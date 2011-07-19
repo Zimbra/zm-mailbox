@@ -35,7 +35,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110714-1514 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110718-1551 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code

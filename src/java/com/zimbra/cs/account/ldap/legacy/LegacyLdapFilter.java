@@ -23,6 +23,8 @@ public class LegacyLdapFilter {
     private static final String FILTER_ACCOUNT_OBJECTCLASS = "(objectclass=zimbraAccount)";
     private static final String FILTER_CALENDAR_RESOURCE_OBJECTCLASS = "(objectclass=zimbraCalendarResource)";
     private static final String FILTER_DISTRIBUTION_LIST_OBJECTCLASS = "(objectclass=zimbraDistributionList)";
+    private static final String FILTER_DYNAMIC_GROUP_OBJECTCLASS = "(objectclass=zimbraGroup)";
+    private static final String FILTER_GROUP_OBJECTCLASS = "(|(objectclass=zimbraGroup)(objectclass=zimbraDistributionList))";
     
     /*
      * operational
@@ -159,6 +161,31 @@ public class LegacyLdapFilter {
         return "(&(zimbraMailAlias=" + name + ")" + FILTER_DISTRIBUTION_LIST_OBJECTCLASS + ")";
     }
     
+    
+    /*
+     * dynamic group
+     */
+    public static String dynamicGroupById(String id) {
+        return "(&(zimbraId=" + id + ")" + FILTER_DYNAMIC_GROUP_OBJECTCLASS + ")";
+    }
+    
+    public static String dynamicGroupByName(String name) {
+        return "(&(zimbraMailAlias=" + name + ")" + FILTER_DYNAMIC_GROUP_OBJECTCLASS + ")";
+    }
+    
+    
+    /*
+     * group
+     */
+    public static String groupById(String id) {
+        return "(&(zimbraId=" + id + ")" + FILTER_GROUP_OBJECTCLASS + ")";
+    }
+    
+    public static String groupByName(String name) {
+        return "(&(zimbraMailAlias=" + name + ")" + FILTER_GROUP_OBJECTCLASS + ")";
+    }
+    
+    
     /*
      * domain
      */
@@ -193,6 +220,7 @@ public class LegacyLdapFilter {
     public static String domainLockedForEagerAutoProvision() {
         return "(!(zimbraAutoProvLock=*))";
     }
+    
     
     /*
      * global config

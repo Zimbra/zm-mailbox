@@ -160,7 +160,7 @@ public class TestLdap {
         String serverBaseDN = dit.serverBaseDN();
         
         Set<String> defaultServerDN = new HashSet<String>();
-        defaultServerDN.add(dit.serverNametoDN(ldapProv.getLocalServer().getName()));
+        defaultServerDN.add(dit.serverNameToDN(ldapProv.getLocalServer().getName()));
         
         deleteAllChildrenUnderDN(serverBaseDN, defaultServerDN);
     }

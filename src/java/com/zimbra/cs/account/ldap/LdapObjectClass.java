@@ -85,6 +85,17 @@ public class LdapObjectClass {
         return ocs;
     }
     
+    public static Set<String> getGroupObjectClasses(Provisioning prov) throws ServiceException {
+        Set<String> ocs = new LinkedHashSet<String>();
+        
+        ocs.add("groupOfURLs");
+        ocs.add("dgIdentityAux");
+        ocs.add(AttributeClass.OC_zimbraGroup);
+        // ocs.add(AttributeClass.OC_zimbraMailRecipient);  // should we?
+
+        return ocs;
+    }
+    
     public static Set<String> getServerObjectClasses(Provisioning prov) throws ServiceException {
         Set<String> ocs = new LinkedHashSet<String>();
         

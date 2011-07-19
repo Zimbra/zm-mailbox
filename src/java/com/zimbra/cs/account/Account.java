@@ -33,7 +33,7 @@ import java.util.Set;
 /**
  * @author schemers
  */
-public class Account extends ZAttrAccount implements GroupedEntry {
+public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry {
     
     public Account(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults, Provisioning prov) {
         super(name, id, attrs, defaults, prov);
@@ -434,6 +434,17 @@ public class Account extends ZAttrAccount implements GroupedEntry {
             setDefaults(defaults, secondaryDefaults);
         }
         
+    }
+
+    @Override
+    public boolean isAddrOfEntry(String addr) {
+        addr = addr.toLowerCase();
+        if (getName().equals(addr)) {
+            return true;
+        } else {
+            Set<String> aliases = getMultiAttrSet(Provisioning.A_zimbraMailAlias);
+            return aliases.contains(addr);
+        }
     }
     
 }

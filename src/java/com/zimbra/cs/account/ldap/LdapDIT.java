@@ -27,6 +27,7 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Identity;
@@ -79,19 +80,20 @@ public class LdapDIT {
     protected final String DEFAULT_CONFIG_BASE_DN        = "cn=zimbra";
     protected final String DEFAULT_MAIL_BASE_DN          = ROOT_DN;
     
-    protected final String DEFAULT_BASE_RDN_ADMIN        = "cn=admins";
-    protected final String DEFAULT_BASE_RDN_APPADMIN     = "cn=appaccts";
-    protected final String DEFAULT_BASE_RDN_ACCOUNT      = "ou=people";
-    protected final String DEFAULT_BASE_RDN_DYNAMICGROUPS= "ou=groups";
-    protected final String DEFAULT_BASE_RDN_COS          = "cn=cos";
-    protected final String DEFAULT_BASE_RDN_MIME         = "cn=mime";
-    protected final String DEFAULT_BASE_RDN_SERVER       = "cn=servers";
-    protected final String DEFAULT_BASE_RDN_XMPPCOMPONENT= "cn=xmppcomponents";
-    protected final String DEFAULT_BASE_RDN_ZIMLET       = "cn=zimlets";
+    protected final String DEFAULT_BASE_RDN_ADMIN          = "cn=admins";
+    protected final String DEFAULT_BASE_RDN_APPADMIN       = "cn=appaccts";
+    protected final String DEFAULT_BASE_RDN_ACCOUNT        = "ou=people";
+    protected final String DEFAULT_BASE_RDN_COS            = "cn=cos";
+    protected final String DEFAULT_BASE_RDN_DYNAMICGROUP   = "cn=groups";
+    protected final String DEFAULT_BASE_RDN_MIME           = "cn=mime";
+    protected final String DEFAULT_BASE_RDN_SERVER         = "cn=servers";
+    protected final String DEFAULT_BASE_RDN_XMPPCOMPONENT  = "cn=xmppcomponents";
+    protected final String DEFAULT_BASE_RDN_ZIMLET         = "cn=zimlets";
     
     
     protected final String DEFAULT_NAMING_RDN_ATTR_USER             = "uid";
     protected final String DEFAULT_NAMING_RDN_ATTR_COS              = "cn";
+    protected final String DEFAULT_NAMING_RDN_ATTR_DYNAMICGROUP     = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_GLOBALCONFIG     = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_GLOBALGRANT      = "cn";
     protected final String DEFAULT_NAMING_RDN_ATTR_MIME             = "cn";
@@ -107,7 +109,7 @@ public class LdapDIT {
     protected String BASE_DN_MAIL_BRANCH;
 
     protected String BASE_RDN_ACCOUNT;
-    protected String BASE_RDN_DYNAMICGROUPS;
+    protected String BASE_RDN_DYNAMICGROUP;
     
     protected String BASE_DN_ADMIN;
     protected String BASE_DN_APPADMIN;
@@ -120,9 +122,9 @@ public class LdapDIT {
      
     protected String NAMING_RDN_ATTR_USER;
     protected String NAMING_RDN_ATTR_COS;
-    
     protected String NAMING_RDN_ATTR_GLOBALCONFIG;
     protected String NAMING_RDN_ATTR_GLOBALGRANT;
+    protected String NAMING_RDN_ATTR_DYNAMICGROUP;
     protected String NAMING_RDN_ATTR_MIME;
     protected String NAMING_RDN_ATTR_SERVER;
     protected String NAMING_RDN_ATTR_XMPPCOMPONENT;
@@ -143,11 +145,12 @@ public class LdapDIT {
         BASE_DN_CONFIG_BRANCH = DEFAULT_CONFIG_BASE_DN;
         BASE_DN_MAIL_BRANCH = ROOT_DN;
 
-        BASE_RDN_ACCOUNT       = DEFAULT_BASE_RDN_ACCOUNT;
-        BASE_RDN_DYNAMICGROUPS = DEFAULT_BASE_RDN_DYNAMICGROUPS;
+        BASE_RDN_ACCOUNT              = DEFAULT_BASE_RDN_ACCOUNT;
+        BASE_RDN_DYNAMICGROUP         = DEFAULT_BASE_RDN_DYNAMICGROUP;
 
         NAMING_RDN_ATTR_USER          = DEFAULT_NAMING_RDN_ATTR_USER;
         NAMING_RDN_ATTR_COS           = DEFAULT_NAMING_RDN_ATTR_COS;
+        NAMING_RDN_ATTR_DYNAMICGROUP  = DEFAULT_NAMING_RDN_ATTR_DYNAMICGROUP;
         NAMING_RDN_ATTR_GLOBALCONFIG  = DEFAULT_NAMING_RDN_ATTR_GLOBALCONFIG;
         NAMING_RDN_ATTR_GLOBALGRANT   = DEFAULT_NAMING_RDN_ATTR_GLOBALGRANT;
         NAMING_RDN_ATTR_MIME          = DEFAULT_NAMING_RDN_ATTR_MIME;
@@ -175,9 +178,10 @@ public class LdapDIT {
             BASE_DN_CONFIG_BRANCH == null ||
             BASE_DN_MAIL_BRANCH == null ||
             BASE_RDN_ACCOUNT == null ||
-            BASE_RDN_DYNAMICGROUPS == null ||
+            BASE_RDN_DYNAMICGROUP == null ||
             NAMING_RDN_ATTR_USER == null ||
             NAMING_RDN_ATTR_COS == null ||
+            NAMING_RDN_ATTR_DYNAMICGROUP == null ||
             NAMING_RDN_ATTR_GLOBALCONFIG == null ||
             NAMING_RDN_ATTR_GLOBALGRANT == null ||
             NAMING_RDN_ATTR_MIME == null ||
@@ -251,16 +255,22 @@ public class LdapDIT {
         return emailToDN(newLocalPart, newDomain);
     }
     
+    
+    public String dnToEmail(String dn, IAttributes attrs) throws ServiceException {
+        String namingAttr = accountNamingRdnAttr();
+        return dnToEmail(dn, namingAttr, attrs);
+    }
+    
     /*
      * Given a dn like "uid=foo,ou=people,dc=widgets,dc=com", return the string "foo@widgets.com".
      * 
      * Param attrs is not used in this implementation of DIT
      */
-    public String dnToEmail(String dn, IAttributes attrs) throws ServiceException {
+    public String dnToEmail(String dn, String namingAttr, IAttributes attrs) throws ServiceException {
         String [] parts = dn.split(",");
         StringBuffer domain = new StringBuffer(dn.length());
         
-        String namingAttr = accountNamingRdnAttr() + "=";
+        namingAttr = namingAttr + "=";
         String namingAttrValue = null;
         
         for (int i = 0; i < parts.length; i++) {
@@ -444,11 +454,51 @@ public class LdapDIT {
     
     // dynamic group base dn for create/delete domain
     public String domainDNToDynamicGroupsBaseDN(String domainDN) throws ServiceException {
-        if (BASE_RDN_DYNAMICGROUPS.length()==0)
+        if (BASE_RDN_DYNAMICGROUP.length()==0)
             return domainDN;
         else
-            return BASE_RDN_DYNAMICGROUPS + "," + domainDN;
+            return BASE_RDN_DYNAMICGROUP + "," + domainDN;
     }
+    
+    
+    /*
+     * ==============
+     *   dynamic group
+     * ==============
+     */
+    public String dynamicGroupNamingRdnAttr() {
+        return NAMING_RDN_ATTR_DYNAMICGROUP;
+    }
+    
+    public String dynamicGroupNameLocalPartToDN(String name, String domainDN) throws ServiceException {
+        return NAMING_RDN_ATTR_DYNAMICGROUP + "=" + LdapUtilCommon.escapeRDNValue(name) + "," + 
+            domainDNToDynamicGroupsBaseDN(domainDN);
+    }
+    
+    public String filterDynamicGroupsByDomain(Domain domain, boolean includeObjectClass) {
+        if (includeObjectClass)
+            return "(objectclass=zimbraGroup)";
+        else
+            return "";
+    }
+    
+    
+    /*
+     * ==============
+     *   group (static and dynamic neutral)
+     * ==============
+     */
+    public String domainDNToGroupsBaseDN(String domainDN) throws ServiceException {
+        return domainDN;
+    }
+    
+    public String filterGroupsByDomain(Domain domain, boolean includeObjectClass) {
+        if (includeObjectClass)
+            return "(|(objectclass=zimbraGroup)(objectclass=zimbraDistributionList))";
+        else
+            return "";
+    }
+    
     
     /*
      * ==============
@@ -494,7 +544,7 @@ public class LdapDIT {
         return BASE_DN_SERVER;
     }
     
-    public String serverNametoDN(String name) {
+    public String serverNameToDN(String name) {
         return NAMING_RDN_ATTR_SERVER + "=" + LdapUtilCommon.escapeRDNValue(name) + "," + BASE_DN_SERVER;
     }
     
@@ -560,6 +610,8 @@ public class LdapDIT {
             return Provisioning.A_zimbraPrefIdentityName;   
         else if (entry instanceof GlobalGrant) 
             return NAMING_RDN_ATTR_GLOBALGRANT;
+        else if (entry instanceof DynamicGroup)
+            return NAMING_RDN_ATTR_DYNAMICGROUP;
         else if (entry instanceof Server)
             return NAMING_RDN_ATTR_SERVER;
         else if (entry instanceof Zimlet)

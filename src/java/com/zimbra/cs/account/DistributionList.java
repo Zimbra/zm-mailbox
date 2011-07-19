@@ -41,6 +41,11 @@ public class DistributionList extends ZAttrDistributionList implements GroupedEn
     public EntryType getEntryType() {
         return EntryType.DISTRIBUTIONLIST;
     }
+    
+    @Override
+    public boolean isDynamic() {
+        return false;
+    }
 
     public void modify(Map<String, Object> attrs) throws ServiceException {
         getProvisioning().modifyAttrs(this, attrs);
@@ -70,6 +75,7 @@ public class DistributionList extends ZAttrDistributionList implements GroupedEn
         getProvisioning().removeMembers(this, member);
     }
 
+    @Override
     public String[] getAllMembers() throws ServiceException {
         if (mIsAclGroup)
             throw ServiceException.FAILURE("internal error", null);

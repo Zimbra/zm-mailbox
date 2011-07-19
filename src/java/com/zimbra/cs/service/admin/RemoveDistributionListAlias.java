@@ -20,6 +20,7 @@ import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -48,14 +49,19 @@ public class RemoveDistributionListAlias extends AdminDocumentHandler {
 	    String id = request.getAttribute(AdminConstants.E_ID, null);
         String alias = request.getAttribute(AdminConstants.E_ALIAS);
 
-	    DistributionList dl = null;
-	    if (id != null)
-	        dl = prov.get(Key.DistributionListBy.id, id);
-            
+	    Group group = null;
+	    if (id != null) {
+	        group = prov.getGroup(Key.DistributionListBy.id, id);
+	    }
+	    
         String dlName = "";
-        if (dl != null) {
-            checkDistributionListRight(zsc, dl, Admin.R_removeDistributionListAlias);
-            dlName = dl.getName();
+        if (group != null) {
+            if (group.isDynamic()) {
+                // TODO: FIX ME
+            } else {
+                checkDistributionListRight(zsc, (DistributionList) group, Admin.R_removeDistributionListAlias);
+            }
+            dlName = group.getName();
         }
         
         // if the admin can remove an alias in the domain
@@ -63,12 +69,12 @@ public class RemoveDistributionListAlias extends AdminDocumentHandler {
         
         // even if dl is null, we still invoke removeAlias and throw an exception afterwards.
         // this is so dangling aliases can be cleaned up as much as possible
-        prov.removeAlias(dl, alias);
+        prov.removeAlias(group, alias);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "RemoveDistributionListAlias", "name", dlName, "alias", alias})); 
         
-        if (dl == null)
+        if (group == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
         
 	    Element response = zsc.createElement(AdminConstants.REMOVE_DISTRIBUTION_LIST_ALIAS_RESPONSE);

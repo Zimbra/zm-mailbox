@@ -243,14 +243,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static final String MAIL_REFER_MODE_REVERSE_PROXIED = "reverse-proxied";
 
 
-    // attributes
-
+    //
+    // attributes (not generated)
+    // 
     public static final String A_dc = "dc";
-
-    /**
-     * aliased object name. The dn that an alias points to
-     */
-    public static final String A_aliasedObjectName = "aliasedObjectName";
+    public static final String A_member = "member";
 
 
 
@@ -458,7 +455,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @throws ServiceException
      */
     public boolean inDistributionList(DistributionList list, String zimbraId) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
     /**
@@ -470,8 +467,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
     /**
      *
      * @param directOnly return only DLs this account is a direct member of
-     * @param via if non-null and directOnly is false, this map will containing a mapping from a DL name to the DL it was a member of, if
-     *            member was indirect.
+     * @param via if non-null and directOnly is false, this map will containing a mapping from a DL 
+     *        name to the DL it was a member of, if member was indirect.
      * @return all the DLs
      * @throws ServiceException
      */
@@ -480,8 +477,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
     /**
      *
      * @param directOnly return only DLs this DL is a direct member of
-     * @param via if non-null and directOnly is false, this map will containing a mapping from a DL name to the DL it was a member of, if
-     *            member was indirect.
+     * @param via if non-null and directOnly is false, this map will containing a mapping from a DL 
+     *        name to the DL it was a member of, if member was indirect.
      * @return all the DLs
      * @throws ServiceException
      */
@@ -492,7 +489,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     // AclGroup
     //
     public DistributionList getAclGroup(Key.DistributionListBy keyType, String key) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
 
@@ -551,7 +548,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @throws ServiceException
      */
     public AclGroups getAclGroups(Account acct, boolean adminGroupsOnly) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
     /**
@@ -564,7 +561,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @throws ServiceException
      */
     public AclGroups getAclGroups(DistributionList list, boolean adminGroupsOnly) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
     /**
@@ -678,7 +675,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public void autoProvAccountEager(EagerAutoProvisionScheduler scheduler) 
     throws ServiceException {
-        throw new UnsupportedOperationException();
+        throw ServiceException.UNSUPPORTED();
     }
     
     /**
@@ -701,7 +698,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public Account autoProvAccountLazy(Domain domain, String loginName, String loginPassword, 
             AutoProvAuthMech authMech) throws ServiceException {
-        throw new UnsupportedOperationException();
+        throw ServiceException.UNSUPPORTED();
     }
     
     public static enum AutoProvPrincipalBy {
@@ -728,7 +725,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public Account autoProvAccountManual(Domain domain, AutoProvPrincipalBy by, String principal) 
     throws ServiceException {
-        throw new UnsupportedOperationException();
+        throw ServiceException.UNSUPPORTED();
     }
     
     public static interface DirectoryEntryVisitor {
@@ -738,7 +735,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public void searchAutoProvDirectory(Domain domain, String filter, String name, 
             String[] returnAttrs, int maxResults, DirectoryEntryVisitor visitor) 
     throws ServiceException {
-        throw new UnsupportedOperationException();
+        throw ServiceException.UNSUPPORTED();
     }
 
     
@@ -750,7 +747,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public Account getAccountByKrb5Principal(String name) throws ServiceException { return get(AccountBy.krb5Principal, name); }
 
     public Account getAccountByForeignName(String foreignName, String application, Domain domain) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
     /**
@@ -830,12 +827,15 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     /** return coses from searchDirectory */
     public static final int SD_COS_FLAG = 0x20;
+    
+    /** return coses from searchDirectory */
+    public static final int SD_GROUP_FLAG = 0x40;
 
     /** do not fixup objectclass in query for searchObject, should only be used from LdapUpgrade */
-    public static final int SO_NO_FIXUP_OBJECTCLASS = 0x40;
+    public static final int SO_NO_FIXUP_OBJECTCLASS = 0x80;
 
     /** do not fixup return attrs for searchObject, should only be used from LdapUpgrade */
-    public static final int SO_NO_FIXUP_RETURNATTRS = 0x80;
+    public static final int SO_NO_FIXUP_RETURNATTRS = 0x100;
 
     /**
      *  do not set account defaults in makeAccount
@@ -905,7 +905,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @return a list of all the accounts that matched.
      * @throws ServiceException
      */
-    public abstract List<NamedEntry> searchAccounts(String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;
+    public abstract List<NamedEntry> searchAccounts(String query, String returnAttrs[], 
+            String sortAttr, boolean sortAscending, int flags) throws ServiceException;
 
     public abstract List<Account> getAllAdminAccounts()  throws ServiceException;
 
@@ -927,7 +928,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
                                         Map<String, Object> authCtxt) throws ServiceException
     {
         if (admin)
-            throw ServiceException.FAILURE("preAuthAccount unimplemented", null);
+            throw ServiceException.UNSUPPORTED();
         else
             preAuthAccount(acct, accountName, accountBy, timestamp, expires, preAuth, authCtxt);
     }
@@ -939,7 +940,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public void preAuthAccount(Domain domain, String accountName, String accountBy, 
             long timestamp, long expires, String preAuth, Map<String, Object> authCtxt) 
     throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
     public abstract void ssoAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt) 
@@ -1109,7 +1110,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract List<Domain> getAllDomains()  throws ServiceException;
 
     public void getAllDomains(NamedEntry.Visitor visitor, String[] retAttrs) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
     public abstract void deleteDomain(String zimbraId) throws ServiceException;
@@ -1151,14 +1152,25 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract void deleteServer(String zimbraId) throws ServiceException;
 
-    public abstract DistributionList createDistributionList(String listAddress, Map<String, Object> listAttrs) throws ServiceException;
-
+    
+    /* 
+     * ==============================
+     * 
+     * Distribution list (static group) methods
+     * 
+     * ==============================
+     */
+    
+    public abstract DistributionList createDistributionList(String listAddress, Map<String, Object> listAttrs)
+    throws ServiceException;
+    
     public abstract DistributionList get(Key.DistributionListBy keyType, String key) throws ServiceException;
 
-    public DistributionList getDistributionListByName(String name) throws ServiceException { return get(Key.DistributionListBy.name, name); }
-    public DistributionList getDistributionListById(String id) throws ServiceException { return get(Key.DistributionListBy.id, id); }
-
     public abstract void deleteDistributionList(String zimbraId) throws ServiceException;
+    
+    public abstract void addMembers(DistributionList list, String[] members) throws ServiceException;
+
+    public abstract void removeMembers(DistributionList list, String[] members) throws ServiceException;
 
     public abstract void addAlias(DistributionList dl, String alias) throws ServiceException;
 
@@ -1176,14 +1188,69 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * contains only basic DL attributes.  It does not contain members 
      * of the group.
      * 
-     * Note: in the LdapProvisioning implementation, this API uses cache wheras 
+     * Note: in the LdapProvisioning implementation, this API uses cache whereas 
      * get(DistributionListBy keyType, String key) does *not* use cache.  
      * Callsites should use this API if all they need is basic info on the DL, like
      * id or name.
      */
-    public DistributionList getGroup(Key.DistributionListBy keyType, String key) throws ServiceException {
+    public DistributionList getDL(Key.DistributionListBy keyType, String key) throws ServiceException {
         return get(keyType, key);
     }
+    
+    
+    /* 
+     * ==============================
+     * 
+     * Group (static/dynamic neutral) methods
+     * 
+     * ==============================
+     */
+    
+    /**
+     * create a static or dynamic group
+     * 
+     * @param listAddress
+     * @param listAttrs
+     * @param dynamic
+     * @return
+     * @throws ServiceException
+     */
+    public Group createGroup(String listAddress, Map<String, Object> listAttrs, boolean dynamic) 
+    throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+    
+    public Group getGroup(Key.DistributionListBy keyType, String key) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
+    public List getAllGroups(Domain domain) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+    
+    public void deleteGroup(String zimbraId) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+    
+    public void addGroupMembers(Group group, String[] members) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
+    public void removeGroupMembers(Group group, String[] members) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+    
+    public void addAlias(Group group, String alias) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+
+    public void removeAlias(Group group, String alias) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+    
+    /*
+     * Zimlet
+     */
 
     public abstract Zimlet getZimlet(String name) throws ServiceException;
 
@@ -1327,7 +1394,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract void getAllAccounts(Domain d, Server s, NamedEntry.Visitor visitor) throws ServiceException;
     
     public void getAllAccountsNoDefaults(Domain d, Server s, NamedEntry.Visitor visitor) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
     public abstract List getAllCalendarResources(Domain d) throws ServiceException;
@@ -1338,6 +1405,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract List getAllDistributionLists(Domain d) throws ServiceException;
 
+
     /**
      * @param query LDAP search query
      * @param returnAttrs list of attributes to return. uid is always included.
@@ -1346,7 +1414,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @return a list of all the accounts that matched.
      * @throws ServiceException
      */
-    public abstract List<NamedEntry> searchAccounts(Domain d, String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException;
+    public abstract List<NamedEntry> searchAccounts(Domain d, String query, String returnAttrs[], 
+            String sortAttr, boolean sortAscending, int flags) throws ServiceException;
 
     /**
      * Search for all accunts on the server
@@ -1356,8 +1425,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @param visitor
      * @throws ServiceException
      */
-    public void searchAccountsOnServer(Server server, SearchOptions opts, NamedEntry.Visitor visitor) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+    public void searchAccountsOnServer(Server server, SearchOptions opts, NamedEntry.Visitor visitor) 
+    throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
     }
 
     public static class SearchOptions {
@@ -1599,11 +1669,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @throws ServiceException
      */
     public SearchGalResult searchGal(Domain d, String query, GalSearchType type, GalMode mode, String token) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
     
     public void searchGal(GalSearchParams params) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
 
@@ -1632,10 +1702,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
         String sortAttr,
         boolean sortAscending)
     throws ServiceException;
-
-    public abstract void addMembers(DistributionList list, String[] members) throws ServiceException;
-
-    public abstract void removeMembers(DistributionList list, String[] member) throws ServiceException;
 
     public Identity getDefaultIdentity(Account account) throws ServiceException {
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -1778,15 +1844,15 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public Map<String, List<RightsDoc>> getRightsDoc(String[] pkgs) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
     public Right getRight(String rightName, boolean expandAllAttrs) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
     public List<Right> getAllRights(String targetType, boolean expandAllAttrs, String rightClass)  throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
     public boolean checkRight(
@@ -1794,20 +1860,20 @@ public abstract class Provisioning extends ZAttrProvisioning {
             Key.GranteeBy granteeBy, String grantee,
             String right, Map<String, Object> attrs,
             AccessManager.ViaGrant via) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
     public RightCommand.AllEffectiveRights getAllEffectiveRights(
             String granteeType, Key.GranteeBy granteeBy, String grantee,
             boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
     public RightCommand.EffectiveRights getEffectiveRights(
             String targetType, Key.TargetBy targetBy, String target,
             Key.GranteeBy granteeBy, String grantee,
             boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
     public RightCommand.EffectiveRights getCreateObjectAttrs(
@@ -1815,28 +1881,28 @@ public abstract class Provisioning extends ZAttrProvisioning {
             Key.DomainBy domainBy, String domainStr,
             Key.CosBy cosBy, String cosStr,
             Key.GranteeBy granteeBy, String grantee) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
     public RightCommand.Grants getGrants(
             String targetType, Key.TargetBy targetBy, String target,
             String granteeType, Key.GranteeBy granteeBy, String grantee,
             boolean granteeIncludeGroupsGranteeBelongs) throws ServiceException{
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
     public void grantRight(
             String targetType, Key.TargetBy targetBy, String target,
             String granteeType, Key.GranteeBy granteeBy, String grantee, String secret,
             String right, RightModifier rightModifier) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
     public void revokeRight(
             String targetType, Key.TargetBy targetBy, String target,
             String granteeType, Key.GranteeBy granteeBy, String grantee,
             String right, RightModifier rightModifier) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
 
@@ -1930,7 +1996,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public CountAccountResult countAccount(Domain domain) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
     // supported types for countObjects
@@ -1949,7 +2015,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public long countObjects(CountObjectsType type, Domain domain) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
     /**
@@ -1998,7 +2064,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public void getShareInfo(Account ownerAcct, PublishedShareInfoVisitor visitor) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
     // TODO: consolidate with CacheType in main
@@ -2060,7 +2126,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     
     public Provisioning.Result checkAuthConfig(Map<String, Object> attrs, String name, String password) 
     throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
 
     public static class GalResult extends Result {
@@ -2077,7 +2143,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     
     public Provisioning.Result checkGalConfig(Map attrs, String query, int limit, GalOp galOp) 
     throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
     
     //
@@ -2087,28 +2153,28 @@ public abstract class Provisioning extends ZAttrProvisioning {
     //
     // SMIME config on domain
     public Map<String, Map<String, Object>> getDomainSMIMEConfig(Domain domain, String configName) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
     
     public void modifyDomainSMIMEConfig(Domain domain, String configName, Map<String, Object> attrs) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
     
     public void removeDomainSMIMEConfig(Domain domain, String configName) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
     
     // SMIME config on globalconfig
     public Map<String, Map<String, Object>> getConfigSMIMEConfig(String configName) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
     
     public void modifyConfigSMIMEConfig(String configName, Map<String, Object> attrs) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
     
     public void removeConfigSMIMEConfig(String configName) throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
+        throw ServiceException.UNSUPPORTED();
     }
     
     

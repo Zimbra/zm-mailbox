@@ -27,15 +27,15 @@ import java.util.Map;
  * AUTO-GENERATED. DO NOT EDIT.
  *
  */
-public abstract class ZAttrDistributionList extends MailTarget {
+public abstract class ZAttrDistributionList extends Group {
 
     protected ZAttrDistributionList(String name, String id, Map<String, Object> attrs, Provisioning prov) {
-        super(name, id, attrs, null, prov);
+        super(name, id, attrs, prov);
     }
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110714-1514 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110718-1551 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by

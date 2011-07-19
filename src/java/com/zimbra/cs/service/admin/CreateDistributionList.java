@@ -22,7 +22,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
@@ -45,18 +45,20 @@ public class CreateDistributionList extends AdminDocumentHandler {
 	    
         String name = request.getAttribute(AdminConstants.E_NAME).toLowerCase();
         Map<String, Object> attrs = AdminService.getAttrs(request, true);
+        
+        boolean dynamic = request.getAttributeBool(AdminConstants.A_DYNAMIC, false);
 
         checkDomainRightByEmail(zsc, name, Admin.R_createDistributionList);
         checkSetAttrsOnCreate(zsc, TargetType.dl, name, attrs);
         
-        DistributionList dl = prov.createDistributionList(name, attrs);
+        Group group = prov.createGroup(name, attrs, dynamic);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                  new String[] {"cmd", "CreateDistributionList","name", name}, attrs));         
 
         Element response = zsc.createElement(AdminConstants.CREATE_DISTRIBUTION_LIST_RESPONSE);
         
-        GetDistributionList.encodeDistributionList(response, dl);
+        GetDistributionList.encodeDistributionList(response, group);
 
         return response;
     }

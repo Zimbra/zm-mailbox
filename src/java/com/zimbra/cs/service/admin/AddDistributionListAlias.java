@@ -20,6 +20,7 @@ import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -48,18 +49,23 @@ public class AddDistributionListAlias extends AdminDocumentHandler {
 	    String id = request.getAttribute(AdminConstants.E_ID);
         String alias = request.getAttribute(AdminConstants.E_ALIAS);
 
-	    DistributionList dl = prov.get(Key.DistributionListBy.id, id);
-        if (dl == null)
+	    Group group = prov.getGroup(Key.DistributionListBy.id, id);
+        if (group == null) {
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
-
-        checkDistributionListRight(lc, dl, Admin.R_addDistributionListAlias);
-
+        }
+        
+        if (group.isDynamic()) {
+            // TODO: fix me
+        } else {
+            checkDistributionListRight(lc, (DistributionList) group, Admin.R_addDistributionListAlias);
+        }
+        
         // if the admin can create an alias in the domain
         checkDomainRightByEmail(lc, alias, Admin.R_createAlias);
 
-        prov.addAlias(dl, alias);
+        prov.addAlias(group, alias);
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                new String[] {"cmd", "AddDistributionListAlias", "name", dl.getName(), "alias", alias})); 
+                new String[] {"cmd", "AddDistributionListAlias", "name", group.getName(), "alias", alias})); 
         
 	    Element response = lc.createElement(AdminConstants.ADD_DISTRIBUTION_LIST_ALIAS_RESPONSE);
 	    return response;

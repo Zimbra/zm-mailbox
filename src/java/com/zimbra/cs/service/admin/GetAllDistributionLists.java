@@ -27,6 +27,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -93,11 +94,20 @@ public class GetAllDistributionLists extends AdminDocumentHandler {
     }
     
     private void doDomain(ZimbraSoapContext zsc, Element e, Domain d, AdminAccessControl aac) throws ServiceException {
-        List dls = Provisioning.getInstance().getAllDistributionLists(d);
+        List dls = Provisioning.getInstance().getAllGroups(d);
         for (Iterator it = dls.iterator(); it.hasNext(); ) {
-            DistributionList dl = (DistributionList) it.next();
-            if (aac.hasRightsToList(dl, Admin.R_listDistributionList, null))
+            Group dl = (Group) it.next();
+            boolean hasRightToList = true;
+            if (dl.isDynamic()) {
+                // TODO: fix me
+                hasRightToList = true;
+            } else {
+                hasRightToList = aac.hasRightsToList(dl, Admin.R_listDistributionList, null);
+            }
+            
+            if (hasRightToList) {
                 GetDistributionList.encodeDistributionList(e, dl, true, null, aac.getAttrRightChecker(dl));
+            }
         }        
     }
     

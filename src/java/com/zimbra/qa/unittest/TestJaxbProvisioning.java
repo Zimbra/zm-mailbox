@@ -335,7 +335,7 @@ public class TestJaxbProvisioning extends TestCase {
         assertNotNull("DistributionList for " + testDl, dl);
         prov.renameDistributionList(dl.getId(), testDlNewName);
         prov.addAlias(dl, testDlAlias);
-        dl = prov.getDistributionListByName(testDlAlias);
+        dl = prov.get(Key.DistributionListBy.name, testDlAlias);
         prov.removeAlias(dl, testDlAlias);
         String[] members = { "one@example.com",
                 "two@example.test", "three@example.net" };

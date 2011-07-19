@@ -42,6 +42,8 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static UBIDLdapFilter FILTER_ALL_DATASOURCES;
     private static UBIDLdapFilter FILTER_ALL_DISTRIBUTION_LISTS;
     private static UBIDLdapFilter FILTER_ALL_DOMAINS;
+    private static UBIDLdapFilter FILTER_ALL_DYNAMIC_GROUPS;
+    private static UBIDLdapFilter FILTER_ALL_GROUPS;
     private static UBIDLdapFilter FILTER_ALL_IDENTITIES;
     private static UBIDLdapFilter FILTER_ALL_MIME_ENTRIES;
     private static UBIDLdapFilter FILTER_ALL_NON_SYSTEM_ACCOUNTS;
@@ -101,6 +103,9 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         FILTER_ALL_DOMAINS = new UBIDLdapFilter(
                 Filter.createEqualityFilter("objectclass", "zimbraDomain"));
         
+        FILTER_ALL_DYNAMIC_GROUPS = new UBIDLdapFilter(
+                Filter.createEqualityFilter("objectclass", "zimbraGroup"));
+        
         FILTER_ALL_IDENTITIES = new UBIDLdapFilter(
                 Filter.createEqualityFilter("objectclass", "zimbraIdentity"));
         
@@ -144,6 +149,10 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         FILTER_ALL_ACCOUNTS_ONLY.getNative(),
                         Filter.createNOTFilter(FILTER_IS_SYSTEM_RESOURCE.getNative())));
         
+        FILTER_ALL_GROUPS = new UBIDLdapFilter(
+                Filter.createORFilter(
+                        FILTER_ALL_DISTRIBUTION_LISTS.getNative(),
+                        FILTER_ALL_DYNAMIC_GROUPS.getNative()));
     }
 
 
@@ -361,7 +370,45 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         Filter.createEqualityFilter("zimbraMailAlias", name),
                         FILTER_ALL_DISTRIBUTION_LISTS.getNative()));
     }
+    
 
+    /*
+     * dynamic group
+     */
+    @Override
+    public ZLdapFilter dynamicGroupById(String id) {
+        return new UBIDLdapFilter(
+                Filter.createANDFilter(
+                        Filter.createEqualityFilter("zimbraId", id),
+                        FILTER_ALL_DYNAMIC_GROUPS.getNative()));
+    }
+    
+    @Override
+    public ZLdapFilter dynamicGroupByName(String name) {
+        return new UBIDLdapFilter(
+                Filter.createANDFilter(
+                        Filter.createEqualityFilter("zimbraMailAlias", name),
+                        FILTER_ALL_DYNAMIC_GROUPS.getNative()));
+    }
+    
+    
+    /*
+     * groups (distribution list or dynamic groups)
+     */
+    public ZLdapFilter groupById(String id) {
+        return new UBIDLdapFilter(
+                Filter.createANDFilter(
+                        Filter.createEqualityFilter("zimbraId", id),
+                        FILTER_ALL_GROUPS.getNative()));
+    }
+    
+    public ZLdapFilter groupByName(String name) {
+        return new UBIDLdapFilter(
+                Filter.createANDFilter(
+                        Filter.createEqualityFilter("zimbraMailAlias", name),
+                        FILTER_ALL_GROUPS.getNative())); 
+    }
+    
     
     /*
      * domain
@@ -420,7 +467,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter domainLockedForEagerAutoProvision() {
         return new UBIDLdapFilter(Filter.createNOTFilter(Filter.createPresenceFilter("zimbraAutoProvLock")));
     }
-
+    
     
     /*
      * global config

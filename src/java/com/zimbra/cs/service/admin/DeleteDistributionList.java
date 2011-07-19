@@ -20,6 +20,7 @@ import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -47,16 +48,20 @@ public class DeleteDistributionList extends AdminDocumentHandler {
 
         String id = request.getAttribute(AdminConstants.E_ID);
 
-        DistributionList distributionList = prov.get(Key.DistributionListBy.id, id);
-        if (distributionList == null)
+        Group group = prov.getGroup(Key.DistributionListBy.id, id);
+        if (group == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
 
-        checkDistributionListRight(zsc, distributionList, Admin.R_deleteDistributionList);        
-
-        prov.deleteDistributionList(distributionList.getId());
+        if (group.isDynamic()) {
+            // TODO: fix me  
+        } else {
+            checkDistributionListRight(zsc, (DistributionList) group, Admin.R_deleteDistributionList);      
+        }
+        
+        prov.deleteGroup(group.getId());
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                                                      new String[] {"cmd", "DeleteDistributionList","name", distributionList.getName(), "id", distributionList.getId()}));
+                new String[] {"cmd", "DeleteDistributionList","name", group.getName(), "id", group.getId()}));
 
         Element response = zsc.createElement(AdminConstants.DELETE_DISTRIBUTION_LIST_RESPONSE);
         return response;

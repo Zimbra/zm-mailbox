@@ -121,6 +121,10 @@ public class NameUtil {
             }
         }
         
+        public static String getAddress(String localPart, String domain) {
+            return localPart + "@" + domain;
+        }
+        
         public String getLocalPart() {
             return localPart;
         }

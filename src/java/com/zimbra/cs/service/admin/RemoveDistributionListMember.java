@@ -22,6 +22,7 @@ import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -53,17 +54,23 @@ public class RemoveDistributionListMember extends AdminDocumentHandler {
         	memberList.add(elem.getTextTrim());
         }
 
-        DistributionList dl = prov.get(Key.DistributionListBy.id, id);
-        if (dl == null)
+        Group group = prov.getGroup(Key.DistributionListBy.id, id);
+        if (group == null) {
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
-
-        checkDistributionListRight(zsc, dl, Admin.R_removeDistributionListMember);
-
+        }
+        
+        if (group.isDynamic()) {
+            // TODO: fix me
+        } else {
+            checkDistributionListRight(zsc, (DistributionList) group, Admin.R_removeDistributionListMember);
+        }
+        
         String[] members = (String[]) memberList.toArray(new String[0]); 
-        prov.removeMembers(dl, members);
+        prov.removeGroupMembers(group, members);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                                                      new String[] {"cmd", "RemoveDistributionListMember", "name", dl.getName(), "member", Arrays.deepToString(members)})); 
+                new String[] {"cmd", "RemoveDistributionListMember", "name", group.getName(), 
+                "member", Arrays.deepToString(members)})); 
 
         Element response = zsc.createElement(AdminConstants.REMOVE_DISTRIBUTION_LIST_MEMBER_RESPONSE);
         return response;

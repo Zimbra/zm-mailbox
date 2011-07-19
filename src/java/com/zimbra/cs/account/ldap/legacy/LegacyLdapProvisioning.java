@@ -1908,7 +1908,7 @@ public class LegacyLdapProvisioning extends LdapProv {
 
         // maybe it's a group
         // (note, entries in this DL cache contains only minimal attrs)
-        target = getGroup(Key.DistributionListBy.id, targetId);
+        target = getDL(Key.DistributionListBy.id, targetId);
 
         return target;
     }
@@ -2837,7 +2837,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             attrs.put(A_zimbraId, zimbraIdStr);
             attrs.put(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
             attrs.put(A_cn, name);
-            String dn = mDIT.serverNametoDN(name);
+            String dn = mDIT.serverNameToDN(name);
 
             Attribute zimbraServiceHostnameAttr = attrs.get(Provisioning.A_zimbraServiceHostname);
             if (zimbraServiceHostnameAttr == null) {
@@ -2933,7 +2933,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         LegacyZimbraLdapContext zlc = null;
         try {
             zlc = new LegacyZimbraLdapContext();
-            String dn = mDIT.serverNametoDN(name);
+            String dn = mDIT.serverNameToDN(name);
             Attributes attrs = zlc.getAttributes(dn);
             LdapServer s = new LdapServer(dn, attrs, getConfig().getServerDefaults(), this);
             sServerCache.put(s);
@@ -4989,7 +4989,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             directGroups = new ArrayList<DistributionList>();
             Set<String> idsToRemove = null;
             for (String groupId : directGroupIds) {
-                DistributionList group = prov.getGroup(Key.DistributionListBy.id, groupId);
+                DistributionList group = prov.getDL(Key.DistributionListBy.id, groupId);
                 if (group == null) {
                     // the group could have been deleted
                     // remove it from our direct group id cache on the entry
@@ -5023,7 +5023,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     //     - entry returned only contains minimal DL attrs
     //
     @Override
-    public DistributionList getGroup(Key.DistributionListBy keyType, String key) throws ServiceException {
+    public DistributionList getDL(Key.DistributionListBy keyType, String key) throws ServiceException {
         switch(keyType) {
         case id:
             return getGroupById(key);

@@ -1234,7 +1234,7 @@ only supported for MySQL.
 
 -----------------------------
 
-<CreateDistributionListRequest>
+<CreateDistributionListRequest [dynamic="1"]>
   <name>...</name>
   <a n="...">...</a>+
 </CreateDistributionListRequest>
@@ -1246,11 +1246,11 @@ only supported for MySQL.
 </CreateDistributionListResponse>
 
 Notes:
+  dynamic: create a dynamic distribution list
 
   extra attrs:
-
-  description
-  zimbraNotes
+      description
+      zimbraNotes
 
 Access: domain admin sufficient
 
@@ -1262,7 +1262,7 @@ Access: domain admin sufficient
 </GetDistributionListRequest>
 
 <GetDistributionListResponse more="{more-flag}" [total="{total}"]>
-  <dl name="{name}" id="{id}">
+  <dl name="{name}" id="{id}" dynamic="1|0">
     <dlm>{member}</dlm>+
     <a n="...">...</a>+
   </dl>
@@ -1280,6 +1280,8 @@ Notes:
     total = total number of distribution lists (not affected by limit/offset)
 
     req-attrs = comma-seperated list of attrs to return
+    
+    dynamic = whether this is a dynamic distribution list
 
 Access: domain admin sufficient
 
@@ -2531,3 +2533,5 @@ Notes:
 
 
 -----------------------------
+
+   

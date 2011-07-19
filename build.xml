@@ -367,6 +367,10 @@
             <param name="getter.class" value="distributionList"/>
             <param name="getter.output" value="ZAttrDistributionList.java"/>
         </antcall>
+        <antcall target="generate-getter">
+            <param name="getter.class" value="group"/>
+            <param name="getter.output" value="ZAttrDynamicGroup.java"/>
+        </antcall>
         <antcall target="generate-provisioning"/>
     </target>
 

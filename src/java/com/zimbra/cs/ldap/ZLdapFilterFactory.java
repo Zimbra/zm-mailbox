@@ -97,6 +97,21 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter distributionListById(String id);
     public abstract ZLdapFilter distributionListByName(String name);
     
+        
+    /*
+     * dynamic group
+     */
+    public abstract ZLdapFilter dynamicGroupById(String id);
+    public abstract ZLdapFilter dynamicGroupByName(String name);
+    
+    
+    /*
+     * groups (distribution list or dynamic groups)
+     */
+    public abstract ZLdapFilter groupById(String id);
+    public abstract ZLdapFilter groupByName(String name);
+    
+    
     /*
      * domain
      */
@@ -108,6 +123,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter domainByForeignName(String foreignName);
     public abstract ZLdapFilter domainLabel();
     public abstract ZLdapFilter domainLockedForEagerAutoProvision();
+
 
     /*
      * global config

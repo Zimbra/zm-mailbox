@@ -466,6 +466,7 @@ public class ProvUtil implements HttpDebugListener {
         CREATE_COS("createCos", "cc", "{name} [attr1 value1 [attr2 value2...]]", Category.COS, 1, Integer.MAX_VALUE),
         CREATE_DATA_SOURCE("createDataSource", "cds", "{name@domain} {ds-type} {ds-name} zimbraDataSourceEnabled {TRUE|FALSE} zimbraDataSourceFolderId {folder-id} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 3, Integer.MAX_VALUE),
         CREATE_DISTRIBUTION_LIST("createDistributionList", "cdl", "{list@domain}", Category.LIST, 1, Integer.MAX_VALUE),
+        CREATE_DYNAMIC_DISTRIBUTION_LIST("createDynamicDistributionList", "cddl", "{list@domain}", Category.LIST, 1, Integer.MAX_VALUE),
         CREATE_DISTRIBUTION_LISTS_BULK("createDistributionListsBulk", "cdlbulk"),
         CREATE_DOMAIN("createDomain", "cd", "{domain} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 1, Integer.MAX_VALUE),
         CREATE_SERVER("createServer", "cs", "{name} [attr1 value1 [attr2 value2...]]", Category.SERVER, 1, Integer.MAX_VALUE),
@@ -1080,7 +1081,10 @@ public class ProvUtil implements HttpDebugListener {
                 console.println("Password passed strength check.");
                 break;
             case CREATE_DISTRIBUTION_LIST:
-                console.println(prov.createDistributionList(args[1], getMapAndCheck(args, 2)).getId());
+                console.println(prov.createGroup(args[1], getMapAndCheck(args, 2), false).getId());
+                break;
+            case CREATE_DYNAMIC_DISTRIBUTION_LIST:
+                console.println(prov.createGroup(args[1], getMapAndCheck(args, 2), true).getId());
                 break;
             case CREATE_DISTRIBUTION_LISTS_BULK:
                 doCreateDistributionListsBulk(args);
@@ -1089,7 +1093,7 @@ public class ProvUtil implements HttpDebugListener {
                 doGetAllDistributionLists(args);
                 break;
             case GET_DISTRIBUTION_LIST:
-                dumpDistributionList(lookupDistributionList(args[1]), getArgNameSet(args, 2));
+                dumpGroup(lookupGroup(args[1]), getArgNameSet(args, 2));
                 break;
             case GET_ALL_XMPP_COMPONENTS:
                 doGetAllXMPPComponents();
@@ -1098,26 +1102,26 @@ public class ProvUtil implements HttpDebugListener {
                 prov.modifyAttrs(lookupDistributionList(args[1]), getMapAndCheck(args, 2), true);
                 break;
             case DELETE_DISTRIBUTION_LIST:
-                prov.deleteDistributionList(lookupDistributionList(args[1]).getId());
+                prov.deleteGroup(lookupGroup(args[1]).getId());
                 break;
             case ADD_DISTRIBUTION_LIST_MEMBER:
                 members = new String[args.length - 2];
                 System.arraycopy(args, 2, members, 0, args.length - 2);
-                prov.addMembers(lookupDistributionList(args[1]), members);
+                prov.addGroupMembers(lookupGroup(args[1]), members);
                 break;
             case REMOVE_DISTRIBUTION_LIST_MEMBER:
                 members = new String[args.length - 2];
                 System.arraycopy(args, 2, members, 0, args.length - 2);
-                prov.removeMembers(lookupDistributionList(args[1]), members);
+                prov.removeGroupMembers(lookupGroup(args[1]), members);
                 break;
             case CREATE_BULK_ACCOUNTS:
                 doCreateAccountsBulk(args);
                 break;
             case ADD_DISTRIBUTION_LIST_ALIAS:
-                prov.addAlias(lookupDistributionList(args[1]), args[2]);
+                prov.addAlias(lookupGroup(args[1]), args[2]);
                 break;
             case REMOVE_DISTRIBUTION_LIST_ALIAS:
-                DistributionList dl = lookupDistributionList(args[1], false);
+                Group dl = lookupGroup(args[1], false);
                 // Even if dl is null, we still invoke removeAlias.
                 // This is so dangling aliases can be cleaned up as much as possible.
                 // If dl is null, the NO_SUCH_DISTRIBUTION_LIST thrown by SOAP will contain
@@ -1845,7 +1849,7 @@ public class ProvUtil implements HttpDebugListener {
                 } else if (account instanceof Alias) {
                     dumpAlias((Alias) account);
                 } else if (account instanceof DistributionList) {
-                    dumpDistributionList((DistributionList) account, null);
+                    dumpGroup((DistributionList) account, null);
                 } else if (account instanceof Domain) {
                     dumpDomain((Domain) account, null);
                 }
@@ -2066,11 +2070,11 @@ public class ProvUtil implements HttpDebugListener {
         console.println();
     }
 
-    private void dumpDistributionList(DistributionList dl, Set<String> attrNames) throws ServiceException {
-        String[] members = dl.getAllMembers();
+    private void dumpGroup(Group group, Set<String> attrNames) throws ServiceException {
+        String[] members = group.getAllMembers();
         int count = members == null ? 0 : members.length;
-        console.println("# distributionList " + dl.getName() + " memberCount=" + count);
-        Map<String, Object> attrs = dl.getAttrs();
+        console.println("# distributionList " + group.getName() + " memberCount=" + count);
+        Map<String, Object> attrs = group.getAttrs();
         dumpAttrs(attrs, attrNames);
         console.println();
     }
@@ -2475,11 +2479,11 @@ public class ProvUtil implements HttpDebugListener {
         if (d == null) {
             List<Domain> domains = prov.getAllDomains();
             for (Domain domain : domains) {
-                Collection<?> dls = prov.getAllDistributionLists(domain);
+                Collection<?> dls = prov.getAllGroups(domain);
                 for (Object obj : dls) {
-                    DistributionList dl = (DistributionList) obj;
+                    Group dl = (Group) obj;
                     if (verbose) {
-                        dumpDistributionList(dl, null);
+                        dumpGroup(dl, null);
                     } else {
                         console.println(dl.getName());
                     }
@@ -2487,11 +2491,11 @@ public class ProvUtil implements HttpDebugListener {
             }
         } else {
             Domain domain = lookupDomain(d);
-            Collection<?> dls = prov.getAllDistributionLists(domain);
+            Collection<?> dls = prov.getAllGroups(domain);
             for (Object obj : dls) {
-                DistributionList dl = (DistributionList) obj;
+                Group dl = (Group) obj;
                 if (verbose) {
-                    dumpDistributionList(dl, null);
+                    dumpGroup(dl, null);
                 } else {
                     console.println(dl.getName());
                 }
@@ -2817,6 +2821,19 @@ public class ProvUtil implements HttpDebugListener {
 
     private DistributionList lookupDistributionList(String key) throws ServiceException {
         return lookupDistributionList(key, true);
+    }
+
+    private Group lookupGroup(String key, boolean mustFind) throws ServiceException {
+        Group dl = prov.getGroup(guessDistributionListBy(key), key);
+        if (mustFind && dl == null) {
+            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(key);
+        } else {
+            return dl;
+        }
+    }
+    
+    private Group lookupGroup(String key) throws ServiceException {
+        return lookupGroup(key, true);
     }
 
     private XMPPComponent lookupXMPPComponent(String value) throws ServiceException {

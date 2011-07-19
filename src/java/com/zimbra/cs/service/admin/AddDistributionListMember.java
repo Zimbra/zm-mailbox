@@ -22,6 +22,7 @@ import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
@@ -59,21 +60,30 @@ public class AddDistributionListMember extends AdminDocumentHandler {
             throw ServiceException.INVALID_REQUEST("members to add not specified", null);
         }
         
-        DistributionList dl = prov.get(Key.DistributionListBy.id, id);
-        if (dl == null)
+        Group group = prov.getGroup(Key.DistributionListBy.id, id);
+        if (group == null)
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
 
-        checkDistributionListRight(zsc, dl, Admin.R_addDistributionListMember);
-
+        if (group.isDynamic()) {
+            // TODO: fixme
+        } else {
+            checkDistributionListRight(zsc, (DistributionList) group, Admin.R_addDistributionListMember);
+        }
+        
         String[] members = (String[]) memberList.toArray(new String[0]); 
-        prov.addMembers(dl, members);
+        prov.addGroupMembers(group, members);
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "AddDistributionListMember","name", dl.getName(), "members", Arrays.deepToString(members)})); 
+                    new String[] {"cmd", "AddDistributionListMember","name", group.getName(), 
+                    "members", Arrays.deepToString(members)})); 
         
         // send share notification email
-        boolean sendShareInfoMsg = dl.getBooleanAttr(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, true);
-        if (sendShareInfoMsg)
-            ShareInfo.NotificationSender.sendShareInfoMessage(octxt, dl, members);
+        if (group.isDynamic()) {
+            // do nothing for now
+        } else {
+            boolean sendShareInfoMsg = group.getBooleanAttr(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, true);
+            if (sendShareInfoMsg)
+                ShareInfo.NotificationSender.sendShareInfoMessage(octxt, (DistributionList) group, members);
+        }
         
         Element response = zsc.createElement(AdminConstants.ADD_DISTRIBUTION_LIST_MEMBER_RESPONSE);
         return response;

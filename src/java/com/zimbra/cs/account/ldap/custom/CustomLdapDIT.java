@@ -95,6 +95,7 @@ public class CustomLdapDIT extends LdapDIT {
         NAMING_RDN_ATTR_COS           = getLC(LC.ldap_dit_naming_rdn_attr_cos,          DEFAULT_NAMING_RDN_ATTR_COS);
         NAMING_RDN_ATTR_GLOBALCONFIG  = getLC(LC.ldap_dit_naming_rdn_attr_globalconfig, DEFAULT_NAMING_RDN_ATTR_GLOBALCONFIG);
         NAMING_RDN_ATTR_GLOBALGRANT   = getLC(LC.ldap_dit_naming_rdn_attr_globalgrant,  DEFAULT_NAMING_RDN_ATTR_GLOBALGRANT);
+        NAMING_RDN_ATTR_DYNAMICGROUP         = getLC(LC.ldap_dit_naming_rdn_attr_group,        DEFAULT_NAMING_RDN_ATTR_DYNAMICGROUP);
         NAMING_RDN_ATTR_MIME          = getLC(LC.ldap_dit_naming_rdn_attr_mime,         DEFAULT_NAMING_RDN_ATTR_MIME);
         NAMING_RDN_ATTR_SERVER        = getLC(LC.ldap_dit_naming_rdn_attr_server,       DEFAULT_NAMING_RDN_ATTR_SERVER);
         NAMING_RDN_ATTR_XMPPCOMPONENT = getLC(LC.ldap_dit_naming_rdn_attr_xmppcomponent,DEFAULT_NAMING_RDN_ATTR_XMPPCOMPONENT);

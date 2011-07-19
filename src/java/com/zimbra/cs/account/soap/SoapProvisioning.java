@@ -481,6 +481,13 @@ public class SoapProvisioning extends Provisioning {
         invokeJaxb(new AddDistributionListAliasRequest(dl.getId(), alias));
         reload(dl);
     }
+    
+    @Override
+    public void addAlias(Group group, String alias)
+            throws ServiceException {
+        invokeJaxb(new AddDistributionListAliasRequest(group.getId(), alias));
+        reload(group);
+    }
 
     @Override
     public void authAccount(Account acct, String password, AuthContext.Protocol proto)
@@ -553,9 +560,26 @@ public class SoapProvisioning extends Provisioning {
     public DistributionList createDistributionList(String listAddress,
             Map<String, Object> listAttrs) throws ServiceException {
         CreateDistributionListRequest req = new CreateDistributionListRequest(
-                listAddress, Attr.mapToList(listAttrs));
+                listAddress, Attr.mapToList(listAttrs), false);
         CreateDistributionListResponse resp = invokeJaxb(req);
         return new SoapDistributionList(resp.getDl(), this);
+    }
+    
+    private Group makeGroup(DistributionListInfo dlInfo) throws ServiceException {
+        if (dlInfo.isDynamic()) {
+            return new SoapDynamicGroup(dlInfo, this);
+        } else {
+            return new SoapDistributionList(dlInfo, this);
+        }
+    }
+    
+    @Override
+    public Group createGroup(String listAddress,
+            Map<String, Object> listAttrs, boolean dynamic) throws ServiceException {
+        CreateDistributionListRequest req = new CreateDistributionListRequest(
+                listAddress, Attr.mapToList(listAttrs), dynamic);
+        CreateDistributionListResponse resp = invokeJaxb(req);
+        return makeGroup(resp.getDl());
     }
 
     @Override
@@ -598,6 +622,11 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public void deleteDistributionList(String zimbraId) throws ServiceException {
+        invokeJaxb(new DeleteDistributionListRequest(zimbraId));
+    }
+    
+    @Override
+    public void deleteGroup(String zimbraId) throws ServiceException {
         invokeJaxb(new DeleteDistributionListRequest(zimbraId));
     }
 
@@ -1084,6 +1113,20 @@ public class SoapProvisioning extends Provisioning {
                 throw e;
         }
     }
+    
+    @Override
+    public Group getGroup(Key.DistributionListBy keyType, String key) throws ServiceException {
+        try {
+            GetDistributionListResponse resp = invokeJaxb(new GetDistributionListRequest(
+                            new DistributionListSelector(toJaxb(keyType), key)));
+            return makeGroup(resp.getDl());
+        } catch (ServiceException e) {
+            if (e.getCode().equals(AccountServiceException.NO_SUCH_DISTRIBUTION_LIST))
+                return null;
+            else
+                throw e;
+        }
+    }
 
     public Domain getDomainInfo(DomainBy keyType, String key)
     throws ServiceException {
@@ -1242,6 +1285,15 @@ public class SoapProvisioning extends Provisioning {
                 (dl == null) ? null : dl.getId(), alias));
         if (dl != null)
             reload(dl);
+    }
+    
+    @Override
+    public void removeAlias(Group group, String alias)
+            throws ServiceException {
+        this.invokeJaxb(new RemoveDistributionListAliasRequest(
+                (group == null) ? null : group.getId(), alias));
+        if (group != null)
+            reload(group);
     }
 
     @Override
@@ -1482,6 +1534,17 @@ public class SoapProvisioning extends Provisioning {
         }
         return result;
     }
+    
+    @Override
+    public List<Group> getAllGroups(Domain domain) throws ServiceException {
+        ArrayList<Group> result = new ArrayList<Group>();
+        GetAllDistributionListsResponse resp =
+                invokeJaxb(new GetAllDistributionListsRequest(getSelector(domain)));
+        for (DistributionListInfo dl : resp.getDls()) {
+            result.add(makeGroup(dl));
+        }
+        return result;
+    }
 
     @Override
     public SearchGalResult autoCompleteGal(Domain d, String query, GalSearchType type, int limit) throws ServiceException {
@@ -1624,12 +1687,27 @@ public class SoapProvisioning extends Provisioning {
                             Arrays.asList(members)));
         reload(list);
     }
+    
+    @Override
+    public void addGroupMembers(Group group, String[] members)
+    throws ServiceException {
+        invokeJaxb(new AddDistributionListMemberRequest(group.getId(),
+                            Arrays.asList(members)));
+        reload(group);
+    }
 
     @Override
     public void removeMembers(DistributionList list, String[] members) throws ServiceException {
         invokeJaxb(new RemoveDistributionListMemberRequest(list.getId(),
                             Arrays.asList(members)));
         reload(list);
+    }
+    
+    @Override
+    public void removeGroupMembers(Group group, String[] members) throws ServiceException {
+        invokeJaxb(new RemoveDistributionListMemberRequest(group.getId(),
+                            Arrays.asList(members)));
+        reload(group);
     }
 
     static void addAttrElementsMailService(Element req, Map<String, ? extends Object> attrs) throws ServiceException {
@@ -2418,4 +2496,6 @@ public class SoapProvisioning extends Provisioning {
         Account acct = prov.get(AccountBy.name, "user1");
         prov.modifyAttrs(acct, acctAttrs);
     }
+
+
 }

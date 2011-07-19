@@ -186,6 +186,30 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
 
     
     /*
+     * dynamic groups
+     */
+    @Override
+    public ZLdapFilter dynamicGroupById(String id) {
+        return new JNDILdapFilter(LegacyLdapFilter.dynamicGroupById(id));
+    }
+    
+    @Override
+    public ZLdapFilter dynamicGroupByName(String name) {
+        return new JNDILdapFilter(LegacyLdapFilter.dynamicGroupByName(name));
+    }
+    
+    /*
+     * groups (distribution list or dynamic groups)
+     */
+    public ZLdapFilter groupById(String id) {
+        return new JNDILdapFilter(LegacyLdapFilter.groupById(id));
+    }
+    
+    public ZLdapFilter groupByName(String name) {
+        return new JNDILdapFilter(LegacyLdapFilter.groupByName(name));
+    }
+    
+    /*
      * domain
      */
     @Override
@@ -227,6 +251,7 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter domainLockedForEagerAutoProvision() {
         return new JNDILdapFilter(LegacyLdapFilter.domainLockedForEagerAutoProvision());
     }
+    
     
     /*
      * global config
