@@ -351,7 +351,6 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         }
 
         AddInviteData aid = null;
-        ItemId msgId = null;
         try {
             if (!csd.mInvite.isCancel()) {
                 // For create/modify requests, we want to first update the local mailbox (organizer's)
@@ -366,7 +365,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 if (!csd.mDontNotifyAttendees) {
                     // All calendar-related emails are sent in sendpartial mode.
                 	try {
-                		msgId = mbox.getMailSender().setSendPartial(true).sendMimeMessage(
+                		mbox.getMailSender().setSendPartial(true).sendMimeMessage(
                             octxt, mbox, csd.mMm, csd.newContacts, csd.uploads, csd.mOrigId, csd.mReplyType, csd.mIdentityId, false);
                 	} catch (MailServiceException e) {
                         if (e.getCode().equals(MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE)) {
@@ -404,7 +403,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                     calItem.checkCancelPermission(octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges(), csd.mInvite);
 
                 if (!csd.mDontNotifyAttendees)
-                    msgId = CalendarMailSender.sendPartial(octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
+                    CalendarMailSender.sendPartial(octxt, mbox, csd.mMm, csd.newContacts, csd.uploads,
                             csd.mOrigId, csd.mReplyType, csd.mIdentityId, false);
                 if (updateOwnAppointment)
                     aid = mbox.addInvite(octxt, csd.mInvite, apptFolderId, pm);
@@ -427,8 +426,6 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 response.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, aid.modSeq);
                 response.addAttribute(MailConstants.A_REVISION, aid.rev);
             }
-            if (msgId != null)
-                response.addUniqueElement(MailConstants.E_MSG).addAttribute(MailConstants.A_ID, ifmt.formatItemId(msgId));
         }
         
         return response;
