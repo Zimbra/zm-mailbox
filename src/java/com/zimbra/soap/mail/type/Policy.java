@@ -15,9 +15,6 @@
 
 package com.zimbra.soap.mail.type;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -28,7 +25,6 @@ import com.google.common.base.Objects;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.Folder.View;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Policy {
@@ -37,14 +33,6 @@ public class Policy {
     public enum Type {
         @XmlEnumValue("user") USER ("user"),
         @XmlEnumValue("system") SYSTEM ("system");
-
-        private static Map<String, View> nameToView = new HashMap<String, View>();
-
-        static {
-            for (View v : View.values()) {
-                nameToView.put(v.toString(), v);
-            }
-        }
 
         private String name;
 
@@ -67,7 +55,7 @@ public class Policy {
             }
         }
     };
-
+    
     @XmlAttribute(name=MailConstants.A_RETENTION_POLICY_TYPE, required=false)
     private Type type;
     
@@ -110,6 +98,17 @@ public class Policy {
         return p;
     }
     
+    public static Policy newSystemPolicy(String name, String lifetime) {
+        return newSystemPolicy(null, name, lifetime);
+    }
+    
+    public static Policy newSystemPolicy(String id, String name, String lifetime) {
+        Policy p = newSystemPolicy(id);
+        p.name = name;
+        p.lifetime = lifetime;
+        return p;
+    }
+    
     public Type getType() {
         return type;
     }
@@ -132,5 +131,17 @@ public class Policy {
             .add("type", type)
             .add("id", id)
             .add("lifetimeString", lifetime).toString();
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || !(o instanceof Policy)) {
+            return false;
+        }
+        Policy other = (Policy) o;
+        return Objects.equal(id, other.id) &&
+            Objects.equal(name, other.name) &&
+            Objects.equal(lifetime, other.lifetime) &&
+            Objects.equal(type, other.type);
     }
 }

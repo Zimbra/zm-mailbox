@@ -266,6 +266,8 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.GetShareNotificationsResponse.class,
             com.zimbra.soap.mail.message.GetSpellDictionariesRequest.class,
             com.zimbra.soap.mail.message.GetSpellDictionariesResponse.class,
+            com.zimbra.soap.mail.message.GetSystemRetentionPolicyRequest.class,
+            com.zimbra.soap.mail.message.GetSystemRetentionPolicyResponse.class,
             com.zimbra.soap.mail.message.GetTagRequest.class,
             com.zimbra.soap.mail.message.GetTagResponse.class,
             com.zimbra.soap.mail.message.GetTaskRequest.class,
@@ -370,6 +372,7 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.WaitSetResponse.class,
             com.zimbra.soap.mail.message.WikiActionRequest.class,
             com.zimbra.soap.mail.message.WikiActionResponse.class,
+            com.zimbra.soap.mail.type.RetentionPolicy.class,
 
             // zimbraAdmin
             com.zimbra.soap.admin.message.AbortHsmRequest.class,
@@ -446,6 +449,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.CreateLDAPEntryResponse.class,
             com.zimbra.soap.admin.message.CreateServerRequest.class,
             com.zimbra.soap.admin.message.CreateServerResponse.class,
+            com.zimbra.soap.admin.message.CreateSystemRetentionPolicyRequest.class,
+            com.zimbra.soap.admin.message.CreateSystemRetentionPolicyResponse.class,
             com.zimbra.soap.admin.message.CreateVolumeRequest.class,
             com.zimbra.soap.admin.message.CreateVolumeResponse.class,
             com.zimbra.soap.admin.message.CreateXMPPComponentRequest.class,
@@ -476,6 +481,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.DeleteMailboxResponse.class,
             com.zimbra.soap.admin.message.DeleteServerRequest.class,
             com.zimbra.soap.admin.message.DeleteServerResponse.class,
+            com.zimbra.soap.admin.message.DeleteSystemRetentionPolicyRequest.class,
+            com.zimbra.soap.admin.message.DeleteSystemRetentionPolicyResponse.class,
             com.zimbra.soap.admin.message.DeleteVolumeRequest.class,
             com.zimbra.soap.admin.message.DeleteVolumeResponse.class,
             com.zimbra.soap.admin.message.DeleteXMPPComponentRequest.class,
@@ -638,6 +645,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetSessionsResponse.class,
             com.zimbra.soap.admin.message.GetShareInfoRequest.class,
             com.zimbra.soap.admin.message.GetShareInfoResponse.class,
+            com.zimbra.soap.admin.message.GetSystemRetentionPolicyRequest.class,
+            com.zimbra.soap.admin.message.GetSystemRetentionPolicyResponse.class,
             com.zimbra.soap.admin.message.GetVersionInfoRequest.class,
             com.zimbra.soap.admin.message.GetVersionInfoResponse.class,
             com.zimbra.soap.admin.message.GetVolumeRequest.class,
@@ -690,6 +699,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.ModifySMIMEConfigResponse.class,
             com.zimbra.soap.admin.message.ModifyServerRequest.class,
             com.zimbra.soap.admin.message.ModifyServerResponse.class,
+            com.zimbra.soap.admin.message.ModifySystemRetentionPolicyRequest.class,
+            com.zimbra.soap.admin.message.ModifySystemRetentionPolicyResponse.class,
             com.zimbra.soap.admin.message.ModifyVolumeRequest.class,
             com.zimbra.soap.admin.message.ModifyVolumeResponse.class,
             com.zimbra.soap.admin.message.ModifyZimletRequest.class,
@@ -1082,7 +1093,7 @@ public final class JaxbUtil {
                 unmarshaller = jaxb.createUnmarshaller();
                 JAXBElement<T> ret =
                     (JAXBElement<T>) unmarshaller.unmarshal(docElem, klass);
-                return (T)ret.getValue();
+                return ret.getValue();
             }
         } catch (JAXBException ex) {
             throw ServiceException.FAILURE("Unable to unmarshal response for " +

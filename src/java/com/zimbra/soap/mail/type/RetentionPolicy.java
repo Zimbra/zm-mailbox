@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -30,6 +31,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 
+@XmlRootElement(name=MailConstants.E_RETENTION_POLICY, namespace=MailConstants.NAMESPACE_STR)
 @XmlAccessorType(XmlAccessType.FIELD)
 public class RetentionPolicy {
     
@@ -79,6 +81,20 @@ public class RetentionPolicy {
         return Collections.unmodifiableList(purge);
     }
     
+    public Policy getPolicyById(String id) {
+        for (Policy p : keep) {
+            if (Objects.equal(p.getId(), id)) {
+                return p;
+            }
+        }
+        for (Policy p : purge) {
+            if (Objects.equal(p.getId(), id)) {
+                return p;
+            }
+        }
+        return null;
+    }
+    
     public boolean isSet() {
         return !(keep.isEmpty() && purge.isEmpty());
     }
@@ -88,5 +104,13 @@ public class RetentionPolicy {
         return Objects.toStringHelper(this)
             .add("keep", keep)
             .add("purge", purge).toString();
+    }
+    
+    public boolean equals(Object o) {
+        if (o == null || !(o instanceof RetentionPolicy)) {
+            return false;
+        }
+        RetentionPolicy other = (RetentionPolicy) o;
+        return keep.equals(other.keep) && purge.equals(other.purge);
     }
 }
