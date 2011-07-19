@@ -70,19 +70,30 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
 
     @Override
     public void exceptionCaught(Throwable e) throws IOException {
-        if (e instanceof NioImapDecoder.TooBigLiteralException) {
-            String tag;
-            try {
-                tag = ImapRequest.parseTag(((NioImapDecoder.TooBigLiteralException) e).getRequest());
-            } catch (ImapParseException e1) {
-                tag = "*";
+        try {
+            if (e instanceof NioImapDecoder.TooBigLiteralException) {
+                String tag;
+                if (request != null) {
+                    tag = request.getTag();
+                } else {
+                    try {
+                        tag = ImapRequest.parseTag(((NioImapDecoder.TooBigLiteralException) e).getRequest());
+                    } catch (ImapParseException e1) {
+                        tag = "*";
+                    }
+                }
+                sendBAD(tag, e.getMessage());
+            } else if (e instanceof RecoverableProtocolDecoderException) {
+                sendBAD("*", e.getMessage());
+            } else if (e instanceof ProtocolDecoderException) {
+                sendBAD("*", e.getMessage());
+                dropConnection(true);
             }
-            sendBAD(tag, e.getMessage());
-        } else if (e instanceof RecoverableProtocolDecoderException) {
-            sendBAD("*", e.getMessage());
-        } else if (e instanceof ProtocolDecoderException) {
-            sendBAD("*", e.getMessage());
-            dropConnection(true);
+        } finally {
+            if (request != null) {
+                request.cleanup();
+                request = null;
+            }
         }
     }
 
