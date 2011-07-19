@@ -362,7 +362,7 @@ public class ZimbraACE {
                     return acct.getName();
                 break;
             case GT_GROUP:
-                DistributionList group = Provisioning.getInstance().getGroup(Key.DistributionListBy.id, mGrantee);
+                DistributionList group = Provisioning.getInstance().getDL(Key.DistributionListBy.id, mGrantee);
                 if (group != null)
                     return group.getName();
                 break;
