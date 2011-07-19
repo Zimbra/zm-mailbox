@@ -139,10 +139,13 @@ public class ZCalendar {
         List<ZProperty> mProperties = new ArrayList<ZProperty>();
         
         public ZVCalendar() { 
+        }
+
+        public void addVersionAndProdId() {
             addProperty(new ZProperty(ICalTok.PRODID, sZimbraProdID));
             addProperty(new ZProperty(ICalTok.VERSION, sIcalVersion));
         }
-        
+
         public void addProperty(ZProperty prop) { mProperties.add(prop); }
         public void addComponent(ZComponent comp) { mComponents.add(comp); }
 
