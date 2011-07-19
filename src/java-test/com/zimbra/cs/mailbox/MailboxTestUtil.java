@@ -33,6 +33,7 @@ import com.zimbra.cs.mime.handler.TextHtmlHandler;
 import com.zimbra.cs.mime.handler.TextPlainHandler;
 import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.soap.mail.type.RetentionPolicy;
 
 public final class MailboxTestUtil {
 

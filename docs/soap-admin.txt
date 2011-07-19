@@ -2534,4 +2534,48 @@ Notes:
 
 -----------------------------
 
-   
+The system retention policy SOAP APIs allow the administrator to edit
+named system retention policies that users can apply to folders and tags.
+
+<GetSystemRetentionPolicyRequest/>
+
+<GetSystemRetentionPolicyResponse>
+  <retentionPolicy xmlns="urn:zimbraMail">
+    <keep>
+      <policy id="{id}" name="{name}" type="system" lifetime="{interval}"/>*
+    </keep>
+    <delete>
+      <policy id="{id}" name="{name}" type="system" lifetime="{interval}"/>*
+    </delete>
+  </retentionPolicy>
+</GetSystemRetentionPolicyResponse>
+
+
+<CreateSystemRetentionPolicyRequest>
+  <keep>
+    <policy name="{name}" lifetime="{interval}" xmlns="urn:zimbraMail"/>
+  </keep> |
+  <delete>
+    <policy name="{name}" lifetime="{interval}" xmlns="urn:zimbraMail"/>
+  </delete>
+</CreateSystemRetentionPolicyRequest>
+
+<CreateSystemRetentionPolicyResponse>
+  <policy id="{id}" name="{name}" type="system" lifetime="{interval}" xmlns="urn:zimbraMail"/>
+</CreateSystemRetentionPolicyResponse>
+
+
+<ModifySystemRetentionPolicyRequest>
+  <policy id="{id}" [name="{name}"] [lifetime="{interval}"] xmlns="urn:zimbraMail"/>
+</ModifySystemRetentionPolicyRequest>
+
+<ModifySystemRetentionPolicyResponse>
+  <policy id="{id}" type="system" name="{name}" lifetime="{interval"} xmlns="urn:zimbraMail"/>
+</ModifySystemRetentionPolicyResponse>
+
+
+<DeleteSystemRetentionPolicyRequest>
+  <policy id="{id}" xmlns="urn:zimbraMail"/>
+</DeleteSystemRetentionPolicyRequest>
+
+<DeleteSystemRetentionPolicyResponse/>

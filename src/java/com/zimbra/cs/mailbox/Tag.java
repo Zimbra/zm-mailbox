@@ -305,7 +305,7 @@ public class Tag extends MailItem {
 
         Metadata rp = meta.getMap(Metadata.FN_RETENTION_POLICY, true);
         if (rp != null) {
-            retentionPolicy = RetentionPolicyManager.retentionPolicyFromMetadata(rp);
+            retentionPolicy = RetentionPolicyManager.retentionPolicyFromMetadata(rp, true);
         } else {
             retentionPolicy = new RetentionPolicy();
         }
@@ -314,7 +314,7 @@ public class Tag extends MailItem {
     @Override Metadata encodeMetadata(Metadata meta) {
         Metadata m = encodeMetadata(meta, mRGBColor, mVersion, deletedUnreadCount);
         if (retentionPolicy.isSet()) {
-            m.put(Metadata.FN_RETENTION_POLICY, RetentionPolicyManager.toMetadata(retentionPolicy));
+            m.put(Metadata.FN_RETENTION_POLICY, RetentionPolicyManager.toMetadata(retentionPolicy, true));
         }
         return m;
     }

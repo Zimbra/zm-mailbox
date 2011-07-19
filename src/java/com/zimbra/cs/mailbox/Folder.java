@@ -1431,7 +1431,7 @@ public class Folder extends MailItem {
         
         Metadata rp = meta.getMap(Metadata.FN_RETENTION_POLICY, true);
         if (rp != null) {
-            retentionPolicy = RetentionPolicyManager.retentionPolicyFromMetadata(rp);
+            retentionPolicy = RetentionPolicyManager.retentionPolicyFromMetadata(rp, true);
         } else {
             retentionPolicy = new RetentionPolicy();
         }
@@ -1443,7 +1443,7 @@ public class Folder extends MailItem {
                 imapUIDNEXT, totalSize, imapMODSEQ, imapRECENT, imapRECENTCutoff, deletedCount,
                 deletedUnreadCount);
         if (retentionPolicy.isSet()) {
-            m.put(Metadata.FN_RETENTION_POLICY, RetentionPolicyManager.toMetadata(retentionPolicy));
+            m.put(Metadata.FN_RETENTION_POLICY, RetentionPolicyManager.toMetadata(retentionPolicy, true));
         }
         return m;
     }

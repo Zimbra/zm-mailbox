@@ -7157,7 +7157,9 @@ public class Mailbox {
             
             // Process any folders that have retention policy set.
             for (Folder folder : getFolderList(octxt, SortBy.NONE)) {
-                for (Policy policy : folder.getRetentionPolicy().getPurgePolicy()) {
+                RetentionPolicy rp =
+                    RetentionPolicyManager.getInstance().getCompleteRetentionPolicy(folder.getRetentionPolicy());
+                for (Policy policy : rp.getPurgePolicy()) {
                     long folderLifetime;
                     
                     try {
@@ -7175,7 +7177,9 @@ public class Mailbox {
             
             // Process any tags that have retention policy set.
             for (Tag tag : getTagList(octxt)) {
-                for (Policy policy : tag.getRetentionPolicy().getPurgePolicy()) {
+                RetentionPolicy rp =
+                    RetentionPolicyManager.getInstance().getCompleteRetentionPolicy(tag.getRetentionPolicy());
+                for (Policy policy : rp.getPurgePolicy()) {
                     long tagLifetime;
                     
                     try {

@@ -18,9 +18,19 @@ import java.util.Arrays;
 
 import junit.framework.TestCase;
 
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZTag;
+import com.zimbra.soap.admin.message.CreateSystemRetentionPolicyRequest;
+import com.zimbra.soap.admin.message.CreateSystemRetentionPolicyResponse;
+import com.zimbra.soap.admin.message.DeleteSystemRetentionPolicyRequest;
+import com.zimbra.soap.admin.message.DeleteSystemRetentionPolicyResponse;
+import com.zimbra.soap.admin.message.GetSystemRetentionPolicyRequest;
+import com.zimbra.soap.admin.message.GetSystemRetentionPolicyResponse;
+import com.zimbra.soap.admin.message.ModifySystemRetentionPolicyRequest;
+import com.zimbra.soap.admin.message.ModifySystemRetentionPolicyResponse;
 import com.zimbra.soap.mail.message.FolderActionRequest;
 import com.zimbra.soap.mail.message.FolderActionResponse;
 import com.zimbra.soap.mail.message.TagActionRequest;
@@ -35,9 +45,12 @@ public class TestPurge extends TestCase {
     private static final String USER_NAME = "user1";
     private static final String NAME_PREFIX = TestPurge.class.getSimpleName();
 
+    private String originalSystemPolicy;
+    
     @Override
     public void setUp() throws Exception {
         cleanUp();
+        originalSystemPolicy = Provisioning.getInstance().getConfig().getMailPurgeSystemPolicy();
     }
 
     /**
@@ -140,9 +153,85 @@ public class TestPurge extends TestCase {
         assertTrue(tag.getRetentionPolicy().isSet());
     }
     
+    public void testSystemRetentionPolicy() throws Exception {
+        SoapProvisioning prov = (SoapProvisioning) Provisioning.getInstance();
+        
+        // Test getting empty system policy.
+        GetSystemRetentionPolicyRequest getReq = new GetSystemRetentionPolicyRequest();
+        GetSystemRetentionPolicyResponse getRes = prov.invokeJaxb(getReq);
+        RetentionPolicy rp = getRes.getRetentionPolicy();
+        assertEquals(0, rp.getKeepPolicy().size());
+        assertEquals(0, rp.getPurgePolicy().size());
+        
+        // Create keep policy.
+        Policy keep = Policy.newSystemPolicy("keep", "60d");
+        CreateSystemRetentionPolicyRequest createReq = CreateSystemRetentionPolicyRequest.newKeepRequest(keep);
+        CreateSystemRetentionPolicyResponse createRes = prov.invokeJaxb(createReq);
+        Policy p = createRes.getPolicy();
+        assertNotNull(p.getId());
+        assertEquals(keep.getName(), p.getName());
+        assertEquals(keep.getLifetime(), p.getLifetime());
+        keep = p;
+        
+        // Create purge policy.
+        Policy purge1 = Policy.newSystemPolicy("purge1", "120d");
+        createReq = CreateSystemRetentionPolicyRequest.newPurgeRequest(purge1);
+        createRes = prov.invokeJaxb(createReq);
+        purge1 = createRes.getPolicy();
+        
+        Policy purge2 = Policy.newSystemPolicy("purge2", "240d");
+        createReq = CreateSystemRetentionPolicyRequest.newPurgeRequest(purge2);
+        createRes = prov.invokeJaxb(createReq);
+        purge2 = createRes.getPolicy();
+        
+        // Test getting updated system policy.
+        getRes = prov.invokeJaxb(getReq);
+        rp = getRes.getRetentionPolicy();
+        assertEquals(1, rp.getKeepPolicy().size());
+        assertEquals(keep, rp.getKeepPolicy().get(0));
+        assertEquals(2, rp.getPurgePolicy().size());
+        assertEquals(purge1, rp.getPolicyById(purge1.getId()));
+        assertEquals(purge2, rp.getPolicyById(purge2.getId()));
+        
+        // Get system policy with the mail API.
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        com.zimbra.soap.mail.message.GetSystemRetentionPolicyResponse mailRes =
+            mbox.invokeJaxb(new com.zimbra.soap.mail.message.GetSystemRetentionPolicyRequest());
+        assertEquals(rp, mailRes.getRetentionPolicy());
+        
+        // Modify lifetime.
+        Policy modLifetime = Policy.newSystemPolicy(purge1.getId(), null, "121d");
+        ModifySystemRetentionPolicyRequest modifyReq = new ModifySystemRetentionPolicyRequest(modLifetime);
+        ModifySystemRetentionPolicyResponse modifyRes = prov.invokeJaxb(modifyReq);
+        Policy newPurge1 = modifyRes.getPolicy();
+        assertEquals(Policy.newSystemPolicy(purge1.getId(), "purge1", "121d"), newPurge1);
+        
+        getRes = prov.invokeJaxb(getReq);
+        assertEquals(newPurge1, getRes.getRetentionPolicy().getPolicyById(newPurge1.getId()));
+        
+        // Modify name.
+        Policy modName = Policy.newSystemPolicy(purge1.getId(), "purge1-new", null);
+        modifyReq = new ModifySystemRetentionPolicyRequest(modName);
+        modifyRes = prov.invokeJaxb(modifyReq);
+        newPurge1 = modifyRes.getPolicy();
+        assertEquals(Policy.newSystemPolicy(purge1.getId(), "purge1-new", "121d"), newPurge1);
+        
+        // Delete.
+        DeleteSystemRetentionPolicyRequest deleteReq = new DeleteSystemRetentionPolicyRequest(purge1);
+        @SuppressWarnings("unused")
+        DeleteSystemRetentionPolicyResponse deleteRes = prov.invokeJaxb(deleteReq);
+        getRes = prov.invokeJaxb(getReq);
+        rp = getRes.getRetentionPolicy();
+        assertEquals(1, rp.getKeepPolicy().size());
+        assertEquals(keep, rp.getKeepPolicy().get(0));
+        assertEquals(1, rp.getPurgePolicy().size());
+        assertEquals(purge2, rp.getPurgePolicy().get(0));
+    }
+    
     @Override
     public void tearDown() throws Exception {
         cleanUp();
+        Provisioning.getInstance().getConfig().setMailPurgeSystemPolicy(originalSystemPolicy);
     }
 
     private void cleanUp() throws Exception {

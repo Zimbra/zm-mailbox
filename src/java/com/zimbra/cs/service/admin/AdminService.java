@@ -252,6 +252,12 @@ public class AdminService implements DocumentService {
 
         // noop
         dispatcher.registerHandler(AdminConstants.NO_OP_REQUEST, new NoOp());
+        
+        // Retention policy
+        dispatcher.registerHandler(AdminConstants.GET_SYSTEM_RETENTION_POLICY_REQUEST, new GetSystemRetentionPolicy());
+        dispatcher.registerHandler(AdminConstants.CREATE_SYSTEM_RETENTION_POLICY_REQUEST, new CreateSystemRetentionPolicy());
+        dispatcher.registerHandler(AdminConstants.MODIFY_SYSTEM_RETENTION_POLICY_REQUEST, new ModifySystemRetentionPolicy());
+        dispatcher.registerHandler(AdminConstants.DELETE_SYSTEM_RETENTION_POLICY_REQUEST, new DeleteSystemRetentionPolicy());
     }
 
     /**

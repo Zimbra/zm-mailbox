@@ -17,6 +17,7 @@ package com.zimbra.cs.mailbox;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -31,13 +32,9 @@ import org.junit.Test;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.Log.Level;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.soap.mail.type.Policy;
@@ -70,6 +67,7 @@ public class PurgeTest {
         
         // Run purge with default settings and make sure nothing was deleted.
         mbox.purgeMessages(null);
+        folder = mbox.getFolderById(null, folder.getId());
         assertEquals(2, folder.getSize());
         
         // Add retention policy.
@@ -521,6 +519,102 @@ public class PurgeTest {
             mbox.setRetentionPolicy(null, folder.getId(), MailItem.Type.FOLDER, purgePolicy);
             fail("Multiple keep policies.");
         } catch (ServiceException e) {
+        }
+    }
+    
+    @Test
+    public void modifySystemPolicy() throws Exception {
+        RetentionPolicyManager mgr = RetentionPolicyManager.getInstance();
+        Policy keep1 = mgr.createSystemKeepPolicy("keep1", "300d");
+        Policy keep2 = mgr.createSystemKeepPolicy("keep2", "400d");
+        Policy purge1 = mgr.createSystemPurgePolicy("purge1", "500d");
+        Policy purge2 = mgr.createSystemPurgePolicy("purge2", "500d");
+        
+        assertEquals(keep1, mgr.getPolicyById(keep1.getId()));
+        assertEquals(keep2, mgr.getPolicyById(keep2.getId()));
+        assertEquals(purge1, mgr.getPolicyById(purge1.getId()));
+        assertEquals(purge2, mgr.getPolicyById(purge2.getId()));
+        
+        // Test modify.
+        mgr.modifySystemPolicy(keep1.getId(), "new keep1", "301d");
+        Policy newKeep1 = mgr.getPolicyById(keep1.getId());
+        assertFalse(keep1.equals(newKeep1));
+        assertEquals(keep1.getId(), newKeep1.getId());
+        assertEquals("new keep1", newKeep1.getName());
+        assertEquals("301d", newKeep1.getLifetime());
+        
+        // Test delete.
+        assertTrue(mgr.deleteSystemPolicy(purge2.getId()));
+        assertNull(mgr.getPolicyById(purge2.getId()));
+        RetentionPolicy rp = mgr.getSystemRetentionPolicy();
+        assertEquals(2, rp.getKeepPolicy().size());
+        assertEquals(1, rp.getPurgePolicy().size());
+    }
+
+    /**
+     * Tests {@link RetentionPolicyManager#getCompleteRetentionPolicy(RetentionPolicy).  Confirms
+     * that system policy elements are updated with the latest values in LDAP.
+     */
+    @Test
+    public void completeRetentionPolicy() throws Exception {
+        RetentionPolicyManager mgr = RetentionPolicyManager.getInstance();
+        Policy keep1 = mgr.createSystemKeepPolicy("keep1", "300d");
+        
+        // Create mailbox policy that references the system policy, and confirm that
+        // lookup returns the latest values.
+        RetentionPolicy mboxRP = new RetentionPolicy(Arrays.asList(Policy.newSystemPolicy(keep1.getId())), null);
+        RetentionPolicy completeRP = mgr.getCompleteRetentionPolicy(mboxRP);
+        Policy latest = completeRP.getKeepPolicy().get(0);
+        assertEquals(keep1, latest);
+        
+        // Modify system policy and confirm that the accessor returns the latest values.
+        mgr.modifySystemPolicy(keep1.getId(), "new keep1", "301d");
+        completeRP = mgr.getCompleteRetentionPolicy(mboxRP);
+        latest = completeRP.getKeepPolicy().get(0);
+        assertFalse(keep1.equals(latest));
+        assertEquals(keep1.getId(), latest.getId());
+        assertEquals("new keep1", latest.getName());
+        assertEquals("301d", latest.getLifetime());
+    }
+    
+    @Test
+    public void purgeWithSystemPolicy() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        
+        // Create folder and test messages.
+        Folder folder = mbox.createFolder(null, "/purgeWithSystemPolicy", (byte) 0, MailItem.Type.MESSAGE);
+        Message older = TestUtil.addMessage(mbox, folder.getId(), "older", System.currentTimeMillis() - (60 * Constants.MILLIS_PER_MINUTE));
+        Message newer = TestUtil.addMessage(mbox, folder.getId(), "newer", System.currentTimeMillis() - (30 * Constants.MILLIS_PER_MINUTE));
+        folder = mbox.getFolderById(null, folder.getId());
+        
+        // Add user and system retention policy.
+        Policy system = RetentionPolicyManager.getInstance().createSystemPurgePolicy("system", "45m");
+        
+        Policy p1 = Policy.newUserPolicy("90m");
+        Policy p2 = Policy.newSystemPolicy(system.getId());
+        RetentionPolicy purgePolicy = new RetentionPolicy(null, Arrays.asList(p1, p2));
+        mbox.setRetentionPolicy(null, folder.getId(), MailItem.Type.FOLDER, purgePolicy);
+        
+        // Run purge and make sure one of the messages was deleted.
+        mbox.purgeMessages(null);
+        folder = mbox.getFolderById(folder.getId());
+        assertEquals(1, folder.getSize());
+        mbox.getMessageById(null, newer.getId());
+        try {
+            mbox.getMessageById(null, older.getId());
+            fail("Older message was not purged.");
+        } catch (NoSuchItemException e) {
+        }
+
+        // Update system policy, rerun purge, and make sure the older message was deleted.
+        RetentionPolicyManager.getInstance().modifySystemPolicy(system.getId(), system.getName(), "20m");
+        mbox.purgeMessages(null);
+        folder = mbox.getFolderById(folder.getId());
+        assertEquals(0, folder.getSize());
+        try {
+            mbox.getMessageById(null, newer.getId());
+            fail("Newer message was not purged.");
+        } catch (NoSuchItemException e) {
         }
     }
     

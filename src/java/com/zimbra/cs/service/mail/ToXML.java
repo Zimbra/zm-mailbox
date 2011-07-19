@@ -174,15 +174,19 @@ public class ToXML {
         return elem;
     }
 
-    public static Element encodeFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Folder folder) {
+    public static Element encodeFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Folder folder)
+    throws ServiceException {
         return encodeFolder(parent, ifmt, octxt, folder, NOTIFY_FIELDS);
     }
 
-    public static Element encodeFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Folder folder, int fields) {
+    public static Element encodeFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Folder folder, int fields)
+    throws ServiceException {
         return encodeFolder(parent, ifmt, octxt, folder, fields, false);
     }
 
-    public static Element encodeFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Folder folder, int fields, boolean exposeAclAccessKey) {
+    public static Element encodeFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
+                                       Folder folder, int fields, boolean exposeAclAccessKey)
+    throws ServiceException {
         if (folder instanceof SearchFolder)
             return encodeSearchFolder(parent, ifmt, (SearchFolder) folder, fields);
         else if (folder instanceof Mountpoint)
@@ -235,7 +239,8 @@ public class ToXML {
                 if (fields != NOTIFY_FIELDS || rp.isSet()) {
                     // Only output retention policy if it's being modified, or if we're returning all
                     // folder data and policy is set.
-                    encodeRetentionPolicy(elem, rp);
+                    encodeRetentionPolicy(elem,
+                        RetentionPolicyManager.getInstance().getCompleteRetentionPolicy(rp));
                 }
             }
         }
@@ -258,9 +263,9 @@ public class ToXML {
             for (Policy p : list) {
                 Element elem = parent.addElement(MailConstants.E_POLICY);
                 elem.addAttribute(MailConstants.A_ID, p.getId());
+                elem.addAttribute(MailConstants.A_NAME, p.getName());
                 elem.addAttribute(MailConstants.A_LIFETIME, p.getLifetime());
-                // TODO: Support system policy
-                elem.addAttribute(MailConstants.A_RETENTION_POLICY_TYPE, "user");
+                elem.addAttribute(MailConstants.A_RETENTION_POLICY_TYPE, p.getType().toString());
             }
         }
     }
@@ -712,11 +717,13 @@ public class ToXML {
         return elem;
     }
 
-    public static Element encodeTag(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Tag tag) {
+    public static Element encodeTag(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Tag tag)
+    throws ServiceException {
         return encodeTag(parent, ifmt, octxt, tag, NOTIFY_FIELDS);
     }
 
-    public static Element encodeTag(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Tag tag, int fields) {
+    public static Element encodeTag(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Tag tag, int fields)
+    throws ServiceException {
         Element elem = parent.addElement(MailConstants.E_TAG);
         elem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(tag));
         if (needToOutput(fields, Change.MODIFIED_NAME))
@@ -748,7 +755,8 @@ public class ToXML {
                 if (fields != NOTIFY_FIELDS || rp.isSet()) {
                     // Only output retention policy if it's being modified, or if we're returning all
                     // folder data and policy is set.
-                    encodeRetentionPolicy(elem, rp);
+                    encodeRetentionPolicy(elem,
+                        RetentionPolicyManager.getInstance().getCompleteRetentionPolicy(rp));
                 }
             }
         }

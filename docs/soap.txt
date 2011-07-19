@@ -1259,6 +1259,9 @@ Retention policy:
     </purge>
   </retentionPolicy>
 
+When applying system retention policy to a folder or tag, only the type and id
+attributes are requited.
+
 Mountpoints:
 
   <link id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] owner="{owner's-display-name}" zid="{owner's-zimbra-id}"
@@ -3712,5 +3715,20 @@ added to Documents only.
 </GetShareNotificationsResponse>
 
     perm = combination of r (read) w (write) i (insert) d (delete) x (action) a (admin)
+
+-----------------------------
+
+<GetSystemRetentionPolicyRequest/>
+
+<GetSystemRetentionPolicyResponse>
+  <retentionPolicy>
+    <keep>
+      <policy id="{id}" name="{name}" type="system" lifetime="{interval}"/>*
+    </keep>
+    <purge>
+      <policy id="{id}" name="{name}" type="system" lifetime="{interval}"/>*
+    </purge>
+  </retentionPolicy>
+</GetSystemRetentionPolicyResponse>
 
 -----------------------------

@@ -17,28 +17,211 @@ package com.zimbra.cs.mailbox;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.DateUtil;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.mail.type.Policy;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 
 public class RetentionPolicyManager {
     
-    public static String FN_KEEP = "keep";
-    public static String FN_PURGE = "purge";
-    public static String FN_ID = "id";
-    public static String FN_LIFETIME = "lifetime";
+    private static String FN_KEEP = "keep";
+    private static String FN_PURGE = "purge";
+    private static String FN_ID = "id";
+    private static String FN_NAME = "name";
+    private static String FN_LIFETIME = "lifetime";
     
-    public static Metadata toMetadata(RetentionPolicy rp) {
+    private class SystemPolicy {
+        Map<String, Policy> keep = Maps.newHashMap();
+        Map<String, Policy> purge = Maps.newHashMap();
+    }
+    
+    private static RetentionPolicyManager instance = new RetentionPolicyManager();
+    private static String SYSTEM_POLICY_KEY =
+        RetentionPolicyManager.class.getSimpleName() + ".SYSTEM_POLICY";
+
+    public static RetentionPolicyManager getInstance() {
+        return instance;
+    }
+    
+    private SystemPolicy getCachedSystemPolicy()
+    throws ServiceException {
+        Config config = Provisioning.getInstance().getConfig();
+        SystemPolicy sp = (SystemPolicy) config.getCachedData(SYSTEM_POLICY_KEY);
+        if (sp == null) {
+            String val = config.getMailPurgeSystemPolicy();
+            sp = new SystemPolicy();
+            if (!Strings.isNullOrEmpty(val)) {
+                Metadata m = new Metadata(val);
+                RetentionPolicy rp = retentionPolicyFromMetadata(m, false);
+                for (Policy p : rp.getKeepPolicy()) {
+                    assert(p.getId() != null);
+                    sp.keep.put(p.getId(), p);
+                }
+                for (Policy p : rp.getPurgePolicy()) {
+                    assert(p.getId() != null);
+                    sp.purge.put(p.getId(), p);
+                }
+            }
+            config.setCachedData(SYSTEM_POLICY_KEY, sp);
+        }
+        return sp;
+    }
+    
+    public synchronized Policy createSystemKeepPolicy(String name, String lifetime)
+    throws ServiceException {
+        validateLifetime(lifetime);
+        Policy p = Policy.newSystemPolicy(generateId(), name, lifetime);
+        SystemPolicy sp = getCachedSystemPolicy();
+        sp.keep.put(p.getId(), p);
+        saveSystemPolicy(new RetentionPolicy(sp.keep.values(), sp.purge.values()));
+        return p;
+    }
+    
+    public synchronized Policy createSystemPurgePolicy(String name, String lifetime)
+    throws ServiceException {
+        validateLifetime(lifetime);
+        Policy p = Policy.newSystemPolicy(generateId(), name, lifetime);
+        SystemPolicy sp = getCachedSystemPolicy();
+        sp.purge.put(p.getId(), p);
+        saveSystemPolicy(new RetentionPolicy(sp.keep.values(), sp.purge.values()));
+        return p;
+    }
+    
+    private static void validateLifetime(String lifetime)
+    throws ServiceException {
+        if (Strings.isNullOrEmpty(lifetime)) {
+            throw ServiceException.INVALID_REQUEST("lifetime not specified", null);
+        }
+        long l = DateUtil.getTimeInterval(lifetime, -1);
+        if (l == -1) {
+            throw ServiceException.INVALID_REQUEST("Invalid lifetime value: " + lifetime, null);
+        }
+    }
+    
+    /**
+     * Updates the properties of the system policy with the given id.
+     * @return {@code null} if a {@code Policy} with the given id could not be found
+     */
+    public synchronized Policy modifySystemPolicy(String id, String name, String lifetime)
+    throws ServiceException {
+        validateLifetime(lifetime);
+        SystemPolicy sp = getCachedSystemPolicy();
+        if (sp.keep.containsKey(id)) {
+            Policy p = Policy.newSystemPolicy(id, name, lifetime);
+            sp.keep.put(id, p);
+            saveSystemPolicy(new RetentionPolicy(sp.keep.values(), sp.purge.values()));
+            return p;
+        }
+        
+        if (sp.purge.containsKey(id)) {
+            Policy p = Policy.newSystemPolicy(id, name, lifetime);
+            sp.purge.put(id, p);
+            saveSystemPolicy(new RetentionPolicy(sp.keep.values(), sp.purge.values()));
+            return p;
+        }
+        return null;
+    }
+    
+    /**
+     * Deletes the system policy with the given id.
+     * @return {@code true} if the policy was successfully deleted, {@code false}
+     * if no policy exists with the given id
+     */
+    public synchronized boolean deleteSystemPolicy(String id)
+    throws ServiceException {
+        SystemPolicy sp = getCachedSystemPolicy();
+        Policy p = sp.keep.remove(id);
+        if (p == null) {
+            p = sp.purge.remove(id);
+        }
+        if (p != null) {
+            saveSystemPolicy(new RetentionPolicy(sp.keep.values(), sp.purge.values()));
+            return true;
+        }
+        return false;
+    }
+    
+    private void saveSystemPolicy(RetentionPolicy rp)
+    throws ServiceException {
+        Metadata m = toMetadata(rp, false);
+        Provisioning.getInstance().getConfig().setMailPurgeSystemPolicy(m.toString());
+    }
+    
+    private String generateId() {
+        return UUID.randomUUID().toString();
+    }
+    
+    public synchronized RetentionPolicy getSystemRetentionPolicy()
+    throws ServiceException {
+        SystemPolicy sp = getCachedSystemPolicy();
+        return new RetentionPolicy(sp.keep.values(), sp.purge.values());
+    }
+
+    /**
+     * Returns a new {@code RetentionPolicy} that has the latest system policy
+     * data for any elements in {@code rp} of type {@link Policy.Type#SYSTEM}.
+     */
+    public synchronized RetentionPolicy getCompleteRetentionPolicy(RetentionPolicy rp)
+    throws ServiceException {
+        return new RetentionPolicy(
+            getLatestList(rp.getKeepPolicy()), getLatestList(rp.getPurgePolicy()));
+    }
+
+    private List<Policy> getLatestList(Iterable<Policy> list)
+    throws ServiceException {
+        List<Policy> latestList = Lists.newArrayList();
+        for (Policy policy : list) {
+            if (policy.getType() == Policy.Type.USER) {
+                latestList.add(policy);
+            } else {
+                Policy latest = getPolicyById(policy.getId());
+                if (latest != null) {
+                    latestList.add(latest);
+                }
+            }
+        }
+        return latestList;
+    }
+    
+    public synchronized Policy getPolicyById(String id)
+    throws ServiceException {
+        SystemPolicy sp = getCachedSystemPolicy();
+        Policy p = sp.keep.get(id);
+        if (p != null) {
+            return p;
+        }
+        p = sp.purge.get(id);
+        if (p != null) {
+            return p;
+        }
+        return null;
+    }
+
+    /**
+     * Persists retention policy to {@code Metadata}. 
+     * @param rp retention policy data
+     * @param forMailbox {@code true} if this is mailbox retention policy,
+     *     {@code false} if this is system retention policy.  For mailbox
+     *     policy, only the id is persisted.
+     * @return
+     */
+    public static Metadata toMetadata(RetentionPolicy rp, boolean forMailbox) {
         MetadataList keep = new MetadataList();
         MetadataList purge = new MetadataList();
         
         for (Policy p : rp.getKeepPolicy()) {
-            keep.add(toMetadata(p));
+            keep.add(toMetadata(p, forMailbox));
         }
         for (Policy p : rp.getPurgePolicy()) {
-            purge.add(toMetadata(p));
+            purge.add(toMetadata(p, forMailbox));
         }
         
         Metadata m = new Metadata();
@@ -47,14 +230,29 @@ public class RetentionPolicyManager {
         return m;
     }
     
-    public static Metadata toMetadata(Policy p) {
+    /**
+     * Persists retention policy to {@code Metadata}. 
+     * @param rp retention policy data
+     * @param forMailbox {@code true} if this is mailbox retention policy,
+     *     {@code false} if this is system retention policy.  For mailbox
+     *     policy, only the id is persisted.
+     * @return
+     */
+    public static Metadata toMetadata(Policy p, boolean forMailbox) {
         Metadata m = new Metadata();
-        m.put(FN_ID, p.getId());
-        m.put(FN_LIFETIME, p.getLifetime());
+        if (p.getType() == Policy.Type.USER) {
+            m.put(FN_LIFETIME, p.getLifetime());
+        } else {
+            m.put(FN_ID, p.getId());
+            if (!forMailbox) {
+                m.put(FN_NAME, p.getName());
+                m.put(FN_LIFETIME, p.getLifetime());
+            }
+        }
         return m;
     }
 
-    public static RetentionPolicy retentionPolicyFromMetadata(Metadata m)
+    public static RetentionPolicy retentionPolicyFromMetadata(Metadata m, boolean forMailbox)
     throws ServiceException {
         if (m == null) {
             return new RetentionPolicy();
@@ -65,32 +263,39 @@ public class RetentionPolicyManager {
 
         MetadataList keepMeta = m.getList(FN_KEEP, true);
         if (keepMeta != null) {
-            keep = policyListFromMetadata(keepMeta); 
+            keep = policyListFromMetadata(keepMeta, forMailbox); 
         }
         MetadataList purgeMeta = m.getList(FN_PURGE, true);
         if (purgeMeta != null) {
-            purge = policyListFromMetadata(purgeMeta);
+            purge = policyListFromMetadata(purgeMeta, forMailbox);
         }
 
         return new RetentionPolicy(keep, purge);
     }
     
-    private static List<Policy> policyListFromMetadata(MetadataList ml)
+    private static List<Policy> policyListFromMetadata(MetadataList ml, boolean forMailbox)
     throws ServiceException {
         List<Policy> policyList = Lists.newArrayList();
         if (ml != null) {
             for (int i = 0; i < ml.size(); i++) {
-                policyList.add(policyFromMetadata(ml.getMap(i)));
+                Policy policy = policyFromMetadata(ml.getMap(i), forMailbox);
+                if (policy != null) {
+                    policyList.add(policy);
+                }
             }
         }
         return policyList;
     }
     
-    private static Policy policyFromMetadata(Metadata m)
+    private static Policy policyFromMetadata(Metadata m, boolean forMailbox)
     throws ServiceException {
         String id = m.get(FN_ID, null);
         if (id != null) {
-            return Policy.newSystemPolicy(id);
+            if (forMailbox) {
+                return Policy.newSystemPolicy(id);
+            } else {
+                return Policy.newSystemPolicy(id, m.get(FN_NAME), m.get(FN_LIFETIME));
+            }
         } else {
             return Policy.newUserPolicy(m.get(FN_LIFETIME));
         }
