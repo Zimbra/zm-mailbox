@@ -31,6 +31,8 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
+import com.zimbra.common.account.ZAttrProvisioning.AutoProvMode;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -45,8 +47,6 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AutoProvPrincipalBy;
 import com.zimbra.cs.account.Provisioning.DirectoryEntryVisitor;
 import com.zimbra.cs.account.Provisioning.EagerAutoProvisionScheduler;
-import com.zimbra.cs.account.ZAttrProvisioning.AutoProvAuthMech;
-import com.zimbra.cs.account.ZAttrProvisioning.AutoProvMode;
 import com.zimbra.cs.account.ldap.AutoProvisionEager;
 import com.zimbra.cs.account.ldap.AutoProvisionListener;
 import com.zimbra.cs.account.ldap.LdapProv;

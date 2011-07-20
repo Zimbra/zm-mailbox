@@ -38,8 +38,8 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.CalendarResourceBy;
 import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.account.ZAttrProvisioning.CalResType;
 import com.zimbra.cs.account.soap.SoapProvisioning;
-import com.zimbra.cs.account.ZAttrProvisioning.CalResType;
 
 
 public class TestSearchCalendarResources {

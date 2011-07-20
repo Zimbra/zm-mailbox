@@ -16,7 +16,7 @@ package com.zimbra.cs.servlet;
 
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.ZAttrProvisioning;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.soap.AdminConstants;

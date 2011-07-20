@@ -20,14 +20,14 @@ import java.util.Set;
 
 import javax.security.auth.login.LoginException;
 
+import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
+import com.zimbra.common.account.ZAttrProvisioning.AutoProvMode;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
-import com.zimbra.cs.account.ZAttrProvisioning.AutoProvAuthMech;
-import com.zimbra.cs.account.ZAttrProvisioning.AutoProvMode;
 import com.zimbra.cs.account.krb5.Krb5Login;
 
 class AutoProvisionLazy extends AutoProvision {

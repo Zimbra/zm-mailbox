@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.account.ZAttrProvisioning.AutoProvMode;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -30,7 +31,6 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.EagerAutoProvisionScheduler;
-import com.zimbra.cs.account.ZAttrProvisioning.AutoProvMode;
 import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapClient;

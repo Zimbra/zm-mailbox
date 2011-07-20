@@ -20,17 +20,17 @@
  */
 package com.zimbra.cs.account;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.zimbra.common.account.ZAttrProvisioning.DomainStatus;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning.GalSearchType;
 import com.zimbra.cs.account.Provisioning.GalMode;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
-import com.zimbra.cs.account.ZAttrProvisioning.DomainStatus;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author schemers

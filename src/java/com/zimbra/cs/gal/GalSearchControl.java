@@ -21,6 +21,7 @@ import java.util.List;
 
 import com.google.common.base.Strings;
 import com.google.common.io.Closeables;
+import com.zimbra.common.account.ZAttrProvisioning.GalMode;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.AccountConstants;
@@ -41,7 +42,6 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.GalSearchType;
-import com.zimbra.cs.account.ZAttrProvisioning.GalMode;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.db.DbDataSource;

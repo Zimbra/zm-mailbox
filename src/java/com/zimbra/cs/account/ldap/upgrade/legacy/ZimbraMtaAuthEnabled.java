@@ -22,6 +22,7 @@ import java.util.Set;
 
 import javax.naming.NamingException;
 
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AttributeCardinality;
 import com.zimbra.cs.account.AttributeClass;
@@ -31,7 +32,6 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.ZAttrProvisioning;
 import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.util.BuildInfo;
 

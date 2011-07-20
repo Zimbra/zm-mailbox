@@ -21,7 +21,7 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.Key.DomainBy;
-import com.zimbra.cs.account.ZAttrProvisioning.GalMode;
+import com.zimbra.common.account.ZAttrProvisioning.GalMode;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.service.mail.CalendarUtils;

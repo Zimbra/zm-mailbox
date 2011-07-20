@@ -22,11 +22,11 @@ import org.junit.*;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DistributionListBy;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.ZAttrProvisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 
 import static org.junit.Assert.*;

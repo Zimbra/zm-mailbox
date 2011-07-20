@@ -43,10 +43,10 @@ public abstract class AccessManager {
                 Config config = Provisioning.getInstance().getConfig();
                 String accessManager = config.getAttr(Provisioning.A_zimbraAdminAccessControlMech);
                 if (accessManager != null) {
-                    ZAttrProvisioning.AdminAccessControlMech am = ZAttrProvisioning.AdminAccessControlMech.fromString(accessManager);
-                    if (am == ZAttrProvisioning.AdminAccessControlMech.acl)
+                    Provisioning.AdminAccessControlMech am = Provisioning.AdminAccessControlMech.fromString(accessManager);
+                    if (am == Provisioning.AdminAccessControlMech.acl)
                         sManager = new com.zimbra.cs.account.accesscontrol.ACLAccessManager();
-                    else if (am == ZAttrProvisioning.AdminAccessControlMech.global)
+                    else if (am == Provisioning.AdminAccessControlMech.global)
                         sManager = new com.zimbra.cs.account.accesscontrol.GlobalAccessManager();
                 }
             } catch (ServiceException e) {

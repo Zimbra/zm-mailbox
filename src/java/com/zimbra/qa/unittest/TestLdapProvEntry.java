@@ -28,6 +28,7 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeClass;
@@ -36,7 +37,6 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.EntryCacheDataKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.ZAttrProvisioning;
 import com.zimbra.cs.account.ldap.LdapObjectClass;
 import com.zimbra.cs.ldap.LdapConstants;
 

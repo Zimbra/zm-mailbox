@@ -23,7 +23,7 @@ import junit.framework.TestCase;
 
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.mime.shim.JavaMailMimeMessage;
-import com.zimbra.cs.account.ZAttrProvisioning;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailclient.smtp.SmtpConfig;
 import com.zimbra.cs.mailclient.smtp.SmtpConnection;
 import com.zimbra.cs.util.JMSession;
@@ -41,8 +41,8 @@ public class TestSmtpClient extends TestCase {
     private int mPort;
 
     public TestSmtpClient() throws Exception {
-        mHost = TestUtil.getServerAttr(ZAttrProvisioning.A_zimbraSmtpHostname);
-        mPort = Integer.parseInt(TestUtil.getServerAttr(ZAttrProvisioning.A_zimbraSmtpPort));
+        mHost = TestUtil.getServerAttr(Provisioning.A_zimbraSmtpHostname);
+        mPort = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraSmtpPort));
     }
 
     @Override

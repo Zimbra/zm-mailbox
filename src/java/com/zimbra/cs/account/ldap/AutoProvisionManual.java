@@ -16,13 +16,13 @@ package com.zimbra.cs.account.ldap;
 
 import java.util.Set;
 
+import com.zimbra.common.account.ZAttrProvisioning.AutoProvMode;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AutoProvPrincipalBy;
-import com.zimbra.cs.account.ZAttrProvisioning.AutoProvMode;
 import com.zimbra.cs.ldap.ZAttributes;
 
 public class AutoProvisionManual extends AutoProvision {
