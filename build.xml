@@ -386,7 +386,7 @@
        <java classname="com.zimbra.cs.account.AttributeManagerUtil" fork="true" classpathref="class.path"
               failonerror="true">
           <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-          <arg line="-a generateProvisioning -i ${config.dir}/attrs -r ${src.java.dir}/com/zimbra/cs/account/ZAttrProvisioning.java"/>
+          <arg line="-a generateProvisioning -i ${config.dir}/attrs -r ${common.src.java.dir}/com/zimbra/common/account/ZAttrProvisioning.java"/>
         </java>
     </target>
 
