@@ -16,10 +16,10 @@ package com.zimbra.cs.zclient;
 
 import org.json.JSONException;
 
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.SystemUtil;
-import com.zimbra.cs.account.DataSource.Type;
 import com.zimbra.soap.type.CalDataSource;
 import com.zimbra.soap.type.DataSources;
 
@@ -46,8 +46,8 @@ public class ZCalDataSource implements ZDataSource, ToZJSONObject {
         return data.getName();
     }
 
-    public Type getType() {
-        return Type.cal;
+    public DataSourceType getType() {
+        return DataSourceType.cal;
     }
     
     public String getFolderId() {

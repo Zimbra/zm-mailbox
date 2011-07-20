@@ -15,7 +15,6 @@
 package com.zimbra.qa.unittest;
 
 import org.junit.*;
-import org.junit.Test;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZDataSource;
 import com.zimbra.cs.zclient.ZFolder;
@@ -28,6 +27,7 @@ import com.zimbra.cs.mailclient.MailConfig;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.soap.type.DataSource.ConnectionType;
 
 import java.io.IOException;
 import java.util.List;
@@ -102,9 +102,9 @@ public class TestImapSync {
     }
 
     private ZDataSource createDataSource() throws Exception {
-        DataSource.ConnectionType ctype =
+        ConnectionType ctype =
             config.getSecurity() == MailConfig.Security.SSL ?
-                DataSource.ConnectionType.ssl : DataSource.ConnectionType.cleartext;
+                ConnectionType.ssl : ConnectionType.cleartext;
         String id = localMailbox.createDataSource(
             new ZImapDataSource(
                 "TestImapSync", true, config.getHost(), config.getPort(),

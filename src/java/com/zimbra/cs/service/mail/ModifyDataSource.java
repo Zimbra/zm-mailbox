@@ -21,6 +21,7 @@ import java.util.Map;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DataSourceBy;
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -51,7 +52,7 @@ public class ModifyDataSource extends MailDocumentHandler {
         //boolean wipeOutOldData = false;
         
         Element eDataSource = CreateDataSource.getDataSourceElement(request);
-        DataSource.Type type = DataSource.Type.fromString(eDataSource.getName());
+        DataSourceType type = DataSourceType.fromString(eDataSource.getName());
         
         String id = eDataSource.getAttribute(MailConstants.A_ID);
         DataSource ds = prov.get(account, Key.DataSourceBy.id, id);
@@ -97,7 +98,7 @@ public class ModifyDataSource extends MailDocumentHandler {
 
         value = eDataSource.getAttribute(MailConstants.A_DS_LEAVE_ON_SERVER, null);
         if (value != null) {
-            if (type != DataSource.Type.pop3) {
+            if (type != DataSourceType.pop3) {
                 String msg = String.format("%s only allowed for %s data sources",
                     MailConstants.A_DS_LEAVE_ON_SERVER, MailConstants.E_DS_POP3);
                 throw ServiceException.INVALID_REQUEST(msg, null);

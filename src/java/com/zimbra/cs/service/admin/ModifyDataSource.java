@@ -29,6 +29,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DataSourceBy;
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.datasource.DataSourceManager;
@@ -68,7 +69,7 @@ public class ModifyDataSource extends AdminDocumentHandler {
         if (ds == null)
             throw ServiceException.INVALID_REQUEST("Cannot find data source with id=" + dsId, null);
         
-        DataSource.Type type = ds.getType();
+        DataSourceType type = ds.getType();
         
         // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager 
         if (isDomainAdminOnly(zsc)) {
@@ -86,14 +87,14 @@ public class ModifyDataSource extends AdminDocumentHandler {
         return response;
     }
     
-    static AttributeClass getAttributeClassFromType(DataSource.Type type) {
-        if (type == DataSource.Type.pop3)
+    static AttributeClass getAttributeClassFromType(DataSourceType type) {
+        if (type == DataSourceType.pop3)
             return AttributeClass.pop3DataSource;
-        else if (type == DataSource.Type.imap)
+        else if (type == DataSourceType.imap)
             return AttributeClass.imapDataSource;
-        else if (type == DataSource.Type.rss)
+        else if (type == DataSourceType.rss)
             return AttributeClass.rssDataSource;
-        else if (type == DataSource.Type.gal)
+        else if (type == DataSourceType.gal)
             return AttributeClass.galDataSource;
         else
             return AttributeClass.dataSource;

@@ -16,6 +16,7 @@ package com.zimbra.cs.service.mail;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DataSourceBy;
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -48,7 +49,7 @@ public class TestDataSource extends MailDocumentHandler {
         
         // Parse request
         Element eDataSource = CreateDataSource.getDataSourceElement(request);
-        DataSource.Type type = DataSource.Type.fromString(eDataSource.getName());
+        DataSourceType type = DataSourceType.fromString(eDataSource.getName());
 
         String id = eDataSource.getAttribute(MailConstants.A_ID, null);
         String password = null;

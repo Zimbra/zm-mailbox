@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -50,7 +51,7 @@ public class CreateDataSource extends MailDocumentHandler {
         
         // Create the data source
         Element eDataSource = getDataSourceElement(request);
-        DataSource.Type type = DataSource.Type.fromString(eDataSource.getName());
+        DataSourceType type = DataSourceType.fromString(eDataSource.getName());
         Map<String, Object> dsAttrs = new HashMap<String, Object>();
 
         // Common attributes
@@ -90,7 +91,7 @@ public class CreateDataSource extends MailDocumentHandler {
         ModifyDataSource.processCommonOptionalAttrs(dsAttrs, eDataSource);
         
         // POP3-specific attributes
-        if (type == DataSource.Type.pop3) {
+        if (type == DataSourceType.pop3) {
             dsAttrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer,
                 LdapUtilCommon.getLdapBooleanString(eDataSource.getAttributeBool(MailConstants.A_DS_LEAVE_ON_SERVER, true)));
         }

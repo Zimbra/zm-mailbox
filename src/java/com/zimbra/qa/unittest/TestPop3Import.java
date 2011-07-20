@@ -33,6 +33,7 @@ import org.testng.annotations.Test;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DataSourceBy;
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -306,7 +307,7 @@ public class TestPop3Import extends TestCase {
         attrs.put(Provisioning.A_zimbraDataSourceFolderId, Integer.toString(Mailbox.ID_FOLDER_INBOX));
         attrs.put(Provisioning.A_zimbraDataSourceConnectionType, "cleartext");
         attrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, Provisioning.FALSE);
-        prov.createDataSource(account, DataSource.Type.pop3, DATA_SOURCE_NAME, attrs);
+        prov.createDataSource(account, DataSourceType.pop3, DATA_SOURCE_NAME, attrs);
     }
     
     private DataSource getDataSource() throws Exception {

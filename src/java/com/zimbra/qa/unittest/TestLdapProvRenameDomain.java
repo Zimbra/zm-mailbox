@@ -31,6 +31,7 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 import com.zimbra.common.account.Key;
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.CliUtil;
@@ -426,7 +427,7 @@ public class TestLdapProvRenameDomain extends TestLdap {
             attrs.put(Provisioning.A_zimbraPrefReplyToDisplay, "Micky");
             if (i < NUM_SIGNATURES)
                 attrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, sigIds[i]);
-            DataSource entry = mProv.createDataSource(acct, DataSource.Type.pop3, DATASOURCE_NAME(acct, i), attrs);
+            DataSource entry = mProv.createDataSource(acct, DataSourceType.pop3, DATASOURCE_NAME(acct, i), attrs);
         }
     }
     

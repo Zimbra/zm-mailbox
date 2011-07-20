@@ -26,6 +26,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
@@ -94,7 +95,7 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
                     Account acct = prov.getAccountById(acctId);
                     if (acct != null) {
                         for (DataSource ds : prov.getAllDataSources(acct)) {
-                            if (!ds.getType().equals(DataSource.Type.gal))
+                            if (!ds.getType().equals(DataSourceType.gal))
                                 continue;
                             if (ds.getAttr(Provisioning.A_zimbraGalType).compareTo("zimbra") == 0)
                                 throw AccountServiceException.ACCOUNT_EXISTS(acct.getName());
@@ -160,7 +161,7 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
                 attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapConstants.LDAP_TRUE);
             if (!attrs.containsKey(Provisioning.A_zimbraGalStatus))
                 attrs.put(Provisioning.A_zimbraGalStatus, "enabled");
-            prov.createDataSource(account, DataSource.Type.gal, name, attrs);
+            prov.createDataSource(account, DataSourceType.gal, name, attrs);
         } catch (ServiceException e) {
             ZimbraLog.gal.error("error creating datasource for GalSyncAccount", e);
             throw e;

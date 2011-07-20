@@ -36,6 +36,7 @@ import java.util.regex.PatternSyntaxException;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -48,45 +49,13 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.AccessManager;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountCache;
-import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.DomainCache.GetFromDomainCacheOption;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.Provisioning.AutoProvPrincipalBy;
 import com.zimbra.cs.account.Provisioning.DirectoryEntryVisitor;
 import com.zimbra.cs.account.Provisioning.EagerAutoProvisionScheduler;
-import com.zimbra.cs.account.Alias;
-import com.zimbra.cs.account.AttributeClass;
-import com.zimbra.cs.account.AttributeManager;
-import com.zimbra.cs.account.CalendarResource;
-import com.zimbra.cs.account.Config;
-import com.zimbra.cs.account.Cos;
-import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.account.DistributionList;
-import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.DomainCache;
-import com.zimbra.cs.account.DynamicGroup;
-import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.EntryCacheDataKey;
-import com.zimbra.cs.account.EntrySearchFilter;
-import com.zimbra.cs.account.GalContact;
-import com.zimbra.cs.account.GlobalGrant;
-import com.zimbra.cs.account.Group;
-import com.zimbra.cs.account.GroupedEntry;
-import com.zimbra.cs.account.GuestAccount;
-import com.zimbra.cs.account.IDNUtil;
-import com.zimbra.cs.account.Identity;
-import com.zimbra.cs.account.NamedEntry;
-import com.zimbra.cs.account.NamedEntryCache;
-import com.zimbra.cs.account.PreAuthKey;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Signature;
-import com.zimbra.cs.account.XMPPComponent;
-import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.PermissionCache;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -6372,22 +6341,22 @@ public class LdapProvisioning extends LdapProv {
 
 
     @Override
-    public DataSource createDataSource(Account account, DataSource.Type dsType, String dsName, Map<String, Object> dataSourceAttrs) throws ServiceException {
+    public DataSource createDataSource(Account account, DataSourceType dsType, String dsName, Map<String, Object> dataSourceAttrs) throws ServiceException {
         return createDataSource(account, dsType, dsName, dataSourceAttrs, false);
     }
 
     @Override
-    public DataSource createDataSource(Account account, DataSource.Type type, String dataSourceName, Map<String, Object> attrs,
+    public DataSource createDataSource(Account account, DataSourceType type, String dataSourceName, Map<String, Object> attrs,
             boolean passwdAlreadyEncrypted) throws ServiceException {
         return createDataSource(account, type, dataSourceName, attrs, passwdAlreadyEncrypted, false);
     }
 
     @Override
-    public DataSource restoreDataSource(Account account, DataSource.Type dsType, String dsName, Map<String, Object> dataSourceAttrs) throws ServiceException {
+    public DataSource restoreDataSource(Account account, DataSourceType dsType, String dsName, Map<String, Object> dataSourceAttrs) throws ServiceException {
         return createDataSource(account, dsType, dsName, dataSourceAttrs, true, true);
     }
 
-    private DataSource createDataSource(Account account, DataSource.Type dsType, String dsName, Map<String, Object> dataSourceAttrs,
+    private DataSource createDataSource(Account account, DataSourceType dsType, String dsName, Map<String, Object> dataSourceAttrs,
             boolean passwdAlreadyEncrypted, boolean restoring) throws ServiceException {
         removeAttrIgnoreCase("objectclass", dataSourceAttrs);
         LdapEntry ldapEntry = (LdapEntry) (account instanceof LdapEntry ? account : getAccountById(account.getId()));

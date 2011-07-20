@@ -26,6 +26,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -36,7 +37,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.account.DataSource.ConnectionType;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.datasource.DataSourceManager;
@@ -51,6 +51,7 @@ import com.zimbra.cs.zclient.ZImapDataSource;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZRssDataSource;
+import com.zimbra.soap.type.DataSource.ConnectionType;
 
 public class TestDataSource extends TestCase {
 
@@ -106,8 +107,8 @@ public class TestDataSource extends TestCase {
         attrs.put(Provisioning.A_zimbraDataSourceUsername, "testuser");
         attrs.put(Provisioning.A_zimbraDataSourcePassword, "testpass");
         attrs.put(Provisioning.A_zimbraDataSourceFolderId, "1");
-        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, DataSource.ConnectionType.cleartext.toString());
-        DataSource ds = prov.createDataSource(account, DataSource.Type.pop3, NAME_PREFIX + " testPollingInterval", attrs);
+        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, ConnectionType.cleartext.toString());
+        DataSource ds = prov.createDataSource(account, DataSourceType.pop3, NAME_PREFIX + " testPollingInterval", attrs);
         
         // Valid polling interval
         assertNotNull("Min not defined", account.getAttr(Provisioning.A_zimbraDataSourceMinPollingInterval));
@@ -146,9 +147,9 @@ public class TestDataSource extends TestCase {
         attrs.put(Provisioning.A_zimbraDataSourceUsername, "user2");
         attrs.put(Provisioning.A_zimbraDataSourcePassword, TestUtil.DEFAULT_PASSWORD);
         attrs.put(Provisioning.A_zimbraDataSourceFolderId, Integer.toString(Mailbox.ID_FOLDER_INBOX));
-        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, DataSource.ConnectionType.cleartext.toString());
+        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, ConnectionType.cleartext.toString());
         attrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, LdapConstants.LDAP_TRUE);
-        DataSource ds = prov.createDataSource(account, DataSource.Type.pop3, DS_NAME, attrs);
+        DataSource ds = prov.createDataSource(account, DataSourceType.pop3, DS_NAME, attrs);
 
         // Make sure error status is not set.
         ZMailbox mbox = TestUtil.getZMailbox(TEST_USER_NAME);
@@ -239,9 +240,9 @@ public class TestDataSource extends TestCase {
         attrs.put(Provisioning.A_zimbraDataSourceUsername, "testuser");
         attrs.put(Provisioning.A_zimbraDataSourcePassword, "testpass");
         attrs.put(Provisioning.A_zimbraDataSourceFolderId, "1");
-        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, DataSource.ConnectionType.cleartext.toString());
+        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, ConnectionType.cleartext.toString());
         String name = NAME_PREFIX + " testNegativePollingInterval";
-        DataSource ds = prov.createDataSource(account, DataSource.Type.pop3, name, attrs);
+        DataSource ds = prov.createDataSource(account, DataSourceType.pop3, name, attrs);
         
         // Test polling interval not set.
         ds = account.getDataSourceByName(name);
@@ -281,9 +282,9 @@ public class TestDataSource extends TestCase {
         attrs.put(Provisioning.A_zimbraDataSourceUsername, "user2");
         attrs.put(Provisioning.A_zimbraDataSourcePassword, "test123");
         attrs.put(Provisioning.A_zimbraDataSourceFolderId, folder.getId());
-        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, DataSource.ConnectionType.cleartext.toString());
+        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, ConnectionType.cleartext.toString());
         String dsName = NAME_PREFIX + " testMigratePollingInterval";
-        DataSource ds = prov.createDataSource(account, DataSource.Type.pop3, dsName, attrs);
+        DataSource ds = prov.createDataSource(account, DataSourceType.pop3, dsName, attrs);
 
         // Set old polling intervals and unset new ones.
         account.unsetDataSourcePop3PollingInterval();

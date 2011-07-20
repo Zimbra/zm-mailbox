@@ -52,6 +52,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.soap.type.DataSource.ConnectionType;
 
 public class CalDavDataImport extends MailItemImport {
 
@@ -135,7 +136,7 @@ public class CalDavDataImport extends MailItemImport {
 
     protected String getTargetUrl() {
         DataSource ds = getDataSource();
-        DataSource.ConnectionType ctype = ds.getConnectionType();
+        ConnectionType ctype = ds.getConnectionType();
         StringBuilder url = new StringBuilder();
 
         switch (ctype) {

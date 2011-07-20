@@ -24,8 +24,8 @@ import java.util.UUID;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.DataSource.Type;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthContext.Protocol;
@@ -559,18 +559,18 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public DataSource createDataSource(Account account, Type type, String dataSourceName, Map<String, Object> attrs) {
+    public DataSource createDataSource(Account account, DataSourceType type, String dataSourceName, Map<String, Object> attrs) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public DataSource createDataSource(Account account, Type type, String dataSourceName, Map<String, Object> attrs,
+    public DataSource createDataSource(Account account, DataSourceType type, String dataSourceName, Map<String, Object> attrs,
             boolean passwdAlreadyEncrypted) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public DataSource restoreDataSource(Account account, Type type, String dataSourceName, Map<String, Object> attrs) {
+    public DataSource restoreDataSource(Account account, DataSourceType type, String dataSourceName, Map<String, Object> attrs) {
         throw new UnsupportedOperationException();
     }
 

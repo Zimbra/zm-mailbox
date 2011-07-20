@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.datasource;
 
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;
@@ -190,7 +191,7 @@ public class DataSourceManager {
         }
     }
 
-    public static String getDefaultImportClass(DataSource.Type ds) {
+    public static String getDefaultImportClass(DataSourceType ds) {
         switch (ds) {
         case caldav:
             return CalDavDataImport.class.getName();

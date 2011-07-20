@@ -44,6 +44,7 @@ import com.zimbra.common.account.Key.SignatureBy;
 import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.account.Key.XMPPComponentBy;
 import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -1844,7 +1845,7 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public DataSource createDataSource(Account account, DataSource.Type dsType, String dsName, Map<String, Object> attrs) throws ServiceException {
+    public DataSource createDataSource(Account account, DataSourceType dsType, String dsName, Map<String, Object> attrs) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.CREATE_DATA_SOURCE_REQUEST);
         req.addElement(AdminConstants.E_ID).setText(account.getId());
         Element ds = req.addElement(AccountConstants.E_DATA_SOURCE);
@@ -1856,12 +1857,12 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public DataSource createDataSource(Account account, DataSource.Type dsType, String dsName, Map<String, Object> attrs, boolean passwdAlreadyEncrypted) throws ServiceException {
+    public DataSource createDataSource(Account account, DataSourceType dsType, String dsName, Map<String, Object> attrs, boolean passwdAlreadyEncrypted) throws ServiceException {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public DataSource restoreDataSource(Account account, DataSource.Type dsType, String dsName, Map<String, Object> attrs) throws ServiceException {
+    public DataSource restoreDataSource(Account account, DataSourceType dsType, String dsName, Map<String, Object> attrs) throws ServiceException {
         throw new UnsupportedOperationException();
     }
 

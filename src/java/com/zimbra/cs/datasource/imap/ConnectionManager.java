@@ -20,7 +20,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.account.DataSource.ConnectionType;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.datasource.MessageContent;
 import com.zimbra.cs.datasource.SyncUtil;
@@ -39,6 +38,7 @@ import com.zimbra.cs.mailclient.imap.ImapData;
 import com.zimbra.cs.mailclient.imap.ImapResponse;
 import com.zimbra.cs.mailclient.imap.ResponseHandler;
 import com.zimbra.cs.util.Zimbra;
+import com.zimbra.soap.type.DataSource.ConnectionType;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;

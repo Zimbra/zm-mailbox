@@ -19,8 +19,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.EnumBiMap;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.account.type.Account;
 import com.zimbra.soap.account.type.Identity;
 import com.zimbra.soap.account.type.Signature;
@@ -70,42 +68,6 @@ public class SoapConverter {
         public Folder.View apply(ZFolder.View from) {
             Folder.View to = VIEW_MAP.inverse().get(from);
             return (to != null ? to : Folder.View.UNKNOWN);
-        }
-    };
-
-    public static final Function<com.zimbra.soap.type.DataSource.ConnectionType, com.zimbra.cs.account.DataSource.ConnectionType> FROM_SOAP_CONNECTION_TYPE =
-        new Function<com.zimbra.soap.type.DataSource.ConnectionType, com.zimbra.cs.account.DataSource.ConnectionType>() {
-        @Override
-        public com.zimbra.cs.account.DataSource.ConnectionType apply(com.zimbra.soap.type.DataSource.ConnectionType from) {
-            if (from == null) {
-                return null;
-            }
-            switch (from) {
-            case cleartext: return com.zimbra.cs.account.DataSource.ConnectionType.cleartext;
-            case ssl: return com.zimbra.cs.account.DataSource.ConnectionType.ssl;
-            case tls: return com.zimbra.cs.account.DataSource.ConnectionType.tls;
-            case tls_if_available: return com.zimbra.cs.account.DataSource.ConnectionType.tls_if_available;
-            }
-            ZimbraLog.soap.warn("Unexpected type %s.  Returning cleartext.", from);
-            return com.zimbra.cs.account.DataSource.ConnectionType.cleartext;
-        }
-    };
-
-    public static final Function<com.zimbra.cs.account.DataSource.ConnectionType, com.zimbra.soap.type.DataSource.ConnectionType> TO_SOAP_CONNECTION_TYPE = 
-        new Function<com.zimbra.cs.account.DataSource.ConnectionType, com.zimbra.soap.type.DataSource.ConnectionType>() {
-        @Override
-        public com.zimbra.soap.type.DataSource.ConnectionType apply(com.zimbra.cs.account.DataSource.ConnectionType from) {
-            if (from == null) {
-                return null;
-            }
-            switch (from) {
-            case cleartext: return com.zimbra.soap.type.DataSource.ConnectionType.cleartext;
-            case ssl: return com.zimbra.soap.type.DataSource.ConnectionType.ssl;
-            case tls: return com.zimbra.soap.type.DataSource.ConnectionType.tls;
-            case tls_if_available: return com.zimbra.soap.type.DataSource.ConnectionType.tls_if_available;
-            }
-            ZimbraLog.soap.warn("Unexpected type %s.  Returning cleartext.", from);
-            return com.zimbra.soap.type.DataSource.ConnectionType.cleartext;
         }
     };
 

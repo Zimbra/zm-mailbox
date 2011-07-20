@@ -17,6 +17,7 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -69,7 +70,7 @@ public class SyncGalAccount extends AdminDocumentHandler {
                 if (ds == null) {
                     throw AccountServiceException.NO_SUCH_DATA_SOURCE(name);
                 }
-                if (!ds.getType().equals(DataSource.Type.gal)) {
+                if (!ds.getType().equals(DataSourceType.gal)) {
                     continue;
                 }
                 boolean fullSync = dsEl.getAttributeBool(AdminConstants.A_FULLSYNC, false);

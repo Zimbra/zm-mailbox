@@ -44,6 +44,7 @@ import com.zimbra.cs.mailclient.pop3.Pop3Capabilities;
 import com.zimbra.cs.mailclient.pop3.Pop3Config;
 import com.zimbra.cs.mailclient.pop3.Pop3Connection;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.soap.type.DataSource.ConnectionType;
 
 public class Pop3Sync extends MailItemImport {
     private final Pop3Connection connection;
@@ -78,9 +79,9 @@ public class Pop3Sync extends MailItemImport {
     }
 
 
-    private MailConfig.Security getSecurity(DataSource.ConnectionType type) {
+    private MailConfig.Security getSecurity(ConnectionType type) {
         if (type == null) {
-            type = DataSource.ConnectionType.cleartext;
+            type = ConnectionType.cleartext;
         }
         switch (type) {
         case cleartext:

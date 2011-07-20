@@ -73,6 +73,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning.CountObjectsType;
@@ -817,7 +818,7 @@ public class ProvUtil implements HttpDebugListener {
                 console.println(prov.createSignature(lookupAccount(args[1]), args[2], getMapAndCheck(args, 3)).getId());
                 break;
             case CREATE_DATA_SOURCE:
-                console.println(prov.createDataSource(lookupAccount(args[1]), DataSource.Type.fromString(args[2]), args[3], getMapAndCheck(args, 4)).getId());
+                console.println(prov.createDataSource(lookupAccount(args[1]), DataSourceType.fromString(args[2]), args[3], getMapAndCheck(args, 4)).getId());
                 break;
             case CREATE_SERVER:
                 console.println(prov.createServer(args[1], getMapAndCheck(args, 2)).getId());

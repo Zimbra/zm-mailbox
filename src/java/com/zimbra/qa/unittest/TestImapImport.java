@@ -32,6 +32,7 @@ import com.zimbra.cs.zclient.ZImapDataSource;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.soap.type.DataSource.ConnectionType;
 
 public class TestImapImport
 extends TestCase {
@@ -84,7 +85,7 @@ extends TestCase {
         // Create data source
         int port = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraImapBindPort));
         mDataSource = new ZImapDataSource(NAME_PREFIX, true, "localhost",
-            port, REMOTE_USER_NAME, TestUtil.DEFAULT_PASSWORD, folder.getId(), DataSource.ConnectionType.cleartext);
+            port, REMOTE_USER_NAME, TestUtil.DEFAULT_PASSWORD, folder.getId(), ConnectionType.cleartext);
         String id = mLocalMbox.createDataSource(mDataSource);
         mDataSource = null;
         for (ZDataSource ds : mLocalMbox.getAllDataSources()) {

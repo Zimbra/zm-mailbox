@@ -17,13 +17,13 @@ package com.zimbra.cs.zclient;
 
 import org.json.JSONException;
 
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.DataSource.ConnectionType;
-import com.zimbra.cs.account.DataSource.Type;
 import com.zimbra.soap.account.type.AccountPop3DataSource;
+import com.zimbra.soap.type.DataSource.ConnectionType;
 import com.zimbra.soap.type.DataSources;
 import com.zimbra.soap.type.Pop3DataSource;
 
@@ -46,7 +46,7 @@ public class ZPop3DataSource implements ZDataSource, ToZJSONObject {
         data.setUsername(username);
         data.setPassword(password);
         data.setFolderId(folderid);
-        data.setConnectionType(SoapConverter.TO_SOAP_CONNECTION_TYPE.apply(connectionType));
+        data.setConnectionType(connectionType);
         setLeaveOnServer(leaveOnServer);
     }
 
@@ -72,7 +72,7 @@ public class ZPop3DataSource implements ZDataSource, ToZJSONObject {
         return src;
     }
 
-    public Type getType() { return Type.pop3; }
+    public DataSourceType getType() { return DataSourceType.pop3; }
 
     public String getId() { return data.getId(); }
 
@@ -95,12 +95,12 @@ public class ZPop3DataSource implements ZDataSource, ToZJSONObject {
     public void setFolderId(String folderid) { data.setFolderId(folderid); }
 
     public ConnectionType getConnectionType() {
-        ConnectionType ct = SoapConverter.FROM_SOAP_CONNECTION_TYPE.apply(data.getConnectionType());
+        ConnectionType ct = data.getConnectionType();
         return (ct == null ? ConnectionType.cleartext : ct);
     }
     
     public void setConnectionType(ConnectionType connectionType) {
-        data.setConnectionType(SoapConverter.TO_SOAP_CONNECTION_TYPE.apply(connectionType));
+        data.setConnectionType(connectionType);
     }
     
     public boolean leaveOnServer() {

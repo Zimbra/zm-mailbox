@@ -41,6 +41,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DistributionListBy;
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.cs.account.Provisioning.GalSearchType;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
@@ -240,7 +241,7 @@ public class GalSearchControl {
             if (a == null)
                 throw new GalAccountNotConfiguredException();
             for (DataSource ds : a.getAllDataSources()) {
-                if (ds.getType() != DataSource.Type.gal)
+                if (ds.getType() != DataSourceType.gal)
                     continue;
                 // check if there was any successful import from gal
                 if (ds.getAttr(Provisioning.A_zimbraGalLastSuccessfulSyncTimestamp, null) == null)
@@ -282,7 +283,7 @@ public class GalSearchControl {
         GalMode galMode = mParams.getDomain().getGalMode();
         boolean first = true;
         for (DataSource ds : galAcct.getAllDataSources()) {
-            if (ds.getType() != DataSource.Type.gal)
+            if (ds.getType() != DataSourceType.gal)
                 continue;
             String galType = ds.getAttr(Provisioning.A_zimbraGalType);
             if (galMode == GalMode.ldap && galType.compareTo("zimbra") == 0)
@@ -322,7 +323,7 @@ public class GalSearchControl {
         }
         searchQuery.append(" #zimbraAccountCalendarUserType:RESOURCE");
         for (DataSource ds : galAcct.getAllDataSources()) {
-            if (ds.getType() != DataSource.Type.gal)
+            if (ds.getType() != DataSourceType.gal)
                 continue;
             String galType = ds.getAttr(Provisioning.A_zimbraGalType);
             if (galType.compareTo("ldap") == 0)
@@ -419,7 +420,7 @@ public class GalSearchControl {
             if (galMode == GalMode.ldap &&
                     domain.isGalAlwaysIncludeLocalCalendarResources()) {
                 for (DataSource ds : galAcct.getAllDataSources()) {
-                    if (ds.getType() != DataSource.Type.gal)
+                    if (ds.getType() != DataSourceType.gal)
                         continue;
                     String galType = ds.getAttr(Provisioning.A_zimbraGalType);
                     if (galType.compareTo("ldap") == 0)
@@ -456,7 +457,7 @@ public class GalSearchControl {
 
             folderIds.clear();
             for (DataSource ds : galAcct.getAllDataSources()) {
-                if (ds.getType() != DataSource.Type.gal)
+                if (ds.getType() != DataSourceType.gal)
                     continue;
                 String galType = ds.getAttr(Provisioning.A_zimbraGalType);
                 if (galMode == GalMode.ldap && galType.compareTo("zimbra") == 0)

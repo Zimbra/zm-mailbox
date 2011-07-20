@@ -19,10 +19,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import junit.framework.TestCase;
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.zclient.ZDataSource;
@@ -30,8 +31,7 @@ import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZImapDataSource;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
-
-import junit.framework.TestCase;
+import com.zimbra.soap.type.DataSource.ConnectionType;
 
 public class TestImapOneWayImport extends TestCase {
     private static final String REMOTE_USER_NAME = "testimapimportremote";
@@ -82,7 +82,7 @@ public class TestImapOneWayImport extends TestCase {
         // Create data source
         int port = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraImapBindPort));
         mDataSource = new ZImapDataSource(NAME_PREFIX, true, "localhost",
-            port, REMOTE_USER_NAME, TestUtil.DEFAULT_PASSWORD, folder.getId(), DataSource.ConnectionType.cleartext, true);
+            port, REMOTE_USER_NAME, TestUtil.DEFAULT_PASSWORD, folder.getId(), ConnectionType.cleartext, true);
 
         String id = mLocalMbox.createDataSource(mDataSource);
         mDataSource = null;

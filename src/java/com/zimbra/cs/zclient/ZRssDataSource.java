@@ -16,10 +16,10 @@ package com.zimbra.cs.zclient;
 
 import org.json.JSONException;
 
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.SystemUtil;
-import com.zimbra.cs.account.DataSource.Type;
 import com.zimbra.soap.type.DataSources;
 import com.zimbra.soap.type.RssDataSource;
 
@@ -47,8 +47,8 @@ public class ZRssDataSource implements ZDataSource, ToZJSONObject {
         return data.getName();
     }
 
-    public Type getType() {
-        return Type.rss;
+    public DataSourceType getType() {
+        return DataSourceType.rss;
     }
     
     public String getFolderId() {

@@ -34,11 +34,13 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import org.apache.commons.codec.binary.Base64;
 
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.datasource.DataSourceManager;
+import com.zimbra.soap.type.DataSource.ConnectionType;
 
 /**
  * @author schemers
@@ -48,30 +50,6 @@ public class DataSource extends AccountProperty {
     private static final int SALT_SIZE_BYTES = 16;
     private static final int AES_PAD_SIZE = 16;
     private static final byte[] VERSION = { 1 };
-
-    public enum Type {
-        pop3, imap, caldav, contacts, yab, rss, cal, gal, xsync;
-
-        public static Type fromString(String s) throws ServiceException {
-            try {
-                return Type.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("invalid type: " + s + ", valid values: " + Arrays.asList(Type.values()), e);
-            }
-        }
-    }
-
-    public enum ConnectionType {
-        cleartext, ssl, tls, tls_if_available;
-
-        public static ConnectionType fromString(String s) throws ServiceException {
-            try {
-                return ConnectionType.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("invalid type: " + s + ", valid values: " + Arrays.asList(ConnectionType.values()), e);
-            }
-        }
-    }
 
     public interface DataImport {
         /**
@@ -87,10 +65,10 @@ public class DataSource extends AccountProperty {
     public static final String CT_CLEARTEXT = "cleartext";
     public static final String CT_SSL = "ssl";
 
-    private Type mType;
+    private DataSourceType mType;
     protected DataSourceConfig.Service knownService;
 
-    public DataSource(Account acct, Type type, String name, String id, Map<String, Object> attrs, Provisioning prov) {
+    public DataSource(Account acct, DataSourceType type, String name, String id, Map<String, Object> attrs, Provisioning prov) {
         super(acct, name, id, attrs, null, prov);
         mType = type;
 
@@ -115,7 +93,7 @@ public class DataSource extends AccountProperty {
         knownService = serviceName == null ? null : DataSourceManager.getConfig().getService(serviceName);
     }
 
-    public Type getType() {
+    public DataSourceType getType() {
         return mType;
     }
 

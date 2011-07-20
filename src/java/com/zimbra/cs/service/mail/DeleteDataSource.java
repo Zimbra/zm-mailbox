@@ -18,6 +18,7 @@ import java.util.Map;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DataSourceBy;
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
@@ -62,12 +63,12 @@ public class DeleteDataSource extends MailDocumentHandler {
             if (dsrc == null)
                 continue;
             String dataSourceId = dsrc.getId();
-            DataSource.Type dstype = dsrc.getType();
+            DataSourceType dstype = dsrc.getType();
 
             prov.deleteDataSource(account, dataSourceId);
-            if (dstype == DataSource.Type.pop3)
+            if (dstype == DataSourceType.pop3)
                 DbPop3Message.deleteUids(mbox, dataSourceId);
-            else if (dstype == DataSource.Type.imap)
+            else if (dstype == DataSourceType.imap)
                 DbImapFolder.deleteImapData(mbox, dataSourceId);
             DbDataSource.deleteAllMappings(dsrc);
             DataSourceManager.cancelSchedule(account, dataSourceId);

@@ -23,6 +23,7 @@ import junit.framework.TestSuite;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -153,7 +154,7 @@ public class TestAccess extends TestCase {
                 attrs.put(Provisioning.A_zimbraDataSourceUsername, "my-pop3-name");
                 attrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, "TRUE");
                 dataSource = createDataSource(get(Key.AccountBy.name, acctName), 
-                                              DataSource.Type.pop3, dataSourceName, attrs);
+                                              DataSourceType.pop3, dataSourceName, attrs);
             } catch (ServiceException e) {
                 e.printStackTrace();
                 fail();

@@ -51,6 +51,7 @@ import com.zimbra.common.calendar.TimeZoneMap;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ContactConstants;
@@ -2344,7 +2345,7 @@ public class ToXML {
         m.addAttribute(MailConstants.A_DS_IS_ENABLED, ds.isEnabled());
         m.addAttribute(MailConstants.A_DS_IS_IMPORTONLY, ds.isImportOnly());
 
-        if (ds.getType() == DataSource.Type.pop3)
+        if (ds.getType() == DataSourceType.pop3)
             m.addAttribute(MailConstants.A_DS_LEAVE_ON_SERVER, ds.leaveOnServer());
 
         if (ds.getHost() != null)

@@ -33,6 +33,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DataSourceBy;
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.ldap.LdapConstants;
 
@@ -213,7 +214,7 @@ public class TestLdapProvAccount extends TestLdap {
         attrs.put(Provisioning.A_zimbraDataSourceConnectionType, "ssl");
         attrs.put(Provisioning.A_zimbraDataSourceHost, "zimbra.com");
         attrs.put(Provisioning.A_zimbraDataSourcePort, "9999");
-        DataSource ds = prov.createDataSource(acct, DataSource.Type.pop3, dataSourceName, attrs);
+        DataSource ds = prov.createDataSource(acct, DataSourceType.pop3, dataSourceName, attrs);
         return ds;
     }
     

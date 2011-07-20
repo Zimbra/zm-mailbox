@@ -29,6 +29,7 @@ import junit.framework.TestCase;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.CacheEntryBy;
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.SetUtil;
@@ -1153,7 +1154,7 @@ public class TestProvisioning extends TestCase {
         dsAttrs.put(Provisioning.A_zimbraPrefReplyToAddress, "goofy@yahoo.com");
         dsAttrs.put(Provisioning.A_zimbraPrefReplyToDisplay, "Micky");
 
-        DataSource entry = mProv.createDataSource(account, DataSource.Type.pop3, DATA_SOURCE_NAME, dsAttrs);
+        DataSource entry = mProv.createDataSource(account, DataSourceType.pop3, DATA_SOURCE_NAME, dsAttrs);
 
         DataSource entryGot = mProv.get(account, Key.DataSourceBy.id, entry.getId());
         TestProvisioningUtil.verifySameEntry(entry, entryGot);

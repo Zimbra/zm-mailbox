@@ -16,6 +16,7 @@ package com.zimbra.cs.account.ldap.entry;
 
 import java.util.List;
 
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -50,7 +51,7 @@ public class LdapDataSource extends DataSource implements LdapEntry {
 		return mDn;
 	}
 
-    public static String getObjectClass(Type type) {
+    public static String getObjectClass(DataSourceType type) {
         switch (type) {
             case pop3:
                 return AttributeClass.OC_zimbraPop3DataSource;
@@ -65,24 +66,24 @@ public class LdapDataSource extends DataSource implements LdapEntry {
         }
     }
 
-    static Type getObjectType(ZAttributes attrs) throws ServiceException {
+    static DataSourceType getObjectType(ZAttributes attrs) throws ServiceException {
         try {
             String dsType = attrs.getAttrString(Provisioning.A_zimbraDataSourceType);
             if (dsType != null)
-                return Type.fromString(dsType);
+                return DataSourceType.fromString(dsType);
         } catch (LdapException e) {
             ZimbraLog.datasource.error("cannot get DataSource type", e);
         }
         
         List<String> attr = attrs.getMultiAttrStringAsList(Provisioning.A_objectClass, CheckBinary.NOCHECK);
         if (attr.contains(AttributeClass.OC_zimbraPop3DataSource)) 
-            return Type.pop3;
+            return DataSourceType.pop3;
         else if (attr.contains(AttributeClass.OC_zimbraImapDataSource))
-            return Type.imap;
+            return DataSourceType.imap;
         else if (attr.contains(AttributeClass.OC_zimbraRssDataSource))
-            return Type.rss;
+            return DataSourceType.rss;
         else if (attr.contains(AttributeClass.OC_zimbraGalDataSource))
-            return Type.gal;
+            return DataSourceType.gal;
         else
             throw ServiceException.FAILURE("unable to determine data source type from object class", null);
     }

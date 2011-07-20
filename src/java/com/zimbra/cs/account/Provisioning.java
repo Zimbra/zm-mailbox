@@ -28,6 +28,7 @@ import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning;
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ExceptionToString;
@@ -1781,10 +1782,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract Signature get(Account account, Key.SignatureBy keyType, String key) throws ServiceException;
 
-    public abstract DataSource createDataSource(Account account, DataSource.Type type, String dataSourceName, Map<String, Object> attrs) throws ServiceException;
-    public abstract DataSource createDataSource(Account account, DataSource.Type type, String dataSourceName, Map<String, Object> attrs, boolean passwdAlreadyEncrypted) throws ServiceException;
+    public abstract DataSource createDataSource(Account account, DataSourceType type, String dataSourceName, Map<String, Object> attrs) throws ServiceException;
+    public abstract DataSource createDataSource(Account account, DataSourceType type, String dataSourceName, Map<String, Object> attrs, boolean passwdAlreadyEncrypted) throws ServiceException;
 
-    public abstract DataSource restoreDataSource(Account account, DataSource.Type type, String dataSourceName, Map<String, Object> attrs) throws ServiceException;
+    public abstract DataSource restoreDataSource(Account account, DataSourceType type, String dataSourceName, Map<String, Object> attrs) throws ServiceException;
 
     public abstract void modifyDataSource(Account account, String dataSourceId, Map<String, Object> attrs) throws ServiceException;
 

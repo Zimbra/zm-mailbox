@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.account.ldap.legacy.entry;
 
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -32,7 +33,7 @@ import javax.naming.directory.Attributes;
  */
 public class LdapDataSource extends DataSource implements LdapEntry {
 
-	public static String getObjectClass(Type type) {
+	public static String getObjectClass(DataSourceType type) {
 		switch (type) {
 		case pop3: return "zimbraPop3DataSource";
 		case imap: return "zimbraImapDataSource";
@@ -42,23 +43,23 @@ public class LdapDataSource extends DataSource implements LdapEntry {
 		}
 	}
 
-	static Type getObjectType(Attributes attrs) throws ServiceException {
+	static DataSourceType getObjectType(Attributes attrs) throws ServiceException {
 		try {
 			String dsType = LegacyLdapUtil.getAttrString(attrs, Provisioning.A_zimbraDataSourceType);
 			if (dsType != null)
-				return Type.fromString(dsType);
+				return DataSourceType.fromString(dsType);
 		} catch (NamingException e) {
 			ZimbraLog.datasource.error("cannot get DataSource type", e);
 		}
 		Attribute attr = attrs.get("objectclass");
 		if (attr.contains("zimbraPop3DataSource")) 
-			return Type.pop3;
+			return DataSourceType.pop3;
 		else if (attr.contains("zimbraImapDataSource"))
-			return Type.imap;
+			return DataSourceType.imap;
 		else if (attr.contains("zimbraRssDataSource"))
-		    return Type.rss;
+		    return DataSourceType.rss;
 		else if (attr.contains("zimbraGalDataSource"))
-            return Type.gal;
+            return DataSourceType.gal;
 		else
 			throw ServiceException.FAILURE("unable to determine data source type from object class", null);
 	}

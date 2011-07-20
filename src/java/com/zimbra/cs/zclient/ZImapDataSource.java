@@ -16,12 +16,12 @@ package com.zimbra.cs.zclient;
 
 import org.json.JSONException;
 
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.SystemUtil;
-import com.zimbra.cs.account.DataSource;
-import com.zimbra.soap.account.type.AccountImapDataSource;
+import com.zimbra.soap.type.DataSource.ConnectionType;
 import com.zimbra.soap.type.DataSources;
 import com.zimbra.soap.type.ImapDataSource;
 
@@ -35,7 +35,7 @@ public class ZImapDataSource implements ZDataSource, ToZJSONObject {
     
     public ZImapDataSource(String name, boolean enabled, String host, int port,
                            String username, String password, String folderid,
-                           DataSource.ConnectionType connectionType, boolean isImportOnly)
+                           ConnectionType connectionType, boolean isImportOnly)
     throws ServiceException {
         data = DataSources.newImapDataSource();
         data.setName(name);
@@ -51,30 +51,14 @@ public class ZImapDataSource implements ZDataSource, ToZJSONObject {
             throw ServiceException.INVALID_REQUEST("Invalid folder id", e);
         }
         
-        data.setConnectionType(SoapConverter.TO_SOAP_CONNECTION_TYPE.apply(connectionType));
+        data.setConnectionType(connectionType);
         data.setImportOnly(isImportOnly);
     }
     
     public ZImapDataSource(String name, boolean enabled, String host, int port,
                            String username, String password, String folderid,
-                           DataSource.ConnectionType connectionType) throws ServiceException {
+                           ConnectionType connectionType) throws ServiceException {
         this(name,enabled,host,port,username,password,folderid,connectionType,false);
-    }
-
-    public ZImapDataSource(DataSource dsrc) throws ServiceException {
-        if (dsrc.getType() != DataSource.Type.imap)
-            throw ServiceException.INVALID_REQUEST("can't instantiate ZImapDataSource for " + dsrc.getType(), null);
-
-        data = new AccountImapDataSource();
-        data.setName(dsrc.getName());
-        data.setEnabled(dsrc.isEnabled());
-        data.setHost(dsrc.getHost());
-        data.setPort(dsrc.getPort());
-        data.setUsername(dsrc.getUsername());
-        data.setPassword(dsrc.getDecryptedPassword());
-        data.setFolderId(Integer.toString(dsrc.getFolderId()));
-        data.setConnectionType(SoapConverter.TO_SOAP_CONNECTION_TYPE.apply(dsrc.getConnectionType()));
-        data.setImportOnly(dsrc.isImportOnly());
     }
 
     public Element toElement(Element parent) {
@@ -98,7 +82,7 @@ public class ZImapDataSource implements ZDataSource, ToZJSONObject {
         return src;
     }
 
-    public DataSource.Type getType() { return DataSource.Type.imap; }
+    public DataSourceType getType() { return DataSourceType.imap; }
 
     public String getId() { return data.getId(); }
 
@@ -121,13 +105,13 @@ public class ZImapDataSource implements ZDataSource, ToZJSONObject {
     public String getFolderId() { return data.getFolderId(); }
     public void setFolderId(String folderid) { data.setFolderId(folderid); }
 
-    public DataSource.ConnectionType getConnectionType() {
-        DataSource.ConnectionType ct = SoapConverter.FROM_SOAP_CONNECTION_TYPE.apply(data.getConnectionType());
-        return (ct != null ? ct : DataSource.ConnectionType.cleartext);
+    public ConnectionType getConnectionType() {
+        ConnectionType ct = data.getConnectionType();
+        return (ct != null ? ct : ConnectionType.cleartext);
     }
     
-    public void setConnectionType(DataSource.ConnectionType connectionType) {
-        data.setConnectionType(SoapConverter.TO_SOAP_CONNECTION_TYPE.apply(connectionType));
+    public void setConnectionType(ConnectionType connectionType) {
+        data.setConnectionType(connectionType);
     }
     
     public ZJSONObject toZJSONObject() throws JSONException {

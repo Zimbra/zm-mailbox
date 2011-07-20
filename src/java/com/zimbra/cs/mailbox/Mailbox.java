@@ -55,6 +55,7 @@ import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.Color;
@@ -6668,7 +6669,7 @@ public class Mailbox {
             List<DataSource> dataSources = prov.getAllDataSources(account);
             for (DataSource i : dataSources) {
                 if (i.getFolderId() == folder.getId() &&
-                    (i.getType() == DataSource.Type.rss || i.getType() == DataSource.Type.cal)) {
+                    (i.getType() == DataSourceType.rss || i.getType() == DataSourceType.cal)) {
                     ds = i;
                     break;
                 }
@@ -6690,13 +6691,13 @@ public class Mailbox {
                 attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapConstants.LDAP_TRUE);
                 attrs.put(Provisioning.A_zimbraDataSourceFolderId, Integer.toString(folder.getId()));
 
-                DataSource.Type type;
+                DataSourceType type;
                 String name;
                 if (folder.getDefaultView() == MailItem.Type.APPOINTMENT) {
-                    type = DataSource.Type.cal;
+                    type = DataSourceType.cal;
                     name = "CAL-" + folder.getId();
                 } else {
-                    type = DataSource.Type.rss;
+                    type = DataSourceType.rss;
                     name = "RSS-" + folder.getId();
                 }
 

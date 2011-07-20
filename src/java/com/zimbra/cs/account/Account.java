@@ -20,6 +20,7 @@ import com.zimbra.common.account.Key.DataSourceBy;
 import com.zimbra.common.account.Key.IdentityBy;
 import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.account.Key.SignatureBy;
+import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning.AclGroups;
@@ -132,11 +133,11 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
         return getProvisioning().getCOS(this);
     }
 
-    public DataSource createDataSource(DataSource.Type type, String dataSourceName, Map<String, Object> attrs) throws ServiceException {
+    public DataSource createDataSource(DataSourceType type, String dataSourceName, Map<String, Object> attrs) throws ServiceException {
         return getProvisioning().createDataSource(this, type, dataSourceName, attrs);
     }
     
-    public DataSource createDataSource(DataSource.Type type, String dataSourceName, Map<String, Object> attrs, boolean passwdAlreadyEncrypted) throws ServiceException {
+    public DataSource createDataSource(DataSourceType type, String dataSourceName, Map<String, Object> attrs, boolean passwdAlreadyEncrypted) throws ServiceException {
         return getProvisioning().createDataSource(this, type, dataSourceName, attrs, passwdAlreadyEncrypted);
     }
 
