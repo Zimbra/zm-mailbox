@@ -19,10 +19,10 @@ import java.util.Map;
 
 import org.json.JSONException;
 
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.SystemUtil;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.account.type.Signature;
 import com.zimbra.soap.account.type.SignatureContent;
 
@@ -94,8 +94,8 @@ public class ZSignature implements Comparable<ZSignature>, ToZJSONObject {
     
     public Map<String, Object> getAttrs() {
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraSignatureId, data.getId());
-        attrs.put(Provisioning.A_zimbraSignatureName, data.getName());
+        attrs.put(ZAttrProvisioning.A_zimbraSignatureId, data.getId());
+        attrs.put(ZAttrProvisioning.A_zimbraSignatureName, data.getName());
         
         String type = null;
         String value = null;

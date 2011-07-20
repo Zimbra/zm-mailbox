@@ -29,6 +29,7 @@ import junit.framework.TestCase;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.CacheEntryBy;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.CliUtil;
@@ -1187,9 +1188,9 @@ public class TestProvisioning extends TestCase {
         TestProvisioningUtil.verifySameEntry(entry, entryGot);
         entryGot = mProv.get(account, Key.IdentityBy.name, IDENTITY_NAME);
         TestProvisioningUtil.verifySameEntry(entry, entryGot);
-        Identity defaultIdentity = mProv.get(account, Key.IdentityBy.name, Provisioning.DEFAULT_IDENTITY_NAME);
+        Identity defaultIdentity = mProv.get(account, Key.IdentityBy.name, ProvisioningConstants.DEFAULT_IDENTITY_NAME);
         TestProvisioningUtil.verifySameId(account, defaultIdentity);
-        assertEquals(Provisioning.DEFAULT_IDENTITY_NAME, defaultIdentity.getName());
+        assertEquals(ProvisioningConstants.DEFAULT_IDENTITY_NAME, defaultIdentity.getName());
 
         List list = mProv.getAllIdentities(account);
         TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{defaultIdentity, entry}, true);

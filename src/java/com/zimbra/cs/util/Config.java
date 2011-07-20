@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -202,7 +203,7 @@ public class Config {
         Provisioning prov = Provisioning.getInstance();
         Server serverConfig = prov.getLocalServer();
         HashMap<String, String> attrs = new HashMap<String, String>();
-        attrs.put(Provisioning.A_zimbraUserServicesEnabled, enabled ? Provisioning.TRUE : Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraUserServicesEnabled, enabled ? ProvisioningConstants.TRUE : ProvisioningConstants.FALSE);
         prov.modifyAttrs(serverConfig, attrs);
         synchronized (sUserServicesEnabledGuard) {
             sUserServicesEnabled = enabled;

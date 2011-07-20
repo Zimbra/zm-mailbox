@@ -22,10 +22,11 @@ import java.util.Map;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.zimbra.common.account.ProvisioningConstants;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.account.type.Attr;
 import com.zimbra.soap.account.type.Identity;
 
@@ -39,7 +40,7 @@ public class ZIdentity  implements ToZJSONObject {
     }
 
     public ZIdentity(String name, Map<String, Object> attrs) {
-        data = new Identity(name, get(Provisioning.A_zimbraPrefIdentityId));
+        data = new Identity(name, get(ZAttrProvisioning.A_zimbraPrefIdentityId));
         data.setAttrs(Attr.fromMultimap(StringUtil.toNewMultimap(attrs)));
     }
     
@@ -52,7 +53,7 @@ public class ZIdentity  implements ToZJSONObject {
     }
 
     public String getName() {
-        return get(Provisioning.A_zimbraPrefIdentityName);
+        return get(ZAttrProvisioning.A_zimbraPrefIdentityName);
     }
 
     public String getId() {
@@ -77,30 +78,30 @@ public class ZIdentity  implements ToZJSONObject {
     }
 
     public boolean getBool(String name) {
-        return Provisioning.TRUE.equals(get(name));
+        return ProvisioningConstants.TRUE.equals(get(name));
     }
 
-    public boolean isDefault() { return Provisioning.DEFAULT_IDENTITY_NAME.equals(getRawName()); }
+    public boolean isDefault() { return ProvisioningConstants.DEFAULT_IDENTITY_NAME.equals(getRawName()); }
     
-    public String getFromAddress() { return get(Provisioning.A_zimbraPrefFromAddress); }
+    public String getFromAddress() { return get(ZAttrProvisioning.A_zimbraPrefFromAddress); }
 
-    public String getFromDisplay() { return get(Provisioning.A_zimbraPrefFromDisplay); }
+    public String getFromDisplay() { return get(ZAttrProvisioning.A_zimbraPrefFromDisplay); }
 
     public ZEmailAddress getFromEmailAddress() {
         return new ZEmailAddress(getFromAddress(), null, getFromDisplay(), ZEmailAddress.EMAIL_TYPE_FROM);
     }
 
-    public String getSignatureId() { return get(Provisioning.A_zimbraPrefDefaultSignatureId); }
+    public String getSignatureId() { return get(ZAttrProvisioning.A_zimbraPrefDefaultSignatureId); }
 
-    public String getReplyToAddress() { return get(Provisioning.A_zimbraPrefReplyToAddress); }
+    public String getReplyToAddress() { return get(ZAttrProvisioning.A_zimbraPrefReplyToAddress); }
 
-    public String getReplyToDisplay() { return get(Provisioning.A_zimbraPrefReplyToDisplay); }
+    public String getReplyToDisplay() { return get(ZAttrProvisioning.A_zimbraPrefReplyToDisplay); }
 
     public ZEmailAddress getReplyToEmailAddress() {
         return new ZEmailAddress(getReplyToAddress(), null, getReplyToDisplay(), ZEmailAddress.EMAIL_TYPE_REPLY_TO);
     }
 
-    public boolean getReplyToEnabled() { return getBool(Provisioning.A_zimbraPrefReplyToEnabled); }
+    public boolean getReplyToEnabled() { return getBool(ZAttrProvisioning.A_zimbraPrefReplyToEnabled); }
 
     public String[] getMulti(String name) {
         Collection<String> values = data.getAttrsMultimap().get(name);
@@ -110,10 +111,10 @@ public class ZIdentity  implements ToZJSONObject {
     }
     
     public String[] getWhenInFolderIds() {
-        return getMulti(Provisioning.A_zimbraPrefWhenInFolderIds);
+        return getMulti(ZAttrProvisioning.A_zimbraPrefWhenInFolderIds);
     }
 
-    public boolean getWhenInFoldersEnabled() { return getBool(Provisioning.A_zimbraPrefWhenInFoldersEnabled); }
+    public boolean getWhenInFoldersEnabled() { return getBool(ZAttrProvisioning.A_zimbraPrefWhenInFoldersEnabled); }
 
     public boolean containsFolderId(String folderId) {
         for (String id : getWhenInFolderIds()) {

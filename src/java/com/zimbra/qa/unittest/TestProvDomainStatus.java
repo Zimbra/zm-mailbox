@@ -41,6 +41,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.soap.SoapProvisioning;
@@ -190,9 +191,9 @@ public class TestProvDomainStatus {
         Map<String, Object> acctAttrs = new HashMap<String, Object>();
         
         if (at == AccountType.ACCT_DOMAIN_ADMIN)
-            acctAttrs.put(Provisioning.A_zimbraIsDomainAdminAccount, Provisioning.TRUE);
+            acctAttrs.put(Provisioning.A_zimbraIsDomainAdminAccount, ProvisioningConstants.TRUE);
         else if (at == AccountType.ACCT_GLOBAL_ADMIN)
-            acctAttrs.put(Provisioning.A_zimbraIsAdminAccount, Provisioning.TRUE);
+            acctAttrs.put(Provisioning.A_zimbraIsAdminAccount, ProvisioningConstants.TRUE);
             
         Account acct = mProv.createAccount(accountEmail, PASSWORD, acctAttrs);
         assertNotNull(acct);
@@ -222,12 +223,12 @@ public class TestProvDomainStatus {
         Map<String, Object> attrs = new HashMap<String, Object>();
         if (set) {
             attrs.put(Provisioning.A_zimbraPasswordLockoutMaxFailures, "1");
-            attrs.put(Provisioning.A_zimbraPasswordLockoutEnabled, Provisioning.TRUE);
+            attrs.put(Provisioning.A_zimbraPasswordLockoutEnabled, ProvisioningConstants.TRUE);
             attrs.put(Provisioning.A_zimbraPasswordLockoutLockedTime, DateUtil.toGeneralizedTime(new Date()));
             mProv.modifyAttrs(acct, attrs);
         } else {
             attrs.put(Provisioning.A_zimbraPasswordLockoutMaxFailures, "");
-            attrs.put("-" + Provisioning.A_zimbraPasswordLockoutEnabled, Provisioning.TRUE);
+            attrs.put("-" + Provisioning.A_zimbraPasswordLockoutEnabled, ProvisioningConstants.TRUE);
             attrs.put(Provisioning.A_zimbraPasswordLockoutLockedTime, "");
             mProv.modifyAttrs(acct, attrs);
         }

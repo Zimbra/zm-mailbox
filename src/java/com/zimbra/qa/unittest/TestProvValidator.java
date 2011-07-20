@@ -30,6 +30,7 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ProvisioningConstants;
 
 public class TestProvValidator extends TestProv {
     
@@ -140,7 +141,7 @@ public class TestProvValidator extends TestProv {
         
         for (int i = 0; i <= FEATURE_MAX_ACCOUNTS; i++) {
             Map<String, Object> attrs = new HashMap<String, Object>();
-            attrs.put(FEATURE, Provisioning.TRUE);
+            attrs.put(FEATURE, ProvisioningConstants.TRUE);
             
             boolean caughtLimitExceeded = false;
             try {
@@ -174,14 +175,14 @@ public class TestProvValidator extends TestProv {
         List<String> acctIds = new ArrayList<String /* account id */>();
         for (int i = 0; i <= FEATURE_MAX_ACCOUNTS; i++) {
             Map<String, Object> attrs = new HashMap<String, Object>();
-            attrs.put(FEATURE, Provisioning.FALSE);
+            attrs.put(FEATURE, ProvisioningConstants.FALSE);
             Account acct = createAccount("acct-" + i, domain, attrs);
         }
         
         for (int i = 0; i <= FEATURE_MAX_ACCOUNTS; i++) {
             String acctId = acctIds.get(i);
             Map<String, Object> attrs = new HashMap<String, Object>();
-            attrs.put(FEATURE, Provisioning.TRUE);
+            attrs.put(FEATURE, ProvisioningConstants.TRUE);
             Account acct = mProv.get(AccountBy.id, acctId);
             
             boolean caughtLimitExceeded = false;

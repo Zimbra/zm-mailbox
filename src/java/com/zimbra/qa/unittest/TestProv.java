@@ -19,6 +19,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.CacheEntryBy;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Server;
@@ -130,7 +131,7 @@ public abstract class TestProv extends TestLdap {
     
     protected Account createDelegatedAdminAccount(String localpart, Domain domain) throws Exception {
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraIsDelegatedAdminAccount, Provisioning.TRUE);
+        attrs.put(Provisioning.A_zimbraIsDelegatedAdminAccount, ProvisioningConstants.TRUE);
         return createAccount(localpart, domain, attrs);
     }
     
@@ -180,7 +181,7 @@ public abstract class TestProv extends TestLdap {
     
     protected DistributionList createAdminGroup(String localpart, Domain domain) throws Exception {
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraIsAdminGroup, Provisioning.TRUE);
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, ProvisioningConstants.TRUE);
         return createGroup(localpart, domain, attrs);
     }
     

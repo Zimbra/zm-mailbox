@@ -29,6 +29,7 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.common.account.Key.TargetBy;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.InlineAttrRight;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
@@ -203,7 +204,7 @@ public class BUG_18277 extends UpgradeOp {
         // turn it into a delegated admin
         //
         HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraIsDelegatedAdminAccount, Provisioning.TRUE);
+        attrs.put(Provisioning.A_zimbraIsDelegatedAdminAccount, ProvisioningConstants.TRUE);
         prov.modifyAttrs(domainAdmin, attrs);
         
         //

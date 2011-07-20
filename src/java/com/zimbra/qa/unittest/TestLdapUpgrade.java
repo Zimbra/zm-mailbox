@@ -20,6 +20,7 @@ import org.junit.*;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.CosBy;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
@@ -74,13 +75,13 @@ public class TestLdapUpgrade extends TestLdap {
     @Test
     public void bug10287() throws Exception {
         HashMap<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraPrefCalendarReminderSendEmail, Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderSendEmail, ProvisioningConstants.FALSE);
         Cos cos = createCos("bug10287", attrs);
         
         LdapUpgrade.upgrade(getArgs("10287"));
         
         cos = getFresh(cos);
-        assertEquals(Provisioning.TRUE, cos.getAttr(Provisioning.A_zimbraPrefCalendarReminderSendEmail));
+        assertEquals(ProvisioningConstants.TRUE, cos.getAttr(Provisioning.A_zimbraPrefCalendarReminderSendEmail));
     }
     
     @Test

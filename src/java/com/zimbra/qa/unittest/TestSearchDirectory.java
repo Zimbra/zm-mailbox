@@ -39,6 +39,7 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.common.account.Key.TargetBy;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
@@ -82,7 +83,7 @@ public class TestSearchDirectory extends TestCase {
     
     private static Account createDelegatedAdmin(Provisioning prov, String acctName) throws Exception {
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraIsDelegatedAdminAccount, Provisioning.TRUE);
+        attrs.put(Provisioning.A_zimbraIsDelegatedAdminAccount, ProvisioningConstants.TRUE);
         return prov.createAccount(acctName, PASSWORD, attrs);
     }
     
@@ -248,11 +249,11 @@ public class TestSearchDirectory extends TestCase {
             // 3. create two admin groups, one in each of the two domains
             //
             Map<String, Object> adminGroup1Attrs = new HashMap<String, Object>();
-            adminGroup1Attrs.put(Provisioning.A_zimbraIsAdminGroup, Provisioning.TRUE);
+            adminGroup1Attrs.put(Provisioning.A_zimbraIsAdminGroup, ProvisioningConstants.TRUE);
             DistributionList adminGroup1 = prov.createDistributionList("adminGroup-1" + "@" + domain1Name, adminGroup1Attrs);
             
             Map<String, Object> adminGroup2Attrs = new HashMap<String, Object>();
-            adminGroup2Attrs.put(Provisioning.A_zimbraIsAdminGroup, Provisioning.TRUE);
+            adminGroup2Attrs.put(Provisioning.A_zimbraIsAdminGroup, ProvisioningConstants.TRUE);
             DistributionList adminGroup2 = prov.createDistributionList("adminGroup-2" + "@" + domain2Name, adminGroup2Attrs);
             
             //

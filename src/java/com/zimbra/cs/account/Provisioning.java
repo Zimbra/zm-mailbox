@@ -27,6 +27,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.localconfig.LC;
@@ -58,9 +59,10 @@ import com.zimbra.soap.type.NamedElement;
 public abstract class Provisioning extends ZAttrProvisioning {
 
 
-    public final static String TRUE  = "TRUE";
-
-    public final static String FALSE = "FALSE";
+    // The public versions of TRUE and FALSE were moved to ProvisioningConstants.
+    // These are used by ZAttr*.
+    static final String TRUE  = "TRUE";
+    static final String FALSE = "FALSE";
 
     public static final String DEFAULT_COS_NAME = "default";
 
@@ -256,8 +258,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static final String LDAP_AM_NONE = "none";
     public static final String LDAP_AM_SIMPLE = "simple";
     public static final String LDAP_AM_KERBEROS5 = "kerberos5";
-
-    public static final String DEFAULT_IDENTITY_NAME = "DEFAULT";
 
     public static final int MAX_ZIMBRA_ID_LEN = 127;
 
@@ -1720,7 +1720,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
             if (value != null) attrs.put(name, value);
         }
         if (attrs.get(A_zimbraPrefIdentityName) == null)
-            attrs.put(A_zimbraPrefIdentityName, DEFAULT_IDENTITY_NAME);
+            attrs.put(A_zimbraPrefIdentityName, ProvisioningConstants.DEFAULT_IDENTITY_NAME);
 
         String fromAddress = (String) attrs.get(A_zimbraPrefFromAddress);
         String fromDisplay = (String) attrs.get(A_zimbraPrefFromDisplay);
@@ -1751,7 +1751,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
                     attrs.put(A_zimbraPrefForwardReplyFormat, composeFormat);
             }
         }
-        return new Identity(account, DEFAULT_IDENTITY_NAME, account.getId(), attrs, this);
+        return new Identity(account, ProvisioningConstants.DEFAULT_IDENTITY_NAME, account.getId(), attrs, this);
     }
 
     public abstract Identity createIdentity(Account account, String identityName, Map<String, Object> attrs) throws ServiceException;

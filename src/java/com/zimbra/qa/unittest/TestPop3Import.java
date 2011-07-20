@@ -33,6 +33,7 @@ import org.testng.annotations.Test;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DataSourceBy;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -299,14 +300,14 @@ public class TestPop3Import extends TestCase {
         Account account = TestUtil.getAccount(USER_NAME);
         int port = Integer.parseInt(TestUtil.getServerAttr(Provisioning.A_zimbraPop3BindPort));
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDataSourceEnabled, Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraDataSourceEnabled, ProvisioningConstants.FALSE);
         attrs.put(Provisioning.A_zimbraDataSourceHost, "localhost");
         attrs.put(Provisioning.A_zimbraDataSourcePort, Integer.toString(port));
         attrs.put(Provisioning.A_zimbraDataSourceUsername, "user1");
         attrs.put(Provisioning.A_zimbraDataSourcePassword, "test123");
         attrs.put(Provisioning.A_zimbraDataSourceFolderId, Integer.toString(Mailbox.ID_FOLDER_INBOX));
         attrs.put(Provisioning.A_zimbraDataSourceConnectionType, "cleartext");
-        attrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraDataSourceLeaveOnServer, ProvisioningConstants.FALSE);
         prov.createDataSource(account, DataSourceType.pop3, DATA_SOURCE_NAME, attrs);
     }
     

@@ -6,6 +6,7 @@ import java.util.Map;
 import org.junit.*;
 import static org.junit.Assert.*;
 
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -72,7 +73,7 @@ public class TestLdapProvExternalLdapAuth extends TestLdap {
     
     private String getWantStartTLS() {
         if (LdapConnType.STARTTLS == testConnType) {
-            return Provisioning.TRUE;
+            return ProvisioningConstants.TRUE;
         } else { 
             return null;
         }

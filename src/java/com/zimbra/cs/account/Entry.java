@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.account;
 
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DateUtil;
@@ -309,7 +310,7 @@ public abstract class Entry implements ToZJSONObject {
      */
     public boolean getBooleanAttr(String name, boolean defaultValue) {
         String v = getAttr(name);
-        return v == null ? defaultValue : Provisioning.TRUE.equals(v);
+        return v == null ? defaultValue : ProvisioningConstants.TRUE.equals(v);
     }
     
     public byte[] getBinaryAttr(String name) {

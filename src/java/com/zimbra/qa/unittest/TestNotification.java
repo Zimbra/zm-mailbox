@@ -34,6 +34,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.util.ByteUtil;
@@ -124,9 +125,9 @@ extends TestCase {
         // Turn on auto-reply and notification
         Account account = TestUtil.getAccount(RECIPIENT_NAME);
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled, Provisioning.TRUE);
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled, ProvisioningConstants.TRUE);
         attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReply, OUT_OF_OFFICE_BODY);
-        attrs.put(Provisioning.A_zimbraPrefNewMailNotificationEnabled, Provisioning.TRUE);
+        attrs.put(Provisioning.A_zimbraPrefNewMailNotificationEnabled, ProvisioningConstants.TRUE);
         attrs.put(Provisioning.A_zimbraPrefNewMailNotificationAddress, TestUtil.getAddress(SENDER_NAME));
         attrs.put(Provisioning.A_zimbraNewMailNotificationSubject, NEW_MAIL_SUBJECT);
         attrs.put(Provisioning.A_zimbraNewMailNotificationBody, NEW_MAIL_BODY);

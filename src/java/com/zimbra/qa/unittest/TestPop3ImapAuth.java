@@ -21,6 +21,7 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.net.SocketFactories;
 import junit.framework.TestCase;
 
@@ -274,7 +275,7 @@ extends TestCase {
     
     private void setServerAttr(String attrName, boolean value)
     throws Exception {
-        String val = value ? Provisioning.TRUE : Provisioning.FALSE;
+        String val = value ? ProvisioningConstants.TRUE : ProvisioningConstants.FALSE;
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(attrName, val);
         mProv.modifyAttrs(mProv.getLocalServer(), attrs);

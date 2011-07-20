@@ -20,6 +20,7 @@ import java.util.Map;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.CosBy;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.AccountServiceException;
@@ -98,7 +99,7 @@ public class ModifyZimlet extends AdminDocumentHandler {
 	    boolean status = val.equalsIgnoreCase("enabled");
 
 	    Map<String, String> attrRightNeeded = new HashMap<String,String>();
-	    attrRightNeeded.put(Provisioning.A_zimbraZimletEnabled, status ? Provisioning.TRUE : Provisioning.FALSE);
+	    attrRightNeeded.put(Provisioning.A_zimbraZimletEnabled, status ? ProvisioningConstants.TRUE : ProvisioningConstants.FALSE);
 	    checkRight(zsc, context, zimlet, attrRightNeeded);
 	    
 		try {

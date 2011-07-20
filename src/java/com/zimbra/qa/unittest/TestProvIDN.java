@@ -39,6 +39,7 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
@@ -341,7 +342,7 @@ public class TestProvIDN extends TestLdap {
         
         // when zimbraAllowNonLDHCharsInDomain is TRUE
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraAllowNonLDHCharsInDomain, Provisioning.TRUE);
+        attrs.put(Provisioning.A_zimbraAllowNonLDHCharsInDomain, ProvisioningConstants.TRUE);
         mProv.modifyAttrs(config, attrs);
         
         String prefix = "allowtest.";  // so that we don't run into domain exist problem
@@ -352,7 +353,7 @@ public class TestProvIDN extends TestLdap {
         
         // when zimbraAllowNonLDHCharsInDomain is FALSE
         attrs.clear();
-        attrs.put(Provisioning.A_zimbraAllowNonLDHCharsInDomain, Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraAllowNonLDHCharsInDomain, ProvisioningConstants.FALSE);
         mProv.modifyAttrs(config, attrs);
         
         prefix = "notallowtest.";

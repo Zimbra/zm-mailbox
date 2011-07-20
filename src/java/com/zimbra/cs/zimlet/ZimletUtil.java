@@ -60,6 +60,7 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.CosBy;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.DebugConfig;
@@ -686,10 +687,10 @@ public class ZimletUtil {
 		
 		String disableZimletUndeploy = zd.getDisableUIUndeploy();
 		if(disableZimletUndeploy != null && disableZimletUndeploy.equalsIgnoreCase("true"))
-			attrs.put(Provisioning.A_zimbraAdminExtDisableUIUndeploy, Provisioning.TRUE);
+			attrs.put(Provisioning.A_zimbraAdminExtDisableUIUndeploy, ProvisioningConstants.TRUE);
 		
 		if (zd.isExtension())
-			attrs.put(Provisioning.A_zimbraZimletIsExtension, Provisioning.TRUE);
+			attrs.put(Provisioning.A_zimbraZimletIsExtension, ProvisioningConstants.TRUE);
 		
 		ZimbraLog.zimlet.info("Deploying Zimlet " + zimletName + " in LDAP.");
 
@@ -844,7 +845,7 @@ public class ZimletUtil {
 			if (z == null)
 	            throw AccountServiceException.NO_SUCH_ZIMLET(zimlet);
             Map<String,String> attr = new HashMap<String,String>();
-            attr.put(Provisioning.A_zimbraZimletEnabled, enabled ? Provisioning.TRUE : Provisioning.FALSE);
+            attr.put(Provisioning.A_zimbraZimletEnabled, enabled ? ProvisioningConstants.TRUE : ProvisioningConstants.FALSE);
             prov.modifyAttrs(z, attr);
 		} catch (Exception e) {
 			if (enabled)

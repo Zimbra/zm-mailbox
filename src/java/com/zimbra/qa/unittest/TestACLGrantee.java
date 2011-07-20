@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Pair;
@@ -93,8 +94,8 @@ public class TestACLGrantee extends TestACL {
         Account nobody = mProv.createAccount(getEmailAddr(testName, "nobody"), PASSWORD, null);
         
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraIsDomainAdminAccount, Provisioning.TRUE);
-        attrs.put(Provisioning.A_zimbraIsDelegatedAdminAccount, Provisioning.TRUE);
+        attrs.put(Provisioning.A_zimbraIsDomainAdminAccount, ProvisioningConstants.TRUE);
+        attrs.put(Provisioning.A_zimbraIsDelegatedAdminAccount, ProvisioningConstants.TRUE);
         Account admin = mProv.createAccount(getEmailAddr(testName, "admin"), PASSWORD, attrs);
         
         /*

@@ -63,6 +63,7 @@ import javax.net.ssl.SSLHandshakeException;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
@@ -3928,7 +3929,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         
         // TODO, need admin UI work for zimbraAuthLdapStartTlsEnabled
         String startTLSEnabled = (String) attrs.get(Provisioning.A_zimbraAuthLdapStartTlsEnabled);
-        boolean startTLS = startTLSEnabled == null ? false : Provisioning.TRUE.equals(startTLSEnabled);
+        boolean startTLS = startTLSEnabled == null ? false : ProvisioningConstants.TRUE.equals(startTLSEnabled);
         boolean requireStartTLS = LdapConnType.requireStartTLS(url,  startTLS);
         
         try {
@@ -4558,11 +4559,11 @@ public class LegacyLdapProvisioning extends LdapProv {
             Attributes attrs = new BasicAttributes(true);
             String hasKeyword = LdapConstants.LDAP_FALSE;
             if (zimletAttrs.containsKey(A_zimbraZimletKeyword)) {
-                hasKeyword = Provisioning.TRUE;
+                hasKeyword = ProvisioningConstants.TRUE;
             }
             LegacyLdapUtil.mapToAttrs(zimletAttrs, attrs);
             LegacyLdapUtil.addAttr(attrs, A_objectClass, "zimbraZimletEntry");
-            LegacyLdapUtil.addAttr(attrs, A_zimbraZimletEnabled, Provisioning.FALSE);
+            LegacyLdapUtil.addAttr(attrs, A_zimbraZimletEnabled, ProvisioningConstants.FALSE);
             LegacyLdapUtil.addAttr(attrs, A_zimbraZimletIndexingEnabled, hasKeyword);
             LegacyLdapUtil.addAttr(attrs, A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
 
@@ -5803,7 +5804,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         if (ldapEntry == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
 
-        if (identityName.equalsIgnoreCase(DEFAULT_IDENTITY_NAME))
+        if (identityName.equalsIgnoreCase(ProvisioningConstants.DEFAULT_IDENTITY_NAME))
                 throw AccountServiceException.IDENTITY_EXISTS(identityName);
 
         List<Identity> existing = getAllIdentities(account);
@@ -5862,7 +5863,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         // clear cache
         account.setCachedData(IDENTITY_LIST_CACHE_KEY, null);
 
-        if (identityName.equalsIgnoreCase(DEFAULT_IDENTITY_NAME)) {
+        if (identityName.equalsIgnoreCase(ProvisioningConstants.DEFAULT_IDENTITY_NAME)) {
             modifyAttrs(account, identityAttrs);
         } else {
 
@@ -5886,7 +5887,7 @@ public class LegacyLdapProvisioning extends LdapProv {
 
     private void renameIdentity(LdapEntry entry, LdapIdentity identity, String newIdentityName) throws ServiceException {
 
-        if (identity.getName().equalsIgnoreCase(DEFAULT_IDENTITY_NAME))
+        if (identity.getName().equalsIgnoreCase(ProvisioningConstants.DEFAULT_IDENTITY_NAME))
             throw ServiceException.INVALID_REQUEST("can't rename default identity", null);
 
         LegacyZimbraLdapContext zlc = null;
@@ -5909,7 +5910,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         if (ldapEntry == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
 
-        if (identityName.equalsIgnoreCase(DEFAULT_IDENTITY_NAME))
+        if (identityName.equalsIgnoreCase(ProvisioningConstants.DEFAULT_IDENTITY_NAME))
             throw ServiceException.INVALID_REQUEST("can't delete default identity", null);
 
         account.setCachedData(IDENTITY_LIST_CACHE_KEY, null);

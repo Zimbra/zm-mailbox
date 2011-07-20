@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.NamedEntry.Visitor;
@@ -493,9 +494,9 @@ public final class MockProvisioning extends Provisioning {
     @Override
     public Identity getDefaultIdentity(Account account) {
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(A_zimbraPrefIdentityName, DEFAULT_IDENTITY_NAME);
+        attrs.put(A_zimbraPrefIdentityName, ProvisioningConstants.DEFAULT_IDENTITY_NAME);
         attrs.put(A_zimbraPrefIdentityId, account.getId());
-        return new Identity(account, DEFAULT_IDENTITY_NAME, account.getId(), attrs, this);
+        return new Identity(account, ProvisioningConstants.DEFAULT_IDENTITY_NAME, account.getId(), attrs, this);
     }
 
     @Override

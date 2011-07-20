@@ -46,6 +46,7 @@ import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.admin.AdminAccessControl;
@@ -229,7 +230,7 @@ public class GetInfo extends AccountDocumentHandler  {
                 value = locale;
             } else if (Provisioning.A_zimbraAttachmentsBlocked.equals(key)) {
                 // leave this a special case for now, until we have enough incidences to make it a pattern
-                value = config.isAttachmentsBlocked() || acct.isAttachmentsBlocked() ? Provisioning.TRUE : Provisioning.FALSE;
+                value = config.isAttachmentsBlocked() || acct.isAttachmentsBlocked() ? ProvisioningConstants.TRUE : ProvisioningConstants.FALSE;
             } else {
                 value = attrsMap.get(key);
                 

@@ -40,6 +40,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
@@ -490,9 +491,9 @@ public abstract class WikiUtil {
         if (!acct.getBooleanAttr(Provisioning.A_zimbraHideInGal, false) ||
                 !acct.getBooleanAttr(Provisioning.A_zimbraIsSystemResource, false)) {
             Map<String,Object> attrs = new HashMap<String, Object>();
-            attrs.put(Provisioning.A_zimbraHideInGal, Provisioning.TRUE);
-            attrs.put(Provisioning.A_zimbraIsSystemResource, Provisioning.TRUE);
-            attrs.put(Provisioning.A_zimbraIsSystemAccount, Provisioning.TRUE);
+            attrs.put(Provisioning.A_zimbraHideInGal, ProvisioningConstants.TRUE);
+            attrs.put(Provisioning.A_zimbraIsSystemResource, ProvisioningConstants.TRUE);
+            attrs.put(Provisioning.A_zimbraIsSystemAccount, ProvisioningConstants.TRUE);
             mProv.modifyAttrs(acct, attrs, true);
         }
         try {

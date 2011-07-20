@@ -15,8 +15,6 @@
 
 package com.zimbra.cs.zclient;
 
-import com.zimbra.cs.account.Provisioning;
-
 import org.json.JSONException;
 
 import java.util.ArrayList;
@@ -28,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Multimap;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.KeyValuePair;
@@ -114,7 +113,7 @@ public class ZGetInfoResult implements ToZJSONObject {
     }
 
     public Map<String, List<String>> getZimletProps() {
-        return MapUtil.multimapToMapOfLists(data.getPropsMultimap(Provisioning.A_zimbraZimletUserProperties));
+        return MapUtil.multimapToMapOfLists(data.getPropsMultimap(ZAttrProvisioning.A_zimbraZimletUserProperties));
     }
 
     /***
@@ -125,10 +124,10 @@ public class ZGetInfoResult implements ToZJSONObject {
         Multimap<String, String> attrs = data.getAttrsMultimap();
         Set<String> addresses = new HashSet<String>();
         addresses.add(getName().toLowerCase());
-        for (String alias : attrs.get(Provisioning.A_zimbraMailAlias)) {
+        for (String alias : attrs.get(ZAttrProvisioning.A_zimbraMailAlias)) {
             addresses.add(alias.toLowerCase());
         }
-        for (String allowFrom : attrs.get(Provisioning.A_zimbraAllowFromAddress)) {
+        for (String allowFrom : attrs.get(ZAttrProvisioning.A_zimbraAllowFromAddress)) {
             addresses.add(allowFrom.toLowerCase());
         }
         return addresses;

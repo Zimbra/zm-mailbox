@@ -36,6 +36,7 @@ import java.util.regex.PatternSyntaxException;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
@@ -3870,7 +3871,7 @@ public class LdapProvisioning extends LdapProv {
         
         // TODO, need admin UI work for zimbraAuthLdapStartTlsEnabled
         String startTLSEnabled = (String) attrs.get(Provisioning.A_zimbraAuthLdapStartTlsEnabled);
-        boolean requireStartTLS = startTLSEnabled == null ? false : Provisioning.TRUE.equals(startTLSEnabled);
+        boolean requireStartTLS = startTLSEnabled == null ? false : ProvisioningConstants.TRUE.equals(startTLSEnabled);
         
         try {
             String searchFilter = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchFilter);
@@ -4487,14 +4488,14 @@ public class LdapProvisioning extends LdapProv {
 
             String hasKeyword = LdapConstants.LDAP_FALSE;
             if (zimletAttrs.containsKey(A_zimbraZimletKeyword)) {
-                hasKeyword = Provisioning.TRUE;
+                hasKeyword = ProvisioningConstants.TRUE;
             }
             
             ZMutableEntry entry = LdapClient.createMutableEntry();
             entry.mapToAttrs(zimletAttrs);
 
             entry.setAttr(A_objectClass, "zimbraZimletEntry");
-            entry.setAttr(A_zimbraZimletEnabled, Provisioning.FALSE);
+            entry.setAttr(A_zimbraZimletEnabled, ProvisioningConstants.FALSE);
             entry.setAttr(A_zimbraZimletIndexingEnabled, hasKeyword);
             entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
 
@@ -5741,7 +5742,7 @@ public class LdapProvisioning extends LdapProv {
         if (ldapEntry == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
 
-        if (identityName.equalsIgnoreCase(DEFAULT_IDENTITY_NAME))
+        if (identityName.equalsIgnoreCase(ProvisioningConstants.DEFAULT_IDENTITY_NAME))
                 throw AccountServiceException.IDENTITY_EXISTS(identityName);
 
         List<Identity> existing = getAllIdentities(account);
@@ -5801,7 +5802,7 @@ public class LdapProvisioning extends LdapProv {
         // clear cache
         account.setCachedData(IDENTITY_LIST_CACHE_KEY, null);
 
-        if (identityName.equalsIgnoreCase(DEFAULT_IDENTITY_NAME)) {
+        if (identityName.equalsIgnoreCase(ProvisioningConstants.DEFAULT_IDENTITY_NAME)) {
             modifyAttrs(account, identityAttrs);
         } else {
 
@@ -5825,7 +5826,7 @@ public class LdapProvisioning extends LdapProv {
 
     private void renameIdentity(LdapEntry entry, LdapIdentity identity, String newIdentityName) throws ServiceException {
 
-        if (identity.getName().equalsIgnoreCase(DEFAULT_IDENTITY_NAME))
+        if (identity.getName().equalsIgnoreCase(ProvisioningConstants.DEFAULT_IDENTITY_NAME))
             throw ServiceException.INVALID_REQUEST("can't rename default identity", null);
 
         ZLdapContext zlc = null;
@@ -5846,7 +5847,7 @@ public class LdapProvisioning extends LdapProv {
         if (ldapEntry == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(account.getName());
 
-        if (identityName.equalsIgnoreCase(DEFAULT_IDENTITY_NAME))
+        if (identityName.equalsIgnoreCase(ProvisioningConstants.DEFAULT_IDENTITY_NAME))
             throw ServiceException.INVALID_REQUEST("can't delete default identity", null);
 
         account.setCachedData(IDENTITY_LIST_CACHE_KEY, null);

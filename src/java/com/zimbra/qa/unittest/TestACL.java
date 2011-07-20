@@ -33,6 +33,7 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.common.account.Key.TargetBy;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
@@ -110,7 +111,7 @@ public abstract class TestACL extends TestCase {
             
             // create a system admin account
             Map<String, Object> attrs = new HashMap<String, Object>();
-            attrs.put(Provisioning.A_zimbraIsAdminAccount, Provisioning.TRUE);
+            attrs.put(Provisioning.A_zimbraIsAdminAccount, ProvisioningConstants.TRUE);
             String sysAdminEmail = getEmailAddr("sysadmin");
             mSysAdminAcct = mProv.createAccount(sysAdminEmail, PASSWORD, attrs);
                 
@@ -193,13 +194,13 @@ public abstract class TestACL extends TestCase {
     
     protected Account createAdminAccount(String email) throws ServiceException {
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraIsAdminAccount, Provisioning.TRUE);
+        attrs.put(Provisioning.A_zimbraIsAdminAccount, ProvisioningConstants.TRUE);
         return mProv.createAccount(email, PASSWORD, attrs);
     }
     
     protected DistributionList createAdminGroup(String email) throws ServiceException {
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraIsAdminGroup, Provisioning.TRUE);
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, ProvisioningConstants.TRUE);
         return mProv.createDistributionList(email, attrs);
     }
     
@@ -209,21 +210,21 @@ public abstract class TestACL extends TestCase {
     
     protected void makeAccountAdmin(Account acct) throws ServiceException {
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraIsAdminAccount, Provisioning.TRUE);
+        attrs.put(Provisioning.A_zimbraIsAdminAccount, ProvisioningConstants.TRUE);
         mProv.modifyAttrs(acct, attrs);
         flushAccountCache(acct);
     }
     
     protected void makeGroupAdmin(DistributionList group) throws ServiceException {
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraIsAdminGroup, Provisioning.TRUE);
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, ProvisioningConstants.TRUE);
         mProv.modifyAttrs(group, attrs);
         mProv.flushCache(CacheEntryType.group, null);
     }
     
     protected void makeGroupNonAdmin(DistributionList group) throws ServiceException {
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraIsAdminGroup, Provisioning.FALSE);
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, ProvisioningConstants.FALSE);
         mProv.modifyAttrs(group, attrs);
         mProv.flushCache(CacheEntryType.group, null);
     }

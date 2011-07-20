@@ -21,6 +21,7 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -95,7 +96,7 @@ public class TestImapOneWayImport extends TestCase {
         // Turn on cleartext login
         mOriginalCleartextValue = TestUtil.getServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled);
         TestUtil.setServerAttr(
-            Provisioning.A_zimbraImapCleartextLoginEnabled, Provisioning.TRUE);
+            Provisioning.A_zimbraImapCleartextLoginEnabled, ProvisioningConstants.TRUE);
 
         // Turn off STARTTLS support so that unit tests don't bomb on Linux
         // (see bug 33683).

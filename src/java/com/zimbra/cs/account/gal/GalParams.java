@@ -16,6 +16,7 @@ package com.zimbra.cs.account.gal;
 
 import java.util.Map;
 
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
@@ -164,7 +165,7 @@ public abstract class GalParams {
                 krb5Keytab = ldapEntry.getAttr(Provisioning.A_zimbraGalLdapKerberos5Keytab);
             }
             
-            boolean startTLS = startTlsEnabled == null ? false : Provisioning.TRUE.equals(startTlsEnabled);
+            boolean startTLS = startTlsEnabled == null ? false : ProvisioningConstants.TRUE.equals(startTlsEnabled);
             mRequireStartTLS = LdapConnType.requireStartTLS(mUrl,  startTLS);
             mCredential = new LdapGalCredential(authMech, bindDn, bindPassword, krb5Principal, krb5Keytab);
         }
@@ -235,7 +236,7 @@ public abstract class GalParams {
                 krb5Keytab = (String)attrs.get(Provisioning.A_zimbraGalLdapKerberos5Keytab);
             }
                 
-            boolean startTLS = startTlsEnabled == null ? false : Provisioning.TRUE.equals(startTlsEnabled);
+            boolean startTLS = startTlsEnabled == null ? false : ProvisioningConstants.TRUE.equals(startTlsEnabled);
             mRequireStartTLS = LdapConnType.requireStartTLS(mUrl,  startTLS);
             mCredential = new LdapGalCredential(authMech, bindDn, bindPassword, krb5Principal, krb5Keytab);
         }

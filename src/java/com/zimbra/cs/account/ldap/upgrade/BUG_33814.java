@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AttributeClass;
@@ -61,8 +62,8 @@ public class BUG_33814 extends UpgradeOp {
 
         String value = null;
         
-        if (Provisioning.TRUE.equals(zimbraMtaAuthEnabled)) {
-            if (Provisioning.TRUE.equals(zimbraMtaTlsAuthOnly))
+        if (ProvisioningConstants.TRUE.equals(zimbraMtaAuthEnabled)) {
+            if (ProvisioningConstants.TRUE.equals(zimbraMtaTlsAuthOnly))
                 value = TLSLEVEL_ENCRYPT;
             else
                 value = TLSLEVEL_MAY;
@@ -92,22 +93,22 @@ public class BUG_33814 extends UpgradeOp {
 
         String value = null;
         
-        if (Provisioning.TRUE.equals(zimbraMtaAuthEnabledOnServer)) {
-            if (Provisioning.TRUE.equals(zimbraMtaTlsAuthOnly))
+        if (ProvisioningConstants.TRUE.equals(zimbraMtaAuthEnabledOnServer)) {
+            if (ProvisioningConstants.TRUE.equals(zimbraMtaTlsAuthOnly))
                 value = TLSLEVEL_ENCRYPT;
             else
                 value = TLSLEVEL_MAY;
                 
-        } else if (Provisioning.FALSE.equals(zimbraMtaAuthEnabledOnServer)) {
+        } else if (ProvisioningConstants.FALSE.equals(zimbraMtaAuthEnabledOnServer)) {
             value = TLSLEVEL_NONE;
         } else {
             // zimbraMtaAuthEnabled is not set on server
             
             // see what's on global config
-            if (Provisioning.TRUE.equals(zimbraMtaAuthEnabled)) {
-                if (Provisioning.TRUE.equals(zimbraMtaTlsAuthOnlyOnServer))
+            if (ProvisioningConstants.TRUE.equals(zimbraMtaAuthEnabled)) {
+                if (ProvisioningConstants.TRUE.equals(zimbraMtaTlsAuthOnlyOnServer))
                     value = TLSLEVEL_ENCRYPT;
-                else if (Provisioning.FALSE.equals(zimbraMtaTlsAuthOnlyOnServer))
+                else if (ProvisioningConstants.FALSE.equals(zimbraMtaTlsAuthOnlyOnServer))
                     value = TLSLEVEL_MAY;
                 // else zimbraMtaTlsAuthOnly is also not set on server, do not 
                 // set zimbraMtaTlsSecurityLevel and just let it inherit from global config
