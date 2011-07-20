@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,13 +23,13 @@ import com.zimbra.common.util.DateParser;
 /**
  * Container class for Sieve constants, enums, and operations.
  */
-public class Sieve {
+public final class Sieve {
 
     public static final DateParser DATE_PARSER = new DateParser("yyyyMMdd");
 
     public enum Condition {
         allof, anyof;
-    
+
         public static Condition fromString(String value)
         throws ServiceException {
             if (value == null) {
@@ -45,10 +45,9 @@ public class Sieve {
     }
 
     public enum Flag {
-        read, flagged;
-    
-        public static Flag fromString(String value)
-        throws ServiceException {
+        read, flagged, priority;
+
+        public static Flag fromString(String value) throws ServiceException {
             if (value == null) {
                 return null;
             }
@@ -56,14 +55,14 @@ public class Sieve {
                 return Flag.valueOf(value);
             } catch (IllegalArgumentException e) {
                 throw ServiceException.PARSE_ERROR(
-                    "Invalid value: " + value + ", valid values: " + Arrays.asList(Flag.values()), e);
+                        "Invalid value: " + value + ", valid values: " + Arrays.asList(Flag.values()), e);
             }
         }
     }
 
     public enum StringComparison {
         is, contains, matches;
-    
+
         public static StringComparison fromString(String value)
         throws ServiceException {
             if (value == null) {
@@ -80,7 +79,7 @@ public class Sieve {
 
     public enum AddressPart {
         all, localpart, domain;
-    
+
         public static AddressPart fromString(String value)
         throws ServiceException {
             if (value == null) {
@@ -98,13 +97,13 @@ public class Sieve {
     public enum Comparator {
         ioctet("i;octet"),
         iasciicasemap("i;ascii-casemap");
-    
+
         private String value;
-    
+
         private Comparator(String value) {
             this.value = value;
         }
-    
+
         public static Comparator fromString(String value)
         throws ServiceException {
             if (value == null)
@@ -115,7 +114,7 @@ public class Sieve {
             }
             throw ServiceException.PARSE_ERROR("Invalid Comparator value: " + value, null);
         }
-    
+
         @Override
         public String toString() {
             return value;
@@ -124,7 +123,7 @@ public class Sieve {
 
     public enum NumberComparison {
         over, under;
-    
+
         public static NumberComparison fromString(String value)
         throws ServiceException {
             if (value == null) {
@@ -141,7 +140,7 @@ public class Sieve {
 
     public enum DateComparison {
         before, after;
-    
+
         public static DateComparison fromString(String value)
         throws ServiceException {
             if (value == null) {
