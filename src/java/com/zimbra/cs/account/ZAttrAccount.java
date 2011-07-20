@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.account;
 
+import com.zimbra.common.account.ZAttr;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.StringUtil;
@@ -35,7 +36,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110718-1551 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110719-1635 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
