@@ -264,12 +264,12 @@ abstract public class MailDataSource implements DataSource {
     }
 
     @Override
-    public DataSource.ConnectionType getConnectionType() {
+    public ConnectionType getConnectionType() {
         return MdsConnectionType.MCT_TO_CT.apply(mdsConnectionType);
     }
 
     @Override
-    public void setConnectionType(DataSource.ConnectionType connectionType) {
+    public void setConnectionType(ConnectionType connectionType) {
         this.mdsConnectionType = MdsConnectionType.CT_TO_MCT.apply(connectionType);
     }
 
