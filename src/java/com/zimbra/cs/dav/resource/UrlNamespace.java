@@ -400,10 +400,8 @@ public class UrlNamespace {
                 String uid = path.substring(index + 1, path.length() - CalendarObject.CAL_EXTENSION.length());
                 index = uid.indexOf(',');
                 if (index > 0) {
-                    String accountId = uid.substring(0, index);
                     try {
-                        if (accountId.equals(account.getId()))
-                            id = Integer.parseInt(uid.substring(index+1));
+                        id = Integer.parseInt(uid.substring(index+1));
                     } catch (NumberFormatException e) {
                     }
                 }
