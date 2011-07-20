@@ -15,18 +15,19 @@
 
 package com.zimbra.cs.zclient;
 
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+
+import org.json.JSONException;
+
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.mailbox.MailServiceException;
-import org.json.JSONException;
-
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class ZEmailAddress implements ToZJSONObject {
 
@@ -171,7 +172,7 @@ public class ZEmailAddress implements ToZJSONObject {
             }
             return result;
         } catch (AddressException e) {
-            throw MailServiceException.ADDRESS_PARSE_ERROR(e);
+            throw ServiceException.INVALID_REQUEST("Couldn't parse address", e);
         }
     }
 }
