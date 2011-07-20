@@ -15,10 +15,14 @@
 
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.mailbox.RetentionPolicyManager;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -28,9 +32,15 @@ import com.zimbra.soap.mail.type.Policy;
 
 public class CreateSystemRetentionPolicy extends AdminDocumentHandler {
 
+    static final String SYSTEM_RETENTION_POLICY_ATTR = Provisioning.A_zimbraMailPurgeSystemPolicy;
+    
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        
+        // check right
+        checkSetRight(zsc, context, this);
+        
         CreateSystemRetentionPolicyRequest req = JaxbUtil.elementToJaxb(request);
         
         Policy keep = req.getKeepPolicy();
@@ -50,5 +60,19 @@ public class CreateSystemRetentionPolicy extends AdminDocumentHandler {
         }
         CreateSystemRetentionPolicyResponse res = new CreateSystemRetentionPolicyResponse(newPolicy);
         return JaxbUtil.jaxbToElement(res, zsc.getResponseProtocol().getFactory());
+    }
+    
+    static void checkSetRight(ZimbraSoapContext zsc, Map<String, Object> context,
+            AdminDocumentHandler handler) 
+    throws ServiceException {
+        Config config = Provisioning.getInstance().getConfig();
+        AdminAccessControl.SetAttrsRight sar = new AdminAccessControl.SetAttrsRight();
+        sar.addAttr(CreateSystemRetentionPolicy.SYSTEM_RETENTION_POLICY_ATTR);
+        handler.checkRight(zsc, context, config, sar);
+    }
+    
+    @Override
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        notes.add("Need set attr right on attribute " + SYSTEM_RETENTION_POLICY_ATTR);
     }
 }

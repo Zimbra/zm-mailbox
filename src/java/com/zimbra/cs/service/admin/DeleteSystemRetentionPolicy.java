@@ -15,10 +15,12 @@
 
 package com.zimbra.cs.service.admin;
 
+import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.mailbox.RetentionPolicyManager;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -31,6 +33,10 @@ public class DeleteSystemRetentionPolicy extends AdminDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        
+        // check right
+        CreateSystemRetentionPolicy.checkSetRight(zsc, context, this);
+        
         DeleteSystemRetentionPolicyRequest req = JaxbUtil.elementToJaxb(request);
         Policy policy = req.getPolicy();
         if (policy == null) {
@@ -46,6 +52,11 @@ public class DeleteSystemRetentionPolicy extends AdminDocumentHandler {
         }
         DeleteSystemRetentionPolicyResponse res = new DeleteSystemRetentionPolicyResponse();
         return JaxbUtil.jaxbToElement(res, zsc.getResponseProtocol().getFactory()); 
+    }
+    
+    @Override
+    public void docRights(List<AdminRight> relatedRights, List<String> notes) {
+        notes.add("Need set attr right on attribute " + CreateSystemRetentionPolicy.SYSTEM_RETENTION_POLICY_ATTR);
     }
 
 }
