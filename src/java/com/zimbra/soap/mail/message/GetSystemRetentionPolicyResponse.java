@@ -24,7 +24,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=MailConstants.E_GET_SYSTEM_RETENTION_POLICY_REQUEST)
+@XmlRootElement(name=MailConstants.E_GET_SYSTEM_RETENTION_POLICY_RESPONSE)
 public class GetSystemRetentionPolicyResponse {
 
     @XmlElement(name=MailConstants.E_RETENTION_POLICY)
@@ -35,11 +35,11 @@ public class GetSystemRetentionPolicyResponse {
      */
     public GetSystemRetentionPolicyResponse() {
     }
-    
+
     public GetSystemRetentionPolicyResponse(RetentionPolicy rp) {
         retentionPolicy = rp;
     }
-    
+
     public RetentionPolicy getRetentionPolicy() {
         return retentionPolicy;
     }
