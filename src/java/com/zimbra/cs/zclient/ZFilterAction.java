@@ -1,21 +1,23 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.zclient;
 
+import com.google.common.base.Objects;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.zimbra.common.filter.Sieve;
-import com.zimbra.common.filter.Sieve.Flag;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -24,7 +26,6 @@ import com.zimbra.common.zclient.ZClientException;
 
 import org.json.JSONException;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -42,43 +43,32 @@ public abstract class ZFilterAction implements ToZJSONObject {
     public static final String A_TAG = "tag";
 
     public enum MarkOp {
-
-        READ, FLAGGED;
-
-        private static String[] mArgs = { "read", "flagged" };
+        READ, FLAGGED, PRIORITY;
 
         public static MarkOp fromString(String s) throws ServiceException {
             try {
                 return valueOf(s.toUpperCase());
             } catch (IllegalArgumentException e) {
-                throw ZClientException.CLIENT_ERROR("invalid op: "+s+", value values: "+Arrays.asList(values()), null);
+                throw ZClientException.CLIENT_ERROR("invalid op: " + s + ", valid values: " + Arrays.asList(values()),
+                        null);
             }
-        }
-
-        public String toProtoArg() { return mArgs[ordinal()]; }
-
-        public static MarkOp fromProtoString(String s) throws ServiceException {
-            s = s.trim().toLowerCase();
-            for (int i=0; i < mArgs.length; i++)
-                if (mArgs[i].equals(s)) return values()[i];
-            throw ZClientException.CLIENT_ERROR("invalid arg "+s+", valid values: "+ Arrays.asList(mArgs), null);
         }
     }
 
-    private String mName;
-    protected List<String> mArgs;
+    private final String name;
+    protected final List<String> args;
 
     private ZFilterAction(String name, String... args) {
-        mName = name;
-        mArgs = Collections.unmodifiableList(args != null ? Arrays.asList(args) : new ArrayList<String>());
+        this.name = name;
+        this.args = args != null ? ImmutableList.<String>copyOf(args) : Collections.<String>emptyList();
     }
 
     public String getName() {
-        return mName;
+        return name;
     }
 
     public List<String> getArgs() {
-        return mArgs;
+        return args;
     }
 
     public abstract String toActionString();
@@ -87,13 +77,13 @@ public abstract class ZFilterAction implements ToZJSONObject {
 
     public static ZFilterAction getAction(Element actionElement) throws ServiceException {
         String n = actionElement.getName();
-        if (n.equals(MailConstants.E_ACTION_KEEP))
+        if (n.equals(MailConstants.E_ACTION_KEEP)) {
             return new ZKeepAction();
-        else if (n.equals(MailConstants.E_ACTION_DISCARD))
+        } else if (n.equals(MailConstants.E_ACTION_DISCARD)) {
             return new ZDiscardAction();
-        else if (n.equals(MailConstants.E_ACTION_STOP))
+        } else if (n.equals(MailConstants.E_ACTION_STOP)) {
             return new ZStopAction();
-        else if (n.equals(MailConstants.E_ACTION_FILE_INTO)) {
+        } else if (n.equals(MailConstants.E_ACTION_FILE_INTO)) {
             String folderPath = actionElement.getAttribute(MailConstants.A_FOLDER_PATH);
             return new ZFileIntoAction(folderPath);
         } else if (n.equals(MailConstants.E_ACTION_TAG)) {
@@ -113,49 +103,82 @@ public abstract class ZFilterAction implements ToZJSONObject {
             return new ZNotifyAction(emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes);
         } else if (n.equals(MailConstants.E_ACTION_FLAG)) {
             Sieve.Flag flag = Sieve.Flag.fromString(actionElement.getAttribute(MailConstants.A_FLAG_NAME));
-            MarkOp op = (flag == Sieve.Flag.flagged ? MarkOp.FLAGGED : MarkOp.READ); 
-            return new ZMarkAction(op);
-        } else
-            throw ZClientException.CLIENT_ERROR("unknown filter action: "+n, null);
+            switch (flag) {
+                case read:
+                    return new ZMarkAction(MarkOp.READ);
+                case flagged:
+                    return new ZMarkAction(MarkOp.FLAGGED);
+                case priority:
+                    return new ZMarkAction(MarkOp.PRIORITY);
+                default:
+                    throw ZClientException.CLIENT_ERROR("unknown flag: " + flag, null);
+            }
+        } else {
+            throw ZClientException.CLIENT_ERROR("unknown filter action: " + n, null);
+        }
     }
 
-    public static class ZKeepAction extends ZFilterAction {
+    public static final class ZKeepAction extends ZFilterAction {
         public ZKeepAction() { super(A_KEEP); }
 
-        public String toActionString() { return "keep"; }
-        
+        @Override
+        public String toActionString() {
+            return "keep";
+        }
+
+        @Override
         Element toElement(Element parent) {
             return parent.addElement(MailConstants.E_ACTION_KEEP);
         }
     }
 
-    public static class ZDiscardAction extends ZFilterAction {
-        public ZDiscardAction() { super(A_DISCARD); }
+    public static final class ZDiscardAction extends ZFilterAction {
+        public ZDiscardAction() {
+            super(A_DISCARD);
+        }
 
-        public String toActionString() { return "discard"; }
+        @Override
+        public String toActionString() {
+            return "discard";
+        }
 
+        @Override
         Element toElement(Element parent) {
             return parent.addElement(MailConstants.E_ACTION_DISCARD);
         }
     }
 
-    public static class ZStopAction extends ZFilterAction {
-        public ZStopAction() { super(A_STOP); }
+    public static final class ZStopAction extends ZFilterAction {
+        public ZStopAction() {
+            super(A_STOP);
+        }
 
-        public String toActionString() { return "stop"; }
+        @Override
+        public String toActionString() {
+            return "stop";
+        }
 
+        @Override
         Element toElement(Element parent) {
             return parent.addElement(MailConstants.E_ACTION_STOP);
         }
     }
 
-    public static class ZFileIntoAction extends ZFilterAction {
-        public ZFileIntoAction(String folderPath) { super(A_FILEINTO, folderPath); }
+    public static final class ZFileIntoAction extends ZFilterAction {
+        public ZFileIntoAction(String folderPath) {
+            super(A_FILEINTO, folderPath);
+        }
 
-        public String getFolderPath() { return mArgs.get(0); }
+        public String getFolderPath() {
+            return args.get(0);
+        }
 
-        public String toActionString() { return "fileinto " + ZFilterRule.quotedString(getFolderPath()); }
+        @Override
+        public String toActionString() {
+            return "fileinto " + ZFilterRule.quotedString(getFolderPath());
+        }
 
+        @Override
         Element toElement(Element parent) {
             Element action = parent.addElement(MailConstants.E_ACTION_FILE_INTO);
             action.addAttribute(MailConstants.A_FOLDER_PATH, getFolderPath());
@@ -163,12 +186,21 @@ public abstract class ZFilterAction implements ToZJSONObject {
         }
     }
 
-    public static class ZTagAction extends ZFilterAction {
-        public ZTagAction(String tagName) { super(A_TAG, tagName); }
-        public String getTagName() { return mArgs.get(0); }
+    public static final class ZTagAction extends ZFilterAction {
+        public ZTagAction(String tagName) {
+            super(A_TAG, tagName);
+        }
 
-        public String toActionString() { return "tag " + ZFilterRule.quotedString(getTagName()); }
+        public String getTagName() {
+            return args.get(0);
+        }
 
+        @Override
+        public String toActionString() {
+            return "tag " + ZFilterRule.quotedString(getTagName());
+        }
+
+        @Override
         Element toElement(Element parent) {
             Element action = parent.addElement(MailConstants.E_ACTION_TAG);
             action.addAttribute(MailConstants.A_TAG_NAME, getTagName());
@@ -177,28 +209,55 @@ public abstract class ZFilterAction implements ToZJSONObject {
     }
 
     public static class ZMarkAction extends ZFilterAction {
-        private MarkOp mMarkOp;
+        private MarkOp op;
+
         public ZMarkAction(MarkOp op) {
-            super(A_FLAG, op.toProtoArg());
-            mMarkOp = op;
+            super(A_FLAG, op.name().toLowerCase());
+            this.op = op;
         }
 
-        public String getMarkOp() { return mMarkOp.name(); }
-        public String toActionString() { return "mark " + mMarkOp.name().toLowerCase(); }
-        
+        public String getMarkOp() {
+            return op.name();
+        }
+
+        @Override
+        public String toActionString() {
+            return "mark " + op.name().toLowerCase();
+        }
+
+        @Override
         Element toElement(Element parent) {
             Element action = parent.addElement(MailConstants.E_ACTION_FLAG);
-            Sieve.Flag flag = (mMarkOp == MarkOp.FLAGGED ? Sieve.Flag.flagged : Sieve.Flag.read);
-            action.addAttribute(MailConstants.A_FLAG_NAME, flag.toString());
+            switch (op) {
+                case FLAGGED:
+                    action.addAttribute(MailConstants.A_FLAG_NAME, Sieve.Flag.flagged.name());
+                    break;
+                case READ:
+                    action.addAttribute(MailConstants.A_FLAG_NAME, Sieve.Flag.read.name());
+                    break;
+                case PRIORITY:
+                    action.addAttribute(MailConstants.A_FLAG_NAME, Sieve.Flag.priority.name());
+                    break;
+            }
             return action;
         }
     }
 
-    public static class ZRedirectAction extends ZFilterAction {
-        public ZRedirectAction(String address) { super(A_REDIRECT, address); }
-        public String getAddress() { return mArgs.get(0); }
-        public String toActionString() { return "redirect " + ZFilterRule.quotedString(getAddress()); }
-        
+    public static final class ZRedirectAction extends ZFilterAction {
+        public ZRedirectAction(String address) {
+            super(A_REDIRECT, address);
+        }
+
+        public String getAddress() {
+            return args.get(0);
+        }
+
+        @Override
+        public String toActionString() {
+            return "redirect " + ZFilterRule.quotedString(getAddress());
+        }
+
+        @Override
         Element toElement(Element parent) {
             Element action = parent.addElement(MailConstants.E_ACTION_REDIRECT);
             action.addAttribute(MailConstants.A_ADDRESS, getAddress());
@@ -206,11 +265,21 @@ public abstract class ZFilterAction implements ToZJSONObject {
         }
     }
 
-    public static class ZReplyAction extends ZFilterAction {
-        public ZReplyAction(String bodyTemplate) { super(A_REPLY, bodyTemplate); }
-        public String getBodyTemplate() { return mArgs.get(0); }
-        public String toActionString() { return "reply " + getBodyTemplate(); }
+    public static final class ZReplyAction extends ZFilterAction {
+        public ZReplyAction(String bodyTemplate) {
+            super(A_REPLY, bodyTemplate);
+        }
 
+        public String getBodyTemplate() {
+            return args.get(0);
+        }
+
+        @Override
+        public String toActionString() {
+            return "reply " + getBodyTemplate();
+        }
+
+        @Override
         Element toElement(Element parent) {
             Element action = parent.addElement(MailConstants.E_ACTION_REPLY);
             action.addElement(MailConstants.E_CONTENT).addText(getBodyTemplate());
@@ -218,7 +287,7 @@ public abstract class ZFilterAction implements ToZJSONObject {
         }
     }
 
-    public static class ZNotifyAction extends ZFilterAction {
+    public static final class ZNotifyAction extends ZFilterAction {
         public ZNotifyAction(String emailAddr, String subjectTemplate, String bodyTemplate) {
             this(emailAddr, subjectTemplate, bodyTemplate, -1);
         }
@@ -228,21 +297,22 @@ public abstract class ZFilterAction implements ToZJSONObject {
         }
 
         public String getEmailAddr() {
-            return mArgs.get(0);
+            return args.get(0);
         }
 
         public String getSubjectTemplate() {
-            return mArgs.get(1);
+            return args.get(1);
         }
 
         public String getBodyTemplate() {
-            return mArgs.get(2);
+            return args.get(2);
         }
 
         public int getMaxBodyBytes() {
-            return Integer.valueOf(mArgs.get(3));
+            return Integer.valueOf(args.get(3));
         }
 
+        @Override
         public String toActionString() {
             return "notify " + getEmailAddr() + " " +
                     (StringUtil.enclose(getSubjectTemplate(), '"')) + " " +
@@ -250,28 +320,34 @@ public abstract class ZFilterAction implements ToZJSONObject {
                     (getMaxBodyBytes() == -1 ? "" : " " + getMaxBodyBytes());
         }
 
+        @Override
         Element toElement(Element parent) {
             Element action = parent.addElement(MailConstants.E_ACTION_NOTIFY);
             action.addAttribute(MailConstants.A_ADDRESS, getEmailAddr());
-            if (!StringUtil.isNullOrEmpty(getSubjectTemplate()))
+            if (!Strings.isNullOrEmpty(getSubjectTemplate())) {
                 action.addAttribute(MailConstants.A_SUBJECT, getSubjectTemplate());
-            if (!StringUtil.isNullOrEmpty(getBodyTemplate()))
+            }
+            if (!Strings.isNullOrEmpty(getBodyTemplate())) {
                 action.addElement(MailConstants.E_CONTENT).addText(getBodyTemplate());
-            if (getMaxBodyBytes() != -1)
+            }
+            if (getMaxBodyBytes() != -1) {
                 action.addAttribute(MailConstants.A_MAX_BODY_SIZE, getMaxBodyBytes());
+            }
             return action;
         }
     }
 
+    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject jo = new ZJSONObject();
-        jo.put("name", mName);
-        jo.putList("args", mArgs);
+        jo.put("name", name);
+        jo.putList("args", args);
         return jo;
     }
 
+    @Override
     public String toString() {
-        return String.format("[ZFilterAction %s]", mName);
+        return Objects.toStringHelper(this).add("name", name).toString();
     }
 
     public String dump() {

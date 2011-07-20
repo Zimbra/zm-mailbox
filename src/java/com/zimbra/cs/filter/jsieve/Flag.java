@@ -14,7 +14,6 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,19 +27,21 @@ import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.commands.AbstractActionCommand;
 import org.apache.jsieve.mail.MailAdapter;
 
+import com.google.common.collect.ImmutableMap;
+
 /**
  * @since Nov 8, 2004
  */
-public class Flag extends AbstractActionCommand {
+public final class Flag extends AbstractActionCommand {
 
-    private static Map<String, ActionFlag> FLAGS = new HashMap<String, ActionFlag>();
-
-    static {
-        FLAGS.put("read", new ActionFlag(com.zimbra.cs.mailbox.Flag.ID_UNREAD, false, "read"));
-        FLAGS.put("unread", new ActionFlag(com.zimbra.cs.mailbox.Flag.ID_UNREAD, true, "unread"));
-        FLAGS.put("flagged", new ActionFlag(com.zimbra.cs.mailbox.Flag.ID_FLAGGED, true, "flagged"));
-        FLAGS.put("unflagged", new ActionFlag(com.zimbra.cs.mailbox.Flag.ID_FLAGGED, false, "unflagged"));
-    }
+    private static final Map<String, ActionFlag> FLAGS = ImmutableMap.<String, ActionFlag>builder()
+        .put("read", new ActionFlag(com.zimbra.cs.mailbox.Flag.ID_UNREAD, false, "read"))
+        .put("unread", new ActionFlag(com.zimbra.cs.mailbox.Flag.ID_UNREAD, true, "unread"))
+        .put("flagged", new ActionFlag(com.zimbra.cs.mailbox.Flag.ID_FLAGGED, true, "flagged"))
+        .put("unflagged", new ActionFlag(com.zimbra.cs.mailbox.Flag.ID_FLAGGED, false, "unflagged"))
+        .put("priority", new ActionFlag(com.zimbra.cs.mailbox.Flag.ID_PRIORITY, true, "priority"))
+        .put("unpriority", new ActionFlag(com.zimbra.cs.mailbox.Flag.ID_PRIORITY, false, "priority"))
+        .build();
 
     @Override
     protected Object executeBasic(MailAdapter mail, Arguments args, Block arg2, SieveContext context) {

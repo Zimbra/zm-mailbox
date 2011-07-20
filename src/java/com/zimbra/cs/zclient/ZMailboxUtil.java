@@ -267,7 +267,8 @@ public class ZMailboxUtil implements DebugListener {
                 "    discard\n" +
                 "    fileinto \"/path\"\n" +
                 "    tag \"/tag\"\n" +
-                "    mark read|flagged\n" +
+                "    flag \"/flag\"\n" +
+                "    mark read|flagged|priority\n" +
                 "    redirect \"address\"\n" +
                 "    reply \"body-template\"\n" +
                 "    notify \"address\" \"subject-template\" \"body-template\" [\"max-body-size(bytes)\"]\n" +

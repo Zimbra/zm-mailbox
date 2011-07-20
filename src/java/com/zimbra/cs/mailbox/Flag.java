@@ -60,6 +60,7 @@ public final class Flag extends Tag {
         INDEXING_DEFERRED(-14, "\\IdxDeferred", HIDDEN),
         POPPED(-15, "\\Popped", 'p'),
         NOTE(-16, "\\Note", 't'),
+        PRIORITY(-17, "\\Priority", '+'),
         SUBSCRIBED(-20, "\\Subscribed", '*'),
         EXCLUDE_FREEBUSY(-21, "\\ExcludeFB", 'b'),
         CHECKED(-22, "\\Checked", '#'),
@@ -127,6 +128,7 @@ public final class Flag extends Tag {
     public static final int ID_INDEXING_DEFERRED = FlagInfo.INDEXING_DEFERRED.id;
     public static final int ID_POPPED = FlagInfo.POPPED.id;
     public static final int ID_NOTE = FlagInfo.NOTE.id;
+    public static final int ID_PRIORITY = FlagInfo.PRIORITY.id;
     public static final int ID_SUBSCRIBED = FlagInfo.SUBSCRIBED.id;
     public static final int ID_EXCLUDE_FREEBUSY = FlagInfo.EXCLUDE_FREEBUSY.id;
     public static final int ID_CHECKED = FlagInfo.CHECKED.id;
@@ -158,6 +160,7 @@ public final class Flag extends Tag {
     public static final int BITMASK_INDEXING_DEFERRED = FlagInfo.INDEXING_DEFERRED.bitmask;
     public static final int BITMASK_POPPED = FlagInfo.POPPED.bitmask;
     public static final int BITMASK_NOTE = FlagInfo.NOTE.bitmask;
+    public static final int BITMASK_PRIORITY = FlagInfo.PRIORITY.bitmask;
     public static final int BITMASK_SUBSCRIBED = FlagInfo.SUBSCRIBED.bitmask;
     public static final int BITMASK_EXCLUDE_FREEBUSY = FlagInfo.EXCLUDE_FREEBUSY.bitmask;
     public static final int BITMASK_CHECKED = FlagInfo.CHECKED.bitmask;
@@ -183,7 +186,7 @@ public final class Flag extends Tag {
         BITMASK_SYNC | BITMASK_NO_INFERIORS | BITMASK_GLOBAL;
     public static final int FLAGS_MESSAGE =
         BITMASK_FROM_ME | BITMASK_REPLIED | BITMASK_FORWARDED | BITMASK_DRAFT | BITMASK_NOTIFIED | BITMASK_UNREAD |
-        BITMASK_HIGH_PRIORITY | BITMASK_LOW_PRIORITY | BITMASK_POPPED | BITMASK_INVITE;
+        BITMASK_HIGH_PRIORITY | BITMASK_LOW_PRIORITY | BITMASK_POPPED | BITMASK_INVITE | BITMASK_PRIORITY;
     public static final int FLAGS_CALITEM =
         BITMASK_DRAFT | BITMASK_HIGH_PRIORITY | BITMASK_LOW_PRIORITY;
     public static final int FLAGS_GENERIC =

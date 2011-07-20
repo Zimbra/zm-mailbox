@@ -22,7 +22,7 @@ import org.junit.Test;
  *
  * @author ysasaki
  */
-public class FlagTest {
+public final class FlagTest {
 
     @SuppressWarnings("deprecation")
     @Test
@@ -43,6 +43,7 @@ public class FlagTest {
         Assert.assertEquals(-14, Flag.ID_INDEXING_DEFERRED);
         Assert.assertEquals(-15, Flag.ID_POPPED);
         Assert.assertEquals(-16, Flag.ID_NOTE);
+        Assert.assertEquals(-17, Flag.ID_PRIORITY);
         Assert.assertEquals(-20, Flag.ID_SUBSCRIBED);
         Assert.assertEquals(-21, Flag.ID_EXCLUDE_FREEBUSY);
         Assert.assertEquals(-22, Flag.ID_CHECKED);
@@ -76,6 +77,7 @@ public class FlagTest {
         Assert.assertEquals(8192, Flag.BITMASK_INDEXING_DEFERRED);
         Assert.assertEquals(16384, Flag.BITMASK_POPPED);
         Assert.assertEquals(32768, Flag.BITMASK_NOTE);
+        Assert.assertEquals(65536, Flag.BITMASK_PRIORITY);
         Assert.assertEquals(524288, Flag.BITMASK_SUBSCRIBED);
         Assert.assertEquals(1048576, Flag.BITMASK_EXCLUDE_FREEBUSY);
         Assert.assertEquals(2097152, Flag.BITMASK_CHECKED);

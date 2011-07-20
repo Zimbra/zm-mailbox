@@ -1168,7 +1168,7 @@ Messages:
   {conv-id}  = converstation id. only present if <m> is not enclosed within a <c> element
   {size}     = size in bytes
   {flags}    = (u)nread, (f)lagged, has (a)ttachment, (r)eplied, (s)ent by me, for(w)arded, calendar in(v)ite,
-               (d)raft, IMAP-\Deleted (x), (n)otification sent, urgent (!), low-priority (?)
+               (d)raft, IMAP-\Deleted (x), (n)otification sent, urgent (!), low-priority (?), priority (+)
   {date}     = secs since epoch, from date header in message
   {original-id} = message id of message being replied to/forwarded (outbound messages only)
   {url}      = content servlet relative url for retrieving message content
@@ -2893,7 +2893,7 @@ Actions:
   <actionDiscard />
   <actionFileInto folderPath="{folder-path}" />
   <actionTag tagName="{tag-name}" />
-  <actionFlag flagName="{flag}" />
+  <actionFlag flagName="{flagged|read|priority}" />
   <actionRedirect a="{email-address}" />
   <actionStop />
   <actionReply>
@@ -2910,7 +2910,6 @@ stringComparison values: is, contains, matches
 numberComparison values: over, under
 dateComparison values: before, after
 size values are in bytes (no suffix), kilobytes (50K), megabytes (50M) or gigabytes (2G)
-flag values: flagged, read
 <dateTest>: date values are are truncated to the day. Hours, minutes, and seconds are ignored.
 index is an integer, used to maintain the order of filter tests and actions.
 method values: anyrequest, anyreply, publish, request, reply, add, cancel, refresh,
