@@ -140,12 +140,6 @@ public abstract class AutoProvision {
         return acct;
     }
     
-    protected static boolean useLdapAuthSettings(Domain domain) {
-        String authMech = domain.getAttr(Provisioning.A_zimbraAuthMech);
-        return domain.isAutoProvUseLdapAuthSettings() && 
-            (Provisioning.AM_LDAP.equals(authMech)  || Provisioning.AM_AD.equals(authMech));
-    }
-    
     private static class AutoProvisionCachedInfo {
         
         private static AutoProvisionCachedInfo getInfo(Domain domain) throws ServiceException {
@@ -290,24 +284,10 @@ public abstract class AutoProvision {
     }
     
     protected ZAttributes getExternalAttrsByDn(String dn) throws ServiceException {
-        boolean useldapAuthSettings = useLdapAuthSettings(domain);
-        
         String url = domain.getAutoProvLdapURL();
         boolean wantStartTLS = domain.isAutoProvLdapStartTlsEnabled();
         String adminDN = domain.getAutoProvLdapAdminBindDn();
         String adminPassword = domain.getAutoProvLdapAdminBindPassword();
-        
-        if (useldapAuthSettings) {
-            url = LdapServerConfig.joinURLS(domain.getAuthLdapURL());
-            wantStartTLS = domain.isAuthLdapStartTlsEnabled();
-            adminDN = domain.getAuthLdapSearchBindDn();
-            adminPassword = domain.getAuthLdapSearchBindPassword();
-        } else {
-            url = domain.getAutoProvLdapURL();
-            wantStartTLS = domain.isAutoProvLdapStartTlsEnabled();
-            adminDN = domain.getAutoProvLdapAdminBindDn();
-            adminPassword = domain.getAutoProvLdapAdminBindPassword();
-        }
         
         ExternalLdapConfig config = new ExternalLdapConfig(url, wantStartTLS, 
                 null, adminDN, adminPassword, null, "auto provision account");
@@ -339,17 +319,8 @@ public abstract class AutoProvision {
             return attrs;
         }
     }
-    
-    protected ExternalEntry getExternalAttrsByName(AutoProvAuthMech authedByMech, 
-            String loginName, String loginPassword) throws ServiceException {
-        if ((authedByMech == null || AutoProvAuthMech.LDAP == authedByMech) && useLdapAuthSettings(domain)) {
-            return getExternalAttrsViaLdapAuthSettings(loginName, loginPassword);
-        } else {
-            return getExternalAttrsViaAutoProvSettings(loginName);
-        }
-    }
 
-    private ExternalEntry getExternalAttrsViaAutoProvSettings(String loginName) throws ServiceException {
+    protected ExternalEntry getExternalAttrsByName(String loginName) throws ServiceException {
         String url = domain.getAutoProvLdapURL();
         boolean wantStartTLS = domain.isAutoProvLdapStartTlsEnabled();
         String adminDN = domain.getAutoProvLdapAdminBindDn();
@@ -395,63 +366,6 @@ public abstract class AutoProvision {
         throw ServiceException.FAILURE("One of " + Provisioning.A_zimbraAutoProvLdapBindDn + 
                 " or " + Provisioning.A_zimbraAutoProvLdapSearchFilter + " must be set", null);
     }
-
-    private ExternalEntry getExternalAttrsViaLdapAuthSettings(String loginName, String loginPassword) 
-    throws ServiceException {
-        String url[] = domain.getAuthLdapURL();
-        boolean wantStartTLS = domain.isAuthLdapStartTlsEnabled();
-        String[] attrs = getAttrsToFetch();
-        
-        ZLdapContext zlc = null;
-        
-        try {
-            String searchFilter = domain.getAuthLdapSearchFilter();
-            if (searchFilter != null) {
-                String searchPassword = domain.getAuthLdapSearchBindPassword();
-                String searchDn = domain.getAuthLdapSearchBindDn();
-                String searchBase = domain.getAuthLdapSearchBase();
-                if (searchBase == null) {
-                    searchBase = "";
-                }
-                searchFilter = LdapUtilCommon.computeAuthDn(loginName, searchFilter);
-                ZimbraLog.autoprov.debug("AutoProvision: computed search filter" + searchFilter);
-                
-                ExternalLdapConfig config = new ExternalLdapConfig(url, wantStartTLS, 
-                        null, searchDn, searchPassword, null, "auto provision account");
-                zlc = LdapClient.getExternalContext(config, LdapUsage.AUTO_PROVISION);
-                
-                ZSearchResultEntry entry = prov.getHelper().searchForEntry(
-                        searchBase, ZLdapFilterFactory.getInstance().fromFilterString(searchFilter), 
-                        zlc, attrs);
-                
-                return new ExternalEntry(entry.getDN(), entry.getAttributes());
-            }
-            
-            String bindDNTemplate = domain.getAuthLdapBindDn();
-            if (bindDNTemplate != null) {
-                if (loginPassword == null) {
-                    throw ServiceException.FAILURE("no password, must configure " + 
-                            Provisioning.A_zimbraAuthLdapSearchFilter, null);
-                }
-                
-                String dn = LdapUtilCommon.computeAuthDn(loginName, bindDNTemplate);
-                ZimbraLog.autoprov.debug("AutoProvision: computed external DN" + dn);
-                
-                ExternalLdapConfig config = new ExternalLdapConfig(url, wantStartTLS, 
-                        null, dn, loginPassword, null, "auto provision account");
-                zlc = LdapClient.getExternalContext(config, LdapUsage.AUTO_PROVISION);
-                                
-                return new ExternalEntry(dn, prov.getHelper().getAttributes(dn, zlc, attrs));
-            }
-        
-        } finally {
-            LdapClient.closeContext(zlc);
-        }
-        
-        throw ServiceException.FAILURE("One of " + Provisioning.A_zimbraAuthLdapBindDn + 
-                " or " + Provisioning.A_zimbraAuthLdapSearchFilter + " must be set", null);
-    }
-
     
     protected void sendNotifMessage(Account acct, String password) throws ServiceException {
         String from = domain.getAutoProvNotificationFromAddress();
@@ -609,13 +523,13 @@ public abstract class AutoProvision {
      * 
      * Only one of filter or name can be provided.  
      * 
-     * - if name is provided, the search filter will be zimbraAutoProvLdapSearchFilter or 
-     *   zimbraAuthLdapSearchFilter with place holders filled with the name.
+     * - if name is provided, the search filter will be zimbraAutoProvLdapSearchFilter with place 
+     *   holders filled with the name.
      * 
      * - if filter is provided, the provided filter will be the search filter.
      * 
-     * - if neither is provided, the search filter will be zimbraAutoProvLdapSearchFilter or 
-     *   zimbraAuthLdapSearchFilter with place holders filled with "*".   If createTimestampLaterThan 
+     * - if neither is provided, the search filter will be zimbraAutoProvLdapSearchFilter with 
+     *   place holders filled with "*".   If createTimestampLaterThan 
      *   is provided, the search filter will be ANDed with (createTimestamp >= {timestamp}) 
      *
      */
@@ -627,31 +541,13 @@ public abstract class AutoProvision {
         if ((filter != null) && (name != null)) {
             throw ServiceException.INVALID_REQUEST("only one of filter or name can be provided", null);
         }
-        
-        boolean useLdapAuthSettings = useLdapAuthSettings(domain);
-        
-        String url;
-        boolean wantStartTLS;
-        String adminDN;
-        String adminPassword;
-        String searchBase;
-        String searchFilterTemplate;
-        
-        if (useLdapAuthSettings) {
-            url = LdapServerConfig.joinURLS(domain.getAuthLdapURL());
-            wantStartTLS = domain.isAuthLdapStartTlsEnabled();
-            adminDN = domain.getAuthLdapSearchBindDn();
-            adminPassword = domain.getAuthLdapSearchBindPassword();
-            searchBase = domain.getAuthLdapSearchBase();
-            searchFilterTemplate = domain.getAuthLdapSearchFilter();
-        } else {
-            url = domain.getAutoProvLdapURL();
-            wantStartTLS = domain.isAutoProvLdapStartTlsEnabled();
-            adminDN = domain.getAutoProvLdapAdminBindDn();
-            adminPassword = domain.getAutoProvLdapAdminBindPassword();
-            searchBase = domain.getAutoProvLdapSearchBase();
-            searchFilterTemplate = domain.getAutoProvLdapSearchFilter();
-        }
+
+        String url = domain.getAutoProvLdapURL();
+        boolean wantStartTLS = domain.isAutoProvLdapStartTlsEnabled();
+        String adminDN = domain.getAutoProvLdapAdminBindDn();
+        String adminPassword = domain.getAutoProvLdapAdminBindPassword();
+        String searchBase = domain.getAutoProvLdapSearchBase();
+        String searchFilterTemplate = domain.getAutoProvLdapSearchFilter();
         
         if (searchBase == null) {
             searchBase = LdapConstants.DN_ROOT_DSE;

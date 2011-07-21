@@ -77,7 +77,7 @@ class AutoProvisionLazy extends AutoProvision {
     }
     
     private Account createAccount() throws ServiceException {
-        ExternalEntry externalEntry = getExternalAttrsByName(authedByMech, loginName, loginPassword);
+        ExternalEntry externalEntry = getExternalAttrsByName(loginName);
         String acctZimbraName = mapName(externalEntry.getAttrs(), loginName);
         
         ZimbraLog.autoprov.info("auto creating account in LAZY mode: " + acctZimbraName);

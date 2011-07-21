@@ -42,7 +42,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110719-2042 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110719-2122 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -760,7 +760,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1239)
+    @ZAttr(id=1238)
     public long getAutoProvPollingInterval() {
         return getTimeInterval(Provisioning.A_zimbraAutoProvPollingInterval, 900000L);
     }
@@ -789,7 +789,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1239)
+    @ZAttr(id=1238)
     public String getAutoProvPollingIntervalAsString() {
         return getAttr(Provisioning.A_zimbraAutoProvPollingInterval, "15m");
     }
@@ -819,7 +819,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1239)
+    @ZAttr(id=1238)
     public void setAutoProvPollingInterval(String zimbraAutoProvPollingInterval) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvPollingInterval, zimbraAutoProvPollingInterval);
@@ -852,7 +852,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1239)
+    @ZAttr(id=1238)
     public Map<String,Object> setAutoProvPollingInterval(String zimbraAutoProvPollingInterval, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvPollingInterval, zimbraAutoProvPollingInterval);
@@ -883,7 +883,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1239)
+    @ZAttr(id=1238)
     public void unsetAutoProvPollingInterval() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvPollingInterval, "");
@@ -915,7 +915,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1239)
+    @ZAttr(id=1238)
     public Map<String,Object> unsetAutoProvPollingInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvPollingInterval, "");
@@ -933,7 +933,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1238)
+    @ZAttr(id=1237)
     public String[] getAutoProvScheduledDomains() {
         return getMultiAttr(Provisioning.A_zimbraAutoProvScheduledDomains);
     }
@@ -950,7 +950,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1238)
+    @ZAttr(id=1237)
     public void setAutoProvScheduledDomains(String[] zimbraAutoProvScheduledDomains) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvScheduledDomains, zimbraAutoProvScheduledDomains);
@@ -970,7 +970,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1238)
+    @ZAttr(id=1237)
     public Map<String,Object> setAutoProvScheduledDomains(String[] zimbraAutoProvScheduledDomains, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvScheduledDomains, zimbraAutoProvScheduledDomains);
@@ -989,7 +989,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1238)
+    @ZAttr(id=1237)
     public void addAutoProvScheduledDomains(String zimbraAutoProvScheduledDomains) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAutoProvScheduledDomains, zimbraAutoProvScheduledDomains);
@@ -1009,7 +1009,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1238)
+    @ZAttr(id=1237)
     public Map<String,Object> addAutoProvScheduledDomains(String zimbraAutoProvScheduledDomains, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAutoProvScheduledDomains, zimbraAutoProvScheduledDomains);
@@ -1028,7 +1028,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1238)
+    @ZAttr(id=1237)
     public void removeAutoProvScheduledDomains(String zimbraAutoProvScheduledDomains) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAutoProvScheduledDomains, zimbraAutoProvScheduledDomains);
@@ -1048,7 +1048,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1238)
+    @ZAttr(id=1237)
     public Map<String,Object> removeAutoProvScheduledDomains(String zimbraAutoProvScheduledDomains, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAutoProvScheduledDomains, zimbraAutoProvScheduledDomains);
@@ -1066,7 +1066,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1238)
+    @ZAttr(id=1237)
     public void unsetAutoProvScheduledDomains() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvScheduledDomains, "");
@@ -1085,7 +1085,7 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1238)
+    @ZAttr(id=1237)
     public Map<String,Object> unsetAutoProvScheduledDomains(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvScheduledDomains, "");

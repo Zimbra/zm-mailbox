@@ -58,43 +58,13 @@ $ zmprov md test.com +zimbraAutoProvAuthMech PREAUTH +zimbraAutoProvAuthMech KRB
 
 
 ------------------------------
-zimbraAutoProvUseLdapAuthSettings
-  type="boolean" cardinality="single" optionalIn="domain"
-  Exposed in admin console: YES
-  Description:
-     EAGER mode: optional
-      LAZY mode: optional
-    MANUAL mode: optional
-    
-    Default is FALSE.
-    
-    Whether to use external LDAP/AD auth settings for auto provisioning.  Purpose of this attribute 
-    is to simplify configuration for domains already configured with external LDAP/AD auth.  By 
-    setting this attribute to TRUE, domains can use the external LDAP/AD auth settings for auto 
-    provision and do not have to duplicate them.
-    
-    Honored when:
-      - for EAGER mode: always.
-      - for LAZY mode: only when user authenticated to Zimbra by external LDAP/AD auth.  
-      - for MANUAL mode: always.
-    If honored, all zimbraAutoProvLdap*** values are ignored, and settings for external LDAP/AD 
-    auth will be used.  If honored and external LDAP/AD auth is not configured or not configured 
-    properly, it will be a config error and we will not fallback to the zimbraAutoProvLdap*** 
-    values.
-
-
-examples:
-$ zmprov md test.com zimbraAutoProvUseLdapAuthSettings TRUE
-
-
-------------------------------
 zimbraAutoProvLdapURL
   type="string" max="256" cardinality="single" optionalIn="domain"
   Exposed in admin console: YES
   Description:
-     EAGER mode: required (if not using LDAP/AD auth settings) 
-      LAZY mode: required (if not using LDAP/AD auth settings) 
-    MANUAL mode: required (if not using LDAP/AD auth settings) 
+     EAGER mode: required
+      LAZY mode: required
+    MANUAL mode: required
     
     LDAP URL of the external LDAP source for auto provision.
 
@@ -126,9 +96,9 @@ zimbraAutoProvLdapAdminBindDn
   type="string" max="256" cardinality="single" optionalIn="domain"
   Exposed in admin console: YES
   Description:
-     EAGER mode: required (if not using LDAP/AD auth settings) 
-      LAZY mode: required (if not using LDAP/AD auth settings and is using zimbraAutoProvLdapSearchFilter), 
-    MANUAL mode: required (if not using LDAP/AD auth settings) 
+     EAGER mode: required
+      LAZY mode: required (if using zimbraAutoProvLdapSearchFilter) 
+    MANUAL mode: required
     
     LDAP search bind DN for auto provision.
 
@@ -141,9 +111,9 @@ zimbraAutoProvLdapAdminBindPassword
   type="string" max="256" cardinality="single" optionalIn="domain"
   Exposed in admin console: YES
   Description:
-     EAGER mode: required (if not using LDAP/AD auth settings) 
-      LAZY mode: required (if not using LDAP/AD auth settings and is using zimbraAutoProvLdapSearchFilter) 
-    MANUAL mode: required (if not using LDAP/AD auth settings) 
+     EAGER mode: required
+      LAZY mode: required
+    MANUAL mode: required
     
     LDAP search bind password for auto provision.
 
@@ -157,9 +127,9 @@ zimbraAutoProvLdapSearchBase
   type="string" max="256" cardinality="single" optionalIn="domain"
   Exposed in admin console: YES
   Description:
-     EAGER mode: required (if not using LDAP/AD auth settings) 
-      LAZY mode: required (if not using LDAP/AD auth settings and is using zimbraAutoProvLdapSearchFilter), 
-    MANUAL mode: required (if not using LDAP/AD auth settings) 
+     EAGER mode: required
+      LAZY mode: required (if using zimbraAutoProvLdapSearchFilter), 
+    MANUAL mode: required
     
     LDAP search base for auto provision, used in conjunction with zimbraAutoProvLdapSearchFilter.  
     If not set, LDAP root DSE will be used.
@@ -174,9 +144,9 @@ zimbraAutoProvLdapSearchFilter
   type="string" max="256" cardinality="single" optionalIn="domain"
   Exposed in admin console: YES
   Description:
-     EAGER mode: required (if not using LDAP/AD auth settings) 
-      LAZY mode: optional (if not using LDAP/AD auth settings) 
-    MANUAL mode: optional (if not using LDAP/AD auth settings)  
+     EAGER mode: required
+      LAZY mode: optional (if not using zimbraAutoProvLdapBindDn) 
+    MANUAL mode: optional (if not using zimbraAutoProvLdapBindDn)  
     
     LDAP search filter template for account auto provisioning.
     For LAZY and MANUAL modes, either zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn 
@@ -198,9 +168,9 @@ zimbraAutoProvLdapBindDn
   type="string" max="256" cardinality="single" optionalIn="domain"
   Exposed in admin console: YES
   Description:
-     EAGER mode: required (if not using LDAP/AD auth settings) 
-      LAZY mode: optional (if not using LDAP/AD auth settings) 
-    MANUAL mode: optional (if not using LDAP/AD auth settings) 
+     EAGER mode: required
+      LAZY mode: optional (if not using zimbraAutoProvLdapSearchFilters) 
+    MANUAL mode: optional (if not using zimbraAutoProvLdapSearchFilters) 
     
     LDAP external DN template for account auto provisioning.
     For LAZY and MANUAL modes, either zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn 

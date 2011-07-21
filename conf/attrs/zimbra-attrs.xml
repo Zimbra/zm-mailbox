@@ -5794,7 +5794,7 @@ TODO: delete them permerntly from here
             
     In all cases, localpart of the Zimbra account is mapped from an attribute on the external entry 
     based on zimbraAutoProvAccountNameMap.  The Zimbra account is populated with attributes mapped 
-    from the external entry based on zimbraAutoProvAttrMap.   
+    from the external entry based on zimbraAutoProvAttrMap.
   </desc>
 </attr>
 
@@ -5810,41 +5810,17 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1223" name="zimbraAutoProvUseLdapAuthSettings" type="boolean" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1223" name="zimbraAutoProvLdapURL" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
-     EAGER mode: optional
-      LAZY mode: optional
-    MANUAL mode: optional
-    
-    Default is FALSE.
-    
-    Whether to use external LDAP/AD auth settings for auto provisioning.  Purpose of this attribute 
-    is to simplify configuration for domains already configured with external LDAP/AD auth.  By 
-    setting this attribute to TRUE, domains can use the external LDAP/AD auth settings for auto 
-    provision and do not have to duplicate them.
-    
-    Honored when:
-      - for EAGER mode: always.
-      - for LAZY mode: only when user authenticated to Zimbra by external LDAP/AD auth.  
-      - for MANUAL mode: always.
-    If honored, all zimbraAutoProvLdap*** values are ignored, and settings for external LDAP/AD 
-    auth will be used.  If honored and external LDAP/AD auth is not configured or not configured 
-    properly, it will be a config error and we will not fallback to the zimbraAutoProvLdap*** 
-    values.
-  </desc>
-</attr>
-
-<attr id="1224" name="zimbraAutoProvLdapURL" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
-  <desc>
-     EAGER mode: required (if not using LDAP/AD auth settings) 
-      LAZY mode: required (if not using LDAP/AD auth settings) 
-    MANUAL mode: required (if not using LDAP/AD auth settings) 
+     EAGER mode: required
+      LAZY mode: required
+    MANUAL mode: required
     
     LDAP URL of the external LDAP source for auto provision.
   </desc>
 </attr>
 
-<attr id="1225" name="zimbraAutoProvLdapStartTlsEnabled" type="boolean" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1224" name="zimbraAutoProvLdapStartTlsEnabled" type="boolean" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
      EAGER mode: optional 
       LAZY mode: optional 
@@ -5856,42 +5832,42 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1226" name="zimbraAutoProvLdapAdminBindDn" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1225" name="zimbraAutoProvLdapAdminBindDn" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
-     EAGER mode: required (if not using LDAP/AD auth settings) 
-      LAZY mode: required (if not using LDAP/AD auth settings and is using zimbraAutoProvLdapSearchFilter) 
-    MANUAL mode: required (if not using LDAP/AD auth settings) 
+     EAGER mode: required
+      LAZY mode: required (if using zimbraAutoProvLdapSearchFilter) 
+    MANUAL mode: required
     
     LDAP search bind DN for auto provision.
   </desc>
 </attr>
 
-<attr id="1227" name="zimbraAutoProvLdapAdminBindPassword" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1226" name="zimbraAutoProvLdapAdminBindPassword" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
-     EAGER mode: required (if not using LDAP/AD auth settings) 
-      LAZY mode: required (if not using LDAP/AD auth settings and is using zimbraAutoProvLdapSearchFilter), 
-    MANUAL mode: required (if not using LDAP/AD auth settings) 
+     EAGER mode: required
+      LAZY mode: required
+    MANUAL mode: required
     
     LDAP search bind password for auto provision.
   </desc>
 </attr>
 
-<attr id="1228" name="zimbraAutoProvLdapSearchBase" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1227" name="zimbraAutoProvLdapSearchBase" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
-     EAGER mode: required (if not using LDAP/AD auth settings) 
-      LAZY mode: required (if not using LDAP/AD auth settings and is using zimbraAutoProvLdapSearchFilter), 
-    MANUAL mode: required (if not using LDAP/AD auth settings) 
+     EAGER mode: required
+      LAZY mode: required (if using zimbraAutoProvLdapSearchFilter), 
+    MANUAL mode: required
     
     LDAP search base for auto provision, used in conjunction with zimbraAutoProvLdapSearchFilter.  
     If not set, LDAP root DSE will be used.
   </desc>
 </attr>
 
-<attr id="1229" name="zimbraAutoProvLdapSearchFilter" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1228" name="zimbraAutoProvLdapSearchFilter" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
-     EAGER mode: required (if not using LDAP/AD auth settings) 
-      LAZY mode: optional (if not using LDAP/AD auth settings) 
-    MANUAL mode: optional (if not using LDAP/AD auth settings)  
+     EAGER mode: required
+      LAZY mode: optional (if not using zimbraAutoProvLdapBindDn) 
+    MANUAL mode: optional (if not using zimbraAutoProvLdapBindDn)  
     
     LDAP search filter template for account auto provisioning.
     For LAZY and MANUAL modes, either zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn 
@@ -5905,11 +5881,11 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1230" name="zimbraAutoProvLdapBindDn" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1229" name="zimbraAutoProvLdapBindDn" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
-     EAGER mode: required (if not using LDAP/AD auth settings) 
-      LAZY mode: optional (if not using LDAP/AD auth settings) 
-    MANUAL mode: optional (if not using LDAP/AD auth settings) 
+     EAGER mode: required
+      LAZY mode: optional (if not using zimbraAutoProvLdapSearchFilters) 
+    MANUAL mode: optional (if not using zimbraAutoProvLdapSearchFilters) 
     
     LDAP external DN template for account auto provisioning.
     For LAZY and MANUAL modes, either zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn 
@@ -5923,7 +5899,7 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1231" name="zimbraAutoProvAccountNameMap" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1230" name="zimbraAutoProvAccountNameMap" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
      EAGER mode: optional 
       LAZY mode: optional 
@@ -5935,12 +5911,12 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1232" name="zimbraAutoProvAttrMap" type="string" max="256" cardinality="multi" optionalIn="domain" since="8.0.0">
+<attr id="1231" name="zimbraAutoProvAttrMap" type="string" max="256" cardinality="multi" optionalIn="domain" since="8.0.0">
   <desc>
      EAGER mode: optional 
       LAZY mode: optional 
     MANUAL mode: optional  
-    
+  
     Attribute map for mapping attribute values from the external entry to Zimbra account attributes.
     Values are in the format of {external attribute}={zimbra attribute}.
     If not set, no attributes from the external directory will be populated in Zimrba directory.
@@ -5955,7 +5931,7 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1233" name="zimbraAutoProvNotificationFromAddress" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1232" name="zimbraAutoProvNotificationFromAddress" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
      EAGER mode: optional 
       LAZY mode: optional 
@@ -5966,7 +5942,7 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1234" name="zimbraAutoProvListenerClass" type="string" max="1024" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1233" name="zimbraAutoProvListenerClass" type="string" max="1024" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
      EAGER mode: optional 
       LAZY mode: optional 
@@ -5980,7 +5956,7 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1235" name="zimbraAutoProvBatchSize" type="integer" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited" since="8.0.0">
+<attr id="1234" name="zimbraAutoProvBatchSize" type="integer" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited" since="8.0.0">
   <globalConfigValue>20</globalConfigValue>
   <desc>
      EAGER mode: required 
@@ -5991,7 +5967,7 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1236" name="zimbraAutoProvLastPolledTimestamp" type="gentime" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1235" name="zimbraAutoProvLastPolledTimestamp" type="gentime" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
      EAGER mode: for Zimbra internal use only - do not change it.
       LAZY mode: N/A
@@ -6003,7 +5979,7 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1237" name="zimbraAutoProvLock" type="string" cardinality="single" optionalIn="domain" since="8.0.0">
+<attr id="1236" name="zimbraAutoProvLock" type="string" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
      EAGER mode: for Zimbra internal use only - do not change it.
       LAZY mode: N/A
@@ -6015,7 +5991,7 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1238" name="zimbraAutoProvScheduledDomains" type="string" cardinality="multi" optionalIn="server" since="8.0.0">
+<attr id="1237" name="zimbraAutoProvScheduledDomains" type="string" cardinality="multi" optionalIn="server" since="8.0.0">
   <desc>
      EAGER mode: required
       LAZY mode: N/A
@@ -6027,7 +6003,7 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1239" name="zimbraAutoProvPollingInterval" type="duration" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" callback="AutoProvPollingInterval" since="8.0.0">
+<attr id="1238" name="zimbraAutoProvPollingInterval" type="duration" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" callback="AutoProvPollingInterval" since="8.0.0">
   <globalConfigValue>15m</globalConfigValue>
   <desc>
      EAGER mode: required
@@ -6048,16 +6024,16 @@ TODO: delete them permerntly from here
   </desc>
 </attr>
 
-<attr id="1240" name="zimbraCalendarKeepExceptionsOnSeriesTimeChange" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.1.2">
+<attr id="1239" name="zimbraCalendarKeepExceptionsOnSeriesTimeChange" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.1.2">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether to retain exception instances when the recurrence series is changed to new time; set to FALSE for Exchange compatibility</desc>
 </attr>
 
-<attr id="1241" name="zimbraMailAddressValidationRegex" type="string" max="512" cardinality="multi" optionalIn="domain,globalConfig" flags="domainInherited,accountInfo" since="7.1.2">
+<attr id="1240" name="zimbraMailAddressValidationRegex" type="string" max="512" cardinality="multi" optionalIn="domain,globalConfig" flags="domainInherited,accountInfo" since="7.1.2">
   <desc>optional regex used by web client to validate email address</desc>
 </attr>
 
-<attr id="1242" name="zimbraMailPurgeSystemPolicy" type="string" cardinality="single" optionalIn="globalConfig" since="8.0">
+<attr id="1241" name="zimbraMailPurgeSystemPolicy" type="string" cardinality="single" optionalIn="globalConfig" since="8.0">
   <desc>System purge policy, encoded as metadata.  Users can apply these policy elements to their folders and tags.  If the system policy changes, user settings are automatically updated with the change.</desc>
 </attr>
 

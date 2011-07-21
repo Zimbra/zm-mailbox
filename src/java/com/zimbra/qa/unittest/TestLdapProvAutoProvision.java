@@ -308,68 +308,6 @@ public class TestLdapProvAutoProvision extends TestLdap {
         verifyAcctAutoProvisioned(acct);
     }
     
-    @Test
-    public void lazyModeUseExternalLdapAuthSettingsDNTemplate() throws Exception {
-        String testName = getTestName();
-        
-        String externalPassword = "test456";
-        String extAcctLocalPart = testName;
-        String extAcctName = createExternalAcctEntry(extAcctLocalPart, externalPassword, null);
-        
-        Map<String, Object> zimbraDomainAttrs = new HashMap<String, Object>();
-        // enable auto provisioning with LDAP auth
-        StringUtil.addToMultiMap(zimbraDomainAttrs, Provisioning.A_zimbraAutoProvAuthMech, AutoProvAuthMech.LDAP.name());
-        StringUtil.addToMultiMap(zimbraDomainAttrs, Provisioning.A_zimbraAutoProvMode, AutoProvMode.LAZY.name());
-        StringUtil.addToMultiMap(zimbraDomainAttrs, Provisioning.A_zimbraAutoProvAttrMap, "sn=displayName");
-        StringUtil.addToMultiMap(zimbraDomainAttrs, Provisioning.A_zimbraAutoProvAttrMap, "displayName=sn");
-        
-        // setup external LDAP auth by DN template
-        zimbraDomainAttrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_AD);
-        zimbraDomainAttrs.put(Provisioning.A_zimbraAuthLdapURL, "ldap://localhost:389");
-        zimbraDomainAttrs.put(Provisioning.A_zimbraAuthLdapBindDn, "uid=%u,ou=people," + extDomainDn);
-        
-        // use LDAP auth settings for auto provisioning
-        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvUseLdapAuthSettings, LdapConstants.LDAP_TRUE);
-        Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
- 
-        String loginName = extAcctLocalPart;
-        Account acct = prov.autoProvAccountLazy(zimbraDomain, loginName, externalPassword, null);
-        verifyAcctAutoProvisioned(acct);
-    }
-    
-    @Test
-    public void lazyModeUseExternalLdapAuthSettingsSearch() throws Exception {
-        String testName = getTestName();
-        
-        String externalPassword = "test456";
-        String extAcctLocalPart = testName;
-        String extAcctName = createExternalAcctEntry(extAcctLocalPart, externalPassword, null);
-        
-        Map<String, Object> zimbraDomainAttrs = new HashMap<String, Object>();
-        // enable auto provisioning with LDAP auth
-        StringUtil.addToMultiMap(zimbraDomainAttrs, Provisioning.A_zimbraAutoProvAuthMech, AutoProvAuthMech.LDAP.name());
-        StringUtil.addToMultiMap(zimbraDomainAttrs, Provisioning.A_zimbraAutoProvMode, AutoProvMode.LAZY.name());
-        StringUtil.addToMultiMap(zimbraDomainAttrs, Provisioning.A_zimbraAutoProvAttrMap, "sn=displayName");
-        StringUtil.addToMultiMap(zimbraDomainAttrs, Provisioning.A_zimbraAutoProvAttrMap, "displayName=sn");
-        
-        // setup external LDAP auth by search
-        zimbraDomainAttrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
-        zimbraDomainAttrs.put(Provisioning.A_zimbraAuthLdapURL, "ldap://localhost:389");
-        zimbraDomainAttrs.put(Provisioning.A_zimbraAuthLdapSearchBindDn, "cn=config");
-        zimbraDomainAttrs.put(Provisioning.A_zimbraAuthLdapSearchBindPassword, "zimbra");
-        zimbraDomainAttrs.put(Provisioning.A_zimbraAuthLdapSearchBase, extDomainDn);
-        zimbraDomainAttrs.put(Provisioning.A_zimbraAuthLdapSearchFilter, "(uid=%u)");
-        
-        // use LDAP auth settings for auto provisioning
-        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvUseLdapAuthSettings, LdapConstants.LDAP_TRUE);
-        Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
- 
-        String loginName = extAcctLocalPart;
-        Account acct = prov.autoProvAccountLazy(zimbraDomain, loginName, externalPassword, null);
-        verifyAcctAutoProvisioned(acct);
-    }
-    
-    
     
     /* ==================
      * MANUAL mode tests

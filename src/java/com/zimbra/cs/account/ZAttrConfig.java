@@ -43,7 +43,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110719-2042 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110719-2122 */
 
     /**
      * RFC2256: descriptive information
@@ -2378,7 +2378,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1235)
+    @ZAttr(id=1234)
     public int getAutoProvBatchSize() {
         return getIntAttr(Provisioning.A_zimbraAutoProvBatchSize, 20);
     }
@@ -2392,7 +2392,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1235)
+    @ZAttr(id=1234)
     public void setAutoProvBatchSize(int zimbraAutoProvBatchSize) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvBatchSize, Integer.toString(zimbraAutoProvBatchSize));
@@ -2409,7 +2409,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1235)
+    @ZAttr(id=1234)
     public Map<String,Object> setAutoProvBatchSize(int zimbraAutoProvBatchSize, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvBatchSize, Integer.toString(zimbraAutoProvBatchSize));
@@ -2424,7 +2424,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1235)
+    @ZAttr(id=1234)
     public void unsetAutoProvBatchSize() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvBatchSize, "");
@@ -2440,7 +2440,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1235)
+    @ZAttr(id=1234)
     public Map<String,Object> unsetAutoProvBatchSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvBatchSize, "");
@@ -2475,7 +2475,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1239)
+    @ZAttr(id=1238)
     public long getAutoProvPollingInterval() {
         return getTimeInterval(Provisioning.A_zimbraAutoProvPollingInterval, 900000L);
     }
@@ -2504,7 +2504,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1239)
+    @ZAttr(id=1238)
     public String getAutoProvPollingIntervalAsString() {
         return getAttr(Provisioning.A_zimbraAutoProvPollingInterval, "15m");
     }
@@ -2534,7 +2534,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1239)
+    @ZAttr(id=1238)
     public void setAutoProvPollingInterval(String zimbraAutoProvPollingInterval) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvPollingInterval, zimbraAutoProvPollingInterval);
@@ -2567,7 +2567,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1239)
+    @ZAttr(id=1238)
     public Map<String,Object> setAutoProvPollingInterval(String zimbraAutoProvPollingInterval, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvPollingInterval, zimbraAutoProvPollingInterval);
@@ -2598,7 +2598,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1239)
+    @ZAttr(id=1238)
     public void unsetAutoProvPollingInterval() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvPollingInterval, "");
@@ -2630,7 +2630,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1239)
+    @ZAttr(id=1238)
     public Map<String,Object> unsetAutoProvPollingInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvPollingInterval, "");
@@ -13898,7 +13898,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1241)
+    @ZAttr(id=1240)
     public String[] getMailAddressValidationRegex() {
         return getMultiAttr(Provisioning.A_zimbraMailAddressValidationRegex);
     }
@@ -13911,7 +13911,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1241)
+    @ZAttr(id=1240)
     public void setMailAddressValidationRegex(String[] zimbraMailAddressValidationRegex) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -13927,7 +13927,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1241)
+    @ZAttr(id=1240)
     public Map<String,Object> setMailAddressValidationRegex(String[] zimbraMailAddressValidationRegex, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -13942,7 +13942,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1241)
+    @ZAttr(id=1240)
     public void addMailAddressValidationRegex(String zimbraMailAddressValidationRegex) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -13958,7 +13958,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1241)
+    @ZAttr(id=1240)
     public Map<String,Object> addMailAddressValidationRegex(String zimbraMailAddressValidationRegex, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -13973,7 +13973,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1241)
+    @ZAttr(id=1240)
     public void removeMailAddressValidationRegex(String zimbraMailAddressValidationRegex) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -13989,7 +13989,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1241)
+    @ZAttr(id=1240)
     public Map<String,Object> removeMailAddressValidationRegex(String zimbraMailAddressValidationRegex, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -14003,7 +14003,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1241)
+    @ZAttr(id=1240)
     public void unsetMailAddressValidationRegex() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, "");
@@ -14018,7 +14018,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1241)
+    @ZAttr(id=1240)
     public Map<String,Object> unsetMailAddressValidationRegex(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, "");
@@ -15229,7 +15229,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.0
      */
-    @ZAttr(id=1242)
+    @ZAttr(id=1241)
     public String getMailPurgeSystemPolicy() {
         return getAttr(Provisioning.A_zimbraMailPurgeSystemPolicy, null);
     }
@@ -15244,7 +15244,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.0
      */
-    @ZAttr(id=1242)
+    @ZAttr(id=1241)
     public void setMailPurgeSystemPolicy(String zimbraMailPurgeSystemPolicy) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailPurgeSystemPolicy, zimbraMailPurgeSystemPolicy);
@@ -15262,7 +15262,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.0
      */
-    @ZAttr(id=1242)
+    @ZAttr(id=1241)
     public Map<String,Object> setMailPurgeSystemPolicy(String zimbraMailPurgeSystemPolicy, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailPurgeSystemPolicy, zimbraMailPurgeSystemPolicy);
@@ -15278,7 +15278,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.0
      */
-    @ZAttr(id=1242)
+    @ZAttr(id=1241)
     public void unsetMailPurgeSystemPolicy() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailPurgeSystemPolicy, "");
@@ -15295,7 +15295,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @since ZCS 8.0
      */
-    @ZAttr(id=1242)
+    @ZAttr(id=1241)
     public Map<String,Object> unsetMailPurgeSystemPolicy(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailPurgeSystemPolicy, "");

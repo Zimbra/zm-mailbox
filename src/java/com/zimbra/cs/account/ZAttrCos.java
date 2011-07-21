@@ -42,7 +42,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110719-2042 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110719-2122 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -1824,7 +1824,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1240)
+    @ZAttr(id=1239)
     public boolean isCalendarKeepExceptionsOnSeriesTimeChange() {
         return getBooleanAttr(Provisioning.A_zimbraCalendarKeepExceptionsOnSeriesTimeChange, false);
     }
@@ -1838,7 +1838,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1240)
+    @ZAttr(id=1239)
     public void setCalendarKeepExceptionsOnSeriesTimeChange(boolean zimbraCalendarKeepExceptionsOnSeriesTimeChange) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalendarKeepExceptionsOnSeriesTimeChange, zimbraCalendarKeepExceptionsOnSeriesTimeChange ? Provisioning.TRUE : Provisioning.FALSE);
@@ -1855,7 +1855,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1240)
+    @ZAttr(id=1239)
     public Map<String,Object> setCalendarKeepExceptionsOnSeriesTimeChange(boolean zimbraCalendarKeepExceptionsOnSeriesTimeChange, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalendarKeepExceptionsOnSeriesTimeChange, zimbraCalendarKeepExceptionsOnSeriesTimeChange ? Provisioning.TRUE : Provisioning.FALSE);
@@ -1870,7 +1870,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1240)
+    @ZAttr(id=1239)
     public void unsetCalendarKeepExceptionsOnSeriesTimeChange() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalendarKeepExceptionsOnSeriesTimeChange, "");
@@ -1886,7 +1886,7 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1240)
+    @ZAttr(id=1239)
     public Map<String,Object> unsetCalendarKeepExceptionsOnSeriesTimeChange(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCalendarKeepExceptionsOnSeriesTimeChange, "");

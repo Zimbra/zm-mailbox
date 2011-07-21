@@ -43,7 +43,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110719-2042 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110719-2122 */
 
     /**
      * RFC2256: descriptive information
@@ -1580,7 +1580,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1231)
+    @ZAttr(id=1230)
     public String getAutoProvAccountNameMap() {
         return getAttr(Provisioning.A_zimbraAutoProvAccountNameMap, null);
     }
@@ -1596,7 +1596,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1231)
+    @ZAttr(id=1230)
     public void setAutoProvAccountNameMap(String zimbraAutoProvAccountNameMap) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvAccountNameMap, zimbraAutoProvAccountNameMap);
@@ -1615,7 +1615,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1231)
+    @ZAttr(id=1230)
     public Map<String,Object> setAutoProvAccountNameMap(String zimbraAutoProvAccountNameMap, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvAccountNameMap, zimbraAutoProvAccountNameMap);
@@ -1632,7 +1632,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1231)
+    @ZAttr(id=1230)
     public void unsetAutoProvAccountNameMap() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvAccountNameMap, "");
@@ -1650,7 +1650,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1231)
+    @ZAttr(id=1230)
     public Map<String,Object> unsetAutoProvAccountNameMap(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvAccountNameMap, "");
@@ -1674,7 +1674,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1232)
+    @ZAttr(id=1231)
     public String[] getAutoProvAttrMap() {
         return getMultiAttr(Provisioning.A_zimbraAutoProvAttrMap);
     }
@@ -1697,7 +1697,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1232)
+    @ZAttr(id=1231)
     public void setAutoProvAttrMap(String[] zimbraAutoProvAttrMap) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvAttrMap, zimbraAutoProvAttrMap);
@@ -1723,7 +1723,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1232)
+    @ZAttr(id=1231)
     public Map<String,Object> setAutoProvAttrMap(String[] zimbraAutoProvAttrMap, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvAttrMap, zimbraAutoProvAttrMap);
@@ -1748,7 +1748,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1232)
+    @ZAttr(id=1231)
     public void addAutoProvAttrMap(String zimbraAutoProvAttrMap) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAutoProvAttrMap, zimbraAutoProvAttrMap);
@@ -1774,7 +1774,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1232)
+    @ZAttr(id=1231)
     public Map<String,Object> addAutoProvAttrMap(String zimbraAutoProvAttrMap, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraAutoProvAttrMap, zimbraAutoProvAttrMap);
@@ -1799,7 +1799,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1232)
+    @ZAttr(id=1231)
     public void removeAutoProvAttrMap(String zimbraAutoProvAttrMap) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAutoProvAttrMap, zimbraAutoProvAttrMap);
@@ -1825,7 +1825,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1232)
+    @ZAttr(id=1231)
     public Map<String,Object> removeAutoProvAttrMap(String zimbraAutoProvAttrMap, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraAutoProvAttrMap, zimbraAutoProvAttrMap);
@@ -1849,7 +1849,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1232)
+    @ZAttr(id=1231)
     public void unsetAutoProvAttrMap() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvAttrMap, "");
@@ -1874,7 +1874,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1232)
+    @ZAttr(id=1231)
     public Map<String,Object> unsetAutoProvAttrMap(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvAttrMap, "");
@@ -2052,7 +2052,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1235)
+    @ZAttr(id=1234)
     public int getAutoProvBatchSize() {
         return getIntAttr(Provisioning.A_zimbraAutoProvBatchSize, 20);
     }
@@ -2066,7 +2066,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1235)
+    @ZAttr(id=1234)
     public void setAutoProvBatchSize(int zimbraAutoProvBatchSize) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvBatchSize, Integer.toString(zimbraAutoProvBatchSize));
@@ -2083,7 +2083,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1235)
+    @ZAttr(id=1234)
     public Map<String,Object> setAutoProvBatchSize(int zimbraAutoProvBatchSize, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvBatchSize, Integer.toString(zimbraAutoProvBatchSize));
@@ -2098,7 +2098,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1235)
+    @ZAttr(id=1234)
     public void unsetAutoProvBatchSize() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvBatchSize, "");
@@ -2114,7 +2114,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1235)
+    @ZAttr(id=1234)
     public Map<String,Object> unsetAutoProvBatchSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvBatchSize, "");
@@ -2136,7 +2136,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1236)
+    @ZAttr(id=1235)
     public Date getAutoProvLastPolledTimestamp() {
         return getGeneralizedTimeAttr(Provisioning.A_zimbraAutoProvLastPolledTimestamp, null);
     }
@@ -2152,7 +2152,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1236)
+    @ZAttr(id=1235)
     public String getAutoProvLastPolledTimestampAsString() {
         return getAttr(Provisioning.A_zimbraAutoProvLastPolledTimestamp, null);
     }
@@ -2169,7 +2169,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1236)
+    @ZAttr(id=1235)
     public void setAutoProvLastPolledTimestamp(Date zimbraAutoProvLastPolledTimestamp) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLastPolledTimestamp, zimbraAutoProvLastPolledTimestamp==null ? "" : DateUtil.toGeneralizedTime(zimbraAutoProvLastPolledTimestamp));
@@ -2189,7 +2189,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1236)
+    @ZAttr(id=1235)
     public Map<String,Object> setAutoProvLastPolledTimestamp(Date zimbraAutoProvLastPolledTimestamp, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLastPolledTimestamp, zimbraAutoProvLastPolledTimestamp==null ? "" : DateUtil.toGeneralizedTime(zimbraAutoProvLastPolledTimestamp));
@@ -2208,7 +2208,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1236)
+    @ZAttr(id=1235)
     public void setAutoProvLastPolledTimestampAsString(String zimbraAutoProvLastPolledTimestamp) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLastPolledTimestamp, zimbraAutoProvLastPolledTimestamp);
@@ -2228,7 +2228,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1236)
+    @ZAttr(id=1235)
     public Map<String,Object> setAutoProvLastPolledTimestampAsString(String zimbraAutoProvLastPolledTimestamp, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLastPolledTimestamp, zimbraAutoProvLastPolledTimestamp);
@@ -2246,7 +2246,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1236)
+    @ZAttr(id=1235)
     public void unsetAutoProvLastPolledTimestamp() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLastPolledTimestamp, "");
@@ -2265,7 +2265,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1236)
+    @ZAttr(id=1235)
     public Map<String,Object> unsetAutoProvLastPolledTimestamp(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLastPolledTimestamp, "");
@@ -2273,32 +2273,30 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and is using
-     * zimbraAutoProvLdapSearchFilter) MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search bind DN for auto provision.
+     * EAGER mode: required LAZY mode: required (if using
+     * zimbraAutoProvLdapSearchFilter) MANUAL mode: required LDAP search bind
+     * DN for auto provision.
      *
      * @return zimbraAutoProvLdapAdminBindDn, or null if unset
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1226)
+    @ZAttr(id=1225)
     public String getAutoProvLdapAdminBindDn() {
         return getAttr(Provisioning.A_zimbraAutoProvLdapAdminBindDn, null);
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and is using
-     * zimbraAutoProvLdapSearchFilter) MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search bind DN for auto provision.
+     * EAGER mode: required LAZY mode: required (if using
+     * zimbraAutoProvLdapSearchFilter) MANUAL mode: required LDAP search bind
+     * DN for auto provision.
      *
      * @param zimbraAutoProvLdapAdminBindDn new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1226)
+    @ZAttr(id=1225)
     public void setAutoProvLdapAdminBindDn(String zimbraAutoProvLdapAdminBindDn) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapAdminBindDn, zimbraAutoProvLdapAdminBindDn);
@@ -2306,10 +2304,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and is using
-     * zimbraAutoProvLdapSearchFilter) MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search bind DN for auto provision.
+     * EAGER mode: required LAZY mode: required (if using
+     * zimbraAutoProvLdapSearchFilter) MANUAL mode: required LDAP search bind
+     * DN for auto provision.
      *
      * @param zimbraAutoProvLdapAdminBindDn new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2317,7 +2314,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1226)
+    @ZAttr(id=1225)
     public Map<String,Object> setAutoProvLdapAdminBindDn(String zimbraAutoProvLdapAdminBindDn, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapAdminBindDn, zimbraAutoProvLdapAdminBindDn);
@@ -2325,16 +2322,15 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and is using
-     * zimbraAutoProvLdapSearchFilter) MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search bind DN for auto provision.
+     * EAGER mode: required LAZY mode: required (if using
+     * zimbraAutoProvLdapSearchFilter) MANUAL mode: required LDAP search bind
+     * DN for auto provision.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1226)
+    @ZAttr(id=1225)
     public void unsetAutoProvLdapAdminBindDn() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapAdminBindDn, "");
@@ -2342,17 +2338,16 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and is using
-     * zimbraAutoProvLdapSearchFilter) MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search bind DN for auto provision.
+     * EAGER mode: required LAZY mode: required (if using
+     * zimbraAutoProvLdapSearchFilter) MANUAL mode: required LDAP search bind
+     * DN for auto provision.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1226)
+    @ZAttr(id=1225)
     public Map<String,Object> unsetAutoProvLdapAdminBindDn(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapAdminBindDn, "");
@@ -2360,32 +2355,28 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and is using
-     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search bind password for auto provision.
+     * EAGER mode: required LAZY mode: required MANUAL mode: required LDAP
+     * search bind password for auto provision.
      *
      * @return zimbraAutoProvLdapAdminBindPassword, or null if unset
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1227)
+    @ZAttr(id=1226)
     public String getAutoProvLdapAdminBindPassword() {
         return getAttr(Provisioning.A_zimbraAutoProvLdapAdminBindPassword, null);
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and is using
-     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search bind password for auto provision.
+     * EAGER mode: required LAZY mode: required MANUAL mode: required LDAP
+     * search bind password for auto provision.
      *
      * @param zimbraAutoProvLdapAdminBindPassword new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1227)
+    @ZAttr(id=1226)
     public void setAutoProvLdapAdminBindPassword(String zimbraAutoProvLdapAdminBindPassword) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapAdminBindPassword, zimbraAutoProvLdapAdminBindPassword);
@@ -2393,10 +2384,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and is using
-     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search bind password for auto provision.
+     * EAGER mode: required LAZY mode: required MANUAL mode: required LDAP
+     * search bind password for auto provision.
      *
      * @param zimbraAutoProvLdapAdminBindPassword new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2404,7 +2393,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1227)
+    @ZAttr(id=1226)
     public Map<String,Object> setAutoProvLdapAdminBindPassword(String zimbraAutoProvLdapAdminBindPassword, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapAdminBindPassword, zimbraAutoProvLdapAdminBindPassword);
@@ -2412,16 +2401,14 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and is using
-     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search bind password for auto provision.
+     * EAGER mode: required LAZY mode: required MANUAL mode: required LDAP
+     * search bind password for auto provision.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1227)
+    @ZAttr(id=1226)
     public void unsetAutoProvLdapAdminBindPassword() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapAdminBindPassword, "");
@@ -2429,17 +2416,15 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and is using
-     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search bind password for auto provision.
+     * EAGER mode: required LAZY mode: required MANUAL mode: required LDAP
+     * search bind password for auto provision.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1227)
+    @ZAttr(id=1226)
     public Map<String,Object> unsetAutoProvLdapAdminBindPassword(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapAdminBindPassword, "");
@@ -2447,10 +2432,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * optional (if not using LDAP/AD auth settings) MANUAL mode: optional
-     * (if not using LDAP/AD auth settings) LDAP external DN template for
-     * account auto provisioning. For LAZY and MANUAL modes, either
+     * EAGER mode: required LAZY mode: optional (if not using
+     * zimbraAutoProvLdapSearchFilters) MANUAL mode: optional (if not using
+     * zimbraAutoProvLdapSearchFilters) LDAP external DN template for account
+     * auto provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
      * precedence. Supported place holders: %n = username with @ (or without,
@@ -2461,16 +2446,16 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1230)
+    @ZAttr(id=1229)
     public String getAutoProvLdapBindDn() {
         return getAttr(Provisioning.A_zimbraAutoProvLdapBindDn, null);
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * optional (if not using LDAP/AD auth settings) MANUAL mode: optional
-     * (if not using LDAP/AD auth settings) LDAP external DN template for
-     * account auto provisioning. For LAZY and MANUAL modes, either
+     * EAGER mode: required LAZY mode: optional (if not using
+     * zimbraAutoProvLdapSearchFilters) MANUAL mode: optional (if not using
+     * zimbraAutoProvLdapSearchFilters) LDAP external DN template for account
+     * auto provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
      * precedence. Supported place holders: %n = username with @ (or without,
@@ -2482,7 +2467,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1230)
+    @ZAttr(id=1229)
     public void setAutoProvLdapBindDn(String zimbraAutoProvLdapBindDn) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapBindDn, zimbraAutoProvLdapBindDn);
@@ -2490,10 +2475,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * optional (if not using LDAP/AD auth settings) MANUAL mode: optional
-     * (if not using LDAP/AD auth settings) LDAP external DN template for
-     * account auto provisioning. For LAZY and MANUAL modes, either
+     * EAGER mode: required LAZY mode: optional (if not using
+     * zimbraAutoProvLdapSearchFilters) MANUAL mode: optional (if not using
+     * zimbraAutoProvLdapSearchFilters) LDAP external DN template for account
+     * auto provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
      * precedence. Supported place holders: %n = username with @ (or without,
@@ -2506,7 +2491,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1230)
+    @ZAttr(id=1229)
     public Map<String,Object> setAutoProvLdapBindDn(String zimbraAutoProvLdapBindDn, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapBindDn, zimbraAutoProvLdapBindDn);
@@ -2514,10 +2499,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * optional (if not using LDAP/AD auth settings) MANUAL mode: optional
-     * (if not using LDAP/AD auth settings) LDAP external DN template for
-     * account auto provisioning. For LAZY and MANUAL modes, either
+     * EAGER mode: required LAZY mode: optional (if not using
+     * zimbraAutoProvLdapSearchFilters) MANUAL mode: optional (if not using
+     * zimbraAutoProvLdapSearchFilters) LDAP external DN template for account
+     * auto provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
      * precedence. Supported place holders: %n = username with @ (or without,
@@ -2528,7 +2513,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1230)
+    @ZAttr(id=1229)
     public void unsetAutoProvLdapBindDn() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapBindDn, "");
@@ -2536,10 +2521,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * optional (if not using LDAP/AD auth settings) MANUAL mode: optional
-     * (if not using LDAP/AD auth settings) LDAP external DN template for
-     * account auto provisioning. For LAZY and MANUAL modes, either
+     * EAGER mode: required LAZY mode: optional (if not using
+     * zimbraAutoProvLdapSearchFilters) MANUAL mode: optional (if not using
+     * zimbraAutoProvLdapSearchFilters) LDAP external DN template for account
+     * auto provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
      * precedence. Supported place holders: %n = username with @ (or without,
@@ -2551,7 +2536,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1230)
+    @ZAttr(id=1229)
     public Map<String,Object> unsetAutoProvLdapBindDn(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapBindDn, "");
@@ -2559,36 +2544,34 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and is using
-     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search base for auto provision, used in
-     * conjunction with zimbraAutoProvLdapSearchFilter. If not set, LDAP root
-     * DSE will be used.
+     * EAGER mode: required LAZY mode: required (if using
+     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required LDAP search
+     * base for auto provision, used in conjunction with
+     * zimbraAutoProvLdapSearchFilter. If not set, LDAP root DSE will be
+     * used.
      *
      * @return zimbraAutoProvLdapSearchBase, or null if unset
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1228)
+    @ZAttr(id=1227)
     public String getAutoProvLdapSearchBase() {
         return getAttr(Provisioning.A_zimbraAutoProvLdapSearchBase, null);
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and is using
-     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search base for auto provision, used in
-     * conjunction with zimbraAutoProvLdapSearchFilter. If not set, LDAP root
-     * DSE will be used.
+     * EAGER mode: required LAZY mode: required (if using
+     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required LDAP search
+     * base for auto provision, used in conjunction with
+     * zimbraAutoProvLdapSearchFilter. If not set, LDAP root DSE will be
+     * used.
      *
      * @param zimbraAutoProvLdapSearchBase new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1228)
+    @ZAttr(id=1227)
     public void setAutoProvLdapSearchBase(String zimbraAutoProvLdapSearchBase) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, zimbraAutoProvLdapSearchBase);
@@ -2596,12 +2579,11 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and is using
-     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search base for auto provision, used in
-     * conjunction with zimbraAutoProvLdapSearchFilter. If not set, LDAP root
-     * DSE will be used.
+     * EAGER mode: required LAZY mode: required (if using
+     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required LDAP search
+     * base for auto provision, used in conjunction with
+     * zimbraAutoProvLdapSearchFilter. If not set, LDAP root DSE will be
+     * used.
      *
      * @param zimbraAutoProvLdapSearchBase new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2609,7 +2591,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1228)
+    @ZAttr(id=1227)
     public Map<String,Object> setAutoProvLdapSearchBase(String zimbraAutoProvLdapSearchBase, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, zimbraAutoProvLdapSearchBase);
@@ -2617,18 +2599,17 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and is using
-     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search base for auto provision, used in
-     * conjunction with zimbraAutoProvLdapSearchFilter. If not set, LDAP root
-     * DSE will be used.
+     * EAGER mode: required LAZY mode: required (if using
+     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required LDAP search
+     * base for auto provision, used in conjunction with
+     * zimbraAutoProvLdapSearchFilter. If not set, LDAP root DSE will be
+     * used.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1228)
+    @ZAttr(id=1227)
     public void unsetAutoProvLdapSearchBase() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, "");
@@ -2636,19 +2617,18 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and is using
-     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search base for auto provision, used in
-     * conjunction with zimbraAutoProvLdapSearchFilter. If not set, LDAP root
-     * DSE will be used.
+     * EAGER mode: required LAZY mode: required (if using
+     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required LDAP search
+     * base for auto provision, used in conjunction with
+     * zimbraAutoProvLdapSearchFilter. If not set, LDAP root DSE will be
+     * used.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1228)
+    @ZAttr(id=1227)
     public Map<String,Object> unsetAutoProvLdapSearchBase(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, "");
@@ -2656,10 +2636,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * optional (if not using LDAP/AD auth settings) MANUAL mode: optional
-     * (if not using LDAP/AD auth settings) LDAP search filter template for
-     * account auto provisioning. For LAZY and MANUAL modes, either
+     * EAGER mode: required LAZY mode: optional (if not using
+     * zimbraAutoProvLdapBindDn) MANUAL mode: optional (if not using
+     * zimbraAutoProvLdapBindDn) LDAP search filter template for account auto
+     * provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
      * precedence. Supported place holders: %n = username with @ (or without,
@@ -2670,16 +2650,16 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1229)
+    @ZAttr(id=1228)
     public String getAutoProvLdapSearchFilter() {
         return getAttr(Provisioning.A_zimbraAutoProvLdapSearchFilter, null);
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * optional (if not using LDAP/AD auth settings) MANUAL mode: optional
-     * (if not using LDAP/AD auth settings) LDAP search filter template for
-     * account auto provisioning. For LAZY and MANUAL modes, either
+     * EAGER mode: required LAZY mode: optional (if not using
+     * zimbraAutoProvLdapBindDn) MANUAL mode: optional (if not using
+     * zimbraAutoProvLdapBindDn) LDAP search filter template for account auto
+     * provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
      * precedence. Supported place holders: %n = username with @ (or without,
@@ -2691,7 +2671,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1229)
+    @ZAttr(id=1228)
     public void setAutoProvLdapSearchFilter(String zimbraAutoProvLdapSearchFilter) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, zimbraAutoProvLdapSearchFilter);
@@ -2699,10 +2679,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * optional (if not using LDAP/AD auth settings) MANUAL mode: optional
-     * (if not using LDAP/AD auth settings) LDAP search filter template for
-     * account auto provisioning. For LAZY and MANUAL modes, either
+     * EAGER mode: required LAZY mode: optional (if not using
+     * zimbraAutoProvLdapBindDn) MANUAL mode: optional (if not using
+     * zimbraAutoProvLdapBindDn) LDAP search filter template for account auto
+     * provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
      * precedence. Supported place holders: %n = username with @ (or without,
@@ -2715,7 +2695,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1229)
+    @ZAttr(id=1228)
     public Map<String,Object> setAutoProvLdapSearchFilter(String zimbraAutoProvLdapSearchFilter, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, zimbraAutoProvLdapSearchFilter);
@@ -2723,10 +2703,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * optional (if not using LDAP/AD auth settings) MANUAL mode: optional
-     * (if not using LDAP/AD auth settings) LDAP search filter template for
-     * account auto provisioning. For LAZY and MANUAL modes, either
+     * EAGER mode: required LAZY mode: optional (if not using
+     * zimbraAutoProvLdapBindDn) MANUAL mode: optional (if not using
+     * zimbraAutoProvLdapBindDn) LDAP search filter template for account auto
+     * provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
      * precedence. Supported place holders: %n = username with @ (or without,
@@ -2737,7 +2717,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1229)
+    @ZAttr(id=1228)
     public void unsetAutoProvLdapSearchFilter() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, "");
@@ -2745,10 +2725,10 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * optional (if not using LDAP/AD auth settings) MANUAL mode: optional
-     * (if not using LDAP/AD auth settings) LDAP search filter template for
-     * account auto provisioning. For LAZY and MANUAL modes, either
+     * EAGER mode: required LAZY mode: optional (if not using
+     * zimbraAutoProvLdapBindDn) MANUAL mode: optional (if not using
+     * zimbraAutoProvLdapBindDn) LDAP search filter template for account auto
+     * provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
      * precedence. Supported place holders: %n = username with @ (or without,
@@ -2760,7 +2740,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1229)
+    @ZAttr(id=1228)
     public Map<String,Object> unsetAutoProvLdapSearchFilter(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, "");
@@ -2776,7 +2756,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1225)
+    @ZAttr(id=1224)
     public boolean isAutoProvLdapStartTlsEnabled() {
         return getBooleanAttr(Provisioning.A_zimbraAutoProvLdapStartTlsEnabled, false);
     }
@@ -2791,7 +2771,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1225)
+    @ZAttr(id=1224)
     public void setAutoProvLdapStartTlsEnabled(boolean zimbraAutoProvLdapStartTlsEnabled) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapStartTlsEnabled, zimbraAutoProvLdapStartTlsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -2809,7 +2789,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1225)
+    @ZAttr(id=1224)
     public Map<String,Object> setAutoProvLdapStartTlsEnabled(boolean zimbraAutoProvLdapStartTlsEnabled, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapStartTlsEnabled, zimbraAutoProvLdapStartTlsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
@@ -2825,7 +2805,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1225)
+    @ZAttr(id=1224)
     public void unsetAutoProvLdapStartTlsEnabled() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapStartTlsEnabled, "");
@@ -2842,7 +2822,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1225)
+    @ZAttr(id=1224)
     public Map<String,Object> unsetAutoProvLdapStartTlsEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapStartTlsEnabled, "");
@@ -2850,32 +2830,28 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings) MANUAL mode: required
-     * (if not using LDAP/AD auth settings) LDAP URL of the external LDAP
-     * source for auto provision.
+     * EAGER mode: required LAZY mode: required MANUAL mode: required LDAP
+     * URL of the external LDAP source for auto provision.
      *
      * @return zimbraAutoProvLdapURL, or null if unset
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1224)
+    @ZAttr(id=1223)
     public String getAutoProvLdapURL() {
         return getAttr(Provisioning.A_zimbraAutoProvLdapURL, null);
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings) MANUAL mode: required
-     * (if not using LDAP/AD auth settings) LDAP URL of the external LDAP
-     * source for auto provision.
+     * EAGER mode: required LAZY mode: required MANUAL mode: required LDAP
+     * URL of the external LDAP source for auto provision.
      *
      * @param zimbraAutoProvLdapURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1224)
+    @ZAttr(id=1223)
     public void setAutoProvLdapURL(String zimbraAutoProvLdapURL) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapURL, zimbraAutoProvLdapURL);
@@ -2883,10 +2859,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings) MANUAL mode: required
-     * (if not using LDAP/AD auth settings) LDAP URL of the external LDAP
-     * source for auto provision.
+     * EAGER mode: required LAZY mode: required MANUAL mode: required LDAP
+     * URL of the external LDAP source for auto provision.
      *
      * @param zimbraAutoProvLdapURL new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2894,7 +2868,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1224)
+    @ZAttr(id=1223)
     public Map<String,Object> setAutoProvLdapURL(String zimbraAutoProvLdapURL, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapURL, zimbraAutoProvLdapURL);
@@ -2902,16 +2876,14 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings) MANUAL mode: required
-     * (if not using LDAP/AD auth settings) LDAP URL of the external LDAP
-     * source for auto provision.
+     * EAGER mode: required LAZY mode: required MANUAL mode: required LDAP
+     * URL of the external LDAP source for auto provision.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1224)
+    @ZAttr(id=1223)
     public void unsetAutoProvLdapURL() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapURL, "");
@@ -2919,17 +2891,15 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings) MANUAL mode: required
-     * (if not using LDAP/AD auth settings) LDAP URL of the external LDAP
-     * source for auto provision.
+     * EAGER mode: required LAZY mode: required MANUAL mode: required LDAP
+     * URL of the external LDAP source for auto provision.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1224)
+    @ZAttr(id=1223)
     public Map<String,Object> unsetAutoProvLdapURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLdapURL, "");
@@ -2949,7 +2919,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1234)
+    @ZAttr(id=1233)
     public String getAutoProvListenerClass() {
         return getAttr(Provisioning.A_zimbraAutoProvListenerClass, null);
     }
@@ -2968,7 +2938,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1234)
+    @ZAttr(id=1233)
     public void setAutoProvListenerClass(String zimbraAutoProvListenerClass) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvListenerClass, zimbraAutoProvListenerClass);
@@ -2990,7 +2960,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1234)
+    @ZAttr(id=1233)
     public Map<String,Object> setAutoProvListenerClass(String zimbraAutoProvListenerClass, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvListenerClass, zimbraAutoProvListenerClass);
@@ -3010,7 +2980,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1234)
+    @ZAttr(id=1233)
     public void unsetAutoProvListenerClass() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvListenerClass, "");
@@ -3031,7 +3001,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1234)
+    @ZAttr(id=1233)
     public Map<String,Object> unsetAutoProvListenerClass(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvListenerClass, "");
@@ -3050,7 +3020,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1237)
+    @ZAttr(id=1236)
     public String getAutoProvLock() {
         return getAttr(Provisioning.A_zimbraAutoProvLock, null);
     }
@@ -3068,7 +3038,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1237)
+    @ZAttr(id=1236)
     public void setAutoProvLock(String zimbraAutoProvLock) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLock, zimbraAutoProvLock);
@@ -3089,7 +3059,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1237)
+    @ZAttr(id=1236)
     public Map<String,Object> setAutoProvLock(String zimbraAutoProvLock, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLock, zimbraAutoProvLock);
@@ -3108,7 +3078,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1237)
+    @ZAttr(id=1236)
     public void unsetAutoProvLock() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLock, "");
@@ -3128,7 +3098,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1237)
+    @ZAttr(id=1236)
     public Map<String,Object> unsetAutoProvLock(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLock, "");
@@ -3388,7 +3358,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1233)
+    @ZAttr(id=1232)
     public String getAutoProvNotificationFromAddress() {
         return getAttr(Provisioning.A_zimbraAutoProvNotificationFromAddress, null);
     }
@@ -3404,7 +3374,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1233)
+    @ZAttr(id=1232)
     public void setAutoProvNotificationFromAddress(String zimbraAutoProvNotificationFromAddress) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvNotificationFromAddress, zimbraAutoProvNotificationFromAddress);
@@ -3423,7 +3393,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1233)
+    @ZAttr(id=1232)
     public Map<String,Object> setAutoProvNotificationFromAddress(String zimbraAutoProvNotificationFromAddress, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvNotificationFromAddress, zimbraAutoProvNotificationFromAddress);
@@ -3440,7 +3410,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1233)
+    @ZAttr(id=1232)
     public void unsetAutoProvNotificationFromAddress() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvNotificationFromAddress, "");
@@ -3458,142 +3428,10 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1233)
+    @ZAttr(id=1232)
     public Map<String,Object> unsetAutoProvNotificationFromAddress(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvNotificationFromAddress, "");
-        return attrs;
-    }
-
-    /**
-     * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Default
-     * is FALSE. Whether to use external LDAP/AD auth settings for auto
-     * provisioning. Purpose of this attribute is to simplify configuration
-     * for domains already configured with external LDAP/AD auth. By setting
-     * this attribute to TRUE, domains can use the external LDAP/AD auth
-     * settings for auto provision and do not have to duplicate them. Honored
-     * when: - for EAGER mode: always. - for LAZY mode: only when user
-     * authenticated to Zimbra by external LDAP/AD auth. - for MANUAL mode:
-     * always. If honored, all zimbraAutoProvLdap*** values are ignored, and
-     * settings for external LDAP/AD auth will be used. If honored and
-     * external LDAP/AD auth is not configured or not configured properly, it
-     * will be a config error and we will not fallback to the
-     * zimbraAutoProvLdap*** values.
-     *
-     * @return zimbraAutoProvUseLdapAuthSettings, or false if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1223)
-    public boolean isAutoProvUseLdapAuthSettings() {
-        return getBooleanAttr(Provisioning.A_zimbraAutoProvUseLdapAuthSettings, false);
-    }
-
-    /**
-     * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Default
-     * is FALSE. Whether to use external LDAP/AD auth settings for auto
-     * provisioning. Purpose of this attribute is to simplify configuration
-     * for domains already configured with external LDAP/AD auth. By setting
-     * this attribute to TRUE, domains can use the external LDAP/AD auth
-     * settings for auto provision and do not have to duplicate them. Honored
-     * when: - for EAGER mode: always. - for LAZY mode: only when user
-     * authenticated to Zimbra by external LDAP/AD auth. - for MANUAL mode:
-     * always. If honored, all zimbraAutoProvLdap*** values are ignored, and
-     * settings for external LDAP/AD auth will be used. If honored and
-     * external LDAP/AD auth is not configured or not configured properly, it
-     * will be a config error and we will not fallback to the
-     * zimbraAutoProvLdap*** values.
-     *
-     * @param zimbraAutoProvUseLdapAuthSettings new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1223)
-    public void setAutoProvUseLdapAuthSettings(boolean zimbraAutoProvUseLdapAuthSettings) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAutoProvUseLdapAuthSettings, zimbraAutoProvUseLdapAuthSettings ? Provisioning.TRUE : Provisioning.FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Default
-     * is FALSE. Whether to use external LDAP/AD auth settings for auto
-     * provisioning. Purpose of this attribute is to simplify configuration
-     * for domains already configured with external LDAP/AD auth. By setting
-     * this attribute to TRUE, domains can use the external LDAP/AD auth
-     * settings for auto provision and do not have to duplicate them. Honored
-     * when: - for EAGER mode: always. - for LAZY mode: only when user
-     * authenticated to Zimbra by external LDAP/AD auth. - for MANUAL mode:
-     * always. If honored, all zimbraAutoProvLdap*** values are ignored, and
-     * settings for external LDAP/AD auth will be used. If honored and
-     * external LDAP/AD auth is not configured or not configured properly, it
-     * will be a config error and we will not fallback to the
-     * zimbraAutoProvLdap*** values.
-     *
-     * @param zimbraAutoProvUseLdapAuthSettings new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1223)
-    public Map<String,Object> setAutoProvUseLdapAuthSettings(boolean zimbraAutoProvUseLdapAuthSettings, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAutoProvUseLdapAuthSettings, zimbraAutoProvUseLdapAuthSettings ? Provisioning.TRUE : Provisioning.FALSE);
-        return attrs;
-    }
-
-    /**
-     * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Default
-     * is FALSE. Whether to use external LDAP/AD auth settings for auto
-     * provisioning. Purpose of this attribute is to simplify configuration
-     * for domains already configured with external LDAP/AD auth. By setting
-     * this attribute to TRUE, domains can use the external LDAP/AD auth
-     * settings for auto provision and do not have to duplicate them. Honored
-     * when: - for EAGER mode: always. - for LAZY mode: only when user
-     * authenticated to Zimbra by external LDAP/AD auth. - for MANUAL mode:
-     * always. If honored, all zimbraAutoProvLdap*** values are ignored, and
-     * settings for external LDAP/AD auth will be used. If honored and
-     * external LDAP/AD auth is not configured or not configured properly, it
-     * will be a config error and we will not fallback to the
-     * zimbraAutoProvLdap*** values.
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1223)
-    public void unsetAutoProvUseLdapAuthSettings() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAutoProvUseLdapAuthSettings, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Default
-     * is FALSE. Whether to use external LDAP/AD auth settings for auto
-     * provisioning. Purpose of this attribute is to simplify configuration
-     * for domains already configured with external LDAP/AD auth. By setting
-     * this attribute to TRUE, domains can use the external LDAP/AD auth
-     * settings for auto provision and do not have to duplicate them. Honored
-     * when: - for EAGER mode: always. - for LAZY mode: only when user
-     * authenticated to Zimbra by external LDAP/AD auth. - for MANUAL mode:
-     * always. If honored, all zimbraAutoProvLdap*** values are ignored, and
-     * settings for external LDAP/AD auth will be used. If honored and
-     * external LDAP/AD auth is not configured or not configured properly, it
-     * will be a config error and we will not fallback to the
-     * zimbraAutoProvLdap*** values.
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1223)
-    public Map<String,Object> unsetAutoProvUseLdapAuthSettings(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraAutoProvUseLdapAuthSettings, "");
         return attrs;
     }
 
@@ -11076,7 +10914,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1241)
+    @ZAttr(id=1240)
     public String[] getMailAddressValidationRegex() {
         return getMultiAttr(Provisioning.A_zimbraMailAddressValidationRegex);
     }
@@ -11089,7 +10927,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1241)
+    @ZAttr(id=1240)
     public void setMailAddressValidationRegex(String[] zimbraMailAddressValidationRegex) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -11105,7 +10943,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1241)
+    @ZAttr(id=1240)
     public Map<String,Object> setMailAddressValidationRegex(String[] zimbraMailAddressValidationRegex, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -11120,7 +10958,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1241)
+    @ZAttr(id=1240)
     public void addMailAddressValidationRegex(String zimbraMailAddressValidationRegex) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -11136,7 +10974,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1241)
+    @ZAttr(id=1240)
     public Map<String,Object> addMailAddressValidationRegex(String zimbraMailAddressValidationRegex, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -11151,7 +10989,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1241)
+    @ZAttr(id=1240)
     public void removeMailAddressValidationRegex(String zimbraMailAddressValidationRegex) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -11167,7 +11005,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1241)
+    @ZAttr(id=1240)
     public Map<String,Object> removeMailAddressValidationRegex(String zimbraMailAddressValidationRegex, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -11181,7 +11019,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1241)
+    @ZAttr(id=1240)
     public void unsetMailAddressValidationRegex() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, "");
@@ -11196,7 +11034,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1241)
+    @ZAttr(id=1240)
     public Map<String,Object> unsetMailAddressValidationRegex(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, "");

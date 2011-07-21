@@ -60,7 +60,7 @@ public class AutoProvisionManual extends AutoProvision {
             externalEntry = new ExternalEntry(principal, externalAttrs);
             acctZimbraName = mapName(externalAttrs, null);
         } else if (by == AutoProvPrincipalBy.name) {
-            externalEntry = getExternalAttrsByName(null, principal, null);
+            externalEntry = getExternalAttrsByName(principal);
             acctZimbraName = mapName(externalEntry.getAttrs(), principal);
         } else {
             throw ServiceException.FAILURE("unknown AutoProvPrincipalBy", null);
