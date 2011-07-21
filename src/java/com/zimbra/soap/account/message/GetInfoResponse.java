@@ -211,7 +211,7 @@ public class GetInfoResponse {
     public String getAccountName() { return accountName; }
     public String getCrumb() { return crumb; }
     public long getLifetime() { return lifetime; }
-    public Boolean getAdminDelegated() { return adminDelegated; }
+    public Boolean getAdminDelegated() { return (adminDelegated != null ? adminDelegated : Boolean.FALSE); }
     public String getRestUrl() { return restUrl; }
     public Long getQuotaUsed() { return quotaUsed; }
     public Long getPreviousSessionTime() { return previousSessionTime; }
