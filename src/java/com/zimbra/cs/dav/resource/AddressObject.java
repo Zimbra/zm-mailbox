@@ -97,27 +97,26 @@ public class AddressObject extends MailItemResource {
         return null;
     }
         
-    private static void constructContactGroupFromAppleXProps(DavContext ctxt, Account ownerAccount, VCard vcard, boolean isCreate) {
+    private static void constructContactGroupFromAppleXProps(DavContext ctxt, Account ownerAccount, VCard vcard, Contact existingContact, int folderId) {
         Map<String, String> xprops = Contact.decodeXProps(vcard.fields.get(ContactConstants.A_vCardXProps));
         String kind = xprops.get(XABSKIND);
         String memberList = xprops.get(XABSMEMBER);
         if (kind != null && kind.compareTo("group") == 0) {
             ContactGroup contactGroup;
             try {
-                if (isCreate)
+                if (existingContact == null) // create
                     contactGroup = ContactGroup.init();
-                else {
-                    Contact contact = getContactByUID(ctxt, vcard.uid, ownerAccount, null);
-                    contactGroup = ContactGroup.init(contact, true);
+                else { // modify
+                    contactGroup = ContactGroup.init(existingContact, true);
                     // remove all the contacts of type CONTACT_REF that belong to the collection same as the group
                     ArrayList<Member> membersToRemove = new ArrayList<Member>();
                     for (Member member : contactGroup.getMembers()) {                        
                         if (Member.Type.CONTACT_REF.equals(member.getType())) {
-                            ItemId itemId = new ItemId(member.getValue(), contact.getAccount().getId());
-                            if (itemId.belongsTo(contact.getAccount())) {
-                                Contact c = getContactByUID(ctxt, itemId.toString(), contact.getAccount(), null);
-                                // check that group and member belong to the same collection 
-                                if ((c != null) && (contact.getFolderId() == c.getFolderId()))
+                            ItemId itemId = new ItemId(member.getValue(), existingContact.getAccount().getId());
+                            if (itemId.belongsTo(existingContact.getAccount())) {
+                                // make sure member belongs to the same collection as the group.
+                                Contact c = getContactByUID(ctxt, itemId.toString(), existingContact.getAccount(), folderId);
+                                if (c != null)
                                     membersToRemove.add(member);                                    
                             }
                         }                            
@@ -131,7 +130,7 @@ public class AddressObject extends MailItemResource {
                         for (String uidStr : members) {
                             if (uidStr.startsWith("urn:uuid:"))
                                 uidStr = uidStr.substring(9);                            
-                            Contact c = getContactByUID(ctxt, uidStr, ownerAccount, null);
+                            Contact c = getContactByUID(ctxt, uidStr, ownerAccount, folderId);
                             if (c != null) {
                                 // add to the group as a CONTACT_REF
                                 ItemId itemId = new ItemId(c);
@@ -174,10 +173,10 @@ public class AddressObject extends MailItemResource {
                     if (member.getType().equals(Member.Type.CONTACT_REF)) {
                         ItemId itemId = new ItemId(member.getValue(), contact.getAccount().getId());
                         if (itemId.belongsTo(contact.getAccount())) {
-                            Contact c = getContactByUID(ctxt, itemId.toString(), contact.getAccount(), null);
-                            // check that group and member belong to the same collection 
-                            if ((c != null) && (contact.getFolderId() == c.getFolderId()))
-                                memberList.add("urn:uuid:" + c.get(ContactConstants.A_vCardUID));
+                            // make sure member belongs to the same collection as the group.
+                            Contact c = getContactByUID(ctxt, itemId.toString(), contact.getAccount(), contact.getFolderId());                             
+                            if (c != null)
+                                memberList.add("urn:uuid:" + VCard.getUid(c));   
                         }
                     }
                 }            
@@ -231,7 +230,7 @@ public class AddressObject extends MailItemResource {
                     if (ifnonematch == null)
                         throw new DavException("item does not exists", HttpServletResponse.SC_CONFLICT);
                     // Convert Apple contact group to Zimbra contact group.
-                    constructContactGroupFromAppleXProps(ctxt, ownerAccount, vcard, true);
+                    constructContactGroupFromAppleXProps(ctxt, ownerAccount, vcard, null, where.getId());
                     c = mbox.createContact(ctxt.getOperationContext(), vcard.asParsedContact(), where.mId, null);
                     res = new AddressObject(ctxt, c);
                     res.mNewlyCreated = true;
@@ -240,8 +239,9 @@ public class AddressObject extends MailItemResource {
                     String itemEtag = res.getEtag();
                     if (etag != null && !etag.equals(itemEtag))
                         throw new DavException("item etag does not match", HttpServletResponse.SC_CONFLICT);
-                    constructContactGroupFromAppleXProps(ctxt, ownerAccount, vcard, false);
-                    mbox.modifyContact(ctxt.getOperationContext(), ((MailItemResource)res).getId(), vcard.asParsedContact());
+                    MailItemResource mir = (MailItemResource) res;
+                    constructContactGroupFromAppleXProps(ctxt, ownerAccount, vcard, (Contact) mir.getMailItem(ctxt), where.getId());
+                    mbox.modifyContact(ctxt.getOperationContext(), mir.getId(), vcard.asParsedContact());
                     res = UrlNamespace.getResourceAt(ctxt, ctxt.getUser(), ctxt.getPath());
                 }
             }
@@ -254,7 +254,7 @@ public class AddressObject extends MailItemResource {
     }
 
     public static AddressObject getAddressObjectByUID(DavContext ctxt, String uid, Account account, Folder f) throws ServiceException {
-        Contact c = getContactByUID(ctxt, uid, account, f);
+        Contact c = getContactByUID(ctxt, uid, account, (f != null) ? f.getId() : -1);
         if (c == null)
             return null;
         return new AddressObject(ctxt, c);
@@ -264,7 +264,7 @@ public class AddressObject extends MailItemResource {
         return getAddressObjectByUID(ctxt, uid, account, null);
     }
 
-    private static Contact getContactByUID(DavContext ctxt, String uid, Account account, Folder f) throws ServiceException {
+    private static Contact getContactByUID(DavContext ctxt, String uid, Account account, int folderId) throws ServiceException {
         Contact item = null;
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         if (uid.endsWith(AddressObject.VCARD_EXTENSION))
@@ -305,9 +305,9 @@ public class AddressObject extends MailItemResource {
                     ZimbraHit hit = zqr.getNext();
                     if (hit instanceof ContactHit) {
                         item = ((ContactHit)hit).getContact();
-                        if (f == null)
+                        if (folderId < 0)
                             break;
-                        if (item.getFolderId() == f.getId())
+                        if (item.getFolderId() == folderId)
                             break;
                         item = null;
                     }
@@ -319,7 +319,7 @@ public class AddressObject extends MailItemResource {
             }
         }
         
-        if ((item != null) && (f != null) && (item.getFolderId() != f.getId()))
+        if ((item != null) && (folderId >= 0) && (item.getFolderId() != folderId))
             item = null;
         
         return item;
