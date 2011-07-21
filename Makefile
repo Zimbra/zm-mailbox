@@ -11,6 +11,7 @@ SHARED_EXT := so
 PUSHED_EXT := so.Linux.i386
 CF := -fPIC -g
 PROXY_INFO := DefaultProxyInfo
+CC := gcc
 
 ifeq ($(BUILD_PLATFORM), MACOSX)
 # Build system is OS/X 10.4 PPC
@@ -44,6 +45,21 @@ ifeq (MACOSXx86,$(BUILD_PLATFORM))
 # Build system is OS/X 10.4 x86
 CF :=-fPIC -g -O2 -force_cpusubtype_ALL -mmacosx-version-min=10.4 -arch i386 -arch ppc
 PROXY_INFO := DefaultProxyInfo
+endif
+
+ifeq ($(BUILD_PLATFORM), MACOSXx86_10.7)
+# Build system is OS/X 10.5 and above, x86
+CC	:= gcc-4.2
+JAVAINC := -I/System/Library/Frameworks/JavaVM.framework/Headers
+SHARED := -dynamiclib
+MACDEF := -DDARWIN
+CF := -fPIC -g -O2 -force_cpusubtype_ALL -mmacosx-version-min=10.7 -arch x86_64
+SHARED_EXT := jnilib
+LIB_OPTS := -install_name /opt/zimbra/lib/libzimbra-native.$(SHARED_EXT) -framework JavaVM -framework CoreServices
+LIB_OPTS_SETUID := -install_name /opt/zimbra/lib/libsetuid.$(SHARED_EXT) -framework JavaVM
+JAVA_BINARY = /usr/bin/java
+PUSHED_EXT := jnilib.MacOSX
+PROXY_INFO := MacProxyInfo
 endif
 
 all: FORCE
