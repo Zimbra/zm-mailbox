@@ -38,10 +38,27 @@ public abstract class LdapServerConfig {
     // connection pool keys.  If any of these becomes set-able, 
     // ExternalLdapConfig.getConnPoolKey() has to be modified accordingly.
     protected final  boolean sslAllowUntrustedCerts;
+    
     protected final int connPoolMaxSize;
     protected final int connPoolTimeoutMillis;
+    
+    // whether connection pool health check will be invoked whenever a connection is to be checked out for use.
+    // if OnCheckout health check is enabled, periodic background health check will be disabled.
+    protected final boolean connPoolHelathCheckOnCheckoutEnabled;
+    
+    // length of time in milliseconds between periodic background health checks against the available 
+    // connections in connection pool
+    protected final long connPoolHelathCheckIntervalMillis;
+    
+    // The maximum length of time in milliseconds that should be allowed for the health check response 
+    // to come back from the LDAP server 
+    // If the provided value is less than or equal to zero, then the default value of 30000 milliseconds 
+    // (30 seconds) will be used by unboundid SDK.
+    protected final long connPoolHelathCheckMaxResponseTimeMillis;
+    
     protected final int connectTimeoutMillis;
     protected final int readTimeoutMillis;
+    
     
     public abstract int getConnPoolInitSize();
     
@@ -63,9 +80,17 @@ public abstract class LdapServerConfig {
         // System.setProperty("com.sun.jndi.ldap.connect.pool.prefsize", LC.ldap_connect_pool_prefsize.value());
         this.connPoolTimeoutMillis = LC.ldap_connect_pool_timeout.intValue();
         
+        this.connPoolHelathCheckOnCheckoutEnabled = 
+            LC.ldap_connect_pool_health_check_on_checkout_enabled.booleanValue();
+        this.connPoolHelathCheckIntervalMillis = 
+            LC.ldap_connect_pool_health_check_interval_millis.longValue();
+        this.connPoolHelathCheckMaxResponseTimeMillis = 
+            LC.ldap_connect_pool_health_check_max_response_time_millis.longValue();
+        
         // timeout setting
         this.connectTimeoutMillis = LC.ldap_connect_timeout.intValue();
         this.readTimeoutMillis = LC.ldap_read_timeout.intValue();
+
     }
     
     
@@ -295,6 +320,18 @@ public abstract class LdapServerConfig {
     
     public int getConnPoolTimeoutMillis() {
         return connPoolTimeoutMillis;
+    }
+    
+    public boolean isConnPoolHelathCheckOnCheckoutEnabled() {
+        return connPoolHelathCheckOnCheckoutEnabled;
+    }
+    
+    public long getConnPoolHelathCheckIntervalMillis() {
+        return connPoolHelathCheckIntervalMillis;
+    }
+    
+    public long getConnPoolHelathCheckMaxResponseTimeMillis() {
+        return connPoolHelathCheckMaxResponseTimeMillis;
     }
     
     public int getConnectTimeoutMillis() {
