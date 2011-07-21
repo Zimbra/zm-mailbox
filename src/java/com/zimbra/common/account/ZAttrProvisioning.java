@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110719-2042 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110719-2122 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1875,7 +1875,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1231)
+    @ZAttr(id=1230)
     public static final String A_zimbraAutoProvAccountNameMap = "zimbraAutoProvAccountNameMap";
 
     /**
@@ -1893,7 +1893,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1232)
+    @ZAttr(id=1231)
     public static final String A_zimbraAutoProvAttrMap = "zimbraAutoProvAttrMap";
 
     /**
@@ -1914,7 +1914,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1235)
+    @ZAttr(id=1234)
     public static final String A_zimbraAutoProvBatchSize = "zimbraAutoProvBatchSize";
 
     /**
@@ -1926,65 +1926,33 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1236)
+    @ZAttr(id=1235)
     public static final String A_zimbraAutoProvLastPolledTimestamp = "zimbraAutoProvLastPolledTimestamp";
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and is using
-     * zimbraAutoProvLdapSearchFilter) MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search bind DN for auto provision.
+     * EAGER mode: required LAZY mode: required (if using
+     * zimbraAutoProvLdapSearchFilter) MANUAL mode: required LDAP search bind
+     * DN for auto provision.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1225)
+    public static final String A_zimbraAutoProvLdapAdminBindDn = "zimbraAutoProvLdapAdminBindDn";
+
+    /**
+     * EAGER mode: required LAZY mode: required MANUAL mode: required LDAP
+     * search bind password for auto provision.
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1226)
-    public static final String A_zimbraAutoProvLdapAdminBindDn = "zimbraAutoProvLdapAdminBindDn";
-
-    /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and is using
-     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search bind password for auto provision.
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1227)
     public static final String A_zimbraAutoProvLdapAdminBindPassword = "zimbraAutoProvLdapAdminBindPassword";
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * optional (if not using LDAP/AD auth settings) MANUAL mode: optional
-     * (if not using LDAP/AD auth settings) LDAP external DN template for
-     * account auto provisioning. For LAZY and MANUAL modes, either
-     * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
-     * set. If both are set, zimbraAutoProvLdapSearchFilter will take
-     * precedence. Supported place holders: %n = username with @ (or without,
-     * if no @ was specified) %u = username with @ removed %d = domain as
-     * foo.com %D = domain as dc=foo,dc=com
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1230)
-    public static final String A_zimbraAutoProvLdapBindDn = "zimbraAutoProvLdapBindDn";
-
-    /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings and is using
-     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required (if not using
-     * LDAP/AD auth settings) LDAP search base for auto provision, used in
-     * conjunction with zimbraAutoProvLdapSearchFilter. If not set, LDAP root
-     * DSE will be used.
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1228)
-    public static final String A_zimbraAutoProvLdapSearchBase = "zimbraAutoProvLdapSearchBase";
-
-    /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * optional (if not using LDAP/AD auth settings) MANUAL mode: optional
-     * (if not using LDAP/AD auth settings) LDAP search filter template for
-     * account auto provisioning. For LAZY and MANUAL modes, either
+     * EAGER mode: required LAZY mode: optional (if not using
+     * zimbraAutoProvLdapSearchFilters) MANUAL mode: optional (if not using
+     * zimbraAutoProvLdapSearchFilters) LDAP external DN template for account
+     * auto provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
      * precedence. Supported place holders: %n = username with @ (or without,
@@ -1994,6 +1962,34 @@ public class ZAttrProvisioning {
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1229)
+    public static final String A_zimbraAutoProvLdapBindDn = "zimbraAutoProvLdapBindDn";
+
+    /**
+     * EAGER mode: required LAZY mode: required (if using
+     * zimbraAutoProvLdapSearchFilter), MANUAL mode: required LDAP search
+     * base for auto provision, used in conjunction with
+     * zimbraAutoProvLdapSearchFilter. If not set, LDAP root DSE will be
+     * used.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1227)
+    public static final String A_zimbraAutoProvLdapSearchBase = "zimbraAutoProvLdapSearchBase";
+
+    /**
+     * EAGER mode: required LAZY mode: optional (if not using
+     * zimbraAutoProvLdapBindDn) MANUAL mode: optional (if not using
+     * zimbraAutoProvLdapBindDn) LDAP search filter template for account auto
+     * provisioning. For LAZY and MANUAL modes, either
+     * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
+     * set. If both are set, zimbraAutoProvLdapSearchFilter will take
+     * precedence. Supported place holders: %n = username with @ (or without,
+     * if no @ was specified) %u = username with @ removed %d = domain as
+     * foo.com %D = domain as dc=foo,dc=com
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1228)
     public static final String A_zimbraAutoProvLdapSearchFilter = "zimbraAutoProvLdapSearchFilter";
 
     /**
@@ -2003,18 +1999,16 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1225)
+    @ZAttr(id=1224)
     public static final String A_zimbraAutoProvLdapStartTlsEnabled = "zimbraAutoProvLdapStartTlsEnabled";
 
     /**
-     * EAGER mode: required (if not using LDAP/AD auth settings) LAZY mode:
-     * required (if not using LDAP/AD auth settings) MANUAL mode: required
-     * (if not using LDAP/AD auth settings) LDAP URL of the external LDAP
-     * source for auto provision.
+     * EAGER mode: required LAZY mode: required MANUAL mode: required LDAP
+     * URL of the external LDAP source for auto provision.
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1224)
+    @ZAttr(id=1223)
     public static final String A_zimbraAutoProvLdapURL = "zimbraAutoProvLdapURL";
 
     /**
@@ -2028,7 +2022,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1234)
+    @ZAttr(id=1233)
     public static final String A_zimbraAutoProvListenerClass = "zimbraAutoProvListenerClass";
 
     /**
@@ -2041,7 +2035,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1237)
+    @ZAttr(id=1236)
     public static final String A_zimbraAutoProvLock = "zimbraAutoProvLock";
 
     /**
@@ -2074,7 +2068,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1233)
+    @ZAttr(id=1232)
     public static final String A_zimbraAutoProvNotificationFromAddress = "zimbraAutoProvNotificationFromAddress";
 
     /**
@@ -2099,7 +2093,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1239)
+    @ZAttr(id=1238)
     public static final String A_zimbraAutoProvPollingInterval = "zimbraAutoProvPollingInterval";
 
     /**
@@ -2111,28 +2105,8 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1238)
+    @ZAttr(id=1237)
     public static final String A_zimbraAutoProvScheduledDomains = "zimbraAutoProvScheduledDomains";
-
-    /**
-     * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Default
-     * is FALSE. Whether to use external LDAP/AD auth settings for auto
-     * provisioning. Purpose of this attribute is to simplify configuration
-     * for domains already configured with external LDAP/AD auth. By setting
-     * this attribute to TRUE, domains can use the external LDAP/AD auth
-     * settings for auto provision and do not have to duplicate them. Honored
-     * when: - for EAGER mode: always. - for LAZY mode: only when user
-     * authenticated to Zimbra by external LDAP/AD auth. - for MANUAL mode:
-     * always. If honored, all zimbraAutoProvLdap*** values are ignored, and
-     * settings for external LDAP/AD auth will be used. If honored and
-     * external LDAP/AD auth is not configured or not configured properly, it
-     * will be a config error and we will not fallback to the
-     * zimbraAutoProvLdap*** values.
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1223)
-    public static final String A_zimbraAutoProvUseLdapAuthSettings = "zimbraAutoProvUseLdapAuthSettings";
 
     /**
      * Use null return path for envelope MAIL FROM when sending out of office
@@ -2362,7 +2336,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1240)
+    @ZAttr(id=1239)
     public static final String A_zimbraCalendarKeepExceptionsOnSeriesTimeChange = "zimbraCalendarKeepExceptionsOnSeriesTimeChange";
 
     /**
@@ -4993,7 +4967,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1241)
+    @ZAttr(id=1240)
     public static final String A_zimbraMailAddressValidationRegex = "zimbraMailAddressValidationRegex";
 
     /**
@@ -5321,7 +5295,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0
      */
-    @ZAttr(id=1242)
+    @ZAttr(id=1241)
     public static final String A_zimbraMailPurgeSystemPolicy = "zimbraMailPurgeSystemPolicy";
 
     /**
