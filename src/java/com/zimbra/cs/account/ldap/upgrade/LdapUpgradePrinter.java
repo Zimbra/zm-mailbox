@@ -17,6 +17,8 @@ package com.zimbra.cs.account.ldap.upgrade;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 
+import com.zimbra.cs.account.Entry;
+
 class LdapUpgradePrinter {
 
     private PrintStream printer = System.out;
@@ -48,5 +50,9 @@ class LdapUpgradePrinter {
     void printStackTrace(String str, Throwable e) {
         println(str);
         e.printStackTrace(getPrintWriter());
+    }
+    
+    void printCheckingEntry(Entry entry) {
+        printer.println("\nChecking " + entry.getEntryType().getName() + " entry " + entry.getLabel());
     }
 }

@@ -79,9 +79,8 @@ public abstract class UpgradeOp {
         if (!attrs.isEmpty()) {
             printer.println();
             printer.println("Modifying " + entry.getEntryType().name() + " " + entry.getLabel());
+            printModAttrs(attrs);
         }
-        
-        printModAttrs(attrs);
     }
     
     private void printModAttrs(Map<String, Object> attrs) {

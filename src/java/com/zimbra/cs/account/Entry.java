@@ -56,6 +56,10 @@ public abstract class Entry implements ToZJSONObject {
         SIGNATURE,
         XMPPCOMPONENT,
         ZIMLET;
+        
+        public String getName() {
+            return name();
+        }
     }
 
     private Map<String,Object> mAttrs;
