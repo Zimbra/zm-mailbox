@@ -70,16 +70,16 @@ all: FORCE
 FORCE: ;
 
 $(BUILD)/libzimbra-native.$(SHARED_EXT): $(BUILD)/IO.o $(BUILD)/Process.o $(BUILD)/ProcessorUsage.o $(BUILD)/ResourceUsage.o $(BUILD)/Util.o $(BUILD)/zjniutil.o $(BUILD)/$(PROXY_INFO).o
-	gcc $(CF) $(LIB_OPTS) $(SHARED) -o $@ $^
+	$(CC) $(CF) $(LIB_OPTS) $(SHARED) -o $@ $^
 
 $(BUILD)/libsetuid.$(SHARED_EXT): $(BUILD)/org_mortbay_setuid_SetUID.o
-	gcc $(CF) $(LIB_OPTS_SETUID) $(SHARED) -o $@ $^
+	$(CC) $(CF) $(LIB_OPTS_SETUID) $(SHARED) -o $@ $^
 
 $(BUILD)/%.o: $(SRC)/native/%.c
-	gcc $(CF) $(MACDEF) $(JAVAINC) -I$(BUILD) -Wall -Wmissing-prototypes -c -o $@ $<
+	$(CC) $(CF) $(MACDEF) $(JAVAINC) -I$(BUILD) -Wall -Wmissing-prototypes -c -o $@ $<
 
 $(BUILD)/%.o: $(SRC)/jetty-setuid/%.c
-	gcc $(CF) $(MACDEF) $(JAVAINC) -I$(BUILD) -Wall -Wmissing-prototypes -c -o $@ $<
+	$(CC) $(CF) $(MACDEF) $(JAVAINC) -I$(BUILD) -Wall -Wmissing-prototypes -c -o $@ $<
 
 $(BUILD)/Process.o: $(SRC)/native/Process.c $(BUILD)/Process.h $(SRC)/native/zjniutil.h
 
