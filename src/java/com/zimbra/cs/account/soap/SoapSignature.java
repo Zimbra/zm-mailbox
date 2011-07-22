@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.account.soap;
 
+import com.zimbra.common.account.SignatureUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -56,7 +57,7 @@ class SoapSignature extends Signature implements SoapEntry {
             else if (attr.equals(Provisioning.A_zimbraPrefMailSignatureContactId) && !StringUtil.isNullOrEmpty(value))
                 signature.addElement(AccountConstants.E_CONTACT_ID).setText(value);
             else {
-                String mimeType = Signature.attrNameToMimeType(attr);
+                String mimeType = SignatureUtil.attrNameToMimeType(attr);
                 if (mimeType == null)
                     throw ZClientException.CLIENT_ERROR("unable to determine mime type from attr " + attr, null);
                 
@@ -77,7 +78,7 @@ class SoapSignature extends Signature implements SoapEntry {
         
         for (Element eContent : contents) {
             String type = eContent.getAttribute(AccountConstants.A_TYPE);
-            String attr = Signature.mimeTypeToAttrName(type);
+            String attr = SignatureUtil.mimeTypeToAttrName(type);
             if (attr != null) {
                 attrs.put(attr, eContent.getText());
             }

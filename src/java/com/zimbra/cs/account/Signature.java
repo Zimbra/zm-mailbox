@@ -19,18 +19,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
+import com.zimbra.common.account.SignatureUtil;
 
 public class Signature extends AccountProperty implements Comparable {
 
-    private static final BiMap<String, String> sAttrTypeMap = HashBiMap.create();
-
-    static {
-        sAttrTypeMap.put(Provisioning.A_zimbraPrefMailSignature, "text/plain");
-        sAttrTypeMap.put(Provisioning.A_zimbraPrefMailSignatureHTML, "text/html");
-    }
-    
     public Signature(Account acct, String name, String id, Map<String, Object> attrs, Provisioning prov) {
         super(acct, name, id, attrs, null, prov);
     }
@@ -66,7 +58,7 @@ public class Signature extends AccountProperty implements Comparable {
     public Set<SignatureContent> getContents() {
         Set<SignatureContent> contents = new HashSet<SignatureContent>();
         
-        for (Iterator it = sAttrTypeMap.entrySet().iterator(); it.hasNext(); ) {
+        for (Iterator it = SignatureUtil.ATTR_TYPE_MAP.entrySet().iterator(); it.hasNext(); ) {
             Map.Entry entry = (Map.Entry)it.next();
             
             String content = getAttr((String)entry.getKey());
@@ -76,13 +68,4 @@ public class Signature extends AccountProperty implements Comparable {
         
         return contents;
     }
-    
-    public static String mimeTypeToAttrName(String mimeType) {
-        return sAttrTypeMap.inverse().get(mimeType);
-    }
-    
-    public static String attrNameToMimeType(String attrName) {
-        return sAttrTypeMap.get(attrName);
-    }
-
 }

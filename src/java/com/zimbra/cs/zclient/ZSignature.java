@@ -103,7 +103,7 @@ public class ZSignature implements Comparable<ZSignature>, ToZJSONObject {
         if (content != null) {
             type = content.getContentType();
             value = content.getContent();
-            attrs.put(com.zimbra.cs.account.Signature.mimeTypeToAttrName(type), value);
+            attrs.put(com.zimbra.common.account.SignatureUtil.mimeTypeToAttrName(type), value);
         }
         return attrs;
     }

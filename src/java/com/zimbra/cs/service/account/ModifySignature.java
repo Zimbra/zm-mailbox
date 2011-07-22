@@ -20,6 +20,7 @@ import java.util.Map;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.SignatureBy;
+import com.zimbra.common.account.SignatureUtil;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.cs.account.Account;
@@ -53,7 +54,7 @@ public class ModifySignature extends DocumentHandler {
         Map<String,Object> attrs = new HashMap<String, Object>();
         for (Element eContent : contents) {
             String type = eContent.getAttribute(AccountConstants.A_TYPE);
-            String attr = Signature.mimeTypeToAttrName(type);
+            String attr = SignatureUtil.mimeTypeToAttrName(type);
             if (attr == null)
                 throw ServiceException.INVALID_REQUEST("invalid type "+type, null);
             if (attrs.get(attr) != null)

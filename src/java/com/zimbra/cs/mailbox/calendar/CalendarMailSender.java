@@ -56,6 +56,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.SignatureBy;
+import com.zimbra.common.account.SignatureUtil;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailSender;
@@ -1132,7 +1133,7 @@ public class CalendarMailSender {
             ZimbraLog.calendar.warn("No such signature " + sigId + " for account " + acct.getName());
             return null;
         }
-        String attr = Signature.mimeTypeToAttrName(MimeConstants.CT_TEXT_PLAIN);
+        String attr = SignatureUtil.mimeTypeToAttrName(MimeConstants.CT_TEXT_PLAIN);
         return sig.getAttr(attr, null);
     }
 
