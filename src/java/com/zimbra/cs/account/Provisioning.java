@@ -854,8 +854,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
      *
      *  Caller is responsible for setting the defaults when it needs them.
      */
-    public static final int SO_NO_ACCOUNT_DEFAULTS = 0x100;            // do not set defaults and secondary defaults in makeAccount
-    public static final int SO_NO_ACCOUNT_SECONDARY_DEFAULTS = 0x200;  // do not set secondary defaults in makeAccount
+    public static final int SO_NO_ACCOUNT_DEFAULTS = 0x200;            // do not set defaults and secondary defaults in makeAccount
+    public static final int SO_NO_ACCOUNT_SECONDARY_DEFAULTS = 0x400;  // do not set secondary defaults in makeAccount
 
     /**
      * Takes a string representation the objects to search for and returns a bit mask of SA_* flags 
