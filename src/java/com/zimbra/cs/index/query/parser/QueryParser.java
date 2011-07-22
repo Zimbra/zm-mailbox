@@ -16,6 +16,7 @@ package com.zimbra.cs.index.query.parser;
 
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -86,8 +87,7 @@ public final class QueryParser {
         IMG2JJ = builder.build();
     }
 
-    private static final Map<String, Integer> FOLDER2ID =
-        new ImmutableMap.Builder<String, Integer>()
+    private static final Map<String, Integer> FOLDER2ID = new ImmutableMap.Builder<String, Integer>()
         .put("inbox", Mailbox.ID_FOLDER_INBOX)
         .put("trash", Mailbox.ID_FOLDER_TRASH)
         .put("junk", Mailbox.ID_FOLDER_SPAM)
@@ -96,8 +96,7 @@ public final class QueryParser {
         .put("contacts", Mailbox.ID_FOLDER_CONTACTS)
         .build();
 
-    private static final Map<Integer, String> JJ2LUCENE =
-        new ImmutableMap.Builder<Integer, String>()
+    private static final Map<Integer, String> JJ2LUCENE = new ImmutableMap.Builder<Integer, String>()
         .put(CONTACT, LuceneFields.L_CONTACT_DATA)
         .put(CONTENT, LuceneFields.L_CONTENT)
         .put(MSGID, LuceneFields.L_H_MESSAGE_ID)
@@ -148,6 +147,7 @@ public final class QueryParser {
     private int defaultField = CONTENT;
     private String sortBy;
     private Set<MailItem.Type> types = EnumSet.noneOf(MailItem.Type.class);
+    private boolean quick = false; // instant search
 
     /**
      * Constructs a new {@link QueryParser}.
@@ -207,6 +207,10 @@ public final class QueryParser {
         return sortBy;
     }
 
+    public void setQuick(boolean value) {
+        quick = value;
+    }
+
     /**
      * Parses the query string.
      *
@@ -216,33 +220,28 @@ public final class QueryParser {
      */
     public List<Query> parse(String src) throws ServiceException {
         Parser parser = new Parser(new StringReader(src));
-        SimpleNode node;
         try {
-            node = parser.parse();
-        } catch (TokenMgrError e) {
-            throw MailServiceException.QUERY_PARSE_ERROR(src, e,
-                    "", -1, e.getMessage());
-        } catch (ParseException e) {
-            throw MailServiceException.QUERY_PARSE_ERROR(src, e,
-                    e.currentToken.image, e.currentToken.beginColumn,
-                    e.getMessage());
-        }
-
-        assert(node.id == JJTROOT);
-        assert(node.jjtGetNumChildren() == 1);
-
-        try {
+            SimpleNode node = parser.parse();
+            assert(node.id == JJTROOT);
+            assert(node.jjtGetNumChildren() == 1);
             return toQuery((SimpleNode) node.jjtGetChild(0));
+        } catch (TokenMgrError e) {
+            if (quick) {
+                return Collections.singletonList(createQuickQuery(src));
+            } else {
+                throw MailServiceException.QUERY_PARSE_ERROR(src, e, "", -1, e.getMessage());
+            }
         } catch (ParseException e) {
-            throw MailServiceException.QUERY_PARSE_ERROR(src, e,
-                    e.currentToken.image, e.currentToken.beginColumn,
-                    e.getMessage());
+            if (quick) {
+                return Collections.singletonList(createQuickQuery(src));
+            } else {
+                throw MailServiceException.QUERY_PARSE_ERROR(src, e,
+                        e.currentToken.image, e.currentToken.beginColumn, e.getMessage());
+            }
         }
     }
 
-    private List<Query> toQuery(SimpleNode node)
-        throws ParseException, ServiceException {
-
+    private List<Query> toQuery(SimpleNode node) throws ParseException, ServiceException {
         assert(node.id == JJTQUERY);
 
         List<Query> result = new LinkedList<Query>();
@@ -274,9 +273,7 @@ public final class QueryParser {
         return result;
     }
 
-    private Query toClause(SimpleNode node)
-        throws ParseException, ServiceException {
-
+    private Query toClause(SimpleNode node) throws ParseException, ServiceException {
         assert(node.id == JJTCLAUSE);
         int num = node.jjtGetNumChildren();
         assert(num > 0 && num <= 2);
@@ -284,24 +281,27 @@ public final class QueryParser {
         Query clause = null;
         SimpleNode child = (SimpleNode) node.jjtGetChild(num - 1);
         switch (child.id) {
-        case JJTTEXTCLAUSE:
-            clause = toTextClause(child);
-            break;
-        case JJTITEMCLAUSE:
-            clause = toItemClause(child);
-            break;
-        case JJTDATECLAUSE:
-            clause = toDateClause(child);
-            break;
-        case JJTQUERY:
-            clause = toSubQuery(child);
-            break;
-        case JJTDEFAULTCLAUSE:
-            clause = toDefaultClause(child);
-            break;
-        default:
-            assert(false);
-            return null;
+            case JJTTEXTCLAUSE:
+                clause = toTextClause(child);
+                break;
+            case JJTITEMCLAUSE:
+                clause = toItemClause(child);
+                break;
+            case JJTDATECLAUSE:
+                clause = toDateClause(child);
+                break;
+            case JJTQUERY:
+                clause = toSubQuery(child);
+                break;
+            case JJTDEFAULTCLAUSE:
+                if (quick && node.jjtGetFirstToken().beginColumn == 1) {
+                    throw new ParseException("quick mode"); // trigger instant search
+                }
+                clause = toDefaultClause(child);
+                break;
+            default:
+                assert(false);
+                return null;
         }
         if (node.jjtGetNumChildren() > 1) {
             clause.setModifier(toModifier((SimpleNode) node.jjtGetChild(0)));
@@ -309,16 +309,12 @@ public final class QueryParser {
         return clause;
     }
 
-    private Query toSubQuery(SimpleNode node)
-        throws ParseException, ServiceException {
-
+    private Query toSubQuery(SimpleNode node) throws ParseException, ServiceException {
         assert(node.id == JJTQUERY);
         return new SubQuery(toQuery(node));
     }
 
-    private Query toTextClause(SimpleNode node)
-        throws ParseException, ServiceException {
-
+    private Query toTextClause(SimpleNode node) throws ParseException, ServiceException {
         assert(node.id == JJTTEXTCLAUSE);
         assert(node.jjtGetNumChildren() == 1);
 
@@ -416,15 +412,15 @@ public final class QueryParser {
 
     private String toString(Token token) {
         switch (token.kind) {
-        case TERM:
-            return token.image;
-        case QUOTED_TERM:
-            return token.image.substring(1, token.image.length() - 1).replaceAll("\\\\\"", "\"");
-        case BRACED_TERM:
-            return token.image.substring(1, token.image.length() - 1);
-        default:
-            assert(false);
-            return "";
+            case TERM:
+                return token.image;
+            case QUOTED_TERM:
+                return token.image.substring(1, token.image.length() - 1).replaceAll("\\\\\"", "\"");
+            case BRACED_TERM:
+                return token.image.substring(1, token.image.length() - 1);
+            default:
+                assert(false);
+                return "";
         }
     }
 
@@ -659,6 +655,16 @@ public final class QueryParser {
 
     private Query createContentQuery(String text) {
         return new TextQuery(analyzer, LuceneFields.L_CONTENT, text);
+    }
+
+    private Query createQuickQuery(String text) {
+        if (types.size() == 1 && types.contains(MailItem.Type.CONTACT)) {
+            return new ContactQuery(text);
+        } else {
+            TextQuery query = new TextQuery(analyzer, LuceneFields.L_CONTENT, text);
+            query.setQuick(true);
+            return query;
+        }
     }
 
     private ParseException exception(String message, Token token) {

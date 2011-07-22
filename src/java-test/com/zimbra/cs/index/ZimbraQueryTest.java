@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.io.Closeables;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -33,12 +34,15 @@ import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
+import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedContact;
+import com.zimbra.cs.mime.ParsedMessage;
 
 /**
  * Unit test for {@link ZimbraQuery}.
@@ -118,6 +122,7 @@ public final class ZimbraQueryTest {
         ZimbraQueryResults result = query.execute();
         Assert.assertTrue(result.hasNext());
         Assert.assertEquals(contact.getId(), result.getNext().getItemId());
+        Closeables.closeQuietly(result);
     }
 
     @Test
@@ -176,10 +181,11 @@ public final class ZimbraQueryTest {
 
         ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
         Assert.assertEquals("ZQ: Q(DATE:MDATE,197001010050-196912312359)", query.toString());
-        ZimbraQueryResults results = query.execute();
-        Assert.assertEquals(104, results.getNext().getItemId());
-        Assert.assertEquals(105, results.getNext().getItemId());
-        Assert.assertEquals(null, results.getNext());
+        ZimbraQueryResults result = query.execute();
+        Assert.assertEquals(104, result.getNext().getItemId());
+        Assert.assertEquals(105, result.getNext().getItemId());
+        Assert.assertEquals(null, result.getNext());
+        Closeables.closeQuietly(result);
     }
 
     @Test
@@ -194,7 +200,7 @@ public final class ZimbraQueryTest {
                 ContactConstants.A_email, "test2@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
 
         SearchParams params = new SearchParams();
-        params.setQueryString("contact:test");
+        params.setQueryString("test");
         params.setSortBy(SortBy.NONE);
         params.setTypes(EnumSet.of(MailItem.Type.CONTACT));
         params.setQuick(true);
@@ -204,6 +210,28 @@ public final class ZimbraQueryTest {
         Assert.assertTrue(result.hasNext());
         Assert.assertEquals(contact.getId(), result.getNext().getItemId());
         Assert.assertFalse(result.hasNext());
+        Closeables.closeQuietly(result);
+    }
+
+    @Test
+    public void suggest() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        Message msg = mbox.addMessage(null, new ParsedMessage("Subject: all hands meeting".getBytes(), false),
+                dopt, null);
+        MailboxTestUtil.index(mbox);
+
+        SearchParams params = new SearchParams();
+        params.setQueryString("all hands me");
+        params.setSortBy(SortBy.NONE);
+        params.setTypes(EnumSet.of(MailItem.Type.MESSAGE));
+        params.setQuick(true);
+
+        ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
+        ZimbraQueryResults result = query.execute();
+        Assert.assertEquals(msg.getId(), result.getNext().getItemId());
+        Assert.assertEquals("[WILDCARD(me*,1,ALL), all hands meeting]", result.getResultInfo().toString());
+        Closeables.closeQuietly(result);
     }
 
 }

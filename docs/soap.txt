@@ -1462,9 +1462,10 @@ conversation result:
 --------------------
 
 <SearchResponse sortBy="sort-by" offset="..." more="{more-flag}" [total="{total hit count}"]>
-  [ <info>
-      [ <wildcard str="foo*" expanded="1|0"/> ]
-   </info> ]
+  [<info>
+    [<wildcard str="foo*" expanded="1|0"/>]
+    [<suggest>{suggested query string}</suggest>]
+   </info>]
   <c id="{conv-id}" t="{tags}" n="{num-msgs}" [total="{all-msgs}"] d="{date}" f="{flags} [mbx="UID"] sf="SORT-FIELD-VALUE">
     <e ...>*
     <su>{subject}</su>

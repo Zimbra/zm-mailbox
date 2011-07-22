@@ -518,4 +518,13 @@ public final class QueryParserTest {
                 Query.toString(parser.parse("\"Zimbra \\\"quoted\\\" test\"")));
     }
 
+    @Test
+    public void quick() throws Exception {
+        QueryParser parser = new QueryParser(null, ZimbraAnalyzer.getInstance());
+        parser.setQuick(true);
+
+        Assert.assertEquals("Q(l.content:all,hands,meeting[*])", Query.toString(parser.parse("all hands meeting")));
+        Assert.assertEquals("Q(l.content:all,hands,meeting[*])", Query.toString(parser.parse("all hands meeting*")));
+    }
+
 }
