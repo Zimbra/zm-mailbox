@@ -1138,4 +1138,6 @@ public final class MailConstants {
     public static final String E_POLICY = "policy";
     public static final String A_LIFETIME = "lifetime";
     public static final String A_RETENTION_POLICY_TYPE = "type";
+    
+    public static final String E_WATCHER = "watcher";
 }
