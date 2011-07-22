@@ -596,7 +596,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                             }
                         } else {
                             // Exception instances are added as additional VEVENTs/VTODOs.
-                            ZComponent exceptComp = except.newToVComponent(true, !hidePrivate);
+                            ZComponent exceptComp = except.newToVComponent(false, !hidePrivate);
                             cal.addComponent(exceptComp);
                         }
                     }

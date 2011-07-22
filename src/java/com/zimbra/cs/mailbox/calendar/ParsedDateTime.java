@@ -621,7 +621,6 @@ public final class ParsedDateTime {
         if (!useOutlookCompatMode && !hasTime()) {
             toRet.addParameter(new ZParameter(ICalTok.VALUE, ICalTok.DATE.toString()));
         } else {
-            assert(isUTC() || tzName != null);
             if (tzName != null) {
                 toRet.addParameter(new ZParameter(ICalTok.TZID, tzName));
             } 
