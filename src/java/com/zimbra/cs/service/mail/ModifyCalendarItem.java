@@ -246,7 +246,7 @@ public class ModifyCalendarItem extends CalendarRequest {
                     echoAddedInvite(response, ifmt, octxt, mbox, dat.mAddInvData, maxSize, wantHTML, neuter);
                 }
 
-                boolean ignorePastExceptions = false;
+                boolean ignorePastExceptions = true;
 
                 // Reflect added/removed attendees in the exception instances.
                 if (!atsAdded.isEmpty() || !atsCanceled.isEmpty()) {

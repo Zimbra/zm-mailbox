@@ -563,7 +563,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             // Get exception instances.  These will be included in the series update email.
             List<Invite> exceptions = new ArrayList<Invite>();
             for (Invite inv : invites) {
-                if (inv.hasRecurId() && (!ignorePastExceptions || inviteIsAfterTime(inv, now))) {
+                if (inv.hasRecurId()) {
                     exceptions.add(inv);
                 }
             }
@@ -575,52 +575,50 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                     continue;
                 }
 
-                if (!inv.isCancel()) {
-                    // Make the new iCalendar part to send.
-                    ZVCalendar cal = inv.newToICalendar(!hidePrivate);
-                    // For series invite, append the exception instances.
-                    if (inv.isRecurrence() && !didExceptions) {
-                        // Find the VEVENT/VTODO for the series.
-                        ZComponent seriesComp = null;
-                        for (Iterator<ZComponent> compIter = cal.getComponentIterator(); compIter.hasNext(); ) {
-                            ZComponent comp = compIter.next();
-                            ICalTok compName = comp.getTok();
-                            if (ICalTok.VEVENT.equals(compName) || ICalTok.VTODO.equals(compName)) {
-                                if (comp.getProperty(ICalTok.RRULE) != null) {
-                                    seriesComp = comp;
-                                    break;
-                                }
+                // Make the new iCalendar part to send.
+                ZVCalendar cal = inv.newToICalendar(!hidePrivate);
+                // For series invite, append the exception instances.
+                if (inv.isRecurrence() && !didExceptions) {
+                    // Find the VEVENT/VTODO for the series.
+                    ZComponent seriesComp = null;
+                    for (Iterator<ZComponent> compIter = cal.getComponentIterator(); compIter.hasNext(); ) {
+                        ZComponent comp = compIter.next();
+                        ICalTok compName = comp.getTok();
+                        if (ICalTok.VEVENT.equals(compName) || ICalTok.VTODO.equals(compName)) {
+                            if (comp.getProperty(ICalTok.RRULE) != null) {
+                                seriesComp = comp;
+                                break;
                             }
                         }
-                        for (Invite except : exceptions) {
-                            if (except.isCancel() && seriesComp != null) {
-                                // Cancels are added as EXDATEs in the series VEVENT/VTODO.
-                                RecurId rid = except.getRecurId();
-                                if (rid != null && rid.getDt() != null) {
-                                    ZProperty exdate = rid.getDt().toProperty(ICalTok.EXDATE, false);
-                                    seriesComp.addProperty(exdate);
-                                }
-                            } else {
-                                // Exception instances are added as additional VEVENTs/VTODOs.
-                                ZComponent exceptComp = except.newToVComponent(true, !hidePrivate);
-                                cal.addComponent(exceptComp);
+                    }
+                    for (Invite except : exceptions) {
+                        if (except.isCancel() && seriesComp != null) {
+                            // Cancels are added as EXDATEs in the series VEVENT/VTODO.
+                            RecurId rid = except.getRecurId();
+                            if (rid != null && rid.getDt() != null) {
+                                ZProperty exdate = rid.getDt().toProperty(ICalTok.EXDATE, false);
+                                seriesComp.addProperty(exdate);
                             }
+                        } else {
+                            // Exception instances are added as additional VEVENTs/VTODOs.
+                            ZComponent exceptComp = except.newToVComponent(true, !hidePrivate);
+                            cal.addComponent(exceptComp);
                         }
-                        didExceptions = true;
                     }
-
-                    // Compose email using the existing MimeMessage as template and send it.
-                    MimeMessage mmInv = calItem.getSubpartMessage(inv.getMailItemId());
-                    List<Address> rcpts;
-                    if (notifyAllAttendees) {
-                        rcpts = CalendarMailSender.toListFromAttendees(inv.getAttendees());
-                    } else {
-                        rcpts = addedRcpts;
-                    }
-                    MimeMessage mmModify = CalendarMailSender.createCalendarMessage(from, sender, rcpts, mmInv, inv, cal, true);
-                    CalendarMailSender.sendPartial(octxt, mbox, mmModify, null,
-                            new ItemId(mbox, inv.getMailItemId()), null, null, false);
+                    didExceptions = true;
                 }
+
+                // Compose email using the existing MimeMessage as template and send it.
+                MimeMessage mmInv = calItem.getSubpartMessage(inv.getMailItemId());
+                List<Address> rcpts;
+                if (notifyAllAttendees) {
+                    rcpts = CalendarMailSender.toListFromAttendees(inv.getAttendees());
+                } else {
+                    rcpts = addedRcpts;
+                }
+                MimeMessage mmModify = CalendarMailSender.createCalendarMessage(from, sender, rcpts, mmInv, inv, cal, true);
+                CalendarMailSender.sendPartial(octxt, mbox, mmModify, null,
+                        new ItemId(mbox, inv.getMailItemId()), null, null, false);
             }
         } finally {
             mbox.lock.release();
