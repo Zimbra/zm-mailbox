@@ -101,6 +101,7 @@ public final class SearchConv extends Search {
                 Element container = nest ? ToXML.encodeConversationSummary(
                         response, ifmt, octxt, conv, CONVERSATION_FIELD_MASK): response;
                 SearchResponse builder = new SearchResponse(zsc, octxt, container, params);
+                builder.setAllRead(conv.getUnreadCount() == 0);
 
                 boolean more = putHits(octxt, ifmt, builder, msgs, results, params);
                 response.addAttribute(MailConstants.A_QUERY_MORE, more);
@@ -163,28 +164,20 @@ public final class SearchConv extends Search {
             ZimbraQueryResults results, SearchParams params) throws ServiceException {
 
         int offset = params.getOffset();
-        int limit  = params.getLimit();
+        int limit = params.getLimit();
+        int size = msgs.size() <= limit + offset ? msgs.size() - offset : limit;
 
-        int iterLen = limit;
-
-        if (msgs.size() <= iterLen + offset) {
-            iterLen = msgs.size() - offset;
-        }
-
-        if (iterLen > 0) {
+        if (size > 0) {
             // Array of ZimbraHit ptrs for matches, 1 entry for every message
-            // we might return from conv. NULL means no ZimbraHit presumably b/c
-            // the message didn't match the search.
-            //
+            // we might return from conv. NULL means no ZimbraHit presumably b/c the message didn't match the search.
             // Note that the match for msgs[i] is matched[i-offset]!!!!
-            ZimbraHit matched[] = new ZimbraHit[iterLen];
-
+            ZimbraHit[] matched = new ZimbraHit[size];
             // For each hit, see if the hit message is in this conv (msgs).
             while (results.hasNext()) {
                 ZimbraHit hit = results.getNext();
-                // we only bother checking the messages between offset and
-                // offset + iterLen, since only they are getting returned.
-                for (int i = offset; i < offset + iterLen; i++) {
+                // we only bother checking the messages between offset and offset + size,
+                // since only they are getting returned.
+                for (int i = offset; i < offset + size; i++) {
                     if (hit.getParsedItemID().equals(new ItemId(msgs.get(i)))) {
                         matched[i - offset] = hit;
                         break;
@@ -192,10 +185,9 @@ public final class SearchConv extends Search {
                 }
             }
 
-            // Okay, we've built the matched[] array. Now iterate through all
-            // the messages, and put the message or the MATCHED entry
-            // into the result
-            for (int i = offset; i < offset + iterLen; i++) {
+            // Okay, we've built the matched[] array. Now iterate through all the messages, and put the message or
+            // the MATCHED entry into the result
+            for (int i = offset; i < offset + size; i++) {
                 if (matched[i - offset] != null) {
                     resp.add(matched[i - offset]);
                 } else {
@@ -207,7 +199,7 @@ public final class SearchConv extends Search {
             }
         }
 
-        return offset + iterLen < msgs.size();
+        return offset + size < msgs.size();
     }
 
     private Element addMessageMiss(Message msg, Element response, OperationContext octxt, ItemIdFormatter ifmt,

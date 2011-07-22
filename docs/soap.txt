@@ -1614,20 +1614,23 @@ message-part result:
 -----------
 
 <SearchConvRequest cid="conversation-id" [limit="..."] [offset="..."] [sortBy="{sort-by}"] [types="{types}"] [nest="0|1"]
-           [fetch="1|hits|all|{item-id}"] [max="{max-inlined-length}"] [html="1"] [read="1"] [neuter="0"] [needExp="1|0"]>
+    [fetch="0|1|u|u1|hits|all|{item-id}"] [max="{max-inlined-length}"] [html="1"] [read="1"] [neuter="0"] [needExp="1|0"]>
   *(<header n="{header-name}/>)
   <query>{query-string}</query>
 </SearchConvRequest>
 
-   {conversation-id} = the conversation to search within.  REQUIRED.
+  {conversation-id} = the conversation to search within.  REQUIRED.
 
-if fetch="1" (or fetch="first"), the first matching message is expanded inline
-if fetch="hits", all matching messages are expanded inline
-if fetch="all", all messages are expanded inline
-if fetch="{item-id}", only the message with the given {item-id} is expanded inline
+  fetch:
+    0|none|false: no messages are expanded inline
+    1|first: the first matching message is expanded inline
+    u|unread: all unread messages are expanded inline
+    u1|unread-first: all unread messages (or the first message if there are no unread messages) are expanded inline
+    hits: all matching messages are expanded inline
+    all: all messages are expanded inline
+    {item-id}: only the message with the given {item-id} is expanded inline
 
-   SEE SearchRequest for more info
-
+  SEE SearchRequest for more info
 
 if nest="0" on the request, response looks like this:
 

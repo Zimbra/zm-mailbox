@@ -18,6 +18,7 @@ package com.zimbra.cs.index;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
@@ -26,6 +27,7 @@ import java.util.regex.Pattern;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.DebugConfig;
@@ -636,6 +638,16 @@ public final class SearchParams implements Cloneable {
         public static final ExpandResults FIRST = new ExpandResults("first");
 
         /**
+         * Expand all unread messages.
+         */
+        public static final ExpandResults UNREAD = new ExpandResults("unread");
+
+        /**
+         * Expand all unread messages, or the first hit if there are no unread messages.
+         */
+        public static final ExpandResults UNREAD_FIRST = new ExpandResults("unread-first");
+
+        /**
          * For searchConv, expand the members of the conversation that match the search.
          */
         public static final ExpandResults HITS = new ExpandResults("hits");
@@ -644,6 +656,15 @@ public final class SearchParams implements Cloneable {
          * Expand ALL hits.
          */
         public static final ExpandResults ALL = new ExpandResults("all");
+
+        private static final Map<String, ExpandResults> MAP = ImmutableMap.<String, ExpandResults>builder()
+            .put(NONE.name, NONE).put("0", NONE).put("false", NONE)
+            .put(FIRST.name, FIRST).put("1", FIRST)
+            .put(UNREAD.name, UNREAD).put("u", UNREAD)
+            .put(UNREAD_FIRST.name, UNREAD_FIRST).put("u1", UNREAD_FIRST)
+            .put(HITS.name, HITS)
+            .put(ALL.name, ALL)
+            .build();
 
         private final String name;
         private ItemId itemId;
@@ -666,22 +687,14 @@ public final class SearchParams implements Cloneable {
         }
 
         public static ExpandResults valueOf(String value, ZimbraSoapContext zsc) throws ServiceException {
-
             if (value == null) {
                 return NONE;
             }
-
-            value = value.trim().toLowerCase();
-            if (value.equals("none") || value.equals("0") || value.equals("false")) {
-                return NONE;
-            } else if (value.equals("first") || value.equals("1")) {
-                return FIRST;
-            } else if (value.equals("hits")) {
-                return HITS;
-            } else if (value.equals("all")) {
-                return ALL;
+            value = value.toLowerCase();
+            ExpandResults result = MAP.get(value);
+            if (result != null) {
+                return result;
             }
-
             try {
                 return new ExpandResults(value, new ItemId(value, zsc));
             } catch (Exception e) {
