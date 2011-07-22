@@ -32,6 +32,8 @@ public final class MemcachedKeyPrefix {
     public static final String MBOX_FOLDERS_TAGS    = "zmFldrsTags" + DELIMITER;
 
     public static final String IMAP = "zmImap" + DELIMITER;
+    
+    public static final String WATCHED_ITEMS = "zmWatch" + DELIMITER;
 
     private MemcachedKeyPrefix() {
     }
