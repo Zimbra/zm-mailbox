@@ -15,8 +15,11 @@
 
 package com.zimbra.cs.service.wiki;
 
+import java.util.HashSet;
 import java.util.Map;
 
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -64,11 +67,23 @@ public class ListDocumentRevisions extends WikiDocumentHandler {
             version = item.getVersion();
         }
         MailItem.Type type = item.getType();
+        HashSet<Account> accounts = new HashSet<Account>();
+        Provisioning prov = Provisioning.getInstance();
         while (version > 0 && count > 0) {
             item = (Document) mbox.getItemRevision(octxt, iid.getId(), type, version);
-            if (item != null)
+            if (item != null) {
                 ToXML.encodeDocument(response, ifmt, octxt, item);
+                Account a = prov.getAccountByName(item.getCreator());
+                if (a != null)
+                    accounts.add(a);
+            }
             version--; count--;
+        }
+        for (Account a : accounts) {
+            Element user = response.addElement(MailConstants.A_USER);
+            user.addAttribute(MailConstants.A_ID, a.getId());
+            user.addAttribute(MailConstants.A_EMAIL, a.getName());
+            user.addAttribute(MailConstants.A_NAME, a.getDisplayName());
         }
 
         return response;

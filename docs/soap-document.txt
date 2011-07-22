@@ -146,6 +146,7 @@ that the document is a note.
 </ListDocumentRevisionsRequest>
 
 <ListDocumentRevisionsResponse>
+  [<user id="{account-id}" name="{display-name}" email="{email-address}"/>]*
   [<doc name="{name}" ver="{version}" cr="{creator}" id="{message-id}" s="{size}" d="{created-date}" md="{modified-date}" l="{folder}" [f="{flags}"] [t="{tags}"] [loid="{lock-owner-account-id}"] [loe="{lock-owner-email}"] [desc="{optional-description}] [descEnabled="true|false"]>
      <fr>... fragment ...</fr>
   </doc>]+
