@@ -53,6 +53,8 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import org.dom4j.QName;
 import org.json.JSONException;
 
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
@@ -79,15 +81,12 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.zclient.ZClientException;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.zclient.ZFolder.Color;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
 import com.zimbra.cs.zclient.ZInvite.ZTimeZone;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
 import com.zimbra.cs.zclient.ZSearchParams.Cursor;
 import com.zimbra.cs.zclient.event.*;
-import com.zimbra.cs.zimlet.ZimletUserProperties;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.AuthResponse;
@@ -99,10 +98,8 @@ import com.zimbra.soap.account.message.GetInfoRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
 import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
-import com.zimbra.soap.account.message.ModifyPropertiesRequest;
 import com.zimbra.soap.account.type.Account;
 import com.zimbra.soap.account.type.InfoSection;
-import com.zimbra.soap.account.type.Prop;
 import com.zimbra.soap.mail.message.CheckSpellingRequest;
 import com.zimbra.soap.mail.message.CheckSpellingResponse;
 import com.zimbra.soap.mail.message.GetDataSourcesRequest;
@@ -3814,16 +3811,6 @@ public class ZMailbox implements ToZJSONObject {
             }
         }
         invoke(req);
-    }
-
-    /**
-     * modify zimlet properties.
-     * @throws ServiceException on error
-     */
-    public void modifyProperties(ZimletUserProperties zimletProps) throws ServiceException {
-        ModifyPropertiesRequest req = new ModifyPropertiesRequest();
-        req.setProps(new ArrayList<Prop>(zimletProps.getAllProperties()));
-        invokeJaxb(req);
     }
 
     public List<String> getAvailableSkins() throws ServiceException {
