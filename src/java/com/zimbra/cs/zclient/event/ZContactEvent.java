@@ -15,18 +15,18 @@
 
 package com.zimbra.cs.zclient.event;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.json.JSONException;
+
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.KeyValuePair;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.zclient.ToZJSONObject;
 import com.zimbra.cs.zclient.ZJSONObject;
-import org.json.JSONException;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class ZContactEvent implements ToZJSONObject {
 
