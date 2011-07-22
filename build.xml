@@ -1,9 +1,8 @@
 <project name="ZimbraServer" default="jar">
 
-  <import file="../ant-global.xml"/>    
-      
   <property file='build-custom.properties'/>
   <property environment="env"/>
+  <property name="javac.target" value="1.6"/>
 
     <!-- The OS user running ZCS.  Use ZIMBRA_USER environment variable
           if set.  If not, default to "zimbra". -->
@@ -51,6 +50,8 @@
         <isset property="is-production"/>
     </condition>
 
+    <property name="build.dir" location="build"/>
+    <property name="build.classes.dir" location="${build.dir}/classes"/>
     <property name="build.zmprov" location="${build.dir}/data/zmprov.txt"/>
     <property name="dist.dir" location="build/dist"/>
     <property name="dist.db.dir" location="build/dist/db"/>
@@ -59,11 +60,28 @@
     <property name="warfilename" value="service.war"/>
     <property name="warfile" location="${build.dir}/${warfilename}"/>
     <property name="jarfile" location="${build.dir}/zimbrastore.jar"/>
+    <property name="common.dir" location="../ZimbraCommon"/>
+    <property name="common.classes.dir" location="${common.dir}/build/classes"/>
     <property name="common.jarfile" location="${common.dir}/build/zimbracommon.jar"/>
-    <property name="soap.jarfile" location="${soap.dir}/build/zimbrasoap.jar"/>
-    <property name="im.jarfile" location="${im.dir}/build/zimbraim.jar"/>
+    <property name="common.jars.dir" location="${common.dir}/jars"/>
 
+    <property name="soap.dir" location="../ZimbraSoap"/>
+    <property name="soap.classes.dir" location="${soap.dir}/build/classes"/>
+    <property name="soap.jarfile" location="${soap.dir}/build/zimbrasoap.jar"/>
+
+    <property name="im.dir" location="../ZimbraIM"/>
+    <property name="im.classes.dir" location="${im.dir}/build/classes"/>
+    <property name="im.jarfile" location="${im.dir}/build/zimbraim.jar"/>
+    <property name="im.jars.dir" location="${im.dir}/jars"/>
+
+    <property name="jars.dir" location="jars"/>
     <property name="lib.dir" location="lib"/>
+    <property name="tools.lib.dir" location="tools/lib"/>
+    <property name="src.dir" location="src"/>
+    <property name="src.java.dir" location="${src.dir}/java"/>
+    <property name="test.dir" location="${build.dir}/test"/>
+    <property name="test.src.dir" location="${src.dir}/java-test"/>
+    <property name="test.classes.dir" location="${build.dir}/test-classes"/>
     <property name="config.dir" location="conf"/>
   <property name="war.web.xml" location="${config.dir}/web.xml${production.suffix}"/>
     <property name="jetty.xml.file" location='${config.dir}/jetty-6.1/jetty.xml' />
@@ -88,6 +106,9 @@
     <property name="lmtp.port" value="7025"/>
     <property name="lmtpinject.numthreads" value="2"/>
 
+    <property name="zimbra.home.dir" location="/opt/zimbra"/>
+
+    <property name="zimbra.derby.dir" location="${zimbra.home.dir}/derby"/>
     <property name="zimbra.index.dir" location="${zimbra.home.dir}/index"/>
     <property name="zimbra.store.dir" location="${zimbra.home.dir}/store"/>
     <property name="zimbra.sqlite.dir" location="${zimbra.home.dir}/sqlite"/>
@@ -105,14 +126,34 @@
     <condition property="db-sqlite">
         <isset property="env.ZIMBRA_USE_SQLITE"/>
     </condition>
+    <condition property="db-derby">
+        <and>
+            <isset property="env.ZIMBRA_USE_DERBY"/>
+            <not><isset property="db-sqlite"/></not>
+        </and>
+    </condition>
     <condition property="db-mysql">
+        <and>
       <not><isset property="db-sqlite"/></not>
+            <not><isset property="db-derby"/></not>
+        </and>
+    </condition>
+
+    <condition property="db.driver.jar" value="derby*.jar">
+        <isset property="db-derby"/>
     </condition>
     <condition property="db.driver.jar" value="mysql-connector-java*.jar">
         <isset property="db-mysql"/>
     </condition>
     <condition property="db.driver.jar" value="sqlitejdbc*.jar">
         <isset property="db-sqlite"/>
+    </condition>
+
+    <condition property="is-windows">
+        <os family="windows"/>
+    </condition>
+    <condition property="is-unix">
+        <not><os family="windows"/></not>
     </condition>
 
     <condition property="jetty-use-service">
@@ -128,6 +169,27 @@
     </condition>
 
     <property name="deploy.path" value="/service"/>
+
+    <condition property="native.os" value="MacOSX">
+        <os name="Mac OS X"/>
+    </condition>
+    <condition property="native.os" value="Linux">
+        <os name="Linux"/>
+    </condition>
+    <condition property="native.so" value="jnilib">
+        <os name="Mac OS X"/>
+    </condition>
+    <condition property="native.so" value="so">
+        <not><os name="Mac OS X"/></not>
+    </condition>
+    <condition property="native.arch" value="">
+        <os name="Mac OS X"/>
+    </condition>
+    <condition property="native.arch" value=".${os.arch}">
+        <not>
+            <os name="Mac OS X"/>
+        </not>
+    </condition>
 
     <property name="slapd.config.dir" value="${config.dir}/ldap/config"/>
     <condition property="slapd.config.src" value="${slapd.config.dir}/cn=config.ldif">
@@ -178,24 +240,24 @@
             <pathelement location="${common.jars.dir}/ant-contrib-1.0b1.jar"/>
         </classpath>
     </taskdef>
-    
+
     <path id="class.path">
       <pathelement location="${common.classes.dir}"/>
       <pathelement location="${soap.classes.dir}"/>
       <pathelement location="${im.classes.dir}"/>
       <pathelement location="${build.classes.dir}"/>
-      <fileset dir="${server.jars.dir}">
+      <fileset dir="${jars.dir}">
         <include name="**/*.jar"/>
       </fileset>
       <fileset dir="${common.jars.dir}">
         <include name="**/*.jar"/>
       </fileset>
-      <fileset dir="${common.dir}/jars-test">
-        <include name="**/*.jar"/>
-      </fileset>
       <fileset dir="${im.jars.dir}">
         <include name="**/*.jar"/>
       </fileset>
+        <fileset dir="${tools.lib.dir}">
+            <include name="**/*.jar"/>
+        </fileset>
     </path>
 
     <taskdef name="deploy" classname="org.apache.catalina.ant.DeployTask" classpathref="class.path"/>
@@ -236,7 +298,7 @@
         </antcall>
     </target>
 
-    <target name="javadoc">
+    <target name="javadoc" depends="set-buildinfo-vars">
         <javadoc sourcepath="src/java" destdir="docs/api" classpathref="class.path" access="private"
                  packagenames="com.zimbra.*" additionalparam='-tag perms:m:"Permissions Required:"'
                  breakiterator="yes" windowtitle="ZimbraServer v${zimbra.buildinfo.version}">
@@ -254,7 +316,72 @@
       outputdirectory="${src.java.dir}/com/zimbra/cs/index/query/parser/"/>
   </target>
 
-    <target name="generate-buildinfo" depends="build-init">
+    <target name="set-buildinfo-vars">
+        <tstamp/>
+        <condition property="zimbra.buildinfo.platform" value="${native.os}">
+            <not><isset property="${zimbra.buildinfo.platform}"/></not>
+        </condition>
+        <condition property="zimbra.buildinfo.version" value="7.0.0_BETA1_1111">
+            <not><isset property="${zimbra.buildinfo.version}"/></not>
+        </condition>
+
+        <propertyregex property="zimbra.buildinfo.majorversion"
+                    input="${zimbra.buildinfo.version}"
+                    regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
+                    select="\1"
+                    casesensitive="false" />
+
+          <propertyregex property="zimbra.buildinfo.minorversion"
+                      input="${zimbra.buildinfo.version}"
+                      regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
+                      select="\2"
+                      casesensitive="false" />
+
+        <propertyregex property="zimbra.buildinfo.microversion"
+                    input="${zimbra.buildinfo.version}"
+                    regexp="([0-9]+)\.([0-9]+)\.([0-9]+)"
+                    select="\3"
+                    casesensitive="false" />
+
+      <propertyregex property="zimbra.buildinfo.relclass"
+                  input="${zimbra.buildinfo.version}"
+                  regexp="([0-9]+)\.([0-9]+)\.([0-9]+)_([A-Z]+)"
+                  select="\4"
+                  casesensitive="false" />
+        <propertyregex property="zimbra.buildinfo.relnum"
+                    input="${zimbra.buildinfo.version}"
+                    regexp="([0-9]+)\.([0-9]+)\.([0-9]+)_([A-Z]+)([0-9]+)(\.|_)?"
+                    select="\5"
+                    casesensitive="false" />
+
+      <propertyregex property="zimbra.buildinfo.buildnum"
+                  input="${zimbra.buildinfo.version}"
+                  regexp="([0-9]+)\.([0-9]+)\.([0-9]+)_([A-Z0-9]+)(\.|_)?([0-9]+)?"
+                  select="\6"
+                  casesensitive="false" />
+
+        <condition property="zimbra.buildinfo.relnum" value="0">
+            <not><isset property="${zimbra.buildinfo.relnum}"/></not>
+        </condition>
+
+        <condition property="zimbra.buildinfo.type" value="">
+            <not><isset property="${zimbra.buildinfo.type}"/></not>
+        </condition>
+        <condition property="zimbra.buildinfo.release" value="${user.name}">
+            <not><isset property="${zimbra.buildinfo.release}"/></not>
+        </condition>
+        <condition property="zimbra.buildinfo.date" value="${DSTAMP}-${TSTAMP}">
+            <not><isset property="${zimbra.buildinfo.date}"/></not>
+        </condition>
+        <condition property="zimbra.buildinfo.host" value="${zimbra.server.hostname}">
+            <not><isset property="${zimbra.buildinfo.host}"/></not>
+        </condition>
+        <property name="zimbra.buildinfo.all"
+                  value="Version: ${zimbra.buildinfo.version}; Type: ${zimbra.buildinfo.type}; Release: ${zimbra.buildinfo.release}; Built: ${zimbra.buildinfo.date}; Host: ${zimbra.buildinfo.host}"/>
+        <echo>Version: ${zimbra.buildinfo.version} Date: ${zimbra.buildinfo.date}</echo>
+    </target>
+
+    <target name="generate-buildinfo" depends="set-buildinfo-vars,build-init">
         <if>
             <not><available file="${build.dir}/buildinfo/com/zimbra/cs/util/BuildInfoGenerated.java"/></not>
             <then>
@@ -270,10 +397,10 @@
                         public static final String RELNUM = "${zimbra.buildinfo.relnum}";
                         public static final String BUILDNUM = "${zimbra.buildinfo.buildnum}";
                         public static final String VERSION = "${zimbra.buildinfo.version}";
-                        public static final String TYPE = "${zimbra.buildinfo.type}";
-                        public static final String RELEASE = "${zimbra.buildinfo.release}";
-                        public static final String DATE = "${DSTAMP}-${TSTAMP}";
-                        public static final String HOST = "${zimbra.buildinfo.host}";
+                      public static final String TYPE = "${zimbra.buildinfo.type}";
+                      public static final String RELEASE = "${zimbra.buildinfo.release}";
+                      public static final String DATE = "${DSTAMP}-${TSTAMP}";
+                      public static final String HOST = "${zimbra.buildinfo.host}";
                     }
                 </echo>
           </then>
@@ -283,7 +410,7 @@
         </javac>
     </target>
 
-    <target name="generate-ldap-config">
+    <target name="generate-ldap-config" depends="set-buildinfo-vars">
         <dependset>
             <srcfileset dir="${config.dir}/attrs" includes="*.xml"/>
             <targetfileset dir='${build.dir}/ldap-config' includes='*'/>
@@ -338,7 +465,7 @@
         </if>
     </target>
 
-    <target name="generate-getters" depends="compile">
+    <target name="generate-getters" depends="set-buildinfo-vars,compile">
         <antcall target="generate-getter">
             <param name="getter.class" value="account"/>
             <param name="getter.output" value="ZAttrAccount.java"/>
@@ -367,10 +494,6 @@
             <param name="getter.class" value="distributionList"/>
             <param name="getter.output" value="ZAttrDistributionList.java"/>
         </antcall>
-        <antcall target="generate-getter">
-            <param name="getter.class" value="group"/>
-            <param name="getter.output" value="ZAttrDynamicGroup.java"/>
-        </antcall>
         <antcall target="generate-provisioning"/>
     </target>
 
@@ -386,7 +509,13 @@
        <java classname="com.zimbra.cs.account.AttributeManagerUtil" fork="true" classpathref="class.path"
               failonerror="true">
           <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-          <arg line="-a generateProvisioning -i ${config.dir}/attrs -r ${common.src.java.dir}/com/zimbra/common/account/ZAttrProvisioning.java"/>
+          <arg line="-a generateProvisioning -i ${config.dir}/attrs -r ${src.java.dir}/com/zimbra/cs/account/ZAttrProvisioning.java"/>
+        </java>
+    </target>
+
+    <target name="derby-versions-init" if="db-derby">
+        <java classname="com.zimbra.cs.db.Derby" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="-o ${build.dir}"/>
         </java>
     </target>
 
@@ -402,7 +531,7 @@
         </java>
     </target>
 
-    <target name="db-versions-init" depends="mysql-versions-init,sqlite-versions-init"/>
+    <target name="db-versions-init" depends="mysql-versions-init,sqlite-versions-init,derby-versions-init"/>
 
     <target name="compile" depends="build-init">
         <ant dir="${common.dir}" target="jar" inheritAll="false"/>
@@ -415,13 +544,21 @@
         <antcall target="db-versions-init"/>
     </target>
 
-    <target name="jar" depends="generate-buildinfo,compile" description="Creates the jar file">
-        <antcall target="zimbra-jar">
-            <param name="jar.file" value="zimbrastore.jar"/> <!-- zimbra-jar expects the filename without the path --> 
-            <param name="implementation.title" value="Zimbra Server"/>
-        </antcall>
+    <target name="jar" depends="generate-buildinfo,compile">
+        <echo>Hostname: ${zimbra.server.hostname}</echo>
+        <jar destfile="${jarfile}" basedir="${build.classes.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="com.zimbra.cs.util.BuildInfo" />
+              <attribute name="Implementation-Vendor" value="VMware, Inc."/>
+              <attribute name="Implementation-Title" value="Zimbra Server"/>
+              <attribute name="Implementation-Version" value="${zimbra.buildinfo.version} ${zimbra.buildinfo.release} ${DSTAMP}-${TSTAMP} ${zimbra.buildinfo.type}"/>
+              <attribute name="Specification-Vendor" value="VMware, Inc."/>
+              <attribute name="Specification-Title" value="Zimbra Collaboration Suite"/>
+              <attribute name="Specification-version" value="${zimbra.buildinfo.majorversion}.${zimbra.buildinfo.minorversion}"/>
+            </manifest>
+        </jar>
     </target>
-        
+
     <target name="clean" description="Deletes classes from build directories">
       <ant dir="${common.dir}" target="clean" inheritAll="false"/>
       <ant dir="${soap.dir}" target="clean" inheritAll="false"/>
@@ -435,48 +572,7 @@
       <delete dir="${zimbra.home.dir}/zimlets-deployed" failonerror="false"/>
       <delete dir="${zimbra.home.dir}/zimlets-properties" failonerror="false"/>
       <delete failonerror="false">
-        <fileset dir="${jetty.home.dir}/common/lib">
-          <include name="${ical4j.jar}"/>
-          <include name="${ziputil.jar}"/>
-          <include name="${memcached.jar}"/>
-          <include name="${db.driver.jar}"/>
-          <include name="mysql-connector-java*.jar"/>
-          <include name="mail.jar"/>
-          <include name="zimbra-native.jar"/>
-          <include name="bcprov-jdk15-146.jar"/>
-          <include name="commons-beanutils*.jar"/>
-          <include name="commons-cli*.jar"/>
-          <include name="commons-codec*.jar"/>
-          <include name="commons-collections*.jar"/>
-          <include name="commons-dbcp*.jar"/>
-          <include name="commons-digester*.jar"/>
-          <include name="commons-fileupload*.jar"/>
-          <include name="commons-httpclient*.jar"/>
-          <include name="commons-io*.jar"/>
-          <include name="commons-lang-*.jar"/>
-          <include name="commons-logging.jar"/>
-          <include name="commons-pool*.jar"/>
-          <include name="concurrent*.jar"/>
-          <include name="yuicompressor*.jar"/>
-          <include name="dom4j*.jar"/>
-          <include name="ganymed-ssh2*.jar"/>
-          <include name="jakarta-oro*.jar"/>
-          <include name="jaxen*.jar"/>
-          <include name="jcommon*.jar"/>
-          <include name="jfreechart*.jar"/>
-          <include name="junit*.jar"/>
-          <include name="jzlib.jar"/>
-          <include name="nekohtml.jar"/>
-          <include name="tnef*.jar"/>
-          <include name="xercesImpl*.jar"/>
-          <include name="xpp3.jar"/>
-          <include name="libidn*.jar"/>
-          <include name="jdom*.jar"/>
-          <include name="json.jar"/>
-          <include name="unboundid*.jar"/>
-          <include name="testng*.jar"/>
-          <include name="jython*.jar"/>
-        </fileset>
+        <fileset dir="${jetty.home.dir}/common/lib" includes="${ical4j.jar},${ziputil.jar},${memcached.jar},${db.driver.jar},mysql-connector-java*.jar,mail.jar,zimbra-native.jar,bcprov-jdk15-146.jar,commons-beanutils*.jar,commons-cli*.jar,commons-codec*.jar,commons-collections*.jar,commons-dbcp*.jar,commons-digester*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,concurrent*.jar,yuicompressor*.jar,dom4j*.jar,ganymed-ssh2*.jar,jakarta-oro*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl*.jar,xpp3.jar,libidn*.jar,jdom*.jar,json.jar,testng*.jar,jython*.jar"/>
       </delete>
     </target>
 
@@ -494,14 +590,7 @@
           <include name="lucene*.jar"/>
           <include name="ant-tar*.jar"/>
           <include name="icu4j-*.jar"/>
-          <include name="mina-*.jar"/>
           <include name="ews.jar"/>
-          <include name="cassandra-*.jar"/>
-          <include name="hector-*.jar"/>
-          <include name="perf4j-*.jar"/>
-          <include name="libthrift-*.jar"/>
-          <include name="high-scale-lib-*.jar"/>
-          <include name="jackson-*.jar"/>
         </lib>
         <lib dir="${im.jars.dir}" includes="*.jar"/>
         <classes dir="${config.dir}" includes="sieveConfig.xml"/>
@@ -534,10 +623,10 @@
             test client box can DNS resolve the home server for the user.
         -->
         <property name="spnego.server.name"         value="${SERVICE_PRINCIPAL_NAME}"/>
-
-
-        <!--
-            SPNEGO auth realm.  Use SPNEGO_AUTH_REALM environment variable if set.
+        
+        
+        <!-- 
+            SPNEGO auth realm.  Use SPNEGO_AUTH_REALM environment variable if set.  
             Exit if the environment variable is not set.
         -->
         <condition property="SPNEGO_AUTH_REALM" value="${env.SPNEGO_AUTH_REALM}">
@@ -549,7 +638,7 @@
             </condition>
         </fail>
         <echo>===== Spnego auth realm: ${SPNEGO_AUTH_REALM} =====</echo>
-
+        
     </target>
 
     <target name="spnego-inject" depends="spnego-service-name">
@@ -800,7 +889,6 @@
 
   <!-- target called by the production build -->
     <target name="dev-dist" depends="war,dev-dist-unix,dev-dist-jetty,choose-db-schema,generate-ldap-config" description="Initializes build/dist">
-        <echo>Version: ${zimbra.buildinfo.version} Date: ${zimbra.buildinfo.date}</echo>
         <!-- bin, libexec -->
         <copy todir="${dist.dir}/bin" overwrite="true">
             <fileset dir="${src.dir}/bin" excludes="*.production,zmmailboxdctl,jetty"/>
@@ -922,6 +1010,18 @@
         </copy>
 
         <if>
+          <isset property="db-derby"/>
+          <then>
+            <copy todir="${dist.dir}/conf" file="${config.dir}/derby.properties" overwrite="true"/>
+            <copy todir="${dist.dir}/lib" file="../ZimbraServer/tools/lib/derbytools.jar" overwrite="true"/>
+            <copy todir="${dist.dir}/jetty/common/lib" file="${common.jars.dir}/derby.jar" overwrite="true"/>
+            <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+              <sysproperty key="zimbra.config" value="${dist.dir}/conf/localconfig.xml"/>
+              <arg line="-e zimbra_class_database=com.zimbra.cs.db.Derby -f"/>
+            </java>
+          </then>
+        </if>
+        <if>
           <isset property="db-sqlite"/>
           <then>
             <copy todir="${dist.dir}/jetty/common/lib" overwrite="true">
@@ -969,42 +1069,8 @@
     <copy tofile="${dist.jetty.dir}/resources/log4j.properties"
           file="${config.dir}/jetty-6.1/log4j.properties${production.suffix}" overwrite="true"/>
     <copy todir="${dist.jetty.dir}/common/lib" overwrite="true">
-      <fileset dir="${common.jars.dir}">
-        <include name="${ical4j.jar}"/>
-        <include name="${ziputil.jar}"/>
-        <include name="${memcached.jar}"/>
-        <include name="${db.driver.jar}"/>
-        <include name="mail.jar"/>
-        <include name="zimbra-native.jar"/>
-        <include name="bcprov-jdk15-146.jar"/>
-        <include name="commons-cli*.jar"/>
-        <include name="commons-codec*.jar"/>
-        <include name="commons-dbcp*.jar"/>
-        <include name="commons-fileupload*.jar"/>
-        <include name="commons-httpclient*.jar"/>
-        <include name="commons-io*.jar"/>
-        <include name="commons-lang-*.jar"/>
-        <include name="commons-logging.jar"/>
-        <include name="commons-pool*.jar"/>
-        <include name="yuicompressor*jar"/>
-        <include name="dom4j*.jar"/>
-        <include name="ganymed-ssh2*.jar"/>
-        <include name="jaxen*.jar"/>
-        <include name="jcommon*.jar"/>
-        <include name="jfreechart*.jar"/>
-        <include name="junit*.jar"/>
-        <include name="jzlib.jar"/>
-        <include name="nekohtml.jar"/>
-        <include name="tnef*.jar"/>
-        <include name="xercesImpl*.jar"/>
-        <include name="xpp3.jar"/>
-        <include name="libidn*.jar"/>
-        <include name="jdom*.jar"/>
-        <include name="json.jar"/>
-        <include name="unboundid*.jar"/>
-        <include name="testng*.jar"/>
-        <include name="guava*.jar"/>
-      </fileset>
+            <fileset dir="${common.jars.dir}"
+                     includes="${ical4j.jar},${ziputil.jar},${memcached.jar},${db.driver.jar},mail.jar,zimbra-native.jar,bcprov-jdk15-146.jar,commons-cli*.jar,commons-codec*.jar,commons-dbcp*.jar,commons-fileupload*.jar,commons-httpclient*.jar,commons-io*.jar,commons-logging.jar,commons-pool*.jar,yuicompressor*jar,dom4j*.jar,ganymed-ssh2*.jar,jaxen*.jar,jcommon*.jar,jfreechart*.jar,junit*.jar,jzlib.jar,mina*.jar,nekohtml.jar,tnef*.jar,xercesImpl*.jar,xpp3.jar,libidn*.jar,jdom*.jar,json.jar,testng*.jar,guava*.jar"/>
     </copy>
     <copy todir="${dist.jetty.dir}/common/endorsed" overwrite="true">
       <fileset dir="${common.jars.dir}" includes="zimbra-charset.jar"/>
@@ -1035,7 +1101,7 @@
           <antcall target="stop-webserver"/>
           <antcall target="stop-ldap"/>
           <exec failonerror="true" executable="../ZimbraServer/src/perl/install-thirdparty">
-      <arg line="main"/>
+	    <arg line="HELIX"/>
           </exec>
         </then>
       </if>
@@ -1068,13 +1134,12 @@
              3. start web server
              4. run the target "reset-the-world-stage2" -->
     <target name="reset-the-world" description="Reset the world">
-      <!-- do not add any other ant calls in between reset-the-world-stage1 and stage2.
-           instead add them as a dependency of stage1 and stage2 targets. -->
         <antcall target="reset-the-world-stage1"/>
+      <antcall target="upgrade-domain-admin"/>
         <antcall target="reset-the-world-stage2"/>
     </target>
 
-    <target name="reset-the-world-stage1" depends="clean-opt-zimbra,clean,init,upgrade-domain-admin"
+    <target name="reset-the-world-stage1" depends="clean-opt-zimbra,clean,init"
       description="Cleans deployed files, compiles, and initializes /opt/zimbra."/>
 
     <target name="reset-the-world-stage2" depends="deploy-war,init-unittest"
@@ -1274,13 +1339,23 @@
         <condition property="db.schema.dir" value="src/db/sqlite">
             <isset property="db-sqlite"/>
         </condition>
+        <condition property="db.schema.dir" value="src/db/derby">
+            <isset property="db-derby"/>
+        </condition>
         <condition property="db.schema.dir" value="src/db/mysql">
             <isset property="db-mysql"/>
         </condition>
         <echo>Using database schema in ${db.schema.dir}</echo>
     </target>
 
-    <target name="db-init" depends="choose-db-schema,mysql-init,sqlite-init"/>
+    <target name="db-init" depends="choose-db-schema,mysql-init,sqlite-init,derby-init"/>
+
+    <target name="derby-init" if="db-derby">
+        <delete dir="${zimbra.derby.dir}"/>
+        <java classname="org.apache.derby.tools.ij" fork="true" classpathref="class.path" failonerror="true">
+            <arg file="${dist.db.dir}/init.sql" />
+        </java>
+    </target>
 
     <target name="mysql-init" if="db-mysql">
         <sql driver="com.mysql.jdbc.Driver" url="jdbc:mysql://127.0.0.1:7306/" userid="root" password="zimbra"
@@ -1407,6 +1482,13 @@
     </java>
     <echo>Running zmprov commands</echo>
     <antcall target="run-zmprov-commands"/>
+  </target>
+
+  <target name="zmlocalconfig">
+    <echo>Running localconfig with with argument: ${localconfig-args}</echo>
+    <java classname="com.zimbra.cs.localconfig.LocalConfigCLI" fork="true" classpathref="class.path" failonerror="true">
+      <arg line="${localconfig-args}"/>
+    </java>
   </target>
 
   <target name="run-zmprov-commands" depends="zmprov-commands">
@@ -2001,14 +2083,14 @@
   <!--                          rights                           -->
   <!-- ========================================================= -->
 
-  <target name="generate-domainadmin-rights-xml" depends="compile">
+  <target name="generate-domainadmin-rights-xml" depends="set-buildinfo-vars,compile">
     <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
       <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
       <arg line="-a genDomainAdminSetAttrsRights -r conf/rights/zimbra-rights-domainadmin.xml -t conf/rights/zimbra-rights-domainadmin.xml-template"/>
     </java>
   </target>
 
-  <target name="generate-rights-java" depends="compile">
+  <target name="generate-rights-java" depends="set-buildinfo-vars,compile">
     <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
       <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
       <arg line="-a genRightConsts -i conf/rights -r ${src.java.dir}/com/zimbra/cs/account/accesscontrol/generated/RightConsts.java"/>
@@ -2023,7 +2105,7 @@
     </java>
   </target>
 
-  <target name="generate-rights-message-properties" depends="compile">
+  <target name="generate-rights-message-properties" depends="set-buildinfo-vars,compile">
     <java classname="com.zimbra.cs.account.accesscontrol.RightManager" fork="true" classpathref="class.path" failonerror="true">
       <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
       <arg line="-a genMessageProperties -i conf/rights -r conf/msgs/ZsMsgRights.properties"/>
@@ -2150,10 +2232,9 @@
     <delete dir="${test.dir}" quiet="true"/>
     <mkdir dir="${test.dir}/output"/>
     <mkdir dir="${test.dir}/report"/>
-    <junit printsummary="on" failureproperty="junit.failure" tempdir="${test.dir}">
+    <junit printsummary="on" haltonfailure="on" tempdir="${test.dir}">
       <classpath refid="class.path"/>
       <classpath path="${test.classes.dir}"/>
-      <assertions><enable/></assertions>
       <formatter type="xml"/>
       <batchtest todir="${test.dir}/output">
         <fileset dir="${test.src.dir}">
@@ -2166,83 +2247,6 @@
       <report todir="${test.dir}/report"/>
     </junitreport>
     <echo>Test Report: ${test.dir}/report/index.html</echo>
-    <fail if="junit.failure" message="Unit test failed"/>
   </target>
 
-  <target name="enable-client-unittest" description="Sets up the unittest accounts for client-side unit testing.">
-    <echo>Setting up client unittest accounts</echo>
-    <antcall target="zmprov">
-      <param name="args" value="-l ca unittest1@${defaultdomain.name} test123
-						  zimbraMailHost ${zimbra.server.hostname}
-						  cn 'UnitTest 1'
-						  displayName 'UnitTest User One'
-						  zimbraAttachmentsIndexingEnabled FALSE
-						  zimbraPrefTimeZoneId '(GMT-07.00) Arizona'
-						  zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
-						  zimbraPrefMailPollingInterval 12h
-						  zimbraPrefWarnOnExit FALSE
-						  telephoneNumber '+1 650 555 5555'"/>
-    </antcall>
-    <antcall target="zmprov">
-	  <param name="args" value="-l ca unittest2@${defaultdomain.name} test123
-						  zimbraMailHost ${zimbra.server.hostname}
-						  cn 'UnitTest 2'
-						  displayName 'UnitTest User Two'
-						  zimbraAttachmentsIndexingEnabled FALSE
-						  zimbraPrefTimeZoneId '(GMT-07.00) Arizona'
-						  zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
-						  zimbraPrefMailPollingInterval 12h
-						  zimbraPrefWarnOnExit FALSE
-						  telephoneNumber '+1 650 555 6666'"/>
-    </antcall>
-    <echo>Injecting contacts, search folders, and mail into client unittest accounts</echo>
-    <antcall target="inject-client-unittest">
-      <param name="account-to-inject.email" value="unittest1@${defaultdomain.name}"/>
-    </antcall>
-  </target>
-
-  <target name="inject-client-unittest" depends="compile">
-    <echo>Inserting default contacts:
-          ${account-to-inject.email}
-    </echo>
-    <java classname="com.zimbra.common.soap.SoapTestHarness"
-      fork="true" classpathref="class.path" failonerror="true">
-      <sysproperty key="SAMPLE_USER"
-        value="${account-to-inject.email}" />
-      <arg line="-s -f data/client-unittest/contacts.xml" />
-    </java>
-    <echo>Creating default search folders:
-      ${account-to-inject.email}</echo>
-    <java classname="com.zimbra.common.soap.SoapTestHarness"
-      fork="true" classpathref="class.path" failonerror="true">
-      <sysproperty key="SAMPLE_USER" value="${account-to-inject.email}" />
-      <arg line="-s -f data/client-unittest/searchfolders.xml" />
-    </java>
-    <echo message="Wait for lmtp host=${lmtp.host} port=${lmtp.port}" />
-    <waitfor checkevery="1" checkeveryunit="second" maxwait="60"
-      maxwaitunit="second" timeoutproperty="lmtp.timeout">
-      <socket server="${lmtp.host}" port="${lmtp.port}" />
-    </waitfor>
-    <fail message="lmtp port ${lmtp.port} not open.">
-      <condition>
-        <isset property="lmtp.timeout" />
-      </condition>
-    </fail>
-
-    <if>
-      <available file="data/client-unittest/mail" /> <!-- Not available for community builds -->
-      <then>
-        <echo>LmtpInject messages for
-          ${account-to-inject.email}
-        </echo>
-        <java classname="com.zimbra.cs.lmtpserver.utils.LmtpInject"
-          fork="true" classpathref="class.path" failonerror="true">
-          <arg
-            line="-t ${lmtpinject.numthreads} -a ${lmtp.host} -p ${lmtp.port} -r ${account-to-inject.email} -s ho@example.zimbra.com -d" />
-          <arg path="data/client-unittest/mail" />
-        </java>
-      </then>
-    </if>
-  </target>
-  
 </project>
