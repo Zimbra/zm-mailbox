@@ -513,7 +513,7 @@ public class RenameDomain {
             }
         
             // Step 1. move the all aliases of the entry that are in the old domain to the new domain 
-            String[] aliases = (isDL)?((DistributionList)entry).getAliases():((Account)entry).getMailAlias();
+            String[] aliases = (isDL)?((DistributionList)entry).getAliases():((Account)entry).getAliases();
             handleAliases(entry, aliases, newDn);
          
             // Step 2. move the entry to the new domain and fixup all the addr attrs that contain the old domain

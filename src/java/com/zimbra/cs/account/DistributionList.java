@@ -90,6 +90,7 @@ public class DistributionList extends ZAttrDistributionList implements GroupedEn
         return getMultiAttrSet(Provisioning.A_zimbraMailForwardingAddress);
     }
     
+    @Override
     public String[] getAliases() throws ServiceException {
         if (mIsAclGroup)
             throw ServiceException.FAILURE("internal error", null);
@@ -127,6 +128,7 @@ public class DistributionList extends ZAttrDistributionList implements GroupedEn
         trimForAclGroup();
     }
     
+    @Override
     public String[] getAllAddrsAsGroupMember() throws ServiceException {
         String aliases[] = getAliases();
         String addrs[] = new String[aliases.length+1];

@@ -33,4 +33,9 @@ public class DynamicGroup extends ZAttrDynamicGroup {
     public String[] getAllMembers() throws ServiceException {
         return getMultiAttr(Provisioning.A_member);
     }
+    
+    @Override
+    public String[] getAliases() throws ServiceException {
+        return getMailAlias();
+    }
 }

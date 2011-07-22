@@ -316,16 +316,6 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
     }
     */
     
-    public String[] getAllAddrsAsGroupMember() throws ServiceException {
-        String aliases[] = getMailAlias();
-        String addrs[] = new String[aliases.length+1];
-        addrs[0] = getName();
-        for (int i=0; i < aliases.length; i++)
-            addrs[i+1] = aliases[i];
-        
-        return addrs;
-    }
-    
     /**
      * 
      * @param prov
@@ -437,6 +427,22 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
         
     }
 
+    @Override
+    public String[] getAllAddrsAsGroupMember() throws ServiceException {
+        String aliases[] = getMailAlias();
+        String addrs[] = new String[aliases.length+1];
+        addrs[0] = getName();
+        for (int i=0; i < aliases.length; i++)
+            addrs[i+1] = aliases[i];
+        
+        return addrs;
+    }
+    
+    @Override
+    public String[] getAliases() throws ServiceException {
+        return getMailAlias();
+    }
+    
     @Override
     public boolean isAddrOfEntry(String addr) {
         addr = addr.toLowerCase();

@@ -30,8 +30,6 @@ import com.zimbra.common.util.ZimbraLog;
 /**
  * @author anandp
  *
- * TODO To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Style - Code Templates
  */
 public class Alias extends MailTarget {
     
@@ -95,6 +93,8 @@ public class Alias extends MailTarget {
             return TargetType.account;
         else if (target instanceof DistributionList)
             return TargetType.dl;
+        else if (target instanceof DynamicGroup)
+            return TargetType.dl; // change to TargetType.dynGroup;
         else
             throw ServiceException.FAILURE("invalid target type for alias " + getName(), null);
     }

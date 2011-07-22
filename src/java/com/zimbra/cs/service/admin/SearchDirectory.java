@@ -249,8 +249,9 @@ public class SearchDirectory extends AdminDocumentHandler {
         ealias.addAttribute(AdminConstants.A_TARGETNAME, a.getTargetUnicodeName(prov));
         
         TargetType tt = a.getTargetType(prov);
-        if (tt != null)
+        if (tt != null) {
             ealias.addAttribute(AdminConstants.A_TYPE, tt.getCode());
+        }
         
         Map attrs = a.getUnicodeAttrs();
         

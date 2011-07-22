@@ -1,5 +1,7 @@
 package com.zimbra.cs.account;
 
+import com.zimbra.common.service.ServiceException;
+
 public interface AliasedEntry {
 
     /*
@@ -14,4 +16,6 @@ public interface AliasedEntry {
      * @return
      */
     public boolean isAddrOfEntry(String addr);
+    
+    public String[] getAliases() throws ServiceException;
 }

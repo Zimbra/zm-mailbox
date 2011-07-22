@@ -170,6 +170,11 @@ public class LdapProvisioning extends LdapProv {
         new NamedEntryCache<DistributionList>(
                 LC.ldap_cache_group_maxsize.intValue(),
                 LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
+    
+    private NamedEntryCache<DynamicGroup> sDynamicGroupCache =
+        new NamedEntryCache<DynamicGroup>(
+                LC.ldap_cache_group_maxsize.intValue(),
+                LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
 
     private NamedEntryCache<XMPPComponent> sXMPPComponentCache =
         new NamedEntryCache<XMPPComponent>(
@@ -178,20 +183,22 @@ public class LdapProvisioning extends LdapProv {
     
     
     private static final String[] sInvalidAccountCreateModifyAttrs = {
+            Provisioning.A_uid,
             Provisioning.A_zimbraMailAlias,
             Provisioning.A_zimbraMailDeliveryAddress,
-            Provisioning.A_uid
     };
 
     private static final String[] sMinimalDlAttrs = {
+            Provisioning.A_cn,
             Provisioning.A_displayName,
-            Provisioning.A_zimbraShareInfo,
-            Provisioning.A_zimbraMailAlias,
-            Provisioning.A_zimbraId,
+            Provisioning.A_mail,
+            Provisioning.A_objectClass,
             Provisioning.A_uid,
             Provisioning.A_zimbraACE,
+            Provisioning.A_zimbraAdminConsoleUIComponents,
+            Provisioning.A_zimbraId,
             Provisioning.A_zimbraIsAdminGroup,
-            Provisioning.A_zimbraAdminConsoleUIComponents
+            Provisioning.A_zimbraMailAlias,
     };
 
     @Override
@@ -445,6 +452,8 @@ public class LdapProvisioning extends LdapProv {
             } else {
                 sDLCache.replace((DistributionList)entry);
             }
+        } else if (entry instanceof DynamicGroup) {
+            sDynamicGroupCache.replace((DynamicGroup)entry);
         } else if (entry instanceof Server) {
             sServerCache.replace((Server)entry);
         } else if (entry instanceof XMPPComponent) {
@@ -1797,9 +1806,10 @@ public class LdapProvisioning extends LdapProv {
             }
 
             // 2. remove address from all DLs
-            if (!aliasPointsToOtherExistingEntry)
+            if (!aliasPointsToOtherExistingEntry) {
                 removeAddressFromAllDistributionLists(alias);
-
+            }
+            
             // 3. remove the alias entry
             if (aliasPointsToEntry || aliasPointsToNonExistingEntry) {
                 try {
@@ -1836,15 +1846,14 @@ public class LdapProvisioning extends LdapProv {
         String targetId = alias.getAttr(Provisioning.A_zimbraAliasTargetId);
         NamedEntry target;
 
-        // maybe it's an account/cr
+        // see it's an account/cr
         target = get(AccountBy.id, targetId);
         if (target != null)
             return target;
 
 
-        // maybe it's a group
-        // (note, entries in this DL cache contains only minimal attrs)
-        target = getDL(Key.DistributionListBy.id, targetId);
+        // see if it's a group
+        target = getGroupBasic(Key.DistributionListBy.id, targetId);
 
         return target;
     }
@@ -3018,8 +3027,13 @@ public class LdapProvisioning extends LdapProv {
             String zimbraIdStr = LdapUtilCommon.generateUUID();
             entry.setAttr(A_zimbraId, zimbraIdStr);
             entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
-            entry.setAttr(A_zimbraMailAlias, listAddress);
             entry.setAttr(A_mail, listAddress);
+            
+            // unlike accounts (which have a zimbraMailDeliveryAddress for the primary, 
+            // and zimbraMailAliases only for aliases), DLs use zibraMailAlias for both. 
+            // Postfix uses these two attributes to route mail, and zimbraMailDeliveryAddress 
+            // indicates that something has a physical mailbox, which DLs don't.
+            entry.setAttr(A_zimbraMailAlias, listAddress);
 
             // by default a distribution list is always created enabled
             if (!entry.hasAttribute(Provisioning.A_zimbraMailStatus)) {
@@ -3238,10 +3252,11 @@ public class LdapProvisioning extends LdapProv {
         if (aliases != null) {
             String dlName = dl.getName();
             for (int i=0; i < aliases.length; i++) {
-                // the DL name shows up in zimbraMailAlias on the DL entry, don't bother to remove
-                // this "alias" if it is the DL name, the entire DL entry will be deleted anyway.
-                if (!dlName.equalsIgnoreCase(aliases[i]))
-                removeAlias(dl, aliases[i]); // this also removes each alias from any DLs
+                // the primary name shows up in zimbraMailAlias on the entry, don't bother to remove
+                // this "alias" if it is the primary name, the entire entry will be deleted anyway.
+                if (!dlName.equalsIgnoreCase(aliases[i])) {
+                    removeAlias(dl, aliases[i]); // this also removes each alias from any DLs
+                }
             }
         }
 
@@ -3290,8 +3305,8 @@ public class LdapProvisioning extends LdapProv {
     /*
      * - cached in LdapProvisioning
      * - returned entry contains only attrs in sMinimalDlAttrs minus zimbraMailAlias
-     * - returned entry is not a "general purpose" DistributionList, it should only be used for ACL purposes
-     *   to check upward membership.
+     * - returned entry is not a "general purpose" DistributionList, it should only be used for ACL 
+     *   purposes for checking upward membership.
      *
      */
     public DistributionList getAclGroup(Key.DistributionListBy keyType, String key) throws ServiceException {
@@ -3329,13 +3344,20 @@ public class LdapProvisioning extends LdapProv {
     }
 
     void removeGroupFromCache(Key.DistributionListBy keyType, String key) {
-        DistributionList group = getAclGroupFromCache(keyType, key);
-        if (group != null)
+        Group group = getAclGroupFromCache(keyType, key);
+        if (group != null) {
             removeFromCache(group);
-
+        }
+        
         group = getDLFromCache(keyType, key);
-        if (group != null)
+        if (group != null) {
             removeFromCache(group);
+        }
+        
+        group = getDynamicGroupFromCache(keyType, key);
+        if (group != null) {
+            removeFromCache(group);
+        }
     }
 
     private DistributionList getAclGroupById(String groupId) throws ServiceException {
@@ -4898,7 +4920,7 @@ public class LdapProvisioning extends LdapProv {
             directGroups = new ArrayList<DistributionList>();
             Set<String> idsToRemove = null;
             for (String groupId : directGroupIds) {
-                DistributionList group = prov.getDL(Key.DistributionListBy.id, groupId);
+                DistributionList group = prov.getDLBasic(Key.DistributionListBy.id, groupId);
                 if (group == null) {
                     // the group could have been deleted
                     // remove it from our direct group id cache on the entry
@@ -4926,13 +4948,15 @@ public class LdapProvisioning extends LdapProv {
         return directGroups;
     }
 
-    // like get(DistributionListBy keyType, String key)
-    // the difference are:
-    //     - cached
-    //     - entry returned only contains minimal DL attrs
-    //
+    /*
+     * like get(DistributionListBy keyType, String key)
+     * the difference are:
+     *     - cached
+     *     - entry returned only contains minimal DL attrs
+     *     - entry returned does not contain members (zimbraMailForwardingAddress) 
+     */
     @Override
-    public DistributionList getDL(Key.DistributionListBy keyType, String key) throws ServiceException {
+    public DistributionList getDLBasic(Key.DistributionListBy keyType, String key) throws ServiceException {
         switch(keyType) {
         case id:
             return getDLById(key);
@@ -6870,12 +6894,14 @@ public class LdapProvisioning extends LdapProv {
         case group:
             if (entries != null) {
                 for (CacheEntry entry : entries) {
-                    Key.DistributionListBy dlBy = (entry.mEntryBy==Key.CacheEntryBy.id)? Key.DistributionListBy.id : Key.DistributionListBy.name;
+                    Key.DistributionListBy dlBy = (entry.mEntryBy==Key.CacheEntryBy.id)? 
+                            Key.DistributionListBy.id : Key.DistributionListBy.name;
                     removeGroupFromCache(dlBy, entry.mEntryIdentity);
                 }
             } else {
                 sAclGroupCache.clear();
                 sDLCache.clear();
+                sDynamicGroupCache.clear();
             }
             return;
         case config:
@@ -6956,6 +6982,8 @@ public class LdapProvisioning extends LdapProv {
         else if (entry instanceof DistributionList) {
             sAclGroupCache.remove((DistributionList)entry);
             sDLCache.remove((DistributionList)entry);
+        } else if (entry instanceof DynamicGroup) {
+            sDynamicGroupCache.remove((DynamicGroup)entry);
         } else
             throw new UnsupportedOperationException();
     }
@@ -7351,15 +7379,59 @@ public class LdapProvisioning extends LdapProv {
     
     @Override
     public Group getGroup(Key.DistributionListBy keyType, String key) throws ServiceException {
+        return getGroupInternal(keyType, key, false);
+    }
+    
+    public Group getGroupInternal(Key.DistributionListBy keyType, String key, boolean basicAttrsOnly) 
+    throws ServiceException {
         switch(keyType) {
             case id:
-                return getGroupById(key, null);
+                return getGroupById(key, null, basicAttrsOnly);
             case name:
-                return getGroupByName(key, null);
+                return getGroupByName(key, null, basicAttrsOnly);
             default:
                 return null;
         }
     }
+    
+    /*
+     * like getGroup(DistributionListBy keyType, String key)
+     * the difference are:
+     *     - cached
+     *     - entry returned only contains minimal group attrs
+     *     - entry returned does not contain members (the member or zimbraMailForwardingAddress attribute) 
+     */
+    @Override
+    public Group getGroupBasic(Key.DistributionListBy keyType, String key) throws ServiceException {
+        Group group;
+        
+        // try DL cache 
+        group = getDLFromCache(keyType, key);
+        if (group != null) {
+            return group;
+        }
+        
+        // try dynamic group cache
+        group = getDynamicGroupFromCache(keyType, key);
+        if (group != null) {
+            return group;
+        }
+        
+        // fetch from LDAP
+        group = getGroupInternal(keyType, key, true);
+        
+        // cache it 
+        if (group != null) {
+            if (group.isDynamic()) {
+                sDynamicGroupCache.put((DynamicGroup) group);
+            } else {
+                sDLCache.put((DistributionList) group);
+            }
+        }
+        
+        return group;
+    }
+    
     
     @Override
     public List getAllGroups(Domain domain) throws ServiceException {
@@ -7453,10 +7525,14 @@ public class LdapProvisioning extends LdapProv {
             String zimbraId = LdapUtilCommon.generateUUID();
             entry.setAttr(A_zimbraId, zimbraId);
             entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
-            entry.setAttr(A_zimbraMailAlias, groupAddress);
             entry.setAttr(A_mail, groupAddress);
             // entry.setAttr("dgIdentity", LC.zimbra_ldap_userdn.value());
             
+            // unlike accounts (which have a zimbraMailDeliveryAddress for the primary, 
+            // and zimbraMailAliases only for aliases), DLs use zibraMailAlias for both. 
+            // Postfix uses these two attributes to route mail, and zimbraMailDeliveryAddress 
+            // indicates that something has a physical mailbox, which DLs don't.
+            entry.setAttr(A_zimbraMailAlias, groupAddress);
            
             /*
             // allow only users in the same domain
@@ -7511,19 +7587,22 @@ public class LdapProvisioning extends LdapProv {
         /*   ============ handle me ??
         // remove the DL from all DLs
         removeAddressFromAllDistributionLists(dl.getName()); // this doesn't throw any exceptions
-
-        // delete all aliases of the DL
-        String aliases[] = dl.getAliases();
+        */
+        
+        // delete all aliases of the group
+        String aliases[] = group.getAliases();
         if (aliases != null) {
-            String dlName = dl.getName();
+            String groupName = group.getName();
             for (int i=0; i < aliases.length; i++) {
-                // the DL name shows up in zimbraMailAlias on the DL entry, don't bother to remove
-                // this "alias" if it is the DL name, the entire DL entry will be deleted anyway.
-                if (!dlName.equalsIgnoreCase(aliases[i]))
-                removeAlias(dl, aliases[i]); // this also removes each alias from any DLs
+                // the primary name shows up in zimbraMailAlias on the entry, don't bother to remove
+                // this "alias" if it is the primary name, the entire entry will be deleted anyway.
+                if (!groupName.equalsIgnoreCase(aliases[i])) {
+                    removeAlias(group, aliases[i]); // this also removes each alias from any DLs
+                }
             }
         }
 
+        /*
         // delete all grants granted to the DL
         try {
              RightCommand.revokeAllRights(this, GranteeType.GT_GROUP, zimbraId);
@@ -7548,9 +7627,19 @@ public class LdapProvisioning extends LdapProv {
         PermissionCache.invalidateCache();
     }
     
+    private DynamicGroup getDynamicGroupFromCache(Key.DistributionListBy keyType, String key) {
+        switch(keyType) {
+        case id:
+            return sDynamicGroupCache.getById(key);
+        case name:
+            return sDynamicGroupCache.getByName(key);
+        default:
+            return null;
+        }
+    }
+    
     private DynamicGroup getDynamicGroupById(String zimbraId, ZLdapContext zlc) 
     throws ServiceException {
-        // TODO: handle cache
         return getDynamicGroupByQuery(filterFactory.dynamicGroupById(zimbraId), zlc);
     }
     
@@ -7647,23 +7736,23 @@ public class LdapProvisioning extends LdapProv {
         }
     }
     
-    private Group getGroupById(String zimbraId, ZLdapContext zlc) 
+    private Group getGroupById(String zimbraId, ZLdapContext zlc, boolean basicAttrsOnly) 
     throws ServiceException {
-        // TODO: handle cache
-        return getGroupByQuery(filterFactory.groupById(zimbraId), zlc);
+        return getGroupByQuery(filterFactory.groupById(zimbraId), zlc, basicAttrsOnly);
     }
     
-    private Group getGroupByName(String groupAddress, ZLdapContext zlc) 
+    private Group getGroupByName(String groupAddress, ZLdapContext zlc, boolean basicAttrsOnly) 
     throws ServiceException {
         groupAddress = IDNUtil.toAsciiEmail(groupAddress);
-        return getGroupByQuery(filterFactory.groupByName(groupAddress), zlc);
+        return getGroupByQuery(filterFactory.groupByName(groupAddress), zlc, basicAttrsOnly);
     }
 
-    private Group getGroupByQuery(ZLdapFilter filter, ZLdapContext initZlc) 
+    private Group getGroupByQuery(ZLdapFilter filter, ZLdapContext initZlc, boolean basicAttrsOnly) 
     throws ServiceException {
         try {
+            String[] returnAttrs = basicAttrsOnly ? sMinimalDlAttrs : null;
             ZSearchResultEntry sr = helper.searchForEntry(
-                    mDIT.mailBranchBaseDN(), filter, initZlc, false, null);
+                    mDIT.mailBranchBaseDN(), filter, initZlc, false, returnAttrs);
             if (sr != null) {
                 ZAttributes attrs = sr.getAttributes();
                 List<String> objectclass = 

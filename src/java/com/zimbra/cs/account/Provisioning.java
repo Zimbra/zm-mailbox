@@ -1201,7 +1201,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * Callsites should use this API if all they need is basic info on the DL, like
      * id or name.
      */
-    public DistributionList getDL(Key.DistributionListBy keyType, String key) throws ServiceException {
+    public DistributionList getDLBasic(Key.DistributionListBy keyType, String key) 
+    throws ServiceException {
         return get(keyType, key);
     }
     
@@ -1229,6 +1230,13 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
     
     public Group getGroup(Key.DistributionListBy keyType, String key) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+    
+    /*
+     * returns only basic attributes on group, does *not* return members
+     */
+    public Group getGroupBasic(Key.DistributionListBy keyType, String key) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
 
@@ -1269,8 +1277,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract void deleteZimlet(String name) throws ServiceException;
 
     /**
-     * Creates the specified calendar resource. The A_zimbraId and A_uid attributes are automatically
-     * created and should not be passed in.
+     * Creates the specified calendar resource. The A_zimbraId and A_uid attributes are 
+     * automatically created and should not be passed in.
      *
      * For example:
      * <pre>
@@ -1285,7 +1293,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @return
      * @throws ServiceException
      */
-    public abstract CalendarResource createCalendarResource(String emailAddress, String password, Map<String, Object> attrs) throws ServiceException;
+    public abstract CalendarResource createCalendarResource(String emailAddress, 
+            String password, Map<String, Object> attrs) throws ServiceException;
 
     /**
      * deletes the specified calendar resource, removing the account and all email aliases.
@@ -1305,8 +1314,13 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract CalendarResource get(Key.CalendarResourceBy keyType, String key) throws ServiceException;
 
-    public CalendarResource getCalendarResourceByName(String name) throws ServiceException { return get(Key.CalendarResourceBy.name, name); }
-    public CalendarResource getCalendarResourceById(String id) throws ServiceException { return get(Key.CalendarResourceBy.id, id); }
+    public CalendarResource getCalendarResourceByName(String name) throws ServiceException { 
+        return get(Key.CalendarResourceBy.name, name); 
+    }
+    
+    public CalendarResource getCalendarResourceById(String id) throws ServiceException {
+        return get(Key.CalendarResourceBy.id, id); 
+    }
 
     public CalendarResource get(Key.CalendarResourceBy keyType, String key, boolean loadFromMaster) throws ServiceException {
         return get(keyType, key);

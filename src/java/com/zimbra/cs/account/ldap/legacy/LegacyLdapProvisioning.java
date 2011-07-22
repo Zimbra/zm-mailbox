@@ -1880,7 +1880,7 @@ public class LegacyLdapProvisioning extends LdapProv {
 
         // maybe it's a group
         // (note, entries in this DL cache contains only minimal attrs)
-        target = getDL(Key.DistributionListBy.id, targetId);
+        target = getDLBasic(Key.DistributionListBy.id, targetId);
 
         return target;
     }
@@ -4961,7 +4961,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             directGroups = new ArrayList<DistributionList>();
             Set<String> idsToRemove = null;
             for (String groupId : directGroupIds) {
-                DistributionList group = prov.getDL(Key.DistributionListBy.id, groupId);
+                DistributionList group = prov.getDLBasic(Key.DistributionListBy.id, groupId);
                 if (group == null) {
                     // the group could have been deleted
                     // remove it from our direct group id cache on the entry
@@ -4995,7 +4995,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     //     - entry returned only contains minimal DL attrs
     //
     @Override
-    public DistributionList getDL(Key.DistributionListBy keyType, String key) throws ServiceException {
+    public DistributionList getDLBasic(Key.DistributionListBy keyType, String key) throws ServiceException {
         switch(keyType) {
         case id:
             return getGroupById(key);
