@@ -247,7 +247,7 @@ public final class MailConstants {
 
     public static final String E_GET_SYSTEM_RETENTION_POLICY_REQUEST = "GetSystemRetentionPolicyRequest";
     public static final String E_GET_SYSTEM_RETENTION_POLICY_RESPONSE = "GetSystemRetentionPolicyResponse";
-    
+
     // noop
     public static final QName NO_OP_REQUEST = QName.get(E_NO_OP_REQUEST, NAMESPACE);
     public static final QName NO_OP_RESPONSE = QName.get(E_NO_OP_RESPONSE, NAMESPACE);
@@ -531,7 +531,7 @@ public final class MailConstants {
 
     public static final QName GET_SYSTEM_RETENTION_POLICY_REQUEST = QName.get(E_GET_SYSTEM_RETENTION_POLICY_REQUEST, NAMESPACE);
     public static final QName GET_SYSTEM_RETENTION_POLICY_RESPONSE = QName.get(E_GET_SYSTEM_RETENTION_POLICY_RESPONSE, NAMESPACE);
-    
+
     public static final String E_MAILBOX = "mbx";
     public static final String E_ITEM = "item";
     public static final String E_MSG = "m";
@@ -767,6 +767,7 @@ public final class MailConstants {
     // search
     public static final String E_QUERY = "query";
     public static final String E_HIT_MIMEPART = "hp";
+    public static final String E_SUGEST = "suggest";
     public static final String A_QUERY = "query";
     public static final String A_GROUPBY = "groupBy";
     public static final String A_SEARCH_TYPES = "types";
