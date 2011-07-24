@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110719-2122 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110723-2102 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1340,6 +1340,12 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=-1)
     public static final String A_mail = "mail";
+
+    /**
+     * Identifies an URL associated with each member of a group
+     */
+    @ZAttr(id=-1)
+    public static final String A_memberURL = "memberURL";
 
     /**
      * RFC1274: mobile telephone number
@@ -4767,6 +4773,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraIPMode = "zimbraIPMode";
 
     /**
+     * if the dynamic group can be a legitimate grantee for folder grantees;
+     * and a legitimate grantee or target for delegated admin grants
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1242)
+    public static final String A_zimbraIsACLGroup = "zimbraIsACLGroup";
+
+    /**
      * set to true for admin accounts
      */
     @ZAttr(id=31)
@@ -5612,7 +5627,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMaxVoiceItemsPerPage = "zimbraMaxVoiceItemsPerPage";
 
     /**
-     * for dynamic group membership
+     * dynamic group membership
      */
     @ZAttr(id=11)
     public static final String A_zimbraMemberOf = "zimbraMemberOf";
