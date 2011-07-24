@@ -63,7 +63,7 @@ public class AddDistributionListAlias extends AdminDocumentHandler {
         // if the admin can create an alias in the domain
         checkDomainRightByEmail(lc, alias, Admin.R_createAlias);
 
-        prov.addAlias(group, alias);
+        prov.addGroupAlias(group, alias);
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "AddDistributionListAlias", "name", group.getName(), "alias", alias})); 
         

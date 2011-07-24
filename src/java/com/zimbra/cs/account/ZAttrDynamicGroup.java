@@ -37,7 +37,7 @@ public abstract class ZAttrDynamicGroup extends Group {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110719-2122 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110723-2102 */
 
     /**
      * RFC2798: preferred name to be used when displaying entries
@@ -160,6 +160,68 @@ public abstract class ZAttrDynamicGroup extends Group {
     public Map<String,Object> unsetMail(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_mail, "");
+        return attrs;
+    }
+
+    /**
+     * Identifies an URL associated with each member of a group
+     *
+     * @return memberURL, or null if unset
+     */
+    @ZAttr(id=-1)
+    public String getMemberURL() {
+        return getAttr(Provisioning.A_memberURL, null);
+    }
+
+    /**
+     * Identifies an URL associated with each member of a group
+     *
+     * @param memberURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void setMemberURL(String memberURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_memberURL, memberURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Identifies an URL associated with each member of a group
+     *
+     * @param memberURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> setMemberURL(String memberURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_memberURL, memberURL);
+        return attrs;
+    }
+
+    /**
+     * Identifies an URL associated with each member of a group
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=-1)
+    public void unsetMemberURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_memberURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Identifies an URL associated with each member of a group
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=-1)
+    public Map<String,Object> unsetMemberURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_memberURL, "");
         return attrs;
     }
 
@@ -537,6 +599,155 @@ public abstract class ZAttrDynamicGroup extends Group {
     public Map<String,Object> unsetId(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraId, "");
+        return attrs;
+    }
+
+    /**
+     * if the dynamic group can be a legitimate grantee for folder grantees;
+     * and a legitimate grantee or target for delegated admin grants
+     *
+     * @return zimbraIsACLGroup, or false if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1242)
+    public boolean isIsACLGroup() {
+        return getBooleanAttr(Provisioning.A_zimbraIsACLGroup, false);
+    }
+
+    /**
+     * if the dynamic group can be a legitimate grantee for folder grantees;
+     * and a legitimate grantee or target for delegated admin grants
+     *
+     * @param zimbraIsACLGroup new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1242)
+    public void setIsACLGroup(boolean zimbraIsACLGroup) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsACLGroup, zimbraIsACLGroup ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * if the dynamic group can be a legitimate grantee for folder grantees;
+     * and a legitimate grantee or target for delegated admin grants
+     *
+     * @param zimbraIsACLGroup new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1242)
+    public Map<String,Object> setIsACLGroup(boolean zimbraIsACLGroup, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsACLGroup, zimbraIsACLGroup ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * if the dynamic group can be a legitimate grantee for folder grantees;
+     * and a legitimate grantee or target for delegated admin grants
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1242)
+    public void unsetIsACLGroup() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsACLGroup, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * if the dynamic group can be a legitimate grantee for folder grantees;
+     * and a legitimate grantee or target for delegated admin grants
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1242)
+    public Map<String,Object> unsetIsACLGroup(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsACLGroup, "");
+        return attrs;
+    }
+
+    /**
+     * set to true for admin groups
+     *
+     * @return zimbraIsAdminGroup, or false if unset
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=802)
+    public boolean isIsAdminGroup() {
+        return getBooleanAttr(Provisioning.A_zimbraIsAdminGroup, false);
+    }
+
+    /**
+     * set to true for admin groups
+     *
+     * @param zimbraIsAdminGroup new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=802)
+    public void setIsAdminGroup(boolean zimbraIsAdminGroup) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, zimbraIsAdminGroup ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * set to true for admin groups
+     *
+     * @param zimbraIsAdminGroup new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=802)
+    public Map<String,Object> setIsAdminGroup(boolean zimbraIsAdminGroup, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, zimbraIsAdminGroup ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * set to true for admin groups
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=802)
+    public void unsetIsAdminGroup() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * set to true for admin groups
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 6.0.0_BETA1
+     */
+    @ZAttr(id=802)
+    public Map<String,Object> unsetIsAdminGroup(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, "");
         return attrs;
     }
 

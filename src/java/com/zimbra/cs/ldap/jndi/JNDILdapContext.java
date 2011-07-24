@@ -137,7 +137,7 @@ public class JNDILdapContext extends ZLdapContext {
     }
     
     @Override
-    public ZModificationList createModiftcationList() {
+    public ZModificationList createModificationList() {
         return new JNDIModificationList();
     }
     

@@ -449,19 +449,23 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @return true if this account (or one of the dl it belongs to) is a member of the specified dl.
      * @throws ServiceException
      */
-    public abstract boolean inDistributionList(Account acct, String zimbraId) throws ServiceException;
+    public abstract boolean inDistributionList(Account acct, String zimbraId) 
+    throws ServiceException;
 
     /**
      * @param zimbraId the zimbraId of the dl we are checking for
-     * @return true if this distribution list (or one of the dl it belongs to) is a member of the specified dl.
+     * @return true if this distribution list (or one of the dl it belongs to) is a member 
+     *         of the specified dl.
      * @throws ServiceException
      */
-    public boolean inDistributionList(DistributionList list, String zimbraId) throws ServiceException {
+    public boolean inDistributionList(DistributionList list, String zimbraId) 
+    throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
 
     /**
-     * @return set of all the zimbraId's of lists this account belongs to, including any list in other list.
+     * @return set of all the zimbraId's of lists this account belongs to, including any 
+     *         list in other list.
      * @throws ServiceException
      */
     public abstract Set<String> getDistributionLists(Account acct) throws ServiceException;
@@ -469,12 +473,14 @@ public abstract class Provisioning extends ZAttrProvisioning {
     /**
      *
      * @param directOnly return only DLs this account is a direct member of
-     * @param via if non-null and directOnly is false, this map will containing a mapping from a DL 
-     *        name to the DL it was a member of, if member was indirect.
+     * @param via if non-null and directOnly is false, this map will containing a mapping 
+     *        from a DL name to the DL it was a member of, if member was indirect.
      * @return all the DLs
      * @throws ServiceException
      */
-    public abstract List<DistributionList> getDistributionLists(Account acct, boolean directOnly, Map<String,String> via) throws ServiceException;
+    public abstract List<DistributionList> getDistributionLists(Account acct, 
+            boolean directOnly, Map<String,String> via) 
+    throws ServiceException;
 
     /**
      *
@@ -484,7 +490,9 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @return all the DLs
      * @throws ServiceException
      */
-    public abstract List<DistributionList> getDistributionLists(DistributionList list, boolean directOnly, Map<String,String> via) throws ServiceException;
+    public abstract List<DistributionList> getDistributionLists(DistributionList list, 
+            boolean directOnly, Map<String,String> via) 
+    throws ServiceException;
 
 
     //
@@ -501,7 +509,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public static class MemberOf {
         private String mId;            // zimbraId of this group
-        private boolean mIsAdminGroup; // is this group is an admin group (zimbraIsAdminGroup == TRUE)
+        private boolean mIsAdminGroup; // if this group is an admin group (zimbraIsAdminGroup == TRUE)
 
         public MemberOf(String id, boolean isAdminGroup) {
             mId = id;
@@ -1229,6 +1237,14 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.UNSUPPORTED();
     }
     
+    public void deleteGroup(String zimbraId) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+    
+    public void renameGroup(String zimbraId, String newName) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+    
     public Group getGroup(Key.DistributionListBy keyType, String key) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
@@ -1244,10 +1260,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.UNSUPPORTED();
     }
     
-    public void deleteGroup(String zimbraId) throws ServiceException {
-        throw ServiceException.UNSUPPORTED();
-    }
-    
     public void addGroupMembers(Group group, String[] members) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
@@ -1256,11 +1268,23 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.UNSUPPORTED();
     }
     
-    public void addAlias(Group group, String alias) throws ServiceException {
+    public void addGroupAlias(Group group, String alias) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
 
-    public void removeAlias(Group group, String alias) throws ServiceException {
+    public void removeGroupAlias(Group group, String alias) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+    
+    /**
+     * @param zimbraId the zimbraId of the group (static or dynamic) we are checking for
+     * @return true if this account is a member of the specified group, and the group 
+     *         is eligible as a 
+     *         If the group is a static group, also true if this account is a member of a 
+     *         group that is a member of the specified group.
+     * @throws ServiceException
+     */
+    public boolean inACLGroup(Account acct, String zimbraId) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
     

@@ -69,7 +69,7 @@ public class RemoveDistributionListAlias extends AdminDocumentHandler {
         
         // even if dl is null, we still invoke removeAlias and throw an exception afterwards.
         // this is so dangling aliases can be cleaned up as much as possible
-        prov.removeAlias(group, alias);
+        prov.removeGroupAlias(group, alias);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "RemoveDistributionListAlias", "name", dlName, "alias", alias})); 

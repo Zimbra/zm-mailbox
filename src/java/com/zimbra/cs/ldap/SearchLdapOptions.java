@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.ldap.LdapTODO.TODO;
 
 
 public class SearchLdapOptions {
@@ -112,6 +113,14 @@ public class SearchLdapOptions {
         setBinaryAttrs(binaryAttrs);
         setSearchScope(searchScope);
         setVisitor(visitor);
+    }
+    
+    @TODO
+    public SearchLdapOptions(String searchbase, ZLdapFilter filter, 
+            String[] returnAttrs, int maxResults, Set<String> binaryAttrs, 
+            ZSearchScope searchScope, SearchLdapOptions.SearchLdapVisitor visitor) {
+        this(searchbase, filter.toFilterString(), // TODO: store ZLdapFilter instead of converting to String
+             returnAttrs, maxResults, binaryAttrs, searchScope, visitor);
     }
     
     public String getSearchBase() {

@@ -48,6 +48,7 @@ public abstract class Entry implements ToZJSONObject {
         DATASOURCE,
         DISTRIBUTIONLIST,
         DOMAIN,
+        DYNAMICGROUP,
         GLOBALCONFIG,
         GLOBALGRANT,
         IDENTITY,

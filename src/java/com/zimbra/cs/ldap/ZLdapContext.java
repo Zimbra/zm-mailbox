@@ -35,7 +35,7 @@ public abstract class ZLdapContext extends ZLdapElement implements ILdapContext 
     public abstract void createEntry(String dn, String[] objectClasses, String[] attrs) 
     throws ServiceException;
     
-    public abstract ZModificationList createModiftcationList();
+    public abstract ZModificationList createModificationList();
     
     public abstract void deleteChildren(String dn) throws ServiceException;
     

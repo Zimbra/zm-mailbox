@@ -77,6 +77,10 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter accountByName(String name) {
         return new JNDILdapFilter(LegacyLdapFilter.accountByName(name));
     }
+    
+    public ZLdapFilter accountByMemberOf(String dynGroupId) {
+        return new JNDILdapFilter(LegacyLdapFilter.accountByMemberOf(dynGroupId));
+    }
 
     @Override
     public ZLdapFilter adminAccountByRDN(String namingRdnAttr, String name) {

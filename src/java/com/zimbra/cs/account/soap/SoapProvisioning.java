@@ -484,7 +484,7 @@ public class SoapProvisioning extends Provisioning {
     }
     
     @Override
-    public void addAlias(Group group, String alias)
+    public void addGroupAlias(Group group, String alias)
             throws ServiceException {
         invokeJaxb(new AddDistributionListAliasRequest(group.getId(), alias));
         reload(group);
@@ -1289,7 +1289,7 @@ public class SoapProvisioning extends Provisioning {
     }
     
     @Override
-    public void removeAlias(Group group, String alias)
+    public void removeGroupAlias(Group group, String alias)
             throws ServiceException {
         this.invokeJaxb(new RemoveDistributionListAliasRequest(
                 (group == null) ? null : group.getId(), alias));
@@ -1317,6 +1317,12 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public void renameDistributionList(String zimbraId, String newName)
+            throws ServiceException {
+        invokeJaxb(new RenameDistributionListRequest(zimbraId, newName));
+    }
+    
+    @Override
+    public void renameGroup(String zimbraId, String newName)
             throws ServiceException {
         invokeJaxb(new RenameDistributionListRequest(zimbraId, newName));
     }

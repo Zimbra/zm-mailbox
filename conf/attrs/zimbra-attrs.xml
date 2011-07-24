@@ -237,6 +237,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>RFC1274: RFC822 Mailbox</desc>
 </attr>
 
+<attr name="memberURL" type="string" requiredIn="group" callback="MemberURL">
+    <desc>Identifies an URL associated with each member of a group</desc>
+</attr>
+
 <attr name="mobile" type="string" optionalIn="account" flags="domainAdminModifiable">
     <desc>RFC1274: mobile telephone number</desc>
 </attr>
@@ -364,8 +368,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>administrative notes</desc>
 </attr>
 
-<attr id="11" name="zimbraMemberOf" type="string" cardinality="multi" optionalIn="account">
-  <desc>for dynamic group membership</desc>
+<attr id="11" name="zimbraMemberOf" type="id" cardinality="multi" optionalIn="account" immutable="1">
+  <desc>dynamic group membership</desc>
 </attr>
 
 <attr id="12" name="zimbraMailForwardingAddress" type="email" max="256" cardinality="multi" optionalIn="mailRecipient" flags="accountInfo,domainAdminModifiable">
@@ -4165,7 +4169,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>favicon for chameleon skin for the domain</desc>
 </attr>
 
-<attr id="802" name="zimbraIsAdminGroup" type="boolean" cardinality="single" optionalIn="distributionList" since="6.0.0_BETA1" callback="AdminGroup">
+<attr id="802" name="zimbraIsAdminGroup" type="boolean" cardinality="single" optionalIn="distributionList,group" since="6.0.0_BETA1" callback="AdminGroup">
   <desc>set to true for admin groups</desc>
 </attr>
 
@@ -6035,6 +6039,10 @@ TODO: delete them permerntly from here
 
 <attr id="1241" name="zimbraMailPurgeSystemPolicy" type="string" cardinality="single" optionalIn="globalConfig" since="8.0">
   <desc>System purge policy, encoded as metadata.  Users can apply these policy elements to their folders and tags.  If the system policy changes, user settings are automatically updated with the change.</desc>
+</attr>
+
+<attr id="1242" name="zimbraIsACLGroup" type="boolean" cardinality="single" optionalIn="group" callback="IsACLGroup" since="8.0.0">
+  <desc>if the dynamic group can be a legitimate grantee for folder grantees; and a legitimate grantee or target for delegated admin grants</desc>
 </attr>
 
 </attrs>

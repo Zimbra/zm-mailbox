@@ -200,7 +200,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter accountByForeignPrincipal(String foreignPrincipal) {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
-                        Filter.createEqualityFilter("zimbraForeignPrincipal", foreignPrincipal),
+                        Filter.createEqualityFilter(Provisioning.A_zimbraForeignPrincipal, foreignPrincipal),
                         FILTER_ALL_ACCOUNTS.getNative()));
     }
 
@@ -208,7 +208,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter accountById(String id) {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
-                        Filter.createEqualityFilter("zimbraId", id),
+                        Filter.createEqualityFilter(Provisioning.A_zimbraId, id),
                         FILTER_ALL_ACCOUNTS.getNative()));
     }
 
@@ -217,11 +217,19 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
                         Filter.createORFilter(
-                                Filter.createEqualityFilter("zimbraMailDeliveryAddress", name),
-                                Filter.createEqualityFilter("zimbraMailAlias", name)),
+                                Filter.createEqualityFilter(Provisioning.A_zimbraMailDeliveryAddress, name),
+                                Filter.createEqualityFilter(Provisioning.A_zimbraMailAlias, name)),
                         FILTER_ALL_ACCOUNTS.getNative()));
     }
 
+    @Override
+    public ZLdapFilter accountByMemberOf(String dynGroupId) {
+        return new UBIDLdapFilter(
+                Filter.createANDFilter(
+                        Filter.createEqualityFilter(Provisioning.A_zimbraMemberOf, dynGroupId),
+                        FILTER_ALL_ACCOUNTS.getNative()));
+    }
+    
     @Override
     public ZLdapFilter adminAccountByRDN(String namingRdnAttr, String name) {
         return new UBIDLdapFilter(
@@ -274,7 +282,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter calendarResourceByForeignPrincipal(String foreignPrincipal) {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
-                        Filter.createEqualityFilter("zimbraForeignPrincipal", foreignPrincipal),
+                        Filter.createEqualityFilter(Provisioning.A_zimbraForeignPrincipal, foreignPrincipal),
                         FILTER_ALL_CALENDAR_RESOURCES.getNative()));
     }
 
@@ -282,7 +290,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter calendarResourceById(String id) {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
-                        Filter.createEqualityFilter("zimbraId", id),
+                        Filter.createEqualityFilter(Provisioning.A_zimbraId, id),
                         FILTER_ALL_CALENDAR_RESOURCES.getNative()));
     }
 
@@ -291,8 +299,8 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
                         Filter.createORFilter(
-                                Filter.createEqualityFilter("zimbraMailDeliveryAddress", name),
-                                Filter.createEqualityFilter("zimbraMailAlias", name)),
+                                Filter.createEqualityFilter(Provisioning.A_zimbraMailDeliveryAddress, name),
+                                Filter.createEqualityFilter(Provisioning.A_zimbraMailAlias, name)),
                         FILTER_ALL_CALENDAR_RESOURCES.getNative()));        
     }
 
@@ -309,7 +317,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter cosById(String id) {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
-                        Filter.createEqualityFilter("zimbraId", id),
+                        Filter.createEqualityFilter(Provisioning.A_zimbraId, id),
                         FILTER_ALL_COSES.getNative()));
     }
 
@@ -318,7 +326,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
                         FILTER_ALL_COSES.getNative(),
-                        Filter.createEqualityFilter("zimbraMailHostPool", server)));
+                        Filter.createEqualityFilter(Provisioning.A_zimbraMailHostPool, server)));
     }
 
     
@@ -335,7 +343,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
                         FILTER_ALL_DATASOURCES.getNative(),
-                        Filter.createEqualityFilter("zimbraDataSourceId", id)));
+                        Filter.createEqualityFilter(Provisioning.A_zimbraDataSourceId, id)));
     }
 
     @Override
@@ -343,7 +351,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
                         FILTER_ALL_DATASOURCES.getNative(),
-                        Filter.createEqualityFilter("zimbraDataSourceName", name)));
+                        Filter.createEqualityFilter(Provisioning.A_zimbraDataSourceName, name)));
     }
 
     
@@ -359,7 +367,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter distributionListById(String id) {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
-                        Filter.createEqualityFilter("zimbraId", id),
+                        Filter.createEqualityFilter(Provisioning.A_zimbraId, id),
                         FILTER_ALL_DISTRIBUTION_LISTS.getNative()));
     }
 
@@ -367,7 +375,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter distributionListByName(String name) {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
-                        Filter.createEqualityFilter("zimbraMailAlias", name),
+                        Filter.createEqualityFilter(Provisioning.A_zimbraMailAlias, name),
                         FILTER_ALL_DISTRIBUTION_LISTS.getNative()));
     }
     
@@ -379,7 +387,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter dynamicGroupById(String id) {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
-                        Filter.createEqualityFilter("zimbraId", id),
+                        Filter.createEqualityFilter(Provisioning.A_zimbraId, id),
                         FILTER_ALL_DYNAMIC_GROUPS.getNative()));
     }
     
@@ -387,7 +395,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter dynamicGroupByName(String name) {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
-                        Filter.createEqualityFilter("zimbraMailAlias", name),
+                        Filter.createEqualityFilter(Provisioning.A_zimbraMailAlias, name),
                         FILTER_ALL_DYNAMIC_GROUPS.getNative()));
     }
     
@@ -404,7 +412,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter groupById(String id) {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
-                        Filter.createEqualityFilter("zimbraId", id),
+                        Filter.createEqualityFilter(Provisioning.A_zimbraId, id),
                         FILTER_ALL_GROUPS.getNative()));
     }
     
@@ -412,7 +420,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter groupByName(String name) {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
-                        Filter.createEqualityFilter("zimbraMailAlias", name),
+                        Filter.createEqualityFilter(Provisioning.A_zimbraMailAlias, name),
                         FILTER_ALL_GROUPS.getNative())); 
     }
     
@@ -429,7 +437,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter domainById(String id) {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
-                        Filter.createEqualityFilter("zimbraId", id),
+                        Filter.createEqualityFilter(Provisioning.A_zimbraId, id),
                         FILTER_ALL_DOMAINS.getNative()));
     }
 
@@ -437,7 +445,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter domainByName(String name) {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
-                        Filter.createEqualityFilter("zimbraDomainName", name),
+                        Filter.createEqualityFilter(Provisioning.A_zimbraDomainName, name),
                         FILTER_ALL_DOMAINS.getNative()));
     }
 
@@ -445,7 +453,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter domainByKrb5Realm(String krb5Realm) {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
-                        Filter.createEqualityFilter("zimbraAuthKerberos5Realm", krb5Realm),
+                        Filter.createEqualityFilter(Provisioning.A_zimbraAuthKerberos5Realm, krb5Realm),
                         FILTER_ALL_DOMAINS.getNative()));
     }
     
@@ -453,7 +461,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter domainByVirtualHostame(String virtualHostname) {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
-                        Filter.createEqualityFilter("zimbraVirtualHostname", virtualHostname),
+                        Filter.createEqualityFilter(Provisioning.A_zimbraVirtualHostname, virtualHostname),
                         FILTER_ALL_DOMAINS.getNative()));
     }
     
@@ -461,7 +469,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter domainByForeignName(String foreignName) {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
-                        Filter.createEqualityFilter("zimbraForeignName", foreignName),
+                        Filter.createEqualityFilter(Provisioning.A_zimbraForeignName, foreignName),
                         FILTER_ALL_DOMAINS.getNative()));
     }
 
@@ -472,7 +480,8 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     
     @Override
     public ZLdapFilter domainLockedForEagerAutoProvision() {
-        return new UBIDLdapFilter(Filter.createNOTFilter(Filter.createPresenceFilter("zimbraAutoProvLock")));
+        return new UBIDLdapFilter(Filter.createNOTFilter(
+                Filter.createPresenceFilter(Provisioning.A_zimbraAutoProvLock)));
     }
     
     
@@ -480,7 +489,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
      * global config
      */
     public ZLdapFilter globalConfig() {
-        return new UBIDLdapFilter(Filter.createEqualityFilter("cn", "config"));
+        return new UBIDLdapFilter(Filter.createEqualityFilter(Provisioning.A_cn, "config"));
     }
     
     
@@ -498,7 +507,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
                         FILTER_ALL_IDENTITIES.getNative(),
-                        Filter.createEqualityFilter("zimbraPrefIdentityName", name)));
+                        Filter.createEqualityFilter(Provisioning.A_zimbraPrefIdentityName, name)));
     }
 
     
@@ -513,7 +522,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     @Override
     public ZLdapFilter mimeEntryByMimeType(String mimeType) {
         return new UBIDLdapFilter(
-                Filter.createEqualityFilter("zimbraMimeType", mimeType));
+                Filter.createEqualityFilter(Provisioning.A_zimbraMimeType, mimeType));
     }
     
 
@@ -529,7 +538,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter serverById(String id) {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
-                        Filter.createEqualityFilter("zimbraId", id),
+                        Filter.createEqualityFilter(Provisioning.A_zimbraId, id),
                         FILTER_ALL_SERVERS.getNative()));
     }
 
@@ -538,7 +547,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
                         FILTER_ALL_SERVERS.getNative(),
-                        Filter.createEqualityFilter("zimbraServiceEnabled", service)));
+                        Filter.createEqualityFilter(Provisioning.A_zimbraServiceEnabled, service)));
     }
 
     
@@ -555,7 +564,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
                         FILTER_ALL_SIGNATURES.getNative(),
-                        Filter.createEqualityFilter("zimbraSignatureId", id)));
+                        Filter.createEqualityFilter(Provisioning.A_zimbraSignatureId, id)));
     }
 
     
@@ -579,7 +588,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter xmppComponentById(String id) {
         return new UBIDLdapFilter(
                 Filter.createANDFilter(
-                        Filter.createEqualityFilter("zimbraId", id),
+                        Filter.createEqualityFilter(Provisioning.A_zimbraId, id),
                         FILTER_ALL_XMPP_COMPONENTS.getNative()));
     }
 

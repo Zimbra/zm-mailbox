@@ -74,7 +74,7 @@ public class ZLdapHelper extends LdapHelper {
 
     private ZModificationList getModList(ZLdapContext zlc, String dn, 
             Map<String, ? extends Object> attrs, Entry entry) throws ServiceException {
-        ZModificationList modList = zlc.createModiftcationList();
+        ZModificationList modList = zlc.createModificationList();
         
         AttributeManager attrMgr = AttributeManager.getInst();
         

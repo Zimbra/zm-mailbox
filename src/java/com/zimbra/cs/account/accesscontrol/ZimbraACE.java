@@ -318,14 +318,27 @@ public class ZimbraACE {
         if (acct == null)
             return mGranteeType == GranteeType.GT_PUBLIC;
         switch (mGranteeType) {
-            case GT_PUBLIC:   return true;
-            case GT_AUTHUSER: return !(acct instanceof GuestAccount); // return !acct.equals(ACL.ANONYMOUS_ACCT);
-            case GT_GROUP:    return prov.inDistributionList(acct, mGrantee);
-            case GT_DOMAIN:   return mGrantee.equals(acct.getDomainId());
-            case GT_USER:     return mGrantee.equals(acct.getId());
-            case GT_GUEST:    return matchesGuestAccount(acct);
-            case GT_KEY:      return matchesAccessKey(acct);
-            default:  throw ServiceException.FAILURE("unknown ACL grantee type: " + mGranteeType, null);
+            case GT_PUBLIC:
+                return true;
+            case GT_AUTHUSER:
+                return !(acct instanceof GuestAccount); // return !acct.equals(ACL.ANONYMOUS_ACCT);
+            /*
+             * actually never called
+             * Group grantees are checked differently via checkGroupPresetRight
+             */
+            case GT_GROUP:
+                return prov.inDistributionList(acct, mGrantee); 
+                                                                              
+            case GT_DOMAIN:
+                return mGrantee.equals(acct.getDomainId());
+            case GT_USER:
+                return mGrantee.equals(acct.getId());
+            case GT_GUEST:
+                return matchesGuestAccount(acct);
+            case GT_KEY:
+                return matchesAccessKey(acct);
+            default:
+                throw ServiceException.FAILURE("unknown ACL grantee type: " + mGranteeType, null);
         }
     }
 

@@ -31,7 +31,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
@@ -170,7 +170,7 @@ public class FolderAction extends ItemAction {
                 try {
                     nentry = lookupGranteeByName(zid, ACL.GRANTEE_USER, zsc);
                     zid = nentry.getId();
-                    gtype = nentry instanceof DistributionList ? ACL.GRANTEE_GROUP : ACL.GRANTEE_USER;
+                    gtype = nentry instanceof Group ? ACL.GRANTEE_GROUP : ACL.GRANTEE_USER;
                 } catch (ServiceException e) {
                     // this is the normal path, where lookupGranteeByName throws account.NO_SUCH_USER
                     secret = grant.getAttribute(MailConstants.A_ARGS, null);
@@ -193,7 +193,7 @@ public class FolderAction extends ItemAction {
                 nentry = lookupGranteeByName(grant.getAttribute(MailConstants.A_DISPLAY), gtype, zsc);
                 zid = nentry.getId();
                 // make sure they didn't accidentally specify "usr" instead of "grp"
-                if (gtype == ACL.GRANTEE_USER && nentry instanceof DistributionList)
+                if (gtype == ACL.GRANTEE_USER && nentry instanceof Group)
                     gtype = ACL.GRANTEE_GROUP;
             }
 
@@ -281,8 +281,9 @@ public class FolderAction extends ItemAction {
         NamedEntry nentry = null;
         Provisioning prov = Provisioning.getInstance();
         nentry = prov.get(AccountBy.name, name);
-        if (nentry == null)
-            nentry = prov.get(Key.DistributionListBy.name, name);
+        if (nentry == null) {
+            nentry = prov.getGroup(Key.DistributionListBy.name, name);
+        }
         return nentry;
     }
 
@@ -305,7 +306,7 @@ public class FolderAction extends ItemAction {
                 case ACL.GRANTEE_COS:     nentry = prov.get(Key.CosBy.name, name);               break;
                 case ACL.GRANTEE_DOMAIN:  nentry = prov.get(Key.DomainBy.name, name);            break;
                 case ACL.GRANTEE_USER:    nentry = lookupEmailAddress(name);                 break;
-                case ACL.GRANTEE_GROUP:   nentry = prov.get(Key.DistributionListBy.name, name);  break;
+                case ACL.GRANTEE_GROUP:   nentry = prov.getGroup(Key.DistributionListBy.name, name);  break;
             }
 
         if (nentry != null)
@@ -326,7 +327,7 @@ public class FolderAction extends ItemAction {
                 case ACL.GRANTEE_COS:     return prov.get(Key.CosBy.id, zid);
                 case ACL.GRANTEE_DOMAIN:  return prov.get(Key.DomainBy.id, zid);
                 case ACL.GRANTEE_USER:    return prov.get(AccountBy.id, zid);
-                case ACL.GRANTEE_GROUP:   return prov.get(Key.DistributionListBy.id, zid);
+                case ACL.GRANTEE_GROUP:   return prov.getGroup(Key.DistributionListBy.id, zid);
                 case ACL.GRANTEE_GUEST:
                 case ACL.GRANTEE_KEY:
                 case ACL.GRANTEE_AUTHUSER:

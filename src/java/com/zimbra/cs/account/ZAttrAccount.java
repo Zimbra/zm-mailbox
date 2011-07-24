@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110719-2122 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110723-2102 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -19648,7 +19648,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * for dynamic group membership
+     * dynamic group membership
      *
      * @return zimbraMemberOf, or empty array if unset
      */
@@ -19658,7 +19658,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * for dynamic group membership
+     * dynamic group membership
      *
      * @param zimbraMemberOf new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -19671,7 +19671,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * for dynamic group membership
+     * dynamic group membership
      *
      * @param zimbraMemberOf new value
      * @param attrs existing map to populate, or null to create a new map
@@ -19685,7 +19685,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * for dynamic group membership
+     * dynamic group membership
      *
      * @param zimbraMemberOf new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -19698,7 +19698,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * for dynamic group membership
+     * dynamic group membership
      *
      * @param zimbraMemberOf new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -19712,7 +19712,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * for dynamic group membership
+     * dynamic group membership
      *
      * @param zimbraMemberOf existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -19725,7 +19725,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * for dynamic group membership
+     * dynamic group membership
      *
      * @param zimbraMemberOf existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -19739,7 +19739,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * for dynamic group membership
+     * dynamic group membership
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -19751,7 +19751,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * for dynamic group membership
+     * dynamic group membership
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

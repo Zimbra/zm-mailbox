@@ -23,6 +23,7 @@ import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
@@ -51,30 +52,35 @@ public class RenameDistributionList extends AdminDocumentHandler {
 	    String id = request.getAttribute(AdminConstants.E_ID);
         String newName = request.getAttribute(AdminConstants.E_NEW_NAME);
 
-	    DistributionList dl = prov.get(Key.DistributionListBy.id, id);
-        if (dl == null)
-            throw AccountServiceException.NO_SUCH_ACCOUNT(id);
-
+	    Group group = prov.getGroup(Key.DistributionListBy.id, id);
+        if (group == null) {
+            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
+        }
+        
         // check if the admin can rename the DL
-        checkDistributionListRight(zsc, dl, Admin.R_renameDistributionList);
-
+        if (group.isDynamic()) {
+            // TODO: fixme
+        } else {
+            checkDistributionListRight(zsc, (DistributionList) group, Admin.R_renameDistributionList);
+        }
+        
         // check if the admin can "create DL" in the domain (can be same or diff)
         checkDomainRightByEmail(zsc, newName, Admin.R_createDistributionList);
         
-        String oldName = dl.getName();
+        String oldName = group.getName();
 
-        prov.renameDistributionList(id, newName);
+        prov.renameGroup(id, newName);
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "RenameDistributionList", "name", oldName, "newName", newName})); 
         
         // get again with new name...
 
-        dl = prov.get(Key.DistributionListBy.id, id);
-        if (dl == null)
+        group = prov.getGroup(Key.DistributionListBy.id, id);
+        if (group == null)
             throw ServiceException.FAILURE("unable to get distribution list after rename: " + id, null);
 	    Element response = zsc.createElement(AdminConstants.RENAME_DISTRIBUTION_LIST_RESPONSE);
-	    GetDistributionList.encodeDistributionList(response, dl);
+	    GetDistributionList.encodeDistributionList(response, group);
 	    return response;
 
     }

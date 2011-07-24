@@ -490,6 +490,11 @@ public class LdapDIT {
             return "";
     }
     
+    public String dynamicGroupDNRename(String oldDn, String newLocalPart, String newDomain) 
+    throws ServiceException {
+        String newDomainDN = domainNameToDN(newDomain);
+        return dynamicGroupNameLocalPartToDN(newLocalPart, newDomainDN);
+    }
     
     /*
      * ==============

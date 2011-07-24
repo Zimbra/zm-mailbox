@@ -166,7 +166,7 @@ public class ACL {
                 case ACL.GRANTEE_AUTHUSER: return !acct.getId().equals(GuestAccount.GUID_PUBLIC);
                 case ACL.GRANTEE_COS:      return mGrantee.equals(getId(prov.getCOS(acct)));
                 case ACL.GRANTEE_DOMAIN:   return mGrantee.equals(getId(prov.getDomain(acct)));
-                case ACL.GRANTEE_GROUP:    return prov.inDistributionList(acct, mGrantee);
+                case ACL.GRANTEE_GROUP:    return prov.inACLGroup(acct, mGrantee);
                 case ACL.GRANTEE_USER:     return mGrantee.equals(acct.getId());
                 case ACL.GRANTEE_GUEST:    return matchesGuestAccount(acct);
                 case ACL.GRANTEE_KEY:      return matchesAccessKey(acct);

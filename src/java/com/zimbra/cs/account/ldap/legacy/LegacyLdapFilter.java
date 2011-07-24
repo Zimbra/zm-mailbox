@@ -69,6 +69,10 @@ public class LegacyLdapFilter {
         return "(&(|(zimbraMailDeliveryAddress=" + name + ")(zimbraMailAlias=" + name + "))" + FILTER_ACCOUNT_OBJECTCLASS + ")";
     }
     
+    public static String accountByMemberOf(String dynGroupId) {
+        return "(&(zimbraMemberOf=" + dynGroupId + ")" + FILTER_ACCOUNT_OBJECTCLASS + ")";
+    }
+    
     public static String adminAccountByRDN(String namingRdnAttr, String name) {
         return "(&(" + namingRdnAttr + "=" + name + ")" + FILTER_ACCOUNT_OBJECTCLASS + ")";
     }

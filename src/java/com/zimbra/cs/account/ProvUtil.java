@@ -1100,7 +1100,7 @@ public class ProvUtil implements HttpDebugListener {
                 doGetAllXMPPComponents();
                 break;
             case MODIFY_DISTRIBUTION_LIST:
-                prov.modifyAttrs(lookupDistributionList(args[1]), getMapAndCheck(args, 2), true);
+                prov.modifyAttrs(lookupGroup(args[1]), getMapAndCheck(args, 2), true);
                 break;
             case DELETE_DISTRIBUTION_LIST:
                 prov.deleteGroup(lookupGroup(args[1]).getId());
@@ -1119,7 +1119,7 @@ public class ProvUtil implements HttpDebugListener {
                 doCreateAccountsBulk(args);
                 break;
             case ADD_DISTRIBUTION_LIST_ALIAS:
-                prov.addAlias(lookupGroup(args[1]), args[2]);
+                prov.addGroupAlias(lookupGroup(args[1]), args[2]);
                 break;
             case REMOVE_DISTRIBUTION_LIST_ALIAS:
                 Group dl = lookupGroup(args[1], false);
@@ -1130,7 +1130,7 @@ public class ProvUtil implements HttpDebugListener {
                 // In this case, we catch the NO_SUCH_DISTRIBUTION_LIST and throw another one
                 // with the named/id entered on the comand line.
                 try {
-                    prov.removeAlias(dl, args[2]);
+                    prov.removeGroupAlias(dl, args[2]);
                 } catch (ServiceException e) {
                     if (!(dl == null && AccountServiceException.NO_SUCH_DISTRIBUTION_LIST.equals(e.getCode()))) {
                         throw e;
@@ -1142,7 +1142,7 @@ public class ProvUtil implements HttpDebugListener {
                 }
                 break;
             case RENAME_DISTRIBUTION_LIST:
-                prov.renameDistributionList(lookupDistributionList(args[1]).getId(), args[2]);
+                prov.renameGroup(lookupGroup(args[1]).getId(), args[2]);
                 break;
             case CREATE_CALENDAR_RESOURCE:
                 console.println(prov.createCalendarResource(args[1], args[2].isEmpty() ? null : args[2],

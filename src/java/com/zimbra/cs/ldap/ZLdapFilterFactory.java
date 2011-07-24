@@ -53,6 +53,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter accountByForeignPrincipal(String foreignPrincipal);
     public abstract ZLdapFilter accountById(String id);
     public abstract ZLdapFilter accountByName(String name);
+    public abstract ZLdapFilter accountByMemberOf(String dynGroupId);
     public abstract ZLdapFilter adminAccountByRDN(String namingRdnAttr, String name);
     public abstract ZLdapFilter adminAccountByAdminFlag();
     

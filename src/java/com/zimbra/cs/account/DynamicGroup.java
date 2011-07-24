@@ -24,6 +24,18 @@ public class DynamicGroup extends ZAttrDynamicGroup {
         super(name, id, attrs, prov);
     }
 
+    public EntryType getEntryType() {
+        return EntryType.DYNAMICGROUP;
+    }
+    
+    public static String getDefaultMemberURL(String zimbraId) {
+        return String.format("ldap:///??sub?(zimbraMemberOf=%s)", zimbraId);     
+    }
+    
+    public String getDefaultMemberURL() {
+        return getDefaultMemberURL(getId());
+    }
+    
     @Override
     public boolean isDynamic() {
         return true;
