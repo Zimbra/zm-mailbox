@@ -247,6 +247,9 @@ public class CalendarMailSender {
         }
 
         String fromDisplayName = fromIdentity.getAttr(Provisioning.A_zimbraPrefFromDisplay);
+        if (fromDisplayName == null) {
+            fromDisplayName = fromAccount.getAttr(Provisioning.A_displayName, fromAccount.getName());
+        }
         StringBuilder replyText = new StringBuilder();
         boolean isResourceAccount = fromAccount instanceof CalendarResource;
 
