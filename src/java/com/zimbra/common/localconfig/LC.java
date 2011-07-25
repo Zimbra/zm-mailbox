@@ -1122,6 +1122,8 @@ public final class LC {
     //octopus
     public static final KnownKey documents_disable_instant_parsing = KnownKey.newKey(false);
     public static final KnownKey default_profile_image = KnownKey.newKey("${zimbra_home}/jetty/webapps/zimbra/img/no-photo.png");
+    public static final KnownKey rest_pdf_converter_url = KnownKey.newKey("http://localhost:7070/zoo/convertpdf");    
+    public static final KnownKey pdf2swf_path = KnownKey.newKey("/sw/bin/pdf2swf");
     
     static {
         // Automatically set the key name with the variable name.
