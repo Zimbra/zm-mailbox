@@ -57,6 +57,7 @@ import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.MailboxBlob;
+import com.zimbra.cs.store.StagedBlob;
 
 /**
  * @since Aug 23, 2004
@@ -728,6 +729,13 @@ public class Contact extends MailItem {
             addr = addr.trim().toLowerCase();
             DbMailAddress.decCount(mMailbox.getOperationConnection(), mMailbox, addr);
         }
+    }
+    
+    @Override
+    MailboxBlob setContent(StagedBlob staged, Object content) throws ServiceException, IOException {
+        ZimbraLog.mailop.info("modifying contact %s: id=%d, folderId=%d, folderName=%s.",
+                    get(ContactConstants.A_email), getId(), getFolderId(), getFolder().getName());
+        return super.setContent(staged, content);
     }
 
     @Override
