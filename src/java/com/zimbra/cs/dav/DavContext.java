@@ -15,8 +15,9 @@
 package com.zimbra.cs.dav;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,16 +34,32 @@ import org.dom4j.Element;
 import org.dom4j.QName;
 
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.dav.resource.Collection;
 import com.zimbra.cs.dav.resource.DavResource;
+import com.zimbra.cs.dav.resource.Notebook;
 import com.zimbra.cs.dav.resource.UrlNamespace;
+import com.zimbra.cs.dav.resource.UrlNamespace.UrlComponents;
 import com.zimbra.cs.dav.service.DavResponse;
+import com.zimbra.cs.dav.service.DavServlet;
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.HttpUtil;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FileUploadServlet;
+import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.zclient.ZMountpoint;
 
 /**
  * 
@@ -87,6 +104,7 @@ public class DavContext {
 	private DavResponse mResponse;
 	private boolean mResponseSent;
 	private DavResource mRequestedResource;
+	private Collection mRequestedParentCollection;
     private RequestType mRequestType;
     private String mCollectionPath;
     private RequestProp mResponseProp;
@@ -132,7 +150,7 @@ public class DavContext {
 			}
 		}
 		
-		public RequestProp(Collection<Element> set, Collection<QName> remove) {
+		public RequestProp(java.util.Collection<Element> set, java.util.Collection<QName> remove) {
 			this(false);
 			allProp = false;
 			for (Element e : set)
@@ -151,7 +169,7 @@ public class DavContext {
 			allProp = false;
 			props.put(p.getQName(), p);
 		}
-		public Collection<QName> getProps() {
+		public java.util.Collection<QName> getProps() {
 			return props.keySet();
 		}
 		public Element getProp(QName p) {
@@ -431,7 +449,13 @@ public class DavContext {
 		return mRequestedResource;
 	}
 	
-	public Collection<DavResource> getAllRequestedResources() throws DavException, ServiceException {
+	public Collection getRequestedParentCollection() throws DavException, ServiceException {
+	    if (mRequestedParentCollection == null)
+	        mRequestedParentCollection = UrlNamespace.getCollectionAtUrl(this, mPath);
+	    return mRequestedParentCollection;
+	}
+	
+	public java.util.Collection<DavResource> getAllRequestedResources() throws DavException, ServiceException {
     	ArrayList<DavResource> rss = new ArrayList<DavResource>();
         if (mRequestType == RequestType.RESOURCE)
         	rss = (ArrayList<DavResource>) UrlNamespace.getResources(this, mUser, mPath, getDepth() == Depth.one);
@@ -552,5 +576,80 @@ public class DavContext {
     
     public boolean isOverwriteSet() {
         return mOverwrite;
+    }
+        
+    public Collection getDestinationCollection() throws DavException {
+        String destinationUrl = getDestinationUrl();
+        if (!destinationUrl.endsWith("/")) {
+            int slash = destinationUrl.lastIndexOf('/');
+            destinationUrl = destinationUrl.substring(0, slash+1);
+        }
+        try {
+            destinationUrl = getInternalDestinationUrl(destinationUrl);
+            DavResource r = UrlNamespace.getResourceAtUrl(this, destinationUrl);
+            if (r instanceof Collection)
+                return ((Collection)r);
+            return UrlNamespace.getCollectionAtUrl(this, destinationUrl);
+        } catch (Exception e) {
+            throw new DavException("can't get destination collection", DavProtocol.STATUS_FAILED_DEPENDENCY);
+        }
+    }
+    
+    private String getDestinationUrl() throws DavException {
+        String destination = getRequest().getHeader(DavProtocol.HEADER_DESTINATION);
+        if (destination == null)
+            throw new DavException("no destination specified", HttpServletResponse.SC_BAD_REQUEST, null);
+        return destination;
+    }
+    
+    private String getInternalDestinationUrl(String destinationUrl) throws ServiceException, DavException {
+        UrlComponents uc = UrlNamespace.parseUrl(destinationUrl);
+        Account targetAcct = Provisioning.getInstance().getAccountByName(uc.user);
+        if (targetAcct == null)
+            return destinationUrl;        
+        ZMailbox zmbx = getZMailbox(targetAcct);
+        ItemId targetRoot = new ItemId("", Mailbox.ID_FOLDER_USER_ROOT);
+        Pair<ZFolder, String> match = zmbx.getFolderByPathLongestMatch(targetRoot.toString(), uc.path);
+        ZFolder targetFolder = match.getFirst();
+        if (targetFolder instanceof ZMountpoint) {
+            ZMountpoint zmp = (ZMountpoint) targetFolder;
+            ItemId target = new ItemId(zmp.getOwnerId(), Integer.parseInt(zmp.getRemoteId()));
+            Account acct = Provisioning.getInstance().getAccountById(zmp.getOwnerId());                
+            ZMailbox targetZmbx = getZMailbox(acct);
+            ZFolder f = targetZmbx.getFolderById(target.toString());
+            String extraPath = match.getSecond();
+            destinationUrl = HttpUtil.urlEscape(DavServlet.DAV_PATH + "/" + acct.getName() + f.getPath() + ((extraPath != null) ? "/" + extraPath : ""));
+        }
+        return destinationUrl;
+    }
+    
+    
+    private ZMailbox getZMailbox(Account acct) throws ServiceException {
+        AuthToken authToken = AuthProvider.getAuthToken(getAuthAccount());
+        ZMailbox.Options zoptions = new ZMailbox.Options(authToken.toZAuthToken(), AccountUtil.getSoapUri(acct));
+        zoptions.setNoSession(true);
+        zoptions.setTargetAccount(acct.getId());
+        zoptions.setTargetAccountBy(Key.AccountBy.id);    
+        return ZMailbox.getMailbox(zoptions);        
+    }
+    
+    public String getNewName() throws DavException {
+        String oldName = getItem();
+        String dest = getDestinationUrl();
+        int begin, end;
+        end = dest.length();
+        if (dest.endsWith("/"))
+            end--;
+        begin = dest.lastIndexOf("/", end-1);
+        String newName = dest.substring(begin+1, end);
+        try {
+            newName = URLDecoder.decode(newName, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            ZimbraLog.dav.warn("can't decode URL ", dest, e);
+        }
+        if (oldName.equals(newName) == false)
+            return newName;
+        else 
+            return null;
     }
 }

@@ -72,8 +72,11 @@ public class RemoteCollection extends Collection {
         mPath = path;
         mSubject = folder.getName();
         type = MailItem.Type.FOLDER;
+        ZFolder.View zview = folder.getDefaultView();
+        if (zview != null)
+            view = MailItem.Type.of(zview.name());
     }
-
+    
     @Override
     public void delete(DavContext ctxt) throws DavException {
         throw new DavException("cannot delete this resource", HttpServletResponse.SC_FORBIDDEN, null);

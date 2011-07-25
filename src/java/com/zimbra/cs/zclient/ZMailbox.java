@@ -53,6 +53,8 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import org.dom4j.QName;
 import org.json.JSONException;
 
+import com.google.common.base.CharMatcher;
+import com.google.common.base.Strings;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
@@ -77,6 +79,7 @@ import com.zimbra.common.soap.ZimbraNamespace;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.MapUtil;
+import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
@@ -4885,6 +4888,43 @@ public class ZMailbox implements ToZJSONObject {
         } catch (URISyntaxException e) {
             throw ZClientException.CLIENT_ERROR("invalid URL: "+url, e);
         }
+    }
+    
+    /**
+     * Given a path, resolves as much of the path as possible and returns the folder and the unmatched part.
+     *
+     * E.G. if the path is "/foo/bar/baz/gub" and this mailbox has a Folder at "/foo/bar" -- this API returns
+     * a Pair containing that Folder and the unmatched part "baz/gub".
+     *
+     * If the returned folder is a ZMountpoint, then it can be assumed that the remaining part is a subfolder in
+     * the remote mailbox.
+     *
+     * @param baseFolderItemId Folder to start from (pass Mailbox.ID_FOLDER_ROOT as String to start from the root)
+     * @throws ServiceException if the folder with {@code startingFolderId} does not exist or {@code path} is
+     * {@code null} or empty.
+     */
+    public Pair<ZFolder, String> getFolderByPathLongestMatch(String baseFolderItemId, String path)
+            throws ServiceException {
+        if (Strings.isNullOrEmpty(path)) {
+            throw ServiceException.INVALID_REQUEST("no such folder " + path, null);
+        }
+        ZFolder folder = getFolderById(baseFolderItemId);
+        assert(folder != null);
+        path = CharMatcher.is('/').trimFrom(path); // trim leading and trailing '/'
+        if (path.isEmpty()) { // relative root to the base folder
+            return new Pair<ZFolder, String>(folder, null);
+        }
+        String unmatched = null;
+        String[] segments = path.split("/");
+        for (int i = 0; i < segments.length; i++) {
+            ZFolder subfolder = folder.getSubFolderByPath(segments[i]);
+            if (subfolder == null) {
+                unmatched = StringUtil.join("/", segments, i, segments.length - i);
+                break;
+            }
+            folder = subfolder;
+        }
+        return new Pair<ZFolder, String>(folder, unmatched);
     }
 }
 

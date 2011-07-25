@@ -42,10 +42,10 @@ public abstract class DavMethod {
 	public abstract String getName();
 	public abstract void handle(DavContext ctxt) throws DavException, IOException, ServiceException;
 	
-	public void checkPrecondition(DavContext ctxt) throws DavException {
+	public void checkPrecondition(DavContext ctxt) throws DavException, ServiceException {
 	}
 	
-	public void checkPostcondition(DavContext ctxt) throws DavException {
+	public void checkPostcondition(DavContext ctxt) throws DavException, ServiceException {
 	}
 	
 	public String toString() {

@@ -122,6 +122,11 @@ public class Collection extends MailItemResource {
         return children;
     }
 
+    
+    public MailItem.Type getDefaultView() {
+        return view;
+    }
+    
     private List<MailItem> getChildrenMailItem(DavContext ctxt) throws DavException,ServiceException {
         Mailbox mbox = getMailbox(ctxt);
 

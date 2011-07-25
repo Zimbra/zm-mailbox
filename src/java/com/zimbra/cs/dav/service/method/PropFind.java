@@ -40,7 +40,7 @@ public class PropFind extends DavMethod {
 	}
 	
 	@Override
-	public void checkPrecondition(DavContext ctxt) throws DavException {
+	public void checkPrecondition(DavContext ctxt) throws DavException, ServiceException {
 	    super.checkPrecondition(ctxt);
 	    if (ctxt.getDepth() == Depth.infinity)
 	        throw new DavException.PropFindInfiniteDepthForbidden();
