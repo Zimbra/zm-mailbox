@@ -43,13 +43,10 @@ public class ActivityInfo {
     private final long timeStamp;
 
     @XmlAttribute(name=MailConstants.A_ITEMID /* itemId */, required=true)
-    private final int itemId;
+    private final String itemId;
 
     @XmlAttribute(name=MailConstants.A_VERSION /* ver */, required=false)
     private Integer version;
-
-    @XmlAttribute(name=MailConstants.A_ITEM_NAME /* itemName */, required=false)
-    private String itemName;
 
     @XmlAttribute(name=MailConstants.A_EMAIL /* email */, required=false)
     private String email;
@@ -62,22 +59,21 @@ public class ActivityInfo {
      */
     @SuppressWarnings("unused")
     private ActivityInfo() {
-        this((String) null, -1L, -1);
+        this((String) null, -1L, (String) null);
     }
 
-    private ActivityInfo(String operation, long timeStamp, int itemId) {
+    private ActivityInfo(String operation, long timeStamp, String itemId) {
         this.operation = operation;
         this.timeStamp = timeStamp;
         this.itemId = itemId;
     }
 
     public static ActivityInfo fromOperationTimeStampItemId(
-            String operation, long timeStamp, int itemId) {
+            String operation, long timeStamp, String itemId) {
         return new ActivityInfo(operation, timeStamp, itemId);
     }
 
     public void setVersion(Integer version) { this.version = version; }
-    public void setItemName(String itemName) { this.itemName = itemName; }
     public void setEmail(String email) { this.email = email; }
     public void setArgs(Iterable <NamedValue> args) {
         this.args.clear();
@@ -100,9 +96,8 @@ public class ActivityInfo {
 
     public String getOperation() { return operation; }
     public long getTimeStamp() { return timeStamp; }
-    public int getItemId() { return itemId; }
+    public String getItemId() { return itemId; }
     public Integer getVersion() { return version; }
-    public String getItemName() { return itemName; }
     public String getEmail() { return email; }
     public List<NamedValue> getArgs() {
         return Collections.unmodifiableList(args);
@@ -115,7 +110,6 @@ public class ActivityInfo {
             .add("timeStamp", timeStamp)
             .add("itemId", itemId)
             .add("version", version)
-            .add("itemName", itemName)
             .add("email", email)
             .add("args", args);
     }

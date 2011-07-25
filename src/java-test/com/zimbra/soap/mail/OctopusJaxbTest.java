@@ -60,14 +60,12 @@ public class OctopusJaxbTest {
     }
 
     private static ActivityInfo toActivityInfo(String account, String op, 
-            long timestamp, int itemId, int version,
+            long timestamp, String itemId, int version,
             String itemName, Map<String,String> args) {
         ActivityInfo activity =
             ActivityInfo.fromOperationTimeStampItemId(op, timestamp, itemId);
         if (version > 0)
             activity.setVersion(version);
-        if (itemName != null && itemName.length() > 0)
-            activity.setItemName(itemName);
         if (account != null)
             activity.setEmail(account);
         activity.setArgs(args);
@@ -79,14 +77,13 @@ public class OctopusJaxbTest {
         Map<String,String> args = Maps.newHashMap();
         args.put("key1", "value1");
         args.put("key2", "value2");
-        ActivityInfo ai = toActivityInfo("account", "op", 333L, 22, 44,
+        ActivityInfo ai = toActivityInfo("account", "op", 333L, "123-123-123:22", 44,
                 "itemName", args);
         Assert.assertEquals("email", "account", ai.getEmail());
         Assert.assertEquals("operation", "op", ai.getOperation());
         Assert.assertEquals("operation", 333L, ai.getTimeStamp());
-        Assert.assertEquals("item id", 22, ai.getItemId());
+        Assert.assertEquals("item id", "123-123-123:22", ai.getItemId());
         Assert.assertEquals("version", Integer.valueOf(44), ai.getVersion());
-        Assert.assertEquals("item name", "itemName", ai.getItemName());
         List<NamedValue> nvArgs = ai.getArgs();
         Assert.assertEquals("Number of args", 2, nvArgs.size());
         Assert.assertEquals("arg1 name prefix", "key",
@@ -104,9 +101,8 @@ public class OctopusJaxbTest {
         Assert.assertEquals("round tripped account id", "account", ai.getEmail());
         Assert.assertEquals("round tripped operation", "op", ai.getOperation());
         Assert.assertEquals("round tripped operation", 333L, ai.getTimeStamp());
-        Assert.assertEquals("round tripped item id", 22, ai.getItemId());
+        Assert.assertEquals("round tripped item id", "123-123-123:22", ai.getItemId());
         Assert.assertEquals("round tripped version", Integer.valueOf(44), ai.getVersion());
-        Assert.assertEquals("round tripped item name", "itemName", ai.getItemName());
         nvArgs = ai.getArgs();
         Assert.assertEquals("round tripped Number of args", 2, nvArgs.size());
         Assert.assertEquals("round tripped arg1 name prefix", "key",
