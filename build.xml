@@ -402,8 +402,7 @@
     <target name="db-versions-init" depends="mysql-versions-init,sqlite-versions-init"/>
 
     <target name="compile" depends="build-init">
-        <ant dir="${common.dir}" target="jar" inheritAll="false"/>
-      <ant dir="${soap.dir}" target="jar" inheritAll="false"/>
+        <ant dir="${client.dir}" target="jar" inheritAll="false"/>
         <ant dir="${im.dir}" target="jar" inheritAll="false"/>
         <javac fork="true" memorymaximumsize="512m" destdir="${build.classes.dir}" debug="true"
                classpathref="class.path" target="${javac.target}">
