@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110723-2102 */
+    /* build: 8.0.0_BETA1_1111 administrator 20110726-1043 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3379,6 +3379,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExternalPop3SSLPort = "zimbraExternalPop3SSLPort";
 
     /**
+     * External email address of an external user. Applicable only when
+     * zimbraIsExternalVirtualAccount is TRUE.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1244)
+    public static final String A_zimbraExternalUserMailAddress = "zimbraExternalUserMailAddress";
+
+    /**
      * whether email features and tabs are enabled in the web client if
      * accessed from the admin console
      *
@@ -4816,6 +4825,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=298)
     public static final String A_zimbraIsDomainAdminAccount = "zimbraIsDomainAdminAccount";
+
+    /**
+     * whether it in an external user account
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1243)
+    public static final String A_zimbraIsExternalVirtualAccount = "zimbraIsExternalVirtualAccount";
 
     /**
      * true if this server is the monitor host
@@ -9450,22 +9467,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
