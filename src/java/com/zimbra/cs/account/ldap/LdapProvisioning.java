@@ -1041,6 +1041,8 @@ public class LdapProvisioning extends LdapProv {
             return acct;
         } catch (LdapEntryAlreadyExistException e) {
             throw AccountServiceException.ACCOUNT_EXISTS(emailAddress, dn, e);
+        } catch (AccountServiceException e) {
+            throw e;
         } catch (ServiceException e) {
            throw ServiceException.FAILURE("unable to create account: "+emailAddress, e);
         } finally {
