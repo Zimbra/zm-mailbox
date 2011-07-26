@@ -464,23 +464,76 @@ public final class LuceneQueryOperation extends QueryOperation {
         }
 
         if (other instanceof LuceneQueryOperation) {
-            LuceneQueryOperation otherLuc = (LuceneQueryOperation) other;
+            LuceneQueryOperation otherLucene = (LuceneQueryOperation) other;
             if (union) {
-                queryString = '(' + queryString + ") OR (" + otherLuc.queryString + ')';
+                queryString = '(' + queryString + ") OR (" + otherLucene.queryString + ')';
             } else {
-                queryString = '(' + queryString + ") AND (" + otherLuc.queryString + ')';
+                queryString = '(' + queryString + ") AND (" + otherLucene.queryString + ')';
             }
 
             BooleanQuery top = new BooleanQuery();
-            BooleanClause lhs = new BooleanClause(luceneQuery, union ? Occur.SHOULD : Occur.MUST);
-            BooleanClause rhs = new BooleanClause(otherLuc.luceneQuery, union ? Occur.SHOULD : Occur.MUST);
-            top.add(lhs);
-            top.add(rhs);
+            if (union) {
+                if (luceneQuery instanceof BooleanQuery) {
+                    orCopy((BooleanQuery) luceneQuery, top);
+                } else {
+                    top.add(new BooleanClause(luceneQuery, Occur.SHOULD));
+                }
+                if (otherLucene.luceneQuery instanceof BooleanQuery) {
+                    orCopy((BooleanQuery) otherLucene.luceneQuery, top);
+                } else {
+                    top.add(new BooleanClause(otherLucene.luceneQuery, Occur.SHOULD));
+                }
+            } else {
+                if (luceneQuery instanceof BooleanQuery) {
+                    andCopy((BooleanQuery) luceneQuery, top);
+                } else {
+                    top.add(new BooleanClause(luceneQuery, Occur.MUST));
+                }
+                if (otherLucene.luceneQuery instanceof BooleanQuery) {
+                    andCopy((BooleanQuery) otherLucene.luceneQuery, top);
+                } else {
+                    top.add(new BooleanClause(otherLucene.luceneQuery, Occur.MUST));
+                }
+            }
             luceneQuery = top;
             queryInfo.addAll(other.getResultInfo());
             return this;
         }
         return null;
+    }
+
+    private void andCopy(BooleanQuery from, BooleanQuery to) {
+        boolean allAnd = true;
+        for (BooleanClause clause : from) {
+            if (clause.getOccur() == BooleanClause.Occur.SHOULD) {
+                allAnd = false;
+                break;
+            }
+        }
+        if (allAnd) {
+            for (BooleanClause clause : from) {
+                to.add(clause);
+            }
+        } else {
+            to.add(new BooleanClause(from, Occur.MUST));
+        }
+    }
+
+    private void orCopy(BooleanQuery from, BooleanQuery to) {
+        boolean allOr = true;
+        for (BooleanClause clause : from) {
+            if (clause.getOccur() != BooleanClause.Occur.SHOULD) {
+                allOr = false;
+                break;
+            }
+        }
+        if (allOr) {
+            for (BooleanClause clause : from) {
+                to.add(clause);
+            }
+        } else {
+            to.add(new BooleanClause(from, Occur.SHOULD));
+        }
     }
 
     @Override

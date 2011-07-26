@@ -100,6 +100,27 @@ public final class LuceneQueryOperationTest {
     }
 
     @Test
+    public void andClauses() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        Message msg1 = mbox.addMessage(null, new ParsedMessage("From: test1@zimbra.com".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage("From: test2@zimbra.com".getBytes(), false), dopt, null);
+        mbox.addMessage(null, new ParsedMessage("From: test3@zimbra.com".getBytes(), false), dopt, null);
+        MailboxTestUtil.index(mbox);
+
+        SearchParams params = new SearchParams();
+        params.setQueryString("from:test1 from:zimbra.com -from:vmware.com");
+        params.setTypes(EnumSet.of(MailItem.Type.MESSAGE));
+        params.setSortBy(SortBy.NONE);
+        ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
+        ZimbraQueryResults results = query.execute();
+        Assert.assertTrue(results.hasNext());
+        Assert.assertEquals(msg1.getId(), results.getNext().getItemId());
+        Assert.assertFalse(results.hasNext());
+        results.close();
+    }
+
+    @Test
     public void subjectQuery() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
