@@ -621,12 +621,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * attrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_ENABLED);
      * attrs.put(Provisioning.A_zimbraMailHost, "server1");
      * attrs.put(Provisioning.A_zimbraMailDeliveryAddress, "roland@tiiq.net");
-     * prov.createAccount("roland@tiiq.net", "dsferulz", Provisioning.ACCOUNT_STATUS_ACTIVE, attrs);
+     * prov.createAccount("roland@tiiq.net", "dsferulz", attrs);
      * </pre>
      *
      * @param emailAddress email address (domain must already exist) of account being created.
      * @param password password of account being created, or null. Account's without passwords can't be logged into.
-     * @param accountStatus the initial account status
      * @param attrs other initial attributes or <code>null</code>
      * @return
      * @throws ServiceException

@@ -199,6 +199,16 @@
     <load-on-startup>5</load-on-startup>
   </servlet>
   
+  <servlet>
+    <servlet-name>ExternalUserProvServlet</servlet-name>
+    <servlet-class>com.zimbra.cs.service.ExternalUserProvServlet</servlet-class>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>%%zimbraMailPort%%, %%zimbraMailSSLPort%%, %%zimbraAdminPort%%, 7070, 7443, 7071</param-value>
+    </init-param>
+    <load-on-startup>5</load-on-startup>
+  </servlet>
+
   <!-- HTTPSCLIENTCERTBEGIN %%uncomment VAR:zimbraMailSSLClientCertPort,-->,0%%
   <servlet>
     <servlet-name>CertAuthServlet</servlet-name>
@@ -407,6 +417,11 @@
     <url-pattern>/preauth</url-pattern>
   </servlet-mapping>
   
+  <servlet-mapping>
+    <servlet-name>ExternalUserProvServlet</servlet-name>
+    <url-pattern>/extuserprov/*</url-pattern>
+  </servlet-mapping>
+
   <!-- HTTPSCLIENTCERTBEGIN %%uncomment VAR:zimbraMailSSLClientCertPort,-->,0%%
   <servlet-mapping>
     <servlet-name>CertAuthServlet</servlet-name>

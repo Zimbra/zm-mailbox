@@ -540,6 +540,10 @@ public class MailboxManager {
         return new Mailbox(data);
     }
 
+    protected Mailbox instantiateExternalVirtualMailbox(MailboxData data) throws ServiceException {
+        return new ExternalVirtualMailbox(data);
+    }
+
     protected synchronized void cacheAccount(String accountId, int mailboxId) {
         mailboxIds.put(accountId.toLowerCase(), new Integer(mailboxId));
     }
@@ -778,7 +782,8 @@ public class MailboxManager {
             MailboxData data = DbMailbox.createMailbox(conn, id, account.getId(), account.getName(), -1);
             ZimbraLog.mailbox.info("Creating mailbox with id %d and group id %d for %s.", data.id, data.schemaGroupId, account.getName());
 
-            mbox = instantiateMailbox(data);
+            mbox = account.isIsExternalVirtualAccount() ?
+                    instantiateExternalVirtualMailbox(data) : instantiateMailbox(data);
 
             // the existing Connection is used for the rest of this transaction...
             mbox.beginTransaction("createMailbox", octxt, redoRecorder, conn);

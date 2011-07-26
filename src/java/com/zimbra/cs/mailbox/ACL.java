@@ -175,9 +175,12 @@ public class ACL {
         }
 
         private boolean matchesGuestAccount(Account acct) {
-        	if (!(acct instanceof GuestAccount))
-        		return false;
-        	return ((GuestAccount) acct).matches(mGrantee, mSecret);
+        	if (acct instanceof GuestAccount) {
+        	    return ((GuestAccount) acct).matches(mGrantee, mSecret);
+            } else if (acct.isIsExternalVirtualAccount()) {
+                return mGrantee.equalsIgnoreCase(acct.getExternalUserMailAddress());
+            }
+            return false;
         }
         
         private boolean matchesAccessKey(Account acct) {

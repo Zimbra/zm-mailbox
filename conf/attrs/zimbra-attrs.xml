@@ -6045,4 +6045,12 @@ TODO: delete them permerntly from here
   <desc>if the dynamic group can be a legitimate grantee for folder grantees; and a legitimate grantee or target for delegated admin grants</desc>
 </attr>
 
+<attr id="1243" name="zimbraIsExternalVirtualAccount" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo" since="8.0.0">
+  <desc>whether it in an external user account</desc>
+</attr>
+
+<attr id="1244" name="zimbraExternalUserMailAddress" type="email" cardinality="single" optionalIn="account" flags="accountInfo" since="8.0.0">
+  <desc>External email address of an external user. Applicable only when zimbraIsExternalVirtualAccount is set to TRUE.</desc>
+</attr>
+
 </attrs>

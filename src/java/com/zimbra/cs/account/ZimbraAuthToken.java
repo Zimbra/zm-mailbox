@@ -339,7 +339,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         return encoded;
     }
 
-    private String getHmac(String data, byte[] key) {
+    public static String getHmac(String data, byte[] key) {
         try {
             ByteKey bk = new ByteKey(key);
             Mac mac = Mac.getInstance("HmacSHA1");

@@ -198,6 +198,16 @@
   </servlet>
 
   <servlet>
+    <servlet-name>ExternalUserProvServlet</servlet-name>
+    <servlet-class>com.zimbra.cs.service.ExternalUserProvServlet</servlet-class>
+    <init-param>
+      <param-name>allowed.ports</param-name>
+      <param-value>80, 443, 7070, 7443, 7071</param-value>
+    </init-param>
+    <load-on-startup>5</load-on-startup>
+  </servlet>
+
+  <servlet>
     <servlet-name>CertAuthServlet</servlet-name>
     <servlet-class>com.zimbra.cs.service.CertAuthServlet</servlet-class>
     <init-param>
@@ -405,6 +415,11 @@
   </servlet-mapping>
 
   <servlet-mapping>
+    <servlet-name>ExternalUserProvServlet</servlet-name>
+    <url-pattern>/extuserprov/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
     <servlet-name>CertAuthServlet</servlet-name>
     <url-pattern>/certauth/*</url-pattern>
   </servlet-mapping>
@@ -418,7 +433,7 @@
     <servlet-name>SpnegoAuthServlet</servlet-name>
     <url-pattern>/spnego/</url-pattern>
   </servlet-mapping>
-  
+
   <servlet-mapping>
     <servlet-name>SpnegoAuthServlet</servlet-name>
     <url-pattern>/spnego</url-pattern>

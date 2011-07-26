@@ -431,44 +431,5 @@ public class SendShareNotification extends MailDocumentHandler {
 
         mbox.getMailSender().sendMimeMessage(octxt, mbox, true, mm, null, null, null, null, false);
     }
-
-    //
-    // send using SMTP client
-    //
-    void sendShareNotif(Account authAccount, ShareInfoData sid, String notes)
-    throws ServiceException {
-
-        Locale locale = authAccount.getLocale();
-        String charset = authAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
-
-        try {
-            SMTPMessage notif = new SMTPMessage(JMSession.getSmtpSession());
-
-            String subject = L10nUtil.getMessage(MsgKey.shareNotifSubject, locale);
-            notif.setSubject(subject, CharsetUtil.checkCharset(subject, charset));
-            notif.setSentDate(new Date());
-
-            // from the auth account
-            notif.setFrom(AccountUtil.getFriendlyEmailAddress(authAccount));
-
-            // to the grantee
-            String recipient = sid.getGranteeName();
-            notif.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(recipient));
-
-            if (Provisioning.getInstance().getConfig().getBooleanAttr(Provisioning.A_zimbraAutoSubmittedNullReturnPath, true))
-                notif.setEnvelopeFrom("<>");
-            else
-                notif.setEnvelopeFrom(authAccount.getName());
-
-            MimeMultipart mmp = ShareInfo.NotificationSender.genNotifBody(sid, MsgKey.shareNotifBodyIntro, notes, locale);
-            notif.setContent(mmp);
-            notif.saveChanges();
-
-            Transport.send(notif);
-        } catch (MessagingException me) {
-            throw ServiceException.FAILURE("error while sending share notification", me);
-        }
-    }
-
 }
 

@@ -22,6 +22,7 @@ import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
 import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.Pair;
@@ -38,8 +39,10 @@ import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.acl.AclPushSerializer;
+import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringEscapeUtils;
 
 import javax.activation.DataHandler;
@@ -531,19 +534,27 @@ public class ShareInfo {
                                                   ACL.RIGHT_ACTION;
 
 
-        public static MimeMultipart genNotifBody(ShareInfoData sid, MsgKey intro, String notes, Locale locale) throws MessagingException {
+        public static MimeMultipart genNotifBody(ShareInfoData sid, MsgKey intro, String notes, Locale locale)
+                throws MessagingException, ServiceException {
 
             // Body
             MimeMultipart mmp = new JavaMailMimeMultipart("alternative");
 
+            String guestUrl = null;
+            if (sid.getGranteeTypeCode() == ACL.GRANTEE_GUEST) {
+                Account owner = Provisioning.getInstance().getAccountById(sid.getOwnerAcctId());
+                guestUrl = getGuestURL(owner, sid.getFolderId(), sid.getGranteeName());
+            }
+
             // TEXT part (add me first!)
             MimeBodyPart textPart = new JavaMailMimeBodyPart();
-            textPart.setText(genTextPart(sid, intro, notes, locale, null), MimeConstants.P_CHARSET_UTF8);
+            textPart.setText(genTextPart(sid, intro, notes, guestUrl, locale, null), MimeConstants.P_CHARSET_UTF8);
             mmp.addBodyPart(textPart);
 
             // HTML part
             MimeBodyPart htmlPart = new JavaMailMimeBodyPart();
-            htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(genHtmlPart(sid, intro, notes, locale, null))));
+            htmlPart.setDataHandler(
+                    new DataHandler(new HtmlPartDataSource(genHtmlPart(sid, intro, notes, guestUrl, locale, null))));
             mmp.addBodyPart(htmlPart);
 
             // XML part
@@ -554,8 +565,24 @@ public class ShareInfo {
             return mmp;
         }
 
+        private static String getGuestURL(Account account, int folderId, String externalUserEmail)
+                throws ServiceException {
+            StringBuilder encodedBuff = new StringBuilder();
+            BlobMetaData.encodeMetaData("aid", account.getId(), encodedBuff);
+            BlobMetaData.encodeMetaData("fid", folderId, encodedBuff);
+            BlobMetaData.encodeMetaData("email", externalUserEmail, encodedBuff);
+            String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
+            AuthTokenKey key = AuthTokenKey.getCurrentKey();
+            String hmac = ZimbraAuthToken.getHmac(data, key.getKey());
+            String encoded = key.getVersion() + "_" + hmac + "_" + data;
+            String path = "/service/extuserprov/?p=" + encoded;
+            return ZimbraServlet.getServiceUrl(
+                    account.getServer(), Provisioning.getInstance().getDomain(account), path);
+        }
 
-        private static String genTextPart(ShareInfoData sid, MsgKey intro, String senderNotes, Locale locale, StringBuilder sb) {
+
+        private static String genTextPart(
+                ShareInfoData sid, MsgKey intro, String senderNotes, String guestUrl, Locale locale, StringBuilder sb) {
             if (sb == null)
                 sb = new StringBuilder();
 
@@ -565,20 +592,20 @@ public class ShareInfo {
                 sb.append("\n\n");
             }
 
-            sb.append(formatTextShareInfo(MsgKey.shareNotifBodySharedItem, sid.getFolderName(), locale, formatFolderDesc(locale, sid)));
+            sb.append(formatTextShareInfo(
+                    MsgKey.shareNotifBodySharedItem, sid.getFolderName(), locale, formatFolderDesc(locale, sid)));
             sb.append(formatTextShareInfo(MsgKey.shareNotifBodyOwner, sid.getOwnerNotifName(), locale, null));
             sb.append("\n");
             sb.append(formatTextShareInfo(MsgKey.shareNotifBodyGrantee, sid.getGranteeNotifName(), locale, null));
             sb.append(formatTextShareInfo(MsgKey.shareNotifBodyRole, getRoleFromRights(sid, locale), locale, null));
-            sb.append(formatTextShareInfo(MsgKey.shareNotifBodyAllowedActions, getRightsText(sid, locale), locale, null));
+            sb.append(formatTextShareInfo(
+                    MsgKey.shareNotifBodyAllowedActions, getRightsText(sid, locale), locale, null));
             sb.append("\n");
 
-            String notes = null;
+            String notes;
             if (sid.getGranteeTypeCode() == ACL.GRANTEE_GUEST) {
                 StringBuilder guestNotes = new StringBuilder();
-                guestNotes.append("URL: " + sid.getUrl() + "\n");
-                guestNotes.append("Username: " + sid.getGranteeName() + "\n");
-                guestNotes.append("Password: " + sid.getGuestPassword() + "\n");
+                guestNotes.append("URL: " + guestUrl + "\n");
                 guestNotes.append("\n");
                 notes = guestNotes + (senderNotes==null?"":senderNotes) + "\n";
             } else
@@ -592,7 +619,8 @@ public class ShareInfo {
             return sb.toString();
         }
 
-        private static String genHtmlPart(ShareInfoData sid, MsgKey intro, String senderNotes, Locale locale, StringBuilder sb) {
+        private static String genHtmlPart(
+                ShareInfoData sid, MsgKey intro, String senderNotes, String guestUrl, Locale locale, StringBuilder sb) {
             if (sb == null)
                 sb = new StringBuilder();
 
@@ -618,9 +646,7 @@ public class ShareInfo {
                 sb.append("<table border=\"0\">\n");
                 sb.append("<tr valign=\"top\"><th align=\"left\">" +
                                   L10nUtil.getMessage(MsgKey.shareNotifBodyNotes) + ":" + "</th><td>" +
-                                  "URL: " + sid.getUrl() + "<br>" +
-                                  "Username: " + sid.getGranteeName() + "<br>" +
-                                  "Password: " + sid.getGuestPassword() + "<br><br>");
+                                  "URL: " + guestUrl + "<br><br>");
                 if (senderNotes != null)
                     sb.append(senderNotes);
                 sb.append("</td></tr></table>\n");
@@ -771,10 +797,10 @@ public class ShareInfo {
 
                 if (idx == null) {
                     for (ShareInfoData sid : mShares) {
-                        genTextPart(sid, null, null, locale, sb);
+                        genTextPart(sid, null, null, null, locale, sb);
                     }
                 } else
-                    genTextPart(mShares.get(idx), null, null, locale, sb);
+                    genTextPart(mShares.get(idx), null, null, null, locale, sb);
 
                 sb.append("\n\n");
                 return sb.toString();
@@ -792,10 +818,10 @@ public class ShareInfo {
 
                 if (idx == null) {
                     for (ShareInfoData sid : mShares) {
-                        genHtmlPart(sid, null, null, locale, sb);
+                        genHtmlPart(sid, null, null, null, locale, sb);
                     }
                 } else
-                    genHtmlPart(mShares.get(idx), null, null, locale, sb);
+                    genHtmlPart(mShares.get(idx), null, null, null, locale, sb);
 
                 return sb.toString();
             }

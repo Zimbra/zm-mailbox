@@ -159,7 +159,7 @@ public class AuthTokenKey {
         }        
     }
 
-    static synchronized AuthTokenKey getCurrentKey() throws ServiceException {
+    public static synchronized AuthTokenKey getCurrentKey() throws ServiceException {
         if (sLatestKey == null) {
             refresh(false);
         }
