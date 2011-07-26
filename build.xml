@@ -213,39 +213,6 @@
     <fail if="junit.failure" message="Unit test failed"/>
   </target>
 
-  <target name="test-compile" depends="compile">
-    <mkdir dir="${test.classes.dir}"/>
-    <javac srcdir="${test.src.dir}" destdir="${test.classes.dir}"
-      debug="true" classpathref="test.class.path" target="${javac.target}"/>
-    <copy todir="${test.classes.dir}">
-      <fileset dir="${test.src.dir}" excludes="**/*.java"/>
-    </copy>
-  </target>
-
-  <!-- tests that do not require ZimbraServer installed -->
-  <target name="test" depends="test-compile" description="Run unit tests">
-    <delete dir="${test.dir}" quiet="true"/>
-    <mkdir dir="${test.dir}/output"/>
-    <mkdir dir="${test.dir}/report"/>
-    <junit printsummary="on" failureproperty="junit.failure" tempdir="${test.dir}">
-      <classpath refid="test.class.path"/>
-      <classpath path="${test.classes.dir}"/>
-      <assertions><enable/></assertions>
-      <formatter type="xml"/>
-      <batchtest todir="${test.dir}/output">
-        <fileset dir="${test.src.dir}">
-          <include name="**/*Test.java"/>
-        </fileset>
-      </batchtest>
-    </junit>
-    <junitreport todir="${test.dir}/report">
-      <fileset dir="${test.dir}/output"/>
-      <report todir="${test.dir}/report"/>
-    </junitreport>
-    <echo>Test Report: ${test.dir}/report/index.html</echo>
-    <fail if="junit.failure" message="Unit test failed"/>
-  </target>
-
   <!-- e.g. ant -DTESTNAME=com.zimbra.soap.admin.GetServerTest one-test -->
   <target name="one-test" depends="test-compile" description="Run unit tests">
     <delete dir="${test.dir}-one" quiet="true"/>
