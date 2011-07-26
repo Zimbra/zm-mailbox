@@ -45,7 +45,7 @@ import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.mail.Search;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
-import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.client.ZFolder;
 
 /**
  * @since Apr 30, 2005

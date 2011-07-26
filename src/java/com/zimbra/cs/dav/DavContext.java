@@ -33,33 +33,30 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.QName;
 
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.dav.resource.Collection;
-import com.zimbra.cs.dav.resource.DavResource;
-import com.zimbra.cs.dav.resource.Notebook;
-import com.zimbra.cs.dav.resource.UrlNamespace;
-import com.zimbra.cs.dav.resource.UrlNamespace.UrlComponents;
-import com.zimbra.cs.dav.service.DavResponse;
-import com.zimbra.cs.dav.service.DavServlet;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMountpoint;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.dav.resource.Collection;
+import com.zimbra.cs.dav.resource.DavResource;
+import com.zimbra.cs.dav.resource.UrlNamespace;
+import com.zimbra.cs.dav.resource.UrlNamespace.UrlComponents;
+import com.zimbra.cs.dav.service.DavResponse;
+import com.zimbra.cs.dav.service.DavServlet;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMountpoint;
 
 /**
  * 

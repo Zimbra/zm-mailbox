@@ -58,7 +58,7 @@ import com.zimbra.cs.mailbox.calendar.cache.CalendarItemData;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.client.ZMailbox;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**

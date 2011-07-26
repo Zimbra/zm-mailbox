@@ -19,16 +19,16 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import com.zimbra.cs.zclient.ZFilterAction;
-import com.zimbra.cs.zclient.ZFilterCondition;
-import com.zimbra.cs.zclient.ZFilterRule;
-import com.zimbra.cs.zclient.ZFilterRules;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMessage;
-import com.zimbra.cs.zclient.ZTag;
-import com.zimbra.cs.zclient.ZFilterAction.ZTagAction;
-import com.zimbra.cs.zclient.ZFilterCondition.HeaderOp;
-import com.zimbra.cs.zclient.ZFilterCondition.ZHeaderCondition;
+import com.zimbra.client.ZFilterAction;
+import com.zimbra.client.ZFilterCondition;
+import com.zimbra.client.ZFilterRule;
+import com.zimbra.client.ZFilterRules;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMessage;
+import com.zimbra.client.ZTag;
+import com.zimbra.client.ZFilterAction.ZTagAction;
+import com.zimbra.client.ZFilterCondition.HeaderOp;
+import com.zimbra.client.ZFilterCondition.ZHeaderCondition;
 
 public class TestTagFilterRules
 extends TestCase

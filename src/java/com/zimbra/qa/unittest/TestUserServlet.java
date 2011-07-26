@@ -32,7 +32,7 @@ import com.zimbra.common.util.tar.TarEntry;
 import com.zimbra.common.util.tar.TarInputStream;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.client.ZMailbox;
 
 
 public class TestUserServlet

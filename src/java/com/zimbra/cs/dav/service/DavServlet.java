@@ -77,8 +77,8 @@ import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
 
 @SuppressWarnings("serial")
 public class DavServlet extends ZimbraServlet {

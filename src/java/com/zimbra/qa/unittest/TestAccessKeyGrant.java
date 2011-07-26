@@ -49,11 +49,11 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZGrant;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMountpoint;
-import com.zimbra.cs.zclient.ZSearchParams;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZGrant;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMountpoint;
+import com.zimbra.client.ZSearchParams;
 
 /*
  * To test key grant:

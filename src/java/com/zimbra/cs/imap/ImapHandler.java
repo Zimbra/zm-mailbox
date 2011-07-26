@@ -60,9 +60,9 @@ import com.zimbra.cs.service.mail.FolderAction;
 import com.zimbra.cs.service.mail.ItemActionHelper;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.BuildInfo;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZGrant;
-import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZGrant;
+import com.zimbra.client.ZMailbox;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;

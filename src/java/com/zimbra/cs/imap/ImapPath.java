@@ -38,10 +38,10 @@ import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMountpoint;
-import com.zimbra.cs.zclient.ZSearchFolder;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMountpoint;
+import com.zimbra.client.ZSearchFolder;
 
 public class ImapPath implements Comparable<ImapPath> {
     enum Scope { UNPARSED, NAME, CONTENT, REFERENCE };

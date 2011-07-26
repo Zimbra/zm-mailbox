@@ -19,10 +19,10 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.zclient.ZDocument;
-import com.zimbra.cs.zclient.ZItem;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZSearchParams;
+import com.zimbra.client.ZDocument;
+import com.zimbra.client.ZItem;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZSearchParams;
 
 public class TestDocument extends TestCase {
 

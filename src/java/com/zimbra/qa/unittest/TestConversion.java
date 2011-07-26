@@ -21,9 +21,9 @@ import junit.framework.TestCase;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMessage;
-import com.zimbra.cs.zclient.ZMessage.ZMimePart;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMessage;
+import com.zimbra.client.ZMessage.ZMimePart;
 
 public class TestConversion extends TestCase {
 

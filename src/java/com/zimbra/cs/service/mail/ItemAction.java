@@ -43,9 +43,9 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMountpoint;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMountpoint;
 import com.zimbra.soap.SoapEngine;
 import com.zimbra.soap.ZimbraSoapContext;
 

@@ -57,6 +57,23 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import com.zimbra.client.*;
+import com.zimbra.client.ZConversation.ZMessageSummary;
+import com.zimbra.client.ZGrant.GranteeType;
+import com.zimbra.client.ZMailbox.Fetch;
+import com.zimbra.client.ZMailbox.GalEntryType;
+import com.zimbra.client.ZMailbox.OwnerBy;
+import com.zimbra.client.ZMailbox.SearchSortBy;
+import com.zimbra.client.ZMailbox.SharedItemBy;
+import com.zimbra.client.ZMailbox.ZApptSummaryResult;
+import com.zimbra.client.ZMailbox.ZSearchGalResult;
+import com.zimbra.client.ZMessage.ZMimePart;
+import com.zimbra.client.ZTag.Color;
+import com.zimbra.client.event.ZCreateEvent;
+import com.zimbra.client.event.ZDeleteEvent;
+import com.zimbra.client.event.ZEventHandler;
+import com.zimbra.client.event.ZModifyEvent;
+import com.zimbra.client.event.ZRefreshEvent;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
@@ -83,22 +100,6 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
-import com.zimbra.cs.zclient.ZConversation.ZMessageSummary;
-import com.zimbra.cs.zclient.ZGrant.GranteeType;
-import com.zimbra.cs.zclient.ZMailbox.Fetch;
-import com.zimbra.cs.zclient.ZMailbox.GalEntryType;
-import com.zimbra.cs.zclient.ZMailbox.OwnerBy;
-import com.zimbra.cs.zclient.ZMailbox.SearchSortBy;
-import com.zimbra.cs.zclient.ZMailbox.SharedItemBy;
-import com.zimbra.cs.zclient.ZMailbox.ZApptSummaryResult;
-import com.zimbra.cs.zclient.ZMailbox.ZSearchGalResult;
-import com.zimbra.cs.zclient.ZMessage.ZMimePart;
-import com.zimbra.cs.zclient.ZTag.Color;
-import com.zimbra.cs.zclient.event.ZCreateEvent;
-import com.zimbra.cs.zclient.event.ZDeleteEvent;
-import com.zimbra.cs.zclient.event.ZEventHandler;
-import com.zimbra.cs.zclient.event.ZModifyEvent;
-import com.zimbra.cs.zclient.event.ZRefreshEvent;
 
 /**
  * @author schemers

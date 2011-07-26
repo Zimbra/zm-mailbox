@@ -45,8 +45,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
 
 /**
  * Rewrites a parsed Sieve tree to XML or vice versa.

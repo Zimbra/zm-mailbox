@@ -22,9 +22,9 @@ import java.util.Set;
 
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMountpoint;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMountpoint;
 
 import junit.framework.TestCase;
 

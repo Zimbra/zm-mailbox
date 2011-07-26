@@ -49,8 +49,8 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.ACL.Grant;
 import com.zimbra.cs.service.AuthProvider;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
 
 public class User extends Principal {
 

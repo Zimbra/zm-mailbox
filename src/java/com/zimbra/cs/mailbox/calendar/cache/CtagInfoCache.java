@@ -48,8 +48,8 @@ import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
 
 public class CtagInfoCache {
 

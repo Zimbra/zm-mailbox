@@ -23,7 +23,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.acl.AclPushTask;
-import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.client.ZMailbox;
 import com.zimbra.soap.account.message.GetShareInfoRequest;
 import com.zimbra.soap.account.message.GetShareInfoResponse;
 import com.zimbra.soap.type.ShareInfo;

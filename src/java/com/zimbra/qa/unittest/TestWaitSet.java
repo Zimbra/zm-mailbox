@@ -26,7 +26,7 @@ import com.zimbra.cs.session.IWaitSet;
 import com.zimbra.cs.session.WaitSetAccount;
 import com.zimbra.cs.session.WaitSetError;
 import com.zimbra.cs.session.WaitSetMgr;
-import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.client.ZFolder;
 
 import junit.framework.TestCase;
 

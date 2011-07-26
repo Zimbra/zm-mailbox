@@ -15,10 +15,10 @@
 package com.zimbra.qa.unittest;
 
 import org.junit.*;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZDataSource;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZImapDataSource;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZDataSource;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZImapDataSource;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ListData;

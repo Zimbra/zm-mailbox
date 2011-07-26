@@ -39,7 +39,7 @@ import com.zimbra.cs.mailbox.ContactGroup.InlineMember;
 import com.zimbra.cs.mailbox.ContactGroup.Member;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.client.ZMailbox;
 
 public class TestContactGroup {
     private static final String CONTACT_REF_VALUE = "736ae588-ae90-4427-a3de-6451e47e0857:257";

@@ -30,7 +30,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.client.ZMailbox;
 import com.zimbra.soap.mail.message.CheckSpellingResponse;
 import com.zimbra.soap.mail.type.Misspelling;
 

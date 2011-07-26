@@ -18,10 +18,10 @@ import junit.framework.TestCase;
 
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mime.handler.TextEnrichedHandler;
-import com.zimbra.cs.zclient.ZGetMessageParams;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMessage;
-import com.zimbra.cs.zclient.ZMessage.ZMimePart;
+import com.zimbra.client.ZGetMessageParams;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMessage;
+import com.zimbra.client.ZMessage.ZMimePart;
 import com.zimbra.common.mime.MimeConstants;
 
 public class TestGetMsg

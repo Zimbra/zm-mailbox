@@ -157,8 +157,8 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMailbox.Options;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMailbox.Options;
 import com.zimbra.soap.mail.type.Policy;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 

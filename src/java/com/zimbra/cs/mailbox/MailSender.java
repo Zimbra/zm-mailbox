@@ -73,7 +73,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.client.ZMailbox;
 
 public class MailSender {
 

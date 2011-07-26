@@ -38,8 +38,8 @@ import com.zimbra.cs.mailbox.calendar.cache.CtagInfo;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
 
 public class RemoteCollection extends Collection {
 

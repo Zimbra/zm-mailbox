@@ -21,8 +21,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZMountpoint;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMountpoint;
 
 // for CalDAV
 // tracks last modified "time" of a calendar folder

@@ -46,11 +46,11 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Contact.Attachment;
-import com.zimbra.cs.zclient.ZContact;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMailbox.ContactSortBy;
-import com.zimbra.cs.zclient.ZMailbox.ZAttachmentInfo;
-import com.zimbra.cs.zclient.ZMailbox.ZImportContactsResult;
+import com.zimbra.client.ZContact;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMailbox.ContactSortBy;
+import com.zimbra.client.ZMailbox.ZAttachmentInfo;
+import com.zimbra.client.ZMailbox.ZImportContactsResult;
 
 
 public class TestContacts

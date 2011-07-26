@@ -21,9 +21,9 @@ import junit.framework.TestCase;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMessage;
-import com.zimbra.cs.zclient.ZSearchParams;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMessage;
+import com.zimbra.client.ZSearchParams;
 
 
 public class TestIndex extends TestCase {

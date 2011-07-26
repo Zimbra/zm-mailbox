@@ -27,11 +27,11 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.zclient.ZDataSource;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZImapDataSource;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMessage;
+import com.zimbra.client.ZDataSource;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZImapDataSource;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMessage;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.type.DataSource.ConnectionType;
 

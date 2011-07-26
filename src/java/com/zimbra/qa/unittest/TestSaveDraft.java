@@ -16,10 +16,10 @@
 package com.zimbra.qa.unittest;
 
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.zclient.ZIdentity;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage;
-import com.zimbra.cs.zclient.ZMessage;
+import com.zimbra.client.ZIdentity;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMailbox.ZOutgoingMessage;
+import com.zimbra.client.ZMessage;
 
 import junit.framework.TestCase;
 

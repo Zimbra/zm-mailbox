@@ -31,9 +31,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.ldap.LdapConstants;
-import com.zimbra.cs.zclient.ZAuthResult;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.client.ZAuthResult;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
 
 public class TestSoap
 extends TestCase {

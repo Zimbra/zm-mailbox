@@ -11,10 +11,10 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.mailbox.ACL;
-import com.zimbra.cs.zclient.ZAce;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZGrant;
-import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.client.ZAce;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZGrant;
+import com.zimbra.client.ZMailbox;
 
 /*
  * TODO: move all user right specific testing from TestACLGrantee 

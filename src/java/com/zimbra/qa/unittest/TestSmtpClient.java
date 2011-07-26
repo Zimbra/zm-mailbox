@@ -27,9 +27,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailclient.smtp.SmtpConfig;
 import com.zimbra.cs.mailclient.smtp.SmtpConnection;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMessage;
-import com.zimbra.cs.zclient.ZMessage.ZMimePart;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMessage;
+import com.zimbra.client.ZMessage.ZMimePart;
 
 public class TestSmtpClient extends TestCase {
 

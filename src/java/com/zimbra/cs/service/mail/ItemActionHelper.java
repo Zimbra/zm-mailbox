@@ -55,10 +55,10 @@ import com.zimbra.cs.service.util.SpamHandler.SpamReport;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.zclient.ZContact;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMountpoint;
+import com.zimbra.client.ZContact;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMountpoint;
 
 public class ItemActionHelper {
 

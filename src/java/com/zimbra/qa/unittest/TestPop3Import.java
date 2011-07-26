@@ -44,18 +44,18 @@ import com.zimbra.cs.db.DbPop3Message;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.zclient.ZDataSource;
-import com.zimbra.cs.zclient.ZFilterAction;
-import com.zimbra.cs.zclient.ZFilterCondition;
-import com.zimbra.cs.zclient.ZFilterRule;
-import com.zimbra.cs.zclient.ZFilterRules;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMessage;
-import com.zimbra.cs.zclient.ZPop3DataSource;
-import com.zimbra.cs.zclient.ZFilterAction.ZFileIntoAction;
-import com.zimbra.cs.zclient.ZFilterCondition.HeaderOp;
-import com.zimbra.cs.zclient.ZFilterCondition.ZHeaderCondition;
+import com.zimbra.client.ZDataSource;
+import com.zimbra.client.ZFilterAction;
+import com.zimbra.client.ZFilterCondition;
+import com.zimbra.client.ZFilterRule;
+import com.zimbra.client.ZFilterRules;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMessage;
+import com.zimbra.client.ZPop3DataSource;
+import com.zimbra.client.ZFilterAction.ZFileIntoAction;
+import com.zimbra.client.ZFilterCondition.HeaderOp;
+import com.zimbra.client.ZFilterCondition.ZHeaderCondition;
 
 
 public class TestPop3Import extends TestCase {

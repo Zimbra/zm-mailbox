@@ -20,8 +20,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.zclient.ToZJSONObject;
-import com.zimbra.cs.zclient.ZJSONObject;
+import com.zimbra.client.ToZJSONObject;
+import com.zimbra.client.ZJSONObject;
 import org.json.JSONException;
 
 import java.util.ArrayList;

@@ -36,13 +36,13 @@ import com.zimbra.cs.lmtpserver.LmtpMessageInputStream;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mime.handler.MessageRFC822Handler;
-import com.zimbra.cs.zclient.ZEmailAddress;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZGetMessageParams;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMessage;
-import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage;
-import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
+import com.zimbra.client.ZEmailAddress;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZGetMessageParams;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMessage;
+import com.zimbra.client.ZMailbox.ZOutgoingMessage;
+import com.zimbra.client.ZMailbox.ZOutgoingMessage.MessagePart;
 
 public class TestLmtp
 extends TestCase {

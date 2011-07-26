@@ -64,7 +64,7 @@ import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.service.mail.ItemActionHelper;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.client.ZMailbox;
 
 /**
  * Abstraction of DavResource that maps to MailItem in the mailbox.

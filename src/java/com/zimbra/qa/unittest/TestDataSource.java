@@ -43,14 +43,14 @@ import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.ScheduledTask;
-import com.zimbra.cs.zclient.ZCalDataSource;
-import com.zimbra.cs.zclient.ZDataSource;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZGrant.GranteeType;
-import com.zimbra.cs.zclient.ZImapDataSource;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMessage;
-import com.zimbra.cs.zclient.ZRssDataSource;
+import com.zimbra.client.ZCalDataSource;
+import com.zimbra.client.ZDataSource;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZGrant.GranteeType;
+import com.zimbra.client.ZImapDataSource;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMessage;
+import com.zimbra.client.ZRssDataSource;
 import com.zimbra.soap.type.DataSource.ConnectionType;
 
 public class TestDataSource extends TestCase {

@@ -35,8 +35,8 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
 
 public class TestFolders extends TestCase
 {

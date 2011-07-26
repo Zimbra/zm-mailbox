@@ -26,11 +26,11 @@ import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.zclient.ZEmailAddress;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage;
-import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
-import com.zimbra.cs.zclient.ZMessage;
+import com.zimbra.client.ZEmailAddress;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMailbox.ZOutgoingMessage;
+import com.zimbra.client.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
+import com.zimbra.client.ZMessage;
 
 public class TestMaxMessageSize
 extends TestCase {

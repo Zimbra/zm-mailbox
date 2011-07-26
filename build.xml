@@ -52,16 +52,12 @@
     </condition>
 
     <property name="build.zmprov" location="${build.dir}/data/zmprov.txt"/>
-    <property name="dist.dir" location="build/dist"/>
     <property name="dist.db.dir" location="build/dist/db"/>
     <property name="dist.jetty.dir" location="${dist.dir}/jetty"/>
     <property name="generated.java.dir" location="${build.dir}/generated/src/java"/>
     <property name="warfilename" value="service.war"/>
     <property name="warfile" location="${build.dir}/${warfilename}"/>
     <property name="jarfile" location="${build.dir}/zimbrastore.jar"/>
-    <property name="common.jarfile" location="${common.dir}/build/zimbracommon.jar"/>
-    <property name="soap.jarfile" location="${soap.dir}/build/zimbrasoap.jar"/>
-    <property name="im.jarfile" location="${im.dir}/build/zimbraim.jar"/>
 
     <property name="lib.dir" location="lib"/>
     <property name="config.dir" location="conf"/>
@@ -182,6 +178,7 @@
     <path id="class.path">
       <pathelement location="${common.classes.dir}"/>
       <pathelement location="${soap.classes.dir}"/>
+      <pathelement location="${client.classes.dir}"/>
       <pathelement location="${im.classes.dir}"/>
       <pathelement location="${build.classes.dir}"/>
       <fileset dir="${server.jars.dir}">
@@ -425,6 +422,7 @@
     <target name="clean" description="Deletes classes from build directories">
       <ant dir="${common.dir}" target="clean" inheritAll="false"/>
       <ant dir="${soap.dir}" target="clean" inheritAll="false"/>
+      <ant dir="${client.dir}" target="clean" inheritAll="false"/>
       <ant dir="${im.dir}" target="clean" inheritAll="false"/>
       <delete dir="${build.dir}"/>
     </target>
@@ -487,6 +485,7 @@
         <fileset dir="WebRoot"/>
         <lib file="${im.jarfile}"/>
         <lib file="${soap.jarfile}"/>
+        <lib file="${client.jarfile}"/>
         <lib file="${jarfile}"/>
         <lib dir="${common.jars.dir}">
           <include name="slf4j*.jar"/>
@@ -884,6 +883,7 @@
         </copy>
         <copy todir="${dist.dir}/lib/jars" file="${common.jarfile}" overwrite="true"/>
         <copy todir="${dist.dir}/lib/jars" file="${soap.jarfile}" overwrite="true"/>
+        <copy todir="${dist.dir}/lib/jars" file="${client.jarfile}" overwrite="true"/>
         <copy todir="${dist.dir}/lib/jars" file="${im.jarfile}" overwrite="true"/>
         <copy todir="${dist.dir}/lib/jars" file="${jarfile}" overwrite="true"/>
 
@@ -2134,39 +2134,6 @@
       </java>
     </else>
     </if>
-  </target>
-
-
-  <target name="test-compile" depends="compile">
-    <mkdir dir="${test.classes.dir}"/>
-    <javac srcdir="${test.src.dir}" destdir="${test.classes.dir}"
-      debug="true" classpathref="class.path" target="${javac.target}"/>
-    <copy todir="${test.classes.dir}">
-      <fileset dir="${test.src.dir}" excludes="**/*.java"/>
-    </copy>
-  </target>
-
-  <target name="test" depends="test-compile" description="Run unit tests">
-    <delete dir="${test.dir}" quiet="true"/>
-    <mkdir dir="${test.dir}/output"/>
-    <mkdir dir="${test.dir}/report"/>
-    <junit printsummary="on" failureproperty="junit.failure" tempdir="${test.dir}">
-      <classpath refid="class.path"/>
-      <classpath path="${test.classes.dir}"/>
-      <assertions><enable/></assertions>
-      <formatter type="xml"/>
-      <batchtest todir="${test.dir}/output">
-        <fileset dir="${test.src.dir}">
-          <include name="**/*Test.java"/>
-        </fileset>
-      </batchtest>
-    </junit>
-    <junitreport todir="${test.dir}/report">
-      <fileset dir="${test.dir}/output"/>
-      <report todir="${test.dir}/report"/>
-    </junitreport>
-    <echo>Test Report: ${test.dir}/report/index.html</echo>
-    <fail if="junit.failure" message="Unit test failed"/>
   </target>
 
   <target name="enable-client-unittest" description="Sets up the unittest accounts for client-side unit testing.">

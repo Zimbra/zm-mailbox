@@ -25,7 +25,7 @@ import org.apache.commons.httpclient.methods.multipart.Part;
 import org.apache.commons.httpclient.methods.multipart.StringPart;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
-import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.client.ZMailbox;
 
 public class TestFileUpload
 extends TestCase {

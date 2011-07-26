@@ -48,12 +48,12 @@ import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.zclient.ZEmailAddress;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMessage;
-import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage;
-import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
-import com.zimbra.cs.zclient.ZMessage.ZMimePart;
+import com.zimbra.client.ZEmailAddress;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMessage;
+import com.zimbra.client.ZMailbox.ZOutgoingMessage;
+import com.zimbra.client.ZMailbox.ZOutgoingMessage.MessagePart;
+import com.zimbra.client.ZMessage.ZMimePart;
 
 
 public class TestNotification

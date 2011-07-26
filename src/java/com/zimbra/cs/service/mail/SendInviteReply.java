@@ -60,7 +60,7 @@ import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.client.ZMailbox;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.soap.ZimbraSoapContext;

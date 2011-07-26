@@ -27,9 +27,9 @@ import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.zclient.ZEmailAddress;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMessage;
+import com.zimbra.client.ZEmailAddress;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMessage;
 
 /**
  * Tests out-of-office notification.  All tests must be run inside the server, because
