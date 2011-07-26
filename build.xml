@@ -6,10 +6,6 @@
 
   <property name="jar.file" value="zimbracommon.jar" />
 
-  <path id="all.java.path">
-    <pathelement location="${src.java.dir}" />
-  </path>
-
   <path id="class.path">
     <pathelement location="${build.classes.dir}" />
     <fileset dir="jars">
@@ -18,53 +14,9 @@
   </path>
 
   <!-- Targets -->
-  <target name="build-init">
-    <mkdir dir="${build.classes.dir}" />
-  </target>
-
-  <target name="compile" depends="build-init" description="Compiles the source code">
-    <javac destdir="${build.classes.dir}" debug="true" classpathref="class.path" target="${javac.target}">
-      <src refid="all.java.path" />
-    </javac>
-  </target>
-
   <target name="jar" depends="compile" description="Creates the jar file">
       <antcall target="zimbra-jar">
           <param name="implementation.title" value="Zimbra Common"/>
       </antcall>
   </target>
-      
-  <target name="clean" description="Removes build files and undeploys extension">
-    <delete dir="${build.dir}" />
-  </target>
-
-  <target name="test-compile" depends="compile">
-      <mkdir dir="${test.classes.dir}"/>
-      <javac srcdir="${test.src.dir}" destdir="${test.classes.dir}"
-        debug="true" classpathref="class.path" target="${javac.target}"/>
-  </target>
-
-  <target name="test" depends="test-compile" description="Run unit tests">
-    <delete dir="${test.dir}" quiet="true"/>
-    <mkdir dir="${test.dir}/output"/>
-    <mkdir dir="${test.dir}/report"/>
-    <junit printsummary="on" failureproperty="junit.failure" tempdir="${test.dir}">
-      <classpath refid="class.path"/>
-      <classpath path="${test.classes.dir}"/>
-      <assertions><enable/></assertions>
-      <formatter type="xml"/>
-      <batchtest todir="${test.dir}/output">
-        <fileset dir="${test.src.dir}">
-          <include name="**/*Test.java"/>
-        </fileset>
-      </batchtest>
-    </junit>
-    <junitreport todir="${test.dir}/report">
-      <fileset dir="${test.dir}/output"/>
-      <report todir="${test.dir}/report"/>
-    </junitreport>
-    <echo>Test Report: ${test.dir}/report/index.html</echo>
-    <fail if="junit.failure" message="Unit test failed"/>
-  </target>
-
 </project>
