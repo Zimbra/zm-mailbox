@@ -247,7 +247,7 @@ public final class ZFilterRule implements ToZJSONObject {
                 String op = args[i++];
                 String header = args[i++];
                 String type = args[i++];
-                if (!"contacts".equals(type) && !"ranking".equals(type)) {
+                if (!"contacts".equals(type) && !"ranking".equals(type) && !"me".equals(type)) {
                     // type was not specified, fall back to default
                     type = "contacts";
                     i--;
