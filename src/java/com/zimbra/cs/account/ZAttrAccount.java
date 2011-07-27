@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20110726-1043 */
+    /* build: 8.0.0_BETA1_1111 administrator 20110727-1038 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -8641,7 +8641,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * External email address of an external user. Applicable only when
-     * zimbraIsExternalVirtualAccount is TRUE.
+     * zimbraIsExternalVirtualAccount is set to TRUE.
      *
      * @return zimbraExternalUserMailAddress, or null if unset
      *
@@ -8654,7 +8654,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * External email address of an external user. Applicable only when
-     * zimbraIsExternalVirtualAccount is TRUE.
+     * zimbraIsExternalVirtualAccount is set to TRUE.
      *
      * @param zimbraExternalUserMailAddress new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -8670,7 +8670,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * External email address of an external user. Applicable only when
-     * zimbraIsExternalVirtualAccount is TRUE.
+     * zimbraIsExternalVirtualAccount is set to TRUE.
      *
      * @param zimbraExternalUserMailAddress new value
      * @param attrs existing map to populate, or null to create a new map
@@ -8687,7 +8687,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * External email address of an external user. Applicable only when
-     * zimbraIsExternalVirtualAccount is TRUE.
+     * zimbraIsExternalVirtualAccount is set to TRUE.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -8702,7 +8702,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * External email address of an external user. Applicable only when
-     * zimbraIsExternalVirtualAccount is TRUE.
+     * zimbraIsExternalVirtualAccount is set to TRUE.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -35166,6 +35166,88 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefOutOfOfficeReplyEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * when user has OOO message enabled, when they login into web client,
+     * whether to alert the user that the OOO message is turned on and
+     * provide the ability to turn it off
+     *
+     * @return zimbraPrefOutOfOfficeStatusAlertOnLogin, or true if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1245)
+    public boolean isPrefOutOfOfficeStatusAlertOnLogin() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefOutOfOfficeStatusAlertOnLogin, true);
+    }
+
+    /**
+     * when user has OOO message enabled, when they login into web client,
+     * whether to alert the user that the OOO message is turned on and
+     * provide the ability to turn it off
+     *
+     * @param zimbraPrefOutOfOfficeStatusAlertOnLogin new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1245)
+    public void setPrefOutOfOfficeStatusAlertOnLogin(boolean zimbraPrefOutOfOfficeStatusAlertOnLogin) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeStatusAlertOnLogin, zimbraPrefOutOfOfficeStatusAlertOnLogin ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * when user has OOO message enabled, when they login into web client,
+     * whether to alert the user that the OOO message is turned on and
+     * provide the ability to turn it off
+     *
+     * @param zimbraPrefOutOfOfficeStatusAlertOnLogin new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1245)
+    public Map<String,Object> setPrefOutOfOfficeStatusAlertOnLogin(boolean zimbraPrefOutOfOfficeStatusAlertOnLogin, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeStatusAlertOnLogin, zimbraPrefOutOfOfficeStatusAlertOnLogin ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * when user has OOO message enabled, when they login into web client,
+     * whether to alert the user that the OOO message is turned on and
+     * provide the ability to turn it off
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1245)
+    public void unsetPrefOutOfOfficeStatusAlertOnLogin() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeStatusAlertOnLogin, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * when user has OOO message enabled, when they login into web client,
+     * whether to alert the user that the OOO message is turned on and
+     * provide the ability to turn it off
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1245)
+    public Map<String,Object> unsetPrefOutOfOfficeStatusAlertOnLogin(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeStatusAlertOnLogin, "");
         return attrs;
     }
 

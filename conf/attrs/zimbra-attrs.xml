@@ -6053,4 +6053,9 @@ TODO: delete them permerntly from here
   <desc>External email address of an external user. Applicable only when zimbraIsExternalVirtualAccount is set to TRUE.</desc>
 </attr>
 
+<attr id="1245" name="zimbraPrefOutOfOfficeStatusAlertOnLogin" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>when user has OOO message enabled, when they login into web client, whether to alert the user that the OOO message is turned on and provide the ability to turn it off</desc>
+</attr>
+
 </attrs>
