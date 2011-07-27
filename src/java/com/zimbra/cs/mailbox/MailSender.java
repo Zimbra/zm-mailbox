@@ -39,6 +39,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
@@ -57,7 +58,6 @@ import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.IdentityBy;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
@@ -707,11 +707,10 @@ public class MailSender {
     }
 
     void updateHeaders(MimeMessage mm, Account acct, Account authuser, OperationContext octxt, String originIP,
-                       boolean replyToSender, boolean skipSendAsCheck)
-    throws MessagingException, ServiceException {
-        if (mSkipHeaderUpdate)
+            boolean replyToSender, boolean skipSendAsCheck) throws MessagingException, ServiceException {
+        if (mSkipHeaderUpdate) {
             return;
-
+        }
         Provisioning prov = Provisioning.getInstance();
         if (originIP != null) {
             boolean addOriginatingIP = prov.getConfig().isSmtpSendAddOriginatingIP();
@@ -732,8 +731,17 @@ public class MailSender {
         }
 
         // set various headers on the outgoing message
-        Pair<Address, Address> fromsender = getSenderHeaders(ArrayUtil.getFirstElement(mm.getFrom()), mm.getSender(), acct, authuser, octxt, skipSendAsCheck);
-        Address from = fromsender.getFirst(), sender = fromsender.getSecond();
+        InternetAddress from = (InternetAddress) ArrayUtil.getFirstElement(mm.getFrom());
+        InternetAddress sender = (InternetAddress) mm.getSender();
+        if (skipSendAsCheck) {
+            if (Objects.equal(from, sender)) {
+                sender = null; // no need for matching Sender and From addresses
+            }
+        } else {
+            Pair<InternetAddress, InternetAddress> fromsender = getSenderHeaders(from, sender, acct, authuser, octxt);
+            from = fromsender.getFirst();
+            sender = fromsender.getSecond();
+        }
         mm.setFrom(from);
         mm.setSender(sender);
 
@@ -742,7 +750,7 @@ public class MailSender {
             Address[] existingReplyTos = mm.getReplyTo();
             if (existingReplyTos == null || existingReplyTos.length == 0) {
                 String replyTo = acct.getPrefReplyToAddress();
-                if (replyTo != null && !replyTo.trim().equals("")) {
+                if (replyTo != null && !replyTo.trim().isEmpty()) {
                     mm.setHeader("Reply-To", replyTo);
                 }
             }
@@ -757,63 +765,54 @@ public class MailSender {
         mm.saveChanges();
     }
 
-    /** Determines an acceptable set of {@code From} and {code Sender} header
+    /** Determines an acceptable set of {@code From} and {@code Sender} header
      *  values for a message.  The message's existing {@code from} and {@code
      *  sender} values are examined in light of the authenticated account's
      *  settings and are reset to the account's default return address if
      *  they aren't acceptable.
      * @return a {@link Pair} containing the approved {@code from} and {@code
      *         sender} header addresses, in that order. */
-    public Pair<Address, Address> getSenderHeaders(Address from, Address sender, Account acct, Account authuser,
-            OperationContext octxt, boolean skipSendAsCheck)
-    throws ServiceException {
-        boolean overrideFromHeader;
-        if (skipSendAsCheck) {
-            overrideFromHeader = false;
-        } else {
-            overrideFromHeader = true;
-            try {
-                // Deny send-as, but allow send-on-behalf-of.
-                if (sender != null && sender instanceof InternetAddress) {
-                    // In send-on-behalf-of, Sender header must be an allowed address to send from.
-                    if (AccountUtil.allowFromAddress(acct, ((InternetAddress) sender).getAddress())) {
-                        overrideFromHeader = false;
-                    }
-                } else {
-                    // In plain send, From header must be an allowed address to send from.
-                    if (from != null && from instanceof InternetAddress) {
-                        if (AccountUtil.allowFromAddress(acct, ((InternetAddress) from).getAddress())) {
-                            overrideFromHeader = false;
-                        }
-                    }
-                }
-            } catch (Exception e) { }
-        }
-
-        if (overrideFromHeader) {
-            from = AccountUtil.getFriendlyEmailAddress(acct);
-        }
-
-        // we need to set the Sender to the authenticated user for delegated sends by non-admins
-        boolean isAdminRequest = octxt == null ? false : octxt.isUsingAdminPrivileges();
-        boolean isDelegatedRequest = !acct.getId().equalsIgnoreCase(authuser.getId());
-        boolean canSendAs = !isDelegatedRequest || AccessManager.getInstance().canDo(authuser, acct, User.R_sendAs, isAdminRequest);
-
-        if (!skipSendAsCheck) {
-            InternetAddress addr = canSendAs ? null : AccountUtil.getFriendlyEmailAddress(authuser);
-            // if the call doesn't require a Sender but the caller supplied one, pass it through if it's acceptable
-            if (sender == null || !(sender instanceof InternetAddress) ||
-                !AccountUtil.addressMatchesAccountOrSendAs(authuser, ((InternetAddress) sender).getAddress())) {
-                sender = addr;
+    public Pair<InternetAddress, InternetAddress> getSenderHeaders(InternetAddress from, InternetAddress sender,
+            Account account, Account authuser, OperationContext octxt) throws ServiceException {
+        if (account.getId().equals(authuser.getId())) { // non delegated sends
+            // From must be the account's address
+            if (from != null && !AccountUtil.allowFromAddress(account, from.getAddress())) {
+                from = AccountUtil.getFriendlyEmailAddress(account);
             }
+            // Sender must be the account's address
+            if (sender != null && !AccountUtil.allowFromAddress(account, sender.getAddress())) {
+                return new Pair<InternetAddress, InternetAddress>(from, null);
+            }
+            if (Objects.equal(sender, from)) { // no need for matching Sender and From addresses
+                sender = null;
+            }
+            return new Pair<InternetAddress, InternetAddress>(from, sender);
+        } else { // delegated sends
+            boolean asAdmin = octxt != null ? octxt.isUsingAdminPrivileges() : false;
+            if (Objects.equal(sender, from)) { // no need for matching Sender and From addresses
+                sender = null;
+            }
+            if (sender == null && AccessManager.getInstance().canDo(authuser, account, User.R_sendAs, asAdmin)) {
+                // From must be the grantor's address.
+                if (from == null || !AccountUtil.allowFromAddress(account, from.getAddress())) {
+                    from = AccountUtil.getFriendlyEmailAddress(account);
+                }
+                return new Pair<InternetAddress, InternetAddress>(from, null);
+            }
+            if (AccessManager.getInstance().canDo(authuser, account, User.R_sendOnBehalfOf, asAdmin)) {
+                // From must be the grantor's address.
+                if (from == null || !AccountUtil.allowFromAddress(account, from.getAddress())) {
+                    from = AccountUtil.getFriendlyEmailAddress(account);
+                }
+                // Sender must be the authenticated user's address.
+                if (sender == null || !AccountUtil.allowFromAddress(authuser, sender.getAddress())) {
+                    sender = AccountUtil.getFriendlyEmailAddress(authuser);
+                }
+                return new Pair<InternetAddress, InternetAddress>(from, sender);
+            }
+            // unauthorized delegated sends
+            return new Pair<InternetAddress, InternetAddress>(AccountUtil.getFriendlyEmailAddress(authuser), null);
         }
-
-        // no need for matching Sender and From addresses...
-        if (sender != null && sender.equals(from)) {
-            sender = null;
-        }
-
-        return new Pair<Address, Address>(from, sender);
     }
 
     protected void updateReferenceHeaders(MimeMessage mm, OperationContext octxt, Account authuser) {
@@ -966,13 +965,13 @@ public class MailSender {
             //skip roll backs for partial send failure cases!
             if (isSendPartial())
                 throw new SafeSendFailedException(e);
-            
+
             for (RollbackData rdata : rollbacks) {
                 if (rdata != null) {
                     rdata.rollback();
                 }
             }
-            
+
             throw new SafeSendFailedException(e);
         } catch (MessagingException e) {
             for (RollbackData rdata : rollbacks) {

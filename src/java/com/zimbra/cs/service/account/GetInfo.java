@@ -1,30 +1,28 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
-/*
- * Created on May 26, 2004
- */
 package com.zimbra.cs.service.account;
 
-import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -44,6 +42,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.accesscontrol.ACLUtil;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ProvisioningConstants;
@@ -61,14 +60,13 @@ import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.type.Prop;
 
 /**
+ * @since May 26, 2004
  * @author schemers
  */
 public class GetInfo extends AccountDocumentHandler  {
 
     private enum Section {
         MBOX, PREFS, ATTRS, ZIMLETS, PROPS, IDENTS, SIGS, DSRCS, CHILDREN;
-
-        static final Set<Section> all = new HashSet<Section>(Arrays.asList(Section.values()));
 
         static Section lookup(String value) throws ServiceException {
             try {
@@ -79,24 +77,27 @@ public class GetInfo extends AccountDocumentHandler  {
         }
     }
 
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Account account = getRequestedAccount(zsc);
 
-        if (!canAccessAccount(zsc, account))
+        if (!canAccessAccount(zsc, account)) {
             throw ServiceException.PERM_DENIED("can not access account");
+        }
 
         // figure out the subset of data the caller wants (default to all data)
         String secstr = request.getAttribute(AccountConstants.A_SECTIONS, null);
         Set<Section> sections;
         if (secstr != null) {
-            sections = new HashSet<Section>();
-            for (String sec : secstr.split(","))
+            sections = EnumSet.noneOf(Section.class);
+            for (String sec : Splitter.on(',').split(secstr)) {
                 sections.add(Section.lookup(sec));
+            }
         } else {
-            sections = Section.all;
+            sections = EnumSet.allOf(Section.class);
         }
-        
+
 
         Element response = zsc.createElement(AccountConstants.GET_INFO_RESPONSE);
         response.addAttribute(AccountConstants.E_VERSION, BuildInfo.FULL_VERSION, Element.Disposition.CONTENT);
@@ -112,7 +113,7 @@ public class GetInfo extends AccountDocumentHandler  {
         response.addAttribute(AccountConstants.E_LIFETIME, lifetime, Element.Disposition.CONTENT);
 
         Provisioning prov = Provisioning.getInstance();
-        
+
         // bug 53770, return if the request is using a delegated authtoken issued to an admin account
         AuthToken authToken = zsc.getAuthToken();
         if (authToken.isDelegatedAuth()) {
@@ -124,18 +125,19 @@ public class GetInfo extends AccountDocumentHandler  {
                 }
             }
         }
-        
+
         try {
-            
             Server server = prov.getLocalServer();
-            if (server != null)
+            if (server != null) {
                 response.addAttribute(AccountConstants.A_DOCUMENT_SIZE_LIMIT, server.getFileUploadMaxSize());
+            }
             Config config = prov.getConfig();
             if (config != null) {
                 response.addAttribute(AccountConstants.A_ATTACHMENT_SIZE_LIMIT, config.getMtaMaxMessageSize());
             }
-        } catch (ServiceException e) {}
-        
+        } catch (ServiceException e) {
+        }
+
         if (sections.contains(Section.MBOX) && Provisioning.onLocalServer(account)) {
             response.addAttribute(AccountConstants.E_REST, UserServlet.getRestUrl(account), Element.Disposition.CONTENT);
             try {
@@ -145,19 +147,24 @@ public class GetInfo extends AccountDocumentHandler  {
                 Session s = (Session) context.get(SoapEngine.ZIMBRA_SESSION);
                 if (s instanceof SoapSession) {
                     // we have a valid session; get the stats on this session
-                    response.addAttribute(AccountConstants.E_PREVIOUS_SESSION, ((SoapSession) s).getPreviousSessionTime(), Element.Disposition.CONTENT);
-                    response.addAttribute(AccountConstants.E_LAST_ACCESS, ((SoapSession) s).getLastWriteAccessTime(), Element.Disposition.CONTENT);
-                    response.addAttribute(AccountConstants.E_RECENT_MSGS, ((SoapSession) s).getRecentMessageCount(), Element.Disposition.CONTENT);
+                    response.addAttribute(AccountConstants.E_PREVIOUS_SESSION,
+                            ((SoapSession) s).getPreviousSessionTime(), Element.Disposition.CONTENT);
+                    response.addAttribute(AccountConstants.E_LAST_ACCESS,
+                            ((SoapSession) s).getLastWriteAccessTime(), Element.Disposition.CONTENT);
+                    response.addAttribute(AccountConstants.E_RECENT_MSGS,
+                            ((SoapSession) s).getRecentMessageCount(), Element.Disposition.CONTENT);
                 } else {
                     // we have no session; calculate the stats from the mailbox and the other SOAP sessions
                     long lastAccess = mbox.getLastSoapAccessTime();
                     response.addAttribute(AccountConstants.E_PREVIOUS_SESSION, lastAccess, Element.Disposition.CONTENT);
                     response.addAttribute(AccountConstants.E_LAST_ACCESS, lastAccess, Element.Disposition.CONTENT);
-                    response.addAttribute(AccountConstants.E_RECENT_MSGS, mbox.getRecentMessageCount(), Element.Disposition.CONTENT);
+                    response.addAttribute(AccountConstants.E_RECENT_MSGS,
+                            mbox.getRecentMessageCount(), Element.Disposition.CONTENT);
                 }
-            } catch (ServiceException e) { }
+            } catch (ServiceException e) {
+            }
         }
-        
+
         doCos(account, response);
 
         Map<String, Object> attrMap = account.getUnicodeAttrs();
@@ -189,17 +196,17 @@ public class GetInfo extends AccountDocumentHandler  {
         }
         if (sections.contains(Section.DSRCS)) {
             Element ds = response.addUniqueElement(AccountConstants.E_DATA_SOURCES);
-            doDataSources(ds, account, zsc);
+            doDataSources(ds, account);
         }
         if (sections.contains(Section.CHILDREN)) {
             Element ca = response.addUniqueElement(AccountConstants.E_CHILD_ACCOUNTS);
             doChildAccounts(ca, account, zsc.getAuthToken());
         }
-        
+
         GetAccountInfo.addUrls(response, account);
         return response;
     }
-    
+
     static void doCos(Account acct, Element response) throws ServiceException {
         Cos cos = Provisioning.getInstance().getCOS(acct);
         if (cos != null) {
@@ -209,31 +216,33 @@ public class GetInfo extends AccountDocumentHandler  {
         }
     }
 
-    static void doAttrs(Account acct, String locale, Element response, Map<String,Object> attrsMap) throws ServiceException {
+    static void doAttrs(Account acct, String locale, Element response, Map<String,Object> attrsMap)
+            throws ServiceException {
         AttributeManager attrMgr = AttributeManager.getInstance();
-        
+
         Set<String> attrList = attrMgr.getAttrsWithFlag(AttributeFlag.accountInfo);
-        
+
         Set<String> acctAttrs = attrMgr.getAllAttrsInClass(AttributeClass.account);
         Set<String> domainAttrs = attrMgr.getAllAttrsInClass(AttributeClass.domain);
         Set<String> serverAttrs = attrMgr.getAllAttrsInClass(AttributeClass.server);
         Set<String> configAttrs = attrMgr.getAllAttrsInClass(AttributeClass.globalConfig);
-        
+
         Provisioning prov = Provisioning.getInstance();
         Domain domain = prov.getDomain(acct);
         Server server = acct.getServer();
         Config config = prov.getConfig();
-        
+
         for (String key : attrList) {
             Object value = null;
             if (Provisioning.A_zimbraLocale.equals(key)) {
                 value = locale;
             } else if (Provisioning.A_zimbraAttachmentsBlocked.equals(key)) {
                 // leave this a special case for now, until we have enough incidences to make it a pattern
-                value = config.isAttachmentsBlocked() || acct.isAttachmentsBlocked() ? ProvisioningConstants.TRUE : ProvisioningConstants.FALSE;
+                value = config.isAttachmentsBlocked() || acct.isAttachmentsBlocked() ?
+                        ProvisioningConstants.TRUE : ProvisioningConstants.FALSE;
             } else {
                 value = attrsMap.get(key);
-                
+
                 if (value == null) { // no value on account/cos
                     if (!acctAttrs.contains(key)) { // not an account attr
                         // see if it is on domain, server, or globalconfig
@@ -253,36 +262,39 @@ public class GetInfo extends AccountDocumentHandler  {
             doAttr(response, key, value);
         }
     }
-    
+
     static void doAttr(Element response, String key, Object value) {
         if (value instanceof String[]) {
             String sa[] = (String[]) value;
             for (int i = 0; i < sa.length; i++) {
                 // FIXME: change to "a"/"n" rather than "attr"/"name"
-                if (sa[i] != null && !sa[i].equals(""))
+                if (!Strings.isNullOrEmpty(sa[i])) {
                     response.addKeyValuePair(key, sa[i], AccountConstants.E_ATTR, AccountConstants.A_NAME);
+                }
             }
-        } else {
-            if (value != null && !value.equals(""))
+        } else if (value instanceof String) {
+            if (!Strings.isNullOrEmpty((String) value)) {
                 response.addKeyValuePair(key, (String) value, AccountConstants.E_ATTR, AccountConstants.A_NAME);
-        }        
+            }
+        }
     }
-    
-    
+
+
     private static void doZimlets(Element response, Account acct) {
         try {
             // bug 34517
             ZimletUtil.migrateUserPrefIfNecessary(acct);
-            
+
             ZimletPresence userZimlets = ZimletUtil.getUserZimlets(acct);
             List<Zimlet> zimletList = ZimletUtil.orderZimletsByPriority(userZimlets.getZimletNamesAsArray());
             int priority = 0;
             for (Zimlet z : zimletList) {
-                if (z.isEnabled() && !z.isExtension())
+                if (z.isEnabled() && !z.isExtension()) {
                     ZimletUtil.listZimlet(response, z, priority, userZimlets.getPresence(z.getName()));
+                }
                 priority++;
             }
-    
+
             // load the zimlets in the dev directory and list them
             ZimletUtil.listDevZimlets(response);
         } catch (ServiceException se) {
@@ -300,63 +312,73 @@ public class GetInfo extends AccountDocumentHandler  {
             elem.setText(prop.getValue());
         }
     }
-    
+
     private static void doIdentities(Element response, Account acct) {
         try {
-            List<Identity> identities = Provisioning.getInstance().getAllIdentities(acct);
-            for (Identity i : identities)
+            for (Identity i : Provisioning.getInstance().getAllIdentities(acct)) {
                 ToXML.encodeIdentity(response, i);
-        } catch (ServiceException se) {
-            ZimbraLog.account.error("can't get identities", se);
+            }
+            for (Identity i : ACLUtil.getSendOnBehalfOf(acct)) {
+                ToXML.encodeIdentity(response, i);
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.account.error("can't get identities", e);
         }
     }
-    
+
     private static void doSignatures(Element response, Account acct) {
         try {
             List<Signature> signatures = Provisioning.getInstance().getAllSignatures(acct);
-            for (Signature s : signatures)
+            for (Signature s : signatures) {
                 ToXML.encodeSignature(response, s);
-        } catch (ServiceException se) {
-            ZimbraLog.account.error("can't get signatures", se);
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.account.error("can't get signatures", e);
         }
     }
-    
-    private static void doDataSources(Element response, Account acct, ZimbraSoapContext zsc) {
+
+    private static void doDataSources(Element response, Account acct) {
         try {
             List<DataSource> dataSources = Provisioning.getInstance().getAllDataSources(acct);
-            for (DataSource ds : dataSources)
-                if (!ds.isInternal())
+            for (DataSource ds : dataSources) {
+                if (!ds.isInternal()) {
                     com.zimbra.cs.service.mail.ToXML.encodeDataSource(response, ds);
-        } catch (ServiceException se) {
-            ZimbraLog.mailbox.error("Unable to get data sources", se);
+                }
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.error("Unable to get data sources", e);
         }
     }
- 
+
     protected void doChildAccounts(Element response, Account acct, AuthToken authToken) throws ServiceException {
         String[] childAccounts = acct.getMultiAttr(Provisioning.A_zimbraChildAccount);
         String[] visibleChildAccounts = acct.getMultiAttr(Provisioning.A_zimbraPrefChildVisibleAccount);
 
-        if (childAccounts.length == 0 && visibleChildAccounts.length == 0)
+        if (childAccounts.length == 0 && visibleChildAccounts.length == 0) {
             return;
-
+        }
         Provisioning prov = Provisioning.getInstance();
         Set<String> children = new HashSet<String>(childAccounts.length);
 
         for (String childId : visibleChildAccounts) {
-            if (children.contains(childId))
+            if (children.contains(childId)) {
                 continue;
+            }
             Account child = prov.get(Key.AccountBy.id, childId, authToken);
-            if (child != null)
+            if (child != null) {
                 encodeChildAccount(response, child, true);
+            }
             children.add(childId);
         }
 
         for (String childId : childAccounts) {
-            if (children.contains(childId))
+            if (children.contains(childId)) {
                 continue;
+            }
             Account child = prov.get(Key.AccountBy.id, childId, authToken);
-            if (child != null)
+            if (child != null) {
                 encodeChildAccount(response, child, false);
+            }
             children.add(childId);
         }
     }
@@ -371,7 +393,8 @@ public class GetInfo extends AccountDocumentHandler  {
         String displayName = child.getAttr(Provisioning.A_displayName);
         if (displayName != null) {
             Element attrsElem = elem.addUniqueElement(AccountConstants.E_ATTRS);
-            attrsElem.addKeyValuePair(Provisioning.A_displayName, displayName, AccountConstants.E_ATTR, AccountConstants.A_NAME);
+            attrsElem.addKeyValuePair(Provisioning.A_displayName, displayName,
+                    AccountConstants.E_ATTR, AccountConstants.A_NAME);
         }
         return elem;
     }

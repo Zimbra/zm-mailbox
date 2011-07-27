@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -76,10 +76,10 @@ public class AccountUtil {
         ia.setAddress(address);
         return ia;
     }
-    
+
     /**
      * Returns the <tt>From</tt> address used for an outgoing message from the given account.
-     * Takes all account attributes into consideration, including user preferences.  
+     * Takes all account attributes into consideration, including user preferences.
      */
     public static InternetAddress getFromAddress(Account acct) {
         if (acct == null) {
@@ -96,7 +96,7 @@ public class AccountUtil {
             return ia;
         }
     }
-    
+
     /**
      * Returns the <tt>Reply-To</tt> address used for an outgoing message from the given
      * account, based on user preferences, or <tt>null</tt> if <tt>zimbraPrefReplyToEnabled</tt>
@@ -123,11 +123,11 @@ public class AccountUtil {
             return ia;
         }
     }
-    
+
     public static boolean isDirectRecipient(Account acct, MimeMessage mm) throws ServiceException, MessagingException {
         return isDirectRecipient(acct, null, mm, -1);
     }
-    
+
     public static boolean isDirectRecipient(Account acct, String[] otherAccountAddrs, MimeMessage mm, int maxToCheck) throws ServiceException, MessagingException {
         Address[] recipients = mm.getAllRecipients();
         if (recipients == null) {
@@ -140,7 +140,7 @@ public class AccountUtil {
             String msgAddress = ((InternetAddress) recipients[i]).getAddress();
             if (acctMatcher.matches(msgAddress))
                 return true;
-            
+
             if (otherAccountAddrs != null) {
                 for (String otherAddr: otherAccountAddrs) {
                     if (otherAddr.equalsIgnoreCase(msgAddress)) {
@@ -149,7 +149,7 @@ public class AccountUtil {
                 }
             }
         }
-        
+
         return false;
     }
 
@@ -160,7 +160,7 @@ public class AccountUtil {
     public static String getCanonicalAddress(Account account) throws ServiceException {
         // If account has a canonical address, let's use that.
         String ca = account.getAttr(Provisioning.A_zimbraMailCanonicalAddress);
-        
+
         // But we still have to canonicalize domain names, so do that with account address
         if (ca == null)
             ca = account.getName();
@@ -184,10 +184,10 @@ public class AccountUtil {
      * Check if given account is allowed to set given from header.
      */
     public static boolean allowFromAddress(Account acct, String fromAddr) throws ServiceException {
-        if (fromAddr == null)
+        if (fromAddr == null) {
             return false;
-        return addressMatchesAccountOrSendAs(acct, fromAddr)
-            || acct.getBooleanAttr(Provisioning.A_zimbraAllowAnyFromAddress, false);
+        }
+        return addressMatchesAccount(acct, fromAddr) || acct.isAllowAnyFromAddress();
     }
 
     /**
@@ -206,7 +206,7 @@ public class AccountUtil {
     public static boolean addressMatchesAccount(Account acct, String givenAddress) throws ServiceException {
         return (new AccountAddressMatcher(acct)).matches(givenAddress);
     }
-    
+
     /**
      * Returns all account email addresses in lower case in a hash set.
      * @param acct user's account
@@ -215,18 +215,18 @@ public class AccountUtil {
      */
     public static Set<String> getEmailAddresses(Account acct) throws ServiceException {
         Set<String> addrs = new HashSet<String> ();
-        
+
         addrs.add(acct.getName().toLowerCase());
         addrs.add(AccountUtil.getCanonicalAddress(acct).toLowerCase());
 
         String[] accountAliases = acct.getMailAlias();
         for (String addr : accountAliases)
             addrs.add(addr.toLowerCase());
-        
+
         String[] allowedFromAddrs = acct.getMultiAttr(Provisioning.A_zimbraAllowFromAddress);
         for (String addr : allowedFromAddrs)
             addrs.add(addr.toLowerCase());
-        
+
         return addrs;
     }
 
@@ -287,7 +287,7 @@ public class AccountUtil {
                                     }
                                 }
                             }
-                        } catch (ServiceException e) {}                
+                        } catch (ServiceException e) {}
                     }
                     addresses.add(addr.toLowerCase());
                 }
@@ -361,7 +361,7 @@ public class AccountUtil {
 
 //    /**
 //     * True if this mime message has at least one recipient that is NOT the same as the specified account
-//     * 
+//     *
 //     * @param acct
 //     * @param mm
 //     * @return
@@ -374,12 +374,12 @@ public class AccountUtil {
 //        String canonicalAddress = getCanonicalAddress(acct);
 //        String[] accountAliases = acct.getMailAlias();
 //        Address[] recipients = mm.getAllRecipients();
-//        
+//
 //        if (recipients != null) {
 //            int numRecipientsToCheck = (maxToCheck <= 0 ? recipients.length : Math.min(recipients.length, maxToCheck));
 //            for (int i = 0; i < numRecipientsToCheck; i++) {
 //                String msgAddress = ((InternetAddress) recipients[i]).getAddress();
-//                if (!addressMatchesAccount(accountAddress, canonicalAddress, accountAliases, msgAddress)) 
+//                if (!addressMatchesAccount(accountAddress, canonicalAddress, accountAliases, msgAddress))
 //                    return true;
 //            }
 //        }

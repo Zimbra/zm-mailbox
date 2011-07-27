@@ -126,9 +126,10 @@ public class BounceMsg extends MailDocumentHandler {
         if (recipients.isEmpty())
             throw ServiceException.INVALID_REQUEST("no recipients specified", null);
 
-        Address rfrom = ArrayUtil.getFirstElement(maddrs.get(EmailType.FROM.toString()));
-        Address rsender = ArrayUtil.getFirstElement(maddrs.get(EmailType.SENDER.toString()));
-        Pair<Address, Address> fromsender = msender.getSenderHeaders(rfrom, rsender, acct, getAuthenticatedAccount(zsc), octxt, false);
+        InternetAddress rfrom = ArrayUtil.getFirstElement(maddrs.get(EmailType.FROM.toString()));
+        InternetAddress rsender = ArrayUtil.getFirstElement(maddrs.get(EmailType.SENDER.toString()));
+        Pair<InternetAddress, InternetAddress> fromsender = msender.getSenderHeaders(rfrom, rsender,
+                acct, getAuthenticatedAccount(zsc), octxt);
         Address from = fromsender.getFirst(), sender = fromsender.getSecond();
         if (sender != null) {
             mm.addHeader("Resent-Sender", sender.toString());
