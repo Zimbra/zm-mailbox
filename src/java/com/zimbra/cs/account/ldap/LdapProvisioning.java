@@ -34,6 +34,7 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ProvisioningConstants;
@@ -6292,9 +6293,10 @@ public class LdapProvisioning extends LdapProv {
             
             entry.setAttr(A_objectClass, "zimbraDataSource");
             String extraOc = LdapDataSource.getObjectClass(dsType);
-            if (extraOc != null)
-                entry.setAttr(A_objectClass, extraOc);
-
+            if (extraOc != null) {
+                entry.addAttr(A_objectClass, Sets.newHashSet(extraOc));
+            }
+            
             String dsId = entry.getAttrString(A_zimbraDataSourceId);
             if (dsId == null) {
                 dsId = LdapUtilCommon.generateUUID();
