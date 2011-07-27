@@ -50,6 +50,7 @@ import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.resource.UrlNamespace.UrlComponents;
 import com.zimbra.cs.dav.service.DavResponse;
 import com.zimbra.cs.dav.service.DavServlet;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -385,7 +386,11 @@ public class DavContext {
 			if (ctype == null)
                 name = getItem();
 			try {
-				mUpload = FileUploadServlet.saveUpload(mReq.getInputStream(), name, ctype, mAuthAccount.getId());
+			    Collection parentCollection = getRequestedParentCollection();
+			    boolean limitByFileUploadMaxSize = false;
+			    if (parentCollection.getDefaultView() == MailItem.Type.DOCUMENT || parentCollection.getDefaultView() == MailItem.Type.UNKNOWN)
+			        limitByFileUploadMaxSize = true;			 
+			    mUpload = FileUploadServlet.saveUpload(mReq.getInputStream(), name, ctype, mAuthAccount.getId(), limitByFileUploadMaxSize);
                 ZimbraLog.dav.debug("Request: requested content-type: %s, actual content-type: %s", ctype, mUpload.getContentType());
 			} catch (ServiceException se) {
 				throw new DavException("can't save upload", se);

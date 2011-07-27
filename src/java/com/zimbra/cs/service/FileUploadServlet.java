@@ -313,12 +313,12 @@ public class FileUploadServlet extends ZimbraServlet {
         }
     }
 
-    public static Upload saveUpload(InputStream is, String filename, String contentType, String accountId) throws ServiceException, IOException {
+    public static Upload saveUpload(InputStream is, String filename, String contentType, String accountId, boolean limitByFileUploadMaxSize) throws ServiceException, IOException {
         FileItem fi = null;
         boolean success = false;
         try {
             // store the fetched file as a normal upload
-            ServletFileUpload upload = getUploader(false);
+            ServletFileUpload upload = getUploader(limitByFileUploadMaxSize);
             fi = upload.getFileItemFactory().createItem("upload", contentType, false, filename);
             long size = ByteUtil.copy(is, true, fi.getOutputStream(), true, upload.getSizeMax() * 3);
             if (size > upload.getSizeMax())
@@ -337,6 +337,10 @@ public class FileUploadServlet extends ZimbraServlet {
                 fi.delete();
             }
         }
+    }
+    
+    public static Upload saveUpload(InputStream is, String filename, String contentType, String accountId) throws ServiceException, IOException {
+        return saveUpload(is, filename, contentType, accountId, false);
     }
     
     static File getStoreLocation(FileItem fi) {
