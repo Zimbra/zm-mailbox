@@ -20,9 +20,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 
@@ -36,13 +36,12 @@ public class CrossDomain {
     private static final Log sLog = ZimbraLog.acl;
     
     static boolean crossDomainOK(Provisioning prov, Account grantee, Domain granteeDomain, 
-            Domain targetDomain, DistributionList grantedOn) throws ServiceException {
+            Domain targetDomain, Group grantedOn) throws ServiceException {
         
-       if (!CrossDomain.checkCrossDomain(prov, granteeDomain, targetDomain, 
-                (DistributionList)grantedOn)) {
+       if (!CrossDomain.checkCrossDomain(prov, granteeDomain, targetDomain, grantedOn)) {
             sLog.info("No cross domain right for " + grantee.getName() + " on domain " +
                     targetDomain.getName() + 
-                    ", skipping positive grants on dl " + ((DistributionList)grantedOn).getName());
+                    ", skipping positive grants on dl " + grantedOn.getName());
             
             return false;
         } else
@@ -90,15 +89,15 @@ public class CrossDomain {
     
     static boolean checkCrossDomain(Provisioning prov, 
             Domain granteeDomain, Domain targetDomain,
-            DistributionList grantedOn) throws ServiceException {
+            Group grantedOn) throws ServiceException {
         
         // sanity check, should not happen
-        // if we get here, the target can inherit rights from a DistributionList,
+        // if we get here, the target can inherit rights from a group,
         // and it must be a domain-ed entry and have a domain  
         if (targetDomain == null)
             return true;  // let it through, or throw?
         
-        Domain grantedOnTargetInDomain = prov.getDomain(grantedOn); 
+        Domain grantedOnTargetInDomain = grantedOn.getDomain(); 
         if (grantedOnTargetInDomain == null) {
             // really an error, can't find the domain for the DL
             // return false so ACL granted on this inherited DL target

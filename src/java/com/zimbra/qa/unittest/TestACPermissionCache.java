@@ -139,8 +139,8 @@ public class TestACPermissionCache extends TestAC {
         Right right = A_USER_RIGHT_DISTRIBUTION_LIST;
         
         Domain domain = createDomain();
-        DistributionList grantTarget = createUserGroup(GRANTTARGET_USER_GROUP, domain);
-        DistributionList target = createUserGroup(TARGET_USER_GROUP, domain);
+        DistributionList grantTarget = createUserDistributionList(GRANTTARGET_USER_GROUP, domain);
+        DistributionList target = createUserDistributionList(TARGET_USER_GROUP, domain);
         Account grantee = createUserAccount(GRANTEE_USER_ACCT, domain);
         
         mProv.addMembers(grantTarget, new String[]{target.getName()});
@@ -165,9 +165,9 @@ public class TestACPermissionCache extends TestAC {
         Right right = A_USER_RIGHT_DISTRIBUTION_LIST;
         
         Domain domain = createDomain();
-        DistributionList grantTarget = createUserGroup(GRANTTARGET_USER_GROUP, domain);
-        DistributionList subGroup = createUserGroup(SUBGROUP_OF_GRANTTARGET_USER_GROUP, domain);
-        DistributionList target = createUserGroup(TARGET_USER_GROUP, domain);
+        DistributionList grantTarget = createUserDistributionList(GRANTTARGET_USER_GROUP, domain);
+        DistributionList subGroup = createUserDistributionList(SUBGROUP_OF_GRANTTARGET_USER_GROUP, domain);
+        DistributionList target = createUserDistributionList(TARGET_USER_GROUP, domain);
         Account grantee = createUserAccount(GRANTEE_USER_ACCT, domain);
         
         mProv.addMembers(grantTarget, new String[]{subGroup.getName()});
@@ -241,8 +241,8 @@ public class TestACPermissionCache extends TestAC {
         Right right = A_USER_RIGHT_DISTRIBUTION_LIST;
         
         Domain domain = createDomain();
-        DistributionList grantTarget = createUserGroup(GRANTTARGET_USER_GROUP, domain);
-        DistributionList target = createUserGroup(TARGET_USER_GROUP, domain);
+        DistributionList grantTarget = createUserDistributionList(GRANTTARGET_USER_GROUP, domain);
+        DistributionList target = createUserDistributionList(TARGET_USER_GROUP, domain);
         Account grantee = createUserAccount(GRANTEE_USER_ACCT, domain);
         
         mProv.addMembers(grantTarget, new String[]{target.getName()});
@@ -262,14 +262,16 @@ public class TestACPermissionCache extends TestAC {
         assertTrue(allow); 
     }
     
+    // TODO test dynamic group
+    
     @Test
     public void testIndirectGroupMembershipChanged() throws Exception {
         Right right = A_USER_RIGHT_DISTRIBUTION_LIST;
         
         Domain domain = createDomain();
-        DistributionList grantTarget = createUserGroup(GRANTTARGET_USER_GROUP, domain);
-        DistributionList subGroup = createUserGroup(SUBGROUP_OF_GRANTTARGET_USER_GROUP, domain);
-        DistributionList target = createUserGroup(TARGET_USER_GROUP, domain);
+        DistributionList grantTarget = createUserDistributionList(GRANTTARGET_USER_GROUP, domain);
+        DistributionList subGroup = createUserDistributionList(SUBGROUP_OF_GRANTTARGET_USER_GROUP, domain);
+        DistributionList target = createUserDistributionList(TARGET_USER_GROUP, domain);
         Account grantee = createUserAccount(GRANTEE_USER_ACCT, domain);
         
         mProv.addMembers(grantTarget, new String[]{subGroup.getName()});
@@ -333,9 +335,9 @@ public class TestACPermissionCache extends TestAC {
         Right right = A_USER_RIGHT_DISTRIBUTION_LIST;
         
         Domain domain = createDomain();
-        DistributionList grantTarget = createUserGroup(GRANTTARGET_USER_GROUP, domain);
-        DistributionList subGroup = createUserGroup(SUBGROUP_OF_GRANTTARGET_USER_GROUP, domain);
-        DistributionList target = createUserGroup(TARGET_USER_GROUP, domain);
+        DistributionList grantTarget = createUserDistributionList(GRANTTARGET_USER_GROUP, domain);
+        DistributionList subGroup = createUserDistributionList(SUBGROUP_OF_GRANTTARGET_USER_GROUP, domain);
+        DistributionList target = createUserDistributionList(TARGET_USER_GROUP, domain);
         Account grantee = createUserAccount(GRANTEE_USER_ACCT, domain);
         
         mProv.addMembers(grantTarget, new String[]{subGroup.getName()});
@@ -368,7 +370,7 @@ public class TestACPermissionCache extends TestAC {
         Domain domain = createDomain();
         Account grantTarget = createUserAccount(GRANTTARGET_USER_ACCT, domain);
         Account target = grantTarget;
-        DistributionList grantee = createUserGroup(GRANTEE_USER_GROUP, domain);
+        DistributionList grantee = createUserDistributionList(GRANTEE_USER_GROUP, domain);
         Account account =  createUserAccount(GRANTEE_USER_ACCT, domain);
         
         mProv.addMembers(grantee, new String[]{account.getName()});

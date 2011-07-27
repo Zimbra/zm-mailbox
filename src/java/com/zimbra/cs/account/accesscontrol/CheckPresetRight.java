@@ -17,7 +17,6 @@ package com.zimbra.cs.account.accesscontrol;
 import java.util.List;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
@@ -25,8 +24,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.AccessManager.ViaGrant;
-import com.zimbra.cs.account.Provisioning.AclGroups;
+import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.accesscontrol.PermissionCache.CachedPermission;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 
@@ -41,7 +41,7 @@ public class CheckPresetRight extends CheckRight {
     private ViaGrant mVia;
     
     // derived from input or aux vars
-    private AclGroups mGranteeGroups;
+    private GroupMembership mGranteeGroups;
     private SeenRight mSeenRight;
     
     private static class SeenRight {
@@ -103,21 +103,24 @@ public class CheckPresetRight extends CheckRight {
         
         // This path is called from AccessManager.canDo, the target object can be a 
         // DistributionList obtained from prov.get(DistributionListBy).  
-        // We require one from prov.getAclGroup(DistributionListBy) here, call getAclGroup to be sure.
-        if (mTarget instanceof DistributionList)
-            mTarget = mProv.getAclGroup(Key.DistributionListBy.id, ((DistributionList)target).getId());
+        // We require one from getDLBasic(DistributionListBy) here, because when group 
+        // members are added/removed, the upward membership cache is cleared on the cached
+        // entry.
+        if (mTarget instanceof DistributionList) {
+            mTarget = mProv.getDLBasic(Key.DistributionListBy.id, ((DistributionList)target).getId());
+        }
         
         mTargetType = TargetType.getTargetType(mTarget);
         
         mSeenRight = new SeenRight();
     }
     
-    private AclGroups getGranteeGroups() throws ServiceException {
+    private GroupMembership getGranteeGroups() throws ServiceException {
         if (mGranteeGroups == null) {
             // get all groups the grantee belongs if we haven't done so (Prov.getAclGroups never returns null)
             // get only admin groups if the right is an admin right
             boolean adminGroupsOnly = !mRightNeeded.isUserRight();
-            mGranteeGroups = mProv.getAclGroups(mGranteeAcct, adminGroupsOnly);
+            mGranteeGroups = mProv.getGroupMembership(mGranteeAcct, adminGroupsOnly);
         }
         return mGranteeGroups;
     }
@@ -181,18 +184,21 @@ public class CheckPresetRight extends CheckRight {
         while ((grantedOn = iter.next()) != null) {
             acl = ACLUtil.getAllACEs(grantedOn);
             
-            if (grantedOn instanceof DistributionList) {
-                if (acl == null)
+            if (grantedOn instanceof Group) {
+                if (acl == null) {
                     continue;
+                }
                 
                 boolean skipPositiveGrants = false;
-                if (adminRight)
+                if (adminRight) {
                     skipPositiveGrants = !CrossDomain.crossDomainOK(mProv, mGranteeAcct, granteeDomain, 
-                        targetDomain, (DistributionList)grantedOn);
+                        targetDomain, (Group)grantedOn);
+                }
                 
                 // don't check yet, collect all acls on all target groups
-                if (groupACLs == null)
+                if (groupACLs == null) {
                     groupACLs = new GroupACLs();
+                }
                 groupACLs.collectACL(grantedOn, skipPositiveGrants);
                 
             } else {

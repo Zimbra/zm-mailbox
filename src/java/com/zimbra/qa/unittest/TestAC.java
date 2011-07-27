@@ -38,6 +38,8 @@ public class TestAC extends TestProv {
     @BeforeClass
     public static void init() throws Exception {
         try {
+            RightManager.getInstance(true);
+            
             // setup rights
             USER_RIGHT                    = getRight("test-user");
             USER_RIGHT_DISTRIBUTION_LIST  = getRight("test-user-distributionlist");
@@ -91,11 +93,7 @@ public class TestAC extends TestProv {
      *  Note: do *not* copy it to /Users/pshao/p4/main/ZimbraServer/conf
      *  that could accidently generate a RightDef.java with our test rights.
      *  
-     *  cp -f /Users/pshao/p4/main/ZimbraServer/data/unittest/*.xml /opt/zimbra/conf/rights
-     *  and
-     *  uncomment sCoreRightDefFiles.add("rights-unittest.xml"); in RightManager
-     *  
-     *  REMEMBER: to comment it out before checking in
+     *  cp -f /Users/pshao/p4/main/ZimbraServer/data/unittest/ldap/rights-unittest.xml /opt/zimbra/conf/rights
      */
     
     /**

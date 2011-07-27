@@ -113,13 +113,14 @@ public class TestLdapProvMisc extends TestLdap {
         Set<String> attrsInOCs = new HashSet<String>();
         ldapProv.getAttrsInOCs(ocs, attrsInOCs);
         
-        assertEquals(36, attrsInOCs.size());
+        assertEquals(48, attrsInOCs.size());
         assertTrue(attrsInOCs.contains("amavisBlacklistSender"));
         assertTrue(attrsInOCs.contains("amavisWhitelistSender"));
         
         /*
+        int i = 1;
         for (String attr : attrsInOCs) {
-            System.out.println(attr);
+            System.out.println(i++ + " " + attr);
         }
         */
     }

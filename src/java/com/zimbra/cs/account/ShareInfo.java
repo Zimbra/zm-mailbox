@@ -27,7 +27,7 @@ import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning.AclGroups;
+import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
@@ -419,7 +419,7 @@ public class ShareInfo {
             if (granteeType == 0) {
                 // no grantee type specified, return all published shares
                 granteeIds.add(acct.getId());
-                AclGroups aclGroups = prov.getAclGroups(acct, false);
+                GroupMembership aclGroups = prov.getGroupMembership(acct, false);
                 granteeIds.addAll(aclGroups.groupIds());
                 includePublic = true;
 
@@ -427,7 +427,7 @@ public class ShareInfo {
                 granteeIds.add(acct.getId());
 
             } else if (granteeType == ACL.GRANTEE_GROUP) {
-                AclGroups aclGroups = prov.getAclGroups(acct, false);
+                GroupMembership aclGroups = prov.getGroupMembership(acct, false);
                 granteeIds.addAll(aclGroups.groupIds());
 
             } else if (granteeType == ACL.GRANTEE_PUBLIC) {
@@ -450,15 +450,7 @@ public class ShareInfo {
                 // get shares published on the dl
                 granteeIds.add(dl.getId());
             } else {
-                // call prov.getAclGroups instead of prov.getDistributionLists
-                // because getAclGroups returns cached data, while getDistributionLists
-                // does LDAP searches each time
-
-                // get shares published on parents of this dl
-                if (!dl.isAclGroup()) {
-                    dl = prov.getAclGroup(Key.DistributionListBy.id, dl.getId());
-                }
-                granteeIds.addAll(prov.getAclGroups(dl, false).groupIds());
+                granteeIds.addAll(prov.getGroupMembership(dl, false).groupIds());
             }
             getSharesPublished(prov, visitor, owner, granteeIds, false);
         }

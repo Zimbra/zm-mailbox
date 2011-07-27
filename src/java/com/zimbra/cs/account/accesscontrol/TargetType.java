@@ -34,20 +34,13 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.CalendarResourceBy;
-import com.zimbra.common.account.Key.CosBy;
-import com.zimbra.common.account.Key.DistributionListBy;
-import com.zimbra.common.account.Key.DomainBy;
-import com.zimbra.common.account.Key.ServerBy;
-import com.zimbra.common.account.Key.TargetBy;
-import com.zimbra.common.account.Key.XMPPComponentBy;
-import com.zimbra.common.account.Key.ZimletBy;
 import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.Server;
@@ -59,7 +52,8 @@ public enum TargetType {
     account(true,       true,    AttributeClass.account,          "Account"),
     calresource(true,   true,    AttributeClass.calendarResource, "CalendarResource"),
     cos(true,           false,   AttributeClass.cos,              "Cos"),
-    dl(true,            true,    AttributeClass.distributionList, "DistributionList"),
+    dl(true,            true,    AttributeClass.distributionList, "DistributionList"), // static group
+    group(true,         true,    AttributeClass.group,            "DynamicGroup"),     // dynamic group
     domain(true,        false,   AttributeClass.domain,           "Domain"),
     server(true,        false,   AttributeClass.server,           "Server"),
     xmppcomponent(true, false,   AttributeClass.xmppComponent,    "XMPPComponent"),
@@ -97,13 +91,6 @@ public enum TargetType {
         init();
     }
     
-    /**
-     * 
-     * @param NeedsTargetIdentity
-     * @param attrClass
-     * @param applicableTargetTypes target types of rights that can be granted on this target type
-     *                              if null, all target types
-     */
     TargetType(boolean NeedsTargetIdentity, boolean isDomained, AttributeClass attrClass, String prettyName) {
         mNeedsTargetIdentity = NeedsTargetIdentity;
         mIsDomained = isDomained;
@@ -121,25 +108,48 @@ public enum TargetType {
     }
     
     static void init() {
-        TargetType.account.setInheritedByTargetTypes(new TargetType[]{TargetType.account});
-        TargetType.calresource.setInheritedByTargetTypes(new TargetType[]{TargetType.account, TargetType.calresource});
-        TargetType.dl.setInheritedByTargetTypes(new TargetType[]{TargetType.account, TargetType.calresource, TargetType.dl});
-        TargetType.domain.setInheritedByTargetTypes(new TargetType[]{TargetType.account, TargetType.calresource, TargetType.dl, TargetType.domain});
-        TargetType.cos.setInheritedByTargetTypes(new TargetType[]{TargetType.cos});
-        TargetType.server.setInheritedByTargetTypes(new TargetType[]{TargetType.server});
-        TargetType.xmppcomponent.setInheritedByTargetTypes(new TargetType[]{TargetType.xmppcomponent});
-        TargetType.zimlet.setInheritedByTargetTypes(new TargetType[]{TargetType.zimlet});
-        TargetType.config.setInheritedByTargetTypes(new TargetType[]{TargetType.config});
-        TargetType.global.setInheritedByTargetTypes(new TargetType[]{TargetType.account, 
-                                                        TargetType.calresource, 
-                                                        TargetType.cos,
-                                                        TargetType.dl,
-                                                        domain,
-                                                        server,
-                                                        xmppcomponent,
-                                                        zimlet,
-                                                        config,
-                                                        global});  // inherited by all
+        TargetType.account.setInheritedByTargetTypes(
+                new TargetType[]{account});
+        
+        TargetType.calresource.setInheritedByTargetTypes(
+                new TargetType[]{account, calresource});
+        
+        TargetType.dl.setInheritedByTargetTypes(
+                new TargetType[]{account, calresource, dl});
+        
+        TargetType.group.setInheritedByTargetTypes(
+                new TargetType[]{account, calresource});
+        
+        TargetType.domain.setInheritedByTargetTypes(
+                new TargetType[]{account, calresource, dl, group, domain});
+        
+        TargetType.cos.setInheritedByTargetTypes(
+                new TargetType[]{cos});
+        
+        TargetType.server.setInheritedByTargetTypes(
+                new TargetType[]{server});
+        
+        TargetType.xmppcomponent.setInheritedByTargetTypes(
+                new TargetType[]{xmppcomponent});
+        
+        TargetType.zimlet.setInheritedByTargetTypes(
+                new TargetType[]{zimlet});
+        
+        TargetType.config.setInheritedByTargetTypes(
+                new TargetType[]{config});
+        
+        TargetType.global.setInheritedByTargetTypes(
+                new TargetType[]{account, 
+                                 calresource, 
+                                 cos,
+                                 dl,
+                                 group,
+                                 domain,
+                                 server,
+                                 xmppcomponent,
+                                 zimlet,
+                                 config,
+                                 global});  // inherited by all
         
         // compute mInheritFromTargetTypes and  mInheritedByOtherTargetTypes 
         // from mInheritedByTargetTypes
@@ -209,7 +219,9 @@ public enum TargetType {
     
     public static TargetType fromCode(String s) throws ServiceException {
         try {
-            return TargetType.valueOf(s);
+            TargetType tt = TargetType.valueOf(s);
+            GroupUtil.checkSpecifiedTargetType(tt);
+            return tt;
         } catch (IllegalArgumentException e) {
             throw ServiceException.INVALID_REQUEST("unknown target type: " + s, e);
         }
@@ -231,7 +243,8 @@ public enum TargetType {
         return mAttrClass;
     }
     
-    public static Entry lookupTarget(Provisioning prov, TargetType targetType, Key.TargetBy targetBy, String target) throws ServiceException {
+    public static Entry lookupTarget(Provisioning prov, TargetType targetType, 
+            Key.TargetBy targetBy, String target) throws ServiceException {
         return lookupTarget(prov, targetType, targetBy, target, true);
     }
     
@@ -245,7 +258,8 @@ public enum TargetType {
      * @return
      * @throws ServiceException
      */
-    static Entry lookupTarget(Provisioning prov, TargetType targetType, Key.TargetBy targetBy, String target, boolean mustFind) throws ServiceException {
+    static Entry lookupTarget(Provisioning prov, TargetType targetType, Key.TargetBy targetBy, 
+            String target, boolean mustFind) throws ServiceException {
         Entry targetEntry = null;
         
         switch (targetType) {
@@ -260,7 +274,8 @@ public enum TargetType {
                 throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(target); 
             break;
         case dl:
-            targetEntry = prov.getAclGroup(Key.DistributionListBy.fromString(targetBy.name()), target);
+        case group:
+            targetEntry = prov.getGroupBasic(Key.DistributionListBy.fromString(targetBy.name()), target);
             if (targetEntry == null && mustFind)
                 throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(target); 
             break;
@@ -326,6 +341,8 @@ public enum TargetType {
             return TargetType.cos;
         else if (target instanceof DistributionList)
             return TargetType.dl;
+        else if (target instanceof DynamicGroup)
+            return TargetType.group;
         else if (target instanceof Server)
             return TargetType.server;
         else if (target instanceof Config)
@@ -387,6 +404,7 @@ public enum TargetType {
         case account:
         case calresource:
         case dl:
+        case group:    
             base = dit.mailBranchBaseDN();
             break;
         case domain:

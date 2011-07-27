@@ -43,6 +43,7 @@ import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.gal.GalSearchParams;
+import com.zimbra.cs.ldap.LdapTODO.ACLTODO;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.admin.type.CmdRightsInfo;
@@ -494,15 +495,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
             boolean directOnly, Map<String,String> via) 
     throws ServiceException;
 
-
-    //
-    // AclGroup
-    //
-    public DistributionList getAclGroup(Key.DistributionListBy keyType, String key) throws ServiceException {
-        throw ServiceException.UNSUPPORTED();
-    }
-
-
     /**
      * represents a super group in which the perspective object(account, cr, dl) is
      * directly or indirectly a member of
@@ -510,10 +502,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static class MemberOf {
         private String mId;            // zimbraId of this group
         private boolean mIsAdminGroup; // if this group is an admin group (zimbraIsAdminGroup == TRUE)
-
-        public MemberOf(String id, boolean isAdminGroup) {
+        private boolean mIsDynamicGroup; // if this group is a dynamic group
+        
+        public MemberOf(String id, boolean isAdminGroup, boolean isDynamicGroup) {
             mId = id;
             mIsAdminGroup = isAdminGroup;
+            mIsDynamicGroup = isDynamicGroup;
         }
 
         public String getId() {
@@ -525,18 +519,23 @@ public abstract class Provisioning extends ZAttrProvisioning {
         }
     }
 
-    public static class AclGroups {
+    public static class GroupMembership {
         List<MemberOf> mMemberOf;  // list of MemberOf
         List<String> mGroupIds;    // list of group ids
 
-        public AclGroups(List<MemberOf> memberOf, List<String> groupIds) {
+        public GroupMembership(List<MemberOf> memberOf, List<String> groupIds) {
             mMemberOf = memberOf;
             mGroupIds = groupIds;
         }
 
         // create an empty AclGroups
-        public AclGroups() {
+        public GroupMembership() {
             this(new ArrayList<MemberOf>(), new ArrayList<String>());
+        }
+        
+        public void append(MemberOf memberOf, String groupId) {
+            mMemberOf.add(memberOf);
+            mGroupIds.add(groupId);
         }
 
         public List<MemberOf> memberOf() {
@@ -557,7 +556,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
      *         the sorter the distance is, the earlier it appears in the returned List.
      * @throws ServiceException
      */
-    public AclGroups getAclGroups(Account acct, boolean adminGroupsOnly) throws ServiceException {
+    public GroupMembership getGroupMembership(Account acct, boolean adminGroupsOnly) 
+    throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
 
@@ -570,7 +570,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
      *         the earlier it appears in the returned List.
      * @throws ServiceException
      */
-    public AclGroups getAclGroups(DistributionList list, boolean adminGroupsOnly) throws ServiceException {
+    public GroupMembership getGroupMembership(DistributionList list, boolean adminGroupsOnly) 
+    throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
 
@@ -580,6 +581,15 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public Domain getDomain(DistributionList dl) throws ServiceException {
         String dname = dl.getDomainName();
+        return dname == null ? null : get(Key.DomainBy.name, dname);
+    }
+    
+    /**
+     * @return the domain of the dynamic grop
+     * @throws ServiceException
+     */
+    public Domain getDomain(DynamicGroup dynGroup) throws ServiceException {
+        String dname = dynGroup.getDomainName();
         return dname == null ? null : get(Key.DomainBy.name, dname);
     }
 
@@ -1211,6 +1221,19 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public DistributionList getDLBasic(Key.DistributionListBy keyType, String key) 
     throws ServiceException {
         return get(keyType, key);
+    }
+    
+
+    /* 
+     * ==============================
+     * 
+     * Dynamic Group methods
+     * 
+     * ==============================
+     */
+    public DynamicGroup createDynamicGroup(String listAddress, Map<String, Object> listAttrs)
+    throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
     }
     
     

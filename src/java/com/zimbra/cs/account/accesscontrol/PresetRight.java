@@ -46,7 +46,9 @@ public class PresetRight extends AdminRight {
         
         if (mutualExcludeAccountAndCalResource(targetType))
             return false;
-        
+
+        // disguise dynamic group as dl, all dl rights are also grantable on groups.
+        targetType = GroupUtil.disguiseDynamicGroupAsDL(targetType);
         return targetType.isInheritedBy(mTargetType);
     }
     

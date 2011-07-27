@@ -79,7 +79,7 @@ public class CheckPermission extends MailDocumentHandler {
             // entry = prov.get(DistributionListBy.fromString(targetBy), targetValue);
             
             // target for all user rights is "account", it doesn't make sense to 
-            // check if the authed user has right on a DL (e.g. can I invite tis DL?)
+            // check if the authed user has right on a DL (e.g. can I invite this DL?)
             // until we add an inviteDistributionList right targeted for DLs.
             // 
             // let it fall through to return the default permission

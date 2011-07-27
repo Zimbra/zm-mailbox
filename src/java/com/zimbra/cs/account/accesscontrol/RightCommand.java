@@ -40,6 +40,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
@@ -945,6 +946,7 @@ public class RightCommand {
         // target
         TargetType tt = TargetType.fromCode(targetType);
         Entry targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
+        tt = GroupUtil.fixupTargetType(targetEntry, tt);
         
         // grantee
         GranteeType gt = GranteeType.GT_USER;  // grantee for check right must be an Account
@@ -1063,6 +1065,7 @@ public class RightCommand {
         if (targetType != null) {
             tt = TargetType.fromCode(targetType);
             targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
+            tt = GroupUtil.fixupTargetType(targetEntry, tt);
         }
         
         // grantee
@@ -1089,6 +1092,8 @@ public class RightCommand {
         if (targetEntry != null) {
             // get ACL from the target
             ZimbraACL zimbraAcl = ACLUtil.getACL(targetEntry);
+            
+            // then filter by grnatee if grantee is specified
             grants.addGrants(tt, targetEntry, zimbraAcl, granteeFilter, isGranteeAnAdmin);
             
         } else {
@@ -1163,7 +1168,7 @@ public class RightCommand {
                     "It can only be granted on target types: " + right.reportGrantableTargetTypes(), null);
         
         // then the ugly special group target checking
-        if (targetType == TargetType.dl && !CheckRight.allowGroupTarget(right))
+        if (GroupUtil.isGroup(targetType) && !CheckRight.allowGroupTarget(right))
             throw ServiceException.INVALID_REQUEST("group target is not supported for right: " + right.getName(), null);
         
         /*
@@ -1210,7 +1215,7 @@ public class RightCommand {
         if (secret != null && !granteeType.allowSecret())
             throw ServiceException.PERM_DENIED("password is not allowed for grantee type " + granteeType.getCode());
     }
-            
+    
     public static void grantRight(
             Provisioning prov,
             Account authedAcct,
@@ -1223,6 +1228,7 @@ public class RightCommand {
         // target
         TargetType tt = TargetType.fromCode(targetType);
         Entry targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
+        tt = GroupUtil.fixupTargetType(targetEntry, tt);
         
         // grantee
         GranteeType gt = GranteeType.fromCode(granteeType);
@@ -1262,6 +1268,7 @@ public class RightCommand {
         // target
         TargetType tt = TargetType.fromCode(targetType);
         Entry targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
+        tt = GroupUtil.fixupTargetType(targetEntry, tt);
         
         // grantee
         GranteeType gt = GranteeType.fromCode(granteeType);

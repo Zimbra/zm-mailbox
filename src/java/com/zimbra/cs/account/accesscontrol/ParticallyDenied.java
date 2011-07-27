@@ -15,7 +15,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AclGroups;
+import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.SearchGrants.GrantsOnTarget;
 
@@ -35,16 +35,16 @@ public class ParticallyDenied {
                     return true;
                 else {
                     // see if targetSub is in a group that is in the domain
-                    AclGroups groups = null;
+                    GroupMembership groups = null;
                     if (targetSub instanceof Account)
-                        groups = prov.getAclGroups((Account)targetSub, false);
+                        groups = prov.getGroupMembership((Account)targetSub, false);
                     else if (targetSub instanceof DistributionList)
-                        groups = prov.getAclGroups((DistributionList)targetSub, false);
+                        groups = prov.getGroupMembership((DistributionList)targetSub, false);
                     else 
                         return false;
                     
                     for (String groupId : groups.groupIds()) {
-                        DistributionList group = prov.getAclGroup(Key.DistributionListBy.id, groupId);
+                        DistributionList group = prov.getDLBasic(Key.DistributionListBy.id, groupId);
                         Domain groupInDomain = prov.getDomain(group);
                         if (groupInDomain!= null &&  // hmm, log a warn if groupInDomain is null? throw internal err?
                             domain.getId().equals(groupInDomain.getId()))

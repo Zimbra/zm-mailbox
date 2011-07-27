@@ -36,6 +36,13 @@ public class LdapTODO {
     public @interface TODO {
     }
     
+    /*
+     * check all ref to DistributionList and TargetType.dl in accesscontrol package
+     */
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface ACLTODO {
+    }
+    
     @Retention(RetentionPolicy.RUNTIME)
     public @interface TODOEXCEPTIONMAPPING {
         // verify if the exception mapping is indeed needed, and if so fix it.

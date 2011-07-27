@@ -26,6 +26,8 @@ public abstract class Group extends MailTarget implements AliasedEntry {
     
     public abstract boolean isDynamic();
 
+    public abstract Domain getDomain() throws ServiceException;
+    
     public abstract String[] getAllMembers() throws ServiceException;
     
 

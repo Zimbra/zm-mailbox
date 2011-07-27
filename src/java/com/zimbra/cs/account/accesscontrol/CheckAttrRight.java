@@ -26,9 +26,9 @@ import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
-import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 
 public class CheckAttrRight extends CheckRight {
@@ -116,7 +116,7 @@ public class CheckAttrRight extends CheckRight {
             while ((grantedOn = iter.next()) != null && (!car.isAll())) {
                 acl = ACLUtil.getAllACEs(grantedOn);
                 
-                if (grantedOn instanceof DistributionList) {
+                if (grantedOn instanceof Group) {
                     if (acl == null)
                         continue;
                     
@@ -127,7 +127,7 @@ public class CheckAttrRight extends CheckRight {
                     if (mGrantee.isAccount())
                         skipPositiveGrants = !CrossDomain.crossDomainOK(mProv, 
                                 mGrantee.getAccount(), mGrantee.getDomain(), 
-                                targetDomain, (DistributionList)grantedOn);
+                                targetDomain, (Group)grantedOn);
                     
                     // don't check yet, collect all acls on all target groups
                     if (groupACLs == null)

@@ -42,6 +42,11 @@ public class DynamicGroup extends ZAttrDynamicGroup {
     }
     
     @Override
+    public Domain getDomain() throws ServiceException {
+        return getProvisioning().getDomain(this);
+    }
+    
+    @Override
     public String[] getAllMembers() throws ServiceException {
         return getMultiAttr(Provisioning.A_member);
     }

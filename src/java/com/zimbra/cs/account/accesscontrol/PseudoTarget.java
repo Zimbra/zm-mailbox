@@ -31,7 +31,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AclGroups;
+import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
@@ -78,7 +78,7 @@ public class PseudoTarget {
     
     static class PseudoAccount extends Account {
         Domain mPseudoDomain;
-        AclGroups mAclGroups;
+        GroupMembership mAclGroups;
         
         PseudoAccount(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults, 
                 Provisioning prov, Domain pseudoDomain) {
@@ -95,14 +95,14 @@ public class PseudoTarget {
         PseudoAccount(String name, String id, Map<String, Object> attrs, Map<String, Object> defaults, 
                 Provisioning prov, DistributionList group) throws ServiceException {
             super(name, id, attrs, defaults, prov);
-            mAclGroups = prov.getAclGroups(group, false);
+            mAclGroups = prov.getGroupMembership(group, false);
         }
         
         Domain getPseudoDomain() {
             return mPseudoDomain;
         }
         
-        AclGroups getAclGroups() {
+        GroupMembership getAclGroups() {
             return mAclGroups;
         }
     }
@@ -125,6 +125,20 @@ public class PseudoTarget {
         Domain mPseudoDomain;
         
         public PseudoDistributionList(String name, String id, Map<String, Object> attrs, 
+                Provisioning prov, Domain pseudoDomain) {
+            super(name, id, attrs, prov);
+            mPseudoDomain = pseudoDomain;
+        }
+        
+        Domain getPseudoDomain() {
+            return mPseudoDomain;
+        }
+    }
+    
+    static class PseudoDynamicGroup extends DistributionList {
+        Domain mPseudoDomain;
+        
+        public PseudoDynamicGroup(String name, String id, Map<String, Object> attrs, 
                 Provisioning prov, Domain pseudoDomain) {
             super(name, id, attrs, prov);
             mPseudoDomain = pseudoDomain;
@@ -242,7 +256,8 @@ public class PseudoTarget {
         Domain domain = null;
         if (targetType == TargetType.account ||
             targetType == TargetType.calresource ||
-            targetType == TargetType.dl) {
+            targetType == TargetType.dl ||
+            targetType == TargetType.group) {
             
             if (createPseudoDomain)
                 domain = pseudoDomain = (Domain)createPseudoTarget(prov, TargetType.domain, null, null, false, null, null);
@@ -292,7 +307,6 @@ public class PseudoTarget {
         case dl:
             targetEntry = new PseudoDistributionList("pseudo@"+domain.getName(), zimbraId, attrMap, prov, pseudoDomain);
             DistributionList dl = (DistributionList)targetEntry;
-            dl.turnToAclGroup();
             break;
         case domain:
             String name = domainName == null ? "pseudo.pseudo" : domainName;

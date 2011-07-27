@@ -38,7 +38,6 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.datasource.DataSourceType;
-import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
@@ -54,9 +53,6 @@ import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.DomainCache.GetFromDomainCacheOption;
 import com.zimbra.cs.account.NamedEntry.Visitor;
-import com.zimbra.cs.account.Provisioning.AutoProvPrincipalBy;
-import com.zimbra.cs.account.Provisioning.DirectoryEntryVisitor;
-import com.zimbra.cs.account.Provisioning.EagerAutoProvisionScheduler;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.PermissionCache;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -161,13 +157,13 @@ public class LdapProvisioning extends LdapProv {
                 LC.ldap_cache_zimlet_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
 
 
-    private NamedEntryCache<DistributionList> sAclGroupCache =
-        new NamedEntryCache<DistributionList>(
+    private NamedEntryCache<Group> sGroupCache =
+        new NamedEntryCache<Group>(
                 LC.ldap_cache_group_maxsize.intValue(),
                 LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
-
-    // TODO: combine with sAclGroupCache
-    //       note: DLs cached in this cache only contains sMinimalDlAttrs
+    
+    /*
+    // note: DLs cached in this cache only contains sMinimalDlAttrs
     private NamedEntryCache<DistributionList> sDLCache =
         new NamedEntryCache<DistributionList>(
                 LC.ldap_cache_group_maxsize.intValue(),
@@ -177,7 +173,8 @@ public class LdapProvisioning extends LdapProv {
         new NamedEntryCache<DynamicGroup>(
                 LC.ldap_cache_group_maxsize.intValue(),
                 LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
-
+    */
+    
     private NamedEntryCache<XMPPComponent> sXMPPComponentCache =
         new NamedEntryCache<XMPPComponent>(
                 LC.ldap_cache_xmppcomponent_maxsize.intValue(),
@@ -199,6 +196,7 @@ public class LdapProvisioning extends LdapProv {
             Provisioning.A_zimbraACE,
             Provisioning.A_zimbraAdminConsoleUIComponents,
             Provisioning.A_zimbraId,
+            Provisioning.A_zimbraIsACLGroup,
             Provisioning.A_zimbraIsAdminGroup,
             Provisioning.A_zimbraMailAlias,
     };
@@ -234,10 +232,10 @@ public class LdapProvisioning extends LdapProv {
     public double getZimletCacheHitRate() { return sZimletCache.getHitRate(); }
     
     @Override
-    public int getGroupCacheSize() { return sAclGroupCache.getSize(); }
+    public int getGroupCacheSize() { return sGroupCache.getSize(); }
     
     @Override
-    public double getGroupCacheHitRate() { return sAclGroupCache.getHitRate(); }
+    public double getGroupCacheHitRate() { return sGroupCache.getHitRate(); }
     
     @Override
     public int getXMPPCacheSize() { return sXMPPComponentCache.getSize(); }
@@ -441,21 +439,18 @@ public class LdapProvisioning extends LdapProv {
     }
 
     public void extendLifeInCache(Entry entry) {
+        //
+        // Note: do NOT do this for Group, entry 
+        //       here always contains all members 
+        //       of the group, which is big.
+        //
+        
         if (entry instanceof Account) {
             sAccountCache.replace((Account)entry);
         } else if (entry instanceof LdapCos) {
             sCosCache.replace((LdapCos)entry);
         } else if (entry instanceof Domain) {
             sDomainCache.replace((Domain)entry);
-        } else if (entry instanceof DistributionList) {
-            DistributionList dl = (DistributionList)entry;
-            if (dl.isAclGroup()) {
-                sAclGroupCache.replace((DistributionList)entry);
-            } else {
-                sDLCache.replace((DistributionList)entry);
-            }
-        } else if (entry instanceof DynamicGroup) {
-            sDynamicGroupCache.replace((DynamicGroup)entry);
         } else if (entry instanceof Server) {
             sServerCache.replace((Server)entry);
         } else if (entry instanceof XMPPComponent) {
@@ -3077,8 +3072,9 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    public List<DistributionList> getDistributionLists(DistributionList list, boolean directOnly, Map<String, String> via) throws ServiceException {
-        return getSuperDistributionLists(list, directOnly, via);
+    public List<DistributionList> getDistributionLists(DistributionList list, 
+            boolean directOnly, Map<String, String> via) throws ServiceException {
+        return getContainingDistributionLists(list, directOnly, via);
     }
 
     private DistributionList getDistributionListByQuery(String base, ZLdapFilter filter, 
@@ -3300,140 +3296,57 @@ public class LdapProvisioning extends LdapProv {
         return mAllDLs.isGroup(addr);
     }
 
-    //
-    // ACL group
-    //
-    static final String DATA_ACLGROUP_LIST = "AG_LIST";
-    static final String DATA_ACLGROUP_LIST_ADMINS_ONLY = "AG_LIST_ADMINS_ONLY";
-
-
-    @Override
-    /*
-     * - cached in LdapProvisioning
-     * - returned entry contains only attrs in sMinimalDlAttrs minus zimbraMailAlias
-     * - returned entry is not a "general purpose" DistributionList, it should only be used for ACL 
-     *   purposes for checking upward membership.
-     *
-     */
-    public DistributionList getAclGroup(Key.DistributionListBy keyType, String key) throws ServiceException {
-        switch(keyType) {
-            case id:
-                return getAclGroupById(key);
-            case name:
-                return getAclGroupByName(key);
-            default:
-                return null;
-        }
-    }
-
-    private DistributionList getAclGroupFromCache(Key.DistributionListBy keyType, String key) {
+    private Group getGroupFromCache(Key.DistributionListBy keyType, String key) {
         switch(keyType) {
         case id:
-            return sAclGroupCache.getById(key);
+            return sGroupCache.getById(key);
         case name:
-            return sAclGroupCache.getByName(key);
+            return sGroupCache.getByName(key);
         default:
             return null;
         }
     }
-
-    // GROUP-TODO: consolidate with sAclGroupCache
+    
+    private void putInGroupCache(Group group) {
+        sGroupCache.put(group);
+    }
+    
     private DistributionList getDLFromCache(Key.DistributionListBy keyType, String key) {
-        switch(keyType) {
-        case id:
-            return sDLCache.getById(key);
-        case name:
-            return sDLCache.getByName(key);
-        default:
+        Group group =  getGroupFromCache(keyType, key);
+        if (group instanceof DistributionList) {
+            return (DistributionList) group;
+        } else {
             return null;
         }
     }
 
     void removeGroupFromCache(Key.DistributionListBy keyType, String key) {
-        Group group = getAclGroupFromCache(keyType, key);
-        if (group != null) {
-            removeFromCache(group);
-        }
-        
-        group = getDLFromCache(keyType, key);
-        if (group != null) {
-            removeFromCache(group);
-        }
-        
-        group = getDynamicGroupFromCache(keyType, key);
+        Group group = getGroupFromCache(keyType, key);
         if (group != null) {
             removeFromCache(group);
         }
     }
 
-    private DistributionList getAclGroupById(String groupId) throws ServiceException {
-
-        DistributionList dl = sAclGroupCache.getById(groupId);
-        if (dl == null) {
-            dl = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
-                    filterFactory.distributionListById(groupId),
-                    null, sMinimalDlAttrs);
-            if (dl != null) {
-                // while we have the members, compute upward membership and cache it
-                AclGroups groups = computeUpwardMembership(dl);
-                dl.setCachedData(DATA_ACLGROUP_LIST, groups);
-
-                // done computing upward membership, trim off big attrs that contain all members
-                dl.turnToAclGroup();
-
-                // cache it
-                sAclGroupCache.put(dl);
-            }
-        }
-        return dl;
-    }
-
-    private DistributionList getAclGroupByName(String groupName) throws ServiceException {
-
-        DistributionList dl = sAclGroupCache.getByName(groupName);
-        if (dl == null) {
-            dl = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
-                    filterFactory.distributionListByName(groupName), null, sMinimalDlAttrs);
-            if (dl != null) {
-                // while we have the members, compute upward membership and cache it
-                AclGroups groups = computeUpwardMembership(dl);
-                dl.setCachedData(DATA_ACLGROUP_LIST, groups);
-
-                // done computing upward membership, trim off big attrs that contain all members
-                dl.turnToAclGroup();
-
-                // cache it
-                sAclGroupCache.put(dl);
-            }
-        }
-        return dl;
-    }
-
-    private AclGroups computeUpwardMembership(DistributionList list) throws ServiceException {
+    private GroupMembership computeUpwardMembership(Entry entry) throws ServiceException {
         Map<String, String> via = new HashMap<String, String>();
-        List<DistributionList> lists = getSuperDistributionLists(list, false, via);
+        List<DistributionList> lists = getContainingDistributionLists(entry, false, via);
         return computeUpwardMembership(lists);
     }
 
-    private AclGroups computeUpwardMembership(List<DistributionList> lists) {
+    private GroupMembership computeUpwardMembership(List<DistributionList> lists) {
         List<MemberOf> groups = new ArrayList<MemberOf>();
         List<String> groupIds = new ArrayList<String>();
 
         for (DistributionList dl : lists) {
-            boolean isAdminGroup = dl.getBooleanAttr(Provisioning.A_zimbraIsAdminGroup, false);
-
-            groups.add(new MemberOf(dl.getId(), isAdminGroup));
+            groups.add(new MemberOf(dl.getId(), dl.isIsAdminGroup(), false));
             groupIds.add(dl.getId());
         }
 
-        groups = Collections.unmodifiableList(groups);
-        groupIds = Collections.unmodifiableList(groupIds);
-
-        return new AclGroups(groups, groupIds);
+        return new GroupMembership(groups, groupIds);
     }
 
     // filter out non-admin groups from an AclGroups instance
-    private AclGroups getAdminAclGroups(AclGroups aclGroups) {
+    private GroupMembership getAdminAclGroups(GroupMembership aclGroups) {
         List<MemberOf> groups = new ArrayList<MemberOf>();
         List<String> groupIds = new ArrayList<String>();
 
@@ -3448,63 +3361,69 @@ public class LdapProvisioning extends LdapProv {
         groups = Collections.unmodifiableList(groups);
         groupIds = Collections.unmodifiableList(groupIds);
 
-        return new AclGroups(groups, groupIds);
+        return new GroupMembership(groups, groupIds);
     }
 
     @Override
-    public AclGroups getAclGroups(Account acct, boolean adminGroupsOnly) throws ServiceException {
-        String cacheKey = adminGroupsOnly?DATA_ACLGROUP_LIST_ADMINS_ONLY:DATA_ACLGROUP_LIST;
+    public GroupMembership getGroupMembership(Account acct, boolean adminGroupsOnly) throws ServiceException {
+        EntryCacheDataKey cacheKey = adminGroupsOnly ? 
+                EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP_ADMINS_ONLY :
+                    EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP;
 
-        AclGroups dls = (AclGroups)acct.getCachedData(cacheKey);
-        if (dls != null)
-            return dls;
+        GroupMembership groups = (GroupMembership)acct.getCachedData(cacheKey);
+        if (groups != null) {
+            return groups;
+        }
+        
+        //
+        // static groups
+        //
+        groups = computeUpwardMembership(acct);
 
-        Map<String, String> via = new HashMap<String, String>();
-        List<DistributionList> lists = getSuperDistributionLists(acct, false, via);
-
-        dls = computeUpwardMembership(lists);
-
-        if (adminGroupsOnly)
-            dls = getAdminAclGroups(dls); // filter out non-admin groups
-
-        acct.setCachedData(cacheKey, dls);
-        return dls;
+        //
+        // append dynamic groups
+        //
+        List<DynamicGroup> dynGroups = getContainingDynamicGroups(acct);
+        for (DynamicGroup dynGroup : dynGroups) {
+            groups.append(new MemberOf(dynGroup.getId(), dynGroup.isIsAdminGroup(), true),
+                    dynGroup.getId());
+        }
+        
+        // cache it 
+        acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP, groups);
+        
+        // filter out non-admin groups
+        if (adminGroupsOnly) {
+            groups = getAdminAclGroups(groups); 
+            acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP_ADMINS_ONLY, groups);
+        }
+        
+        return groups;
     }
 
     @Override
-    /*
-     * Should only be called if list was obtained from getAclGroup.
-     *
-     * DistributionList returned by getAclGroup always have the upward membership cached in its data cache.
-     * But the data cache can be cleared by a prov.modifyAttrs call on the object. We recompute the
-     * upward membership if it is not in cache.
-     *
-     */
-    public AclGroups getAclGroups(DistributionList list, boolean adminGroupsOnly) throws ServiceException {
+    public GroupMembership getGroupMembership(DistributionList dl, boolean adminGroupsOnly) 
+    throws ServiceException {
 
-        // sanity check
-        if (!list.isAclGroup())
-            throw ServiceException.FAILURE("internal error", null);
+        EntryCacheDataKey cacheKey = adminGroupsOnly ? 
+                EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP_ADMINS_ONLY :
+                EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP;
 
-        String cacheKey = adminGroupsOnly?DATA_ACLGROUP_LIST_ADMINS_ONLY:DATA_ACLGROUP_LIST;
+        GroupMembership groups = (GroupMembership)dl.getCachedData(cacheKey);
+        if (groups != null) {
+            return groups;
+        }
 
-        AclGroups dls = (AclGroups)list.getCachedData(cacheKey);
-        if (dls != null)
-            return dls;
+        groups = computeUpwardMembership(dl);
 
-        // reload the entry from ldap because its zimbraMailAlias was trimmed off.
-        DistributionList dl = get(Key.DistributionListBy.id, list.getId());
-        if (dl == null)
-            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(list.getName());
+        dl.setCachedData(EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP, groups);
+        
+        if (adminGroupsOnly) {
+            groups = getAdminAclGroups(groups); // filter out non-admin groups
+            dl.setCachedData(EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP_ADMINS_ONLY, groups);
+        }
 
-        dls = computeUpwardMembership(dl);
-
-        if (adminGroupsOnly)
-            dls = getAdminAclGroups(dls); // filter out non-admin groups
-
-        dl.setCachedData(cacheKey, dls);
-
-        return dls;
+        return groups;
     }
 
     @Override
@@ -4830,7 +4749,8 @@ public class LdapProvisioning extends LdapProv {
             sb.append(")");
         String [] attrs = minimalData ? sMinimalDlAttrs : null;
 
-        return (List<DistributionList>) searchAccountsInternal(sb.toString(), attrs, null, true, Provisioning.SD_DISTRIBUTION_LIST_FLAG);
+        return (List<DistributionList>) searchAccountsInternal(sb.toString(), attrs, null, 
+                true, Provisioning.SD_DISTRIBUTION_LIST_FLAG);
 
     }
 
@@ -4838,7 +4758,7 @@ public class LdapProvisioning extends LdapProv {
         if (!(entry instanceof GroupedEntry))
             throw ServiceException.FAILURE("internal error", null);
 
-        String cacheKey = EntryCacheDataKey.GROUPEDENTRY_DIRECT_GROUPIDS.getKeyName();
+        EntryCacheDataKey cacheKey = EntryCacheDataKey.GROUPEDENTRY_DIRECT_GROUPIDS;
         @SuppressWarnings("unchecked")
         List<String> directGroupIds = (List<String>) entry.getCachedData(cacheKey);
 
@@ -4853,18 +4773,18 @@ public class LdapProvisioning extends LdapProv {
             // - build the group id list and cache it on the entry
             // - add each group in cache only if it is not already in.
             //   we do not want to overwrite the entry in cache, because it
-            //   might have its direct group ids cached on it.
+            //   might already have all its direct group ids cached on it.
             // - if the group is already in cache, return the cached instance
-            //   instead of the instance we ject fetched, because the cached
+            //   instead of the instance we just fetched, because the cached
             //   instance might have its direct group ids cached on it.
             directGroupIds = new ArrayList<String>(directGroups.size());
             List<DistributionList> directGroupsToReturn = new ArrayList<DistributionList>(directGroups.size());
             for (DistributionList group : directGroups) {
                 String groupId = group.getId();
                 directGroupIds.add(groupId);
-                DistributionList cached = sDLCache.getById(groupId);
+                DistributionList cached = getDLFromCache(Key.DistributionListBy.id, groupId);
                 if (cached == null) {
-                    sDLCache.put(group);
+                    putInGroupCache(group);
                     directGroupsToReturn.add(group);
                 } else {
                     directGroupsToReturn.add(cached);
@@ -4874,6 +4794,11 @@ public class LdapProvisioning extends LdapProv {
             return directGroupsToReturn;
 
         } else {
+            /*
+             * The entry already have direct group ids cached.
+             * Go through each of them and fetch the groups,
+             * eithr from cache or from LDAP (prov.getDLBasic).
+             */
             directGroups = new ArrayList<DistributionList>();
             Set<String> idsToRemove = null;
             for (String groupId : directGroupIds) {
@@ -4884,8 +4809,9 @@ public class LdapProvisioning extends LdapProv {
                     if (idsToRemove == null)
                         idsToRemove = new HashSet<String>();
                     idsToRemove.add(groupId);
-                } else
+                } else {
                     directGroups.add(group);
+                }
             }
 
             // update our direct group id cache if needed
@@ -4893,11 +4819,12 @@ public class LdapProvisioning extends LdapProv {
                 // create a new object, do *not* update directly on the cached copy
                 List<String> updatedDirectGroupIds = new ArrayList<String>();
                 for (String id : directGroupIds) {
-                    if (!idsToRemove.contains(id))
+                    if (!idsToRemove.contains(id)) {
                         updatedDirectGroupIds.add(id);
+                    }
                 }
 
-                // swap the new data in
+                // swap in the new data
                 entry.setCachedData(cacheKey, updatedDirectGroupIds);
             }
         }
@@ -4913,44 +4840,41 @@ public class LdapProvisioning extends LdapProv {
      *     - entry returned does not contain members (zimbraMailForwardingAddress) 
      */
     @Override
-    public DistributionList getDLBasic(Key.DistributionListBy keyType, String key) throws ServiceException {
+    public DistributionList getDLBasic(Key.DistributionListBy keyType, String key) 
+    throws ServiceException {
+        
+        Group group = getGroupFromCache(keyType, key);
+        
+        if (group instanceof DistributionList) {
+            return (DistributionList) group;
+        } else if (group instanceof DynamicGroup) {
+            return null;
+        }
+        
+        // not in cache, fetch from LDAP
+        DistributionList dl = null;
+        
         switch(keyType) {
         case id:
-            return getDLById(key);
+            dl = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
+                    filterFactory.distributionListById(key), null, sMinimalDlAttrs);
+            break;
         case name:
-            return getDLByName(key);
+            dl = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
+                    filterFactory.distributionListByName(key), null, sMinimalDlAttrs);
+            break;
         default:
            return null;
         }
-    }
-
-    private DistributionList getDLById(String groupId) throws ServiceException {
-        DistributionList group = sDLCache.getById(groupId);
-        if (group == null) {
-            // fetch from LDAP
-            group = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
-                    filterFactory.distributionListById(groupId), null, sMinimalDlAttrs);
-            if (group != null)
-                sDLCache.put(group);
+        
+        if (dl != null) {
+            putInGroupCache(dl);
         }
-
-        return group;
+        
+        return dl;
     }
 
-    private DistributionList getDLByName(String groupName) throws ServiceException {
-        DistributionList group = sDLCache.getByName(groupName);
-        if (group == null) {
-            // fetch from LDAP
-            group = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
-                    filterFactory.distributionListByName(groupName), null, sMinimalDlAttrs);
-            if (group != null)
-                sDLCache.put(group);
-        }
-
-        return group;
-    }
-
-    private List<DistributionList> getSuperDistributionLists(Entry entry, boolean directOnly, 
+    private List<DistributionList> getContainingDistributionLists(Entry entry, boolean directOnly, 
             Map<String, String> via) throws ServiceException {
         List<DistributionList> directDLs = getAllDirectDLs(this, entry);
         HashSet<String> directDLSet = new HashSet<String>();
@@ -4975,7 +4899,9 @@ public class LdapProvisioning extends LdapProv {
 
             for (DistributionList newDl: newLists) {
                 if (!directDLSet.contains(newDl.getName())) {
-                    if (via != null) via.put(newDl.getName(), dl.getName());
+                    if (via != null) {
+                        via.put(newDl.getName(), dl.getName());
+                    }
                     dlsToCheck.push(newDl);
                 }
             }
@@ -4984,12 +4910,10 @@ public class LdapProvisioning extends LdapProv {
         return result;
     }
 
-    static final String DATA_DL_SET = "DL_SET";
-
     @Override
     public Set<String> getDistributionLists(Account acct) throws ServiceException {
         @SuppressWarnings("unchecked")
-        Set<String> dls = (Set<String>) acct.getCachedData(DATA_DL_SET);
+        Set<String> dls = (Set<String>) acct.getCachedData(EntryCacheDataKey.ACCOUNT_DLS);
         if (dls != null) return dls;
 
         dls = new HashSet<String>();
@@ -5000,7 +4924,7 @@ public class LdapProvisioning extends LdapProv {
             dls.add(dl.getId());
         }
         dls = Collections.unmodifiableSet(dls);
-        acct.setCachedData(DATA_DL_SET, dls);
+        acct.setCachedData(EntryCacheDataKey.ACCOUNT_DLS, dls);
         return dls;
 
     }
@@ -5013,20 +4937,14 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public boolean inDistributionList(DistributionList list, String zimbraId) throws ServiceException {
-        DistributionList group = list;
-
-        // if the dl is not an AclGroup, get one because AclGroup are cached in LdapProvisioning and
-        // upward membership are for the group is cached on the AclGroup object
-        if (!list.isAclGroup())
-            group = getAclGroup(Key.DistributionListBy.id, list.getId());
-
-        AclGroups aclGroups = getAclGroups(group, false);
+        GroupMembership aclGroups = getGroupMembership(list, false);
         return aclGroups.groupIds().contains(zimbraId);
     }
 
     @Override
-    public List<DistributionList> getDistributionLists(Account acct, boolean directOnly, Map<String, String> via) throws ServiceException {
-        return getSuperDistributionLists(acct, directOnly, via);
+    public List<DistributionList> getDistributionLists(Account acct, boolean directOnly, 
+            Map<String, String> via) throws ServiceException {
+        return getContainingDistributionLists(acct, directOnly, via);
     }
 
     private static final int DEFAULT_GAL_MAX_RESULTS = 100;
@@ -5580,9 +5498,9 @@ public class LdapProvisioning extends LdapProv {
     }
 
     private void clearUpwardMembershipCache(Account acct) {
-        acct.setCachedData(LdapProvisioning.DATA_DL_SET, null);
-        acct.setCachedData(LdapProvisioning.DATA_ACLGROUP_LIST, null);
-        acct.setCachedData(LdapProvisioning.DATA_ACLGROUP_LIST_ADMINS_ONLY, null);
+        acct.setCachedData(EntryCacheDataKey.ACCOUNT_DLS, null);
+        acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP, null);
+        acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_MEMBERSHIP_ADMINS_ONLY, null);
         acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_DIRECT_GROUPIDS.getKeyName(), null);
     }
     
@@ -6859,9 +6777,7 @@ public class LdapProvisioning extends LdapProv {
                     removeGroupFromCache(dlBy, entry.mEntryIdentity);
                 }
             } else {
-                sAclGroupCache.clear();
-                sDLCache.clear();
-                sDynamicGroupCache.clear();
+                sGroupCache.clear();
             }
             return;
         case config:
@@ -6937,15 +6853,13 @@ public class LdapProvisioning extends LdapProv {
 
     @Override // LdapProv
     public void removeFromCache(Entry entry) {
-        if (entry instanceof Account)
+        if (entry instanceof Account) {
             sAccountCache.remove((Account)entry);
-        else if (entry instanceof DistributionList) {
-            sAclGroupCache.remove((DistributionList)entry);
-            sDLCache.remove((DistributionList)entry);
-        } else if (entry instanceof DynamicGroup) {
-            sDynamicGroupCache.remove((DynamicGroup)entry);
-        } else
+        } else if (entry instanceof DistributionList) {
+            sGroupCache.remove((DistributionList)entry);
+        } else {
             throw new UnsupportedOperationException();
+        }
     }
 
     private static class CountAccountVisitor implements NamedEntry.Visitor {
@@ -7364,16 +7278,7 @@ public class LdapProvisioning extends LdapProv {
      */
     @Override
     public Group getGroupBasic(Key.DistributionListBy keyType, String key) throws ServiceException {
-        Group group;
-        
-        // try DL cache 
-        group = getDLFromCache(keyType, key);
-        if (group != null) {
-            return group;
-        }
-        
-        // try dynamic group cache
-        group = getDynamicGroupFromCache(keyType, key);
+        Group group = getGroupFromCache(keyType, key);
         if (group != null) {
             return group;
         }
@@ -7383,11 +7288,7 @@ public class LdapProvisioning extends LdapProv {
         
         // cache it 
         if (group != null) {
-            if (group.isDynamic()) {
-                sDynamicGroupCache.put((DynamicGroup) group);
-            } else {
-                sDLCache.put((DistributionList) group);
-            }
+            putInGroupCache(group);
         }
         
         return group;
@@ -7445,7 +7346,7 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public boolean inACLGroup(Account acct, String zimbraId) throws ServiceException {
         // check dynamic groups first, it's cheaper than the check for static groups
-        if (inDynamicGroup(acct, zimbraId, true)) {
+        if (inDynamicGroup(acct, zimbraId)) {
             return true;
         } else {
             // check static groups
@@ -7507,7 +7408,8 @@ public class LdapProvisioning extends LdapProv {
      *   Dynamic Groups
      * ==================
      */
-    private DynamicGroup createDynamicGroup(String groupAddress,
+    @Override
+    public DynamicGroup createDynamicGroup(String groupAddress,
             Map<String, Object> groupAttrs) throws ServiceException {
 
         SpecialAttrs specialAttrs = mDIT.handleSpecialAttrs(groupAttrs);
@@ -7810,36 +7712,34 @@ public class LdapProvisioning extends LdapProv {
     }
     
     private DynamicGroup getDynamicGroupFromCache(Key.DistributionListBy keyType, String key) {
-        switch(keyType) {
-        case id:
-            return sDynamicGroupCache.getById(key);
-        case name:
-            return sDynamicGroupCache.getByName(key);
-        default:
+        Group group =  getGroupFromCache(keyType, key);
+        if (group instanceof DynamicGroup) {
+            return (DynamicGroup) group;
+        } else {
             return null;
         }
     }
     
     private DynamicGroup getDynamicGroupBasic(Key.DistributionListBy keyType, String key) 
     throws ServiceException {
-        DynamicGroup group = getDynamicGroupFromCache(keyType, key);
-        if (group != null) {
-            return group;
+        DynamicGroup dynGroup = getDynamicGroupFromCache(keyType, key);
+        if (dynGroup != null) {
+            return dynGroup;
         }
         
         switch(keyType) {
         case id:
-            group = getDynamicGroupById(key, null, true);
+            dynGroup = getDynamicGroupById(key, null, true);
             break;
         case name:
-            group = getDynamicGroupByName(key, null, true);
+            dynGroup = getDynamicGroupByName(key, null, true);
             break;
         }
         
-        if (group != null) {
-            sDynamicGroupCache.put(group);
+        if (dynGroup != null) {
+            putInGroupCache(dynGroup);
         }
-        return group;
+        return dynGroup;
     }
     
     private DynamicGroup getDynamicGroupById(String zimbraId, ZLdapContext zlc, boolean basicAttrsOnly) 
@@ -7943,16 +7843,26 @@ public class LdapProvisioning extends LdapProv {
         }
     }
     
-    private boolean inDynamicGroup(Account acct, String zimbraId, boolean aclGroup) throws ServiceException {
+    private boolean inDynamicGroup(Account acct, String zimbraId) throws ServiceException {
         Set<String> memberOf = acct.getMultiAttrSet(Provisioning.A_zimbraMemberOf);
         if (memberOf.contains(zimbraId)) {
             DynamicGroup dynGroup = getDynamicGroupBasic(Key.DistributionListBy.id, zimbraId);
-            if (aclGroup) {
-                return dynGroup.isIsACLGroup();
-            }
-            return dynGroup != null;
+            return dynGroup != null && dynGroup.isIsACLGroup();
         }
         return false;
     }
-
+    
+    private List<DynamicGroup> getContainingDynamicGroups(Account acct) throws ServiceException {
+        List<DynamicGroup> groups = new ArrayList<DynamicGroup>();
+        
+        String[] memberOf = acct.getMultiAttr(Provisioning.A_zimbraMemberOf);
+        for (String groupId : memberOf) {
+            DynamicGroup dynGroup = getDynamicGroupBasic(Key.DistributionListBy.id, groupId);
+            if (dynGroup != null && dynGroup.isIsACLGroup()) {
+                groups.add(dynGroup);
+            }
+        }
+        
+        return groups;
+    }
 }

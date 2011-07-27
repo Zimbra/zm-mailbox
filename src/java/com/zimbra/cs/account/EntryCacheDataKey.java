@@ -17,6 +17,8 @@ public enum EntryCacheDataKey {
      * account
      */
     ACCOUNT_COS,
+    ACCOUNT_DLS,
+    ACCOUNT_DYNAMIC_GROUPS,
     ACCOUNT_IS_GAL_SYNC_ACCOUNT,
     ACCOUNT_EMAIL_FIELDS,
     ACCOUNT_VALIDITY_VALUE_HIGHEST_RELOAD,
@@ -30,7 +32,9 @@ public enum EntryCacheDataKey {
      * grouped entries(entries that can be in groups): account, cr, dl
      */
     GROUPEDENTRY_DIRECT_GROUPIDS,
-    
+    GROUPEDENTRY_MEMBERSHIP,
+    GROUPEDENTRY_MEMBERSHIP_ADMINS_ONLY,
+        
     /*
      * domain
      */

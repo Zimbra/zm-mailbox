@@ -13,12 +13,13 @@ import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.DynamicGroup;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
@@ -165,7 +166,7 @@ public abstract class TestProv extends TestLdap {
         return cos;
     }
     
-    private DistributionList createGroup(String localpart, Domain domain, Map<String, Object> attrs) throws Exception {
+    private DistributionList createDistributionList(String localpart, Domain domain, Map<String, Object> attrs) throws Exception {
         if (domain == null)
             domain = createDomain();
          
@@ -175,16 +176,36 @@ public abstract class TestProv extends TestLdap {
         return dl;
     }
     
-    protected DistributionList createUserGroup(String localpart, Domain domain) throws Exception {
-        return createGroup(localpart, domain, new HashMap<String, Object>());
+    protected DistributionList createUserDistributionList(String localpart, Domain domain) throws Exception {
+        return createDistributionList(localpart, domain, new HashMap<String, Object>());
     }
     
     protected DistributionList createAdminGroup(String localpart, Domain domain) throws Exception {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraIsAdminGroup, ProvisioningConstants.TRUE);
-        return createGroup(localpart, domain, attrs);
+        return createDistributionList(localpart, domain, attrs);
     }
     
+    private DynamicGroup createDynamicGroup(String localpart, Domain domain, Map<String, Object> attrs) 
+    throws Exception {
+        if (domain == null)
+            domain = createDomain();
+         
+        String email = localpart + "@" + domain.getName();
+        DynamicGroup dynGroup = mProv.createDynamicGroup(email, attrs);
+        mCreatedEntries.add(dynGroup);
+        return dynGroup;
+    }
+    
+    protected DynamicGroup createUserDynamicGroup(String localpart, Domain domain) throws Exception {
+        return createDynamicGroup(localpart, domain, new HashMap<String, Object>());
+    }
+    
+    protected DynamicGroup createAdminDynamicGroup(String localpart, Domain domain) throws Exception {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, ProvisioningConstants.TRUE);
+        return createDynamicGroup(localpart, domain, attrs);
+    }
     
     protected Server createServer() throws Exception {
         Server server = mProv.createServer(genServerName(), new HashMap<String, Object>());
@@ -219,8 +240,8 @@ public abstract class TestProv extends TestLdap {
             mProv.deleteCalendarResource(entry.getId());
         else if (entry instanceof Cos)
             mProv.deleteCos(entry.getId());
-        else if (entry instanceof DistributionList)
-            mProv.deleteDistributionList(entry.getId());
+        else if (entry instanceof Group)
+            mProv.deleteGroup(entry.getId());
         else if (entry instanceof Domain)
             mProv.deleteDomain(entry.getId());
         else if (entry instanceof Server)

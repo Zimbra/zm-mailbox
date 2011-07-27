@@ -3373,7 +3373,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     static final String DATA_ACLGROUP_LIST_ADMINS_ONLY = "AG_LIST_ADMINS_ONLY";
 
 
-    @Override
+    
     /*
      * - cached in LdapProvisioning
      * - returned entry contains only attrs in sMinimalDlAttrs minus zimbraMailAlias
@@ -3381,7 +3381,7 @@ public class LegacyLdapProvisioning extends LdapProv {
      *   to check upward membership.
      *
      */
-    public DistributionList getAclGroup(Key.DistributionListBy keyType, String key) throws ServiceException {
+    private DistributionList getAclDL(Key.DistributionListBy keyType, String key) throws ServiceException {
         switch(keyType) {
             case id:
                 return getAclGroupById(key);
@@ -3392,6 +3392,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         }
     }
 
+    
     private DistributionList getAclGroupFromCache(Key.DistributionListBy keyType, String key) {
         switch(keyType) {
         case id:
@@ -3434,7 +3435,7 @@ public class LegacyLdapProvisioning extends LdapProv {
                     null, sMinimalDlAttrs);
             if (dl != null) {
                 // while we have the members, compute upward membership and cache it
-                AclGroups groups = computeUpwardMembership(dl);
+                GroupMembership groups = computeUpwardMembership(dl);
                 dl.setCachedData(DATA_ACLGROUP_LIST, groups);
 
                 // done computing upward membership, trim off big attrs that contain all members
@@ -3456,7 +3457,7 @@ public class LegacyLdapProvisioning extends LdapProv {
                                             null, sMinimalDlAttrs);
             if (dl != null) {
                 // while we have the members, compute upward membership and cache it
-                AclGroups groups = computeUpwardMembership(dl);
+                GroupMembership groups = computeUpwardMembership(dl);
                 dl.setCachedData(DATA_ACLGROUP_LIST, groups);
 
                 // done computing upward membership, trim off big attrs that contain all members
@@ -3469,31 +3470,31 @@ public class LegacyLdapProvisioning extends LdapProv {
         return dl;
     }
 
-    private AclGroups computeUpwardMembership(DistributionList list) throws ServiceException {
+    private GroupMembership computeUpwardMembership(DistributionList list) throws ServiceException {
         Map<String, String> via = new HashMap<String, String>();
         List<DistributionList> lists = getGroups(list, false, via);
         return computeUpwardMembership(lists);
     }
 
-    private AclGroups computeUpwardMembership(List<DistributionList> lists) {
+    private GroupMembership computeUpwardMembership(List<DistributionList> lists) {
         List<MemberOf> groups = new ArrayList<MemberOf>();
         List<String> groupIds = new ArrayList<String>();
 
         for (DistributionList dl : lists) {
             boolean isAdminGroup = dl.getBooleanAttr(Provisioning.A_zimbraIsAdminGroup, false);
 
-            groups.add(new MemberOf(dl.getId(), isAdminGroup));
+            groups.add(new MemberOf(dl.getId(), isAdminGroup, false));
             groupIds.add(dl.getId());
         }
 
         groups = Collections.unmodifiableList(groups);
         groupIds = Collections.unmodifiableList(groupIds);
 
-        return new AclGroups(groups, groupIds);
+        return new GroupMembership(groups, groupIds);
     }
 
     // filter out non-admin groups from an AclGroups instance
-    private AclGroups getAdminAclGroups(AclGroups aclGroups) {
+    private GroupMembership getAdminAclGroups(GroupMembership aclGroups) {
         List<MemberOf> groups = new ArrayList<MemberOf>();
         List<String> groupIds = new ArrayList<String>();
 
@@ -3508,14 +3509,14 @@ public class LegacyLdapProvisioning extends LdapProv {
         groups = Collections.unmodifiableList(groups);
         groupIds = Collections.unmodifiableList(groupIds);
 
-        return new AclGroups(groups, groupIds);
+        return new GroupMembership(groups, groupIds);
     }
 
     @Override
-    public AclGroups getAclGroups(Account acct, boolean adminGroupsOnly) throws ServiceException {
+    public GroupMembership getGroupMembership(Account acct, boolean adminGroupsOnly) throws ServiceException {
         String cacheKey = adminGroupsOnly?DATA_ACLGROUP_LIST_ADMINS_ONLY:DATA_ACLGROUP_LIST;
 
-        AclGroups dls = (AclGroups)acct.getCachedData(cacheKey);
+        GroupMembership dls = (GroupMembership)acct.getCachedData(cacheKey);
         if (dls != null)
             return dls;
 
@@ -3540,7 +3541,7 @@ public class LegacyLdapProvisioning extends LdapProv {
      * upward membership if it is not in cache.
      *
      */
-    public AclGroups getAclGroups(DistributionList list, boolean adminGroupsOnly) throws ServiceException {
+    public GroupMembership getGroupMembership(DistributionList list, boolean adminGroupsOnly) throws ServiceException {
 
         // sanity check
         if (!list.isAclGroup())
@@ -3548,7 +3549,7 @@ public class LegacyLdapProvisioning extends LdapProv {
 
         String cacheKey = adminGroupsOnly?DATA_ACLGROUP_LIST_ADMINS_ONLY:DATA_ACLGROUP_LIST;
 
-        AclGroups dls = (AclGroups)list.getCachedData(cacheKey);
+        GroupMembership dls = (GroupMembership)list.getCachedData(cacheKey);
         if (dls != null)
             return dls;
 
@@ -5104,9 +5105,9 @@ public class LegacyLdapProvisioning extends LdapProv {
         // if the dl is not an AclGroup, get one because AclGroup are cached in LdapProvisioning and
         // upward membership are for the group is cached on the AclGroup object
         if (!list.isAclGroup())
-            group = getAclGroup(Key.DistributionListBy.id, list.getId());
+            group = getAclDL(Key.DistributionListBy.id, list.getId());
 
-        AclGroups aclGroups = getAclGroups(group, false);
+        GroupMembership aclGroups = getGroupMembership(group, false);
         return aclGroups.groupIds().contains(zimbraId);
     }
 

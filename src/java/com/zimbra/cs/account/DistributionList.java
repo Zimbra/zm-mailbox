@@ -21,17 +21,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class DistributionList extends ZAttrDistributionList implements GroupedEntry {
-    
-    /*
-     * This is for sanity checking purpose.
-     * 
-     * Certain calls on DistributionList should only be made if the DistributionList
-     * object was obtained from prov.getAclGroup, *not* prov.get(DistributionListBy), 
-     * *not* prov.searchObjects.   Some calls are vice versa.
-     * 
-     * mIsAclGroup is true if this object was loaded by prov.getAclGroup.
-     */
-    boolean mIsAclGroup;
+
     
     public DistributionList(String name, String id, Map<String, Object> attrs, Provisioning prov) {
         super(name, id, attrs, prov);
@@ -45,6 +35,11 @@ public class DistributionList extends ZAttrDistributionList implements GroupedEn
     @Override
     public boolean isDynamic() {
         return false;
+    }
+    
+    @Override
+    public Domain getDomain() throws ServiceException {
+        return getProvisioning().getDomain(this);
     }
 
     public void modify(Map<String, Object> attrs) throws ServiceException {
@@ -74,7 +69,7 @@ public class DistributionList extends ZAttrDistributionList implements GroupedEn
     public void removeMembers(String[] member) throws ServiceException {
         getProvisioning().removeMembers(this, member);
     }
-
+    
     @Override
     public String[] getAllMembers() throws ServiceException {
         if (mIsAclGroup)
@@ -92,9 +87,6 @@ public class DistributionList extends ZAttrDistributionList implements GroupedEn
     
     @Override
     public String[] getAliases() throws ServiceException {
-        if (mIsAclGroup)
-            throw ServiceException.FAILURE("internal error", null);
-        
         return getMultiAttr(Provisioning.A_zimbraMailAlias);
     }
     
@@ -104,6 +96,32 @@ public class DistributionList extends ZAttrDistributionList implements GroupedEn
         if (mIsAclGroup)
             trimForAclGroup();
     }
+
+    @Override
+    public String[] getAllAddrsAsGroupMember() throws ServiceException {
+        String aliases[] = getAliases();
+        String addrs[] = new String[aliases.length+1];
+        addrs[0] = getName();
+        for (int i=0; i < aliases.length; i++)
+            addrs[i+1] = aliases[i];
+        return addrs;
+    }
+    
+    
+    // =====================================================================================
+    //  Delete all following junk and mIsAclGroup  after LegacyldapProvisioning disappear!!!
+    // =====================================================================================
+    
+    /*
+     * This is for sanity checking purpose.
+     * 
+     * Certain calls on DistributionList should only be made if the DistributionList
+     * object was obtained from prov.getAclGroup, *not* prov.get(DistributionListBy), 
+     * *not* prov.searchObjects.   Some calls are vice versa.
+     * 
+     * mIsAclGroup is true if this object was loaded by prov.getAclGroup.
+     */
+    boolean mIsAclGroup;
 
     private void trimForAclGroup() {
         /*
@@ -115,7 +133,7 @@ public class DistributionList extends ZAttrDistributionList implements GroupedEn
          * needed.  Remove it before caching.
          */ 
         Map<String, Object> attrs = getAttrs(false);
-        attrs.remove(Provisioning.A_zimbraMailAlias);
+        // attrs.remove(Provisioning.A_zimbraMailAlias);
         attrs.remove(Provisioning.A_zimbraMailForwardingAddress);
     }
     
@@ -127,15 +145,6 @@ public class DistributionList extends ZAttrDistributionList implements GroupedEn
         mIsAclGroup = true;
         trimForAclGroup();
     }
-    
-    @Override
-    public String[] getAllAddrsAsGroupMember() throws ServiceException {
-        String aliases[] = getAliases();
-        String addrs[] = new String[aliases.length+1];
-        addrs[0] = getName();
-        for (int i=0; i < aliases.length; i++)
-            addrs[i+1] = aliases[i];
-        return addrs;
-    }
+
 
 }

@@ -15,9 +15,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.RightBearer.GlobalAdmin;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
@@ -201,7 +201,7 @@ public class CollectEffectiveRights {
         while ((grantedOn = iter.next()) != null && (!car.isAll())) {
             acl = ACLUtil.getAllACEs(grantedOn);
                 
-            if (grantedOn instanceof DistributionList) {
+            if (grantedOn instanceof Group) {
                 if (acl == null)
                     continue;
                     
@@ -211,7 +211,7 @@ public class CollectEffectiveRights {
                 // members in the group can be in different domains, no point checking it.
                 if (grantee.isAccount())
                     skipPositiveGrants = !CrossDomain.crossDomainOK(prov, grantee.getAccount(), grantee.getDomain(), 
-                        targetDomain, (DistributionList)grantedOn);
+                        targetDomain, (Group)grantedOn);
                 
                 // don't check yet, collect all acls on all target groups
                 if (groupACLs == null)

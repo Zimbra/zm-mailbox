@@ -23,7 +23,7 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AclGroups;
+import com.zimbra.cs.account.Provisioning.GroupMembership;
 
 public abstract class RightBearer {
     protected NamedEntry mRightBearer;
@@ -68,16 +68,16 @@ public abstract class RightBearer {
             super(grantee);
             
             Provisioning prov = grantee.getProvisioning();
-            AclGroups granteeGroups = null;
+            GroupMembership granteeGroups = null;
             
             if (grantee instanceof Account) {
                 mGranteeType = GranteeType.GT_USER;
                 mGranteeDomain = prov.getDomain((Account)grantee);
-                granteeGroups = prov.getAclGroups((Account)grantee, adminOnly);
+                granteeGroups = prov.getGroupMembership((Account)grantee, adminOnly);
             } else if (grantee instanceof DistributionList) {
                 mGranteeType = GranteeType.GT_GROUP;
                 mGranteeDomain = prov.getDomain((DistributionList)grantee);
-                granteeGroups = prov.getAclGroups((DistributionList)grantee, adminOnly);
+                granteeGroups = prov.getGroupMembership((DistributionList)grantee, adminOnly);
             } else {
                 if (adminOnly) {
                     throw ServiceException.INVALID_REQUEST("invalid grantee type", null);

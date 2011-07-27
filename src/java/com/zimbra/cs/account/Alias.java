@@ -94,7 +94,7 @@ public class Alias extends MailTarget {
         else if (target instanceof DistributionList)
             return TargetType.dl;
         else if (target instanceof DynamicGroup)
-            return TargetType.dl; // change to TargetType.dynGroup;
+            return TargetType.group;
         else
             throw ServiceException.FAILURE("invalid target type for alias " + getName(), null);
     }

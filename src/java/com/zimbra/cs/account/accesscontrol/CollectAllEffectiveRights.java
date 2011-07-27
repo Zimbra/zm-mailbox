@@ -8,11 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.DistributionListBy;
-import com.zimbra.common.account.Key.DomainBy;
-import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -31,8 +27,10 @@ import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
+import com.zimbra.cs.ldap.LdapTODO.ACLTODO;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 
+@ACLTODO   // check refs of targetType.dl and handle the same for group
 public class CollectAllEffectiveRights {
 
     

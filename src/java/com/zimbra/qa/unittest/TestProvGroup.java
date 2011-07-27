@@ -54,7 +54,7 @@ public class TestProvGroup extends TestProv {
             if (parentOfNode != null)
                 groupName = groupName + "." + parentOfNode;
             System.out.println("Creating group " + groupName);
-            DistributionList group = createUserGroup(groupName, domain);
+            DistributionList group = createUserDistributionList(groupName, domain);
             group.addMembers(memberNames);
             
             // huge bummer! SoapDistributionList.getId() does not work for the getDistributionLists call!!!  FIXIT!
@@ -169,8 +169,8 @@ public class TestProvGroup extends TestProv {
         useLdapProv();
         
         Domain domain = createDomain();
-        DistributionList group1 = createUserGroup("group1", domain);
-        DistributionList group2 = createUserGroup("group2", domain);
+        DistributionList group1 = createUserDistributionList("group1", domain);
+        DistributionList group2 = createUserDistributionList("group2", domain);
         Account acct1 = createUserAccount("acct1", domain);
         Account acct2 = createUserAccount("acct2", domain);
         String acct1Id = acct1.getId();
@@ -200,9 +200,9 @@ public class TestProvGroup extends TestProv {
         useLdapProv();
         
         Domain domain = createDomain();
-        DistributionList group1 = createUserGroup("group1", domain);
-        DistributionList group2 = createUserGroup("group2", domain);
-        DistributionList group3 = createUserGroup("group3", domain);
+        DistributionList group1 = createUserDistributionList("group1", domain);
+        DistributionList group2 = createUserDistributionList("group2", domain);
+        DistributionList group3 = createUserDistributionList("group3", domain);
         Account acct1 = createUserAccount("acct1", domain);
         Account acct2 = createUserAccount("acct2", domain);
         String acct1Id = acct1.getId();
@@ -233,8 +233,8 @@ public class TestProvGroup extends TestProv {
         useLdapProv();
         
         Domain domain = createDomain();
-        DistributionList group1 = createUserGroup("group1", domain);
-        DistributionList group2 = createUserGroup("group2", domain);
+        DistributionList group1 = createUserDistributionList("group1", domain);
+        DistributionList group2 = createUserDistributionList("group2", domain);
         Account acct1 = createUserAccount("acct1", domain);
         Account acct2 = createUserAccount("acct2", domain);
         String acct1Id = acct1.getId();

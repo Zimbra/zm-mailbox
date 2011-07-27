@@ -318,7 +318,8 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
         
         if (targetType == TargetType.account ||
             targetType == TargetType.calresource ||
-            targetType == TargetType.dl) {
+            targetType == TargetType.dl ||
+            targetType == TargetType.group) {
             String parts[] = EmailUtil.getLocalPartAndDomain(entryName);
             if (parts == null)
                 throw ServiceException.INVALID_REQUEST("must be valid email address: "+entryName, null);

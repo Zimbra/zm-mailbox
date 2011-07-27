@@ -444,7 +444,7 @@ public class TestLdap {
     // invoked once per JVM
     private static void initTest(TestConfig testConfig) throws Exception {
         CliUtil.toolSetup();
-        ZimbraLog.account.setLevel(Log.Level.debug);
+        // ZimbraLog.account.setLevel(Log.Level.debug);
         // ZimbraLog.ldap.setLevel(Log.Level.debug);
         // ZimbraLog.soap.setLevel(Log.Level.trace);
         

@@ -23,7 +23,7 @@ import com.zimbra.common.account.Key.SignatureBy;
 import com.zimbra.common.datasource.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning.AclGroups;
+import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.Provisioning.SetPasswordResult;
 import com.zimbra.cs.account.auth.AuthContext;
 
@@ -81,8 +81,8 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
         return getProvisioning().setPassword(this, password);
     }
 
-    public AclGroups getAclGroups(boolean adminGroupsOnly) throws ServiceException {
-        return getProvisioning().getAclGroups(this, adminGroupsOnly);
+    public GroupMembership getAclGroups(boolean adminGroupsOnly) throws ServiceException {
+        return getProvisioning().getGroupMembership(this, adminGroupsOnly);
     }
 
     /**

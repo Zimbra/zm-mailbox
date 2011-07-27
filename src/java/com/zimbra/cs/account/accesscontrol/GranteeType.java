@@ -119,7 +119,7 @@ public enum GranteeType {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(grantee); 
             break;
         case GT_GROUP:
-            granteeEntry = prov.getAclGroup(Key.DistributionListBy.fromString(granteeBy.name()), grantee);
+            granteeEntry = prov.getDLBasic(Key.DistributionListBy.fromString(granteeBy.name()), grantee);
             if (granteeEntry == null)
                 throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(grantee); 
             break;

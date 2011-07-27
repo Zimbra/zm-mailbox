@@ -255,6 +255,7 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
         tts.add(TargetType.account);
         tts.add(TargetType.calresource);
         tts.add(TargetType.dl);
+        tts.add(TargetType.group);
         
         return tts;
     }

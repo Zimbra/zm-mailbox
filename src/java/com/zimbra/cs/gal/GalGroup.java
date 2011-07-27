@@ -225,7 +225,7 @@ public abstract class GalGroup {
     private static boolean canExpandGroup(Provisioning prov, String groupName, Account authedAcct) {
         try {
             // get the dl object for ACL checking
-            DistributionList dl = prov.getAclGroup(Key.DistributionListBy.name, groupName);
+            DistributionList dl = prov.getDLBasic(Key.DistributionListBy.name, groupName);
 
             // the DL might have been deleted since the last GAL sync account sync, throw.
             // or should we just let the request through?

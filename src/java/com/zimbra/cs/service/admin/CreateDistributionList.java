@@ -27,6 +27,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class CreateDistributionList extends AdminDocumentHandler {
@@ -38,6 +39,7 @@ public class CreateDistributionList extends AdminDocumentHandler {
         return true;
     }
 
+    @ACLTODO  // check refs of targetType.dl and handle the same for group
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
 	    
         ZimbraSoapContext zsc = getZimbraSoapContext(context);

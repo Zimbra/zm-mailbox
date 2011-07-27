@@ -118,6 +118,8 @@ public final class SearchGrants {
                 tt = TargetType.cos;
             } else if (sgr.objectClass.contains(AttributeClass.OC_zimbraDistributionList)) {
                 tt = TargetType.dl;
+            } else if (sgr.objectClass.contains(AttributeClass.OC_zimbraGroup)) {
+                tt = TargetType.group;    
             } else if (sgr.objectClass.contains(AttributeClass.OC_zimbraDomain)) {
                 tt = TargetType.domain;
             } else if (sgr.objectClass.contains(AttributeClass.OC_zimbraServer)) {

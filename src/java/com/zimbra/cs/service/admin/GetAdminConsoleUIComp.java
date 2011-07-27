@@ -30,7 +30,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DistributionListBy;
-import com.zimbra.cs.account.Provisioning.AclGroups;
+import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -56,7 +56,7 @@ public class GetAdminConsoleUIComp extends AdminDocumentHandler {
         Account authedAcct = getAuthenticatedAccount(zsc);
         
         Set<String> added = new HashSet<String>();
-        AclGroups aclGroups;
+        GroupMembership aclGroups;
         
         if (eAccount != null) {
             AccountBy by = AccountBy.fromString(eAccount.getAttribute(AdminConstants.A_BY));
@@ -70,12 +70,12 @@ public class GetAdminConsoleUIComp extends AdminDocumentHandler {
                 checkRight(zsc, context, acct, Admin.R_viewAccountAdminUI);
             
             addValues(acct, resp, added, false);
-            aclGroups = prov.getAclGroups(acct, true);
+            aclGroups = prov.getGroupMembership(acct, true);
             
         } else if (eDL != null) {
             Key.DistributionListBy by = Key.DistributionListBy.fromString(eDL.getAttribute(AdminConstants.A_BY));
             String key = eDL.getText();
-            DistributionList dl = prov.getAclGroup(by, key);
+            DistributionList dl = prov.getDLBasic(by, key);
             
             if (dl == null)
                 throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(key);
@@ -83,11 +83,11 @@ public class GetAdminConsoleUIComp extends AdminDocumentHandler {
             checkRight(zsc, context, dl, Admin.R_viewDistributionListAdminUI);
             
             addValues(dl, resp, added, false);
-            aclGroups = prov.getAclGroups(dl, true);
+            aclGroups = prov.getGroupMembership(dl, true);
         } else {
             // use the authed account
             addValues(authedAcct, resp, added, false);
-            aclGroups = prov.getAclGroups(authedAcct, true);
+            aclGroups = prov.getGroupMembership(authedAcct, true);
         }
         
         for (String groupId : aclGroups.groupIds()) {
