@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20110726-1043 */
+    /* build: 8.0.0_BETA1_1111 administrator 20110727-1038 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3380,7 +3380,7 @@ public class ZAttrProvisioning {
 
     /**
      * External email address of an external user. Applicable only when
-     * zimbraIsExternalVirtualAccount is TRUE.
+     * zimbraIsExternalVirtualAccount is set to TRUE.
      *
      * @since ZCS 8.0.0
      */
@@ -7719,6 +7719,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=59)
     public static final String A_zimbraPrefOutOfOfficeReplyEnabled = "zimbraPrefOutOfOfficeReplyEnabled";
+
+    /**
+     * when user has OOO message enabled, when they login into web client,
+     * whether to alert the user that the OOO message is turned on and
+     * provide the ability to turn it off
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1245)
+    public static final String A_zimbraPrefOutOfOfficeStatusAlertOnLogin = "zimbraPrefOutOfOfficeStatusAlertOnLogin";
 
     /**
      * out of office notifications (if enabled) are sent only if current date
