@@ -80,7 +80,7 @@ public final class ACLUtil {
     private static Multimap<Right, Entry> getGrantedRights(Account grantee, Set<String> fetchAttrs)
             throws ServiceException {
         SearchGrants search = new SearchGrants(grantee.getProvisioning(), EnumSet.of(TargetType.account),
-                new RightBearer.Grantee(grantee).getIdAndGroupIds());
+                new RightBearer.Grantee(grantee, false).getIdAndGroupIds());
         search.addFetchAttribute(fetchAttrs);
         Set<SearchGrants.GrantsOnTarget> results = search.doSearch().getResults();
         Multimap<Right, Entry> map = HashMultimap.create();
