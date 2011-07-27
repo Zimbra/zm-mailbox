@@ -79,6 +79,13 @@ public class ItemActionHelper {
         return ia;
     }
 
+    public static ItemActionHelper PRIORITY(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
+            List<Integer> ids, MailItem.Type type, boolean flagValue, TargetConstraint tcon) throws ServiceException {
+        ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.PRIORITY, type, flagValue, tcon);
+        ia.schedule();
+        return ia;
+    }
+
     public static ItemActionHelper READ(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
             List<Integer> ids, MailItem.Type type, boolean flagValue, TargetConstraint tcon) throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.READ, type, flagValue, tcon);
@@ -183,6 +190,7 @@ public class ItemActionHelper {
     public static enum Op {
         TAG("tag"),
         FLAG("flag"),
+        PRIORITY("priority"),
         READ("read"),
         COLOR("color"),
         HARD_DELETE("delete"),
@@ -196,11 +204,16 @@ public class ItemActionHelper {
         LOCK("lock"),
         UNLOCK("unlock");
 
-        private String mStr;
+        private final String name;
 
-        private Op(String str)  { mStr = str; }
+        private Op(String name) {
+            this.name = name;
+        }
 
-        @Override public String toString()  { return mStr; }
+        @Override
+        public String toString() {
+            return name;
+        }
     }
 
     protected String mResult;
@@ -362,6 +375,9 @@ public class ItemActionHelper {
         switch (mOperation) {
             case FLAG:
                 getMailbox().alterTag(getOpCtxt(), mIds, type, Flag.ID_FLAGGED, mFlagValue, mTargetConstraint);
+                break;
+            case PRIORITY:
+                getMailbox().alterTag(getOpCtxt(), mIds, type, Flag.ID_PRIORITY, mFlagValue, mTargetConstraint);
                 break;
             case READ:
                 getMailbox().alterTag(getOpCtxt(), mIds, type, Flag.ID_UNREAD, !mFlagValue, mTargetConstraint);

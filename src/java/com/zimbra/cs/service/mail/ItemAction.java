@@ -57,22 +57,22 @@ public class ItemAction extends MailDocumentHandler {
     protected static final String[] OPERATION_PATH = new String[] { MailConstants.E_ACTION, MailConstants.A_OPERATION };
     protected static final String[] TARGET_ITEM_PATH = new String[] { MailConstants.E_ACTION, MailConstants.A_ID };
 
-
-    public static final String OP_TAG         = "tag";
-    public static final String OP_FLAG        = "flag";
-    public static final String OP_READ        = "read";
-    public static final String OP_COLOR       = "color";
+    public static final String OP_TAG = "tag";
+    public static final String OP_FLAG = "flag";
+    public static final String OP_PRIORITY = "priority";
+    public static final String OP_READ = "read";
+    public static final String OP_COLOR = "color";
     public static final String OP_HARD_DELETE = "delete";
-    public static final String OP_RECOVER     = "recover";  // recover by copying then deleting from dumpster
+    public static final String OP_RECOVER = "recover";  // recover by copying then deleting from dumpster
     public static final String OP_DUMPSTER_DELETE = "dumpsterdelete";  // delete from dumpster
-    public static final String OP_MOVE        = "move";
-    public static final String OP_COPY        = "copy";
-    public static final String OP_SPAM        = "spam";
-    public static final String OP_TRASH       = "trash";
-    public static final String OP_RENAME      = "rename";
-    public static final String OP_UPDATE      = "update";
-    public static final String OP_LOCK        = "lock";
-    public static final String OP_UNLOCK      = "unlock";
+    public static final String OP_MOVE = "move";
+    public static final String OP_COPY = "copy";
+    public static final String OP_SPAM = "spam";
+    public static final String OP_TRASH = "trash";
+    public static final String OP_RENAME = "rename";
+    public static final String OP_UPDATE = "update";
+    public static final String OP_LOCK = "lock";
+    public static final String OP_UNLOCK = "unlock";
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
@@ -134,6 +134,8 @@ public class ItemAction extends MailDocumentHandler {
                 localResults = ItemActionHelper.TAG(octxt, mbox, responseProto, local, type, flagValue, tcon, tagId).getResult();
             } else if (opStr.equals(OP_FLAG)) {
                 localResults = ItemActionHelper.FLAG(octxt, mbox, responseProto, local, type, flagValue, tcon).getResult();
+            } else if (opStr.equals(OP_PRIORITY)) {
+                localResults = ItemActionHelper.PRIORITY(octxt, mbox, responseProto, local, type, flagValue, tcon).getResult();
             } else if (opStr.equals(OP_READ)) {
                 localResults = ItemActionHelper.READ(octxt, mbox, responseProto, local, type, flagValue, tcon).getResult();
             } else if (opStr.equals(OP_COLOR)) {
