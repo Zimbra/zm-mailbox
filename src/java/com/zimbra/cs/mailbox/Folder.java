@@ -1123,6 +1123,10 @@ public class Folder extends MailItem {
         if (rights != null) {
             queueForAclPush();
         }
+        
+        // for Folder objects rename also means the change in the contents.
+        mData.date = mMailbox.getOperationTimestamp();
+        mData.contentChanged(mMailbox);
     }
 
     /** Moves this folder so that it is a subfolder of <tt>target</tt>.

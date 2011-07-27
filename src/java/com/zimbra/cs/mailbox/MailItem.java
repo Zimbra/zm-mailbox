@@ -2452,15 +2452,6 @@ public abstract class MailItem implements Comparable<MailItem> {
             mData.dateChanged = mMailbox.getOperationTimestamp();
             mData.metadataChanged(mMailbox);
             
-            // for Folder objects rename also means the change in the contents.
-            switch (getType()) {
-            case FOLDER:
-            case MOUNTPOINT:
-            case SEARCHFOLDER:
-                mData.date = mMailbox.getOperationTimestamp();
-                mData.contentChanged(mMailbox);
-                break;
-            }
             saveName(target.getId());
         }
 
