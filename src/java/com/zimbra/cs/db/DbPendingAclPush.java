@@ -43,23 +43,20 @@ public class DbPendingAclPush {
         if (mbox == null)
             return;
         ZimbraLog.acl.debug("Queuing for ACL push - mailbox %s item %s", mbox.getId(), itemId);
-        DbConnection conn = null;
+        DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            conn = DbPool.getConnection(mbox);
             stmt = conn.prepareStatement(
                     "INSERT INTO " + TABLE_PENDING_ACL_PUSH + " (mailbox_id, item_id, date) VALUES (?, ?, ?)");
             stmt.setInt(1, mbox.getId());
             stmt.setInt(2, itemId);
             stmt.setLong(3, System.currentTimeMillis());
             stmt.executeUpdate();
-            conn.commit();
         } catch (SQLException e) {
             throw ServiceException.FAILURE(
                     "Unable to queue for ACL push - mailbox " + mbox.getId() + " item " + itemId, e);
         } finally {
-            DbPool.closeStatement(stmt);
-            DbPool.quietClose(conn);
+            conn.closeQuietly(stmt);
         }
     }
 
