@@ -279,7 +279,7 @@ public final class MilterHandler implements NioHandler {
             return;
         }
         if (prov.isDistributionList(rcpt)) {
-            DistributionList dl = prov.getAclGroup(Key.DistributionListBy.name, rcpt);
+            DistributionList dl = prov.getDLBasic(Key.DistributionListBy.name, rcpt);
             if (dl != null && !accessMgr.canDo(sender, dl, User.R_sendToDistList, false)) {
                 SMFIR_ReplyCode("571", "571 Sender is not allowed to email this distribution list: " + rcpt);
                 return;
