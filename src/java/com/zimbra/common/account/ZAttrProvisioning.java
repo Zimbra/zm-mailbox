@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20110727-1038 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110727-0059 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -7135,6 +7135,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefFolderTreeOpen = "zimbraPrefFolderTreeOpen";
 
     /**
+     * the font for the web client
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1246)
+    public static final String A_zimbraPrefFont = "zimbraPrefFont";
+
+    /**
      * what part of the original message to include during forwards
      * (deprecatedSince 5.0 in identity). The value includeBody has been
      * deprecated since 6.0.6, use includeBodyAndHeaders instead.
@@ -9477,6 +9485,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
