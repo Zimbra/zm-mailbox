@@ -28,7 +28,6 @@ import org.junit.Test;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.filter.jsieve.AddressBookTest;
 import com.zimbra.cs.mailbox.ContactRankings;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -61,12 +60,28 @@ public final class AddressBookTestTest {
     @Test
     public void ranking() throws Exception {
         Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        RuleManager.clearCachedRules(account);
         ContactRankings.increment(account.getId(), Collections.singleton(new InternetAddress("test1@zimbra.com")));
 
         account.setMailSieveScript("if addressbook :in \"From\" \"ranking\" { tag \"Priority\"; }");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
                 new ParsedMessage("From: test1@zimbra.com".getBytes(), false), 0, account.getName(),
+                new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+        Assert.assertEquals(1, ids.size());
+        Message msg = mbox.getMessageById(null, ids.get(0).getId());
+        Assert.assertEquals("Priority", msg.getTagList().get(0).getName());
+    }
+
+    @Test
+    public void me() throws Exception {
+        Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        RuleManager.clearCachedRules(account);
+
+        account.setMailSieveScript("if addressbook :in \"To\" \"me\" { tag \"Priority\"; }");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                new ParsedMessage("To: test@zimbra.com".getBytes(), false), 0, account.getName(),
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         Message msg = mbox.getMessageById(null, ids.get(0).getId());

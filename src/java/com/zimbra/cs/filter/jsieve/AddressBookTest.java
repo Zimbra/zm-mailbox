@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.jsieve.Argument;
@@ -31,13 +30,13 @@ import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
-import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.mailbox.ContactRankings;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.util.AccountUtil;
 
 /**
  * @since Nov 11, 2004
@@ -46,25 +45,7 @@ public final class AddressBookTest extends AbstractTest {
     private static final String IN = ":in";
 
     private enum Type {
-        CONTACTS("contacts"), GAL("GAL"), RANKING("ranking");
-
-        private static final Map<String, Type> NAME2TYPE;
-        static {
-            ImmutableMap.Builder<String, Type> builder = ImmutableMap.builder();
-            for (Type type : values()) {
-                builder.put(type.name, type);
-            }
-            NAME2TYPE = builder.build();
-        }
-        private final String name;
-
-        Type(String name) {
-            this.name = name;
-        }
-
-        static Type of(String name) {
-            return NAME2TYPE.get(name);
-        }
+        CONTACTS, GAL, RANKING, ME;
     }
 
     @Override
@@ -94,7 +75,7 @@ public final class AddressBookTest extends AbstractTest {
             if (argument instanceof StringListArgument) {
                 StringListArgument strList = (StringListArgument) argument;
                 headers = new String[strList.getList().size()];
-                for (int i=0; i< headers.length; i++) {
+                for (int i = 0; i< headers.length; i++) {
                     headers[i] = strList.getList().get(i);
                 }
             }
@@ -102,23 +83,25 @@ public final class AddressBookTest extends AbstractTest {
         if (headers == null) {
             throw new SyntaxException("No headers are found");
         }
-        Set<Type> abooks = EnumSet.noneOf(Type.class);
+        Set<Type> types = EnumSet.noneOf(Type.class);
         // Third argument MUST be one or more Type
         if (argumentsIter.hasNext()) {
             Object argument = argumentsIter.next();
             if (argument instanceof StringListArgument) {
                 StringListArgument strList = (StringListArgument) argument;
                 for (String name : strList.getList()) {
-                    Type type = Type.of(name);
-                    if (type == null) {
-                        throw new SyntaxException("Unknown address book name: " + name);
+                    Type type;
+                    try {
+                        type = Type.valueOf(name.toUpperCase());
+                    } catch (IllegalArgumentException e) {
+                        throw new SyntaxException("Unknown type: " + name);
                     }
-                    abooks.add(type);
+                    types.add(type);
                 }
             }
         }
-        if (abooks.isEmpty()) {
-            throw new SyntaxException("Expecting address book name(s)");
+        if (types.isEmpty()) {
+            throw new SyntaxException("Expecting type(s)");
         }
         // There MUST NOT be any further arguments
         if (argumentsIter.hasNext()) {
@@ -127,10 +110,10 @@ public final class AddressBookTest extends AbstractTest {
         if (!(mail instanceof ZimbraMailAdapter)) {
             return false;
         }
-        return test(mail, headers, abooks);
+        return test(mail, headers, types);
     }
 
-    private boolean test(MailAdapter mail, String[] headers, Set<Type> abooks) throws SieveException {
+    private boolean test(MailAdapter mail, String[] headers, Set<Type> types) throws SieveException {
         Mailbox mbox = ((ZimbraMailAdapter) mail).getMailbox();
         List<InternetAddress> addrs = new ArrayList<InternetAddress>();
         // get values for header that should contains address, like From, To, etc.
@@ -141,7 +124,7 @@ public final class AddressBookTest extends AbstractTest {
             }
         }
 
-        for (Type type : abooks) {
+        for (Type type : types) {
             switch (type) {
                 case CONTACTS:
                     try {
@@ -160,6 +143,18 @@ public final class AddressBookTest extends AbstractTest {
                         }
                     } catch (ServiceException e) {
                         ZimbraLog.filter.error("Failed to lookup ranking", e);
+                    }
+                    break;
+                case ME:
+                    try {
+                        Set<String> me = AccountUtil.getEmailAddresses(mbox.getAccount());
+                        for (InternetAddress addr : addrs) {
+                            if (me.contains(addr.getAddress().toLowerCase())) {
+                                return true;
+                            }
+                        }
+                    } catch (ServiceException e) {
+                        ZimbraLog.filter.error("Failed to lookup my addresses", e);
                     }
                     break;
                 case GAL: //TODO
