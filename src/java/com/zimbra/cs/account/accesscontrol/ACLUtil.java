@@ -80,7 +80,7 @@ public final class ACLUtil {
     private static Multimap<Right, Entry> getGrantedRights(Account grantee, Set<String> fetchAttrs)
             throws ServiceException {
         SearchGrants search = new SearchGrants(grantee.getProvisioning(), EnumSet.of(TargetType.account),
-                Collections.singleton(grantee.getId()));
+                new RightBearer.Grantee(grantee).getIdAndGroupIds());
         search.addFetchAttribute(fetchAttrs);
         Set<SearchGrants.GrantsOnTarget> results = search.doSearch().getResults();
         Multimap<Right, Entry> map = HashMultimap.create();
@@ -97,8 +97,6 @@ public final class ACLUtil {
 
     /**
      * Returns {@link UserRights#R_sendOnBehalfOf} rights granted to the grantee.
-     *
-     * TODO: include inherited rights
      */
     public static List<Identity> getSendOnBehalfOf(Account grantee) throws ServiceException {
         Multimap<Right, Entry> rights = getGrantedRights(grantee, Collections.singleton(Provisioning.A_displayName));
