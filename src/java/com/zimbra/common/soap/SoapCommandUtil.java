@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
@@ -477,6 +479,8 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             mOut.println(resultString);
         }
     }
+    
+    private static Pattern PAT_PATH_AND_VALUE = Pattern.compile("([^=]*)=(.*)");
 
     /**
      * Processes a path that's relative to the given root.  The path
@@ -495,11 +499,10 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         String value = null;
         
         // Parse out value, if it's specified.
-        if (path.contains("=")) {
-            String[] parts = path.split("=");
-            path = parts[0];
-            if (parts.length > 1)
-                value = parts[1];
+        Matcher m = PAT_PATH_AND_VALUE.matcher(path);
+        if (m.matches()) {
+            path = m.group(1);
+            value = m.group(2);
         }
         
         // Find the first element.
