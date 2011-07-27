@@ -91,7 +91,13 @@
     </java>
   </target>
 
-  <target name="generate-schema" depends="compile">
+  <target name="check-schema-done">
+    <uptodate property="schema.build.notrequired" targetFile="${xml.schema.dir}/zimbra.xsd">
+        <srcfiles dir="${src.java.dir}" includes="**/*.java"/>
+    </uptodate>
+  </target>
+
+  <target name="generate-schema" depends="compile,check-schema-done" unless="schema.build.notrequired">
     <mkdir dir="${xml.schema.dir}"/>
     <schemagen srcdir="${src.java.dir}" destdir="${xml.schema.dir}">
       <classpath refid="class.path"/>
@@ -104,6 +110,7 @@
       <schema namespace="urn:zimbraMail" file="zimbraMail.xsd" />
       <schema namespace="urn:zimbraSync" file="zimbraSync.xsd" />
       <schema namespace="urn:zimbraRepl" file="zimbraRepl.xsd" />
+      <schema namespace="urn:zimbraAppblast" file="zimbraAppblast.xsd" />
     </schemagen>
   </target>
 
