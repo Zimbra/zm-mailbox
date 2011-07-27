@@ -20,13 +20,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.dom4j.DocumentException;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.mail.type.Policy;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 
@@ -56,18 +62,23 @@ public class RetentionPolicyManager {
         Config config = Provisioning.getInstance().getConfig();
         SystemPolicy sp = (SystemPolicy) config.getCachedData(SYSTEM_POLICY_KEY);
         if (sp == null) {
-            String val = config.getMailPurgeSystemPolicy();
+            String xml = config.getMailPurgeSystemPolicy();
             sp = new SystemPolicy();
-            if (!Strings.isNullOrEmpty(val)) {
-                Metadata m = new Metadata(val);
-                RetentionPolicy rp = retentionPolicyFromMetadata(m, false);
-                for (Policy p : rp.getKeepPolicy()) {
-                    assert(p.getId() != null);
-                    sp.keep.put(p.getId(), p);
-                }
-                for (Policy p : rp.getPurgePolicy()) {
-                    assert(p.getId() != null);
-                    sp.purge.put(p.getId(), p);
+            if (!Strings.isNullOrEmpty(xml)) {
+                ZimbraLog.purge.debug("Parsing system retention policy:\n%s", xml);
+                try {
+                    Element el = Element.parseXML(xml);
+                    RetentionPolicy rp = JaxbUtil.elementToJaxb(el, RetentionPolicy.class);
+                    for (Policy p : rp.getKeepPolicy()) {
+                        assert(p.getId() != null);
+                        sp.keep.put(p.getId(), p);
+                    }
+                    for (Policy p : rp.getPurgePolicy()) {
+                        assert(p.getId() != null);
+                        sp.purge.put(p.getId(), p);
+                    }
+                } catch (DocumentException e) {
+                    throw ServiceException.FAILURE("Unable to parse system retention policy.", e);
                 }
             }
             config.setCachedData(SYSTEM_POLICY_KEY, sp);
@@ -151,8 +162,8 @@ public class RetentionPolicyManager {
     
     private void saveSystemPolicy(RetentionPolicy rp)
     throws ServiceException {
-        Metadata m = toMetadata(rp, false);
-        Provisioning.getInstance().getConfig().setMailPurgeSystemPolicy(m.toString());
+        String xml = JaxbUtil.jaxbToElement(rp, XMLElement.mFactory).prettyPrint();
+        Provisioning.getInstance().getConfig().setMailPurgeSystemPolicy(xml);
     }
     
     private String generateId() {
