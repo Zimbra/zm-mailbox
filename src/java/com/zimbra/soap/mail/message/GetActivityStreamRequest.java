@@ -28,8 +28,8 @@ import com.zimbra.common.soap.OctopusXmlConstants;
 @XmlRootElement(name=OctopusXmlConstants.E_GET_ACTIVITY_STREAM_REQUEST)
 public class GetActivityStreamRequest {
 
-    @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
-    private String id;
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
+    private final String id;
 
     @XmlAttribute(name=MailConstants.A_QUERY_OFFSET /* offset */, required=false)
     private Integer queryOffset;
@@ -37,10 +37,18 @@ public class GetActivityStreamRequest {
     @XmlAttribute(name=MailConstants.A_QUERY_LIMIT /* limit */, required=false)
     private Integer queryLimit;
 
-    public GetActivityStreamRequest() {
+    /**
+     * no-argument constructor wanted by JAXB
+     */
+    @SuppressWarnings("unused")
+    private GetActivityStreamRequest() {
+        this((String) null);
     }
 
-    public void setId(String id) { this.id = id; }
+    public GetActivityStreamRequest(String id) {
+        this.id = id;
+    }
+
     public void setQueryOffset(Integer queryOffset) { this.queryOffset = queryOffset; }
     public void setQueryLimit(Integer queryLimit) { this.queryLimit = queryLimit; }
     public String getId() { return id; }
