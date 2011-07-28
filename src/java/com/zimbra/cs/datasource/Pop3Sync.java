@@ -256,6 +256,7 @@ public class Pop3Sync extends MailItemImport {
                 Date sentDate = pm.getMimeMessage().getSentDate();
                 pm.setReceivedDate(sentDate != null ? sentDate.getTime() : System.currentTimeMillis());
             } catch (MessagingException e) {
+                LOG.warn("unable to get sent date from parsed message due to exception, must use current time", e);
                 pm.setReceivedDate(System.currentTimeMillis());
             }
             DeliveryContext dc = mc.getDeliveryContext();
