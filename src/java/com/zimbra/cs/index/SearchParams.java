@@ -39,7 +39,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.mail.CalendarUtils;
-import com.zimbra.cs.service.mail.Search;
 import com.zimbra.cs.service.mail.ToXML.OutputParticipants;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -464,7 +463,7 @@ public final class SearchParams implements Cloneable {
         String types = request.getAttribute(MailConstants.A_SEARCH_TYPES,
                 request.getAttribute(MailConstants.A_GROUPBY, null));
         if (Strings.isNullOrEmpty(types)) {
-            params.setTypes(Search.DEFAULT_SEARCH_TYPES);
+            params.setTypes(EnumSet.of(params.isQuick() ? MailItem.Type.MESSAGE : MailItem.Type.CONVERSATION));
         } else {
             params.setTypes(types);
         }
@@ -582,11 +581,10 @@ public final class SearchParams implements Cloneable {
     }
 
     private static int parseLimit(Element request) throws ServiceException {
-        int limit = (int) request.getAttributeLong(MailConstants.A_QUERY_LIMIT, -1);
+        int limit = request.getAttributeInt(MailConstants.A_QUERY_LIMIT, -1);
         if (limit <= 0) {
-            limit = 30;
-        }
-        if (limit > 1000) {
+            limit = 10;
+        } else if (limit > 1000) {
             limit = 1000;
         }
         return limit;

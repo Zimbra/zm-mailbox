@@ -1361,12 +1361,13 @@ Tags:
 
 </SearchRequest>
 
-limit is an integer specifying the maximum number of results to return. if limt <= 0 or limit > 1000 then it defaults to 30.
-offset is an integer specifying the 0-based offset into the results list to return as
-  the first result for this search operation.
+limit: an integer specifying the maximum number of results to return. It defaults to 10 if not specified, and is capped
+  by 1000.
+offset: an integer specifying the 0-based offset into the results list to return as the first result for this search
+  operation.
 For example, limit=10 offset=30 will return the 31st through 40th results inclusive.
-For a response, the order of the returned results represents the sorted order.  There
-  is not a separate index attribute or element.
+For a response, the order of the returned results represents the sorted order.  There is not a separate index attribute
+  or element.
 
 if fetch="1" (or fetch="first") is specified, the first hit will be expanded inline (messages only at present)
 if fetch="{item-id}", only the message with the given {item-id} is expanded inline

@@ -42,7 +42,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.service.mail.Search;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.client.ZFolder;
@@ -222,7 +221,7 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
                 return EnumSet.noneOf(MailItem.Type.class);
             }
         } else {
-            types = EnumSet.copyOf(Search.DEFAULT_SEARCH_TYPES);
+            types = EnumSet.of(MailItem.Type.CONVERSATION);
         }
 
         if (types.remove(MailItem.Type.CONVERSATION)) {

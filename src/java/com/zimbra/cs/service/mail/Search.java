@@ -16,7 +16,6 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -65,8 +64,6 @@ import com.zimbra.soap.ZimbraSoapContext;
  * @since May 26, 2004
  */
 public class Search extends MailDocumentHandler  {
-
-    public static final Set<MailItem.Type> DEFAULT_SEARCH_TYPES = EnumSet.of(MailItem.Type.CONVERSATION);
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {

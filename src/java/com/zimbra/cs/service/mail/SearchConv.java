@@ -223,7 +223,7 @@ public final class SearchConv extends Search {
                 el.addAttribute(MailConstants.E_FRAG, msg.getFragment(), Element.Disposition.CONTENT);
             }
         } else {
-            el = ToXML.encodeMessageSummary(response, ifmt, octxt, msg, params.getWantRecipients());
+            el = ToXML.encodeMessageSummary(response, ifmt, octxt, msg, params.getWantRecipients(), ToXML.NOTIFY_FIELDS);
         }
         return el;
     }
