@@ -26,7 +26,7 @@ import com.zimbra.common.service.ServiceException;
 @XmlEnum
 public enum TargetType {
     // case must match protocol
-    account, calresource, cos, dl, domain, server,
+    account, calresource, cos, dl, group, domain, server,
     xmppcomponent, zimlet, config, global;
 
     public static TargetType fromString(String s)
