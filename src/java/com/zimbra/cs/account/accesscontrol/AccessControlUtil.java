@@ -37,13 +37,15 @@ public class AccessControlUtil {
         try {
             
             if (authToken == null) {
-                if (rightNeeded.isUserRight())
+                if (rightNeeded.isUserRight()) {
                     granteeAcct = GuestAccount.ANONYMOUS_ACCT;
-            } else if (authToken.isZimbraUser())
+                }
+            } else if (authToken.isZimbraUser()) {
                 granteeAcct = authToken.getAccount();
-            else {
-                if (rightNeeded.isUserRight())
+            } else {
+                if (rightNeeded.isUserRight()) {
                     granteeAcct = new GuestAccount(authToken);
+                }
             }
         } catch (ServiceException e) {
             ZimbraLog.acl.warn("unable to get account from auth token, id=: " + authToken.getAccountId(), e);
@@ -55,11 +57,14 @@ public class AccessControlUtil {
     static public Account emailAddrToAccount(String emailAddr, Right rightNeeded) {
         Account granteeAcct = null;
         try {
-            if (emailAddr != null)
+            if (emailAddr != null) {
                 granteeAcct = Provisioning.getInstance().get(Key.AccountBy.name, emailAddr);
+            }
+
             if (granteeAcct == null) {
-                if (rightNeeded.isUserRight())
-                    granteeAcct = GuestAccount.ANONYMOUS_ACCT;
+                if (rightNeeded.isUserRight()) {
+                    granteeAcct = new GuestAccount(emailAddr, null);
+                }
             }
             
         } catch (ServiceException e) {
