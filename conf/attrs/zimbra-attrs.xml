@@ -6059,7 +6059,6 @@ TODO: delete them permerntly from here
 </attr>
 
 <attr id="1246" name="zimbraPrefFont" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
-  <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>the font for the web client</desc>
 </attr>
 

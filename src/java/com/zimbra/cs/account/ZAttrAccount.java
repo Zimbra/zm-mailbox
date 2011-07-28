@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110727-0059 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110727-1818 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -29017,13 +29017,13 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * the font for the web client
      *
-     * @return zimbraPrefFont, or "TRUE" if unset
+     * @return zimbraPrefFont, or null if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1246)
     public String getPrefFont() {
-        return getAttr(Provisioning.A_zimbraPrefFont, "TRUE");
+        return getAttr(Provisioning.A_zimbraPrefFont, null);
     }
 
     /**
