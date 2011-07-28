@@ -1,0 +1,22 @@
+Date: Tue, 3 Oct 2006 00:01:00 -0500 (CDT)
+From: c@test.test
+To: a@test.test
+Subject: Case 00004899 - Bug 11614 two images + a link test
+MIME-Version: 1.0
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+<html>
+ <head>
+  <base href="http://www.zimbra.com/" />
+ </head>
+ <body>
+  <p>zimbra logo:</p>
+  <img src="_media/zimbra_logo.gif" width="150" height="50">
+  <p>zimbra logo 2:</p>
+  <img src="http://www.zimbra.com/_media/zimbra_logo.gif" width="150" height="50">
+  <p>zimbra link:</p>
+<a href="forums">forums</a>
+ </body>
+</html>
+

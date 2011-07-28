@@ -1,0 +1,152 @@
+Return-Path: emailengine@mail.ihotelier.com
+From: reservations@ihotelier.com
+To: guest@example.com
+Subject: Enjoy Your Stay
+MIME-Version: 1.0
+Content-Type: multipart/alternative; 
+	boundary="----=_Part_3641035_6487236.1273395575673"
+
+------=_Part_3641035_6487236.1273395575673
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.=
+w3.org/TR/html4/loose.dtd">
+<html><head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dutf-8">
+=09
+=09
+
+
+
+<title>Inns in Blacksburg | Hotels near Virginia Tech | Collegiate Inn of B=
+lacksburg, Virginia</title>
+<style type=3D"text/css">
+<!--
+body {
+=09background-image: url(https://reservations.ihotelier.com/crs/hotelimages=
+/15447/bkg_body.jpg);
+=09background-repeat: repeat-x;
+=09margin-left: 0px;
+=09margin-top: 0px;
+=09margin-right: 0px;
+=09margin-bottom: 0px;
+=09background-color: #887F70;
+}
+-->
+</style></head><body><table width=3D"360" border=3D"0" align=3D"center" cel=
+lpadding=3D"0" cellspacing=3D"0">
+  <tr>
+    <td valign=3D"top"><img src=3D"https://reservations.ihotelier.com/crs/h=
+otelimages/15447/top.jpg" width=3D"931" height=3D"472" border=3D"0" usemap=
+=3D"#Map"></td>
+  </tr>
+  <tr>
+    <td><table width=3D"931" border=3D"0" cellspacing=3D"0" cellpadding=3D"=
+0">
+      <tr>
+        <td width=3D"253" background=3D"https://reservations.ihotelier.com/=
+crs/hotelimages/15447/left.jpg">=C2=A0</td>
+        <td width=3D"678" background=3D"https://reservations.ihotelier.com/=
+crs/hotelimages/15447/rigth.jpg"><div align=3D"center"><P>
+<TABLE>
+<TBODY>
+<TR>
+<TD></TD></TR>
+<TR>
+<TD></TD></TR>
+<TR>
+<TD>&nbsp;</TD></TR>
+<TR>
+<TD>
+<P>We look forward to serving you during your upcoming stay at the Collegia=
+te Inn of Blacksburg.&nbsp; </P>
+<P>If we can be of further assistance, please do not hesitate to reply to t=
+his e-mail or contact us at 1-540-951-0220.</P>
+<P>Sincerely,<BR>General Manager<BR>1-540-951-0220<BR><A href=3D"mailto:jfi=
+sher@hotel.ciblacksburg.com">jfisher@hotel.ciblacksburg.com</A><BR><A href=
+=3D"http://www.ciblacksburg.com">www.ciblacksburg.com</A></P>
+<P>&nbsp;</P></TD></TR>
+<TR>
+<TD>&nbsp;</TD></TR>
+<TR>
+<TD></TD></TR>
+<TR>
+<TD>&nbsp;</TD></TR>
+<TR>
+<TD>&nbsp;</TD></TR>
+<TR>
+<TD> </TD></TR>
+<TR>
+<TD>&nbsp;</TD></TR>
+<TR>
+<TD> </TD></TR></TBODY></TABLE></P></div></td>
+      </tr>
+     =20
+    </table></td>
+  </tr>
+  <tr>
+    <td><img src=3D"https://reservations.ihotelier.com/crs/hotelimages/1544=
+7/down.jpg" width=3D"931" height=3D"214" border=3D"0" usemap=3D"#Map2"></td=
+>
+  </tr>
+</table>
+
+<map name=3D"Map"><area shape=3D"rect" coords=3D"110,149,156,162" href=3D"h=
+ttp://www.ciblacksburghotel.com/index.cfm">
+<area shape=3D"rect" coords=3D"61,176,191,189" href=3D"http://www.ciblacksb=
+urghotel.com/accommodations/index.cfm">
+<area shape=3D"rect" coords=3D"89,204,165,216" href=3D"http://www.ciblacksb=
+urghotel.com/amenities/index.cfm">
+<area shape=3D"rect" coords=3D"102,233,151,244" href=3D"http://www.ciblacks=
+burghotel.com/dining-restaurant/index.cfm">
+<area shape=3D"rect" coords=3D"55,262,197,272" href=3D"http://www.ciblacksb=
+urghotel.com/meetings-groups/index.cfm">
+<area shape=3D"rect" coords=3D"79,288,173,301" href=3D"http://www.ciblacksb=
+urghotel.com/things-to-do/index.cfm">
+<area shape=3D"rect" coords=3D"84,319,169,330" href=3D"http://www.ciblacksb=
+urghotel.com/directions-map/index.cfm">
+<area shape=3D"rect" coords=3D"566,24,691,42" href=3D"http://www.ciblacksbu=
+rghotel.com/specials-packages/index.cfm">
+<area shape=3D"rect" coords=3D"716,22,809,42" href=3D"http://www.ciblacksbu=
+rghotel.com/photo-gallery/index.cfm">
+<area shape=3D"rect" coords=3D"830,24,907,41" href=3D"http://www.ciblacksbu=
+rghotel.com/contact/index.cfm">
+<area shape=3D"rect" coords=3D"21,34,230,99" href=3D"http://www.ciblacksbur=
+ghotel.com/index.cfm">
+</map>
+<map name=3D"Map2"><area shape=3D"rect" coords=3D"91,156,128,170" href=3D"h=
+ttp://www.ciblacksburghotel.com/index.cfm">
+<area shape=3D"rect" coords=3D"136,157,236,172" href=3D"http://www.ciblacks=
+burghotel.com/accommodations/index.cfm">
+<area shape=3D"rect" coords=3D"247,158,303,170" href=3D"http://www.ciblacks=
+burghotel.com/amenities/index.cfm">
+<area shape=3D"rect" coords=3D"312,156,352,171" href=3D"http://www.ciblacks=
+burghotel.com/dining-restaurant/index.cfm">
+<area shape=3D"rect" coords=3D"362,157,469,171" href=3D"http://www.ciblacks=
+burghotel.com/meetings-groups/index.cfm">
+<area shape=3D"rect" coords=3D"478,154,554,171" href=3D"http://www.ciblacks=
+burghotel.com/things-to-do/index.cfm">
+<area shape=3D"rect" coords=3D"561,155,629,170" href=3D"http://www.ciblacks=
+burghotel.com/directions-map/index.cfm">
+  <area shape=3D"rect" coords=3D"724,155,840,172" href=3D"http://www.ciblac=
+ksburghotel.com/specials-packages/index.cfm">
+  <area shape=3D"rect" coords=3D"744,127,838,138" href=3D"http://www.ciblac=
+ksburghotel.com/privacy-policy/index.cfm">
+  <area shape=3D"rect" coords=3D"866,126,922,139" href=3D"http://www.ciblac=
+ksburghotel.com/sitemap/index.cfm">
+  <area shape=3D"rect" coords=3D"245,179,329,190" href=3D"http://www.ciblac=
+ksburghotel.com/photo-gallery/index.cfm">
+  <area shape=3D"rect" coords=3D"337,177,409,190" href=3D"http://www.ciblac=
+ksburghotel.com/contact/index.cfm">
+  <area shape=3D"rect" coords=3D"415,176,502,192" href=3D"http://www.ciblac=
+ksburghotel.com/privacy-policy/index.cfm">
+  <area shape=3D"rect" coords=3D"510,178,628,192" href=3D"http://www.ciblac=
+ksburghotel.com/best-rate-guarantee/index.cfm">
+  <area shape=3D"rect" coords=3D"637,177,686,191" href=3D"http://www.ciblac=
+ksburghotel.com/sitemap/index.cfm">
+<area shape=3D"rect" coords=3D"386,199,543,214" href=3D"http://www.travelcl=
+ick.net/">
+</map></body></html><BR>
+------=_Part_3641035_6487236.1273395575673--
+
