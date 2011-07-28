@@ -28,6 +28,7 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
@@ -135,7 +136,7 @@ public class PseudoTarget {
         }
     }
     
-    static class PseudoDynamicGroup extends DistributionList {
+    static class PseudoDynamicGroup extends DynamicGroup {
         Domain mPseudoDomain;
         
         public PseudoDynamicGroup(String name, String id, Map<String, Object> attrs, 
@@ -306,8 +307,10 @@ public class PseudoTarget {
             break;
         case dl:
             targetEntry = new PseudoDistributionList("pseudo@"+domain.getName(), zimbraId, attrMap, prov, pseudoDomain);
-            DistributionList dl = (DistributionList)targetEntry;
             break;
+        case group:
+            targetEntry = new PseudoDynamicGroup("pseudo@"+domain.getName(), zimbraId, attrMap, prov, pseudoDomain);
+            break;    
         case domain:
             String name = domainName == null ? "pseudo.pseudo" : domainName;
             targetEntry = new PseudoDomain(name, zimbraId, attrMap, config.getDomainDefaults(), prov);
