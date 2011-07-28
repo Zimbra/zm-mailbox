@@ -49,21 +49,22 @@ import com.zimbra.cs.account.Zimlet;
 
 
 public enum TargetType {
-    account(true,       true,    AttributeClass.account,          "Account"),
-    calresource(true,   true,    AttributeClass.calendarResource, "CalendarResource"),
-    cos(true,           false,   AttributeClass.cos,              "Cos"),
-    dl(true,            true,    AttributeClass.distributionList, "DistributionList"), // static group
-    group(true,         true,    AttributeClass.group,            "DynamicGroup"),     // dynamic group
-    domain(true,        false,   AttributeClass.domain,           "Domain"),
-    server(true,        false,   AttributeClass.server,           "Server"),
-    xmppcomponent(true, false,   AttributeClass.xmppComponent,    "XMPPComponent"),
-    zimlet(true,        false,   AttributeClass.zimletEntry,      "Zimlet"),
-    config(false,       false,   AttributeClass.globalConfig,     "GlobalConfig"),
-    global(false,       false,   AttributeClass.aclTarget,        "GlobalGrant");
+    account(true,       true,    AttributeClass.account,          com.zimbra.soap.type.TargetType.account,       "Account"),
+    calresource(true,   true,    AttributeClass.calendarResource, com.zimbra.soap.type.TargetType.calresource,   "CalendarResource"),
+    cos(true,           false,   AttributeClass.cos,              com.zimbra.soap.type.TargetType.cos,           "Cos"),
+    dl(true,            true,    AttributeClass.distributionList, com.zimbra.soap.type.TargetType.dl,            "DistributionList"), // static group
+    group(true,         true,    AttributeClass.group,            com.zimbra.soap.type.TargetType.group,         "DynamicGroup"),     // dynamic group
+    domain(true,        false,   AttributeClass.domain,           com.zimbra.soap.type.TargetType.domain,        "Domain"),
+    server(true,        false,   AttributeClass.server,           com.zimbra.soap.type.TargetType.server,        "Server"),
+    xmppcomponent(true, false,   AttributeClass.xmppComponent,    com.zimbra.soap.type.TargetType.xmppcomponent, "XMPPComponent"),
+    zimlet(true,        false,   AttributeClass.zimletEntry,      com.zimbra.soap.type.TargetType.zimlet,        "Zimlet"),
+    config(false,       false,   AttributeClass.globalConfig,     com.zimbra.soap.type.TargetType.config,        "GlobalConfig"),
+    global(false,       false,   AttributeClass.aclTarget,        com.zimbra.soap.type.TargetType.global,        "GlobalGrant");
     
     private boolean mNeedsTargetIdentity;
     private boolean mIsDomained;
     private AttributeClass mAttrClass;
+    private com.zimbra.soap.type.TargetType jaxbTargetType;
     private String mPrettyName;
     
     //
@@ -91,16 +92,20 @@ public enum TargetType {
         init();
     }
     
-    TargetType(boolean NeedsTargetIdentity, boolean isDomained, AttributeClass attrClass, String prettyName) {
+    TargetType(boolean NeedsTargetIdentity, boolean isDomained,
+            AttributeClass attrClass,
+            com.zimbra.soap.type.TargetType jaxbTargetType,
+            String prettyName) {
         mNeedsTargetIdentity = NeedsTargetIdentity;
         mIsDomained = isDomained;
         mAttrClass = attrClass;
+        this.jaxbTargetType = jaxbTargetType;
         mPrettyName = prettyName;
     }
 
-    /* Convert to equivalent JAXB object */
+    /* return equivalent JAXB enum */
     public com.zimbra.soap.type.TargetType toJaxb() throws ServiceException {
-        return com.zimbra.soap.type.TargetType.fromString(this.name());
+        return jaxbTargetType;
     }
 
     private void setInheritedByTargetTypes(TargetType[] targetTypes) {
