@@ -22,7 +22,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.ByteArrayRequestEntity;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.apache.commons.httpclient.methods.RequestEntity;
 import org.dom4j.io.XMLWriter;
 
 import com.zimbra.common.service.ServiceException;
@@ -97,14 +99,15 @@ public abstract class DavMethod {
 			PostMethod method = new PostMethod(targetUrl) {
 				public String getName() { return getMethodName(); }
 			};
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			RequestEntity reqEntry;
 			if (ctxt.hasRequestMessage()) {
+			    ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				XMLWriter writer = new XMLWriter(baos);
 				writer.write(ctxt.getRequestMessage());
-			} else {
-				ByteUtil.copy(ctxt.getUpload().getInputStream(), true, baos, false);
+				reqEntry = new ByteArrayRequestEntity(baos.toByteArray());
+			} else { // this could be a huge upload
+				reqEntry = new InputStreamRequestEntity(ctxt.getUpload().getInputStream(), ctxt.getUpload().getSize());
 			}
-			ByteArrayRequestEntity reqEntry = new ByteArrayRequestEntity(baos.toByteArray());
 			method.setRequestEntity(reqEntry);
 			return method;
 		}
