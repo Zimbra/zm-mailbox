@@ -2378,9 +2378,8 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (!inSpam() && target.inSpam())
             detach();
 
-        // item moved out of spam, so update the index id
-        //   (will be written to DB in DbMailItem.setFolder());
-        if (inSpam() && !target.inSpam() && isIndexed() && mData.indexId != -1) {
+        // item moved out of spam, so update the index id (will be written to DB in DbMailItem.setFolder())
+        if (inSpam() && !target.inSpam() && isIndexed() && mData.indexId < 0) {
             mData.indexId = mData.id;
             getMailbox().queueForIndexing(this, false, null);
         }

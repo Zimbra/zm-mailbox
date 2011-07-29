@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -491,11 +491,9 @@ public class Conversation extends MailItem {
             }
 
             // moved an item out of the spam folder, need to index it
-            if (msg.inSpam() && !target.inSpam()) {
-                if (msg.isIndexed() && msg.getIndexId() != -1) {
-                    msg.indexIdChanged(msg.getId());
-                    indexUpdated.add(msg);
-                }
+            if (msg.inSpam() && !target.inSpam() && msg.isIndexed() && msg.getIndexId() < 0) {
+                msg.indexIdChanged(msg.getId());
+                indexUpdated.add(msg);
             }
 
             // if a draft is being moved to Trash then remove any "send-later" info from it
