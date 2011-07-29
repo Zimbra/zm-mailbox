@@ -555,9 +555,8 @@ public class Message extends MailItem {
             data.parentId = conv.getId();
         }
         data.folderId = folder.getId();
-        if (!folder.inSpam() || acct.getBooleanAttr(Provisioning.A_zimbraJunkMessagesIndexingEnabled, false)) {
-            data.indexId = IndexStatus.DEFERRED.id();
-        }
+        data.indexId = !folder.inSpam() || acct.isJunkMessagesIndexingEnabled() ?
+                IndexStatus.DEFERRED.id() : IndexStatus.DONE.id();
         data.locator = staged.getLocator();
         data.imapId = id;
         data.date = (int) (date / 1000);

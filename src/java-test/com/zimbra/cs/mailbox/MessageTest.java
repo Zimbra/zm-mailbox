@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 
@@ -24,6 +25,7 @@ import org.junit.Test;
 
 import com.google.common.base.Strings;
 import com.google.common.io.ByteStreams;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -33,6 +35,9 @@ import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.index.SearchParams;
+import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mime.ParsedMessage;
 
 /**
@@ -145,6 +150,31 @@ public final class MessageTest {
                 "SELECT recipients FROM mboxgroup1.mail_item WHERE mailbox_id = ? AND id = ?",
                 mbox.getId(), msg3.getId()).getString(1));
         conn.closeQuietly();
+    }
+
+    @Test
+    public void moveOutOfSpam() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        mbox.getAccount().setJunkMessagesIndexingEnabled(false);
+        DeliveryOptions opt = new DeliveryOptions();
+        opt.setFolderId(Mailbox.ID_FOLDER_SPAM);
+        Message msg = mbox.addMessage(null, new ParsedMessage(
+                "From: spammer@zimbra.com\r\nTo: test@zimbra.com".getBytes(), false), opt, null);
+        MailboxTestUtil.index(mbox);
+
+        SearchParams params = new SearchParams();
+        params.setSortBy(SortBy.NONE);
+        params.setTypes(EnumSet.of(MailItem.Type.MESSAGE));
+        params.setQueryString("from:spammer");
+        ZimbraQueryResults result = mbox.index.search(SoapProtocol.Soap12, new OperationContext(mbox), params);
+        Assert.assertFalse(result.hasNext());
+
+        mbox.move(new OperationContext(mbox), msg.getId(), MailItem.Type.MESSAGE, Mailbox.ID_FOLDER_INBOX);
+        MailboxTestUtil.index(mbox);
+
+        result = mbox.index.search(SoapProtocol.Soap12, new OperationContext(mbox), params);
+        Assert.assertTrue(result.hasNext());
+        Assert.assertEquals(msg.getId(), result.getNext().getItemId());
     }
 
 }
