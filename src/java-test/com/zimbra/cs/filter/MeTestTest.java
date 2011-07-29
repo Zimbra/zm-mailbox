@@ -14,7 +14,6 @@
  */
 package com.zimbra.cs.filter;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -23,26 +22,25 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.filter.jsieve.MeTest;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 
 /**
- * Unit test for {@link AddressBookTest}.
+ * Unit test for {@link MeTest}.
  *
  * @author ysasaki
  */
-public final class AddressBookTestTest {
+public final class MeTestTest {
 
     @BeforeClass
     public static void init() throws Exception {
@@ -60,13 +58,11 @@ public final class AddressBookTestTest {
     public void filter() throws Exception {
         Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
         RuleManager.clearCachedRules(account);
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-        mbox.createContact(null, new ParsedContact(Collections.<String, Object>singletonMap(
-                ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
 
-        account.setMailSieveScript("if addressbook :in \"From\" { tag \"Priority\"; }");
+        account.setMailSieveScript("if me :in \"To\" { tag \"Priority\"; }");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
         List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
-                new ParsedMessage("From: test1@zimbra.com".getBytes(), false), 0, account.getName(),
+                new ParsedMessage("To: test@zimbra.com".getBytes(), false), 0, account.getName(),
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         Message msg = mbox.getMessageById(null, ids.get(0).getId());

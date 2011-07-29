@@ -2875,7 +2875,9 @@ Tests:
   <dateTest dateComparison="{before|after}" d="{date}" />
   <bodyTest [caseSensitive="{0|1}"] value="{value}" />
   <attachmentTest />
-  <addressBookTest header="{header-name}" [type="{contacts|ranking|me}"]/>
+  <addressBookTest header="{header-name}"/>
+  <rankingTest header="{header-name}"/>
+  <meTest header="{header-name}"/>
   <inviteTest>
     <method>{method}</method>+
   </inviteTest>

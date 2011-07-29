@@ -92,6 +92,8 @@ public final class RuleManager {
         testMap.put("body", com.zimbra.cs.filter.jsieve.BodyTest.class.getName());
         testMap.put("attachment", com.zimbra.cs.filter.jsieve.AttachmentTest.class.getName());
         testMap.put("addressbook", com.zimbra.cs.filter.jsieve.AddressBookTest.class.getName());
+        testMap.put("contact_ranking", com.zimbra.cs.filter.jsieve.ContactRankingTest.class.getName());
+        testMap.put("me", com.zimbra.cs.filter.jsieve.MeTest.class.getName());
         testMap.put("invite", com.zimbra.cs.filter.jsieve.InviteTest.class.getName());
         testMap.put("mime_header", com.zimbra.cs.filter.jsieve.MimeHeaderTest.class.getName());
         testMap.put("current_time", com.zimbra.cs.filter.jsieve.CurrentTimeTest.class.getName());

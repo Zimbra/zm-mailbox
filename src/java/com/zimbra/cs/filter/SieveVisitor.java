@@ -127,8 +127,18 @@ public abstract class SieveVisitor {
     }
 
     @SuppressWarnings("unused")
-    protected void visitAddressBookTest(Node node, VisitPhase phase, RuleProperties props,
-            String header, String folderPath) throws ServiceException {
+    protected void visitAddressBookTest(Node node, VisitPhase phase, RuleProperties props, String header)
+            throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitContactRankingTest(Node node, VisitPhase phase, RuleProperties props, String header)
+            throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitMeTest(Node node, VisitPhase phase, RuleProperties props, String header)
+            throws ServiceException {
     }
 
     @SuppressWarnings("unused")
@@ -376,10 +386,19 @@ public abstract class SieveVisitor {
                 visitAttachmentTest(node, VisitPhase.end, props);
             } else if ("addressbook".equalsIgnoreCase(nodeName)) {
                 String header = getValue(node, 0, 1, 0, 0);
-                String folderPath = getValue(node, 0, 2, 0, 0);
-                visitAddressBookTest(node, VisitPhase.begin, props, header, folderPath);
+                visitAddressBookTest(node, VisitPhase.begin, props, header);
                 accept(node, props);
-                visitAddressBookTest(node, VisitPhase.end, props, header, folderPath);
+                visitAddressBookTest(node, VisitPhase.end, props, header);
+            } else if ("contact_ranking".equalsIgnoreCase(nodeName)) {
+                String header = getValue(node, 0, 1, 0, 0);
+                visitContactRankingTest(node, VisitPhase.begin, props, header);
+                accept(node, props);
+                visitContactRankingTest(node, VisitPhase.end, props, header);
+            } else if ("me".equalsIgnoreCase(nodeName)) {
+                String header = getValue(node, 0, 1, 0, 0);
+                visitMeTest(node, VisitPhase.begin, props, header);
+                accept(node, props);
+                visitMeTest(node, VisitPhase.end, props, header);
             } else if ("invite".equalsIgnoreCase(nodeName)) {
                 List<String> methods = Collections.emptyList();
                 if (getNode(node, 0).jjtGetNumChildren() > 0) {

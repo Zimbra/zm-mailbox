@@ -137,10 +137,11 @@ public final class SoapToSieve {
             String snippetFormat = caseSensitive ? "body :contains :comparator \"i;octet\" \"%s\"" : "body :contains \"%s\"";
             snippet = String.format(snippetFormat, FilterUtil.escape(value));
         } else if (name.equals(MailConstants.E_ADDRESS_BOOK_TEST)) {
-            String header = test.getAttribute(MailConstants.A_HEADER);
-            String type = test.getAttribute(MailConstants.A_CONTACT_TYPE, "contacts");
-            snippet = String.format("addressbook :in \"%s\" \"%s\"",
-                    FilterUtil.escape(header), FilterUtil.escape(type));
+            snippet = "addressbook :in \"" + FilterUtil.escape(test.getAttribute(MailConstants.A_HEADER)) + '"';
+        } else if (name.equals(MailConstants.E_CONTACT_RANKING_TEST)) {
+            snippet = "contact_ranking :in \"" + FilterUtil.escape(test.getAttribute(MailConstants.A_HEADER)) + '"';
+        } else if (name.equals(MailConstants.E_ME_TEST)) {
+            snippet = "me :in \"" + FilterUtil.escape(test.getAttribute(MailConstants.A_HEADER)) + '"';
         } else if (name.equals(MailConstants.E_ATTACHMENT_TEST)) {
             snippet = "attachment";
         } else if (name.equals(MailConstants.E_INVITE_TEST)) {

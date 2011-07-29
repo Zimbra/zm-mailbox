@@ -195,12 +195,29 @@ public final class SieveToSoap extends SieveVisitor {
     }
 
     @Override
-    protected void visitAddressBookTest(Node node, VisitPhase phase, RuleProperties props, String header, String type)
+    protected void visitAddressBookTest(Node node, VisitPhase phase, RuleProperties props, String header)
             throws ServiceException {
         if (phase == VisitPhase.begin) {
             Element test = addTest(MailConstants.E_ADDRESS_BOOK_TEST, props);
             test.addAttribute(MailConstants.A_HEADER, header);
-            test.addAttribute(MailConstants.A_CONTACT_TYPE, type);
+        }
+    }
+
+    @Override
+    protected void visitContactRankingTest(Node node, VisitPhase phase, RuleProperties props, String header)
+            throws ServiceException {
+        if (phase == VisitPhase.begin) {
+            Element test = addTest(MailConstants.E_CONTACT_RANKING_TEST, props);
+            test.addAttribute(MailConstants.A_HEADER, header);
+        }
+    }
+
+    @Override
+    protected void visitMeTest(Node node, VisitPhase phase, RuleProperties props, String header)
+            throws ServiceException {
+        if (phase == VisitPhase.begin) {
+            Element test = addTest(MailConstants.E_ME_TEST, props);
+            test.addAttribute(MailConstants.A_HEADER, header);
         }
     }
 

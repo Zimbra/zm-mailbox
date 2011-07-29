@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -17,6 +17,7 @@ package com.zimbra.cs.filter.jsieve;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
@@ -32,13 +33,14 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.util.AccountUtil;
 
 /**
- * SIEVE test that returns true if the email address in the specified header exists in the address book.
+ * SIEVE test that returns true if the specified header contains the recipient's email address including aliases.
  *
- * @since Nov 11, 2004
+ * @author ysasaki
  */
-public final class AddressBookTest extends AbstractTest {
+public final class MeTest extends AbstractTest {
     private static final String IN = ":in";
     private List<String> headers;
 
@@ -70,7 +72,7 @@ public final class AddressBookTest extends AbstractTest {
     }
 
     @Override
-    protected boolean executeBasic(MailAdapter mail, Arguments arguments, SieveContext context) throws SieveException {
+    protected boolean executeBasic(MailAdapter mail, Arguments args, SieveContext ctx) throws SieveException {
         assert(headers != null);
         if (!(mail instanceof ZimbraMailAdapter)) {
             return false;
@@ -83,9 +85,14 @@ public final class AddressBookTest extends AbstractTest {
             }
         }
         try {
-            return mbox.existsInContacts(addrs);
+            Set<String> me = AccountUtil.getEmailAddresses(mbox.getAccount());
+            for (InternetAddress addr : addrs) {
+                if (me.contains(addr.getAddress().toLowerCase())) {
+                    return true;
+                }
+            }
         } catch (ServiceException e) {
-            ZimbraLog.filter.error("Failed to lookup contacts", e);
+            ZimbraLog.filter.error("Failed to lookup my addresses", e);
         }
         return false;
     }
