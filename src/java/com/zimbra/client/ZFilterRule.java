@@ -32,20 +32,24 @@ import com.zimbra.client.ZFilterAction.ZStopAction;
 import com.zimbra.client.ZFilterAction.ZTagAction;
 import com.zimbra.client.ZFilterCondition.AddressBookOp;
 import com.zimbra.client.ZFilterCondition.BodyOp;
+import com.zimbra.client.ZFilterCondition.ContactRankingOp;
 import com.zimbra.client.ZFilterCondition.DateOp;
 import com.zimbra.client.ZFilterCondition.HeaderOp;
+import com.zimbra.client.ZFilterCondition.MeOp;
 import com.zimbra.client.ZFilterCondition.SimpleOp;
 import com.zimbra.client.ZFilterCondition.SizeOp;
 import com.zimbra.client.ZFilterCondition.ZAddressBookCondition;
 import com.zimbra.client.ZFilterCondition.ZAddressCondition;
 import com.zimbra.client.ZFilterCondition.ZAttachmentExistsCondition;
 import com.zimbra.client.ZFilterCondition.ZBodyCondition;
+import com.zimbra.client.ZFilterCondition.ZContactRankingCondition;
 import com.zimbra.client.ZFilterCondition.ZCurrentDayOfWeekCondition;
 import com.zimbra.client.ZFilterCondition.ZCurrentTimeCondition;
 import com.zimbra.client.ZFilterCondition.ZDateCondition;
 import com.zimbra.client.ZFilterCondition.ZHeaderCondition;
 import com.zimbra.client.ZFilterCondition.ZHeaderExistsCondition;
 import com.zimbra.client.ZFilterCondition.ZInviteCondition;
+import com.zimbra.client.ZFilterCondition.ZMeCondition;
 import com.zimbra.client.ZFilterCondition.ZMimeHeaderCondition;
 import com.zimbra.client.ZFilterCondition.ZSizeCondition;
 import org.json.JSONException;
@@ -241,18 +245,26 @@ public final class ZFilterRule implements ToZJSONObject {
             } else if (a.equals("all")) {
                 all = true;
             } else if (a.equals("addressbook")) {
-                if (i + 3 > args.length) {
+                if (i + 2 > args.length) {
                     throw ZClientException.CLIENT_ERROR("missing args", null);
                 }
                 String op = args[i++];
                 String header = args[i++];
-                String type = args[i++];
-                if (!"contacts".equals(type) && !"ranking".equals(type) && !"me".equals(type)) {
-                    // type was not specified, fall back to default
-                    type = "contacts";
-                    i--;
+                conditions.add(new ZAddressBookCondition(AddressBookOp.fromString(op), header));
+            } else if (a.equals("contact_ranking")) {
+                if (i + 2 > args.length) {
+                    throw ZClientException.CLIENT_ERROR("missing args", null);
                 }
-                conditions.add(new ZAddressBookCondition(AddressBookOp.fromString(op), header, type));
+                String op = args[i++];
+                String header = args[i++];
+                conditions.add(new ZContactRankingCondition(ContactRankingOp.fromString(op), header));
+            } else if (a.equals("me")) {
+                if (i + 2 > args.length) {
+                    throw ZClientException.CLIENT_ERROR("missing args", null);
+                }
+                String op = args[i++];
+                String header = args[i++];
+                conditions.add(new ZMeCondition(MeOp.fromString(op), header));
             } else if (a.equals("attachment")) {
                 if (i + 1 > args.length) {
                     throw ZClientException.CLIENT_ERROR("missing exists arg", null);

@@ -33,6 +33,8 @@ import java.util.List;
 public abstract class ZFilterCondition implements ToZJSONObject {
 
     public static final String C_ADDRESSBOOK = "addressbook";
+    public static final String C_CONTACT_RANKING = "contact_ranking";
+    public static final String C_ME = "me";
     public static final String C_ATTACHMENT = "attachment";
     public static final String C_BODY = "body";
     public static final String C_DATE = "date";
@@ -188,6 +190,32 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         }
     }
 
+    public enum ContactRankingOp {
+        IN, NOT_IN;
+
+        public static ContactRankingOp fromString(String src) throws ServiceException {
+            try {
+                return valueOf(src.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw ZClientException.CLIENT_ERROR("invalid op: " + src +
+                        ", possible values: " + Arrays.asList(values()), null);
+            }
+        }
+    }
+
+    public enum MeOp {
+        IN, NOT_IN;
+
+        public static MeOp fromString(String src) throws ServiceException {
+            try {
+                return valueOf(src.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw ZClientException.CLIENT_ERROR("invalid op: " + src +
+                        ", possible values: " + Arrays.asList(values()), null);
+            }
+        }
+    }
+
     public enum ConversationOp {
         WHERE, NOT_WHERE;
 
@@ -258,8 +286,13 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             return new ZCurrentDayOfWeekCondition(op, value);
         } else if (name.equals(MailConstants.E_ADDRESS_BOOK_TEST)) {
             String header = condEl.getAttribute(MailConstants.A_HEADER);
-            String type = condEl.getAttribute(MailConstants.A_CONTACT_TYPE, "contacts");
-            return new ZAddressBookCondition(isNegative ? AddressBookOp.NOT_IN : AddressBookOp.IN, header, type);
+            return new ZAddressBookCondition(isNegative ? AddressBookOp.NOT_IN : AddressBookOp.IN, header);
+        } else if (name.equals(MailConstants.E_CONTACT_RANKING_TEST)) {
+            String header = condEl.getAttribute(MailConstants.A_HEADER);
+            return new ZContactRankingCondition(isNegative ? ContactRankingOp.NOT_IN : ContactRankingOp.IN, header);
+        } else if (name.equals(MailConstants.E_ME_TEST)) {
+            String header = condEl.getAttribute(MailConstants.A_HEADER);
+            return new ZMeCondition(isNegative ? MeOp.NOT_IN : MeOp.IN, header);
         } else if (name.equals(MailConstants.E_ATTACHMENT_TEST)) {
             return new ZAttachmentExistsCondition(!isNegative);
         } else if (name.equals(MailConstants.E_INVITE_TEST)) {
@@ -516,14 +549,12 @@ public abstract class ZFilterCondition implements ToZJSONObject {
     }
 
     public static final class ZAddressBookCondition extends ZFilterCondition {
-        private final AddressBookOp addressBookOp;
+        private final AddressBookOp op;
         private final String header;
-        private final String type;
 
-        public ZAddressBookCondition(AddressBookOp op, String header, String type) {
-            this.addressBookOp = op;
+        public ZAddressBookCondition(AddressBookOp op, String header) {
+            this.op = op;
             this.header = header;
-            this.type = type;
         }
 
         @Override
@@ -535,8 +566,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         Element toElement(Element parent) {
             Element test = parent.addElement(MailConstants.E_ADDRESS_BOOK_TEST);
             test.addAttribute(MailConstants.A_HEADER, header);
-            test.addAttribute(MailConstants.A_CONTACT_TYPE, type);
-            if (addressBookOp == AddressBookOp.NOT_IN) {
+            if (op == AddressBookOp.NOT_IN) {
                 test.addAttribute(MailConstants.A_NEGATIVE, true);
             }
             return test;
@@ -544,8 +574,69 @@ public abstract class ZFilterCondition implements ToZJSONObject {
 
         @Override
         public String toConditionString() {
-            return (addressBookOp == AddressBookOp.IN ? "addressbook in " : "addressbook not_in ") +
-                ZFilterRule.quotedString(header) + ' ' + ZFilterRule.quotedString(type);
+            return (op == AddressBookOp.IN ? "addressbook in " : "addressbook not_in ") +
+                ZFilterRule.quotedString(header);
+        }
+    }
+
+    public static final class ZContactRankingCondition extends ZFilterCondition {
+        private final ContactRankingOp op;
+        private final String header;
+
+        public ZContactRankingCondition(ContactRankingOp op, String header) {
+            this.op = op;
+            this.header = header;
+        }
+
+        @Override
+        public String getName() {
+            return C_CONTACT_RANKING;
+        }
+
+        @Override
+        Element toElement(Element parent) {
+            Element test = parent.addElement(MailConstants.E_CONTACT_RANKING_TEST);
+            test.addAttribute(MailConstants.A_HEADER, header);
+            if (op == ContactRankingOp.NOT_IN) {
+                test.addAttribute(MailConstants.A_NEGATIVE, true);
+            }
+            return test;
+        }
+
+        @Override
+        public String toConditionString() {
+            return (op == ContactRankingOp.IN ? "contact_ranking in " : "contact_ranking not_in ") +
+                ZFilterRule.quotedString(header);
+        }
+    }
+
+    public static final class ZMeCondition extends ZFilterCondition {
+        private final MeOp op;
+        private final String header;
+
+        public ZMeCondition(MeOp op, String header) {
+            this.op = op;
+            this.header = header;
+        }
+
+        @Override
+        public String getName() {
+            return C_ME;
+        }
+
+        @Override
+        Element toElement(Element parent) {
+            Element test = parent.addElement(MailConstants.E_CONTACT_RANKING_TEST);
+            test.addAttribute(MailConstants.A_HEADER, header);
+            if (op == MeOp.NOT_IN) {
+                test.addAttribute(MailConstants.A_NEGATIVE, true);
+            }
+            return test;
+        }
+
+        @Override
+        public String toConditionString() {
+            return (op == MeOp.IN ? "me in " : "me not_in ") + ZFilterRule.quotedString(header);
         }
     }
 
