@@ -72,20 +72,19 @@ public enum TargetType {
     // the same fact from two opposite directions
     //
     
-    // set of designated target types for a right that can be 
-    // inherited from this target type
+    // set of target types that can inherit from this target type
+    // e.g. if this target type is domain, the set would be 
+    //      account, calresource, dl, group, domain
     private Set<TargetType> mInheritedByTargetTypes;
     
-    // set of target types from which the designated target type
-    // for a right can inherit from
+    // set of target types this target type can inherit from
+    // e.g. if this target type is domain, the set would be 
+    //      globalGrant, domain
     private Set<TargetType> mInheritFromTargetTypes;
     
     // pretty much like mInheritedByTargetTypes, but this is for LDAP 
     // search of sub-targets of a target type.  This Set is different 
-    // from the mInheritedByTargetTypes that it:
-    // 1. does not contain self
-    // 2. for calresource, does not contain account.  Because account 
-    //    is not really "sub-target" of calresource.
+    // from the mInheritedByTargetTypes that it does not contain self
     private Set<TargetType> mSubTargetTypes;
 
     static {
@@ -117,7 +116,7 @@ public enum TargetType {
                 new TargetType[]{account});
         
         TargetType.calresource.setInheritedByTargetTypes(
-                new TargetType[]{account, calresource});
+                new TargetType[]{calresource});
         
         TargetType.dl.setInheritedByTargetTypes(
                 new TargetType[]{account, calresource, dl});
@@ -156,25 +155,21 @@ public enum TargetType {
                                  config,
                                  global});  // inherited by all
         
-        // compute mInheritFromTargetTypes and  mInheritedByOtherTargetTypes 
+        // compute mInheritFromTargetTypes and mSubTargetTypes
         // from mInheritedByTargetTypes
         for (TargetType inheritFrom : TargetType.values()) {
             inheritFrom.mInheritFromTargetTypes = new HashSet<TargetType>();
             inheritFrom.mSubTargetTypes = new HashSet<TargetType>();
             
             for (TargetType inheritedBy : TargetType.values()) {
-                if (inheritedBy.mInheritedByTargetTypes.contains(inheritFrom))
+                if (inheritedBy.mInheritedByTargetTypes.contains(inheritFrom)) {
                     inheritFrom.mInheritFromTargetTypes.add(inheritedBy);
+                }
             }
             
             for (TargetType tt: inheritFrom.mInheritedByTargetTypes) {
-                // add this ugly check, see comments for mSubTargetTypes above
-                if (inheritFrom == TargetType.calresource) {
-                    if (inheritFrom != tt && tt != TargetType.account)
-                        inheritFrom.mSubTargetTypes.add(tt);
-                } else {
-                    if (inheritFrom != tt)
-                        inheritFrom.mSubTargetTypes.add(tt);
+                if (inheritFrom != tt) {
+                    inheritFrom.mSubTargetTypes.add(tt);
                 }
             }
         }
@@ -185,6 +180,31 @@ public enum TargetType {
             tt.mSubTargetTypes = Collections.unmodifiableSet(tt.mSubTargetTypes);
         }
         
+        /*
+        for (TargetType tt : TargetType.values()) {
+            tt.dump();
+        }
+        */
+    }
+    
+    private void dump() {
+        System.out.println();
+        System.out.println(mPrettyName);
+        
+        System.out.println("mInheritedByTargetTypes");
+        for (TargetType tt : mInheritedByTargetTypes) {
+            System.out.println("    " + tt);
+        }
+        
+        System.out.println("mInheritFromTargetTypes");
+        for (TargetType tt : mInheritFromTargetTypes) {
+            System.out.println("    " + tt);
+        }
+        
+        System.out.println("mSubTargetTypes");
+        for (TargetType tt : mSubTargetTypes) {
+            System.out.println("    " + tt);
+        }
     }
     
     /**
@@ -325,7 +345,7 @@ public enum TargetType {
         return targetEntry;
     }
 
-    static Set<String> getAttrsInClass(Entry target) throws ServiceException {
+    public static Set<String> getAttrsInClass(Entry target) throws ServiceException {
         AttributeClass klass = TargetType.getAttributeClass(target);
         return AttributeManager.getInstance().getAllAttrsInClass(klass);
     }
@@ -359,7 +379,8 @@ public enum TargetType {
         else if (target instanceof XMPPComponent)
             return TargetType.xmppcomponent;
         else 
-            throw ServiceException.FAILURE("internal error, target is : " + (target==null?"null":target.getClass().getCanonicalName()), null);
+            throw ServiceException.FAILURE("internal error, target is : " + 
+                    (target==null?"null":target.getClass().getCanonicalName()), null);
     }
 
     boolean isDomained() {
@@ -370,7 +391,8 @@ public enum TargetType {
         return (target instanceof NamedEntry)? ((NamedEntry)target).getId() : null;
     }
     
-    public static Domain getTargetDomain(Provisioning prov, Entry target) throws ServiceException{
+    public static Domain getTargetDomain(Provisioning prov, Entry target) 
+    throws ServiceException{
         
         if (target instanceof CalendarResource) {
             CalendarResource cr = (CalendarResource)target;
@@ -385,7 +407,8 @@ public enum TargetType {
             return null;
     }
     
-    public static String getTargetDomainName(Provisioning prov, Entry target) throws ServiceException{
+    public static String getTargetDomainName(Provisioning prov, Entry target) 
+    throws ServiceException{
         
         if (target instanceof CalendarResource) {
             CalendarResource cr = (CalendarResource)target;
@@ -400,7 +423,8 @@ public enum TargetType {
             return null;
     }
     
-    static String getSearchBase(Provisioning prov, TargetType tt) throws ServiceException {
+    static String getSearchBase(Provisioning prov, TargetType tt) 
+    throws ServiceException {
         LdapDIT dit = ((LdapProv)prov).getDIT();
         
         String base;
@@ -514,18 +538,22 @@ public enum TargetType {
              if (inConfigBranch) {
                  configBranchOCs.addAll(ocs);
                  
-                 if (leastCommonBaseInConfigBranch == null)
+                 if (leastCommonBaseInConfigBranch == null) {
                      leastCommonBaseInConfigBranch = base;
-                 else
-                     leastCommonBaseInConfigBranch = getCommonBase(base, leastCommonBaseInConfigBranch);
+                 } else {
+                     leastCommonBaseInConfigBranch = 
+                         getCommonBase(base, leastCommonBaseInConfigBranch);
+                 }
 
              } else {
                  mailBranchOCs.addAll(ocs);
                  
-                 if (leastCommonBaseInMailBranch == null)
+                 if (leastCommonBaseInMailBranch == null) {
                      leastCommonBaseInMailBranch = base;
-                 else
-                     leastCommonBaseInMailBranch = getCommonBase(base, leastCommonBaseInMailBranch);
+                 } else {
+                     leastCommonBaseInMailBranch = 
+                         getCommonBase(base, leastCommonBaseInMailBranch);
+                 }
              }
         }
         
@@ -535,7 +563,8 @@ public enum TargetType {
         if (LdapDIT.isZimbraDefault(dit)) {
             if (leastCommonBaseInMailBranch != null && leastCommonBaseInConfigBranch != null) {
                 // merge the two
-                String commonBase = getCommonBase(leastCommonBaseInMailBranch, leastCommonBaseInConfigBranch);
+                String commonBase = getCommonBase(leastCommonBaseInMailBranch, 
+                        leastCommonBaseInConfigBranch);
                 Set<String> allOCs = SetUtil.union(mailBranchOCs, configBranchOCs);
                 result.put(commonBase, allOCs);
                 return result;
@@ -543,10 +572,12 @@ public enum TargetType {
         } 
         
         // bug 48272, do two searches, one based at the mail branch, one based on the config branch.
-        if (leastCommonBaseInMailBranch != null)
+        if (leastCommonBaseInMailBranch != null) {
             result.put(leastCommonBaseInMailBranch, mailBranchOCs);
-        if (leastCommonBaseInConfigBranch != null)
+        }
+        if (leastCommonBaseInConfigBranch != null) {
             result.put(leastCommonBaseInConfigBranch, configBranchOCs);
+        }
 
         return result;
     }

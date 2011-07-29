@@ -35,7 +35,7 @@ public class CheckAttrRight extends CheckRight {
     private static final Log sLog = ZimbraLog.acl;
 
     private Grantee mGrantee;
-    private AttrRight mAttrRightNeeded; // just to save a casting from Right to AttrRight
+    private AttrRight mAttrRightNeeded;
     
     static enum CollectAttrsResult {
         SOME(false),
@@ -69,7 +69,7 @@ public class CheckAttrRight extends CheckRight {
         
         mGrantee = grantee;
         mTargetType = TargetType.getTargetType(mTarget);
-        mAttrRightNeeded = rightNeeded;  // just to save a casting
+        mAttrRightNeeded = rightNeeded;
     }
     
     private AllowedAttrs computeAccessibleAttrs() throws ServiceException {
@@ -331,7 +331,8 @@ public class CheckAttrRight extends CheckRight {
     
     private CollectAttrsResult expandAttrsGrantToAttrs(
             ZimbraACE ace, AttrRight attrRightGranted, Integer relativity,
-            Map<String, Integer> allowSome, Map<String, Integer> denySome) throws ServiceException {
+            Map<String, Integer> allowSome, Map<String, Integer> denySome) 
+    throws ServiceException {
         
         /*
          * note: do NOT call ace.getRight in this method, ace is passed in for deny() and getTargetType() 

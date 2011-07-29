@@ -1106,7 +1106,7 @@ public abstract class AdminAccessControl {
         private AccessManager.AttrRightChecker mRightChecker;
         
         private AttributeRightChecker(AdminAccessControl accessControl, Entry target) throws ServiceException {
-            mRightChecker = accessControl.mAccessMgr.canGetAttrs(accessControl.mAuthedAcct, target, true);
+            mRightChecker = accessControl.mAccessMgr.getGetAttrsChecker(accessControl.mAuthedAcct, target, true);
         }
             
         public boolean allowAttr(String attrName) {

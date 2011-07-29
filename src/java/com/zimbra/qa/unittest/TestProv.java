@@ -77,6 +77,22 @@ public abstract class TestProv extends TestLdap {
         return nextSeq() + "." + BASE_DOMAIN_NAME;
     }
     
+    private String genAccountName() {
+        return "acct-" + nextSeq() + "." + BASE_DOMAIN_NAME;
+    }
+    
+    private String genCalendarResourceName() {
+        return "cr-" + nextSeq() + "." + BASE_DOMAIN_NAME;
+    }
+    
+    private String genDistributionListName() {
+        return "dl-" + nextSeq() + "." + BASE_DOMAIN_NAME;
+    }
+    
+    private String genDynamicGroupName() {
+        return "group-" + nextSeq() + "." + BASE_DOMAIN_NAME;
+    }
+    
     private String genCosName() {
         return "cos-" + nextSeq() + "." + BASE_DOMAIN_NAME;
     }
@@ -130,10 +146,20 @@ public abstract class TestProv extends TestLdap {
         return createAccount(localpart, domain, null);
     }
     
+    protected Account createUserAccount(Domain domain) throws Exception {
+        String localpart = genAccountName();
+        return createAccount(localpart, domain, null);
+    }
+    
     protected Account createDelegatedAdminAccount(String localpart, Domain domain) throws Exception {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraIsDelegatedAdminAccount, ProvisioningConstants.TRUE);
         return createAccount(localpart, domain, attrs);
+    }
+    
+    protected Account createDelegatedAdminAccount(Domain domain) throws Exception {
+        String localpart = genAccountName();
+        return createDelegatedAdminAccount(localpart, domain);
     }
     
     protected Account createGuestAccount(String email, String password) {
@@ -160,6 +186,11 @@ public abstract class TestProv extends TestLdap {
         return cr;
     }
     
+    protected CalendarResource createCalendarResource(Domain domain) throws Exception {
+        String localpart = genCalendarResourceName();
+        return createCalendarResource(localpart, domain);
+    }
+    
     protected Cos createCos() throws Exception {
         Cos cos = mProv.createCos(genCosName(), null);
         mCreatedEntries.add(cos);
@@ -178,6 +209,11 @@ public abstract class TestProv extends TestLdap {
     
     protected DistributionList createUserDistributionList(String localpart, Domain domain) throws Exception {
         return createDistributionList(localpart, domain, new HashMap<String, Object>());
+    }
+    
+    protected DistributionList createUserDistributionList(Domain domain) throws Exception {
+        String localpart = genDistributionListName();
+        return createUserDistributionList(localpart, domain);
     }
     
     protected DistributionList createAdminGroup(String localpart, Domain domain) throws Exception {
@@ -199,6 +235,11 @@ public abstract class TestProv extends TestLdap {
     
     protected DynamicGroup createUserDynamicGroup(String localpart, Domain domain) throws Exception {
         return createDynamicGroup(localpart, domain, new HashMap<String, Object>());
+    }
+    
+    protected DynamicGroup createUserDynamicGroup(Domain domain) throws Exception {
+        String localpart = genDynamicGroupName();
+        return createUserDynamicGroup(localpart, domain);
     }
     
     protected DynamicGroup createAdminDynamicGroup(String localpart, Domain domain) throws Exception {

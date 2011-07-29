@@ -256,7 +256,7 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     }
 
     @Override
-    public AttrRightChecker canGetAttrs(Account credentials,   Entry target, boolean asAdmin) throws ServiceException {
+    public AttrRightChecker getGetAttrsChecker(Account credentials, Entry target, boolean asAdmin) throws ServiceException {
         Boolean hardRulesResult = HardRules.checkHardRules(credentials, asAdmin, target, null);
         
         if (hardRulesResult == Boolean.TRUE)
@@ -268,8 +268,8 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     }
     
     @Override
-    public AttrRightChecker canGetAttrs(AuthToken credentials, Entry target, boolean asAdmin) throws ServiceException {
-        return canGetAttrs(credentials.getAccount(), target, asAdmin);
+    public AttrRightChecker getGetAttrsChecker(AuthToken credentials, Entry target, boolean asAdmin) throws ServiceException {
+        return getGetAttrsChecker(credentials.getAccount(), target, asAdmin);
     }
     
     
@@ -316,10 +316,7 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
         Key.CosBy cosBy = null;
         String cosStr = null;
         
-        if (targetType == TargetType.account ||
-            targetType == TargetType.calresource ||
-            targetType == TargetType.dl ||
-            targetType == TargetType.group) {
+        if (targetType.isDomained()) {
             String parts[] = EmailUtil.getLocalPartAndDomain(entryName);
             if (parts == null)
                 throw ServiceException.INVALID_REQUEST("must be valid email address: "+entryName, null);
@@ -508,21 +505,21 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
             AttrRight rightNeeded, boolean canDelegateNeeded) throws ServiceException {
         AllowedAttrs allowedAttrs = 
             CheckAttrRight.accessibleAttrs(new Grantee(granteeAcct), target, rightNeeded, canDelegateNeeded);
-        return allowedAttrs.canAccessAttrs(rightNeeded.getAttrs(), target, rightNeeded);
+        return allowedAttrs.canAccessAttrs(rightNeeded.getAttrs(), target);
     }
     
     private boolean canGetAttrsInternal(Account granteeAcct, Entry target, 
             Set<String> attrsNeeded, boolean canDelegateNeeded) throws ServiceException {
         AllowedAttrs allowedAttrs = 
             CheckAttrRight.accessibleAttrs(new Grantee(granteeAcct), target, AdminRight.PR_GET_ATTRS, canDelegateNeeded);
-        return allowedAttrs.canAccessAttrs(attrsNeeded, target, AdminRight.PR_GET_ATTRS);
+        return allowedAttrs.canAccessAttrs(attrsNeeded, target);
     }
     
     private boolean canSetAttrsInternal(Account granteeAcct, Entry target, 
             Set<String> attrsNeeded, boolean canDelegateNeeded) throws ServiceException {
         AllowedAttrs allowedAttrs = 
             CheckAttrRight.accessibleAttrs(new Grantee(granteeAcct), target, AdminRight.PR_SET_ATTRS, canDelegateNeeded);
-        return allowedAttrs.canAccessAttrs(attrsNeeded, target, AdminRight.PR_SET_ATTRS);
+        return allowedAttrs.canAccessAttrs(attrsNeeded, target);
     }
 
     // ============

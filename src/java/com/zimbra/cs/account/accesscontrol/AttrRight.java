@@ -14,9 +14,7 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
@@ -73,8 +71,9 @@ public class AttrRight extends AdminRight {
             ComboRight cr = (ComboRight)other;
             Set<AttrRight> otherAttrRights = cr.getAttrRights();
             for (AttrRight ar : otherAttrRights) {
-                if (overlapAttrRight(ar))
+                if (overlapAttrRight(ar)) {
                     return true;
+                }
             }
             return false;
         } else
@@ -82,30 +81,35 @@ public class AttrRight extends AdminRight {
     }
         
     private boolean overlapAttrRight(AttrRight otherAttrRight) {
-        if (this == otherAttrRight)
+        if (this == otherAttrRight) {
             return true; 
-        if (SetUtil.intersect(getTargetTypes(), otherAttrRight.getTargetTypes()).isEmpty())
+        }
+        if (SetUtil.intersect(getTargetTypes(), otherAttrRight.getTargetTypes()).isEmpty()) {
             return false;
-                
-        if (allAttrs() || otherAttrRight.allAttrs())
+        }
+        if (allAttrs() || otherAttrRight.allAttrs()) {
             return true;
-            
+        }
         // neither is allAttrs
         return !SetUtil.intersect(getAttrs(), otherAttrRight.getAttrs()).isEmpty();
     }
     
     @Override
     boolean executableOnTargetType(TargetType targetType) {
+        targetType = GroupUtil.disguiseDynamicGroupAsDL(targetType);
         return mTargetTypes.contains(targetType);
     }
     
     @Override
     boolean grantableOnTargetType(TargetType targetType) {
+        targetType = GroupUtil.disguiseDynamicGroupAsDL(targetType);
+        
         // return true if *any* of the applicable target types for the right 
         // can inherit from targetType
         for (TargetType tt : getTargetTypes()) {
-            if (targetType.isInheritedBy(tt))
+            if (targetType.isInheritedBy(tt)) {
                 return true;
+            }
         }
 
         return false;
@@ -143,7 +147,7 @@ public class AttrRight extends AdminRight {
     
     // for SOAP response only
     @Override
-     public String getTargetTypeStr() {
+    public String getTargetTypeStr() {
         StringBuilder sb = new StringBuilder();
         boolean first = true;
         for (TargetType tt : mTargetTypes) {
@@ -208,22 +212,27 @@ public class AttrRight extends AdminRight {
      */
     boolean suitableFor(RightType needed) {
         if (needed == mRightType ||
-            needed == RightType.getAttrs && mRightType == RightType.setAttrs)
+            needed == RightType.getAttrs && mRightType == RightType.setAttrs) {
             return true;
-        else
+        } else {
             return false;
+        }
     }
 
     @Override
     void completeRight() throws ServiceException {
         super.completeRight();
         
-        if (mTargetTypes.size() == 0)
+        if (mTargetTypes.size() == 0) {
             throw ServiceException.PARSE_ERROR("missing target type", null);
-
+        }
+        
         // verify that if allAttrs, then there can be exactly one target type.
-        if (allAttrs() == true && mTargetTypes.size() != 1)
-            throw ServiceException.PARSE_ERROR("there must be exactly one target type for getAttrs/setAttrs right that cover all attributes", null);
+        if (allAttrs() == true && mTargetTypes.size() != 1) {
+            throw ServiceException.PARSE_ERROR(
+                    "there must be exactly one target type for getAttrs/setAttrs right " + 
+                    "that cover all attributes", null);
+        }
     }
     
     /**

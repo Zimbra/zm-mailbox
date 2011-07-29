@@ -14,8 +14,10 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 
@@ -29,11 +31,21 @@ public abstract class CheckRight {
     protected TargetType mTargetType;
     
     
-    protected CheckRight(Entry target, Right rightNeeded, boolean canDelegateNeeded) {
+    protected CheckRight(Entry target, Right rightNeeded, boolean canDelegateNeeded) 
+    throws ServiceException {
         
         mProv = Provisioning.getInstance();
 
+        // This path is called from AccessManager, the target object can be a 
+        // DistributionList obtained from prov.get(DistributionListBy).  
+        // We require one from getDLBasic(DistributionListBy) here, because when group 
+        // members are added/removed, the upward membership cache is cleared on the cached
+        // entry.
+        if (target instanceof DistributionList) {
+            target = mProv.getDLBasic(Key.DistributionListBy.id, ((DistributionList)target).getId());
+        }
         mTarget = target;
+        
         mRightNeeded = rightNeeded;
         mCanDelegateNeeded = canDelegateNeeded;
     }

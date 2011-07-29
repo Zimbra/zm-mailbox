@@ -12,6 +12,7 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.GlobalGrant;
@@ -261,8 +262,6 @@ public class TestACPermissionCache extends TestAC {
         allow = accessMgr.canDo(grantee, target, right, false, null);
         assertTrue(allow); 
     }
-    
-    // TODO test dynamic group
     
     @Test
     public void testIndirectGroupMembershipChanged() throws Exception {

@@ -27,10 +27,6 @@ import java.util.TreeMap;
 
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.CosBy;
-import com.zimbra.common.account.Key.DomainBy;
-import com.zimbra.common.account.Key.GranteeBy;
-import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -40,7 +36,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeManager;
-import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
@@ -64,18 +59,12 @@ import com.zimbra.soap.type.NamedElement;
 public class RightCommand {
     
     /*
-     * Grants and ACE are aux class for ProvUtil.  We don't want to pass "live"(those actually being used 
-     * in the server) ZimbraACL/ZimbraACE objects to ProvUtil, because:
-     *     - Some methods(e.g. ZimbraACE.getGranteeDisplayName ) calls Provisioning.getInstance(), 
-     *       which is an instance of LdapProvisioning, which should not be done from ProvUtil when 
-     *       the command is via soap.
-     *       
-     *     - We really just want to pass a "static" object in that all data members are "burned in" 
-     *       and cannot be manipulated, since the sole purpose for them is to be displayed/read.
-     *       
-     * Use String instead of TargetTyep/GranteeType/Right data members in those classes so they 
-     * can be readily displayed/serialize without further dependency of any server side logic, e.g.
-     * RightManager, which would access LDAP for custom rights that are defined in LDAP.
+     * Grants and ACE are aux classes for ProvUtil.  
+     *        
+     * Use String instead of TargetTyep/GranteeType/Right data members in those classes 
+     * so they can be readily displayed/serialize without further dependency of any server 
+     * side logic, e.g. RightManager, which would access LDAP for custom rights that are 
+     * defined in LDAP.
      */
     
     public static class Grants {
@@ -152,8 +141,9 @@ public class RightCommand {
                     continue;
                 }
                     
-                if (granteeFilter == null || granteeFilter.contains(ace.getGrantee()))
+                if (granteeFilter == null || granteeFilter.contains(ace.getGrantee())) {
                     addACE(new ACE(targetType, target, ace));
+                }
             }
         }
         
@@ -282,7 +272,8 @@ public class RightCommand {
     }
     
     public static class EffectiveRights {
-        private static final SortedMap<String, EffectiveAttr> EMPTY_MAP = new TreeMap<String, EffectiveAttr>();
+        private static final SortedMap<String, EffectiveAttr> 
+            EMPTY_MAP = new TreeMap<String, EffectiveAttr>();
         
         String mTargetType;
         String mTargetId;
@@ -303,7 +294,8 @@ public class RightCommand {
         boolean mCanGetAllAttrs = false;
         SortedMap<String, EffectiveAttr> mCanGetAttrs = EMPTY_MAP;  // sorted by attr name 
         
-        EffectiveRights(String targetType, String targetId, String targetName, String granteeId, String granteeName) {
+        EffectiveRights(String targetType, String targetId, String targetName, 
+                String granteeId, String granteeName) {
             mTargetType = targetType;
             mTargetId = targetId==null ? "" : targetId;
             mTargetName = targetName;
@@ -372,7 +364,8 @@ public class RightCommand {
             return er;
         }
 
-        public static EffectiveRights fromXML_CreateObjectAttrs(Element parent) throws ServiceException {
+        public static EffectiveRights fromXML_CreateObjectAttrs(Element parent) 
+        throws ServiceException {
             EffectiveRights er = new EffectiveRights();
             
             // setAttrs
@@ -446,7 +439,8 @@ public class RightCommand {
             return attrs;
         }
 
-        private static TreeMap<String, EffectiveAttr> fromXML_attrs(Element eAttrs) throws ServiceException {
+        private static TreeMap<String, EffectiveAttr> fromXML_attrs(Element eAttrs) 
+        throws ServiceException {
             TreeMap<String, EffectiveAttr> attrs = new TreeMap<String, EffectiveAttr>();
             
             AttributeManager am = AttributeManager.getInstance();
@@ -514,7 +508,8 @@ public class RightCommand {
             toXML(eParent, AdminConstants.E_GET_ATTRS, mCanGetAllAttrs, mCanGetAttrs);
         }
         
-        private void toXML(Element parent, String elemName, boolean allAttrs, SortedMap<String, EffectiveAttr> attrs) {
+        private void toXML(Element parent, String elemName, boolean allAttrs, 
+                SortedMap<String, EffectiveAttr> attrs) {
             Element eAttrs = parent.addElement(elemName);
             if (allAttrs) {
                 eAttrs.addAttribute(AdminConstants.A_ALL, true);
@@ -653,7 +648,8 @@ public class RightCommand {
             entries.add(new RightAggregation(name, er));
         }
         
-        protected static void addAggregation(Set<RightAggregation> entries, Set<String> names, EffectiveRights er) {
+        protected static void addAggregation(Set<RightAggregation> entries, 
+                Set<String> names, EffectiveRights er) {
             
             // add the entry to an aggregation if there is one with the same rights
             // otherwise create a new aggregation
@@ -720,7 +716,8 @@ public class RightCommand {
         String mGranteeId;
         String mGranteeName;
         
-        Map<TargetType, RightsByTargetType> mRightsByTargetType = new HashMap<TargetType, RightsByTargetType>();
+        Map<TargetType, RightsByTargetType> mRightsByTargetType = 
+            new HashMap<TargetType, RightsByTargetType>();
         
         AllEffectiveRights(String granteeType, String granteeId, String granteeName) {
             mGranteeType = granteeType;
@@ -764,7 +761,8 @@ public class RightCommand {
         void addDomainEntry(TargetType targetType, String domainName, EffectiveRights er) {
             if (er.hasNoRight())
                 return;
-            DomainedRightsByTargetType drbtt = (DomainedRightsByTargetType)mRightsByTargetType.get(targetType);
+            DomainedRightsByTargetType drbtt = 
+                (DomainedRightsByTargetType)mRightsByTargetType.get(targetType);
             drbtt.addDomainEntry(domainName, er);
         }
 
@@ -838,7 +836,8 @@ public class RightCommand {
                 }
                 
                 if (rbtt instanceof DomainedRightsByTargetType) {
-                    DomainedRightsByTargetType domainedRights = (RightCommand.DomainedRightsByTargetType)rbtt;
+                    DomainedRightsByTargetType domainedRights = 
+                        (RightCommand.DomainedRightsByTargetType)rbtt;
                     
                     for (RightAggregation rightsByDomains : domainedRights.domains()) {
                         Element eInDomains = eTarget.addElement(AdminConstants.E_IN_DOMAINS);
@@ -871,7 +870,8 @@ public class RightCommand {
         if (!(AccessManager.getInstance() instanceof ACLAccessManager))
             throw ServiceException.FAILURE("method is not supported by the current AccessManager: " + 
                     AccessManager.getInstance().getClass().getCanonicalName() +
-                    ", this method requires access manager " +  ACLAccessManager.class.getCanonicalName(), null);
+                    ", this method requires access manager " +  
+                    ACLAccessManager.class.getCanonicalName(), null);
     }
     
     private static AdminConsoleCapable verifyAdminConsoleCapable() throws ServiceException {
@@ -892,7 +892,8 @@ public class RightCommand {
     
     /**
      * return rights that can be granted on target with the specified targetType
-     *     e.g. renameAccount can be granted on a domain, a distribution list, or an account target
+     *     e.g. renameAccount can be granted on a domain, a distribution list, or an 
+     *          account target
      *     
      * Note: this is *not* the same as "rights executable on targetType"
      *     e.g. renameAccount is executable on account entries. 
@@ -901,7 +902,8 @@ public class RightCommand {
      * @return
      * @throws ServiceException
      */
-    public static List<Right> getAllRights(String targetType, String rightClass) throws ServiceException {
+    public static List<Right> getAllRights(String targetType, String rightClass) 
+    throws ServiceException {
         verifyAccessManager();
         
         List<Right> result = new ArrayList<Right>();
@@ -926,7 +928,9 @@ public class RightCommand {
         return result;
     }
     
-    private static void getAllRights(TargetType targetType, Map<String, ? extends Right> rights, List<Right> result) throws ServiceException {
+    private static void getAllRights(TargetType targetType, 
+            Map<String, ? extends Right> rights, List<Right> result) 
+    throws ServiceException {
        
         for (Map.Entry<String, ? extends Right> right : rights.entrySet()) {
             Right r = right.getValue();
@@ -937,10 +941,10 @@ public class RightCommand {
     }
     
     public static boolean checkRight(Provisioning prov,
-                                     String targetType, Key.TargetBy targetBy, String target,
-                                     Key.GranteeBy granteeBy, String grantee, GuestAccount guest,
-                                     String right, Map<String, Object> attrs,
-                                     AccessManager.ViaGrant via) throws ServiceException {
+            String targetType, Key.TargetBy targetBy, String target,
+            Key.GranteeBy granteeBy, String grantee, GuestAccount guest,
+            String right, Map<String, Object> attrs,
+            AccessManager.ViaGrant via) throws ServiceException {
         verifyAccessManager();
         
         // target
@@ -951,10 +955,11 @@ public class RightCommand {
         // grantee
         GranteeType gt = GranteeType.GT_USER;  // grantee for check right must be an Account
         NamedEntry granteeEntry;
-        if (guest != null)
+        if (guest != null) {
             granteeEntry = guest;
-        else
+        } else {
             granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);  
+        }
         
         // right
         Right r = RightManager.getInstance().getRight(right);
@@ -966,7 +971,8 @@ public class RightCommand {
             */
         } else {
             if (attrs != null && !attrs.isEmpty())
-                throw ServiceException.INVALID_REQUEST("attr map is not allowed for checking a non-setAttrs right: " + r.getName(), null);
+                throw ServiceException.INVALID_REQUEST(
+                        "attr map is not allowed for checking a non-setAttrs right: " + r.getName(), null);
         }
         
         AccessManager am = AccessManager.getInstance();
@@ -986,16 +992,18 @@ public class RightCommand {
         NamedEntry granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);  
         RightBearer rightBearer = RightBearer.newRightBearer(granteeEntry);
         
-        AllEffectiveRights aer = new AllEffectiveRights(gt.getCode(), granteeEntry.getId(), granteeEntry.getName());
+        AllEffectiveRights aer = 
+            new AllEffectiveRights(gt.getCode(), granteeEntry.getId(), granteeEntry.getName());
         
         acc.getAllEffectiveRights(rightBearer, expandSetAttrs, expandGetAttrs, aer);
         return aer;
     }
     
     public static EffectiveRights getEffectiveRights(Provisioning prov,
-                                                     String targetType, Key.TargetBy targetBy, String target,
-                                                     Key.GranteeBy granteeBy, String grantee,
-                                                     boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
+            String targetType, Key.TargetBy targetBy, String target,
+            Key.GranteeBy granteeBy, String grantee,
+            boolean expandSetAttrs, boolean expandGetAttrs) 
+    throws ServiceException {
         AdminConsoleCapable acc = verifyAdminConsoleCapable();
         
         // target
@@ -1009,18 +1017,20 @@ public class RightCommand {
         Account granteeAcct = (Account)granteeEntry;
         RightBearer rightBearer = RightBearer.newRightBearer(granteeEntry);
         
-        EffectiveRights er = new EffectiveRights(targetType, TargetType.getId(targetEntry), targetEntry.getLabel(), 
+        EffectiveRights er = new EffectiveRights(targetType, 
+                TargetType.getId(targetEntry), targetEntry.getLabel(), 
                 granteeAcct.getId(), granteeAcct.getName());
         
         acc.getEffectiveRights(rightBearer, targetEntry, expandSetAttrs, expandGetAttrs, er);
         return er;
     }
     
-    public static EffectiveRights getCreateObjectAttrs(Provisioning prov,
-                                                       String targetType,
-                                                       Key.DomainBy domainBy, String domainStr,
-                                                       Key.CosBy cosBy, String cosStr,
-                                                       Key.GranteeBy granteeBy, String grantee) throws ServiceException {
+    public static EffectiveRights getCreateObjectAttrs(
+            Provisioning prov, String targetType,
+            Key.DomainBy domainBy, String domainStr,
+            Key.CosBy cosBy, String cosStr,
+            Key.GranteeBy granteeBy, String grantee) 
+    throws ServiceException {
         
         AdminConsoleCapable acc = verifyAdminConsoleCapable();
         
@@ -1033,7 +1043,8 @@ public class RightCommand {
             
             domainName = domainStr;
         }
-        Entry targetEntry = PseudoTarget.createPseudoTarget(prov, tt, domainBy, domainStr, false, cosBy, cosStr, domainName);
+        Entry targetEntry = PseudoTarget.createPseudoTarget(prov, tt, domainBy, domainStr, 
+                false, cosBy, cosStr, domainName);
        
         // grantee
         GranteeType gt = GranteeType.GT_USER;
@@ -1042,7 +1053,8 @@ public class RightCommand {
         Account granteeAcct = (Account)granteeEntry;
         RightBearer rightBearer = RightBearer.newRightBearer(granteeEntry);
         
-        EffectiveRights er = new EffectiveRights(targetType, TargetType.getId(targetEntry), targetEntry.getLabel(), 
+        EffectiveRights er = new EffectiveRights(targetType, 
+                TargetType.getId(targetEntry), targetEntry.getLabel(), 
                 granteeAcct.getId(), granteeAcct.getName());
         
         acc.getEffectiveRights(rightBearer, targetEntry, true, true, er);
@@ -1050,14 +1062,16 @@ public class RightCommand {
     }
     
     public static Grants getGrants(Provisioning prov,
-                                String targetType, Key.TargetBy targetBy, String target, 
-                                String granteeType, Key.GranteeBy granteeBy, String grantee, 
-                                boolean granteeIncludeGroupsGranteeBelongs) throws ServiceException {
+            String targetType, Key.TargetBy targetBy, String target, 
+            String granteeType, Key.GranteeBy granteeBy, String grantee, 
+             boolean granteeIncludeGroupsGranteeBelongs) 
+    throws ServiceException {
         verifyAccessManager();
         
-        if (targetType == null && granteeType == null)
-            throw ServiceException.INVALID_REQUEST("at least one of target or grantee must be specified", null);
-
+        if (targetType == null && granteeType == null) {
+            throw ServiceException.INVALID_REQUEST(
+                    "at least one of target or grantee must be specified", null);
+        }
         
         // target
         TargetType tt = null;
@@ -1094,7 +1108,8 @@ public class RightCommand {
             ZimbraACL zimbraAcl = ACLUtil.getACL(targetEntry);
             
             // then filter by grnatee if grantee is specified
-            grants.addGrants(tt, targetEntry, zimbraAcl, granteeFilter, isGranteeAnAdmin);
+            grants.addGrants(GroupUtil.disguiseDynamicGroupAsDL(tt), targetEntry, 
+                    zimbraAcl, granteeFilter, isGranteeAnAdmin);
             
         } else {
             /*
@@ -1107,7 +1122,8 @@ public class RightCommand {
              */
             
             // we want all target types
-            Set<TargetType> targetTypesToSearch = new HashSet<TargetType>(Arrays.asList(TargetType.values()));
+            Set<TargetType> targetTypesToSearch = 
+                new HashSet<TargetType>(Arrays.asList(TargetType.values()));
             
             SearchGrants searchGrants = new SearchGrants(prov, targetTypesToSearch, granteeFilter);
             Set<GrantsOnTarget> grantsOnTargets = searchGrants.doSearch().getResults();
@@ -1126,7 +1142,8 @@ public class RightCommand {
     private static void validateGrant(Account authedAcct,
             TargetType targetType, Entry targetEntry,
             GranteeType granteeType, NamedEntry granteeEntry, String secret,
-            Right right, RightModifier rightModifier, boolean revoking) throws ServiceException {
+            Right right, RightModifier rightModifier, boolean revoking) 
+    throws ServiceException {
             
         /*
          * check grantee if the right is an admin right, or if the right is an user right with 
@@ -1144,45 +1161,54 @@ public class RightCommand {
                 boolean isCDARight = CrossDomain.validateCrossDomainAdminGrant(right, granteeType);
                 if (!isCDARight &&
                     !RightBearer.isValidGranteeForAdminRights(granteeType, granteeEntry))
-                    throw ServiceException.INVALID_REQUEST("grantee for admin right or for user right " + 
-                            "with the can delegate modifier must be a delegated admin account or admin group, " +
-                            "it cannot be a global admin account or a regular user account.", null);
+                    throw ServiceException.INVALID_REQUEST("grantee for admin right or " +
+                            "for user right with the canDelegate modifier must be a " +
+                            "delegated admin account or admin group, it cannot be a " +
+                            "global admin account or a regular user account.", null);
             }
             
             /*
              * check if the grantee type can be used for an admin right
              */
             if (!granteeType.allowedForAdminRights())
-                throw ServiceException.INVALID_REQUEST("grantee type " + granteeType.getCode() +
-                        " is not allowed for admin right", null);
+                throw ServiceException.INVALID_REQUEST("grantee type " + 
+                        granteeType.getCode() +  " is not allowed for admin right", null);
         }
         
         /*
          * check if the right can be granted on the target type
          */
         // first the "normal" checking 
-        if (!right.grantableOnTargetType(targetType))
+        if (!right.grantableOnTargetType(targetType)) {
             throw ServiceException.INVALID_REQUEST(
                     "right " + right.getName() + 
                     " cannot be granted on a " + targetType.getCode() + " entry. " +
-                    "It can only be granted on target types: " + right.reportGrantableTargetTypes(), null);
+                    "It can only be granted on target types: " + 
+                    right.reportGrantableTargetTypes(), null);
+        }
         
         // then the ugly special group target checking
-        if (GroupUtil.isGroup(targetType) && !CheckRight.allowGroupTarget(right))
-            throw ServiceException.INVALID_REQUEST("group target is not supported for right: " + right.getName(), null);
+        if (GroupUtil.isGroup(targetType) && !CheckRight.allowGroupTarget(right)) {
+            throw ServiceException.INVALID_REQUEST(
+                    "group target is not supported for right: " + right.getName(), null);
+        }
         
         /*
          * check if the right modifier is applicable on the target and right
          */
         if (RightModifier.RM_SUBDOMAIN == rightModifier) {
             // can only be granted on domain targets
-            if (targetType != TargetType.domain)
-                throw ServiceException.INVALID_REQUEST("right modifier " + RightModifier.RM_SUBDOMAIN.getModifier() +
+            if (targetType != TargetType.domain) {
+                throw ServiceException.INVALID_REQUEST("right modifier " + 
+                        RightModifier.RM_SUBDOMAIN.getModifier() +
                         " can only be granted on domain targets", null);
+            }
             
-            if (!right.allowSubDomainModifier())
-                throw ServiceException.INVALID_REQUEST("right modifier " + RightModifier.RM_SUBDOMAIN.getModifier() +
+            if (!right.allowSubDomainModifier()) {
+                throw ServiceException.INVALID_REQUEST("right modifier " + 
+                        RightModifier.RM_SUBDOMAIN.getModifier() +
                         " is not allowed for the right: " + right.getName(), null);
+            }
         }
         
         /*
@@ -1206,22 +1232,24 @@ public class RightCommand {
             
             AccessManager am = AccessManager.getInstance();
             boolean canGrant = am.canPerform(authedAcct, targetEntry, right, true, null, true, null);
-            if (!canGrant)
+            if (!canGrant) {
                 throw ServiceException.PERM_DENIED("insuffcient right to " + (revoking?"revoke":"grant"));
-                
+            }
+            
             ParticallyDenied.checkPartiallyDenied(authedAcct, targetType, targetEntry, right);
         }
         
         if (secret != null && !granteeType.allowSecret())
-            throw ServiceException.PERM_DENIED("password is not allowed for grantee type " + granteeType.getCode());
+            throw ServiceException.PERM_DENIED("password is not allowed for grantee type " + 
+                    granteeType.getCode());
     }
     
     public static void grantRight(
-            Provisioning prov,
-            Account authedAcct,
+            Provisioning prov, Account authedAcct,
             String targetType, Key.TargetBy targetBy, String target,
             String granteeType, Key.GranteeBy granteeBy, String grantee, String secret,
-            String right, RightModifier rightModifier) throws ServiceException {
+            String right, RightModifier rightModifier) 
+    throws ServiceException {
         
         verifyAccessManager();
         
@@ -1257,11 +1285,11 @@ public class RightCommand {
     }
 
     public static void revokeRight(
-            Provisioning prov,
-            Account authedAcct,
+            Provisioning prov, Account authedAcct,
             String targetType, Key.TargetBy targetBy, String target,
             String granteeType, Key.GranteeBy granteeBy, String grantee,
-            String right, RightModifier rightModifier) throws ServiceException {
+            String right, RightModifier rightModifier) 
+    throws ServiceException {
         
         verifyAccessManager();
         
@@ -1313,8 +1341,9 @@ public class RightCommand {
         //       want to hack that part.
         Right r = RightManager.getInstance().getRight(right); 
         
-        if (granteeEntry != null)
+        if (granteeEntry != null) {
             validateGrant(authedAcct, tt, targetEntry, gt, granteeEntry, null, r, rightModifier, true);
+        }
         
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         ZimbraACE ace = new ZimbraACE(granteeId, gt, r, rightModifier, null);
@@ -1364,7 +1393,8 @@ public class RightCommand {
         }
     }
 
-    public static Element rightToXML(Element parent, Right right, boolean expandAllAtrts, Locale locale) throws ServiceException {
+    public static Element rightToXML(Element parent, Right right, boolean expandAllAtrts, 
+            Locale locale) throws ServiceException {
         Element eRight = parent.addElement(AdminConstants.E_RIGHT);
         eRight.addAttribute(AdminConstants.E_NAME, right.getName());
         eRight.addAttribute(AdminConstants.A_TYPE, right.getRightType().name());
@@ -1395,8 +1425,9 @@ public class RightCommand {
                     
                 }
             } else {
-                for (String attrName :attrRight.getAttrs())
+                for (String attrName :attrRight.getAttrs()) {
                     eAttrs.addElement(attrName);
+                }
             }
         } else if (right.isComboRight()) {
             Element eRights = eRight.addElement(AdminConstants.E_RIGHTS);

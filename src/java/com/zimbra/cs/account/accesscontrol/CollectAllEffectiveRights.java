@@ -143,14 +143,14 @@ public class CollectAllEffectiveRights {
     
     private static class AllGroupMembers {
         String mGroupName; // name of the group
+                
+        Set<String> mAccounts = new HashSet<String>();
+        Set<String> mCalendarResources = new HashSet<String>();
+        Set<String> mDistributionLists = new HashSet<String>();
         
         AllGroupMembers(String groupName) {
             mGroupName = groupName;
         }
-        
-        Set<String> mAccounts = new HashSet<String>();
-        Set<String> mCalendarResources = new HashSet<String>();
-        Set<String> mDistributionLists = new HashSet<String>();
         
         String getGroupName() {
             return mGroupName;
@@ -373,7 +373,7 @@ public class CollectAllEffectiveRights {
                 // remove it from the accountMembers
                 accountMembers.remove(member);
                 
-                // haven't expaned this group yet
+                // haven't expand this group yet
                 if (!result.getMembers(TargetType.dl).contains(member)) {
                     result.getMembers(TargetType.dl).add(member);
                     DistributionList grp = mProv.get(Key.DistributionListBy.name, member);

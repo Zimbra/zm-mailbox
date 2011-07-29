@@ -45,7 +45,7 @@ public class TestAccess extends TestCase {
     private SoapAdminUser mProvAdmin;
     private SoapUser mSoapUser1;
     
-    private static int sBrainDeadSingleThreadRandom = 0;
+    private static int sDummyRandom = 0;
         
     private static String PASSWORD = "test123";
     private String DOMAIN_NAME;
@@ -164,7 +164,7 @@ public class TestAccess extends TestCase {
     }
     
     private static String random() {
-        String r = "" + (sBrainDeadSingleThreadRandom++);
+        String r = "" + (sDummyRandom++);
         // System.out.println("===== " + r + " =====");
         return r;
     }

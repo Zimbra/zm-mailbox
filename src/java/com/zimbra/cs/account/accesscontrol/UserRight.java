@@ -36,15 +36,33 @@ public class UserRight extends Right {
     public boolean isPresetRight() {
         return true;
     }
+    
+    // special treatment for user right:
+    //
+    // For users rights, accounts and calresoruces are treated equally.
+    // 
+    // if a right is executable on account, it is executable on calendar resource.
+    // if a right is grantable on a target from which account rights can be inherited,
+    // the right is grantable on the target from which calendar resource rights can be 
+    // inherited
+    private TargetType disguiseCalendarResourceAsAccount(TargetType targetType) {
+        if (targetType == TargetType.calresource) {
+            return TargetType.account;
+        } else {
+            return targetType;
+        }
+    }
 
     @Override
     boolean executableOnTargetType(TargetType targetType) {
-        // special treatment for user right:
-        // if a right is executable on account, it is executable on calendar resource
-        if (mTargetType == TargetType.account)
-            return (targetType == TargetType.account || targetType == TargetType.calresource);
-        else
-            return super.executableOnTargetType(targetType);    
+        targetType = disguiseCalendarResourceAsAccount(targetType);
+        return super.executableOnTargetType(targetType); 
+    }
+    
+    @Override
+    boolean grantableOnTargetType(TargetType targetType) {
+        targetType = disguiseCalendarResourceAsAccount(targetType);
+        return super.grantableOnTargetType(targetType); 
     }
     
     @Override

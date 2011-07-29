@@ -399,7 +399,7 @@ public class TestLdap {
         junit.run(TestLdapZMutableEntry.class);
         junit.run(TestProvAttrCallback.class);
         
-        // old tests
+        // old tests, TODO: convert them 
         junit.run(TestAccountLockout.class);
         junit.run(TestACPermissionCache.class);
         junit.run(TestACUserRights.class);
@@ -425,6 +425,21 @@ public class TestLdap {
          * TestLdapSMIMELookup
          */
         
+        /*
+         * ACL tests
+         * 
+         * TestACBasic
+         * TestACEffectiveRights
+         * TestACLAttrRight
+         * TestACLGrant
+         * TestACLGrantee
+         * TestACLPrecedence
+         * TestACLRight
+         * TestACLTarget
+         * TestACPermissionCache
+         * TestACUserRights
+         * 
+         */
         /*  // tests need fixing
         junit.run(TestCreateAccount.class);
         junit.run(TestProvDomainStatus.class);

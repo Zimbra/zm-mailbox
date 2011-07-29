@@ -71,7 +71,8 @@ public abstract class TargetIterator{
         mTarget = target;
     }
     
-    static TargetIterator getTargetIeterator(Provisioning prov, Entry target, boolean expandGroups) throws ServiceException {
+    static TargetIterator getTargetIeterator(Provisioning prov, Entry target, boolean expandGroups) 
+    throws ServiceException {
         /*
          * tested in the order of how often acl are checked on each target types in normal 
          * server operation pattern.
@@ -83,30 +84,31 @@ public abstract class TargetIterator{
          */
         TargetIterator iter = null;
         
-        if (target instanceof CalendarResource)
+        if (target instanceof CalendarResource) {
             iter = new TargetIterator.AccountTargetIterator(prov, target, expandGroups);
-        else if (target instanceof Account)
+        } else if (target instanceof Account) {
             iter =  new TargetIterator.AccountTargetIterator(prov, target, expandGroups);
-        else if (target instanceof Domain)
+        } else if (target instanceof Domain) {
             iter =  new TargetIterator.DomainTargetIterator(prov, target);
-        else if (target instanceof Cos)
+        } else if (target instanceof Cos) {
             iter =  new TargetIterator.CosTargetIterator(prov, target);
-        else if (target instanceof DistributionList) {
+        } else if (target instanceof DistributionList) {
             iter =  new TargetIterator.DistributionListTargetIterator(prov, target, expandGroups);
         } else if (target instanceof DynamicGroup) {
             iter =  new TargetIterator.DynamicGroupTargetIterator(prov, target);
-        } else if (target instanceof Server)
+        } else if (target instanceof Server) {
             iter =  new TargetIterator.ServerTargetIterator(prov, target);
-        else if (target instanceof Config)
+        } else if (target instanceof Config) {
             iter =  new TargetIterator.ConfigTargetIterator(prov, target);
-        else if (target instanceof GlobalGrant)
+        } else if (target instanceof GlobalGrant) {
             iter =  new TargetIterator.GlobalGrantTargetIterator(prov, target);
-        else if (target instanceof Zimlet)
+        } else if (target instanceof Zimlet) {
             iter =  new TargetIterator.ZimletTargetIterator(prov, target);
-        else if (target instanceof XMPPComponent)
+        } else if (target instanceof XMPPComponent) {
             iter =  new TargetIterator.XMPPComponentTargetIterator(prov, target);
-        else
+        } else {
             throw ServiceException.FAILURE("internal error", null);
+        }
         
         /*
          * consume the first target, which is the perspective target itself, because RightChecker.canDo 

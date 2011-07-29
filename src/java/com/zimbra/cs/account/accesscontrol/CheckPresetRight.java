@@ -94,24 +94,13 @@ public class CheckPresetRight extends CheckRight {
     }
 
     private CheckPresetRight(Account grantee, Entry target, 
-            Right rightNeeded, boolean canDelegateNeeded, ViaGrant via) throws ServiceException {
-        
+            Right rightNeeded, boolean canDelegateNeeded, ViaGrant via) 
+    throws ServiceException {
         super(target, rightNeeded, canDelegateNeeded);
         
         mGranteeAcct = grantee;
         mVia = via;
-        
-        // This path is called from AccessManager.canDo, the target object can be a 
-        // DistributionList obtained from prov.get(DistributionListBy).  
-        // We require one from getDLBasic(DistributionListBy) here, because when group 
-        // members are added/removed, the upward membership cache is cleared on the cached
-        // entry.
-        if (mTarget instanceof DistributionList) {
-            mTarget = mProv.getDLBasic(Key.DistributionListBy.id, ((DistributionList)target).getId());
-        }
-        
         mTargetType = TargetType.getTargetType(mTarget);
-        
         mSeenRight = new SeenRight();
     }
     

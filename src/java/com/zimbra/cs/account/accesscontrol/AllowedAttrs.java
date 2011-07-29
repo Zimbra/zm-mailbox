@@ -75,7 +75,7 @@ public class AllowedAttrs implements AccessManager.AttrRightChecker {
         }
     }
     
-    boolean canAccessAttrs(Set<String> attrsNeeded, Entry target, AttrRight rightNeeded) throws ServiceException {
+    boolean canAccessAttrs(Set<String> attrsNeeded, Entry target) throws ServiceException {
         
         if (sLog.isDebugEnabled()) {
             sLog.debug("canAccessAttrs attrsAllowed: " + dump());
@@ -90,7 +90,7 @@ public class AllowedAttrs implements AccessManager.AttrRightChecker {
             sLog.debug("canAccessAttrs attrsNeeded: " + sb.toString());
         }
         
-        if (mResult == AllowedAttrs.Result.ALLOW_ALL && rightNeeded.getRightType() == RightType.getAttrs)
+        if (mResult == AllowedAttrs.Result.ALLOW_ALL)
             return true;
         else if (mResult == AllowedAttrs.Result.DENY_ALL)
             return false;

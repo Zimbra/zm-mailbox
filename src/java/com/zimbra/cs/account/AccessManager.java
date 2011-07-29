@@ -290,11 +290,11 @@ public abstract class AccessManager {
      * @return
      * @throws ServiceException
      */
-    public AttrRightChecker canGetAttrs(Account credentials,   Entry target, boolean asAdmin) throws ServiceException {
+    public AttrRightChecker getGetAttrsChecker(Account credentials,   Entry target, boolean asAdmin) throws ServiceException {
         throw ServiceException.FAILURE("not supported", null);
     }
     
-    public AttrRightChecker canGetAttrs(AuthToken credentials, Entry target, boolean asAdmin) throws ServiceException {
+    public AttrRightChecker getGetAttrsChecker(AuthToken credentials, Entry target, boolean asAdmin) throws ServiceException {
         throw ServiceException.FAILURE("not supported", null);
     }
 

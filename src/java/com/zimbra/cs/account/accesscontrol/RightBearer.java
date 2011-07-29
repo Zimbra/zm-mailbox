@@ -95,8 +95,9 @@ public abstract class RightBearer {
                 }
             }
             
-            if (mGranteeDomain == null)
+            if (mGranteeDomain == null) {
                 throw ServiceException.FAILURE("internal error, cannot get domain for grantee", null);
+            }
             
             // setup grantees ids 
             mIdAndGroupIds = new HashSet<String>();

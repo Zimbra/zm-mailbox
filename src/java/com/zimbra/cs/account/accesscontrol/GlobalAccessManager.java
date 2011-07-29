@@ -164,7 +164,7 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
 
 
     @Override
-    public AttrRightChecker canGetAttrs(Account credentials,   Entry target, boolean asAdmin) throws ServiceException {
+    public AttrRightChecker getGetAttrsChecker(Account credentials,   Entry target, boolean asAdmin) throws ServiceException {
         if (AccessControlUtil.isGlobalAdmin(credentials, asAdmin) == Boolean.TRUE)
             return AllowedAttrs.ALLOW_ALL_ATTRS();
         else
@@ -172,8 +172,8 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
     }
     
     @Override
-    public AttrRightChecker canGetAttrs(AuthToken credentials, Entry target, boolean asAdmin) throws ServiceException {
-        return canGetAttrs(credentials.getAccount(), target, asAdmin);
+    public AttrRightChecker getGetAttrsChecker(AuthToken credentials, Entry target, boolean asAdmin) throws ServiceException {
+        return getGetAttrsChecker(credentials.getAccount(), target, asAdmin);
     }
     
     @Override

@@ -56,6 +56,7 @@ public class ComboRight extends AdminRight {
         
         return sb.toString();
     }
+    
     void addRight(Right right) throws ServiceException {
         // sanity check, combo right can only contain admin rights
         if (right.isUserRight())
@@ -82,11 +83,14 @@ public class ComboRight extends AdminRight {
 
     @Override
     boolean grantableOnTargetType(TargetType targetType) {
+        targetType = GroupUtil.disguiseDynamicGroupAsDL(targetType);
+        
         // true if *all* of the rights in the combo right are 
         // grantable on targetType
         for (Right r : getAllRights()) {
-            if (!r.grantableOnTargetType(targetType))
+            if (!r.grantableOnTargetType(targetType)) {
                 return false;
+            }
         }
         return true;
     }
@@ -96,8 +100,9 @@ public class ComboRight extends AdminRight {
         // true if *any* of the rights in the combo right are 
         // executable on targetType domain
         for (Right r : getAllRights()) {
-            if (r.executableOnTargetType(TargetType.domain))
+            if (r.executableOnTargetType(TargetType.domain)) {
                 return true;
+            }
         }
         return false;
     }
@@ -146,7 +151,8 @@ public class ComboRight extends AdminRight {
         mAllRights.addAll(mAttrRights);
     }
     
-    private static void expand(ComboRight right, Set<Right> presetRights, Set<AttrRight> attrRights) throws ServiceException {
+    private static void expand(ComboRight right, Set<Right> presetRights, 
+            Set<AttrRight> attrRights) throws ServiceException {
         for (Right r : right.getRights()) {
             if (r.isPresetRight())
                 presetRights.add(r);

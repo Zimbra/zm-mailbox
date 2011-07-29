@@ -141,6 +141,13 @@
   </attrs>
 </right>
 
+<right name="test-getAttrs-xmppcomponent" type="getAttrs" targetType="zimlet">
+  <desc>a getAttrs xmppcomponent right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
 <right name="test-getAttrs-zimlet" type="getAttrs" targetType="zimlet">
   <desc>a getAttrs zimlet right</desc>
   <attrs>
@@ -240,6 +247,13 @@
   </attrs>
 </right>
 
+<right name="test-setAttrs-xmppcomponent" type="setAttrs" targetType="zimlet">
+  <desc>a setAttrs xmppcomponent right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
 <right name="test-setAttrs-zimlet" type="setAttrs" targetType="zimlet">
   <desc>a setAttrs zimlet right</desc>
   <attrs>
@@ -283,6 +297,96 @@
   </rights>
 </right>
 
+<right name="test-combo-calendarresource" type="combo">
+  <desc>a combo right that has only calendarresource rights</desc>
+  <rights>
+    <r n="test-preset-calendarresource"/>
+    <r n="test-getAttrs-calendarresource"/>
+    <r n="test-setAttrs-calendarresource"/>
+  </rights>
+</right>
+
+<right name="test-combo-cos" type="combo">
+  <desc>a combo right that has only cos rights</desc>
+  <rights>
+    <r n="test-preset-cos"/>
+    <r n="test-getAttrs-cos"/>
+    <r n="test-setAttrs-cos"/>
+  </rights>
+</right>
+
+<right name="test-combo-distributionlist" type="combo">
+  <desc>a combo right that has only distributionlist rights</desc>
+  <rights>
+    <r n="test-preset-distributionlist"/>
+    <r n="test-getAttrs-distributionlist"/>
+    <r n="test-setAttrs-distributionlist"/>
+  </rights>
+</right>
+
+<right name="test-combo-domain" type="combo">
+  <desc>a combo right that has only distributionlist rights</desc>
+  <rights>
+    <r n="test-preset-domain"/>
+    <r n="test-getAttrs-domain"/>
+    <r n="test-setAttrs-domain"/>
+  </rights>
+</right>
+
+<right name="test-combo-globalconfig" type="combo">
+  <desc>a combo right that has only global config rights</desc>
+  <rights>
+    <r n="test-preset-globalconfig"/>
+    <r n="test-getAttrs-globalconfig"/>
+    <r n="test-setAttrs-globalconfig"/>
+  </rights>
+</right>
+
+<right name="test-combo-globalgrant" type="combo">
+  <desc>a combo right that has only global config rights</desc>
+  <rights>
+    <r n="test-preset-globalgrant"/>
+    <r n="test-getAttrs-globalgrant"/>
+    <r n="test-setAttrs-globalgrant"/>
+  </rights>
+</right>
+
+<right name="test-combo-server" type="combo">
+  <desc>a combo right that has only global config rights</desc>
+  <rights>
+    <r n="test-preset-server"/>
+    <r n="test-getAttrs-server"/>
+    <r n="test-setAttrs-server"/>
+  </rights>
+</right>
+
+<right name="test-combo-xmppcomponent" type="combo">
+  <desc>a combo right that has only global config rights</desc>
+  <rights>
+    <r n="test-preset-xmppcomponent"/>
+    <r n="test-getAttrs-xmppcomponent"/>
+    <r n="test-setAttrs-xmppcomponent"/>
+  </rights>
+</right>
+
+<right name="test-combo-zimlet" type="combo">
+  <desc>a combo right that has only global config rights</desc>
+  <rights>
+    <r n="test-preset-zimlet"/>
+    <r n="test-getAttrs-zimlet"/>
+    <r n="test-setAttrs-zimlet"/>
+  </rights>
+</right>
+
+
+
+
+<!--  
+      ==================
+      combo rights (to clean up)
+      ==================
+-->
+
 <right name="test-combo-account-cos-accountCos" type="combo">
   <desc>a combo right that has account, cos, account/cos rights</desc>
   <rights>
@@ -304,11 +408,6 @@
   </rights>
 </right>
 
-<!--  
-      ==================
-      combo rights (to clean up)
-      ==================
--->
 
 <right name="test-getAttrs-account-2" type="getAttrs" targetType="account,cos">
   <desc>for unittest only, do we have a use case for this?</desc>
