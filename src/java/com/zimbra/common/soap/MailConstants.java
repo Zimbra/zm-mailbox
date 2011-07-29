@@ -583,6 +583,8 @@ public final class MailConstants {
     public static final String E_BODY_TEST = "bodyTest";
     public static final String E_ATTACHMENT_TEST = "attachmentTest";
     public static final String E_ADDRESS_BOOK_TEST = "addressBookTest";
+    public static final String E_CONTACT_RANKING_TEST = "contactRankingTest";
+    public static final String E_ME_TEST = "meTest";
     public static final String E_INVITE_TEST = "inviteTest";
     public static final String E_CONVERSATION_TEST = "conversationTest";
     public static final String E_FACEBOOK_TEST = "facebookTest";
@@ -1138,6 +1140,6 @@ public final class MailConstants {
     public static final String E_POLICY = "policy";
     public static final String A_LIFETIME = "lifetime";
     public static final String A_RETENTION_POLICY_TYPE = "type";
-    
+
     public static final String E_WATCHER = "watcher";
 }
