@@ -2876,7 +2876,7 @@ Tests:
   <bodyTest [caseSensitive="{0|1}"] value="{value}" />
   <attachmentTest />
   <addressBookTest header="{header-name}"/>
-  <rankingTest header="{header-name}"/>
+  <contactRankingTest header="{header-name}"/>
   <meTest header="{header-name}"/>
   <inviteTest>
     <method>{method}</method>+
