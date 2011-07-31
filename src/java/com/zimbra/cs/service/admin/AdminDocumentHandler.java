@@ -29,6 +29,7 @@ import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
@@ -394,9 +395,23 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      * DL right
      * --------
      */
-    protected AdminAccessControl checkDistributionListRight(ZimbraSoapContext zsc, DistributionList dl, Object needed) throws ServiceException {
+    protected AdminAccessControl checkDistributionListRight(ZimbraSoapContext zsc, 
+            DistributionList dl, Object needed) throws ServiceException {
         AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
         aac.checkDistributionListRight(this, dl, needed);
+        return aac;
+    }
+    
+
+    /*
+     * --------
+     * Dynamic group right
+     * --------
+     */
+    protected AdminAccessControl checkDynamicGroupRight(ZimbraSoapContext zsc, 
+            DynamicGroup group, Object needed) throws ServiceException {
+        AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(zsc);
+        aac.checkDynamicGroupRight(this, group, needed);
         return aac;
     }
 

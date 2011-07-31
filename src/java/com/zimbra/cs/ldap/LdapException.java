@@ -33,17 +33,23 @@ public class LdapException extends ServiceException {
     public static final String INVALID_NAME             = "ldap.INVALID_NAME";
     public static final String INVALID_SEARCH_FILTER    = "ldap.INVALID_SEARCH_FILTER";
     public static final String MULTIPLE_ENTRIES_MATCHED = "ldap.MULTIPLE_ENTRIES_MATCHED";
+    public static final String OBJECT_CLASS_VIOLATION   = "ldap.OBJECT_CLASS_VIOLATION";
     public static final String SIZE_LIMIT_EXCEEDED      = "ldap.SIZE_LIMIT_EXCEEDED";
         
     // in addition to getCause(), a more exception for callsites to relate 
     // the exception to a user message.
     private Throwable detail;
     
-    private static String format(String msg1, String msg2) {
-        if (msg2 == null) {
-            return msg1;
+    private static String format(String msg1, String msg2, Throwable cause) {
+        String msg = msg1;
+        if (msg2 != null) {
+            msg = msg + " - " + msg2;
+        }
+        
+        if (cause != null) {
+            return msg + ": " + cause.getMessage();
         } else {
-            return msg1 + " - " + msg2;
+            return msg;
         }
     }
     
@@ -74,7 +80,7 @@ public class LdapException extends ServiceException {
     
     // generic LDAP error
     public static LdapException LDAP_ERROR(String message, Throwable cause) {
-        return new LdapException(format("LDAP error: ", message), LDAP_ERROR, cause);
+        return new LdapException(format("LDAP error: ", message, cause), LDAP_ERROR, cause);
     }
     
     //
@@ -113,6 +119,10 @@ public class LdapException extends ServiceException {
         return new LdapMultipleEntriesMatchedException(base, query, dups);
     }
     
+    public static LdapException OBJECT_CLASS_VIOLATION(String message, Throwable cause) {
+        return new LdapObjectClassViolationException(message, cause);
+    }
+    
     public static LdapException SIZE_LIMIT_EXCEEDED(String message, Throwable cause) {
         return new LdapSizeLimitExceededException(message, cause);
     }
@@ -124,43 +134,43 @@ public class LdapException extends ServiceException {
     
     public static class LdapContextNotEmptyException extends LdapException {
         private LdapContextNotEmptyException(String message, Throwable cause) {
-            super(format("context not empty", message), CONTEXT_NOT_EMPTY, cause);
+            super(format("context not empty", message, cause), CONTEXT_NOT_EMPTY, cause);
         }
     }
     
     public static class LdapEntryAlreadyExistException extends LdapException {
         private LdapEntryAlreadyExistException(String message, Throwable cause) {
-            super(format("entry already exist", message), ENTRY_ALREADY_EXIST, cause);
+            super(format("entry already exist", message, cause), ENTRY_ALREADY_EXIST, cause);
         }
     }
     
     public static class LdapEntryNotFoundException extends LdapException {
         private LdapEntryNotFoundException(String message, Throwable cause) {
-            super(format("entry not found", message), ENTRY_NOT_FOUND, cause);
+            super(format("entry not found", message, cause), ENTRY_NOT_FOUND, cause);
         }
     }
     
     public static class LdapInvalidAttrNameException extends LdapException {
         private LdapInvalidAttrNameException(String message, Throwable cause) {
-            super(format("invalid attr name", message), INVALID_ATTR_NAME, cause);
+            super(format("invalid attr name", message, cause), INVALID_ATTR_NAME, cause);
         }
     }
     
     public static class LdapInvalidAttrValueException extends LdapException {
         private LdapInvalidAttrValueException(String message, Throwable cause) {
-            super(format("invalid attr value", message), INVALID_ATTR_VALUE, cause);
+            super(format("invalid attr value", message, cause), INVALID_ATTR_VALUE, cause);
         }
     }
     
     public static class LdapInvalidNameException extends LdapException {
         private LdapInvalidNameException(String message, Throwable cause) {
-            super(format("invalid name", message), INVALID_NAME, cause);
+            super(format("invalid name", message, cause), INVALID_NAME, cause);
         }
     }
     
     public static class LdapInvalidSearchFilterException extends LdapException {
         private LdapInvalidSearchFilterException(String message, Throwable cause) {
-            super(format("invalid search filter", message), INVALID_SEARCH_FILTER, cause);
+            super(format("invalid search filter", message, cause), INVALID_SEARCH_FILTER, cause);
         }
     }
     
@@ -171,9 +181,15 @@ public class LdapException extends ServiceException {
         }
     }
     
+    public static class LdapObjectClassViolationException extends LdapException {
+        private LdapObjectClassViolationException(String message, Throwable cause) {
+            super(format("object class violation", message, cause), OBJECT_CLASS_VIOLATION, cause);
+        }
+    }
+    
     public static class LdapSizeLimitExceededException extends LdapException {
         private LdapSizeLimitExceededException(String message, Throwable cause) {
-            super(format("size limit exceeded", message), SIZE_LIMIT_EXCEEDED, cause);
+            super(format("size limit exceeded", message, cause), SIZE_LIMIT_EXCEEDED, cause);
         }
     }
 }

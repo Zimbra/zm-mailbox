@@ -47,6 +47,7 @@ public class TestAC extends TestProv {
     protected static Right ADMIN_PRESET_CONFIG;
     protected static Right ADMIN_PRESET_COS;
     protected static Right ADMIN_PRESET_DISTRIBUTION_LIST;
+    protected static Right ADMIN_PRESET_DYNAMIC_GROUP;
     protected static Right ADMIN_PRESET_DOMAIN;
     protected static Right ADMIN_PRESET_GLOBALGRANT;
     protected static Right ADMIN_PRESET_SERVER;
@@ -74,6 +75,10 @@ public class TestAC extends TestProv {
     protected static Right ADMIN_ATTR_SETALL_DISTRIBUTION_LIST;
     protected static Right ADMIN_ATTR_GETSOME_DISTRIBUTION_LIST;
     protected static Right ADMIN_ATTR_SETSOME_DISTRIBUTION_LIST;
+    protected static Right ADMIN_ATTR_GETALL_DYNAMIC_GROUP;
+    protected static Right ADMIN_ATTR_SETALL_DYNAMIC_GROUP;
+    protected static Right ADMIN_ATTR_GETSOME_DYNAMIC_GROUP;
+    protected static Right ADMIN_ATTR_SETSOME_DYNAMIC_GROUP;
     protected static Right ADMIN_ATTR_GETALL_DOMAIN;
     protected static Right ADMIN_ATTR_SETALL_DOMAIN;
     protected static Right ADMIN_ATTR_GETSOME_DOMAIN;
@@ -93,6 +98,7 @@ public class TestAC extends TestProv {
     protected static Right ADMIN_COMBO_CONFIG;
     protected static Right ADMIN_COMBO_COS;
     protected static Right ADMIN_COMBO_DISTRIBUTION_LIST;
+    protected static Right ADMIN_COMBO_DYNAMIC_GROUP;
     protected static Right ADMIN_COMBO_DOMAIN;
     protected static Right ADMIN_COMBO_GLOBALGRANT;
     protected static Right ADMIN_COMBO_SERVER;
@@ -123,6 +129,7 @@ public class TestAC extends TestProv {
             ADMIN_PRESET_CONFIG            = getRight("test-preset-globalconfig");
             ADMIN_PRESET_COS               = getRight("test-preset-cos");
             ADMIN_PRESET_DISTRIBUTION_LIST = getRight("test-preset-distributionlist");
+            ADMIN_PRESET_DYNAMIC_GROUP     = getRight("test-preset-dynamicgroup");
             ADMIN_PRESET_DOMAIN            = getRight("test-preset-domain");
             ADMIN_PRESET_GLOBALGRANT       = getRight("test-preset-globalgrant");
             ADMIN_PRESET_SERVER            = getRight("test-preset-server");
@@ -149,6 +156,10 @@ public class TestAC extends TestProv {
             ADMIN_ATTR_SETALL_DISTRIBUTION_LIST     = Admin.R_modifyDistributionList;
             ADMIN_ATTR_GETSOME_DISTRIBUTION_LIST    = getRight("test-getAttrs-distributionlist");
             ADMIN_ATTR_SETSOME_DISTRIBUTION_LIST    = getRight("test-setAttrs-distributionlist");
+            ADMIN_ATTR_GETALL_DYNAMIC_GROUP         = Admin.R_getGroup;
+            ADMIN_ATTR_SETALL_DYNAMIC_GROUP         = Admin.R_modifyGroup;
+            ADMIN_ATTR_GETSOME_DYNAMIC_GROUP        = getRight("test-getAttrs-dynamicgroup");
+            ADMIN_ATTR_SETSOME_DYNAMIC_GROUP        = getRight("test-setAttrs-dynamicgroup");
             ADMIN_ATTR_GETALL_DOMAIN                = Admin.R_getDomain;
             ADMIN_ATTR_SETALL_DOMAIN                = Admin.R_modifyDomain;
             ADMIN_ATTR_GETSOME_DOMAIN               = getRight("test-getAttrs-domain");
@@ -167,6 +178,7 @@ public class TestAC extends TestProv {
             ADMIN_COMBO_CONFIG            = getRight("test-combo-globalconfig");
             ADMIN_COMBO_COS               = getRight("test-combo-cos");
             ADMIN_COMBO_DISTRIBUTION_LIST = getRight("test-combo-distributionlist");
+            ADMIN_COMBO_DYNAMIC_GROUP     = getRight("test-combo-dynamicgroup");
             ADMIN_COMBO_DOMAIN            = getRight("test-combo-domain");
             ADMIN_COMBO_GLOBALGRANT       = getRight("test-combo-globalgrant");
             ADMIN_COMBO_SERVER            = getRight("test-combo-server");
@@ -183,6 +195,7 @@ public class TestAC extends TestProv {
             sRights.add(ADMIN_PRESET_CONFIG);
             sRights.add(ADMIN_PRESET_COS);
             sRights.add(ADMIN_PRESET_DISTRIBUTION_LIST);
+            sRights.add(ADMIN_PRESET_DYNAMIC_GROUP);
             sRights.add(ADMIN_PRESET_DOMAIN);
             sRights.add(ADMIN_PRESET_GLOBALGRANT);
             sRights.add(ADMIN_PRESET_SERVER);
@@ -209,6 +222,10 @@ public class TestAC extends TestProv {
             sRights.add(ADMIN_ATTR_SETALL_DISTRIBUTION_LIST);
             sRights.add(ADMIN_ATTR_GETSOME_DISTRIBUTION_LIST);
             sRights.add(ADMIN_ATTR_SETSOME_DISTRIBUTION_LIST);
+            sRights.add(ADMIN_ATTR_GETALL_DYNAMIC_GROUP);
+            sRights.add(ADMIN_ATTR_SETALL_DYNAMIC_GROUP);
+            sRights.add(ADMIN_ATTR_GETSOME_DYNAMIC_GROUP);
+            sRights.add(ADMIN_ATTR_SETSOME_DYNAMIC_GROUP);
             sRights.add(ADMIN_ATTR_GETALL_DOMAIN);
             sRights.add(ADMIN_ATTR_SETALL_DOMAIN);
             sRights.add(ADMIN_ATTR_GETSOME_DOMAIN);
@@ -227,6 +244,7 @@ public class TestAC extends TestProv {
             sRights.add(ADMIN_COMBO_CONFIG);
             sRights.add(ADMIN_COMBO_COS);
             sRights.add(ADMIN_COMBO_DISTRIBUTION_LIST);
+            sRights.add(ADMIN_COMBO_DYNAMIC_GROUP);
             sRights.add(ADMIN_COMBO_DOMAIN);
             sRights.add(ADMIN_COMBO_GLOBALGRANT);
             sRights.add(ADMIN_COMBO_SERVER);

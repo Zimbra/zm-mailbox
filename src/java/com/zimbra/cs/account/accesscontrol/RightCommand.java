@@ -612,7 +612,7 @@ public class RightCommand {
         // effective rights on all entries of a target type 
         // e.g. rights A, B, C
         //
-        EffectiveRights mAll = null;;
+        EffectiveRights mAll = null;
         
         //
         // e.g. account-1, account-2, account-3: rights A
@@ -678,7 +678,7 @@ public class RightCommand {
     /*
      * aggregation of all effective rights executable on a "domained"
      * (i.e. entries can be aggregated by a domain) target type:
-     * account, calresource, dl
+     * account, calresource, dl, dynamic group
      * 
      * e.g.
      *     all accounts: rights A, B, C
@@ -766,15 +766,16 @@ public class RightCommand {
             drbtt.addDomainEntry(domainName, er);
         }
 
-        public static AllEffectiveRights fromJaxb(
-                GetAllEffectiveRightsResponse resp)
+        public static AllEffectiveRights fromJaxb(GetAllEffectiveRightsResponse resp)
         throws ServiceException {
             GranteeInfo grantee = resp.getGrantee();
             com.zimbra.soap.admin.type.GranteeInfo.GranteeType gt =
                     grantee.getType();
             String granteeType = (gt == null) ? null : gt.toString();
+            
             AllEffectiveRights aer = new AllEffectiveRights(granteeType, 
                     grantee.getId(), grantee.getName());
+            
             for (EffectiveRightsTarget target : resp.getTargets()) {
                 TargetType targetType = TargetType.fromCode(
                         target.getType().toString());
@@ -950,7 +951,6 @@ public class RightCommand {
         // target
         TargetType tt = TargetType.fromCode(targetType);
         Entry targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
-        tt = GroupUtil.fixupTargetType(targetEntry, tt);
         
         // grantee
         GranteeType gt = GranteeType.GT_USER;  // grantee for check right must be an Account
@@ -1038,8 +1038,9 @@ public class RightCommand {
         
         String domainName = null;
         if (tt == TargetType.domain) {
-            if (domainBy != Key.DomainBy.name)
+            if (domainBy != Key.DomainBy.name) {
                 throw ServiceException.INVALID_REQUEST("must be by name for domain target", null);
+            }
             
             domainName = domainStr;
         }
@@ -1079,7 +1080,6 @@ public class RightCommand {
         if (targetType != null) {
             tt = TargetType.fromCode(targetType);
             targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
-            tt = GroupUtil.fixupTargetType(targetEntry, tt);
         }
         
         // grantee
@@ -1108,8 +1108,7 @@ public class RightCommand {
             ZimbraACL zimbraAcl = ACLUtil.getACL(targetEntry);
             
             // then filter by grnatee if grantee is specified
-            grants.addGrants(GroupUtil.disguiseDynamicGroupAsDL(tt), targetEntry, 
-                    zimbraAcl, granteeFilter, isGranteeAnAdmin);
+            grants.addGrants(tt, targetEntry, zimbraAcl, granteeFilter, isGranteeAnAdmin);
             
         } else {
             /*
@@ -1188,7 +1187,7 @@ public class RightCommand {
         }
         
         // then the ugly special group target checking
-        if (GroupUtil.isGroup(targetType) && !CheckRight.allowGroupTarget(right)) {
+        if (targetType.isGroup() && !CheckRight.allowGroupTarget(right)) {
             throw ServiceException.INVALID_REQUEST(
                     "group target is not supported for right: " + right.getName(), null);
         }
@@ -1233,7 +1232,8 @@ public class RightCommand {
             AccessManager am = AccessManager.getInstance();
             boolean canGrant = am.canPerform(authedAcct, targetEntry, right, true, null, true, null);
             if (!canGrant) {
-                throw ServiceException.PERM_DENIED("insuffcient right to " + (revoking?"revoke":"grant"));
+                throw ServiceException.PERM_DENIED("insuffcient right to " + 
+                        (revoking?"revoke":"grant"));
             }
             
             ParticallyDenied.checkPartiallyDenied(authedAcct, targetType, targetEntry, right);
@@ -1256,7 +1256,6 @@ public class RightCommand {
         // target
         TargetType tt = TargetType.fromCode(targetType);
         Entry targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
-        tt = GroupUtil.fixupTargetType(targetEntry, tt);
         
         // grantee
         GranteeType gt = GranteeType.fromCode(granteeType);
@@ -1296,7 +1295,6 @@ public class RightCommand {
         // target
         TargetType tt = TargetType.fromCode(targetType);
         Entry targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
-        tt = GroupUtil.fixupTargetType(targetEntry, tt);
         
         // grantee
         GranteeType gt = GranteeType.fromCode(granteeType);

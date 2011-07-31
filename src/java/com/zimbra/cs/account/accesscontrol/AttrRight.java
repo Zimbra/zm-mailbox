@@ -96,13 +96,11 @@ public class AttrRight extends AdminRight {
     
     @Override
     boolean executableOnTargetType(TargetType targetType) {
-        targetType = GroupUtil.disguiseDynamicGroupAsDL(targetType);
         return mTargetTypes.contains(targetType);
     }
     
     @Override
     boolean grantableOnTargetType(TargetType targetType) {
-        targetType = GroupUtil.disguiseDynamicGroupAsDL(targetType);
         
         // return true if *any* of the applicable target types for the right 
         // can inherit from targetType

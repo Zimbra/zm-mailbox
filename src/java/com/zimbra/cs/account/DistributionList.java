@@ -22,6 +22,7 @@ import java.util.Set;
 
 public class DistributionList extends ZAttrDistributionList implements GroupedEntry {
 
+    protected static final String MEMBER_ATTR = Provisioning.A_zimbraMailForwardingAddress;
     
     public DistributionList(String name, String id, Map<String, Object> attrs, Provisioning prov) {
         super(name, id, attrs, prov);
@@ -70,19 +71,20 @@ public class DistributionList extends ZAttrDistributionList implements GroupedEn
         getProvisioning().removeMembers(this, member);
     }
     
-    @Override
+    @Override  // overriden in LdapDistributionList
     public String[] getAllMembers() throws ServiceException {
         if (mIsAclGroup)
             throw ServiceException.FAILURE("internal error", null);
         
-        return getMultiAttr(Provisioning.A_zimbraMailForwardingAddress);
+        return getMultiAttr(MEMBER_ATTR);
     }
     
+    @Override  // overriden in LdapDistributionList
     public Set<String> getAllMembersSet() throws ServiceException {
         if (mIsAclGroup)
             throw ServiceException.FAILURE("internal error", null);
         
-        return getMultiAttrSet(Provisioning.A_zimbraMailForwardingAddress);
+        return getMultiAttrSet(MEMBER_ATTR);
     }
     
     @Override

@@ -15,6 +15,7 @@
 package com.zimbra.cs.account;
 
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 
@@ -46,13 +47,20 @@ public class DynamicGroup extends ZAttrDynamicGroup {
         return getProvisioning().getDomain(this);
     }
     
-    @Override
+    @Override  // overriden on LdapDynamicGroup
     public String[] getAllMembers() throws ServiceException {
         return getMultiAttr(Provisioning.A_member);
+    }
+    
+    @Override  // overriden on LdapDynamicGroup
+    public Set<String> getAllMembersSet() throws ServiceException {
+        return getMultiAttrSet(Provisioning.A_member);
     }
     
     @Override
     public String[] getAliases() throws ServiceException {
         return getMailAlias();
     }
+
+
 }

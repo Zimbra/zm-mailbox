@@ -25,7 +25,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -41,7 +40,8 @@ public class AddDistributionListAlias extends AdminDocumentHandler {
         return true;
     }
 
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+	public Element handle(Element request, Map<String, Object> context) 
+	throws ServiceException {
 
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
@@ -55,7 +55,7 @@ public class AddDistributionListAlias extends AdminDocumentHandler {
         }
         
         if (group.isDynamic()) {
-            // TODO: fix me
+            checkDistributionListRight(lc, (DistributionList) group, Admin.R_addGroupAlias);
         } else {
             checkDistributionListRight(lc, (DistributionList) group, Admin.R_addDistributionListAlias);
         }
@@ -74,6 +74,7 @@ public class AddDistributionListAlias extends AdminDocumentHandler {
 	@Override
 	public void docRights(List<AdminRight> relatedRights, List<String> notes) {
 	    relatedRights.add(Admin.R_addDistributionListAlias);
+	    relatedRights.add(Admin.R_addGroupAlias);
 	    relatedRights.add(Admin.R_createAlias);
     }
 }

@@ -79,13 +79,15 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
          
         checkDomainStatus(target);
         
-        if (isParentOf(at, target))
+        if (isParentOf(at, target)) {
             return true;
+        }
         
-        if (asAdmin)
+        if (asAdmin) {
             return canDo(at, actualTargetForAdminLoginAs(target), actualRightForAdminLoginAs(target), asAdmin);
-        else
+        } else {
             return canDo(at, target, User.R_loginAs, asAdmin);
+        }
     }
 
     @Override
@@ -98,13 +100,15 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
         
         checkDomainStatus(target);
         
-        if (isParentOf(credentials, target))
+        if (isParentOf(credentials, target)) {
             return true;
+        }
         
-        if (asAdmin)
+        if (asAdmin) {
             return canDo(credentials, actualTargetForAdminLoginAs(target), actualRightForAdminLoginAs(target), asAdmin);
-        else
+        } else {
             return canDo(credentials, target, User.R_loginAs, asAdmin);
+        }
     }
     
     @Override
@@ -201,10 +205,11 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
         
         // check pseudo rights
         if (asAdmin) {
-            if (rightNeeded == AdminRight.PR_ALWAYS_ALLOW)
+            if (rightNeeded == AdminRight.PR_ALWAYS_ALLOW) {
                 return true;
-            else if (rightNeeded == AdminRight.PR_SYSTEM_ADMIN_ONLY)
+            } else if (rightNeeded == AdminRight.PR_SYSTEM_ADMIN_ONLY) {
                 return false;
+            }
         }
         
         return checkPresetRight(grantee, target, rightNeeded, false, asAdmin, via);
@@ -215,8 +220,9 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
             boolean asAdmin, ViaGrant via) throws ServiceException {
         try {
             Account granteeAcct = AccessControlUtil.authTokenToAccount(grantee, rightNeeded);
-            if (granteeAcct != null)
+            if (granteeAcct != null) {
                 return canDo(granteeAcct, target, rightNeeded, asAdmin, via);
+            }
         } catch (ServiceException e) {
             ZimbraLog.acl.warn("ACL checking failed", e);
         }
@@ -229,8 +235,9 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
             boolean asAdmin, ViaGrant via) throws ServiceException {
         try {
             Account granteeAcct = AccessControlUtil.emailAddrToAccount(granteeEmail, rightNeeded);
-            if (granteeAcct != null)
+            if (granteeAcct != null) {
                 return canDo(granteeAcct, target, rightNeeded, asAdmin, via);
+            }
         } catch (ServiceException e) {
             ZimbraLog.acl.warn("ACL checking failed", e);
         }
@@ -239,12 +246,14 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     }
     
     @Override
-    public boolean canGetAttrs(Account grantee, Entry target, Set<String> attrsNeeded, boolean asAdmin) throws ServiceException {
+    public boolean canGetAttrs(Account grantee, Entry target, Set<String> attrsNeeded, boolean asAdmin) 
+    throws ServiceException {
         
         // check hard rules
         Boolean hardRulesResult = HardRules.checkHardRules(grantee, asAdmin, target, null);
-        if (hardRulesResult != null)
+        if (hardRulesResult != null) {
             return hardRulesResult.booleanValue();
+        }
         
         return canGetAttrsInternal(grantee, target, attrsNeeded, false);
     }
@@ -256,48 +265,57 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     }
 
     @Override
-    public AttrRightChecker getGetAttrsChecker(Account credentials, Entry target, boolean asAdmin) throws ServiceException {
+    public AttrRightChecker getGetAttrsChecker(Account credentials, Entry target, boolean asAdmin) 
+    throws ServiceException {
         Boolean hardRulesResult = HardRules.checkHardRules(credentials, asAdmin, target, null);
         
-        if (hardRulesResult == Boolean.TRUE)
+        if (hardRulesResult == Boolean.TRUE) {
             return AllowedAttrs.ALLOW_ALL_ATTRS();
-        else if (hardRulesResult == Boolean.FALSE)
+        } else if (hardRulesResult == Boolean.FALSE) {
             return AllowedAttrs.DENY_ALL_ATTRS();
-        else
-            return CheckAttrRight.accessibleAttrs(new Grantee(credentials), target, AdminRight.PR_GET_ATTRS, false);
+        } else {
+            return CheckAttrRight.accessibleAttrs(new Grantee(credentials), target, 
+                    AdminRight.PR_GET_ATTRS, false);
+        }
     }
     
     @Override
-    public AttrRightChecker getGetAttrsChecker(AuthToken credentials, Entry target, boolean asAdmin) throws ServiceException {
+    public AttrRightChecker getGetAttrsChecker(AuthToken credentials, Entry target, boolean asAdmin) 
+    throws ServiceException {
         return getGetAttrsChecker(credentials.getAccount(), target, asAdmin);
     }
     
     
     @Override
     // this API does not check constraints
-    public boolean canSetAttrs(Account grantee, Entry target, Set<String> attrsNeeded, boolean asAdmin) throws ServiceException {
+    public boolean canSetAttrs(Account grantee, Entry target, Set<String> attrsNeeded, boolean asAdmin) 
+    throws ServiceException {
         
         // check hard rules
         Boolean hardRulesResult = HardRules.checkHardRules(grantee, asAdmin, target, null);
-        if (hardRulesResult != null)
+        if (hardRulesResult != null) {
             return hardRulesResult.booleanValue();
+        }
         
         return canSetAttrsInternal(grantee, target, attrsNeeded, false);
     }
     
     @Override
-    public boolean canSetAttrs(AuthToken grantee, Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException {
+    public boolean canSetAttrs(AuthToken grantee, Entry target, Set<String> attrs, boolean asAdmin) 
+    throws ServiceException {
         return canSetAttrs(grantee.getAccount(), target, attrs, asAdmin);
     }
     
     @Override
     // this API does check constraints
-    public boolean canSetAttrs(Account granteeAcct, Entry target, Map<String, Object> attrsNeeded, boolean asAdmin) throws ServiceException {
+    public boolean canSetAttrs(Account granteeAcct, Entry target, Map<String, Object> attrsNeeded, boolean asAdmin) 
+    throws ServiceException {
         
         // check hard rules
         Boolean hardRulesResult = HardRules.checkHardRules(granteeAcct, asAdmin, target, null);
-        if (hardRulesResult != null)
+        if (hardRulesResult != null) {
             return hardRulesResult.booleanValue();
+        }
         
         Grantee grantee = new Grantee(granteeAcct);
         AllowedAttrs allowedAttrs = CheckAttrRight.accessibleAttrs(grantee, target, AdminRight.PR_SET_ATTRS, false);
@@ -305,7 +323,8 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     }
     
     @Override
-    public boolean canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException {
+    public boolean canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs, boolean asAdmin) 
+    throws ServiceException {
         return canSetAttrs(grantee.getAccount(), target, attrs, asAdmin);
     }
     
@@ -318,8 +337,9 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
         
         if (targetType.isDomained()) {
             String parts[] = EmailUtil.getLocalPartAndDomain(entryName);
-            if (parts == null)
+            if (parts == null) {
                 throw ServiceException.INVALID_REQUEST("must be valid email address: "+entryName, null);
+            }
             
             domainBy = Key.DomainBy.name;
             domainStr = parts[1];
@@ -329,18 +349,16 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
             targetType == TargetType.calresource) {
             cosStr = (String)attrs.get(Provisioning.A_zimbraCOSId);
             if (cosStr != null) {
-                if (LdapUtilCommon.isValidUUID(cosStr))
+                if (LdapUtilCommon.isValidUUID(cosStr)) {
                     cosBy = cosBy.id;
-                else
+                } else {
                     cosBy = cosBy.name;
+                }
             }
         }
         
         Entry target = PseudoTarget.createPseudoTarget(Provisioning.getInstance(),
-                                                       targetType, 
-                                                       domainBy, domainStr, false,
-                                                       cosBy, cosStr,
-                                                       entryName);
+                targetType, domainBy, domainStr, false, cosBy, cosStr, entryName);
         return canSetAttrs(grantee, target, attrs, asAdmin);
     }
     
@@ -352,8 +370,9 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
         
         // check hard rules
         Boolean hardRulesResult = HardRules.checkHardRules(grantee, asAdmin, target, rightNeeded);
-        if (hardRulesResult != null)
+        if (hardRulesResult != null) {
             return hardRulesResult.booleanValue();
+        }
         
         boolean allowed = false;
         if (rightNeeded.isPresetRight()) {
@@ -370,8 +389,9 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
             // check all directly and indirectly contained rights
             for (Right right : comboRight.getAllRights()) {
                 // via is not set for combo right. maybe we should just get rid of via 
-                if (!canPerform(grantee, target, right, canDelegateNeeded, attrs, asAdmin, null)) 
+                if (!canPerform(grantee, target, right, canDelegateNeeded, attrs, asAdmin, null)) {
                     return false;
+                }
             }
             allowed = true;
         }
@@ -390,17 +410,18 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     
     // all user and admin preset rights go through here 
     private boolean checkPresetRight(Account grantee, Entry target, 
-                                     Right rightNeeded, boolean canDelegateNeeded, 
-                                     boolean asAdmin, ViaGrant via) {
+            Right rightNeeded, boolean canDelegateNeeded, boolean asAdmin, ViaGrant via) {
         try {
             if (grantee == null) {
-                if (canDelegateNeeded)
+                if (canDelegateNeeded) {
                     return false;
+                }
                 
-                if (rightNeeded.isUserRight())
+                if (rightNeeded.isUserRight()) {
                     grantee = GuestAccount.ANONYMOUS_ACCT;
-                else
+                } else {
                     return false;
+                }
             }
 
             //
@@ -409,19 +430,23 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
             if (rightNeeded.isUserRight()) {
                 if (target instanceof Account) {
                     // always allow self for user right, self can also delegate(i.e. grant) the right
-                    if (((Account)target).getId().equals(grantee.getId()))
+                    if (((Account)target).getId().equals(grantee.getId())) {
                         return true;
+                    }
                     
                     // check the loginAs right and family access - if the right being asked for is not loginAs
-                    if (rightNeeded != Rights.User.R_loginAs)
-                        if (canAccessAccount(grantee, (Account)target, asAdmin))
+                    if (rightNeeded != Rights.User.R_loginAs) {
+                        if (canAccessAccount(grantee, (Account)target, asAdmin)) {
                             return true;
+                        }
+                    }
                 }
             } else {
                 // not a user right, must have a target object
                 // if it is a user right, let it fall through to return the default permission.
-                if (target == null)
+                if (target == null) {
                     return false;
+                }
             }
             
             
@@ -429,16 +454,18 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
             // check ACL
             //
             Boolean result = null;
-            if (target != null)
+            if (target != null) {
                 result = CheckPresetRight.check(grantee, target, rightNeeded, canDelegateNeeded, via);
+            }
             
-            if (result != null && result.booleanValue()) 
+            if (result != null && result.booleanValue()) {
                 return result.booleanValue();  // allowed by ACL
-            else {
+            } else {
                 // either no matching ACL for the right or is not allowed by ACL
                 
-                if (canDelegateNeeded)
+                if (canDelegateNeeded) {
                     return false;
+                }
                 
                 // call the fallback if there is one for the right
                 CheckRightFallback fallback = rightNeeded.getFallback();
@@ -472,12 +499,14 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     }
     
     private boolean checkAttrRight(Account grantee, Entry target, 
-                                   AttrRight rightNeeded, boolean canDelegateNeeded, 
-                                   Map<String, Object> attrs, boolean asAdmin) throws ServiceException {
+            AttrRight rightNeeded, boolean canDelegateNeeded, 
+            Map<String, Object> attrs, boolean asAdmin) 
+    throws ServiceException {
         
         TargetType targetType = TargetType.getTargetType(target);
-        if (!CheckRight.rightApplicableOnTargetType(targetType, rightNeeded, canDelegateNeeded))
+        if (!CheckRight.rightApplicableOnTargetType(targetType, rightNeeded, canDelegateNeeded)) {
             return false;
+        }
         
         boolean allowed = false;
         
@@ -491,8 +520,9 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
                 // attr/value map is provided, check it (constraints are checked)
                 
                 // sanity check, we should *not* be needing "can delegate"
-                if (canDelegateNeeded)
+                if (canDelegateNeeded) {
                     throw ServiceException.FAILURE("internal error", null);
+                }
                 
                 allowed = canSetAttrs(grantee, target, attrs, asAdmin);
             }
@@ -511,14 +541,16 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     private boolean canGetAttrsInternal(Account granteeAcct, Entry target, 
             Set<String> attrsNeeded, boolean canDelegateNeeded) throws ServiceException {
         AllowedAttrs allowedAttrs = 
-            CheckAttrRight.accessibleAttrs(new Grantee(granteeAcct), target, AdminRight.PR_GET_ATTRS, canDelegateNeeded);
+            CheckAttrRight.accessibleAttrs(new Grantee(granteeAcct), target, 
+                    AdminRight.PR_GET_ATTRS, canDelegateNeeded);
         return allowedAttrs.canAccessAttrs(attrsNeeded, target);
     }
     
     private boolean canSetAttrsInternal(Account granteeAcct, Entry target, 
             Set<String> attrsNeeded, boolean canDelegateNeeded) throws ServiceException {
         AllowedAttrs allowedAttrs = 
-            CheckAttrRight.accessibleAttrs(new Grantee(granteeAcct), target, AdminRight.PR_SET_ATTRS, canDelegateNeeded);
+            CheckAttrRight.accessibleAttrs(new Grantee(granteeAcct), target, 
+                    AdminRight.PR_SET_ATTRS, canDelegateNeeded);
         return allowedAttrs.canAccessAttrs(attrsNeeded, target);
     }
 

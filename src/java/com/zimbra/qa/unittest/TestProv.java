@@ -216,17 +216,24 @@ public abstract class TestProv extends TestLdap {
         return createUserDistributionList(localpart, domain);
     }
     
-    protected DistributionList createAdminGroup(String localpart, Domain domain) throws Exception {
+    protected DistributionList createAdminDistributionList(String localpart, Domain domain) 
+    throws Exception {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraIsAdminGroup, ProvisioningConstants.TRUE);
         return createDistributionList(localpart, domain, attrs);
     }
     
+    protected DistributionList createAdminDistributionList(Domain domain) throws Exception {
+        String localpart = genDistributionListName();
+        return createAdminDistributionList(localpart, domain);
+    }
+    
     private DynamicGroup createDynamicGroup(String localpart, Domain domain, Map<String, Object> attrs) 
     throws Exception {
-        if (domain == null)
+        if (domain == null) {
             domain = createDomain();
-         
+        }
+        
         String email = localpart + "@" + domain.getName();
         DynamicGroup dynGroup = mProv.createDynamicGroup(email, attrs);
         mCreatedEntries.add(dynGroup);
@@ -246,6 +253,11 @@ public abstract class TestProv extends TestLdap {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraIsAdminGroup, ProvisioningConstants.TRUE);
         return createDynamicGroup(localpart, domain, attrs);
+    }
+    
+    protected DynamicGroup createAdminDynamicGroup(Domain domain) throws Exception {
+        String localpart = genDynamicGroupName();
+        return createAdminDynamicGroup(localpart, domain);
     }
     
     protected Server createServer() throws Exception {

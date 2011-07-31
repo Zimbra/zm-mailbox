@@ -150,12 +150,10 @@ public abstract class Right extends RightConsts {
     }
     
     boolean executableOnTargetType(TargetType targetType) {
-        targetType = GroupUtil.disguiseDynamicGroupAsDL(targetType);
         return (mTargetType == targetType);
     }
     
     boolean grantableOnTargetType(TargetType targetType) {
-        targetType = GroupUtil.disguiseDynamicGroupAsDL(targetType);
         return targetType.isInheritedBy(mTargetType);
     }
     

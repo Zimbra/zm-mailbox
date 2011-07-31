@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 ysasaki 20110720-1409 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110730-1155 */
 
 
     /*
@@ -103,6 +103,16 @@ public class RightConsts {
      * add member to distribution list
      */
     public static final String RT_addDistributionListMember = "addDistributionListMember";
+
+    /**
+     * add group alias
+     */
+    public static final String RT_addGroupAlias = "addGroupAlias";
+
+    /**
+     * add member to group
+     */
+    public static final String RT_addGroupMember = "addGroupMember";
 
     /**
      * Admin Console Account Rights
@@ -677,6 +687,11 @@ public class RightConsts {
     public static final String RT_createDistributionList = "createDistributionList";
 
     /**
+     * create group in the domain
+     */
+    public static final String RT_createGroup = "createGroup";
+
+    /**
      * create bulk migration task on a server
      */
     public static final String RT_createMigrationTask = "createMigrationTask";
@@ -745,6 +760,11 @@ public class RightConsts {
      * delete domain
      */
     public static final String RT_deleteDomain = "deleteDomain";
+
+    /**
+     * delete group
+     */
+    public static final String RT_deleteGroup = "deleteGroup";
 
     /**
      * delete server
@@ -1008,6 +1028,11 @@ public class RightConsts {
     public static final String RT_getGlobalConfig = "getGlobalConfig";
 
     /**
+     * get all group attributes
+     */
+    public static final String RT_getGroup = "getGroup";
+
+    /**
      * get HSM process status for a server
      */
     public static final String RT_getHSMStatus = "getHSMStatus";
@@ -1094,6 +1119,11 @@ public class RightConsts {
     public static final String RT_listDomain = "listDomain";
 
     /**
+     * see group in GetAllCos/SearchDirectoryResponse
+     */
+    public static final String RT_listGroup = "listGroup";
+
+    /**
      * see server in GetAllCos/SearchDirectoryResponse
      */
     public static final String RT_listServer = "listServer";
@@ -1167,6 +1197,11 @@ public class RightConsts {
      * modify all global config attributes
      */
     public static final String RT_modifyGlobalConfig = "modifyGlobalConfig";
+
+    /**
+     * set all group attributes
+     */
+    public static final String RT_modifyGroup = "modifyGroup";
 
     /**
      * set all server attributes
@@ -1244,6 +1279,16 @@ public class RightConsts {
     public static final String RT_removeDistributionListMember = "removeDistributionListMember";
 
     /**
+     * remove group alias
+     */
+    public static final String RT_removeGroupAlias = "removeGroupAlias";
+
+    /**
+     * remove member from group
+     */
+    public static final String RT_removeGroupMember = "removeGroupMember";
+
+    /**
      * rename account
      */
     public static final String RT_renameAccount = "renameAccount";
@@ -1262,6 +1307,11 @@ public class RightConsts {
      * rename distribution list
      */
     public static final String RT_renameDistributionList = "renameDistributionList";
+
+    /**
+     * rename group
+     */
+    public static final String RT_renameGroup = "renameGroup";
 
     /**
      * restore accounts on a server

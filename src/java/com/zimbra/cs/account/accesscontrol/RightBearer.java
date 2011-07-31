@@ -21,6 +21,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GroupMembership;
@@ -74,10 +75,19 @@ public abstract class RightBearer {
                 mGranteeType = GranteeType.GT_USER;
                 mGranteeDomain = prov.getDomain((Account)grantee);
                 granteeGroups = prov.getGroupMembership((Account)grantee, adminOnly);
+                
             } else if (grantee instanceof DistributionList) {
                 mGranteeType = GranteeType.GT_GROUP;
                 mGranteeDomain = prov.getDomain((DistributionList)grantee);
                 granteeGroups = prov.getGroupMembership((DistributionList)grantee, adminOnly);
+                
+            } else if (grantee instanceof DynamicGroup) {
+                mGranteeType = GranteeType.GT_GROUP;
+                mGranteeDomain = prov.getDomain((DynamicGroup)grantee);
+                // no need to get membership for dynamic groups
+                // dynamic groups cannot be nested, either as a members in another 
+                // dynamic group or a distribution list
+                
             } else {
                 if (adminOnly) {
                     throw ServiceException.INVALID_REQUEST("invalid grantee type", null);
@@ -112,15 +122,10 @@ public abstract class RightBearer {
         }
         
         Account getAccount() throws ServiceException {
-            if (mGranteeType != GranteeType.GT_USER)
+            if (mGranteeType != GranteeType.GT_USER) {
                 throw ServiceException.FAILURE("internal error", null);
+            }
             return (Account)mRightBearer;
-        }
-        
-        DistributionList getGroup() throws ServiceException {
-            if (mGranteeType != GranteeType.GT_GROUP)
-                throw ServiceException.FAILURE("internal error", null);
-            return (DistributionList)mRightBearer;
         }
         
         Domain getDomain() {

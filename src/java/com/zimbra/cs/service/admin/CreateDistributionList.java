@@ -27,7 +27,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.TargetType;
-import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class CreateDistributionList extends AdminDocumentHandler {
@@ -39,8 +38,8 @@ public class CreateDistributionList extends AdminDocumentHandler {
         return true;
     }
 
-    @ACLTODO  // check refs of targetType.dl and handle the same for group
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    public Element handle(Element request, Map<String, Object> context) 
+    throws ServiceException {
 	    
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
@@ -50,8 +49,13 @@ public class CreateDistributionList extends AdminDocumentHandler {
         
         boolean dynamic = request.getAttributeBool(AdminConstants.A_DYNAMIC, false);
 
-        checkDomainRightByEmail(zsc, name, Admin.R_createDistributionList);
-        checkSetAttrsOnCreate(zsc, TargetType.dl, name, attrs);
+        if (dynamic) {
+            checkDomainRightByEmail(zsc, name, Admin.R_createGroup);
+            checkSetAttrsOnCreate(zsc, TargetType.group, name, attrs);
+        } else {
+            checkDomainRightByEmail(zsc, name, Admin.R_createDistributionList);
+            checkSetAttrsOnCreate(zsc, TargetType.dl, name, attrs);
+        }
         
         Group group = prov.createGroup(name, attrs, dynamic);
         
@@ -68,7 +72,10 @@ public class CreateDistributionList extends AdminDocumentHandler {
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_createDistributionList);
+        relatedRights.add(Admin.R_createGroup);
         notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY, 
                 Admin.R_modifyDistributionList.getName(), "distribution list"));
+        notes.add(String.format(AdminRightCheckPoint.Notes.MODIFY_ENTRY, 
+                Admin.R_modifyGroup.getName(), "group"));
     }
 }

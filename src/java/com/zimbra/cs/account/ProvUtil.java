@@ -2082,6 +2082,10 @@ public class ProvUtil implements HttpDebugListener {
         Map<String, Object> attrs = group.getAttrs();
         dumpAttrs(attrs, attrNames);
         console.println();
+        console.println("members");
+        for (String member : members) {
+            console.println(member);
+        }
     }
 
     private void dumpAlias(Alias alias) throws ServiceException {

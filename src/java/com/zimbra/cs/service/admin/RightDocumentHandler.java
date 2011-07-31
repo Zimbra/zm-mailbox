@@ -33,16 +33,19 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class RightDocumentHandler extends AdminDocumentHandler {
     
-    Entry getTargetEntry(Provisioning prov, Element eTarget, TargetType targetType) throws ServiceException {
+    Entry getTargetEntry(Provisioning prov, Element eTarget, TargetType targetType) 
+    throws ServiceException {
         Key.TargetBy targetBy = Key.TargetBy.fromString(eTarget.getAttribute(AdminConstants.A_BY));
         String target = eTarget.getText();
          
         return TargetType.lookupTarget(prov, targetType, targetBy, target);
     }
     
-    NamedEntry getGranteeEntry(Provisioning prov, Element eGrantee, GranteeType granteeType) throws ServiceException {
-        if (!granteeType.allowedForAdminRights())
+    NamedEntry getGranteeEntry(Provisioning prov, Element eGrantee, GranteeType granteeType) 
+    throws ServiceException {
+        if (!granteeType.allowedForAdminRights()) {
             throw ServiceException.INVALID_REQUEST("unsupported grantee type: " + granteeType.getCode(), null);
+        }
         
         Key.GranteeBy granteeBy = Key.GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
         String grantee = eGrantee.getText();
@@ -51,7 +54,8 @@ public abstract class RightDocumentHandler extends AdminDocumentHandler {
     }
     
     protected void checkCheckRightRight(ZimbraSoapContext zsc, 
-            GranteeType granteeType, Key.GranteeBy granteeBy, String grantee) throws ServiceException {
+            GranteeType granteeType, Key.GranteeBy granteeBy, String grantee) 
+    throws ServiceException {
         checkCheckRightRight(zsc, granteeType, granteeBy, grantee, false);
     }
     
@@ -87,12 +91,15 @@ public abstract class RightDocumentHandler extends AdminDocumentHandler {
             // backward compatibility issue for this SOAP.
             //
             // Note: granteeEntry is the target for the R_checkRight{Usr}/{Grp} right here
-            if (granteeType == GranteeType.GT_USER)
+            if (granteeType == GranteeType.GT_USER) {
                 checkRight(zsc, granteeEntry, Admin.R_checkRightUsr);
-            else if (granteeType == GranteeType.GT_GROUP)
+            } else if (granteeType == GranteeType.GT_GROUP) {
+                // R_checkRightGrp is specially treated, it applies to both 
+                // distribution list and dynamic group.  See PresetRight. 
                 checkRight(zsc, granteeEntry, Admin.R_checkRightGrp);
-            else
+            } else {
                 throw ServiceException.PERM_DENIED("invalid grantee type for check right:" + granteeType.getCode());
+            }
             
             return true;
         } else {

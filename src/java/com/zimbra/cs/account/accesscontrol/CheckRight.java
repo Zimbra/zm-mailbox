@@ -41,7 +41,7 @@ public abstract class CheckRight {
         // We require one from getDLBasic(DistributionListBy) here, because when group 
         // members are added/removed, the upward membership cache is cleared on the cached
         // entry.
-        if (target instanceof DistributionList) {
+        if ((target instanceof DistributionList) && !(target instanceof PseudoTarget.PseudoDistributionList)) {
             target = mProv.getDLBasic(Key.DistributionListBy.id, ((DistributionList)target).getId());
         }
         mTarget = target;

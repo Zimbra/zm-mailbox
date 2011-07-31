@@ -49,6 +49,10 @@
   <desc>a preset distribution list right</desc>
 </right>
 
+<right name="test-preset-dynamicgroup" type="preset" targetType="group">
+  <desc>a preset dynamic group right</desc>
+</right>
+
 <right name="test-preset-domain" type="preset" targetType="domain">
   <desc>a preset domain right</desc>
 </right>
@@ -118,6 +122,13 @@
   </attrs>
 </right>
 
+<right name="test-getAttrs-dynamicgroup" type="getAttrs" targetType="group">
+  <desc>a getAttrs dynamic group right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
 <right name="test-getAttrs-domain" type="getAttrs" targetType="domain">
   <desc>a getAttrs domain right</desc>
   <attrs>
@@ -141,7 +152,7 @@
   </attrs>
 </right>
 
-<right name="test-getAttrs-xmppcomponent" type="getAttrs" targetType="zimlet">
+<right name="test-getAttrs-xmppcomponent" type="getAttrs" targetType="xmppcomponent">
   <desc>a getAttrs xmppcomponent right</desc>
   <attrs>
       <a n="description"/>
@@ -225,6 +236,13 @@
   </attrs>
 </right>
 
+<right name="test-setAttrs-dynamicgroup" type="setAttrs" targetType="group">
+  <desc>a setAttrs dynamic group right</desc>
+  <attrs>
+      <a n="description"/>
+  </attrs>
+</right>
+
 <right name="test-setAttrs-domain" type="setAttrs" targetType="domain">
   <desc>a setAttrs domain right</desc>
   <attrs>
@@ -247,7 +265,7 @@
   </attrs>
 </right>
 
-<right name="test-setAttrs-xmppcomponent" type="setAttrs" targetType="zimlet">
+<right name="test-setAttrs-xmppcomponent" type="setAttrs" targetType="xmppcomponent">
   <desc>a setAttrs xmppcomponent right</desc>
   <attrs>
       <a n="description"/>
@@ -324,8 +342,17 @@
   </rights>
 </right>
 
+<right name="test-combo-dynamicgroup" type="combo">
+  <desc>a combo right that has only dynamic group rights</desc>
+  <rights>
+    <r n="test-preset-dynamicgroup"/>
+    <r n="test-getAttrs-dynamicgroup"/>
+    <r n="test-setAttrs-dynamicgroup"/>
+  </rights>
+</right>
+
 <right name="test-combo-domain" type="combo">
-  <desc>a combo right that has only distributionlist rights</desc>
+  <desc>a combo right that has only domain rights</desc>
   <rights>
     <r n="test-preset-domain"/>
     <r n="test-getAttrs-domain"/>
@@ -343,7 +370,7 @@
 </right>
 
 <right name="test-combo-globalgrant" type="combo">
-  <desc>a combo right that has only global config rights</desc>
+  <desc>a combo right that has only global grant rights</desc>
   <rights>
     <r n="test-preset-globalgrant"/>
     <r n="test-getAttrs-globalgrant"/>
@@ -352,7 +379,7 @@
 </right>
 
 <right name="test-combo-server" type="combo">
-  <desc>a combo right that has only global config rights</desc>
+  <desc>a combo right that has only server rights</desc>
   <rights>
     <r n="test-preset-server"/>
     <r n="test-getAttrs-server"/>
@@ -361,7 +388,7 @@
 </right>
 
 <right name="test-combo-xmppcomponent" type="combo">
-  <desc>a combo right that has only global config rights</desc>
+  <desc>a combo right that has only xmppcomponent rights</desc>
   <rights>
     <r n="test-preset-xmppcomponent"/>
     <r n="test-getAttrs-xmppcomponent"/>
@@ -370,7 +397,7 @@
 </right>
 
 <right name="test-combo-zimlet" type="combo">
-  <desc>a combo right that has only global config rights</desc>
+  <desc>a combo right that has only zimlet rights</desc>
   <rights>
     <r n="test-preset-zimlet"/>
     <r n="test-getAttrs-zimlet"/>

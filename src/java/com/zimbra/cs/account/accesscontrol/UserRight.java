@@ -38,30 +38,37 @@ public class UserRight extends Right {
     }
     
     // special treatment for user right:
+    // - disguise calendar resource as account
+    // - disguise dynamic group as distribution list
     //
-    // For users rights, accounts and calresoruces are treated equally.
-    // 
+    // For users rights, accounts and calresoruces are treated equally; and 
+    // distribution list and dynamic group are treated equally.
+    //
+    // e.g.
     // if a right is executable on account, it is executable on calendar resource.
     // if a right is grantable on a target from which account rights can be inherited,
     // the right is grantable on the target from which calendar resource rights can be 
     // inherited
-    private TargetType disguiseCalendarResourceAsAccount(TargetType targetType) {
+    private TargetType disguiseTargetType(TargetType targetType) {
         if (targetType == TargetType.calresource) {
             return TargetType.account;
+        } else if (targetType == TargetType.group) {
+            return TargetType.dl;
         } else {
             return targetType;
         }
     }
+    
 
     @Override
     boolean executableOnTargetType(TargetType targetType) {
-        targetType = disguiseCalendarResourceAsAccount(targetType);
+        targetType = disguiseTargetType(targetType);
         return super.executableOnTargetType(targetType); 
     }
     
     @Override
     boolean grantableOnTargetType(TargetType targetType) {
-        targetType = disguiseCalendarResourceAsAccount(targetType);
+        targetType = disguiseTargetType(targetType);
         return super.grantableOnTargetType(targetType); 
     }
     

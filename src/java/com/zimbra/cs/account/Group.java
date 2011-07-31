@@ -30,6 +30,7 @@ public abstract class Group extends MailTarget implements AliasedEntry {
     
     public abstract String[] getAllMembers() throws ServiceException;
     
+    public abstract Set<String> getAllMembersSet() throws ServiceException;
 
     @Override
     public boolean isAddrOfEntry(String addr) {

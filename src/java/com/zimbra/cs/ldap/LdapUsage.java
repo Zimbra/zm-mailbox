@@ -58,6 +58,7 @@ public enum LdapUsage {
     GAL_LEGACY_SEARCH,
     GAL_LEGACY_SYNC,
     GET_ENTRY,
+    GET_GROUP_MEMBER,
     GET_SCHEMA,
     MODIFY_ENTRY,
     MODIFY_ACCOUNT,

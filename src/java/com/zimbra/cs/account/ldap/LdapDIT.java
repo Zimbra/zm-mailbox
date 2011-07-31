@@ -261,12 +261,15 @@ public class LdapDIT {
     
     
     public String dnToEmail(String dn, IAttributes attrs) throws ServiceException {
-        String namingAttr = accountNamingRdnAttr();
-        return dnToEmail(dn, namingAttr, attrs);
+        return dnToEmail(dn, null, attrs);
     }
     
     /*
      * Given a dn like "uid=foo,ou=people,dc=widgets,dc=com", return the string "foo@widgets.com".
+     * 
+     * If namingAttr is not null, use the provided namingAttr for the localpart.
+     * If namingAttr is null, first try using the account/dl rdn, if no such attrs,
+     * then try the dynamci group rdn.
      * 
      * Param attrs is not used in this implementation of DIT
      */
@@ -274,7 +277,15 @@ public class LdapDIT {
         String [] parts = dn.split(",");
         StringBuffer domain = new StringBuffer(dn.length());
         
-        namingAttr = namingAttr + "=";
+        String alternateNamingAttr = null;
+        
+        if (namingAttr != null) {
+            namingAttr = namingAttr + "=";
+        } else {
+            namingAttr = accountNamingRdnAttr() + "=";
+            alternateNamingAttr = dynamicGroupNamingRdnAttr() + "=";
+        }
+        
         String namingAttrValue = null;
         
         for (int i = 0; i < parts.length; i++) {
@@ -284,12 +295,16 @@ public class LdapDIT {
                 domain.append(LdapUtilCommon.unescapeRDNValue(parts[i].substring(3)));
             } else if (i==0 && parts[i].startsWith(namingAttr)) {
                 namingAttrValue = LdapUtilCommon.unescapeRDNValue(parts[i].substring(namingAttr.length()));
+            } else if (alternateNamingAttr != null && i==0 && parts[i].startsWith(alternateNamingAttr)) {
+                namingAttrValue = LdapUtilCommon.unescapeRDNValue(parts[i].substring(alternateNamingAttr.length()));
             }
         }
-        if (namingAttrValue == null)
+        if (namingAttrValue == null) {
             throw ServiceException.FAILURE("unable to map dn [" + dn + "] to email", null);
-        if (domain.length() == 0)
+        }
+        if (domain.length() == 0) {
             return namingAttrValue;
+        }
         return new StringBuffer(namingAttrValue).append('@').append(domain).toString();
     }
     

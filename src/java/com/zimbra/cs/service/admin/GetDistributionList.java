@@ -18,26 +18,21 @@ package com.zimbra.cs.service.admin;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Map.Entry;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeClass;
-import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AccessManager.AttrRightChecker;
-import com.zimbra.cs.account.AttributeManager.IDNType;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -80,9 +75,12 @@ public class GetDistributionList extends AdminDocumentHandler {
         AttrRightChecker arc = null;
         
         if (group.isDynamic()) {
-            // TODO: fix me
+            AdminAccessControl aac = checkDynamicGroupRight(zsc, 
+                    (DynamicGroup) group, AdminRight.PR_ALWAYS_ALLOW);
+            arc = aac.getAttrRightChecker(group);
         } else {
-            AdminAccessControl aac = checkDistributionListRight(zsc, (DistributionList) group, AdminRight.PR_ALWAYS_ALLOW);
+            AdminAccessControl aac = checkDistributionListRight(zsc, 
+                    (DistributionList) group, AdminRight.PR_ALWAYS_ALLOW);
             arc = aac.getAttrRightChecker(group);
         }
         
@@ -92,8 +90,7 @@ public class GetDistributionList extends AdminDocumentHandler {
         // return member info only if the authed has right to see zimbraMailForwardingAddress
         boolean allowMembers = true;
         if (group.isDynamic()) {
-            // TODO: fix me
-            allowMembers = true;
+            allowMembers = arc == null ? true : arc.allowAttr(Provisioning.A_member);
         } else {
             allowMembers = arc == null ? true : arc.allowAttr(Provisioning.A_zimbraMailForwardingAddress);
         }
@@ -109,7 +106,8 @@ public class GetDistributionList extends AdminDocumentHandler {
             int offset, int limit, boolean sortAscending) throws ServiceException {
         String[] members = group.getAllMembers();
         if (offset > 0 && offset >= members.length) {
-            throw ServiceException.INVALID_REQUEST("offset " + offset + " greater than size " + members.length, null);
+            throw ServiceException.INVALID_REQUEST("offset " + offset + 
+                    " greater than size " + members.length, null);
         }
         int stop = offset + limit;
         if (limit == 0) {
@@ -132,12 +130,14 @@ public class GetDistributionList extends AdminDocumentHandler {
         response.addAttribute(AdminConstants.A_TOTAL, members.length);
     }
 
-    public static Element encodeDistributionList(Element e, Group group) throws ServiceException {
+    public static Element encodeDistributionList(Element e, Group group) 
+    throws ServiceException {
         return encodeDistributionList(e, group, true, null, null);
     }
     
     public static Element encodeDistributionList(Element e, Group group, boolean hideMembers, 
-            Set<String> reqAttrs, AttrRightChecker attrRightChecker) throws ServiceException {
+            Set<String> reqAttrs, AttrRightChecker attrRightChecker) 
+    throws ServiceException {
         Element distributionList = e.addElement(AdminConstants.E_DL);
         distributionList.addAttribute(AdminConstants.A_NAME, group.getUnicodeName());
         distributionList.addAttribute(AdminConstants.A_ID,group.getId());
@@ -152,7 +152,8 @@ public class GetDistributionList extends AdminDocumentHandler {
                 hideAttrs.add(Provisioning.A_zimbraMailForwardingAddress);
             }
         }
-        ToXML.encodeAttrs(distributionList, group.getUnicodeAttrs(), AdminConstants.A_N, reqAttrs, hideAttrs, attrRightChecker);
+        ToXML.encodeAttrs(distributionList, group.getUnicodeAttrs(), 
+                AdminConstants.A_N, reqAttrs, hideAttrs, attrRightChecker);
         
         return distributionList;
     }
@@ -160,6 +161,8 @@ public class GetDistributionList extends AdminDocumentHandler {
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_getDistributionList);
+        relatedRights.add(Admin.R_getGroup);
         notes.add(String.format(AdminRightCheckPoint.Notes.GET_ENTRY, Admin.R_getDistributionList.getName()));
+        notes.add(String.format(AdminRightCheckPoint.Notes.GET_ENTRY, Admin.R_getGroup.getName()));
     }
 }

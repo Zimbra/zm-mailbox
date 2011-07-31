@@ -64,8 +64,9 @@ public class GetEffectiveRights  extends RightDocumentHandler {
             grantee = zsc.getRequestedAccountId();  
         }
         
-        if (!grantee.equals(zsc.getAuthtokenAccountId()))
+        if (!grantee.equals(zsc.getAuthtokenAccountId())) {
             checkCheckRightRight(zsc, GranteeType.GT_USER, granteeBy, grantee);
+        }
         
         RightCommand.EffectiveRights er = RightCommand.getEffectiveRights(
                 Provisioning.getInstance(),

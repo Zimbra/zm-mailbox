@@ -22,6 +22,7 @@ import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
@@ -60,7 +61,7 @@ public class RemoveDistributionListMember extends AdminDocumentHandler {
         }
         
         if (group.isDynamic()) {
-            // TODO: fix me
+            checkDynamicGroupRight(zsc, (DynamicGroup) group, Admin.R_removeGroupMember);
         } else {
             checkDistributionListRight(zsc, (DistributionList) group, Admin.R_removeDistributionListMember);
         }
@@ -79,5 +80,6 @@ public class RemoveDistributionListMember extends AdminDocumentHandler {
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_removeDistributionListMember);
+        relatedRights.add(Admin.R_removeGroupMember);
     }
 }

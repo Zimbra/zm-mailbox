@@ -30,6 +30,10 @@ public class PresetRight extends AdminRight {
         return true;
     }
     
+    //
+    // TODO: disguise group target as dl for R_checkRightGrp right
+    //
+    
     @Override
     protected Set<TargetType> getGrantableTargetTypes() {
         Set<TargetType> targetTypes = new HashSet<TargetType>();

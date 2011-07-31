@@ -67,8 +67,9 @@ public class CheckRight extends RightDocumentHandler {
             
         Element eGrantee = request.getElement(AdminConstants.E_GRANTEE);
         String granteeType = eGrantee.getAttribute(AdminConstants.A_TYPE, GranteeType.GT_USER.getCode());
-        if (GranteeType.fromCode(granteeType) != GranteeType.GT_USER)
+        if (GranteeType.fromCode(granteeType) != GranteeType.GT_USER) {
             throw ServiceException.INVALID_REQUEST("invalid grantee type " + granteeType, null);
+        }
         Key.GranteeBy granteeBy = Key.GranteeBy.fromString(eGrantee.getAttribute(AdminConstants.A_BY));
         String grantee = eGrantee.getText();
 
@@ -82,8 +83,9 @@ public class CheckRight extends RightDocumentHandler {
         GuestAccount guest = null;
         if (!grantee.equals(zsc.getAuthtokenAccountId())) {
             boolean checked = checkCheckRightRight(zsc, GranteeType.GT_USER, granteeBy, grantee, true);
-            if (!checked)
+            if (!checked) {
                 guest = new GuestAccount(grantee, null);
+            }
         }
         
         ViaGrant via = new ViaGrant();

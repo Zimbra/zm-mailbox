@@ -56,8 +56,9 @@ public class GetAllEffectiveRights extends RightDocumentHandler {
         }
         
         GranteeType gt = GranteeType.fromCode(granteeType);
-        if (!grantee.equals(zsc.getAuthtokenAccountId()))
+        if (!grantee.equals(zsc.getAuthtokenAccountId())) {
             checkCheckRightRight(zsc, gt, granteeBy, grantee);
+        }
         
         RightCommand.AllEffectiveRights aer = RightCommand.getAllEffectiveRights(
                 Provisioning.getInstance(),

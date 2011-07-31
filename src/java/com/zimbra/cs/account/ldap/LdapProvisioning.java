@@ -34,6 +34,8 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import org.testng.v6.Lists;
+
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -162,19 +164,6 @@ public class LdapProvisioning extends LdapProv {
         new NamedEntryCache<Group>(
                 LC.ldap_cache_group_maxsize.intValue(),
                 LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
-    
-    /*
-    // note: DLs cached in this cache only contains sMinimalDlAttrs
-    private NamedEntryCache<DistributionList> sDLCache =
-        new NamedEntryCache<DistributionList>(
-                LC.ldap_cache_group_maxsize.intValue(),
-                LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
-    
-    private NamedEntryCache<DynamicGroup> sDynamicGroupCache =
-        new NamedEntryCache<DynamicGroup>(
-                LC.ldap_cache_group_maxsize.intValue(),
-                LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
-    */
     
     private NamedEntryCache<XMPPComponent> sXMPPComponentCache =
         new NamedEntryCache<XMPPComponent>(
@@ -1037,6 +1026,8 @@ public class LdapProvisioning extends LdapProv {
             return acct;
         } catch (LdapEntryAlreadyExistException e) {
             throw AccountServiceException.ACCOUNT_EXISTS(emailAddress, dn, e);
+        } catch (LdapException e) {
+            throw e;
         } catch (AccountServiceException e) {
             throw e;
         } catch (ServiceException e) {
@@ -1417,7 +1408,7 @@ public class LdapProvisioning extends LdapProv {
             else if (objectclass.contains(AttributeClass.OC_zimbraAlias))
                 visitor.visit(prov.makeAlias(dn, attrs));
             else if (objectclass.contains(AttributeClass.OC_zimbraDistributionList))
-                visitor.visit(prov.makeDistributionList(dn, attrs));
+                visitor.visit(prov.makeDistributionList(dn, attrs, false));
             else if (objectclass.contains(AttributeClass.OC_zimbraGroup))
                 visitor.visit(prov.makeDynamicGroup(dn, attrs));
             else if (objectclass.contains(AttributeClass.OC_zimbraDomain))
@@ -1700,6 +1691,10 @@ public class LdapProvisioning extends LdapProv {
             modifyAttrsInternal(entry, zlc, attrs);
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.ACCOUNT_EXISTS(alias, aliasDn, nabe);
+        } catch (LdapException e) {
+            throw e;
+        } catch (AccountServiceException e) {
+            throw e;
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to create alias: "+e.getMessage(), e);
         } finally {
@@ -1959,12 +1954,11 @@ public class LdapProvisioning extends LdapProv {
 
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.DOMAIN_EXISTS(name);
+        } catch (LdapException e) {
+            throw e;
+        } catch (AccountServiceException e) {
+            throw e;
         } catch (ServiceException e) {
-            // do not eat up the AccountServiceException.DOMAIN_EXISTS thrown
-            // from the try block
-            if (e instanceof AccountServiceException) {
-                throw e; 
-            }
             throw ServiceException.FAILURE("unable to create domain: "+name, e);
         } finally {
             LdapClient.closeContext(zlc);
@@ -2237,6 +2231,12 @@ public class LdapProvisioning extends LdapProv {
             return cos;
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.COS_EXISTS(destCosName);
+        } catch (LdapException e) {
+            throw e;
+        } catch (AccountServiceException e) {
+            throw e;
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("unable to create cos: " + destCosName, e);
         } finally {
             LdapClient.closeContext(zlc);
         }
@@ -2261,6 +2261,10 @@ public class LdapProvisioning extends LdapProv {
             sCosCache.remove(cos);
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.COS_EXISTS(newName);
+        } catch (LdapException e) {
+            throw e;
+        } catch (AccountServiceException e) {
+            throw e;
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to rename cos: "+zimbraId, e);
         } finally {
@@ -2509,6 +2513,12 @@ public class LdapProvisioning extends LdapProv {
 
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.ACCOUNT_EXISTS(newName);
+        } catch (LdapException e) {
+            throw e;
+        } catch (AccountServiceException e) {
+            throw e;
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("unable to rename account: "+newName, e);
         } finally {
             // prune cache
             sAccountCache.remove(acct);
@@ -2771,6 +2781,12 @@ public class LdapProvisioning extends LdapProv {
 
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.SERVER_EXISTS(name);
+        } catch (LdapException e) {
+            throw e;
+        } catch (AccountServiceException e) {
+            throw e;
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("unable to create server: " + name, e);
         } finally {
             LdapClient.closeContext(zlc);
         }
@@ -3065,6 +3081,10 @@ public class LdapProvisioning extends LdapProv {
 
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.DISTRIBUTION_LIST_EXISTS(listAddress);
+        } catch (LdapException e) {
+            throw e;
+        } catch (AccountServiceException e) {
+            throw e;
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to create distribution list: "+listAddress, e);
         } finally {
@@ -3089,7 +3109,7 @@ public class LdapProvisioning extends LdapProv {
                     searchControls, initZlc, LdapServerType.REPLICA);
             if (ne.hasMore()) {
                 ZSearchResultEntry sr = ne.next();
-                dl = makeDistributionList(sr.getDN(), sr.getAttributes());
+                dl = makeDistributionList(sr.getDN(), sr.getAttributes(), false);
             }
             ne.close();
         } catch (ServiceException e) {
@@ -3198,6 +3218,10 @@ public class LdapProvisioning extends LdapProv {
             }
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.DISTRIBUTION_LIST_EXISTS(newEmail);
+        } catch (LdapException e) {
+            throw e;
+        } catch (AccountServiceException e) {
+            throw e;
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to rename distribution list: " + zimbraId, e);
         } finally {
@@ -4456,8 +4480,12 @@ public class LdapProvisioning extends LdapProv {
             return zimlet;
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.ZIMLET_EXISTS(name);
-        } catch (ServiceException se) {
-            throw se;
+        } catch (LdapException e) {
+            throw e;
+        } catch (AccountServiceException e) {
+            throw e;
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("unable to create zimlet: "+name, e);
         } finally {
             LdapClient.closeContext(zlc);
         }
@@ -4635,9 +4663,10 @@ public class LdapProvisioning extends LdapProv {
         return alias;
     }
 
-    private DistributionList makeDistributionList(String dn, ZAttributes attrs) throws ServiceException {
+    private DistributionList makeDistributionList(String dn, ZAttributes attrs, boolean isBasic) 
+    throws ServiceException {
         String emailAddress = mDIT.dnToEmail(dn, attrs);
-        DistributionList dl = new LdapDistributionList(dn, emailAddress, attrs, this);
+        DistributionList dl = new LdapDistributionList(dn, emailAddress, attrs, isBasic, this);
         return dl;
     }
     
@@ -5684,8 +5713,12 @@ public class LdapProvisioning extends LdapProv {
             return identity;
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.IDENTITY_EXISTS(identityName);
+        } catch (LdapException e) {
+            throw e;
+        } catch (AccountServiceException e) {
+            throw e;
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to create identity", e);
+            throw ServiceException.FAILURE("unable to create identity " + identityName, e);
         } finally {
             LdapClient.closeContext(zlc);
         }
@@ -5962,6 +5995,12 @@ public class LdapProvisioning extends LdapProv {
             return signature;
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.SIGNATURE_EXISTS(signatureName);
+        } catch (LdapException e) {
+            throw e;
+        } catch (AccountServiceException e) {
+            throw e;
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("unable to create signature: " + signatureName, e);
         } finally {
             LdapClient.closeContext(zlc);
         }
@@ -6317,8 +6356,12 @@ public class LdapProvisioning extends LdapProv {
             return ds;
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.DATA_SOURCE_EXISTS(dsName);
+        } catch (LdapException e) {
+            throw e;
+        } catch (AccountServiceException e) {
+            throw e;
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to create data source", e);
+            throw ServiceException.FAILURE("unable to create data source: " + dsName, e);
         } finally {
             LdapClient.closeContext(zlc);
         }
@@ -6607,6 +6650,10 @@ public class LdapProvisioning extends LdapProv {
             sXMPPComponentCache.remove(comp);
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.IM_COMPONENT_EXISTS(newName);
+        } catch (LdapException e) {
+            throw e;
+        } catch (AccountServiceException e) {
+            throw e;
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to rename XMPPComponent: "+zimbraId, e);
         } finally {
@@ -7391,7 +7438,7 @@ public class LdapProvisioning extends LdapProv {
                     attrs.getMultiAttrStringAsList(Provisioning.A_objectClass, CheckBinary.NOCHECK);
                 
                 if (objectclass.contains(AttributeClass.OC_zimbraDistributionList)) {
-                    return makeDistributionList(sr.getDN(), attrs);
+                    return makeDistributionList(sr.getDN(), attrs, basicAttrsOnly);
                 } else if (objectclass.contains(AttributeClass.OC_zimbraGroup)) {
                     return makeDynamicGroup(sr.getDN(), attrs);
                 }
@@ -7505,6 +7552,10 @@ public class LdapProvisioning extends LdapProv {
             
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.DISTRIBUTION_LIST_EXISTS(groupAddress);
+        } catch (LdapException e) {
+            throw e;
+        } catch (AccountServiceException e) {
+            throw e;
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to create group: " + groupAddress, e);
         } finally {
@@ -7566,14 +7617,23 @@ public class LdapProvisioning extends LdapProv {
         PermissionCache.invalidateCache();
     }
     
-    // TODO: change to ldif and do in background
-    private void deleteMemberOfOnAccounts(ZLdapContext zlc, String dynGroupId) 
+    private void searchMembers(ZLdapContext zlc, String dynGroupId, SearchLdapVisitor visitor) 
     throws ServiceException {
         String base = mDIT.mailBranchBaseDN();
         ZLdapFilter filter = filterFactory.accountByMemberOf(dynGroupId);
+         
+        SearchLdapOptions searchOptions = new SearchLdapOptions(base, filter, 
+                new String[]{A_zimbraMailDeliveryAddress, Provisioning.A_zimbraMemberOf}, 
+                SearchLdapOptions.SIZE_UNLIMITED, 
+                null, ZSearchScope.SEARCH_SCOPE_SUBTREE, visitor);
         
+        zlc.searchPaged(searchOptions);
+    }
+    
+    // TODO: change to ldif and do in background
+    private void deleteMemberOfOnAccounts(ZLdapContext zlc, String dynGroupId) 
+    throws ServiceException {
         final List<Account> accts = new ArrayList<Account>();
-        
         SearchLdapVisitor visitor = new SearchLdapVisitor(false) {
             public void visit(String dn, IAttributes ldapAttrs)
             throws StopIteratingException {
@@ -7586,14 +7646,7 @@ public class LdapProvisioning extends LdapProv {
                 }
             }
         };
-        
-        SearchLdapOptions searchOptions = new SearchLdapOptions(base, filter, 
-                new String[]{A_zimbraMailDeliveryAddress, Provisioning.A_zimbraMemberOf}, 
-                SearchLdapOptions.SIZE_UNLIMITED, 
-                null, ZSearchScope.SEARCH_SCOPE_SUBTREE, visitor);
-        
-        zlc.searchPaged(searchOptions);
-
+        searchMembers(zlc, dynGroupId, visitor);
         
         // go through each DN and remove the zimbraMemberOf={dynGroupId} on the entry
         // do in background?
@@ -7703,6 +7756,10 @@ public class LdapProvisioning extends LdapProv {
             }
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.DISTRIBUTION_LIST_EXISTS(newEmail);
+        } catch (LdapException e) {
+            throw e;
+        } catch (AccountServiceException e) {
+            throw e;
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to rename distribution list: " + zimbraId, e);
         } finally {
@@ -7808,6 +7865,7 @@ public class LdapProvisioning extends LdapProv {
         } finally {
             LdapClient.closeContext(zlc);
         }
+        PermissionCache.invalidateCache();
     }
     
     private void removeDynamicGroupMembers(LdapDynamicGroup group, String[] members) 
@@ -7843,6 +7901,7 @@ public class LdapProvisioning extends LdapProv {
         } finally {
             LdapClient.closeContext(zlc);
         }
+        PermissionCache.invalidateCache();
     }
     
     private boolean inDynamicGroup(Account acct, String zimbraId) throws ServiceException {
@@ -7866,5 +7925,46 @@ public class LdapProvisioning extends LdapProv {
         }
         
         return groups;
+    }
+    
+    private List<String> getDynamicGroupMembersList(DynamicGroup dygGroup) {
+        final List<String> members = Lists.newArrayList();
+        
+        SearchLdapVisitor visitor = new SearchLdapVisitor(false) {
+            public void visit(String dn, IAttributes ldapAttrs)
+            throws StopIteratingException {
+                String addr = null;
+                try {
+                    addr = ldapAttrs.getAttrString(Provisioning.A_zimbraMailDeliveryAddress);
+                } catch (ServiceException e) {
+                    ZimbraLog.account.warn("unable to get attr", e);
+                }
+                if (addr != null) {
+                    members.add(addr);
+                }
+            }
+        };
+        
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.REPLICA, LdapUsage.GET_GROUP_MEMBER);
+            searchMembers(zlc, dygGroup.getId(), visitor);
+        } catch (ServiceException e) {    
+            ZimbraLog.account.warn("unable to get dynamic group members", e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+        
+        return members;
+    }
+    
+    public String[] getDynamicGroupMembers(DynamicGroup dygGroup) {
+        List<String> members = getDynamicGroupMembersList(dygGroup);
+        return members.toArray(new String[members.size()]);
+    }
+    
+    public Set<String> getDynamicGroupMembersSet(DynamicGroup dygGroup) {
+        List<String> members = getDynamicGroupMembersList(dygGroup);
+        return Sets.newHashSet(members);
     }
 }

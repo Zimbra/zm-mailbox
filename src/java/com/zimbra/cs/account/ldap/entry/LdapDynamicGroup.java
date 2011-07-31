@@ -14,8 +14,14 @@
  */
 package com.zimbra.cs.account.ldap.entry;
 
+import java.util.Set;
+
+import com.zimbra.common.account.Key.DistributionListBy;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZAttributes;
 
@@ -25,14 +31,23 @@ public class LdapDynamicGroup extends DynamicGroup implements LdapEntry {
     
     public LdapDynamicGroup(String dn, String email, ZAttributes attrs, Provisioning prov) 
     throws LdapException {
-        super(email, attrs.getAttrString(Provisioning.A_zimbraId), 
-                attrs.getAttrs(), prov);
+        super(email, attrs.getAttrString(Provisioning.A_zimbraId), attrs.getAttrs(), prov);
         mDn = dn;
     }
 
     @Override
     public String getDN() {
         return mDn;
+    }
+    
+    @Override
+    public String[] getAllMembers() throws ServiceException {
+        return ((LdapProvisioning) getProvisioning()).getDynamicGroupMembers(this);
+    }
+    
+    @Override
+    public Set<String> getAllMembersSet() throws ServiceException {
+        return ((LdapProvisioning) getProvisioning()).getDynamicGroupMembersSet(this);
     }
 
 }

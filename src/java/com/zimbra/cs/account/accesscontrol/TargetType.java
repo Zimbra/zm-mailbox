@@ -122,7 +122,7 @@ public enum TargetType {
                 new TargetType[]{account, calresource, dl});
         
         TargetType.group.setInheritedByTargetTypes(
-                new TargetType[]{account, calresource});
+                new TargetType[]{account, calresource, group});
         
         TargetType.domain.setInheritedByTargetTypes(
                 new TargetType[]{account, calresource, dl, group, domain});
@@ -244,9 +244,7 @@ public enum TargetType {
     
     public static TargetType fromCode(String s) throws ServiceException {
         try {
-            TargetType tt = TargetType.valueOf(s);
-            GroupUtil.checkSpecifiedTargetType(tt);
-            return tt;
+            return TargetType.valueOf(s);
         } catch (IllegalArgumentException e) {
             throw ServiceException.INVALID_REQUEST("unknown target type: " + s, e);
         }
@@ -290,47 +288,56 @@ public enum TargetType {
         switch (targetType) {
         case account:
             targetEntry = prov.get(AccountBy.fromString(targetBy.name()), target);
-            if (targetEntry == null && mustFind)
+            if (targetEntry == null && mustFind) {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(target); 
+            }
             break;
         case calresource:
             targetEntry = prov.get(Key.CalendarResourceBy.fromString(targetBy.name()), target);
-            if (targetEntry == null && mustFind)
+            if (targetEntry == null && mustFind) {
                 throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(target); 
+            }
             break;
         case dl:
         case group:
             targetEntry = prov.getGroupBasic(Key.DistributionListBy.fromString(targetBy.name()), target);
-            if (targetEntry == null && mustFind)
+            if (targetEntry == null && mustFind) {
                 throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(target); 
+            }
             break;
         case domain:
             targetEntry = prov.get(Key.DomainBy.fromString(targetBy.name()), target);
-            if (targetEntry == null && mustFind)
+            if (targetEntry == null && mustFind) {
                 throw AccountServiceException.NO_SUCH_DOMAIN(target); 
+            }
             break;
         case cos:
             targetEntry = prov.get(Key.CosBy.fromString(targetBy.name()), target);
-            if (targetEntry == null && mustFind)
-                throw AccountServiceException.NO_SUCH_COS(target); 
+            if (targetEntry == null && mustFind) {
+                throw AccountServiceException.NO_SUCH_COS(target);
+            }
             break;
         case server:
             targetEntry = prov.get(Key.ServerBy.fromString(targetBy.name()), target);
-            if (targetEntry == null && mustFind)
+            if (targetEntry == null && mustFind) {
                 throw AccountServiceException.NO_SUCH_SERVER(target); 
+            }
             break;
         case xmppcomponent:
             targetEntry = prov.get(Key.XMPPComponentBy.fromString(targetBy.name()), target);
-            if (targetEntry == null && mustFind)
+            if (targetEntry == null && mustFind) {
                 throw AccountServiceException.NO_SUCH_XMPP_COMPONENT(target); 
+            }
             break;    
         case zimlet:
             Key.ZimletBy zimletBy = Key.ZimletBy.fromString(targetBy.name());
-            if (zimletBy != Key.ZimletBy.name)
+            if (zimletBy != Key.ZimletBy.name) {
                 throw ServiceException.INVALID_REQUEST("zimlet must be by name", null);
+            }
             targetEntry = prov.getZimlet(target);
-            if (targetEntry == null && mustFind)
+            if (targetEntry == null && mustFind) {
                 throw AccountServiceException.NO_SUCH_ZIMLET(target); 
+            }
             break;
         case config:
             targetEntry = prov.getConfig();
@@ -387,6 +394,10 @@ public enum TargetType {
         return mIsDomained;
     }
     
+    public boolean isGroup() {
+        return (this == TargetType.dl || this == TargetType.group);
+    }
+    
     public static String getId(Entry target) {
         return (target instanceof NamedEntry)? ((NamedEntry)target).getId() : null;
     }
@@ -403,6 +414,9 @@ public enum TargetType {
         } else if (target instanceof DistributionList) {
             DistributionList dl = (DistributionList)target;
             return prov.getDomain(dl);
+        } else if (target instanceof DynamicGroup) {
+            DynamicGroup group = (DynamicGroup)target;
+            return prov.getDomain(group);
         } else
             return null;
     }
@@ -419,8 +433,12 @@ public enum TargetType {
         } else if (target instanceof DistributionList) {
             DistributionList dl = (DistributionList)target;
             return dl.getDomainName();
-        } else
+        } else if (target instanceof DynamicGroup) {
+            DynamicGroup group = (DynamicGroup)target;
+            return group.getDomainName();
+        } else {
             return null;
+        }
     }
     
     static String getSearchBase(Provisioning prov, TargetType tt) 

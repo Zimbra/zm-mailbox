@@ -60,8 +60,9 @@ public class GetCreateObjectAttrs extends RightDocumentHandler {
         Key.GranteeBy granteeBy = Key.GranteeBy.id;
         String grantee = zsc.getRequestedAccountId();
         
-        if (!grantee.equals(zsc.getAuthtokenAccountId()))
+        if (!grantee.equals(zsc.getAuthtokenAccountId())) {
             checkCheckRightRight(zsc, GranteeType.GT_USER, granteeBy, grantee);
+        }
         
         RightCommand.EffectiveRights er = RightCommand.getCreateObjectAttrs(Provisioning.getInstance(),
                                                                             targetType,

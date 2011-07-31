@@ -83,7 +83,6 @@ public class ComboRight extends AdminRight {
 
     @Override
     boolean grantableOnTargetType(TargetType targetType) {
-        targetType = GroupUtil.disguiseDynamicGroupAsDL(targetType);
         
         // true if *all* of the rights in the combo right are 
         // grantable on targetType

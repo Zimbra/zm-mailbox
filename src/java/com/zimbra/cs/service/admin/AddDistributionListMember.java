@@ -22,6 +22,7 @@ import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ShareInfo;
@@ -65,7 +66,7 @@ public class AddDistributionListMember extends AdminDocumentHandler {
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
 
         if (group.isDynamic()) {
-            // TODO: fixme
+            checkDynamicGroupRight(zsc, (DynamicGroup) group, Admin.R_addGroupMember);
         } else {
             checkDistributionListRight(zsc, (DistributionList) group, Admin.R_addDistributionListMember);
         }
@@ -80,9 +81,11 @@ public class AddDistributionListMember extends AdminDocumentHandler {
         if (group.isDynamic()) {
             // do nothing for now
         } else {
-            boolean sendShareInfoMsg = group.getBooleanAttr(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, true);
-            if (sendShareInfoMsg)
+            boolean sendShareInfoMsg = 
+                group.getBooleanAttr(Provisioning.A_zimbraDistributionListSendShareMessageToNewMembers, true);
+            if (sendShareInfoMsg) {
                 ShareInfo.NotificationSender.sendShareInfoMessage(octxt, (DistributionList) group, members);
+            }
         }
         
         Element response = zsc.createElement(AdminConstants.ADD_DISTRIBUTION_LIST_MEMBER_RESPONSE);
@@ -92,5 +95,6 @@ public class AddDistributionListMember extends AdminDocumentHandler {
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_addDistributionListMember);
+        relatedRights.add(Admin.R_addGroupMember);
     }
 }

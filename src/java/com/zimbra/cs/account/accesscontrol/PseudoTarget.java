@@ -260,15 +260,16 @@ public class PseudoTarget {
             targetType == TargetType.dl ||
             targetType == TargetType.group) {
             
-            if (createPseudoDomain)
+            if (createPseudoDomain) {
                 domain = pseudoDomain = (Domain)createPseudoTarget(prov, TargetType.domain, null, null, false, null, null);
-            else {
+            } else {
                 if (domainBy == null || domainStr == null)
                     throw ServiceException.INVALID_REQUEST("domainBy and domain identifier is required", null);
                 domain = prov.get(domainBy, domainStr);
             }
-            if (domain == null)
+            if (domain == null) {
                 throw AccountServiceException.NO_SUCH_DOMAIN(domainStr);
+            }
         }
         
         switch (targetType) {
@@ -277,29 +278,35 @@ public class PseudoTarget {
             Cos cos = null;
             if (cosBy != null && cosStr != null) {
                 cos = prov.get(cosBy, cosStr);
-                if (cos == null)
+                if (cos == null) {
                     throw AccountServiceException.NO_SUCH_COS(cosStr);
+                }
                 attrMap.put(Provisioning.A_zimbraCOSId, cos.getId());
             } else {
                 String domainCosId = domain != null ? domain.getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null) : null;
-                if (domainCosId != null) cos = prov.get(Key.CosBy.id, domainCosId);
-                if (cos == null) cos = prov.get(Key.CosBy.name, Provisioning.DEFAULT_COS_NAME);
+                if (domainCosId != null) {
+                    cos = prov.get(Key.CosBy.id, domainCosId);
+                }
+                if (cos == null) { 
+                    cos = prov.get(Key.CosBy.name, Provisioning.DEFAULT_COS_NAME);
+                }
             }
             
-            if (targetType == TargetType.account)
+            if (targetType == TargetType.account) {
                 targetEntry = new PseudoAccount("pseudo@"+domain.getName(),
                                            zimbraId,
                                            attrMap,
                                            cos.getAccountDefaults(),
                                            prov,
                                            pseudoDomain);
-            else
+            } else {
                 targetEntry = new PseudoCalendarResource("pseudo@"+domain.getName(),
                                            zimbraId,
                                            attrMap,
                                            cos.getAccountDefaults(),
                                            prov,
                                            pseudoDomain);
+            }
             break;
             
         case cos:  

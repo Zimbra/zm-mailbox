@@ -115,18 +115,21 @@ public enum GranteeType {
         switch (granteeType) {
         case GT_USER:
             granteeEntry = prov.get(AccountBy.fromString(granteeBy.name()), grantee);
-            if (granteeEntry == null)
+            if (granteeEntry == null) {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(grantee); 
+            }
             break;
         case GT_GROUP:
-            granteeEntry = prov.getDLBasic(Key.DistributionListBy.fromString(granteeBy.name()), grantee);
-            if (granteeEntry == null)
+            granteeEntry = prov.getGroupBasic(Key.DistributionListBy.fromString(granteeBy.name()), grantee);
+            if (granteeEntry == null) {
                 throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(grantee); 
+            }
             break;
         case GT_DOMAIN:
             granteeEntry = prov.get(Key.DomainBy.fromString(granteeBy.name()), grantee);
-            if (granteeEntry == null)
-                throw AccountServiceException.NO_SUCH_DOMAIN(grantee); 
+            if (granteeEntry == null) {
+                throw AccountServiceException.NO_SUCH_DOMAIN(grantee);
+            }
             break;
         default:
             throw ServiceException.INVALID_REQUEST("invallid grantee type for lookupGrantee:" + 

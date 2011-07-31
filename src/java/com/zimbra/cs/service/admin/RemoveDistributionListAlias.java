@@ -20,12 +20,12 @@ import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
@@ -41,7 +41,8 @@ public class RemoveDistributionListAlias extends AdminDocumentHandler {
         return true;
     }
 
-	public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+	public Element handle(Element request, Map<String, Object> context) 
+	throws ServiceException {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
@@ -57,7 +58,7 @@ public class RemoveDistributionListAlias extends AdminDocumentHandler {
         String dlName = "";
         if (group != null) {
             if (group.isDynamic()) {
-                // TODO: FIX ME
+                checkDynamicGroupRight(zsc, (DynamicGroup) group, Admin.R_removeGroupAlias);
             } else {
                 checkDistributionListRight(zsc, (DistributionList) group, Admin.R_removeDistributionListAlias);
             }
@@ -74,8 +75,9 @@ public class RemoveDistributionListAlias extends AdminDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "RemoveDistributionListAlias", "name", dlName, "alias", alias})); 
         
-        if (group == null)
+        if (group == null) {
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
+        }
         
 	    Element response = zsc.createElement(AdminConstants.REMOVE_DISTRIBUTION_LIST_ALIAS_RESPONSE);
 	    return response;
@@ -84,6 +86,7 @@ public class RemoveDistributionListAlias extends AdminDocumentHandler {
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_removeDistributionListAlias);
+        relatedRights.add(Admin.R_removeGroupAlias);
         relatedRights.add(Admin.R_deleteAlias);
     }
 }

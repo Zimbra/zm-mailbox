@@ -43,20 +43,30 @@ class UBIDLdapException {
         
         if (ResultCode.ENTRY_ALREADY_EXISTS == rc) {
             return LdapException.ENTRY_ALREADY_EXIST(message, e);
+            
         } else if (ResultCode.NOT_ALLOWED_ON_NONLEAF == rc) {
             return LdapException.CONTEXT_NOT_EMPTY(message, e);
+            
         } else if (ResultCode.UNDEFINED_ATTRIBUTE_TYPE == rc) { 
             return LdapException.INVALID_ATTR_NAME(message, e);
+            
         } else if (ResultCode.CONSTRAINT_VIOLATION == rc ||
                 ResultCode.INVALID_ATTRIBUTE_SYNTAX == rc) {
             return LdapException.INVALID_ATTR_VALUE(message, e);
+            
+        } else if (ResultCode.OBJECT_CLASS_VIOLATION == rc) {
+            return LdapException.OBJECT_CLASS_VIOLATION(message, e);
+            
         } else if (ResultCode.SIZE_LIMIT_EXCEEDED == rc) {
             return LdapException.SIZE_LIMIT_EXCEEDED(message, e);
+            
         } else if (ResultCode.NO_SUCH_OBJECT == rc) { 
             // mostly when the search base DB does not exist in the DIT
             return LdapException.ENTRY_NOT_FOUND(message, e);
+            
         } else if (ResultCode.FILTER_ERROR == rc) { 
             return LdapException.INVALID_SEARCH_FILTER(message, e);
+            
         }
         
         return LdapException.LDAP_ERROR(message, e);
