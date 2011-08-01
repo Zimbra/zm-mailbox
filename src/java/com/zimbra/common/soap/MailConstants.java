@@ -1069,7 +1069,6 @@ public final class MailConstants {
     public static final String E_UPLOAD = "upload";
     public static final String A_VERSION = "ver";
     public static final String A_SUBJECT = "su";
-    public static final String A_MODIFIED_DATE = "md";
     public static final String A_LAST_EDITED_BY = "leb";
     public static final String A_COUNT = "count";
     public static final String A_TRAVERSE = "tr";
