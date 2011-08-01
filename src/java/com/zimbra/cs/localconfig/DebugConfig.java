@@ -1,23 +1,16 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on 2005. 4. 25.
- *
- * TODO To change the template for this generated file go to
- * Window - Preferences - Java - Code Style - Code Templates
  */
 package com.zimbra.cs.localconfig;
 
@@ -27,8 +20,13 @@ import com.zimbra.common.localconfig.LC;
  * Various switches to turn features on/off, mainly for measuring the
  * performance overhead.  Refer to the code that uses these keys to
  * see precisely which code paths are avoided by turning a feature off.
+ *
+ * @since 2005. 4. 25.
  */
-public class DebugConfig {
+public final class DebugConfig {
+
+    private DebugConfig() {
+    }
 
     /** If true, then we do ICalendar Validation every time we generate
      *  ICalendar data. */
@@ -173,15 +171,16 @@ public class DebugConfig {
     public static int imapNoninteractiveSessionLimit;
     public static boolean imapTerminateSessionOnClose;
     public static boolean imapSerializeSessionOnClose;
-    
-	// For QA only. bug 57279
+    public static final boolean imapProxyToLocalhost = booleanValue("imap_proxy_to_localhost", false);
+
+    // For QA only. bug 57279
     public static boolean allowModifyingDeprecatedAttributes;
 
     public static boolean enableRdate;
     public static boolean enableThisAndFuture;
 
     public static boolean caldavAllowAttendeeForOrganizer;
-    
+
     public static boolean certAuthCaptureClientCertificate;
 
     static {
@@ -260,7 +259,7 @@ public class DebugConfig {
         enableThisAndFuture = booleanValue("debug_enable_calendar_thisandfuture", false);
 
         caldavAllowAttendeeForOrganizer = booleanValue("debug_caldav_allow_attendee_for_organizer", false);
-        
+
         certAuthCaptureClientCertificate = booleanValue("debug_certauth_capture_client_certificate", false);
     }
 

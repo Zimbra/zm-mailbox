@@ -30,9 +30,9 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
 
-class TcpImapHandler extends ImapHandler {
+final class TcpImapHandler extends ImapHandler {
     private TcpServerInputStream mInputStream;
-    private String mRemoteAddress;
+    private String remoteIp;
     private TcpImapRequest request;
 
     TcpImapHandler(ImapServer server) {
@@ -40,8 +40,13 @@ class TcpImapHandler extends ImapHandler {
     }
 
     @Override
+    String getRemoteIp() {
+        return remoteIp;
+    }
+
+    @Override
     protected boolean setupConnection(Socket connection) throws IOException {
-        mRemoteAddress = connection.getInetAddress().getHostAddress();
+        remoteIp = connection.getInetAddress().getHostAddress();
         INFO("connected");
 
         mInputStream = new TcpServerInputStream(connection.getInputStream());
@@ -77,7 +82,7 @@ class TcpImapHandler extends ImapHandler {
             clearRequest();
             return STOP_PROCESSING;
         }
-        setUpLogContext(mRemoteAddress);
+        setLoggingContext();
 
         if (request == null) {
             request = new TcpImapRequest(mInputStream, this);
@@ -188,7 +193,7 @@ class TcpImapHandler extends ImapHandler {
         if (mCredentials != null && !mGoodbyeSent) {
             ZimbraLog.imap.info("dropping connection for user " + mCredentials.getUsername() + " (server-initiated)");
         }
-        ZimbraLog.addIpToContext(mRemoteAddress);
+        ZimbraLog.addIpToContext(remoteIp);
         try {
             OutputStream os = mOutputStream;
             if (os != null) {
@@ -267,6 +272,6 @@ class TcpImapHandler extends ImapHandler {
         int length = 64;
         if (message != null)
             length += message.length();
-        return new StringBuilder(length).append("[").append(mRemoteAddress).append("] ").append(message);
+        return new StringBuilder(length).append("[").append(remoteIp).append("] ").append(message);
     }
 }

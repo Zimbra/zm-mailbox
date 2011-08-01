@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -25,7 +25,7 @@ import com.zimbra.cs.util.Config;
 import java.io.IOException;
 import java.net.Socket;
 
-class MinaImapHandler extends ImapHandler implements MinaHandler {
+final class MinaImapHandler extends ImapHandler implements MinaHandler {
     private MinaImapServer mServer;
     private MinaSession mSession;
     private MinaImapRequest mRequest;
@@ -38,6 +38,12 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
         this.mServer = server;
         this.mSession = session;
         mOutputStream = mSession.getOutputStream();
+    }
+
+
+    @Override
+    String getRemoteIp() {
+        return mSession.getRemoteAddress().getAddress().getHostAddress();
     }
 
     @Override boolean doSTARTTLS(String tag) throws IOException {
@@ -77,7 +83,7 @@ class MinaImapHandler extends ImapHandler implements MinaHandler {
 
         if (mRequest.parse(msg)) {
             // Request is complete
-            setUpLogContext(mSession.getRemoteAddress().toString());
+            setLoggingContext();
             try {
                 if (!processRequest(mRequest))
                     dropConnection();

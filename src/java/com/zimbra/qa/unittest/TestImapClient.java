@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -310,13 +310,13 @@ public class TestImapClient {
     @Test
     public void testID() throws Exception {
         IDInfo id = new IDInfo();
-        id.setName("foo");
-        assertEquals("foo", id.getName());
+        id.put(IDInfo.NAME, "foo");
+        assertEquals("foo", id.get(IDInfo.NAME));
         assertEquals("foo", id.get("Name"));
         connect();
         IDInfo id1 = connection.id(id);
         assertNotNull(id1);
-        assertEquals("Zimbra", id1.getName());
+        assertEquals("Zimbra", id1.get(IDInfo.NAME));
         IDInfo id2 = connection.id();
         assertEquals(id1, id2);
     }

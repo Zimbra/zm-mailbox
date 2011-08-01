@@ -32,16 +32,18 @@ import com.zimbra.cs.mailclient.MailConfig;
 import com.zimbra.cs.mailclient.MailInputStream;
 import com.zimbra.cs.mailclient.auth.Authenticator;
 import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
+import com.zimbra.cs.mailclient.imap.IDInfo;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.util.BuildInfo;
 
-class ImapProxy {
+final class ImapProxy {
     private static final AuthenticatorFactory sAuthenticatorFactory = new AuthenticatorFactory();
-        static {
-            sAuthenticatorFactory.register(ZimbraAuthenticator.MECHANISM, ZimbraClientAuthenticator.class);
-        }
+    static {
+        sAuthenticatorFactory.register(ZimbraAuthenticator.MECHANISM, ZimbraClientAuthenticator.class);
+    }
 
     private final ImapHandler mHandler;
     private final ImapPath mPath;
@@ -74,11 +76,17 @@ class ImapProxy {
             throw ServiceException.PROXY_ERROR(new Exception("no open IMAP port for server " + host), path.asImapPath());
         }
 
-        ZimbraLog.imap.info("opening proxy connection (user=" + acct.getName() + ", host=" + host + ", path=" + path.getReferent().asImapPath() + ')');
+        ZimbraLog.imap.info("opening proxy connection (user=%s, host=%s, path=%s)",
+                acct.getName(), host, path.getReferent().asImapPath());
 
+        IDInfo id = new IDInfo();
+        id.put(IDInfo.NAME, "ZCS");
+        id.put(IDInfo.VERSION, BuildInfo.VERSION);
+        id.put(IDInfo.X_VIA, mHandler.getNextVia());
         ImapConnection conn = mConnection = new ImapConnection(config);
         try {
             conn.connect();
+            conn.id(id);
             conn.authenticate(AuthProvider.getAuthToken(acct).getEncoded());
         } catch (Exception e) {
             dropConnection();
