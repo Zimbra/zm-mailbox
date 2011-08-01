@@ -379,32 +379,6 @@ public class DavContext {
 		return false;
 	}
 	
-	private boolean getLimitByFileUploadMaxSize() {
-        boolean limitByFileUploadMaxSize = false;               
-        DavResource rs = null;
-        Collection parentCollection = null;
-        try {
-            rs = getRequestedResource();
-        } catch (DavException de) {
-            // ignore the error. the resource may not exist yet.
-        } catch (ServiceException e) {
-            // ignore the error. the resource may not exist yet.
-        }
-        try {
-            if ((rs != null) && (rs instanceof Collection))
-                parentCollection = (Collection) rs;
-            else 
-                parentCollection = getRequestedParentCollection();
-        } catch (DavException de) {
-            // ignore the error. The parent could be a mounted subcollection and PROPFIND requests are not proxied.
-        } catch (ServiceException e) {
-            // ignore the error. The parent could be a mounted subcollection and PROPFIND requests are not proxied.
-        }
-        if ( (parentCollection != null) && (parentCollection.getDefaultView() == MailItem.Type.DOCUMENT || parentCollection.getDefaultView() == MailItem.Type.UNKNOWN))
-            limitByFileUploadMaxSize = true;
-	    return limitByFileUploadMaxSize;
-	}
-	
 	public FileUploadServlet.Upload getUpload() throws DavException, IOException {
 		if (mUpload == null) {
 			String name = null;
@@ -412,7 +386,7 @@ public class DavContext {
 			if (ctype == null)
                 name = getItem();
 			try {			 
-			    mUpload = FileUploadServlet.saveUpload(mReq.getInputStream(), name, ctype, mAuthAccount.getId(), getLimitByFileUploadMaxSize());
+			    mUpload = FileUploadServlet.saveUpload(mReq.getInputStream(), name, ctype, mAuthAccount.getId(), true);
                 ZimbraLog.dav.debug("Request: requested content-type: %s, actual content-type: %s", ctype, mUpload.getContentType());
 			} catch (ServiceException se) {
 				throw new DavException("can't save upload", se);
