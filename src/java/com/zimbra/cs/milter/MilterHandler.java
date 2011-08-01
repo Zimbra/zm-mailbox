@@ -16,16 +16,21 @@ package com.zimbra.cs.milter;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.mina.core.buffer.IoBuffer;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DistributionList;
@@ -41,6 +46,7 @@ import com.zimbra.cs.server.NioHandler;
  * <ul>
  *  <li>Check ACL to see if the sender is allowed to send a message to the DL.
  *  <li>Add {@code List-Id} header (RFC 2919) if the recipient is a DL.
+ *  <li>Add {@code Reply-To} header if the recipient is a DL.
  * </ul>
  *
  * @see http://cpansearch.perl.org/src/AVAR/Sendmail-PMilter-1.00/doc/milter-protocol.txt
@@ -71,7 +77,7 @@ public final class MilterHandler implements NioHandler {
     //private static final int SMFIF_CHGBODY = 0x02; // Change body chunks (SMFIR_REPLBODY)
     //private static final int SMFIF_ADDRCPT = 0x04; // Add recipients (SMFIR_ADDRCPT)
     //private static final int SMFIF_DELRCPT = 0x08; // Remove recipients (SMFIR_DELRCPT)
-    //private static final int SMFIF_CHGHDRS = 0x10; // Change or delete headers (SMFIR_CHGHEADER)
+    private static final int SMFIF_CHGHDRS = 0x10; // Change or delete headers (SMFIR_CHGHEADER)
     //private static final int SMFIF_QUARANTINE = 0x20; // Quarantine message (SMFIR_QUARANTINE)
 
     // response codes
@@ -82,7 +88,7 @@ public final class MilterHandler implements NioHandler {
     private static final byte SMFIR_CONTINUE = 'c'; // Accept and keep processing (accept/reject action)
     //private static final byte SMFIR_DISCARD = 'd'; // Set discard flag for entire message (accept/reject action)
     private static final byte SMFIR_ADDHEADER = 'h'; // Add header (modification action)
-    //private static final byte SMFIR_CHGHEADER = 'm'; // Change header (modification action)
+    private static final byte SMFIR_CHGHEADER = 'm'; // Change header (modification action)
     //private static final byte SMFIR_PROGRESS = 'p'; // Progress (asynchronous action)
     //private static final byte SMFIR_QUARANTINE = 'q'; // Quarantine message (modification action)
     //private static final byte SMFIR_REJECT = 'r'; // Reject command/recipient with a 5xx (accept/reject action)
@@ -93,7 +99,7 @@ public final class MilterHandler implements NioHandler {
     private static final Charset CHARSET = Charsets.US_ASCII;
 
     private final Map<Context, String> context = new EnumMap<Context, String>(Context.class);
-    private final Set<String> lists = Sets.newHashSetWithExpectedSize(0);
+    private final Set<DistributionList> lists = Sets.newHashSetWithExpectedSize(0);
     private final Provisioning prov;
     private final AccessManager accessMgr;
     private final NioConnection connection;
@@ -246,6 +252,15 @@ public final class MilterHandler implements NioHandler {
         connection.send(new MilterPacket(len, SMFIR_REPLYCODE, data));
     }
 
+    private void SMFIR_ChgHeader(int index, String name, String value) throws IOException {
+        // sizeof(unit32) + name.length + NUL + value.length + NUL
+        IoBuffer buf = IoBuffer.allocate(6 + name.length() + value.length());
+        buf.putUnsignedInt(index);
+        buf.putString(name, name.length() + 1, CHARSET.newEncoder());
+        buf.putString(value, value.length() + 1, CHARSET.newEncoder());
+        connection.send(new MilterPacket(buf.position() + 1, SMFIR_CHGHEADER, buf.array()));
+    }
+
     private void SMFIC_Connect(MilterPacket command) throws IOException {
         ZimbraLog.milter.debug("SMFIC_Connect");
         IoBuffer data = getDataBuffer(command);
@@ -284,7 +299,7 @@ public final class MilterHandler implements NioHandler {
                 SMFIR_ReplyCode("571", "571 Sender is not allowed to email this distribution list: " + rcpt);
                 return;
             }
-            lists.add(rcpt.replace('@', '.'));
+            lists.add(dl);
         }
         connection.send(new MilterPacket(SMFIR_CONTINUE));
     }
@@ -311,7 +326,7 @@ public final class MilterHandler implements NioHandler {
         ZimbraLog.milter.debug("SMFIC_OptNeg");
         IoBuffer data = IoBuffer.allocate(12, false);
         data.putInt(2); // version
-        data.putInt(SMFIF_ADDHDRS); // actions
+        data.putInt(SMFIF_ADDHDRS | SMFIF_CHGHDRS); // actions
         data.putInt(SMFIP_NOHELO | SMFIP_NOMAIL | SMFIP_NOHDRS | SMFIP_NOEOH | SMFIP_NOBODY); // protocol
         byte[] dataArray = new byte[12];
         System.arraycopy(data.array(), 0, dataArray, 0, 12);
@@ -323,18 +338,33 @@ public final class MilterHandler implements NioHandler {
         connection.send(new MilterPacket(SMFIR_ACCEPT)); // stop processing when we hit headers
     }
 
-    /**
-     * Add {@code List-Id} header (RFC 2919) if the recipient is a DL.
-     */
-    private void SMFIC_BodyEOB() {
+    private void SMFIC_BodyEOB() throws IOException {
         ZimbraLog.milter.debug("SMFIC_BodyEOB");
-        for (String list : lists) {
+        List<String> replyToAddrs = new ArrayList<String>(lists.size());
+        for (DistributionList dl : lists) {
+            String list = dl.getMail().replace('@', '.');
             ZimbraLog.milter.info("Add List-Id header (RFC 2919): %s", list);
             // 'h'  SMFIR_ADDHEADER Add header (modification action)
             // char    name[]      Name of header, NUL terminated
             // char    value[]     Value of header, NUL terminated
-            String header = "List-Id\0<" + list + ">\0";
-            connection.send(new MilterPacket(header.length() + 1, SMFIR_ADDHEADER, header.getBytes(CHARSET)));
+            String listId = "List-Id\0<" + list + ">\0";
+            connection.send(new MilterPacket(listId.length() + 1, SMFIR_ADDHEADER, listId.getBytes(CHARSET)));
+
+            if (dl.isPrefReplyToEnabled()) {
+                String addr = dl.getPrefReplyToAddress();
+                if (Strings.isNullOrEmpty(addr)) {
+                    addr = dl.getMail(); // fallback to the default email address
+                }
+                String disp = dl.getPrefReplyToDisplay();
+                if (Strings.isNullOrEmpty(disp)) {
+                    disp = dl.getDisplayName(); // fallback to the default display name
+                }
+                replyToAddrs.add(new InternetAddress(disp, addr).toString());
+            }
+        }
+        if (!replyToAddrs.isEmpty()) {
+            // replace Reply-To if exists, otherwise add one.
+            SMFIR_ChgHeader(1, "Reply-To", Joiner.on(", ").join(replyToAddrs));
         }
         connection.send(new MilterPacket(SMFIR_ACCEPT));
     }
