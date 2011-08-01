@@ -43,6 +43,9 @@ public class CalItemRequestBase {
 
     @XmlElement(name=MailConstants.E_MSG /* m */, required=false)
     private CalendarItemMsg msg;
+    
+    @XmlAttribute(name=MailConstants.A_CAL_FORCESEND /* forcesend */, required=false)
+    private Boolean forceSend;
 
     public CalItemRequestBase() {
     }
@@ -52,11 +55,13 @@ public class CalItemRequestBase {
     public void setWantHtml(Boolean wantHtml) { this.wantHtml = wantHtml; }
     public void setNeuter(Boolean neuter) { this.neuter = neuter; }
     public void setMsg(CalendarItemMsg msg) { this.msg = msg; }
+    public void setForceSend(Boolean force) { this.forceSend = force; }
     public Boolean getEcho() { return echo; }
     public Integer getMaxSize() { return maxSize; }
     public Boolean getWantHtml() { return wantHtml; }
     public Boolean getNeuter() { return neuter; }
     public CalendarItemMsg getMsg() { return msg; }
+    public Boolean getForceSend() { return forceSend; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
