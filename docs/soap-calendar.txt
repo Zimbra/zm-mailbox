@@ -49,6 +49,8 @@
 <CreateAppointmentRequest
     [echo="1"]  // if specified, the created appointment is echoed back in the response as if a GetMsgRequest was made
     [max="{max-inlined-length}"] [html="*0|1"] [neuter="0|*1"]  // options for echoing
+    [forcesend="0|1"] // if set to 1, ignore smtp 550 errors when sending the notification to attendees. The default is 1.
+                      // if set to 0, throw the soapfaultexception with invalid addresses so that client can give forcesend option to enduser. 
 >
   <m f="{flags}" l="{folder}">  // See soap.txt for complete list of attrs on <m>
      [<e .../>*]  // users to send request to
@@ -398,7 +400,10 @@
 //  On the other hand, if a user clicks on the 6/15 9am appointment and wants to modify it,
 //  then this is the right API to use.
 //
-<CreateAppointmentException [id="ID_DEFAULT_INVITE" comp="COMP_DEFAULT_INVITE"] >
+<CreateAppointmentException [id="ID_DEFAULT_INVITE" comp="COMP_DEFAULT_INVITE"] 
+    [forcesend="0|1"] // if set to 1, ignore smtp 550 errors when sending the notification to attendees. The default is 1.
+                      // if set to 0, throw the soapfaultexception with invalid addresses so that client can give forcesend option to enduser. 
+>
   <m f="{flags}" l="{folder}">
      ...
      <inv [uid="uid-for-create"]>  // optional: client can request the UID to use
@@ -839,6 +844,9 @@ OR
     ms="change-sequence of fetched version" rev="revision of fetched version"
     [echo="1"]  // if specified, the modified appointment is echoed back in the response as if a GetMsgRequest was made
     [max="{max-inlined-length}"] [html="*0|1"] [neuter="0|*1"]  // options for echoing
+    [forcesend="0|1"] // if set to 1, ignore smtp 550 errors when sending the notification to attendees. The default is 1.
+                      // if set to 0, throw the soapfaultexception with invalid addresses so that client can give forcesend option to enduser. 
+    
 >
    rest is SAME as CreateAppointmentRequest
 </ModifyAppointmentRequest>

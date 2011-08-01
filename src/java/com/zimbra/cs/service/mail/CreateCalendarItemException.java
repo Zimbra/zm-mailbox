@@ -176,8 +176,8 @@ public class CreateCalendarItemException extends CalendarRequest {
                 // !series.isNeverSent() ? false : true ==> series.isNeverSent()
                 dat.mInvite.setNeverSent(inv.isNeverSent());
             }
-
-            sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response);
+            boolean forceSend = request.getAttributeBool(MailConstants.A_CAL_FORCESEND, true);
+            sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true, forceSend);
             boolean echo = request.getAttributeBool(MailConstants.A_CAL_ECHO, false);
             if (echo && dat.mAddInvData != null) {
                 int maxSize = (int) request.getAttributeLong(MailConstants.A_MAX_INLINED_LENGTH, 0);

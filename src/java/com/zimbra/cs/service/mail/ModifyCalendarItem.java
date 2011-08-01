@@ -220,7 +220,7 @@ public class ModifyCalendarItem extends CalendarRequest {
         int maxSize = (int) request.getAttributeLong(MailConstants.A_MAX_INLINED_LENGTH, 0);
         boolean wantHTML = request.getAttributeBool(MailConstants.A_WANT_HTML, false);
         boolean neuter = request.getAttributeBool(MailConstants.A_NEUTER, true);
- 
+        boolean forceSend = request.getAttributeBool(MailConstants.A_CAL_FORCESEND, true);
         if (inv.isOrganizer()) {
             // Notify removed attendees before making any changes to the appointment.
             List<ZAttendee> atsCanceled = parser.getAttendeesCanceled();
@@ -239,7 +239,7 @@ public class ModifyCalendarItem extends CalendarRequest {
                 // own appointment without notifying any attendees.  Notifications will be sent later,
                 removeAllRecipients(dat.mMm);
                 // Save the change to the series as specified by the client.
-                sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true);
+                sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true, forceSend);
 
                 // Echo the updated inv in the response.
                 if (echo && dat.mAddInvData != null) {
@@ -261,7 +261,7 @@ public class ModifyCalendarItem extends CalendarRequest {
                 // Modifying a one-off appointment or an exception instance.  There are no
                 // complications like in the series update case.  Just update the invite with the
                 // data supplied by the client, and let the built-in notification take place.
-                sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true);
+                sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true, forceSend);
 
                 // Echo the updated inv in the response.
                 if (echo && dat.mAddInvData != null) {
@@ -270,7 +270,7 @@ public class ModifyCalendarItem extends CalendarRequest {
             }
         } else {  // not organizer
             // Apply the change.
-            sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true);
+            sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true, forceSend);
 
             // Echo the updated inv in the response.
             if (echo && dat.mAddInvData != null) {

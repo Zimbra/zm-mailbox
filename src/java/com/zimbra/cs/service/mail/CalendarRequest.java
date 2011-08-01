@@ -28,49 +28,46 @@ import java.util.Locale;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
+import javax.mail.SendFailedException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.service.ServiceException.Argument;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.MailUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.Element;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.mailbox.CalendarItem;
-import com.zimbra.cs.mailbox.DeliveryOptions;
-import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailSender;
-import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.Mailbox.AddInviteData;
-import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
-import com.zimbra.cs.mailbox.calendar.Invite;
-import com.zimbra.cs.mailbox.calendar.RecurId;
-import com.zimbra.cs.mailbox.calendar.ZAttendee;
-import com.zimbra.cs.mime.MPartInfo;
-import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.mime.Mime.FixedMimeMessage;
-import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.util.Zimbra;
-import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
+import com.zimbra.common.util.MailUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.CalendarItem;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailSender;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.AddInviteData;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
+import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.calendar.RecurId;
+import com.zimbra.cs.mailbox.calendar.ZAttendee;
+import com.zimbra.cs.mime.MPartInfo;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.Mime.FixedMimeMessage;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.service.util.ItemIdFormatter;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class CalendarRequest extends MailDocumentHandler {
@@ -210,7 +207,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         CalSendData csd,
         Element response)
     throws ServiceException {
-        return sendCalendarMessage(zsc, octxt, apptFolderId, acct, mbox, csd, response, true);
+        return sendCalendarMessage(zsc, octxt, apptFolderId, acct, mbox, csd, response, true, true);
     }
 
     protected static Element sendCalendarMessage(
@@ -221,11 +218,12 @@ public abstract class CalendarRequest extends MailDocumentHandler {
             Mailbox mbox,
             CalSendData csd,
             Element response,
-            boolean updateOwnAppointment)
+            boolean updateOwnAppointment,
+            boolean forceSend)
         throws ServiceException {
             return sendCalendarMessageInternal(zsc, octxt, apptFolderId,
                                                acct, mbox, csd, response,
-                                               updateOwnAppointment);
+                                               updateOwnAppointment, forceSend);
         }
 
     /**
@@ -254,7 +252,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         boolean cancelOwnAppointment)
     throws ServiceException {
         return sendCalendarMessageInternal(zsc, octxt, apptFolderId, acct, mbox, csd,
-                                           null, cancelOwnAppointment);
+                                           null, cancelOwnAppointment, true);
     }
 
     /**
@@ -279,7 +277,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         Mailbox mbox,
         CalSendData csd,
         Element response,
-        boolean updateOwnAppointment)
+        boolean updateOwnAppointment, boolean forceSend)
     throws ServiceException {
         boolean onBehalfOf = isOnBehalfOfRequest(zsc);
         boolean notifyOwner = onBehalfOf && acct.getBooleanAttr(Provisioning.A_zimbraPrefCalendarNotifyDelegatedChanges, false);
@@ -356,6 +354,17 @@ public abstract class CalendarRequest extends MailDocumentHandler {
         AddInviteData aid = null;
         try {
             if (!csd.mInvite.isCancel()) {
+                // Validate the addresses first.
+                if (!forceSend && !csd.mDontNotifyAttendees) {
+                    try {
+                        MailUtil.validateRcptAddresses(JMSession.getSmtpSession(mbox.getAccount()), csd.mMm.getAllRecipients());
+                    } catch (MessagingException mex) {
+                        if (mex instanceof SendFailedException) {
+                            SendFailedException sfex = (SendFailedException) mex;
+                            throw MailServiceException.SEND_ABORTED_ADDRESS_FAILURE("invalid addresses", sfex, sfex.getInvalidAddresses(), sfex.getValidUnsentAddresses());
+                        }
+                    }
+                }    
                 // For create/modify requests, we want to first update the local mailbox (organizer's)
                 // and send invite emails only if local change succeeded.  This order is also necessary
                 // because of the side-effect relating to attachments.  (see below comments)
@@ -368,31 +377,8 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 // Next, notify any attendees.
                 if (!csd.mDontNotifyAttendees) {
                     // All calendar-related emails are sent in sendpartial mode.
-                	try {
-                		mbox.getMailSender().setSendPartial(true).sendMimeMessage(
-                            octxt, mbox, csd.mMm, csd.uploads, csd.mOrigId, csd.mReplyType, csd.mIdentityId, false);
-                	} catch (MailServiceException e) {
-                        if (e.getCode().equals(MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE)) {
-                            ZimbraLog.calendar.info("Unable to send to some addresses: " + e);
-                            // place delivery failure in inbox
-                            String subject = "<No Subject>";
-                            try {
-                                subject = csd.mMm.getSubject();
-                            } catch (MessagingException e1) {
-                                // ignore
-                            }
-                            Mailbox mb;
-                            if (onBehalfOf) {
-                                Account authAccount = octxt.getAuthenticatedUser();
-                                mb = MailboxManager.getInstance().getMailboxByAccountId(authAccount.getId());
-                            } else {
-                                mb = mbox;
-                            }	
-                            insertDeliveryFailureMessage(octxt, mb, subject, e.getArgs());
-                        } else {
-                            throw e;
-                        }
-                	}
+                    CalendarMailSender.sendPartial(octxt, mbox, csd.mMm, csd.uploads, csd.mOrigId,
+                            csd.mReplyType, csd.mIdentityId, false);
                 }   
             } else {
                 // But if we're sending a cancel request, send emails first THEN update the local mailbox.
@@ -436,22 +422,6 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 
         return response;
     }
-
-    private static void insertDeliveryFailureMessage(OperationContext octxt, Mailbox mbox, String subject, Argument[] addressArgs) {
-    	try {
-    		MimeMessage failedDeliverymm = new Mime.FixedMimeMessage(JMSession.getSession());
-    		MailUtil.populateFailureDeliveryMessageFields(failedDeliverymm, subject, mbox.getAccount().getName(), addressArgs);
-        
-    		Mime.recursiveRepairTransferEncoding(failedDeliverymm);
-    		failedDeliverymm.saveChanges();
-        
-    		ParsedMessage pm = new ParsedMessage(failedDeliverymm, true);
-    		DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setNoICal(true).setFlags(Flag.BITMASK_UNREAD);
-    		mbox.addMessage(octxt, pm, dopt, null);
-        } catch (Exception e) {
-            ZimbraLog.sync.warn("Can't add the partial send failure notice to the user's INBOX " + e);
-        }
-    }
     
     protected static Element echoAddedInvite(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Mailbox mbox,
                                              AddInviteData aid, int maxSize, boolean wantHtml, boolean neuter)
@@ -484,7 +454,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                             csd.mMm = CalendarMailSender.createOrganizerChangeMessage(
                                     acct, authAccount, zsc.isUsingAdminPrivileges(), calItem, csd.mInvite, rcpts);
                             sendCalendarMessageInternal(zsc, octxt, calItem.getFolderId(), acct, mbox, csd,
-                                                        null, false);
+                                                        null, false, true);
                         }
                     }
                 } catch (ServiceException e) {

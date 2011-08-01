@@ -114,8 +114,8 @@ public class CreateCalendarItem extends CalendarRequest {
             // This is the case of organizer saving an invite with attendees, but without sending the notification.
             dat.mInvite.setNeverSent(true);
         }
-
-        sendCalendarMessage(zsc, octxt, iidFolder.getId(), acct, mbox, dat, response);
+        boolean forceSend = request.getAttributeBool(MailConstants.A_CAL_FORCESEND, true);
+        sendCalendarMessage(zsc, octxt, iidFolder.getId(), acct, mbox, dat, response, true, forceSend);
         boolean echo = request.getAttributeBool(MailConstants.A_CAL_ECHO, false);
         if (echo && dat.mAddInvData != null) {
             ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
