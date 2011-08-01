@@ -32,7 +32,7 @@ import com.zimbra.cs.util.MockTcpServer;
  *
  * @author ysasaki
  */
-public class ImapProxyTest {
+public final class ImapProxyTest {
     private static final int PORT = 9143;
     private MockTcpServer server;
 
@@ -50,6 +50,9 @@ public class ImapProxyTest {
             .recvLine() // CAPABILITY
             .sendLine("* CAPABILITY IMAP4rev1 AUTH=X-ZIMBRA")
             .reply(Pattern.compile("(.*) CAPABILITY"), "{0} OK CAPABILITY\r\n")
+            .recvLine() // ID
+            .sendLine("* ID (\"NAME\" \"Zimbra\")")
+            .reply(Pattern.compile("(.*) ID"), "{0} OK ID completed\r\n")
             .recvLine() // AUTHENTICATE
             .sendLine("+ ready for literal")
             .reply(Pattern.compile("(.*) AUTHENTICATE"), "{0} OK AUTHENTICATE\r\n")
@@ -70,6 +73,16 @@ public class ImapProxyTest {
 
         // verify BYE was not proxied
         Assert.assertEquals("001 OK NOOP\r\n", handler.output.toString());
+
+        server.shutdown(3000);
+        Assert.assertEquals("C01 CAPABILITY\r\n", server.replay());
+        String id = server.replay();
+        Assert.assertTrue(id, id.matches(
+                "C02 ID \\(\"name\" \"ZCS\" \"version\" \".*\" \"X-VIA\" \"127\\.0\\.0\\.1\"\\)\r\n"));
+        Assert.assertEquals("C03 AUTHENTICATE X-ZIMBRA\r\n", server.replay());
+        server.replay(); // auth token
+        Assert.assertEquals("001 NOOP\r\n", server.replay());
+        Assert.assertEquals(null, server.replay());
     }
 
     private static final class MockImapHandler extends ImapHandler {
@@ -77,6 +90,11 @@ public class ImapProxyTest {
         MockImapHandler() {
             super(new ImapConfig(false));
             output = new ByteArrayOutputStream();
+        }
+
+        @Override
+        String getRemoteIp() {
+            return "127.0.0.1";
         }
 
         @Override

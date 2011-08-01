@@ -254,23 +254,20 @@ public class ImapPath implements Comparable<ImapPath> {
     }
 
     Object getOwnerMailbox() throws ServiceException {
-        return getOwnerMailbox(true);
-    }
-
-    Object getOwnerMailbox(boolean traverse) throws ServiceException {
-        if (useReferent())
+        if (useReferent()) {
             return mReferent.getOwnerMailbox();
-
+        }
         if (mMailbox == null) {
             Account target = getOwnerAccount();
-            if (target == null)
+            if (target == null) {
                 mMailbox = null;
-            else if (Provisioning.onLocalServer(target))
+            } else if (Provisioning.onLocalServer(target)) {
                 mMailbox = MailboxManager.getInstance().getMailboxByAccount(target);
-            else if (mCredentials == null)
+            } else if (mCredentials == null) {
                 mMailbox = null;
-            else
+            } else {
                 mMailbox = getOwnerZMailbox();
+            }
         }
         return mMailbox;
     }

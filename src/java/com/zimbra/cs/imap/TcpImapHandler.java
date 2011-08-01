@@ -32,9 +32,9 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
 
-class TcpImapHandler extends ProtocolHandler {
+final class TcpImapHandler extends ProtocolHandler {
     private TcpServerInputStream input;
-    private String remoteAddress;
+    private String remoteIp;
     private TcpImapRequest request;
     private final ImapConfig config;
     private Socket socket;
@@ -49,7 +49,7 @@ class TcpImapHandler extends ProtocolHandler {
     @Override
     protected boolean setupConnection(Socket connection) throws IOException {
         socket = connection;
-        remoteAddress = socket.getInetAddress().getHostAddress();
+        remoteIp = socket.getInetAddress().getHostAddress();
         INFO("connected");
 
         input = new TcpServerInputStream(connection.getInputStream());
@@ -170,9 +170,10 @@ class TcpImapHandler extends ProtocolHandler {
 
     private StringBuilder withClientInfo(String message) {
         int length = 64;
-        if (message != null)
+        if (message != null) {
             length += message.length();
-        return new StringBuilder(length).append("[").append(remoteAddress).append("] ").append(message);
+        }
+        return new StringBuilder(length).append("[").append(remoteIp).append("] ").append(message);
     }
 
     @Override
@@ -189,6 +190,11 @@ class TcpImapHandler extends ProtocolHandler {
 
         HandlerDelegate(ImapConfig config) {
             super(config);
+        }
+
+        @Override
+        String getRemoteIp() {
+            return remoteIp;
         }
 
         @Override
@@ -232,7 +238,7 @@ class TcpImapHandler extends ProtocolHandler {
                 ZimbraLog.imap.info("dropping connection for user %s (server-initiated)", credentials.getUsername());
             }
 
-            ZimbraLog.addIpToContext(remoteAddress);
+            ZimbraLog.addIpToContext(remoteIp);
             try {
                 OutputStream os = output;
                 if (os != null) {
@@ -268,7 +274,7 @@ class TcpImapHandler extends ProtocolHandler {
 
         @Override
         void completeAuthentication() throws IOException {
-            delegate.setLoggingContext(remoteAddress);
+            delegate.setLoggingContext();
             authenticator.sendSuccess();
             if (authenticator.isEncryptionEnabled()) {
                 // switch to encrypted streams

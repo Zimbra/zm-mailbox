@@ -176,7 +176,7 @@ final class ConnectionManager {
         if (!ds.isOffline() && ic.hasCapability(ImapCapabilities.ID)) {
             try {
                 IDInfo id = ic.id();
-                if ("Zimbra".equalsIgnoreCase(id.getName())) {
+                if ("Zimbra".equalsIgnoreCase(id.get(IDInfo.NAME))) {
                     String user = id.get("user");
                     String server = id.get("server");
                     return user != null && user.equals(ds.getAccount().getName()) &&

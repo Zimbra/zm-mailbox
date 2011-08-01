@@ -39,6 +39,11 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     }
 
     @Override
+    String getRemoteIp() {
+        return connection.getRemoteAddress().getAddress().getHostAddress();
+    }
+
+    @Override
     public void connectionOpened() throws IOException {
         sendGreeting();
     }
@@ -160,7 +165,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
 
     @Override
     public void setLoggingContext() {
-        setLoggingContext(connection.getRemoteAddress().toString());
+        super.setLoggingContext();
     }
 
     @Override

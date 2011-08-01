@@ -310,13 +310,13 @@ public class TestImapClient {
     @Test
     public void testID() throws Exception {
         IDInfo id = new IDInfo();
-        id.setName("foo");
-        assertEquals("foo", id.getName());
+        id.put(IDInfo.NAME, "foo");
+        assertEquals("foo", id.get(IDInfo.NAME));
         assertEquals("foo", id.get("Name"));
         connect();
         IDInfo id1 = connection.id(id);
         assertNotNull(id1);
-        assertEquals("Zimbra", id1.getName());
+        assertEquals("Zimbra", id1.get(IDInfo.NAME));
         IDInfo id2 = connection.id();
         assertEquals(id1, id2);
     }

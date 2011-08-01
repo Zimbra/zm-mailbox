@@ -35,10 +35,12 @@ import com.zimbra.cs.mailclient.MailConfig;
 import com.zimbra.cs.mailclient.MailInputStream;
 import com.zimbra.cs.mailclient.auth.Authenticator;
 import com.zimbra.cs.mailclient.auth.AuthenticatorFactory;
+import com.zimbra.cs.mailclient.imap.IDInfo;
 import com.zimbra.cs.mailclient.imap.ImapConfig;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
 import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.util.BuildInfo;
 
 final class ImapProxy {
     private static final Set<String> UNSTRUCTURED_CODES = ImmutableSet.of("OK", "NO", "BAD", "PREAUTH", "BYE");
@@ -59,9 +61,9 @@ final class ImapProxy {
         Account acct = handler.getCredentials().getAccount();
         Server server = Provisioning.getInstance().getServer(path.getOwnerAccount());
         String host = server.getServiceHostname();
-        if (acct == null)
+        if (acct == null) {
             throw ServiceException.PROXY_ERROR(new Exception("no such authenticated user"), path.asImapPath());
-
+        }
         ImapConfig config = new ImapConfig();
         config.setAuthenticationId(acct.getName());
         config.setMechanism(ZimbraAuthenticator.MECHANISM);
@@ -78,11 +80,12 @@ final class ImapProxy {
             throw ServiceException.PROXY_ERROR(new Exception("no open IMAP port for server " + host), path.asImapPath());
         }
 
-        ZimbraLog.imap.info("opening proxy connection (user=" + acct.getName() + ", host=" + host + ", path=" + path.getReferent().asImapPath() + ')');
-
+        ZimbraLog.imap.info("opening proxy connection (user=%s, host=%s, path=%s)",
+                acct.getName(), host, path.getReferent().asImapPath());
         connection = new ImapConnection(config);
         try {
             connection.connect();
+            connection.id(createIDInfo(handler));
             connection.authenticate(AuthProvider.getAuthToken(acct).getEncoded());
         } catch (Exception e) {
             dropConnection();
@@ -105,7 +108,16 @@ final class ImapProxy {
         config.setPort(remote.getPort());
         connection = new ImapConnection(config);
         connection.connect();
+        connection.id(createIDInfo(handler));
         connection.authenticate(password);
+    }
+
+    private IDInfo createIDInfo(ImapHandler handler) {
+        IDInfo id = new IDInfo();
+        id.put(IDInfo.NAME, "ZCS");
+        id.put(IDInfo.VERSION, BuildInfo.VERSION);
+        id.put(IDInfo.X_VIA, handler.getNextVia());
+        return id;
     }
 
     ImapPath getPath() {

@@ -17,6 +17,7 @@ package com.zimbra.cs.imap;
 import com.google.common.base.Charsets;
 import com.google.common.io.Closeables;
 import com.zimbra.common.calendar.WellKnownTimeZones;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ArrayUtil;
@@ -52,6 +53,7 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailclient.imap.IDInfo;
 import com.zimbra.cs.security.sasl.Authenticator;
 import com.zimbra.cs.security.sasl.AuthenticatorUser;
 import com.zimbra.cs.security.sasl.PlainAuthenticator;
@@ -117,7 +119,8 @@ abstract class ImapHandler {
     private ImapProxy imapProxy;
     ImapSession selectedFolder;
     private String idleTag;
-    private String origRemoteAddress;
+    private String origRemoteIp;
+    private String via;
     private String userAgent;
     boolean goodbyeSent;
     private Set<ImapExtension> activeExtensions;
@@ -151,12 +154,14 @@ abstract class ImapHandler {
         return config;
     }
 
-    String getOrigRemoteIpAddr() {
-        return origRemoteAddress;
+    abstract String getRemoteIp();
+
+    String getOrigRemoteIp() {
+        return origRemoteIp;
     }
 
-    void setOrigRemoteIpAddr(String ip) {
-        origRemoteAddress = ip;
+    String getVia() {
+        return via;
     }
 
     String getUserAgent() {
@@ -167,11 +172,10 @@ abstract class ImapHandler {
         userAgent = ua;
     }
 
-    void setLoggingContext(String remoteAddress) {
+    void setLoggingContext() {
         ZimbraLog.clearContext();
         ImapSession i4selected = selectedFolder;
         Mailbox mbox = i4selected == null ? null : i4selected.getMailbox();
-        String origRemoteIp = getOrigRemoteIpAddr();
 
         if (credentials != null) {
             ZimbraLog.addAccountNameToContext(credentials.getUsername());
@@ -182,7 +186,10 @@ abstract class ImapHandler {
         if (origRemoteIp != null) {
             ZimbraLog.addOrigIpToContext(origRemoteIp);
         }
-        ZimbraLog.addIpToContext(remoteAddress);
+        if (via != null) {
+            ZimbraLog.addViaToContext(via);
+        }
+        ZimbraLog.addIpToContext(getRemoteIp());
     }
 
     protected void handleParseException(ImapParseException e) throws IOException {
@@ -996,50 +1003,8 @@ abstract class ImapHandler {
     // RFC 2971 3: "The sole purpose of the ID extension is to enable clients and servers
     //              to exchange information on their implementations for the purposes of
     //              statistical analysis and problem determination."
-    boolean doID(String tag, Map<String, String> attrs) throws IOException {
-        if (attrs != null) {
-            boolean ignore = false;
-
-            String origIp = attrs.get("X-ORIGINATING-IP");
-            if (origIp != null) {
-                String curOrigRemoteIp = getOrigRemoteIpAddr();
-                if (curOrigRemoteIp == null) {
-                    setOrigRemoteIpAddr(origIp);
-                    ZimbraLog.addOrigIpToContext(origIp);
-                } else {
-                    if (curOrigRemoteIp.equals(origIp))
-                        ZimbraLog.imap.warn("IMAP ID with X-ORIGINATING-IP is allowed only once per session, command ignored");
-                    else
-                        ZimbraLog.imap.error("IMAP ID with X-ORIGINATING-IP is allowed only once per session, received different IP: " + origIp + ", command ignored");
-                    ignore = true;
-                }
-            }
-
-            if (!ignore) {
-                String userAgent = attrs.get("name");
-                if (userAgent != null) {
-                    String version = attrs.get("version");
-                    if (version != null)
-                        userAgent = userAgent + "/" + version; // conform to the way ZimberSoapContext build ua
-
-                    String curUserAgent = getUserAgent();
-                    if (curUserAgent == null) {
-                        setUserAgent(userAgent);
-                        ZimbraLog.addUserAgentToContext(userAgent);
-                    } else {
-                        if (curUserAgent.equals(userAgent))
-                            ZimbraLog.imap.warn("IMAP ID with name/version is allowed only once per session, command ignored");
-                        else
-                            ZimbraLog.imap.error("IMAP ID with name/version is allowed only once per session, received different name/version: " + userAgent + ", command ignored");
-                        ignore = true;
-                    }
-                }
-            }
-
-            if (!ignore)
-                ZimbraLog.imap.debug("IMAP client identified as: " + attrs);
-        }
-
+    boolean doID(String tag, Map<String, String> fields) throws IOException {
+        setIDFields(fields);
         sendNotifications(true, false);
         if (isAuthenticated()) {
             String localServerId = null;
@@ -1055,6 +1020,78 @@ abstract class ImapHandler {
         }
         sendOK(tag, "ID completed");
         return true;
+    }
+
+    private void setIDFields(Map<String, String> fields) {
+        if (fields == null) {
+            return;
+        }
+
+        String ip = fields.get(IDInfo.X_ORIGINATING_IP);
+        if (ip != null) {
+            if (origRemoteIp == null) {
+                origRemoteIp = ip;
+                ZimbraLog.addOrigIpToContext(ip);
+            } else {
+                if (origRemoteIp.equals(ip)) {
+                    ZimbraLog.imap.warn("IMAP ID with %s is allowed only once per session, command ignored",
+                            IDInfo.X_ORIGINATING_IP);
+                } else {
+                    ZimbraLog.imap.error("IMAP ID with %s is allowed only once per session, received different IP: %s, command ignored",
+                            IDInfo.X_ORIGINATING_IP, ip);
+                }
+                return;
+            }
+        }
+
+        String xvia = fields.get(IDInfo.X_VIA);
+        if (via == null) {
+            via = xvia;
+            ZimbraLog.addViaToContext(via);
+        } else {
+            if (xvia.equals(via)) {
+                ZimbraLog.imap.warn("IMAP ID with %s is allowed only once per session, command ignored", IDInfo.X_VIA);
+            } else {
+                ZimbraLog.imap.error("IMAP ID with %s is allowed only once per session, received different value: %s, command ignored",
+                        IDInfo.X_VIA, xvia);
+            }
+            return;
+        }
+
+        String ua = fields.get(IDInfo.NAME);
+        if (ua != null) {
+            String version = fields.get(IDInfo.VERSION);
+            if (version != null) {
+                ua = ua + '/' + version; // conform to the way ZimberSoapContext build ua
+            }
+            if (userAgent == null) {
+                setUserAgent(ua);
+                ZimbraLog.addUserAgentToContext(ua);
+            } else {
+                if (userAgent.equals(ua)) {
+                    ZimbraLog.imap.warn("IMAP ID with %s/%s is allowed only once per session, command ignored",
+                            IDInfo.NAME, IDInfo.VERSION);
+                } else {
+                    ZimbraLog.imap.error("IMAP ID with %s/%s is allowed only once per session, received different name/version: %s, command ignored",
+                            IDInfo.NAME, IDInfo.VERSION, ua);
+                }
+                return;
+            }
+        }
+
+        ZimbraLog.imap.debug("IMAP client identified as: %s", fields);
+    }
+
+    String getNextVia() {
+        StringBuilder result = new StringBuilder();
+        if (via != null) {
+            result.append(via).append(',');
+        }
+        result.append(origRemoteIp != null ? origRemoteIp : getRemoteIp());
+        if (userAgent != null) {
+            result.append('(').append(userAgent).append(')');
+        }
+        return result.toString();
     }
 
     boolean doENABLE(String tag, List<String> extensions) throws IOException {
@@ -1196,7 +1233,8 @@ abstract class ImapHandler {
         try {
             // for some authenticators, actually do the authentication here
             // for others (e.g. GSSAPI), auth is already done -- this is just a lookup and authorization check
-            Account acct = auth.authenticate(username, authenticateId, password, AuthContext.Protocol.imap, getOrigRemoteIpAddr(), getUserAgent());
+            Account acct = auth.authenticate(username, authenticateId, password, AuthContext.Protocol.imap,
+                    origRemoteIp, userAgent);
             if (acct == null) {
                 // auth failure was represented by Authenticator.authenticate() returning null
                 sendNO(tag, command + " failed");
@@ -1270,16 +1308,19 @@ abstract class ImapHandler {
         return selectFolder(tag, "EXAMINE", path, (byte) (params | ImapFolder.SELECT_READONLY), qri);
     }
 
-    private boolean selectFolder(String tag, String command, ImapPath path, byte params, QResyncInfo qri) throws IOException, ImapParseException {
-        if (!checkState(tag, State.AUTHENTICATED))
+    private boolean selectFolder(String tag, String command, ImapPath path, byte params, QResyncInfo qri)
+            throws IOException, ImapParseException {
+        if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
-
+        }
         ImapFolder i4folder = null;
         InitialFolderValues initial = null;
         boolean writable;
         List<String> permflags = Collections.emptyList();
         try {
-            Object mboxobj = path.getOwnerMailbox();
+            // set imap_proxy_to_localhost = true to test IMAP proxy
+            Object mboxobj = (DebugConfig.imapProxyToLocalhost && path.useReferent()) ?
+                            path.getOwnerZMailbox() : path.getOwnerMailbox();
             if (!(mboxobj instanceof Mailbox)) {
                 // 6.3.1: "The SELECT command automatically deselects any currently selected mailbox
                 //         before attempting the new selection.  Consequently, if a mailbox is selected
