@@ -24,6 +24,9 @@ package com.zimbra.common.localconfig;
  */
 public final class DebugConfig {
 
+    private DebugConfig() {
+    }
+
     /** If true, then we do ICalendar Validation every time we generate
      *  ICalendar data. */
     public static final boolean validateOutgoingICalendar = value("debug_validate_outgoing_icalendar", false);
@@ -168,6 +171,7 @@ public final class DebugConfig {
             value("debug_imap_noninteractive_session_limit", Integer.MAX_VALUE);
     public static final boolean imapTerminateSessionOnClose = value("imap_terminate_session_on_close", false);
     public static final boolean imapSerializeSessionOnClose = value("imap_serialize_session_on_close", true);
+    public static final boolean imapProxyToLocalhost = value("imap_proxy_to_localhost", false);
 
     /** For QA only. bug 57279 */
     public static final boolean allowModifyingDeprecatedAttributes =
@@ -176,8 +180,8 @@ public final class DebugConfig {
     public static final boolean enableThisAndFuture = value("debug_enable_calendar_thisandfuture", false);
     public static final boolean caldavAllowAttendeeForOrganizer =
             value("debug_caldav_allow_attendee_for_organizer", false);
-    
-    public static boolean certAuthCaptureClientCertificate = 
+
+    public static boolean certAuthCaptureClientCertificate =
         value("debug_certauth_capture_client_certificate", false);
 
     private static boolean value(String key, boolean defaultValue) {
