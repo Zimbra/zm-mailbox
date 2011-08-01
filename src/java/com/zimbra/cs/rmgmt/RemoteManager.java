@@ -28,7 +28,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -78,6 +77,10 @@ public class RemoteManager {
         mPrivateKey = key;
 
         mDescription = "{RemoteManager: " + localName + "->" + mUser + "@" + mHost + ":" + mPort + "}";
+    }
+
+    public String getPrivateKeyPath() {
+        return mPrivateKey.getAbsolutePath();
     }
 
     public String toString() {
@@ -140,12 +143,6 @@ public class RemoteManager {
             InputStream stderr = new StreamGobbler(s.getStderr());
             result.mStdout = ByteUtil.getContent(stdout, -1);
             result.mStderr = ByteUtil.getContent(stderr, -1);
-            if (false) {
-                System.out.println("#### STDOUT");
-                System.out.println(new String(result.mStdout));
-                System.out.println("#### STDERR");
-                System.out.println(new String(result.mStderr));
-            }
             try {
                 result.mExitStatus = s.getExitStatus();
             } catch (NullPointerException npe) {
