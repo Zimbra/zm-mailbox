@@ -37,6 +37,20 @@ public final class BackupConstants {
     public static final String E_PURGE_MOVED_MAILBOX_RESPONSE = "PurgeMovedMailboxResponse";
     public static final String E_SCHEDULE_BACKUPS_REQUEST = "ScheduleBackupsRequest";
     public static final String E_SCHEDULE_BACKUPS_RESPONSE = "ScheduleBackupsResponse";
+    public static final String E_MOVE_MAILBOX_REQUEST = "MoveMailboxRequest";
+    public static final String E_MOVE_MAILBOX_RESPONSE = "MoveMailboxResponse";
+    public static final String E_GET_MAILBOX_VOLUMES_REQUEST = "GetMailboxVolumesRequest";
+    public static final String E_GET_MAILBOX_VOLUMES_RESPONSE = "GetMailboxVolumesResponse";
+    public static final String E_UNLOAD_MAILBOX_REQUEST = "UnloadMailboxRequest";
+    public static final String E_UNLOAD_MAILBOX_RESPONSE = "UnloadMailboxResponse";
+    public static final String E_RELOAD_ACCOUNT_REQUEST = "ReloadAccountRequest";
+    public static final String E_RELOAD_ACCOUNT_RESPONSE = "ReloadAccountResponse";
+    public static final String E_REGISTER_MAILBOX_MOVE_OUT_REQUEST = "RegisterMailboxMoveOutRequest";
+    public static final String E_REGISTER_MAILBOX_MOVE_OUT_RESPONSE = "RegisterMailboxMoveOutResponse";
+    public static final String E_UNREGISTER_MAILBOX_MOVE_OUT_REQUEST = "UnregisterMailboxMoveOutRequest";
+    public static final String E_UNREGISTER_MAILBOX_MOVE_OUT_RESPONSE = "UnregisterMailboxMoveOutResponse";
+    public static final String E_QUERY_MAILBOX_MOVE_REQUEST = "QueryMailboxMoveRequest";
+    public static final String E_QUERY_MAILBOX_MOVE_RESPONSE = "QueryMailboxMoveResponse";
 
     public static final QName EXPORTMAILBOX_REQUEST = QName.get(E_EXPORTMAILBOX_REQUEST, NAMESPACE);
     public static final QName EXPORTMAILBOX_RESPONSE = QName.get(E_EXPORTMAILBOX_RESPONSE, NAMESPACE);
@@ -58,6 +72,21 @@ public final class BackupConstants {
     public static final QName SCHEDULE_BACKUPS_REQUEST = QName.get(E_SCHEDULE_BACKUPS_REQUEST, NAMESPACE);
     public static final QName SCHEDULE_BACKUPS_RESPONSE = QName.get(E_SCHEDULE_BACKUPS_RESPONSE, NAMESPACE);
 
+    public static final QName MOVE_MAILBOX_REQUEST = QName.get(E_MOVE_MAILBOX_REQUEST, NAMESPACE);
+    public static final QName MOVE_MAILBOX_RESPONSE = QName.get(E_MOVE_MAILBOX_RESPONSE, NAMESPACE);
+    public static final QName GET_MAILBOX_VOLUMES_REQUEST = QName.get(E_GET_MAILBOX_VOLUMES_REQUEST, NAMESPACE);
+    public static final QName GET_MAILBOX_VOLUMES_RESPONSE = QName.get(E_GET_MAILBOX_VOLUMES_RESPONSE, NAMESPACE);
+    public static final QName UNLOAD_MAILBOX_REQUEST = QName.get(E_UNLOAD_MAILBOX_REQUEST, NAMESPACE);
+    public static final QName UNLOAD_MAILBOX_RESPONSE = QName.get(E_UNLOAD_MAILBOX_RESPONSE, NAMESPACE);
+    public static final QName RELOAD_ACCOUNT_REQUEST = QName.get(E_RELOAD_ACCOUNT_REQUEST, NAMESPACE);
+    public static final QName RELOAD_ACCOUNT_RESPONSE = QName.get(E_RELOAD_ACCOUNT_RESPONSE, NAMESPACE);
+    public static final QName REGISTER_MAILBOX_MOVE_OUT_REQUEST = QName.get(E_REGISTER_MAILBOX_MOVE_OUT_REQUEST, NAMESPACE);
+    public static final QName REGISTER_MAILBOX_MOVE_OUT_RESPONSE = QName.get(E_REGISTER_MAILBOX_MOVE_OUT_RESPONSE, NAMESPACE);
+    public static final QName UNREGISTER_MAILBOX_MOVE_OUT_REQUEST = QName.get(E_UNREGISTER_MAILBOX_MOVE_OUT_REQUEST, NAMESPACE);
+    public static final QName UNREGISTER_MAILBOX_MOVE_OUT_RESPONSE = QName.get(E_UNREGISTER_MAILBOX_MOVE_OUT_RESPONSE, NAMESPACE);
+    public static final QName QUERY_MAILBOX_MOVE_REQUEST = QName.get(E_QUERY_MAILBOX_MOVE_REQUEST, NAMESPACE);
+    public static final QName QUERY_MAILBOX_MOVE_RESPONSE = QName.get(E_QUERY_MAILBOX_MOVE_RESPONSE, NAMESPACE);
+
     public static final String ZM_SCHEDULE_BACKUP = "zmschedulebackup";
 
     public static final String E_ACCOUNT = "account";
@@ -72,11 +101,7 @@ public final class BackupConstants {
     public static final String E_COUNTER = "counter";
 
     public static final String A_MAILBOXID = "mbxid";
-    public static final String A_NAME = "name"; 
-    public static final String A_TARGET = "dest";
-    public static final String A_PORT = "destPort";
-    public static final String A_OVERWRITE = "overwrite";
-    public static final String A_TEMP_DIR = "tempDir";
+    public static final String A_NAME = "name";
     public static final String A_METHOD = "method";
     public static final String A_ACCOUNT_ID = "accountId";
     public static final String A_PREFIX = "prefix";
@@ -126,6 +151,17 @@ public final class BackupConstants {
     public static final String A_COUNTER_NUM_SAMPLES = "numSamples";
     public static final String A_TOTAL_SPACE = "totalSpace";
     public static final String A_FREE_SPACE = "freeSpace";
+
+    // mailbox move
+    public static final String A_SOURCE = "src";
+    public static final String A_TARGET = "dest";
+    public static final String A_PORT = "destPort";
+    public static final String A_OVERWRITE = "overwrite";
+    public static final String A_MAX_SYNCS = "maxSyncs";
+    public static final String A_SYNC_FINISH_THRESHOLD = "syncFinishThreshold";
+    public static final String A_TEMP_DIR = "tempDir";
+    public static final String A_CHECK_PEER = "checkPeer";
+    public static final String A_NO_PEER = "noPeer";
 
     // FileCopier options
     public static final String E_FILE_COPIER = "fileCopier";
