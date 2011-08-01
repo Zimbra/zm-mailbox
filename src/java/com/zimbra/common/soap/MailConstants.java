@@ -1011,6 +1011,7 @@ public final class MailConstants {
     public static final String A_CAL_CHANGES = "changes";
     public static final String A_CAL_ECHO = "echo";
     public static final String A_CAL_CODE = "code";
+    public static final String A_CAL_FORCESEND = "forcesend";
 
     public static final String A_CAL_ORPHAN = "orphan";
 
