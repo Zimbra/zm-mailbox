@@ -2372,7 +2372,6 @@ public final class ToXML {
             try {
                 m.addAttribute(MailConstants.A_VERSION, doc.getVersion());
                 m.addAttribute(MailConstants.A_LAST_EDITED_BY, doc.getCreator());
-                m.addAttribute(MailConstants.A_MODIFIED_DATE, doc.getDate());
                 String fragment = doc.getFragment();
                 if (!Strings.isNullOrEmpty(fragment)) {
                     m.addAttribute(MailConstants.E_FRAG, fragment, Element.Disposition.CONTENT);
