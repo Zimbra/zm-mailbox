@@ -74,6 +74,7 @@ public class AttributeManager {
     private static final String E_GLOBAL_CONFIG_VALUE = "globalConfigValue";
     private static final String E_GLOBAL_CONFIG_VALUE_UPGRADE = "globalConfigValueUpgrade";
     private static final String E_DEFAULT_COS_VALUE = "defaultCOSValue";
+    private static final String E_DEFAULT_EXTERNAL_COS_VALUE = "defaultExternalCOSValue";
     private static final String E_DEFAULT_COS_VALUE_UPGRADE = "defaultCOSValueUpgrade";
 
     private static AttributeManager mInstance;
@@ -418,6 +419,7 @@ public class AttributeManager {
             List<String> globalConfigValues = new LinkedList<String>();
             List<String> globalConfigValuesUpgrade = null; // note: init to null instead of empty List
             List<String> defaultCOSValues = new LinkedList<String>();
+            List<String> defaultExternalCOSValues = new LinkedList<String>();
             List<String> defaultCOSValuesUpgrade = null;   // note: init to null instead of empty List
             String description = null;
             String deprecateDesc = null;
@@ -432,6 +434,8 @@ public class AttributeManager {
                     globalConfigValuesUpgrade.add(elem.getText());
                 } else if (elem.getName().equals(E_DEFAULT_COS_VALUE)) {
                     defaultCOSValues.add(elem.getText());
+                } else if (elem.getName().equals(E_DEFAULT_EXTERNAL_COS_VALUE)) {
+                    defaultExternalCOSValues.add(elem.getText());
                 } else if (elem.getName().equals(E_DEFAULT_COS_VALUE_UPGRADE)) {
                     if (defaultCOSValuesUpgrade == null)
                         defaultCOSValuesUpgrade = new LinkedList<String>();
@@ -507,7 +511,7 @@ public class AttributeManager {
                 if (globalConfigValues.size() > 1) {
                     error(name, file, "more than one global config value specified for cardinality " + AttributeCardinality.single);
                 }
-                if (defaultCOSValues.size() > 1) {
+                if (defaultCOSValues.size() > 1 || defaultExternalCOSValues.size() > 1) {
                     error(name, file, "more than one default COS value specified for cardinality " + AttributeCardinality.single);
                 }
             }
@@ -515,7 +519,7 @@ public class AttributeManager {
             AttributeInfo info = createAttributeInfo(
                     name, id, parentOid, groupId, callback, type, order, value, immutable, min, max,
                     cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues,
-                    globalConfigValuesUpgrade, defaultCOSValuesUpgrade,
+                    defaultExternalCOSValues, globalConfigValuesUpgrade, defaultCOSValuesUpgrade,
                     mMinimize ? null : description, requiresRestart, sinceVer, deprecatedSinceVer);
 
             if (mAttrs.get(canonicalName) != null) {
@@ -555,19 +559,20 @@ public class AttributeManager {
         }
     }
 
-    protected AttributeInfo createAttributeInfo(String name, int id, String parentOid, int groupId,
+    protected AttributeInfo createAttributeInfo(
+            String name, int id, String parentOid, int groupId,
             AttributeCallback callback, AttributeType type, AttributeOrder order,
             String value, boolean immutable, String min, String max,
             AttributeCardinality cardinality, Set<AttributeClass> requiredIn,
             Set<AttributeClass> optionalIn, Set<AttributeFlag> flags,
             List<String> globalConfigValues, List<String> defaultCOSValues,
-            List<String> globalConfigValuesUpgrade, List<String> defaultCOSValuesUpgrade,
-            String description, List<AttributeServerType> requiresRestart,
+            List<String> defaultExternalCOSValues, List<String> globalConfigValuesUpgrade,
+            List<String> defaultCOSValuesUpgrade, String description, List<AttributeServerType> requiresRestart,
             Version sinceVer, Version deprecatedSinceVer) {
         return new AttributeInfo(
                 name, id, parentOid, groupId, callback, type, order, value, immutable, min, max,
                 cardinality, requiredIn, optionalIn, flags, globalConfigValues, defaultCOSValues,
-                globalConfigValuesUpgrade, defaultCOSValuesUpgrade,
+                defaultExternalCOSValues, globalConfigValuesUpgrade, defaultCOSValuesUpgrade,
                 description, requiresRestart, sinceVer, deprecatedSinceVer);
     }
 

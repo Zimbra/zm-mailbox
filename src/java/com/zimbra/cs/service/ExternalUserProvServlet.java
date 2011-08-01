@@ -19,7 +19,6 @@ import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
@@ -178,10 +177,6 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             attrs.put(Provisioning.A_zimbraExternalUserMailAddress, extUserEmail);
             attrs.put(Provisioning.A_zimbraMailHost, prov.getLocalServer().getServiceHostname());
             attrs.put(Provisioning.A_displayName, displayName);
-            attrs.put(Provisioning.A_zimbraFeatureOptionsEnabled, ProvisioningConstants.FALSE);
-            attrs.put(Provisioning.A_zimbraFeatureMailEnabled, ProvisioningConstants.FALSE);
-            attrs.put(Provisioning.A_zimbraFeatureDistributionListExpandMembersEnabled, ProvisioningConstants.FALSE);
-            attrs.put(Provisioning.A_zimbraFeatureGalAutoCompleteEnabled, ProvisioningConstants.FALSE);
             grantee = prov.createAccount(mapExtEmailToAcctName(extUserEmail, domain), password, attrs);
             // create external account mailbox
             Mailbox granteeMbox = MailboxManager.getInstance().getMailboxByAccount(grantee);

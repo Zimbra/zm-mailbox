@@ -66,6 +66,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     static final String FALSE = "FALSE";
 
     public static final String DEFAULT_COS_NAME = "default";
+    public static final String DEFAULT_EXTERNAL_COS_NAME = "defaultExternal";
 
     public static final String SERVICE_MAILBOX   = "mailbox";
     public static final String SERVICE_MEMCACHED = "memcached";
@@ -416,7 +417,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
                     String domainCosId = domain != null ? domain.getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null) : null;
                     if (domainCosId != null) cos = get(Key.CosBy.id, domainCosId);
                 }
-                if (cos == null) cos = get(Key.CosBy.name, Provisioning.DEFAULT_COS_NAME);
+                if (cos == null) {
+                    cos = get(Key.CosBy.name,
+                              acct.isIsExternalVirtualAccount() ?
+                                      Provisioning.DEFAULT_EXTERNAL_COS_NAME : Provisioning.DEFAULT_COS_NAME);
+                }
                 if (cos != null) acct.setCachedData(EntryCacheDataKey.ACCOUNT_COS, cos);
         }
         return cos;

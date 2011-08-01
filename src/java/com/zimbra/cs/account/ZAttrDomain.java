@@ -43,7 +43,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110727-1818 */
+    /* build: 8.0.0_BETA1_1111 administrator 20110801-1933 */
 
     /**
      * RFC2256: descriptive information
@@ -4264,6 +4264,78 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetDomainDefaultCOSId(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDomainDefaultCOSId, "");
+        return attrs;
+    }
+
+    /**
+     * id of the default COS for external user accounts
+     *
+     * @return zimbraDomainDefaultExternalUserCOSId, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1247)
+    public String getDomainDefaultExternalUserCOSId() {
+        return getAttr(Provisioning.A_zimbraDomainDefaultExternalUserCOSId, null);
+    }
+
+    /**
+     * id of the default COS for external user accounts
+     *
+     * @param zimbraDomainDefaultExternalUserCOSId new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1247)
+    public void setDomainDefaultExternalUserCOSId(String zimbraDomainDefaultExternalUserCOSId) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainDefaultExternalUserCOSId, zimbraDomainDefaultExternalUserCOSId);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * id of the default COS for external user accounts
+     *
+     * @param zimbraDomainDefaultExternalUserCOSId new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1247)
+    public Map<String,Object> setDomainDefaultExternalUserCOSId(String zimbraDomainDefaultExternalUserCOSId, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainDefaultExternalUserCOSId, zimbraDomainDefaultExternalUserCOSId);
+        return attrs;
+    }
+
+    /**
+     * id of the default COS for external user accounts
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1247)
+    public void unsetDomainDefaultExternalUserCOSId() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainDefaultExternalUserCOSId, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * id of the default COS for external user accounts
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1247)
+    public Map<String,Object> unsetDomainDefaultExternalUserCOSId(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainDefaultExternalUserCOSId, "");
         return attrs;
     }
 

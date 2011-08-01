@@ -150,7 +150,8 @@ public class TestLdap {
         
         Set<String> defaultCosDN = new HashSet<String>();
         defaultCosDN.add(dit.cosNametoDN(Provisioning.DEFAULT_COS_NAME));
-        
+        defaultCosDN.add(dit.cosNametoDN(Provisioning.DEFAULT_EXTERNAL_COS_NAME));
+
         deleteAllChildrenUnderDN(cosBaseDN, defaultCosDN);
     }
     

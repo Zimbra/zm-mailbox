@@ -15,6 +15,132 @@
 
 package com.zimbra.cs.account.ldap;
 
+import com.google.common.collect.Sets;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.ProvisioningConstants;
+import com.zimbra.common.datasource.DataSourceType;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.service.ServiceException.Argument;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.EmailUtil;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccessManager;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountCache;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.Alias;
+import com.zimbra.cs.account.AttributeClass;
+import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.CalendarResource;
+import com.zimbra.cs.account.Config;
+import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.DataSource;
+import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.DomainCache;
+import com.zimbra.cs.account.DomainCache.GetFromDomainCacheOption;
+import com.zimbra.cs.account.DynamicGroup;
+import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.EntryCacheDataKey;
+import com.zimbra.cs.account.EntrySearchFilter;
+import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.account.GlobalGrant;
+import com.zimbra.cs.account.Group;
+import com.zimbra.cs.account.GroupedEntry;
+import com.zimbra.cs.account.GuestAccount;
+import com.zimbra.cs.account.IDNUtil;
+import com.zimbra.cs.account.Identity;
+import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.NamedEntry.Visitor;
+import com.zimbra.cs.account.NamedEntryCache;
+import com.zimbra.cs.account.PreAuthKey;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Signature;
+import com.zimbra.cs.account.XMPPComponent;
+import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.accesscontrol.GranteeType;
+import com.zimbra.cs.account.accesscontrol.PermissionCache;
+import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RightCommand;
+import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
+import com.zimbra.cs.account.accesscontrol.RightModifier;
+import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.account.auth.AuthMechanism;
+import com.zimbra.cs.account.auth.PasswordUtil;
+import com.zimbra.cs.account.callback.MailSignature;
+import com.zimbra.cs.account.gal.GalNamedFilter;
+import com.zimbra.cs.account.gal.GalOp;
+import com.zimbra.cs.account.gal.GalParams;
+import com.zimbra.cs.account.gal.GalUtil;
+import com.zimbra.cs.account.krb5.Krb5Principal;
+import com.zimbra.cs.account.ldap.entry.LdapAccount;
+import com.zimbra.cs.account.ldap.entry.LdapAlias;
+import com.zimbra.cs.account.ldap.entry.LdapCalendarResource;
+import com.zimbra.cs.account.ldap.entry.LdapConfig;
+import com.zimbra.cs.account.ldap.entry.LdapCos;
+import com.zimbra.cs.account.ldap.entry.LdapDataSource;
+import com.zimbra.cs.account.ldap.entry.LdapDistributionList;
+import com.zimbra.cs.account.ldap.entry.LdapDomain;
+import com.zimbra.cs.account.ldap.entry.LdapDynamicGroup;
+import com.zimbra.cs.account.ldap.entry.LdapEntry;
+import com.zimbra.cs.account.ldap.entry.LdapGlobalGrant;
+import com.zimbra.cs.account.ldap.entry.LdapIdentity;
+import com.zimbra.cs.account.ldap.entry.LdapMimeType;
+import com.zimbra.cs.account.ldap.entry.LdapServer;
+import com.zimbra.cs.account.ldap.entry.LdapSignature;
+import com.zimbra.cs.account.ldap.entry.LdapXMPPComponent;
+import com.zimbra.cs.account.ldap.entry.LdapZimlet;
+import com.zimbra.cs.account.names.NameUtil;
+import com.zimbra.cs.account.names.NameUtil.EmailAddress;
+import com.zimbra.cs.gal.GalSearchConfig;
+import com.zimbra.cs.gal.GalSearchParams;
+import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.ldap.IAttributes;
+import com.zimbra.cs.ldap.IAttributes.CheckBinary;
+import com.zimbra.cs.ldap.LdapClient;
+import com.zimbra.cs.ldap.LdapConstants;
+import com.zimbra.cs.ldap.LdapException;
+import com.zimbra.cs.ldap.LdapException.LdapContextNotEmptyException;
+import com.zimbra.cs.ldap.LdapException.LdapEntryAlreadyExistException;
+import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
+import com.zimbra.cs.ldap.LdapException.LdapInvalidAttrNameException;
+import com.zimbra.cs.ldap.LdapException.LdapInvalidAttrValueException;
+import com.zimbra.cs.ldap.LdapException.LdapInvalidSearchFilterException;
+import com.zimbra.cs.ldap.LdapException.LdapMultipleEntriesMatchedException;
+import com.zimbra.cs.ldap.LdapException.LdapSizeLimitExceededException;
+import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
+import com.zimbra.cs.ldap.LdapServerType;
+import com.zimbra.cs.ldap.LdapTODO.TODO;
+import com.zimbra.cs.ldap.LdapUsage;
+import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
+import com.zimbra.cs.ldap.SearchLdapOptions.StopIteratingException;
+import com.zimbra.cs.ldap.ZAttributes;
+import com.zimbra.cs.ldap.ZLdapContext;
+import com.zimbra.cs.ldap.ZLdapFilter;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
+import com.zimbra.cs.ldap.ZLdapSchema;
+import com.zimbra.cs.ldap.ZMutableEntry;
+import com.zimbra.cs.ldap.ZSearchControls;
+import com.zimbra.cs.ldap.ZSearchResultEntry;
+import com.zimbra.cs.ldap.ZSearchResultEnumeration;
+import com.zimbra.cs.ldap.ZSearchScope;
+import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.cs.util.Zimbra;
+import com.zimbra.cs.zimlet.ZimletException;
+import com.zimbra.cs.zimlet.ZimletUtil;
+import org.testng.v6.Lists;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -33,90 +159,6 @@ import java.util.Stack;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-
-import org.testng.v6.Lists;
-
-import com.google.common.collect.Sets;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.ProvisioningConstants;
-import com.zimbra.common.datasource.DataSourceType;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.service.ServiceException.Argument;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.DateUtil;
-import com.zimbra.common.util.EmailUtil;
-import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.*;
-import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
-import com.zimbra.cs.account.DomainCache.GetFromDomainCacheOption;
-import com.zimbra.cs.account.NamedEntry.Visitor;
-import com.zimbra.cs.account.accesscontrol.GranteeType;
-import com.zimbra.cs.account.accesscontrol.PermissionCache;
-import com.zimbra.cs.account.accesscontrol.Right;
-import com.zimbra.cs.account.accesscontrol.RightCommand;
-import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
-import com.zimbra.cs.account.accesscontrol.RightModifier;
-import com.zimbra.cs.account.auth.AuthContext;
-import com.zimbra.cs.account.auth.AuthMechanism;
-import com.zimbra.cs.account.auth.PasswordUtil;
-import com.zimbra.cs.account.callback.MailSignature;
-import com.zimbra.cs.account.gal.GalNamedFilter;
-import com.zimbra.cs.account.gal.GalOp;
-import com.zimbra.cs.account.gal.GalParams;
-import com.zimbra.cs.account.gal.GalUtil;
-import com.zimbra.cs.account.krb5.Krb5Principal;
-import com.zimbra.cs.account.ldap.ChangePasswordListener;
-import com.zimbra.cs.account.ldap.DomainNameMappingHandler;
-import com.zimbra.cs.account.ldap.Groups;
-import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
-import com.zimbra.cs.account.ldap.LdapLockoutPolicy;
-import com.zimbra.cs.account.ldap.LdapMimeTypeCache;
-import com.zimbra.cs.account.ldap.LdapObjectClass;
-import com.zimbra.cs.account.ldap.LdapObjectClassHierarchy;
-import com.zimbra.cs.account.ldap.LdapProv;
-import com.zimbra.cs.account.ldap.LdapSMIMEConfig;
-import com.zimbra.cs.account.ldap.SpecialAttrs;
-import com.zimbra.cs.account.ldap.entry.*;
-import com.zimbra.cs.account.names.NameUtil;
-import com.zimbra.cs.account.names.NameUtil.EmailAddress;
-import com.zimbra.cs.gal.GalSearchConfig;
-import com.zimbra.cs.gal.GalSearchParams;
-import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.ldap.IAttributes;
-import com.zimbra.cs.ldap.IAttributes.CheckBinary;
-import com.zimbra.cs.ldap.LdapClient;
-import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
-import com.zimbra.cs.ldap.LdapConstants;
-import com.zimbra.cs.ldap.LdapException;
-import com.zimbra.cs.ldap.LdapException.*;
-import com.zimbra.cs.ldap.LdapServerType;
-import com.zimbra.cs.ldap.LdapTODO.*;
-import com.zimbra.cs.ldap.LdapUtilCommon;
-import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
-import com.zimbra.cs.ldap.SearchLdapOptions.StopIteratingException;
-import com.zimbra.cs.ldap.LdapUsage;
-import com.zimbra.cs.ldap.SearchLdapOptions;
-import com.zimbra.cs.ldap.ZAttributes;
-import com.zimbra.cs.ldap.ZLdapContext;
-import com.zimbra.cs.ldap.ZLdapFilter;
-import com.zimbra.cs.ldap.ZLdapFilterFactory;
-import com.zimbra.cs.ldap.ZLdapSchema;
-import com.zimbra.cs.ldap.ZModificationList;
-import com.zimbra.cs.ldap.ZMutableEntry;
-import com.zimbra.cs.ldap.ZSearchControls;
-import com.zimbra.cs.ldap.ZSearchResultEntry;
-import com.zimbra.cs.ldap.ZSearchResultEnumeration;
-import com.zimbra.cs.ldap.ZSearchScope;
-import com.zimbra.cs.mime.MimeTypeInfo;
-import com.zimbra.cs.util.Zimbra;
-import com.zimbra.cs.zimlet.ZimletException;
-import com.zimbra.cs.zimlet.ZimletUtil;
 
 
 
@@ -955,9 +997,19 @@ public class LdapProvisioning extends LdapProv {
                 }
                 entry.setAttr(Provisioning.A_zimbraCOSId, cosId);
             } else {
-                String domainCosId = domain != null ? d.getAttr(Provisioning.A_zimbraDomainDefaultCOSId, null) : null;
-                if (domainCosId != null) cos = get(Key.CosBy.id, domainCosId);
-                if (cos == null) cos = getCosByName(Provisioning.DEFAULT_COS_NAME, zlc);
+                String domainCosId =
+                        domain != null ?
+                                isExternalVirtualAccount(entry) ?
+                                        d.getDomainDefaultExternalUserCOSId() : d.getDomainDefaultCOSId() :
+                                null;
+                if (domainCosId != null) {
+                    cos = get(Key.CosBy.id, domainCosId);
+                }
+                if (cos == null) {
+                    cos = getCosByName(isExternalVirtualAccount(entry) ?
+                                               Provisioning.DEFAULT_EXTERNAL_COS_NAME : Provisioning.DEFAULT_COS_NAME,
+                                       zlc);
+                }
             }
 
             boolean hasMailTransport = entry.hasAttribute(Provisioning.A_zimbraMailTransport);
@@ -1036,7 +1088,12 @@ public class LdapProvisioning extends LdapProv {
             LdapClient.closeContext(zlc);
         }
     }
-    
+
+    private static boolean isExternalVirtualAccount(ZMutableEntry entry) throws LdapException {
+        return entry.hasAttribute(Provisioning.A_zimbraIsExternalVirtualAccount) &&
+                ProvisioningConstants.TRUE.equals(entry.getAttrString(Provisioning.A_zimbraIsExternalVirtualAccount));
+    }
+
     @Override
     public void searchOCsForSuperClasses(Map<String, Set<String>> ocs) {
         ZLdapContext zlc = null;

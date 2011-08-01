@@ -89,6 +89,8 @@ public class AttributeInfo {
 
     protected List<String> mDefaultCOSValues;
 
+    private List<String> mDefaultExternalCOSValues;
+
     private List<String> mDefaultCOSValuesUpgrade;
 
     private long mMin = Long.MIN_VALUE, mMax = Long.MAX_VALUE;
@@ -139,14 +141,15 @@ public class AttributeInfo {
     }
 
 
-    protected AttributeInfo (String attrName, int id, String parentId, int groupId,
-            AttributeCallback callback, AttributeType type,  AttributeOrder order,
+    protected AttributeInfo(
+            String attrName, int id, String parentId, int groupId,
+            AttributeCallback callback, AttributeType type, AttributeOrder order,
             String value, boolean immutable, String min, String max,
             AttributeCardinality cardinality, Set<AttributeClass> requiredIn,
             Set<AttributeClass> optionalIn, Set<AttributeFlag> flags,
             List<String> globalConfigValues, List<String> defaultCOSValues,
-            List<String> globalConfigValuesUpgrade, List<String> defaultCOSValuesUpgrade,
-            String description, List<AttributeServerType> requiresRestart,
+            List<String> defaultExternalCOSValues, List<String> globalConfigValuesUpgrade,
+            List<String> defaultCOSValuesUpgrade, String description, List<AttributeServerType> requiresRestart,
             Version since, Version deprecatedSince) {
         mName = attrName;
         mImmutable = immutable;
@@ -164,6 +167,7 @@ public class AttributeInfo {
         mGlobalConfigValues = globalConfigValues;
         mGlobalConfigValuesUpgrade = globalConfigValuesUpgrade;
         mDefaultCOSValues = defaultCOSValues;
+        mDefaultExternalCOSValues = defaultExternalCOSValues;
         mDefaultCOSValuesUpgrade = defaultCOSValuesUpgrade;
         mDescription = description;
         mRequiresRestart = requiresRestart;
@@ -509,6 +513,10 @@ public class AttributeInfo {
 
     public List<String> getDefaultCosValues() {
         return mDefaultCOSValues;
+    }
+
+    public List<String> getDefaultExternalCosValues() {
+        return mDefaultExternalCOSValues;
     }
 
     public List<String> getDefaultCosValuesUpgrade() {

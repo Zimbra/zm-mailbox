@@ -75,6 +75,7 @@ public class Cos extends ZAttrCos {
     }
     
     public boolean isDefaultCos() {
-        return getName().equals(Provisioning.DEFAULT_COS_NAME);
+        return getName().equals(Provisioning.DEFAULT_COS_NAME) ||
+                getName().equals(Provisioning.DEFAULT_EXTERNAL_COS_NAME);
     }
 }

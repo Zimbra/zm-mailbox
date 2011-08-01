@@ -1870,6 +1870,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="359" name="zimbraFeatureGalAutoCompleteEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultExternalCOSValue>FALSE</defaultExternalCOSValue>
   <desc>enable auto-completion from the GAL, zimbraFeatureGalEnabled also has to be enabled for the auto-completion feature</desc>
 </attr>
 
@@ -2302,6 +2303,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="451" name="zimbraFeatureOptionsEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultExternalCOSValue>FALSE</defaultExternalCOSValue>
   <desc>whether an account can modify its zimbraPref* attributes</desc>
 </attr>
 
@@ -2490,6 +2492,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="489" name="zimbraFeatureMailEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultExternalCOSValue>FALSE</defaultExternalCOSValue>
   <desc>email features enabled</desc>
 </attr>
 
@@ -5187,6 +5190,7 @@ TODO: delete them permerntly from here
 
 <attr id="1134" name="zimbraFeatureDistributionListExpandMembersEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="7.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultExternalCOSValue>FALSE</defaultExternalCOSValue>
   <desc>whether expanding distribution list members feature is enabled</desc>
 </attr>
 
@@ -6060,6 +6064,10 @@ TODO: delete them permerntly from here
 
 <attr id="1246" name="zimbraPrefFont" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
   <desc>the font for the web client</desc>
+</attr>
+
+<attr id="1247" name="zimbraDomainDefaultExternalUserCOSId" type="id" cardinality="single" optionalIn="domain" callback="CosId" since="8.0.0">
+  <desc>id of the default COS for external user accounts</desc>
 </attr>
 
 </attrs>

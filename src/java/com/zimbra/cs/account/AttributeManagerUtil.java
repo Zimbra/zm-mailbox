@@ -96,6 +96,7 @@ public class AttributeManagerUtil {
     private enum Action { 
         dump,
         generateDefaultCOSLdif,
+        generateDefaultExternalCOSLdif,
         generateGetters,
         generateGlobalConfigLdif,
         generateLdapSchema,
@@ -161,9 +162,9 @@ public class AttributeManagerUtil {
         pw.println("#");
         pw.println("# LDAP entry for the default Zimbra COS.");
         pw.println("#");
-        
+
         String baseDn = CLOptions.getBaseDn("cos");
-        String cosName = CLOptions.getEntryName("cos", "default");
+        String cosName = CLOptions.getEntryName("cos", Provisioning.DEFAULT_COS_NAME);
         String cosId = CLOptions.getEntryId("cos", "e00428a1-0c00-11d9-836a-000d93afea2a");
 
         pw.println("dn: cn=" + cosName +",cn=cos," + baseDn);
@@ -181,13 +182,51 @@ public class AttributeManagerUtil {
                }
            }
         }
-        String[] outs = out.toArray(new String[0]);
+        String[] outs = out.toArray(new String[out.size()]);
         Arrays.sort(outs);
         for (String o : outs) {
             pw.println(o);
         }
     }
-    
+
+    private void generateDefaultExternalCOSLdif(PrintWriter pw) {
+        pw.println(doNotModifyDisclaimer("#"));
+        pw.println("#");
+        pw.println("# LDAP entry for default COS for external user accounts.");
+        pw.println("#");
+
+        String baseDn = CLOptions.getBaseDn("cos");
+        String cosName = CLOptions.getEntryName("cos", Provisioning.DEFAULT_EXTERNAL_COS_NAME);
+        String cosId = CLOptions.getEntryId("cos", "f27456a8-0c00-11d9-280a-286d93afea2g");
+
+        pw.println("dn: cn=" + cosName +",cn=cos," + baseDn);
+        pw.println("cn: " + cosName);
+        pw.println("objectclass: zimbraCOS");
+        pw.println("zimbraId: " + cosId);
+        pw.println("description: The default external users COS");
+
+        List<String> out = new LinkedList<String>();
+        for (AttributeInfo attr : getAttrs().values()) {
+            List<String> defaultValues = attr.getDefaultExternalCosValues();
+            if (defaultValues != null && !defaultValues.isEmpty()) {
+                for (String v : defaultValues) {
+                    out.add(attr.getName() + ": " + v);
+                }
+            } else {
+                defaultValues = attr.getDefaultCosValues();
+                if (defaultValues != null) {
+                    for (String v : defaultValues) {
+                        out.add(attr.getName() + ": " + v);
+                    }
+                }
+            }
+        }
+        String[] outs = out.toArray(new String[out.size()]);
+        Arrays.sort(outs);
+        for (String o : outs) {
+            pw.println(o);
+        }
+    }
 
     private void generateGlobalConfigLdif(PrintWriter pw) {
         pw.println(doNotModifyDisclaimer("#"));
@@ -210,7 +249,7 @@ public class AttributeManagerUtil {
                }
            }
         }
-        String[] outs = out.toArray(new String[0]);
+        String[] outs = out.toArray(new String[out.size()]);
         Arrays.sort(outs);
         for (String o : outs) {
             pw.println(o);
@@ -1336,6 +1375,9 @@ public class AttributeManagerUtil {
         case generateDefaultCOSLdif:
             amu.generateDefaultCOSLdif(pw);
             break;        
+        case generateDefaultExternalCOSLdif:
+            amu.generateDefaultExternalCOSLdif(pw);
+            break;
         case generateGetters:
             amu.generateGetters(cl.getOptionValue('c'), cl.getOptionValue('r'));
             break;

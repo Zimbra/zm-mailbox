@@ -320,6 +320,11 @@
                     <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
                     <arg line="-a generateDefaultCOSLdif -i ${build.dir}/attrs -o ${build.dir}/ldap-config/zimbra_defaultcos.ldif"/>
                 </java>
+                <java classname="com.zimbra.cs.account.AttributeManagerUtil" fork="true" classpathref="class.path"
+                      failonerror="true">
+                    <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
+                    <arg line="-a generateDefaultExternalCOSLdif -i ${build.dir}/attrs -o ${build.dir}/ldap-config/zimbra_defaultexternalcos.ldif"/>
+                </java>
                 <copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/zimbra.ldif"/>
                 <copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/zimbra_mimehandlers.ldif"/>
                 <copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/amavisd.schema"/>
@@ -1319,6 +1324,9 @@
             <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_defaultcos.ldif"/>
         </antcall>
         <antcall target="ldap-modify">
+            <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_defaultexternalcos.ldif"/>
+        </antcall>
+        <antcall target="ldap-modify">
             <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_mimehandlers.ldif"/>
         </antcall>
     </target>
@@ -1392,6 +1400,9 @@
     </antcall>
     <antcall target="ldap-add">
       <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_defaultcos.ldif"/>
+    </antcall>
+    <antcall target="ldap-add">
+      <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_defaultexternalcos.ldif"/>
     </antcall>
     <antcall target="ldap-add">
       <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_mimehandlers.ldif"/>
