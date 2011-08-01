@@ -379,18 +379,40 @@ public class DavContext {
 		return false;
 	}
 	
+	private boolean getLimitByFileUploadMaxSize() {
+        boolean limitByFileUploadMaxSize = false;               
+        DavResource rs = null;
+        Collection parentCollection = null;
+        try {
+            rs = getRequestedResource();
+        } catch (DavException de) {
+            // ignore the error. the resource may not exist yet.
+        } catch (ServiceException e) {
+            // ignore the error. the resource may not exist yet.
+        }
+        try {
+            if ((rs != null) && (rs instanceof Collection))
+                parentCollection = (Collection) rs;
+            else 
+                parentCollection = getRequestedParentCollection();
+        } catch (DavException de) {
+            // ignore the error. The parent could be a mounted subcollection and PROPFIND requests are not proxied.
+        } catch (ServiceException e) {
+            // ignore the error. The parent could be a mounted subcollection and PROPFIND requests are not proxied.
+        }
+        if ( (parentCollection != null) && (parentCollection.getDefaultView() == MailItem.Type.DOCUMENT || parentCollection.getDefaultView() == MailItem.Type.UNKNOWN))
+            limitByFileUploadMaxSize = true;
+	    return limitByFileUploadMaxSize;
+	}
+	
 	public FileUploadServlet.Upload getUpload() throws DavException, IOException {
 		if (mUpload == null) {
 			String name = null;
 			String ctype = getRequest().getContentType();
 			if (ctype == null)
                 name = getItem();
-			try {
-			    Collection parentCollection = getRequestedParentCollection();
-			    boolean limitByFileUploadMaxSize = false;
-			    if (parentCollection.getDefaultView() == MailItem.Type.DOCUMENT || parentCollection.getDefaultView() == MailItem.Type.UNKNOWN)
-			        limitByFileUploadMaxSize = true;			 
-			    mUpload = FileUploadServlet.saveUpload(mReq.getInputStream(), name, ctype, mAuthAccount.getId(), limitByFileUploadMaxSize);
+			try {			 
+			    mUpload = FileUploadServlet.saveUpload(mReq.getInputStream(), name, ctype, mAuthAccount.getId(), getLimitByFileUploadMaxSize());
                 ZimbraLog.dav.debug("Request: requested content-type: %s, actual content-type: %s", ctype, mUpload.getContentType());
 			} catch (ServiceException se) {
 				throw new DavException("can't save upload", se);
@@ -452,7 +474,7 @@ public class DavContext {
 	}
 	
 	public Collection getRequestedParentCollection() throws DavException, ServiceException {
-	    if (mRequestedParentCollection == null)
+	    if (mPath != null && mRequestedParentCollection == null)
 	        mRequestedParentCollection = UrlNamespace.getCollectionAtUrl(this, mPath);
 	    return mRequestedParentCollection;
 	}
