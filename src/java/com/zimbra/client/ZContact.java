@@ -132,7 +132,7 @@ public class ZContact implements ZItem, ToZJSONObject {
         mTagIds = e.getAttribute(MailConstants.A_TAGS, null);
         mRevision = e.getAttribute(MailConstants.A_REVISION, null);
         mDate = e.getAttributeLong(MailConstants.A_DATE, 0);
-        mMetaDataChangedDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
+        mMetaDataChangedDate = e.getAttributeLong(MailConstants.A_CHANGE_DATE, 0) * 1000;
         
         HashMap<String, String> attrs = new HashMap<String, String>();
         HashMap<String, ZContactAttachmentInfo> attachments = new HashMap<String, ZContactAttachmentInfo>();

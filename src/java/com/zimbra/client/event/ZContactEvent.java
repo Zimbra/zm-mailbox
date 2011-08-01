@@ -65,7 +65,7 @@ public class ZContactEvent implements ToZJSONObject {
     }
 
     public long getMetaDataChangedDate(long defaultValue) throws ServiceException {
-        return mContactEl.getAttributeLong(MailConstants.A_MODIFIED_DATE, defaultValue);
+        return mContactEl.getAttributeLong(MailConstants.A_CHANGE_DATE, defaultValue);
     }
 
     public long getDate(long defaultValue) throws ServiceException {

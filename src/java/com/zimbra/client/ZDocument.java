@@ -49,8 +49,8 @@ public class ZDocument implements ZItem, ToZJSONObject {
     	creator = e.getAttribute(MailConstants.A_CREATOR);
     	restUrl = e.getAttribute(MailConstants.A_REST_URL, null);
     	createdDate = e.getAttributeLong(MailConstants.A_CREATED_DATE, 0) * 1000;
-    	modifiedDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
-    	metadataChangeDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
+    	modifiedDate = e.getAttributeLong(MailConstants.A_DATE, 0);
+    	metadataChangeDate = e.getAttributeLong(MailConstants.A_CHANGE_DATE, 0) * 1000;
         size = e.getAttributeLong(MailConstants.A_SIZE,0);
         if(isWiki){
             contentType = MimeConstants.CT_TEXT_HTML; //"text/html";

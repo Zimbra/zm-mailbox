@@ -63,7 +63,7 @@ public class ZContactHit implements ZSearchHit {
         mRevision = e.getAttribute(MailConstants.A_REVISION, null);
         mFolderId = e.getAttribute(MailConstants.A_FOLDER,null);
         mDate = e.getAttributeLong(MailConstants.A_DATE, 0);
-        mMetaDataDate = e.getAttributeLong(MailConstants.A_MODIFIED_DATE, 0) * 1000;
+        mMetaDataDate = e.getAttributeLong(MailConstants.A_CHANGE_DATE, 0) * 1000;
         mType = e.getAttribute(MailConstants.A_CONTACT_TYPE, null);
 
         HashMap<String, String> attrs = new HashMap<String, String>();

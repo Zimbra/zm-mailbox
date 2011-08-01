@@ -305,7 +305,7 @@ public class ZAppointmentHit implements ZSearchHit {
             appt.mFragment = inst.getAttribute(MailConstants.E_FRAG, fragment);
             appt.mUid = inst.getAttribute(MailConstants.A_UID, uid);
             appt.mModifiedSeq = inst.getAttributeLong(MailConstants.A_MODIFIED_SEQUENCE, ms);
-            appt.mModifiedDate = inst.getAttributeLong(MailConstants.A_MODIFIED_DATE, md);
+            appt.mModifiedDate = inst.getAttributeLong(MailConstants.A_DATE, md);
             appt.mSavedSeq = inst.getAttributeLong(MailConstants.A_REVISION, ss);
             appts.add(appt);
         }
