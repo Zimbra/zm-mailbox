@@ -23,6 +23,7 @@
         <folder remotePath="[Gmail]/Sent Mail" localPath="/Sent" sync="true"/>
         <folder remotePath="[Gmail]/Spam" localPath="/Junk" sync="false"/>
         <folder remotePath="[Gmail]/Starred" ignore="true"/>
+        <folder remotePath="[Gmail]/Important" ignore="true"/>
     </service>
 
     <service name="aol.com" saveToSent="true">
