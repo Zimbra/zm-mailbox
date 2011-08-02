@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 8.0.0_BETA1_1111 pshao 20110801-1809 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3321,6 +3321,31 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=501)
     public static final String A_zimbraExcludeFromCMBSearch = "zimbraExcludeFromCMBSearch";
+
+    /**
+     * the handler class for getting all groups an account belongs to in the
+     * external directory
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1251)
+    public static final String A_zimbraExternalGroupHandlerClass = "zimbraExternalGroupHandlerClass";
+
+    /**
+     * LDAP search base for searching external LDAP groups
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1249)
+    public static final String A_zimbraExternalGroupLdapSearchBase = "zimbraExternalGroupLdapSearchBase";
+
+    /**
+     * LDAP search filter for searching external LDAP groups
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1250)
+    public static final String A_zimbraExternalGroupLdapSearchFilter = "zimbraExternalGroupLdapSearchFilter";
 
     /**
      * external imap hostname
@@ -9493,6 +9518,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
