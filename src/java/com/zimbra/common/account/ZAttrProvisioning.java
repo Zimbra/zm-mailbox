@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110801-1809 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110801-2320 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1832,11 +1832,19 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAuthLdapURL = "zimbraAuthLdapURL";
 
     /**
-     * mechanism to use for authentication. Valid values are zimbra, ldap,
-     * ad, kerberos5, custom:{handler-name} [arg1 arg2 ...]
+     * mechanism to use for verifying password. Valid values are zimbra,
+     * ldap, ad, kerberos5, custom:{handler-name} [arg1 arg2 ...]
      */
     @ZAttr(id=42)
     public static final String A_zimbraAuthMech = "zimbraAuthMech";
+
+    /**
+     * mechanism to use for verifying password for admin. See zimbraAuthMech
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1252)
+    public static final String A_zimbraAuthMechAdmin = "zimbraAuthMechAdmin";
 
     /**
      * auth token secret key
