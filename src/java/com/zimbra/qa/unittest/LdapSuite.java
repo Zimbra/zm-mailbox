@@ -58,7 +58,7 @@ public class LdapSuite {
          * and
          * uncomment sCoreRightDefFiles.add("rights-unittest.xml"); in RightManager
          */  
-        junit.run(TestACBasic.class);
+        junit.run(TestACAll.class);
         
         /*
          * To setup Velodrome DIT:
