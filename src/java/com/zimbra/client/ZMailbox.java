@@ -3121,11 +3121,13 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     /**
-     * create a new mointpoint in the specified parent folder.
+     * create a new mountpoint in the specified parent folder.
      *
      * @param parentId parent folder id
      * @param name name of new folder
      * @param defaultView default view of new folder.
+     * @param color
+     * @param flags
      * @param ownerBy used to specify whether owner is an id or account name (email address)
      * @param owner either the id or name of the owner
      * @param itemBy used to specify whether sharedItem is an id or path to the shared item
