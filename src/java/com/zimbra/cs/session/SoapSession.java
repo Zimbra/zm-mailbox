@@ -45,6 +45,7 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.mailbox.Comment;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
@@ -207,6 +208,7 @@ public class SoapSession extends Session {
                 return pms;
             }
 
+            OperationContext octxt = new OperationContext(getAuthenticatedAccountId());
             PendingModifications filtered = new PendingModifications();
             filtered.changedTypes = pms.changedTypes;
             if (pms.deleted != null && !pms.deleted.isEmpty()) {
@@ -217,6 +219,13 @@ public class SoapSession extends Session {
                     if (item instanceof Conversation ||
                             visible.contains(item instanceof Folder ? item.getId() : item.getFolderId())) {
                         filtered.recordCreated(item);
+                    } else if (item instanceof Comment) {
+                        try {
+                            mailbox.getItemById(octxt, item.getParentId(), MailItem.Type.UNKNOWN);
+                            filtered.recordCreated(item);
+                        } catch (ServiceException e) {
+                            // no permission.  ignore the item.
+                        }
                     }
                 }
             }
