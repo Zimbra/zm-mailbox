@@ -26,6 +26,7 @@ import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZLdapFilter;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
@@ -142,7 +143,14 @@ public abstract class LdapHelper {
         if (initZlc == null) {
             throw ServiceException.FAILURE("internal error", null);
         }
-        return searchForEntry(base, filter, initZlc, false); 
+        return searchForEntry(base, filter, initZlc, false, returnAttrs); 
+    }
+    
+    public ZSearchResultEntry searchForEntry(String base, String filter, 
+            ZLdapContext initZlc, String[] returnAttrs) 
+    throws LdapMultipleEntriesMatchedException, ServiceException {
+        ZLdapFilter zFilter = ZLdapFilterFactory.getInstance().fromStringFilter(filter);
+        return searchForEntry(base, zFilter, initZlc, returnAttrs); 
     }
     
     /**

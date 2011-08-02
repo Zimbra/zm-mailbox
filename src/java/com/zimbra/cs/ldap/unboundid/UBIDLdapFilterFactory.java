@@ -31,6 +31,11 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         
     }
     
+    @Override
+    public ZLdapFilter fromStringFilter(String stringFilter) throws LdapException {
+        return new UBIDLdapFilter(stringFilter);
+    }
+    
     /*
      * canned filters
      */

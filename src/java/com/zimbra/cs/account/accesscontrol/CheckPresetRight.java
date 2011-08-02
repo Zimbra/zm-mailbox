@@ -16,6 +16,7 @@ package com.zimbra.cs.account.accesscontrol;
 
 import java.util.List;
 
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
@@ -61,21 +62,25 @@ public class CheckPresetRight extends CheckRight {
      * @param target
      * @param rightNeeded
      * @param canDelegateNeeded if we are checking for "can delegate" the right
-     * @param via if not null, will be populated with the grant info via which the result was decided.
+     * @param via if not null, will be populated with the grant info via which the 
+     *        result was determined.
      * @return Boolean.TRUE if allowed, 
      *         Boolean.FALSE if denied, 
      *         null if there is no grant applicable to the rightNeeded.
      * @throws ServiceException
      */
     public static Boolean check(Account grantee, Entry target, 
-            Right rightNeeded, boolean canDelegateNeeded, ViaGrant via) throws ServiceException {
+            Right rightNeeded, boolean canDelegateNeeded, ViaGrant via) 
+    throws ServiceException {
         
-        CachedPermission cached = PermissionCache.cacheGet(grantee, target, rightNeeded, canDelegateNeeded);
+        CachedPermission cached = PermissionCache.cacheGet(grantee, target, 
+                rightNeeded, canDelegateNeeded);
         
         Boolean allowed;
         
         if (cached == CachedPermission.NOT_CACHED) {
-            CheckPresetRight checker = new CheckPresetRight(grantee, target, rightNeeded, canDelegateNeeded, via);
+            CheckPresetRight checker = new CheckPresetRight(grantee, target, 
+                    rightNeeded, canDelegateNeeded, via);
             allowed = checker.checkRight();
             PermissionCache.cachePut(grantee, target, rightNeeded, canDelegateNeeded, allowed);
         } else {
@@ -85,7 +90,8 @@ public class CheckPresetRight extends CheckRight {
         if (sLog.isDebugEnabled()) {
             sLog.debug("check ACL: " + (allowed==null ? "no matching ACL" : allowed) + 
                     "(target=" + target.getLabel() + ", grantee=" + grantee.getName() + 
-                    ", right=" + rightNeeded.getName() + ", canDelegateNeeded=" + canDelegateNeeded + ")");
+                    ", right=" + rightNeeded.getName() + 
+                    ", canDelegateNeeded=" + canDelegateNeeded + ")");
         }
         
         return allowed;
@@ -110,6 +116,16 @@ public class CheckPresetRight extends CheckRight {
             mGranteeGroups = mProv.getGroupMembership(mGranteeAcct, adminGroupsOnly);
         }
         return mGranteeGroups;
+    }
+    
+    private boolean matchesGroupGrantee(ZimbraACE ace) throws ServiceException {
+        if (getGranteeGroups().groupIds().contains(ace.getGrantee())) {
+            return true;
+        } else if (ace.getGranteeType() == GranteeType.GT_EXT_GROUP) {
+            return ace.matchesGrantee(mGranteeAcct);
+        } else {
+            return false;
+        }
     }
             
     private Boolean checkRight() throws ServiceException {
@@ -373,15 +389,18 @@ public class CheckPresetRight extends CheckRight {
     
     /*
      * Like checkPresetRight, but checks group grantees.  Instead of calling ZimbraACE.match, 
-     * which checks group grants by call inDistributionList, we do it the other way around 
-     * by passing in an AclGroups object that contains all the groups the account is in that 
-     * are "eligible" for the grant.   We check if the grantee of the grant is one of the 
-     * "eligible" group the account is in.  
+     * which checks group grants using inDistributionList, we do it the other way around 
+     * by obtaining a GroupMembership object that contains all the groups the account is 
+     * in that are "eligible"(for adming rights, the group's admin flag must be on) for 
+     * the grant.   We check if the grantee of the grant is one of the eligible groups the 
+     * account is in.  If the grantee on the zimbraACE is an external group, check if 
+     * the account is in the external group. 
      *
      * Eligible:
-     *   - for admin rights granted to a group, the grant is effective only if the group has
-     *     zimbraIsAdminGroup=TRUE.  The the group's zimbraIsAdminGroup is set to false after 
-     *     if grant is made, the grant is still there on the target entry, but becomes useless.
+     *   - for admin rights granted to a group, the grant is effective only if the group 
+     *     has zimbraIsAdminGroup=TRUE.  If the group's zimbraIsAdminGroup is set to false 
+     *     after a grant is made, the grant is still there on the target entry, but 
+     *     becomes useless.
      */
     private Boolean checkGroupPresetRight(List<ZimbraACE> acl, short granteeFlags, boolean subDomain) 
     throws ServiceException {
@@ -396,7 +415,7 @@ public class CheckPresetRight extends CheckRight {
             // This is so callsite default will not be honored.
             mSeenRight.setSeenRight();
             
-            if (getGranteeGroups().groupIds().contains(ace.getGrantee())) {
+            if (matchesGroupGrantee(ace)) {
                 return gotResult(ace);
             }
         }

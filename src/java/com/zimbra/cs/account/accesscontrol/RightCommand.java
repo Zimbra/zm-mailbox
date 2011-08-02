@@ -27,6 +27,7 @@ import java.util.TreeMap;
 
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -1145,33 +1146,35 @@ public class RightCommand {
     throws ServiceException {
             
         /*
-         * check grantee if the right is an admin right, or if the right is an user right with 
-         * can_delegate modifier    
+         * check grantee if the right is an admin right, or if the right is an 
+         * user right with can_delegate modifier    
          */
         if (!right.isUserRight() || RightModifier.RM_CAN_DELEGATE == rightModifier){
             
             /*
              * check if the grantee is an admin account or admin group
              * 
-             * If we are revoking, skip this check, just let the revoke through.  
+             * If this is revoking, skip this check, just let the revoke through.  
              * The grantee could have been taken away the admin privilege.
              */ 
             if (!revoking) {
                 boolean isCDARight = CrossDomain.validateCrossDomainAdminGrant(right, granteeType);
                 if (!isCDARight &&
-                    !RightBearer.isValidGranteeForAdminRights(granteeType, granteeEntry))
+                    !RightBearer.isValidGranteeForAdminRights(granteeType, granteeEntry)) {
                     throw ServiceException.INVALID_REQUEST("grantee for admin right or " +
                             "for user right with the canDelegate modifier must be a " +
                             "delegated admin account or admin group, it cannot be a " +
                             "global admin account or a regular user account.", null);
+                }
             }
             
             /*
              * check if the grantee type can be used for an admin right
              */
-            if (!granteeType.allowedForAdminRights())
+            if (!granteeType.allowedForAdminRights()) {
                 throw ServiceException.INVALID_REQUEST("grantee type " + 
                         granteeType.getCode() +  " is not allowed for admin right", null);
+            }
         }
         
         /*
@@ -1186,7 +1189,9 @@ public class RightCommand {
                     right.reportGrantableTargetTypes(), null);
         }
         
-        // then the ugly special group target checking
+        /*
+         * then the ugly special group target checking
+         */
         if (targetType.isGroup() && !CheckRight.allowGroupTarget(right)) {
             throw ServiceException.INVALID_REQUEST(
                     "group target is not supported for right: " + right.getName(), null);
@@ -1224,24 +1229,35 @@ public class RightCommand {
          * e.g. if and admin is granting the invite right on a domain, the 
          *      admin must have effective +invite right on the domain.
          * 
+         * Only a global admin can grant/revoke rights for external group grantees.
+         * 
          * if authedAcct==null, the call site is LdapProvisioning, treat it 
          * as a system admin and skip this check.
          */
         if (authedAcct != null) {
-            
             AccessManager am = AccessManager.getInstance();
-            boolean canGrant = am.canPerform(authedAcct, targetEntry, right, true, null, true, null);
-            if (!canGrant) {
-                throw ServiceException.PERM_DENIED("insuffcient right to " + 
-                        (revoking?"revoke":"grant"));
-            }
             
-            ParticallyDenied.checkPartiallyDenied(authedAcct, targetType, targetEntry, right);
+            if (granteeType == GranteeType.GT_EXT_GROUP) {
+                // must be system admin
+                if (!AccessControlUtil.isGlobalAdmin(authedAcct)) {
+                    throw ServiceException.PERM_DENIED("only global admins can grant to " +
+                            "external group");
+                }
+            } else {
+                boolean canGrant = am.canPerform(authedAcct, targetEntry, right, true, null, true, null);
+                if (!canGrant) {
+                    throw ServiceException.PERM_DENIED("insuffcient right to " + 
+                            (revoking?"revoke":"grant"));
+                }
+                
+                ParticallyDenied.checkPartiallyDenied(authedAcct, targetType, targetEntry, right);
+            }
         }
         
-        if (secret != null && !granteeType.allowSecret())
+        if (secret != null && !granteeType.allowSecret()) {
             throw ServiceException.PERM_DENIED("password is not allowed for grantee type " + 
                     granteeType.getCode());
+        }
     }
     
     public static void grantRight(
@@ -1264,6 +1280,14 @@ public class RightCommand {
         if (gt.isZimbraEntry()) {
             granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);
             granteeId = granteeEntry.getId();
+        } else if (gt == GranteeType.GT_EXT_GROUP) {
+            ExternalGroup extGroup = ExternalGroup.get(DomainBy.name, grantee);
+            if (extGroup == null) {
+                throw ServiceException.INVALID_REQUEST("unable to find external group " + 
+                        grantee, null);
+            }
+            granteeId = extGroup.getId();
+            
         } else {
             // for all and pub, ZimbraACE will use the correct id, granteeId here will be ignored
             // for guest, grantee id is the email

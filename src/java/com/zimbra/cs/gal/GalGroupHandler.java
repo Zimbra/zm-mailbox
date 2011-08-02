@@ -15,11 +15,17 @@
 
 package com.zimbra.cs.gal;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning.GroupMembership;
+import com.zimbra.cs.account.Provisioning.MemberOf;
+import com.zimbra.cs.account.accesscontrol.ExternalGroup;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.ILdapContext;
@@ -31,6 +37,8 @@ public abstract class GalGroupHandler {
     public abstract String[] getMembers(ILdapContext ldapContext, String searchBase, 
             String entryDN, IAttributes ldapAttrs);
     
+    public abstract boolean inDelegatedAdminGroup(ExternalGroup group, Account acct) 
+    throws ServiceException;
     
     private static Map<String, HandlerInfo> sHandlers = new ConcurrentHashMap<String,HandlerInfo>();
     

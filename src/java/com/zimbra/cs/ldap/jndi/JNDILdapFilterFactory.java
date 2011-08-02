@@ -28,6 +28,11 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
         
     }
     
+    @Override
+    public ZLdapFilter fromStringFilter(String stringFilter) {
+        return new JNDILdapFilter(stringFilter);
+    }
+    
     /*
      * operational
      */

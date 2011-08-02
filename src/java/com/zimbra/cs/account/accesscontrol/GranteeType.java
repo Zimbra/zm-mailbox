@@ -29,6 +29,7 @@ public enum GranteeType {
 
     GT_USER("usr",     (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_INDIVIDUAL | GranteeFlag.F_IS_ZIMBRA_ENTRY)),
     GT_GROUP("grp",    (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_GROUP      | GranteeFlag.F_IS_ZIMBRA_ENTRY)),
+    GT_EXT_GROUP("egp",(short)(GranteeFlag.F_ADMIN | GranteeFlag.F_GROUP)),
     GT_AUTHUSER("all", (short)(                      GranteeFlag.F_AUTHUSER)),
     GT_DOMAIN("dom",   (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_DOMAIN     | GranteeFlag.F_IS_ZIMBRA_ENTRY)),  // only for the admin crossDomainAdmin right and user rights
     GT_GUEST("gst",    (short)(                      GranteeFlag.F_INDIVIDUAL                                  | GranteeFlag.F_HAS_SECRET)),

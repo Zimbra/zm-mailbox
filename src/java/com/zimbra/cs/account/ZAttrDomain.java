@@ -43,7 +43,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 8.0.0_BETA1_1111 pshao 20110801-1809 */
 
     /**
      * RFC2256: descriptive information
@@ -5425,6 +5425,227 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetErrorReportUrl(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraErrorReportUrl, "");
+        return attrs;
+    }
+
+    /**
+     * the handler class for getting all groups an account belongs to in the
+     * external directory
+     *
+     * @return zimbraExternalGroupHandlerClass, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1251)
+    public String getExternalGroupHandlerClass() {
+        return getAttr(Provisioning.A_zimbraExternalGroupHandlerClass, null);
+    }
+
+    /**
+     * the handler class for getting all groups an account belongs to in the
+     * external directory
+     *
+     * @param zimbraExternalGroupHandlerClass new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1251)
+    public void setExternalGroupHandlerClass(String zimbraExternalGroupHandlerClass) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalGroupHandlerClass, zimbraExternalGroupHandlerClass);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the handler class for getting all groups an account belongs to in the
+     * external directory
+     *
+     * @param zimbraExternalGroupHandlerClass new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1251)
+    public Map<String,Object> setExternalGroupHandlerClass(String zimbraExternalGroupHandlerClass, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalGroupHandlerClass, zimbraExternalGroupHandlerClass);
+        return attrs;
+    }
+
+    /**
+     * the handler class for getting all groups an account belongs to in the
+     * external directory
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1251)
+    public void unsetExternalGroupHandlerClass() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalGroupHandlerClass, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the handler class for getting all groups an account belongs to in the
+     * external directory
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1251)
+    public Map<String,Object> unsetExternalGroupHandlerClass(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalGroupHandlerClass, "");
+        return attrs;
+    }
+
+    /**
+     * LDAP search base for searching external LDAP groups
+     *
+     * @return zimbraExternalGroupLdapSearchBase, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1249)
+    public String getExternalGroupLdapSearchBase() {
+        return getAttr(Provisioning.A_zimbraExternalGroupLdapSearchBase, null);
+    }
+
+    /**
+     * LDAP search base for searching external LDAP groups
+     *
+     * @param zimbraExternalGroupLdapSearchBase new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1249)
+    public void setExternalGroupLdapSearchBase(String zimbraExternalGroupLdapSearchBase) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalGroupLdapSearchBase, zimbraExternalGroupLdapSearchBase);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP search base for searching external LDAP groups
+     *
+     * @param zimbraExternalGroupLdapSearchBase new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1249)
+    public Map<String,Object> setExternalGroupLdapSearchBase(String zimbraExternalGroupLdapSearchBase, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalGroupLdapSearchBase, zimbraExternalGroupLdapSearchBase);
+        return attrs;
+    }
+
+    /**
+     * LDAP search base for searching external LDAP groups
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1249)
+    public void unsetExternalGroupLdapSearchBase() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalGroupLdapSearchBase, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP search base for searching external LDAP groups
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1249)
+    public Map<String,Object> unsetExternalGroupLdapSearchBase(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalGroupLdapSearchBase, "");
+        return attrs;
+    }
+
+    /**
+     * LDAP search filter for searching external LDAP groups
+     *
+     * @return zimbraExternalGroupLdapSearchFilter, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1250)
+    public String getExternalGroupLdapSearchFilter() {
+        return getAttr(Provisioning.A_zimbraExternalGroupLdapSearchFilter, null);
+    }
+
+    /**
+     * LDAP search filter for searching external LDAP groups
+     *
+     * @param zimbraExternalGroupLdapSearchFilter new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1250)
+    public void setExternalGroupLdapSearchFilter(String zimbraExternalGroupLdapSearchFilter) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalGroupLdapSearchFilter, zimbraExternalGroupLdapSearchFilter);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP search filter for searching external LDAP groups
+     *
+     * @param zimbraExternalGroupLdapSearchFilter new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1250)
+    public Map<String,Object> setExternalGroupLdapSearchFilter(String zimbraExternalGroupLdapSearchFilter, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalGroupLdapSearchFilter, zimbraExternalGroupLdapSearchFilter);
+        return attrs;
+    }
+
+    /**
+     * LDAP search filter for searching external LDAP groups
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1250)
+    public void unsetExternalGroupLdapSearchFilter() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalGroupLdapSearchFilter, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * LDAP search filter for searching external LDAP groups
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1250)
+    public Map<String,Object> unsetExternalGroupLdapSearchFilter(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalGroupLdapSearchFilter, "");
         return attrs;
     }
 

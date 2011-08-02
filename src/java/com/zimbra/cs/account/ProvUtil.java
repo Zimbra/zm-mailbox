@@ -4237,7 +4237,8 @@ public class ProvUtil implements HttpDebugListener {
                 allEffRights.granteeName() + "(" + allEffRights.granteeId() + ")" +
                 " has the following rights:");
 
-        for (Map.Entry<TargetType, RightCommand.RightsByTargetType> rightsByTargetType : allEffRights.rightsByTargetType().entrySet()) {
+        for (Map.Entry<TargetType, RightCommand.RightsByTargetType> rightsByTargetType : 
+                allEffRights.rightsByTargetType().entrySet()) {
             RightCommand.RightsByTargetType rbtt = rightsByTargetType.getValue();
             if (!rbtt.hasNoRight()) {
                 dumpRightsByTargetType(rightsByTargetType.getKey(), rbtt, expandSetAttrs, expandGetAttrs);

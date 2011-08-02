@@ -30,7 +30,6 @@ public abstract class CheckRight {
     protected Provisioning mProv; 
     protected TargetType mTargetType;
     
-    
     protected CheckRight(Entry target, Right rightNeeded, boolean canDelegateNeeded) 
     throws ServiceException {
         

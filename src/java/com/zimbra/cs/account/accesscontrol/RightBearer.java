@@ -17,7 +17,9 @@ package com.zimbra.cs.account.accesscontrol;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
@@ -30,10 +32,11 @@ public abstract class RightBearer {
     protected NamedEntry mRightBearer;
     
     static RightBearer newRightBearer(NamedEntry entry) throws ServiceException {
-        if (entry instanceof Account && AccessControlUtil.isGlobalAdmin((Account)entry, true))
+        if (entry instanceof Account && AccessControlUtil.isGlobalAdmin((Account)entry, true)) {
             return new GlobalAdmin(entry);
-        else
+        } else {
             return new Grantee(entry);
+        }
     }
     
     protected RightBearer(NamedEntry grantee) {
@@ -153,7 +156,32 @@ public abstract class RightBearer {
                     grantee.getBooleanAttr(Provisioning.A_zimbraIsDelegatedAdminAccount, false));
         } else if (gt == GranteeType.GT_GROUP) {
             return grantee.getBooleanAttr(Provisioning.A_zimbraIsAdminGroup, false);
-        } else
+        } else if (gt == GranteeType.GT_EXT_GROUP) {
+            return true;
+        } else {
             return false;
+        }
     }
+    
+    static boolean matchesGrantee(Grantee grantee, ZimbraACE ace) throws ServiceException {
+        // set of zimbraIds the grantee in question can assume: including 
+        //   - zimbraId of the grantee
+        //   - all zimbra internal admin groups the grantee is in 
+        Set<String> granteeIds = grantee.getIdAndGroupIds();
+        if (granteeIds.contains(ace.getGrantee())) {
+            return true;
+        } else if (ace.getGranteeType() == GranteeType.GT_EXT_GROUP) {
+            if (grantee.isAccount()) {
+                return ace.matchesGrantee(grantee.getAccount());
+            } else {
+                // we are collecting rights for a group grantee
+                // TODO
+                throw ServiceException.FAILURE("Nnot yet implemented", null);
+            }
+        } else {
+            return false;
+        }
+    }
+    
+    
 }

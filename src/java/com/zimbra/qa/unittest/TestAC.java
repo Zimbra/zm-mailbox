@@ -263,8 +263,9 @@ public class TestAC extends TestProv {
     
     @Override
     protected Account getGlobalAdminAcct() throws ServiceException {
-        if (mGlobalAdminAcct == null)
+        if (mGlobalAdminAcct == null) {
             mGlobalAdminAcct = super.getGlobalAdminAcct();
+        }
         return mGlobalAdminAcct;
     }
     

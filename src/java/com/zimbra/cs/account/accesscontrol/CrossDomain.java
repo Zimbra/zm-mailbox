@@ -121,14 +121,16 @@ public class CrossDomain {
     }
     
     static boolean validateCrossDomainAdminGrant(Right right, GranteeType granteeType) 
-    throws ServiceException{
-        if (right == Admin.R_crossDomainAdmin && granteeType != GranteeType.GT_DOMAIN)
+    throws ServiceException {
+        if (right == Admin.R_crossDomainAdmin && granteeType != GranteeType.GT_DOMAIN) {
             throw ServiceException.INVALID_REQUEST("grantee for right " + 
                 Admin.R_crossDomainAdmin.getName() + " must be a domain.", null);
-
-        if (right != Admin.R_crossDomainAdmin && granteeType == GranteeType.GT_DOMAIN)
+        }
+        
+        if (right != Admin.R_crossDomainAdmin && granteeType == GranteeType.GT_DOMAIN) {
             throw ServiceException.INVALID_REQUEST("grantee for right " + 
                     right.getName() + " cannot be a domain.", null);
+        }
         
         return right == Admin.R_crossDomainAdmin;
     }

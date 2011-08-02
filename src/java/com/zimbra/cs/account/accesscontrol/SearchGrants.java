@@ -37,7 +37,8 @@ public final class SearchGrants {
     private final Provisioning prov;
     private final Set<TargetType> targetTypes;
     private final Set<String> granteeIds;
-    private final Set<String> fetchAttrs = Sets.newHashSet(Provisioning.A_cn, Provisioning.A_zimbraId,
+    private final Set<String> fetchAttrs = Sets.newHashSet(
+            Provisioning.A_cn, Provisioning.A_zimbraId,
             Provisioning.A_objectClass, Provisioning.A_zimbraACE);
 
     SearchGrants(Provisioning prov, Set<TargetType> targetTypes, Set<String> granteeIds) {

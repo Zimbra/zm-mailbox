@@ -499,9 +499,9 @@ public class TestLdap {
         JUnitCore junit = new JUnitCore();
         junit.addListener(new ConsoleListener());
         
-        // TestConfig.useConfig(TestConfig.LEGACY);
+        TestConfig.useConfig(TestConfig.LEGACY);
         
-        runTests(junit, TestConfig.UBID);
+        // runTests(junit, TestConfig.UBID);
         // runTests(junit, TestConfig.JNDI);
         // runTests(junit, TestConfig.LEGACY);
         

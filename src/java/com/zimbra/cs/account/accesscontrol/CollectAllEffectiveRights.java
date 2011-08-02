@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -259,6 +260,12 @@ public class CollectAllEffectiveRights {
 
         // get the set of zimbraId of the grantees to search for
         Set<String> granteeIdsToSearch = mGrantee.getIdAndGroupIds();
+        
+        // add external group grants that *may* apply
+        if (mGrantee.isAccount()) {
+            Domain domain = mProv.getDomain(mGrantee.getAccount());
+            granteeIdsToSearch.add(ZimbraACE.ExternalGroupInfo.encode(domain.getId(), ""));
+        }
         
         SearchGrants searchGrants = new SearchGrants(mProv, targetTypesToSearch, granteeIdsToSearch);
         Set<GrantsOnTarget> grantsOnTargets = searchGrants.doSearch().getResults();

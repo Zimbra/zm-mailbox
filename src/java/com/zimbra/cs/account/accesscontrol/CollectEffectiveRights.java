@@ -58,11 +58,13 @@ public class CollectEffectiveRights {
      * @param result
      * @throws ServiceException
      */
-    static void getEffectiveRights(RightBearer rightBearer, Entry target, TargetType targetType,
+    static void getEffectiveRights(RightBearer rightBearer, 
+            Entry target, TargetType targetType,
             boolean expandSetAttrs, boolean expandGetAttrs,
             RightCommand.EffectiveRights result) throws ServiceException{
-        CollectEffectiveRights cer = new CollectEffectiveRights(rightBearer, target, targetType,
-                expandSetAttrs, expandGetAttrs, result);
+        
+        CollectEffectiveRights cer = new CollectEffectiveRights(rightBearer, 
+                target, targetType, expandSetAttrs, expandGetAttrs, result);
         cer.collect();
     }
     
@@ -93,6 +95,10 @@ public class CollectEffectiveRights {
         return (mRightBearer instanceof GlobalAdmin);
     }
     
+    private Grantee getGrantee() {
+        return (Grantee) mRightBearer;
+    }
+    
     private void collect() throws ServiceException {
         
         Set<Right> presetRights;
@@ -110,16 +116,16 @@ public class CollectEffectiveRights {
             allowGetAttrs = AllowedAttrs.ALLOW_ALL_ATTRS();
             
         } else {
-            Grantee grantee = (Grantee)mRightBearer;
-            
             // get effective preset rights
-            presetRights = getEffectiveAdminPresetRights(grantee);
+            presetRights = getEffectiveAdminPresetRights();
             
             // get effective setAttrs rights
-            allowSetAttrs = CheckAttrRight.accessibleAttrs(grantee, mTarget, AdminRight.PR_SET_ATTRS, false);
+            allowSetAttrs = CheckAttrRight.accessibleAttrs(
+                    getGrantee(), mTarget, AdminRight.PR_SET_ATTRS, false);
             
             // get effective getAttrs rights
-            allowGetAttrs = CheckAttrRight.accessibleAttrs(grantee, mTarget, AdminRight.PR_GET_ATTRS, false);
+            allowGetAttrs = CheckAttrRight.accessibleAttrs(
+                    getGrantee(), mTarget, AdminRight.PR_GET_ATTRS, false);
         }
         
         // finally, populate our result 
@@ -181,11 +187,11 @@ public class CollectEffectiveRights {
         return rights;
     }
     
-    private Set<Right> getEffectiveAdminPresetRights(Grantee grantee) throws ServiceException {
+    private Set<Right> getEffectiveAdminPresetRights() throws ServiceException {
         
         Provisioning prov = Provisioning.getInstance();
         
-        Set<String> granteeIds = grantee.getIdAndGroupIds();
+        Grantee grantee = getGrantee();
         TargetType targetType = TargetType.getTargetType(mTarget);
         
         Map<Right, Integer> allowed = new HashMap<Right, Integer>();
@@ -200,7 +206,7 @@ public class CollectEffectiveRights {
         // check the target entry itself
         List<ZimbraACE> acl = ACLUtil.getAllACEs(mTarget);
         if (acl != null) {
-            collectAdminPresetRightOnTarget(acl, targetType, granteeIds, relativity, false, allowed, denied);
+            collectAdminPresetRightOnTarget(acl, targetType, relativity, false, allowed, denied);
             relativity += 2;
         }
         
@@ -248,7 +254,7 @@ public class CollectEffectiveRights {
                     List<ZimbraACE> aclsOnGroupTargets = groupACLs.getAllACLs();
                     if (aclsOnGroupTargets != null) {
                         collectAdminPresetRightOnTarget(aclsOnGroupTargets, targetType, 
-                                granteeIds, relativity, false, allowed, denied);
+                                relativity, false, allowed, denied);
                         relativity += 2;
                     }
                         
@@ -261,7 +267,7 @@ public class CollectEffectiveRights {
                 }
                 
                 boolean subDomain = (mTargetType == TargetType.domain && (grantedOn instanceof Domain));
-                collectAdminPresetRightOnTarget(acl, targetType, granteeIds, relativity, subDomain, allowed, denied);
+                collectAdminPresetRightOnTarget(acl, targetType, relativity, subDomain, allowed, denied);
                 relativity += 2;
             }
         }
@@ -290,21 +296,21 @@ public class CollectEffectiveRights {
     }
 
     private void collectAdminPresetRightOnTarget(List<ZimbraACE> acl, TargetType targeType,
-            Set<String> granteeIds, Integer relativity, boolean subDomain,
+            Integer relativity, boolean subDomain,
             Map<Right, Integer> allowed, Map<Right, Integer> denied) throws ServiceException {
         // as an individual: user
         short granteeFlags = (short)(GranteeFlag.F_INDIVIDUAL | GranteeFlag.F_ADMIN);
-        collectAdminPresetRights(acl, targeType, granteeIds, granteeFlags, relativity, 
+        collectAdminPresetRights(acl, targeType, granteeFlags, relativity, 
                 subDomain, allowed,  denied);
         
         // as a group member, bump up the relativity
         granteeFlags = (short)(GranteeFlag.F_GROUP | GranteeFlag.F_ADMIN);
-        collectAdminPresetRights(acl, targeType, granteeIds, granteeFlags, relativity, 
+        collectAdminPresetRights(acl, targeType, granteeFlags, relativity, 
                 subDomain, allowed,  denied);
     }
     
     private void collectAdminPresetRights(List<ZimbraACE> acl, TargetType targetType,
-            Set<String> granteeIds, short granteeFlags, Integer relativity, boolean subDomain,
+            short granteeFlags, Integer relativity, boolean subDomain,
             Map<Right, Integer> allowed, Map<Right, Integer> denied) 
     throws ServiceException {
         
@@ -313,8 +319,9 @@ public class CollectEffectiveRights {
             if (!granteeType.hasFlags(granteeFlags))
                 continue;
                 
-            if (!granteeIds.contains(ace.getGrantee()))
+            if (!RightBearer.matchesGrantee(getGrantee(), ace)) {
                 continue;
+            }
             
             if (!ace.deny()) {
                 if (subDomain != ace.subDomain())

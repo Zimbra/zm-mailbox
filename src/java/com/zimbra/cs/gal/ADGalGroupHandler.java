@@ -16,23 +16,34 @@
 package com.zimbra.cs.gal;
 
 import java.util.List;
-import java.util.Map;
 import java.util.TreeSet;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.EntryCacheDataKey;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.ExternalGroup;
 import com.zimbra.cs.account.ldap.LdapHelper;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.ILdapContext;
+import com.zimbra.cs.ldap.LdapClient;
+import com.zimbra.cs.ldap.LdapUsage;
+import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.ZAttributes;
+import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZSearchScope;
+import com.zimbra.cs.ldap.IAttributes.CheckBinary;
+import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 
 public class ADGalGroupHandler extends GalGroupHandler {
 
     private static final String MAIL_ATTR = "mail";
+    private static final String MEMBER_OF_ATTR = "memberOf";
     
     @Override
     public boolean isGroup(IAttributes ldapAttrs) {
@@ -47,7 +58,8 @@ public class ADGalGroupHandler extends GalGroupHandler {
     }
 
     @Override
-    public String[] getMembers(ILdapContext ldapContext, String searchBase, String entryDN, IAttributes ldapAttrs) {
+    public String[] getMembers(ILdapContext ldapContext, String searchBase, 
+            String entryDN, IAttributes ldapAttrs) {
         if (ZimbraLog.gal.isDebugEnabled()) {
             try {
                 ZimbraLog.gal.debug("Fetching members for group " + ldapAttrs.getAttrString(MAIL_ATTR));
@@ -86,7 +98,7 @@ public class ADGalGroupHandler extends GalGroupHandler {
         
         private TreeSet<String> searchLdap(ILdapContext zlc, String searchBase, String dnOfGroup) {
             
-            String query = "(memberof=" + dnOfGroup + ")";
+            String query = "(" + MEMBER_OF_ATTR + "=" + dnOfGroup + ")";
             String[] returnAttrs = new String[]{MAIL_ATTR};
             
             try {
@@ -101,6 +113,99 @@ public class ADGalGroupHandler extends GalGroupHandler {
             }
                         
             return result;
+        }
+    }
+
+    /*
+     * callsite is responsible for closing the context after done.
+     * 
+     * External group for delegated admin uses the external AD auth 
+     * settings.  The diff is, when looking for the account anywhere 
+     * other than authenticating the account, we have to use the 
+     * admin bindDN/password, because:
+     *   - we no longer have the user's AD password
+     *   - it makes perfect sense to do this task using the AD admin's credentials.
+     *
+     */
+    public static ZLdapContext getExternalDelegatedAdminGroupsLdapContext(Domain domain) 
+    throws ServiceException {
+        String[] ldapUrl = domain.getAuthLdapURL();
+        if (ldapUrl == null || ldapUrl.length == 0) {
+            throw ServiceException.INVALID_REQUEST("ubable to search external group, " +
+                    "missing " + Provisioning.A_zimbraAuthLdapURL, null);
+        }
+        
+        String authMech = domain.getAuthMech();
+        if (!Provisioning.AM_AD.equals(authMech)) {
+            throw ServiceException.INVALID_REQUEST("domain auth mech must be AD", null);
+        }
+        
+        boolean startTLSEnabled = domain.isAuthLdapStartTlsEnabled();
+        String bindDN = domain.getAuthLdapSearchBindDn();
+        String bindPassword = domain.getAuthLdapSearchBindPassword();
+        
+        ExternalLdapConfig ldapConfig = new ExternalLdapConfig(ldapUrl, startTLSEnabled, 
+                authMech, bindDN, bindPassword, null, 
+                "search external group");
+        
+        return LdapClient.getExternalContext(ldapConfig, LdapUsage.EXTERNAL_GROUP);
+    }
+
+    @Override
+    public boolean inDelegatedAdminGroup(ExternalGroup group, Account acct) 
+    throws ServiceException {
+        // check cache
+        @SuppressWarnings("unchecked")
+        List<String> groupDNs = (List<String>)
+            acct.getCachedData(EntryCacheDataKey.GROUPEDENTRY_EXTERNAL_GROUP_DNS);
+        
+        if (groupDNs != null) {
+            return groupDNs.contains(group.getDN());
+        }
+        
+        // get groups DNs this account belongs to in the external group
+        groupDNs = getDelegatedAdminGroups(acct);
+                
+        acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_EXTERNAL_GROUP_DNS, groupDNs);
+        
+        return groupDNs.contains(group.getDN());
+    }
+    
+    private List<String> getDelegatedAdminGroups(Account acct) throws ServiceException {
+        LdapProv prov = LdapProv.getInst();
+        
+        Domain domain = prov.getDomain(acct);
+        if (domain == null) {
+            throw ServiceException.FAILURE("unable to get domain for account " + 
+                    acct.getName(), null);
+        }
+        
+        // try explicit external DN on account first
+        String extDN = acct.getAuthLdapExternalDn();
+        if (extDN == null) {
+            // then try bind DN template on domain
+            // note: for AD auth, zimbraAuthLdapSearchFilter is not used, so we 
+            //       skip that. See LdapProvisioning.externalLdapAuth
+            String dnTemplate = domain.getAuthLdapBindDn();
+            if (dnTemplate != null) {
+                extDN = LdapUtilCommon.computeAuthDn(acct.getName(), dnTemplate);
+            }
+        }
+        
+        if (extDN == null) {
+            throw ServiceException.FAILURE("unable to get external DN for account " + 
+                    acct.getName(), null);
+        }
+        
+        ZLdapContext zlc = null;
+        try {
+            zlc = ADGalGroupHandler.getExternalDelegatedAdminGroupsLdapContext(domain);
+            
+            ZAttributes attrs = prov.getHelper().getAttributes(extDN, zlc, new String[]{MEMBER_OF_ATTR});
+            
+            return attrs.getMultiAttrStringAsList(MEMBER_OF_ATTR, CheckBinary.NOCHECK);
+        } finally {
+            LdapClient.closeContext(zlc);
         }
     }
     

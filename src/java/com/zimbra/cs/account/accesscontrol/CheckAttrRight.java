@@ -73,9 +73,10 @@ public class CheckAttrRight extends CheckRight {
     }
     
     private AllowedAttrs computeAccessibleAttrs() throws ServiceException {
-        if (mGrantee == null)
+        if (mGrantee == null) {
             return AllowedAttrs.DENY_ALL_ATTRS();
-                
+        }
+        
         Map<String, Integer> allowSome = new HashMap<String, Integer>();
         Map<String, Integer> denySome = new HashMap<String, Integer>();
         Integer relativity = Integer.valueOf(1);
@@ -124,14 +125,16 @@ public class CheckAttrRight extends CheckRight {
                     // check cross domain right if we are checking rights for an account
                     // skip cross domain rights if we are checking rights for a group, because
                     // members in the group can be in different domains, no point checking it.
-                    if (mGrantee.isAccount())
+                    if (mGrantee.isAccount()) {
                         skipPositiveGrants = !CrossDomain.crossDomainOK(mProv, 
                                 mGrantee.getAccount(), mGrantee.getDomain(), 
                                 targetDomain, (Group)grantedOn);
+                    }
                     
                     // don't check yet, collect all acls on all target groups
-                    if (groupACLs == null)
+                    if (groupACLs == null) {
                         groupACLs = new GroupACLs();
+                    }
                     groupACLs.collectACL(grantedOn, skipPositiveGrants);
                     
                 } else {
@@ -208,7 +211,8 @@ public class CheckAttrRight extends CheckRight {
     
     private CollectAttrsResult checkTarget(
             List<ZimbraACE> acl, Integer relativity, boolean subDomain,
-            Map<String, Integer> allowSome, Map<String, Integer> denySome) throws ServiceException {
+            Map<String, Integer> allowSome, Map<String, Integer> denySome) 
+    throws ServiceException {
         
         CollectAttrsResult result = null;
         
@@ -224,6 +228,7 @@ public class CheckAttrRight extends CheckRight {
 
         return result;
     }
+    
     
     /**
      * expand attr rights on this collection of ACEs into attributes.
@@ -266,22 +271,19 @@ public class CheckAttrRight extends CheckRight {
      */
     private CollectAttrsResult expandACLToAttrs(
             List<ZimbraACE> acl, short granteeFlags, Integer relativity, boolean subDomain,
-            Map<String, Integer> allowSome, Map<String, Integer> denySome) throws ServiceException {
+            Map<String, Integer> allowSome, Map<String, Integer> denySome) 
+    throws ServiceException {
                                                 
         CollectAttrsResult result = null;
-        
-        // set of zimbraIds the grantee in question can assume: including 
-        //   - zimbraId of the grantee
-        //   - all admin groups the grantee is in 
-        Set<String> granteeIds = mGrantee.getIdAndGroupIds();
         
         for (ZimbraACE ace : acl) {
             GranteeType granteeType = ace.getGranteeType();
             if (!granteeType.hasFlags(granteeFlags))
                 continue;
             
-            if (!granteeIds.contains(ace.getGrantee()))
+            if (!RightBearer.matchesGrantee(mGrantee, ace)) {
                 continue;
+            }
             
             Right rightGranted = ace.getRight();
             if (rightGranted.isPresetRight())

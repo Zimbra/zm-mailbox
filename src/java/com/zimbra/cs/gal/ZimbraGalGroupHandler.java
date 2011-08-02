@@ -20,8 +20,10 @@ import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.ExternalGroup;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.ILdapContext;
 
@@ -42,7 +44,8 @@ public class ZimbraGalGroupHandler extends GalGroupHandler {
     }
     
     @Override
-    public String[] getMembers(ILdapContext ldapContext, String searchBase, String entryDN, IAttributes ldapAttrs) {
+    public String[] getMembers(ILdapContext ldapContext, String searchBase, 
+            String entryDN, IAttributes ldapAttrs) {
         try {
             ZimbraLog.gal.debug("Fetching members for group " + ldapAttrs.getAttrString(Provisioning.A_mail));
             String[] members = ldapAttrs.getMultiAttrString(Provisioning.A_zimbraMailForwardingAddress);
@@ -52,5 +55,14 @@ public class ZimbraGalGroupHandler extends GalGroupHandler {
             ZimbraLog.gal.warn("unable to retrieve group members ", e);
             return sEmptyMembers;
         }
+    }
+
+    @Override
+    public boolean inDelegatedAdminGroup(ExternalGroup group, Account acct) 
+    throws ServiceException {
+        // this method is used for checking external group membership for checking 
+        // delegated admin rights.  Internal group grantees do not go through
+        // this path.
+        throw ServiceException.FAILURE("internal error", null);
     }
 }

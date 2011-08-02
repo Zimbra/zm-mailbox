@@ -23,7 +23,6 @@ import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.mailbox.ACL;
 
@@ -34,12 +33,16 @@ public class ZimbraACE {
     // delimits {grantee} {grantee type} {right}
     private static final char S_DELIMITER = ' ';
     
-    // delimits {external email}:{password} for guest grantee and {external email/name}:{accesskey} for key grantee
+    // delimits:
+    // {external email}:{password} for guest grantee
+    // {external email/name}:{accesskey} for key grantee
+    // {zimbraId of the Zimbra domain}:{email addr of the external group} for external group grantee
     private static final String S_SECRET_DELIMITER = ":";
     
     /* 
      * usr: zimbraId of the entry being granted rights
      * grp: zimbraId of the entry being granted rights
+     * egp: email address of the external group
      * gst: email address of the guest being granted rights
      * all: The pseudo-GUID GUID_AUTHUSER signifying "all authenticated users"
      * pub: The pseudo-GUID GUID_PUBLIC signifying "all authenticated and unauthenticated users"
@@ -73,18 +76,19 @@ public class ZimbraACE {
                 grantee type    stored 
                 -----------------------------------------------------
                 usr             zimbraId of the account
-                grp             zimbraId of the distribution list
+                grp             zimbraId of the distribution list or dynamic group
+                egp             {zimbraId of the Zimbra domain}:{email addr of the external group}
                 gst             {grantee email}:{password}
                 key             {grantee email (or just a name)}:{access key}
                 all             pseudo id 00000000-0000-0000-0000-000000000000
                 pub             pseudo id 99999999-9999-9999-9999-999999999999
                 
-                grantee name for key grantees, password, and access key(if provided by user) can have 
-                spaces, they are enclosed in {}.  {} are not allowed for them.
+                grantee name for key grantees, password, and access key(if provided by user) 
+                can have spaces, they are enclosed in {}.  {} are not allowed for them.
                  
-        grantee-type: usr | grp | gst | key | all | pub
+        grantee-type: usr | grp | egp | gst | key | all | pub
         
-        right: one of the supported right.
+        right: one of the supported rights.
                if a '-' (minus sign) is prepended to the right, it means the right is 
                specifically denied.
                         
@@ -94,7 +98,8 @@ public class ZimbraACE {
          foo bar:8d159aed5fb9431d8ac52db5e20baafb key viewFreeBusy
          foo bar:ocean blue key viewFreeBusy
          00000000-0000-0000-0000-000000000000 all viewFreeBusy
-         99999999-9999-9999-9999-999999999999 pub invite     
+         99999999-9999-9999-9999-999999999999 pub invite 
+         71b30452-99b5-49b2-9ead-19c4c02f9a35:group@external.com egp -viewFreeBusy    
     */
     private String[] getParts(String ace) throws ServiceException {
         int p3 = ace.lastIndexOf(S_DELIMITER);
@@ -112,13 +117,47 @@ public class ZimbraACE {
         return parts;
     }
     
+    static class ExternalGroupInfo {
+        // zimbraId of the Zimbra domain when persisted in ZimbraACE
+        // name of the Zimbra domain when specified in CLI and SOAP
+        private String zimbraDomain; 
+        private String extGroupName;
+        
+        private ExternalGroupInfo(String zimbraDomain, String externalGroupName) {
+            this.zimbraDomain = zimbraDomain;
+            this.extGroupName = externalGroupName;
+        }
+        
+        String getZimbraDmain() {
+            return zimbraDomain;
+        }
+        
+        String getExternalGroupName() {
+            return extGroupName;
+        }
+        
+        static ExternalGroupInfo parse(String grantee) 
+        throws ServiceException {
+            String[] parts = grantee.split(S_SECRET_DELIMITER);
+            if (parts.length != 2) {
+                throw ServiceException.PARSE_ERROR(
+                        "invalid external group grantee " + grantee, null);
+            }
+            return new ExternalGroupInfo(parts[0], parts[1]);
+        }
+        
+        static String encode(String zimbraDomain, String extGroupName) {
+            return zimbraDomain + S_SECRET_DELIMITER + extGroupName;
+        }
+    }
+    
     /**
      * ctor for loading from LDAP.  
      * 
      * We store targetType and targetName in ZimbraACE, because in some code path we've got 
      * an ZimbraACE object but lost track of on which target is it granted.  
      * 
-     * targetType and targetName are *not* serialized into LDAP, they are only set in memory.
+     * targetType and targetName are *not* serialized to LDAP, they are only set in memory.
      * 
      * @param ace
      * @param rm
@@ -126,7 +165,8 @@ public class ZimbraACE {
      * @param targetName
      * @throws ServiceException
      */
-    ZimbraACE(String ace, RightManager rm, TargetType targetType, String targetName) throws ServiceException {
+    ZimbraACE(String ace, RightManager rm, TargetType targetType, String targetName) 
+    throws ServiceException {
         String[] parts = getParts(ace);
         
         String grantee;
@@ -142,47 +182,61 @@ public class ZimbraACE {
         case GT_DOMAIN:    
         case GT_AUTHUSER:
         case GT_PUBLIC: 
-            if (!Provisioning.isUUID(grantee))
+            if (!Provisioning.isUUID(grantee)) {
                 throw ServiceException.PARSE_ERROR("grantee ID [" + grantee + "] is not a UUID", null);
+            }
+            mGrantee = grantee;
+            break;
+        case GT_EXT_GROUP:
+            // do not split zimbra domain id and external group name
+            // callsites need the domain id to find the external group
+            // callsites should call ZimbraACE.getExternalGroupInfo(grantee) 
+            // to get the zimbra domain part and external group part.
             mGrantee = grantee;
             break;
         case GT_GUEST:
         case GT_KEY:
             String[] externalParts = grantee.split(S_SECRET_DELIMITER);
-            if (externalParts.length != 1 && externalParts.length != 2)
-                throw ServiceException.PARSE_ERROR("bad ACE(gurst/key grantee must have two sub parts): " + ace, null);
+            if (externalParts.length != 1 && externalParts.length != 2) {
+                throw ServiceException.PARSE_ERROR(
+                        "bad ACE(guest/key grantee must have two sub parts): " + ace, null);
+            }
             mGrantee = decodeGrantee(externalParts[0]);
-            if (externalParts.length == 2)
+            if (externalParts.length == 2) {
                 mSecret = decodeSecret(externalParts[1]);
-            else
+            } else {
                 mSecret = null;
+            }
             break;
         default:
             throw ServiceException.PARSE_ERROR("invalid grantee type " + mGranteeType, null);
         }
         
         mRightModifier = RightModifier.fromChar(right.charAt(0));
-        if (mRightModifier == null)
+        if (mRightModifier == null) {
             mRight = rm.getRight(right);
-        else
+        } else {
             mRight = rm.getRight(right.substring(1));
-        
+        }
         mTargetType = targetType;
         mTargetName = targetName;
     }
     
     
-    public ZimbraACE(String granteeId, GranteeType granteeType, Right right, RightModifier rightModifier, String secret) throws ServiceException {
+    public ZimbraACE(String granteeId, GranteeType granteeType, Right right, 
+            RightModifier rightModifier, String secret) 
+    throws ServiceException {
         
         mGranteeType = granteeType;
         
-        if (mGranteeType == GranteeType.GT_AUTHUSER)
+        if (mGranteeType == GranteeType.GT_AUTHUSER) {
             mGrantee = GuestAccount.GUID_AUTHUSER;
-        else if (mGranteeType == GranteeType.GT_PUBLIC)
+        } else if (mGranteeType == GranteeType.GT_PUBLIC) {
             mGrantee = GuestAccount.GUID_PUBLIC;
-        else
+        } else {
             mGrantee = granteeId;
-            
+        }
+        
         mRightModifier = rightModifier;
         mRight = right;
         mSecret = secret;
@@ -328,7 +382,13 @@ public class ZimbraACE {
              */
             case GT_GROUP:
                 return prov.inDistributionList(acct, mGrantee); 
-                                                                              
+            case GT_EXT_GROUP:
+                ExternalGroup extGroup = ExternalGroup.get(DomainBy.id, mGrantee);
+                if (extGroup == null) {
+                    ZimbraLog.account.warn("unable to find external group grantee " + mGrantee);
+                    return false;
+                }
+                return extGroup.inGroup(acct);
             case GT_DOMAIN:
                 return mGrantee.equals(acct.getDomainId());
             case GT_USER:
@@ -375,7 +435,8 @@ public class ZimbraACE {
                     return acct.getName();
                 break;
             case GT_GROUP:
-                DistributionList group = Provisioning.getInstance().getDLBasic(Key.DistributionListBy.id, mGrantee);
+                DistributionList group = Provisioning.getInstance().getDLBasic(
+                        Key.DistributionListBy.id, mGrantee);
                 if (group != null)
                     return group.getName();
                 break;

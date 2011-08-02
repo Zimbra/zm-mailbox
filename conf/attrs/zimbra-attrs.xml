@@ -6070,4 +6070,16 @@ TODO: delete them permerntly from here
   <desc>id of the default COS for external user accounts</desc>
 </attr>
 
+<attr id="1249" name="zimbraExternalGroupLdapSearchBase" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+  <desc>LDAP search base for searching external LDAP groups</desc>
+</attr>
+
+<attr id="1250" name="zimbraExternalGroupLdapSearchFilter" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
+  <desc>LDAP search filter for searching external LDAP groups</desc>
+</attr>
+
+<attr id="1251" name="zimbraExternalGroupHandlerClass" type="string" max="1024" cardinality="single" optionalIn="domain" since="8.0.0">
+  <desc>the handler class for getting all groups an account belongs to in the external directory</desc>
+</attr>
+
 </attrs>

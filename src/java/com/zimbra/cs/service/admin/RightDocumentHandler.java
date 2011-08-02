@@ -15,14 +15,11 @@
 package com.zimbra.cs.service.admin;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.GranteeBy;
-import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
@@ -33,6 +30,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class RightDocumentHandler extends AdminDocumentHandler {
     
+    /*
     Entry getTargetEntry(Provisioning prov, Element eTarget, TargetType targetType) 
     throws ServiceException {
         Key.TargetBy targetBy = Key.TargetBy.fromString(eTarget.getAttribute(AdminConstants.A_BY));
@@ -52,6 +50,7 @@ public abstract class RightDocumentHandler extends AdminDocumentHandler {
         
         return GranteeType.lookupGrantee(prov, granteeType, granteeBy, grantee);
     }
+    */
     
     protected void checkCheckRightRight(ZimbraSoapContext zsc, 
             GranteeType granteeType, Key.GranteeBy granteeBy, String grantee) 
