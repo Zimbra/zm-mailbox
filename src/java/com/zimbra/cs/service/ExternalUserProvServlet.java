@@ -15,9 +15,14 @@
 
 package com.zimbra.cs.service;
 
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMountpoint;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BlobMetaData;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -34,6 +39,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.acl.AclPushSerializer;
 import com.zimbra.cs.servlet.ZimbraServlet;
+import com.zimbra.cs.util.AccountUtil;
 import org.apache.commons.codec.binary.Hex;
 
 import javax.servlet.ServletException;
@@ -42,10 +48,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class ExternalUserProvServlet extends ZimbraServlet {
+
+    private static final Log logger = LogFactory.getLog(ExternalUserProvServlet.class);
 
     @Override
     public void init() throws ServletException {
@@ -69,7 +79,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
         }
         Map<Object, Object> tokenMap = validatePrelimToken(param);
         String ownerId = (String) tokenMap.get("aid");
-//        String folderId = (String) tokenMap.get("fid");
+        String folderId = (String) tokenMap.get("fid");
         String extUserEmail = (String) tokenMap.get("email");
 
         Provisioning prov = Provisioning.getInstance();
@@ -83,9 +93,46 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 resp.addCookie(new Cookie("ZM_PRELIM_AUTH_TOKEN", param));
                 resp.sendRedirect("/zimbra/public/extuserprov.jsp");
             } else {
-                // create a new mountpoint in the external user's mailbox
-                // TODO
+                // create a new mountpoint in the external user's mailbox in not already created
 
+                String[] sharedItems = owner.getSharedItem();
+                int sharedFolderId = Integer.valueOf(folderId);
+                String sharedFolderName = null;
+                MailItem.Type sharedFolderView = null;
+                for (String sharedItem : sharedItems) {
+                    ShareInfoData sid = AclPushSerializer.deserialize(sharedItem);
+                    if (sid.getFolderId() == sharedFolderId) {
+                        sharedFolderName = getSharedFolderName(sid.getFolderPath());
+                        sharedFolderView = sid.getFolderDefaultViewCode();
+                        break;
+                    }
+                }
+                if (sharedFolderName == null) {
+                    throw new ServletException("share not found");
+                }
+                String mountpointName = owner.getDisplayName() + "'s " + sharedFolderName;
+
+                ZMailbox.Options options = new ZMailbox.Options();
+                options.setNoSession(true);
+                options.setAuthToken(AuthProvider.getAuthToken(grantee).toZAuthToken());
+                options.setUri(AccountUtil.getSoapUri(grantee));
+                ZMailbox zMailbox = new ZMailbox(options);
+                ZMountpoint zMtpt = null;
+                try {
+                    zMtpt = zMailbox.createMountpoint(
+                            Integer.toString(Mailbox.ID_FOLDER_USER_ROOT), mountpointName,
+                            ZFolder.View.fromString(sharedFolderView.toString()), ZFolder.Color.defaultColor, null,
+                            ZMailbox.OwnerBy.BY_ID, ownerId, ZMailbox.SharedItemBy.BY_ID, folderId, false);
+                } catch (ServiceException e) {
+                    logger.debug("Error in attempting to create mountpoint. Probably it already exists.", e);
+                }
+                if (zMtpt != null) {
+                    HashSet<MailItem.Type> types = new HashSet<MailItem.Type>();
+                    types.add(sharedFolderView);
+                    enableAppFeatures(grantee, types);
+                }
+
+                // check if the external user is already logged-in
                 String zAuthTokenCookie = null;
                 javax.servlet.http.Cookie cookies[] = req.getCookies();
                 if (cookies != null) {
@@ -168,7 +215,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                                                 Provisioning.A_zimbraSharedItem },
                                         null, false, Provisioning.SD_ACCOUNT_FLAG);
             if (accounts.isEmpty()) {
-                throw new ServletException("No shares discovered. You may try again after some time.");
+                throw new ServletException("no shares discovered");
             }
 
             // create external account
@@ -181,26 +228,57 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             // create external account mailbox
             Mailbox granteeMbox = MailboxManager.getInstance().getMailboxByAccount(grantee);
 
+            // create mountpoints
+            Set<MailItem.Type> viewTypes = new HashSet<MailItem.Type>();
             for (NamedEntry ne : accounts) {
                 Account account = (Account) ne;
                 String[] sharedItems = account.getSharedItem();
                 for (String sharedItem : sharedItems) {
                     ShareInfoData shareData = AclPushSerializer.deserialize(sharedItem);
-                    int i = shareData.getFolderPath().lastIndexOf("/");
-                    String sharedFolderName = shareData.getFolderPath().substring(i + 1);
+                    String sharedFolderName = getSharedFolderName(shareData.getFolderPath());
                     String mountpointName = account.getDisplayName() + "'s " + sharedFolderName;
                     granteeMbox.createMountpoint(null, Mailbox.ID_FOLDER_USER_ROOT, mountpointName, account.getId(),
                                                  shareData.getFolderId(), shareData.getFolderDefaultViewCode(), 0,
                                                  MailItem.DEFAULT_COLOR, false);
+                    viewTypes.add(shareData.getFolderDefaultViewCode());
                 }
             }
+            enableAppFeatures(grantee, viewTypes);
 
+            // set zimbra auth cookie and redirect
             AuthToken authToken = AuthProvider.getAuthToken(grantee);
             authToken.encode(resp, false, req.getScheme().equals("https"));
             resp.sendRedirect(prov.getLocalServer().getMailURL());
         } catch (Exception e) {
             throw new ServletException(e);
         }
+    }
+
+    private static void enableAppFeatures(Account grantee, Set<MailItem.Type> viewTypes) throws ServiceException {
+        Map<String, Object> appFeatureAttrs = new HashMap<String, Object>();
+        for (MailItem.Type type : viewTypes) {
+            switch (type) {
+                case DOCUMENT:
+                    appFeatureAttrs.put(Provisioning.A_zimbraFeatureBriefcasesEnabled, ProvisioningConstants.TRUE);
+                    break;
+                case APPOINTMENT:
+                    appFeatureAttrs.put(Provisioning.A_zimbraFeatureCalendarEnabled, ProvisioningConstants.TRUE);
+                    break;
+                case CONTACT:
+                    appFeatureAttrs.put(Provisioning.A_zimbraFeatureContactsEnabled, ProvisioningConstants.TRUE);
+                    break;
+                case TASK:
+                    appFeatureAttrs.put(Provisioning.A_zimbraFeatureTasksEnabled, ProvisioningConstants.TRUE);
+                    break;
+                default:
+                    // we don't care about other types
+            }
+        }
+        grantee.modify(appFeatureAttrs);
+    }
+
+    private static String getSharedFolderName(String folderPath) {
+        return folderPath.substring(folderPath.lastIndexOf("/") + 1);
     }
 
     private static Map<Object, Object> validatePrelimToken(String param) throws ServletException {

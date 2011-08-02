@@ -39,6 +39,7 @@ import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.acl.AclPushSerializer;
+import com.zimbra.cs.mailbox.acl.AclPushTask;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
@@ -536,6 +537,10 @@ public class ShareInfo {
             if (sid.getGranteeTypeCode() == ACL.GRANTEE_GUEST) {
                 Account owner = Provisioning.getInstance().getAccountById(sid.getOwnerAcctId());
                 guestUrl = getGuestURL(owner, sid.getFolderId(), sid.getGranteeName());
+                // before sending out email to external user, push the pending ACLs to LDAP now
+                // so that during external user account provisioning we are able to discover shares
+                // accessible to the external user
+                AclPushTask.doWork();
             }
 
             // TEXT part (add me first!)
@@ -551,7 +556,7 @@ public class ShareInfo {
 
             // XML part
             MimeBodyPart xmlPart = new JavaMailMimeBodyPart();
-            xmlPart.setDataHandler(new DataHandler(new XmlPartDataSource(genXmlPart(sid, notes, null))));
+            xmlPart.setDataHandler(new DataHandler(new XmlPartDataSource(genXmlPart(sid, notes, guestUrl, null))));
             mmp.addBodyPart(xmlPart);
 
             return mmp;
@@ -655,7 +660,7 @@ public class ShareInfo {
             return sb.toString();
         }
 
-        private static String genXmlPart(ShareInfoData sid, String senderNotes, StringBuilder sb) {
+        private static String genXmlPart(ShareInfoData sid, String senderNotes, String guestUrl, StringBuilder sb) {
             if (sb == null)
                 sb = new StringBuilder();
             /*
@@ -671,9 +676,7 @@ public class ShareInfo {
             String notes = null;
             if (sid.getGranteeTypeCode() == ACL.GRANTEE_GUEST) {
                 StringBuilder guestNotes = new StringBuilder();
-                guestNotes.append("URL: " + sid.getUrl() + "\n");
-                guestNotes.append("Username: " + sid.getGranteeName() + "\n");
-                guestNotes.append("Password: " + sid.getGuestPassword() + "\n");
+                guestNotes.append("URL: " + guestUrl + "\n");
                 guestNotes.append("\n");
                 notes = guestNotes + (senderNotes==null?"":senderNotes) + "\n";
             } else
@@ -823,10 +826,10 @@ public class ShareInfo {
 
                  if (idx == null) {
                     for (ShareInfoData sid : mShares) {
-                        genXmlPart(sid, null, sb);
+                        genXmlPart(sid, null, null, sb);
                     }
                 } else {
-                    genXmlPart(mShares.get(idx), null, sb);
+                    genXmlPart(mShares.get(idx), null, null, sb);
                 }
                 return sb.toString();
             }
