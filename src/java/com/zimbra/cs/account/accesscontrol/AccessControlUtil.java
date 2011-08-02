@@ -24,12 +24,16 @@ import com.zimbra.cs.account.Provisioning;
 
 public class AccessControlUtil {
     
+    public static boolean isGlobalAdmin(Account acct) {
+        return isGlobalAdmin(acct, true);
+    }
+    
     public static boolean isGlobalAdmin(Account acct, boolean asAdmin) {
-        return (asAdmin && acct != null && acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false));
+        return (asAdmin && acct != null && acct.isIsAdminAccount());
     }
     
     static boolean isDelegatedAdmin(Account acct, boolean asAdmin) {
-        return (asAdmin && acct != null && acct.getBooleanAttr(Provisioning.A_zimbraIsDelegatedAdminAccount, false));
+        return (asAdmin && acct != null && acct.isIsDelegatedAdminAccount());
     }
     
     static public Account authTokenToAccount(AuthToken authToken, Right rightNeeded) {
@@ -48,7 +52,8 @@ public class AccessControlUtil {
                 }
             }
         } catch (ServiceException e) {
-            ZimbraLog.acl.warn("unable to get account from auth token, id=: " + authToken.getAccountId(), e);
+            ZimbraLog.acl.warn("unable to get account from auth token, id=: " + 
+                    authToken.getAccountId(), e);
         }
         
         return granteeAcct;
@@ -62,8 +67,13 @@ public class AccessControlUtil {
             }
 
             if (granteeAcct == null) {
+                // not an internal user
                 if (rightNeeded.isUserRight()) {
-                    granteeAcct = new GuestAccount(emailAddr, null);
+                    if (emailAddr != null) {
+                        granteeAcct = new GuestAccount(emailAddr, null);
+                    } else {
+                        granteeAcct = GuestAccount.ANONYMOUS_ACCT;
+                    }
                 }
             }
             
