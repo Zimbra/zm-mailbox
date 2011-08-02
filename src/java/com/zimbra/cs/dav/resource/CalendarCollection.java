@@ -391,7 +391,7 @@ public class CalendarCollection extends Collection {
                 }
 
                 // For attendee case, update replies list with matching ATTENDEE from the invite.
-                if (!i.isOrganizer()) {
+                if (!i.isOrganizer() && replies != null) {
                     ZAttendee at = i.getMatchingAttendee(account);
                     if (at != null) {
                         AccountAddressMatcher acctMatcher = new AccountAddressMatcher(account);
