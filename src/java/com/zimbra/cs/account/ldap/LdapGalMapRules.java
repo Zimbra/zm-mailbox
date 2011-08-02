@@ -27,7 +27,7 @@ import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.gal.GalGroupHandler;
+import com.zimbra.cs.account.grouphandler.GroupHandler;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.ILdapContext;
 
@@ -41,7 +41,7 @@ public class LdapGalMapRules {
     private List<String> mLdapAttrs;
     private Set<String> mBinaryLdapAttrs; // attrs need to be set in JNDI "java.naming.ldap.attributes.binary" environment property
     private Map<String, LdapGalValueMap> mValueMaps;
-    private GalGroupHandler mGroupHandler;
+    private GroupHandler mGroupHandler;
     private boolean mFetchGroupMembers;
     private boolean mNeedSMIMECerts;
 
@@ -82,7 +82,7 @@ public class LdapGalMapRules {
         for (String rule: rules)
             add(rule);
         
-        mGroupHandler = GalGroupHandler.getHandler(groupHandlerClass);
+        mGroupHandler = GroupHandler.getHandler(groupHandlerClass);
         ZimbraLog.gal.debug("groupHandlerClass=" + groupHandlerClass + ", handler instantiated=" + mGroupHandler.getClass().getCanonicalName());
     }
     

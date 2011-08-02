@@ -24,10 +24,11 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.ExternalGroup;
+import com.zimbra.cs.account.grouphandler.GroupHandler;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.ILdapContext;
 
-public class ZimbraGalGroupHandler extends GalGroupHandler {
+public class ZimbraGalGroupHandler extends GroupHandler {
 
     private static String[] sEmptyMembers = new String[0];
     

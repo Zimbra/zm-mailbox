@@ -18,7 +18,7 @@ public class GalLdapFilter extends AttributeCallback {
         
         String newValue = mod.value();
         if ("ad".equalsIgnoreCase(newValue))
-            attrsToModify.put(Provisioning.A_zimbraGalLdapGroupHandlerClass, com.zimbra.cs.gal.ADGalGroupHandler.class.getCanonicalName());
+            attrsToModify.put(Provisioning.A_zimbraGalLdapGroupHandlerClass, com.zimbra.cs.account.grouphandler.ADGroupHandler.class.getCanonicalName());
     }
 
     public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {

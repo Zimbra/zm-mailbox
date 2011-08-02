@@ -31,9 +31,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.Provisioning.MemberOf;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE.ExternalGroupInfo;
+import com.zimbra.cs.account.grouphandler.ADGroupHandler;
+import com.zimbra.cs.account.grouphandler.GroupHandler;
 import com.zimbra.cs.account.ldap.LdapProv;
-import com.zimbra.cs.gal.ADGalGroupHandler;
-import com.zimbra.cs.gal.GalGroupHandler;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapException;
@@ -52,7 +52,7 @@ public class ExternalGroup extends NamedEntry {
                 LC.ldap_cache_group_maxage.intValue() * Constants.MILLIS_PER_MINUTE);
     
     private String dn;
-    private GalGroupHandler groupHandler;
+    private GroupHandler groupHandler;
     private String zimbraDomainId;
     
     /*
@@ -60,7 +60,7 @@ public class ExternalGroup extends NamedEntry {
      * name: {zimbra domain name}:{external group name}
      */
     ExternalGroup(String dn, String id, String name, String zimbraDomainId,
-            ZAttributes attrs, GalGroupHandler groupHandler, Provisioning prov) 
+            ZAttributes attrs, GroupHandler groupHandler, Provisioning prov) 
     throws LdapException {
         super(name, id, attrs.getAttrs(), null, prov);
         this.dn = dn;
@@ -87,7 +87,7 @@ public class ExternalGroup extends NamedEntry {
         
         // load group handler
         String className = domain.getExternalGroupHandlerClass();
-        GalGroupHandler groupHandler = GalGroupHandler.getHandler(className);
+        GroupHandler groupHandler = GroupHandler.getHandler(className);
         
         ExternalGroup extGroup = new ExternalGroup(
                 dn, id, name, domain.getId(), attrs, groupHandler, LdapProv.getInst());
@@ -145,7 +145,7 @@ public class ExternalGroup extends NamedEntry {
         
         ZLdapContext zlc = null;
         try {
-            zlc = ADGalGroupHandler.getExternalDelegatedAdminGroupsLdapContext(domain);
+            zlc = ADGroupHandler.getExternalDelegatedAdminGroupsLdapContext(domain);
             
             ZSearchResultEntry entry = prov.getHelper().searchForEntry(
                     searchBase, searchFilter, zlc, new String[]{"mail"});

@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.gal;
+package com.zimbra.cs.account.grouphandler;
 
 import java.util.List;
 import java.util.Map;
@@ -23,14 +23,13 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning.GroupMembership;
-import com.zimbra.cs.account.Provisioning.MemberOf;
 import com.zimbra.cs.account.accesscontrol.ExternalGroup;
 import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.gal.ZimbraGalGroupHandler;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.ILdapContext;
 
-public abstract class GalGroupHandler {
+public abstract class GroupHandler {
 
     public abstract boolean isGroup(IAttributes ldapAttrs);
     
@@ -43,10 +42,10 @@ public abstract class GalGroupHandler {
     private static Map<String, HandlerInfo> sHandlers = new ConcurrentHashMap<String,HandlerInfo>();
     
     private static class HandlerInfo {
-        Class<? extends GalGroupHandler> mClass;
+        Class<? extends GroupHandler> mClass;
 
-        public GalGroupHandler getInstance() {
-            GalGroupHandler handler;
+        public GroupHandler getInstance() {
+            GroupHandler handler;
             try {
                 handler = mClass.newInstance();
             } catch (InstantiationException e) {
@@ -58,7 +57,7 @@ public abstract class GalGroupHandler {
         }
     }
     
-    private static GalGroupHandler newDefaultHandler() {
+    private static GroupHandler newDefaultHandler() {
         return new ZimbraGalGroupHandler();
     }
     
@@ -66,7 +65,7 @@ public abstract class GalGroupHandler {
         HandlerInfo handlerInfo = new HandlerInfo();
 
         try {
-            handlerInfo.mClass = ExtensionUtil.findClass(className).asSubclass(GalGroupHandler.class);
+            handlerInfo.mClass = ExtensionUtil.findClass(className).asSubclass(GroupHandler.class);
         } catch (ClassNotFoundException e) {
             // miss configuration or the extension is disabled
             ZimbraLog.gal.warn("GAL group handler %s not found, default to ZimbraGalGroupHandler", className);
@@ -76,7 +75,7 @@ public abstract class GalGroupHandler {
         return handlerInfo;
     }
     
-    public static GalGroupHandler getHandler(String className) {
+    public static GroupHandler getHandler(String className) {
         if (StringUtil.isNullOrEmpty(className)) {
             return newDefaultHandler();
         }

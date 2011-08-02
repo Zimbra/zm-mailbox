@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.cs.gal;
+package com.zimbra.cs.account.grouphandler;
 
 import java.util.List;
 import java.util.TreeSet;
@@ -40,7 +40,7 @@ import com.zimbra.cs.ldap.IAttributes.CheckBinary;
 import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 
-public class ADGalGroupHandler extends GalGroupHandler {
+public class ADGroupHandler extends GroupHandler {
 
     private static final String MAIL_ATTR = "mail";
     private static final String MEMBER_OF_ATTR = "memberOf";
@@ -235,7 +235,7 @@ public class ADGalGroupHandler extends GalGroupHandler {
         
         ZLdapContext zlc = null;
         try {
-            zlc = ADGalGroupHandler.getExternalDelegatedAdminGroupsLdapContext(domain);
+            zlc = ADGroupHandler.getExternalDelegatedAdminGroupsLdapContext(domain);
             
             ZAttributes attrs = prov.getHelper().getAttributes(extDN, zlc, new String[]{MEMBER_OF_ATTR});
             
