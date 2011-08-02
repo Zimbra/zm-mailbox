@@ -126,6 +126,7 @@ public class ADGalGroupHandler extends GalGroupHandler {
      *   - we no longer have the user's AD password
      *   - it makes perfect sense to do this task using the AD admin's credentials.
      *
+     * TODO: should not be static method.
      */
     public static ZLdapContext getExternalDelegatedAdminGroupsLdapContext(Domain domain) 
     throws ServiceException {
@@ -135,8 +136,7 @@ public class ADGalGroupHandler extends GalGroupHandler {
                     "missing " + Provisioning.A_zimbraAuthLdapURL, null);
         }
         
-        String authMech = domain.getAuthMech();
-        if (!Provisioning.AM_AD.equals(authMech)) {
+        if (!domainAdminAuthMechIsAD(domain)) {
             throw ServiceException.INVALID_REQUEST("domain auth mech must be AD", null);
         }
         
@@ -145,15 +145,51 @@ public class ADGalGroupHandler extends GalGroupHandler {
         String bindPassword = domain.getAuthLdapSearchBindPassword();
         
         ExternalLdapConfig ldapConfig = new ExternalLdapConfig(ldapUrl, startTLSEnabled, 
-                authMech, bindDN, bindPassword, null, 
+                null, bindDN, bindPassword, null, 
                 "search external group");
         
         return LdapClient.getExternalContext(ldapConfig, LdapUsage.EXTERNAL_GROUP);
+    }
+    
+    private static boolean domainAdminAuthMechIsAD(Domain domain) {
+        return Provisioning.AM_AD.equals(domain.getAuthMechAdmin());
+    }
+    
+    /*
+     * Check:
+     *   - zimbraAuthMechAdmin on the domain must be AD
+     *   - domain of the account must be the same as the domain in the grant
+     *   
+     * TODO: pass in auth token and validate that the auth was indeed via AD 
+     */
+    private boolean legitimateDelegatedAdminAsGroupMember(ExternalGroup group, Account acct) 
+    throws ServiceException {
+        String zimbraDomainId = group.getZimbraDomainId();
+        Domain domain = Provisioning.getInstance().getDomain(acct);
+        
+        if (domain == null) {
+            return false;
+        }
+        
+        if (!domainAdminAuthMechIsAD(domain)) {
+            return false;
+        }
+        
+        if (!domain.getId().equals(zimbraDomainId)) {
+            return false;
+        }
+        
+        return true;
     }
 
     @Override
     public boolean inDelegatedAdminGroup(ExternalGroup group, Account acct) 
     throws ServiceException {
+        
+        if (!legitimateDelegatedAdminAsGroupMember(group, acct)) {
+            return false;
+        }
+        
         // check cache
         @SuppressWarnings("unchecked")
         List<String> groupDNs = (List<String>)

@@ -44,6 +44,7 @@ public class ZimbraAuthProvider extends AuthProvider{
         return isAdminReq? ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN : ZimbraServlet.COOKIE_ZM_AUTH_TOKEN;
     }
     
+    @Override
     protected AuthToken authToken(HttpServletRequest req, boolean isAdminReq) throws AuthProviderException, AuthTokenException {
         String cookieName = cookieName(isAdminReq);
         String encodedAuthToken = null;
@@ -60,6 +61,7 @@ public class ZimbraAuthProvider extends AuthProvider{
         return genAuthToken(encodedAuthToken);
     }
 
+    @Override
     protected AuthToken authToken(Element soapCtxt, Map engineCtxt) throws AuthProviderException, AuthTokenException  {
         String encodedAuthToken = (soapCtxt == null ? null : soapCtxt.getAttribute(HeaderConstants.E_AUTH_TOKEN, null));
         
@@ -70,10 +72,11 @@ public class ZimbraAuthProvider extends AuthProvider{
         return genAuthToken(encodedAuthToken);
     }
     
+    @Override
     protected AuthToken authToken(String encoded) throws AuthProviderException, AuthTokenException {
         return genAuthToken(encoded);
     }
-    
+
     protected AuthToken genAuthToken(String encodedAuthToken) throws AuthProviderException, AuthTokenException {
         if (StringUtil.isNullOrEmpty(encodedAuthToken))
             throw AuthProviderException.NO_AUTH_DATA();
@@ -81,20 +84,25 @@ public class ZimbraAuthProvider extends AuthProvider{
         return ZimbraAuthToken.getAuthToken(encodedAuthToken);
     }
     
+    @Override
     protected AuthToken authToken(Account acct) {
         return new ZimbraAuthToken(acct);
     }
     
-    protected AuthToken authToken(Account acct, boolean isAdmin) {
-        return new ZimbraAuthToken(acct, isAdmin);
+    @Override
+    protected AuthToken authToken(Account acct, boolean isAdmin, String authMech) {
+        return new ZimbraAuthToken(acct, isAdmin, authMech);
     }
     
+    @Override
     protected AuthToken authToken(Account acct, long expires) {
         return new ZimbraAuthToken(acct, expires);
     }
     
-    protected AuthToken authToken(Account acct, long expires, boolean isAdmin, Account adminAcct) {
-        return new ZimbraAuthToken(acct, expires, isAdmin, adminAcct);
+    @Override
+    protected AuthToken authToken(Account acct, long expires, boolean isAdmin, 
+            Account adminAcct) {
+        return new ZimbraAuthToken(acct, expires, isAdmin, adminAcct, null);
     }
     
 }

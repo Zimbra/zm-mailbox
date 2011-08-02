@@ -3741,10 +3741,12 @@ public class LegacyLdapProvisioning extends LdapProv {
         }
     }
 
-    private void authAccount(Account acct, String password, boolean checkPasswordPolicy, Map<String, Object> authCtxt) throws ServiceException {
+    private void authAccount(Account acct, String password, 
+            boolean checkPasswordPolicy, Map<String, Object> authCtxt) 
+    throws ServiceException {
         checkAccountStatus(acct, authCtxt);
 
-        AuthMechanism authMech = AuthMechanism.newInstance(acct);
+        AuthMechanism authMech = AuthMechanism.newInstance(acct, authCtxt);
         verifyPassword(acct, password, authMech, authCtxt);
 
         // true:  authenticating

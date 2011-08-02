@@ -3703,10 +3703,12 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    private void authAccount(Account acct, String password, boolean checkPasswordPolicy, Map<String, Object> authCtxt) throws ServiceException {
+    private void authAccount(Account acct, String password, 
+            boolean checkPasswordPolicy, Map<String, Object> authCtxt) 
+    throws ServiceException {
         checkAccountStatus(acct, authCtxt);
 
-        AuthMechanism authMech = AuthMechanism.newInstance(acct);
+        AuthMechanism authMech = AuthMechanism.newInstance(acct, authCtxt);
         verifyPassword(acct, password, authMech, authCtxt);
 
         // true:  authenticating
@@ -4076,19 +4078,25 @@ public class LdapProvisioning extends LdapProv {
      * authAccount does all the status/mustChange checks, this just takes the
      * password and auths the user
      */
-    private void verifyPasswordInternal(Account acct, String password, AuthMechanism authMech, Map<String, Object> context) throws ServiceException {
+    private void verifyPasswordInternal(Account acct, String password, 
+            AuthMechanism authMech, Map<String, Object> context) 
+    throws ServiceException {
 
         Domain domain = Provisioning.getInstance().getDomain(acct);
 
         boolean allowFallback = true;
-        if (!authMech.isZimbraAuth())
+        if (!authMech.isZimbraAuth()) {
             allowFallback =
                 domain.getBooleanAttr(Provisioning.A_zimbraAuthFallbackToLocal, false) ||
                 acct.getBooleanAttr(Provisioning.A_zimbraIsAdminAccount, false) ||
                 acct.getBooleanAttr(Provisioning.A_zimbraIsDomainAdminAccount, false);
+        }
 
         try {
             authMech.doAuth(this, domain, acct, password, context);
+            String authedByMech = authMech.getMechanism();
+            // indicate the authed by mech in the auth context 
+            // context.put(AuthContext.AC_AUTHED_BY_MECH, authedByMech); TODO
             return;
         } catch (ServiceException e) {
             if (!allowFallback || authMech.isZimbraAuth())
@@ -4099,6 +4107,7 @@ public class LdapProvisioning extends LdapProv {
 
         // fall back to zimbra default auth
         AuthMechanism.doZimbraAuth(this, domain, acct, password, context);
+        // context.put(AuthContext.AC_AUTHED_BY_MECH, Provisioning.AM_ZIMBRA); // TODO
     }
 
     @Override

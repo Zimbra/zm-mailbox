@@ -143,9 +143,11 @@ public class Auth extends AdminDocumentHandler {
                 authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, context.get(SoapEngine.ORIG_REQUEST_IP));
                 authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, valuePassedIn);
                 authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
+                authCtxt.put(AuthContext.AC_AS_ADMIN, Boolean.TRUE);
                 prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
                 checkAdmin(acct);
-                at = AuthProvider.getAuthToken(acct, true);
+                String authedByMech = (String) authCtxt.get(AuthContext.AC_AUTHED_BY_MECH);
+                at = AuthProvider.getAuthToken(acct, true, authedByMech);
 
             } catch (ServiceException se) {
                 ZimbraLog.security.warn(ZimbraLog.encodeAttrs(
@@ -157,7 +159,8 @@ public class Auth extends AdminDocumentHandler {
         return doResponse(at, zsc, context, acct);
     }
 
-    private AuthToken dummyYCCTokenTestNeverCallMe(Element authTokenEl) throws ServiceException, AuthTokenException  {
+    private AuthToken dummyYCCTokenTestNeverCallMe(Element authTokenEl) 
+    throws ServiceException, AuthTokenException  {
         String atType = authTokenEl.getAttribute(AdminConstants.A_TYPE);
         if ("YAHOO_CALENDAR_AUTH_PROVIDER".equals(atType)) {
             for (Element a : authTokenEl.listElements(AdminConstants.E_A)) {
@@ -166,7 +169,7 @@ public class Auth extends AdminDocumentHandler {
                 if ("ADMIN_AUTH_KEY".equals(name) &&
                         "1210713456+dDedin1lO8d1_j8Kl.vl".equals(value)) {
                     Account acct = Provisioning.getInstance().get(AccountBy.name, "admin@phoebe.mac");
-                    return new ZimbraAuthToken(acct, true);
+                    return new ZimbraAuthToken(acct, true, null);
                 }
             }
         }

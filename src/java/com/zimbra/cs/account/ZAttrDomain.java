@@ -43,7 +43,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110801-1809 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110801-2320 */
 
     /**
      * RFC2256: descriptive information
@@ -1504,8 +1504,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * mechanism to use for authentication. Valid values are zimbra, ldap,
-     * ad, kerberos5, custom:{handler-name} [arg1 arg2 ...]
+     * mechanism to use for verifying password. Valid values are zimbra,
+     * ldap, ad, kerberos5, custom:{handler-name} [arg1 arg2 ...]
      *
      * @return zimbraAuthMech, or null if unset
      */
@@ -1515,8 +1515,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * mechanism to use for authentication. Valid values are zimbra, ldap,
-     * ad, kerberos5, custom:{handler-name} [arg1 arg2 ...]
+     * mechanism to use for verifying password. Valid values are zimbra,
+     * ldap, ad, kerberos5, custom:{handler-name} [arg1 arg2 ...]
      *
      * @param zimbraAuthMech new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -1529,8 +1529,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * mechanism to use for authentication. Valid values are zimbra, ldap,
-     * ad, kerberos5, custom:{handler-name} [arg1 arg2 ...]
+     * mechanism to use for verifying password. Valid values are zimbra,
+     * ldap, ad, kerberos5, custom:{handler-name} [arg1 arg2 ...]
      *
      * @param zimbraAuthMech new value
      * @param attrs existing map to populate, or null to create a new map
@@ -1544,8 +1544,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * mechanism to use for authentication. Valid values are zimbra, ldap,
-     * ad, kerberos5, custom:{handler-name} [arg1 arg2 ...]
+     * mechanism to use for verifying password. Valid values are zimbra,
+     * ldap, ad, kerberos5, custom:{handler-name} [arg1 arg2 ...]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -1557,8 +1557,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * mechanism to use for authentication. Valid values are zimbra, ldap,
-     * ad, kerberos5, custom:{handler-name} [arg1 arg2 ...]
+     * mechanism to use for verifying password. Valid values are zimbra,
+     * ldap, ad, kerberos5, custom:{handler-name} [arg1 arg2 ...]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -1567,6 +1567,78 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetAuthMech(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAuthMech, "");
+        return attrs;
+    }
+
+    /**
+     * mechanism to use for verifying password for admin. See zimbraAuthMech
+     *
+     * @return zimbraAuthMechAdmin, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1252)
+    public String getAuthMechAdmin() {
+        return getAttr(Provisioning.A_zimbraAuthMechAdmin, null);
+    }
+
+    /**
+     * mechanism to use for verifying password for admin. See zimbraAuthMech
+     *
+     * @param zimbraAuthMechAdmin new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1252)
+    public void setAuthMechAdmin(String zimbraAuthMechAdmin) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAuthMechAdmin, zimbraAuthMechAdmin);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * mechanism to use for verifying password for admin. See zimbraAuthMech
+     *
+     * @param zimbraAuthMechAdmin new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1252)
+    public Map<String,Object> setAuthMechAdmin(String zimbraAuthMechAdmin, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAuthMechAdmin, zimbraAuthMechAdmin);
+        return attrs;
+    }
+
+    /**
+     * mechanism to use for verifying password for admin. See zimbraAuthMech
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1252)
+    public void unsetAuthMechAdmin() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAuthMechAdmin, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * mechanism to use for verifying password for admin. See zimbraAuthMech
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1252)
+    public Map<String,Object> unsetAuthMechAdmin(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAuthMechAdmin, "");
         return attrs;
     }
 

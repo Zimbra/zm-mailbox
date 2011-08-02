@@ -43,7 +43,8 @@ public abstract class AuthMechanism {
         mAuthMech = authMech;
     }
     
-    public static AuthMechanism newInstance(Account acct) throws ServiceException {
+    public static AuthMechanism newInstance(Account acct, Map<String, Object> context) 
+    throws ServiceException {
         String authMech = Provisioning.AM_ZIMBRA;
         
         Provisioning prov = Provisioning.getInstance();
@@ -51,7 +52,14 @@ public abstract class AuthMechanism {
         
         // see if it specifies an alternate auth
         if (domain != null) {
-            String am = domain.getAttr(Provisioning.A_zimbraAuthMech);
+            String am;
+            Boolean asAdmin = context == null ? null : (Boolean) context.get(AuthContext.AC_AS_ADMIN);
+            if (asAdmin != null && asAdmin) {
+                am = domain.getAuthMechAdmin();
+            } else {
+                am = domain.getAuthMech();
+            }
+            
             if (am != null)
                 authMech = am;
         }
@@ -245,6 +253,11 @@ public abstract class AuthMechanism {
                 }
                 ZimbraLog.account.debug("CustomAuth: handlerName=" + mHandlerName + ", args=" + sb);
             }
+        }
+        
+        @Override
+        public String getMechanism() {
+            return Provisioning.AM_CUSTOM;
         }
         
         public void doAuth(LdapProv prov, Domain domain, Account acct, String password, 

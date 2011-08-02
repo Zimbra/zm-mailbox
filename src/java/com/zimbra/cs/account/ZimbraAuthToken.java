@@ -61,6 +61,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private static final String C_EXTERNAL_USER_EMAIL = "email";
     private static final String C_DIGEST = "digest";
     private static final String C_VALIDITY_VALUE  = "vv";
+    private static final String C_AUTH_MECH = "am";
 
     private static final Map<String, ZimbraAuthToken> CACHE = MapUtil.newLruMap(LC.zimbra_authtoken_cache_size.intValue());
     private static final Log LOG = LogFactory.getLog(AuthToken.class);
@@ -78,6 +79,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     private String digest;
     private String accessKey; // just a dummy placeholder for now until accesskey auth is implemented in ZimbraAuthToken
     private String proxyAuthToken;
+    private String authMech;
 
     @Override
     public String toString() {
@@ -178,6 +180,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
             String dlga = (String) map.get(C_DLGADMIN);
             isDelegatedAdmin = "1".equals(dlga);
             type = (String)map.get(C_TYPE);
+            authMech = (String)map.get(C_AUTH_MECH);
             externalUserEmail = (String)map.get(C_EXTERNAL_USER_EMAIL);
             digest = (String)map.get(C_DIGEST);
             String vv = (String)map.get(C_VALIDITY_VALUE);
@@ -197,11 +200,11 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     }
 
     public ZimbraAuthToken(Account acct) {
-        this(acct, false);
+        this(acct, false, null);
     }
 
-    public ZimbraAuthToken(Account acct, boolean isAdmin) {
-        this(acct, 0, isAdmin, null);
+    public ZimbraAuthToken(Account acct, boolean isAdmin, String authMech) {
+        this(acct, 0, isAdmin, null, authMech);
         long lifetime = isAdmin || isDomainAdmin || isDelegatedAdmin ?
                     acct.getTimeInterval(Provisioning.A_zimbraAdminAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000) :
                     acct.getTimeInterval(Provisioning.A_zimbraAuthTokenLifetime, DEFAULT_AUTH_LIFETIME * 1000);
@@ -209,7 +212,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     }
 
     public ZimbraAuthToken(Account acct, long expires) {
-        this(acct, expires, false, null);
+        this(acct, expires, false, null, null);
     }
 
     /**
@@ -219,7 +222,8 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
      * @param adminAcct the admin account accessing acct's information, if this token was created by an admin. mainly used
      *        for auditing.
      */
-    public ZimbraAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct) {
+    public ZimbraAuthToken(Account acct, long expires, boolean isAdmin, Account adminAcct, 
+            String authMech) {
         accountId = acct.getId();
         adminAccountId = adminAcct != null ? adminAcct.getId() : null;
         validityValue = acct.getAuthTokenValidityValue();
@@ -227,6 +231,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
         this.isAdmin = isAdmin && "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsAdminAccount));
         isDomainAdmin = isAdmin && "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsDomainAdminAccount));
         isDelegatedAdmin = isAdmin && "TRUE".equals(acct.getAttr(Provisioning.A_zimbraIsDelegatedAdminAccount));
+        this.authMech = authMech;
         encoded = null;
         if (acct instanceof GuestAccount) {
             type = C_TYPE_EXTERNAL_USER;
@@ -306,6 +311,11 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
     public String getAccessKey() {
         return accessKey;
     }
+    
+    @Override 
+    public String getAuthMech() {
+        return authMech;
+    }
 
     @Override
     public String getEncoded() throws AuthTokenException {
@@ -329,6 +339,7 @@ public class ZimbraAuthToken extends AuthToken implements Cloneable {
                 BlobMetaData.encodeMetaData(C_VALIDITY_VALUE, validityValue, encodedBuff);
             }
             BlobMetaData.encodeMetaData(C_TYPE, type, encodedBuff);
+            BlobMetaData.encodeMetaData(C_AUTH_MECH, authMech, encodedBuff);
             BlobMetaData.encodeMetaData(C_EXTERNAL_USER_EMAIL, externalUserEmail, encodedBuff);
             BlobMetaData.encodeMetaData(C_DIGEST, digest, encodedBuff);
             String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));

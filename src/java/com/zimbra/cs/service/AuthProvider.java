@@ -170,7 +170,7 @@ public abstract class AuthProvider {
      * @throws AuthProviderException
      */
     protected AuthToken authToken(Account acct) throws AuthProviderException {
-        return authToken(acct, false);
+        return authToken(acct, false, null);
     }
     
     /**
@@ -179,10 +179,12 @@ public abstract class AuthProvider {
      * 
      * @param acct
      * @param isAdmin
+     * @param authMech 
      * @return
      * @throws AuthProviderException
      */
-    protected AuthToken authToken(Account acct, boolean isAdmin) throws AuthProviderException {
+    protected AuthToken authToken(Account acct, boolean isAdmin, String authMech) 
+    throws AuthProviderException {
         if (acct == null)
             throw AuthProviderException.NOT_SUPPORTED();
         
@@ -394,11 +396,17 @@ public abstract class AuthProvider {
         throw AuthProviderException.FAILURE("cannot get authtoken from account " + acct.getName());
     }
     
-    public static AuthToken getAuthToken(Account acct, boolean isAdmin) throws AuthProviderException {
+    public static AuthToken getAuthToken(Account acct, boolean isAdmin) 
+    throws AuthProviderException {
+        return getAuthToken(acct, isAdmin, null);
+    }
+    
+    public static AuthToken getAuthToken(Account acct, boolean isAdmin, String authMech) 
+    throws AuthProviderException {
         List<AuthProvider> providers = getProviders();
         for (AuthProvider ap : providers) {
             try {
-                AuthToken at = ap.authToken(acct, isAdmin);
+                AuthToken at = ap.authToken(acct, isAdmin, authMech);
                 // sanity check, should not be null, if a provider returns null we throw AuthTokenException here
                 if (at == null)
                     throw AuthProviderException.FAILURE("auth provider " + ap.getName() + " returned null");

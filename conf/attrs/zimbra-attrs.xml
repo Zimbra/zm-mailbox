@@ -487,7 +487,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="42" name="zimbraAuthMech" type="string" max="512" cardinality="single" optionalIn="domain" callback="AuthMech">
-  <desc>mechanism to use for authentication.  Valid values are zimbra, ldap, ad, kerberos5, custom:{handler-name} [arg1 arg2 ...]</desc>
+  <desc>mechanism to use for verifying password.  Valid values are zimbra, ldap, ad, kerberos5, custom:{handler-name} [arg1 arg2 ...]</desc>
 </attr>
 
 <attr id="43" name="zimbraAuthLdapURL" type="string" max="256" cardinality="multi" optionalIn="domain">
@@ -6097,6 +6097,10 @@ TODO: delete them permerntly from here
 
 <attr id="1251" name="zimbraExternalGroupHandlerClass" type="string" max="1024" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>the handler class for getting all groups an account belongs to in the external directory</desc>
+</attr>
+
+<attr id="1252" name="zimbraAuthMechAdmin" type="string" max="512" cardinality="single" optionalIn="domain" callback="AuthMech" since="8.0.0">
+  <desc>mechanism to use for verifying password for admin.  See zimbraAuthMech</desc>
 </attr>
 
 </attrs>

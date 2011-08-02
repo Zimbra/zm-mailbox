@@ -53,21 +53,27 @@ public class ExternalGroup extends NamedEntry {
     
     private String dn;
     private GalGroupHandler groupHandler;
+    private String zimbraDomainId;
     
     /*
      * id:   {zimbra domain id}:{external group name}
      * name: {zimbra domain name}:{external group name}
      */
-    ExternalGroup(String dn, String id, String name, ZAttributes attrs,
-            GalGroupHandler groupHandler, Provisioning prov) 
+    ExternalGroup(String dn, String id, String name, String zimbraDomainId,
+            ZAttributes attrs, GalGroupHandler groupHandler, Provisioning prov) 
     throws LdapException {
         super(name, id, attrs.getAttrs(), null, prov);
         this.dn = dn;
         this.groupHandler = groupHandler;
+        this.zimbraDomainId = zimbraDomainId;
     }
     
     public String getDN() {
         return dn;
+    }
+    
+    public String getZimbraDomainId() {
+        return zimbraDomainId;
     }
     
     boolean inGroup(Account acct) throws ServiceException {
@@ -84,15 +90,11 @@ public class ExternalGroup extends NamedEntry {
         GalGroupHandler groupHandler = GalGroupHandler.getHandler(className);
         
         ExternalGroup extGroup = new ExternalGroup(
-                dn, id, name, attrs, groupHandler, LdapProv.getInst());
+                dn, id, name, domain.getId(), attrs, groupHandler, LdapProv.getInst());
         return extGroup;
     }
     
     /*
-     * TODO: check:
-     *   - authToken must indicate AD auth
-     *   - domain of the authed account must be the same as the domain in the extGroupGrantee
-     *   
      * domainBy: id when extGroupGrantee is obtained in fron persisted ZimbraACE   
      *           name when extGroupGrantee is provided to zmprov or SOAP. 
      *         

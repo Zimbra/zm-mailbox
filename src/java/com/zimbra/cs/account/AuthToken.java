@@ -89,6 +89,10 @@ public abstract class AuthToken {
     public String getAccessKey() {
         return null;
     }
+    
+    public String getAuthMech() {
+        return null;
+    }
 
     public void setProxyAuthToken(String encoded) {}
     

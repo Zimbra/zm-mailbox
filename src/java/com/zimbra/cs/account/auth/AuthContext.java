@@ -39,6 +39,19 @@ public class AuthContext {
     public static final String AC_USER_AGENT = "ua";
     
     /*
+     * Whether the auth request came to the admin port and attempting 
+     * to acquire an admin auth token
+     * 
+     * type: Boolean
+     */
+    public static final String AC_AS_ADMIN = "asAdmin";
+    
+    /*
+     * 
+     */
+    public static final String AC_AUTHED_BY_MECH = "authedByMech";
+    
+    /*
      * Protocol from which the auth request went in.
      * 
      * type: AuthContext.Protocol
@@ -57,7 +70,6 @@ public class AuthContext {
         
         //for internal use only
         test;
-
-    }
+    };
     
 }
