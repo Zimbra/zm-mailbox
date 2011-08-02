@@ -45,7 +45,7 @@ public class AclPushTask extends TimerTask {
     }
 
     public static void doWork() {
-        ZimbraLog.acl.info("Starting pending ACL push");
+        ZimbraLog.misc.info("Starting pending ACL push");
         Date now = new Date();
         try {
             Multimap<Integer, Integer> mboxIdToItemIds = DbPendingAclPush.getEntries(now);
@@ -102,8 +102,8 @@ public class AclPushTask extends TimerTask {
 
             DbPendingAclPush.deleteEntries(now);
         } catch (ServiceException e) {
-            ZimbraLog.acl.warn("Error during ACL push task", e);
+            ZimbraLog.misc.warn("Error during ACL push task", e);
         }
-        ZimbraLog.acl.info("Finished pending ACL push");
+        ZimbraLog.misc.info("Finished pending ACL push");
     }
 }

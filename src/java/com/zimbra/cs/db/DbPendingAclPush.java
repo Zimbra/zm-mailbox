@@ -42,7 +42,7 @@ public class DbPendingAclPush {
             return;
         if (mbox == null)
             return;
-        ZimbraLog.acl.debug("Queuing for ACL push - mailbox %s item %s", mbox.getId(), itemId);
+        ZimbraLog.mailbox.debug("Queuing for ACL push - mailbox %s item %s", mbox.getId(), itemId);
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -65,7 +65,7 @@ public class DbPendingAclPush {
         DbConnection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        ZimbraLog.acl.debug("Getting entries recorded before %s for ACL push", uptoTime);
+        ZimbraLog.misc.debug("Getting entries recorded before %s for ACL push", uptoTime);
         try {
             conn = DbPool.getConnection();
             stmt = conn.prepareStatement(
@@ -86,7 +86,7 @@ public class DbPendingAclPush {
     }
 
     public static void deleteEntries(Date uptoTime) throws ServiceException {
-        ZimbraLog.acl.debug("Deleting entries for ACL push before %s", uptoTime);
+        ZimbraLog.misc.debug("Deleting entries for ACL push before %s", uptoTime);
         DbConnection conn = null;
         PreparedStatement stmt = null;
         try {
