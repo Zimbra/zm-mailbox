@@ -701,15 +701,12 @@ public final class MailboxIndex {
     }
 
     /**
-     * Adds and deletes index documents. Called by {@link Mailbox#endTransaction(boolean)}.
-     *
-     * @param add items to add
-     * @param del item IDs to delete
-     * @return list of items that have successfully been indexed
-     * @throws ServiceException DB error
+     * Deletes index documents. The caller doesn't necessarily hold the mailbox lock.
      */
-    synchronized void update(List<IndexItemEntry> add, List<Integer> del) throws ServiceException {
-        assert(mailbox.lock.isLocked());
+    synchronized void delete(List<Integer> ids) {
+        if (ids.isEmpty()) {
+            return;
+        }
 
         Indexer indexer;
         try {
@@ -720,18 +717,42 @@ public final class MailboxIndex {
             return;
         }
 
-        List<MailItem> indexed = new ArrayList<MailItem>(add.size());
-
         try {
-            if (!del.isEmpty()) {
-                try {
-                    indexer.deleteDocument(del);
-                } catch (IOException e) {
-                    ZimbraLog.index.warn("Failed to delete index documents", e);
-                }
+            indexer.deleteDocument(ids);
+        } catch (IOException e) {
+            ZimbraLog.index.warn("Failed to delete index documents", e);
+        } finally {
+            try {
+                indexer.close();
+            } catch (IOException e) {
+                ZimbraLog.index.error("Failed to close Indexer", e);
+                return;
             }
+        }
+        removeDeferredId(ids);
+    }
 
-            for (IndexItemEntry entry : add) {
+    /**
+     * Adds index documents. The caller must hold the mailbox lock.
+     */
+    synchronized void add(List<IndexItemEntry> entries) throws ServiceException {
+        assert(mailbox.lock.isLocked());
+        if (entries.isEmpty()) {
+            return;
+        }
+
+        Indexer indexer;
+        try {
+            indexer = indexStore.openIndexer();
+        } catch (IOException e) {
+            ZimbraLog.index.warn("Failed to open Indexer", e);
+            lastFailedTime = System.currentTimeMillis();
+            return;
+        }
+
+        List<MailItem> indexed = new ArrayList<MailItem>(entries.size());
+        try {
+            for (IndexItemEntry entry : entries) {
                 if (entry.documents == null) {
                     ZimbraLog.index.warn("NULL index data item=%s", entry);
                     continue;
