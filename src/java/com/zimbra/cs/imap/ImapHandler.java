@@ -168,10 +168,6 @@ abstract class ImapHandler {
         return userAgent;
     }
 
-    void setUserAgent(String ua) {
-        userAgent = ua;
-    }
-
     void setLoggingContext() {
         ZimbraLog.clearContext();
         ImapSession i4selected = selectedFolder;
@@ -188,6 +184,9 @@ abstract class ImapHandler {
         }
         if (via != null) {
             ZimbraLog.addViaToContext(via);
+        }
+        if (userAgent != null) {
+            ZimbraLog.addUserAgentToContext(userAgent);
         }
         ZimbraLog.addIpToContext(getRemoteIp());
     }
@@ -1065,7 +1064,7 @@ abstract class ImapHandler {
                 ua = ua + '/' + version; // conform to the way ZimberSoapContext build ua
             }
             if (userAgent == null) {
-                setUserAgent(ua);
+                userAgent = ua;
                 ZimbraLog.addUserAgentToContext(ua);
             } else {
                 if (userAgent.equals(ua)) {
