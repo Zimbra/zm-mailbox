@@ -82,6 +82,11 @@ public class Move extends DavMethod {
     }
     protected Collection getDestinationCollection(DavContext ctxt) throws DavException {
         String destinationUrl = getDestination(ctxt);
+        try {
+            destinationUrl = URLDecoder.decode(destinationUrl, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            ZimbraLog.dav.warn("can't decode destination url %s", destinationUrl, e);
+        }
         if (!destinationUrl.endsWith("/")) {
             int slash = destinationUrl.lastIndexOf('/');
             destinationUrl = destinationUrl.substring(0, slash+1);
