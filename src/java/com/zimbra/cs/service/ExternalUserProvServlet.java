@@ -34,12 +34,16 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ShareInfoData;
 import com.zimbra.cs.account.ZimbraAuthToken;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.acl.AclPushSerializer;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.soap.mail.message.FolderActionRequest;
+import com.zimbra.soap.mail.type.FolderActionSelector;
 import org.apache.commons.codec.binary.Hex;
 
 import javax.servlet.ServletException;
@@ -123,6 +127,12 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                             Integer.toString(Mailbox.ID_FOLDER_USER_ROOT), mountpointName,
                             ZFolder.View.fromString(sharedFolderView.toString()), ZFolder.Color.defaultColor, null,
                             ZMailbox.OwnerBy.BY_ID, ownerId, ZMailbox.SharedItemBy.BY_ID, folderId, false);
+                    if (sharedFolderView == MailItem.Type.APPOINTMENT) {
+                        // make sure that the mountpoint is checked in the UI by default
+                        FolderActionSelector actionSelector = new FolderActionSelector(zMtpt.getId(), "check");
+                        FolderActionRequest actionRequest = new FolderActionRequest(actionSelector);
+                        zMailbox.invokeJaxb(actionRequest);
+                    }
                 } catch (ServiceException e) {
                     logger.debug("Error in attempting to create mountpoint. Probably it already exists.", e);
                 }
@@ -224,6 +234,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             attrs.put(Provisioning.A_zimbraExternalUserMailAddress, extUserEmail);
             attrs.put(Provisioning.A_zimbraMailHost, prov.getLocalServer().getServiceHostname());
             attrs.put(Provisioning.A_displayName, displayName);
+            attrs.put(Provisioning.A_zimbraHideInGal, ProvisioningConstants.TRUE);
             grantee = prov.createAccount(mapExtEmailToAcctName(extUserEmail, domain), password, attrs);
             // create external account mailbox
             Mailbox granteeMbox = MailboxManager.getInstance().getMailboxByAccount(grantee);
@@ -237,9 +248,13 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                     ShareInfoData shareData = AclPushSerializer.deserialize(sharedItem);
                     String sharedFolderName = getSharedFolderName(shareData.getFolderPath());
                     String mountpointName = account.getDisplayName() + "'s " + sharedFolderName;
-                    granteeMbox.createMountpoint(null, Mailbox.ID_FOLDER_USER_ROOT, mountpointName, account.getId(),
-                                                 shareData.getFolderId(), shareData.getFolderDefaultViewCode(), 0,
-                                                 MailItem.DEFAULT_COLOR, false);
+                    Mountpoint mtpt = granteeMbox.createMountpoint(
+                            null, Mailbox.ID_FOLDER_USER_ROOT, mountpointName, account.getId(), shareData.getFolderId(),
+                            shareData.getFolderDefaultViewCode(), 0, MailItem.DEFAULT_COLOR, false);
+                    if (shareData.getFolderDefaultViewCode() == MailItem.Type.APPOINTMENT) {
+                        // make sure that the mountpoint is checked in the UI by default
+                        granteeMbox.alterTag(null, mtpt.getId(), mtpt.getType(), Flag.ID_CHECKED, true);
+                    }
                     viewTypes.add(shareData.getFolderDefaultViewCode());
                 }
             }

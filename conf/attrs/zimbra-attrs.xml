@@ -1035,11 +1035,13 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="174" name="zimbraImapEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultExternalCOSValue>FALSE</defaultExternalCOSValue>
   <desc>whether IMAP is enabled for an account</desc>
 </attr>
 
 <attr id="175" name="zimbraPop3Enabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultExternalCOSValue>FALSE</defaultExternalCOSValue>
   <desc>whether POP3 is enabled for an account</desc>
 </attr>
 
@@ -2118,6 +2120,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="415" name="zimbraFeatureIdentitiesEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
   <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultExternalCOSValue>FALSE</defaultExternalCOSValue>
   <desc>whether to allow use of identities feature</desc>
 </attr>
 
