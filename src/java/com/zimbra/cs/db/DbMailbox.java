@@ -87,6 +87,7 @@ public final class DbMailbox {
 
     public static final int CI_SCHEDULED_TASK_MAILBOX_ID = 3;
     public static final int CI_OUT_OF_OFFICE_MAILBOX_ID = 1;
+    public static final int CI_PENDING_ACL_PUSH_MAILBOX_ID = 1;
 
     static final String DB_PREFIX_MAILBOX_GROUP = "mboxgroup";
     static final String TABLE_MAILBOX       = "mailbox";
