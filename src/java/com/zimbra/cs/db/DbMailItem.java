@@ -144,6 +144,7 @@ public class DbMailItem {
         if (data.id <= 0 || data.folderId <= 0 || data.parentId == 0) {
             throw ServiceException.FAILURE("invalid data for DB item create", null);
         }
+        assert mailbox.isNewItemIdValid(data.id) : "[bug 46549] illegal id for mail item";   //temporarily for bug 46549
         checkNamingConstraint(mailbox, data.folderId, data.name, data.id);
 
         DbConnection conn = mailbox.getOperationConnection();

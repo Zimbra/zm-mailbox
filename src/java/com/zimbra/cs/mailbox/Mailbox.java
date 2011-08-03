@@ -8300,4 +8300,11 @@ public class Mailbox {
     boolean isChildFolderPermitted(int folderId) {
         return (folderId != Mailbox.ID_FOLDER_SPAM);
     }
+
+    /**
+     * temporarily for bug 46549
+     */
+    public boolean isNewItemIdValid(int id) {
+        return id < 2<<29;
+    }
 }
