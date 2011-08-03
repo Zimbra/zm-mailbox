@@ -772,6 +772,10 @@ public class DbDataSource {
     	return items;
     }
 
+    public static String getTableName(int mailboxId, int groupId) {
+        return DbMailbox.qualifyTableName(groupId, TABLE_DATA_SOURCE_ITEM);
+    }
+
     public static String getTableName(Mailbox mbox) {
         return DbMailbox.qualifyTableName(mbox, TABLE_DATA_SOURCE_ITEM);
     }
