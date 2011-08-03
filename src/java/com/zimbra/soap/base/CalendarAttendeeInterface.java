@@ -1,0 +1,56 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2011 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
+
+package com.zimbra.soap.base;
+
+import java.util.List;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+
+@XmlAccessorType(XmlAccessType.NONE)
+public interface CalendarAttendeeInterface {
+    public void setAddress(String address);
+    public void setUrl(String url);
+    public void setDisplayName(String displayName);
+    public void setSentBy(String sentBy);
+    public void setDir(String dir);
+    public void setLanguage(String language);
+    public void setCuType(String cuType);
+    public void setRole(String role);
+    public void setPartStat(String partStat);
+    public void setRsvp(Boolean rsvp);
+    public void setMember(String member);
+    public void setDelegatedTo(String delegatedTo);
+    public void setDelegatedFrom(String delegatedFrom);
+
+    public String getAddress();
+    public String getUrl();
+    public String getDisplayName();
+    public String getSentBy();
+    public String getDir();
+    public String getLanguage();
+    public String getCuType();
+    public String getRole();
+    public String getPartStat();
+    public Boolean getRsvp();
+    public String getMember();
+    public String getDelegatedTo();
+    public String getDelegatedFrom();
+
+    public void setXParamInterfaces(Iterable<XParamInterface> xParams);
+    public void addXParamInterface(XParamInterface xParam);
+    public List<XParamInterface> getXParamInterfaces();
+}

@@ -113,7 +113,8 @@ implements InviteComponentInterface
     }
 
     @Override
-    public InviteComponent create(String method, int componentNum, boolean rsvp) {
+    public InviteComponentInterface createFromMethodComponentNumRsvp(
+            String method, int componentNum, boolean rsvp) {
         return new InviteComponent(method, componentNum, rsvp);
     }
 
@@ -242,9 +243,9 @@ implements InviteComponentInterface
     @Override
     public String getHtmlDescription() { return htmlDescription; }
     @Override
-    public CalOrganizer getOrganizer() { return organizer; }
+    public CalOrganizerInterface getOrganizerInterface() { return organizer; }
     @Override
-    public RecurrenceInfo getRecurrence() { return recurrence; }
+    public RecurrenceInfoInterface getRecurrenceInterface() { return recurrence; }
     public ExceptionRecurIdInfo getExceptionId() { return exceptionId; }
     public DtTimeInfo getDtStart() { return dtStart; }
     public DtTimeInfo getDtEnd() { return dtEnd; }
