@@ -47,21 +47,26 @@ public abstract class AuthMechanism {
     throws ServiceException {
         String authMech = Provisioning.AM_ZIMBRA;
         
-        Provisioning prov = Provisioning.getInstance();
-        Domain domain = prov.getDomain(acct);
+        // bypass domain AuthMech and always use Zimbra auth for external virtual accounts 
         
-        // see if it specifies an alternate auth
-        if (domain != null) {
-            String am;
-            Boolean asAdmin = context == null ? null : (Boolean) context.get(AuthContext.AC_AS_ADMIN);
-            if (asAdmin != null && asAdmin) {
-                am = domain.getAuthMechAdmin();
-            } else {
-                am = domain.getAuthMech();
-            }
+        if (!acct.isIsExternalVirtualAccount()) {
+            Provisioning prov = Provisioning.getInstance();
+            Domain domain = prov.getDomain(acct);
             
-            if (am != null)
-                authMech = am;
+            // see if it specifies an alternate auth
+            if (domain != null) {
+                String am;
+                Boolean asAdmin = context == null ? null : (Boolean) context.get(AuthContext.AC_AS_ADMIN);
+                if (asAdmin != null && asAdmin) {
+                    am = domain.getAuthMechAdmin();
+                } else {
+                    am = domain.getAuthMech();
+                }
+                
+                if (am != null) {
+                    authMech = am;
+                }
+            }
         }
         
         if (authMech.equals(Provisioning.AM_ZIMBRA))
