@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2009, 2010, 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -16,31 +16,32 @@ package com.zimbra.cs.index;
 
 import org.apache.lucene.document.Document;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
 public final class DocumentHit extends ZimbraHit {
 
-    private int mMessageId;
-    private Document mLuceneDoc;
-    private com.zimbra.cs.mailbox.Document mDocItem;
+    private final int itemId;
+    private final Document luceneDoc;
+    private com.zimbra.cs.mailbox.Document docItem;
 
-    DocumentHit(ZimbraQueryResultsImpl results, Mailbox mbx, int mailItemId, Document luceneDoc,
+    DocumentHit(ZimbraQueryResultsImpl results, Mailbox mbx, int itemId, Document luceneDoc,
             com.zimbra.cs.mailbox.Document docItem) {
         super(results, mbx);
-        mMessageId = mailItemId;
-        mLuceneDoc = luceneDoc;
-        mDocItem = docItem;
+        this.itemId = itemId;
+        this.luceneDoc = luceneDoc;
+        this.docItem = docItem;
     }
 
     @Override
-    public long getDate() {
-        return mDocItem.getDate();
+    public long getDate() throws ServiceException {
+        return getDocument().getDate();
     }
 
     @Override
-    public long getSize() {
-        return mDocItem.getSize();
+    public long getSize() throws ServiceException {
+        return getDocument().getSize();
     }
 
     @Override
@@ -50,53 +51,55 @@ public final class DocumentHit extends ZimbraHit {
 
     @Override
     public int getItemId() {
-        return mMessageId;
+        return itemId;
     }
 
-    public byte getItemType() {
-        return mDocItem.getType();
+    public byte getItemType() throws ServiceException {
+        return getDocument().getType();
     }
 
     @Override
     void setItem(MailItem item) {
         if (item instanceof com.zimbra.cs.mailbox.Document) {
-            mDocItem = (com.zimbra.cs.mailbox.Document) item;
+            docItem = (com.zimbra.cs.mailbox.Document) item;
         }
     }
 
     @Override
     boolean itemIsLoaded() {
-        return mDocItem != null;
+        return docItem != null;
     }
 
     @Override
-    public String getSubject() {
-        return mDocItem.getName();
+    public String getSubject() throws ServiceException {
+        return getDocument().getName();
     }
 
     @Override
-    public String getName() {
-        return mDocItem.getName();
+    public String getName() throws ServiceException {
+        return getDocument().getName();
     }
 
     @Override
-    public MailItem getMailItem() {
+    public MailItem getMailItem() throws ServiceException {
         return getDocument();
     }
 
-    public com.zimbra.cs.mailbox.Document getDocument() {
-        return mDocItem;
+    public com.zimbra.cs.mailbox.Document getDocument() throws ServiceException {
+        if (docItem == null) {
+            docItem = getMailbox().getDocumentById(null, itemId);
+        }
+        return docItem;
     }
 
-    public int getVersion() {
-        if (mDocItem != null) {
-            String verStr = mLuceneDoc.get(LuceneFields.L_VERSION);
-            if (verStr != null) {
-                return Integer.parseInt(verStr);
+    public int getVersion() throws ServiceException {
+        if (luceneDoc != null) {
+            String ver = luceneDoc.get(LuceneFields.L_VERSION);
+            if (ver != null) {
+                return Integer.parseInt(ver);
             }
         }
-        // if there is no lucene Document, only the db search was done.
-        // then just match the latest version.
-        return mDocItem.getVersion();
+        // if there is no lucene Document, only the db search was done, then just match the latest version.
+        return getDocument().getVersion();
     }
 }
