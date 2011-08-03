@@ -106,7 +106,7 @@ When sessions are explicitly requested by the client, the server
 will return the client's active session ID in the response's <session/>
 header element.  If this session ID is different from the one sent by the
 client (or if the client requested a new session by including just a bare
-"<session/>" inn the header), the client should assume the old session
+"<session/>" in the header), the client should assume the old session
 (if any) has expired and immediately start using the returned session ID.
 
 If a new session is created (due to no session ID being supplied in the request
