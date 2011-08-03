@@ -57,7 +57,6 @@ import com.zimbra.common.util.CopyInputStream;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -8075,5 +8074,12 @@ public class Mailbox {
 
     boolean isChildFolderPermitted(int folderId) {
         return (folderId != Mailbox.ID_FOLDER_SPAM);
+    }
+
+    /**
+     * temporarily for bug 46549
+     */
+    public boolean isNewItemIdValid(int id) {
+        return id < 2<<29;
     }
 }
