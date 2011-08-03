@@ -69,6 +69,19 @@ public abstract class UpgradeOp {
         this.bug = bug;
     }
     
+    void describe() {
+        Description desc = getDescription();
+        if (desc == null) {
+            printer.format("\nBug %s", getBug() + ": descrition not available.\n\n");
+        } else {
+            desc.describe();
+        }
+    }
+    
+    Description getDescription() {
+        return null;
+    }
+    
     private void printModAttrs(String dn, Map<String, Object> attrs) {
         printer.println();
         printer.println("Modifying " + dn);

@@ -32,6 +32,7 @@ public class LdapUpgrade {
 
     private static String O_HELP = "h";
     private static String O_BUG = "b";
+    private static String O_DESCRIBE ="d";
     private static String O_VERBOSE = "v";
     
     private static Options getAllOptions() {
@@ -39,7 +40,7 @@ public class LdapUpgrade {
         options.addOption(O_HELP, "help", false, "print usage");
         options.addOption(O_VERBOSE, "verbose", false, "be verbose");
         options.addOption(O_BUG, "bug", true, "bug number this upgrade is for");
-        
+        options.addOption(O_DESCRIBE, "desc", true, "describe this upgrade task");
         return options;
     }
     
@@ -76,6 +77,22 @@ public class LdapUpgrade {
         }
     }
     
+    private static UpgradeOp getUpgradeOp(String bug, LdapUpgradePrinter printer) 
+    throws ServiceException {
+        UpgradeTask upgradeTask = UpgradeTask.getTaskByBug(bug);
+        
+        if (upgradeTask == null) {
+            printer.println("unrecognized bug number");
+            System.exit(1);
+        } 
+        
+        UpgradeOp upgradeOp = upgradeTask.getUpgradeOp();
+        upgradeOp.setPrinter(printer);
+        upgradeOp.setBug(bug);
+        upgradeOp.setLdapProv(LdapProv.getInst());
+        return upgradeOp;
+    }
+    
     // public for unittest
     public static void upgrade(String[] args) throws ServiceException {
         LdapUpgradePrinter printer = new LdapUpgradePrinter();
@@ -108,29 +125,24 @@ public class LdapUpgrade {
             System.exit(0);
         }
 
+        if (cl.hasOption(O_DESCRIBE)) {
+            String bug = cl.getOptionValue(O_DESCRIBE);
+            UpgradeOp upgradeOp = getUpgradeOp(bug, printer);
+            upgradeOp.describe();
+            System.exit(0);
+        }
+        
         if (!cl.hasOption(O_BUG)) {
             usage();
             System.exit(1);
         }
         
-        String bug = cl.getOptionValue(O_BUG);
         boolean verbose = cl.hasOption(O_VERBOSE);
+        String bug = cl.getOptionValue(O_BUG);
         
-        UpgradeTask upgradeTask = UpgradeTask.getTaskByBug(bug);
-        
-        if (upgradeTask == null) {
-            printer.println("unrecognized bug number");
-            System.exit(1);
-        } 
-        
-        LdapProv ldapProv = LdapProv.getInst();
-        
-        UpgradeOp upgradeOp = upgradeTask.getUpgradeOp();
-        upgradeOp.setPrinter(printer);
+        UpgradeOp upgradeOp = getUpgradeOp(bug, printer);
         upgradeOp.setVerbose(verbose);
-        upgradeOp.setBug(bug);
-        upgradeOp.setLdapProv(ldapProv);
-        
+                
         if (!upgradeOp.parseCommandLine(cl)) {
             System.exit(1);
         }

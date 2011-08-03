@@ -116,39 +116,14 @@ public class ADGroupHandler extends GroupHandler {
         }
     }
 
-    /*
-     * callsite is responsible for closing the context after done.
-     * 
-     * External group for delegated admin uses the external AD auth 
-     * settings.  The diff is, when looking for the account anywhere 
-     * other than authenticating the account, we have to use the 
-     * admin bindDN/password, because:
-     *   - we no longer have the user's AD password
-     *   - it makes perfect sense to do this task using the AD admin's credentials.
-     *
-     * TODO: should not be static method.
-     */
-    public static ZLdapContext getExternalDelegatedAdminGroupsLdapContext(Domain domain) 
+    @Override
+    public ZLdapContext getExternalDelegatedAdminGroupsLdapContext(Domain domain) 
     throws ServiceException {
-        String[] ldapUrl = domain.getAuthLdapURL();
-        if (ldapUrl == null || ldapUrl.length == 0) {
-            throw ServiceException.INVALID_REQUEST("ubable to search external group, " +
-                    "missing " + Provisioning.A_zimbraAuthLdapURL, null);
-        }
-        
         if (!domainAdminAuthMechIsAD(domain)) {
             throw ServiceException.INVALID_REQUEST("domain auth mech must be AD", null);
         }
         
-        boolean startTLSEnabled = domain.isAuthLdapStartTlsEnabled();
-        String bindDN = domain.getAuthLdapSearchBindDn();
-        String bindPassword = domain.getAuthLdapSearchBindPassword();
-        
-        ExternalLdapConfig ldapConfig = new ExternalLdapConfig(ldapUrl, startTLSEnabled, 
-                null, bindDN, bindPassword, null, 
-                "search external group");
-        
-        return LdapClient.getExternalContext(ldapConfig, LdapUsage.EXTERNAL_GROUP);
+        return super.getExternalDelegatedAdminGroupsLdapContext(domain);
     }
     
     private static boolean domainAdminAuthMechIsAD(Domain domain) {
@@ -235,7 +210,7 @@ public class ADGroupHandler extends GroupHandler {
         
         ZLdapContext zlc = null;
         try {
-            zlc = ADGroupHandler.getExternalDelegatedAdminGroupsLdapContext(domain);
+            zlc = getExternalDelegatedAdminGroupsLdapContext(domain);
             
             ZAttributes attrs = prov.getHelper().getAttributes(extDN, zlc, new String[]{MEMBER_OF_ATTR});
             

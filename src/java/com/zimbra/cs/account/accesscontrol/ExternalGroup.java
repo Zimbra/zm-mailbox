@@ -80,14 +80,16 @@ public class ExternalGroup extends NamedEntry {
         return groupHandler.inDelegatedAdminGroup(this, acct);
     }
     
+    private static GroupHandler getGroupHandler(Domain domain) {
+        String className = domain.getExternalGroupHandlerClass();
+        return GroupHandler.getHandler(className);
+    }
+    
     private static ExternalGroup makeExternalGroup(Domain domain, 
-            String extGroupName, String dn, ZAttributes attrs) throws ServiceException {
+            GroupHandler groupHandler, String extGroupName, String dn, 
+            ZAttributes attrs) throws ServiceException {
         String id = ExternalGroupInfo.encode(domain.getId(), extGroupName);
         String name = ExternalGroupInfo.encode(domain.getName(), extGroupName);
-        
-        // load group handler
-        String className = domain.getExternalGroupHandlerClass();
-        GroupHandler groupHandler = GroupHandler.getHandler(className);
         
         ExternalGroup extGroup = new ExternalGroup(
                 dn, id, name, domain.getId(), attrs, groupHandler, LdapProv.getInst());
@@ -143,23 +145,24 @@ public class ExternalGroup extends NamedEntry {
         }
         String searchFilter = LdapUtilCommon.computeAuthDn(extGroupName, filterTemplate);
         
+        GroupHandler groupHandler = getGroupHandler(domain);
+        
         ZLdapContext zlc = null;
         try {
-            zlc = ADGroupHandler.getExternalDelegatedAdminGroupsLdapContext(domain);
+            zlc = groupHandler.getExternalDelegatedAdminGroupsLdapContext(domain);
             
             ZSearchResultEntry entry = prov.getHelper().searchForEntry(
                     searchBase, searchFilter, zlc, new String[]{"mail"});
             
             if (entry != null) {
-                return makeExternalGroup(domain, extGroupName, entry.getDN(), 
-                        entry.getAttributes());
+                return makeExternalGroup(domain, groupHandler, extGroupName, 
+                        entry.getDN(), entry.getAttributes());
             } else {
                 return null;
             }
         } finally {
             LdapClient.closeContext(zlc);
         }
-
     }
 
 }

@@ -112,14 +112,13 @@ public class TestACAll extends TestAC {
     @Before
     public void initTest() throws Exception {
         // remove all grants on global grant so it will not interfere with later tests
-        revokeAllGrantsOnGlobalGrant();
+        revokeAllGrantsOnGlobalGrantAndGlobalConfig();
     }
     
     @After
     public void cleanupTest() throws Exception {
         // remove all grants on global grant so it will not interfere with later tests
-        revokeAllGrantsOnGlobalGrant();
-        
+        revokeAllGrantsOnGlobalGrantAndGlobalConfig();
         deleteAllEntries();
     }
     
@@ -357,7 +356,7 @@ public class TestACAll extends TestAC {
                     // Configure the domain for external AD auth
                     //
                     Map<String, Object> domainAttrs = Maps.newHashMap();
-                    domain.setAuthMech(Provisioning.AM_AD, domainAttrs);
+                    domain.setAuthMechAdmin(Provisioning.AM_AD, domainAttrs);
                     
                     /*  ==== mock test ====
                     // setup auth
@@ -565,10 +564,10 @@ public class TestACAll extends TestAC {
                     right.getName(), null);
             
         } catch (ServiceException e) {
-            // e.printStackTrace();
             if (ServiceException.INVALID_REQUEST.equals(e.getCode())) {
                 gotInvalidRequestException = true;
             } else {
+                e.printStackTrace();
                 fail();
             }
         }
@@ -951,8 +950,8 @@ public class TestACAll extends TestAC {
         } catch (ServiceException e) {
             // getEffectiveRights should not throw in the normal case.
             // The only expected exception is when the grantee is not a delegated admin
-            // e.printStackTrace();
             if (!expectFailure) {
+                e.printStackTrace();
                 fail();
             }
         }
@@ -976,8 +975,8 @@ public class TestACAll extends TestAC {
         } catch (ServiceException e) {
             // getEffectiveRights should not throw in the normal case.
             // The only expected exception is when the grantee is not a delegated admin
-            // e.printStackTrace();
             if (!expectFailure) {
+                e.printStackTrace();
                 fail();
             }
         }
@@ -1010,8 +1009,8 @@ public class TestACAll extends TestAC {
                 Key.GranteeBy.name, grantee.getName());
             
         } catch (ServiceException e) {
-            // e.printStackTrace();
             if (!expectFailure) {
+                e.printStackTrace();
                 fail();
             }
         }
@@ -1095,7 +1094,7 @@ public class TestACAll extends TestAC {
                 try {
                     domain = TargetType.getTargetDomain(mProv, target);
                 } catch (ServiceException e) {
-                    // e.printStackTrace();
+                    e.printStackTrace();
                     fail();
                 }
                 assertNotNull(domain);
@@ -1217,6 +1216,7 @@ public class TestACAll extends TestAC {
         } catch (ServiceException e) {
             // the only reasonable exception is PERM_DENIED 
             if (!ServiceException.PERM_DENIED.equals(e.getCode())) {
+                e.printStackTrace();
                 fail();
             }
         }
@@ -1381,12 +1381,22 @@ public class TestACAll extends TestAC {
 
     }
     
-    private void revokeAllGrantsOnGlobalGrant() throws Exception {
+    private void revokeAllGrantsOnGlobalGrantAndGlobalConfig() throws Exception {
         
         Grants grants = RightCommand.getGrants(mProv,
                 TargetType.global.getCode(), null, null, 
                 null, null, null, false);
-            
+        
+        revokeAllGrants(grants);
+        
+        grants = RightCommand.getGrants(mProv,
+                TargetType.config.getCode(), null, null, 
+                null, null, null, false);
+        
+        revokeAllGrants(grants);
+    }
+    
+    private void revokeAllGrants(Grants grants) throws Exception {    
         for (RightCommand.ACE ace : grants.getACEs()) {
             RightCommand.revokeRight(mProv,
                 getGlobalAdminAcct(),
@@ -1408,7 +1418,7 @@ public class TestACAll extends TestAC {
         try {
             execTest(note, grantedOnTargetType, granteeType, right);
         } finally {
-            // revokeAllGrantsOnGlobalGrant();
+            revokeAllGrantsOnGlobalGrantAndGlobalConfig();
             cleanupTest();
         }
     }
@@ -1539,7 +1549,7 @@ public class TestACAll extends TestAC {
         // doTest("1/1", TargetType.domain, GranteeType.GT_USER, ADMIN_PRESET_DISTRIBUTION_LIST);
         // doTest("1/1", TargetType.domain, GranteeType.GT_USER, ADMIN_PRESET_DOMAIN);
         
-        doTest("1/1", TargetType.server, GranteeType.GT_EXT_GROUP, ADMIN_COMBO_ACCOUNT);
+        doTest("1/1", TargetType.config, GranteeType.GT_EXT_GROUP, ADMIN_ATTR_GETALL_CONFIG);
                
         // doTest("1/1", TargetType.zimlet, TestGranteeType.GRANTEE_DYNAMIC_GROUP, ADMIN_COMBO_XMPP_COMPONENT);
 
