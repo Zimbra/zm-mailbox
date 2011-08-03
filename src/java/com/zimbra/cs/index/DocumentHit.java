@@ -16,6 +16,7 @@ package com.zimbra.cs.index;
 
 import org.apache.lucene.document.Document;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -28,7 +29,7 @@ public final class DocumentHit extends ZimbraHit {
     DocumentHit(ZimbraQueryResultsImpl results, Mailbox mbx, int id,
             com.zimbra.cs.mailbox.Document docItem, Document luceneDoc, Object sortKey) {
         super(results, mbx, sortKey);
-        itemId = id;
+        this.itemId = id;
         this.luceneDoc = luceneDoc;
         this.docItem = docItem;
     }
@@ -43,8 +44,8 @@ public final class DocumentHit extends ZimbraHit {
         return itemId;
     }
 
-    public MailItem.Type getItemType() {
-        return docItem.getType();
+    public MailItem.Type getItemType() throws ServiceException {
+        return getDocument().getType();
     }
 
     @Override
@@ -60,27 +61,30 @@ public final class DocumentHit extends ZimbraHit {
     }
 
     @Override
-    public String getName() {
-        return docItem.getName();
+    public String getName() throws ServiceException {
+        return getDocument().getName();
     }
 
     @Override
-    public MailItem getMailItem() {
+    public MailItem getMailItem() throws ServiceException {
         return getDocument();
     }
 
-    public com.zimbra.cs.mailbox.Document getDocument() {
+    public com.zimbra.cs.mailbox.Document getDocument() throws ServiceException {
+        if (docItem == null) {
+            docItem = getMailbox().getDocumentById(null, itemId);
+        }
         return docItem;
     }
 
-    public int getVersion() {
-        if (docItem != null) {
-            String verStr = luceneDoc.get(LuceneFields.L_VERSION);
-            if (verStr != null) {
-                return Integer.parseInt(verStr);
+    public int getVersion() throws ServiceException {
+        if (luceneDoc != null) {
+            String ver = luceneDoc.get(LuceneFields.L_VERSION);
+            if (ver != null) {
+                return Integer.parseInt(ver);
             }
         }
-        // if there is no lucene Document, only the db search was done. then just match the latest version.
-        return docItem.getVersion();
+        // if there is no lucene Document, only the db search was done, then just match the latest version.
+        return getDocument().getVersion();
     }
 }
