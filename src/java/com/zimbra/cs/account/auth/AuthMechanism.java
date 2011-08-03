@@ -59,6 +59,10 @@ public abstract class AuthMechanism {
                 Boolean asAdmin = context == null ? null : (Boolean) context.get(AuthContext.AC_AS_ADMIN);
                 if (asAdmin != null && asAdmin) {
                     am = domain.getAuthMechAdmin();
+                    if (am == null) {
+                        // fallback to zimbraAuthMech if zimbraAuthMechAdmin is not specified
+                        am = domain.getAuthMech();
+                    }
                 } else {
                     am = domain.getAuthMech();
                 }
