@@ -238,6 +238,14 @@ public abstract class SoapTransport {
         return mResponseProto == null ? mRequestProto : mResponseProto;
     }
 
+    /**
+     * Return true if Zimbra-specific context header should be added
+     * @see com.zimbra.cs.offline.util.ymail.YMailClient
+     */
+    public boolean generateContextHeader() {
+        return true;
+    }
+
     protected final Element generateSoapMessage(Element document, boolean raw, boolean noSession,
             String requestedAccountId, String changeToken, String tokenType) {
 
@@ -262,24 +270,26 @@ public abstract class SoapTransport {
         String targetId = requestedAccountId != null ? requestedAccountId : mTargetAcctId;
         String targetName = targetId == null ? mTargetAcctName : null;
 
-        Element context = SoapUtil.toCtxt(proto, mAuthToken);
-        if (noSession) {
-            SoapUtil.disableNotificationOnCtxt(context);
-        } else {
-            SoapUtil.addSessionToCtxt(context, mAuthToken == null ? null : mSessionId, mMaxNotifySeq);
+        Element context = null;
+        if (generateContextHeader()) { 
+            context = SoapUtil.toCtxt(proto, mAuthToken);
+            if (noSession) {
+                SoapUtil.disableNotificationOnCtxt(context);
+            } else {
+                SoapUtil.addSessionToCtxt(context, mAuthToken == null ? null : mSessionId, mMaxNotifySeq);
+            }
+            SoapUtil.addTargetAccountToCtxt(context, targetId, targetName);
+            SoapUtil.addChangeTokenToCtxt(context, changeToken, tokenType);
+            SoapUtil.addUserAgentToCtxt(context, getUserAgentName(), getUserAgentVersion());
+            if (responseProto != proto) {
+                SoapUtil.addResponseProtocolToCtxt(context, responseProto);
+            }
+    
+            String via = viaHolder.get().peek();
+            if (via != null) {
+                context.addUniqueElement(HeaderConstants.E_VIA).setText(via);
+            }
         }
-        SoapUtil.addTargetAccountToCtxt(context, targetId, targetName);
-        SoapUtil.addChangeTokenToCtxt(context, changeToken, tokenType);
-        SoapUtil.addUserAgentToCtxt(context, getUserAgentName(), getUserAgentVersion());
-        if (responseProto != proto) {
-            SoapUtil.addResponseProtocolToCtxt(context, responseProto);
-        }
-
-        String via = viaHolder.get().peek();
-        if (via != null) {
-            context.addUniqueElement(HeaderConstants.E_VIA).setText(via);
-        }
-
         Element envelope = proto.soapEnvelope(document, context);
         if (mDebugListener != null) {
             mDebugListener.sendSoapMessage(envelope);
