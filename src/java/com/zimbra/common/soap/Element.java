@@ -120,6 +120,12 @@ public abstract class Element implements Cloneable {
      *  <tt>Element</tt>s of this <tt>Element</tt>'s type. */
     public abstract ElementFactory getFactory();
 
+    /**
+     * Cleanup any resources supporting this element.  For instance,
+     * {@link FileBackedElement} removes its backing file.
+     */
+    public abstract void destroy();
+
     /** Creates a new child <tt>Element</tt> with the given name and adds it
      *  to this <tt>Element</tt>. */
     public abstract Element addElement(String name) throws ContainerException;
@@ -693,6 +699,12 @@ public abstract class Element implements Cloneable {
         public JSONElement(String name) {
             mName = name;
             mAttributes = new LinkedHashMap<String, Object>();
+        }
+
+        @Override
+        public void destroy() {
+            // Assumption - Only FileBackedElement children of XMLElement
+            // need special action from destroy(), so, we're done here.
         }
 
         public JSONElement(QName qname) {
@@ -1416,6 +1428,15 @@ public abstract class Element implements Cloneable {
             }
         }
 
+        @Override
+        public void destroy() {
+            if (mChildren != null) {
+                for (Element elt : mChildren) {
+                    elt.destroy();
+                }
+            }
+        }
+
         private final class XMLKeyValuePair implements KeyValuePair {
             private final XMLElement mTarget;
             private final String mAttrName;
@@ -1491,9 +1512,11 @@ public abstract class Element implements Cloneable {
             if (elt == null || elt.mParent == this)
                 return elt;
             else if (elt.mParent != null)
-                throw new ContainerException("element already has a parent");
+                throw new ContainerException("element already has a parent - <" + elt.getName() + ">");
             else if (mText != null)
-                throw new ContainerException("cannot add children to element containing text");
+                throw new ContainerException(
+                        "cannot add children to element containing text - <" +
+                        this.getName() + ">, trying to add <" + elt.getName() + ">");
 
             if (mChildren == null)
                 mChildren = new ArrayList<Element>();
@@ -1504,8 +1527,10 @@ public abstract class Element implements Cloneable {
 
         @Override
         public Element setText(String content) throws ContainerException {
-            if (content != null && !content.trim().equals("") && mChildren != null)
-                throw new ContainerException("cannot set text on element with children");
+            if (content != null && !content.trim().equals("") && mChildren != null) {
+                throw new ContainerException(
+                        "cannot set text on element with children - <" + this.getName() + ">");
+            }
             mText = content;
             return this;
         }
@@ -1822,12 +1847,19 @@ public abstract class Element implements Cloneable {
     /**
      * Read-only {@link Element} backed by a file. Use this for encoding a big XML document which can't fit in memory.
      * The backed file must consist of a raw element already encoded.
+     * Note that {@link destroy} will delete the backedFile
      */
     public static final class FileBackedElement extends Element {
         private final File backedFile;
 
         public FileBackedElement(File file) {
             backedFile = file;
+        }
+
+        @Override
+        public void destroy() {
+            ZimbraLog.misc.debug("FileBackedElement destroy - rm {}", backedFile);
+            backedFile.delete();
         }
 
         @Override
@@ -1922,8 +1954,12 @@ public abstract class Element implements Cloneable {
 
         @Override
         public void marshal(Appendable out) throws IOException {
+            if (!backedFile.exists()) {
+                throw new IOException(
+                    "marshal for FileBackedElement <" + this.getName() +
+                    "> failed - backing file " + backedFile + " does not exist");
+            }
             Files.copy(backedFile, Charsets.UTF_8, out);
-            backedFile.delete();
         }
     }
 
