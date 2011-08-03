@@ -1517,6 +1517,26 @@ public class Mailbox {
         // loaded by the earlier call to loadFoldersAndTags in beginTransaction
         lock.lock();
         try {
+            createDefaultFolders();
+
+            currentChange.itemId = getInitialItemId();
+            DbMailbox.updateMailboxStats(this);
+
+            // set the version to CURRENT
+            Metadata md = new Metadata();
+            version = new MailboxVersion();
+            version.writeToMetadata(md);
+            DbMailbox.updateConfig(this, MD_CONFIG_VERSION, md);
+        } finally {
+            lock.release();
+        }
+    }
+
+    /**
+     * @see #initialize() */
+    protected void createDefaultFolders() throws ServiceException {
+        lock.lock();
+        try {
             byte hidden = Folder.FOLDER_IS_IMMUTABLE | Folder.FOLDER_DONT_TRACK_COUNTS;
             Folder root = Folder.create(ID_FOLDER_ROOT, this, null, "ROOT", hidden, MailItem.Type.UNKNOWN, 0,
                     MailItem.DEFAULT_COLOR_RGB, null, null);
@@ -1554,15 +1574,6 @@ public class Mailbox {
                     MailItem.DEFAULT_COLOR_RGB, null, null);
             Folder.create(ID_FOLDER_BRIEFCASE, this, userRoot, "Briefcase", system, MailItem.Type.DOCUMENT, 0,
                     MailItem.DEFAULT_COLOR_RGB, null, null);
-
-            currentChange.itemId = getInitialItemId();
-            DbMailbox.updateMailboxStats(this);
-
-            // set the version to CURRENT
-            Metadata md = new Metadata();
-            version = new MailboxVersion();
-            version.writeToMetadata(md);
-            DbMailbox.updateConfig(this, MD_CONFIG_VERSION, md);
         } finally {
             lock.release();
         }
