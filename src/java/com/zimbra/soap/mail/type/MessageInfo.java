@@ -30,12 +30,17 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.EmailInfoInterface;
+import com.zimbra.soap.base.InviteInfoInterface;
+import com.zimbra.soap.base.MessageInfoInterface;
 import com.zimbra.soap.type.KeyValuePair;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = { "fragment", "emails", "subject",
     "messageIdHeader", "inReplyTo", "invite", "headers", "contentElems" })
-public class MessageInfo extends MessageCommon {
+public class MessageInfo
+extends MessageCommon
+implements MessageInfoInterface {
 
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
@@ -106,34 +111,51 @@ public class MessageInfo extends MessageCommon {
         this.id = id;
     }
 
+    @Override
+    public MessageInfoInterface createFromId(String id) {
+        return new MessageInfo(id);
+    }
+
+    @Override
     public void setId(String id) { this.id = id; }
+
+    @Override
     public void setCalendarIntendedFor(String calendarIntendedFor) {
         this.calendarIntendedFor = calendarIntendedFor;
     }
 
+    @Override
     public void setOrigId(String origId) { this.origId = origId; }
+    @Override
     public void setDraftReplyType(String draftReplyType) {
         this.draftReplyType = draftReplyType;
     }
 
+    @Override
     public void setIdentityId(String identityId) {
         this.identityId = identityId;
     }
 
+    @Override
     public void setDraftAccountId(String draftAccountId) {
         this.draftAccountId = draftAccountId;
     }
 
+    @Override
     public void setDraftAutoSendTime(Long draftAutoSendTime) {
         this.draftAutoSendTime = draftAutoSendTime;
     }
 
+    @Override
     public void setSentDate(Long sentDate) { this.sentDate = sentDate; }
+    @Override
     public void setResentDate(Long resentDate) {
         this.resentDate = resentDate;
     }
 
+    @Override
     public void setPart(String part) { this.part = part; }
+    @Override
     public void setFragment(String fragment) { this.fragment = fragment; }
     public void setEmails(Iterable <EmailInfo> emails) {
         this.emails.clear();
@@ -146,12 +168,16 @@ public class MessageInfo extends MessageCommon {
         this.emails.add(email);
     }
 
+    @Override
     public void setSubject(String subject) { this.subject = subject; }
+    @Override
     public void setMessageIdHeader(String messageIdHeader) {
         this.messageIdHeader = messageIdHeader;
     }
+    @Override
     public void setInReplyTo(String inReplyTo) { this.inReplyTo = inReplyTo; }
     public void setInvite(InviteInfo invite) { this.invite = invite; }
+    @Override
     public void setHeaders(Iterable <KeyValuePair> headers) {
         this.headers.clear();
         if (headers != null) {
@@ -159,10 +185,12 @@ public class MessageInfo extends MessageCommon {
         }
     }
 
+    @Override
     public void addHeader(KeyValuePair header) {
         this.headers.add(header);
     }
 
+    @Override
     public void setContentElems(Iterable <Object> contentElems) {
         this.contentElems.clear();
         if (contentElems != null) {
@@ -170,35 +198,53 @@ public class MessageInfo extends MessageCommon {
         }
     }
 
+    @Override
     public void addContentElem(Object contentElem) {
         this.contentElems.add(contentElem);
     }
 
+    @Override
     public String getId() { return id; }
+    @Override
     public String getCalendarIntendedFor() { return calendarIntendedFor; }
+    @Override
     public String getOrigId() { return origId; }
+    @Override
     public String getDraftReplyType() { return draftReplyType; }
+    @Override
     public String getIdentityId() { return identityId; }
+    @Override
     public String getDraftAccountId() { return draftAccountId; }
+    @Override
     public Long getDraftAutoSendTime() { return draftAutoSendTime; }
+    @Override
     public Long getSentDate() { return sentDate; }
+    @Override
     public Long getResentDate() { return resentDate; }
+    @Override
     public String getPart() { return part; }
+    @Override
     public String getFragment() { return fragment; }
     public List<EmailInfo> getEmails() {
         return Collections.unmodifiableList(emails);
     }
+    @Override
     public String getSubject() { return subject; }
+    @Override
     public String getMessageIdHeader() { return messageIdHeader; }
+    @Override
     public String getInReplyTo() { return inReplyTo; }
     public InviteInfo getInvite() { return invite; }
+    @Override
     public List<KeyValuePair> getHeaders() {
         return Collections.unmodifiableList(headers);
     }
+    @Override
     public List<Object> getContentElems() {
         return Collections.unmodifiableList(contentElems);
     }
 
+    @Override
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
@@ -227,5 +273,29 @@ public class MessageInfo extends MessageCommon {
     public String toString() {
         return addToStringInfo(Objects.toStringHelper(this))
                 .toString();
+    }
+    @Override
+    public void setEmailInterfaces(Iterable<EmailInfoInterface> emails) {
+        setEmails(EmailInfo.fromInterfaces(emails));
+    }
+
+    @Override
+    public void addEmailInterface(EmailInfoInterface email) {
+        addEmail((EmailInfo) email);
+    }
+
+    @Override
+    public void setInviteInterface(InviteInfoInterface invite) {
+        setInvite((InviteInfo) invite);
+    }
+
+    @Override
+    public List<EmailInfoInterface> getEmailInterfaces() {
+        return EmailInfo.toInterfaces(emails);
+    }
+
+    @Override
+    public InviteInfoInterface getInvitInterfacee() {
+        return invite;
     }
 }

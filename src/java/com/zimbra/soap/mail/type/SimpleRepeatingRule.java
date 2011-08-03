@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -29,12 +29,28 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.ByDayRuleInterface;
+import com.zimbra.soap.base.ByHourRuleInterface;
+import com.zimbra.soap.base.ByMinuteRuleInterface;
+import com.zimbra.soap.base.ByMonthDayRuleInterface;
+import com.zimbra.soap.base.ByMonthRuleInterface;
+import com.zimbra.soap.base.BySecondRuleInterface;
+import com.zimbra.soap.base.BySetPosRuleInterface;
+import com.zimbra.soap.base.ByWeekNoRuleInterface;
+import com.zimbra.soap.base.ByYearDayRuleInterface;
+import com.zimbra.soap.base.DateTimeStringAttrInterface;
+import com.zimbra.soap.base.IntervalRuleInterface;
+import com.zimbra.soap.base.NumAttrInterface;
+import com.zimbra.soap.base.SimpleRepeatingRuleInterface;
+import com.zimbra.soap.base.WkstRuleInterface;
+import com.zimbra.soap.base.XNameRuleInterface;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"until", "count", "interval", "bySecond", "byMinute",
             "byHour", "byDay", "byMonthDay", "byYearDay", "byWeekNo",
             "byMonth", "bySetPos", "weekStart", "xNames"})
-public class SimpleRepeatingRule implements RecurRuleBase {
+public class SimpleRepeatingRule
+implements RecurRuleBase, SimpleRepeatingRuleInterface {
 
     @XmlAttribute(name=MailConstants.A_CAL_RULE_FREQ, required=true)
     private final String frequency;
@@ -93,6 +109,11 @@ public class SimpleRepeatingRule implements RecurRuleBase {
         this.frequency = frequency;
     }
 
+    @Override
+    public SimpleRepeatingRuleInterface createFromFrequency(String frequency) {
+        return new SimpleRepeatingRule(frequency);
+    }
+
     public void setUntil(DateTimeStringAttr until) { this.until = until; }
     public void setCount(NumAttr count) { this.count = count; }
     public void setInterval(IntervalRule interval) { this.interval = interval; }
@@ -124,6 +145,7 @@ public class SimpleRepeatingRule implements RecurRuleBase {
         return this;
     }
 
+    @Override
     public String getFrequency() { return frequency; }
     public DateTimeStringAttr getUntil() { return until; }
     public NumAttr getCount() { return count; }
@@ -166,5 +188,151 @@ public class SimpleRepeatingRule implements RecurRuleBase {
     public String toString() {
         return addToStringInfo(Objects.toStringHelper(this))
                 .toString();
+    }
+
+    @Override
+    public void setUntilInterface(DateTimeStringAttrInterface until) {
+        setUntil((DateTimeStringAttr) until);
+    }
+
+    @Override
+    public void setCountInterface(NumAttrInterface count) {
+        setCount((NumAttr) count);
+    }
+
+    @Override
+    public void setIntervalInterface(IntervalRuleInterface interval) {
+        setInterval((IntervalRule) interval);
+    }
+
+    @Override
+    public void setBySecondInterface(BySecondRuleInterface bySecond) {
+        setBySecond((BySecondRule) bySecond);
+        
+    }
+
+    @Override
+    public void setByMinuteInterface(ByMinuteRuleInterface byMinute) {
+        setByMinute((ByMinuteRule) byMinute);
+    }
+
+    @Override
+    public void setByHourInterface(ByHourRuleInterface byHour) {
+        setByHour((ByHourRule) byHour);
+    }
+
+    @Override
+    public void setByDayInterface(ByDayRuleInterface byDay) {
+        setByDay((ByDayRule) byDay);
+    }
+
+    @Override
+    public void setByMonthDayInterface(ByMonthDayRuleInterface byMonthDay) {
+        setByMonthDay((ByMonthDayRule) byMonthDay);
+    }
+
+    @Override
+    public void setByYearDayInterface(ByYearDayRuleInterface byYearDay) {
+        setByYearDay((ByYearDayRule) byYearDay);
+    }
+
+    @Override
+    public void setByWeekNoInterface(ByWeekNoRuleInterface byWeekNo) {
+        setByWeekNo((ByWeekNoRule) byWeekNo);
+    }
+
+    @Override
+    public void setByMonthInterface(ByMonthRuleInterface byMonth) {
+        setByMonth((ByMonthRule) byMonth);
+    }
+
+    @Override
+    public void setBySetPosInterface(BySetPosRuleInterface bySetPos) {
+        setBySetPos((BySetPosRule) bySetPos);
+    }
+
+    @Override
+    public void setWeekStartInterface(WkstRuleInterface weekStart) {
+        setWeekStart((WkstRule) weekStart);
+    }
+
+    @Override
+    public void setXNameInterfaces(Iterable<XNameRuleInterface> xNames) {
+        setXNames(XNameRule.fromInterfaces(xNames));
+    }
+
+    @Override
+    public void addXNameInterface(XNameRuleInterface xName) {
+        addXName((XNameRule) xName);
+    }
+
+    @Override
+    public DateTimeStringAttrInterface getUntilInterface() {
+        return until;
+    }
+
+    @Override
+    public NumAttrInterface getCountInterface() {
+        return count;
+    }
+
+    @Override
+    public IntervalRuleInterface getIntervalInterface() {
+        return interval;
+    }
+
+    @Override
+    public BySecondRuleInterface getBySecondInterface() {
+        return this.bySecond;
+    }
+
+    @Override
+    public ByMinuteRuleInterface getByMinuteInterface() {
+        return this.byMinute;
+    }
+
+    @Override
+    public ByHourRuleInterface getByHourInterface() {
+        return this.byHour;
+    }
+
+    @Override
+    public ByDayRuleInterface getByDayInterface() {
+        return this.byDay;
+    }
+
+    @Override
+    public ByMonthDayRuleInterface getByMonthDayInterface() {
+        return this.byMonthDay;
+    }
+
+    @Override
+    public ByYearDayRuleInterface getByYearDayInterface() {
+        return this.byYearDay;
+    }
+
+    @Override
+    public ByWeekNoRuleInterface getByWeekNoInterface() {
+        return this.byWeekNo;
+    }
+
+    @Override
+    public ByMonthRuleInterface getByMonthInterface() {
+        return this.byMonth;
+    }
+
+    @Override
+    public BySetPosRuleInterface getBySetPosInterface() {
+        return this.bySetPos;
+    }
+
+    @Override
+    public WkstRuleInterface getWeekStartInterface() {
+        return this.weekStart;
+    }
+
+    @Override
+    public List<XNameRuleInterface> getXNamesInterface() {
+        return XNameRule.toInterfaces(xNames);
     }
 }

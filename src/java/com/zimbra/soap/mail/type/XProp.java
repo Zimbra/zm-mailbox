@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -29,8 +29,11 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-public class XProp {
+import com.zimbra.soap.base.XPropInterface;
+import com.zimbra.soap.base.XParamInterface;
+
+@XmlAccessorType(XmlAccessType.NONE)
+public class XProp implements XPropInterface {
 
     @XmlAttribute(name=MailConstants.A_NAME, required=true)
     private final String name;
@@ -54,6 +57,11 @@ public class XProp {
         this.value = value;
     }
 
+    @Override
+    public XPropInterface createFromNameAndValue(String name, String value) {
+        return new XProp(name, value);
+    }
+
     public void setXParams(Iterable <XParam> xParams) {
         this.xParams.clear();
         if (xParams != null) {
@@ -66,8 +74,11 @@ public class XProp {
         return this;
     }
 
+    @Override
     public String getName() { return name; }
+    @Override
     public String getValue() { return value; }
+
     public List<XParam> getXParams() {
         return Collections.unmodifiableList(xParams);
     }
@@ -79,5 +90,38 @@ public class XProp {
             .add("value", value)
             .add("xParams", xParams)
             .toString();
+    }
+
+    @Override
+    public void setXParamInterfaces(Iterable<XParamInterface> xParams) {
+        setXParams(XParam.fromInterfaces(xParams));
+    }
+
+    @Override
+    public void addXParamInterface(XParamInterface xParam) {
+        addXParam((XParam) xParam);
+    }
+
+    @Override
+    public List<XParamInterface> getXParamInterfaces() {
+        return XParam.toInterfaces(xParams);
+    }
+
+    public static Iterable <XProp> fromInterfaces(Iterable <XPropInterface> params) {
+        if (params == null)
+            return null;
+        List <XProp> newList = Lists.newArrayList();
+        for (XPropInterface param : params) {
+            newList.add((XProp) param);
+        }
+        return newList;
+    }
+
+    public static List <XPropInterface> toInterfaces(Iterable <XProp> params) {
+        if (params == null)
+            return null;
+        List <XPropInterface> newList = Lists.newArrayList();
+        Iterables.addAll(newList, params);
+        return newList;
     }
 }

@@ -29,10 +29,12 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.CalendarAttendeeInterface;
+import com.zimbra.soap.base.XParamInterface;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
-public class CalendarAttendee {
+public class CalendarAttendee implements CalendarAttendeeInterface {
 
     @XmlAttribute(name=MailConstants.A_ADDRESS /* a */, required=false)
     private String address;
@@ -80,23 +82,36 @@ public class CalendarAttendee {
     public CalendarAttendee() {
     }
 
+    @Override
     public void setAddress(String address) { this.address = address; }
+    @Override
     public void setUrl(String url) { this.url = url; }
+    @Override
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
+    @Override
     public void setSentBy(String sentBy) { this.sentBy = sentBy; }
+    @Override
     public void setDir(String dir) { this.dir = dir; }
+    @Override
     public void setLanguage(String language) { this.language = language; }
+    @Override
     public void setCuType(String cuType) { this.cuType = cuType; }
+    @Override
     public void setRole(String role) { this.role = role; }
+    @Override
     public void setPartStat(String partStat) { this.partStat = partStat; }
+    @Override
     public void setRsvp(Boolean rsvp) { this.rsvp = rsvp; }
+    @Override
     public void setMember(String member) { this.member = member; }
+    @Override
     public void setDelegatedTo(String delegatedTo) {
         this.delegatedTo = delegatedTo;
     }
 
+    @Override
     public void setDelegatedFrom(String delegatedFrom) {
         this.delegatedFrom = delegatedFrom;
     }
@@ -112,18 +127,31 @@ public class CalendarAttendee {
         this.xParams.add(xParam);
     }
 
+    @Override
     public String getAddress() { return address; }
+    @Override
     public String getUrl() { return url; }
+    @Override
     public String getDisplayName() { return displayName; }
+    @Override
     public String getSentBy() { return sentBy; }
+    @Override
     public String getDir() { return dir; }
+    @Override
     public String getLanguage() { return language; }
+    @Override
     public String getCuType() { return cuType; }
+    @Override
     public String getRole() { return role; }
+    @Override
     public String getPartStat() { return partStat; }
+    @Override
     public Boolean getRsvp() { return rsvp; }
+    @Override
     public String getMember() { return member; }
+    @Override
     public String getDelegatedTo() { return delegatedTo; }
+    @Override
     public String getDelegatedFrom() { return delegatedFrom; }
     public List<XParam> getXParams() {
         return Collections.unmodifiableList(xParams);
@@ -152,5 +180,40 @@ public class CalendarAttendee {
     public String toString() {
         return addToStringInfo(Objects.toStringHelper(this))
                 .toString();
+    }
+
+    @Override
+    public void setXParamInterfaces(Iterable<XParamInterface> xParams) {
+        setXParams(XParam.fromInterfaces(xParams));
+    }
+
+    @Override
+    public void addXParamInterface(XParamInterface xParam) {
+        addXParam((XParam) xParam);
+    }
+
+    @Override
+    public List<XParamInterface> getXParamInterfaces() {
+        return XParam.toInterfaces(xParams);
+    }
+
+    public static Iterable <CalendarAttendee> fromInterfaces(
+                Iterable <CalendarAttendeeInterface> params) {
+        if (params == null)
+            return null;
+        List <CalendarAttendee> newList = Lists.newArrayList();
+        for (CalendarAttendeeInterface param : params) {
+            newList.add((CalendarAttendee) param);
+        }
+        return newList;
+    }
+
+    public static List <CalendarAttendeeInterface> toInterfaces(
+                Iterable <CalendarAttendee> params) {
+        if (params == null)
+            return null;
+        List <CalendarAttendeeInterface> newList = Lists.newArrayList();
+        Iterables.addAll(newList, params);
+        return newList;
     }
 }

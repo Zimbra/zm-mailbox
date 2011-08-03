@@ -22,10 +22,13 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.CustomMetadataInterface;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_METADATA)
-public class MailCustomMetadata extends MailKeyValuePairs {
+public class MailCustomMetadata
+extends MailKeyValuePairs
+implements CustomMetadataInterface {
 
     // Normally present but sometimes an empty element is created to show that
     // CustomMetadata info is present but there are no sections to report on.
@@ -35,9 +38,12 @@ public class MailCustomMetadata extends MailKeyValuePairs {
     public MailCustomMetadata() {
     }
 
+    @Override
     public void setSection(String section) { this.section = section; }
+    @Override
     public String getSection() { return section; }
 
+    @Override
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);

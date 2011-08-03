@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -29,10 +29,12 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.PartInfoInterface;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = { "content", "mimeParts"})
-public class PartInfo {
+public class PartInfo
+implements PartInfoInterface {
 
     @XmlAttribute(name=MailConstants.A_PART, required=true)
     private final String part;
@@ -80,19 +82,33 @@ public class PartInfo {
         this.contentType = contentType;
     }
 
+    @Override
+    public PartInfoInterface createFromPartAndContentType(String part,
+            String contentType) {
+        return new PartInfo(part, contentType);
+    }
+
+    @Override
     public void setSize(Integer size) { this.size = size; }
+    @Override
     public void setContentDisposition(String contentDisposition) {
         this.contentDisposition = contentDisposition;
     }
+    @Override
     public void setContentFilename(String contentFilename) {
         this.contentFilename = contentFilename;
     }
+    @Override
     public void setContentId(String contentId) { this.contentId = contentId; }
+    @Override
     public void setLocation(String location) { this.location = location; }
+    @Override
     public void setBody(Boolean body) { this.body = body; }
+    @Override
     public void setTruncatedContent(Boolean truncatedContent) {
         this.truncatedContent = truncatedContent;
     }
+    @Override
     public void setContent(String content) { this.content = content; }
     public void setMimeParts(Iterable <PartInfo> mimeParts) {
         this.mimeParts.clear();
@@ -106,18 +122,64 @@ public class PartInfo {
         return this;
     }
 
+    @Override
     public String getPart() { return part; }
+    @Override
     public String getContentType() { return contentType; }
+    @Override
     public Integer getSize() { return size; }
+    @Override
     public String getContentDisposition() { return contentDisposition; }
+    @Override
     public String getContentFilename() { return contentFilename; }
+    @Override
     public String getContentId() { return contentId; }
+    @Override
     public String getLocation() { return location; }
+    @Override
     public Boolean getBody() { return body; }
+    @Override
     public Boolean getTruncatedContent() { return truncatedContent; }
+    @Override
     public String getContent() { return content; }
     public List<PartInfo> getMimeParts() {
         return Collections.unmodifiableList(mimeParts);
+    }
+
+    @Override
+    public void setMimePartInterfaces(Iterable<PartInfoInterface> mimeParts) {
+        setMimeParts(PartInfo.fromInterfaces(mimeParts));
+        
+    }
+
+    @Override
+    public void addMimePartInterface(PartInfoInterface mimePart) {
+        addMimePart((PartInfo) mimePart);
+    }
+
+    @Override
+    public List<PartInfoInterface> getMimePartInterfaces() {
+        return PartInfo.toInterfaces(mimeParts);
+    }
+
+    public static Iterable <PartInfo> fromInterfaces(
+                    Iterable <PartInfoInterface> ifs) {
+        if (ifs == null)
+            return null;
+        List <PartInfo> newList = Lists.newArrayList();
+        for (PartInfoInterface listEnt : ifs) {
+            newList.add((PartInfo) listEnt);
+        }
+        return newList;
+    }
+
+    public static List <PartInfoInterface> toInterfaces(
+                    Iterable <PartInfo> params) {
+        if (params == null)
+            return null;
+        List <PartInfoInterface> newList = Lists.newArrayList();
+        Iterables.addAll(newList, params);
+        return newList;
     }
 
     @Override

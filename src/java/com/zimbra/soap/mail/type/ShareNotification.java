@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,9 +22,11 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.ShareNotificationInterface;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-public class ShareNotification {
+@XmlAccessorType(XmlAccessType.NONE)
+public class ShareNotification
+implements ShareNotificationInterface {
 
     @XmlAttribute(name=MailConstants.A_TRUNCATED_CONTENT, required=false)
     private Boolean truncatedContent;
@@ -35,11 +37,16 @@ public class ShareNotification {
     public ShareNotification() {
     }
 
+    @Override
     public void setTruncatedContent(Boolean truncatedContent) {
         this.truncatedContent = truncatedContent;
     }
+    @Override
     public void setContent(String content) { this.content = content; }
+
+    @Override
     public Boolean getTruncatedContent() { return truncatedContent; }
+    @Override
     public String getContent() { return content; }
 
     @Override

@@ -28,15 +28,27 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.AlarmInfoInterface;
+import com.zimbra.soap.base.CalOrganizerInterface;
+import com.zimbra.soap.base.CalendarAttendeeInterface;
+import com.zimbra.soap.base.DtTimeInfoInterface;
+import com.zimbra.soap.base.DurationInfoInterface;
+import com.zimbra.soap.base.ExceptionRecurIdInfoInterface;
+import com.zimbra.soap.base.GeoInfoInterface;
+import com.zimbra.soap.base.InviteComponentInterface;
+import com.zimbra.soap.base.RecurrenceInfoInterface;
+import com.zimbra.soap.base.XPropInterface;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = { "categories", "comments", "contacts", "geo",
     "attendees", "alarms", "xProps", "fragment",
     "description", "htmlDescription", "organizer",
     "recurrence", "exceptionId", "dtStart", "dtEnd", "duration" })
-public class InviteComponent 
-extends InviteComponentCommon {
-    // {@link InviteComponent} and {@link InviteComponentWithGroupInfo} only 
+public class InviteComponent
+extends InviteComponentCommon
+implements InviteComponentInterface
+{
+    // {@link InviteComponent} and {@link InviteComponentWithGroupInfo} only
     // differ in the object representing E_CAL_ATTENDEE
     @XmlElement(name=MailConstants.E_CAL_CATEGORY /* category */,
                     required=false)
@@ -100,6 +112,12 @@ extends InviteComponentCommon {
         super(method, componentNum, rsvp);
     }
 
+    @Override
+    public InviteComponent create(String method, int componentNum, boolean rsvp) {
+        return new InviteComponent(method, componentNum, rsvp);
+    }
+
+    @Override
     public void setCategories(Iterable <String> categories) {
         this.categories.clear();
         if (categories != null) {
@@ -107,10 +125,12 @@ extends InviteComponentCommon {
         }
     }
 
+    @Override
     public void addCategory(String category) {
         this.categories.add(category);
     }
 
+    @Override
     public void setComments(Iterable <String> comments) {
         this.comments.clear();
         if (comments != null) {
@@ -118,10 +138,12 @@ extends InviteComponentCommon {
         }
     }
 
+    @Override
     public void addComment(String comment) {
         this.comments.add(comment);
     }
 
+    @Override
     public void setContacts(Iterable <String> contacts) {
         this.contacts.clear();
         if (contacts != null) {
@@ -129,6 +151,7 @@ extends InviteComponentCommon {
         }
     }
 
+    @Override
     public void addContact(String contact) {
         this.contacts.add(contact);
     }
@@ -167,10 +190,13 @@ extends InviteComponentCommon {
         this.xProps.add(xProp);
     }
 
+    @Override
     public void setFragment(String fragment) { this.fragment = fragment; }
+    @Override
     public void setDescription(String description) {
         this.description = description;
     }
+    @Override
     public void setHtmlDescription(String htmlDescription) {
         this.htmlDescription = htmlDescription;
     }
@@ -187,12 +213,15 @@ extends InviteComponentCommon {
     public void setDtEnd(DtTimeInfo dtEnd) { this.dtEnd = dtEnd; }
     public void setDuration(DurationInfo duration) { this.duration = duration; }
 
+    @Override
     public List<String> getCategories() {
         return Collections.unmodifiableList(categories);
     }
+    @Override
     public List<String> getComments() {
         return Collections.unmodifiableList(comments);
     }
+    @Override
     public List<String> getContacts() {
         return Collections.unmodifiableList(contacts);
     }
@@ -206,16 +235,22 @@ extends InviteComponentCommon {
     public List<XProp> getXProps() {
         return Collections.unmodifiableList(xProps);
     }
+    @Override
     public String getFragment() { return fragment; }
+    @Override
     public String getDescription() { return description; }
+    @Override
     public String getHtmlDescription() { return htmlDescription; }
+    @Override
     public CalOrganizer getOrganizer() { return organizer; }
+    @Override
     public RecurrenceInfo getRecurrence() { return recurrence; }
     public ExceptionRecurIdInfo getExceptionId() { return exceptionId; }
     public DtTimeInfo getDtStart() { return dtStart; }
     public DtTimeInfo getDtEnd() { return dtEnd; }
     public DurationInfo getDuration() { return duration; }
 
+    @Override
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
@@ -242,5 +277,112 @@ extends InviteComponentCommon {
     public String toString() {
         return addToStringInfo(Objects.toStringHelper(this))
                 .toString();
+    }
+
+    @Override
+    public void setGeoInterface(GeoInfoInterface geo) {
+        setGeo((GeoInfo) geo);
+    }
+
+    @Override
+    public void setAttendeeInterfaces(
+            Iterable<CalendarAttendeeInterface> attendees) {
+        setAttendees(CalendarAttendee.fromInterfaces(attendees));
+    }
+
+    @Override
+    public void addAttendeeInterface(CalendarAttendeeInterface attendee) {
+        addAttendee((CalendarAttendee) attendee);
+    }
+
+    @Override
+    public void setAlarmInterfaces(Iterable<AlarmInfoInterface> alarms) {
+        setAlarms(AlarmInfo.fromInterfaces(alarms));
+    }
+
+    @Override
+    public void addAlarmInterface(AlarmInfoInterface alarm) {
+        addAlarm((AlarmInfo) alarm);
+    }
+
+    @Override
+    public void setXPropInterfaces(Iterable<XPropInterface> xProps) {
+        setXProps(XProp.fromInterfaces(xProps));
+    }
+
+    @Override
+    public void addXPropInterface(XPropInterface xProp) {
+        addXProp((XProp) xProp);
+    }
+
+    @Override
+    public void setOrganizerInterface(CalOrganizerInterface organizer) {
+        setOrganizer((CalOrganizer) organizer);
+    }
+
+    @Override
+    public void setRecurrenceInterface(RecurrenceInfoInterface recurrence) {
+        setRecurrence((RecurrenceInfo) recurrence);
+    }
+
+    @Override
+    public void setExceptionIdInterface(
+            ExceptionRecurIdInfoInterface exceptionId) {
+        setExceptionId((ExceptionRecurIdInfo) exceptionId);
+    }
+
+    @Override
+    public void setDtStartInterface(DtTimeInfoInterface dtStart) {
+        setDtStart((DtTimeInfo) dtStart);
+    }
+
+    @Override
+    public void setDtEndInterface(DtTimeInfoInterface dtEnd) {
+        setDtEnd((DtTimeInfo) dtEnd);
+    }
+
+    @Override
+    public void setDurationInterface(DurationInfoInterface duration) {
+        setDuration((DurationInfo) duration);
+    }
+
+    @Override
+    public GeoInfoInterface getGeoInterface() {
+        return this.geo;
+    }
+
+    @Override
+    public List<CalendarAttendeeInterface> getAttendeeInterfaces() {
+        return CalendarAttendee.toInterfaces(this.attendees);
+    }
+
+    @Override
+    public List<AlarmInfoInterface> getAlarmInterfaces() {
+        return AlarmInfo.toInterfaces(this.alarms);
+    }
+
+    @Override
+    public List<XPropInterface> getXPropInterfaces() {
+        return XProp.toInterfaces(this.xProps);
+    }
+
+    @Override
+    public ExceptionRecurIdInfoInterface getExceptionIdInterface() {
+        return this.exceptionId;
+    }
+
+    @Override
+    public DtTimeInfoInterface getDtStartInterface() {
+        return this.dtStart;
+    }
+
+    @Override
+    public DtTimeInfoInterface getDtEndInterface() {
+        return this.dtEnd;
+    }
+
+    @Override
+    public DurationInfoInterface getDurationInterface() {
+        return this.duration;
     }
 }

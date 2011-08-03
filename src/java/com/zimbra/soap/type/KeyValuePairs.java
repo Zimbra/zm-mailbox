@@ -27,11 +27,11 @@ import com.zimbra.common.service.ServiceException;
  *     <a n="{key}">{value}</a>
  */
 public interface KeyValuePairs {
-    public KeyValuePairs setKeyValuePairs(Iterable<KeyValuePair> keyValues);
-    public KeyValuePairs setKeyValuePairs(
+    public void setKeyValuePairs(Iterable<KeyValuePair> keyValues);
+    public void setKeyValuePairs(
             Map<String, ? extends Object> keyValues)
     throws ServiceException;
-    public KeyValuePairs addKeyValuePair(KeyValuePair keyValue);
+    public void addKeyValuePair(KeyValuePair keyValue);
     public List<KeyValuePair> getKeyValuePairs();
     public Multimap<String, String> getKeyValuePairsMultimap();
     public Map<String, Object> getKeyValuePairsAsOldMultimap();

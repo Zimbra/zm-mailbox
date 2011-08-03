@@ -17,6 +17,8 @@ package com.zimbra.soap;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.Map;
+
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -37,6 +39,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.Maps;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -56,6 +59,7 @@ public final class JaxbUtil {
     private static final String ADMIN_JAXB_PACKAGE = "com.zimbra.soap.admin.message";
     private static final String MAIL_JAXB_PACKAGE = "com.zimbra.soap.mail.message";
     private static JAXBContext JAXB_CONTEXT;
+    private static Map <Class<?>,JAXBContext> classJaxbContexts;
 
     static {
         MESSAGE_CLASSES = new Class<?>[] {
@@ -865,13 +869,26 @@ public final class JaxbUtil {
         return jaxbToElement(o, XMLElement.mFactory);
     }
 
+    private static JAXBContext getJaxbContext(Class<?> klass)
+    throws JAXBException {
+        JAXBContext jaxb = null;
+        if (JaxbUtil.classJaxbContexts == null) {
+            JaxbUtil.classJaxbContexts = Maps.newHashMap();
+        }
+        if (JaxbUtil.classJaxbContexts.containsKey(klass)) {
+            jaxb = JaxbUtil.classJaxbContexts.get(klass);
+        } else {
+            jaxb = JAXBContext.newInstance(klass);
+        }
+        return jaxb;
+    }
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static Element jaxbToNamedElement(String name, String namespace,
             Object o, Element.ElementFactory factory)
     throws ServiceException {
         try {
-            JAXBContext jaxb = JAXBContext.newInstance(o.getClass());
-            Marshaller marshaller = jaxb.createMarshaller();
+            Marshaller marshaller = createMarshaller(o.getClass());
             // marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
             DocumentResult dr = new DocumentResult();
             marshaller.marshal(new JAXBElement(new QName(namespace, name),
@@ -1089,8 +1106,7 @@ public final class JaxbUtil {
                 return (T) unmarshaller.unmarshal(doc);
             } else {
                 org.w3c.dom.Element docElem = doc.getDocumentElement();
-                JAXBContext jaxb = JAXBContext.newInstance(klass);
-                unmarshaller = jaxb.createUnmarshaller();
+                unmarshaller = createUnmarshaller(klass);
                 JAXBElement<T> ret =
                     (JAXBElement<T>) unmarshaller.unmarshal(docElem, klass);
                 return ret.getValue();
@@ -1147,6 +1163,9 @@ public final class JaxbUtil {
         return null;
     }
 
+    /**
+     * Only for use when marshalling request or response objects.
+     */
     public static Marshaller createMarshaller() {
         try {
             return getContext().createMarshaller();
@@ -1155,9 +1174,30 @@ public final class JaxbUtil {
         }
     }
 
+    /**
+     * Only for use when unmarshalling request or response objects.
+     */
     public static Unmarshaller createUnmarshaller() {
         try {
             return getContext().createUnmarshaller();
+        } catch (JAXBException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Marshaller createMarshaller(Class<?> klass) {
+        try {
+            JAXBContext jaxb = getJaxbContext(klass);
+            return jaxb.createMarshaller();
+        } catch (JAXBException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static Unmarshaller createUnmarshaller(Class<?> klass) {
+        try {
+            JAXBContext jaxb = getJaxbContext(klass);
+            return jaxb.createUnmarshaller();
         } catch (JAXBException e) {
             throw new RuntimeException(e);
         }

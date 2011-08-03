@@ -29,7 +29,9 @@ import java.util.List;
 import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.stream.StreamSource;
 
 import junit.framework.Assert;
 import org.apache.log4j.BasicConfigurator;
@@ -43,6 +45,7 @@ import com.zimbra.soap.account.message.CreateIdentityRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
 import com.zimbra.soap.account.type.Pref;
 import com.zimbra.soap.admin.message.CreateAccountRequest;
+import com.zimbra.soap.admin.message.CreateXMbxSearchRequest;
 import com.zimbra.soap.admin.message.MailQueueActionRequest;
 import com.zimbra.soap.admin.type.Attr;
 import com.zimbra.soap.admin.type.MailQueueAction;
@@ -512,5 +515,20 @@ public class JaxbToElementTest {
         Assert.assertEquals("toString output", 
             "CreateIdentityRequest{identity=Identity{a=[Attr{name=key2, value=value2 wonderful}, Attr{name=key1, value=value1}], name=hello, id=null}}",
             request.toString());
+    }
+
+    @Test
+    public void KeyValuePairs() throws Exception {
+        InputStream is = JaxbToElementTest.class.getResourceAsStream(
+                "CreateXMbxSearchRequest.xml");
+        // String soapXml = streamToString(is, Charsets.UTF_8);
+        JAXBContext jaxb = JAXBContext.newInstance(CreateXMbxSearchRequest.class);
+        Unmarshaller unmarshaller = jaxb.createUnmarshaller();
+        JAXBElement<CreateXMbxSearchRequest> jaxbElem =
+            unmarshaller.unmarshal(new StreamSource(is), CreateXMbxSearchRequest.class);
+        Assert.assertNotNull("JAXBElement resulting from unmarshal", jaxbElem);
+        CreateXMbxSearchRequest soapObj = jaxbElem.getValue();
+        Assert.assertNotNull("Unmarshal soap object", soapObj);
+        Assert.assertEquals("Number of attributes", 10, soapObj.getKeyValuePairs().size());
     }
 }

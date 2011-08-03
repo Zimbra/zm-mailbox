@@ -29,11 +29,17 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.AlarmInfoInterface;
+import com.zimbra.soap.base.AlarmTriggerInfoInterface;
+import com.zimbra.soap.base.CalendarAttachInterface;
+import com.zimbra.soap.base.CalendarAttendeeInterface;
+import com.zimbra.soap.base.DurationInfoInterface;
+import com.zimbra.soap.base.XPropInterface;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"action", "trigger", "repeat", "description", "attach",
                         "summary", "attendees", "xProps"})
-public class AlarmInfo {
+public class AlarmInfo implements AlarmInfoInterface {
 
     @XmlAttribute(name=MailConstants.A_CAL_ALARM_ACTION /* action */, required=true)
     private final String action;
@@ -71,16 +77,23 @@ public class AlarmInfo {
         this.action = action;
     }
 
+    @Override
+    public AlarmInfoInterface createFromAction(String action) {
+        return new AlarmInfo(action);
+    }
+
     public void setTrigger(AlarmTriggerInfo trigger) {
         this.trigger = trigger;
     }
 
     public void setRepeat(DurationInfo repeat) { this.repeat = repeat; }
+    @Override
     public void setDescription(String description) {
         this.description = description;
     }
 
     public void setAttach(CalendarAttach attach) { this.attach = attach; }
+    @Override
     public void setSummary(String summary) { this.summary = summary; }
     public void setAttendees(Iterable <CalendarAttendee> attendees) {
         this.attendees.clear();
@@ -104,11 +117,14 @@ public class AlarmInfo {
         this.xProps.add(xProp);
     }
 
+    @Override
     public String getAction() { return action; }
     public AlarmTriggerInfo getTrigger() { return trigger; }
     public DurationInfo getRepeat() { return repeat; }
+    @Override
     public String getDescription() { return description; }
     public CalendarAttach getAttach() { return attach; }
+    @Override
     public String getSummary() { return summary; }
     public List<CalendarAttendee> getAttendees() {
         return Collections.unmodifiableList(attendees);
@@ -134,5 +150,84 @@ public class AlarmInfo {
     public String toString() {
         return addToStringInfo(Objects.toStringHelper(this))
                 .toString();
+    }
+
+    @Override
+    public void setTriggerInterface(AlarmTriggerInfoInterface trigger) {
+        setTrigger((AlarmTriggerInfo) trigger);
+    }
+
+    @Override
+    public void setRepeatInterface(DurationInfoInterface repeat) {
+        setRepeat((DurationInfo) repeat);
+    }
+
+    @Override
+    public void setAttachInterface(CalendarAttachInterface attach) {
+        setAttach((CalendarAttach) attach);
+    }
+
+    @Override
+    public void setAttendeeInterfaces(
+            Iterable<CalendarAttendeeInterface> attendees) {
+        setAttendees(CalendarAttendee.fromInterfaces(attendees));
+    }
+
+    @Override
+    public void addAttendeeInterface(CalendarAttendeeInterface attendee) {
+        addAttendee((CalendarAttendee) attendee);
+    }
+
+    @Override
+    public void setXPropsInterface(Iterable<XPropInterface> xProps) {
+        setXProps(XProp.fromInterfaces(xProps));
+    }
+
+    @Override
+    public void addXPropInterface(XPropInterface xProp) {
+        addXProp((XProp) xProp);
+    }
+
+    @Override
+    public AlarmTriggerInfoInterface getTriggerInfo() {
+        return trigger;
+    }
+
+    @Override
+    public DurationInfoInterface getRepeatInfo() {
+        return repeat;
+    }
+
+    @Override
+    public CalendarAttachInterface getAttachInfo() {
+        return attach;
+    }
+
+    @Override
+    public List<CalendarAttendeeInterface> getAttendeeInterfaces() {
+        return CalendarAttendee.toInterfaces(attendees);
+    }
+
+    @Override
+    public List<XPropInterface> getXPropInterfaces() {
+        return XProp.toInterfaces(xProps);
+    }
+    
+    public static Iterable <AlarmInfo> fromInterfaces(Iterable <AlarmInfoInterface> params) {
+        if (params == null)
+            return null;
+        List <AlarmInfo> newList = Lists.newArrayList();
+        for (AlarmInfoInterface param : params) {
+            newList.add((AlarmInfo) param);
+        }
+        return newList;
+    }
+
+    public static List <AlarmInfoInterface> toInterfaces(Iterable <AlarmInfo> params) {
+        if (params == null)
+            return null;
+        List <AlarmInfoInterface> newList = Lists.newArrayList();
+        Iterables.addAll(newList, params);
+        return newList;
     }
 }

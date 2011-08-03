@@ -1,0 +1,14 @@
+<CreateXMbxSearchRequest xmlns="urn:zimbraAdmin">
+  <a n="query">Kitchen</a>
+  <a n="searchArchives">1</a>
+  <a n="searchLive">1</a>
+  <a n="targetFolder">xmbx search results</a>
+  <a n="accounts">*</a>
+  <a n="limit">0</a>
+  <a n="notificationMessage">Search task %taskId% completed with status %status%. 
+Imported: %numMsgs% messages. 
+Search query used: %query%. </a>
+  <a n="notificationSubj">Search task %taskId% completed with status %status%</a>
+  <a n="serverId">680e9de1-be94-4455-b64d-2bb27ccca1ac</a>
+  <a n="targetMbx">admin@prome-2n-dhcp45.eng.vmware.com</a>
+</CreateXMbxSearchRequest>

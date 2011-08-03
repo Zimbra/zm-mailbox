@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,9 +22,10 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.calendar.ParsedDuration;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.DurationInfoInterface;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-public class DurationInfo {
+@XmlAccessorType(XmlAccessType.NONE)
+public class DurationInfo implements DurationInfoInterface {
 
     @XmlAttribute(name=MailConstants.A_CAL_DURATION_NEGATIVE, required=false)
     private Boolean durationNegative;
@@ -63,6 +64,11 @@ public class DurationInfo {
         }
     }
 
+    @Override
+    public DurationInfoInterface create(ParsedDuration parsedDuration) {
+        return new DurationInfo(parsedDuration);
+    }
+
     private Integer adjustDuration(Integer pdVal) {
         if (pdVal == 0) {
             return null;
@@ -75,27 +81,43 @@ public class DurationInfo {
         }
     }
 
+    @Override
     public void setDurationNegative(Boolean durationNegative) {
         this.durationNegative = durationNegative;
     }
 
+    @Override
     public void setWeeks(Integer weeks) { this.weeks = weeks; }
+    @Override
     public void setDays(Integer days) { this.days = days; }
+    @Override
     public void setHours(Integer hours) { this.hours = hours; }
+    @Override
     public void setMinutes(Integer minutes) { this.minutes = minutes; }
+    @Override
     public void setSeconds(Integer seconds) { this.seconds = seconds; }
+    @Override
     public void setRelated(String related) { this.related = related; }
+    @Override
     public void setRepeatCount(Integer repeatCount) {
         this.repeatCount = repeatCount;
     }
 
+    @Override
     public Boolean getDurationNegative() { return durationNegative; }
+    @Override
     public Integer getWeeks() { return weeks; }
+    @Override
     public Integer getDays() { return days; }
+    @Override
     public Integer getHours() { return hours; }
+    @Override
     public Integer getMinutes() { return minutes; }
+    @Override
     public Integer getSeconds() { return seconds; }
+    @Override
     public String getRelated() { return related; }
+    @Override
     public Integer getRepeatCount() { return repeatCount; }
 
     @Override

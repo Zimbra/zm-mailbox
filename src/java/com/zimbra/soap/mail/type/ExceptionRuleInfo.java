@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -21,9 +21,13 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.ExceptionRuleInfoInterface;
+import com.zimbra.soap.base.RecurrenceInfoInterface;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-public class ExceptionRuleInfo extends RecurIdInfo implements RecurRuleBase {
+@XmlAccessorType(XmlAccessType.NONE)
+public class ExceptionRuleInfo
+extends RecurIdInfo
+implements RecurRuleBase, ExceptionRuleInfoInterface {
 
     @XmlElement(name=MailConstants.E_CAL_ADD, required=false)
     private RecurrenceInfo add;
@@ -39,6 +43,27 @@ public class ExceptionRuleInfo extends RecurIdInfo implements RecurRuleBase {
     public RecurrenceInfo getAdd() { return add; }
     public RecurrenceInfo getExclude() { return exclude; }
 
+    @Override
+    public void setAddInterface(RecurrenceInfoInterface add) {
+        setAdd((RecurrenceInfo) add);
+    }
+
+    @Override
+    public void setExcludeInterface(RecurrenceInfoInterface exclude) {
+        setExclude((RecurrenceInfo) exclude);
+    }
+
+    @Override
+    public RecurrenceInfoInterface getAddInterface() {
+        return (RecurrenceInfo) add;
+    }
+
+    @Override
+    public RecurrenceInfoInterface getExcludeInterface() {
+        return (RecurrenceInfo) exclude;
+    }
+
+    @Override
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);

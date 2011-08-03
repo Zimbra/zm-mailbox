@@ -29,10 +29,13 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.CustomMetadataInterface;
+import com.zimbra.soap.base.MessageCommonInterface;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"metadatas"})
-public class MessageCommon {
+public class MessageCommon
+implements MessageCommonInterface {
 
     @XmlAttribute(name=MailConstants.A_SIZE /* s */, required=false)
     private Long size;
@@ -67,16 +70,25 @@ public class MessageCommon {
     public MessageCommon() {
     }
 
+    @Override
     public void setSize(Long size) { this.size = size; }
+    @Override
     public void setDate(Long date) { this.date = date; }
+    @Override
     public void setFolder(String folder) { this.folder = folder; }
+    @Override
     public void setConversationId(String conversationId) {
         this.conversationId = conversationId;
     }
+    @Override
     public void setFlags(String flags) { this.flags = flags; }
+    @Override
     public void setTags(String tags) { this.tags = tags; }
+    @Override
     public void setRevision(Integer revision) { this.revision = revision; }
+    @Override
     public void setChangeDate(Long changeDate) { this.changeDate = changeDate; }
+    @Override
     public void setModifiedSequence(Integer modifiedSequence) {
         this.modifiedSequence = modifiedSequence;
     }
@@ -91,14 +103,23 @@ public class MessageCommon {
         this.metadatas.add(metadata);
     }
 
+    @Override
     public Long getSize() { return size; }
+    @Override
     public Long getDate() { return date; }
+    @Override
     public String getFolder() { return folder; }
+    @Override
     public String getConversationId() { return conversationId; }
+    @Override
     public String getFlags() { return flags; }
+    @Override
     public String getTags() { return tags; }
+    @Override
     public Integer getRevision() { return revision; }
+    @Override
     public Long getChangeDate() { return changeDate; }
+    @Override
     public Integer getModifiedSequence() { return modifiedSequence; }
     public List<MailCustomMetadata> getMetadatas() {
         return Collections.unmodifiableList(metadatas);
@@ -123,5 +144,25 @@ public class MessageCommon {
     public String toString() {
         return addToStringInfo(Objects.toStringHelper(this))
                 .toString();
+    }
+
+    @Override
+    public void setMetadataInterfaces(
+            Iterable<CustomMetadataInterface> metadatas) {
+        for (CustomMetadataInterface meta : metadatas) {
+            addMetadata((MailCustomMetadata)meta);
+        }
+    }
+
+    @Override
+    public void addMetadataInterfaces(CustomMetadataInterface metadata) {
+        addMetadata((MailCustomMetadata)metadata);
+    }
+
+    @Override
+    public List<CustomMetadataInterface> getMetadataInterfaces() {
+        List<CustomMetadataInterface> metas = Lists.newArrayList();
+        metas.addAll(metadatas);
+        return Collections.unmodifiableList(metas);
     }
 }

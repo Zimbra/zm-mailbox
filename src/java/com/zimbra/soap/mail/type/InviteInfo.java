@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -30,10 +30,15 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.CalTZInfoInterface;
+import com.zimbra.soap.base.CalendarReplyInterface;
+import com.zimbra.soap.base.InviteComponentInterface;
+import com.zimbra.soap.base.InviteInfoInterface;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"timezones", "inviteComponent", "calendarReplies"})
-public class InviteInfo {
+public class InviteInfo
+implements InviteInfoInterface {
 
     // Valid values - "appt" and "task"
     @XmlAttribute(name=MailConstants.A_CAL_ITEM_TYPE, required=true)
@@ -59,6 +64,11 @@ public class InviteInfo {
 
     public InviteInfo(String calItemType) {
         this.calItemType = calItemType;
+    }
+
+    @Override
+    public InviteInfoInterface create(String calItemType) {
+        return new InviteInfo(calItemType);
     }
 
     public void setTimezones(Iterable <CalTZInfo> timezones) {
@@ -88,6 +98,7 @@ public class InviteInfo {
         return this;
     }
 
+    @Override
     public String getCalItemType() { return calItemType; }
     public List<CalTZInfo> getTimezones() {
         return Collections.unmodifiableList(timezones);
@@ -105,5 +116,48 @@ public class InviteInfo {
             .add("inviteComponent", inviteComponent)
             .add("calendarReplies", calendarReplies)
             .toString();
+    }
+
+    @Override
+    public void setTimezoneInterfaces(Iterable<CalTZInfoInterface> timezones) {
+        setTimezones(CalTZInfo.fromInterfaces(timezones));
+    }
+
+    @Override
+    public void addTimezoneInterface(CalTZInfoInterface timezone) {
+        addTimezone((CalTZInfo) timezone);
+    }
+
+    @Override
+    public void setInviteComponentInterface(
+            InviteComponentInterface inviteComponent) {
+        setInviteComponent((InviteComponent) inviteComponent);
+        
+    }
+
+    @Override
+    public void setCalendarReplyInterfaces(
+            Iterable<CalendarReplyInterface> calendarReplies) {
+        setCalendarReplies(CalendarReply.fromInterfaces(calendarReplies));
+    }
+
+    @Override
+    public void addCalendarReplyInterface(CalendarReplyInterface calendarReply) {
+        addCalendarReply((CalendarReply) calendarReply);
+    }
+
+    @Override
+    public List<CalTZInfoInterface> getTimezoneInterfaces() {
+        return CalTZInfo.toInterfaces(timezones);
+    }
+
+    @Override
+    public InviteComponentInterface getInviteComponentInterface() {
+        return inviteComponent;
+    }
+
+    @Override
+    public List<CalendarReplyInterface> getCalendarReplyInterfaces() {
+        return CalendarReply.toInterfaces(calendarReplies);
     }
 }

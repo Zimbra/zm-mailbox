@@ -23,9 +23,10 @@ import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.calendar.Attach;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.CalendarAttachInterface;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-public class CalendarAttach {
+@XmlAccessorType(XmlAccessType.NONE)
+public class CalendarAttach implements CalendarAttachInterface {
 
     @XmlAttribute(name=MailConstants.A_CAL_ATTACH_URI /* uri */, required=false)
     private String uri;
@@ -48,17 +49,28 @@ public class CalendarAttach {
         }
     }
 
+    @Override
+    public CalendarAttachInterface createFromAttach(Attach att) {
+        return new CalendarAttach(att);
+    }
+
+    @Override
     public void setUri(String uri) { this.uri = uri; }
+    @Override
     public void setContentType(String contentType) {
         this.contentType = contentType;
     }
 
+    @Override
     public void setBinaryB64Data(String binaryB64Data) {
         this.binaryB64Data = binaryB64Data;
     }
 
+    @Override
     public String getUri() { return uri; }
+    @Override
     public String getContentType() { return contentType; }
+    @Override
     public String getBinaryB64Data() { return binaryB64Data; }
 
     public Objects.ToStringHelper addToStringInfo(

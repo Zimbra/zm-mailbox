@@ -19,11 +19,16 @@ import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.CustomMetadataInterface;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class AdminCustomMetadata extends AdminKeyValuePairs {
+@XmlRootElement(name=MailConstants.E_METADATA)
+public class AdminCustomMetadata
+extends AdminKeyValuePairs
+implements CustomMetadataInterface {
 
     // Normally present but sometimes an empty element is created to show that
     // CustomMetadata info is present but there are no sections to report on.
@@ -33,9 +38,12 @@ public class AdminCustomMetadata extends AdminKeyValuePairs {
     public AdminCustomMetadata() {
     }
 
+    @Override
     public void setSection(String section) { this.section = section; }
+    @Override
     public String getSection() { return section; }
 
+    @Override
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);

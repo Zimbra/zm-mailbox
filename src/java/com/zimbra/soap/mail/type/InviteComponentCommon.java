@@ -21,9 +21,11 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.InviteComponentCommonInterface;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-public class InviteComponentCommon {
+@XmlAccessorType(XmlAccessType.NONE)
+public class InviteComponentCommon
+implements InviteComponentCommonInterface {
 
     @XmlAttribute(name=MailConstants.A_CAL_METHOD /* method */, required=true)
     private final String method;
@@ -140,74 +142,135 @@ public class InviteComponentCommon {
         this.rsvp = rsvp;
     }
 
+    @Override
+    public InviteComponentCommonInterface create(String method,
+            int componentNum, boolean rsvp) {
+        return new InviteComponentCommon(method, componentNum, rsvp);
+    }
+
+    @Override
     public void setPriority(String priority) { this.priority = priority; }
+    @Override
     public void setName(String name) { this.name = name; }
+    @Override
     public void setLocation(String location) { this.location = location; }
+    @Override
     public void setPercentComplete(String percentComplete) {
         this.percentComplete = percentComplete;
     }
+    @Override
     public void setCompleted(String completed) { this.completed = completed; }
+    @Override
     public void setNoBlob(Boolean noBlob) { this.noBlob = noBlob; }
+    @Override
     public void setFreeBusyActual(String freeBusyActual) {
         this.freeBusyActual = freeBusyActual;
     }
+    @Override
     public void setFreeBusy(String freeBusy) { this.freeBusy = freeBusy; }
+    @Override
     public void setTransparency(String transparency) {
         this.transparency = transparency;
     }
+    @Override
     public void setIsOrganizer(Boolean isOrganizer) {
         this.isOrganizer = isOrganizer;
     }
+    @Override
     public void setXUid(String xUid) { this.xUid = xUid; }
+    @Override
     public void setUid(String uid) { this.uid = uid; }
+    @Override
     public void setSequence(Integer sequence) { this.sequence = sequence; }
+    @Override
     public void setDateTime(Long dateTime) { this.dateTime = dateTime; }
+    @Override
     public void setCalItemId(String calItemId) { this.calItemId = calItemId; }
+    @Override
     public void setDeprecatedApptId(String deprecatedApptId) {
         this.deprecatedApptId = deprecatedApptId;
     }
+    @Override
     public void setCalItemFolder(String calItemFolder) {
         this.calItemFolder = calItemFolder;
     }
+    @Override
     public void setStatus(String status) { this.status = status; }
+    @Override
     public void setCalClass(String calClass) { this.calClass = calClass; }
+    @Override
     public void setUrl(String url) { this.url = url; }
+    @Override
     public void setIsException(Boolean isException) {
         this.isException = isException;
     }
+    @Override
     public void setRecurIdZ(String recurIdZ) { this.recurIdZ = recurIdZ; }
+    @Override
     public void setIsAllDay(Boolean isAllDay) { this.isAllDay = isAllDay; }
+    @Override
     public void setIsDraft(Boolean isDraft) { this.isDraft = isDraft; }
+    @Override
     public void setNeverSent(Boolean neverSent) { this.neverSent = neverSent; }
+    @Override
     public void setChanges(String changes) { this.changes = changes; }
+    @Override
     public String getMethod() { return method; }
+    @Override
     public int getComponentNum() { return componentNum; }
+    @Override
     public boolean getRsvp() { return rsvp; }
+    @Override
     public String getPriority() { return priority; }
+    @Override
     public String getName() { return name; }
+    @Override
     public String getLocation() { return location; }
+    @Override
     public String getPercentComplete() { return percentComplete; }
+    @Override
     public String getCompleted() { return completed; }
+    @Override
     public Boolean getNoBlob() { return noBlob; }
+    @Override
     public String getFreeBusyActual() { return freeBusyActual; }
+    @Override
     public String getFreeBusy() { return freeBusy; }
+    @Override
     public String getTransparency() { return transparency; }
+    @Override
     public Boolean getIsOrganizer() { return isOrganizer; }
+    @Override
     public String getXUid() { return xUid; }
+    @Override
     public String getUid() { return uid; }
+    @Override
     public Integer getSequence() { return sequence; }
+    @Override
     public Long getDateTime() { return dateTime; }
+    @Override
     public String getCalItemId() { return calItemId; }
+    @Override
     public String getDeprecatedApptId() { return deprecatedApptId; }
+    @Override
     public String getCalItemFolder() { return calItemFolder; }
+    @Override
     public String getStatus() { return status; }
+    @Override
     public String getCalClass() { return calClass; }
+    @Override
     public String getUrl() { return url; }
+    @Override
     public Boolean getIsException() { return isException; }
+    @Override
     public String getRecurIdZ() { return recurIdZ; }
+    @Override
     public Boolean getIsAllDay() { return isAllDay; }
+    @Override
     public Boolean getIsDraft() { return isDraft; }
+    @Override
     public Boolean getNeverSent() { return neverSent; }
+    @Override
     public String getChanges() { return changes; }
 
     public Objects.ToStringHelper addToStringInfo(

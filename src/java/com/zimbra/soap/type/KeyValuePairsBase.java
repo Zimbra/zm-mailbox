@@ -44,7 +44,7 @@ import com.zimbra.common.util.StringUtil;
 @XmlAccessorType(XmlAccessType.NONE)
 abstract public class KeyValuePairsBase implements KeyValuePairs {
 
-    private List<KeyValuePair> keyValuePairs = Lists.newArrayList();
+    private List<KeyValuePair> keyValuePairs;
 
     public KeyValuePairsBase() {
         this.setKeyValuePairs((Iterable<KeyValuePair>) null);
@@ -60,32 +60,38 @@ abstract public class KeyValuePairsBase implements KeyValuePairs {
     }
 
     @Override
-    public KeyValuePairs setKeyValuePairs(
+    public void setKeyValuePairs(
                     Iterable<KeyValuePair> keyValuePairs) {
+        if (this.keyValuePairs == null) {
+            this.keyValuePairs = Lists.newArrayList();
+        }
         this.keyValuePairs.clear();
         if (keyValuePairs != null) {
             Iterables.addAll(this.keyValuePairs, keyValuePairs);
         }
-        return this;
     }
 
     @Override
-    public KeyValuePairs setKeyValuePairs(
+    public void setKeyValuePairs(
                     Map<String, ? extends Object> keyValuePairs)
     throws ServiceException {
         this.setKeyValuePairs(KeyValuePair.fromMap(keyValuePairs));
-        return this;
     }
 
     @Override
-    public KeyValuePairs addKeyValuePair(KeyValuePair keyValuePair) {
+    public void addKeyValuePair(KeyValuePair keyValuePair) {
         keyValuePairs.add(keyValuePair);
-        return this;
     }
 
     @Override
     public List<KeyValuePair> getKeyValuePairs() {
-        return Collections.unmodifiableList(keyValuePairs);
+        if (keyValuePairs == null) {
+            keyValuePairs = Lists.newArrayList();
+        }
+        // Making the return of this unmodifiable causes
+        // "UnsupportedOperationException" on unmarshalling - see Bug 62187.
+        //     return Collections.unmodifiableList(keyValuePairs);
+        return keyValuePairs;
     }
 
     @Override
