@@ -37,6 +37,7 @@ import com.zimbra.cs.mailbox.Metadata;
  * @author ysasaki
  */
 public final class DbMailAddress {
+    public static final String TABLE_MAIL_ADDRESS = "mail_address";
     private static final int MAX_ADDRESS_LEN = 128;
 
     private final Mailbox mailbox;
@@ -74,8 +75,12 @@ public final class DbMailAddress {
         return result;
     }
 
-    static String getTableName(Mailbox mbox) {
-        return DbMailbox.qualifyTableName(mbox, "mail_address");
+    public static String getTableName(int mailboxId, int groupId) {
+        return DbMailbox.qualifyTableName(groupId, TABLE_MAIL_ADDRESS);
+    }
+
+    public static String getTableName(Mailbox mbox) {
+        return DbMailbox.qualifyTableName(mbox, TABLE_MAIL_ADDRESS);
     }
 
     public int create() throws ServiceException {
