@@ -333,6 +333,28 @@ public class MailboxManager {
      *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
      *        lives on a different host</ul> */
     public Mailbox getMailboxByAccountId(String accountId, FetchMode fetchMode) throws ServiceException {
+        return getMailboxByAccountId(accountId, fetchMode, false);
+    }
+
+    /** Returns the mailbox for the given account id.  Creates a new
+     *  mailbox if one doesn't already exist and <code>fetchMode</code>
+     *  is <code>FetchMode.AUTOCREATE</code>.
+     *
+     * @param accountId   The id of the account whose mailbox we want.
+     * @param fetchMode <code>FetchMode.ONLY_IF_CACHED</code> will return the mailbox only
+     *                     if it is already cached in memory
+     *                  <code>FetchMode.DO_NOT_AUTOCREATE</code>Will fetch the mailbox from
+     *                     the DB if it is not cached, but will not create it.
+     *                  <code>FetchMode.AUTOCREATE</code> to create the mailbox if needed
+     * @param skipMailHostCheck If true, don't do home server check.  WRONG_HOST exception will not be thrown.
+     * @return The requested <code>Mailbox</code> object, or <code>null</code>.
+     * @throws ServiceException  The following error codes are possible:<ul>
+     *    <li><code>mail.MAINTENANCE</code> - if the mailbox is in maintenance
+     *        mode and the calling thread doesn't hold the lock
+     *    <li><code>service.FAILURE</code> - if there's a database failure
+     *    <li><code>service.WRONG_HOST</code> - if the Account's mailbox
+     *        lives on a different host</ul> */
+    public Mailbox getMailboxByAccountId(String accountId, FetchMode fetchMode, boolean skipMailHostCheck) throws ServiceException {
         if (accountId == null)
             throw new IllegalArgumentException();
 
@@ -342,28 +364,28 @@ public class MailboxManager {
         }
         if (mailboxKey != null) {
             if (DebugConfig.mockMultiserverInstall)
-                verifyCorrectHost(accountId);
-            return getMailboxById(mailboxKey, fetchMode, false);
+                lookupAccountWithHostCheck(accountId, skipMailHostCheck);
+            return getMailboxById(mailboxKey, fetchMode, skipMailHostCheck);
         } else if (fetchMode != FetchMode.AUTOCREATE) {
             return null;
         }
 
         // auto-create the mailbox if this is the right host...
-        Account account = verifyCorrectHost(accountId);
+        Account account = lookupAccountWithHostCheck(accountId, skipMailHostCheck);
         synchronized (this) {
             mailboxKey = mMailboxIds.get(accountId.toLowerCase());
         }
         if (mailboxKey != null)
-            return getMailboxById(mailboxKey, fetchMode, false);
+            return getMailboxById(mailboxKey, fetchMode, skipMailHostCheck);
         else
-            return createMailbox(null, account);
+            return createMailbox(null, account, skipMailHostCheck);
     }
 
-    private Account verifyCorrectHost(String accountId) throws ServiceException {
+    private Account lookupAccountWithHostCheck(String accountId, boolean skipMailHostCheck) throws ServiceException {
         Account account = Provisioning.getInstance().get(AccountBy.id, accountId);
         if (account == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
-        if (!Provisioning.onLocalServer(account))
+        if (!skipMailHostCheck && !Provisioning.onLocalServer(account))
             throw ServiceException.WRONG_HOST(account.getMailHost(), null);
         return account;
     }
@@ -764,9 +786,13 @@ public class MailboxManager {
      *        lives on a different host</ul>
      * @see #initialize() */
     public Mailbox createMailbox(OperationContext octxt, Account account) throws ServiceException {
+        return createMailbox(octxt, account, false);
+    }
+
+    private Mailbox createMailbox(OperationContext octxt, Account account, boolean skipMailHostCheck) throws ServiceException {
         if (account == null)
             throw ServiceException.FAILURE("createMailbox: must specify an account", null);
-        if (!Provisioning.onLocalServer(account))
+        if (!skipMailHostCheck && !Provisioning.onLocalServer(account))
             throw ServiceException.WRONG_HOST(account.getMailHost(), null);
 
         // the awkward structure here is to avoid calling getMailboxById while holding the lock

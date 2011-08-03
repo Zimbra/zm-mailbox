@@ -79,6 +79,10 @@ public class RemoteManager {
         mDescription = "{RemoteManager: " + localName + "->" + mUser + "@" + mHost + ":" + mPort + "}";
     }
 
+    public String getPrivateKeyPath() {
+        return mPrivateKey.getAbsolutePath();
+    }
+
     public String toString() {
         return mDescription;
     }
@@ -139,12 +143,6 @@ public class RemoteManager {
             InputStream stderr = new StreamGobbler(s.getStderr());
             result.mStdout = ByteUtil.getContent(stdout, -1);
             result.mStderr = ByteUtil.getContent(stderr, -1);
-            if (false) {
-                System.out.println("#### STDOUT");
-                System.out.println(new String(result.mStdout));
-                System.out.println("#### STDERR");
-                System.out.println(new String(result.mStderr));
-            }
             try {
                 result.mExitStatus = s.getExitStatus();
             } catch (NullPointerException npe) {

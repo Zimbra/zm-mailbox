@@ -145,13 +145,18 @@ extends Thread {
                         attemptedPurge = true;
                         Mailbox mbox = mm.getMailboxById(mailboxId);
                         Account account = mbox.getAccount();
-                        ZimbraLog.addAccountNameToContext(account.getName());
-                        boolean purgedAll = mbox.purgeMessages(null);
-                        if (!purgedAll) {
-                            ZimbraLog.purge.info("Not all messages were purged.  Scheduling mailbox to be purged again.");
-                            mailboxIds.add(mailboxId);
+                        Provisioning prov = Provisioning.getInstance();
+                        if (!Provisioning.ACCOUNT_STATUS_MAINTENANCE.equals(account.getAccountStatus(prov))) { 
+                            ZimbraLog.addAccountNameToContext(account.getName());
+                            boolean purgedAll = mbox.purgeMessages(null);
+                            if (!purgedAll) {
+                                ZimbraLog.purge.info("Not all messages were purged.  Scheduling mailbox to be purged again.");
+                                mailboxIds.add(mailboxId);
+                            }
+                            Config.setInt(Config.KEY_PURGE_LAST_MAILBOX_ID, mbox.getId());
+                        } else {
+                            ZimbraLog.purge.debug("Skipping mailbox %d because the account is in maintenance status.", mailboxId);
                         }
-                        Config.setInt(Config.KEY_PURGE_LAST_MAILBOX_ID, mbox.getId());
                     } else {
                         ZimbraLog.purge.debug("Skipping mailbox %d because it is not loaded into memory.", mailboxId);
                     }
