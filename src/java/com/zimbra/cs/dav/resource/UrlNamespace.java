@@ -67,6 +67,12 @@ public class UrlNamespace {
         public String path;
     }
 
+    /**
+     * Parse the given url into user and path information.
+     * @param url must be passed as decoded
+     * @return user and path info as UrlComponents
+     */
+    
     public static UrlComponents parseUrl(String url) {
         UrlComponents uc = new UrlComponents();
 
@@ -80,12 +86,6 @@ public class UrlNamespace {
             }
         }
         uc.path = url;
-        try {
-            uc.path = URLDecoder.decode(url, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            ZimbraLog.dav.debug("can't decode url %s", url, e);
-        }
-
         return uc;
     }
 

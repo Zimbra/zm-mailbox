@@ -583,6 +583,7 @@ public class DavContext {
             destinationUrl = destinationUrl.substring(0, slash+1);
         }
         try {
+            destinationUrl = HttpUtil.urlUnescape(destinationUrl);
             destinationUrl = getInternalDestinationUrl(destinationUrl);
             DavResource r = UrlNamespace.getResourceAtUrl(this, destinationUrl);
             if (r instanceof Collection)
@@ -616,7 +617,7 @@ public class DavContext {
             ZMailbox targetZmbx = getZMailbox(acct);
             ZFolder f = targetZmbx.getFolderById(target.toString());
             String extraPath = match.getSecond();
-            destinationUrl = HttpUtil.urlEscape(DavServlet.DAV_PATH + "/" + acct.getName() + f.getPath() + ((extraPath != null) ? "/" + extraPath : ""));
+            destinationUrl = DavServlet.DAV_PATH + "/" + acct.getName() + f.getPath() + ((extraPath != null) ? "/" + extraPath : "");
         }
         return destinationUrl;
     }
