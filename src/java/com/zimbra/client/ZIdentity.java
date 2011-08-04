@@ -16,7 +16,6 @@
 package com.zimbra.client;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
 
 import org.json.JSONException;
@@ -40,8 +39,9 @@ public class ZIdentity  implements ToZJSONObject {
     }
 
     public ZIdentity(String name, Map<String, Object> attrs) {
-        data = new Identity(name, get(ZAttrProvisioning.A_zimbraPrefIdentityId));
+        data = Identity.fromName(name);
         data.setAttrs(Attr.fromMultimap(StringUtil.toNewMultimap(attrs)));
+        data.setId(data.getFirstMatchingAttr(ZAttrProvisioning.A_zimbraPrefIdentityId));
     }
     
     public Identity getData() {
@@ -65,12 +65,7 @@ public class ZIdentity  implements ToZJSONObject {
      * @return null if unset, or first value in list
      */
     public String get(String name) {
-        Collection<String> values = data.getAttrsMultimap().get(name);
-        Iterator<String> iter = values.iterator();
-        if (!iter.hasNext()) {
-            return null;
-        }
-        return iter.next();
+        return data.getFirstMatchingAttr(name);
     }
     
     public Map<String, Object> getAttrs() {
@@ -133,7 +128,8 @@ public class ZIdentity  implements ToZJSONObject {
         }
         return identity;
     }
-    
+
+    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = new ZJSONObject();
         zjo.put("name", getName());
@@ -146,6 +142,7 @@ public class ZIdentity  implements ToZJSONObject {
         return zjo;
     }
 
+    @Override
     public String toString() {
         return String.format("[ZIdentity %s]", getName());
     }
