@@ -235,6 +235,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             attrs.put(Provisioning.A_zimbraMailHost, prov.getLocalServer().getServiceHostname());
             attrs.put(Provisioning.A_displayName, displayName);
             attrs.put(Provisioning.A_zimbraHideInGal, ProvisioningConstants.TRUE);
+            attrs.put(Provisioning.A_zimbraMailStatus, "disabled");
             grantee = prov.createAccount(mapExtEmailToAcctName(extUserEmail, domain), password, attrs);
             // create external account mailbox
             Mailbox granteeMbox = MailboxManager.getInstance().getMailboxByAccount(grantee);
