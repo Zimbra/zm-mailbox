@@ -26,6 +26,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.commons.io.FileUtils;
+
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileUtil;
 
@@ -37,64 +39,68 @@ import com.zimbra.common.util.FileUtil;
  * is represented by a MailboxBlob object.
  */
 public class Blob {
-
-    private File mFile;
-    private String mPath;
-    private Boolean mIsCompressed = null;
-    private String mDigest;
-    private Long mRawSize;
+    private File file;
+    private String path;
+    private Boolean compressed = null;
+    private String digest;
+    private Long rawSize;
 
     protected Blob(final File file) {
-        if (file == null)
+        if (file == null) {
             throw new NullPointerException("file cannot be null");
+        }
 
-        mFile = file;
-        mPath = file.getAbsolutePath();
+        this.file = file;
+        this.path = file.getAbsolutePath();
     }
 
     public File getFile() {
-        return mFile;
+        return file;
     }
 
     public String getPath() {
-        return mPath;
+        return path;
     }
 
     public InputStream getInputStream() throws IOException {
-        InputStream in = new FileInputStream(mFile);
-        if (isCompressed())
+        InputStream in = new FileInputStream(file);
+        if (isCompressed()) {
             in = new GZIPInputStream(in);
+        }
         return in;
     }
 
     public boolean isCompressed() throws IOException {
-        if (mIsCompressed == null) {
-            if (mRawSize != null && mRawSize.longValue() == mFile.length())
-                mIsCompressed = Boolean.FALSE;
-            else
-                mIsCompressed = FileUtil.isGzipped(mFile);
+        if (compressed == null) {
+            if (rawSize != null && rawSize.longValue() == file.length()) {
+                this.compressed = Boolean.FALSE;
+            } else {
+                this.compressed = FileUtil.isGzipped(file);
+            }
         }
-        return mIsCompressed;
+        return compressed;
     }
 
     /** Returns the SHA1 digest of this blob's uncompressed data,
      *  encoded in base64. */
     public String getDigest() throws IOException {
-        if (mDigest == null)
+        if (digest == null) {
             initializeSizeAndDigest();
-        return mDigest;
+        }
+        return digest;
     }
 
     /** Returns the size of the blob's data.  If the blob is compressed,
      *  returns the uncompressed size. */
     public long getRawSize() throws IOException {
-        if (mRawSize == null) {
-            if (!isCompressed())
-                mRawSize = mFile.length();
-            else
+        if (rawSize == null) {
+            if (!isCompressed()) {
+                this.rawSize = file.length();
+            } else {
                 initializeSizeAndDigest();
+            }
         }
-        return mRawSize;
+        return rawSize;
     }
 
     private void initializeSizeAndDigest() throws IOException {
@@ -111,9 +117,8 @@ public class Blob {
                 md.update(buffer, 0, numBytes);
                 totalBytes += numBytes;
             }
-            byte[] digest = md.digest();
-            mDigest = ByteUtil.encodeFSSafeBase64(digest);
-            mRawSize = totalBytes;
+            this.digest = ByteUtil.encodeFSSafeBase64(md.digest());
+            this.rawSize = totalBytes;
         } catch (NoSuchAlgorithmException e) {
             // this should never happen unless the JDK is foobar
             //  e.printStackTrace();
@@ -124,45 +129,43 @@ public class Blob {
     }
 
     public Blob setCompressed(final boolean isCompressed) {
-        mIsCompressed = isCompressed;
+        this.compressed = isCompressed;
         return this;
     }
 
     public Blob setDigest(final String digest) {
-        mDigest = digest;
+        this.digest = digest;
         return this;
     }
 
     public Blob setRawSize(final long rawSize) {
-        mRawSize = rawSize;
+        this.rawSize = rawSize;
         return this;
     }
 
     public Blob copyCachedDataFrom(final Blob other) {
-        if (mIsCompressed == null && other.mIsCompressed != null)
-            mIsCompressed = other.mIsCompressed;
-        if (mDigest == null && other.mDigest != null)
-            mDigest = other.mDigest;
-        if (mRawSize == null && other.mRawSize != null)
-            mRawSize = other.mRawSize;
+        if (compressed == null && other.compressed != null) {
+            this.compressed = other.compressed;
+        }
+        if (digest == null && other.digest != null) {
+            this.digest = other.digest;
+        }
+        if (rawSize == null && other.rawSize != null) {
+            this.rawSize = other.rawSize;
+        }
         return this;
     }
 
-    public boolean renameTo(final String path) {
-        if (mPath.equals(path))
-            return false;
-
-        File newFile = new File(path);
-        if (mFile.renameTo(newFile)) {
-            mPath = path;
-            mFile = newFile;
-            return true;
-        } else {
-            return false;
+    public void renameTo(final String newPath) throws IOException {
+        if (!path.equals(newPath)) {
+            File newFile = new File(newPath);
+            FileUtils.moveFile(file, newFile);
+            this.path = newPath;
+            this.file = newFile;
         }
     }
 
     @Override public String toString() {
-        return "Blob: { path=" + mPath + ", size=" + mRawSize + ", compressed=" + mIsCompressed + " }";
+        return "Blob: { path=" + path + ", size=" + rawSize + ", compressed=" + compressed + " }";
     }
 }
