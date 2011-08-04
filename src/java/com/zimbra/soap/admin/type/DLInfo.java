@@ -29,6 +29,8 @@ import com.zimbra.common.soap.AdminConstants;
 @XmlType(propOrder = {})
 public class DLInfo extends AdminObjectInfo {
 
+    @XmlAttribute(name=AdminConstants.A_DYNAMIC, required=false)
+    Boolean dynamic;
     @XmlAttribute(name=AdminConstants.A_VIA, required=true)
     private final String via;
     /**
@@ -54,5 +56,13 @@ public class DLInfo extends AdminObjectInfo {
 
     public String getVia() {
         return via;
+    }
+    
+    public Boolean isDynamic() {
+        if (dynamic == null) {
+            return Boolean.FALSE;
+        } else {
+            return dynamic;
+        }
     }
 }
