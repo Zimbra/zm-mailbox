@@ -386,7 +386,7 @@ public class TestACAll extends TestAC {
                     domain.setAuthLdapSearchBindPassword("***", domainAttrs);
                     domain.setExternalGroupLdapSearchBase("OU=Groups,OU=Corp,DC=vmware,DC=com", domainAttrs);
                     domain.setExternalGroupLdapSearchFilter("(&(objectClass=group)(mail=%n))", domainAttrs);
-                    domain.setExternalGroupHandlerClass("com.zimbra.cs.gal.ADGalGroupHandler", domainAttrs);
+                    domain.setExternalGroupHandlerClass("com.zimbra.cs.account.grouphandler.ADGroupHandler", domainAttrs);
                     mProv.modifyAttrs(domain, domainAttrs);
                     
                     String extGroupName = "ESPPEnrollment-USA@vmware.com";

@@ -5036,8 +5036,8 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public boolean inDistributionList(DistributionList list, String zimbraId) throws ServiceException {
-        GroupMembership aclGroups = getGroupMembership(list, false);
-        return aclGroups.groupIds().contains(zimbraId);
+        GroupMembership groupMembership = getGroupMembership(list, false);
+        return groupMembership.groupIds().contains(zimbraId);
     }
 
     @Override
@@ -7458,6 +7458,32 @@ public class LdapProvisioning extends LdapProv {
     public void removeGroupAlias(Group group, String alias) throws ServiceException {
         removeAliasInternal(group, alias);
         mAllDLs.removeGroup(alias);
+    }
+    
+    @Override
+    public Set<String> getGroups(Account acct) throws ServiceException {
+        GroupMembership groupMembership = getGroupMembership(acct, false);
+        return Sets.newHashSet(groupMembership.groupIds());
+    }
+    
+    /*
+     * only called from ProvUtil and GetAccountMembership SOAP handler.
+     * can't use getGroupMembership because it needs via.
+     */
+    @Override
+    public List<Group> getGroups(Account acct, boolean directOnly, Map<String,String> via) 
+    throws ServiceException {
+        // get static groups
+        List<DistributionList> dls = getDistributionLists(acct, directOnly, via);
+        
+        // get dynamic groups
+        List<DynamicGroup> dynGroups = getContainingDynamicGroups(acct);
+        
+        List<Group> groups = Lists.newArrayList();
+        groups.addAll(dls);
+        groups.addAll(dynGroups);
+        
+        return groups;
     }
 
     @Override

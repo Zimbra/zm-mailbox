@@ -32,6 +32,8 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.DynamicGroup;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
@@ -67,25 +69,34 @@ public class GetAccountMembership extends AdminDocumentHandler {
         checkAccountRight(zsc, account, Admin.R_getAccountMembership);
 
         HashMap<String,String> via = new HashMap<String, String>();
-        List<DistributionList> lists = prov.getDistributionLists(account, false, via);
+        List<Group> groups = prov.getGroups(account, false, via);
         
         Element response = zsc.createElement(AdminConstants.GET_ACCOUNT_MEMBERSHIP_RESPONSE);
-        for (DistributionList dl: lists) {
-            Element distributionList = response.addElement(AdminConstants.E_DL);
-            distributionList.addAttribute(AdminConstants.A_NAME, dl.getName());
-            distributionList.addAttribute(AdminConstants.A_ID,dl.getId());
-            String viaDl = via.get(dl.getName());
-            if (viaDl != null) distributionList.addAttribute(AdminConstants.A_VIA, viaDl);
+        for (Group group: groups) {
+            Element eDL = response.addElement(AdminConstants.E_DL);
+            eDL.addAttribute(AdminConstants.A_NAME, group.getName());
+            eDL.addAttribute(AdminConstants.A_ID,group.getId());
+            eDL.addAttribute(AdminConstants.A_DYNAMIC, group.isDynamic());
+            String viaDl = via.get(group.getName());
+            if (viaDl != null) {
+                eDL.addAttribute(AdminConstants.A_VIA, viaDl);
+            }
             
             try {
-                checkDistributionListRight(zsc, dl, needGetAttrsRight());
+                if (group.isDynamic()) {
+                    checkDynamicGroupRight(zsc, (DynamicGroup) group, needGetAttrsRight());
+                } else {
+                    checkDistributionListRight(zsc, (DistributionList) group, needGetAttrsRight());
+                }
                 
-                String isAdminGroup = dl.getAttr(Provisioning.A_zimbraIsAdminGroup);
-                if (isAdminGroup != null)
-                    distributionList.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, Provisioning.A_zimbraIsAdminGroup).setText(isAdminGroup);
+                String isAdminGroup = group.getAttr(Provisioning.A_zimbraIsAdminGroup);
+                if (isAdminGroup != null) {
+                    eDL.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, Provisioning.A_zimbraIsAdminGroup).setText(isAdminGroup);
+                }
             } catch (ServiceException e) {
-                if (ServiceException.PERM_DENIED.equals(e.getCode()))
-                    ZimbraLog.acl.warn("no permission to view " + Provisioning.A_zimbraIsAdminGroup + " of dl " + dl.getName());
+                if (ServiceException.PERM_DENIED.equals(e.getCode())) {
+                    ZimbraLog.acl.warn("no permission to view " + Provisioning.A_zimbraIsAdminGroup + " of dl " + group.getName());
+                }
             }
         }
         return response;

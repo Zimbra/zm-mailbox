@@ -3140,7 +3140,7 @@ public class LegacyLdapProvisioning extends LdapProv {
 
     @Override
     public List<DistributionList> getDistributionLists(DistributionList list, boolean directOnly, Map<String, String> via) throws ServiceException {
-        return getGroups(list, directOnly, via);
+        return getContainingGroups(list, directOnly, via);
     }
 
     private DistributionList getDistributionListByQuery(String base, String query, LegacyZimbraLdapContext initZlc, String[] returnAttrs) 
@@ -3472,7 +3472,7 @@ public class LegacyLdapProvisioning extends LdapProv {
 
     private GroupMembership computeUpwardMembership(DistributionList list) throws ServiceException {
         Map<String, String> via = new HashMap<String, String>();
-        List<DistributionList> lists = getGroups(list, false, via);
+        List<DistributionList> lists = getContainingGroups(list, false, via);
         return computeUpwardMembership(lists);
     }
 
@@ -3521,7 +3521,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             return dls;
 
         Map<String, String> via = new HashMap<String, String>();
-        List<DistributionList> lists = getGroups(acct, false, via);
+        List<DistributionList> lists = getContainingGroups(acct, false, via);
 
         dls = computeUpwardMembership(lists);
 
@@ -4872,7 +4872,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     }
 
     // GROUP-TODO: retire after getGroupsInternal is stable and have callsites call it directly
-    private List<DistributionList> getGroups(Entry entry, boolean directOnly, Map<String, String> via) throws ServiceException {
+    private List<DistributionList> getContainingGroups(Entry entry, boolean directOnly, Map<String, String> via) throws ServiceException {
         if (DebugConfig.disableComputeGroupMembershipOptimization) {
             // old way
             String[] addr = ((GroupedEntry)entry).getAllAddrsAsGroupMember();
@@ -5115,7 +5115,7 @@ public class LegacyLdapProvisioning extends LdapProv {
 
     @Override
     public List<DistributionList> getDistributionLists(Account acct, boolean directOnly, Map<String, String> via) throws ServiceException {
-        return getGroups(acct, directOnly, via);
+        return getContainingGroups(acct, directOnly, via);
     }
 
     private static final int DEFAULT_GAL_MAX_RESULTS = 100;

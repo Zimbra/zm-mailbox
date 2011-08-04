@@ -574,6 +574,14 @@ public class SoapProvisioning extends Provisioning {
         }
     }
     
+    private Group makeGroup(DLInfo dlInfo) throws ServiceException {
+        if (dlInfo.isDynamic()) {
+            return new SoapDynamicGroup(dlInfo, this);
+        } else {
+            return new SoapDistributionList(dlInfo, this);
+        }
+    }
+    
     @Override
     public Group createGroup(String listAddress,
             Map<String, Object> listAttrs, boolean dynamic) throws ServiceException {
@@ -1391,16 +1399,18 @@ public class SoapProvisioning extends Provisioning {
     }
 
     private static final String DATA_DL_SET = "DL_SET";
-
+    
     @SuppressWarnings("unchecked")
     @Override
     public Set<String> getDistributionLists(Account acct) throws ServiceException {
         Set<String> dls = (Set<String>) acct.getCachedData(DATA_DL_SET);
-        if (dls != null) return dls;
+        if (dls != null) {
+            return dls;
+        }
 
         dls = new HashSet<String>();
 
-       List<DistributionList> lists = getDistributionLists(acct, false, null);
+        List<DistributionList> lists = getDistributionLists(acct, false, null);
 
         for (DistributionList dl : lists) {
             dls.add(dl.getId());
@@ -1409,7 +1419,29 @@ public class SoapProvisioning extends Provisioning {
         acct.setCachedData(DATA_DL_SET, dls);
         return dls;
     }
+    
+    private static final String DATA_GROUP_SET = "GROUP_SET";
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public Set<String> getGroups(Account acct) throws ServiceException {
+        Set<String> groupIds = (Set<String>) acct.getCachedData(DATA_GROUP_SET);
+        if (groupIds != null) {
+            return groupIds;
+        }
 
+        groupIds = new HashSet<String>();
+
+        List<Group> groups = getGroups(acct, false, null);
+
+        for (Group dl : groups) {
+            groupIds.add(dl.getId());
+        }
+        groupIds = Collections.unmodifiableSet(groupIds);
+        acct.setCachedData(DATA_GROUP_SET, groupIds);
+        return groupIds;
+    }
+    
     @Override
     public List<DistributionList> getDistributionLists(Account acct,
                 boolean directOnly, Map<String, String> via)
@@ -1427,7 +1459,29 @@ public class SoapProvisioning extends Provisioning {
         }
         return result;
     }
+    
+    @Override
+    public List<Group> getGroups(Account acct, boolean directOnly, Map<String, String> via)
+    throws ServiceException {
+        ArrayList<Group> result = new ArrayList<Group>();
+        GetAccountMembershipResponse resp = invokeJaxb(
+            new GetAccountMembershipRequest(getSelector(acct)));
+        
+        for (DLInfo dlInfo : resp.getDlList()) {
+            String viaList = dlInfo.getVia();
+            if (directOnly && viaList != null) {
+                continue;
+            }
+            Group group = makeGroup(dlInfo);
+            if (via != null && viaList != null) {
+                via.put(group.getName(), viaList);
+            }
+            result.add(group);
+        }
+        return result;
+    }
 
+    
     @Override
     public boolean inDistributionList(Account acct, String zimbraId) throws ServiceException {
         return getDistributionLists(acct).contains(zimbraId);

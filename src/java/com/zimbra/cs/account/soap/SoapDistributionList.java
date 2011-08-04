@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -65,12 +64,19 @@ class SoapDistributionList extends DistributionList implements SoapEntry {
     throws ServiceException {
         super(dlInfo.getName(), dlInfo.getId(), 
                 Attr.collectionToMap(dlInfo.getAttrList()), prov);
+        
+        // DLInfo does not supply zimbraId
+        Map<String, Object> attrs = getRawAttrs();
+        attrs.put(Provisioning.A_zimbraId, dlInfo.getId());
+        
         // DLInfo does not supply membership info
         addDlm(new ArrayList<String>(), getRawAttrs());
     }
 
     SoapDistributionList(Element e, Provisioning prov) throws ServiceException {
-        super(e.getAttribute(AdminConstants.A_NAME), e.getAttribute(AdminConstants.A_ID), SoapProvisioning.getAttrs(e), prov);
+        super(e.getAttribute(AdminConstants.A_NAME), 
+                e.getAttribute(AdminConstants.A_ID), 
+                SoapProvisioning.getAttrs(e), prov);
         addDlm(e, getRawAttrs());
     }
 
@@ -87,7 +93,8 @@ class SoapDistributionList extends DistributionList implements SoapEntry {
         addDlm(list, attrs);
     }
 
-    public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, boolean checkImmutable) throws ServiceException {
+    public void modifyAttrs(SoapProvisioning prov, Map<String, ? extends Object> attrs, 
+            boolean checkImmutable) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.MODIFY_DISTRIBUTION_LIST_REQUEST);
         req.addElement(AdminConstants.E_ID).setText(getId());
         SoapProvisioning.addAttrElements(req, attrs);

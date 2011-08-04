@@ -1550,17 +1550,19 @@ public class ProvUtil implements HttpDebugListener {
         }
         Account account = lookupAccount(key);
         if (idsOnly) {
-            Set<String> lists = prov.getDistributionLists(account);
+            Set<String> lists = prov.getGroups(account);
             for (String id: lists) {
                 console.println(id);
             }
         } else {
             HashMap<String,String> via = new HashMap<String, String>();
-            List<DistributionList> lists = prov.getDistributionLists(account, false, via);
-            for (DistributionList dl: lists) {
-                String viaDl = via.get(dl.getName());
-                if (viaDl != null) console.println(dl.getName()+" (via "+viaDl+")");
-                else console.println(dl.getName());
+            List<Group> groups = prov.getGroups(account, false, via);
+            for (Group group: groups) {
+                String viaDl = via.get(group.getName());
+                if (viaDl != null) {
+                    console.println(group.getName()+" (via "+viaDl+")");
+                }
+                else console.println(group.getName());
             }
         }
     }

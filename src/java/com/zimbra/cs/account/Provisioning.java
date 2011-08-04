@@ -1304,6 +1304,28 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
     
     /**
+     * @return set of all the zimbraId's of groups this account belongs to, including 
+     *         dynamic groups and direct/nested static distribution lists.
+     * @throws ServiceException
+     */
+    public Set<String> getGroups(Account acct) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+    
+    /**
+     *
+     * @param directOnly return only DLs this account is a direct member of
+     * @param via if non-null and directOnly is false, this map will containing a mapping 
+     *        from a DL name to the DL it was a member of, if member was indirect.
+     * @return all the DLs
+     * @throws ServiceException
+     */
+    public List<Group> getGroups(Account acct, boolean directOnly, Map<String,String> via) 
+    throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+        
+    /**
      * @param zimbraId the zimbraId of the group (static or dynamic) we are checking for
      * @return true if this account is a member of the specified group, and the group 
      *         is eligible as a 
