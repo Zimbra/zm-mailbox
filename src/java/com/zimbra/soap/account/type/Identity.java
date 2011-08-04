@@ -32,7 +32,7 @@ import com.zimbra.common.soap.AccountConstants;
      </identity>*
 
  */
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class Identity extends AttrsImpl {
 
     // TODO:Want constructor for old style Identity
@@ -41,7 +41,7 @@ public class Identity extends AttrsImpl {
     private final String name;
 
     @XmlAttribute(name=AccountConstants.A_ID, required=false)
-    private final String id;
+    private String id;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -56,15 +56,25 @@ public class Identity extends AttrsImpl {
         this.id = id;
     }
 
+    public static Identity fromName(String name) {
+        return new Identity(name, null);
+    }
+
+    public static Identity fromNameAndId(String name, String id) {
+        return new Identity(name, id);
+    }
     public Identity(Identity i) {
         name = i.getName();
         id = i.getId();
         super.setAttrs(Lists.transform(i.getAttrs(), Attr.COPY));
     }
 
+    public void setId(String id) { this.id = id; }
+
     public String getName() { return name; }
     public String getId() { return id; }
 
+    @Override
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
@@ -78,4 +88,5 @@ public class Identity extends AttrsImpl {
         return addToStringInfo(Objects.toStringHelper(this))
                 .toString();
     }
+
 }

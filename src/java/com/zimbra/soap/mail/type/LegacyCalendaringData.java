@@ -24,7 +24,6 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
@@ -62,7 +61,6 @@ implements CalendaringDataInterface {
     /**
      * no-argument constructor wanted by JAXB
      */
-    @SuppressWarnings("unused")
     protected LegacyCalendaringData() {
         this((String) null, (String) null);
     }
@@ -71,11 +69,14 @@ implements CalendaringDataInterface {
         super(xUid, uid);
     }
 
+    @Override
     public void setDate(long date) { super.setDuration(date) /* Bug compatible... */; }
 
+    @Override
     public void setOrganizer(CalOrganizer organizer) {
         this.organizer = organizer;
     }
+    @Override
     public void setCategories(Iterable <String> categories) {
         this.categories.clear();
         if (categories != null) {
@@ -83,11 +84,14 @@ implements CalendaringDataInterface {
         }
     }
 
+    @Override
     public void addCategory(String category) {
         this.categories.add(category);
     }
 
+    @Override
     public void setGeo(GeoInfo geo) { this.geo = geo; }
+    @Override
     public void setFragment(String fragment) { this.fragment = fragment; }
     public void setInstances(Iterable <LegacyInstanceDataInfo> instances) {
         this.instances.clear();
@@ -100,22 +104,30 @@ implements CalendaringDataInterface {
         this.instances.add(instance);
     }
 
+    @Override
     public void setAlarmData(AlarmDataInfo alarmData) {
         this.alarmData = alarmData;
     }
 
+    @Override
     public long getDate() { return super.getDuration(); }
+    @Override
     public CalOrganizer getOrganizer() { return organizer; }
+    @Override
     public List<String> getCategories() {
         return Collections.unmodifiableList(categories);
     }
+    @Override
     public GeoInfo getGeo() { return geo; }
+    @Override
     public String getFragment() { return fragment; }
     public List<LegacyInstanceDataInfo> getInstances() {
         return Collections.unmodifiableList(instances);
     }
+    @Override
     public AlarmDataInfo getAlarmData() { return alarmData; }
 
+    @Override
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
@@ -136,6 +148,7 @@ implements CalendaringDataInterface {
     }
 
     // Non-JAXB method needed by CalendaringDataInterface
+    @Override
     public void setCalendaringInstances(
             Iterable <InstanceDataInterface> instances) {
         this.instances.clear();
@@ -147,6 +160,7 @@ implements CalendaringDataInterface {
     }
 
     // Non-JAXB method needed by CalendaringDataInterface
+    @Override
     public void addCalendaringInstance(InstanceDataInterface instance) {
         if (instance instanceof LegacyInstanceDataInfo) {
             addInstance((LegacyInstanceDataInfo) instance);
@@ -154,6 +168,7 @@ implements CalendaringDataInterface {
     }
 
     // Non-JAXB method needed by CalendaringDataInterface
+    @Override
     public List<InstanceDataInterface> getCalendaringInstances() {
         List<InstanceDataInterface> insts = Lists.newArrayList();
         Iterables.addAll(insts,instances);

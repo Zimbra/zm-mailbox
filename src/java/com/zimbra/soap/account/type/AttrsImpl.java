@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,8 +15,9 @@
 
 package com.zimbra.soap.account.type;
 
-import java.util.List;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Collections;
 import java.util.Map;
 
@@ -33,7 +34,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.StringUtil;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 abstract public class AttrsImpl implements Attrs {
 
     @XmlElement(name=AdminConstants.E_A)
@@ -52,6 +53,7 @@ abstract public class AttrsImpl implements Attrs {
         this.setAttrs(attrs);
     }
 
+    @Override
     public Attrs setAttrs(Iterable<Attr> attrs) {
         this.attrs.clear();
         if (attrs != null) {
@@ -60,25 +62,44 @@ abstract public class AttrsImpl implements Attrs {
         return this;
     }
 
+    @Override
     public Attrs setAttrs(Map<String, ? extends Object> attrs)
     throws ServiceException {
         this.setAttrs(Attr.fromMap(attrs));
         return this;
     }
 
+    @Override
     public Attrs addAttr(Attr attr) {
         attrs.add(attr);
         return this;
     }
 
+    @Override
     public List<Attr> getAttrs() {
         return Collections.unmodifiableList(attrs);
     }
 
+    @Override
     public Multimap<String, String> getAttrsMultimap() {
         return Attr.toMultimap(attrs);
     }
 
+    /**
+     * @param name name of attr to get
+     * @return null if unset, or first value in list
+     */
+    @Override
+    public String getFirstMatchingAttr(String name) {
+        Collection<String> values = getAttrsMultimap().get(name);
+        Iterator<String> iter = values.iterator();
+        if (!iter.hasNext()) {
+            return null;
+        }
+        return iter.next();
+    }
+
+    @Override
     public Map<String, Object> getAttrsAsOldMultimap() {
         return StringUtil.toOldMultimap(getAttrsMultimap());
     }

@@ -16,7 +16,6 @@
 package com.zimbra.soap.account.type;
 
 import java.util.List;
-import java.util.Collection;
 import java.util.Map;
 
 import com.google.common.collect.Multimap;
@@ -30,5 +29,6 @@ public interface Attrs {
     public Attrs addAttr(Attr attr);
     public List<Attr> getAttrs();
     public Multimap<String, String> getAttrsMultimap();
+    public String getFirstMatchingAttr(String name);
     public Map<String, Object> getAttrsAsOldMultimap();
 }

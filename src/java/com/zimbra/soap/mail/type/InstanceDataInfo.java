@@ -57,13 +57,17 @@ implements InstanceDataInterface {
     public InstanceDataInfo() {
     }
 
+    @Override
     public void setStartTime(Long startTime) { this.startTime = startTime; }
+    @Override
     public void setIsException(Boolean isException) {
         this.isException = isException;
     }
+    @Override
     public void setOrganizer(CalOrganizer organizer) {
         this.organizer = organizer;
     }
+    @Override
     public void setCategories(Iterable <String> categories) {
         this.categories.clear();
         if (categories != null) {
@@ -71,21 +75,31 @@ implements InstanceDataInterface {
         }
     }
 
+    @Override
     public void addCategory(String category) {
         this.categories.add(category);
     }
 
+    @Override
     public void setGeo(GeoInfo geo) { this.geo = geo; }
+    @Override
     public void setFragment(String fragment) { this.fragment = fragment; }
+    @Override
     public Long getStartTime() { return startTime; }
+    @Override
     public Boolean getIsException() { return isException; }
+    @Override
     public CalOrganizer getOrganizer() { return organizer; }
+    @Override
     public List<String> getCategories() {
         return Collections.unmodifiableList(categories);
     }
+    @Override
     public GeoInfo getGeo() { return geo; }
+    @Override
     public String getFragment() { return fragment; }
 
+    @Override
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
