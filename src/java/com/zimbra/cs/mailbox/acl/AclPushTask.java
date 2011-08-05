@@ -26,6 +26,7 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.util.ZimbraApplication;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,12 +40,20 @@ import java.util.TimerTask;
  */
 public class AclPushTask extends TimerTask {
 
+    private static boolean supported;
+
+    static {
+         supported = ZimbraApplication.getInstance().supports(DbPendingAclPush.class);
+    }
+
     @Override
     public void run() {
         doWork();
     }
 
     public static void doWork() {
+        if (!supported)
+            return;
         ZimbraLog.misc.info("Starting pending ACL push");
         Date now = new Date();
         try {
