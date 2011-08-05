@@ -62,7 +62,7 @@ public class ActivityInfo {
         this((String) null, -1L, (String) null);
     }
 
-    private ActivityInfo(String operation, long timeStamp, String itemId) {
+    public ActivityInfo(String operation, long timeStamp, String itemId) {
         this.operation = operation;
         this.timeStamp = timeStamp;
         this.itemId = itemId;
