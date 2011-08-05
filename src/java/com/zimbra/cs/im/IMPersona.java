@@ -1893,10 +1893,10 @@ public class IMPersona extends ClassLogger {
     private void postIMNotification(IMNotification not, Session s) {
         if (s == null) {
             for (Session session : mListeners.keySet()) {
-                session.notifyIM(not);
+                session.notifyExternalEvent(not);
             }
         } else {
-            s.notifyIM(not);
+            s.notifyExternalEvent(not);
         }
     }
 

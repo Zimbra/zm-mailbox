@@ -91,7 +91,6 @@ import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.fb.LocalFreeBusyProvider;
-import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.BrowseTerm;
@@ -696,13 +695,6 @@ public class Mailbox {
         // this may be redundant, as Session.doCleanup should dequeue
         //   the listener, but empty the list here just to be sure
         mListeners.clear();
-    }
-
-    /** Posts an IM-related notification to all the Mailbox's sessions. */
-    public void postIMNotification(IMNotification imn) {
-        for (Session session : mListeners) {
-            session.notifyIM(imn);
-        }
     }
 
     /** Returns whether the server is keeping track of message deletes

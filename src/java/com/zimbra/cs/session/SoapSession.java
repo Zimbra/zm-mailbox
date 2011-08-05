@@ -43,7 +43,6 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Comment;
 import com.zimbra.cs.mailbox.Conversation;
@@ -129,6 +128,17 @@ public class SoapSession extends Session {
             }
         }
 
+        @Override public void notifyExternalEvent(ExternalEventNotification extra) {
+            Account authAccount = null;
+            try {
+                authAccount = Provisioning.getInstance().getAccountById(getAuthenticatedAccountId());
+            } catch (ServiceException e) {
+            }
+            if (extra.canAccess(authAccount)) {
+                SoapSession.this.notifyExternalEvent(extra);
+            }
+        }
+        
         /**
          * Returns true if the MailItem should be excluded from notification serialization
          * @throws ServiceException
@@ -364,8 +374,8 @@ public class SoapSession extends Session {
     }
 
     class QueuedNotifications {
-        /** IMNotifications are strictly sequential right now */
-        List<IMNotification> mIMNotifications;
+        /** ExternalEventNotifications are kept sequentially */
+        List<ExternalEventNotification> mExtraNotifications;
         PendingModifications mMailboxChanges;
         RemoteNotifications mRemoteChanges;
         boolean mHasLocalChanges;
@@ -386,7 +396,7 @@ public class SoapSession extends Session {
                 return true;
             if (!localMailboxOnly && mRemoteChanges != null && mRemoteChanges.hasNotifications())
                 return true;
-            if (mIMNotifications != null && !mIMNotifications.isEmpty())
+            if (mExtraNotifications != null && !mExtraNotifications.isEmpty())
                 return true;
             return false;
         }
@@ -396,10 +406,10 @@ public class SoapSession extends Session {
                    (mRemoteChanges == null  ? 0 : mRemoteChanges.getScaledNotificationCount());
         }
 
-        void addNotification(IMNotification imn) {
-            if (mIMNotifications == null)
-                mIMNotifications = new LinkedList<IMNotification>();
-            mIMNotifications.add(imn);
+        void addNotification(ExternalEventNotification extra) {
+            if (mExtraNotifications == null)
+                mExtraNotifications = new LinkedList<ExternalEventNotification>();
+            mExtraNotifications.add(extra);
         }
 
         void addNotification(PendingModifications pms) {
@@ -792,18 +802,18 @@ public class SoapSession extends Session {
 
 
     @Override
-    public void notifyIM(IMNotification imn) {
-        if (imn == null) {
+    public void notifyExternalEvent(ExternalEventNotification extra) {
+        if (extra == null) {
             return;
         }
         synchronized (sentChanges) {
-            changes.addNotification(imn);
+            changes.addNotification(extra);
         }
         try {
             // if we're in a hanging no-op, alert the client that there are changes
             notifyPushChannel(null, true);
         } catch (ServiceException e) {
-            ZimbraLog.session.warn("ServiceException in notifyIM", e);
+            ZimbraLog.session.warn("ServiceException in notifyExternalEvent", e);
         }
     }
 
@@ -1482,14 +1492,9 @@ public class SoapSession extends Session {
             }
         }
 
-        if (ntfn.mIMNotifications != null && ntfn.mIMNotifications.size() > 0) {
-            Element eIM = eNotify.addUniqueElement(ZimbraNamespace.E_IM);
-            for (IMNotification imn : ntfn.mIMNotifications) {
-                try {
-                    imn.toXml(eIM);
-                } catch (ServiceException e) {
-                    ZimbraLog.session.warn("error serializing IM notification; skipping", e);
-                }
+        if (ntfn.mExtraNotifications != null && ntfn.mExtraNotifications.size() > 0) {
+            for (ExternalEventNotification extra : ntfn.mExtraNotifications) {
+                extra.addElement(eNotify);
             }
         }
 

@@ -16,8 +16,23 @@ package com.zimbra.cs.im;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.ZimbraNamespace;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.session.Session;
 
-public abstract class IMNotification {
+public abstract class IMNotification extends Session.ExternalEventNotification {
+    public void addElement(Element notify) {
+        Element eIM = notify.getOptionalElement(ZimbraNamespace.E_IM);
+        if (eIM == null) {
+            eIM = notify.addUniqueElement(ZimbraNamespace.E_IM);
+        }
+        try {
+            toXml(eIM);
+        } catch (ServiceException e) {
+            ZimbraLog.session.warn("error serializing IM notification; skipping", e);
+        }
+    }
+    
     abstract public Element toXml(Element parent) throws ServiceException;
     
     protected static Element create(Element parent, String typeName) {

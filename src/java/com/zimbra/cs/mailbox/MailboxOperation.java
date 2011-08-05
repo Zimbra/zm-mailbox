@@ -101,7 +101,9 @@ public enum MailboxOperation {
     SnoozeCalendarItemAlarm(83),
     CreateComment(84),
     CreateLink(85),
-    SetRetentionPolicy(86);
+    SetRetentionPolicy(86),
+    Watch(87),       // Octopus item watch / follow
+    Unwatch(88);
     
     private MailboxOperation(int c) {
         code = c;

@@ -23,7 +23,6 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.im.IMNotification;
 import com.zimbra.cs.im.IMPersona;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -82,6 +81,18 @@ public abstract class Session {
         }
     }
 
+    /**
+     * for non-Mailbox related notifications
+     *
+     */
+    public abstract static class ExternalEventNotification {
+        /** Add XML representation to the <notify/> block. */
+        public abstract void addElement(Element notify);
+        public boolean canAccess(Account account) {
+            return true;
+        }
+    }
+    
     /** Creates a {@code Session} of the given <tt>Type</tt> whose target
      *  {@link Account} is the same as its authenticated <tt>Account</tt>.
      * @param accountId  The account ID of the {@code Session}'s owner
@@ -277,8 +288,8 @@ public abstract class Session {
      *                  <tt>null</tt> if none was specified. */
     public abstract void notifyPendingChanges(PendingModifications pns, int changeId, Session source);
 
-    /** Notify this session that an IM event has occured. */
-    public void notifyIM(IMNotification imn) {
+    /** Notify this session that an external event has occured. */
+    public void notifyExternalEvent(ExternalEventNotification extra) {
         // do nothing by default.
     }
 
