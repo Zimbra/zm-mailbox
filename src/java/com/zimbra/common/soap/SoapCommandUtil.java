@@ -36,8 +36,8 @@ import org.apache.commons.cli.ParseException;
 import org.dom4j.DocumentException;
 import org.dom4j.Namespace;
 import org.dom4j.QName;
-import org.python.google.common.base.Objects;
 
+import com.google.common.base.Objects;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element.ElementFactory;
