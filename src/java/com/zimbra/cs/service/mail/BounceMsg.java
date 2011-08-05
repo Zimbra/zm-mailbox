@@ -53,7 +53,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class BounceMsg extends MailDocumentHandler {
+public final class BounceMsg extends MailDocumentHandler {
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -105,8 +105,8 @@ public class BounceMsg extends MailDocumentHandler {
      *  {@code From} and {@code Sender} are treated in normal mail send.
      *  Updates the {@link MailSender}'s envelope with the sender and recipient
      *  {@code Resent-*} addresses. */
-    MailSender addResentHeaders(Element msgElem, JavaMailMimeMessage mm, ZimbraSoapContext zsc, OperationContext octxt, Account acct, MailSender msender)
-    throws MessagingException, ServiceException {
+    MailSender addResentHeaders(Element msgElem, JavaMailMimeMessage mm, ZimbraSoapContext zsc, OperationContext octxt,
+            Account acct, MailSender msender) throws MessagingException, ServiceException {
         MessageAddresses maddrs = getResentAddressees(msgElem, acct, msender);
 
         // RFC 5322 section 3.6.6:
@@ -123,14 +123,16 @@ public class BounceMsg extends MailDocumentHandler {
         recipients.addAll(addResentRecipientHeader(mm, "Resent-Bcc", maddrs.get(EmailType.BCC.toString())));
         recipients.addAll(addResentRecipientHeader(mm, "Resent-Cc", maddrs.get(EmailType.CC.toString())));
         recipients.addAll(addResentRecipientHeader(mm, "Resent-To", maddrs.get(EmailType.TO.toString())));
-        if (recipients.isEmpty())
+        if (recipients.isEmpty()) {
             throw ServiceException.INVALID_REQUEST("no recipients specified", null);
-
+        }
         InternetAddress rfrom = ArrayUtil.getFirstElement(maddrs.get(EmailType.FROM.toString()));
         InternetAddress rsender = ArrayUtil.getFirstElement(maddrs.get(EmailType.SENDER.toString()));
         Pair<InternetAddress, InternetAddress> fromsender = msender.getSenderHeaders(rfrom, rsender,
-                acct, getAuthenticatedAccount(zsc), octxt);
-        Address from = fromsender.getFirst(), sender = fromsender.getSecond();
+                acct, getAuthenticatedAccount(zsc), octxt != null ? octxt.isUsingAdminPrivileges() : false);
+        InternetAddress from = fromsender.getFirst();
+        InternetAddress sender = fromsender.getSecond();
+        assert(from != null);
         if (sender != null) {
             mm.addHeader("Resent-Sender", sender.toString());
         }
@@ -141,7 +143,7 @@ public class BounceMsg extends MailDocumentHandler {
         mm.saveChanges();
 
         // now that we've updated the MimeMessage's headers, we can update the MailSender's envelope
-        msender.setEnvelopeFrom(((InternetAddress) from).getAddress());
+        msender.setEnvelopeFrom(from.getAddress());
         msender.setRecipients(recipients.toArray(new String[recipients.size()]));
         return msender;
     }

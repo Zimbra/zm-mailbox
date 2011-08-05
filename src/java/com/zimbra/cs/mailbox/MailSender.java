@@ -738,7 +738,8 @@ public class MailSender {
                 sender = null; // no need for matching Sender and From addresses
             }
         } else {
-            Pair<InternetAddress, InternetAddress> fromsender = getSenderHeaders(from, sender, acct, authuser, octxt);
+            Pair<InternetAddress, InternetAddress> fromsender = getSenderHeaders(from, sender, acct, authuser,
+                    octxt != null ? octxt.isUsingAdminPrivileges() : false);
             from = fromsender.getFirst();
             sender = fromsender.getSecond();
         }
@@ -773,10 +774,10 @@ public class MailSender {
      * @return a {@link Pair} containing the approved {@code from} and {@code
      *         sender} header addresses, in that order. */
     public Pair<InternetAddress, InternetAddress> getSenderHeaders(InternetAddress from, InternetAddress sender,
-            Account account, Account authuser, OperationContext octxt) throws ServiceException {
+            Account account, Account authuser, boolean asAdmin) throws ServiceException {
         if (account.getId().equals(authuser.getId())) { // non delegated sends
             // From must be the account's address
-            if (from != null && !AccountUtil.allowFromAddress(account, from.getAddress())) {
+            if (from == null || !AccountUtil.allowFromAddress(account, from.getAddress())) {
                 from = AccountUtil.getFriendlyEmailAddress(account);
             }
             // Sender must be the account's address
@@ -788,7 +789,6 @@ public class MailSender {
             }
             return new Pair<InternetAddress, InternetAddress>(from, sender);
         } else { // delegated sends
-            boolean asAdmin = octxt != null ? octxt.isUsingAdminPrivileges() : false;
             if (Objects.equal(sender, from)) { // no need for matching Sender and From addresses
                 sender = null;
             }

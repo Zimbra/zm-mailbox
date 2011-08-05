@@ -33,7 +33,6 @@ import com.zimbra.cs.mime.handler.TextHtmlHandler;
 import com.zimbra.cs.mime.handler.TextPlainHandler;
 import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.soap.mail.type.RetentionPolicy;
 
 public final class MailboxTestUtil {
 
@@ -41,9 +40,9 @@ public final class MailboxTestUtil {
     }
 
     /**
-     * Initializes the database, index, store manager, and provisioning.
+     * Initializes the provisioning.
      */
-    public static void initServer() throws Exception {
+    public static void initProvisioning() throws Exception {
         System.setProperty("log4j.configuration", "log4j-test.properties");
         // Don't load from /opt/zimbra/conf
         System.setProperty("zimbra.config", "src/java-test/localconfig-test.xml");
@@ -57,6 +56,13 @@ public final class MailboxTestUtil {
             prov.addMimeType(entry.getKey(), entry.getValue());
         }
         Provisioning.setInstance(prov);
+    }
+
+    /**
+     * Initializes the provisioning, database, index and store manager.
+     */
+    public static void initServer() throws Exception {
+        initProvisioning();
 
         LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
         DbPool.startup();
