@@ -37,10 +37,13 @@ public class ElementTest {
         element.addElement("password").addText("secret");
         element.addElement("pfxPassword").addText("secret");
         element.addElement("a").addAttribute("n", "pfxPassword").addText("secret");
+        element.addElement("a").addAttribute("n", "hostPwd").addText("secret");
+        element.addElement("a").addAttribute("n", "webexZimlet_pwd1").addText("secret");
         element.addElement("dummy2").
                 addAttribute("password", "secret").
                 addAttribute("pass", "secret").
                 addAttribute("pwd", "secret");
+        element.addElement("prop").addAttribute("name", "passwd").addText("secret");
         String elementStr = element.prettyPrint(true);
         Assert.assertFalse("Sensitive values have not been masked\n" + elementStr, elementStr.contains("secret"));
     }

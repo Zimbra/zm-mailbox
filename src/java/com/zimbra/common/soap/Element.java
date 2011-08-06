@@ -1495,8 +1495,27 @@ public abstract class Element implements Cloneable {
     private static boolean isSensitiveElement(Element element) {
         // - elements having name that ends with "password" or "Password"
         // - elements like: <a n='zimbraGalLdapBindPassword'>...</a>
+        // - elements like: <a n='hostPwd'>...</a>
+        // - elements like (zimlet specific case): <a n='webexZimlet_pwd1'>...</a>
+        // - elements like: <prop name='passwd'>...</prop>
         String name = element.getName();
-        return name.endsWith("assword") || (name.equals("a") && element.getAttribute("n", "").endsWith("assword"));
+        if (name.endsWith("assword")) {
+            return true;
+        } else if (name.equals("a")) {
+            String propName = element.getAttribute("n", null);
+            if (propName != null &&
+                    (propName.endsWith("assword") || propName.endsWith("Pwd") ||
+                            propName.contains("webexZimlet_pwd"))) {
+                return true;
+            }
+        } else if (name.equals("prop")) {
+            String propName = element.getAttribute("name", null);
+            if (propName != null &&
+                    (propName.endsWith("assword") || propName.endsWith("asswd") || propName.endsWith("Pwd"))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void main(String[] args) throws ContainerException, SoapParseException {
