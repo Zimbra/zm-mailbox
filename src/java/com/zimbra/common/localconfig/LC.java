@@ -353,7 +353,7 @@ public final class LC {
 
     @Supported
     public static final KnownKey ldap_connect_pool_health_check_on_checkout_enabled = KnownKey.newKey(true);
-    
+
     @Supported
     public static final KnownKey ldap_connect_pool_health_check_interval_millis = KnownKey.newKey(60000);
 
@@ -375,7 +375,7 @@ public final class LC {
 
     @Supported
     public static final KnownKey ldap_starttls_required = KnownKey.newKey(true);
-    
+
     @Supported
     public static final KnownKey zimbra_directory_max_search_result = KnownKey.newKey(5000);
 
@@ -753,11 +753,11 @@ public final class LC {
     public static final KnownKey zimbra_class_ldap_client = KnownKey.newKey("com.zimbra.cs.ldap.jndi.JNDILdapClient");
     public static final KnownKey zimbra_class_provisioning = KnownKey.newKey("com.zimbra.cs.account.ldap.legacy.LegacyLdapProvisioning");
     */
-    
+
     public static final KnownKey zimbra_class_ldap_client = KnownKey.newKey("com.zimbra.cs.ldap.unboundid.UBIDLdapClient");
     public static final KnownKey zimbra_class_provisioning = KnownKey.newKey("com.zimbra.cs.account.ldap.LdapProvisioning");
-    
-    
+
+
     public static final KnownKey zimbra_class_accessmanager = KnownKey.newKey("com.zimbra.cs.account.accesscontrol.ACLAccessManager");
     public static final KnownKey zimbra_class_mboxmanager = KnownKey.newKey("com.zimbra.cs.mailbox.MailboxManager");
     public static final KnownKey zimbra_class_database = KnownKey.newKey("com.zimbra.cs.db.MySQL");
@@ -854,7 +854,6 @@ public final class LC {
     public static final KnownKey yauth_baseuri = KnownKey.newKey("https://login.yahoo.com/WSLogin/V1");
 
     public static final KnownKey purge_initial_sleep_ms = KnownKey.newKey(30 * Constants.MILLIS_PER_MINUTE);
-    public static final KnownKey purge_mail_address_table_enabled = KnownKey.newKey(true);
 
     public static final KnownKey conversation_max_age_ms = KnownKey.newKey(31 * Constants.MILLIS_PER_DAY);
     public static final KnownKey tombstone_max_age_ms = KnownKey.newKey(3 * Constants.MILLIS_PER_MONTH);
@@ -873,7 +872,7 @@ public final class LC {
 
     public static final KnownKey httpclient_internal_connmgr_keepalive_connections = KnownKey.newKey(true);
     public static final KnownKey httpclient_external_connmgr_keepalive_connections = KnownKey.newKey(true);
-    
+
     public static final KnownKey httpclient_internal_connmgr_tcp_nodelay = KnownKey.newKey(false);
     public static final KnownKey httpclient_external_connmgr_tcp_nodelay = KnownKey.newKey(false);
 
@@ -888,7 +887,7 @@ public final class LC {
 
     public static final KnownKey httpclient_internal_connmgr_idle_reaper_sleep_interval = KnownKey.newKey(5 * Constants.MILLIS_PER_MINUTE);
     public static final KnownKey httpclient_external_connmgr_idle_reaper_sleep_interval = KnownKey.newKey(5 * Constants.MILLIS_PER_MINUTE);
-    
+
     public static final KnownKey httpclient_internal_connmgr_idle_reaper_connection_timeout = KnownKey.newKey(5 * Constants.MILLIS_PER_MINUTE);
     public static final KnownKey httpclient_external_connmgr_idle_reaper_connection_timeout = KnownKey.newKey(5 * Constants.MILLIS_PER_MINUTE);
 
@@ -1122,9 +1121,9 @@ public final class LC {
     //octopus
     public static final KnownKey documents_disable_instant_parsing = KnownKey.newKey(false);
     public static final KnownKey default_profile_image = KnownKey.newKey("${zimbra_home}/jetty/webapps/zimbra/img/no-photo.png");
-    public static final KnownKey rest_pdf_converter_url = KnownKey.newKey("http://localhost:7070/zoo/convertpdf");    
+    public static final KnownKey rest_pdf_converter_url = KnownKey.newKey("http://localhost:7070/zoo/convertpdf");
     public static final KnownKey pdf2swf_path = KnownKey.newKey("/sw/bin/pdf2swf");
-    
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
