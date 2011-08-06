@@ -198,9 +198,6 @@ public interface DbSearchConstraints extends Cloneable {
         /** optional - ALL of these types are excluded. */
         public Set<MailItem.Type> excludeTypes = EnumSet.noneOf(MailItem.Type.class);
 
-        /** optional - join with mail_address on sender_id = id, and mail_address.contact_count > 0. */
-        public Boolean fromContact;
-
         // A possible result must match *ALL* the range constraints below.  It might seem strange that we don't
         // just combine the ranges -- yes this would be easy for positive ranges (foo>5 AND foo >7 and foo<10)
         // but it quickly gets very complicated with negative ranges such as (3<foo<100 AND NOT 7<foo<20)
@@ -311,7 +308,6 @@ public interface DbSearchConstraints extends Cloneable {
             result.types = EnumSet.copyOf(types);
             result.excludeTypes = EnumSet.copyOf(excludeTypes);
             result.ranges.putAll(ranges);
-            result.fromContact = fromContact;
             return result;
         }
 
@@ -428,9 +424,6 @@ public interface DbSearchConstraints extends Cloneable {
             }
             for (Map.Entry<RangeType, Range> entry : ranges.entries()) {
                 entry.getValue().toQueryString(entry.getKey().toQuery(), out).append(' ');
-            }
-            if (fromContact != null) {
-                out.append(fromContact ? "IS:fromcontact" : "-IS:fromcontact");
             }
             return out;
         }
@@ -571,16 +564,6 @@ public interface DbSearchConstraints extends Cloneable {
 
             excludeTypes.addAll(other.excludeTypes);
             ranges.putAll(other.ranges);
-
-            if (other.fromContact != null) {
-                if (fromContact != null) {
-                    if (fromContact != other.fromContact) {
-                        noResults = true;
-                    }
-                } else {
-                    fromContact = other.fromContact;
-                }
-            }
         }
 
         /**
@@ -771,10 +754,6 @@ public interface DbSearchConstraints extends Cloneable {
         void setCursorRange(String min, boolean minInclusive, String max, boolean maxInclusive, SortBy sort) {
             assert cursorRange == null : cursorRange;
             cursorRange = new CursorRange(min, minInclusive, max, maxInclusive, sort);
-        }
-
-        void setFromContact(boolean bool) {
-            fromContact = bool;
         }
 
         void addConvId(int cid, boolean truth) {

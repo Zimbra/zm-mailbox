@@ -20,7 +20,6 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -36,10 +35,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.google.common.base.Objects;
-import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
@@ -50,7 +47,6 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.EntryCacheDataKey;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
@@ -562,14 +558,6 @@ public class Contact extends MailItem {
         return getEmailAddresses(emailFields, fields, derefGroupMemberOpt);
     }
 
-    private Set<String> getNormalizedEmailAddrs() {
-        Set<String> result = new HashSet<String>();
-        for (String addr : getEmailAddresses()) {
-            result.add(addr.trim().toLowerCase());
-        }
-        return result;
-    }
-
     public static final boolean isEmailField(String[] emailFields, String fieldName) {
         if (fieldName == null)
             return false;
@@ -702,35 +690,9 @@ public class Contact extends MailItem {
         if (contact.fields.isEmpty()) {
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);
         }
-        contact.saveEmailAddrs(contact.getNormalizedEmailAddrs(), Collections.<String>emptySet());
         return contact;
     }
 
-    private void saveEmailAddrs(Set<String> add, Set<String> del) throws ServiceException {
-        assert Collections.disjoint(add, del) : "add=" + add + ",del=" + del;
-
-        for (String addr : add) {
-            try {
-                addr = DbMailAddress.normalizeAddress(addr);
-            } catch (IllegalArgumentException e) {
-                ZimbraLog.contact.warn("%s addr=%s", e.getMessage(), addr);
-                continue;
-            }
-            int id = DbMailAddress.getId(mMailbox.getOperationConnection(), mMailbox, addr);
-            if (id < 0) {
-                new DbMailAddress(mMailbox).setId(mMailbox.getNextAddressId())
-                    .setAddress(addr).setContactCount(1).create();
-            } else {
-                DbMailAddress.incCount(mMailbox.getOperationConnection(), mMailbox, id);
-            }
-        }
-
-        for (String addr : del) {
-            addr = addr.trim().toLowerCase();
-            DbMailAddress.decCount(mMailbox.getOperationConnection(), mMailbox, addr);
-        }
-    }
-    
     @Override
     MailboxBlob setContent(StagedBlob staged, Object content) throws ServiceException, IOException {
         ZimbraLog.mailop.info("modifying contact %s: id=%d, folderId=%d, folderName=%s.",
@@ -764,7 +726,6 @@ public class Contact extends MailItem {
         ParsedContact pc = (ParsedContact) data;
 
         markItemModified(Change.MODIFIED_CONTENT | Change.MODIFIED_DATE | Change.MODIFIED_FLAGS);
-        Set<String> oldAddrs = getNormalizedEmailAddrs();
         fields = pc.getFields();
         if (fields == null || fields.isEmpty()) {
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);
@@ -774,8 +735,6 @@ public class Contact extends MailItem {
         if (pc.hasAttachment()) {
             mData.setFlag(Flag.FlagInfo.ATTACHED);
         }
-        Set<String> newAddrs = getNormalizedEmailAddrs();
-        saveEmailAddrs(Sets.difference(newAddrs, oldAddrs), Sets.difference(oldAddrs, newAddrs));
         saveData(new DbMailItem(mMailbox).setSender(getFileAsString(fields)));
     }
 
@@ -793,55 +752,6 @@ public class Contact extends MailItem {
     MailItem icopy(Folder folder, int copyId) throws IOException, ServiceException {
         mMailbox.updateContactCount(1);
         return super.icopy(folder, copyId);
-    }
-
-    @Override
-    boolean move(Folder target) throws ServiceException {
-        boolean fromTrash = inTrash();
-        boolean toTrash = target.inTrash();
-        if (super.move(target)) {
-            if (!fromTrash && toTrash) { // moving into Trash
-                onSoftDelete();
-            } else if (fromTrash && !toTrash) { // moving out of Trash
-                onSoftRecover();
-            }
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Called when moving this contact into Trash.
-     */
-    void onSoftDelete() throws ServiceException {
-        saveEmailAddrs(Collections.<String>emptySet(), getNormalizedEmailAddrs());
-    }
-
-    /**
-     * Called when moving this contact out of Trash.
-     */
-    void onSoftRecover() throws ServiceException {
-        saveEmailAddrs(getNormalizedEmailAddrs(), Collections.<String>emptySet());
-    }
-
-    /**
-     * Called when hard-deleting this contact.
-     *
-     * @param trash true if deleting from Trash, false from non Trash
-     */
-    void onHardDelete(boolean trash) throws ServiceException {
-        if (!trash) {
-            saveEmailAddrs(Collections.<String>emptySet(), getNormalizedEmailAddrs());
-        }
-    }
-
-    @Override
-    void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
-        if (!inTrash()) { // hard-deleting from non Trash
-            onHardDelete(false);
-        }
-        super.delete(scope, writeTombstones);
     }
 
     /** @perms {@link ACL#RIGHT_DELETE} on the item */

@@ -107,7 +107,7 @@ public class Folder extends MailItem {
 
         assert(retentionPolicy != null); // Should have been set in decodeMetadata().
     }
-    
+
     @Override public String getSender() {
         return "";
     }
@@ -500,7 +500,7 @@ public class Folder extends MailItem {
     public RetentionPolicy getRetentionPolicy() {
         return retentionPolicy;
     }
-    
+
     /** Returns this folder's parent folder.  The root folder's parent is
      *  itself.
      * @see Mailbox#ID_FOLDER_ROOT */
@@ -578,7 +578,7 @@ public class Folder extends MailItem {
         }
         return subfolders;
     }
-    
+
     /** Returns a <tt>List</tt> that includes this folder and all its
      *  subfolders.  The tree traversal is done depth-first, so this folder
      *  is the first element in the list, followed by its children, then
@@ -1123,7 +1123,7 @@ public class Folder extends MailItem {
         if (rights != null) {
             queueForAclPush();
         }
-        
+
         // for Folder objects rename also means the change in the contents.
         mData.date = mMailbox.getOperationTimestamp();
         mData.contentChanged(mMailbox);
@@ -1157,8 +1157,6 @@ public class Folder extends MailItem {
         boolean toTrash = target.inTrash();
         if (!fromTrash && toTrash) { // moving this folder into Trash
             onSoftDelete();
-        } else if (fromTrash && !toTrash) { // moving this folder out of Trash
-            onSoftRecover();
         }
 
         // tell the folder's old and new parents
@@ -1182,11 +1180,6 @@ public class Folder extends MailItem {
 
     private void onSoftDelete() throws ServiceException {
         alterUnread(false);
-        if (defaultView == Type.CONTACT) {
-            for (Contact contact : mMailbox.getContactList(null, getId())) { //TODO may cause OOME
-                contact.onSoftDelete();
-            }
-        }
         if (subfolders != null) { // call on all sub folders recursively
             for (Folder subfolder : subfolders) {
                 subfolder.onSoftDelete();
@@ -1194,20 +1187,8 @@ public class Folder extends MailItem {
         }
     }
 
-    private void onSoftRecover() throws ServiceException {
-        if (defaultView == Type.CONTACT) {
-            for (Contact contact : mMailbox.getContactList(null, getId())) { //TODO may cause OOME
-                contact.onSoftRecover();
-            }
-        }
-        if (subfolders != null) { // call on all sub folders recursively
-            for (Folder subfolder : subfolders) {
-                subfolder.onSoftRecover();
-            }
-        }
-    }
-
-    @Override void addChild(MailItem child) throws ServiceException {
+    @Override
+    void addChild(MailItem child) throws ServiceException {
         addChild(child, true);
     }
 
@@ -1320,11 +1301,6 @@ public class Folder extends MailItem {
         if (info.cascadeIds != null) {
             info.modifiedIds.removeAll(info.cascadeIds);
         }
-        if (info.contacts > 0 && !inTrash()) {
-            for (Contact contact : mMailbox.getContactList(null, getId())) { //TODO may cause OOME
-                contact.onHardDelete(false);
-            }
-        }
         super.propagateDeletion(info);
     }
 
@@ -1432,7 +1408,7 @@ public class Folder extends MailItem {
                 alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
             }
         }
-        
+
         Metadata rp = meta.getMap(Metadata.FN_RETENTION_POLICY, true);
         if (rp != null) {
             retentionPolicy = RetentionPolicyManager.retentionPolicyFromMetadata(rp, true);

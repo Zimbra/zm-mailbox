@@ -40,12 +40,14 @@ import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.IndexSearcher;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SetMultimap;
 import com.google.common.io.Closeables;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
@@ -262,6 +264,38 @@ public final class MailboxIndex {
     }
 
     /**
+     * Returns true if any of the specified email addresses exists in contacts, otherwise false.
+     */
+    public boolean existsInContacts(Collection<InternetAddress> addrs) throws ServiceException {
+        StringBuilder query = new StringBuilder();
+        CharMatcher matcher = CharMatcher.is('"');
+        for (InternetAddress addr : addrs) {
+            if (!Strings.isNullOrEmpty(addr.getAddress())) {
+                if (query.length() > 0) {
+                    query.append(" || ");
+                }
+                query.append("to:\"").append(matcher.removeFrom(addr.getAddress())).append('"');
+            }
+        }
+        if (query.length() == 0) {
+            return false;
+        }
+        SearchParams params = new SearchParams();
+        params.setQueryString(query.toString());
+        params.setTypes(Collections.singleton(MailItem.Type.CONTACT));
+        params.setSortBy(SortBy.NONE);
+        params.setLimit(1);
+        params.setPrefetch(false);
+        params.setMode(SearchResultMode.IDS);
+        ZimbraQueryResults result = search(SoapProtocol.Soap12, new OperationContext(mailbox), params);
+        try {
+            return result.hasNext();
+        } finally {
+            Closeables.closeQuietly(result);
+        }
+    }
+
+    /**
      * Returns the maximum number of items to be batched in a single indexing pass. If a search comes in that requires
      * use of the index, all deferred unindexed items are immediately indexed regardless of batch size. If this number
      * is {@code 0}, all items are indexed immediately when they are added.
@@ -474,8 +508,6 @@ public final class MailboxIndex {
                 indexDeferredItems(EnumSet.noneOf(MailItem.Type.class), status, true);
                 ZimbraLog.index.info("Optimizing index");
                 optimize();
-                ZimbraLog.index.info("Rebuilding MAIL_ADDRESS table");
-                mailbox.rebuildMailAddressTable();
             } else { // partial re-index
                 indexLock.acquireUninterruptibly();
                 try {

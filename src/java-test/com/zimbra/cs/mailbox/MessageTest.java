@@ -29,7 +29,6 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.db.DbPool.DbConnection;
@@ -77,49 +76,6 @@ public final class MessageTest {
         String body = docs.get(0).toDocument().get(LuceneFields.L_CONTENT);
         Assert.assertEquals("\u65e5\u672c\u8a9e", subject);
         Assert.assertEquals("\u65e5\u672c\u8a9e", body.trim());
-    }
-
-    @Test
-    public void senderId() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        DeliveryOptions opt = new DeliveryOptions();
-        opt.setFolderId(Mailbox.ID_FOLDER_INBOX);
-        Message msg1 = mbox.addMessage(null, new ParsedMessage("From: test1@zimbra.com".getBytes(), false), opt, null);
-        Message msg2 = mbox.addMessage(null, new ParsedMessage("From: test2@zimbra.com".getBytes(), false), opt, null);
-        Message msg3 = mbox.addMessage(null, new ParsedMessage("From: test3@zimbra.com".getBytes(), false), opt, null);
-
-        DbConnection conn = DbPool.getConnection(mbox);
-        int senderId1 = DbUtil.executeQuery(conn,
-                "SELECT sender_id FROM mboxgroup1.mail_item WHERE mailbox_id = ? AND id = ?",
-                mbox.getId(), msg1.getId()).getInt(1);
-        int senderId2 = DbUtil.executeQuery(conn,
-                "SELECT sender_id FROM mboxgroup1.mail_item WHERE mailbox_id = ? AND id = ?",
-                mbox.getId(), msg2.getId()).getInt(1);
-        int senderId3 = DbUtil.executeQuery(conn,
-                "SELECT sender_id FROM mboxgroup1.mail_item WHERE mailbox_id = ? AND id = ?",
-                mbox.getId(), msg3.getId()).getInt(1);
-        Assert.assertEquals(DbMailAddress.getId(conn, mbox, "test1@zimbra.com"), senderId1);
-        Assert.assertEquals(DbMailAddress.getId(conn, mbox, "test2@zimbra.com"), senderId2);
-        Assert.assertEquals(DbMailAddress.getId(conn, mbox, "test3@zimbra.com"), senderId3);
-        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, senderId1));
-        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, senderId2));
-        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, senderId3));
-        conn.closeQuietly();
-    }
-
-    @Test
-    public void tooLongSender() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        DeliveryOptions opt = new DeliveryOptions();
-        opt.setFolderId(Mailbox.ID_FOLDER_INBOX);
-        Message msg = mbox.addMessage(null, new ParsedMessage(
-                ("From: " + Strings.repeat("x", 129) + "@zimbra.com").getBytes(), false), opt, null);
-
-        DbConnection conn = DbPool.getConnection(mbox);
-        Assert.assertTrue(DbUtil.executeQuery(conn,
-                "SELECT sender_id FROM mboxgroup1.mail_item WHERE mailbox_id = ? AND id = ?",
-                mbox.getId(), msg.getId()).isNull(1));
-        conn.closeQuietly();
     }
 
     @Test

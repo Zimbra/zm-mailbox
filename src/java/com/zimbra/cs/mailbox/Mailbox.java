@@ -82,7 +82,6 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.datasource.DataSourceManager;
-import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailItem.QueryParams;
 import com.zimbra.cs.db.DbMailbox;
@@ -268,7 +267,6 @@ public class Mailbox {
         Boolean imap = null;
         long size = NO_CHANGE;
         int itemId = NO_CHANGE;
-        int addressId = NO_CHANGE;
         int changeId = NO_CHANGE;
         int contacts = NO_CHANGE;
         int accessed = NO_CHANGE;
@@ -357,9 +355,7 @@ public class Mailbox {
         }
 
         void reset() {
-            if (conn != null) {
-                DbPool.quietClose(conn);
-            }
+            DbPool.quietClose(conn);
             active = false;
             conn = null;
             octxt = null;
@@ -368,7 +364,6 @@ public class Mailbox {
             size = NO_CHANGE;
             changeId = NO_CHANGE;
             itemId = NO_CHANGE;
-            addressId = NO_CHANGE;
             contacts = NO_CHANGE;
             accessed = NO_CHANGE;
             recent = NO_CHANGE;
@@ -408,7 +403,6 @@ public class Mailbox {
     private IMPersona persona;
     private MailboxVersion version;
     private volatile boolean open = false;
-    private int lastAddressId = -1; // lazily loaded by DbMailAddress.getLastId()
 
     protected Mailbox(MailboxData data) {
         mId = data.id;
@@ -830,18 +824,6 @@ public class Mailbox {
             currentChange.itemId = nextId;
         }
         return nextId;
-    }
-
-    int getNextAddressId() throws ServiceException {
-        if (currentChange.addressId == MailboxChange.NO_CHANGE) {
-            if (lastAddressId < 0) {
-                lastAddressId = DbMailAddress.getLastId(getOperationConnection(), this);
-            }
-            currentChange.addressId = lastAddressId + 1;
-        } else {
-            currentChange.addressId++;
-        }
-        return currentChange.addressId;
     }
 
     TargetConstraint getOperationTargetConstraint() {
@@ -5289,8 +5271,7 @@ public class Mailbox {
     }
 
     /**
-     * Resets all INDEX_ID and SENDER_ID in MAIL_ITEM table, delete all rows in MAIL_ADDRESS table, and reset the
-     * lastAddressId. The caller must hold the mailbox lock.
+     * Resets all INDEX_ID in MAIL_ITEM table. The caller must hold the mailbox lock.
      */
     void resetIndex() throws ServiceException {
         assert(lock.isLocked());
@@ -5299,9 +5280,6 @@ public class Mailbox {
         try {
             beginTransaction("resetIndex", null);
             DbMailItem.resetIndexId(getOperationConnection(), this);
-            DbMailItem.resetSenderId(getOperationConnection(), this);
-            DbMailAddress.delete(getOperationConnection(), this);
-            lastAddressId = 0;
             success = true;
         } finally {
             endTransaction(success);
@@ -6338,32 +6316,6 @@ public class Mailbox {
     }
 
     /**
-     * Returns true if any of the specified email addresses exists in contacts, otherwise false.
-     */
-    public boolean existsInContacts(Collection<InternetAddress> addrs) throws ServiceException {
-        if (addrs.isEmpty()) {
-            return false;
-        }
-        // normalize before DB query
-        Set<String> normalized = new HashSet<String>();
-        for (InternetAddress addr : addrs) {
-            if (Strings.isNullOrEmpty(addr.getAddress())) {
-                continue;
-            }
-            normalized.add(addr.getAddress().trim().toLowerCase());
-        }
-        if (normalized.isEmpty()) {
-            return false;
-        }
-        DbConnection conn = DbPool.getConnection(this);
-        try {
-            return !DbMailAddress.existsInContacts(conn, this, normalized).isEmpty();
-        } finally {
-            conn.closeQuietly();
-        }
-    }
-
-    /**
      * Creates new contacts in AUTO_CONTACTS folder. Email addresses that already exist in any contacts folder are
      * ignored.
      *
@@ -6376,48 +6328,26 @@ public class Mailbox {
         if (addrs.isEmpty()) {
             return Collections.emptyList();
         }
-        // normalize before DB query
-        Map<String, InternetAddress> norm2addr = new HashMap<String, InternetAddress>();
-        for (InternetAddress iaddr : addrs) {
-            if (Strings.isNullOrEmpty(iaddr.getAddress())) {
-                continue;
+        Set<InternetAddress> newAddrs = new HashSet<InternetAddress>();
+        for (InternetAddress addr : addrs) {
+            if (!Strings.isNullOrEmpty(addr.getAddress()) && !index.existsInContacts(Collections.singleton(addr))) {
+                newAddrs.add(addr);
             }
-            norm2addr.put(iaddr.getAddress().trim().toLowerCase(), iaddr);
         }
-        Set<String> exist;
-        DbConnection conn = DbPool.getConnection(this);
-        try {
-            exist = DbMailAddress.existsInContacts(conn, this, norm2addr.keySet());
-        } finally {
-            conn.closeQuietly();
-        }
-        norm2addr.keySet().removeAll(exist);
-        if (norm2addr.isEmpty()) {
+        if (newAddrs.isEmpty()) {
             return Collections.emptyList();
         }
-
-        List<Contact> result = new ArrayList<Contact>(exist.size());
-        for (InternetAddress iaddr : norm2addr.values()) {
-            ZimbraLog.mailbox.debug("Auto-adding new contact addr=%s", iaddr);
+        List<Contact> result = new ArrayList<Contact>(newAddrs.size());
+        for (InternetAddress addr : newAddrs) {
+            ZimbraLog.mailbox.debug("Auto-adding new contact addr=%s", addr);
             try {
-                result.add(createContact(octxt, new ParsedContact(new ParsedAddress(iaddr).getAttributes()),
+                result.add(createContact(octxt, new ParsedContact(new ParsedAddress(addr).getAttributes()),
                         Mailbox.ID_FOLDER_AUTO_CONTACTS, null));
             } catch (ServiceException e) {
-                ZimbraLog.mailbox.warn("Failed to auto-add contact addr=%s", iaddr, e);
+                ZimbraLog.mailbox.warn("Failed to auto-add contact addr=%s", addr, e);
             }
         }
         return result;
-    }
-
-    void rebuildMailAddressTable() throws ServiceException {
-        boolean success = false;
-        try {
-            beginTransaction("DbMailAddress.rebuild", null);
-            currentChange.addressId = DbMailAddress.rebuild(getOperationConnection(), this, lastAddressId);
-            success = true;
-        } finally {
-            endTransaction(success);
-        }
     }
 
     public Folder createFolder(OperationContext octxt, String name, int parentId, MailItem.Type defaultView, int flags,
@@ -7234,11 +7164,6 @@ public class Mailbox {
                 }
             }
 
-            if (LC.purge_mail_address_table_enabled.booleanValue()) {
-                int numPurgedMailAddrs = DbMailAddress.purge(getOperationConnection(), this);
-                ZimbraLog.purge.debug("Purged %d mail addresses", numPurgedMailAddrs);
-            }
-
             success = true;
             ZimbraLog.purge.debug("purgedAll=%b", purgedAll);
             return purgedAll;
@@ -7984,9 +7909,6 @@ public class Mailbox {
             }
             if (change.itemId != MailboxChange.NO_CHANGE) {
                 mData.lastItemId = change.itemId;
-            }
-            if (change.addressId != MailboxChange.NO_CHANGE) {
-                lastAddressId = change.addressId;
             }
             if (change.contacts != MailboxChange.NO_CHANGE) {
                 mData.contacts = change.contacts;

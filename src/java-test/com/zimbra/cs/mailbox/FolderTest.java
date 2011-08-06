@@ -15,7 +15,6 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -23,14 +22,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.db.DbMailAddress;
-import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbPool.DbConnection;
-import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
 
 /**
@@ -133,75 +127,6 @@ public final class FolderTest {
         // hard delete message
         mbox.delete(null, msgId, MailItem.Type.MESSAGE);
         modseq = checkMODSEQ("hard delete", mbox, folderId, modseq);
-    }
-
-    @Test
-    public void updateAddressCountOnSoftDelete() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Folder folder = mbox.createFolder(null, "/Contacts/test", (byte) 0, MailItem.Type.CONTACT);
-        Map<String, Object> fields = new HashMap<String, Object>();
-        fields.put(ContactConstants.A_email, "test1@zimbra.com");
-        mbox.createContact(null, new ParsedContact(fields), folder.getId(), null);
-        mbox.createContact(null, new ParsedContact(fields), folder.getId(), null);
-        mbox.createContact(null, new ParsedContact(fields), folder.getId(), null);
-
-        DbConnection conn = DbPool.getConnection(mbox);
-        Assert.assertEquals(3, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
-        mbox.move(null, folder.getId(), MailItem.Type.FOLDER, Mailbox.ID_FOLDER_TRASH); // soft-delete
-        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
-        mbox.move(null, folder.getId(), MailItem.Type.FOLDER, Mailbox.ID_FOLDER_CONTACTS); // soft-recover
-        Assert.assertEquals(3, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
-        conn.closeQuietly();
-    }
-
-    @Test
-    public void updateAddressCountOnHardDelete() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Folder folder1 = mbox.createFolder(null, "/Contacts/test1", (byte) 0, MailItem.Type.CONTACT);
-        Folder folder2 = mbox.createFolder(null, "/Contacts/test2", (byte) 0, MailItem.Type.CONTACT);
-        Map<String, Object> fields = new HashMap<String, Object>();
-        fields.put(ContactConstants.A_email, "test1@zimbra.com");
-        mbox.createContact(null, new ParsedContact(fields), folder1.getId(), null);
-        mbox.createContact(null, new ParsedContact(fields), folder1.getId(), null);
-        mbox.createContact(null, new ParsedContact(fields), folder1.getId(), null);
-        mbox.createContact(null, new ParsedContact(fields), folder2.getId(), null);
-        mbox.createContact(null, new ParsedContact(fields), folder2.getId(), null);
-        mbox.createContact(null, new ParsedContact(fields), folder2.getId(), null);
-
-        DbConnection conn = DbPool.getConnection(mbox);
-        Assert.assertEquals(6, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
-        mbox.delete(null, folder1.getId(), MailItem.Type.FOLDER); // hard-delete from non Trash
-        Assert.assertEquals(3, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
-        mbox.move(null, folder2.getId(), MailItem.Type.FOLDER, Mailbox.ID_FOLDER_TRASH); // soft-delete
-        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
-        mbox.delete(null, folder2.getId(), MailItem.Type.FOLDER); // hard-delete from Trash
-        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
-        conn.closeQuietly();
-    }
-
-    @Test
-    public void updateAddressCountOnEmptyFolder() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Folder folder1 = mbox.createFolder(null, "/Contacts/test1", (byte) 0, MailItem.Type.CONTACT);
-        Folder folder2 = mbox.createFolder(null, "/Contacts/test2", (byte) 0, MailItem.Type.CONTACT);
-        Map<String, Object> fields = new HashMap<String, Object>();
-        fields.put(ContactConstants.A_email, "test1@zimbra.com");
-        mbox.createContact(null, new ParsedContact(fields), folder1.getId(), null);
-        mbox.createContact(null, new ParsedContact(fields), folder1.getId(), null);
-        mbox.createContact(null, new ParsedContact(fields), folder1.getId(), null);
-        mbox.createContact(null, new ParsedContact(fields), folder2.getId(), null);
-        mbox.createContact(null, new ParsedContact(fields), folder2.getId(), null);
-        mbox.createContact(null, new ParsedContact(fields), folder2.getId(), null);
-
-        DbConnection conn = DbPool.getConnection(mbox);
-        Assert.assertEquals(6, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
-        mbox.emptyFolder(null, folder1.getId(), true); // empty the folder
-        Assert.assertEquals(3, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
-        mbox.move(null, folder2.getId(), MailItem.Type.FOLDER, Mailbox.ID_FOLDER_TRASH); // soft-delete
-        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
-        mbox.emptyFolder(null, Mailbox.ID_FOLDER_TRASH, true); // empty Trash
-        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
-        conn.closeQuietly();
     }
 
     @Test

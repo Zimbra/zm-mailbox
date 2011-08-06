@@ -153,9 +153,9 @@ public class DbMailItem {
             String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
             stmt = conn.prepareStatement("INSERT INTO " + getMailItemTableName(mailbox) + "(" + mailbox_id +
                     " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest, unread," +
-                    " flags, tags, sender, sender_id, recipients, subject, name, metadata, mod_metadata, change_date," +
+                    " flags, tags, sender, recipients, subject, name, metadata, mod_metadata, change_date," +
                     " mod_content) VALUES (" + MAILBOX_ID_VALUE +
-                    "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             int pos = 1;
             pos = setMailboxId(stmt, mailbox, pos);
             stmt.setInt(pos++, data.id);
@@ -198,11 +198,6 @@ public class DbMailItem {
             stmt.setInt(pos++, data.getFlags());
             stmt.setLong(pos++, data.tags);
             stmt.setString(pos++, sender);
-            if (senderId >= 0) {
-                stmt.setInt(pos++, senderId);
-            } else {
-                stmt.setNull(pos++, Types.INTEGER);
-            }
             stmt.setString(pos++, recipients);
             stmt.setString(pos++, data.getSubject());
             stmt.setString(pos++, data.name);
@@ -778,20 +773,6 @@ public class DbMailItem {
         }
     }
 
-    public static void resetSenderId(DbConnection conn, Mailbox mbox) throws ServiceException {
-        PreparedStatement stmt = null;
-        try {
-            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox) +
-                    " SET sender_id = NULL WHERE " + IN_THIS_MAILBOX_AND + "sender_id IS NOT NULL");
-            setMailboxId(stmt, mbox, 1);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("Failed to reset sender_id", e);
-        } finally {
-            conn.closeQuietly(stmt);
-        }
-    }
-
     public static void setParent(MailItem child, MailItem parent) throws ServiceException {
         setParent(new MailItem[] { child }, parent);
     }
@@ -993,7 +974,7 @@ public class DbMailItem {
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                     " SET type = ?, imap_id = ?, index_id = ?, parent_id = ?, date = ?, size = ?, flags = ?, " +
-                    "blob_digest = ?, sender = ?, sender_id = ?, recipients = ?, subject = ?, name = ?, " +
+                    "blob_digest = ?, sender = ?, recipients = ?, subject = ?, name = ?, " +
                     "metadata = ?, mod_metadata = ?, change_date = ?, mod_content = ?, volume_id = ? WHERE " +
                     IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
@@ -1019,11 +1000,6 @@ public class DbMailItem {
             stmt.setInt(pos++, item.getInternalFlagBitmask());
             stmt.setString(pos++, item.getDigest());
             stmt.setString(pos++, item.getSortSender());
-            if (senderId >= 0) {
-                stmt.setInt(pos++, senderId);
-            } else {
-                stmt.setNull(pos++, Types.INTEGER);
-            }
             stmt.setString(pos++, item.getSortRecipients());
             stmt.setString(pos++, item.getSortSubject());
             stmt.setString(pos++, name);
@@ -2750,12 +2726,12 @@ public class DbMailItem {
         if (folders == null) {
             folders = Collections.emptyList();
         }
-        
+
         try {
             StringBuilder constraint = new StringBuilder();
             String dateColumn = (useChangeDate ? "change_date" : "date");
             Set<Long> tagsets = Collections.emptySet();
-            
+
             if (globalMessages) {
                 constraint.append(dateColumn).append(" < ? AND ").append(typeIn(MailItem.Type.MESSAGE));
             } else {
@@ -3608,7 +3584,7 @@ public class DbMailItem {
             }
             return this;
         }
-        
+
         public Set<MailItem.Type> getIncludedTypes() {
             return Collections.unmodifiableSet(includedTypes);
         }
@@ -4201,7 +4177,6 @@ public class DbMailItem {
     private final Mailbox mailbox;
     // The following data are only used for INSERT/UPDATE, not loaded by SELECT.
     private String sender;
-    private int senderId = -1;
     private String recipients;
 
     /**
@@ -4215,11 +4190,6 @@ public class DbMailItem {
         if (!Strings.isNullOrEmpty(value)) {
             sender = DbMailItem.normalize(value, DbMailItem.MAX_SENDER_LENGTH);
         }
-        return this;
-    }
-
-    public DbMailItem setSenderId(int value) {
-        senderId = value;
         return this;
     }
 

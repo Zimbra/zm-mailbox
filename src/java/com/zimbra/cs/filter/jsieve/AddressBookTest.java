@@ -83,7 +83,7 @@ public final class AddressBookTest extends AbstractTest {
             }
         }
         try {
-            return mbox.existsInContacts(addrs);
+            return mbox.index.existsInContacts(addrs);
         } catch (ServiceException e) {
             ZimbraLog.filter.error("Failed to lookup contacts", e);
         }

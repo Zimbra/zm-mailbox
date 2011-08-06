@@ -17,17 +17,6 @@
 
 CREATE SCHEMA *{DATABASE_NAME};
 
-CREATE TABLE *{DATABASE_NAME}.mail_address (
-   mailbox_id    INTEGER NOT NULL,
-   id            INTEGER NOT NULL,
-   address       VARCHAR(128) NOT NULL,
-   contact_count INTEGER NOT NULL,
-
-   CONSTRAINT pk_mail_address PRIMARY KEY (mailbox_id, id),
-   CONSTRAINT i_mail_address_address UNIQUE (mailbox_id, address),
-   CONSTRAINT fk_mail_address_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id) ON DELETE CASCADE
-);
-
 CREATE TABLE *{DATABASE_NAME}.mail_item (
    mailbox_id    INTEGER NOT NULL,
    id            INTEGER NOT NULL,
@@ -44,7 +33,6 @@ CREATE TABLE *{DATABASE_NAME}.mail_item (
    flags         INTEGER DEFAULT 0 NOT NULL,
    tags          BIGINT DEFAULT 0 NOT NULL,
    sender        VARCHAR(128),
-   sender_id     INTEGER DEFAULT NULL,
    recipients    VARCHAR(128),
    subject       VARCHAR(255),
    name          VARCHAR(128),
@@ -58,7 +46,6 @@ CREATE TABLE *{DATABASE_NAME}.mail_item (
    CONSTRAINT fk_mail_item_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id),
    CONSTRAINT fk_mail_item_parent_id FOREIGN KEY (mailbox_id, parent_id) REFERENCES mail_item(mailbox_id, id),
    CONSTRAINT fk_mail_item_folder_id FOREIGN KEY (mailbox_id, folder_id) REFERENCES mail_item(mailbox_id, id),
-   CONSTRAINT fk_mail_item_sender_id FOREIGN KEY (mailbox_id, sender_id) REFERENCES mail_address(mailbox_id, id),
    CONSTRAINT fk_mail_item_volume_id FOREIGN KEY (volume_id) REFERENCES zimbra.volume(id)
 );
 

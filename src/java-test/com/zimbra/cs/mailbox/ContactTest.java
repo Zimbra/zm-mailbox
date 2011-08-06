@@ -30,7 +30,6 @@ import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.db.DbPool.DbConnection;
@@ -53,60 +52,6 @@ public final class ContactTest {
     @Before
     public void setUp() throws Exception {
         MailboxTestUtil.clearData();
-    }
-
-    @Test
-    public void updateAddressCount() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Map<String, Object> fields = new HashMap<String, Object>();
-        fields.put(ContactConstants.A_email, "test1@zimbra.com");
-        fields.put(ContactConstants.A_workEmail1, "test2@zimbra.com");
-        mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
-
-        DbConnection conn = DbPool.getConnection(mbox);
-        Assert.assertEquals(1, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
-        Assert.assertEquals(1, DbMailAddress.getCount(conn, mbox, "test2@zimbra.com"));
-        fields.clear();
-        fields.put(ContactConstants.A_email, "test1@zimbra.com");
-        fields.put(ContactConstants.A_workEmail1, "test1@zimbra.com");
-        mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
-        Assert.assertEquals(2, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
-        conn.closeQuietly();
-    }
-
-    @Test
-    public void updateAddressCountOnSoftDelete() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Map<String, Object> fields = new HashMap<String, Object>();
-        fields.put(ContactConstants.A_email, "test1@zimbra.com");
-        Contact contact = mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
-
-        DbConnection conn = DbPool.getConnection(mbox);
-        Assert.assertEquals(1, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
-        mbox.move(null, contact.getId(), MailItem.Type.CONTACT, Mailbox.ID_FOLDER_TRASH); // soft-delete
-        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
-        mbox.move(null, contact.getId(), MailItem.Type.CONTACT, Mailbox.ID_FOLDER_INBOX); // soft-recover
-        Assert.assertEquals(1, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
-        conn.closeQuietly();
-    }
-
-    @Test
-    public void updateAddressCountOnHardDelete() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Map<String, Object> fields = new HashMap<String, Object>();
-        fields.put(ContactConstants.A_email, "test1@zimbra.com");
-        Contact contact1 = mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
-        Contact contact2 = mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
-
-        DbConnection conn = DbPool.getConnection(mbox);
-        Assert.assertEquals(2, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
-        mbox.delete(null, contact1.getId(), MailItem.Type.CONTACT); // hard-delete from Inbox
-        Assert.assertEquals(1, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
-        mbox.move(null, contact2.getId(), MailItem.Type.CONTACT, Mailbox.ID_FOLDER_TRASH);
-        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
-        mbox.delete(null, contact2.getId(), MailItem.Type.CONTACT); // hard-delete from Trash
-        Assert.assertEquals(0, DbMailAddress.getCount(conn, mbox, "test1@zimbra.com"));
-        conn.closeQuietly();
     }
 
     @Test
@@ -139,10 +84,11 @@ public final class ContactTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         mbox.createContact(null, new ParsedContact(Collections.singletonMap(
                 ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+        MailboxTestUtil.index(mbox);
 
-        Assert.assertTrue(mbox.existsInContacts(Arrays.asList(new InternetAddress("Test <test1@zimbra.com>"),
+        Assert.assertTrue(mbox.index.existsInContacts(Arrays.asList(new InternetAddress("Test <test1@zimbra.com>"),
                 new InternetAddress("Test <test2@zimbra.com>"))));
-        Assert.assertFalse(mbox.existsInContacts(Arrays.asList(new InternetAddress("Test <test2@zimbra.com>"),
+        Assert.assertFalse(mbox.index.existsInContacts(Arrays.asList(new InternetAddress("Test <test2@zimbra.com>"),
                 new InternetAddress("Test <test3@zimbra.com>"))));
     }
 

@@ -157,13 +157,9 @@ public final class DbSearch {
     public static int countResults(DbConnection conn, DbSearchConstraints node, Mailbox mbox, boolean inDumpster)
             throws ServiceException {
         // Assemble the search query
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM ");
-        sql.append(DbMailItem.getMailItemTableName(mbox, "mi", inDumpster));
-        if (node.toLeaf().fromContact != null) {
-            sql.append(", ").append(DbMailAddress.getTableName(mbox)).append(" AS ma");
-        }
-
-        sql.append(" WHERE ").append(DbMailItem.IN_THIS_MAILBOX_AND);
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM ")
+            .append(DbMailItem.getMailItemTableName(mbox, "mi", inDumpster))
+            .append(" WHERE ").append(DbMailItem.IN_THIS_MAILBOX_AND);
         int num = DebugConfig.disableMailboxGroups ? 0 : 1;
         num += encodeConstraint(sql, conn, mbox, node, null, false);
 
@@ -247,16 +243,12 @@ public final class DbSearch {
         }
         addSortColumn(out, sort);
 
-        // FROM mail_item AS mi FORCE INDEX (...) [, mail_address AS ma] [, appointment AS ap]
+        // FROM mail_item AS mi FORCE INDEX (...) [, appointment AS ap]
         out.append(" FROM ").append(DbMailItem.getMailItemTableName(mbox, "mi", inDumpster));
         out.append(getForceIndexClause(node, sort, validLIMIT));
         if (includeCalTable) {
             out.append(", ").append(DbMailItem.getCalendarItemTableName(mbox, "ap", inDumpster));
         }
-        if (node instanceof DbSearchConstraints.Leaf && node.toLeaf().fromContact != null) {
-            out.append(", ").append(DbMailAddress.getTableName(mbox)).append(" AS ma");
-        }
-
         // WHERE mi.mailboxId=? [AND ap.mailboxId=? AND mi.id = ap.id ] AND "
         out.append(" WHERE ");
         //TODO don't put a bare mailbox_id, but use a parameter
@@ -385,14 +377,6 @@ public final class DbSearch {
                 out.append(" AND mi.index_id is NOT NULL ");
             } else {
                 out.append(" AND mi.index_id is NULL ");
-            }
-        }
-
-        if (constraint.fromContact != null) {
-            if (constraint.fromContact) {
-                out.append(" AND mi.sender_id = ma.id AND ma.contact_count > 0");
-            } else {
-                out.append(" AND mi.sender_id = ma.id AND ma.contact_count = 0");
             }
         }
 

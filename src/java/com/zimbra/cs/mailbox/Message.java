@@ -48,7 +48,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
-import com.zimbra.cs.db.DbMailAddress;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
@@ -573,7 +572,6 @@ public class Message extends MailItem {
                               data.id, pm.getMessageID(), data.parentId, folder.getId(), folder.getName());
         new DbMailItem(mbox)
             .setSender(pm.getParsedSender().getSortString())
-            .setSenderId(saveSender(mbox, sender))
             .setRecipients(ParsedAddress.getSortString(pm.getParsedRecipients()))
             .create(data);
         Message msg = fact.create(mbox, data);
@@ -589,21 +587,6 @@ public class Message extends MailItem {
 
         msg.finishCreation(conv);
         return msg;
-    }
-
-    private static int saveSender(Mailbox mbox, String sender) throws ServiceException {
-        String addr;
-        try {
-            addr = DbMailAddress.normalizeAddress(sender);
-        } catch (IllegalArgumentException e) {
-            ZimbraLog.mailbox.warn("%s sender=%s", e.getMessage(), sender);
-            return -1; // skip
-        }
-        int senderId = DbMailAddress.getId(mbox.getOperationConnection(), mbox, addr);
-        if (senderId < 0) {
-            senderId = new DbMailAddress(mbox).setId(mbox.getNextAddressId()).setAddress(addr).create();
-        }
-        return senderId;
     }
 
     /**
@@ -1322,8 +1305,8 @@ public class Message extends MailItem {
         }
 
         // rewrite the DB row to reflect our new view
-        saveData(new DbMailItem(mMailbox).setSenderId(saveSender(mMailbox, pm.getSenderEmail())), encodeMetadata(
-                mRGBColor, mVersion, mExtendedData, pm, draftInfo, calendarItemInfos, calendarIntendedFor));
+        saveData(new DbMailItem(mMailbox), encodeMetadata(mRGBColor, mVersion, mExtendedData, pm, draftInfo,
+                calendarItemInfos, calendarIntendedFor));
 
         if (parent instanceof VirtualConversation) {
             ((VirtualConversation) parent).recalculateMetadata(Collections.singletonList(this));

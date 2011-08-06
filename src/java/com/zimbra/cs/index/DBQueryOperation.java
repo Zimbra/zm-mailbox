@@ -322,12 +322,6 @@ public class DBQueryOperation extends QueryOperation {
         getTopLeafConstraint().addSenderRange(min, minInclusive, max, maxIncluisve, bool);
     }
 
-    public void setFromContact(boolean bool) {
-        allResultsQuery = false;
-        queryTarget = QueryTarget.LOCAL;
-        getTopLeafConstraint().setFromContact(bool);
-    }
-
     public void addConvId(Mailbox mbox, ItemId convId, boolean truth) {
         allResultsQuery = false;
         if (convId.belongsTo(mbox)) { // LOCAL

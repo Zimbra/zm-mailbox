@@ -188,11 +188,5 @@ public abstract class BuiltInQuery {
                         EnumSet.of(AddrQuery.Address.TO, AddrQuery.Address.FROM, AddrQuery.Address.CC));
             }
         })
-        .put("fromcontact", new BuiltInQuery() {
-            @Override
-            Query create(Mailbox mbox, Analyzer analyzer) {
-                return new FromContactQuery();
-            }
-        })
         .build();
 }
