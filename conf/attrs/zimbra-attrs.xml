@@ -5722,7 +5722,7 @@ TODO: delete them permerntly from here
 </attr>
 
 <attr id="1212" name="zimbraMailSSLProxyClientCertPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" requiresRestart="nginxproxy" since="7.1.1">
-  <globalConfigValue>0</globalConfigValue>
+  <globalConfigValue>3443</globalConfigValue>
   <desc>SSL client certificate port for HTTP proxy</desc>
 </attr>
 
