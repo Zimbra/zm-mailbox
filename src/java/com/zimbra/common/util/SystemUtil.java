@@ -64,4 +64,8 @@ public class SystemUtil {
         }
         return null;
     }
+    
+    public static String getProductVersion() {
+        return SystemUtil.class.getPackage().getImplementationVersion();
+    }
 }
