@@ -54,4 +54,11 @@ public final class AttachmentQueryTest {
         Assert.assertEquals("(attachment:any)", ((LuceneQueryOperation) query.compile(mbox, true)).toQueryString());
     }
 
+    @Test
+    public void notAny() throws Exception {
+        AttachmentQuery query = new AttachmentQuery("any");
+        query.setModifier(Query.Modifier.MINUS);
+        Assert.assertEquals("Q(attachment:none)", query.toString());
+    }
+
 }

@@ -100,7 +100,7 @@ public abstract class Query {
         return modifier;
     }
 
-    public final void setModifier(Modifier mod) {
+    public void setModifier(Modifier mod) {
         modifier = mod;
     }
 

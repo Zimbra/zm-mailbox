@@ -32,7 +32,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 abstract class LuceneQuery extends Query {
     private final String luceneField;
     private final String queryField;
-    private final String term;
+    String term;
 
     static String lookup(Map<String, String> map, String key) {
         String toRet = map.get(key);

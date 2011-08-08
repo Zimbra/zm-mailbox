@@ -59,4 +59,14 @@ public final class AttachmentQuery extends LuceneQuery {
         super("attachment:", LuceneFields.L_ATTACHMENTS, lookup(MAP, what));
     }
 
+    @Override
+    public final void setModifier(Modifier mod) {
+        // translate not "any" to "none"
+        if (mod == Modifier.MINUS && "any".equals(term)) {
+            term = "none";
+            return;
+        }
+        super.setModifier(mod);
+    }
+
 }
