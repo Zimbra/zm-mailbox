@@ -35,6 +35,7 @@ public final class HeaderConstants {
     public static final String A_PROXIED    = "proxy";
     public static final String E_NOTIFY     = "notify";
     public static final String A_NOTIFY     = "notify";
+    public static final String E_REFRESH    = "refresh";
     public static final String A_SEQNO      = "seq";
     public static final String E_CHANGE     = "change";
     public static final String A_CHANGE_ID  = "token";
