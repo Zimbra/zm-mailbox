@@ -57,3 +57,43 @@ Gotchas
 .   You cannot use basic types like "int" for optional attributes/variables.
     This is because need something which can have a null value to represent
     absence.
+
+Steps to add a new namespace
+----------------------------
+1.  Choose a new sub-package name {PKG} and a service name {SVC}
+    e.g. for AppBlast, chose {PKG}="appblast" and {SVC}=AppblastService
+2.  Create new directories :
+        ZimbraSoap/src/java/com/zimbra/soap/{PKG}/message
+        ZimbraSoap/src/java/com/zimbra/soap/{PKG}/type
+3.  Create new files:
+        ZimbraSoap/src/java/com/zimbra/soap/{PKG}/message/package-info.java
+        ZimbraSoap/src/java/com/zimbra/soap/{PKG}/type/package-info.java
+    These can be based on similar files for another namespace.  Need to update
+    namespace/package etc info in these files.
+4.  Update ZimbraSoap/src/java/com/zimbra/soap/util/WsdlGenerator.java
+    main method needs something like :
+        createWsdl("AppblastService.wsdl",
+                AppBlastConstants.NAMESPACE_STR, "AppblastService",
+                "http://localhost:7070/service/soap",
+                requestLists.get("com.zimbra.soap.appblast.message")
+5.  Create binding files for use with wsdl-test API :
+    ZimbraSoap/src/wsdl-test/wsdlBindings-{PKG}.xml
+        Base this on a similar file for another namespace but update the
+        <jaxws:package name to be zimbra.generated.{PKG}client.ws.service
+    ZimbraSoap/src/wsdl-test/xsdBindings-{PKG}.xml
+        Base this on a similar file for another namespace
+        Make sure there is a jaxb:bindings section for each xsd file that
+        will be imported in the .wsdl file for this namespace
+        For each of those, make sure the "schemaLocation", "targetNamespace" 
+        is correct.
+        For the new namespace, make sure the jaxb:package name is
+            zimbra.generated.{PKG}client.{PKG}
+        Make sure app of the jaxb:package names in the file start with:
+            zimbra.generated.{PKG}client.
+6.  Update build.xml to add a target similar to :
+      <target name="{PKG}-service-client-support" depends="jar">
+          <service-client-support svcname="{SVC}" pathelem="{PKG}"/>
+      </target>
+7.  Update build.xml so that wsdl-client-support depends on the target created
+    above.
+

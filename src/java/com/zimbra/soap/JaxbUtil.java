@@ -376,7 +376,6 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.WaitSetResponse.class,
             com.zimbra.soap.mail.message.WikiActionRequest.class,
             com.zimbra.soap.mail.message.WikiActionResponse.class,
-            com.zimbra.soap.mail.type.RetentionPolicy.class,
 
             // zimbraAdmin
             com.zimbra.soap.admin.message.AbortHsmRequest.class,
@@ -595,6 +594,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetDevicesCountSinceLastUsedResponse.class,
             com.zimbra.soap.admin.message.GetDevicesCountUsedTodayRequest.class,
             com.zimbra.soap.admin.message.GetDevicesCountUsedTodayResponse.class,
+            com.zimbra.soap.admin.message.GetDevicesRequest.class,
+            com.zimbra.soap.admin.message.GetDevicesResponse.class,
             com.zimbra.soap.admin.message.GetDistributionListMembershipRequest.class,
             com.zimbra.soap.admin.message.GetDistributionListMembershipResponse.class,
             com.zimbra.soap.admin.message.GetDistributionListRequest.class,
@@ -777,6 +778,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.SetPasswordResponse.class,
             com.zimbra.soap.admin.message.UndeployZimletRequest.class,
             com.zimbra.soap.admin.message.UndeployZimletResponse.class,
+            com.zimbra.soap.admin.message.UpdateDeviceStatusRequest.class,
+            com.zimbra.soap.admin.message.UpdateDeviceStatusResponse.class,
             com.zimbra.soap.admin.message.VerifyIndexRequest.class,
             com.zimbra.soap.admin.message.VerifyIndexResponse.class,
             com.zimbra.soap.admin.message.VersionCheckRequest.class,
@@ -826,7 +829,11 @@ public final class JaxbUtil {
             com.zimbra.soap.sync.message.ResumeDeviceRequest.class,
             com.zimbra.soap.sync.message.ResumeDeviceResponse.class,
             com.zimbra.soap.sync.message.SuspendDeviceRequest.class,
-            com.zimbra.soap.sync.message.SuspendDeviceResponse.class
+            com.zimbra.soap.sync.message.SuspendDeviceResponse.class,
+
+            // zimbraAppblast
+            com.zimbra.soap.appblast.message.EditDocumentRequest.class,
+            com.zimbra.soap.appblast.message.EditDocumentResponse.class
         };
 
         try {

@@ -35,4 +35,9 @@ public enum AccountBy {
                    Arrays.asList(AccountBy.values()), null);
         }
     }
+
+    public com.zimbra.common.account.Key.AccountBy toKeyDomainBy()
+    throws ServiceException {
+        return com.zimbra.common.account.Key.AccountBy.fromString(this.name());
+    }
 }

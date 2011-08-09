@@ -42,6 +42,9 @@ public class TimeZoneInfo {
         this.id = id;
     }
 
+    public static TimeZoneInfo fromIdAndDisplayName(String id, String displayName) {
+        return new TimeZoneInfo(id, displayName);
+    }
     public String getDisplayName() { return displayName; }
     public String getId() { return id; }
 }

@@ -61,12 +61,14 @@ import com.zimbra.soap.mail.type.ActionSelector;
 import com.zimbra.soap.mail.type.ContactActionSelector;
 import com.zimbra.soap.mail.type.FolderActionSelector;
 import com.zimbra.soap.mail.type.NoteActionSelector;
+import com.zimbra.soap.mail.type.RetentionPolicy;
 import com.zimbra.soap.type.AttributeName;
 import com.zimbra.soap.type.Id;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.JSONElement;
+import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
 
 /**
@@ -501,6 +503,20 @@ public class JaxbToElementTest {
         } else {
             Assert.fail("Failed to get back a FolderActionSelector");
         }
+    }
+
+    @Test
+    public void standalonElementToJaxbTest() throws Exception {
+        InputStream is = getClass().getResourceAsStream("retentionPolicy.xml");
+        Element elem = Element.parseXML(is);
+        String eXml = elem.toString();
+        LOG.info("retentionPolicy.xml from Element:\n" + eXml);
+        RetentionPolicy rp = JaxbUtil.elementToJaxb(elem, RetentionPolicy.class);
+        Assert.assertNotNull("elementToJaxb RetentionPolicy returned object", rp);
+        Element elem2 = JaxbUtil.jaxbToElement(rp, XMLElement.mFactory);
+        String eXml2 = elem2.toString();
+        LOG.info("Round tripped retentionPolicy.xml from Element:\n" + eXml2);
+        Assert.assertEquals("elementToJaxb RetentionPolicy Xml after", eXml, eXml2);
     }
 
     @Test

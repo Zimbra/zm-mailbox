@@ -15,17 +15,27 @@
 
 package com.zimbra.soap.admin.type;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.util.CsvReader;
+import com.zimbra.soap.type.ZeroOrOne;
 
 /**
  * Used by {@CountAccountResponse}
  */
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class ServiceStatus {
 
     @XmlAttribute(name=AdminConstants.A_SERVER, required=true)
@@ -33,27 +43,98 @@ public class ServiceStatus {
     @XmlAttribute(name=AdminConstants.A_SERVICE, required=true)
     private final String service;
     @XmlAttribute(name=AdminConstants.A_T, required=true)
-    private final String time;
+    // seconds since epoch
+    private final long time;
+    // "1" or "0"
     @XmlValue
-    private final String status;
+    private final ZeroOrOne status;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private ServiceStatus() {
-        this(null, null, null, null);
+        this(null, null, -1, null);
     }
 
-    public ServiceStatus(String server, String service, String time, String status) {
+    private ServiceStatus(String server, String service, long time, ZeroOrOne status) {
         this.server = server;
         this.service = service;
         this.time = time;
         this.status = status;
     }
 
+    public static ServiceStatus fromServerServiceTimeStatus(
+                String server, String service, long time, ZeroOrOne status) {
+        return new ServiceStatus(server, service, time, status);
+    }
+
     public String getServer() { return server; }
     public String getService() { return service; }
-    public String getTime() { return time; }
-    public String getStatus() { return status; }
+    public long getTime() { return time; }
+    public ZeroOrOne getStatus() { return status; }
+
+    @Override
+    public int hashCode() {
+        return server.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        boolean eq = false;
+        if (other instanceof ServiceStatus) {
+            ServiceStatus o = (ServiceStatus) other;
+            eq = server.equals(o.server) && service.equals(o.service);
+        }
+        return eq;
+    }
+
+    public static List<ServiceStatus> parseData(Map<String,CsvReader> data)
+    throws IOException {
+        List<ServiceStatus> results = Lists.newArrayList();
+        for (String host : data.keySet()) {
+            CsvReader r = data.get(host);
+            List<String> columns = new ArrayList<String>(
+                    Arrays.asList(r.getColNames()));
+            columns.remove("timestamp");
+            Map<String,String> row = Maps.newHashMap();
+            String lastTS = null;
+            
+            while (r.hasNext()) {
+                String ts = r.getValue("timestamp");
+                boolean rowHasData = false;
+                for (String column : columns) {
+                    String value = r.getValue(column);
+                    rowHasData = rowHasData || value != null;
+                }
+                if (rowHasData) {
+                    lastTS = ts;
+                    row.clear();
+                    for (String column : columns) {
+                        String value = r.getValue(column);
+                        if (value != null)
+                            row.put(column, value);
+                    }
+                }
+            }
+            if (lastTS != null) {
+                long timeStamp = Long.parseLong(lastTS);
+                for (String service : row.keySet()) {
+                    String status = row.get(service);
+                    if (status != null) {
+                        status = status.trim();
+                        // for some reason, QA is getting an empty string
+                        if ("".equals(status)) continue;
+                        ServiceStatus s = fromServerServiceTimeStatus(host,
+                                service, timeStamp,
+                                // 0.8 check because of rrd rounding,
+                                // happens when a service has just started
+                                ZeroOrOne.fromBool(Float.parseFloat(status) > 0.8));
+                        results.add(s);
+                    }
+                }
+            }
+        }
+        return results;
+    }
 }

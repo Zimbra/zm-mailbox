@@ -38,6 +38,11 @@ public class DomainSelector {
                 throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
             }
         }
+
+        public com.zimbra.common.account.Key.DomainBy toKeyDomainBy()
+        throws ServiceException {
+            return com.zimbra.common.account.Key.DomainBy.fromString(this.name());
+        }
     }
 
     @XmlValue private final String key;
