@@ -41,7 +41,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 administrator 20110708-2131 */
+    /* build: 7.0.0_BETA1_1111 pshao 20110809-1612 */
 
     /**
      * RFC2256: descriptive information
@@ -9887,6 +9887,185 @@ public class ZAttrConfig extends Entry {
     }
 
     /**
+     * Object classes added on the global config entry. Unlike other
+     * zimbra***ExtraObjectClass attributes, object classes specified in this
+     * attributes will not be automatically added to the global config entry.
+     * Extra object class on the global config entry must be added using
+     * &quot;zmprov mcf +objectClass {object class}&quot;, then recorded in
+     * this attributes.
+     *
+     * @return zimbraGlobalConfigExtraObjectClass, or empty array if unset
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1254)
+    public String[] getGlobalConfigExtraObjectClass() {
+        return getMultiAttr(Provisioning.A_zimbraGlobalConfigExtraObjectClass);
+    }
+
+    /**
+     * Object classes added on the global config entry. Unlike other
+     * zimbra***ExtraObjectClass attributes, object classes specified in this
+     * attributes will not be automatically added to the global config entry.
+     * Extra object class on the global config entry must be added using
+     * &quot;zmprov mcf +objectClass {object class}&quot;, then recorded in
+     * this attributes.
+     *
+     * @param zimbraGlobalConfigExtraObjectClass new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1254)
+    public void setGlobalConfigExtraObjectClass(String[] zimbraGlobalConfigExtraObjectClass) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGlobalConfigExtraObjectClass, zimbraGlobalConfigExtraObjectClass);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Object classes added on the global config entry. Unlike other
+     * zimbra***ExtraObjectClass attributes, object classes specified in this
+     * attributes will not be automatically added to the global config entry.
+     * Extra object class on the global config entry must be added using
+     * &quot;zmprov mcf +objectClass {object class}&quot;, then recorded in
+     * this attributes.
+     *
+     * @param zimbraGlobalConfigExtraObjectClass new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1254)
+    public Map<String,Object> setGlobalConfigExtraObjectClass(String[] zimbraGlobalConfigExtraObjectClass, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGlobalConfigExtraObjectClass, zimbraGlobalConfigExtraObjectClass);
+        return attrs;
+    }
+
+    /**
+     * Object classes added on the global config entry. Unlike other
+     * zimbra***ExtraObjectClass attributes, object classes specified in this
+     * attributes will not be automatically added to the global config entry.
+     * Extra object class on the global config entry must be added using
+     * &quot;zmprov mcf +objectClass {object class}&quot;, then recorded in
+     * this attributes.
+     *
+     * @param zimbraGlobalConfigExtraObjectClass new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1254)
+    public void addGlobalConfigExtraObjectClass(String zimbraGlobalConfigExtraObjectClass) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraGlobalConfigExtraObjectClass, zimbraGlobalConfigExtraObjectClass);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Object classes added on the global config entry. Unlike other
+     * zimbra***ExtraObjectClass attributes, object classes specified in this
+     * attributes will not be automatically added to the global config entry.
+     * Extra object class on the global config entry must be added using
+     * &quot;zmprov mcf +objectClass {object class}&quot;, then recorded in
+     * this attributes.
+     *
+     * @param zimbraGlobalConfigExtraObjectClass new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1254)
+    public Map<String,Object> addGlobalConfigExtraObjectClass(String zimbraGlobalConfigExtraObjectClass, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraGlobalConfigExtraObjectClass, zimbraGlobalConfigExtraObjectClass);
+        return attrs;
+    }
+
+    /**
+     * Object classes added on the global config entry. Unlike other
+     * zimbra***ExtraObjectClass attributes, object classes specified in this
+     * attributes will not be automatically added to the global config entry.
+     * Extra object class on the global config entry must be added using
+     * &quot;zmprov mcf +objectClass {object class}&quot;, then recorded in
+     * this attributes.
+     *
+     * @param zimbraGlobalConfigExtraObjectClass existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1254)
+    public void removeGlobalConfigExtraObjectClass(String zimbraGlobalConfigExtraObjectClass) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraGlobalConfigExtraObjectClass, zimbraGlobalConfigExtraObjectClass);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Object classes added on the global config entry. Unlike other
+     * zimbra***ExtraObjectClass attributes, object classes specified in this
+     * attributes will not be automatically added to the global config entry.
+     * Extra object class on the global config entry must be added using
+     * &quot;zmprov mcf +objectClass {object class}&quot;, then recorded in
+     * this attributes.
+     *
+     * @param zimbraGlobalConfigExtraObjectClass existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1254)
+    public Map<String,Object> removeGlobalConfigExtraObjectClass(String zimbraGlobalConfigExtraObjectClass, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraGlobalConfigExtraObjectClass, zimbraGlobalConfigExtraObjectClass);
+        return attrs;
+    }
+
+    /**
+     * Object classes added on the global config entry. Unlike other
+     * zimbra***ExtraObjectClass attributes, object classes specified in this
+     * attributes will not be automatically added to the global config entry.
+     * Extra object class on the global config entry must be added using
+     * &quot;zmprov mcf +objectClass {object class}&quot;, then recorded in
+     * this attributes.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1254)
+    public void unsetGlobalConfigExtraObjectClass() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGlobalConfigExtraObjectClass, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Object classes added on the global config entry. Unlike other
+     * zimbra***ExtraObjectClass attributes, object classes specified in this
+     * attributes will not be automatically added to the global config entry.
+     * Extra object class on the global config entry must be added using
+     * &quot;zmprov mcf +objectClass {object class}&quot;, then recorded in
+     * this attributes.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1254)
+    public Map<String,Object> unsetGlobalConfigExtraObjectClass(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraGlobalConfigExtraObjectClass, "");
+        return attrs;
+    }
+
+    /**
      * help URL for admin
      *
      * @return zimbraHelpAdminURL, or null if unset
@@ -15779,25 +15958,25 @@ public class ZAttrConfig extends Entry {
      *
      * @see #getMailSSLProxyClientCertPortAsString()
      *
-     * @return zimbraMailSSLProxyClientCertPort, or 0 if unset
+     * @return zimbraMailSSLProxyClientCertPort, or 3443 if unset
      *
      * @since ZCS 7.1.1
      */
     @ZAttr(id=1212)
     public int getMailSSLProxyClientCertPort() {
-        return getIntAttr(Provisioning.A_zimbraMailSSLProxyClientCertPort, 0);
+        return getIntAttr(Provisioning.A_zimbraMailSSLProxyClientCertPort, 3443);
     }
 
     /**
      * SSL client certificate port for HTTP proxy
      *
-     * @return zimbraMailSSLProxyClientCertPort, or "0" if unset
+     * @return zimbraMailSSLProxyClientCertPort, or "3443" if unset
      *
      * @since ZCS 7.1.1
      */
     @ZAttr(id=1212)
     public String getMailSSLProxyClientCertPortAsString() {
-        return getAttr(Provisioning.A_zimbraMailSSLProxyClientCertPort, "0");
+        return getAttr(Provisioning.A_zimbraMailSSLProxyClientCertPort, "3443");
     }
 
     /**
