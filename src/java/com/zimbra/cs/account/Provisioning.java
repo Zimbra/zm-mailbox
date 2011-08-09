@@ -684,8 +684,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @throws ServiceException if the key is malformed
      */
     public abstract Account get(AccountBy keyType, String key) throws ServiceException;
-    
-    
+
+    public Account get(AccountSelector acctSel)
+    throws ServiceException {
+        return get(acctSel.getBy().toKeyDomainBy(), acctSel.getKey());
+    }
+
     public static interface EagerAutoProvisionScheduler {
         // returns whether a shutdown has been request to the scheduler
         public boolean isShutDownRequested();
@@ -801,6 +805,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public Account get(AccountBy keyType, String key, AuthToken authToken) throws ServiceException {
         return get(keyType, key);
+    }
+
+    public Account get(AccountSelector acctSel, AuthToken authToken)
+    throws ServiceException {
+        return get(acctSel.getBy().toKeyDomainBy(), acctSel.getKey(), authToken);
     }
 
     public Account get(AccountBy keyType, String key, boolean loadFromMaster, AuthToken authToken) throws ServiceException {
@@ -1115,6 +1124,11 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract Domain createDomain(String name, Map<String, Object> attrs) throws ServiceException;
 
     public abstract Domain get(Key.DomainBy keyType, String key) throws ServiceException;
+
+    public Domain get(DomainSelector domSel)
+    throws ServiceException {
+        return get(domSel.getBy().toKeyDomainBy(), domSel.getKey());
+    }
 
     /**
      * @param keyType

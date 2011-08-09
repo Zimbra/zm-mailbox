@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -21,10 +21,10 @@ import org.dom4j.DocumentException;
 import com.zimbra.common.localconfig.ConfigException;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.admin.message.ReloadLocalConfigResponse;
 
 /**
  * Reload the local config file on the fly.
@@ -53,8 +53,7 @@ public final class ReloadLocalConfig extends AdminDocumentHandler {
         ZimbraLog.misc.info("LocalConfig reloaded");
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Element response = zsc.createElement(AdminConstants.RELOAD_LOCAL_CONFIG_RESPONSE);
-        return response;
+        return zsc.jaxbToElement(new ReloadLocalConfigResponse());
     }
 
 }

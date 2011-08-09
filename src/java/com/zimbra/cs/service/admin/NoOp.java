@@ -5,9 +5,9 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.admin.message.NoOpResponse;
 
 /**
  * 
@@ -20,8 +20,7 @@ public class NoOp extends AdminDocumentHandler {
     public Element handle(Element request, Map<String, Object> context)
             throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Element resp = zsc.createElement(AdminConstants.NO_OP_RESPONSE);
-        return resp;
+        return zsc.jaxbToElement(new NoOpResponse());
     }
     
     @Override
