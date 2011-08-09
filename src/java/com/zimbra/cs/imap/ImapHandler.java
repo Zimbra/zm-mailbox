@@ -2048,8 +2048,15 @@ abstract class ImapHandler {
 
     private void checkSubscription(ImapPath path, Pattern pattern, Pattern childPattern, Map<ImapPath, Boolean> hits)
             throws ServiceException {
-        if (!path.isVisible()) { // hidden folders are not exposed even if subscribed
-            return;
+        try {
+            if (!path.isVisible()) { // hidden folders are not exposed even if subscribed
+                return;
+            }
+        } catch (NoSuchItemException ignore) {
+            // 6.3.9.  LSUB Command
+            //   The server MUST NOT unilaterally remove an existing mailbox name
+            //   from the subscription list even if a mailbox by that name no
+            //   longer exists.
         }
         if (pathMatches(path, pattern)) {
             hits.put(path, Boolean.TRUE);
