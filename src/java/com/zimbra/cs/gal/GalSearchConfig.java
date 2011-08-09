@@ -21,10 +21,10 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.GalSearchType;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.account.ldap.LdapGalMapRules;
+import com.zimbra.soap.type.GalSearchType;
 
 public class GalSearchConfig {
     

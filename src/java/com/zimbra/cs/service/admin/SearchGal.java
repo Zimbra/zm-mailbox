@@ -18,14 +18,12 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.GalSearchType;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.gal.GalSearchControl;
@@ -33,6 +31,7 @@ import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchResultCallback;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.type.GalSearchType;
 
 /**
  * @since May 26, 2004
@@ -42,6 +41,7 @@ public class SearchGal extends AdminDocumentHandler {
 
     private static final String[] TARGET_ACCOUNT_PATH = new String[] { AccountConstants.A_GAL_ACCOUNT_ID };
     
+    @Override
     protected String[] getProxiedAccountPath() { 
         return TARGET_ACCOUNT_PATH;
     }
@@ -69,7 +69,7 @@ public class SearchGal extends AdminDocumentHandler {
         String name = request.getAttribute(AdminConstants.E_NAME, "");
         int limit = (int) request.getAttributeLong(AdminConstants.A_LIMIT, 0);
         String typeStr = request.getAttribute(AdminConstants.A_TYPE, GalSearchType.account.name());
-        Provisioning.GalSearchType type = Provisioning.GalSearchType.fromString(typeStr);
+        GalSearchType type = GalSearchType.fromString(typeStr);
         
         String galAcctId = request.getAttribute(AccountConstants.A_GAL_ACCOUNT_ID, null);
         

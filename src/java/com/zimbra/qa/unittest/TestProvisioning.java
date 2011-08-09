@@ -47,6 +47,7 @@ import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.mime.MimeTypeInfo;
+import com.zimbra.soap.type.GalSearchType;
 
 public class TestProvisioning extends TestCase {
 
@@ -1417,7 +1418,7 @@ public class TestProvisioning extends TestCase {
         mProv.modifyAttrs(domain, attrs, true);
         Provisioning.SearchGalResult galResult = mProv.searchGal(domain,
                 ACCT_EMAIL,
-                Provisioning.GalSearchType.all,
+                GalSearchType.all,
                 null);
         List<GalContact> matches = galResult.getMatches();
         assertEquals(1, galResult.getNumMatches());
@@ -1433,7 +1434,7 @@ public class TestProvisioning extends TestCase {
         // auto complete Gal
         Provisioning.SearchGalResult galResult = mProv.autoCompleteGal(domain,
                                                                        query,
-                                                                       Provisioning.GalSearchType.all,
+                                                                       GalSearchType.all,
                                                                        100);
 
         List<GalContact> matches = galResult.getMatches();
@@ -1443,7 +1444,7 @@ public class TestProvisioning extends TestCase {
         // search gal
         galResult = mProv.searchGal(domain,
                                     query,
-                                    Provisioning.GalSearchType.all,
+                                    GalSearchType.all,
                                     null);
         matches = galResult.getMatches();
         assertEquals(1, galResult.getNumMatches());

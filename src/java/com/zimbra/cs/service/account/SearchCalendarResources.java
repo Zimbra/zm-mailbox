@@ -40,6 +40,7 @@ import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchQueryCallback;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.type.GalSearchType;
 
 public class SearchCalendarResources extends GalDocumentHandler {
 
@@ -73,7 +74,7 @@ public class SearchCalendarResources extends GalDocumentHandler {
             params.setExtraQueryCallback(new CalendarResourceExtraQueryCallback(filter));
         }
         
-        params.setType(Provisioning.GalSearchType.resource);
+        params.setType(GalSearchType.resource);
         params.setRequest(request);
         params.setResponseName(AccountConstants.SEARCH_CALENDAR_RESOURCES_RESPONSE);
         

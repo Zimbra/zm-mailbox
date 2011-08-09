@@ -34,9 +34,9 @@ import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchResultCallback;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.mailbox.acl.EffectiveACLCacheKey;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.soap.type.GalSearchType;
 
 public class ContactGroup {
     
@@ -733,7 +733,7 @@ public class ContactGroup {
             // search GAL by DN
             GalSearchParams params = new GalSearchParams(mbox.getAccount(), null);
             params.setSearchEntryByDn(value);
-            params.setType(Provisioning.GalSearchType.all);
+            params.setType(GalSearchType.all);
             params.setLimit(1);
             
             // params.setExtraQueryCallback(new ContactGroupExtraQueryCallback(value));

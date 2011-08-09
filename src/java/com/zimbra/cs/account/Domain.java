@@ -28,9 +28,9 @@ import com.zimbra.common.account.ZAttrProvisioning.DomainStatus;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning.GalSearchType;
 import com.zimbra.cs.account.Provisioning.GalMode;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.soap.type.GalSearchType;
 
 /**
  * @author schemers

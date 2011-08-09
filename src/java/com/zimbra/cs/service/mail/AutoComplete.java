@@ -28,6 +28,7 @@ import com.zimbra.cs.mailbox.ContactAutoComplete.AutoCompleteResult;
 import com.zimbra.cs.mailbox.ContactAutoComplete.ContactEntry;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.type.GalSearchType;
 
 public class AutoComplete extends MailDocumentHandler {
 
@@ -42,7 +43,7 @@ public class AutoComplete extends MailDocumentHandler {
         // remove commas (bug 46540)
         name = name.replace(",", " ").trim();
 
-        Provisioning.GalSearchType type = Provisioning.GalSearchType.fromString(request.getAttribute(MailConstants.A_TYPE, "account"));
+        GalSearchType type = GalSearchType.fromString(request.getAttribute(MailConstants.A_TYPE, "account"));
         int limit = account.getContactAutoCompleteMaxResults();
         boolean needCanExpand = request.getAttributeBool(MailConstants.A_NEED_EXP, false);
 
@@ -69,12 +70,12 @@ public class AutoComplete extends MailDocumentHandler {
     }
 
     protected AutoCompleteResult query(Element request, ZimbraSoapContext zsc, Account account,
-            boolean excludeGal, String name, int limit, Provisioning.GalSearchType type, OperationContext octxt) throws ServiceException {
+            boolean excludeGal, String name, int limit, GalSearchType type, OperationContext octxt) throws ServiceException {
         return query(request, zsc, account, excludeGal, name, limit, type, false, octxt);
     }
 
     protected AutoCompleteResult query(Element request, ZimbraSoapContext zsc, Account account,
-            boolean excludeGal, String name, int limit, Provisioning.GalSearchType type, boolean needCanExpand, OperationContext octxt) throws ServiceException {
+            boolean excludeGal, String name, int limit, GalSearchType type, boolean needCanExpand, OperationContext octxt) throws ServiceException {
        if (!canAccessAccount(zsc, account))
             throw ServiceException.PERM_DENIED("can not access account");
 

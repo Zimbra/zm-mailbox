@@ -26,14 +26,12 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.CacheEntryBy;
-import com.zimbra.common.account.Key.DistributionListBy;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.type.GalSearchType;
 
 
 public abstract class GalGroup {
@@ -342,12 +340,14 @@ public abstract class GalGroup {
         
         // no need to synchronize because we would never modify/get the set concurrently.
         // No one would call this method when the GalGroup object is still syncing  
+        @Override
         public boolean isInternalGroup(String addr) {
             return internalGroups.contains(addr.toLowerCase());
         }
         
         // no need to synchronize because we would never modify/get the set concurrently.
         // No one would call this method when the GalGroup object is still syncing  
+        @Override
         public boolean isExternalGroup(String addr) {
             return externalGroups.contains(addr.toLowerCase());
         }
@@ -396,7 +396,7 @@ public abstract class GalGroup {
                 int pageSize = 1000;
                 int limit = (max == 0) ? pageSize : Math.min(pageSize, max); // page size for GAL sync account search
                 
-                Provisioning.GalSearchType searchType = Provisioning.GalSearchType.group;
+                GalSearchType searchType = GalSearchType.group;
                 
                 boolean hasMore = true;
                 
@@ -551,7 +551,7 @@ public abstract class GalGroup {
         EmailAddrGalGroupCache(String addr, Account requestedAcct) {
             GalSearchParams params = new GalSearchParams(requestedAcct);
             params.setQuery(addr);
-            params.setType(Provisioning.GalSearchType.group);
+            params.setType(GalSearchType.group);
             params.setLimit(1);
             resultCallback = new SearchGroupCallback(params);
             params.setResultCallback(resultCallback);
@@ -564,10 +564,12 @@ public abstract class GalGroup {
             }
         }
         
+        @Override
         public boolean isInternalGroup(String addr) {
             return resultCallback.isInternalGroup();
         }
         
+        @Override
         public boolean isExternalGroup(String addr) {
             return resultCallback.isExternalGroup();
         }

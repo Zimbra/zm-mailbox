@@ -40,6 +40,7 @@ import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchQueryCallback;
 import com.zimbra.cs.gal.GalExtraSearchFilter.GalExtraQueryCallback;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.type.GalSearchType;
 
 /**
  * @since May 26, 2004
@@ -77,7 +78,7 @@ public class SearchGal extends GalDocumentHandler {
         EntrySearchFilter filter = GalExtraSearchFilter.parseSearchFilter(request);
                 
         String typeStr = request.getAttribute(AccountConstants.A_TYPE, "all");
-        Provisioning.GalSearchType type = Provisioning.GalSearchType.fromString(typeStr);
+        GalSearchType type = GalSearchType.fromString(typeStr);
         boolean needCanExpand = request.getAttributeBool(AccountConstants.A_NEED_EXP, false);
         
         // internal attr, for proxied GSA search from GetSMIMEPublicCerts only

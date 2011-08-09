@@ -41,9 +41,11 @@ import com.zimbra.cs.dav.resource.DavResource;
 import com.zimbra.cs.dav.resource.MailItemResource;
 import com.zimbra.cs.dav.resource.UrlNamespace;
 import com.zimbra.cs.dav.service.DavResponse;
+import com.zimbra.soap.type.GalSearchType;
 
 public class AclReports extends Report {
-	public void handle(DavContext ctxt) throws DavException, ServiceException {
+	@Override
+    public void handle(DavContext ctxt) throws DavException, ServiceException {
 		ctxt.setStatus(DavProtocol.STATUS_MULTI_STATUS);
 		Element query = ctxt.getRequestMessage().getRootElement();
 		if (query.getQName().equals(DavElements.E_PRINCIPAL_PROPERTY_SEARCH))
@@ -74,13 +76,13 @@ public class AclReports extends Report {
 			return ret;
 		
 		// apple hack to do user / resource search
-		Provisioning.GalSearchType type = Provisioning.GalSearchType.all;
+		GalSearchType type = GalSearchType.all;
 		String queryType = query.attributeValue("type");
 		if (queryType != null) {
 			if (queryType.compareToIgnoreCase("INDIVIDUAL") == 0)
-				type = Provisioning.GalSearchType.account;
+				type = GalSearchType.account;
 			else if (queryType.compareToIgnoreCase("RESOURCE") == 0)
-				type = Provisioning.GalSearchType.resource;
+				type = GalSearchType.resource;
 		}
 		@SuppressWarnings("unchecked")
 		List propSearch = query.elements(DavElements.E_PROPERTY_SEARCH);
@@ -99,7 +101,7 @@ public class AclReports extends Report {
 		return ret;
 	}
 	
-	private ArrayList<DavResource> getMatchingPrincipals(DavContext ctxt, QName prop, String match, Provisioning.GalSearchType type) throws DavException, ServiceException {
+	private ArrayList<DavResource> getMatchingPrincipals(DavContext ctxt, QName prop, String match, GalSearchType type) throws DavException, ServiceException {
 		Provisioning prov = Provisioning.getInstance();
 		ArrayList<DavResource> ret = new ArrayList<DavResource>();
 		Account authAccount = ctxt.getAuthAccount();

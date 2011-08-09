@@ -34,10 +34,11 @@ import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.type.GalSearchType;
 
 public class GalSearchParams {
     private GalSearchConfig mConfig;
-    private Provisioning.GalSearchType mType = Provisioning.GalSearchType.account;
+    private GalSearchType mType = GalSearchType.account;
     private int mLimit;
     private Integer mLdapLimit; // ldap search does not support paging, allow a different limit for ldap search
     private int mPageSize;
@@ -88,7 +89,7 @@ public class GalSearchParams {
         return mConfig;
     }
 
-    public Provisioning.GalSearchType getType() {
+    public GalSearchType getType() {
         return mType;
     }
 
@@ -212,7 +213,7 @@ public class GalSearchParams {
         mConfig = config;
     }
 
-    public void setType(Provisioning.GalSearchType type) {
+    public void setType(GalSearchType type) {
         mType = type;
     }
 

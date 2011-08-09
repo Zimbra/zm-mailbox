@@ -109,6 +109,7 @@ import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.cs.wiki.WikiUtil;
 import com.zimbra.cs.zclient.ZMailboxUtil;
+import com.zimbra.soap.type.GalSearchType;
 
 /**
  * @author schemers
@@ -1882,8 +1883,8 @@ public class ProvUtil implements HttpDebugListener {
         Domain d = lookupDomain(domain);
 
         SearchGalResult result = (prov instanceof SoapProvisioning) ?
-                ((SoapProvisioning) prov).searchGal(d, query, Provisioning.GalSearchType.all, null, limit, offset, sortBy) :
-                prov.searchGal(d, query, Provisioning.GalSearchType.all, null);
+                ((SoapProvisioning) prov).searchGal(d, query, GalSearchType.all, null, limit, offset, sortBy) :
+                prov.searchGal(d, query, GalSearchType.all, null);
         for (GalContact contact : result.getMatches()) {
             dumpContact(contact);
         }
@@ -1893,7 +1894,7 @@ public class ProvUtil implements HttpDebugListener {
         String domain = args[1];
         String query = args[2];
         Domain d = lookupDomain(domain);
-        SearchGalResult result = prov.autoCompleteGal(d, query, Provisioning.GalSearchType.all, 100);
+        SearchGalResult result = prov.autoCompleteGal(d, query, GalSearchType.all, 100);
         for (GalContact contact : result.getMatches()) {
             dumpContact(contact);
         }
@@ -1956,7 +1957,7 @@ public class ProvUtil implements HttpDebugListener {
 
         Domain d = lookupDomain(domain);
 
-        SearchGalResult result = prov.searchGal(d, "", Provisioning.GalSearchType.all, token);
+        SearchGalResult result = prov.searchGal(d, "", GalSearchType.all, token);
         if (result.getToken() != null) {
             console.println("# token = " + result.getToken() + "\n");
         }

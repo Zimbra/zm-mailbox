@@ -51,6 +51,7 @@ import com.zimbra.soap.admin.type.DistributionListSelector;
 import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.ServerSelector;
 import com.zimbra.soap.type.AccountSelector;
+import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.NamedElement;
 
 /**
@@ -922,19 +923,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return sb.toString();
     }
 
-    public static enum GalSearchType {
-        all, account, resource, group;
-
-        public static GalSearchType fromString(String s) throws ServiceException {
-            try {
-                return GalSearchType.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("Invalid search type: " + s, null);
-            }
-        }
-
-    }
-
     /**
      * @param query LDAP search query
      * @param returnAttrs list of attributes to return. uid is always included. null will return all attrs.
@@ -1794,7 +1782,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @return List of GalContact objects
      * @throws ServiceException
      */
-    public abstract SearchGalResult autoCompleteGal(Domain d, String query, Provisioning.GalSearchType type, int limit) throws ServiceException;
+    public abstract SearchGalResult autoCompleteGal(Domain d, String query, GalSearchType type, int limit) throws ServiceException;
 
     /**
      * @param filter search filter

@@ -83,6 +83,7 @@ import com.zimbra.soap.account.type.NameId;
 import com.zimbra.soap.admin.message.*;
 import com.zimbra.soap.admin.type.*;
 import com.zimbra.soap.type.AccountSelector;
+import com.zimbra.soap.type.GalSearchType;
 
 public class SoapProvisioning extends Provisioning {
 

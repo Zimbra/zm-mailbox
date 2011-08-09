@@ -42,7 +42,6 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.datasource.DataSourceType;
-import com.zimbra.cs.account.Provisioning.GalSearchType;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.db.DbDataSource;
@@ -65,6 +64,7 @@ import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.type.GalSearchType;
 
 public class GalSearchControl {
     private GalSearchParams mParams;
@@ -260,7 +260,7 @@ public class GalSearchControl {
         String query = mParams.getQuery();
         String searchByDn = mParams.getSearchEntryByDn();
         
-        Provisioning.GalSearchType type = mParams.getType();
+        GalSearchType type = mParams.getType();
         StringBuilder searchQuery = new StringBuilder();
         
         if (searchByDn != null) {
@@ -595,7 +595,7 @@ public class GalSearchControl {
     private void ldapSearch() throws ServiceException {
         Domain domain = mParams.getDomain();
         GalMode galMode = domain.getGalMode();
-        Provisioning.GalSearchType stype = mParams.getType();
+        GalSearchType stype = mParams.getType();
         Provisioning prov = Provisioning.getInstance();
 
         if (needResources()) {
@@ -667,7 +667,7 @@ public class GalSearchControl {
     private boolean needResources() throws ServiceException {
         Domain domain = mParams.getDomain();
         return (domain.getGalMode() == GalMode.ldap &&
-                (Provisioning.GalSearchType.all == mParams.getType() || Provisioning.GalSearchType.resource == mParams.getType()) &&
+                (GalSearchType.all == mParams.getType() || GalSearchType.resource == mParams.getType()) &&
                 domain.isGalAlwaysIncludeLocalCalendarResources());
     }
 

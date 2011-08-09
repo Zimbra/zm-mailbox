@@ -38,6 +38,7 @@ import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchResultCallback;
 import com.zimbra.common.soap.Element;
+import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -45,6 +46,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class SyncGal extends GalDocumentHandler {
 
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         disableJettyTimeout();
         
@@ -59,7 +61,7 @@ public class SyncGal extends GalDocumentHandler {
         boolean idOnly   = request.getAttributeBool(AccountConstants.A_ID_ONLY, false);
 
         GalSearchParams params = new GalSearchParams(account, zsc);
-        params.setType(Provisioning.GalSearchType.all);
+        params.setType(GalSearchType.all);
         params.setToken(tokenAttr);
         params.setRequest(request);
         params.setResponseName(AccountConstants.SYNC_GAL_RESPONSE);

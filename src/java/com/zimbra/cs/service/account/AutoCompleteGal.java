@@ -24,6 +24,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.type.GalSearchType;
 
 /**
  * @since May 26, 2004
@@ -41,7 +42,7 @@ public class AutoCompleteGal extends GalDocumentHandler {
         
         String name = request.getAttribute(AccountConstants.E_NAME);
         String typeStr = request.getAttribute(AccountConstants.A_TYPE, "account");
-        Provisioning.GalSearchType type = Provisioning.GalSearchType.fromString(typeStr);
+        GalSearchType type = GalSearchType.fromString(typeStr);
 
         boolean needCanExpand = request.getAttributeBool(AccountConstants.A_NEED_EXP, false);
 

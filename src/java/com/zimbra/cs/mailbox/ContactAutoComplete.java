@@ -36,7 +36,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.GalSearchType;
 import com.zimbra.cs.gal.GalGroup;
 import com.zimbra.cs.gal.GalGroupInfoProvider;
 import com.zimbra.cs.gal.GalSearchControl;
@@ -48,6 +47,7 @@ import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class ContactAutoComplete {

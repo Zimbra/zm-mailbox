@@ -27,11 +27,11 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.GalSearchType;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchParams;
+import com.zimbra.soap.type.GalSearchType;
 
 public class TestLdapProvGal extends TestLdap {
     private static Provisioning prov;

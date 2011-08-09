@@ -43,6 +43,7 @@ import com.zimbra.cs.account.Provisioning.GalMode;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.gal.GalConstants;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.soap.type.GalSearchType;
 
 
 public class TestGal extends TestCase {
@@ -325,7 +326,7 @@ public class TestGal extends TestCase {
         Domain domain = mProv.get(Key.DomainBy.name, DOMAIN_NAME);
         SearchGalResult galResult = mProv.autoCompleteGal(domain, 
                                                           QUERY,
-                                                          Provisioning.GalSearchType.account, // Provisioning.GAL_SEARCH_TYPE.ALL, 
+                                                          GalSearchType.account, // Provisioning.GAL_SEARCH_TYPE.ALL, 
                                                           maxWanted);
         if (numResultsExpected != galResult.getNumMatches())
             dumpResult(galResult);
@@ -339,7 +340,7 @@ public class TestGal extends TestCase {
         Domain domain = mProv.get(Key.DomainBy.name, DOMAIN_NAME);
         SearchGalResult galResult = mProv.searchGal(domain, 
                                                     QUERY,
-                                                    Provisioning.GalSearchType.all, 
+                                                    GalSearchType.all, 
                                                     null);
         assertEquals(numResultsExpected, galResult.getNumMatches());
         boolean expectedHasMore = numResultsExpected < NUM_ACCOUNTS;
@@ -356,7 +357,7 @@ public class TestGal extends TestCase {
         Domain domain = mProv.get(Key.DomainBy.name, DOMAIN_NAME);
         SearchGalResult galResult = mProv.searchGal(domain, 
                                                     QUERY,
-                                                    Provisioning.GalSearchType.all, 
+                                                    GalSearchType.all, 
                                                     token);
         assertEquals(numResultsExpected, galResult.getNumMatches());
         boolean expectedHasMore = numResultsExpected < numTotal;
@@ -540,12 +541,12 @@ public class TestGal extends TestCase {
         if (galOp == GalOp.GOP_AUTOCOMPLETE)
             galResult = mProv.autoCompleteGal(domain, 
                                               key,
-                                              Provisioning.GalSearchType.account, // Provisioning.GAL_SEARCH_TYPE.ALL, 
+                                              GalSearchType.account, // Provisioning.GAL_SEARCH_TYPE.ALL, 
                                               10);
         else if (galOp == GalOp.GOP_SEARCH)
             galResult = mProv.searchGal(domain, 
                                         key,
-                                        Provisioning.GalSearchType.account, 
+                                        GalSearchType.account, 
                                         null);
         else
             fail();

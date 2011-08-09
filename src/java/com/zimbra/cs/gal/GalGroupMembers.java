@@ -18,9 +18,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.GalContact;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GalGroupMembers {
@@ -250,7 +250,7 @@ public class GalGroupMembers {
     throws ServiceException {
         GalSearchParams params = new GalSearchParams(account, zsc);
         params.setQuery(groupName);
-        params.setType(Provisioning.GalSearchType.group);
+        params.setType(GalSearchType.group);
         params.setLimit(1);
         params.setFetchGroupMembers(true);
         params.setRequest(request);

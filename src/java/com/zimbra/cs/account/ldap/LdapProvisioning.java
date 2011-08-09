@@ -139,6 +139,7 @@ import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
+import com.zimbra.soap.type.GalSearchType;
 import org.testng.v6.Lists;
 
 import java.io.IOException;
@@ -5196,7 +5197,7 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public SearchGalResult searchGal(Domain d,
                                      String n,
-                                     Provisioning.GalSearchType type,
+                                     GalSearchType type,
                                      String token)
     throws ServiceException {
         return searchGal(d, n, type, null, token, null);
@@ -5205,7 +5206,7 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public SearchGalResult searchGal(Domain d,
                                      String n,
-                                     Provisioning.GalSearchType type,
+                                     GalSearchType type,
                                      GalMode galMode,
                                      String token) throws ServiceException {
         return searchGal(d, n, type, galMode, token, null);
@@ -5218,7 +5219,7 @@ public class LdapProvisioning extends LdapProv {
 
     private SearchGalResult searchGal(Domain d,
                                       String n,
-                                      Provisioning.GalSearchType type,
+                                      GalSearchType type,
                                       GalMode galMode,
                                       String token,
                                       GalContact.Visitor visitor)
@@ -5228,9 +5229,9 @@ public class LdapProvisioning extends LdapProv {
         n = LdapUtilCommon.escapeSearchFilterArg(n);
 
         int maxResults = token != null ? 0 : d.getIntAttr(Provisioning.A_zimbraGalMaxResults, DEFAULT_GAL_MAX_RESULTS);
-        if (type == Provisioning.GalSearchType.resource)
+        if (type == GalSearchType.resource)
             return searchResourcesGal(d, n, maxResults, token, galOp, visitor);
-        else if (type == Provisioning.GalSearchType.group)
+        else if (type == GalSearchType.group)
             return searchGroupsGal(d, n, maxResults, null, galOp, null);
 
         GalMode mode = galMode != null ? galMode : GalMode.fromString(d.getAttr(Provisioning.A_zimbraGalMode));
@@ -5251,7 +5252,7 @@ public class LdapProvisioning extends LdapProv {
         }
         if (results == null) results = SearchGalResult.newSearchGalResult(visitor);  // should really not be null by now
 
-        if (type == Provisioning.GalSearchType.all) {
+        if (type == GalSearchType.all) {
             SearchGalResult resourceResults = null;
             if (maxResults == 0)
                 resourceResults = searchResourcesGal(d, n, 0, token, galOp, visitor);
@@ -5270,16 +5271,16 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    public SearchGalResult autoCompleteGal(Domain d, String n, Provisioning.GalSearchType type, int max) throws ServiceException
+    public SearchGalResult autoCompleteGal(Domain d, String n, GalSearchType type, int max) throws ServiceException
     {
         GalOp galOp = GalOp.autocomplete;
         // escape user-supplied string
         n = LdapUtilCommon.escapeSearchFilterArg(n);
 
         int maxResults = Math.min(max, d.getIntAttr(Provisioning.A_zimbraGalMaxResults, DEFAULT_GAL_MAX_RESULTS));
-        if (type == Provisioning.GalSearchType.resource)
+        if (type == GalSearchType.resource)
             return searchResourcesGal(d, n, maxResults, null, galOp, null);
-        else if (type == Provisioning.GalSearchType.group)
+        else if (type == GalSearchType.group)
             return searchGroupsGal(d, n, maxResults, null, galOp, null);
 
         GalMode mode = GalMode.fromString(d.getAttr(Provisioning.A_zimbraGalMode));
@@ -5301,7 +5302,7 @@ public class LdapProvisioning extends LdapProv {
         }
         if (results == null) results = SearchGalResult.newSearchGalResult(null);  // should really not be null by now
 
-        if (type == Provisioning.GalSearchType.all) {
+        if (type == GalSearchType.all) {
             SearchGalResult resourceResults = null;
             if (maxResults == 0)
                 resourceResults = searchResourcesGal(d, n, 0, null, galOp, null);

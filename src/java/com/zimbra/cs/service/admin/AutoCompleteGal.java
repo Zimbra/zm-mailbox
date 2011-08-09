@@ -22,23 +22,19 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.GalSearchType;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
-import com.zimbra.cs.gal.GalSearchResultCallback;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.type.GalSearchType;
 
 /**
  * @author schemers
@@ -47,6 +43,7 @@ public class AutoCompleteGal extends AdminDocumentHandler {
 
     private static final String[] TARGET_ACCOUNT_PATH = new String[] { AccountConstants.A_GAL_ACCOUNT_ID };
     
+    @Override
     protected String[] getProxiedAccountPath() { 
         return TARGET_ACCOUNT_PATH;
     }
@@ -54,10 +51,12 @@ public class AutoCompleteGal extends AdminDocumentHandler {
     /**
      * must be careful and only return accounts a domain admin can see
      */
+    @Override
     public boolean domainAuthSufficient(Map context) {
         return true;
     }
 
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         
@@ -93,6 +92,7 @@ public class AutoCompleteGal extends AdminDocumentHandler {
 
     }
     
+    @Override
     public boolean needsAuth(Map<String, Object> context) {
         return true;
     }
