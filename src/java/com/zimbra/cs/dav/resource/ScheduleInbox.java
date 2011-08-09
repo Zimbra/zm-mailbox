@@ -25,6 +25,7 @@ import org.dom4j.Element;
 import org.dom4j.QName;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -98,10 +99,20 @@ public class ScheduleInbox extends CalendarCollection {
                 	DavResource rs = UrlNamespace.getResourceFromMailItem(ctxt, msg);
                 	if (rs != null) {
                     	String href = UrlNamespace.getRawResourceUrl(rs);
-                    	if (hrefs == null || hrefs.contains(href))
+                    	if (hrefs == null)
                     		result.add(rs);
-                    	else
-                    		result.add(new DavResource.InvalidResource(href, getOwner()));
+                    	else {
+                    	    boolean found = false;
+                            for (String ref : hrefs) {
+                                if (HttpUtil.urlUnescape(ref).equals(href)) {
+                                    result.add(rs);
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found)
+                                result.add(new DavResource.InvalidResource(href, getOwner()));
+                    	}                    		
                 	}
                 }
 			}
