@@ -194,6 +194,7 @@ public class ZMailbox implements ToZJSONObject {
         private List<String> mAttrs;
         private List<String> mPrefs;
         private String mRequestedSkin;
+        private Map<String, String> mCustomHeaders;
 
         public Options() {
         }
@@ -299,6 +300,12 @@ public class ZMailbox implements ToZJSONObject {
 
         public String getRequestedSkin() { return mRequestedSkin; }
         public Options setRequestedSkin(String skin) { mRequestedSkin = skin;  return this; }
+        
+        public Map<String, String> getCustomHeaders() {
+            if (mCustomHeaders == null)
+                mCustomHeaders = new HashMap<String, String>();
+            return mCustomHeaders;
+        }
     }
 
     private ZAuthToken mAuthToken;
@@ -382,7 +389,7 @@ public class ZMailbox implements ToZJSONObject {
             if (options.getAuthAuthToken())
                 mAuthResult = authByAuthToken(options);
             initAuthToken(options.getAuthToken());
-        } else {
+        } else if (options.getAccount() != null) {
             String password;
             if (options.getNewPassword() != null) {
                 changePassword(options.getAccount(), options.getAccountBy(), options.getPassword(), options.getNewPassword(), options.getVirtualHost());
@@ -524,6 +531,8 @@ public class ZMailbox implements ToZJSONObject {
             mTransport.setRetryCount(options.getRetryCount());
         if (mAuthToken != null)
             mTransport.setAuthToken(mAuthToken);
+        for (Map.Entry<String, String> entry : options.getCustomHeaders().entrySet())
+            mTransport.getCustomHeaders().put(entry.getKey(), entry.getValue());
     }
 
     @SuppressWarnings("unchecked")
