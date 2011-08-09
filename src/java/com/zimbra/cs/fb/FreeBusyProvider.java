@@ -20,13 +20,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.account.Key;
@@ -39,6 +42,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.Type;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxListener;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -62,7 +66,12 @@ public abstract class FreeBusyProvider {
     }
     
     protected static class Request {
+        
         public Request(Account req, String em, long s, long e, int f) {
+            this(req, em, s, e, f, -1);
+        }
+        
+        public Request(Account req, String em, long s, long e, int f, int hops) {
             requestor = req; email = em;
             Calendar cal = GregorianCalendar.getInstance();
             cal.setTimeInMillis(s);
@@ -72,6 +81,7 @@ public abstract class FreeBusyProvider {
             cal.set(Calendar.SECOND, 0);
             end = cal.getTimeInMillis();
             folder = f;
+            hopcount = hops;
         }
         Account requestor;
         String email;
@@ -79,10 +89,54 @@ public abstract class FreeBusyProvider {
         long end;
         int folder;
         Object data;
+        int hopcount;
+        
+        public Account getRequestor() {
+            return requestor;
+        }
+        
+        public String getEmail() {
+            return email;
+        }
+        
+        public long getStart() {
+            return start;
+        }
+        
+        public long getEnd() {
+            return end;
+        }
+        
+        public int getFolder() {
+            return folder;
+        }
+        
+        public Object getData() {
+            return data;
+        }
+        
+        public void setData(Object obj) {
+            data = obj;
+        }
+        
+        public int getHopcount() {
+            return hopcount;
+        }
+        
+        public void incrementHopcount() {
+            if (hopcount < 0 )
+                hopcount = 0;
+            else
+                hopcount += 1;
+        }
     }
     @SuppressWarnings("serial")
     protected static class FreeBusyUserNotFoundException extends Exception {
+        public FreeBusyUserNotFoundException() {
+            // empty constructor
+        }
     }
+
 
     public abstract FreeBusyProvider getInstance();
     public abstract String getName();
@@ -147,17 +201,16 @@ public abstract class FreeBusyProvider {
             ToXML.encodeFreeBusy(response, fb);
     }
 
-    public static List<FreeBusy> getRemoteFreeBusy(Account requestor, List<String> remoteIds, long start, long end, int folder) {
+    public static List<FreeBusy> getRemoteFreeBusy(Account requestor, List<String> remoteIds, long start, long end, int folder, int hopcount) {
         Set<FreeBusyProvider> providers = getProviders();
         ArrayList<FreeBusy> ret = new ArrayList<FreeBusy>();
         for (String emailAddr : remoteIds) {
-            Request req = new Request(requestor, emailAddr, start, end, folder);
+            Request req = new Request(requestor, emailAddr, start, end, folder, hopcount);
             boolean succeed = false;
             for (FreeBusyProvider prov : providers) {
                 try {
                     prov.addFreeBusyRequest(req);
                     succeed = true;
-                    break;
                 } catch (FreeBusyUserNotFoundException e) {
                 }
             }
@@ -167,14 +220,39 @@ public abstract class FreeBusyProvider {
             }
         }
 
+        // there could be duplicate results from different providers.
+        // construct the map of results.
+        Map<String, ArrayList<FreeBusy>> freebusyMap = new HashMap<String, ArrayList<FreeBusy>>();
         for (FreeBusyProvider prov : providers) {
-            ret.addAll(prov.getResults());
+            for (FreeBusy fb : prov.getResults()) {
+                ArrayList<FreeBusy> freebusyList = freebusyMap.get(fb.getName());
+                if (freebusyList == null) {
+                    freebusyList = new ArrayList<FreeBusy>();
+                    freebusyMap.put(fb.getName(), freebusyList);
+                }
+                freebusyList.add(fb);
+            }
+        } 
+        // filter the duplicate and take one freebusy result for each user.
+        for (Map.Entry<String, ArrayList<FreeBusy>> entry : freebusyMap.entrySet()) {   
+            ArrayList<FreeBusy> freebusyList = entry.getValue();
+            FreeBusy freebusy = null;
+            for (FreeBusy fb : freebusyList) {
+                if (freebusy == null) {
+                    freebusy = fb;
+                } else {
+                    // check if fb is better response than freebusy.
+                    if (!fb.getBusiest().equals(IcalXmlStrMap.FBTYPE_FREE))
+                        freebusy = fb;                            
+                }
+            }
+            ret.add(freebusy);
         }
         return ret;
     }
 
-    public static void getRemoteFreeBusy(Account requestor, Element response, List<String> remoteIds, long start, long end, int folder) {
-        for (FreeBusy fb : getRemoteFreeBusy(requestor, remoteIds, start, end, folder)) {
+    public static void getRemoteFreeBusy(Account requestor, Element response, List<String> remoteIds, long start, long end, int folder, int hopcount) {
+        for (FreeBusy fb : getRemoteFreeBusy(requestor, remoteIds, start, end, folder, hopcount)) {
             ToXML.encodeFreeBusy(response, fb);
         }
     }

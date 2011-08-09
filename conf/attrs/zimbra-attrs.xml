@@ -6106,4 +6106,8 @@ TODO: delete them permerntly from here
   <desc>mechanism to use for verifying password for admin.  See zimbraAuthMech</desc>
 </attr>
 
+<attr id="1253" name="zimbraFreebusyExternalZimbraURL" type="string" max="256" cardinality="multi" optionalIn="globalConfig" since="8.0.0">
+  <desc>URLs of external Zimbra servers for free/busy lookup in the form of http[s]://[user:pass@]host:port</desc>
+</attr>
+
 </attrs>

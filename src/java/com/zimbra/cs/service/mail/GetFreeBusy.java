@@ -58,6 +58,11 @@ public class GetFreeBusy extends MailDocumentHandler {
         if (days > MAX_PERIOD_SIZE_IN_DAYS)
             throw ServiceException.INVALID_REQUEST("Requested range is too large (Maximum "+MAX_PERIOD_SIZE_IN_DAYS+" days)", null);
     }
+    
+    @Override
+    public boolean needsAuth(Map<String, Object> context) {
+        return false;
+    }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zc = getZimbraSoapContext(context);

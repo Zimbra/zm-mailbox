@@ -72,7 +72,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
         mEnd = end;
     }
     private String mName;
-    IntervalList mList; 
+    protected IntervalList mList; 
     
     private long mStart;
     private long mEnd;
@@ -113,7 +113,7 @@ public class FreeBusy implements Iterable<FreeBusy.Interval> {
             mHead = new Interval(start, end, IcalXmlStrMap.FBTYPE_FREE);
         }
 
-        void addInterval(Interval toAdd) {
+        public void addInterval(Interval toAdd) {
             assert(toAdd.mStart <= toAdd.mEnd);
             // we only care about intervals within our window!  
             if (toAdd.mStart < mStart) {

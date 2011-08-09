@@ -124,7 +124,7 @@ public class FreeBusyQuery {
         		if (Provisioning.onLocalServer(acct)) {
         		    Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
         		    OperationContext octxt = null;
-        		    if (mCtxt != null)
+        		    if (mCtxt != null && mCtxt.getAuthToken() != null)
         		        octxt = new OperationContext(mCtxt.getAuthToken());
         		    else if (mRequestor != null)
         		        octxt = new OperationContext(mRequestor);
@@ -146,6 +146,18 @@ public class FreeBusyQuery {
     	}
     }
     
+    private int getHopcount() {        
+        int hopcount = -1;
+        String hopcountStr = mReq.getHeader("X-ZIMBRA-FREEBUSY-HOPCOUNT");
+        if (hopcountStr != null) {
+            try {
+                hopcount = Integer.parseInt(hopcountStr);
+            } catch (NumberFormatException nfe) {
+                // ignore
+            }
+        }
+        return hopcount;
+    }
     public Collection<FreeBusy> getResults() {
     	RemoteFreeBusyProvider remote = new RemoteFreeBusyProvider(mReq, mCtxt, mStart, mEnd, mExApptUid);
     	ArrayList<String> external = new ArrayList<String>();
@@ -154,7 +166,7 @@ public class FreeBusyQuery {
 
     	fbList.addAll(remote.getResults());
     	if (external.size() > 0)
-    		fbList.addAll(FreeBusyProvider.getRemoteFreeBusy(mRequestor, external, mStart, mEnd, CALENDAR_FOLDER_ALL));
+    	    fbList.addAll(FreeBusyProvider.getRemoteFreeBusy(mRequestor, external, mStart, mEnd, CALENDAR_FOLDER_ALL, getHopcount()));	
     	return fbList;
     }
     
@@ -168,6 +180,6 @@ public class FreeBusyQuery {
         	ToXML.encodeFreeBusy(response, fb);
     	remote.addResults(response);
     	if (external.size() > 0)
-    		FreeBusyProvider.getRemoteFreeBusy(mRequestor, response, external, mStart, mEnd, CALENDAR_FOLDER_ALL);
+    		FreeBusyProvider.getRemoteFreeBusy(mRequestor, response, external, mStart, mEnd, CALENDAR_FOLDER_ALL, getHopcount());	
 	}
 }

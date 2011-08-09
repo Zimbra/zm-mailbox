@@ -43,7 +43,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110801-2320 */
+    /* build: 8.0.0_BETA1_1111 pburgu 20110808-1745 */
 
     /**
      * RFC2256: descriptive information
@@ -8630,6 +8630,149 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
+     * URLs of external Zimbra servers for free/busy lookup in the form of
+     * http[s]://[user:pass@]host:port
+     *
+     * @return zimbraFreebusyExternalZimbraURL, or empty array if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1253)
+    public String[] getFreebusyExternalZimbraURL() {
+        return getMultiAttr(Provisioning.A_zimbraFreebusyExternalZimbraURL);
+    }
+
+    /**
+     * URLs of external Zimbra servers for free/busy lookup in the form of
+     * http[s]://[user:pass@]host:port
+     *
+     * @param zimbraFreebusyExternalZimbraURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1253)
+    public void setFreebusyExternalZimbraURL(String[] zimbraFreebusyExternalZimbraURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExternalZimbraURL, zimbraFreebusyExternalZimbraURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URLs of external Zimbra servers for free/busy lookup in the form of
+     * http[s]://[user:pass@]host:port
+     *
+     * @param zimbraFreebusyExternalZimbraURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1253)
+    public Map<String,Object> setFreebusyExternalZimbraURL(String[] zimbraFreebusyExternalZimbraURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExternalZimbraURL, zimbraFreebusyExternalZimbraURL);
+        return attrs;
+    }
+
+    /**
+     * URLs of external Zimbra servers for free/busy lookup in the form of
+     * http[s]://[user:pass@]host:port
+     *
+     * @param zimbraFreebusyExternalZimbraURL new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1253)
+    public void addFreebusyExternalZimbraURL(String zimbraFreebusyExternalZimbraURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraFreebusyExternalZimbraURL, zimbraFreebusyExternalZimbraURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URLs of external Zimbra servers for free/busy lookup in the form of
+     * http[s]://[user:pass@]host:port
+     *
+     * @param zimbraFreebusyExternalZimbraURL new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1253)
+    public Map<String,Object> addFreebusyExternalZimbraURL(String zimbraFreebusyExternalZimbraURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraFreebusyExternalZimbraURL, zimbraFreebusyExternalZimbraURL);
+        return attrs;
+    }
+
+    /**
+     * URLs of external Zimbra servers for free/busy lookup in the form of
+     * http[s]://[user:pass@]host:port
+     *
+     * @param zimbraFreebusyExternalZimbraURL existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1253)
+    public void removeFreebusyExternalZimbraURL(String zimbraFreebusyExternalZimbraURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraFreebusyExternalZimbraURL, zimbraFreebusyExternalZimbraURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URLs of external Zimbra servers for free/busy lookup in the form of
+     * http[s]://[user:pass@]host:port
+     *
+     * @param zimbraFreebusyExternalZimbraURL existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1253)
+    public Map<String,Object> removeFreebusyExternalZimbraURL(String zimbraFreebusyExternalZimbraURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraFreebusyExternalZimbraURL, zimbraFreebusyExternalZimbraURL);
+        return attrs;
+    }
+
+    /**
+     * URLs of external Zimbra servers for free/busy lookup in the form of
+     * http[s]://[user:pass@]host:port
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1253)
+    public void unsetFreebusyExternalZimbraURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExternalZimbraURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * URLs of external Zimbra servers for free/busy lookup in the form of
+     * http[s]://[user:pass@]host:port
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1253)
+    public Map<String,Object> unsetFreebusyExternalZimbraURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFreebusyExternalZimbraURL, "");
+        return attrs;
+    }
+
+    /**
      * The interval to wait when the server encounters problems while
      * propagating Zimbra users free/busy information to external provider
      * such as Exchange. . Must be in valid duration format:
@@ -16279,25 +16422,25 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @see #getMailSSLProxyClientCertPortAsString()
      *
-     * @return zimbraMailSSLProxyClientCertPort, or 0 if unset
+     * @return zimbraMailSSLProxyClientCertPort, or 3443 if unset
      *
      * @since ZCS 7.1.1
      */
     @ZAttr(id=1212)
     public int getMailSSLProxyClientCertPort() {
-        return getIntAttr(Provisioning.A_zimbraMailSSLProxyClientCertPort, 0);
+        return getIntAttr(Provisioning.A_zimbraMailSSLProxyClientCertPort, 3443);
     }
 
     /**
      * SSL client certificate port for HTTP proxy
      *
-     * @return zimbraMailSSLProxyClientCertPort, or "0" if unset
+     * @return zimbraMailSSLProxyClientCertPort, or "3443" if unset
      *
      * @since ZCS 7.1.1
      */
     @ZAttr(id=1212)
     public String getMailSSLProxyClientCertPortAsString() {
-        return getAttr(Provisioning.A_zimbraMailSSLProxyClientCertPort, "0");
+        return getAttr(Provisioning.A_zimbraMailSSLProxyClientCertPort, "3443");
     }
 
     /**

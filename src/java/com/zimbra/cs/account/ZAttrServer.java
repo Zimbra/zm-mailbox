@@ -42,7 +42,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110801-2320 */
+    /* build: 8.0.0_BETA1_1111 pburgu 20110808-1745 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -8992,25 +8992,25 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @see #getMailSSLProxyClientCertPortAsString()
      *
-     * @return zimbraMailSSLProxyClientCertPort, or 0 if unset
+     * @return zimbraMailSSLProxyClientCertPort, or 3443 if unset
      *
      * @since ZCS 7.1.1
      */
     @ZAttr(id=1212)
     public int getMailSSLProxyClientCertPort() {
-        return getIntAttr(Provisioning.A_zimbraMailSSLProxyClientCertPort, 0);
+        return getIntAttr(Provisioning.A_zimbraMailSSLProxyClientCertPort, 3443);
     }
 
     /**
      * SSL client certificate port for HTTP proxy
      *
-     * @return zimbraMailSSLProxyClientCertPort, or "0" if unset
+     * @return zimbraMailSSLProxyClientCertPort, or "3443" if unset
      *
      * @since ZCS 7.1.1
      */
     @ZAttr(id=1212)
     public String getMailSSLProxyClientCertPortAsString() {
-        return getAttr(Provisioning.A_zimbraMailSSLProxyClientCertPort, "0");
+        return getAttr(Provisioning.A_zimbraMailSSLProxyClientCertPort, "3443");
     }
 
     /**
