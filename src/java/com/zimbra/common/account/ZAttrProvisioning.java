@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110801-2320 */
+    /* build: 8.0.0_BETA1_1111 pburgu 20110808-1745 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4103,6 +4103,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=610)
     public static final String A_zimbraFreebusyExchangeUserOrg = "zimbraFreebusyExchangeUserOrg";
+
+    /**
+     * URLs of external Zimbra servers for free/busy lookup in the form of
+     * http[s]://[user:pass@]host:port
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1253)
+    public static final String A_zimbraFreebusyExternalZimbraURL = "zimbraFreebusyExternalZimbraURL";
 
     /**
      * when set to TRUE, free/busy for the account is not calculated from
@@ -9526,22 +9535,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
