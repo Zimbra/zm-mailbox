@@ -487,11 +487,22 @@ public class ToXML {
         return serialized;
     }
 
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, boolean summary, Collection<String> attrFilter) {
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, 
+            Contact contact, boolean summary, Collection<String> attrFilter) {
         return encodeContact(parent, ifmt, contact, summary, attrFilter, NOTIFY_FIELDS);
     }
+    
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, 
+            Contact contact, boolean summary, Collection<String> attrFilter, 
+            int fields) {
+        
+        return encodeContact(parent, ifmt, contact, summary, attrFilter, 
+                fields, false);
+    }
 
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact, boolean summary, Collection<String> attrFilter, int fields) {
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, 
+            Contact contact, boolean summary, Collection<String> attrFilter, 
+            int fields, boolean returnHiddenAttrs) {
         Element elem = parent.addElement(MailConstants.E_CONTACT);
         elem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
@@ -554,7 +565,9 @@ public class ToXML {
                 }
             }
         } else {
-            for (Map.Entry<String, String> me : contact.getFields().entrySet()) {
+            Map<String, String> contactFields = returnHiddenAttrs ? 
+                    contact.getAllFields() : contact.getFields();
+            for (Map.Entry<String, String> me : contactFields.entrySet()) {
                 String name = me.getKey();
                 String value = me.getValue();
                 if (name != null && !name.trim().equals("") && value != null && !value.equals("")) {

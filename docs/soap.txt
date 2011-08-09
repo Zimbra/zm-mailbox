@@ -2384,7 +2384,7 @@ NOTE: should we return modified attrs in response?
 
 ----------
 
-<GetContactsRequest [sortBy="nameAsc|nameDesc"] [sync="1"] [l="{folder-id}"]>
+<GetContactsRequest [sortBy="nameAsc|nameDesc"] [sync="1"] [l="{folder-id}"] [returnHiddenAttrs="1"]>
   <a n="..."/>*
   <cn id="{contact-id}[,{contact-id}...]"/>*
 </GetContactsRequest>
@@ -2393,6 +2393,10 @@ NOTE: should we return modified attrs in response?
   if l="{folder-id}" is present, return only contacts in the specified folder.
   if <a n="..."/> present, return only the specified attribute(s).
   if <cn id="..."/> present, only get the specified contact(s).
+  
+                         
+  {returnHiddenAttrs} : whether to return contact hidden attrs defined in zimbraContactHiddenAttributes.
+                        ignored if <a> is present.
 
 <GetContactsResponse>
   <cn [md="{metadata-change-date}"]>...</cn>*

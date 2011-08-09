@@ -90,6 +90,11 @@ public class GetContacts extends MailDocumentHandler  {
 				e.detach();
 			}
         }
+		
+		boolean returnHiddenAttrs = false;
+		if (attrs == null) {
+		    returnHiddenAttrs = request.getAttributeBool(MailConstants.A_RETURN_HIDDEN_ATTRS, false);
+		}
 
 		Element response = zsc.createElement(MailConstants.GET_CONTACTS_RESPONSE);
 
@@ -117,15 +122,17 @@ public class GetContacts extends MailDocumentHandler  {
 			    synchronized(mbox) {
                     for (int id : local) {
                         Contact con = mbox.getContactById(octxt, id);
-                        if (con != null && (folderId == ALL_FOLDERS || folderId == con.getFolderId()))
-                            ToXML.encodeContact(response, ifmt, con, false, attrs, fields);
+                        if (con != null && (folderId == ALL_FOLDERS || folderId == con.getFolderId())) {
+                            ToXML.encodeContact(response, ifmt, con, false, attrs, fields, returnHiddenAttrs);
+                        }
                     }
 			    }
 			}
 		} else {
 			for (Contact con : mbox.getContactList(octxt, folderId, sort)) {
-				if (con != null)
-					ToXML.encodeContact(response, ifmt, con, false, attrs, fields);
+				if (con != null) {
+					ToXML.encodeContact(response, ifmt, con, false, attrs, fields, returnHiddenAttrs);
+				}
             }
 		}
 		return response;
