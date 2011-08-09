@@ -253,6 +253,9 @@ public class Pop3Sync extends MailItemImport {
         // bug 47796: Set received date to sent date if available otherwise use current time
             try {
                 Date sentDate = pm.getMimeMessage().getSentDate();
+                if (sentDate == null) {
+                    LOG.warn("null sent date; probably due to parse error. Date header value: [%s]",pm.getMimeMessage().getHeader("Date", null));
+                }
                 pm.setReceivedDate(sentDate != null ? sentDate.getTime() : System.currentTimeMillis());
             } catch (MessagingException e) {
                 LOG.warn("unable to get sent date from parsed message due to exception, must use current time", e);
