@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20110808-1745 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110809-1140 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4493,6 +4493,19 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=850)
     public static final String A_zimbraGalType = "zimbraGalType";
+
+    /**
+     * Object classes added on the global config entry. Unlike other
+     * zimbra***ExtraObjectClass attributes, object classes specified in this
+     * attributes will not be automatically added to the global config entry.
+     * Extra object class on the global config entry must be added using
+     * &quot;zmprov mcf +objectClass {object class}&quot;, then recorded in
+     * this attributes.
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1254)
+    public static final String A_zimbraGlobalConfigExtraObjectClass = "zimbraGlobalConfigExtraObjectClass";
 
     /**
      * Deprecated since: 3.2.0. greatly simplify dl/group model. Orig desc:
@@ -9535,6 +9548,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
