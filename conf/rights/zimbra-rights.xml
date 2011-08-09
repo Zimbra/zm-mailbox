@@ -72,6 +72,10 @@
   <desc>reindex mailbox</desc>
 </right> 
 
+<right name="getAccountShareInfo" type="preset" targetType="account">
+  <desc>get share info on account</desc>
+</right>  
+
 <right name="moveAccountMailbox" type="preset" targetType="account">
   <desc>move account mailbox</desc>
 </right>        
@@ -195,6 +199,10 @@
   <desc>reindex mailbox</desc>
 </right> 
 
+<right name="getCalendarResourceShareInfo" type="preset" targetType="calresource">
+  <desc>get share info on calendar resource</desc>
+</right>
+
 <right name="moveCalendarResourceMailbox" type="preset" targetType="calresource">
   <desc>move calendar resource mailbox</desc>
 </right>   
@@ -311,50 +319,13 @@
   <desc>remove member from distribution list</desc>
 </right>
 
-
-<!-- 
-========================================================
-                 dynamic group
-========================================================
--->
-
-<right name="getGroup" type="getAttrs" targetType="group">
-  <desc>get all group attributes</desc>
+<right name="publishDistributionListShareInfo" type="preset" targetType="dl">
+  <desc>publish share info on distribution list</desc>
 </right>
 
-<right name="modifyGroup" type="setAttrs" targetType="group">
-  <desc>set all group attributes</desc>
+<right name="getDistributionListShareInfo" type="preset" targetType="dl">
+  <desc>get share info on distribution list</desc>
 </right>
-
-<right name="listGroup" type="preset" targetType="group">
-  <desc>see group in GetAllCos/SearchDirectoryResponse</desc>
-</right>
-
-<right name="renameGroup" type="preset" targetType="group">
-  <desc>rename group</desc>
-</right>
-
-<right name="deleteGroup" type="preset" targetType="group">
-  <desc>delete group</desc>
-</right>
-
-<right name="addGroupAlias" type="preset" targetType="group">
-  <desc>add group alias</desc>
-</right>
-
-<right name="removeGroupAlias" type="preset" targetType="group">
-  <desc>remove group alias</desc>
-</right>
-
-<right name="addGroupMember" type="preset" targetType="group">
-  <desc>add member to group</desc>
-</right>
-
-<right name="removeGroupMember" type="preset" targetType="group">
-  <desc>remove member from group</desc>
-</right>
-
-
 
 <!-- 
 ========================================================
@@ -398,20 +369,12 @@
   <desc>create account in the domain</desc>
 </right>
 
-<right name="autoProvisionAccount" type="preset" targetType="domain">
-  <desc>auto provision account in the domain in MANUAL mode</desc>
-</right>
-
 <right name="createCalendarResource" type="preset" targetType="domain">
   <desc>create calendar resource in the domain</desc>
 </right>
 
 <right name="createDistributionList" type="preset" targetType="domain">
   <desc>create distribution list in the domain</desc>
-</right>
-
-<right name="createGroup" type="preset" targetType="domain">
-  <desc>create group in the domain</desc>
 </right>
 
 <right name="createAlias" type="preset" targetType="domain">
