@@ -6110,4 +6110,12 @@ TODO: delete them permerntly from here
   <desc>URLs of external Zimbra servers for free/busy lookup in the form of http[s]://[user:pass@]host:port</desc>
 </attr>
 
+<attr id="1254" name="zimbraGlobalConfigExtraObjectClass" type="string" max="256" cardinality="multi" optionalIn="globalConfig" since="7.1.3">
+  <desc>
+    Object classes added on the global config entry.  Unlike other zimbra***ExtraObjectClass attributes, object classes specified
+    in this attributes will not be automatically added to the global config entry.  Extra object class on the global config entry 
+    must be added using "zmprov mcf +objectClass {object class}", then recorded in this attributes.  
+  </desc>
+</attr>
+
 </attrs>
