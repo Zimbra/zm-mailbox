@@ -193,13 +193,18 @@ public class UrlNamespace {
 		        resource = getMailItemResource(ctxt, user, path);
 		    } catch (ServiceException se) {
 		    	if (path.length() == 1 && path.charAt(0) == '/' && se.getCode().equals(ServiceException.PERM_DENIED)) {
-		    		// return the list of folders the authUser has access to
+		    	    // iCal makes this request for delegated calendars. iCal5 doesn't display the contents of
+		    	    // delegated calendars if the delegator's home collection is not present in the PROPFIND response. 
+		    	    // Since the user does not have permissions on delegator's home collection, return an empty
+		    	    // collection and the list of folders the authUser has access to.
+		    	    rss.add(new Collection("/", user));
 		            ctxt.setCollectionPath("/");
 		    		try {
-						return getFolders(ctxt, user);
+						rss.addAll(getFolders(ctxt, user));
 					} catch (ServiceException e) {
 				        ZimbraLog.dav.warn("can't get folders for "+user, e);
 					}
+					return rss;
 		    	} else {
 			        ZimbraLog.dav.warn("can't get mail item resource for "+user+", "+path, se);
 		    	}
