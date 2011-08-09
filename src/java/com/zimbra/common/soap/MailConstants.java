@@ -707,13 +707,14 @@ public final class MailConstants {
     public static final String A_NEED_GRANTEE_NAME = "needGranteeName";
     public static final String A_INVALID = "invalid";
     public static final String A_REMINDER = "reminder";
+    public static final String A_RETURN_HIDDEN_ATTRS = "returnHiddenAttrs";
 
     // contact group
     public static final String E_CONTACT_GROUP_MEMBER = "m";
     public static final String E_CONTACT_GROUP_MEMBER_ATTRIBUTE = "ma";
     public static final String A_CONTACT_GROUP_MEMBER_TYPE = "type";
     public static final String A_CONTACT_GROUP_MEMBER_VALUE = "value";
-    public static final String A_DEREF_CONATC_GROUP_MEMBER = "derefGroupMember";
+    public static final String A_DEREF_CONTACT_GROUP_MEMBER = "derefGroupMember";
 
     // messages
     public static final String E_MIMEPART = "mp";
