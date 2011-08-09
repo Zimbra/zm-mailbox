@@ -47,6 +47,12 @@ public class GetContactsRequest {
     //     com.zimbra.cs.index.SortBy
     @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
     private String sortBy;
+    
+    @XmlAttribute(name=MailConstants.A_DEREF_CONTACT_GROUP_MEMBER /* derefGroupMember */, required=false)
+    private Boolean derefGroupMember;
+    
+    @XmlAttribute(name=MailConstants.A_RETURN_HIDDEN_ATTRS /* returnHiddenAttrs */, required=false)
+    private Boolean returnHiddenAttrs;
 
     // TODO:need methods to get/set lists of attribs and contacts
     // The Server side handler copes with mixed order of attibutes and contacts
@@ -65,6 +71,8 @@ public class GetContactsRequest {
     public void setSync(Boolean sync) { this.sync = sync; }
     public void setFolderId(String folderId) { this.folderId = folderId; }
     public void setSortBy(String sortBy) { this.sortBy = sortBy; }
+    public void setDerefGroupMember(Boolean derefGroupMember) { this.derefGroupMember = derefGroupMember; }
+    public void setReturnHiddenAttrs(Boolean returnHiddenAttrs) { this.returnHiddenAttrs = returnHiddenAttrs; }
     public void setElements(Iterable <Object> elements) {
         this.elements.clear();
         if (elements != null) {
@@ -80,6 +88,8 @@ public class GetContactsRequest {
     public Boolean getSync() { return sync; }
     public String getFolderId() { return folderId; }
     public String getSortBy() { return sortBy; }
+    public Boolean getDerefGroupMember() { return derefGroupMember; }
+    public Boolean getReturnHiddenAttrs() { return returnHiddenAttrs; }
     public List<Object> getElements() {
         return Collections.unmodifiableList(elements);
     }
