@@ -2478,7 +2478,7 @@ NOTE: should we return modified attrs in response?
 
 ----------
 
-<GetContactsRequest [sortBy="nameAsc|nameDesc"] [sync="1"] [l="{folder-id}"] [derefGroupMember="1"]>
+<GetContactsRequest [sortBy="nameAsc|nameDesc"] [sync="1"] [l="{folder-id}"] [derefGroupMember="1"] [returnHiddenAttrs="1"]>
   <a n="..."/>*
   <ma n="..."/>*
   <cn id="{contact-id}[,{contact-id}...]"/>*
@@ -2498,6 +2498,9 @@ NOTE: should we return modified attrs in response?
                        1 - deref contact group members
                        Note: for performance reason, derefGroupMember is supported
                        only when specific contact ids are specified.
+                       
+  {returnHiddenAttrs} : whether to return contact hidden attrs defined in zimbraContactHiddenAttributes.
+                        ignored if <a> is present.
 
 <GetContactsResponse>
   <cn [md="{metadata-change-date}"]>...</cn>*

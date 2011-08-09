@@ -543,12 +543,13 @@ public final class ToXML {
 
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact,
             boolean summary, Collection<String> attrFilter, int fields) {
-        return encodeContact(parent, ifmt, contact, null, null, summary, attrFilter, fields, null);
+        return encodeContact(parent, ifmt, contact, null, null, summary, attrFilter, fields, null, false);
     }
 
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact,
-            ContactGroup contactGroup, Collection<String> memberAttrFilter, boolean summary,
-            Collection<String> attrFilter, int fields, String migratedDlist) {
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, 
+            Contact contact, ContactGroup contactGroup, Collection<String> memberAttrFilter, 
+            boolean summary, Collection<String> attrFilter, int fields, 
+            String migratedDlist, boolean returnHiddenAttrs) {
         Element el = parent.addElement(MailConstants.E_CONTACT);
         el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
         if (needToOutput(fields, Change.MODIFIED_FOLDER)) {
@@ -615,7 +616,9 @@ public final class ToXML {
                 }
             }
         } else {
-            for (Map.Entry<String, String> me : contact.getFields().entrySet()) {
+            Map<String, String> contactFields = returnHiddenAttrs ? 
+                    contact.getAllFields() : contact.getFields();
+            for (Map.Entry<String, String> me : contactFields.entrySet()) {
                 String name = me.getKey();
                 String value = me.getValue();
                 if (name != null && !name.trim().isEmpty() && !Strings.isNullOrEmpty(value)) {
