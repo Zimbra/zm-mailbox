@@ -451,7 +451,7 @@ public final class MailConstants {
     public static final String A_CSVSEPARATOR = "csvsep";
     public static final String A_NEED_GRANTEE_NAME = "needGranteeName";
     public static final String A_INVALID = "invalid";
-
+    public static final String A_RETURN_HIDDEN_ATTRS = "returnHiddenAttrs";
 
     // messages
     public static final String E_MIMEPART = "mp";
