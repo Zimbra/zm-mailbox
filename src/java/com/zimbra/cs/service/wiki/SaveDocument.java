@@ -82,6 +82,8 @@ public class SaveDocument extends WikiDocumentHandler {
         Doc doc = null;
         Element response = null;
         boolean success = false;
+        Mailbox mbox = null;
+        int folderId = 0;
         try {
             String explicitName = docElem.getAttribute(MailConstants.A_NAME, null);
             String explicitCtype = docElem.getAttribute(MailConstants.A_CONTENT_TYPE, null);
@@ -98,12 +100,13 @@ public class SaveDocument extends WikiDocumentHandler {
 
             String description = docElem.getAttribute(MailConstants.A_DESC, null);
             ItemId fid = new ItemId(docElem.getAttribute(MailConstants.A_FOLDER, DEFAULT_DOCUMENT_FOLDER), zsc);
+            folderId = fid.getId();
 
             String id = docElem.getAttribute(MailConstants.A_ID, null);
             int itemId = id == null ? 0 : new ItemId(id, zsc).getId();
             int ver = (int) docElem.getAttributeLong(MailConstants.A_VERSION, 0);
 
-            Mailbox mbox = getRequestedMailbox(zsc);
+            mbox = getRequestedMailbox(zsc);
             Element attElem = docElem.getOptionalElement(MailConstants.E_UPLOAD);
             Element msgElem = docElem.getOptionalElement(MailConstants.E_MSG);
             Element docRevElem = docElem.getOptionalElement(MailConstants.E_DOC);
@@ -159,19 +162,9 @@ public class SaveDocument extends WikiDocumentHandler {
                     ParsedDocument pd = new ParsedDocument(is, doc.name, doc.contentType, System.currentTimeMillis(),
                         getAuthor(zsc), doc.description, descEnabled);
                     String flags = docElem.getAttribute(MailConstants.A_FLAGS, null);
-                    docItem = mbox.createDocument(octxt, fid.getId(), pd, MailItem.Type.DOCUMENT, Flag.toBitmask(flags));
+                    docItem = mbox.createDocument(octxt, folderId, pd, MailItem.Type.DOCUMENT, Flag.toBitmask(flags));
                 } catch (IOException e) {
                     throw ServiceException.FAILURE("unable to create document", e);
-                } catch (ServiceException e) {
-                    if (e.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
-                        MailItem item = mbox.getItemByPath(octxt, doc.name, fid.getId());
-                        if (item != null && item instanceof Document) {
-                            throw MailServiceException.ALREADY_EXISTS("name " + doc.name + " in folder " + fid.getId(), new Argument(MailConstants.A_NAME, doc.name,
-                                    Argument.Type.STR), new Argument(MailConstants.A_ID, item.getId(), Argument.Type.IID),
-                                    new Argument(MailConstants.A_VERSION, ((Document) item).getVersion(), Argument.Type.NUM));
-                        }
-                    }
-                    throw e;
                 }
             } else {
                 // add a new revision
@@ -194,6 +187,24 @@ public class SaveDocument extends WikiDocumentHandler {
             m.addAttribute(MailConstants.A_VERSION, docItem.getVersion());
             m.addAttribute(MailConstants.A_NAME, docItem.getName());
             success = true;
+        } catch (ServiceException e) {
+            if (e.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
+                MailItem item = null;
+                if (mbox != null && folderId != 0) {
+                    item = mbox.getItemByPath(octxt, doc.name, folderId);
+                }
+                if (item != null && item instanceof Document) {
+                    // name clash with another Document
+                    throw MailServiceException.ALREADY_EXISTS("name " + doc.name + " in folder " + folderId, new Argument(MailConstants.A_NAME, doc.name,
+                            Argument.Type.STR), new Argument(MailConstants.A_ID, item.getId(), Argument.Type.IID),
+                            new Argument(MailConstants.A_VERSION, ((Document) item).getVersion(), Argument.Type.NUM));
+                } else if (item != null) {
+                    // name class with a folder
+                    throw MailServiceException.ALREADY_EXISTS("name " + doc.name + " in folder " + folderId, new Argument(MailConstants.A_NAME, doc.name,
+                            Argument.Type.STR), new Argument(MailConstants.A_ID, item.getId(), Argument.Type.IID));
+                }
+            }
+            throw e;
         } finally {
             if (success && doc != null) {
                 doc.cleanup();
