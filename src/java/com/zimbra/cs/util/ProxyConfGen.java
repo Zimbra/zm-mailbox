@@ -685,6 +685,53 @@ class SSORedirectEnablerVar extends ProxyConfVar {
 	}
 }
 
+class ZMSSOEnablerVar extends ProxyConfVar {
+	public ZMSSOEnablerVar() {
+		super("web.sso.enabled",
+		      "zimbraReverseProxyClientCertMode", 
+		      false, 
+		      ProxyConfValueType.ENABLER, 
+		      ProxyConfOverride.CUSTOM, 
+		      "whether enable sso for domain level");
+	}
+	
+	@Override
+	public void update() throws ServiceException {
+		for (DomainAttrItem item: ProxyConfGen.mDomainReverseProxyAttrs) {
+	        if (item.clientCertMode != null &&
+	        	!ProxyConfUtil.isEmptyString(item.clientCertMode) &&
+	            !item.clientCertMode.equals("off")) {
+	        	mValue = true;
+	        	return;
+	        }
+		}
+		mValue = false;
+	}
+}
+
+class ZMSSODefaultEnablerVar extends ProxyConfVar {
+	public ZMSSODefaultEnablerVar() {
+		super("web.sso.enabled",
+		      "zimbraReverseProxyClientCertMode", 
+		      false, 
+		      ProxyConfValueType.ENABLER, 
+		      ProxyConfOverride.CUSTOM, 
+		      "whether enable sso for global/server level");
+	}
+	
+	@Override
+	public void update() throws ServiceException {
+        String clientCertMode = serverSource.getAttr(mAttribute, true);
+        if (clientCertMode == null ||
+            ProxyConfUtil.isEmptyString(clientCertMode) ||
+            clientCertMode.equals("off")) {
+        	mValue = false;
+        } else {
+        	mValue = true;
+        }
+	}
+}
+
 /**
  * A simple class of Triple<VirtualHostName, VirtualIPAddress, DomainName>. Uses
  * this only for convenient and HashMap can't guarantee order
@@ -1306,6 +1353,8 @@ public class ProxyConfGen
         mConfVars.put("zmlookup.dpasswd", new ProxyConfVar("zmlookup.dpasswd", "ldap_nginx_password", "zmnginx", ProxyConfValueType.STRING, ProxyConfOverride.LOCALCONFIG, "Password for master credentials used by NGINX to log in to upstream for GSSAPI authentication"));
         mConfVars.put("web.sso.certauth.port", new ProxyConfVar("web.sso.certauth.port", Provisioning.A_zimbraMailSSLProxyClientCertPort, new Integer(0), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER,"reverse proxy client cert auth port"));
         mConfVars.put("web.sso.certauth.default.enabled", new ZMSSOCertAuthDefaultEnablerVar());
+        mConfVars.put("web.sso.enabled", new ZMSSOEnablerVar());
+        mConfVars.put("web.sso.default.enabled", new ZMSSODefaultEnablerVar());
     }
 
     /* update the default variable map from the active configuration */
@@ -1458,14 +1507,14 @@ public class ProxyConfGen
         }
 
         /* upgrade the variable map from the config in force */
+        mLog.debug("Loading Attrs in Domain Level");
+        mDomainReverseProxyAttrs = loadDomainReverseProxyAttrs();
+        
         mLog.debug("Updating Default Variable Map");
         updateDefaultVars();
 
         mLog.debug("Processing Config Overrides");
         overrideDefaultVars(cl);
-        
-        mLog.debug("Loading Attrs in Domain Level");
-        mDomainReverseProxyAttrs = loadDomainReverseProxyAttrs();
         
         if (cl.hasOption('D')) {
             displayVariables();
