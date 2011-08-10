@@ -146,7 +146,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF virtual_transport					          LOCAL postfix_virtual_transport
 	POSTCONF always_add_missing_headers           LOCAL postfix_always_add_missing_headers
 	POSTCONF smtpd_sasl_security_options		LOCAL postfix_smtpd_sasl_security_options
-	POSTCONF smtpd_tls_security_options		LOCAL postfix_smtpd_tls_security_options
+	POSTCONF smtpd_sasl_tls_security_options	LOCAL smtpd_sasl_tls_security_options
 	RESTART mta
 
 SECTION sasl
