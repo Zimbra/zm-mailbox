@@ -205,9 +205,14 @@ public class ImapSession extends Session {
         return detach();
     }
 
-    synchronized Session detach() {
-        ImapSessionManager.getInstance().uncacheSession(this);
-        return isRegistered() ? super.unregister() : this;
+    Session detach() {
+        Mailbox mbox = mMailbox;
+        synchronized (mbox != null ? mbox : this) { // locking order is always Mailbox then Session
+            synchronized (this) {
+                ImapSessionManager.getInstance().uncacheSession(this);
+                return isRegistered() ? super.unregister() : this;
+            }
+        }
     }
 
     @Override
