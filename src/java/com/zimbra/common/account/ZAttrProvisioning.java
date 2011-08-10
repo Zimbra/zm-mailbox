@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110809-1140 */
+    /* build: 8.0.0_BETA1_1111 administrator 20110808-1136 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -6471,6 +6471,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPasswordMinAlphaChars = "zimbraPasswordMinAlphaChars";
 
     /**
+     * minimum number of numeric or ascii punctuation characters required in
+     * a password
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1255)
+    public static final String A_zimbraPasswordMinDigitsOrPuncs = "zimbraPasswordMinDigitsOrPuncs";
+
+    /**
      * minimum length of a password
      */
     @ZAttr(id=33)
@@ -9548,22 +9557,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
