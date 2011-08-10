@@ -6152,21 +6152,24 @@ public class LdapProvisioning extends LdapProv {
 
         if (LdapSignature.isAccountSignature(account, signatureId)) {
             LdapSignature.deleteAccountSignature(this, account);
-            return;
+        } else {
+            ZLdapContext zlc = null;
+            try {
+                zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_SIGNATURE);
+                Signature signature = getSignatureById(account, ldapEntry, signatureId, zlc);
+                if (signature == null)
+                    throw AccountServiceException.NO_SUCH_SIGNATURE(signatureId);
+                String dn = getSignatureDn(ldapEntry, signature.getName());
+                zlc.deleteEntry(dn);
+            } catch (ServiceException e) {
+                throw ServiceException.FAILURE("unable to delete signarure: " + signatureId, e);
+            } finally {
+                LdapClient.closeContext(zlc);
+            }
         }
 
-        ZLdapContext zlc = null;
-        try {
-            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_SIGNATURE);
-            Signature signature = getSignatureById(account, ldapEntry, signatureId, zlc);
-            if (signature == null)
-                throw AccountServiceException.NO_SUCH_SIGNATURE(signatureId);
-            String dn = getSignatureDn(ldapEntry, signature.getName());
-            zlc.deleteEntry(dn);
-        } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to delete signarure: "+signatureId, e);
-        } finally {
-            LdapClient.closeContext(zlc);
+        if (signatureId.equals(account.getPrefDefaultSignatureId())) {
+            account.unsetPrefDefaultSignatureId();
         }
     }
 
