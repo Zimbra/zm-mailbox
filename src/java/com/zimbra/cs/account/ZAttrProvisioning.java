@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110809-1612 */
+    /* build: 7.0.0_BETA1_1111 administrator 20110810-1144 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5966,6 +5966,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1162)
     public static final String A_zimbraPasswordMinAlphaChars = "zimbraPasswordMinAlphaChars";
+
+    /**
+     * minimum number of numeric or ascii punctuation characters required in
+     * a password
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1255)
+    public static final String A_zimbraPasswordMinDigitsOrPuncs = "zimbraPasswordMinDigitsOrPuncs";
 
     /**
      * minimum length of a password
