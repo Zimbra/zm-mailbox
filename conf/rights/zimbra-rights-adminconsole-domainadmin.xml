@@ -555,6 +555,8 @@
   <rights>
     <r n="setDomainAdminConsoleDLSharesTab"/>
     <r n="viewDomainAdminConsoleDLSharesTab"/>
+    <r n="getDistributionListShareInfo"/>
+    <r n="publishDistributionListShareInfo"/>
   </rights>
 </right>
 <!-- Admin Console DL ACL Tab -->
@@ -645,6 +647,7 @@
     <r n="renameCalendarResource"/>
     <r n="deleteCalendarResource"/>
     <r n="setCalendarResourcePassword"/>
+    <r n="getCalendarResourceShareInfo"/>
   </rights>
 </right>
 <!-- Admin Console Resources Location/Contact Tab -->
