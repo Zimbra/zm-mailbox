@@ -3979,7 +3979,8 @@ public class LdapProvisioning extends Provisioning {
         int minNumeric = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinNumericChars, 0);
         int minPunctuation = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinPunctuationChars, 0);
         int minAlpha = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinAlphaChars, 0);
-        
+        int minNumOrPunc = getInt(acct, cos, attrs, Provisioning.A_zimbraPasswordMinDigitsOrPuncs, 0);
+
         String allowedChars = getString(acct, cos, attrs, Provisioning.A_zimbraPasswordAllowedChars);
         Pattern allowedCharsPattern = null;
         if (allowedChars != null) {
@@ -3992,7 +3993,7 @@ public class LdapProvisioning extends Provisioning {
         }
         
         boolean hasPolicies = minUpperCase > 0 || minLowerCase > 0 || minNumeric > 0 || minPunctuation > 0 ||
-                minAlpha > 0 || allowedCharsPattern != null;
+                minAlpha > 0 || minNumOrPunc > 0 || allowedCharsPattern != null;
             
         if (!hasPolicies) {
             return;
@@ -4053,6 +4054,10 @@ public class LdapProvisioning extends Provisioning {
         if (alpha < minAlpha) {
             throw AccountServiceException.INVALID_PASSWORD("not enough alpha characters", 
                     new Argument(Provisioning.A_zimbraPasswordMinAlphaChars, minAlpha, Argument.Type.NUM));
+        }
+        if (numeric + punctuation < minNumOrPunc) {
+            throw AccountServiceException.INVALID_PASSWORD("not enough numeric or punctuation characters",
+                    new Argument(Provisioning.A_zimbraPasswordMinDigitsOrPuncs, minNumOrPunc, Argument.Type.NUM));
         }
     }
 
