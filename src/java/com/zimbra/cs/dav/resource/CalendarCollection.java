@@ -297,6 +297,8 @@ public class CalendarCollection extends Collection {
             try {
                 ZCalendar.ZVCalendar vcalendar = ZCalendar.ZCalendarBuilder.build(is, MimeConstants.P_CHARSET_UTF8);
                 CalDavUtils.removeAttendeeForOrganizer(vcalendar);  // Apple iCal fixup
+                if (ctxt.isIcalClient()) // Apple iCal fixup for todos
+                    CalDavUtils.adjustPercentCompleteForToDos(vcalendar);
                 invites = Invite.createFromCalendar(account,
                         findSummary(vcalendar),
                         vcalendar,

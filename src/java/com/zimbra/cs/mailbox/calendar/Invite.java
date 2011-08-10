@@ -1721,7 +1721,7 @@ public class Invite {
                                 // ignore all other sub components
                             }
                         }
-
+                        boolean isTodoCompleted = false;
                         boolean sawIntendedFreeBusy = false;
                         List<ZProperty> properties = Lists.newArrayList(comp.getPropertyIterator());
                         for (ZProperty prop : properties) {
@@ -1869,6 +1869,8 @@ public class Invite {
                                             }
                                         } else {
                                             newInv.setStatus(status);
+                                            if (isTodo && IcalXmlStrMap.STATUS_COMPLETED.equals(status))
+                                                isTodoCompleted = true;
                                         }
                                     }
                                     break;
@@ -1918,14 +1920,18 @@ public class Invite {
                                 case PERCENT_COMPLETE:
                                     if (isTodo) {
                                         String pctComplete = propVal;
-                                        if (pctComplete != null)
+                                        if (pctComplete != null) {
                                             newInv.setPercentComplete(pctComplete);
+                                            if (prop.getIntValue() == 100)
+                                                isTodoCompleted = true;
+                                        }    
                                     }
                                     break;
                                 case COMPLETED:
                                     if (isTodo) {
                                         ParsedDateTime completed = ParsedDateTime.parseUtcOnly(propVal);
                                         newInv.setCompleted(completed.getUtcTime());
+                                        isTodoCompleted = true;
                                     }
                                     break;
                                 case CONTACT:
@@ -1951,7 +1957,16 @@ public class Invite {
                                 }
                             }
                         }
-
+                        
+                        if (isTodoCompleted) {
+                            // set the status to Completed.
+                            newInv.setStatus(IcalXmlStrMap.STATUS_COMPLETED);
+                            // set percent-complete to 100
+                            newInv.setPercentComplete(Integer.toString(100));
+                            if (newInv.getCompleted() == 0) // set COMPLETED property to now if not already set.
+                                newInv.setCompleted(System.currentTimeMillis());
+                        }    
+                        
                         newInv.setIsOrganizer(account);
 
                         newInv.validateDuration();

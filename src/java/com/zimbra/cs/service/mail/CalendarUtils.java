@@ -1135,6 +1135,10 @@ public class CalendarUtils {
                 } catch (ParseException e) {
                     throw ServiceException.INVALID_REQUEST("Invalid COMPLETED value: " + completed, e);
                 }
+            } else if (status.equals(IcalXmlStrMap.STATUS_COMPLETED)) {
+                newInv.setCompleted(System.currentTimeMillis());
+            } else {
+                newInv.setCompleted(0);
             }
         }
 
