@@ -6328,6 +6328,10 @@ public class Mailbox {
         if (addrs.isEmpty()) {
             return Collections.emptyList();
         }
+        if (lock.isLocked()) { //TODO can't search while holding the mailbox lock
+            ZimbraLog.mailbox.warn("Unable to auto-add contact while holding Mailbox lock");
+            return Collections.emptyList();
+        }
         Set<InternetAddress> newAddrs = new HashSet<InternetAddress>();
         for (InternetAddress addr : addrs) {
             if (!Strings.isNullOrEmpty(addr.getAddress()) && !index.existsInContacts(Collections.singleton(addr))) {
