@@ -298,10 +298,6 @@ public class LdapProvisioning extends Provisioning {
 
     /**
      * should only be called internally.
-     *
-     * @param initCtxt
-     * @param attrs
-     * @throws ServiceException
      */
     protected void modifyAttrsInternal(Entry entry, ZimbraLdapContext initZlc, Map<?, ?> attrs)
             throws ServiceException {
@@ -5722,21 +5718,24 @@ public class LdapProvisioning extends Provisioning {
 
         if (LdapSignature.isAccountSignature(account, signatureId)) {
             LdapSignature.deleteAccountSignature(this, account);
-            return;
+        } else {
+            ZimbraLdapContext zlc = null;
+            try {
+                zlc = new ZimbraLdapContext(true);
+                Signature signature = getSignatureById(account, ldapEntry, signatureId, zlc);
+                if (signature == null)
+                    throw AccountServiceException.NO_SUCH_SIGNATURE(signatureId);
+                String dn = getSignatureDn(ldapEntry, signature.getName());
+                zlc.unbindEntry(dn);
+            } catch (NamingException e) {
+                throw ServiceException.FAILURE("unable to delete signarure: " + signatureId, e);
+            } finally {
+                ZimbraLdapContext.closeContext(zlc);
+            }
         }
 
-        ZimbraLdapContext zlc = null;
-        try {
-            zlc = new ZimbraLdapContext(true);
-            Signature signature = getSignatureById(account, ldapEntry, signatureId, zlc);
-            if (signature == null)
-                throw AccountServiceException.NO_SUCH_SIGNATURE(signatureId);
-            String dn = getSignatureDn(ldapEntry, signature.getName());
-            zlc.unbindEntry(dn);
-        } catch (NamingException e) {
-            throw ServiceException.FAILURE("unable to delete signarure: "+signatureId, e);
-        } finally {
-            ZimbraLdapContext.closeContext(zlc);
+        if (signatureId.equals(account.getPrefDefaultSignatureId())) {
+            account.unsetPrefDefaultSignatureId();
         }
     }
 
