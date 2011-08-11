@@ -5637,4 +5637,8 @@ TODO: delete them permerntly from here
   <desc>minimum number of numeric or ascii punctuation characters required in a password</desc>
 </attr>
 
+<attr id="1256" name="zimbraPasswordAllowedPunctuationChars" type="cstring" max="64" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.1.3">
+  <desc>regex of allowed punctuation characters in password</desc>
+</attr>
+
 </attrs>

@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 administrator 20110810-1144 */
+    /* build: 7.0.0_BETA1_1111 administrator 20110810-1230 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5865,6 +5865,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1163)
     public static final String A_zimbraPasswordAllowedChars = "zimbraPasswordAllowedChars";
+
+    /**
+     * regex of allowed punctuation characters in password
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1256)
+    public static final String A_zimbraPasswordAllowedPunctuationChars = "zimbraPasswordAllowedPunctuationChars";
 
     /**
      * registered change password listener name
