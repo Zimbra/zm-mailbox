@@ -436,6 +436,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.CountAccountResponse.class,
             com.zimbra.soap.admin.message.CreateAccountRequest.class,
             com.zimbra.soap.admin.message.CreateAccountResponse.class,
+            com.zimbra.soap.admin.message.CreateArchiveRequest.class,
+            com.zimbra.soap.admin.message.CreateArchiveResponse.class,
             com.zimbra.soap.admin.message.CreateCalendarResourceRequest.class,
             com.zimbra.soap.admin.message.CreateCalendarResourceResponse.class,
             com.zimbra.soap.admin.message.CreateCosRequest.class,
