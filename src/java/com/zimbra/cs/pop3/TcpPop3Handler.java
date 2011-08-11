@@ -106,8 +106,8 @@ final class TcpPop3Handler extends ProtocolHandler {
         protected void startTLS() throws IOException {
             sendOK("Begin TLS negotiation");
             SSLSocketFactory fac = (SSLSocketFactory) SSLSocketFactory.getDefault();
-            SSLSocket sock = (SSLSocket) fac.createSocket(mConnection,
-                    mConnection.getInetAddress().getHostName(), mConnection.getPort(), true);
+            SSLSocket sock = (SSLSocket) fac.createSocket(connection,
+                    connection.getInetAddress().getHostName(), connection.getPort(), true);
             NetUtil.setSSLEnabledCipherSuites(sock, config.getSslExcludedCiphers());
             sock.setUseClientMode(false);
             startHandshake(sock);
@@ -122,14 +122,14 @@ final class TcpPop3Handler extends ProtocolHandler {
             authenticator.sendSuccess();
             if (authenticator.isEncryptionEnabled()) {
                 // Switch to encrypted streams
-                input = new TcpServerInputStream(authenticator.unwrap(mConnection.getInputStream()));
-                output = authenticator.wrap(mConnection.getOutputStream());
+                input = new TcpServerInputStream(authenticator.unwrap(connection.getInputStream()));
+                output = authenticator.wrap(connection.getOutputStream());
             }
         }
 
         @Override
         InetSocketAddress getLocalAddress() {
-            return (InetSocketAddress) mConnection.getLocalSocketAddress();
+            return (InetSocketAddress) connection.getLocalSocketAddress();
         }
 
         @Override

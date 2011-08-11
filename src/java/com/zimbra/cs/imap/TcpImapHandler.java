@@ -269,7 +269,7 @@ final class TcpImapHandler extends ProtocolHandler {
 
         @Override
         void enableInactivityTimer() throws SocketException {
-            mConnection.setSoTimeout(config.getAuthenticatedMaxIdleTime() * 1000);
+            connection.setSoTimeout(config.getAuthenticatedMaxIdleTime() * 1000);
         }
 
         @Override
@@ -278,8 +278,8 @@ final class TcpImapHandler extends ProtocolHandler {
             authenticator.sendSuccess();
             if (authenticator.isEncryptionEnabled()) {
                 // switch to encrypted streams
-                input = new TcpServerInputStream(authenticator.unwrap(mConnection.getInputStream()));
-                output = authenticator.wrap(mConnection.getOutputStream());
+                input = new TcpServerInputStream(authenticator.unwrap(connection.getInputStream()));
+                output = authenticator.wrap(connection.getOutputStream());
             }
         }
 
@@ -294,7 +294,8 @@ final class TcpImapHandler extends ProtocolHandler {
             sendOK(tag, "Begin TLS negotiation now");
 
             SSLSocketFactory fac = (SSLSocketFactory) SSLSocketFactory.getDefault();
-            SSLSocket tlsconn = (SSLSocket) fac.createSocket(mConnection, mConnection.getInetAddress().getHostName(), mConnection.getPort(), true);
+            SSLSocket tlsconn = (SSLSocket) fac.createSocket(connection, connection.getInetAddress().getHostName(),
+                    connection.getPort(), true);
             NetUtil.setSSLEnabledCipherSuites(tlsconn, config.getSslExcludedCiphers());
             tlsconn.setUseClientMode(false);
             startHandshake(tlsconn);
