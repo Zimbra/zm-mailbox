@@ -652,13 +652,8 @@ class ClientCertAuthDefaultCAVar extends ProxyConfVar {
 	
 	@Override
 	public void update() throws ServiceException {
-		//"ssl.clientcertca.default" indicates the local client ca cert path other than file content
-        String defaultClientCertCaContent = serverSource.getAttr(mAttribute, "");
-        if (!ProxyConfUtil.isEmptyString(defaultClientCertCaContent)) {
-            String defaultClientCertCaPath = (String)mDefault;
-            ProxyConfUtil.writeContentToFile(defaultClientCertCaContent, defaultClientCertCaPath);
-        }
-        mValue = mDefault; 
+        
+        mValue = mDefault; //must be the value of getDefaultClientCertCaPath
 	}
 }
 
@@ -696,15 +691,11 @@ class ZMSSOEnablerVar extends ProxyConfVar {
 	
 	@Override
 	public void update() throws ServiceException {
-		for (DomainAttrItem item: ProxyConfGen.mDomainReverseProxyAttrs) {
-	        if (item.clientCertMode != null &&
-	        	!ProxyConfUtil.isEmptyString(item.clientCertMode) &&
-	            !item.clientCertMode.equals("off")) {
+        if (ProxyConfGen.isDomainClientCertVerifyEnabled()) {
 	        	mValue = true;
-	        	return;
-	        }
+        } else {
+            mValue = false;
 		}
-		mValue = false;
 	}
 }
 
@@ -720,13 +711,10 @@ class ZMSSODefaultEnablerVar extends ProxyConfVar {
 	
 	@Override
 	public void update() throws ServiceException {
-        String clientCertMode = serverSource.getAttr(mAttribute, true);
-        if (clientCertMode == null ||
-            ProxyConfUtil.isEmptyString(clientCertMode) ||
-            clientCertMode.equals("off")) {
-        	mValue = false;
+        if (ProxyConfGen.isClientCertVerifyEnabled()) {
+            mValue = true;
         } else {
-        	mValue = true;
+        	mValue = false;
         }
 	}
 }
@@ -881,6 +869,7 @@ public class ProxyConfGen
         attrsNeeded.add(Provisioning.A_zimbraSSLPrivateKey);
         attrsNeeded.add(Provisioning.A_zimbraReverseProxyClientCertMode);
         attrsNeeded.add(Provisioning.A_zimbraReverseProxyClientCertCA);
+        attrsNeeded.add(Provisioning.A_zimbraWebClientLoginURL);
 
         final List<DomainAttrItem> result = new ArrayList<DomainAttrItem>();
 
@@ -921,8 +910,6 @@ public class ProxyConfGen
                         if (!ProxyConfUtil.isEmptyString(clientCertCA)){
 
                             createDomainSSLDirIfNotExists();
-                            String clientCertCaPath = getClientCertCaPathByDomain(domainName);
-                            ProxyConfUtil.writeContentToFile(clientCertCA, clientCertCaPath);
                         }
                         result.add(new DomainAttrItem(domainName,
                                 virtualHostnames[i], vip, certificate, privateKey, 
@@ -939,6 +926,36 @@ public class ProxyConfGen
         mProv.getAllDomains(visitor,
             attrsNeeded.toArray(new String[attrsNeeded.size()]));
         return result;
+    }
+
+    /**
+     * Load all the client cert ca content
+     * @return
+     */
+    private static String loadAllClientCertCA() {
+        // to avoid redundancy CA if some domains share the same CA
+        HashSet<String> caSet = new HashSet<String>(); 
+        String globalCA = mServer.getAttr(Provisioning.A_zimbraReverseProxyClientCertCA, "");
+        if (!ProxyConfUtil.isEmptyString(globalCA)) {
+            caSet.add(globalCA);
+        }
+        
+        for (DomainAttrItem item : mDomainReverseProxyAttrs) {
+            if (!ProxyConfUtil.isEmptyString(item.clientCertCa)) {
+                caSet.add(item.clientCertCa);
+            }
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        String separator = System.getProperty("line.separator");
+        for (String ca: caSet) {
+            sb.append(ca);
+            sb.append(separator);
+        }
+        if (sb.length() > separator.length()) {
+            sb.setLength(sb.length() - separator.length()); // trim the last separator
+        }
+        return sb.toString();
     }
 
     public static void createDomainSSLDirIfNotExists( ){
@@ -1096,7 +1113,7 @@ public class ProxyConfGen
 
             cache = expandTemplateAndCache(temp, conf);
             conf.newLine();
-            
+
             while (it.hasNext()) {
                 item = it.next();
                 fillVarsWithDomainAttrs(item);
@@ -1509,6 +1526,9 @@ public class ProxyConfGen
         mLog.debug("Processing Config Overrides");
         overrideDefaultVars(cl);
         
+        String clientCA = loadAllClientCertCA();
+        writeClientCAtoFile(clientCA);
+       
         if (cl.hasOption('D')) {
             displayVariables();
             exitCode = 0;
@@ -1583,8 +1603,72 @@ public class ProxyConfGen
         return (exitCode);
     }
 
-    public static void main(String[] args) throws ServiceException,
-        ProxyConfException {
+    private static void writeClientCAtoFile(String clientCA)
+            throws ServiceException {
+        int exitCode;
+        ProxyConfVar clientCAEnabledVar = null;
+
+        if (ProxyConfUtil.isEmptyString(clientCA)) {
+            clientCAEnabledVar = new ProxyConfVar(
+                    "ssl.clientcertca.enabled", null, false, 
+                    ProxyConfValueType.ENABLER, 
+                    ProxyConfOverride.CUSTOM, "is there valid client ca cert");
+            
+            if(isClientCertVerifyEnabled() || isDomainClientCertVerifyEnabled()) {
+                mLog.error("Client certificate verification is enabled but no client cert ca is provided");
+                exitCode = 1;
+                System.exit(exitCode);
+            }
+            
+        } else {
+            clientCAEnabledVar = new ProxyConfVar(
+                    "ssl.clientcertca.enabled", null, true, 
+                    ProxyConfValueType.ENABLER, 
+                    ProxyConfOverride.CUSTOM, "is there valid client ca cert");
+             mLog.debug("Write Client CA file");
+             ProxyConfUtil.writeContentToFile(clientCA, getDefaultClientCertCaPath());
+        }
+        mConfVars.put("ssl.clientcertca.enabled", clientCAEnabledVar);
+        try {
+            mVars.put("ssl.clientcertca.enabled", clientCAEnabledVar.confValue());
+        } catch (ProxyConfException e) {
+            mLog.error("ProxyConfException during format ssl.clientcertca.enabled", e);
+            System.exit(1);
+        }
+    }
+    
+    /**
+     * check whether client cert verify is enabled in server level
+     * @return
+     */
+    static boolean isClientCertVerifyEnabled() {
+        String globalMode = mServer.getAttr(Provisioning.A_zimbraReverseProxyClientCertMode, "off");
+        
+        if (globalMode.equals("on") ||
+            globalMode.equals("optional")) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * check whether client cert verify is enabled in domain level
+     * @return
+     */
+    static boolean isDomainClientCertVerifyEnabled() {
+        for (DomainAttrItem item: mDomainReverseProxyAttrs) {
+            if (item.clientCertMode != null &&
+                (item.clientCertMode.equals("on") ||
+                 item.clientCertMode.equals("optional"))) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    public static void main(String[] args) throws ServiceException, ProxyConfException {
         int exitCode = createConf(args);
         System.exit(exitCode);
     }
