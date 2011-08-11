@@ -147,6 +147,8 @@ public abstract class ProtocolHandler implements Runnable {
             ZimbraLog.addIpToContext(remoteAddress);
             mLog.debug("Idle timeout: " + e);
             notifyIdleConnection();
+        } catch (AssertionError e) { // should not halt the server
+            mLog.error("This should not happen. Please file a bug.", e);
         } catch (OutOfMemoryError e) {
             Zimbra.halt("out of memory", e);
         } catch (Error e) {
