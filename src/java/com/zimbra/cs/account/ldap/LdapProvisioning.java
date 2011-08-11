@@ -3991,9 +3991,19 @@ public class LdapProvisioning extends Provisioning {
                         " is not valid regex: " + e.getMessage());
             }
         }
-        
+        String allowedPuncChars = getString(acct, cos, attrs, Provisioning.A_zimbraPasswordAllowedPunctuationChars);
+        Pattern allowedPuncCharsPattern = null;
+        if (allowedPuncChars != null) {
+            try {
+                allowedPuncCharsPattern = Pattern.compile(allowedPuncChars);
+            } catch (PatternSyntaxException e) {
+                throw AccountServiceException.INVALID_PASSWORD(Provisioning.A_zimbraPasswordAllowedPunctuationChars +
+                        " is not valid regex: " + e.getMessage());
+            }
+        }
+
         boolean hasPolicies = minUpperCase > 0 || minLowerCase > 0 || minNumeric > 0 || minPunctuation > 0 ||
-                minAlpha > 0 || minNumOrPunc > 0 || allowedCharsPattern != null;
+                minAlpha > 0 || minNumOrPunc > 0 || allowedCharsPattern != null || allowedPuncCharsPattern != null;
             
         if (!hasPolicies) {
             return;
@@ -4006,9 +4016,16 @@ public class LdapProvisioning extends Provisioning {
         int alpha = 0;
 
         for (int i=0; i < password.length(); i++) {
-            int ch = password.charAt(i);
-            boolean isAlpha = true;
+            char ch = password.charAt(i);
 
+            if (allowedCharsPattern != null) {
+                if (!allowedCharsPattern.matcher(Character.toString(ch)).matches()) {
+                    throw AccountServiceException.INVALID_PASSWORD(ch + " is not an allowed character",
+                            new Argument(Provisioning.A_zimbraPasswordAllowedChars, allowedChars, Argument.Type.STR));
+                }
+            }
+
+            boolean isAlpha = true;
             if (Character.isUpperCase(ch)) {
                 upper++;
             } else if (Character.isLowerCase(ch)) {
@@ -4016,23 +4033,18 @@ public class LdapProvisioning extends Provisioning {
             } else if (Character.isDigit(ch)) {
                 numeric++;
                 isAlpha = false;
+            } else if (allowedPuncCharsPattern != null) {
+                if (allowedPuncCharsPattern.matcher(Character.toString(ch)).matches()) {
+                    punctuation++;
+                    isAlpha = false;
+                }
             } else if (isAsciiPunc(ch)) {
                 punctuation++;
                 isAlpha = false;
             }
-            
             if (isAlpha) {
                 alpha++;
             }
-            
-            if (allowedCharsPattern != null) {
-                char character = password.charAt(i);
-                if (!allowedCharsPattern.matcher(Character.toString(character)).matches()) {
-                    throw AccountServiceException.INVALID_PASSWORD(character + " is not an allowed character", 
-                            new Argument(Provisioning.A_zimbraPasswordAllowedChars, allowedChars, Argument.Type.STR));
-                }
-            }
-            
         }
 
         if (upper < minUpperCase) {
@@ -4061,7 +4073,7 @@ public class LdapProvisioning extends Provisioning {
         }
     }
 
-    private boolean isAsciiPunc(int ch) {
+    private boolean isAsciiPunc(char ch) {
         return
             (ch >= 33 && ch <= 47) || // ! " # $ % & ' ( ) * + , - . /
             (ch >= 58 && ch <= 64) || // : ; < = > ? @
