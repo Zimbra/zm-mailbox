@@ -15244,6 +15244,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * regex of allowed punctuation characters in password
+     *
+     * @return zimbraPasswordAllowedPunctuationChars, or null if unset
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1256)
+    public String getPasswordAllowedPunctuationChars() {
+        return getAttr(Provisioning.A_zimbraPasswordAllowedPunctuationChars, null);
+    }
+
+    /**
+     * regex of allowed punctuation characters in password
+     *
+     * @param zimbraPasswordAllowedPunctuationChars new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1256)
+    public void setPasswordAllowedPunctuationChars(String zimbraPasswordAllowedPunctuationChars) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordAllowedPunctuationChars, zimbraPasswordAllowedPunctuationChars);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * regex of allowed punctuation characters in password
+     *
+     * @param zimbraPasswordAllowedPunctuationChars new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1256)
+    public Map<String,Object> setPasswordAllowedPunctuationChars(String zimbraPasswordAllowedPunctuationChars, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordAllowedPunctuationChars, zimbraPasswordAllowedPunctuationChars);
+        return attrs;
+    }
+
+    /**
+     * regex of allowed punctuation characters in password
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1256)
+    public void unsetPasswordAllowedPunctuationChars() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordAllowedPunctuationChars, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * regex of allowed punctuation characters in password
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1256)
+    public Map<String,Object> unsetPasswordAllowedPunctuationChars(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPasswordAllowedPunctuationChars, "");
+        return attrs;
+    }
+
+    /**
      * whether or not to enforce password history. Number of unique passwords
      * a user must have before being allowed to re-use an old one. A value of
      * 0 means no password history.
@@ -18662,13 +18734,13 @@ public abstract class ZAttrCos extends NamedEntry {
      * used. Orig desc: whether or not email reminders for appointments and
      * tasks are enabled
      *
-     * @return zimbraPrefCalendarReminderSendEmail, or true if unset
+     * @return zimbraPrefCalendarReminderSendEmail, or false if unset
      *
      * @since ZCS 5.0.0
      */
     @ZAttr(id=576)
     public boolean isPrefCalendarReminderSendEmail() {
-        return getBooleanAttr(Provisioning.A_zimbraPrefCalendarReminderSendEmail, true);
+        return getBooleanAttr(Provisioning.A_zimbraPrefCalendarReminderSendEmail, false);
     }
 
     /**
