@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.server;
 
+import com.google.common.base.Preconditions;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.Zimbra;
@@ -73,15 +74,15 @@ public abstract class ProtocolHandler implements Runnable {
 
     private final Log log;
 
-    protected Socket mConnection;
+    protected Socket connection;
     private volatile boolean idle = true;
     private volatile boolean shuttingDown = false;
-    private final TcpServer mServer;
-    private Thread mHandlerThread;
+    private final TcpServer server;
+    private Thread handlerThread;
 
     public ProtocolHandler(TcpServer server) {
-        mServer = server;
-        log = server.getConfig().getLog();
+        this.server = server;
+        this.log = server.getConfig().getLog();
     }
 
     protected void setIdle(boolean value) {
@@ -96,8 +97,8 @@ public abstract class ProtocolHandler implements Runnable {
         shuttingDown = value;
     }
 
-    void setConnection(Socket connection) {
-        mConnection = connection;
+    void setConnection(Socket sock) {
+        connection = sock;
     }
 
     @Override
@@ -105,34 +106,35 @@ public abstract class ProtocolHandler implements Runnable {
         // This asserts any reuse of a ProtocolHandler object.  Once we close a connection
         // we also set it to null, and since there is no setConnection, you can't meaningfully
         // reuse an ProtocolHandler object and if you do we give you this ISE.
-        if (mConnection == null)
-            throw new IllegalStateException("Connection can not be null when running ProtocolHandler");
-        String remoteAddress = mConnection.getInetAddress().getHostAddress();
+        Preconditions.checkState(connection != null, "Connection can not be null when running ProtocolHandler");
+        String remoteAddress = connection.getInetAddress().getHostAddress();
 
-        mHandlerThread = Thread.currentThread();
-        mServer.addActiveHandler(this);
+        handlerThread = Thread.currentThread();
+        server.addActiveHandler(this);
 
         ZimbraLog.clearContext();
 
         try {
-            mConnection.setSoTimeout(mServer.getConfigMaxIdleMilliSeconds()); // must be set before any traffic
-            if (mConnection instanceof SSLSocket) {
-                startHandshake((SSLSocket) mConnection);
+            connection.setSoTimeout(server.getConfigMaxIdleMilliSeconds()); // must be set before any traffic
+            if (connection instanceof SSLSocket) {
+                startHandshake((SSLSocket) connection);
             }
 
-            if (setupConnection(mConnection)) {
+            if (setupConnection(connection)) {
                 if (authenticate()) {
                     processConnection();
                 } else {
-                    log.info("Authentication failed for client " + remoteAddress);
+                    log.info("Authentication failed for client %s", remoteAddress);
                 }
             } else {
-                log.info("Connection refused for client " + remoteAddress);
+                log.info("Connection refused for client %s", remoteAddress);
             }
         } catch (SocketTimeoutException e) {
             ZimbraLog.addIpToContext(remoteAddress);
-            log.debug("Idle timeout: " + e);
+            log.debug("Idle timeout", e);
             notifyIdleConnection();
+        } catch (AssertionError e) { // should not halt the server
+            log.error("This should not happen. Please file a bug.", e);
         } catch (OutOfMemoryError e) {
             Zimbra.halt("out of memory", e);
         } catch (Error e) {
@@ -144,12 +146,12 @@ public abstract class ProtocolHandler implements Runnable {
             dropConnection();
             ZimbraLog.addIpToContext(remoteAddress);
             try {
-                mConnection.close();
-            } catch (IOException ioe) {
+                connection.close();
+            } catch (IOException e) {
                 if (log.isDebugEnabled()) {
-                    log.info("I/O error while closing connection", ioe);
+                    log.info("I/O error while closing connection", e);
                 } else {
-                    log.info("I/O error while closing connection: " + ioe);
+                    log.info("I/O error while closing connection: %s", e.toString());
                 }
             } finally {
                 ZimbraLog.clearContext();
@@ -157,8 +159,8 @@ public abstract class ProtocolHandler implements Runnable {
         }
 
         ZimbraLog.clearContext();
-        mServer.removeActiveHandler(this);
-        mHandlerThread = null;
+        server.removeActiveHandler(this);
+        handlerThread = null;
         log.info("Handler exiting normally");
     }
 
@@ -184,7 +186,7 @@ public abstract class ProtocolHandler implements Runnable {
                 cont = processCommand();
                 setIdle(true);
             } catch (IOException e) {
-                ZimbraLog.addIpToContext(mConnection.getInetAddress().getHostAddress());
+                ZimbraLog.addIpToContext(connection.getInetAddress().getHostAddress());
                 if (isSocketError(e)) {
                     cont = false;
                     if (getShuttingDown()) {
@@ -228,18 +230,19 @@ public abstract class ProtocolHandler implements Runnable {
 
     void hardShutdown(String reason) {
         setShuttingDown(true);
-        if (reason != null)
+        if (reason != null) {
             log.info(reason);
-        if (!mConnection.isClosed()) {
+        }
+        if (!connection.isClosed()) {
             dropConnection();
             try {
-                mConnection.close();
-            } catch (IOException ioe) {
-                log.info("Exception while closing connection", ioe);
+                connection.close();
+            } catch (IOException e) {
+                log.info("Exception while closing connection", e);
             }
         }
-        if (mHandlerThread != null) {
-            mHandlerThread.interrupt();
+        if (handlerThread != null) {
+            handlerThread.interrupt();
         }
     }
 }
