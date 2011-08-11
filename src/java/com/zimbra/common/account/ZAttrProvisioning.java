@@ -6370,6 +6370,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPasswordAllowedChars = "zimbraPasswordAllowedChars";
 
     /**
+     * regex of allowed punctuation characters in password
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1256)
+    public static final String A_zimbraPasswordAllowedPunctuationChars = "zimbraPasswordAllowedPunctuationChars";
+
+    /**
      * registered change password listener name
      *
      * @since ZCS 5.0.1
