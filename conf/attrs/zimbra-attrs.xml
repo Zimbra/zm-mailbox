@@ -2985,9 +2985,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="576" name="zimbraPrefCalendarReminderSendEmail" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0" deprecatedSince="6.0.0_BETA1">
-  <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether or not email reminders for appointments and tasks are enabled</desc>
-   <deprecateDesc>was added for Yahoo calendar, no longer used</deprecateDesc>
+  <deprecateDesc>was added for Yahoo calendar, no longer used</deprecateDesc>
 </attr>
 
 <attr id="577" name="zimbraPrefCalendarReminderMobile" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.0" deprecatedSince="6.0.0_BETA1">

@@ -18,7 +18,6 @@ import com.zimbra.common.service.ServiceException;
 
 public enum UpgradeTask {
     
-    BUG_10287(BUG_10287.class),
     BUG_11562(BUG_11562.class),
     BUG_14531(BUG_14531.class),
     BUG_18277(BUG_18277.class),
