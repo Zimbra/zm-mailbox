@@ -17,7 +17,6 @@ package com.zimbra.cs.account.ldap.upgrade;
 import com.zimbra.common.service.ServiceException;
 
 public enum UpgradeTask {
-    BUG_10287(zimbraPrefCalendarReminderSendEmail.class),
     BUG_11562(Bug11562.class),
     BUG_14531(ZimbraGalLdapFilterDef_zimbraSync.class),
     BUG_18277(AdminRights.class),
