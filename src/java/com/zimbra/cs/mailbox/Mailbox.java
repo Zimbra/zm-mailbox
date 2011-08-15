@@ -149,7 +149,6 @@ import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.MailboxBlobDataSource;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.upgrade.MailboxUpgrade;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.cs.util.JMSession;

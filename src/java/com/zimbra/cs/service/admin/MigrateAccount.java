@@ -27,14 +27,18 @@ import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxUpgrade;
 import com.zimbra.cs.mailbox.MigrateToDocuments;
-import com.zimbra.cs.upgrade.MailboxUpgrade;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class MigrateAccount extends AdminDocumentHandler {
 
     private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminConstants.E_MIGRATE, AdminConstants.A_ID };
-    protected String[] getProxiedAccountPath()  { return TARGET_ACCOUNT_PATH; }
+
+    @Override
+    protected String[] getProxiedAccountPath() {
+        return TARGET_ACCOUNT_PATH;
+    }
 
     private static enum Action {
         contactGroup,
