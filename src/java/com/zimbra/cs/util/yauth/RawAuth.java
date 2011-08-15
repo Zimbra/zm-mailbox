@@ -28,6 +28,7 @@ import org.apache.log4j.Level;
 
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.Constants;
 
 /**
  * Implementation of Yahoo "Raw Auth" aka "Token Login v2"
@@ -125,7 +126,7 @@ public class RawAuth implements Auth {
         wssId = res.getRequiredField(WSSID);
         String s = res.getRequiredField(EXPIRATION);
         try {
-            expiration = System.currentTimeMillis() + Long.parseLong(s);
+            expiration = System.currentTimeMillis() + Long.parseLong(s) * Constants.MILLIS_PER_SECOND;
         } catch (NumberFormatException e) {
             throw new IOException(
                 "Invalid integer value for field '" + EXPIRATION + "': " + s);
