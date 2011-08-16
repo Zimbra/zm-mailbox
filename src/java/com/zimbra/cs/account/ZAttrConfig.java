@@ -41,7 +41,7 @@ public class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 administrator 20110810-1230 */
+    /* build: 7.0.0_BETA1_1111 administrator 20110811-1447 */
 
     /**
      * RFC2256: descriptive information
@@ -33497,6 +33497,160 @@ public class ZAttrConfig extends Entry {
     public Map<String,Object> unsetSpamTagPercent(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSpamTagPercent, "");
+        return attrs;
+    }
+
+    /**
+     * Mail header name for flagging a message as not spam. If set, this
+     * takes precedence over zimbraSpamHeader.
+     *
+     * @return zimbraSpamWhitelistHeader, or null if unset
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1257)
+    public String getSpamWhitelistHeader() {
+        return getAttr(Provisioning.A_zimbraSpamWhitelistHeader, null);
+    }
+
+    /**
+     * Mail header name for flagging a message as not spam. If set, this
+     * takes precedence over zimbraSpamHeader.
+     *
+     * @param zimbraSpamWhitelistHeader new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1257)
+    public void setSpamWhitelistHeader(String zimbraSpamWhitelistHeader) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpamWhitelistHeader, zimbraSpamWhitelistHeader);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Mail header name for flagging a message as not spam. If set, this
+     * takes precedence over zimbraSpamHeader.
+     *
+     * @param zimbraSpamWhitelistHeader new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1257)
+    public Map<String,Object> setSpamWhitelistHeader(String zimbraSpamWhitelistHeader, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpamWhitelistHeader, zimbraSpamWhitelistHeader);
+        return attrs;
+    }
+
+    /**
+     * Mail header name for flagging a message as not spam. If set, this
+     * takes precedence over zimbraSpamHeader.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1257)
+    public void unsetSpamWhitelistHeader() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpamWhitelistHeader, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Mail header name for flagging a message as not spam. If set, this
+     * takes precedence over zimbraSpamHeader.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1257)
+    public Map<String,Object> unsetSpamWhitelistHeader(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpamWhitelistHeader, "");
+        return attrs;
+    }
+
+    /**
+     * regular expression for matching the value of zimbraSpamWhitelistHeader
+     * for flagging a message as not spam
+     *
+     * @return zimbraSpamWhitelistHeaderValue, or null if unset
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1258)
+    public String getSpamWhitelistHeaderValue() {
+        return getAttr(Provisioning.A_zimbraSpamWhitelistHeaderValue, null);
+    }
+
+    /**
+     * regular expression for matching the value of zimbraSpamWhitelistHeader
+     * for flagging a message as not spam
+     *
+     * @param zimbraSpamWhitelistHeaderValue new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1258)
+    public void setSpamWhitelistHeaderValue(String zimbraSpamWhitelistHeaderValue) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpamWhitelistHeaderValue, zimbraSpamWhitelistHeaderValue);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * regular expression for matching the value of zimbraSpamWhitelistHeader
+     * for flagging a message as not spam
+     *
+     * @param zimbraSpamWhitelistHeaderValue new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1258)
+    public Map<String,Object> setSpamWhitelistHeaderValue(String zimbraSpamWhitelistHeaderValue, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpamWhitelistHeaderValue, zimbraSpamWhitelistHeaderValue);
+        return attrs;
+    }
+
+    /**
+     * regular expression for matching the value of zimbraSpamWhitelistHeader
+     * for flagging a message as not spam
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1258)
+    public void unsetSpamWhitelistHeaderValue() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpamWhitelistHeaderValue, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * regular expression for matching the value of zimbraSpamWhitelistHeader
+     * for flagging a message as not spam
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1258)
+    public Map<String,Object> unsetSpamWhitelistHeaderValue(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraSpamWhitelistHeaderValue, "");
         return attrs;
     }
 

@@ -5641,4 +5641,12 @@ TODO: delete them permerntly from here
   <desc>regex of allowed punctuation characters in password</desc>
 </attr>
 
+<attr id="1257" name="zimbraSpamWhitelistHeader" type="string" cardinality="single" optionalIn="globalConfig" since="7.1.3">
+  <desc>Mail header name for flagging a message as not spam. If set, this takes precedence over zimbraSpamHeader.</desc>
+</attr>
+
+<attr id="1258" name="zimbraSpamWhitelistHeaderValue" type="string" cardinality="single" optionalIn="globalConfig" since="7.1.3">
+  <desc>regular expression for matching the value of zimbraSpamWhitelistHeader for flagging a message as not spam</desc>
+</attr>
+
 </attrs>

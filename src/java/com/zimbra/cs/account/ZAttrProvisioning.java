@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 administrator 20110810-1230 */
+    /* build: 7.0.0_BETA1_1111 administrator 20110811-1447 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -8662,6 +8662,24 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=204)
     public static final String A_zimbraSpamTagPercent = "zimbraSpamTagPercent";
+
+    /**
+     * Mail header name for flagging a message as not spam. If set, this
+     * takes precedence over zimbraSpamHeader.
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1257)
+    public static final String A_zimbraSpamWhitelistHeader = "zimbraSpamWhitelistHeader";
+
+    /**
+     * regular expression for matching the value of zimbraSpamWhitelistHeader
+     * for flagging a message as not spam
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1258)
+    public static final String A_zimbraSpamWhitelistHeaderValue = "zimbraSpamWhitelistHeaderValue";
 
     /**
      * The list of available dictionaries that can be used for spell
