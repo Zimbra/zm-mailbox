@@ -304,6 +304,8 @@ public final class LC {
 
     public static final KnownKey index_store = KnownKey.newKey("lucene");
     public static final KnownKey cassandra_host = KnownKey.newKey("localhost:9160");
+    public static final KnownKey hbase_host = KnownKey.newKey("localhost");
+    public static final KnownKey hbase_table_pool_size = KnownKey.newKey(10);
 
     @Supported
     public static final KnownKey ldap_host = KnownKey.newKey("");
