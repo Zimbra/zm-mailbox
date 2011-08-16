@@ -9372,6 +9372,24 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSpamTrashAlias = "zimbraSpamTrashAlias";
 
     /**
+     * Mail header name for flagging a message as not spam. If set, this
+     * takes precedence over zimbraSpamHeader.
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1257)
+    public static final String A_zimbraSpamWhitelistHeader = "zimbraSpamWhitelistHeader";
+
+    /**
+     * regular expression for matching the value of zimbraSpamWhitelistHeader
+     * for flagging a message as not spam
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1258)
+    public static final String A_zimbraSpamWhitelistHeaderValue = "zimbraSpamWhitelistHeaderValue";
+
+    /**
      * The list of available dictionaries that can be used for spell
      * checking.
      *
