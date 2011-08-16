@@ -41,7 +41,6 @@ import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
@@ -58,16 +57,15 @@ import com.zimbra.cs.util.JMSession;
 
 public class SpamHandler {
 
-    private static Log mLog = LogFactory.getLog(SpamHandler.class);
+    private static Log log = LogFactory.getLog(SpamHandler.class);
 
-    private static SpamHandler sSpamHandler;
-    private Thread mSpamHandlerThread;
+    private static SpamHandler spamHandler;
 
     public static synchronized SpamHandler getInstance() {
-        if (sSpamHandler == null) {
-            sSpamHandler = new SpamHandler();
+        if (spamHandler == null) {
+            spamHandler = new SpamHandler();
         }
-        return sSpamHandler;
+        return spamHandler;
     }
 
     public SpamHandler() {
@@ -76,10 +74,10 @@ public class SpamHandler {
                 reportLoop();
             }
         };
-        mSpamHandlerThread = new Thread(r);
-        mSpamHandlerThread.setName("Junk-NotJunk-Handler");
-        mSpamHandlerThread.setDaemon(true);
-        mSpamHandlerThread.start();
+        Thread spamHandlerThread = new Thread(r);
+        spamHandlerThread.setName("Junk-NotJunk-Handler");
+        spamHandlerThread.setDaemon(true);
+        spamHandlerThread.start();
     }
 
     private void sendReport(SpamReport sr) throws ServiceException, MessagingException {
@@ -90,8 +88,7 @@ public class SpamHandler {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(sr.mailboxId);
         Message msg = mbox.getMessageById(null, sr.messageId);
 
-        MimeMultipart mmp = null;
-        mmp = new JavaMailMimeMultipart("mixed");
+        MimeMultipart mmp = new JavaMailMimeMultipart("mixed");
 
         MimeBodyPart infoPart = new JavaMailMimeBodyPart();
         infoPart.setHeader("Content-Description", "Zimbra spam classification report");
@@ -190,25 +187,25 @@ public class SpamHandler {
         }
     }
     
-    private static final int mSpamReportQueueSize = LC.zimbra_spam_report_queue_size.intValue();
+    private static final int spamReportQueueSize = LC.zimbra_spam_report_queue_size.intValue();
 
-    private Object mSpamReportQueueLock = new Object();
+    private final Object spamReportQueueLock = new Object();
 
-    List<SpamReport> mSpamReportQueue = new ArrayList<SpamReport>(mSpamReportQueueSize);
+    List<SpamReport> spamReportQueue = new ArrayList<SpamReport>(spamReportQueueSize);
 
     void reportLoop() {
         while (true) {
-            List<SpamReport> workQueue = null; 
-            synchronized (mSpamReportQueueLock) {
-                while (mSpamReportQueue.size() == 0) {
+            List<SpamReport> workQueue;
+            synchronized (spamReportQueueLock) {
+                while (spamReportQueue.size() == 0) {
                     try {
-                        mSpamReportQueueLock.wait();
+                        spamReportQueueLock.wait();
                     } catch (InterruptedException ie) {
                         ZimbraLog.misc.warn("SpamHandler interrupted", ie);
                     }
                 }
-                workQueue = mSpamReportQueue;
-                mSpamReportQueue = new ArrayList<SpamReport>(mSpamReportQueueSize);
+                workQueue = spamReportQueue;
+                spamReportQueue = new ArrayList<SpamReport>(spamReportQueueSize);
             }
 
             if (workQueue == null) {
@@ -227,33 +224,33 @@ public class SpamHandler {
     }
 
     private void enqueue(List<SpamReport> reports) {
-        synchronized (mSpamReportQueueLock) {
+        synchronized (spamReportQueueLock) {
             for (SpamReport report : reports) {
-                if (mSpamReportQueue.size() > mSpamReportQueueSize) {
-                    ZimbraLog.misc.warn("SpamHandler queue size " + mSpamReportQueue.size() + " too large, ignored " + report);
+                if (spamReportQueue.size() > spamReportQueueSize) {
+                    ZimbraLog.misc.warn("SpamHandler queue size " + spamReportQueue.size() + " too large, ignored " + report);
                     continue;
                 }
-                mSpamReportQueue.add(report);
+                spamReportQueue.add(report);
                 ZimbraLog.misc.debug("SpamHandler enqueued %s", report);
             }
-            mSpamReportQueueLock.notify();
+            spamReportQueueLock.notify();
         }
     }
 
     public void handle(OperationContext octxt, Mailbox mbox, int itemId, byte type, SpamReport report)
     throws ServiceException {
         Config config = Provisioning.getInstance().getConfig();
-        String address = null;
+        String address;
         if (report.isSpam) {
             address = config.getSpamIsSpamAccount();
             if (Strings.isNullOrEmpty(address)) {
-                mLog.debug("Spam address is not set.  Nothing to do.");
+                log.debug("Spam address is not set.  Nothing to do.");
                 return;
             }
         } else {
             address = config.getSpamIsNotSpamAccount();
             if (Strings.isNullOrEmpty(address)) {
-                mLog.debug("Ham address is not set.  Nothing to do.");
+                log.debug("Ham address is not set.  Nothing to do.");
                 return;
             }
         }
@@ -291,40 +288,81 @@ public class SpamHandler {
 
     /**
      * Stores the last known value of <tt>zimbraSpamHeaderValue</tt>.  Used
-     * for determining whether {@link #sSpamPattern} needs to be recompiled. 
+     * for determining whether {@link #spamPattern} needs to be recompiled.
      */
-    private static String sSpamHeaderValue;
+    private static String spamHeaderValue;
 
     /**
-     * Compiled version of {@link #sSpamHeaderValue}.
+     * Compiled version of {@link #spamHeaderValue}.
      */
-    private static Pattern sSpamPattern;
+    private static Pattern spamPattern;
 
     /**
-     * Returns <tt>true</tt> if the value of the header named <tt>zimbraSpamHeader</tt>
-     * matches the pattern specified by <tt>zimbraSpamHeaderValue</tt>.
+     * Stores the last known value of <tt>zimbraSpamWhitelistHeaderValue</tt>.  Used
+     * for determining whether {@link #whitelistPattern} needs to be recompiled.
+     */
+    private static String whitelistHeaderValue;
+
+    /**
+     * Compiled version of {@link #whitelistHeaderValue}.
+     */
+    private static Pattern whitelistPattern;
+
+    /**
+     * Returns <tt>false</tt> if the value of the header named <tt>zimbraSpamWhitelistHeader</tt>
+     * matches the pattern specified by <tt>zimbraSpamWhitelistHeaderValue</tt>.
+     *
+     * If <tt>zimbraSpamWhitelistHeader</tt> does not match, returns <tt>true</tt> if the value of the
+     * header named <tt>zimbraSpamHeader</tt> matches the pattern specified by <tt>zimbraSpamHeaderValue</tt>.
      */
     public static boolean isSpam(MimeMessage msg) {
         try {
-            Provisioning prov = Provisioning.getInstance();
-            String spamHeader = prov.getConfig().getAttr(Provisioning.A_zimbraSpamHeader, null);
-            if (StringUtil.isNullOrEmpty(spamHeader)) {
-                return false;
+            Config config = Provisioning.getInstance().getConfig();
+
+            String whitelistHeader = config.getSpamWhitelistHeader();
+            if (whitelistHeader != null) {
+                String whitelistHeaderValue = config.getSpamWhitelistHeaderValue();
+                if (whitelistHeaderValue != null) {
+                    if (!whitelistHeaderValue.equals(SpamHandler.whitelistHeaderValue)) {
+                        // Value has changed.  Recompile pattern.
+                        SpamHandler.whitelistHeaderValue = whitelistHeaderValue;
+                        whitelistPattern = Pattern.compile(whitelistHeaderValue);
+                    }
+
+                    String[] values = Mime.getHeaders(msg, whitelistHeader);
+                    boolean matched = false;
+                    for (String val : values) {
+                        Matcher m = whitelistPattern.matcher(val);
+                        if (m.matches()) {
+                            matched = true;
+                        } else {
+                            matched = false;
+                            break;
+                        }
+                    }
+                    if (matched) {
+                        return false;
+                    }
+                }
             }
-            String spamHeaderValue = prov.getConfig().getAttr(Provisioning.A_zimbraSpamHeaderValue, null);
-            if (StringUtil.isNullOrEmpty(spamHeaderValue)) {
-                return false;
-            }
-            if (!spamHeaderValue.equals(sSpamHeaderValue)) {
-                // Value has changed.  Recompile pattern.
-                sSpamHeaderValue = spamHeaderValue;
-                sSpamPattern = Pattern.compile(spamHeaderValue);
-            }
-            String val = Mime.getHeader(msg, spamHeader);
-            if (val != null) {
-                Matcher m = sSpamPattern.matcher(val);
-                if (m.matches()) {
-                    return true;
+
+            String spamHeader = config.getSpamHeader();
+            if (spamHeader != null) {
+                String spamHeaderValue = config.getSpamHeaderValue();
+                if (spamHeaderValue != null) {
+                    if (!spamHeaderValue.equals(SpamHandler.spamHeaderValue)) {
+                        // Value has changed.  Recompile pattern.
+                        SpamHandler.spamHeaderValue = spamHeaderValue;
+                        spamPattern = Pattern.compile(spamHeaderValue);
+                    }
+
+                    String[] values = Mime.getHeaders(msg, spamHeader);
+                    for (String val : values) {
+                        Matcher m = spamPattern.matcher(val);
+                        if (m.matches()) {
+                            return true;
+                        }
+                    }
                 }
             }
         } catch (Exception e) {
