@@ -610,7 +610,7 @@ public class CalDavDataImport extends MailItemImport {
     }
     private void sync(OperationContext octxt, CalendarFolder cf) throws ServiceException, IOException, DavException {
         Folder syncFolder = cf.folder;
-        int lastSync = (int)syncFolder.getLastSyncDate();
+        int lastSync = (int)syncFolder.getLastSyncDate();  // hack alert: caldav import uses sync date field to store sync token
         int currentSync = lastSync;
         boolean allDone = false;
         HashMap<Integer,Integer> modifiedFromRemote = new HashMap<Integer,Integer>();
@@ -620,41 +620,43 @@ public class CalDavDataImport extends MailItemImport {
         while (!allDone) {
             allDone = true;
 
-            // push local deletion
-            List<Integer> deleted = new ArrayList<Integer>();
-            for (int itemId : mbox.getTombstones(lastSync).getAll()) {
-                if (deletedFromRemote.contains(itemId)) {
-                    continue;  // was just deleted from sync
+            if (lastSync > 0) {  // Don't push local changes during initial sync.
+                // push local deletion
+                List<Integer> deleted = new ArrayList<Integer>();
+                for (int itemId : mbox.getTombstones(lastSync).getAll()) {
+                    if (deletedFromRemote.contains(itemId)) {
+                        continue;  // was just deleted from sync
+                    }
+                    deleted.add(itemId);
                 }
-                deleted.add(itemId);
-            }
-
-            // move to trash is equivalent to delete
-            HashSet<Integer> fid = new HashSet<Integer>();
-            fid.add(Mailbox.ID_FOLDER_TRASH);
-            List<Integer> trashed = mbox.getModifiedItems(octxt, lastSync, MailItem.Type.UNKNOWN, fid).getFirst();
-            deleted.addAll(trashed);
-
-            if (!deleted.isEmpty()) {
-                // pushDelete returns true if one or more items were deleted
-                allDone &= !pushDelete(deleted);
-            }
-
-            // push local modification
-            fid.clear();
-            fid.add(syncFolder.getId());
-            List<Integer> modified = mbox.getModifiedItems(octxt, lastSync, MailItem.Type.UNKNOWN, fid).getFirst();
-            for (int itemId : modified) {
-                MailItem item = mbox.getItemById(octxt, itemId, MailItem.Type.UNKNOWN);
-                if (modifiedFromRemote.containsKey(itemId) &&
-                        modifiedFromRemote.get(itemId).equals(item.getModifiedSequence()))
-                    continue;  // was just downloaded from remote
-                try {
-                    pushModify(item);
-                } catch (Exception e) {
-                    ZimbraLog.datasource.info("Failed to push item "+item.getId(), e);
+    
+                // move to trash is equivalent to delete
+                HashSet<Integer> fid = new HashSet<Integer>();
+                fid.add(Mailbox.ID_FOLDER_TRASH);
+                List<Integer> trashed = mbox.getModifiedItems(octxt, lastSync, MailItem.Type.UNKNOWN, fid).getFirst();
+                deleted.addAll(trashed);
+    
+                if (!deleted.isEmpty()) {
+                    // pushDelete returns true if one or more items were deleted
+                    allDone &= !pushDelete(deleted);
                 }
-                allDone = false;
+    
+                // push local modification
+                fid.clear();
+                fid.add(syncFolder.getId());
+                List<Integer> modified = mbox.getModifiedItems(octxt, lastSync, MailItem.Type.UNKNOWN, fid).getFirst();
+                for (int itemId : modified) {
+                    MailItem item = mbox.getItemById(octxt, itemId, MailItem.Type.UNKNOWN);
+                    if (modifiedFromRemote.containsKey(itemId) &&
+                            modifiedFromRemote.get(itemId).equals(item.getModifiedSequence()))
+                        continue;  // was just downloaded from remote
+                    try {
+                        pushModify(item);
+                    } catch (Exception e) {
+                        ZimbraLog.datasource.info("Failed to push item "+item.getId(), e);
+                    }
+                    allDone = false;
+                }
             }
 
             if (cf.ctagMatched) {
