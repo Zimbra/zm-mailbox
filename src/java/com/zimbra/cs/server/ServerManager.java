@@ -26,14 +26,13 @@ import com.zimbra.cs.lmtpserver.LmtpServer;
 import com.zimbra.cs.lmtpserver.TcpLmtpServer;
 import com.zimbra.cs.milter.MilterConfig;
 import com.zimbra.cs.milter.MilterServer;
-import com.zimbra.cs.milter.NioMilterServer;
 import com.zimbra.cs.pop3.NioPop3Server;
 import com.zimbra.cs.pop3.Pop3Config;
 import com.zimbra.cs.pop3.Pop3Server;
 import com.zimbra.cs.pop3.TcpPop3Server;
 import com.zimbra.cs.util.ZimbraApplication;
 
-public class ServerManager {
+public final class ServerManager {
     private LmtpServer lmtpServer;
     private Pop3Server pop3Server;
     private Pop3Server pop3SSLServer;
@@ -108,8 +107,7 @@ public class ServerManager {
     }
 
     private MilterServer startMilterServer() throws ServiceException {
-        MilterConfig config = new MilterConfig();
-        MilterServer server = new NioMilterServer(config);
+        MilterServer server = new MilterServer(new MilterConfig());
         server.start();
         return server;
     }
