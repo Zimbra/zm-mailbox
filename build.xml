@@ -1,7 +1,7 @@
 <project name="ZimbraServer" default="jar">
 
-  <import file="../ant-global.xml"/>    
-      
+  <import file="../ant-global.xml"/>
+
   <property file='build-custom.properties'/>
   <property environment="env"/>
 
@@ -174,7 +174,7 @@
             <pathelement location="${common.jars.dir}/ant-contrib-1.0b1.jar"/>
         </classpath>
     </taskdef>
-    
+
     <path id="class.path">
       <pathelement location="${common.classes.dir}"/>
       <pathelement location="${soap.classes.dir}"/>
@@ -418,11 +418,11 @@
 
     <target name="jar" depends="generate-buildinfo,compile" description="Creates the jar file">
         <antcall target="zimbra-jar">
-            <param name="jar.file" value="zimbrastore.jar"/> <!-- zimbra-jar expects the filename without the path --> 
+            <param name="jar.file" value="zimbrastore.jar"/> <!-- zimbra-jar expects the filename without the path -->
             <param name="implementation.title" value="Zimbra Server"/>
         </antcall>
     </target>
-        
+
     <target name="clean" description="Deletes classes from build directories">
       <ant dir="${common.dir}" target="clean" inheritAll="false"/>
       <ant dir="${soap.dir}" target="clean" inheritAll="false"/>
@@ -505,6 +505,9 @@
           <include name="libthrift-*.jar"/>
           <include name="high-scale-lib-*.jar"/>
           <include name="jackson-*.jar"/>
+          <include name="hadoop-*.jar"/>
+          <include name="hbase-*.jar"/>
+          <include name="zookeeper-*.jar"/>
         </lib>
         <lib dir="${im.jars.dir}" includes="*.jar"/>
         <classes dir="${config.dir}" includes="sieveConfig.xml"/>
@@ -2150,27 +2153,27 @@
     <echo>Setting up client unittest accounts</echo>
     <antcall target="zmprov">
       <param name="args" value="-l ca unittest1@${defaultdomain.name} test123
-						  zimbraMailHost ${zimbra.server.hostname}
-						  cn 'UnitTest 1'
-						  displayName 'UnitTest User One'
-						  zimbraAttachmentsIndexingEnabled FALSE
-						  zimbraPrefTimeZoneId '(GMT-07.00) Arizona'
-						  zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
-						  zimbraPrefMailPollingInterval 12h
-						  zimbraPrefWarnOnExit FALSE
-						  telephoneNumber '+1 650 555 5555'"/>
+              zimbraMailHost ${zimbra.server.hostname}
+              cn 'UnitTest 1'
+              displayName 'UnitTest User One'
+              zimbraAttachmentsIndexingEnabled FALSE
+              zimbraPrefTimeZoneId '(GMT-07.00) Arizona'
+              zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
+              zimbraPrefMailPollingInterval 12h
+              zimbraPrefWarnOnExit FALSE
+              telephoneNumber '+1 650 555 5555'"/>
     </antcall>
     <antcall target="zmprov">
-	  <param name="args" value="-l ca unittest2@${defaultdomain.name} test123
-						  zimbraMailHost ${zimbra.server.hostname}
-						  cn 'UnitTest 2'
-						  displayName 'UnitTest User Two'
-						  zimbraAttachmentsIndexingEnabled FALSE
-						  zimbraPrefTimeZoneId '(GMT-07.00) Arizona'
-						  zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
-						  zimbraPrefMailPollingInterval 12h
-						  zimbraPrefWarnOnExit FALSE
-						  telephoneNumber '+1 650 555 6666'"/>
+    <param name="args" value="-l ca unittest2@${defaultdomain.name} test123
+              zimbraMailHost ${zimbra.server.hostname}
+              cn 'UnitTest 2'
+              displayName 'UnitTest User Two'
+              zimbraAttachmentsIndexingEnabled FALSE
+              zimbraPrefTimeZoneId '(GMT-07.00) Arizona'
+              zimbraPrefGroupMailBy ${zimbra.prefGroupMailBy}
+              zimbraPrefMailPollingInterval 12h
+              zimbraPrefWarnOnExit FALSE
+              telephoneNumber '+1 650 555 6666'"/>
     </antcall>
     <echo>Injecting contacts, search folders, and mail into client unittest accounts</echo>
     <antcall target="inject-client-unittest">
@@ -2221,5 +2224,5 @@
       </then>
     </if>
   </target>
-  
+
 </project>
