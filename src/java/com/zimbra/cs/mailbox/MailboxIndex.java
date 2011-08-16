@@ -59,6 +59,7 @@ import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.index.CassandraIndex;
 import com.zimbra.cs.index.DbSearchConstraints;
+import com.zimbra.cs.index.HBaseIndex;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneIndex;
@@ -123,6 +124,8 @@ public final class MailboxIndex {
     static void setIndexStoreFactory(String name) {
         if ("cassandra".equals(name)) {
             indexStoreFactory = new CassandraIndex.Factory();
+        } else if ("hbase".equals(name)) {
+            indexStoreFactory = new HBaseIndex.Factory();
         } else {
             indexStoreFactory = new LuceneIndex.Factory();
         }

@@ -1,0 +1,70 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2011 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
+package com.zimbra.cs.index;
+
+import java.io.IOException;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HColumnDescriptor;
+import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.TableNotFoundException;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
+
+/**
+ * Tools for {@link HBaseIndex} tests.
+ *
+ * @author ysasaki
+ */
+final class HBaseIndexTestUtils {
+    private static final String INDEX_TABLE = "__zimbra.index";
+    private static final HBaseIndex.Factory FACTORY;
+    static {
+        Configuration conf = HBaseConfiguration.create();
+        conf.set("zimbra.index", INDEX_TABLE);
+        FACTORY = new HBaseIndex.Factory(conf);
+    }
+
+    private HBaseIndexTestUtils() {
+    }
+
+    static HBaseIndex createIndex(Mailbox mbox) throws ServiceException {
+        return FACTORY.getInstance(mbox);
+    }
+
+    static void initSchema() throws IOException {
+        HBaseAdmin admin = new HBaseAdmin(FACTORY.getConfiguration());
+        try {
+            admin.disableTable(INDEX_TABLE);
+            admin.deleteTable(INDEX_TABLE);
+        } catch (TableNotFoundException ignore) {
+        }
+        HTableDescriptor indexTableDesc = new HTableDescriptor(INDEX_TABLE);
+        HColumnDescriptor mboxCF = new HColumnDescriptor(HBaseIndex.MBOX_CF);
+        mboxCF.setMaxVersions(1);
+        indexTableDesc.addFamily(mboxCF);
+        HColumnDescriptor termCF = new HColumnDescriptor(HBaseIndex.TERM_CF);
+        termCF.setMaxVersions(Integer.MAX_VALUE);
+        indexTableDesc.addFamily(termCF);
+        HColumnDescriptor docCF = new HColumnDescriptor(HBaseIndex.DOC_CF);
+        docCF.setMaxVersions(Integer.MAX_VALUE);
+        indexTableDesc.addFamily(docCF);
+        admin.createTable(indexTableDesc);
+    }
+
+}
