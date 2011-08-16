@@ -1189,7 +1189,9 @@ public final class MailboxIndex {
 
         @Override
         public Thread newThread(Runnable runnable) {
-            return new Thread(GROUP, runnable, name + '-' + count.getAndIncrement());
+            Thread thread = new Thread(GROUP, runnable, name + '-' + count.getAndIncrement());
+            thread.setDaemon(true);
+            return thread;
         }
     }
 
