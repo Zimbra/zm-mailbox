@@ -16,18 +16,13 @@ package com.zimbra.cs.util;
 
 import java.io.File;
 import java.sql.Timestamp;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.db.DbConfig;
-import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 
@@ -35,7 +30,7 @@ import com.zimbra.cs.db.DbPool.DbConnection;
  * @since Apr 19, 2004
  * @author schemers
  */
-public class Config {
+public final class Config {
 
     public static final String KEY_PURGE_LAST_MAILBOX_ID = "purge.lastMailboxId";
 
@@ -73,13 +68,6 @@ public class Config {
         } finally {
             if (conn != null)
                 DbPool.quietClose(conn);
-        }
-
-        Server serverConfig = Provisioning.getInstance().getLocalServer();
-        boolean userServicesEnabled =
-            serverConfig.getBooleanAttr(Provisioning.A_zimbraUserServicesEnabled, true);
-        synchronized (sUserServicesEnabledGuard) {
-            sUserServicesEnabled = userServicesEnabled;
         }
     }
 
@@ -189,36 +177,4 @@ public class Config {
         return new File(home, path);
     }
 
-
-    private static boolean sUserServicesEnabled;
-
-    private static final Object sUserServicesEnabledGuard = new Object();
-
-    /**
-     * Enable/disable end-user services on SOAP and LMTP interfaces.
-     * @param enabled
-     * @throws ServiceException
-     */
-    public static void enableUserServices(boolean enabled) throws ServiceException {
-        Provisioning prov = Provisioning.getInstance();
-        Server serverConfig = prov.getLocalServer();
-        HashMap<String, String> attrs = new HashMap<String, String>();
-        attrs.put(Provisioning.A_zimbraUserServicesEnabled, enabled ? ProvisioningConstants.TRUE : ProvisioningConstants.FALSE);
-        prov.modifyAttrs(serverConfig, attrs);
-        synchronized (sUserServicesEnabledGuard) {
-            sUserServicesEnabled = enabled;
-        }
-    }
-
-    /**
-     * Returns whether end-user services on SOAP and LMTP interfaces
-     * are enabled.
-     * @return
-     */
-    public static boolean userServicesEnabled() {
-        initConfig();
-        synchronized (sUserServicesEnabledGuard) {
-            return sUserServicesEnabled;
-        }
-    }
 }

@@ -29,11 +29,10 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.server.ProtocolHandler;
-import com.zimbra.cs.util.Config;
 
 public abstract class LmtpHandler extends ProtocolHandler {
     // Connection specific data
-    protected LmtpConfig mConfig;
+    final LmtpConfig config;
     protected LmtpWriter mWriter;
     protected String mRemoteAddress;
     protected String mRemoteHostname;
@@ -45,7 +44,7 @@ public abstract class LmtpHandler extends ProtocolHandler {
 
     LmtpHandler(LmtpServer server) {
         super(server instanceof TcpLmtpServer ? (TcpLmtpServer) server : null);
-        mConfig = server.getConfig();
+        config = server.getConfig();
     }
 
     protected boolean setupConnection(InetAddress remoteAddr) {
@@ -60,7 +59,7 @@ public abstract class LmtpHandler extends ProtocolHandler {
         }
         ZimbraLog.addIpToContext(mRemoteAddress);
         ZimbraLog.lmtp.debug("connected");
-        if (!Config.userServicesEnabled()) {
+        if (!config.isServiceEnabled()) {
             sendReply(LmtpReply.SERVICE_DISABLED);
             dropConnection();
             return false;
@@ -93,7 +92,7 @@ public abstract class LmtpHandler extends ProtocolHandler {
 
         ZimbraLog.lmtp.trace("C: %s", cmd);
 
-        if (!Config.userServicesEnabled()) {
+        if (!config.isServiceEnabled()) {
             sendReply(LmtpReply.SERVICE_DISABLED);
             dropConnection();
             return false;
@@ -259,7 +258,7 @@ public abstract class LmtpHandler extends ProtocolHandler {
             return;
         }
 
-        String resp = "250-" + mConfig.getServerName() + "\r\n" +
+        String resp = "250-" + config.getServerName() + "\r\n" +
                 "250-8BITMIME\r\n" +
                 "250-ENHANCEDSTATUSCODES\r\n" +
                 "250-SIZE\r\n" +
@@ -325,13 +324,13 @@ public abstract class LmtpHandler extends ProtocolHandler {
             return;
         }
 
-        LmtpAddress addr = new LmtpAddress(arg, null, mConfig.getMtaRecipientDelimiter());
+        LmtpAddress addr = new LmtpAddress(arg, null, config.getMtaRecipientDelimiter());
         if (!addr.isValid()) {
             sendReply(LmtpReply.INVALID_RECIPIENT_ADDRESS);
             return;
         }
 
-        LmtpReply reply = mConfig.getLmtpBackend().getAddressStatus(addr);
+        LmtpReply reply = config.getLmtpBackend().getAddressStatus(addr);
         if (reply.success()) {
             if (addr.isOnLocalServer())
                 mEnvelope.addLocalRecipient(addr);
@@ -364,7 +363,7 @@ public abstract class LmtpHandler extends ProtocolHandler {
         // TODO there should be a too many recipients test (for now protected by postfix config)
 
         try {
-            mConfig.getLmtpBackend().deliver(mEnvelope, in, mEnvelope.getSize());
+            config.getLmtpBackend().deliver(mEnvelope, in, mEnvelope.getSize());
             finishMessageData(in.getMessageSize());
         } catch (UnrecoverableLmtpException e) {
             ZimbraLog.lmtp.error("Unrecoverable error while handling DATA command.  Dropping connection.", e);

@@ -23,7 +23,6 @@ import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
 
 import com.google.common.base.Charsets;
-import com.zimbra.cs.util.Config;
 
 /**
  * Handler for MINA I/O events. Responsible for notifying the connection's {@link NioHandler} when a connection has
@@ -57,8 +56,7 @@ final class NioHandlerDispatcher extends IoHandlerAdapter {
     @Override
     public void sessionOpened(IoSession session) throws IOException {
         NioHandler handler = getHandler(session);
-
-        if (!Config.userServicesEnabled()) {
+        if (!server.config.isServiceEnabled()) {
             server.getLog().warn("Dropping connection (user services are disabled)");
             session.close(true);
         } else if (server.acceptor.getManagedSessionCount() > server.getConfig().getMaxConnections()) {

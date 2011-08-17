@@ -21,7 +21,6 @@ import com.zimbra.common.util.NetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.server.ProtocolHandler;
-import com.zimbra.cs.util.Config;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
@@ -55,7 +54,7 @@ final class TcpImapHandler extends ProtocolHandler {
         input = new TcpServerInputStream(connection.getInputStream());
         delegate.output = new BufferedOutputStream(connection.getOutputStream());
 
-        if (!Config.userServicesEnabled()) {
+        if (!config.isServiceEnabled()) {
             ZimbraLog.imap.debug("dropping connection because user services are disabled");
             dropConnection();
             return false;

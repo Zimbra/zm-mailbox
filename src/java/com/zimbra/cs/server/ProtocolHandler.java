@@ -16,8 +16,10 @@
 package com.zimbra.cs.server;
 
 import com.google.common.base.Preconditions;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.util.Zimbra;
 
 import javax.net.ssl.HandshakeCompletedEvent;
@@ -245,4 +247,5 @@ public abstract class ProtocolHandler implements Runnable {
             handlerThread.interrupt();
         }
     }
+
 }

@@ -47,7 +47,6 @@ import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
-import com.zimbra.cs.util.Config;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.ZimbraSoapContext.SessionInfo;
 import org.dom4j.DocumentException;
@@ -344,9 +343,6 @@ public final class SoapEngine {
         if (RedoLogProvider.getInstance().isSlave() && !handler.isReadOnly()) {
             return soapFault(soapProto, "cannot dispatch request", ServiceException.NON_READONLY_OPERATION_DENIED());
         }
-        if (!Config.userServicesEnabled() && !(handler instanceof AdminDocumentHandler)) {
-            return soapFault(soapProto, "cannot dispatch request", ServiceException.TEMPORARILY_UNAVAILABLE());
-        }
         AuthToken at = zsc.getAuthToken();
         boolean needsAuth = handler.needsAuth(context);
         boolean needsAdminAuth = handler.needsAdminAuth(context);
@@ -356,6 +352,11 @@ public final class SoapEngine {
         Element response = null;
         SoapTransport.setVia(zsc.getNextVia());
         try {
+            Provisioning prov = Provisioning.getInstance();
+            if (!prov.getLocalServer().getBooleanAttr(Provisioning.A_zimbraUserServicesEnabled, true) &&
+                    !(handler instanceof AdminDocumentHandler)) {
+                return soapFault(soapProto, "cannot dispatch request", ServiceException.TEMPORARILY_UNAVAILABLE());
+            }
             if (needsAdminAuth) {
                 AdminAccessControl aac = AdminAccessControl.getAdminAccessControl(at);
                 if (!aac.isSufficientAdminForSoap(context, handler)) {
@@ -372,8 +373,6 @@ public final class SoapEngine {
                 isGuestAccount = acctId.equals(GuestAccount.GUID_PUBLIC);
                 delegatedAuth = at.isDelegatedAuth();
             }
-
-            Provisioning prov = Provisioning.getInstance();
 
             if (!isGuestAccount) {
                 if (needsAuth || needsAdminAuth) {

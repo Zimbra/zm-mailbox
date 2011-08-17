@@ -191,5 +191,16 @@ public abstract class ServerConfig {
     protected com.zimbra.cs.account.Config getGlobalConfig() throws ServiceException {
         return Provisioning.getInstance().getConfig();
     }
+
+    public boolean isServiceEnabled() {
+        try {
+            return Provisioning.getInstance().getLocalServer().getBooleanAttr(
+                    Provisioning.A_zimbraUserServicesEnabled, true);
+        } catch (ServiceException e) {
+            getLog().error("Unabled to determine the service availability", e);
+            return false;
+        }
+    }
+
 }
 

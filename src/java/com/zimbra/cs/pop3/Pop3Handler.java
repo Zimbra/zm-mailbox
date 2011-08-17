@@ -30,7 +30,6 @@ import com.zimbra.cs.security.sasl.Authenticator;
 import com.zimbra.cs.security.sasl.AuthenticatorUser;
 import com.zimbra.cs.security.sasl.PlainAuthenticator;
 import com.zimbra.cs.stats.ZimbraPerf;
-import com.zimbra.cs.util.Config;
 import org.apache.commons.codec.binary.Base64;
 
 import java.io.IOException;
@@ -54,7 +53,7 @@ abstract class Pop3Handler {
     private static final byte[] TERMINATOR_BYTE = {'.'};
 
     // Connection specific data
-    Pop3Config config;
+    final Pop3Config config;
     OutputStream output;
     boolean startedTLS;
 
@@ -104,7 +103,7 @@ abstract class Pop3Handler {
         ZimbraLog.addIpToContext(clientAddress);
 
         ZimbraLog.pop.info("connected");
-        if (!Config.userServicesEnabled()) {
+        if (!config.isServiceEnabled()) {
             return false;
         }
         sendOK(config.getGreeting());
@@ -172,7 +171,7 @@ abstract class Pop3Handler {
             }
         }
 
-        if (!Config.userServicesEnabled()) {
+        if (!config.isServiceEnabled()) {
             dropConnection = true;
             sendERR("Temporarily unavailable");
             return false;
