@@ -394,7 +394,7 @@ public final class LC {
 
     @Supported
     public static final KnownKey ldap_starttls_required = KnownKey.newKey(true);
-    
+
     @Supported
     public static final KnownKey zimbra_directory_max_search_result = KnownKey.newKey(5000);
 
@@ -720,24 +720,10 @@ public final class LC {
 
     public static final KnownKey text_attachments_base64 = KnownKey.newKey(true);
 
-    @Supported
-    public static final KnownKey nio_imap_enabled = KnownKey.newKey(false);
-    @Supported
-    public static final KnownKey nio_pop3_enabled = KnownKey.newKey(false);
-
     public static final KnownKey imap_max_request_size = KnownKey.newKey(10 * 1024);
     public static final KnownKey imap_max_idle_time = KnownKey.newKey(60);
     public static final KnownKey imap_authenticated_max_idle_time = KnownKey.newKey(1800);
     public static final KnownKey pop3_max_idle_time = KnownKey.newKey(60);
-
-    // NIO IMAP configuration settings. Move these to zimbra-attrs.xml once
-    // they have been finalized.
-    public static final KnownKey nio_imap_min_threads = KnownKey.newKey(20);
-    public static final KnownKey nio_imap_max_sessions = KnownKey.newKey(200);
-    public static final KnownKey nio_imap_max_scheduled_write_bytes = KnownKey.newKey(1024 * 1024);
-    public static final KnownKey nio_imap_write_timeout = KnownKey.newKey(60);
-    public static final KnownKey nio_imap_write_chunk_size = KnownKey.newKey(8 * 1024);
-    public static final KnownKey nio_imap_thread_keep_alive_time = KnownKey.newKey(60);
     public static final KnownKey data_source_imap_reuse_connections = KnownKey.newKey(false);
 
     public static final KnownKey milter_bind_port = KnownKey.newKey(0);
@@ -887,7 +873,7 @@ public final class LC {
 
     public static final KnownKey httpclient_internal_connmgr_keepalive_connections = KnownKey.newKey(true);
     public static final KnownKey httpclient_external_connmgr_keepalive_connections = KnownKey.newKey(true);
-    
+
     public static final KnownKey httpclient_internal_connmgr_tcp_nodelay = KnownKey.newKey(false);
     public static final KnownKey httpclient_external_connmgr_tcp_nodelay = KnownKey.newKey(false);
 
@@ -902,7 +888,7 @@ public final class LC {
 
     public static final KnownKey httpclient_internal_connmgr_idle_reaper_sleep_interval = KnownKey.newKey(5 * Constants.MILLIS_PER_MINUTE);
     public static final KnownKey httpclient_external_connmgr_idle_reaper_sleep_interval = KnownKey.newKey(5 * Constants.MILLIS_PER_MINUTE);
-    
+
     public static final KnownKey httpclient_internal_connmgr_idle_reaper_connection_timeout = KnownKey.newKey(5 * Constants.MILLIS_PER_MINUTE);
     public static final KnownKey httpclient_external_connmgr_idle_reaper_connection_timeout = KnownKey.newKey(5 * Constants.MILLIS_PER_MINUTE);
 
