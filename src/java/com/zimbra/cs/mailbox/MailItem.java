@@ -2990,6 +2990,10 @@ public abstract class MailItem implements Comparable<MailItem> {
         data.update(this, metadata);
     }
 
+    void markMetadataChanged() throws ServiceException {
+        saveData(new DbMailItem(mMailbox));
+    }
+    
     /**
      * Locks this MailItem with exclusive write lock.
      * When a MailItem is locked, only the user who locked the item

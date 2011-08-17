@@ -8174,6 +8174,19 @@ public class Mailbox {
         }
     }
 
+    public MailItem markMetadataChanged(OperationContext octxt, int itemId) throws ServiceException {
+        boolean success = false;
+        try {
+            beginTransaction("markMetadataChanged", octxt, null);
+            MailItem item = getItemById(octxt, itemId, Type.UNKNOWN);
+            item.markMetadataChanged();
+            success = true;
+            return item;
+        } finally {
+            endTransaction(success);
+        }
+    }
+    
     protected void migrateWikiFolders() throws ServiceException {
         MigrateToDocuments migrate = new MigrateToDocuments();
         try {
