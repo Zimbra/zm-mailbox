@@ -125,6 +125,9 @@ final class TcpImapHandler extends ProtocolHandler {
             }
             return true;
         } catch (TcpImapRequest.ImapTerminatedException e) {
+            if (socket.isInputShutdown()) { // drop connection requested
+                dropConnection();
+            }
             return false;
         } catch (ImapParseException e) {
             delegate.handleParseException(e);
@@ -263,6 +266,15 @@ final class TcpImapHandler extends ProtocolHandler {
                 }
             } finally {
                 ZimbraLog.clearContext();
+            }
+        }
+
+        @Override
+        void dropConnectionAsynchronously() {
+            try {
+                socket.shutdownInput(); // blocking read from this socket will return EOF
+            } catch (IOException e) {
+                ZimbraLog.imap.debug("Failed to close socket input", e);
             }
         }
 

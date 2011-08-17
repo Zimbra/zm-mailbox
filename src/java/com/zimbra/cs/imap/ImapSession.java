@@ -71,7 +71,7 @@ public class ImapSession extends Session {
     private final int      mFolderId;
     private final boolean  mIsVirtual;
     private ImapFolderData mFolder;
-    private ImapHandler    mHandler;
+    private ImapHandler handler;
 
     ImapSession(ImapFolder i4folder, ImapHandler handler) throws ServiceException {
         super(i4folder.getCredentials().getAccountId(), i4folder.getPath().getOwnerAccountId(), Session.Type.IMAP);
@@ -79,13 +79,13 @@ public class ImapSession extends Session {
         mFolderId  = i4folder.getId();
         mIsVirtual = i4folder.isVirtual();
         mFolder    = i4folder;
-        mHandler   = handler;
+        this.handler = handler;
 
         i4folder.setSession(this);
     }
 
     ImapHandler getHandler() {
-        return mHandler;
+        return handler;
     }
 
     ImapFolder getImapFolder() {
@@ -98,7 +98,7 @@ public class ImapSession extends Session {
     }
 
     boolean isInteractive() {
-        return mHandler != null;
+        return handler != null;
     }
 
     public boolean isWritable() {
@@ -125,7 +125,7 @@ public class ImapSession extends Session {
     boolean isExtensionActivated(ImapExtension ext) {
         switch (ext) {
             case CONDSTORE:
-                return !mIsVirtual && mHandler.sessionActivated(ext);
+                return !mIsVirtual && handler.sessionActivated(ext);
             default:
                 return false;
         }
@@ -161,7 +161,7 @@ public class ImapSession extends Session {
         mFolder.endSelect();
         // removes this session from the global SessionCache, *not* from ImapSessionManager
         removeFromSessionCache();
-        mHandler = null;
+        handler = null;
     }
 
     /** If the folder is selected READ-WRITE, updates its high-water RECENT
@@ -180,20 +180,24 @@ public class ImapSession extends Session {
         }
     }
 
-    @Override protected boolean isMailboxListener() {
+    @Override
+    protected boolean isMailboxListener() {
         return true;
     }
 
-    @Override protected boolean isRegisteredInCache() {
+    @Override
+    protected boolean isRegisteredInCache() {
         return true;
     }
 
-    @Override public void doEncodeState(Element parent) {
+    @Override
+    public void doEncodeState(Element parent) {
         mFolder.doEncodeState(parent.addElement("imap"));
     }
 
-    @Override protected long getSessionIdleLifetime() {
-        return mHandler.getConfig().getAuthenticatedMaxIdleTime() * 1000;
+    @Override
+    protected long getSessionIdleLifetime() {
+        return handler.getConfig().getAuthenticatedMaxIdleTime() * 1000;
     }
 
     // XXX: need to handle the abrupt disconnect case, the LOGOUT case, the timeout case, and the too-many-sessions disconnect case
@@ -222,11 +226,10 @@ public class ImapSession extends Session {
 
     @Override
     protected void cleanup() {
-        // XXX: is there a synchronization issue here?
-        ImapHandler handler = mHandler;
-        if (handler != null) {
+        ImapHandler i4handler = handler;
+        if (i4handler != null) {
             ZimbraLog.imap.debug("dropping connection because Session is closing");
-            handler.dropConnection(true);
+            i4handler.dropConnectionAsynchronously();
         }
     }
 
@@ -334,12 +337,13 @@ public class ImapSession extends Session {
         }
     }
 
-    @Override public void notifyPendingChanges(PendingModifications pns, int changeId, Session source) {
+    @Override
+    public void notifyPendingChanges(PendingModifications pns, int changeId, Session source) {
         if (!pns.hasNotifications()) {
             return;
         }
 
-        ImapHandler handler = mHandler;
+        ImapHandler i4handler = handler;
         try {
             synchronized (this) {
                 AddedItems added = new AddedItems();
@@ -367,15 +371,15 @@ public class ImapSession extends Session {
                 mFolder.finishNotification(changeId);
             }
 
-            if (handler != null && handler.isIdle()) {
-                handler.sendNotifications(true, true);
+            if (i4handler != null && i4handler.isIdle()) {
+                i4handler.sendNotifications(true, true);
             }
         } catch (IOException e) {
             // ImapHandler.dropConnection clears our mHandler and calls SessionCache.clearSession,
             //   which calls Session.doCleanup, which calls Mailbox.removeListener
             ZimbraLog.imap.debug("dropping connection due to IOException during IDLE notification", e);
-            if (handler != null) {
-                handler.dropConnection(false);
+            if (i4handler != null) {
+                i4handler.dropConnection(false);
             }
         }
     }
@@ -393,8 +397,8 @@ public class ImapSession extends Session {
             // RFC 2180 3.3: "The server MAY allow the DELETE/RENAME of a multi-accessed
             //                mailbox, but disconnect all other clients who have the
             //                mailbox accessed by sending a untagged BYE response."
-            if (mHandler != null) {
-                mHandler.dropConnection(true);
+            if (handler != null) {
+                handler.dropConnection(true);
             }
         } else if (ImapMessage.SUPPORTED_TYPES.contains(type)) {
             mFolder.handleItemDelete(changeId, id, chg);
@@ -421,8 +425,8 @@ public class ImapSession extends Session {
                 // RFC 2180 3.3: "The server MAY allow the DELETE/RENAME of a multi-accessed
                 //                mailbox, but disconnect all other clients who have the
                 //                mailbox accessed by sending a untagged BYE response."
-                if (mHandler != null) {
-                    mHandler.dropConnection(true);
+                if (handler != null) {
+                    handler.dropConnection(true);
                 }
             } else if ((chg.why & (Change.MODIFIED_FOLDER | Change.MODIFIED_NAME)) != 0) {
                 mFolder.handleFolderRename(changeId, folder, chg);

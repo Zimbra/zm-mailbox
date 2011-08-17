@@ -141,20 +141,20 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
         dropConnection(true);
     }
 
+    /**
+     * Called when connection is closed. No need to worry about concurrent execution since requests are processed in
+     * sequence for any given connection.
+     */
     @Override
     public void connectionClosed() {
-        cleanup();
-        connection.close();
-    }
-
-    private void cleanup() {
         if (request != null) {
             request.cleanup();
             request = null;
         }
         try {
             unsetSelectedFolder(false);
-        } catch (Exception e) {}
+        } catch (Exception ignore) {
+        }
     }
 
     @Override
@@ -181,30 +181,28 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     }
 
     /**
-     * Called when connection is closed. No need to worry about concurrent execution since requests are processed in
-     * sequence for any given connection.
+     * Close the connection.
+     *
+     * Do not clean up the session here, but let the framework call {@link #connectionClosed()}, so that concurrency
+     * issues are taken care of.
      */
     @Override
     void dropConnection(boolean sendBanner) {
-        try {
-            unsetSelectedFolder(false);
-        } catch (Exception e) {
-        }
-
         if (credentials != null && !goodbyeSent) {
-            ZimbraLog.imap.info("dropping connection for user " + credentials.getUsername() + " (server-initiated)");
+            ZimbraLog.imap.info("dropping connection for user %s (server-initiated)", credentials.getUsername());
         }
-
         if (!connection.isOpen()) {
             return; // No longer connected
         }
-        ZimbraLog.imap.debug("dropConnection: sendBanner = %s\n", sendBanner);
-        cleanup();
-
         if (sendBanner && !goodbyeSent) {
             sendBYE();
         }
         connection.close();
+    }
+
+    @Override
+    void dropConnectionAsynchronously() {
+        dropConnection(true);
     }
 
     @Override

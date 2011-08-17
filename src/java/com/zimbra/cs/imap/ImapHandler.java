@@ -131,7 +131,20 @@ abstract class ImapHandler {
     }
 
     abstract void sendLine(String line, boolean flush) throws IOException;
+
+    /**
+     * Close the connection.
+     *
+     * If closing from outside of this IMAP handler, you must use {@link #dropConnectionAsynchronously()} instead,
+     * otherwise concurrency issues arise.
+     */
     abstract void dropConnection(boolean sendBanner);
+
+    /**
+     * Request to close the connection.
+     */
+    abstract void dropConnectionAsynchronously();
+
     abstract void enableInactivityTimer() throws IOException;
     abstract void completeAuthentication() throws IOException;
     abstract boolean doSTARTTLS(String tag) throws IOException;

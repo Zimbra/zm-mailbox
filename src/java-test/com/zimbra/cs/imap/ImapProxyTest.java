@@ -107,6 +107,10 @@ public final class ImapProxyTest {
         }
 
         @Override
+        void dropConnectionAsynchronously() {
+        }
+
+        @Override
         void enableInactivityTimer() throws IOException {
         }
 
