@@ -6135,4 +6135,31 @@ TODO: delete them permerntly from here
   <desc>regular expression for matching the value of zimbraSpamWhitelistHeader for flagging a message as not spam</desc>
 </attr>
 
+<attr id="1259" name="zimbraLimitExternalShareLifetime" since="8.0" type="boolean" cardinality="single" optionalIn="account,cos,identity" flags="accountInherited,domainAdminModifiable">
+  <desc>flag indicates whether to limit lifetime of external shares</desc>
+  <defaultCOSValue>TRUE</defaultCOSValue>
+</attr>
+
+<attr id="1260" name="zimbraExternalShareLifetime" since="8.0" type="duration" cardinality="single" optionalIn="account,cos,identity" flags="accountInherited,domainAdminModifiable">
+  <desc>lifetime of external shares</desc>
+  <defaultCOSValue>90d</defaultCOSValue>
+</attr>
+
+<attr id="1261" name="zimbraExternalSharingEnabled" since="8.0" type="boolean" cardinality="single" optionalIn="account,cos,identity" flags="accountInherited,domainAdminModifiable">
+  <desc>flag indicates whether to enable sharing files with external accounts</desc>
+  <defaultCOSValue>TRUE</defaultCOSValue>
+</attr>
+
+<attr id="1262" name="zimbraExternalShareDomainPolicyType" since="8.0" type="enum" value="whitelist,blacklist" cardinality="single" optionalIn="account,cos,identity" flags="accountInherited,domainAdminModifiable">
+  <desc>flag indicates whether to enable sharing files with external accounts</desc>
+  <defaultCOSValue>whitelist</defaultCOSValue>
+</attr>
+
+<attr id="1263" name="zimbraExternalShareDomainWhiteList" since="8.0" type="string" cardinality="multi" optionalIn="account,cos,identity" flags="accountInherited,domainAdminModifiable">
+  <desc>list of domains that users can share files with</desc>
+</attr>
+
+<attr id="1264" name="zimbraExternalShareDomainBlackList" since="8.0" type="string" cardinality="multi" optionalIn="account,cos,identity" flags="accountInherited,domainAdminModifiable">
+  <desc>list of domains that users cannot share files with</desc>
+</attr>
 </attrs>
