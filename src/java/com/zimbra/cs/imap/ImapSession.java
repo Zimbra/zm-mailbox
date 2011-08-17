@@ -217,11 +217,10 @@ public class ImapSession extends Session {
 
     @Override
     protected void cleanup() {
-        // XXX: is there a synchronization issue here?
         ImapHandler handler = mHandler;
         if (handler != null) {
             ZimbraLog.imap.debug("dropping connection because Session is closing");
-            handler.dropConnection(true);
+            handler.dropConnectionAsynchronously();
         }
     }
 

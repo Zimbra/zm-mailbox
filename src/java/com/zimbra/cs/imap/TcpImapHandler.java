@@ -31,6 +31,7 @@ import java.net.Socket;
 import java.net.SocketException;
 
 final class TcpImapHandler extends ImapHandler {
+    private Socket socket;
     private TcpServerInputStream mInputStream;
     private String remoteIp;
     private TcpImapRequest request;
@@ -45,12 +46,13 @@ final class TcpImapHandler extends ImapHandler {
     }
 
     @Override
-    protected boolean setupConnection(Socket connection) throws IOException {
-        remoteIp = connection.getInetAddress().getHostAddress();
+    protected boolean setupConnection(Socket sock) throws IOException {
+        socket = sock;
+        remoteIp = sock.getInetAddress().getHostAddress();
         INFO("connected");
 
-        mInputStream = new TcpServerInputStream(connection.getInputStream());
-        mOutputStream = new BufferedOutputStream(connection.getOutputStream());
+        mInputStream = new TcpServerInputStream(sock.getInputStream());
+        mOutputStream = new BufferedOutputStream(sock.getOutputStream());
 
         if (!Config.userServicesEnabled()) {
             ZimbraLog.imap.debug("dropping connection because user services are disabled");
@@ -121,7 +123,10 @@ final class TcpImapHandler extends ImapHandler {
                 sendContinuation("send literal data");
             }
             return CONTINUE_PROCESSING;
-        } catch (TcpImapRequest.ImapTerminatedException ite) {
+        } catch (TcpImapRequest.ImapTerminatedException e) {
+            if (socket.isInputShutdown()) { // drop connection requested
+                dropConnection();
+            }
             return STOP_PROCESSING;
         } catch (ImapParseException e) {
             handleParseException(e);
@@ -191,7 +196,7 @@ final class TcpImapHandler extends ImapHandler {
         }.start();
 
         if (mCredentials != null && !mGoodbyeSent) {
-            ZimbraLog.imap.info("dropping connection for user " + mCredentials.getUsername() + " (server-initiated)");
+            ZimbraLog.imap.info("dropping connection for user %s (server-initiated)", mCredentials.getUsername());
         }
         ZimbraLog.addIpToContext(remoteIp);
         try {
@@ -219,6 +224,15 @@ final class TcpImapHandler extends ImapHandler {
             }
         } finally {
             ZimbraLog.clearContext();
+        }
+    }
+
+    @Override
+    void dropConnectionAsynchronously() {
+        try {
+            socket.shutdownInput(); // blocking read from this socket will return EOF
+        } catch (IOException e) {
+            ZimbraLog.imap.debug("Failed to close socket input", e);
         }
     }
 

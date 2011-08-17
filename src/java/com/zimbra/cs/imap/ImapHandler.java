@@ -3834,11 +3834,23 @@ abstract class ImapHandler extends ProtocolHandler {
             flushOutput();
     }
 
-    @Override public void dropConnection() {
+    @Override
+    public void dropConnection() {
         dropConnection(true);
     }
 
+    /**
+     * Close the connection.
+     *
+     * If closing from outside of this IMAP handler, you must use {@link #dropConnectionAsynchronously()} instead,
+     * otherwise concurrency issues arise.
+     */
     abstract protected void dropConnection(boolean sendBanner);
+
+    /**
+     * Request to close the connection.
+     */
+    abstract void dropConnectionAsynchronously();
 
     abstract protected void flushOutput() throws IOException;
 

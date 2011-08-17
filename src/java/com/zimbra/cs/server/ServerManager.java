@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -24,7 +24,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.imap.ImapConfig;
 import com.zimbra.cs.imap.ImapServer;
-import com.zimbra.cs.imap.MinaImapServer;
 import com.zimbra.cs.imap.TcpImapServer;
 import com.zimbra.cs.lmtpserver.LmtpConfig;
 import com.zimbra.cs.lmtpserver.LmtpServer;
@@ -33,27 +32,21 @@ import com.zimbra.cs.milter.MilterConfig;
 import com.zimbra.cs.milter.MilterServer;
 import com.zimbra.cs.milter.MinaMilterServer;
 import com.zimbra.cs.nio.NioThreadFactory;
-import com.zimbra.cs.pop3.MinaPop3Server;
 import com.zimbra.cs.pop3.Pop3Config;
 import com.zimbra.cs.pop3.Pop3Server;
 import com.zimbra.cs.pop3.TcpPop3Server;
 import com.zimbra.cs.util.ZimbraApplication;
 
-public class ServerManager {
+public final class ServerManager {
     private LmtpServer lmtpServer;
     private Pop3Server pop3Server;
     private Pop3Server pop3SSLServer;
     private ImapServer imapServer;
     private ImapServer imapSSLServer;
-    private ExecutorService pop3NioHandlerPool;
-    private ExecutorService imapNioHandlerPool;
     private ExecutorService milterNioHandlerPool;
     private MilterServer milterServer;
-    
-    private static final ServerManager INSTANCE = new ServerManager();
 
-    // For debugging...
-    private static final boolean NIO_ENABLED = Boolean.getBoolean("ZimbraNioEnabled");
+    private static final ServerManager INSTANCE = new ServerManager();
 
     public static ServerManager getInstance() {
         return INSTANCE;
@@ -80,7 +73,7 @@ public class ServerManager {
                 imapSSLServer = startImapServer(true);
             }
         }
-        
+
         // run milter service in the same process as mailtoxd. should be used only in dev environment
         if (app.supports(MilterServer.class)) {
             if (LC.milter_in_process_mode.booleanValue()) {
@@ -99,25 +92,15 @@ public class ServerManager {
         server.start();
         return server;
     }
-    
+
     private Pop3Server startPop3Server(boolean ssl) throws ServiceException {
-        Pop3Config config = new Pop3Config(ssl);
-        if (pop3NioHandlerPool == null) {
-            pop3NioHandlerPool = newNioHandlerPool(config);
-        }
-        Pop3Server server = NIO_ENABLED || LC.nio_pop3_enabled.booleanValue() ?
-            new MinaPop3Server(config, pop3NioHandlerPool) : new TcpPop3Server(config);
+        Pop3Server server = new TcpPop3Server(new Pop3Config(ssl));
         server.start();
         return server;
     }
 
     private ImapServer startImapServer(boolean ssl) throws ServiceException {
-        ImapConfig config = new ImapConfig(ssl);
-        if (imapNioHandlerPool == null) {
-            imapNioHandlerPool = newNioHandlerPool(config);
-        }
-        ImapServer server = NIO_ENABLED || LC.nio_imap_enabled.booleanValue() ?
-            new MinaImapServer(config, imapNioHandlerPool) : new TcpImapServer(config);
+        ImapServer server = new TcpImapServer(new ImapConfig(ssl));
         server.start();
         return server;
     }
@@ -131,7 +114,7 @@ public class ServerManager {
         server.start();
         return server;
     }
-    
+
     public void stopServers() throws ServiceException {
         if (lmtpServer != null) {
             lmtpServer.stop();
