@@ -2185,6 +2185,7 @@ u attribute is present iff count > 0
   <m [f="!|?"] [origid="..." rt="r|w"] [idnt="{identity-id}"] [did="{saved-draft-id}"]>
     <e t="{type}" a="{email-address}" p="{personal-name}"/>+
     <su>{subject}</su>*
+    [<h name="{header-name}">{header-value}</h>]*
     [<irt>{Message-ID header for message being replied to}</irt>]
     <mp ct="{content-type}" [ci="{content-id}"]>
       <content>...</content>
@@ -2220,6 +2221,9 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
                if the SendMsg request is re-sent but the message has not been modified, the client should use
                    the same {send-uid} and the server will try to check the status of the previous SendMsg attempt
 
+  {header-name}, {header-value} - custom RFC822 header name and value respectively. Only header names specified in
+    zimbraCustomMimeHeaderNameAllowed global config are allowed for security reasons.
+
 ----------------------------
 
 # origid will be present if this is a reply or forward
@@ -2239,6 +2243,7 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
   <m [id="{existing-draft-id}"] [origid="..." rt="r|w"] [idnt="{identity-id}"] [l="{folder}"] [f="{flags}"] [t="{tag-id-list}"] [color="{color}"] [autoSendTime="{millis-since-epoch}"]>
     <e t="{type}" a="{email-address}" p="{personal-name}"/>+
     <su>{subject}</su>*
+    [<h name="{header-name}">{header-value}</h>]*
     [<irt>{Message-ID header for message being replied to}</irt>]
     <mp ct="{content-type}">
       <content>...</content>
@@ -2498,7 +2503,7 @@ NOTE: should we return modified attrs in response?
                        1 - deref contact group members
                        Note: for performance reason, derefGroupMember is supported
                        only when specific contact ids are specified.
-                       
+
   {returnHiddenAttrs} : whether to return contact hidden attrs defined in zimbraContactHiddenAttributes.
                         ignored if <a> is present.
 

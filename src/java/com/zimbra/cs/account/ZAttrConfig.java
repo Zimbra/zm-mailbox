@@ -43,7 +43,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 8.0.0_BETA1_1111 ysasaki 20110817-1640 */
 
     /**
      * RFC2256: descriptive information
@@ -6202,6 +6202,149 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetCreateTimestamp(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCreateTimestamp, "");
+        return attrs;
+    }
+
+    /**
+     * Custom RFC822 header names (case-sensitive) allowed to specify in
+     * SendMsgRequest
+     *
+     * @return zimbraCustomMimeHeaderNameAllowed, or empty array if unset
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1265)
+    public String[] getCustomMimeHeaderNameAllowed() {
+        return getMultiAttr(Provisioning.A_zimbraCustomMimeHeaderNameAllowed);
+    }
+
+    /**
+     * Custom RFC822 header names (case-sensitive) allowed to specify in
+     * SendMsgRequest
+     *
+     * @param zimbraCustomMimeHeaderNameAllowed new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1265)
+    public void setCustomMimeHeaderNameAllowed(String[] zimbraCustomMimeHeaderNameAllowed) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCustomMimeHeaderNameAllowed, zimbraCustomMimeHeaderNameAllowed);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Custom RFC822 header names (case-sensitive) allowed to specify in
+     * SendMsgRequest
+     *
+     * @param zimbraCustomMimeHeaderNameAllowed new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1265)
+    public Map<String,Object> setCustomMimeHeaderNameAllowed(String[] zimbraCustomMimeHeaderNameAllowed, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCustomMimeHeaderNameAllowed, zimbraCustomMimeHeaderNameAllowed);
+        return attrs;
+    }
+
+    /**
+     * Custom RFC822 header names (case-sensitive) allowed to specify in
+     * SendMsgRequest
+     *
+     * @param zimbraCustomMimeHeaderNameAllowed new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1265)
+    public void addCustomMimeHeaderNameAllowed(String zimbraCustomMimeHeaderNameAllowed) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraCustomMimeHeaderNameAllowed, zimbraCustomMimeHeaderNameAllowed);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Custom RFC822 header names (case-sensitive) allowed to specify in
+     * SendMsgRequest
+     *
+     * @param zimbraCustomMimeHeaderNameAllowed new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1265)
+    public Map<String,Object> addCustomMimeHeaderNameAllowed(String zimbraCustomMimeHeaderNameAllowed, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraCustomMimeHeaderNameAllowed, zimbraCustomMimeHeaderNameAllowed);
+        return attrs;
+    }
+
+    /**
+     * Custom RFC822 header names (case-sensitive) allowed to specify in
+     * SendMsgRequest
+     *
+     * @param zimbraCustomMimeHeaderNameAllowed existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1265)
+    public void removeCustomMimeHeaderNameAllowed(String zimbraCustomMimeHeaderNameAllowed) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraCustomMimeHeaderNameAllowed, zimbraCustomMimeHeaderNameAllowed);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Custom RFC822 header names (case-sensitive) allowed to specify in
+     * SendMsgRequest
+     *
+     * @param zimbraCustomMimeHeaderNameAllowed existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1265)
+    public Map<String,Object> removeCustomMimeHeaderNameAllowed(String zimbraCustomMimeHeaderNameAllowed, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraCustomMimeHeaderNameAllowed, zimbraCustomMimeHeaderNameAllowed);
+        return attrs;
+    }
+
+    /**
+     * Custom RFC822 header names (case-sensitive) allowed to specify in
+     * SendMsgRequest
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1265)
+    public void unsetCustomMimeHeaderNameAllowed() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCustomMimeHeaderNameAllowed, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Custom RFC822 header names (case-sensitive) allowed to specify in
+     * SendMsgRequest
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1265)
+    public Map<String,Object> unsetCustomMimeHeaderNameAllowed(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraCustomMimeHeaderNameAllowed, "");
         return attrs;
     }
 

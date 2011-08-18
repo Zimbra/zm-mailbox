@@ -24,6 +24,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.activation.DataHandler;
 import javax.mail.Header;
@@ -38,12 +39,14 @@ import javax.mail.internet.MimePart;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.calendar.ZCalendar;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.DataSourceWrapper;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.MimeHeader;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
 import com.zimbra.common.mime.shim.JavaMailMimeMessage;
@@ -93,10 +96,9 @@ import com.zimbra.soap.ZimbraSoapContext;
 /**
  * @since Sep 29, 2004
  */
-public class ParseMimeMessage {
+public final class ParseMimeMessage {
 
-    static Log mLog = LogFactory.getLog(ParseMimeMessage.class);
-
+    private static final Log LOG = LogFactory.getLog(ParseMimeMessage.class);
     private static final long DEFAULT_MAX_SIZE = 10 * 1024 * 1024;
 
     /**
@@ -141,7 +143,7 @@ public class ParseMimeMessage {
         try {
             return new Mime.FixedMimeMessage(JMSession.getSession(), messageStream);
         } catch (MessagingException me) {
-            mLog.warn(ExceptionToString.ToString(me));
+            LOG.warn(ExceptionToString.ToString(me));
             throw ServiceException.FAILURE("MessagingExecption", me);
         }
     }
@@ -263,7 +265,7 @@ public class ParseMimeMessage {
 
         void incrementSize(String name, long numBytes) throws MailServiceException {
             size += numBytes;
-            mLog.debug("Adding %s, incrementing size by %d to %d.", name, numBytes, size);
+            LOG.debug("Adding %s, incrementing size by %d to %d.", name, numBytes, size);
             if (size > maxSize) {
                 throw MailServiceException.MESSAGE_TOO_BIG(maxSize, size);
             }
@@ -271,24 +273,19 @@ public class ParseMimeMessage {
     }
 
     /**
-     * Given an <m> element from SOAP, return us a parsed MimeMessage,
-     * and also fill in the MimeMessageData structure with information we parsed out of it (e.g. contained
-     * Invite, msgids, etc etc)
-     * @param zsc TODO
-     * @param octxt TODO
-     * @param mbox
-     * @param msgElem the <m> element
-     * @param additionalParts - MimeBodyParts that we want to have added to the MimeMessage (ie things the server is adding onto the message)
-     * @param inviteParser Callback which handles <inv> embedded invite components
+     * Given an {@code <m>} element from SOAP, return us a parsed {@link MimeMessage}, and also fill in the
+     * {@link MimeMessageData} structure with information we parsed out of it (e.g. contained Invite, msgids, etc etc)
+     *
+     * @param msgElem the {@code <m>} element
+     * @param additionalParts MimeBodyParts that we want to have added to the {@link MimeMessage} (ie things the server
+     * is adding onto the message)
+     * @param inviteParser Callback which handles {@code <inv>} embedded invite components
      * @param out Holds info about things we parsed out of the message that the caller might want to know about
-     * @return
-     * @throws ServiceException
      */
-    public static MimeMessage parseMimeMsgSoap(ZimbraSoapContext zsc, OperationContext octxt, Mailbox mbox, Element msgElem,
-                                               MimeBodyPart[] additionalParts, InviteParser inviteParser, MimeMessageData out)
-    throws ServiceException {
-        /* msgElem == "<m>" E_MSG */
-        assert(msgElem.getName().equals(MailConstants.E_MSG));
+    public static MimeMessage parseMimeMsgSoap(ZimbraSoapContext zsc, OperationContext octxt, Mailbox mbox,
+            Element msgElem, MimeBodyPart[] additionalParts, InviteParser inviteParser, MimeMessageData out)
+            throws ServiceException {
+        assert(msgElem.getName().equals(MailConstants.E_MSG)); // msgElem == "<m>" E_MSG
 
         Account target = DocumentHandler.getRequestedAccount(zsc);
         ParseMessageContext ctxt = new ParseMessageContext();
@@ -376,6 +373,8 @@ public class ParseMimeMessage {
             // <m> attributes: id, f[lags], s[ize], d[ate], cid(conv-id), l(parent folder)
             // <m> child elements: <e> (email), <s> (subject), <f> (fragment), <mp>, <attach>
             MessageAddresses maddrs = new MessageAddresses();
+            Set<String> headerNames = ImmutableSet.copyOf(
+                    Provisioning.getInstance().getConfig().getCustomMimeHeaderNameAllowed());
             for (Element elem : msgElem.listElements()) {
                 String eName = elem.getName();
                 if (eName.equals(MailConstants.E_ATTACH)) {
@@ -389,13 +388,20 @@ public class ParseMimeMessage {
                 } else if (eName.equals(MailConstants.E_SUBJECT)) { /* <su> */
                     // mm.setSubject(elem.getText(), "utf-8");
                 } else if (eName.equals(MailConstants.E_FRAG)) { /* <f> */
-                    mLog.debug("Ignoring message fragment data");
+                    LOG.debug("Ignoring message fragment data");
                 } else if (eName.equals(MailConstants.E_INVITE)) { /* <inv> */
                     // Already processed above.  Ignore it.
                 } else if (eName.equals(MailConstants.E_CAL_TZ)) { /* <tz> */
                     // Ignore as a special case.
+                } else if (eName.equals(MailConstants.E_HEADER)) { // <h>
+                    String name = elem.getAttribute(MailConstants.A_NAME);
+                    if (headerNames.contains(name)) {
+                        mm.addHeader(name, MimeHeader.escape(elem.getText(), Charsets.UTF_8, true));
+                    } else {
+                        throw ServiceException.INVALID_REQUEST("header '" + name + "' not allowed", null);
+                    }
                 } else {
-                    mLog.warn("unsupported child element '" + elem.getName() + "' under parent " + msgElem.getName());
+                    LOG.warn("unsupported child element '%s' under parent %s", elem.getName(), msgElem.getName());
                 }
             }
 
@@ -429,26 +435,19 @@ public class ParseMimeMessage {
             // JavaMail tip: don't forget to call this, it is REALLY confusing.
             mm.saveChanges();
 
-            if (mLog.isDebugEnabled()) {
+            if (LOG.isDebugEnabled()) {
                 dumpMessage(mm);
             }
 
             return mm;
-        } catch (UnsupportedEncodingException encEx) {
-            String excepStr = ExceptionToString.ToString(encEx);
-            mLog.warn(excepStr);
-            throw ServiceException.FAILURE("UnsupportedEncodingExecption", encEx);
-        } catch (SendFailedException sfe) {
-            SafeSendFailedException ssfe = new SafeSendFailedException(sfe);
-            String excepStr = ExceptionToString.ToString(ssfe);
-            mLog.warn(excepStr);
+        } catch (UnsupportedEncodingException e) {
+            throw ServiceException.FAILURE("UnsupportedEncodingExecption", e);
+        } catch (SendFailedException e) {
+            SafeSendFailedException ssfe = new SafeSendFailedException(e);
             throw ServiceException.FAILURE("SendFailure", ssfe);
-        } catch (MessagingException me) {
-            String excepStr = ExceptionToString.ToString(me);
-            mLog.warn(excepStr);
-            throw ServiceException.FAILURE("MessagingExecption", me);
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("MessagingExecption", e);
         } catch (IOException e) {
-            e.printStackTrace();
             throw ServiceException.FAILURE("IOExecption", e);
         }
     }
@@ -891,48 +890,56 @@ public class ParseMimeMessage {
     }
 
     private static void addAddressHeaders(MimeMessage mm, MessageAddresses maddrs) throws MessagingException {
-        boolean debug = mLog.isDebugEnabled();
+        boolean debug = LOG.isDebugEnabled();
 
         InternetAddress[] addrs = maddrs.get(EmailType.TO.toString());
         if (addrs != null && addrs.length > 0) {
             mm.addRecipients(javax.mail.Message.RecipientType.TO, addrs);
-            if (debug)  mLog.debug("\t\tTO: %s", Arrays.toString(addrs));
+            if (debug) {
+                LOG.debug("\t\tTO: %s", Arrays.toString(addrs));
+            }
         }
 
         addrs = maddrs.get(EmailType.CC.toString());
         if (addrs != null && addrs.length > 0) {
             mm.addRecipients(javax.mail.Message.RecipientType.CC, addrs);
-            if (debug)  mLog.debug("\t\tCC: %s", Arrays.toString(addrs));
+            if (debug) {
+                LOG.debug("\t\tCC: %s", Arrays.toString(addrs));
+            }
         }
 
         addrs = maddrs.get(EmailType.BCC.toString());
         if (addrs != null && addrs.length > 0) {
             mm.addRecipients(javax.mail.Message.RecipientType.BCC, addrs);
-            if (debug)  mLog.debug("\t\tBCC: %s", Arrays.toString(addrs));
+            if (debug) {
+                LOG.debug("\t\tBCC: %s", Arrays.toString(addrs));
+            }
         }
 
         addrs = maddrs.get(EmailType.FROM.toString());
         if (addrs != null && addrs.length == 1) {
             mm.setFrom(addrs[0]);
-            if (debug)  mLog.debug("\t\tFrom: %s", addrs[0]);
+            LOG.debug("\t\tFrom: %s", addrs[0]);
         }
 
         addrs = maddrs.get(EmailType.SENDER.toString());
         if (addrs != null && addrs.length == 1) {
             mm.setSender(addrs[0]);
-            if (debug)  mLog.debug("\t\tSender: %s", addrs[0]);
+            LOG.debug("\t\tSender: %s", addrs[0]);
         }
 
         addrs = maddrs.get(EmailType.REPLY_TO.toString());
         if (addrs != null && addrs.length > 0) {
             mm.setReplyTo(addrs);
-            if (debug)  mLog.debug("\t\tReply-To: %s", addrs[0]);
+            LOG.debug("\t\tReply-To: %s", addrs[0]);
         }
 
         addrs = maddrs.get(EmailType.READ_RECEIPT.toString());
         if (addrs != null && addrs.length > 0) {
             mm.addHeader("Disposition-Notification-To", InternetAddress.toString(addrs));
-            if (debug)  mLog.debug("\t\tDisposition-Notification-To: %s", Arrays.toString(addrs));
+            if (debug) {
+                LOG.debug("\t\tDisposition-Notification-To: %s", Arrays.toString(addrs));
+            }
         }
     }
 
@@ -955,32 +962,34 @@ public class ParseMimeMessage {
         return reference;
     }
 
+    /**
+     * Dump the outgoing message to stdout for now...
+     */
     private static void dumpMessage(MimeMessage mm) {
-        /*
-         * Dump the outgoing message to stdout for now...
-         */
-        mLog.debug("--------------------------------------");
+        LOG.debug("--------------------------------------");
         try {
             Enumeration<?> hdrsEnum = mm.getAllHeaders();
-            if (hdrsEnum != null)
+            if (hdrsEnum != null) {
                 while (hdrsEnum.hasMoreElements()) {
                     Header hdr = (Header) hdrsEnum.nextElement();
-                    if (!hdr.getName().equals("") && !hdr.getValue().equals("\n"))
-                        mLog.debug(hdr.getName()+" = \""+hdr.getValue()+"\"");
+                    if (!hdr.getName().equals("") && !hdr.getValue().equals("\n")) {
+                        LOG.debug("%s = \"%s\"", hdr.getName(), hdr.getValue());
+                    }
                 }
-            mLog.debug("--------------------------------------");
-            javax.mail.Address[] recips = mm.getAllRecipients();
-            if (recips != null)
-                for (int i = 0; i < recips.length; i++)
-                    mLog.debug("Recipient: "+recips[i].toString());
+            }
+            LOG.debug("--------------------------------------");
+            javax.mail.Address[] rcpts = mm.getAllRecipients();
+            if (rcpts != null) {
+                for (javax.mail.Address rcpt : rcpts) {
+                    LOG.debug("Recipient: %s", rcpt);
+                }
+            }
 
-            mLog.debug("--------------------------------------\nMessage size is: "+mm.getSize());
-
-//          System.out.println("--------------------------------------");
-//          System.out.print("Message Dump:");
-//          mm.writeTo(System.out);
-        } catch (Exception e) { e.printStackTrace(); };
-        mLog.debug("--------------------------------------\n");
+            LOG.debug("--------------------------------------\nMessage size is: "+mm.getSize());
+        } catch (Exception e) {
+            LOG.error(e.getMessage(), e);
+        };
+        LOG.debug("--------------------------------------\n");
     }
 
 }
