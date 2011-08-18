@@ -24,6 +24,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.activation.DataHandler;
 import javax.mail.Header;
@@ -37,12 +38,14 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableSet;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.DataSourceWrapper;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.MimeHeader;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
 import com.zimbra.common.mime.shim.JavaMailMimeMessage;
@@ -372,6 +375,8 @@ public class ParseMimeMessage {
             // <m> attributes: id, f[lags], s[ize], d[ate], cid(conv-id), l(parent folder)
             // <m> child elements: <e> (email), <s> (subject), <f> (fragment), <mp>, <attach>
             MessageAddresses maddrs = new MessageAddresses(out.newContacts);
+            Set<String> headerNames = ImmutableSet.copyOf(
+                    Provisioning.getInstance().getConfig().getCustomMimeHeaderNameAllowed());
             for (Element elem : msgElem.listElements()) {
                 String eName = elem.getName();
                 if (eName.equals(MailConstants.E_ATTACH)) {
@@ -390,6 +395,13 @@ public class ParseMimeMessage {
                     // Already processed above.  Ignore it.
                 } else if (eName.equals(MailConstants.E_CAL_TZ)) { /* <tz> */
                     // Ignore as a special case.
+                } else if (eName.equals(MailConstants.E_HEADER)) { // <h>
+                    String name = elem.getAttribute(MailConstants.A_NAME);
+                    if (headerNames.contains(name)) {
+                        mm.addHeader(name, MimeHeader.escape(elem.getText(), Charsets.UTF_8, true));
+                    } else {
+                        throw ServiceException.INVALID_REQUEST("header '" + name + "' not allowed", null);
+                    }
                 } else {
                     mLog.warn("unsupported child element '" + elem.getName() + "' under parent " + msgElem.getName());
                 }

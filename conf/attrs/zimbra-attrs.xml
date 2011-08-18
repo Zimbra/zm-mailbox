@@ -5649,4 +5649,9 @@ TODO: delete them permerntly from here
   <desc>regular expression for matching the value of zimbraSpamWhitelistHeader for flagging a message as not spam</desc>
 </attr>
 
+
+<attr id="1265" name="zimbraCustomMimeHeaderNameAllowed" type="string" cardinality="multi" optionalIn="globalConfig" since="7.1.3">
+  <desc>Custom RFC822 header names (case-sensitive) allowed to specify in SendMsgRequest</desc>
+</attr>
+
 </attrs>

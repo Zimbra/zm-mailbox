@@ -565,7 +565,7 @@ effect if called in a <nosession> context.
   {life-time} = number of milliseconds until auth token expires
   {admin-delegated} = "1" if the auth token is a delegated auth token issued to an admin account
   {account-base-REST-url} = base REST URL for the requested account
-  
+
 
 
   returned only if the command successfully executes on the target user's home mail server:
@@ -655,7 +655,7 @@ import and export of addressbook.
  <SearchGalRequest [type="{type}"] [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"]  [needExp="1|0"]>
   [<cursor id="{prevId}" sortVal="{prevSortValue}" endSortVal="{endSortValue}"/> ]
    <name>...</name>
-   
+
    [<searchFilter>
      <conds [not="1|0"] [or="1|0"] >
        [<cond> or <conds>]+
@@ -665,7 +665,7 @@ import and export of addressbook.
 
      <cond [not="1|0"] attr="{attr}" op="{op}" value="{value}" />  (exactly one instance of <cond>)
    </searchFilter>]
-   
+
  </SearchGalRequest>
 
  <SearchGalResponse more="{more}" sortBy="sort-by" offset="..." [tokenizeKey="{tokenize-key-op}"]>
@@ -772,8 +772,8 @@ import and export of addressbook.
   id attribute without all the contact fields populated.  The sync client
   then should make batch request to the server to fetch the contact fields
   with <GetContactsRequest/>.
-  Note: idOnly only works when GAL sync account is configured/enabled.  
-  If idOnly is specified and GAL sync account is not enabled, idOnly will 
+  Note: idOnly only works when GAL sync account is configured/enabled.
+  If idOnly is specified and GAL sync account is not enabled, idOnly will
   be ignored.
 
 ----------------------------
@@ -2124,6 +2124,7 @@ u attribute is present iff count > 0
   <m [f="!|?"] [origid="..." rt="r|w"] [idnt="{identity-id}"] [did="{saved-draft-id}"]>
     <e t="{type}" a="{email-address}" p="{personal-name}" [add="1"]/>+
     <su>{subject}</su>*
+    [<h name="{header-name}">{header-value}</h>]*
     [<irt>{Message-ID header for message being replied to}</irt>]
     <mp ct="{content-type}" [ci="{content-id}"]>
       <content>...</content>
@@ -2159,6 +2160,9 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
                if the SendMsg request is re-sent but the message has not been modified, the client should use
                    the same {send-uid} and the server will try to check the status of the previous SendMsg attempt
 
+  {header-name}, {header-value} - custom RFC822 header name and value respectively. Only header names specified in
+    zimbraCustomMimeHeaderNameAllowed global config are allowed for security reasons.
+
 ----------------------------
 
 # origid will be present if this is a reply or forward
@@ -2178,6 +2182,7 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
   <m [id="{existing-draft-id}"] [origid="..." rt="r|w"] [idnt="{identity-id}"] [l="{folder}"] [f="{flags}"] [t="{tag-id-list}"] [color="{color}"] [autoSendTime="{millis-since-epoch}"]>
     <e t="{type}" a="{email-address}" p="{personal-name}"/>+
     <su>{subject}</su>*
+    [<h name="{header-name}">{header-value}</h>]*
     [<irt>{Message-ID header for message being replied to}</irt>]
     <mp ct="{content-type}">
       <content>...</content>
@@ -2353,13 +2358,13 @@ END:VCARD]
 
   if replace-mode is 1, all attrs in the specified contact are replaced with specified attrs, otherwise
   the attrs are merged with the existing contact.
-  
+
  {op} = + | -
         + : add the value
         - : remvoe the value
-        
+
         {op} is not allowed if replace-mode is 1, if specified when replace=1, INVALID_REQUEST will be thrown
-        
+
         When replace=0:
         (1) if op is not present:
                if {attr-value} is empty, remove the field
@@ -2368,7 +2373,7 @@ END:VCARD]
         (2) if op is present:
                if {attr-value} is empty, throw INVALID_REQUEST
                - otherwise, add/remove the specified value.
-  
+
 
 <ModifyContactResponse>
    <cn ...>
@@ -2393,8 +2398,8 @@ NOTE: should we return modified attrs in response?
   if l="{folder-id}" is present, return only contacts in the specified folder.
   if <a n="..."/> present, return only the specified attribute(s).
   if <cn id="..."/> present, only get the specified contact(s).
-  
-                         
+
+
   {returnHiddenAttrs} : whether to return contact hidden attrs defined in zimbraContactHiddenAttributes.
                         ignored if <a> is present.
 
