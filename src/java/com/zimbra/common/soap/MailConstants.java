@@ -745,7 +745,7 @@ public final class MailConstants {
 
     // send/save draft
     public static final String E_ATTACH = "attach";
-    public static final String E_HEADER = "h";
+    public static final String E_HEADER = A_HEADER;
     public static final String A_ATTACHMENT_ID = "aid";
     public static final String A_OPTIONAL = "optional";
     public static final String A_ORIG_ID = "origid";
