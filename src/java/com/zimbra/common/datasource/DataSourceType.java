@@ -20,7 +20,7 @@ import java.util.Arrays;
 import com.zimbra.common.service.ServiceException;
 
 public enum DataSourceType {
-    pop3, imap, caldav, contacts, yab, rss, cal, gal, xsync;
+    pop3, imap, caldav, contacts, yab, rss, cal, gal, xsync, tagmap;
 
     public static DataSourceType fromString(String s) throws ServiceException {
         try {
