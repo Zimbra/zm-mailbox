@@ -76,7 +76,9 @@ public class ItemData {
             ud.unreadCount = json.getInt(Keys.unread.toString());
             ud.setFlags(json.getInt(Keys.flags.toString()) |
                 Flag.BITMASK_UNCACHED);
-            ud.tags = json.getLong(Keys.tags.toString());
+            if (!json.isNull(Keys.tags.toString())) {
+                ud.tags = json.getLong(Keys.tags.toString());
+            }
             ud.setSubject(json.optString(Keys.subject.toString()));
             ud.name = json.optString(Keys.name.toString());
             ud.metadata = json.optString(Keys.metadata.toString());
