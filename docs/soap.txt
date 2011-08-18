@@ -2124,7 +2124,7 @@ u attribute is present iff count > 0
   <m [f="!|?"] [origid="..." rt="r|w"] [idnt="{identity-id}"] [did="{saved-draft-id}"]>
     <e t="{type}" a="{email-address}" p="{personal-name}" [add="1"]/>+
     <su>{subject}</su>*
-    [<h name="{header-name}">{header-value}</h>]*
+    [<header name="{header-name}">{header-value}</h>]*
     [<irt>{Message-ID header for message being replied to}</irt>]
     <mp ct="{content-type}" [ci="{content-id}"]>
       <content>...</content>
@@ -2182,7 +2182,7 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
   <m [id="{existing-draft-id}"] [origid="..." rt="r|w"] [idnt="{identity-id}"] [l="{folder}"] [f="{flags}"] [t="{tag-id-list}"] [color="{color}"] [autoSendTime="{millis-since-epoch}"]>
     <e t="{type}" a="{email-address}" p="{personal-name}"/>+
     <su>{subject}</su>*
-    [<h name="{header-name}">{header-value}</h>]*
+    [<header name="{header-name}">{header-value}</h>]*
     [<irt>{Message-ID header for message being replied to}</irt>]
     <mp ct="{content-type}">
       <content>...</content>

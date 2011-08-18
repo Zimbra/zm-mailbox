@@ -18,16 +18,13 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.activation.DataHandler;
-import javax.mail.Header;
 import javax.mail.MessagingException;
 import javax.mail.Part;
 import javax.mail.SendFailedException;
@@ -54,9 +51,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.CharsetUtil;
-import com.zimbra.common.util.ExceptionToString;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -96,10 +90,7 @@ import com.zimbra.soap.ZimbraSoapContext;
 /**
  * @since Sep 29, 2004
  */
-public class ParseMimeMessage {
-
-    static Log mLog = LogFactory.getLog(ParseMimeMessage.class);
-
+public final class ParseMimeMessage {
     private static final long DEFAULT_MAX_SIZE = 10 * 1024 * 1024;
 
     /**
@@ -143,7 +134,6 @@ public class ParseMimeMessage {
         try {
             return new Mime.FixedMimeMessage(JMSession.getSession(), messageStream);
         } catch (MessagingException me) {
-            mLog.warn(ExceptionToString.ToString(me));
             throw ServiceException.FAILURE("MessagingExecption", me);
         }
     }
@@ -253,7 +243,7 @@ public class ParseMimeMessage {
                 Config config = Provisioning.getInstance().getConfig();
                 maxSize = config.getIntAttr(Provisioning.A_zimbraMtaMaxMessageSize, -1);
             } catch (ServiceException e) {
-                ZimbraLog.mailbox.warn("Unable to determine max message size.  Disabling limit check.", e);
+                ZimbraLog.soap.warn("Unable to determine max message size.  Disabling limit check.", e);
             }
             if (maxSize < 0) {
                 maxSize = Long.MAX_VALUE;
@@ -262,7 +252,7 @@ public class ParseMimeMessage {
 
         void incrementSize(String name, long numBytes) throws MailServiceException {
             size += numBytes;
-            mLog.debug("Adding %s, incrementing size by %d to %d.", name, numBytes, size);
+            ZimbraLog.soap.debug("Adding %s, incrementing size by %d to %d.", name, numBytes, size);
             if (size > maxSize) {
                 throw MailServiceException.MESSAGE_TOO_BIG(maxSize, size);
             }
@@ -390,7 +380,7 @@ public class ParseMimeMessage {
                 } else if (eName.equals(MailConstants.E_SUBJECT)) { /* <su> */
                     // mm.setSubject(elem.getText(), "utf-8");
                 } else if (eName.equals(MailConstants.E_FRAG)) { /* <f> */
-                    mLog.debug("Ignoring message fragment data");
+                    ZimbraLog.soap.debug("Ignoring message fragment data");
                 } else if (eName.equals(MailConstants.E_INVITE)) { /* <inv> */
                     // Already processed above.  Ignore it.
                 } else if (eName.equals(MailConstants.E_CAL_TZ)) { /* <tz> */
@@ -403,7 +393,8 @@ public class ParseMimeMessage {
                         throw ServiceException.INVALID_REQUEST("header '" + name + "' not allowed", null);
                     }
                 } else {
-                    mLog.warn("unsupported child element '" + elem.getName() + "' under parent " + msgElem.getName());
+                    ZimbraLog.soap.warn("unsupported child element '%s' under parent %s",
+                            elem.getName(), msgElem.getName());
                 }
             }
 
@@ -436,27 +427,15 @@ public class ParseMimeMessage {
 
             // JavaMail tip: don't forget to call this, it is REALLY confusing.
             mm.saveChanges();
-
-            if (mLog.isDebugEnabled()) {
-                dumpMessage(mm);
-            }
-
             return mm;
-        } catch (UnsupportedEncodingException encEx) {
-            String excepStr = ExceptionToString.ToString(encEx);
-            mLog.warn(excepStr);
-            throw ServiceException.FAILURE("UnsupportedEncodingExecption", encEx);
-        } catch (SendFailedException sfe) {
-            SafeSendFailedException ssfe = new SafeSendFailedException(sfe);
-            String excepStr = ExceptionToString.ToString(ssfe);
-            mLog.warn(excepStr);
+        } catch (UnsupportedEncodingException e) {
+            throw ServiceException.FAILURE("UnsupportedEncodingExecption", e);
+        } catch (SendFailedException e) {
+            SafeSendFailedException ssfe = new SafeSendFailedException(e);
             throw ServiceException.FAILURE("SendFailure", ssfe);
-        } catch (MessagingException me) {
-            String excepStr = ExceptionToString.ToString(me);
-            mLog.warn(excepStr);
-            throw ServiceException.FAILURE("MessagingExecption", me);
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("MessagingExecption", e);
         } catch (IOException e) {
-            e.printStackTrace();
             throw ServiceException.FAILURE("IOExecption", e);
         }
     }
@@ -905,72 +884,37 @@ public class ParseMimeMessage {
         InternetAddress[] addrs = maddrs.get(EmailType.TO.toString());
         if (addrs != null && addrs.length > 0) {
             mm.addRecipients(javax.mail.Message.RecipientType.TO, addrs);
-            mLog.debug("\t\tTO: " + Arrays.toString(addrs));
         }
 
         addrs = maddrs.get(EmailType.CC.toString());
         if (addrs != null && addrs.length > 0) {
             mm.addRecipients(javax.mail.Message.RecipientType.CC, addrs);
-            mLog.debug("\t\tCC: " + Arrays.toString(addrs));
         }
 
         addrs = maddrs.get(EmailType.BCC.toString());
         if (addrs != null && addrs.length > 0) {
             mm.addRecipients(javax.mail.Message.RecipientType.BCC, addrs);
-            mLog.debug("\t\tBCC: " + Arrays.toString(addrs));
         }
 
         addrs = maddrs.get(EmailType.FROM.toString());
         if (addrs != null && addrs.length == 1) {
             mm.setFrom(addrs[0]);
-            mLog.debug("\t\tFrom: " + addrs[0]);
         }
 
         addrs = maddrs.get(EmailType.SENDER.toString());
         if (addrs != null && addrs.length == 1) {
             mm.setSender(addrs[0]);
-            mLog.debug("\t\tSender: " + addrs[0]);
         }
 
         addrs = maddrs.get(EmailType.REPLY_TO.toString());
         if (addrs != null && addrs.length > 0) {
             mm.setReplyTo(addrs);
-            mLog.debug("\t\tReply-To: " + addrs[0]);
         }
 
         addrs = maddrs.get(EmailType.READ_RECEIPT.toString());
         if (addrs != null && addrs.length > 0) {
             mm.addHeader("Disposition-Notification-To", InternetAddress.toString(addrs));
-            mLog.debug("\t\tDisposition-Notification-To: " + Arrays.toString(addrs));
         }
-    }
-
-    private static void dumpMessage(MimeMessage mm) {
-        /*
-         * Dump the outgoing message to stdout for now...
-         */
-        mLog.debug("--------------------------------------");
-        try {
-            Enumeration<?> hdrsEnum = mm.getAllHeaders();
-            if (hdrsEnum != null)
-                while (hdrsEnum.hasMoreElements()) {
-                    Header hdr = (Header) hdrsEnum.nextElement();
-                    if (!hdr.getName().equals("") && !hdr.getValue().equals("\n"))
-                        mLog.debug(hdr.getName()+" = \""+hdr.getValue()+"\"");
-                }
-            mLog.debug("--------------------------------------");
-            javax.mail.Address[] recips = mm.getAllRecipients();
-            if (recips != null)
-                for (int i = 0; i < recips.length; i++)
-                    mLog.debug("Recipient: "+recips[i].toString());
-
-            mLog.debug("--------------------------------------\nMessage size is: "+mm.getSize());
-
-//          System.out.println("--------------------------------------");
-//          System.out.print("Message Dump:");
-//          mm.writeTo(System.out);
-        } catch (Exception e) { e.printStackTrace(); };
-        mLog.debug("--------------------------------------\n");
     }
 
 }
