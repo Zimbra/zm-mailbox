@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 8.0.0_BETA1_1111 ysasaki 20110817-1640 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -2758,6 +2758,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=605)
     public static final String A_zimbraCustomerCareTier = "zimbraCustomerCareTier";
+
+    /**
+     * Custom RFC822 header names (case-sensitive) allowed to specify in
+     * SendMsgRequest
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1265)
+    public static final String A_zimbraCustomMimeHeaderNameAllowed = "zimbraCustomMimeHeaderNameAllowed";
 
     /**
      * SQL statements that take longer than this duration to execute will be
