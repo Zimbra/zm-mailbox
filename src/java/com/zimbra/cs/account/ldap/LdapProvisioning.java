@@ -4340,34 +4340,42 @@ public class LdapProvisioning extends Provisioning {
     throws ServiceException {
         if (zimbraId == null)
             return null;
-        LdapCalendarResource resource =
-            (LdapCalendarResource) sAccountCache.getById(zimbraId);
-        if (resource == null) {
-            zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
-            resource = (LdapCalendarResource) getAccountByQuery(
-                mDIT.mailBranchBaseDN(),
-                LdapFilter.calendarResourceById(zimbraId),
-                null, loadFromMaster);
-            sAccountCache.put(resource);
+        Account acct = sAccountCache.getById(zimbraId);
+        if (acct != null) {
+            if (acct instanceof LdapCalendarResource) {
+                return (LdapCalendarResource) acct;
+            } else {
+                // could be a non-resource Account
+                return null;
+            }
         }
+        zimbraId = LdapUtil.escapeSearchFilterArg(zimbraId);
+        LdapCalendarResource resource = (LdapCalendarResource) getAccountByQuery(
+            mDIT.mailBranchBaseDN(),
+            LdapFilter.calendarResourceById(zimbraId),
+            null, loadFromMaster);
+        sAccountCache.put(resource);
         return resource;
     }
 
     private CalendarResource getCalendarResourceByName(String emailAddress, boolean loadFromMaster)
     throws ServiceException {
-
         emailAddress = fixupAccountName(emailAddress);
-
-        LdapCalendarResource resource =
-            (LdapCalendarResource) sAccountCache.getByName(emailAddress);
-        if (resource == null) {
-            emailAddress = LdapUtil.escapeSearchFilterArg(emailAddress);
-            resource = (LdapCalendarResource) getAccountByQuery(
-                mDIT.mailBranchBaseDN(),
-                LdapFilter.calendarResourceByName(emailAddress),
-                null, loadFromMaster);
-            sAccountCache.put(resource);
+        Account acct = sAccountCache.getByName(emailAddress);
+        if (acct != null) {
+            if (acct instanceof LdapCalendarResource) {
+                return (LdapCalendarResource) acct;
+            } else {
+                // could be a non-resource Account
+                return null;
+            }
         }
+        emailAddress = LdapUtil.escapeSearchFilterArg(emailAddress);
+        LdapCalendarResource resource = (LdapCalendarResource) getAccountByQuery(
+            mDIT.mailBranchBaseDN(),
+            LdapFilter.calendarResourceByName(emailAddress),
+            null, loadFromMaster);
+        sAccountCache.put(resource);
         return resource;
     }
 
