@@ -29,8 +29,7 @@ public class AutoSendDraftTask extends ScheduledTask<Object> {
      * @throws Exception if unable to compute a result
      */
     @Override public Void call() throws Exception {
-        if (ZimbraLog.scheduler.isDebugEnabled())
-            ZimbraLog.scheduler.debug("Running task " + this);
+        ZimbraLog.scheduler.debug("Running task %s", this);
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
         if (mbox == null) {
             ZimbraLog.scheduler.error("Mailbox for id %s does not exist", getMailboxId());
@@ -49,7 +48,7 @@ public class AutoSendDraftTask extends ScheduledTask<Object> {
             ZimbraLog.scheduler.warn("Message with id %s is not a Draft scheduled to be auto-sent", draftId);
             return null;
         }
-        if (msg.isTagged(Flag.ID_DELETED) || msg.inTrash()) {
+        if (msg.isTagged(Flag.FlagInfo.DELETED) || msg.inTrash()) {
             ZimbraLog.scheduler.debug("Draft with id %s is deleted", draftId);
             return null;
         }

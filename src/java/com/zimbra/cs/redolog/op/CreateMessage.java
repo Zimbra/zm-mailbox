@@ -38,9 +38,11 @@ import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
+import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessageOptions;
 import com.zimbra.cs.redolog.RedoException;
@@ -70,7 +72,8 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
     private int mConvFirstMsgId;    // first message of conversation, if creating new conversation
     private List<Integer> mMergedConvIds;  // existing conversations to merge into the message's conversation
     private int mFlags;             // flags applied to the new message
-    private String mTags;           // tags applied to the new message
+    private String[] mTags;         // tags applied to the new message
+    private String mTagIds;         // (deprecated) tag ids applied to the new message
     private int mCalendarItemId;    // new calendar item created if this is meeting or task invite message
     private String mCalendarItemPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
     private boolean mNoICal;        // true if we should NOT process the iCalendar part
@@ -96,13 +99,13 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
 
     protected CreateMessage(int mailboxId, String rcptEmail, boolean shared,
                             String digest, int msgSize, int folderId, boolean noICal,
-                            int flags, String tags) {
+                            int flags, String[] tags) {
         this(mailboxId, rcptEmail, RECEIVED_DATE_UNSET, shared, digest, msgSize, folderId, noICal, flags, tags, null);
     }
 
     public CreateMessage(int mailboxId, String rcptEmail, long receivedDate,
                          boolean shared, String digest, int msgSize, int folderId,
-                         boolean noICal, int flags, String tags, CustomMetadata extended) {
+                         boolean noICal, int flags, String[] tags, CustomMetadata extended) {
         super(MailboxOperation.CreateMessage);
         setMailboxId(mailboxId);
         mRcptEmail = rcptEmail;
@@ -116,7 +119,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         mConvFirstMsgId = UNKNOWN_ID;
         mMergedConvIds = Collections.emptyList();
         mFlags = flags;
-        mTags = tags != null ? tags : "";
+        mTags = tags != null ? tags : new String[0];
         mMsgBodyType = MSGBODY_INLINE;
         mNoICal = noICal;
         mExtendedData = extended;
@@ -236,7 +239,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         mFlags = flags;
     }
     
-    public String getTags() {
+    public String[] getTags() {
         return mTags;
     }        
 
@@ -345,7 +348,11 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         }
         out.writeInt(mFlags);
         out.writeBoolean(mNoICal);
-        out.writeUTF(mTags);
+        if (getVersion().atLeast(1, 33)) {
+            out.writeUTFArray(mTags);
+        } else {
+            out.writeUTF(mTagIds);
+        }
         out.writeUTF(mPath);
         out.writeShort((short) -1);
         if (getVersion().atLeast(1, 25)) {
@@ -401,7 +408,11 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         }
         mFlags = in.readInt();
         mNoICal = in.readBoolean();
-        mTags = in.readUTF();
+        if (getVersion().atLeast(1, 33)) {
+            mTags = in.readUTFArray();
+        } else {
+            mTagIds = in.readUTF();
+        }
         mPath = in.readUTF();
         in.readShort();
         if (getVersion().atLeast(1, 25)) {
@@ -460,14 +471,19 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
     public void redo() throws Exception {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+        OperationContext octxt = getOperationContext();
 
-        DeliveryContext dcxtxt = new DeliveryContext(mShared, Arrays.asList(mboxId));
+        if (mTags == null && mTagIds != null) {
+            mTags = TagUtil.tagIdStringToNames(mbox, octxt, mTagIds);
+        }
+
+        DeliveryContext dctxt = new DeliveryContext(mShared, Arrays.asList(mboxId));
         
         if (mMsgBodyType == MSGBODY_LINK) {
             Blob blob = StoreIncomingBlob.fetchBlob(mPath); 
             if (blob == null)
                 throw new RedoException("Missing link source blob " + mPath + " (digest=" + mDigest + ")", this);
-            dcxtxt.setIncomingBlob(blob);
+            dctxt.setIncomingBlob(blob);
 
             ParsedMessage pm = null;
             try {
@@ -478,7 +494,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
                     .setSize(mMsgSize)
                     .setDigest(mDigest);
                 pm = new ParsedMessage(opt);
-                mbox.addMessage(getOperationContext(), pm, getDeliveryOptions(), dcxtxt);
+                mbox.addMessage(octxt, pm, getDeliveryOptions(), dctxt);
             } catch (MailServiceException e) {
                 if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                     mLog.info("Message " + mMsgId + " is already in mailbox " + mboxId);
@@ -499,7 +515,7 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
                 if (mData.getLength() != mMsgSize) {
                     in = new GZIPInputStream(in);
                 }
-                mbox.addMessage(getOperationContext(), in, mMsgSize, mReceivedDate, getDeliveryOptions(), dcxtxt); 
+                mbox.addMessage(octxt, in, mMsgSize, mReceivedDate, getDeliveryOptions(), dctxt); 
             } catch (MailServiceException e) {
                 if (e.getCode() == MailServiceException.ALREADY_EXISTS) {
                     mLog.info("Message " + mMsgId + " is already in mailbox " + mboxId);

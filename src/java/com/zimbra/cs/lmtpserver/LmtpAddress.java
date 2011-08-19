@@ -32,7 +32,7 @@ public class LmtpAddress {
     private boolean mSkipFilters = false;
     private String mFolder = null;
     private String mFlags = null;
-    private String mTags = null;
+    private String[] mTags = null;
 
     private boolean mOnLocalServer = true;
     private String mRemoteServer; // if mOnLocalServer is false
@@ -92,11 +92,11 @@ public class LmtpAddress {
 	return mFlags;
     }
     
-    public void setTags(String tags) {
+    public void setTags(String[] tags) {
 	mTags = tags;
     }
     
-    public String getTags() {
+    public String[] getTags() {
 	return mTags;
     }
     

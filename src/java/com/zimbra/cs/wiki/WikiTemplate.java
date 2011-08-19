@@ -36,8 +36,6 @@ import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.wiki.WikiServiceException;
@@ -839,17 +837,17 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
             }
             else if (ctxt.item instanceof Document) {
                 Document doc = (Document) ctxt.item;
-                List<Tag> tags = doc.getTagList();
-                StringBuffer names= new StringBuffer();
+                String[] tags = doc.getTags();
+                StringBuffer names = new StringBuffer();
                 int count = 0;
-                int size = tags.size();
-                if(size>0){
+                int size = tags.length;
+                if (size > 0){
                     names.append("<span class='zmwiki-tagsTitle'>Tags: </span>");
                 }
-                for (Tag tag : tags) {
+                for (String tagName : tags) {
                     count++;
                     names.append("<span class='zmwiki-tags'>");
-                    names.append(tag.getName()+((size==count)?" ":", "));
+                    names.append(tagName + ((size == count) ? " " : ", "));
                     names.append(" </span>");
                 }
                 return names.toString();

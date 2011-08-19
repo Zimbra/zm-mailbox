@@ -56,7 +56,11 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class SendDeliveryReport extends MailDocumentHandler {
 
     private static final String[] TARGET_ITEM_PATH = new String[] { MailConstants.A_MESSAGE_ID };
-    @Override protected String[] getProxiedIdPath(Element request) { return TARGET_ITEM_PATH; }
+
+    @Override
+    protected String[] getProxiedIdPath(Element request) {
+        return TARGET_ITEM_PATH;
+    }
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -75,7 +79,7 @@ public class SendDeliveryReport extends MailDocumentHandler {
         sendReport(getSenderAccount(zsc), msg, false, zsc.getRequestIP(), zsc.getUserAgent());
 
         // then mark the message as \Notified
-        mbox.alterTag(octxt, msgid, MailItem.Type.MESSAGE, Flag.ID_NOTIFIED, true);
+        mbox.alterTag(octxt, msgid, MailItem.Type.MESSAGE, Flag.FlagInfo.NOTIFIED, true, null);
 
         Element response = zsc.createElement(MailConstants.SEND_REPORT_RESPONSE);
         return response;
@@ -91,8 +95,9 @@ public class SendDeliveryReport extends MailDocumentHandler {
         Account owner = msg.getMailbox().getAccount();
 
         String charset = authAccount.getPrefMailDefaultCharset();
-        if (charset == null)
+        if (charset == null) {
             charset = MimeConstants.P_CHARSET_UTF8;
+        }
 
         try {
             InternetAddress[] recipients = Mime.parseAddressHeader(mm, "Disposition-Notification-To");
@@ -108,10 +113,11 @@ public class SendDeliveryReport extends MailDocumentHandler {
             report.setHeader("Auto-Submitted", "auto-replied (zimbra; read-receipt)");
             report.setHeader("Precedence", "bulk");
 
-            if (Provisioning.getInstance().getConfig().isAutoSubmittedNullReturnPath())
+            if (Provisioning.getInstance().getConfig().isAutoSubmittedNullReturnPath()) {
                 report.setEnvelopeFrom("<>");
-            else
+            } else {
                 report.setEnvelopeFrom(authAccount.getName());
+            }
 
             MimeMultipart multi = new JavaMailMimeMultipart("report");
 
@@ -165,10 +171,12 @@ public class SendDeliveryReport extends MailDocumentHandler {
 
         if (userAgent != null || requestHost != null) {
             mdn.append("Reporting-UA: ");
-            if (requestHost != null && !requestHost.trim().equals(""))
+            if (requestHost != null && !requestHost.trim().equals("")) {
                 mdn.append(requestHost).append(userAgent == null ? "" : "; ");
-            if (userAgent != null && !userAgent.trim().equals(""))
+            }
+            if (userAgent != null && !userAgent.trim().equals("")) {
                 mdn.append(userAgent);
+            }
             mdn.append("\r\n");
         }
 
@@ -176,8 +184,9 @@ public class SendDeliveryReport extends MailDocumentHandler {
         mdn.append("Final-Recipient: rfc822;").append(owner.getName()).append("\r\n");
 
         String messageID = mm.getMessageID();
-        if (messageID != null && !messageID.trim().equals(""))
+        if (messageID != null && !messageID.trim().equals("")) {
             mdn.append("Original-Message-ID: ").append(messageID.trim()).append("\r\n");
+        }
 
         mdn.append("Disposition: manual-action/MDN-sent-");
         mdn.append(automatic ? "automatically" : "manually");

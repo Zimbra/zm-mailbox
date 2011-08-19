@@ -43,6 +43,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.UserServletContext;
@@ -71,7 +72,8 @@ public class SyncFormatter extends Formatter {
         List<Pair<String, String>> hdrs = new ArrayList<Pair<String, String>>();
         hdrs.add(new Pair<String, String>("X-Zimbra-ItemId", item.getId() + ""));
         hdrs.add(new Pair<String, String>("X-Zimbra-FolderId", item.getFolderId() + ""));
-        hdrs.add(new Pair<String, String>("X-Zimbra-Tags", item.getTagString()));
+        hdrs.add(new Pair<String, String>("X-Zimbra-Tags", TagUtil.getTagIdString(item)));
+        hdrs.add(new Pair<String, String>("X-Zimbra-Tag-Names", TagUtil.encodeTags(item.getTags())));
         hdrs.add(new Pair<String, String>("X-Zimbra-Flags", item.getFlagString()));
         hdrs.add(new Pair<String, String>("X-Zimbra-Received", item.getDate() + ""));
         hdrs.add(new Pair<String, String>("X-Zimbra-Modified", item.getChangeDate() + ""));

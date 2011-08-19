@@ -28,6 +28,7 @@ import java.util.Set;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -229,7 +230,7 @@ public final class DbSearch {
                 out.append(DbMailItem.DB_FIELDS);
                 break;
             case IMAP_MSG:
-                out.append("mi.id, mi.index_id, mi.type, mi.imap_id, mi.unread, mi.flags, mi.tags");
+                out.append("mi.id, mi.index_id, mi.type, mi.imap_id, mi.unread, mi.flags, mi.tag_names");
                 break;
             case MODSEQ:
                 out.append("mi.id, mi.index_id, mi.type, mi.mod_metadata");
@@ -260,13 +261,12 @@ public final class DbSearch {
     }
 
     private static final int encodeConstraint(StringBuilder out, DbConnection conn, Mailbox mbox,
-            DbSearchConstraints node, byte[] calTypes, boolean inCalTable) throws ServiceException {
+            DbSearchConstraints node, byte[] calTypes, boolean inCalTable)
+    throws ServiceException {
         /*
          *( SUB-NODE AND/OR (SUB-NODE...) ) AND/OR ( SUB-NODE ) AND
          *    (
          *       one of: [type NOT IN (...)]  || [type = ?] || [type IN ( ...)]
-         *       [ AND tags != 0]
-         *       [ AND tags IN ( ... ) ]
          *       [ AND flags IN (...) ]
          *       ..etc
          *    )
@@ -308,11 +308,28 @@ public final class DbSearch {
             num += constraint.types.size();
         }
 
+
         num += encode(out, "mi.type", false, constraint.excludeTypes);
         num += encode(out, "mi.type", inCalTable, calTypes);
-        num += encode(out, "mi.tags", true, tc.searchTagsets);
-        num += encode(out, "mi.flags", true, tc.searchFlagsets);
+
+        if (tc.flagMask != 0) {
+            out.append(" AND ").append(Db.getInstance().bitAND("mi.flags", "?")).append(" = ?");
+            num += 2;
+        }
+        if (tc.tags != null) {
+            for (int i = 0; i < tc.tags.size(); i++) {
+                out.append(" AND mi.tag_names LIKE ?");
+                num++;
+            }
+        }
+        if (tc.excludeTags != null) {
+            for (int i = 0; i < tc.excludeTags.size(); i++) {
+                out.append(" AND mi.tag_names NOT LIKE ?");
+                num++;
+            }
+        }
         num += encode(out, "unread", true, tc.unread);
+
         num += encode(out, "mi.folder_id", true, constraint.folders);
         num += encode(out, "mi.folder_id", false, constraint.excludeFolders);
         if (constraint.convId > 0) {
@@ -420,7 +437,8 @@ public final class DbSearch {
     };
 
     public static List<Result> search(DbConnection conn, Mailbox mbox, DbSearchConstraints node, SortBy sort,
-            int offset, int limit, FetchMode fetch, boolean inDumpster) throws ServiceException {
+            int offset, int limit, FetchMode fetch, boolean inDumpster)
+    throws ServiceException {
         if (!Db.supports(Db.Capability.AVOID_OR_IN_WHERE_CLAUSE) ||
                 (sort.getKey() != SortBy.Key.DATE && sort.getKey() != SortBy.Key.SIZE) ||
                 !(node instanceof DbSearchConstraints.Union)) {
@@ -446,7 +464,7 @@ public final class DbSearch {
 
     private static List<Result> searchInternal(DbConnection conn, Mailbox mbox, DbSearchConstraints node,
             SortBy sort, int offset, int limit, FetchMode fetch, boolean inDumpster)
-            throws SQLException, ServiceException {
+    throws SQLException, ServiceException {
         boolean hasValidLIMIT = offset >= 0 && limit >= 0;
         StringBuilder sql = new StringBuilder();
         int numParams = 0;
@@ -469,8 +487,6 @@ public final class DbSearch {
              *( SUB-NODE AND/OR (SUB-NODE...) ) AND/OR ( SUB-NODE ) AND
              *    (
              *       one of: [type NOT IN (...)]  || [type = ?] || [type IN ( ...)]
-             *       [ AND tags != 0]
-             *       [ AND tags IN ( ... ) ]
              *       [ AND flags IN (...) ]
              *       ..etc
              *    )
@@ -606,16 +622,18 @@ public final class DbSearch {
 
     private static final int setBytes(PreparedStatement stmt, int param, byte[] c) throws SQLException {
         if (c != null && c.length > 0) {
-            for (byte b: c)
+            for (byte b : c) {
                 stmt.setByte(param++, b);
+            }
         }
         return param;
     }
 
     private static final int setIntegers(PreparedStatement stmt, int param, Collection<Integer> c) throws SQLException {
         if (!ListUtil.isEmpty(c)) {
-            for (int i: c)
+            for (int i : c) {
                 stmt.setInt(param++, i);
+            }
         }
         return param;
     }
@@ -688,16 +706,18 @@ public final class DbSearch {
 
     private static final int setLongs(PreparedStatement stmt, int param, Collection<Long> c) throws SQLException {
         if (!ListUtil.isEmpty(c)) {
-            for (long l: c)
+            for (long l : c) {
                 stmt.setLong(param++, l);
+            }
         }
         return param;
     }
 
     private static final int setFolders(PreparedStatement stmt, int param, Collection<Folder> c) throws SQLException {
         if (!ListUtil.isEmpty(c)) {
-            for (Folder f : c)
+            for (Folder f : c) {
                 stmt.setInt(param++, f.getId());
+            }
         }
         return param;
     }
@@ -783,6 +803,7 @@ public final class DbSearch {
         if (!(lowValid || highValid)) {
             return 0;
         }
+
         int params = 0;
         out.append(range.bool ? " AND (" : " AND NOT (");
         if (lowValid) {
@@ -845,34 +866,34 @@ public final class DbSearch {
     }
 
     public static final class TagConstraints {
-        Set<Long> searchTagsets;
-        Set<Long> searchFlagsets;
+        int setFlagMask, flagMask;
+        Set<Tag> tags, excludeTags;
         Boolean unread;
         boolean noMatches;
 
-        static TagConstraints getTagConstraints(Mailbox mbox, DbSearchConstraints.Leaf leaf, DbConnection conn)
-                throws ServiceException {
+        static TagConstraints getTagConstraints(Mailbox mbox, DbSearchConstraints.Leaf leaf, DbConnection conn) {
             TagConstraints tc = leaf.tagConstraints = new TagConstraints();
             if (leaf.tags.isEmpty() && leaf.excludeTags.isEmpty()) {
                 return tc;
             }
-            int setFlagMask = 0;
-            long setTagMask = 0;
 
             if (!ListUtil.isEmpty(leaf.tags)) {
                 for (Tag tag : leaf.tags) {
                     if (tag.getId() == Flag.ID_UNREAD) {
                         tc.unread = Boolean.TRUE;
                     } else if (tag instanceof Flag) {
-                        setFlagMask |= tag.getBitmask();
+                        tc.flagMask |= ((Flag) tag).toBitmask();
                     } else {
-                        setTagMask |= tag.getBitmask();
+                        if (tc.tags == null) {
+                            tc.tags = Sets.newHashSet(tag);
+                        } else {
+                            tc.tags.add(tag);
+                        }
                     }
                 }
+                tc.setFlagMask = tc.flagMask;
             }
 
-            int flagMask = setFlagMask;
-            long tagMask = setTagMask;
 
             if (!ListUtil.isEmpty(leaf.excludeTags)) {
                 for (Tag tag : leaf.excludeTags) {
@@ -882,42 +903,20 @@ public final class DbSearch {
                         }
                         tc.unread = Boolean.FALSE;
                     } else if (tag instanceof Flag) {
-                        if ((setFlagMask & tag.getBitmask()) != 0) {
+                        if ((tc.setFlagMask & ((Flag) tag).toBitmask()) != 0) {
                             tc.noMatches = true;
                         }
-                        flagMask |= tag.getBitmask();
+                        tc.flagMask |= ((Flag) tag).toBitmask();
                     } else {
-                        if ((setTagMask & tag.getBitmask()) != 0) {
+                        if (tc.tags != null && tc.tags.contains(tag)) {
                             tc.noMatches = true;
                         }
-                        tagMask |= tag.getBitmask();
+                        if (tc.excludeTags == null) {
+                            tc.excludeTags = Sets.newHashSet(tag);
+                        } else {
+                            tc.excludeTags.add(tag);
+                        }
                     }
-                }
-            }
-
-            // if we know we have no matches (e.g. "is:flagged and is:unflagged"), just stop here...
-            if (tc.noMatches) {
-                return tc;
-            }
-            TagsetCache tcFlags = DbMailItem.getFlagsetCache(conn, mbox);
-            TagsetCache tcTags  = DbMailItem.getTagsetCache(conn, mbox);
-            if (setTagMask != 0 || tagMask != 0) {
-                // note that tcTags.getMatchingTagsets() returns null when *all* tagsets match
-                tc.searchTagsets = tcTags.getMatchingTagsets(tagMask, setTagMask);
-                // if no items match the specified tags...
-                if (tc.searchTagsets != null && tc.searchTagsets.isEmpty()) {
-                    tc.noMatches = true;
-                    tc.searchTagsets = null; // otherwise we encode "tags IN()" which MySQL doesn't like
-                }
-            }
-
-            if (setFlagMask != 0 || flagMask != 0) {
-                // note that tcFlags.getMatchingTagsets() returns null when *all* flagsets match
-                tc.searchFlagsets = tcFlags.getMatchingTagsets(flagMask, setFlagMask);
-                // if no items match the specified flags...
-                if (tc.searchFlagsets != null && tc.searchFlagsets.isEmpty()) {
-                    tc.noMatches = true;
-                    tc.searchFlagsets = null;  // otherwise we encode "flags IN()" which MySQL doesn't like
                 }
             }
 
@@ -925,14 +924,12 @@ public final class DbSearch {
         }
     }
 
-    private static int setSearchVars(PreparedStatement stmt, DbSearchConstraints node, int param,
-            byte[] calTypes, boolean inCalTable) throws SQLException {
+    private static int setSearchVars(PreparedStatement stmt, DbSearchConstraints node, int param, byte[] calTypes, boolean inCalTable)
+    throws SQLException {
         /*
          *( SUB-NODE AND/OR (SUB-NODE...) ) AND/OR ( SUB-NODE ) AND
          *    (
          *       one of: [type NOT IN (...)]  || [type = ?] || [type IN ( ...)]
-         *       [ AND tags != 0]
-         *       [ AND tags IN ( ... ) ]
          *       [ AND flags IN (...) ]
          *       ..etc
          *    )
@@ -960,8 +957,20 @@ public final class DbSearch {
         }
         param = setBytes(stmt, param, calTypes);
 
-        param = setLongs(stmt, param, leaf.tagConstraints.searchTagsets);
-        param = setLongs(stmt, param, leaf.tagConstraints.searchFlagsets);
+        if (leaf.tagConstraints.flagMask != 0) {
+            stmt.setInt(param++, leaf.tagConstraints.flagMask);
+            stmt.setInt(param++, leaf.tagConstraints.setFlagMask);
+        }
+        if (leaf.tagConstraints.tags != null) {
+            for (Tag tag : leaf.tagConstraints.tags) {
+                stmt.setString(param++, DbTag.tagLIKEPattern(tag.getName()));
+            }
+        }
+        if (leaf.tagConstraints.excludeTags != null) {
+            for (Tag tag : leaf.tagConstraints.excludeTags) {
+                stmt.setString(param++, DbTag.tagLIKEPattern(tag.getName()));
+            }
+        }
         param = setBooleanAsInt(stmt, param, leaf.tagConstraints.unread);
         param = setFolders(stmt, param, leaf.folders);
         param = setFolders(stmt, param, leaf.excludeFolders);
@@ -1151,7 +1160,7 @@ public final class DbSearch {
             super(rs, sortkey);
             int offset = COLUMN_TYPE;
             int flags = rs.getBoolean(offset + 2) ? Flag.BITMASK_UNREAD | rs.getInt(offset + 3) : rs.getInt(offset + 3);
-            i4msg = new ImapMessage(getId(), getType(), rs.getInt(offset + 1), flags, rs.getLong(offset + 4));
+            i4msg = new ImapMessage(getId(), getType(), rs.getInt(offset + 1), flags, DbTag.deserializeTags(rs.getString(offset + 4)));
         }
 
         @Override

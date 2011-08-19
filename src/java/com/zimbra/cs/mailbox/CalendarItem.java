@@ -397,7 +397,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         return toRet;
     }
 
-    static CalendarItem create(int id, Folder folder, int flags, long tags, String uid,
+    static CalendarItem create(int id, Folder folder, int flags, Tag.NormalizedTags ntags, String uid,
             ParsedMessage pm, Invite firstInvite, long nextAlarm, CustomMetadata custom) throws ServiceException {
         firstInvite.sanitize(false);
 
@@ -471,7 +471,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         data.imapId = id;
         data.date = mbox.getOperationTimestamp();
         data.setFlags(flags & (Flag.FLAGS_CALITEM | Flag.FLAGS_GENERIC));
-        data.tags = tags;
+        data.setTags(ntags);
         data.setSubject(subject);
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, custom, uid, startTime, endTime, recur,
                                        invites, firstInvite.getTimeZoneMap(), new ReplyList(), null);

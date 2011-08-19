@@ -15,13 +15,12 @@
 package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
@@ -34,6 +33,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Contact.Attachment;
+import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -44,9 +44,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public class ContactAction extends ItemAction {
 
-    private static final Set<String> CONTACT_OPS = new HashSet<String>(Arrays.asList(new String[] {
-        OP_UPDATE
-    }));
+    private static final Set<String> CONTACT_OPS = ImmutableSet.of(OP_UPDATE);
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
@@ -55,8 +53,10 @@ public class ContactAction extends ItemAction {
         Element action = request.getElement(MailConstants.E_ACTION);
         String operation = action.getAttribute(MailConstants.A_OPERATION).toLowerCase();
 
-        if (operation.endsWith(OP_READ) || operation.endsWith(OP_SPAM))
+        if (operation.endsWith(OP_READ) || operation.endsWith(OP_SPAM)) {
             throw ServiceException.INVALID_REQUEST("invalid operation on contact: " + operation, null);
+        }
+
         String successes;
         if (CONTACT_OPS.contains(operation)) {
             successes = handleContact(context, request, operation);
@@ -90,12 +90,13 @@ public class ContactAction extends ItemAction {
                 // duplicating code from ItemAction.java for now...
                 String folderId = action.getAttribute(MailConstants.A_FOLDER, null);
                 ItemId iidFolder = new ItemId(folderId == null ? "-1" : folderId, zsc);
-                if (!iidFolder.belongsTo(mbox))
+                if (!iidFolder.belongsTo(mbox)) {
                     throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
-                else if (folderId != null && iidFolder.getId() <= 0)
+                } else if (folderId != null && iidFolder.getId() <= 0) {
                     throw MailServiceException.NO_SUCH_FOLDER(iidFolder.getId());
+                }
                 String flags = action.getAttribute(MailConstants.A_FLAGS, null);
-                String tags  = action.getAttribute(MailConstants.A_TAGS, null);
+                String[] tags = TagUtil.parseTags(action, mbox, octxt);
                 Color color = getColor(action);
                 ParsedContact pc = null;
                 if (!action.listElements(MailConstants.E_ATTRIBUTE).isEmpty()) {
@@ -104,8 +105,7 @@ public class ContactAction extends ItemAction {
                     pc = new ParsedContact(cdata.getFirst(), cdata.getSecond());
                 }
 
-                localResults = ContactActionHelper.UPDATE(zsc, octxt, mbox,
-                                                             local, iidFolder, flags, tags, color, pc).getResult();
+                localResults = ContactActionHelper.UPDATE(zsc, octxt, mbox, local, iidFolder, flags, tags, color, pc).getResult();
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + operation, null);
             }

@@ -86,13 +86,13 @@ final class LocalFolder {
         int bits = folder.getFlagBitmask();
         if (((bits & Flag.BITMASK_NO_INFERIORS) != 0) != noinferiors) {
             debug("Setting NO_INFERIORS flag to " + noinferiors);
-            alterTag(Flag.ID_NO_INFERIORS, noinferiors);
+            alterTag(Flag.FlagInfo.NO_INFERIORS, noinferiors);
         }
         boolean sync = !flags.isNoselect();
         if (((bits & Flag.BITMASK_SYNCFOLDER) != 0) != sync) {
             debug("Setting sync flag to " + sync);
-            alterTag(Flag.ID_SYNCFOLDER, sync);
-            alterTag(Flag.ID_SYNC, sync);
+            alterTag(Flag.FlagInfo.SYNCFOLDER, sync);
+            alterTag(Flag.FlagInfo.SYNC, sync);
         }
         if (folder.getDefaultView() != MailItem.Type.MESSAGE) {
             debug("Setting default view to TYPE_MESSAGE");
@@ -100,8 +100,8 @@ final class LocalFolder {
         }
     }
 
-    public void alterTag(int flagId, boolean value) throws ServiceException {
-        mbox.alterTag(null, getFolder().getId(), MailItem.Type.FOLDER, flagId, value);
+    public void alterTag(Flag.FlagInfo finfo, boolean value) throws ServiceException {
+        mbox.alterTag(null, getFolder().getId(), MailItem.Type.FOLDER, finfo, value, null);
     }
 
     public void setMessageFlags(int id, int flagMask) throws ServiceException {

@@ -32,6 +32,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_item (
    unread        INTEGER,
    flags         INTEGER DEFAULT 0 NOT NULL,
    tags          BIGINT DEFAULT 0 NOT NULL,
+   tag_names     VARCHAR(255),
    sender        VARCHAR(128),
    recipients    VARCHAR(128),
    subject       VARCHAR(255),
@@ -64,6 +65,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_item_dumpster (
    unread        INTEGER,
    flags         INTEGER DEFAULT 0 NOT NULL,
    tags          BIGINT DEFAULT 0 NOT NULL,
+   tag_names     VARCHAR(255),
    sender        VARCHAR(128),
    recipients    VARCHAR(128),
    subject       VARCHAR(255),
@@ -116,6 +118,32 @@ CREATE TABLE *{DATABASE_NAME}.revision_dumpster (
    CONSTRAINT fk_revision_dumpster_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id),
    CONSTRAINT fk_revision_dumpster_item_id FOREIGN KEY (mailbox_id, item_id)
       REFERENCES mail_item_dumpster(mailbox_id, id) ON DELETE CASCADE
+);
+
+CREATE TABLE *{DATABASE_NAME}.tag (
+   mailbox_id    INTEGER NOT NULL,
+   id            INTEGER NOT NULL,
+   name          VARCHAR(128) NOT NULL,
+   color         BIGINT,
+   item_count    INTEGER DEFAULT 0 NOT NULL,
+   unread        INTEGER DEFAULT 0 NOT NULL,
+   listed        BOOLEAN DEFAULT FALSE NOT NULL,
+   sequence      INTEGER NOT NULL,
+   policy        VARCHAR(1024),
+
+   CONSTRAINT pk_tag PRIMARY KEY (mailbox_id, id),
+   CONSTRAINT i_tag_name UNIQUE (mailbox_id, name),
+   CONSTRAINT fk_tag_mailbox_id FOREIGN KEY (mailbox_id) REFERENCES zimbra.mailbox(id)
+);
+
+CREATE TABLE *{DATABASE_NAME}.tagged_item (
+   mailbox_id    INTEGER NOT NULL,
+   tag_id        INTEGER NOT NULL,
+   item_id       INTEGER NOT NULL,
+
+   CONSTRAINT i_tagged_item UNIQUE (mailbox_id, tag_id, item_id),
+   CONSTRAINT fk_tagged_item_tag FOREIGN KEY (mailbox_id, tag_id) REFERENCES tag(mailbox_id, id) ON DELETE CASCADE,
+   CONSTRAINT fk_tagged_item_item FOREIGN KEY (mailbox_id, item_id) REFERENCES mail_item(mailbox_id, id) ON DELETE CASCADE
 );
 
 CREATE TABLE *{DATABASE_NAME}.open_conversation (

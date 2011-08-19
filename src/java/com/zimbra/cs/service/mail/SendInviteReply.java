@@ -167,7 +167,7 @@ public class SendInviteReply extends CalendarRequest {
                 calItemId = 0;
                 ZMailbox zmbx = getRemoteZMailbox(octxt, authAcct, intendedAcct);
                 // Try to add the appointment to remote mailbox.
-                AddInviteResult addInviteResult = sendAddInvite(zmbx, msg);
+                AddInviteResult addInviteResult = sendAddInvite(zmbx, octxt, msg);
                 if (addInviteResult == null)
                     throw MailServiceException.INVITE_OUT_OF_DATE(iid.toString());
 
@@ -426,7 +426,7 @@ public class SendInviteReply extends CalendarRequest {
      * @throws ServiceException subclasses may throw an error
      */
     protected boolean deleteInviteOnReply(Account acct) throws ServiceException {
-        return acct.getBooleanAttr(Provisioning.A_zimbraPrefDeleteInviteOnReply, true);
+        return acct.isPrefDeleteInviteOnReply();
     }
 
     private static class AddInviteResult {
@@ -460,11 +460,11 @@ public class SendInviteReply extends CalendarRequest {
         return ZMailbox.getMailbox(zoptions);
     }
 
-    private static AddInviteResult sendAddInvite(ZMailbox zmbx, Message msg)
+    private static AddInviteResult sendAddInvite(ZMailbox zmbx, OperationContext octxt, Message msg)
     throws ServiceException {
         ItemIdFormatter ifmt = new ItemIdFormatter();
         Element addInvite = Element.create(SoapProtocol.SoapJS, MailConstants.ADD_APPOINTMENT_INVITE_REQUEST);
-        ToXML.encodeMessageAsMIME(addInvite, ifmt, msg, null, true, false);
+        ToXML.encodeMessageAsMIME(addInvite, ifmt, octxt, msg, null, true, false);
         Element response = zmbx.invoke(addInvite);
         int calItemId = (int) response.getAttributeLong(MailConstants.A_CAL_ID, 0);
         int invId = (int) response.getAttributeLong(MailConstants.A_CAL_INV_ID, 0);

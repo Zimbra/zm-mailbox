@@ -81,13 +81,13 @@ extends FilterHandler {
     }
 
     @Override
-    public Message explicitKeep(Collection<ActionFlag> flagActions, String tags)
+    public Message explicitKeep(Collection<ActionFlag> flagActions, String[] tags)
     throws ServiceException {
         return addMessage(defaultFolderId, flagActions, tags);
     }
 
     @Override
-    public ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String tags)
+    public ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String[] tags)
     throws ServiceException {
         ItemId id = FilterUtil.addMessage(dctxt, mailbox, parsedMessage, recipientAddress, folderPath,
                                           false, FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD, mailbox),
@@ -112,13 +112,13 @@ extends FilterHandler {
     }
 
     @Override
-    public Message implicitKeep(Collection<ActionFlag> flagActions, String tags) throws ServiceException {
+    public Message implicitKeep(Collection<ActionFlag> flagActions, String[] tags) throws ServiceException {
         int folderId = mailbox.getAccount().isFeatureAntispamEnabled() && SpamHandler.isSpam(getMimeMessage()) ?
                 Mailbox.ID_FOLDER_SPAM : defaultFolderId;
         return addMessage(folderId, flagActions, tags);
     }
 
-    private Message addMessage(int folderId, Collection<ActionFlag> flagActions, String tags)
+    private Message addMessage(int folderId, Collection<ActionFlag> flagActions, String[] tags)
     throws ServiceException {
         try {
             DeliveryOptions dopt = new DeliveryOptions().setFolderId(folderId).setNoICal(noICal).setRecipientEmail(recipientAddress);

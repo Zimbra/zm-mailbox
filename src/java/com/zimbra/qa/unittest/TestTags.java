@@ -92,24 +92,24 @@ public class TestTags extends TestCase {
 
         // Create the maximum number of tags, based on the number that already exist
         // in the mailbox
-        int numTags = MailItem.MAX_TAG_COUNT - mMbox.getTagList(null).size();
+        int numTags = 256 - mMbox.getTagList(null).size();
         assertTrue("Can't create any new tags", numTags != 0);
 
         // Create tags
         mTags = new Tag[numTags];
         for (int i = 0; i < mTags.length; i++) {
-            mTags[i] = mMbox.createTag(null, TAG_PREFIX + (i + 1), (byte)0);
+            mTags[i] = mMbox.createTag(null, TAG_PREFIX + (i + 1), (byte) 0);
         }
         refresh();
 
         // Assign each tag to M1
         for (int i = 0; i < mTags.length; i++) {
-            mMbox.alterTag(null, mMessage1.getId(), mMessage1.getType(), mTags[i].getId(), true);
+            mMbox.alterTag(null, mMessage1.getId(), mMessage1.getType(), mTags[i].getName(), true, null);
             refresh();
         }
 
         numPrepares = ZimbraPerf.getPrepareCount() - numPrepares;
-        ZimbraLog.test.debug("testManyTags generated " + numPrepares + " SQL statements.");
+        ZimbraLog.test.debug("testManyTags generated %d SQL statements.", numPrepares);
     }
 
     public void testTagSearch()
@@ -122,19 +122,19 @@ public class TestTags extends TestCase {
         refresh();
 
         // First assign T1 to the entire conversation, then remove it from M2-M4
-        mMbox.alterTag(null, mConv.getId(), mConv.getType(), mTags[0].getId(), true);
-        mMbox.alterTag(null, mMessage2.getId(), mMessage2.getType(), mTags[0].getId(), false);
-        mMbox.alterTag(null, mMessage3.getId(), mMessage3.getType(), mTags[0].getId(), false);
-        mMbox.alterTag(null, mMessage4.getId(), mMessage4.getType(), mTags[0].getId(), false);
+        mMbox.alterTag(null, mConv.getId(), mConv.getType(), mTags[0].getName(), true, null);
+        mMbox.alterTag(null, mMessage2.getId(), mMessage2.getType(), mTags[0].getName(), false, null);
+        mMbox.alterTag(null, mMessage3.getId(), mMessage3.getType(), mTags[0].getName(), false, null);
+        mMbox.alterTag(null, mMessage4.getId(), mMessage4.getType(), mTags[0].getName(), false, null);
 
         // Assign tags:
         //   M1: T1
         //   M2: T2
         //   M3: T2, T3
         //   M4: no tags
-        mMbox.alterTag(null, mMessage2.getId(), mMessage2.getType(), mTags[1].getId(), true);
-        mMbox.alterTag(null, mMessage3.getId(), mMessage3.getType(), mTags[1].getId(), true);
-        mMbox.alterTag(null, mMessage3.getId(), mMessage3.getType(), mTags[2].getId(), true);
+        mMbox.alterTag(null, mMessage2.getId(), mMessage2.getType(), mTags[1].getName(), true, null);
+        mMbox.alterTag(null, mMessage3.getId(), mMessage3.getType(), mTags[1].getName(), true, null);
+        mMbox.alterTag(null, mMessage3.getId(), mMessage3.getType(), mTags[2].getName(), true, null);
         refresh();
 
         // tag:TestTags1 -> (M1)
@@ -181,25 +181,20 @@ public class TestTags extends TestCase {
     }
 
     public void testFlagSearch() throws Exception {
-        // Look up flags
-        Flag replied = mMbox.getFlagById(Flag.ID_REPLIED);
-        Flag flagged = mMbox.getFlagById(Flag.ID_FLAGGED);
-        Flag forwarded = mMbox.getFlagById(Flag.ID_FORWARDED);
-
         // First assign T1 to the entire conversation, then remove it from M2-M4
-        mMbox.alterTag(null, mConv.getId(), mConv.getType(), replied.getId(), true);
-        mMbox.alterTag(null, mMessage2.getId(), mMessage2.getType(), replied.getId(), false);
-        mMbox.alterTag(null, mMessage3.getId(), mMessage3.getType(), replied.getId(), false);
-        mMbox.alterTag(null, mMessage4.getId(), mMessage4.getType(), replied.getId(), false);
+        mMbox.alterTag(null, mConv.getId(), mConv.getType(), Flag.FlagInfo.REPLIED, true, null);
+        mMbox.alterTag(null, mMessage2.getId(), mMessage2.getType(), Flag.FlagInfo.REPLIED, false, null);
+        mMbox.alterTag(null, mMessage3.getId(), mMessage3.getType(), Flag.FlagInfo.REPLIED, false, null);
+        mMbox.alterTag(null, mMessage4.getId(), mMessage4.getType(), Flag.FlagInfo.REPLIED, false, null);
 
         // Assign tags:
         //   M1: replied
         //   M2: flagged
         //   M3: flagged, forwarded
         //   M4: no flags
-        mMbox.alterTag(null, mMessage2.getId(), mMessage2.getType(), flagged.getId(), true);
-        mMbox.alterTag(null, mMessage3.getId(), mMessage3.getType(), flagged.getId(), true);
-        mMbox.alterTag(null, mMessage3.getId(), mMessage3.getType(), forwarded.getId(), true);
+        mMbox.alterTag(null, mMessage2.getId(), mMessage2.getType(), Flag.FlagInfo.FLAGGED, true, null);
+        mMbox.alterTag(null, mMessage3.getId(), mMessage3.getType(), Flag.FlagInfo.FLAGGED, true, null);
+        mMbox.alterTag(null, mMessage3.getId(), mMessage3.getType(), Flag.FlagInfo.FORWARDED, true, null);
         refresh();
 
         // is:replied -> (M1,...)

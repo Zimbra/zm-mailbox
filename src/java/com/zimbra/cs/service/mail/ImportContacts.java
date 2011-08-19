@@ -34,6 +34,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
@@ -55,11 +56,20 @@ import com.zimbra.soap.mail.type.ImportContact;
 public class ImportContacts extends MailDocumentHandler  {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.A_FOLDER };
-    protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
-    protected boolean checkMountpointProxy(Element request)  { return true; }
 
-    String DEFAULT_FOLDER_ID = Mailbox.ID_FOLDER_CONTACTS + "";
+    @Override
+    protected String[] getProxiedIdPath(Element request) {
+        return TARGET_FOLDER_PATH;
+    }
 
+    @Override
+    protected boolean checkMountpointProxy(Element request) {
+        return true;
+    }
+
+    private String DEFAULT_FOLDER_ID = Mailbox.ID_FOLDER_CONTACTS + "";
+
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
@@ -90,7 +100,7 @@ public class ImportContacts extends MailDocumentHandler  {
             } else {
                 reader = parseUploadedContent(zsc, attachment, uploads = new ArrayList<Upload>());
             }
-            
+
             contacts = ContactCSV.getContacts(reader, format, locale);
             reader.close();
         } catch (IOException e) {
@@ -98,18 +108,20 @@ public class ImportContacts extends MailDocumentHandler  {
         } catch (ParseException e) {
             throw MailServiceException.UNABLE_TO_IMPORT_CONTACTS(e.getMessage(), e);
         } finally {
-            if (reader != null)
+            if (reader != null) {
                 try { reader.close(); } catch (IOException e) { }
-            if (attachment != null)
+            }
+            if (attachment != null) {
                 FileUploadServlet.deleteUploads(uploads);
+            }
         }
 
         List<ItemId> idsList = ImportCsvContacts(octxt, mbox, iidFolder, contacts);
-        
+
 
         ImportContactsResponse resp = new ImportContactsResponse();
         ImportContact impCntct = new ImportContact();
-        
+
         for (ItemId iid : idsList) {
             impCntct.addCreatedId(iid.toString(ifmt));
         }
@@ -118,12 +130,14 @@ public class ImportContacts extends MailDocumentHandler  {
 
         return zsc.jaxbToElement(resp);
     }
-    
+
     private static BufferedReader parseUploadedContent(ZimbraSoapContext lc, String attachId, List<Upload> uploads)
     throws ServiceException {
         Upload up = FileUploadServlet.fetchUpload(lc.getAuthtokenAccountId(), attachId, lc.getAuthToken());
-        if (up == null)
+        if (up == null) {
             throw MailServiceException.NO_SUCH_UPLOAD(attachId);
+        }
+
         uploads.add(up);
         try {
             return new BufferedReader(new InputStreamReader(up.getInputStream(), "UTF-8"));
@@ -131,43 +145,15 @@ public class ImportContacts extends MailDocumentHandler  {
             throw ServiceException.FAILURE(e.getMessage(), e);
         }
     }
-    
-    public static List<ItemId> ImportCsvContacts(OperationContext oc, Mailbox mbox, 
-        ItemId iidFolder, List<Map<String, String>> csvContacts) throws ServiceException {
-        
+
+    public static List<ItemId> ImportCsvContacts(OperationContext oc, Mailbox mbox,  ItemId iidFolder, List<Map<String, String>> csvContacts)
+    throws ServiceException {
         List<ItemId> createdIds = new LinkedList<ItemId>();
         for (Map<String,String> contact : csvContacts) {
-        	String tags = getTags(oc, mbox, contact);
-        	Contact c = mbox.createContact(oc, new ParsedContact(contact), iidFolder.getId(), tags);
-        	createdIds.add(new ItemId(c));
+            String[] tags = TagUtil.decodeTags(ContactCSV.getTags(contact));
+            Contact c = mbox.createContact(oc, new ParsedContact(contact), iidFolder.getId(), tags);
+            createdIds.add(new ItemId(c));
         }
-        
         return createdIds;
     }
-    
-    public static String getTags(OperationContext octxt, Mailbox mbox, Map<String,String> contact) {
-		String tags = ContactCSV.getTags(contact);
-		if (tags == null)
-			return null;
-		StringBuilder tagIds = null;
-		for (String t : tags.split(",")) {
-			Tag tag = null;
-			try {
-				tag = mbox.getTagByName(t);
-			} catch (ServiceException se) {
-				try {
-					tag = mbox.createTag(octxt, t, MailItem.DEFAULT_COLOR);
-				} catch (ServiceException e) {
-				}
-			}
-			if (tag != null) {
-				if (tagIds == null)
-					tagIds = new StringBuilder(Integer.toString(tag.getId()));
-				else
-					tagIds.append(",").append(Integer.toString(tag.getId()));
-			}
-		}
-		return tagIds.toString();
-    }
-    
 }

@@ -50,7 +50,7 @@ public class GetComments extends MailDocumentHandler {
         HashSet<Account> accounts = new HashSet<Account>();
         for (Comment comment : mbox.getComments(octxt, iid.getId(), 0, -1)) {
             accounts.add(comment.getCreatorAccount());
-            ToXML.encodeComment(response, ifmt, comment);
+            ToXML.encodeComment(response, ifmt, octxt, comment);
         }
         
         for (Account a : accounts) {

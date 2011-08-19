@@ -60,7 +60,7 @@ public class CreateNote extends MailDocumentHandler {
 
         Element response = zsc.createElement(MailConstants.CREATE_NOTE_RESPONSE);
         if (note != null)
-        	ToXML.encodeNote(response, ifmt, note);
+        	ToXML.encodeNote(response, ifmt, octxt, note);
         return response;
 	}
 }

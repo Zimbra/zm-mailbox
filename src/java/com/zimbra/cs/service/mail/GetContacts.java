@@ -155,7 +155,7 @@ public final class GetContacts extends MailDocumentHandler  {
                                     contactGroup.derefAllMembers(con.getMailbox(), octxt);
                                 }
                             }
-                            ToXML.encodeContact(response, ifmt, con, contactGroup, 
+                            ToXML.encodeContact(response, ifmt, octxt, con, contactGroup, 
                                     memberAttrs, false, attrs, fields, migratedDlist, 
                                     returnHiddenAttrs);
                         }
@@ -167,7 +167,7 @@ public final class GetContacts extends MailDocumentHandler  {
         } else {
             for (Contact con : mbox.getContactList(octxt, folderId, sort)) {
                 if (con != null) {
-                    ToXML.encodeContact(response, ifmt, con, null, null,  
+                    ToXML.encodeContact(response, ifmt, octxt, con, null, null,  
                             false, attrs, fields, null, returnHiddenAttrs);
                 }
             }

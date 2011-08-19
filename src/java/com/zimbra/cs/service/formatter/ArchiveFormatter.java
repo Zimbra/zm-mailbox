@@ -63,6 +63,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.HttpUtil.Browser;
+import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.ACL;
@@ -95,6 +96,7 @@ import com.zimbra.cs.mailbox.Message.CalendarItemInfo;
 import com.zimbra.cs.mailbox.calendar.IcsImportParseHandler;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.IcsImportParseHandler.ImportInviteVisitor;
+import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -376,7 +378,7 @@ public abstract class ArchiveFormatter extends Formatter {
         String metaParam = context.params.get(UserServlet.QP_META);
         boolean meta = metaParam == null ? getDefaultMeta() : !metaParam.equals("0");
 
-        if (!version && mi.isTagged(Flag.ID_VERSIONED)) {
+        if (!version && mi.isTagged(Flag.FlagInfo.VERSIONED)) {
             for (MailItem rev : context.targetMailbox.getAllRevisions( context.opContext, mi.getId(), mi.getType())) {
                 if (mi.getVersion() != rev.getVersion()) {
                     aos = saveItem(context, rev, fldrs, cnts, names, true, aos, charsetEncoder);
@@ -643,7 +645,7 @@ public abstract class ArchiveFormatter extends Formatter {
         } else if (name.length() > 121) {
             name = name.substring(0, 120);
         }
-        if (mi.isTagged(Flag.ID_VERSIONED)) {
+        if (mi.isTagged(Flag.FlagInfo.VERSIONED)) {
             // prepend the version before the extension of up to four characters
             int dot = name.lastIndexOf('.');
             if (dot >= 0 && dot >= name.length() - 5) {
@@ -851,7 +853,7 @@ public abstract class ArchiveFormatter extends Formatter {
     }
 
     private Folder createParent(UserServletContext context, Map<Object, Folder> fmap, String path, MailItem.Type view)
-            throws ServiceException {
+    throws ServiceException {
         String parent = path.substring(0, path.lastIndexOf('/'));
         if (parent.equals("")) {
             parent = "/";
@@ -860,7 +862,7 @@ public abstract class ArchiveFormatter extends Formatter {
     }
 
     private Folder createPath(UserServletContext context, Map<Object, Folder> fmap, String path, MailItem.Type view)
-            throws ServiceException {
+    throws ServiceException {
         Folder fldr;
 
         if ((fldr = fmap.get(path)) == null) {
@@ -880,41 +882,39 @@ public abstract class ArchiveFormatter extends Formatter {
         return fldr;
     }
 
-    private long getTagBitmask(OperationContext oc, Mailbox mbox, ItemData id)
-        throws IOException {
-        long bitmask = 0;
+    private static final String[] NO_TAGS = new String[0];
 
-        if (id.tags != null && id.tags.length() > 0) {
-            // pre 6.0.6 versions had numeric tags strings, not names
-            if (Character.isDigit(id.tags.charAt(0)) && id.tags.indexOf(':') == -1)
-                return id.ud.tags;
-            try {
-                for (String name : id.tags.split(":")) {
-                    Tag tag;
-
-                    try {
-                        tag = mbox.getTagByName(name);
-                    } catch (MailServiceException e) {
-                        if (e.getCode() == MailServiceException.NO_SUCH_TAG)
-                            tag = mbox.createTag(oc, name, (byte)0);
-                        else
-                            throw e;
-                    }
-                    bitmask |= tag.getBitmask();
-                }
-            } catch (Exception e) {
-                throw new IOException("tag error: " + e);
-            }
+    private String[] getTagNames(OperationContext octxt, Mailbox mbox, ItemData id)
+    throws IOException {
+        if (Strings.isNullOrEmpty(id.tags)) {
+            return NO_TAGS;
         }
-        return bitmask;
+
+        try {
+            String serialized = id.tags;
+
+            // pre 6.0.6 versions had numeric tags strings, not names
+            if (Character.isDigit(serialized.charAt(0)) && serialized.indexOf(':') == -1) {
+                return TagUtil.tagIdStringToNames(mbox, octxt, serialized);
+            }
+
+            // pre-8.0 versions had colon-delimited values
+            if (serialized.charAt(0) != '\0') {
+                serialized = '\0' + serialized.replace(':', '\0') + '\0';
+            }
+
+            return DbTag.deserializeTags(serialized);
+        } catch (Exception e) {
+            throw new IOException("tag error: " + e);
+        }
     }
 
-    private static byte[] readArchiveEntry(ArchiveInputStream ais,
-        ArchiveInputEntry aie) throws IOException {
+    private static byte[] readArchiveEntry(ArchiveInputStream ais, ArchiveInputEntry aie)
+    throws IOException {
         if (aie == null)
             return null;
 
-        int dsz = (int)aie.getSize();
+        int dsz = (int) aie.getSize();
         byte[] data;
 
         if (dsz == 0) {
@@ -932,16 +932,18 @@ public abstract class ArchiveFormatter extends Formatter {
     private String string(String s) { return s == null ? new String() : s; }
 
     private void warn(Exception e) {
-        if (e.getCause() == null)
+        if (e.getCause() == null) {
             ZimbraLog.misc.warn("Archive Formatter warning: %s", e, e);
-        else
+        } else {
             ZimbraLog.misc.warn("Archive Formatter warning: %s: %s", e,
                 e.getCause().toString(), e.getCause());
+        }
     }
 
     private void addItem(UserServletContext context, Folder fldr, Map<Object, Folder> fmap, Map<String, Integer> digestMap,
             Map<Integer, Integer> idMap, int[] ids, Set<MailItem.Type> types, Resolve r, ItemData id,
-            ArchiveInputStream ais, ArchiveInputEntry aie, List<ServiceException> errs) throws ServiceException {
+            ArchiveInputStream ais, ArchiveInputEntry aie, List<ServiceException> errs)
+    throws ServiceException {
         try {
             Mailbox mbox = fldr.getMailbox();
             MailItem mi = MailItem.constructItem(mbox, id.ud);
@@ -961,10 +963,11 @@ public abstract class ArchiveFormatter extends Formatter {
                 addError(errs, FormatterServiceException.MISSING_BLOB(id.path));
                 return;
             }
-            if (root)
+            if (root) {
                 path = id.path;
-            else
+            } else {
                 path = fldr.getPath() + id.path;
+            }
             if (path.endsWith("/") && !path.equals("/")) {
                 path = path.substring(0, path.length() - 1);
             }
@@ -1022,7 +1025,7 @@ public abstract class ArchiveFormatter extends Formatter {
                         newItem = mbox.setCalendarItem(oc, oldItem != null &&
                             r == Resolve.Modify ? oldItem.getFolderId() :
                             fldr.getId(), ci.getFlagBitmask(),
-                            ci.getTagBitmask(), defScid, exceptionScids,
+                            ci.getTags(), defScid, exceptionScids,
                             ci.getAllReplies(), ad == null ?
                             CalendarItem.NEXT_ALARM_KEEP_CURRENT : ad.getNextAt());
                     }
@@ -1058,7 +1061,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 }
                 if (oldItem == null)
                     newItem = mbox.createChat(oc, pm, fldr.getId(),
-                        chat.getFlagBitmask(), chat.getTagString());
+                        chat.getFlagBitmask(), chat.getTags());
                 break;
             case CONVERSATION:
                 Conversation cv = (Conversation) mi;
@@ -1111,7 +1114,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 if (oldItem == null)
                     newItem = mbox.createContact(oc, new ParsedContact(
                         ct.getFields(), readArchiveEntry(ais, aie)), fldr.getId(),
-                        ct.getTagString());
+                        ct.getTags());
                 break;
             case DOCUMENT:
             case WIKI:
@@ -1255,7 +1258,7 @@ public abstract class ArchiveFormatter extends Formatter {
                     DeliveryOptions opt = new DeliveryOptions().
                         setFolderId(fldr.getId()).setNoICal(true).
                         setFlags(msg.getFlagBitmask()).
-                        setTags(msg.getTagString());
+                        setTags(msg.getTags());
                     newItem = mbox.addMessage(oc, ais.getInputStream(),
                         (int)aie.getSize(), msg.getDate(), opt, null);
                 }
@@ -1362,7 +1365,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 }
                 if (!id.flags.equals(newItem.getFlagString()) || !id.tagsEqual(newItem)) {
                     mbox.setTags(oc, newItem.getId(), newItem.getType(), Flag.toBitmask(id.flags),
-                            getTagBitmask(oc, mbox, id), null);
+                            getTagNames(oc, mbox, id), null);
                 }
             } else if (oldItem != null && r == Resolve.Modify) {
                 if (mi.getColor() != oldItem.getColor()) {
@@ -1370,7 +1373,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 }
                 if (!id.flags.equals(oldItem.getFlagString()) || !id.tagsEqual(oldItem)) {
                     mbox.setTags(oc, oldItem.getId(), oldItem.getType(), Flag.toBitmask(id.flags),
-                            getTagBitmask(oc, mbox, id), null);
+                            getTagNames(oc, mbox, id), null);
                 }
             }
         } catch (MailServiceException e) {

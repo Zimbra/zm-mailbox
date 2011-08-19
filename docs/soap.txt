@@ -144,9 +144,9 @@ element involving the session.)  If there is a session, there will be a
           </folder>
         </refresh>]
        [<notify seq="sequence-number">
-          <deleted id="665,66,452,883"/>
+          <deleted id="665,1192,452,883"/>
           <created>
-            <tag id="66" name="phlox" u="8"/>
+            <tag id="466" name="phlox" u="8" n="13"/>
             <folder id="4353" name="a&p" u="2" l="1"/>
             <folder id="4356" name="subfolder" u="2" l="4353"/>
             <link id="1" name="new-mount-point" l="1" n="6" u="1" f="u" owner="user1@example.com" zid="151bd192-e19a-40be-b8c9-259b21ffac48" rid="2" oname="user1folder">
@@ -154,7 +154,7 @@ element involving the session.)  If there is a session, there will be a
             </link>
           </created>
           <modified>
-            <tag id="65" u="0"/>
+            <tag id="652" u="0" n="2"/>
             <m id="553" f="ua"/>
           </modified>
         </notify>]+
@@ -212,14 +212,14 @@ response:
           </folder>
         </refresh>]
        [<notify seq="sequence-number">
-          <deleted ids="665,66,452,883"/>
+          <deleted ids="665,466,452,883"/>
           <created>
-            <tag id="66" name="phlox" u="8"/>
+            <tag id="966" name="phlox" u="8" n="12"/>
             <folder id="4353" name="a&p" u="2" l="1"/>
           </created>
           <modified>
-            <tag id="65" u="0"/>
-            <m id="553" t="ua"/>
+            <tag id="654" u="0" n="3"/>
+            <m id="553" f="ua"/>
           </modified>
         </notify>]+
      </context>
@@ -1184,7 +1184,7 @@ Messages:
 
 Conversations:
 
-  <c id="{conv-id}" t="{tags}" n="{num-msgs}" [total="{all-msgs}"] d="{date}" f="{flags}" [elided="1"]>
+  <c id="{conv-id}" tn="{tag-names}" n="{num-msgs}" [total="{all-msgs}"] d="{date}" f="{flags}" [elided="1"]>
     <e ...>*
     <su>{subject}</su>
     <fr>{fragment}</fr>
@@ -1192,7 +1192,7 @@ Conversations:
   </c>
 
   {date}      = date (secs since epoch) of most recent message in converstation
-  {tags}      = list of tag-ids on conv
+  {tag-names} = comma-separated list of tags on conv
   {flags}     = same flags as on <m> ("sarwfdxnu!?"), aggregated from all the conversation's messages
   {subject}   = subject of conversation
   {fragment}  = fragment of most recent msg in converstation
@@ -1284,7 +1284,7 @@ Mountpoints:
 
 Tags:
 
-  <tag id="{tag-id}" name="{tag-name}" [color="{color}"] u="{unread}" [i4u="{imap-unread}"]>
+  <tag id="{tag-id}" name="{tag-name}" [color="{color}"] u="{unread}" n="{item-count}"]>
     [<retentionPolicy> ... </retentionPolicy>]
   </tag>
 
@@ -1293,7 +1293,7 @@ Tags:
                   cannot begin with '\' (avoid collsions with IMAP)
   {color}       = numeric; range 0-127; defaults to 0 if not present; client can display only 0-7
   {unread}      = number of unread messages with this tag
-  {imap-unread} = number of unread messages with this tag, *including* those with the IMAP \Deleted flag set
+  {item-count}  = number of items with this flag
 
 ----------
 
@@ -1467,7 +1467,7 @@ conversation result:
     [<wildcard str="foo*" expanded="1|0"/>]
     [<suggest>{suggested query string}</suggest>]
    </info>]
-  <c id="{conv-id}" t="{tags}" n="{num-msgs}" [total="{all-msgs}"] d="{date}" f="{flags} [mbx="UID"] sf="SORT-FIELD-VALUE">
+  <c id="{conv-id}" tn="{tag-names}" n="{num-msgs}" [total="{all-msgs}"] d="{date}" f="{flags} [mbx="UID"] sf="SORT-FIELD-VALUE">
     <e ...>*
     <su>{subject}</su>
     <fr>{fragment}</fr>
@@ -1492,7 +1492,7 @@ message result:
 ---------------
 <SearchResponse sortBy="sort-by" offset="..." more="{more-flag}" [total="{total hit count}"]>
    [<info>...</info>]
-   <m id="{message-id}" t="{tags}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" l="{location}" [mbx="UID"] sf="SORT-FIELD-VALUE" [cm="1"]>
+   <m id="{message-id}" tn="{tag-names}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" l="{location}" [mbx="UID"] sf="SORT-FIELD-VALUE" [cm="1"]>
      <e .../>*  <!- from only -->
      <su>{subject}</su>
      <fr>{fragment}</fr>
@@ -1509,7 +1509,7 @@ contact result:
 ---------------
 <SearchResponse offset="..." more="{more-flag}">
    [<info>...</info>]
-   <cn id="id" t="tags" l="folder" sf="SORT-FIELD-VALUE" [email="Email_1 Addr"] [email2="Email_2_addr"]
+   <cn id="id" tn="tags" l="folder" sf="SORT-FIELD-VALUE" [email="Email_1 Addr"] [email2="Email_2_addr"]
        email3="Email_3_addr" [type="contact|group"] rev="REVISION" fileAsStr="..." md="{metadata-change-date}"/>
 
 type is assumed to be "contact" if not present. If it is present and set to "group", then the contact is a
@@ -1519,7 +1519,7 @@ appointment result:
 -------------------
 
 <appt|task id="appointment_mail_item_id"
-       t="{tags}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" // standard hit data
+       tn="{tag-names}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" // standard hit data
        l="{location}" [mbx="UID"] sf="SORT-FIELD-VALUE" // standard hit data
        [fba="F|B|T|U"]
        [transp="O|T"]
@@ -1651,7 +1651,7 @@ if nest="1" on the request, response looks like this:
 
 <SearchConvResponse sortBy="sort-by" offset="..." more="{more-flag}">
    [<info>...</info>]
-   <c id="{conv-id}" t="{tags}" n="{num-msgs}" [total="{all-msgs}"] f="{flags}">
+   <c id="{conv-id}" tn="{tag-names}" n="{num-msgs}" [total="{all-msgs}"] f="{flags}">
      <m id="{message-id}" [cm="1"] f="{flags}" s="{size}" d="{date}" cid="{conv-id}" sf="SORT-FIELD-VALUE">
        <e .../>  <!- from only -->
        <su>{subject}</su>
@@ -1784,9 +1784,9 @@ if <header>s are requested, any matching headers are inlined into the response
     (not available when raw="1")
 
 <GetConvResponse>
-  <c id="{conv-id}" [t="{tags}"] n="{num-msgs}" [total="{all-msgs}"] [f="{flags}"]>
+  <c id="{conv-id}" [tn="{tag-names}"] n="{num-msgs}" [total="{all-msgs}"] [f="{flags}"]>
     <su>{subject}</su>
-    <m id="{message-id}" [f="{flags}"] s="{size}" d="{date}" [t="{tags}"]>
+    <m id="{message-id}" [f="{flags}"] s="{size}" d="{date}" [tn="{tag-names}"]>
       <e .../>
       <fr>{fragment}</fr>
      </m>+
@@ -1831,7 +1831,7 @@ if <header>s are requested, any matching headers are inlined into the response
     (not available when raw="1")
 
 <GetMsgResponse>
-  <m id="{message-id}" [origid="..." rt="r|w"] [part="{part}"] f="{flags}" t="{tags}" s="{size}" [d="{received-date}"] sd="{date-header}" [rd="{resent-date}"] l="{folder}" (cid="{conv}")
+  <m id="{message-id}" [origid="..." rt="r|w"] [part="{part}"] f="{flags}" tn="{tag-names}" s="{size}" [d="{received-date}"] sd="{date-header}" [rd="{resent-date}"] l="{folder}" (cid="{conv}")
      (cif="{X-Zimbra-Calendar-Intended-For header}")
   >
     <e ... [isGroup="1|0"] [exp="1|0"]/>*
@@ -1865,7 +1865,7 @@ If needExp is "1" in the request, two additional flags will be included in <e> e
 </GetMsgMetadataRequest>
 
 <GetMsgMetadataResponse>
-  (<m id="{message-id}" f="{flags}" t="{tags}" s="{size}" d="{received-date}" l="{folder}" [cid="{conv}"]
+  (<m id="{message-id}" f="{flags}" tn="{tag-names}" s="{size}" d="{received-date}" l="{folder}" [cid="{conv}"]
       rev="{revision-number}" md="{date-metadata-changed}" ms="{change-sequence}"/>)*
 </GetMsgMetadataResponse>
 
@@ -1893,8 +1893,8 @@ If needExp is "1" in the request, two additional flags will be included in <e> e
 <ItemActionRequest>
   <!-- action can be preceeded by a "!" to negate it" -->
   <action id="{list}" op="delete|dumpsterdelete|recover|read|flag|priority|tag|move|trash|rename|update|color|lock|unlock"
-         [tag="{id}"] [l="{folder}"] [name="{item-name}"] [color="{color}"] [rgb="{rgb-color}"]
-         [tcon="[-]{constraint}"] [f="{flags}"] [t="{id-list}"]/>
+         [tn="{tag-name/list}"] [l="{folder}"] [name="{item-name}"] [color="{color}"] [rgb="{rgb-color}"]
+         [tcon="[-]{constraint}"] [f="{flags}"]/>
 </ItemActionRequest>
 
 <ItemActionResponse>
@@ -1911,7 +1911,7 @@ If needExp is "1" in the request, two additional flags will be included in <e> e
     a leading '-' means to negate the constraint (e.g. "-t" means all messages not in Trash)
 
   For op="update", caller can specify any or all of: l="{folder}", name="{name}", color="{color}",
-    t="{tag-id-list}", f="{flags}".  When modifying tags or flags, all specified tags and flags
+    tn="{tag-names}", f="{flags}".  When modifying tags or flags, all specified tags and flags
     are set, and all others are unset.
 
   In op="delete" action, the item is either permanently deleted if dumpster is not in use, or
@@ -1922,7 +1922,7 @@ If needExp is "1" in the request, two additional flags will be included in <e> e
   For op="recover", caller must specify l="{folder}".  The item is recovered from dumpster as a copy
   in the specified folder.  The dumpster copy is then deleted.
 
-  For op="tag" or op="!tag", caller must specify tag="{id}".  This changes the state of
+  For op="tag" or op="!tag", caller must specify tn="{tag-name}".  This changes the state of
     the specified tag without altering other tags.
 
   A trash operation on a remote item will cause it to be moved to the trash folder of its
@@ -1941,7 +1941,7 @@ If needExp is "1" in the request, two additional flags will be included in <e> e
 
 <MsgActionRequest>
   <!-- action can be preceeded by a "!" to negate it" -->
-  <action id="{list}" op="delete|read|flag|tag|move|update|spam|trash" [tag="{id}"] [l="{folder}"] [f="{flags}"] [t="{tag-id-list}"] [color="{color}"]/>
+  <action id="{list}" op="delete|read|flag|tag|move|update|spam|trash" [tag="{id}"] [l="{folder}"] [f="{flags}"] [tn="{tag-names}"] [color="{color}"]/>
 </MsgActionRequest>
 
 <MsgActionResponse>
@@ -1953,7 +1953,7 @@ If needExp is "1" in the request, two additional flags will be included in <e> e
            list may only have 1 element for action "spam"
 
   For op="update", caller can specify any or all of: l="{folder}", name="{name}", color="{color}",
-    t="{tag-id-list}", f="{flags}".
+    tn="{tag-names}", f="{flags}".
 
   for op="!spam", can optionally specify a destination folder
 
@@ -2097,10 +2097,10 @@ note that "delete", "empty", "rename", "move", "color", "update" can be used on 
 <GetTagRequest/>
 
 <GetTagResponse>
-  <tag id="..." name="..." color="..." [u="{unread_count}"]/>+
+  <tag id="..." name="..." color="..." [u="{unread_count}"] [n="{item-count}"]/>+
 </GetTagResponse>
 
-u attribute is present iff count > 0
+u,n attributes present iff count > 0
 ---------
 
 <CreateTagRequest>
@@ -2240,7 +2240,7 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
 +  can optionally set autoSendTime to specify the time at which the draft should be automatically sent by the server
 
 <SaveDraftRequest>
-  <m [id="{existing-draft-id}"] [origid="..." rt="r|w"] [idnt="{identity-id}"] [l="{folder}"] [f="{flags}"] [t="{tag-id-list}"] [color="{color}"] [autoSendTime="{millis-since-epoch}"]>
+  <m [id="{existing-draft-id}"] [origid="..." rt="r|w"] [idnt="{identity-id}"] [l="{folder}"] [f="{flags}"] [tn="{tag-names}"] [color="{color}"] [autoSendTime="{millis-since-epoch}"]>
     <e t="{type}" a="{email-address}" p="{personal-name}"/>+
     <su>{subject}</su>*
     [<header name="{header-name}">{header-value}</h>]*
@@ -2262,13 +2262,13 @@ needCalendarSentByFixup - Add SENT-BY parameter to ORGANIZER and/or ATTENDEE
 
 <SaveDraftRequest>
   <m aid="{uploaded-MIME-body-ID}" [id="{existing-draft-id}"]
-    [origid="..." rt="r|w"] [l="{folder}"] [f="{flags}"] [t="{tag-id-list}"] [color="{color}"] [autoSendTime="{millis-since-epoch}"]/>
+    [origid="..." rt="r|w"] [l="{folder}"] [f="{flags}"] [tn="{tag-names}"] [color="{color}"] [autoSendTime="{millis-since-epoch}"]/>
 </SaveDraftRequest>
 
 
 # The id of the saved draft is returned
 <SaveDraftResponse>
-  <m id="{message-id}" f="{flags}" t="{tags}" s="{size}" [d="{received-date}"]
+  <m id="{message-id}" f="{flags}" tn="{tag-names}" s="{size}" [d="{received-date}"]
     sd="{date-header}" l="{folder}" (cid="{conv}") [autoSendTime="{millis-since-epoch}"]
     [idnt="{identity-id}"]>
     <e .../>*
@@ -2308,7 +2308,7 @@ is saved.
 ----------------------------
 
   <AddMsgRequest [filterSent="0|1"]>
-    <m l="{folder}" [f="{flags}"] [t="{tags}"] [d="{received-date}"] [aid="{uploaded-MIME-body-ID}"] [noICal="0|1"]>
+    <m l="{folder}" [f="{flags}"] [tn="{tag-names}"] [d="{received-date}"] [aid="{uploaded-MIME-body-ID}"] [noICal="0|1"]>
        <content>
           ...
        </content>
@@ -2321,7 +2321,7 @@ is saved.
 
   {flags} = (u)nread, (f)lagged, has (a)ttachment, (r)eplied, (s)ent by me, for(w)arded,
             (d)raft, deleted (x), (n)otification sent
-  {tags} = comma-separated list of tag IDs
+  {tag-names} = comma-separated list of tag names
   {folder} = folder pathname (starts with '/') or folder ID
   {received-date} = (optional) time the message was originally received, in MILLISECONDS since the epoch
   {uploaded-MIME-body-ID} = ID of message uploaded via FileUploadServlet
@@ -2337,7 +2337,7 @@ is saved.
 
 # Returns the Message's ID just created
 <AddMsgResponse>
-  <m id="{message-id}" f="{flags}" t="{tags}" s="{size}" d="{received-date}" l="{folder}" [cid="{conv}"]
+  <m id="{message-id}" f="{flags}" tn="{tag-names}" s="{size}" d="{received-date}" l="{folder}" [cid="{conv}"]
       rev="{revision-number}" md="{date-metadata-changed}" ms="{change-sequence}"/>
 </AddMsgResponse>
 
@@ -2352,7 +2352,7 @@ is saved.
 # NOTE that this operation is effectively a create and a delete, and thus the message's item ID will change
 
   <RemoveAttachmentsResponse>
-    <m id="{message-id}" f="{flags}" t="{tags}" s="{size}" d="{received-date}" l="{folder}" [cid="{conv}"]
+    <m id="{message-id}" f="{flags}" tn="{tag-names}" s="{size}" d="{received-date}" l="{folder}" [cid="{conv}"]
         rev="{revision-number}" md="{date-metadata-changed}" ms="{change-sequence}"/>
   </RemoveAttachmentsResponse>
 
@@ -2360,7 +2360,7 @@ is saved.
 
 Contacts:
 
-  <cn id="{contact-id}" [t="{tags}"] [f="{flags}"] md="{modified-date}" [l="{folder}"] [fileAsStr="{file-as}"]>
+  <cn id="{contact-id}" [tn="{tag-names}"] [f="{flags}"] md="{modified-date}" [l="{folder}"] [fileAsStr="{file-as}"]>
     <a n="{attr-name}">{attr-data}</a>+
     <a n="{attr-name}" aid="{upload-id}"/>*
     <a n="{attr-name}" id="{item-id}" [part="{subpart-name}"]/>*
@@ -2382,7 +2382,7 @@ Contacts:
 
   when contacts are returned, they look like:
 
-  <cn id="{contact-id}" t="{tags}" f="{flags}" md="{modified-date}" l="{folder}" fileAsStr="{file-as}">
+  <cn id="{contact-id}" tn="{tag-names}" f="{flags}" md="{modified-date}" l="{folder}" fileAsStr="{file-as}">
     <a n="{attr-name}">{attr-data}</a>+
     <a n="{attr-name}" size="{attach-size}" ctype="{attach-content-type}" filename="{attach-filename}" part="{part-id}"/>*
   </cn>
@@ -2390,7 +2390,7 @@ Contacts:
 ----------
 
 <CreateContactRequest [verbose="0|1"]>
-  <cn [l="{folder-id}"] [t="{tags}"]>
+  <cn [l="{folder-id}"] [tn="{tag-names}"]>
      <a>...</a>+
      <m type="{member-type}" value="{member-value}"/>*
   </cn>
@@ -2414,7 +2414,7 @@ Contacts:
     -- aid attribute specifying an uploaded text/calendar file
 
 <CreateContactRequest [verbose="0|1"]>
-  <cn [l="{folder-id}"] [t="{tags}"]>
+  <cn [l="{folder-id}"] [tn="{tag-names}"]>
     <vcard [mid="{message-id}" part="{part-identifier}] [aid={uploaded-attachment-id"}"]>
 [BEGIN:VCARD
 ...
@@ -2429,7 +2429,7 @@ END:VCARD]
 </CreateContactResponse>
 
   {folder-id} = id of folder to create contact in. Un-specified means use the default Contacts folder.
-  {tags} = list of tags to apply to the created contact
+  {tag-names} = list of tags to apply to the created contact
 
   -- if "verbose='0'" (defaults to '1') was specified on the request, the returned <cn>
          is just a placeholder containing the new contact ID (i.e. <cn id="{id}"/>)
@@ -2577,9 +2577,9 @@ For example:
   {list} = on input, list of contacts to act on, on output, list of
            contacts that were acted on
 
-for op="update", caller can specify any or all of: l="{folder}", t="{tag-id-list}", f="{flags}", color="{color}", <a> attribute list:
+for op="update", caller can specify any or all of: l="{folder}", tn="{tag-names}", f="{flags}", color="{color}", <a> attribute list:
 
-  <action id="{list}" op="update" [l="{folder}"] [t="{tag-id-list}"] [f="{flags}"] [color="{color}"]>
+  <action id="{list}" op="update" [l="{folder}"] [tn="{tag-names}"] [f="{flags}"] [color="{color}"]>
     [<a n="fieldName">fieldValue</a>]*
   </action>
 
@@ -2632,13 +2632,13 @@ EXAMPLE:
 </SearchRequest>
 
 <SearchResponse hits="2" offset="...">
-   <c id="12344" n="2" d="10023420023" t="1,12" f="1">
+   <c id="12344" n="2" d="10023420023" tn="foo,tag2" f="1">
      <e p="Roland Schemers" a="schemers@example.zimbra.com" d="Roland"/>
      <e p="Dan Karp" a="dan@example.zimbra.com" d="Dan"/>
      <su>Speaking of animals</su>
      <fr>I am still looking for my monkey!</fr>
    </c>
-   <c id="456" n="2" d="10023420023" t="1,12" a="1">
+   <c id="456" n="2" d="10023420023" tn="tag2,qux" a="1">
      <e p="Roland Schemers" a="schemers@example.zimbra.com" d="Roland"/>
      <e p="Ross Dargahi" a="ross@example.zimbra.com" d="Ross"/>
      <su>phone numbers</su>
@@ -2655,7 +2655,7 @@ EXAMPLE:
 </GetConvRequest>
 
 <GetConvResponse>
-  <c id="12345" t="1,12" n="2">
+  <c id="12345" tn="foo,tag2" n="2">
    <su>Speaking of animals</su>
    <m id="123445" f="1" s="1234" d="10002323">
      <e p="Dan Karp" a="dan@example.zimbra.com"/>

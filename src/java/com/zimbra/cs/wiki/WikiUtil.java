@@ -141,13 +141,13 @@ public abstract class WikiUtil {
             }
             List<Document> items = mbox.getDocumentList(octxt, where.getId());
             for (Document doc : items) {
-                mbox.delete(octxt, doc, null);
+                mbox.delete(octxt, doc.getId(), doc.getType(), null);
             }
             List<Folder> folders = where.getSubfolders(octxt);
             for (Folder f : folders) {
                 deleteItems(octxt, mbox, f);
                 if (f.getDefaultView() == MailItem.Type.WIKI) {
-                    mbox.delete(octxt, f, null);
+                    mbox.delete(octxt, f.getId(), f.getType(), null);
                 }
             }
         }

@@ -20,6 +20,7 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
@@ -41,7 +42,9 @@ import javax.mail.internet.MimeUtility;
 import org.json.JSONException;
 
 import com.google.common.base.Strings;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.zimbra.common.calendar.CalendarUtil;
 import com.zimbra.common.calendar.Geo;
 import com.zimbra.common.calendar.ICalTimeZone;
@@ -63,6 +66,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.HttpUtil;
@@ -101,6 +105,7 @@ import com.zimbra.cs.mailbox.calendar.Recurrence;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
+import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedAddress;
@@ -139,9 +144,9 @@ public final class ToXML {
         } else if (item instanceof Tag) {
             return encodeTag(parent, ifmt, octxt, (Tag) item, fields);
         } else if (item instanceof Note) {
-            return encodeNote(parent, ifmt, (Note) item, fields);
+            return encodeNote(parent, ifmt, octxt, (Note) item, fields);
         } else if (item instanceof Contact) {
-            return encodeContact(parent, ifmt, (Contact) item, false, null, fields);
+            return encodeContact(parent, ifmt, octxt, (Contact) item, false, null, fields);
         } else if (item instanceof CalendarItem) {
             return encodeCalendarItemSummary(parent, ifmt, octxt, (CalendarItem) item, fields, true);
         } else if (item instanceof Conversation) {
@@ -156,7 +161,7 @@ public final class ToXML {
                     OutputParticipants.PUT_BOTH : OutputParticipants.PUT_SENDERS;
             return encodeMessageSummary(parent, ifmt, octxt, (Message) item, output, fields);
         } else if (item instanceof Comment) {
-            return encodeComment(parent, ifmt, (Comment) item, fields);
+            return encodeComment(parent, ifmt, octxt, (Comment) item, fields);
         } else {
             return null;
         }
@@ -164,6 +169,14 @@ public final class ToXML {
 
     private static boolean needToOutput(int fields, int fieldMask) {
         return ((fields & fieldMask) > 0);
+    }
+
+    public static boolean hasFullAccess(Mailbox mbox, OperationContext octxt) throws ServiceException {
+        if (octxt == null || !octxt.isDelegatedRequest(mbox)) {
+            return true;
+        } else {
+            return AccessManager.getInstance().canAccessAccount(octxt.getAuthenticatedUser(), mbox.getAccount(), octxt.isUsingAdminPrivileges());
+        }
     }
 
     public static Element encodeMailbox(Element parent, OperationContext octxt, Mailbox mbox) {
@@ -182,17 +195,19 @@ public final class ToXML {
     }
 
     public static Element encodeFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Folder folder)
-            throws ServiceException {
+    throws ServiceException {
         return encodeFolder(parent, ifmt, octxt, folder, NOTIFY_FIELDS);
     }
 
     public static Element encodeFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            Folder folder, int fields) throws ServiceException {
+            Folder folder, int fields)
+    throws ServiceException {
         return encodeFolder(parent, ifmt, octxt, folder, fields, false);
     }
 
     public static Element encodeFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            Folder folder, int fields, boolean exposeAclAccessKey) throws ServiceException {
+            Folder folder, int fields, boolean exposeAclAccessKey)
+    throws ServiceException {
         if (folder instanceof SearchFolder) {
             return encodeSearchFolder(parent, ifmt, (SearchFolder) folder, fields);
         } else if (folder instanceof Mountpoint) {
@@ -213,7 +228,7 @@ public final class ToXML {
 
         if (needToOutput(fields, Change.MODIFIED_URL)) {
             String url = folder.getUrl();
-            if (!url.isEmpty() || fields != NOTIFY_FIELDS){
+            if (!url.isEmpty() || fields != NOTIFY_FIELDS) {
                 // Note: in this case, a url on a folder object
                 // is not a url to the folder, but the url to another item that's
                 // external of the mail system. In most cases this is a 'synced' folder
@@ -236,7 +251,7 @@ public final class ToXML {
         if (canAdminister) {
             // return full ACLs for folders we have admin rights on
             if (needToOutput(fields, Change.MODIFIED_ACL)) {
-                if (fields != NOTIFY_FIELDS || folder.isTagged(Flag.ID_NO_INHERIT)) {
+                if (fields != NOTIFY_FIELDS || folder.isTagged(Flag.FlagInfo.NO_INHERIT)) {
                     encodeACL(octxt, elem, folder.getEffectiveACL(), exposeAclAccessKey);
                 }
             }
@@ -489,7 +504,11 @@ public final class ToXML {
         }
     }
 
-    public static void recordItemTags(Element elem, MailItem item, int fields) {
+    public static void recordItemTags(Element elem, MailItem item, OperationContext octxt) throws ServiceException {
+        recordItemTags(elem, item, octxt, NOTIFY_FIELDS);
+    }
+
+    public static void recordItemTags(Element elem, MailItem item, OperationContext octxt, int fields) throws ServiceException {
         if (needToOutput(fields, Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD)) {
             String flags = item.getFlagString();
             if (fields != NOTIFY_FIELDS || !flags.isEmpty()) {
@@ -497,9 +516,12 @@ public final class ToXML {
             }
         }
         if (needToOutput(fields, Change.MODIFIED_TAGS)) {
-            String tags = item.getTagString();
-            if (!tags.isEmpty() || fields != NOTIFY_FIELDS) {
-                elem.addAttribute(MailConstants.A_TAGS, tags);
+            String[] tags = item.getTags();
+            if (!ArrayUtil.isEmpty(tags) || fields != NOTIFY_FIELDS) {
+                elem.addAttribute(MailConstants.A_TAG_NAMES, TagUtil.encodeTags(tags));
+                if (hasFullAccess(item.getMailbox(), octxt)) {
+                    elem.addAttribute(MailConstants.A_TAGS, TagUtil.getTagIdString(item));
+                }
             }
         }
     }
@@ -536,26 +558,28 @@ public final class ToXML {
         return serialized;
     }
 
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact,
-            boolean summary, Collection<String> attrFilter) {
-        return encodeContact(parent, ifmt, contact, summary, attrFilter, NOTIFY_FIELDS);
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
+            boolean summary, Collection<String> attrFilter)
+    throws ServiceException {
+        return encodeContact(parent, ifmt, octxt, contact, summary, attrFilter, NOTIFY_FIELDS);
     }
 
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, Contact contact,
-            boolean summary, Collection<String> attrFilter, int fields) {
-        return encodeContact(parent, ifmt, contact, null, null, summary, attrFilter, fields, null, false);
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
+            boolean summary, Collection<String> attrFilter, int fields)
+    throws ServiceException {
+        return encodeContact(parent, ifmt, octxt, contact, null, null, summary, attrFilter, fields, null, false);
     }
 
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, 
-            Contact contact, ContactGroup contactGroup, Collection<String> memberAttrFilter, 
-            boolean summary, Collection<String> attrFilter, int fields, 
-            String migratedDlist, boolean returnHiddenAttrs) {
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
+            ContactGroup contactGroup, Collection<String> memberAttrFilter, boolean summary,
+            Collection<String> attrFilter, int fields, String migratedDlist, boolean returnHiddenAttrs)
+    throws ServiceException {
         Element el = parent.addElement(MailConstants.E_CONTACT);
         el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
         if (needToOutput(fields, Change.MODIFIED_FOLDER)) {
             el.addAttribute(MailConstants.A_FOLDER, ifmt.formatItemId(contact.getFolderId()));
         }
-        recordItemTags(el, contact, fields);
+        recordItemTags(el, contact, octxt, fields);
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
             el.addAttribute(MailConstants.A_CHANGE_DATE, contact.getChangeDate() / 1000);
             el.addAttribute(MailConstants.A_MODIFIED_SEQUENCE, contact.getModifiedSequence());
@@ -635,7 +659,7 @@ public final class ToXML {
         if (migratedDlist != null) {
             encodeContactAttr(el, ContactConstants.A_dlist, migratedDlist, contact, false);
         } else if (contactGroup != null) {
-            encodeContactGroup(el, contactGroup, memberAttrFilter, ifmt, summary, fields);
+            encodeContactGroup(el, contactGroup, memberAttrFilter, ifmt, octxt, summary, fields);
         }
 
         return el;
@@ -675,8 +699,8 @@ public final class ToXML {
     }
 
     private static void encodeContactGroup(Element elem, ContactGroup contactGroup,
-            Collection<String> memberAttrFilter, ItemIdFormatter ifmt, boolean summary, int fields) {
-
+            Collection<String> memberAttrFilter, ItemIdFormatter ifmt, OperationContext octxt, boolean summary, int fields)
+    throws ServiceException {
         for (ContactGroup.Member member : contactGroup.getMembers(true)) {
             Element eMember = elem.addElement(MailConstants.E_CONTACT_GROUP_MEMBER);
             encodeContactGroupMemberBasic(eMember, member);
@@ -687,7 +711,7 @@ public final class ToXML {
                 } else if (derefedMember instanceof Contact) {
                     // only expand one level for now.
                     // If this member is a group, do not create/apss down a ContactGroup object from the member.
-                    encodeContact(eMember, ifmt, (Contact) derefedMember, summary, memberAttrFilter, fields);
+                    encodeContact(eMember, ifmt, octxt, (Contact) derefedMember, summary, memberAttrFilter, fields);
                 } else if (derefedMember instanceof GalContact) {
                     encodeGalContact(eMember, (GalContact) derefedMember, memberAttrFilter);
                 } else if (derefedMember instanceof Element) {
@@ -715,11 +739,11 @@ public final class ToXML {
                 attach.getSize()).addAttribute(MailConstants.A_CONTENT_FILENAME, attach.getFilename());
     }
 
-    public static Element encodeNote(Element parent, ItemIdFormatter ifmt, Note note) {
-        return encodeNote(parent, ifmt, note, NOTIFY_FIELDS);
+    public static Element encodeNote(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Note note) throws ServiceException {
+        return encodeNote(parent, ifmt, octxt, note, NOTIFY_FIELDS);
     }
 
-    public static Element encodeNote(Element parent, ItemIdFormatter ifmt, Note note, int fields) {
+    public static Element encodeNote(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Note note, int fields) throws ServiceException {
         Element el = parent.addElement(MailConstants.E_NOTE);
         el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(note));
         if (needToOutput(fields, Change.MODIFIED_CONTENT) && note.getSavedSequence() != 0) {
@@ -731,7 +755,7 @@ public final class ToXML {
         if (needToOutput(fields, Change.MODIFIED_DATE)) {
             el.addAttribute(MailConstants.A_DATE, note.getDate());
         }
-        recordItemTags(el, note, fields);
+        recordItemTags(el, note, octxt, fields);
         if (needToOutput(fields, Change.MODIFIED_POSITION)) {
             el.addAttribute(MailConstants.A_BOUNDS, note.getBounds().toString());
         }
@@ -750,26 +774,28 @@ public final class ToXML {
     }
 
     public static Element encodeTag(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Tag tag)
-            throws ServiceException {
+    throws ServiceException {
         return encodeTag(parent, ifmt, octxt, tag, NOTIFY_FIELDS);
     }
 
     public static Element encodeTag(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Tag tag, int fields)
-            throws ServiceException {
+    throws ServiceException {
         Element el = parent.addElement(MailConstants.E_TAG);
+        // FIXME: eventually remove tag ID from serialization 
         el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(tag));
-        if (needToOutput(fields, Change.MODIFIED_NAME)) {
-            el.addAttribute(MailConstants.A_NAME, tag.getName());
-        }
+        // always encode the name now that we're switching away from IDs
+        el.addAttribute(MailConstants.A_NAME, tag.getName());
         encodeColor(el, tag, fields);
         if (needToOutput(fields, Change.MODIFIED_UNREAD)) {
             int unreadCount = tag.getUnreadCount();
             if (unreadCount > 0 || fields != NOTIFY_FIELDS) {
-                int deletedUnread = tag.getDeletedUnreadCount();
-                el.addAttribute(MailConstants.A_UNREAD, unreadCount - deletedUnread);
-                if (deletedUnread > 0) {
-                    el.addAttribute(MailConstants.A_IMAP_UNREAD, unreadCount);
-                }
+                el.addAttribute(MailConstants.A_UNREAD, unreadCount);
+            }
+        }
+        if (needToOutput(fields, Change.MODIFIED_SIZE)) {
+            long num = tag.getItemCount();
+            if (num > 0 || fields != NOTIFY_FIELDS) {
+                el.addAttribute(MailConstants.A_NUM, num);
             }
         }
         if (needToOutput(fields, Change.MODIFIED_CONFLICT)) {
@@ -821,7 +847,7 @@ public final class ToXML {
     public static Element encodeConversation(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
             Conversation conv, List<Message> msgs, SearchParams params) throws ServiceException {
         int fields = NOTIFY_FIELDS;
-        Element c = encodeConversationCommon(parent, ifmt, conv, msgs, fields);
+        Element c = encodeConversationCommon(parent, ifmt, octxt, conv, msgs, fields);
         if (msgs.isEmpty()) {
             return c;
         }
@@ -829,7 +855,7 @@ public final class ToXML {
 
         ExpandResults expand = params.getInlineRule();
         for (Message msg : msgs) {
-            if (msg.isTagged(Flag.ID_DELETED)) {
+            if (msg.isTagged(Flag.FlagInfo.DELETED)) {
                 continue;
             }
             if (expand == ExpandResults.FIRST || expand == ExpandResults.ALL || expand.matches(msg)) {
@@ -844,7 +870,7 @@ public final class ToXML {
                 m.addAttribute(MailConstants.A_DATE, msg.getDate());
                 m.addAttribute(MailConstants.A_SIZE, msg.getSize());
                 m.addAttribute(MailConstants.A_FOLDER, ifmt.formatItemId(msg.getFolderId()));
-                recordItemTags(m, msg, fields);
+                recordItemTags(m, msg, octxt, fields);
                 m.addAttribute(MailConstants.E_FRAG, msg.getFragment(), Element.Disposition.CONTENT);
                 encodeEmail(m, msg.getSender(), EmailType.FROM);
             }
@@ -856,23 +882,22 @@ public final class ToXML {
      * This version lets you specify the Date and Fragment -- we use this when sending Query Results back to the client,
      * the conversation date returned and fragment correspond to those of the matched message.
      */
-    public static Element encodeConversationSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            Conversation conv, int fields) throws ServiceException {
+    public static Element encodeConversationSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Conversation conv, int fields)
+    throws ServiceException {
         return encodeConversationSummary(parent, ifmt, octxt, conv, null, OutputParticipants.PUT_SENDERS, fields, true);
     }
 
-    public static Element encodeConversationSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            Conversation conv, Message msgHit, OutputParticipants output) throws ServiceException {
+    public static Element encodeConversationSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Conversation conv, Message msgHit,
+            OutputParticipants output)
+    throws ServiceException {
         return encodeConversationSummary(parent, ifmt, octxt, conv, msgHit, output, NOTIFY_FIELDS, true);
     }
 
-    private static Element encodeConversationSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            Conversation conv, Message msgHit, OutputParticipants output, int fields, boolean alwaysSerialize)
-            throws ServiceException {
-        boolean addRecips  = msgHit != null && msgHit.isFromMe() &&
-            (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
-        boolean addSenders = (output == OutputParticipants.PUT_BOTH || !addRecips) &&
-            needToOutput(fields, Change.MODIFIED_SENDERS);
+    private static Element encodeConversationSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Conversation conv, Message msgHit,
+            OutputParticipants output, int fields, boolean alwaysSerialize)
+    throws ServiceException {
+        boolean addRecips  = msgHit != null && msgHit.isFromMe() && (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
+        boolean addSenders = (output == OutputParticipants.PUT_BOTH || !addRecips) && needToOutput(fields, Change.MODIFIED_SENDERS);
 
         Mailbox mbox = conv.getMailbox();
         // if the caller might not be able to see all the messages (due to rights or \Deleted),
@@ -883,11 +908,11 @@ public final class ToXML {
             isDelegatedNonAccessible = !AccessManager.getInstance().canAccessAccount(octxt.getAuthenticatedUser(),
                     conv.getAccount(), octxt.isUsingAdminPrivileges());
         }
-        if (isDelegatedNonAccessible || conv.isTagged(Flag.ID_DELETED)) {
+        if (isDelegatedNonAccessible || conv.isTagged(Flag.FlagInfo.DELETED)) {
             msgs = mbox.getMessagesByConversation(octxt, conv.getId(), SortBy.DATE_ASC, -1);
         }
         boolean noneVisible = msgs != null && msgs.isEmpty();
-        Element c = noneVisible && !alwaysSerialize ? null : encodeConversationCommon(parent, ifmt, conv, msgs, fields);
+        Element c = noneVisible && !alwaysSerialize ? null : encodeConversationCommon(parent, ifmt, octxt, conv, msgs, fields);
         if (noneVisible) {
             return c;
         }
@@ -895,8 +920,7 @@ public final class ToXML {
             c.addAttribute(MailConstants.A_DATE, msgHit != null ? msgHit.getDate() : conv.getDate());
         }
         if (needToOutput(fields, Change.MODIFIED_SUBJECT)) {
-            c.addAttribute(MailConstants.E_SUBJECT, msgHit != null ? msgHit.getSubject() : conv.getSubject(),
-                    Element.Disposition.CONTENT);
+            c.addAttribute(MailConstants.E_SUBJECT, msgHit != null ? msgHit.getSubject() : conv.getSubject(), Element.Disposition.CONTENT);
         }
         if (fields == NOTIFY_FIELDS && msgHit != null) {
             c.addAttribute(MailConstants.E_FRAG, msgHit.getFragment(), Element.Disposition.CONTENT);
@@ -910,7 +934,7 @@ public final class ToXML {
                 if (msgs != null) {
                     sl = new SenderList();
                     for (Message msg : msgs) {
-                        if (!msg.isTagged(Flag.ID_DELETED)) {
+                        if (!msg.isTagged(Flag.FlagInfo.DELETED)) {
                             sl.add(msg);
                         }
                     }
@@ -940,8 +964,8 @@ public final class ToXML {
         return c;
     }
 
-    private static Element encodeConversationCommon(Element parent, ItemIdFormatter ifmt, Conversation conv,
-            List<Message> msgs, int fields) {
+    private static Element encodeConversationCommon(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Conversation conv, List<Message> msgs, int fields)
+    throws ServiceException {
         Element c = parent.addElement(MailConstants.E_CONV);
         c.addAttribute(MailConstants.A_ID, ifmt.formatItemId(conv));
 
@@ -953,7 +977,7 @@ public final class ToXML {
             if (msgs != null) {
                 count = nondeleted = msgs.size();
                 for (Message msg : msgs) {
-                    if (msg.isTagged(Flag.ID_DELETED)) {
+                    if (msg.isTagged(Flag.FlagInfo.DELETED)) {
                         nondeleted--;
                     }
                 }
@@ -966,12 +990,16 @@ public final class ToXML {
         }
 
         if (msgs == null) {
-            recordItemTags(c, conv, fields);
+            recordItemTags(c, conv, octxt, fields);
         } else if (needToOutput(fields, Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD | Change.MODIFIED_TAGS)) {
-            int flags = 0;  long tags = 0;
+            int flags = 0;
+            Set<String> tags = Sets.newHashSet();
+            Set<Integer> tagIds = Sets.newTreeSet();
             for (Message msg : msgs) {
-                if (!msg.isTagged(Flag.ID_DELETED)) {
-                    flags |= msg.getFlagBitmask();  tags |= msg.getTagBitmask();
+                if (!msg.isTagged(Flag.FlagInfo.DELETED)) {
+                    flags |= msg.getFlagBitmask();
+                    tags.addAll(Arrays.asList(msg.getTags()));
+                    tagIds.addAll(msg.getTagIds());
                 }
             }
             if (needToOutput(fields, Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD)) {
@@ -980,8 +1008,11 @@ public final class ToXML {
                 }
             }
             if (needToOutput(fields, Change.MODIFIED_TAGS)) {
-                if (fields != NOTIFY_FIELDS || tags != 0) {
-                    c.addAttribute(MailConstants.A_TAGS, Tag.bitmaskToTags(tags));
+                if (fields != NOTIFY_FIELDS || !tags.isEmpty()) {
+                    c.addAttribute(MailConstants.A_TAG_NAMES, TagUtil.encodeTags(tags));
+                    if (hasFullAccess(conv.getMailbox(), octxt)) {
+                        c.addAttribute(MailConstants.A_TAGS, Joiner.on(',').join(tagIds));
+                    }
                 }
             }
         }
@@ -1009,11 +1040,11 @@ public final class ToXML {
     public static Element encodeMessageAsMP(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Message msg,
             String part, int maxSize, boolean wantHTML, boolean neuter, Set<String> headers, boolean serializeType)
             throws ServiceException {
-        boolean wholeMessage = (part == null || part.trim().isEmpty());
+        boolean wholeMessage = part == null || part.trim().isEmpty();
 
         Element m;
         if (wholeMessage) {
-            m = encodeMessageCommon(parent, ifmt, msg, NOTIFY_FIELDS, serializeType);
+            m = encodeMessageCommon(parent, ifmt, octxt, msg, NOTIFY_FIELDS, serializeType);
             m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
         } else {
             m = parent.addElement(MailConstants.E_MSG);
@@ -1145,7 +1176,7 @@ public final class ToXML {
     public static void setCalendarItemFields(Element calItemElem, ItemIdFormatter ifmt, OperationContext octxt,
             CalendarItem calItem, int fields, boolean encodeInvites, boolean includeContent, boolean neuter)
             throws ServiceException {
-        recordItemTags(calItemElem, calItem, fields);
+        recordItemTags(calItemElem, calItem, octxt, fields);
 
         calItemElem.addAttribute(MailConstants.A_UID, calItem.getUid());
         calItemElem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(calItem));
@@ -1353,7 +1384,7 @@ public final class ToXML {
         if (wholeMessage) {
             // We want to return the MODIFIED_CONFLICT fields to enable conflict detection on modify.
             int fields = NOTIFY_FIELDS | Change.MODIFIED_CONFLICT;
-            m = encodeMessageCommon(parent, ifmt, calItem, fields, serializeType);
+            m = encodeMessageCommon(parent, ifmt, octxt, calItem, fields, serializeType);
             m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(calItem, invId));
         } else {
             m = parent.addElement(MailConstants.E_MSG);
@@ -1454,18 +1485,18 @@ public final class ToXML {
     /**
      * Encodes a Message object into <m> element with standard MIME content.
      */
-    public static Element encodeMessageAsMIME(Element parent, ItemIdFormatter ifmt, Message msg, String part,
-            boolean serializeType) throws ServiceException {
-        return encodeMessageAsMIME(parent, ifmt, msg, part, false, serializeType);
+    public static Element encodeMessageAsMIME(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Message msg, String part, boolean serializeType)
+    throws ServiceException {
+        return encodeMessageAsMIME(parent, ifmt, octxt, msg, part, false, serializeType);
     }
 
-    public static Element encodeMessageAsMIME(Element parent, ItemIdFormatter ifmt, Message msg, String part,
-            boolean mustInline, boolean serializeType) throws ServiceException {
+    public static Element encodeMessageAsMIME(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Message msg, String part, boolean mustInline, boolean serializeType)
+    throws ServiceException {
         boolean wholeMessage = (part == null || part.trim().isEmpty());
 
         Element m;
         if (wholeMessage) {
-            m = encodeMessageCommon(parent, ifmt, msg, NOTIFY_FIELDS, serializeType);
+            m = encodeMessageCommon(parent, ifmt, octxt, msg, NOTIFY_FIELDS, serializeType);
             m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
         } else {
             m = parent.addElement(MailConstants.E_MSG);
@@ -1502,14 +1533,14 @@ public final class ToXML {
     }
 
     public static Element encodeMessageSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            Message msg, OutputParticipants output, int fields) {
-        Element el = encodeMessageCommon(parent, ifmt, msg, fields, true);
+            Message msg, OutputParticipants output, int fields)
+    throws ServiceException {
+        Element el = encodeMessageCommon(parent, ifmt, octxt, msg, fields, true);
         el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(msg));
         if (!needToOutput(fields, Change.MODIFIED_CONTENT)) {
             return el;
         }
-        boolean addRecips = msg.isFromMe() &&
-                (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
+        boolean addRecips = msg.isFromMe() && (output == OutputParticipants.PUT_RECIPIENTS || output == OutputParticipants.PUT_BOTH);
         boolean addSenders = output == OutputParticipants.PUT_BOTH || !addRecips;
         if (addRecips) {
             addEmails(el, Mime.parseAddressHeader(msg.getRecipients()), EmailType.TO);
@@ -1539,8 +1570,8 @@ public final class ToXML {
         return el;
     }
 
-    private static Element encodeMessageCommon(Element parent, ItemIdFormatter ifmt, MailItem item, int fields,
-            boolean serializeType) {
+    private static Element encodeMessageCommon(Element parent, ItemIdFormatter ifmt, OperationContext octxt, MailItem item, int fields, boolean serializeType)
+    throws ServiceException {
         String name = serializeType && item instanceof Chat ? MailConstants.E_CHAT : MailConstants.E_MSG;
         Element elem = parent.addElement(name);
         // DO NOT encode the item-id here, as some Invite-Messages-In-CalendarItems have special item-id's
@@ -1560,7 +1591,7 @@ public final class ToXML {
                 elem.addAttribute(MailConstants.A_CONV_ID, ifmt.formatItemId(msg.getConversationId()));
             }
         }
-        recordItemTags(elem, item, fields);
+        recordItemTags(elem, item, octxt, fields);
         if (needToOutput(fields, Change.MODIFIED_METADATA)) {
             encodeAllCustomMetadata(elem, item, fields);
         }
@@ -2297,23 +2328,22 @@ public final class ToXML {
         return el;
     }
 
-    public static Element encodeWiki(Element parent, ItemIdFormatter ifmt, OperationContext octxt, WikiItem wiki) {
+    public static Element encodeWiki(Element parent, ItemIdFormatter ifmt, OperationContext octxt, WikiItem wiki) throws ServiceException {
         return encodeWiki(parent, ifmt, octxt, wiki, NOTIFY_FIELDS);
     }
 
-    public static Element encodeWiki(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            WikiItem wiki, int fields) {
+    public static Element encodeWiki(Element parent, ItemIdFormatter ifmt, OperationContext octxt, WikiItem wiki, int fields)
+    throws ServiceException {
         Element elem = parent.addElement(MailConstants.E_WIKIWORD);
         encodeDocumentCommon(elem, ifmt, octxt, wiki, fields);
         return elem;
     }
 
-    public static Element encodeDocument(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Document doc) {
+    public static Element encodeDocument(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Document doc) throws ServiceException {
         return encodeDocument(parent, ifmt, octxt, doc, Change.ALL_FIELDS);
     }
 
-    public static Element encodeDocument(Element parent, ItemIdFormatter ifmt, OperationContext octxt,
-            Document doc, int fields) {
+    public static Element encodeDocument(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields) throws ServiceException {
         Element el = parent.addElement(MailConstants.E_DOC);
         encodeDocumentCommon(el, ifmt, octxt, doc, fields);
         if (needToOutput(fields, Change.MODIFIED_LOCK)) {
@@ -2339,8 +2369,8 @@ public final class ToXML {
         return el;
     }
 
-    public static Element encodeDocumentCommon(Element m, ItemIdFormatter ifmt, OperationContext octxt,
-            Document doc, int fields) {
+    public static Element encodeDocumentCommon(Element m, ItemIdFormatter ifmt, OperationContext octxt, Document doc, int fields)
+    throws ServiceException {
         m.addAttribute(MailConstants.A_ID, ifmt.formatItemId(doc));
         if (needToOutput(fields, Change.MODIFIED_NAME)) {
             m.addAttribute(MailConstants.A_NAME, doc.getName());
@@ -2360,7 +2390,7 @@ public final class ToXML {
             m.addAttribute(MailConstants.A_CHANGE_DATE, (doc.getChangeDate() / 1000));
             m.addAttribute(MailConstants.A_REVISION, doc.getSavedSequence());
         }
-        recordItemTags(m, doc, fields | Change.MODIFIED_FLAGS);
+        recordItemTags(m, doc, octxt, fields | Change.MODIFIED_FLAGS);
         if (needToOutput(fields, Change.MODIFIED_METADATA)) {
             encodeAllCustomMetadata(m, doc, fields);
             String description = doc.getDescription();
@@ -2751,11 +2781,13 @@ public final class ToXML {
         }
     }
 
-    public static Element encodeComment(Element response, ItemIdFormatter ifmt, Comment comment) {
-        return encodeComment(response, ifmt, comment, NOTIFY_FIELDS);
+    public static Element encodeComment(Element response, ItemIdFormatter ifmt, OperationContext octxt, Comment comment)
+    throws ServiceException {
+        return encodeComment(response, ifmt, octxt, comment, NOTIFY_FIELDS);
     }
 
-    public static Element encodeComment(Element response, ItemIdFormatter ifmt, Comment comment, int fields) {
+    public static Element encodeComment(Element response, ItemIdFormatter ifmt, OperationContext octxt, Comment comment, int fields)
+    throws ServiceException {
         Element c = response.addElement(MailConstants.E_COMMENT);
         if (needToOutput(fields, Change.MODIFIED_PARENT)) {
             c.addAttribute(MailConstants.A_PARENT_ID, ifmt.formatItemId(comment.getParentId()));
@@ -2771,7 +2803,7 @@ public final class ToXML {
             }
         } catch (ServiceException e) {
         }
-        recordItemTags(c, comment, fields);
+        recordItemTags(c, comment, octxt, fields);
         encodeColor(c, comment, fields);
         if (needToOutput(fields, Change.MODIFIED_DATE)) {
             c.addAttribute(MailConstants.A_DATE, comment.getDate());

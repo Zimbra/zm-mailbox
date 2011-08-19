@@ -18,6 +18,7 @@
  */
 package com.zimbra.cs.service.mail;
 
+import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
@@ -50,6 +51,7 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.type.RetentionPolicy;
+
 import org.apache.commons.codec.binary.Hex;
 
 import javax.mail.internet.MimeMessage;
@@ -93,10 +95,10 @@ public class FolderAction extends ItemAction {
     public static final String OP_SYNCOFF  = '!' + OP_SYNCON;
     public static final String OP_RETENTIONPOLICY = "retentionpolicy";
 
-    private static final Set<String> FOLDER_OPS = new HashSet<String>(Arrays.asList(new String[] {
+    private static final Set<String> FOLDER_OPS = ImmutableSet.of(
         OP_EMPTY, OP_REFRESH, OP_SET_URL, OP_IMPORT, OP_FREEBUSY, OP_CHECK, OP_UNCHECK, OP_GRANT,
         OP_REVOKE, OP_REVOKEORPHANGRANTS, OP_UPDATE, OP_SYNCON, OP_SYNCOFF, OP_RETENTIONPOLICY
-    }));
+    );
 
     @Override public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
@@ -107,10 +109,12 @@ public class FolderAction extends ItemAction {
         Element response = zsc.createElement(MailConstants.FOLDER_ACTION_RESPONSE);
         Element result = response.addUniqueElement(MailConstants.E_ACTION);
 
-        if (operation.equals(OP_TAG) || operation.equals(OP_FLAG) || operation.equals(OP_UNTAG) || operation.equals(OP_UNFLAG))
+        if (operation.equals(OP_TAG) || operation.equals(OP_FLAG) || operation.equals(OP_UNTAG) || operation.equals(OP_UNFLAG)) {
             throw ServiceException.INVALID_REQUEST("cannot tag/flag a folder", null);
-        if (operation.endsWith(OP_COPY) || operation.endsWith(OP_SPAM))
+        } else if (operation.endsWith(OP_COPY) || operation.endsWith(OP_SPAM)) {
             throw ServiceException.INVALID_REQUEST("invalid operation on folder: " + operation, null);
+        }
+
         String successes;
         if (FOLDER_OPS.contains(operation)) {
             successes = handleFolder(context, request, operation, result);
@@ -145,10 +149,10 @@ public class FolderAction extends ItemAction {
             mbox.importFeed(octxt, iid.getId(), url, false);
         } else if (operation.equals(OP_FREEBUSY)) {
             boolean fb = action.getAttributeBool(MailConstants.A_EXCLUDE_FREEBUSY, false);
-            mbox.alterTag(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.ID_EXCLUDE_FREEBUSY, fb);
+            mbox.alterTag(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.FlagInfo.EXCLUDE_FREEBUSY, fb, null);
             FreeBusyProvider.mailboxChanged(zsc.getRequestedAccountId());
         } else if (operation.equals(OP_CHECK) || operation.equals(OP_UNCHECK)) {
-            mbox.alterTag(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.ID_CHECKED, operation.equals(OP_CHECK));
+            mbox.alterTag(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.FlagInfo.CHECKED, operation.equals(OP_CHECK), null);
         } else if (operation.equals(OP_SET_URL)) {
             String url = action.getAttribute(MailConstants.A_URL, "");
             mbox.setFolderUrl(octxt, iid.getId(), url);
@@ -157,7 +161,7 @@ public class FolderAction extends ItemAction {
             }
             if (action.getAttribute(MailConstants.A_EXCLUDE_FREEBUSY, null) != null) {
                 boolean fb = action.getAttributeBool(MailConstants.A_EXCLUDE_FREEBUSY, false);
-                mbox.alterTag(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.ID_EXCLUDE_FREEBUSY, fb);
+                mbox.alterTag(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.FlagInfo.EXCLUDE_FREEBUSY, fb, null);
             }
         } else if (operation.equals(OP_REVOKE)) {
             String zid = action.getAttribute(MailConstants.A_ZIMBRA_ID);
@@ -219,10 +223,11 @@ public class FolderAction extends ItemAction {
             String newName = action.getAttribute(MailConstants.A_NAME, null);
             String folderId = action.getAttribute(MailConstants.A_FOLDER, null);
             ItemId iidFolder = new ItemId(folderId == null ? "-1" : folderId, zsc);
-            if (!iidFolder.belongsTo(mbox))
+            if (!iidFolder.belongsTo(mbox)) {
                 throw ServiceException.INVALID_REQUEST("cannot move folder between mailboxes", null);
-            else if (folderId != null && iidFolder.getId() <= 0)
+            } else if (folderId != null && iidFolder.getId() <= 0) {
                 throw MailServiceException.NO_SUCH_FOLDER(iidFolder.getId());
+            }
             String flags = action.getAttribute(MailConstants.A_FLAGS, null);
             byte color = (byte) action.getAttributeLong(MailConstants.A_COLOR, -1);
             ACL acl = parseACL(action.getOptionalElement(MailConstants.E_ACL));
@@ -234,7 +239,7 @@ public class FolderAction extends ItemAction {
                 mbox.setPermissions(octxt, iid.getId(), acl);
             }
             if (flags != null) {
-                mbox.setTags(octxt, iid.getId(), MailItem.Type.FOLDER, flags, null, null);
+                mbox.setTags(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.toBitmask(flags), null, null);
             }
             if (view != null) {
                 mbox.setFolderDefaultView(octxt, iid.getId(), MailItem.Type.of(view));
@@ -245,7 +250,7 @@ public class FolderAction extends ItemAction {
                 mbox.move(octxt, iid.getId(), MailItem.Type.FOLDER, iidFolder.getId(), null);
             }
         } else if (operation.equals(OP_SYNCON) || operation.equals(OP_SYNCOFF)) {
-            mbox.alterTag(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.ID_SYNC, operation.equals(OP_SYNCON));
+            mbox.alterTag(octxt, iid.getId(), MailItem.Type.FOLDER, Flag.FlagInfo.SYNC, operation.equals(OP_SYNCON), null);
         } else if (operation.equals(OP_RETENTIONPOLICY)) {
             mbox.setRetentionPolicy(octxt, iid.getId(), MailItem.Type.FOLDER,
                 new RetentionPolicy(action.getElement(MailConstants.E_RETENTION_POLICY)));
@@ -267,13 +272,14 @@ public class FolderAction extends ItemAction {
             short rights = ACL.stringToRights(grant.getAttribute(MailConstants.A_RIGHTS));
 
             String secret = null;
-            if (gtype == ACL.GRANTEE_KEY)
+            if (gtype == ACL.GRANTEE_KEY) {
                 secret = grant.getAttribute(MailConstants.A_ACCESSKEY, null);
-            else if (gtype == ACL.GRANTEE_GUEST) {
+            } else if (gtype == ACL.GRANTEE_GUEST) {
                 secret = grant.getAttribute(MailConstants.A_ARGS, null);
                 // bug 30891 for 5.0.x
-                if (secret == null)
+                if (secret == null) {
                     secret = grant.getAttribute(MailConstants.A_PASSWORD);
+                }
             }
             acl.grantAccess(zid, gtype, rights, secret);
         }

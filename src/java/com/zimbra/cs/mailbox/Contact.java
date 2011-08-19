@@ -634,7 +634,7 @@ public class Contact extends MailItem {
      * @param mblob   The stored blob containing contact attachments.
      * @param pc      The contact's fields and values, plus attachments.
      * @param flags   Initial flagset
-     * @param tags    A serialized version of all {@link Tag}s to apply.
+     * @param ntags    A serialized version of all {@link Tag}s to apply.
      * @perms {@link ACL#RIGHT_INSERT} on the folder
      * @throws ServiceException   The following error codes are possible:<ul>
      *    <li><tt>mail.CANNOT_CONTAIN</tt> - if the target folder can't
@@ -646,8 +646,8 @@ public class Contact extends MailItem {
      *        permissions</ul>
      * @see #canContain(byte)
      */
-    static Contact create(int id, Folder folder, MailboxBlob mblob, ParsedContact pc, int flags, String tags,
-            CustomMetadata custom) throws ServiceException {
+    static Contact create(int id, Folder folder, MailboxBlob mblob, ParsedContact pc, int flags, Tag.NormalizedTags ntags, CustomMetadata custom)
+    throws ServiceException {
         if (folder == null || !folder.canContain(Type.CONTACT)) {
             throw MailServiceException.CANNOT_CONTAIN();
         }
@@ -670,7 +670,7 @@ public class Contact extends MailItem {
         data.size = pc.getSize();
         data.date = mbox.getOperationTimestamp();
         data.setFlags(flags | (pc.hasAttachment() ? Flag.BITMASK_ATTACHED : 0));
-        data.tags = Tag.tagsToBitmask(tags);
+        data.setTags(ntags);
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, custom, pc.getFields(), pc.getAttachments());
         data.contentChanged(mbox);
 

@@ -432,7 +432,7 @@ public final class RuleManager {
 
     public static List<ItemId> applyRulesToOutgoingMessage(
             OperationContext octxt, Mailbox mailbox, ParsedMessage pm, int sentFolderId,
-            boolean noICal, int flags, String tags, int convId)
+            boolean noICal, int flags, String[] tags, int convId)
             throws ServiceException {
         List<ItemId> addedMessageIds = null;
         OutgoingMessageHandler handler = new OutgoingMessageHandler(

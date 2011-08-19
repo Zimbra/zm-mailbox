@@ -112,13 +112,13 @@ public final class MailboxTestUtil {
     public static void setFlag(Mailbox mbox, int itemId, Flag.FlagInfo flag) throws ServiceException {
         MailItem item = mbox.getItemById(null, itemId, MailItem.Type.UNKNOWN);
         int flags = item.getFlagBitmask() | flag.toBitmask();
-        mbox.setTags(null, itemId, item.getType(), flags, item.getTagBitmask(), null);
+        mbox.setTags(null, itemId, item.getType(), flags, null, null);
     }
 
     public static void unsetFlag(Mailbox mbox, int itemId, Flag.FlagInfo flag) throws ServiceException {
         MailItem item = mbox.getItemById(null, itemId, MailItem.Type.UNKNOWN);
         int flags = item.getFlagBitmask() & ~flag.toBitmask();
-        mbox.setTags(null, itemId, item.getType(), flags, item.getTagBitmask(), null);
+        mbox.setTags(null, itemId, item.getType(), flags, null, null);
     }
 
     public static void index(Mailbox mbox) throws ServiceException {

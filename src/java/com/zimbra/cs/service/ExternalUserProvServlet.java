@@ -254,7 +254,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                             shareData.getFolderDefaultViewCode(), 0, MailItem.DEFAULT_COLOR, false);
                     if (shareData.getFolderDefaultViewCode() == MailItem.Type.APPOINTMENT) {
                         // make sure that the mountpoint is checked in the UI by default
-                        granteeMbox.alterTag(null, mtpt.getId(), mtpt.getType(), Flag.ID_CHECKED, true);
+                        granteeMbox.alterTag(null, mtpt.getId(), mtpt.getType(), Flag.FlagInfo.CHECKED, true, null);
                     }
                     viewTypes.add(shareData.getFolderDefaultViewCode());
                 }

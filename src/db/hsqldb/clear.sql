@@ -13,6 +13,8 @@
 -- ***** END LICENSE BLOCK *****
 --
 
+DELETE FROM *{DATABASE_NAME}.tagged_item;
+DELETE FROM *{DATABASE_NAME}.tag;
 DELETE FROM *{DATABASE_NAME}.mail_item;
 DELETE FROM *{DATABASE_NAME}.mail_item_dumpster;
 DELETE FROM *{DATABASE_NAME}.revision;

@@ -29,8 +29,10 @@ import java.util.concurrent.ConcurrentSkipListMap;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.imap.ImapFlagCache.ImapFlag;
@@ -118,7 +120,7 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
         }
         mailbox = folder.getMailbox();
         mFlags = ImapFlagCache.getSystemFlags(mailbox);
-        mTags = new ImapFlagCache(mailbox, null);
+        mTags = new ImapFlagCache();
     }
 
     void setInitialSize() {
@@ -405,7 +407,24 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
         // update the folder information
         sequence.add(i4msg);
         setIndex(i4msg, sequence.size());
+        // update the tag cache to include only the tags in the folder
+        updateTagCache(i4msg);
         return i4msg;
+    }
+
+    void updateTagCache(ImapMessage i4msg) {
+        if (!ArrayUtil.isEmpty(i4msg.tags)) {
+            for (String tag : i4msg.tags) {
+                if (mTags.getByZimbraName(tag) == null) {
+                    try {
+                        mTags.cache(new ImapFlag(mailbox.getTagByName(tag)));
+                        setTagsDirty(true);
+                    } catch (ServiceException e) {
+                        ZimbraLog.imap.warn("could not fetch listed tag: " + tag, e);
+                    }
+                }
+            }
+        }
     }
 
     private void setIndex(ImapMessage i4msg, int position) {
@@ -443,61 +462,56 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
         return sdata == null ? false : sdata.mTagsAreDirty;
     }
 
-    void cleanTags() {
+    void setTagsDirty(boolean dirty) {
         SessionData sdata = mSessionData;
         if (sdata != null) {
-            sdata.mTagsAreDirty = false;
+            sdata.mTagsAreDirty = dirty;
         }
     }
 
     ImapFlag cacheTag(Tag ltag) {
-        assert(!(ltag instanceof Flag));
+        assert !(ltag instanceof Flag);
         if (ltag instanceof Flag) {
             return null;
         }
-        SessionData sdata = mSessionData;
-        if (sdata != null) {
-            sdata.mTagsAreDirty = true;
-        }
-        return mTags.cache(new ImapFlag(ltag.getName(), ltag, true));
+
+        setTagsDirty(true);
+        return mTags.cache(new ImapFlag(ltag));
     }
 
-    void dirtyTag(int id, int modseq) {
-        dirtyTag(id, modseq, false);
-    }
-
-    synchronized void dirtyTag(int id, int modseq, boolean removeTag) {
-        SessionData sdata = mSessionData;
-        if (sdata != null) {
-            sdata.mTagsAreDirty = true;
-        }
-        if (getSize() == 0) {
+    void dirtyTag(ImapFlag i4flag, int modseq, String newName) {
+        setTagsDirty(true);
+        if (getSize() == 0 || i4flag == null) {
             return;
         }
-        long mask = 1L << Tag.getIndex(id);
+
         for (ImapMessage i4msg : sequence) {
-            if (i4msg != null && (i4msg.tags & mask) != 0) {
+            if (i4msg != null && i4flag.matches(i4msg)) {
                 dirtyMessage(i4msg, modseq);
-                if (removeTag) {
-                    i4msg.tags &= ~mask;
+
+                List<String> tags = Lists.newArrayList(i4msg.tags);
+                tags.remove(i4flag.mName);
+                if (newName != null) {
+                    tags.add(newName);
                 }
+                i4msg.tags = tags.isEmpty() ? null : tags.toArray(new String[tags.size()]);
             }
         }
     }
 
     ImapFlag getFlagByName(String name) {
-        ImapFlag i4flag = mFlags.getByName(name);
-        return (i4flag != null ? i4flag : mTags.getByName(name));
+        ImapFlag i4flag = mFlags.getByImapName(name);
+        return (i4flag != null ? i4flag : mTags.getByImapName(name));
     }
 
-    ImapFlag getTagByMask(long mask) {
-        return mTags.getByMask(mask);
+    ImapFlag getTagByName(String name) {
+        return mFlags.getByImapName(name);
     }
 
     List<String> getFlagList(boolean permanentOnly) {
         List<String> names = mFlags.listNames(permanentOnly);
         for (String tagname : mTags.listNames(permanentOnly)) {
-            if (mFlags.getByName(tagname) == null) {
+            if (mFlags.getByImapName(tagname) == null) {
                 names.add(tagname);
             }
         }
@@ -622,11 +636,8 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
     synchronized ImapMessageSet getAllMessages() {
         ImapMessageSet result = new ImapMessageSet();
         if (getSize() > 0) {
-            for (ImapMessage i4msg : sequence) {
-                if (i4msg != null) {
-                    result.add(i4msg);
-                }
-            }
+            result.addAll(sequence);
+            result.remove(null);
         }
         return result;
     }
@@ -805,6 +816,7 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
         if (items == null || items.isEmpty()) {
             return "";
         }
+
         StringBuilder sb = new StringBuilder();
         int start = -1, last = -1;
         boolean done;
@@ -834,6 +846,7 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
         if (items == null || items.isEmpty()) {
             return "";
         }
+
         StringBuilder sb = new StringBuilder();
         int start = -1, last = -1;
         boolean done;
@@ -904,20 +917,13 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
 
     @Override
     public void handleTagDelete(int changeId, int tagId, Change chg) {
-        mTags.uncache(1L << Tag.getIndex(tagId));
-        dirtyTag(tagId, changeId, true);
-    }
-
-    @Override
-    public void handleTagCreate(int changeId, Tag tag) {
-        cacheTag(tag);
+        dirtyTag(mTags.uncache(tagId), changeId, null);
     }
 
     @Override
     public void handleTagRename(int changeId, Tag tag, Change chg) {
-        mTags.uncache(tag.getBitmask());
+        dirtyTag(mTags.uncache(tag.getId()), changeId, tag.getName());
         cacheTag(tag);
-        dirtyTag(tag.getId(), changeId);
     }
 
     @Override
@@ -936,6 +942,7 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
         if (getById(msgId) != null) {
             return;
         }
+
         ImapMessage i4msg = getByImapId(item.getImapUid());
         if (i4msg == null) {
             added.add(item);
@@ -955,7 +962,7 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
     @Override
     public void handleItemUpdate(int changeId, Change chg, ImapSession.AddedItems added) {
         MailItem item = (MailItem) chg.what;
-        boolean inFolder = isVirtual() || (item.getFolderId() == mFolderId);
+        boolean inFolder = isVirtual() || item.getFolderId() == mFolderId;
 
         ImapMessage i4msg = getById(item.getId());
         if (i4msg == null) {
@@ -971,11 +978,9 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
             if (!isVirtual()) {
                 added.add(item);
             }
-            if (ZimbraLog.imap.isDebugEnabled()) {
-                ZimbraLog.imap.debug("  ** imap uid changed (ntfn): %d", item.getId());
-            }
+            ZimbraLog.imap.debug("  ** imap uid changed (ntfn): %d", item.getId());
         } else if ((chg.why & (Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD)) != 0) {
-            i4msg.setPermanentFlags(item.getFlagBitmask(), item.getTagBitmask(), changeId, this);
+            i4msg.setPermanentFlags(item.getFlagBitmask(), item.getTags(), changeId, this);
         }
     }
 

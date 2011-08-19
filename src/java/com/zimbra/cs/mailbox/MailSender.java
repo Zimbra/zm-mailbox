@@ -899,9 +899,9 @@ public class MailSender {
             if (target instanceof Mailbox) {
                 Mailbox mbox = (Mailbox) target;
                 if (MSGTYPE_REPLY.equals(mReplyType)) {
-                    mbox.alterTag(octxt, mOriginalMessageId.getId(), MailItem.Type.MESSAGE, Flag.ID_REPLIED, true);
+                    mbox.alterTag(octxt, mOriginalMessageId.getId(), MailItem.Type.MESSAGE, Flag.FlagInfo.REPLIED, true, null);
                 } else if (MSGTYPE_FORWARD.equals(mReplyType)) {
-                    mbox.alterTag(octxt, mOriginalMessageId.getId(), MailItem.Type.MESSAGE, Flag.ID_FORWARDED, true);
+                    mbox.alterTag(octxt, mOriginalMessageId.getId(), MailItem.Type.MESSAGE, Flag.FlagInfo.FORWARDED, true, null);
                 }
             } else if (target instanceof ZMailbox) {
                 ZMailbox zmbx = (ZMailbox) target;

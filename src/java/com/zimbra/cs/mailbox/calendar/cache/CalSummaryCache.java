@@ -44,6 +44,7 @@ import com.zimbra.cs.mailbox.MailboxManager.FetchMode;
 import com.zimbra.cs.mailbox.acl.FolderACL;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
+import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -142,7 +143,7 @@ public class CalSummaryCache {
                                      defaultEffectivePartStat, defaultFba, null);
             calItemData = new CalendarItemData(
                     calItem.getType(), calItem.getFolderId(), calItem.getId(),
-                    calItem.getFlagString(), calItem.getTagString(),
+                    calItem.getFlagString(), calItem.getTags(), TagUtil.getTagIdString(calItem),
                     calItem.getModifiedSequence(), calItem.getSavedSequence(),
                     calItem.getDate(), calItem.getChangeDate(), calItem.getSize(),
                     defaultInvite.getUid(), defaultInvite.isRecurrence(), calItem.isPublic(),

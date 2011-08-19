@@ -15,6 +15,7 @@
 package com.zimbra.cs.imap;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
 import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.localconfig.DebugConfig;
@@ -1627,8 +1628,8 @@ abstract class ImapHandler {
                 }
                 Mailbox mbox = (Mailbox) path.getOwnerMailbox();
                 Folder folder = (Folder) path.getFolder();
-                if (!folder.isTagged(Flag.ID_SUBSCRIBED)) {
-                    mbox.alterTag(getContext(), folder.getId(), MailItem.Type.FOLDER, Flag.ID_SUBSCRIBED, true);
+                if (!folder.isTagged(Flag.FlagInfo.SUBSCRIBED)) {
+                    mbox.alterTag(getContext(), folder.getId(), MailItem.Type.FOLDER, Flag.FlagInfo.SUBSCRIBED, true, null);
                 }
             } else {
                 credentials.subscribe(path);
@@ -1660,8 +1661,8 @@ abstract class ImapHandler {
                 try {
                     Mailbox mbox = credentials.getMailbox();
                     Folder folder = (Folder) path.getFolder();
-                    if (folder.isTagged(Flag.ID_SUBSCRIBED)) {
-                        mbox.alterTag(getContext(), folder.getId(), MailItem.Type.FOLDER, Flag.ID_SUBSCRIBED, false);
+                    if (folder.isTagged(Flag.FlagInfo.SUBSCRIBED)) {
+                        mbox.alterTag(getContext(), folder.getId(), MailItem.Type.FOLDER, Flag.FlagInfo.SUBSCRIBED, false, null);
                     }
                 } catch (NoSuchItemException e) {
                 }
@@ -1988,7 +1989,7 @@ abstract class ImapHandler {
     private boolean isPathSubscribed(ImapPath path, Set<String> subscriptions) throws ServiceException {
         if (path.belongsTo(credentials)) {
             Folder folder = (Folder) path.getFolder();
-            return folder.isTagged(Flag.ID_SUBSCRIBED);
+            return folder.isTagged(Flag.FlagInfo.SUBSCRIBED);
         } else if (subscriptions != null && !subscriptions.isEmpty()) {
             for (String sub : subscriptions) {
                 if (sub.equalsIgnoreCase(path.asImapPath())) {
@@ -2020,7 +2021,7 @@ abstract class ImapHandler {
                 if (owner == null) {
                     Mailbox mbox = credentials.getMailbox();
                     for (Folder folder : mbox.getFolderById(getContext(), Mailbox.ID_FOLDER_USER_ROOT).getSubfolderHierarchy()) {
-                        if (folder.isTagged(Flag.ID_SUBSCRIBED)) {
+                        if (folder.isTagged(Flag.FlagInfo.SUBSCRIBED)) {
                             checkSubscription(new ImapPath(null, folder, credentials), pattern, childPattern, hits);
                         }
                     }
@@ -2140,22 +2141,24 @@ abstract class ImapHandler {
             ImapFolder i4folder = getSelectedFolder();
 
             messages = (int) folder.getItemCount();
-            if ((status & STATUS_RECENT) == 0)
+            if ((status & STATUS_RECENT) == 0) {
                 recent = -1;
-            else if (messages == 0)
+            } else if (messages == 0) {
                 recent = 0;
-            else if (i4folder != null && path.isEquivalent(i4folder.getPath()))
+            } else if (i4folder != null && path.isEquivalent(i4folder.getPath())) {
                 recent = i4folder.getRecentCount();
-            else
+            } else {
                 recent = mbox.getImapRecent(getContext(), folder.getId());
+            }
             uidnext = folder instanceof SearchFolder ? -1 : folder.getImapUIDNEXT();
             uvv = ImapFolder.getUIDValidity(folder);
             unread = folder.getUnreadCount();
             modseq = folder instanceof SearchFolder ? 0 : folder.getImapMODSEQ();
         } else if (mboxobj instanceof ZMailbox) {
             ZFolder zfolder = (ZFolder) path.getFolder();
-            if (zfolder == null)
+            if (zfolder == null) {
                 throw MailServiceException.NO_SUCH_FOLDER(path.asImapPath());
+            }
 
             messages = zfolder.getImapMessageCount();
             recent = 0;
@@ -2167,26 +2170,33 @@ abstract class ImapHandler {
             throw AccountServiceException.NO_SUCH_ACCOUNT(path.getOwner());
         }
 
-        if (messages >= 0 && (status & STATUS_MESSAGES) != 0)
+        if (messages >= 0 && (status & STATUS_MESSAGES) != 0) {
             data.append(data.length() != empty ? " " : "").append("MESSAGES ").append(messages);
-        if (recent >= 0 && (status & STATUS_RECENT) != 0)
+        }
+        if (recent >= 0 && (status & STATUS_RECENT) != 0) {
             data.append(data.length() != empty ? " " : "").append("RECENT ").append(recent);
+        }
         // note: we're not supporting UIDNEXT for search folders; see the comments in selectFolder()
-        if (uidnext > 0 && (status & STATUS_UIDNEXT) != 0)
+        if (uidnext > 0 && (status & STATUS_UIDNEXT) != 0) {
             data.append(data.length() != empty ? " " : "").append("UIDNEXT ").append(uidnext);
-        if (uvv > 0 && (status & STATUS_UIDVALIDITY) != 0)
+        }
+        if (uvv > 0 && (status & STATUS_UIDVALIDITY) != 0) {
             data.append(data.length() != empty ? " " : "").append("UIDVALIDITY ").append(uvv);
-        if (unread >= 0 && (status & STATUS_UNSEEN) != 0)
+        }
+        if (unread >= 0 && (status & STATUS_UNSEEN) != 0) {
             data.append(data.length() != empty ? " " : "").append("UNSEEN ").append(unread);
-        if (modseq >= 0 && (status & STATUS_HIGHESTMODSEQ) != 0)
+        }
+        if (modseq >= 0 && (status & STATUS_HIGHESTMODSEQ) != 0) {
             data.append(data.length() != empty ? " " : "").append("HIGHESTMODSEQ ").append(modseq);
+        }
 
         return data.append(')').toString();
     }
 
     boolean doAPPEND(String tag, ImapPath path, List<AppendMessage> appends) throws IOException, ImapParseException {
-        if (!checkState(tag, State.AUTHENTICATED))
+        if (!checkState(tag, State.AUTHENTICATED)) {
             return true;
+        }
 
         Object mboxobj = null;
         List<Tag> newTags = new ArrayList<Tag>();
@@ -2272,7 +2282,7 @@ abstract class ImapHandler {
         for (Tag ltag : ltags) {
             try {
                 // notification will update mTags hash
-                ltag.getMailbox().delete(getContext(), ltag, null);
+                ltag.getMailbox().delete(getContext(), ltag.getId(), ltag.getType(), null);
             } catch (ServiceException e) {
                 ZimbraLog.imap.warn("failed to delete tag: " + ltag.getName(), e);
             }
@@ -2998,7 +3008,7 @@ abstract class ImapHandler {
                             continue;
                         hits.add(i4msg);
                         if (requiresMODSEQ)
-                            modseq = Math.max(modseq, Math.max(hit.getModifiedSequence(), i4msg.getFlagModseq(i4folder.getTagset())));
+                            modseq = Math.max(modseq, hit.getModifiedSequence());
                     }
                 } finally {
                     Closeables.closeQuietly(zqr);
@@ -3311,14 +3321,6 @@ abstract class ImapHandler {
                     if (i4msg != null)
                         modified.add(i4msg);
                 }
-                // add any messages with tags whose names have been changed since the checkpoint
-                ImapFlagCache i4cache = i4folder.getTagset();
-                if (i4cache.getMaximumModseq() > changedSince) {
-                    for (ImapMessage i4msg : i4set) {
-                        if (i4msg.getFlagModseq(i4cache) > changedSince)
-                            modified.add(i4msg);
-                    }
-                }
                 // and intersect those "modified" messages with the set of requested messages
                 i4set.retainAll(modified);
             } catch (ServiceException e) {
@@ -3334,7 +3336,7 @@ abstract class ImapHandler {
         try {
             if (i4folder.areTagsDirty()) {
                 sendUntagged("FLAGS (" + StringUtil.join(" ", i4folder.getFlagList(false)) + ')');
-                i4folder.cleanTags();
+                i4folder.setTagsDirty(false);
             }
         } finally {
             mbox.lock.release();
@@ -3414,7 +3416,7 @@ abstract class ImapHandler {
                 //         change, they SHOULD be included as part of the FETCH responses."
                 // FIXME: optimize by doing a single mark-read op on multiple messages
                 if (markMessage) {
-                    mbox.alterTag(getContext(), i4msg.msgId, i4msg.getType(), Flag.ID_UNREAD, false, null);
+                    mbox.alterTag(getContext(), i4msg.msgId, i4msg.getType(), Flag.FlagInfo.UNREAD, false, null);
                 }
                 ImapFolder.DirtyMessage unsolicited = i4folder.undirtyMessage(i4msg);
                 if ((attributes & FETCH_FLAGS) != 0 || unsolicited != null) {
@@ -3425,7 +3427,7 @@ abstract class ImapHandler {
                 //                FETCH request, the server MUST include the MODSEQ fetch response
                 //                data items in all subsequent unsolicited FETCH responses."
                 if ((attributes & FETCH_MODSEQ) != 0 || (modseqEnabled && unsolicited != null)) {
-                    int modseq = unsolicited == null ? i4msg.getModseq(item, i4folder.getTagset()) : unsolicited.modseq;
+                    int modseq = unsolicited == null ? i4msg.getModseq(item) : unsolicited.modseq;
                     result.print((empty ? "" : " ") + "MODSEQ (" + modseq + ')');  empty = false;
                 }
             } catch (ImapPartSpecifier.BinaryDecodingException e) {
@@ -3534,8 +3536,9 @@ abstract class ImapHandler {
         //                  while the mailbox is selected:
         //                     -  a STORE command with the UNCHANGEDSINCE modifier
         //                  MUST reject any such command with the tagged BAD response."
-        if (!modseqEnabled && modseq >= 0)
+        if (!modseqEnabled && modseq >= 0) {
             throw new ImapParseException(tag, "NOMODSEQ", "cannot STORE UNCHANGEDSINCE in this mailbox", true);
+        }
         ImapMessageSet modifyConflicts = modseqEnabled ? new ImapMessageSet() : null;
 
         String command = (byUID ? "UID STORE" : "STORE");
@@ -3569,7 +3572,7 @@ abstract class ImapHandler {
 
                 if (i4folder.areTagsDirty()) {
                     sendUntagged("FLAGS (" + StringUtil.join(" ", i4folder.getFlagList(false)) + ')');
-                    i4folder.cleanTags();
+                    i4folder.setTagsDirty(false);
                 }
             } finally {
                 mbox.lock.release();
@@ -3590,15 +3593,16 @@ abstract class ImapHandler {
             }
 
             // if we're doing a STORE FLAGS (i.e. replace), precompute the new set of flags for all the affected messages
-            long tags = 0;  int flags = Flag.BITMASK_UNREAD;  short sflags = 0;
+            List<String> tags = Lists.newArrayList();  int flags = Flag.BITMASK_UNREAD;  short sflags = 0;
             if (operation == StoreAction.REPLACE) {
                 for (ImapFlag i4flag : i4flags) {
-                    if (Tag.validateId(i4flag.mId))
-                        tags = (i4flag.mPositive ? tags | i4flag.mBitmask : tags & ~i4flag.mBitmask);
-                    else if (!i4flag.mPermanent)
+                    if (i4flag.mId > 0) {
+                        tags.add(i4flag.mName);
+                    } else if (!i4flag.mPermanent) {
                         sflags = (byte) (i4flag.mPositive ? sflags | i4flag.mBitmask : sflags & ~i4flag.mBitmask);
-                    else
+                    } else {
                         flags = (int) (i4flag.mPositive ? flags | i4flag.mBitmask : flags & ~i4flag.mBitmask);
+                    }
                 }
             }
 
@@ -3620,7 +3624,7 @@ abstract class ImapHandler {
                         MailItem[] items = mbox.getItemById(getContext(), idlist, MailItem.Type.UNKNOWN);
                         for (int idx = items.length - 1; idx >= 0; idx--) {
                             ImapMessage i4msg = i4list.get(idx);
-                            if (i4msg.getModseq(items[idx], i4folder.getTagset()) > modseq) {
+                            if (i4msg.getModseq(items[idx]) > modseq) {
                                 modifyConflicts.add(i4msg);
                                 i4list.remove(idx);  idlist.remove(idx);
                                 allPresent = false;
@@ -3630,25 +3634,28 @@ abstract class ImapHandler {
 
                     try {
                         // if it was a STORE [+-]?FLAGS.SILENT, temporarily disable notifications
-                        if (silent && !modseqEnabled)
+                        if (silent && !modseqEnabled) {
                             i4folder.disableNotifications();
+                        }
 
                         if (operation == StoreAction.REPLACE) {
                             // replace real tags and flags on all messages
-                            mbox.setTags(getContext(), ArrayUtil.toIntArray(idlist), MailItem.Type.UNKNOWN, flags, tags, null);
+                            mbox.setTags(getContext(), ArrayUtil.toIntArray(idlist), MailItem.Type.UNKNOWN, flags, tags.toArray(new String[tags.size()]), null);
                             // replace session tags on all messages
-                            for (ImapMessage i4msg : i4list)
+                            for (ImapMessage i4msg : i4list) {
                                 i4msg.setSessionFlags(sflags, i4folder);
+                            }
                         } else {
                             for (ImapFlag i4flag : i4flags) {
                                 boolean add = operation == StoreAction.ADD ^ !i4flag.mPositive;
                                 if (i4flag.mPermanent) {
                                     // real tag; do a batch update to the DB
-                                    mbox.alterTag(getContext(), ArrayUtil.toIntArray(idlist), MailItem.Type.UNKNOWN, i4flag.mId, add, null);
+                                    mbox.alterTag(getContext(), ArrayUtil.toIntArray(idlist), MailItem.Type.UNKNOWN, i4flag.mName, add, null);
                                 } else {
                                     // session tag; update one-by-one in memory only
-                                    for (ImapMessage i4msg : i4list)
+                                    for (ImapMessage i4msg : i4list) {
                                         i4msg.setSessionFlags((short) (add ? i4msg.sflags | i4flag.mBitmask : i4msg.sflags & ~i4flag.mBitmask), i4folder);
+                                    }
                                 }
                             }
                         }
@@ -3900,7 +3907,7 @@ abstract class ImapHandler {
 
             if (i4folder.areTagsDirty()) {
                 notifications.add("FLAGS (" + StringUtil.join(" ", i4folder.getFlagList(false)) + ')');
-                i4folder.cleanTags();
+                i4folder.setTagsDirty(false);
             }
 
             int oldRecent = i4folder.getRecentCount();

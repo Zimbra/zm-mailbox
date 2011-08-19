@@ -30,7 +30,6 @@ import org.apache.commons.codec.net.QuotedPrintableCodec;
 import org.json.JSONException;
 
 import com.zimbra.cs.mailbox.Contact;
-import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.Contact.DerefGroupMembersOption;
 import com.zimbra.cs.mime.ParsedContact;
@@ -111,9 +110,11 @@ public class VCard {
         boolean containsParam(String param)  { return params.contains(param); }
         String getParamValue(String pname) {
             pname = pname.toUpperCase() + '=';
-            for (String param : params)
-                if (param.startsWith(pname))
+            for (String param : params) {
+                if (param.startsWith(pname)) {
                     return param.substring(pname.length());
+                }
+            }
             return null;
         }
 
@@ -598,15 +599,14 @@ public class VCard {
         }
 
         if (vcattrs == null || vcattrs.contains("CATEGORIES")) {
-            try {
-                List<Tag> tags = con.getTagList();
-                if (!tags.isEmpty()) {
-                    StringBuilder sbtags = new StringBuilder();
-                    for (Tag tag : tags)
-                        sbtags.append(sbtags.length() == 0 ? "" : ",").append(vcfEncode(tag.getName()));
-                    sb.append("CATEGORIES:").append(sbtags).append("\r\n");
+            String[] tags = con.getTags();
+            if (tags.length > 0) {
+                StringBuilder sbtags = new StringBuilder();
+                for (String tagName : tags) {
+                    sbtags.append(sbtags.length() == 0 ? "" : ",").append(vcfEncode(tagName));
                 }
-            } catch (ServiceException ignored) { }
+                sb.append("CATEGORIES:").append(sbtags).append("\r\n");
+            }
         }
 
         String uid = getUid(con);

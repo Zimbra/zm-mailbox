@@ -31,6 +31,7 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 
+import com.google.common.collect.Lists;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.cs.filter.jsieve.ActionNotify;
 import com.zimbra.cs.filter.jsieve.ActionReply;
@@ -72,7 +73,7 @@ public class ZimbraMailAdapter implements MailAdapter
 {
     private Mailbox mailbox;
     private FilterHandler handler;
-    private String tags;
+    private String[] tags;
     private boolean allowFilterToMountpoint = true;
     
     /**
@@ -382,38 +383,13 @@ public class ZimbraMailAdapter implements MailAdapter
         }
     }
 
-    private String getTags()
-    throws ServiceException {
+    private String[] getTags() {
         if (tags == null) {
-            StringBuilder tagsBuf = null;
+            List<String> taglist = Lists.newArrayList();
             for (Action action : getTagActions()) {
-                String tagName = ((ActionTag) action).getTagName();
-                Tag tag = null;
-                try {
-                    tag = mailbox.getTagByName(tagName);
-                } catch (MailServiceException e) {
-                    if (e.getCode().equals(MailServiceException.NO_SUCH_TAG)) {
-                        ZimbraLog.filter.info("Could not find tag %s.  Automatically creating it.", tagName);
-                        try {
-                            tag = mailbox.createTag(null, tagName, MailItem.DEFAULT_COLOR);
-                        } catch (ServiceException e2) {
-                            ZimbraLog.filter.warn("Could not create tag %s.  Not applying tag.", tagName, e2);
-                        }
-                    }
-                }
-                if (tag != null) {
-                    if (tagsBuf == null) {
-                        tagsBuf = new StringBuilder(Integer.toString(tag.getId()));
-                    } else {
-                        tagsBuf.append(",").append(tag.getId());
-                    }
-                }
+                taglist.add(((ActionTag) action).getTagName());
             }
-            if (tagsBuf == null) {
-                tags = "";
-            } else {
-                tags = tagsBuf.toString();
-            }
+            tags = taglist.toArray(new String[taglist.size()]);
         }
         return tags;
     }

@@ -23,6 +23,8 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxOperation;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
 
@@ -33,6 +35,7 @@ public class AlterItemTag extends RedoableOp {
 
     private int[] mIds;
     private MailItem.Type type;
+    private String mTagName;
     private int mTagId;
     private boolean mTagged;
     private String mConstraint;
@@ -45,12 +48,12 @@ public class AlterItemTag extends RedoableOp {
         mConstraint = null;
     }
 
-    public AlterItemTag(int mailboxId, int[] ids, MailItem.Type type, int tagId, boolean tagged, TargetConstraint tcon) {
+    public AlterItemTag(int mailboxId, int[] ids, MailItem.Type type, String tag, boolean tagged, TargetConstraint tcon) {
         this();
         setMailboxId(mailboxId);
         mIds = ids;
         this.type = type;
-        mTagId = tagId;
+        mTagName = tag;
         mTagged = tagged;
         mConstraint = (tcon == null ? null : tcon.toString());
     }
@@ -59,9 +62,10 @@ public class AlterItemTag extends RedoableOp {
     protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("ids=");
         sb.append(Arrays.toString(mIds)).append(", type=").append(type);
-        sb.append(", tag=").append(mTagId).append(", tagged=").append(mTagged);
-        if (mConstraint != null)
+        sb.append(", tag=").append(mTagName == null ? "" + mTagId : mTagName).append(", tagged=").append(mTagged);
+        if (mConstraint != null) {
             sb.append(", constraint=").append(mConstraint);
+        }
         return sb.toString();
     }
 
@@ -70,7 +74,11 @@ public class AlterItemTag extends RedoableOp {
         boolean hasConstraint = mConstraint != null;
         out.writeInt(-1);
         out.writeByte(type.toByte());
-        out.writeInt(mTagId);
+        if (getVersion().atLeast(1, 33)) {
+            out.writeUTF(mTagName);
+        } else {
+            out.writeInt(mTagId);
+        }
         out.writeBoolean(mTagged);
         out.writeBoolean(hasConstraint);
         if (hasConstraint) {
@@ -91,7 +99,11 @@ public class AlterItemTag extends RedoableOp {
             mIds = new int[] { id };
         }
         type = MailItem.Type.of(in.readByte());
-        mTagId = in.readInt();
+        if (getVersion().atLeast(1, 33)) {
+            mTagName = in.readUTF();
+        } else {
+            mTagId = in.readInt();
+        }
         mTagged = in.readBoolean();
         if (in.readBoolean()) {
             mConstraint = in.readUTF();
@@ -108,6 +120,8 @@ public class AlterItemTag extends RedoableOp {
     public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
 
+        OperationContext octxt = getOperationContext();
+
         TargetConstraint tcon = null;
         if (mConstraint != null) {
             try {
@@ -116,6 +130,11 @@ public class AlterItemTag extends RedoableOp {
                 mLog.warn(e);
             }
         }
-        mbox.alterTag(getOperationContext(), mIds, type, mTagId, mTagged, tcon);
+
+        if (mTagName == null && mTagId != 0) {
+            mTagName = TagUtil.tagIdToName(mbox, octxt, mTagId);
+        }
+
+        mbox.alterTag(octxt, mIds, type, mTagName, mTagged, tcon);
     }
 }

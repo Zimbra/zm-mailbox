@@ -30,6 +30,8 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxOperation;
+import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
@@ -46,7 +48,8 @@ public class CreateContact extends RedoableOp {
     /** Used when this op is read from the redolog. */
     private RedoableOpData mRedoLogContent;
 
-    private String mTags;
+    private String[] mTags;
+    private String mTagIds;
 
     public CreateContact() {
         super(MailboxOperation.CreateContact);
@@ -54,14 +57,14 @@ public class CreateContact extends RedoableOp {
         mFolderId = UNKNOWN_ID;
     }
 
-    public CreateContact(int mailboxId, int folderId, ParsedContact pc, String tags) {
+    public CreateContact(int mailboxId, int folderId, ParsedContact pc, String[] tags) {
         this();
         setMailboxId(mailboxId);
         mId = UNKNOWN_ID;
         mFolderId = folderId;
         mFields = pc.getFields();
         mParsedContact = pc;
-        mTags = tags != null ? tags : "";
+        mTags = tags != null ? tags : new String[0];
     }
 
     public void setContactId(int id) {
@@ -72,9 +75,10 @@ public class CreateContact extends RedoableOp {
         return mId;
     }
 
-    @Override protected String getPrintableData() {
+    @Override
+    protected String getPrintableData() {
         StringBuffer sb = new StringBuffer("folder=").append(mFolderId);
-        sb.append(", tags=\"").append(mTags).append("\"");
+        sb.append(", tags=\"").append(TagUtil.encodeTags(mTags)).append("\"");
         if (mFields != null && mFields.size() > 0) {
             sb.append(", attrs={");
             for (Map.Entry<String, String> entry : mFields.entrySet()) {
@@ -87,11 +91,16 @@ public class CreateContact extends RedoableOp {
         return sb.toString();
     }
 
-    @Override protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override
+    protected void serializeData(RedoLogOutput out) throws IOException {
         out.writeInt(mId);
         out.writeInt(mFolderId);
         out.writeShort((short) -1);
-        out.writeUTF(mTags);
+        if (getVersion().atLeast(1, 33)) {
+            out.writeUTFArray(mTags);
+        } else {
+            out.writeUTF(mTagIds);
+        }
         int numAttrs = mFields != null ? mFields.size() : 0;
         out.writeShort((short) numAttrs);
         if (numAttrs > 0) {
@@ -122,7 +131,11 @@ public class CreateContact extends RedoableOp {
         mId = in.readInt();
         mFolderId = in.readInt();
         in.readShort();
-        mTags = in.readUTF();
+        if (getVersion().atLeast(1, 33)) {
+            mTags = in.readUTFArray();
+        } else {
+            mTagIds = in.readUTF();
+        }
         int numAttrs = in.readShort();
         if (numAttrs > 0) {
             mFields = new HashMap<String, String>(numAttrs);
@@ -153,18 +166,22 @@ public class CreateContact extends RedoableOp {
 
     @Override public void redo() throws Exception {
         int mboxId = getMailboxId();
-        Mailbox mailbox = MailboxManager.getInstance().getMailboxById(mboxId);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+        OperationContext octxt = getOperationContext();
+
+        if (mTags == null && mTagIds != null) {
+            mTags = TagUtil.tagIdStringToNames(mbox, octxt, mTagIds);
+        }
 
         InputStream in = null;
         try {
             in = getAdditionalDataStream();
             ParsedContact pc = new ParsedContact(mFields, in);
-            mailbox.createContact(getOperationContext(), pc, mFolderId, mTags);
+            mbox.createContact(octxt, pc, mFolderId, mTags);
         } catch (ServiceException e) {
             String code = e.getCode();
             if (code.equals(MailServiceException.ALREADY_EXISTS)) {
-                if (mLog.isInfoEnabled())
-                    mLog.info("Contact " + mId + " already exists in mailbox " + mboxId);
+                mLog.info("Contact %d already exists in mailbox %d", mId, mboxId);
             } else {
                 throw e;
             }

@@ -62,9 +62,21 @@ public class GetCalendarItemSummaries extends CalendarRequest {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { };
-    protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
-    protected boolean checkMountpointProxy(Element request)  { return true; }
-    protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
+
+    @Override
+    protected String[] getProxiedIdPath(Element request) {
+        return TARGET_FOLDER_PATH;
+    }
+
+    @Override
+    protected boolean checkMountpointProxy(Element request) {
+        return true;
+    }
+
+    @Override
+    protected String[] getResponseItemPath() {
+        return RESPONSE_ITEM_PATH;
+    }
 
     private static final String DEFAULT_FOLDER = "" + Mailbox.ID_AUTO_INCREMENT;
     
@@ -126,10 +138,11 @@ public class GetCalendarItemSummaries extends CalendarRequest {
             // Duration is null if no DTEND or DURATION was present.  Assume 1 day for all-day
             // events and 1 second for non all-day.  (bug 28615)
             if (defDuration == null && !defaultInvite.isTodo()) {
-                if (defaultInvite.isAllDayEvent())
+                if (defaultInvite.isAllDayEvent()) {
                     defDuration = ParsedDuration.ONE_DAY;
-                else
+                } else {
                     defDuration = ParsedDuration.ONE_SECOND;
+                }
             }
             long defDurationMsecs = 0;
             if (defaultInvite.getStartTime() != null && defDuration != null) {
@@ -139,8 +152,9 @@ public class GetCalendarItemSummaries extends CalendarRequest {
             }
             
             String defaultFba = null;
-            if (calItem instanceof Appointment)
+            if (calItem instanceof Appointment) {
                 defaultFba = ((Appointment) calItem).getEffectiveFreeBusyActual(defaultInvite, null);
+            }
             
             String defaultPtSt = calItem.getEffectivePartStat(defaultInvite, null);
 
@@ -191,12 +205,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
 
                             if (showAll) {
                                 // flags and tags
-                                String flags = calItem.getFlagString();
-                                if (flags != null && !flags.equals(""))
-                                    calItemElem.addAttribute(MailConstants.A_FLAGS, flags);
-                                String tags = calItem.getTagString();
-                                if (tags != null && !tags.equals(""))
-                                    calItemElem.addAttribute(MailConstants.A_TAGS, tags);
+                                ToXML.recordItemTags(calItemElem, calItem, octxt);
                             }
 
                             // Organizer
@@ -350,12 +359,7 @@ public class GetCalendarItemSummaries extends CalendarRequest {
 
                     if (showAll) {
                         // flags and tags
-                        String flags = calItem.getFlagString();
-                        if (flags != null && !flags.equals(""))
-                            calItemElem.addAttribute(MailConstants.A_FLAGS, flags);
-                        String tags = calItem.getTagString();
-                        if (tags != null && !tags.equals(""))
-                            calItemElem.addAttribute(MailConstants.A_TAGS, tags);
+                        ToXML.recordItemTags(calItemElem, calItem, octxt);
                     }
 
                     // Organizer

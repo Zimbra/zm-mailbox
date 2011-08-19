@@ -39,6 +39,7 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.session.SoapSession;
@@ -130,8 +131,14 @@ public class ItemAction extends MailDocumentHandler {
 
             // set additional parameters (depends on op type)
             if (opStr.equals(OP_TAG)) {
-                int tagId = (int) action.getAttributeLong(MailConstants.A_TAG);
-                localResults = ItemActionHelper.TAG(octxt, mbox, responseProto, local, type, flagValue, tcon, tagId).getResult();
+                String tagName = action.getAttribute(MailConstants.A_TAG_NAMES, null);
+                if (tagName == null) {
+                    if (action.getAttribute(MailConstants.A_TAG) == null) {
+                        throw ServiceException.INVALID_REQUEST("missing required attribute: " + MailConstants.A_TAG_NAMES, null);
+                    }
+                    tagName = TagUtil.tagIdToName(mbox, octxt, (int) action.getAttributeLong(MailConstants.A_TAG));
+                }
+                localResults = ItemActionHelper.TAG(octxt, mbox, responseProto, local, type, tagName, flagValue, tcon).getResult();
             } else if (opStr.equals(OP_FLAG)) {
                 localResults = ItemActionHelper.FLAG(octxt, mbox, responseProto, local, type, flagValue, tcon).getResult();
             } else if (opStr.equals(OP_PRIORITY)) {
@@ -168,16 +175,16 @@ public class ItemAction extends MailDocumentHandler {
             } else if (opStr.equals(OP_UPDATE)) {
                 String folderId = action.getAttribute(MailConstants.A_FOLDER, null);
                 ItemId iidFolder = new ItemId(folderId == null ? "-1" : folderId, zsc);
-                if (!iidFolder.belongsTo(mbox))
+                if (!iidFolder.belongsTo(mbox)) {
                     throw ServiceException.INVALID_REQUEST("cannot move item between mailboxes", null);
-                else if (folderId != null && iidFolder.getId() <= 0)
+                } else if (folderId != null && iidFolder.getId() <= 0) {
                     throw MailServiceException.NO_SUCH_FOLDER(iidFolder.getId());
-                String name  = action.getAttribute(MailConstants.A_NAME, null);
+                }
+                String name = action.getAttribute(MailConstants.A_NAME, null);
                 String flags = action.getAttribute(MailConstants.A_FLAGS, null);
-                String tags  = action.getAttribute(MailConstants.A_TAGS, null);
+                String[] tags = TagUtil.parseTags(action, mbox, octxt);
                 Color color = getColor(action);
-                localResults = ItemActionHelper.UPDATE(octxt, mbox, responseProto, local, type, tcon, name, iidFolder, flags,
-                        tags, color).getResult();
+                localResults = ItemActionHelper.UPDATE(octxt, mbox, responseProto, local, type, tcon, name, iidFolder, flags, tags, color).getResult();
             } else if (opStr.equals(OP_LOCK)) {
                 localResults = ItemActionHelper.LOCK(octxt, mbox, responseProto, local, type, tcon).getResult();
             } else if (opStr.equals(OP_UNLOCK)) {
@@ -198,12 +205,13 @@ public class ItemAction extends MailDocumentHandler {
     public static Color getColor(Element action) throws ServiceException {
         String rgb = action.getAttribute(MailConstants.A_RGB, null);
         byte c = (byte) action.getAttributeLong(MailConstants.A_COLOR, -1);
-        if (rgb == null && c < 0)
+        if (rgb == null && c < 0) {
             return new Color(-1);  // it will default to ORANGE
-        if (rgb == null)
+        } else if (rgb == null) {
             return new Color(c);
-        else
+        } else {
             return new Color(rgb);
+        }
     }
 
     private Account forceRemoteSession(ZimbraSoapContext zsc, Map<String, Object> context, OperationContext octxt, String op, Element action)

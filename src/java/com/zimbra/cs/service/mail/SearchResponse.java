@@ -230,7 +230,7 @@ final class SearchResponse {
         if (inline && msg.isUnread() && params.getMarkRead()) {
             // Mark the message as READ
             try {
-                msg.getMailbox().alterTag(octxt, msg.getId(), msg.getType(), Flag.ID_UNREAD, false);
+                msg.getMailbox().alterTag(octxt, msg.getId(), msg.getType(), Flag.FlagInfo.UNREAD, false, null);
             } catch (ServiceException e) {
                 if (e.getCode().equals(ServiceException.PERM_DENIED)) {
                     LOG.info("no permissions to mark message as read (ignored): %d", msg.getId());
@@ -284,11 +284,11 @@ final class SearchResponse {
     }
 
     private Element add(ContactHit hit) throws ServiceException {
-        return ToXML.encodeContact(element, ifmt, hit.getContact(), true, null);
+        return ToXML.encodeContact(element, ifmt, octxt, hit.getContact(), true, null);
     }
 
     private Element add(NoteHit hit) throws ServiceException {
-        return ToXML.encodeNote(element, ifmt, hit.getNote());
+        return ToXML.encodeNote(element, ifmt, octxt, hit.getNote());
     }
 
     private Element add(DocumentHit hit) throws ServiceException {

@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.imap;
 
+import com.google.common.collect.Sets;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobBuilder;
 import com.zimbra.cs.store.StoreManager;
@@ -43,6 +44,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.BufferedInputStream;
@@ -61,7 +63,7 @@ class AppendMessage {
     private Blob content;
     private List<String> flagNames;
     private int flags = Flag.BITMASK_UNREAD;
-    private long tags;
+    private Set<String> tags = Sets.newHashSetWithExpectedSize(3);
     private short sflags;
 
     public static AppendMessage parse(ImapHandler handler, String tag, ImapRequest req)
@@ -92,16 +94,18 @@ class AppendMessage {
             catenate = true;
             parts = new ArrayList<Part>(5);
             while (req.peekChar() != ')') {
-                if (!parts.isEmpty())
+                if (!parts.isEmpty()) {
                     req.skipSpace();
+                }
                 String type = req.readATOM();
                 req.skipSpace();
-                if (type.equals("TEXT"))
+                if (type.equals("TEXT")) {
                     parts.add(new Part(req.readLiteral()));
-                else if (type.equals("URL"))
+                } else if (type.equals("URL")) {
                     parts.add(new Part(new ImapURL(tag, handler, req.readAstring())));
-                else
+                } else {
                     throw new ImapParseException(tag, "unknown CATENATE cat-part: " + type);
+                }
             }
             req.skipChar(')');
         } else {
@@ -115,20 +119,27 @@ class AppendMessage {
             return;
 
         for (String name : flagNames) {
-            ImapFlagCache.ImapFlag i4flag = flagSet.getByName(name);
-            if (i4flag != null && !i4flag.mListed)
+            ImapFlagCache.ImapFlag i4flag = flagSet.getByImapName(name);
+            if (i4flag != null && !i4flag.mListed) {
                 i4flag = null;
-            else if (i4flag == null && !name.startsWith("\\"))
-                i4flag = tagSet.getByName(name);
+            } else if (i4flag == null && !name.startsWith("\\")) {
+                i4flag = tagSet.getByImapName(name);
+            }
 
-            if (i4flag == null)
+            if (i4flag == null) {
                 i4flag = tagSet.createTag(mbox, handler.getContext(), name, newTags);
+            }
 
             if (i4flag != null) {
-                if (!i4flag.mPermanent)               sflags |= i4flag.mBitmask;
-                else if (Tag.validateId(i4flag.mId))  tags |= i4flag.mBitmask;
-                else if (i4flag.mPositive)            flags |= i4flag.mBitmask;
-                else                                  flags &= ~i4flag.mBitmask;
+                if (!i4flag.mPermanent) {
+                    sflags |= i4flag.mBitmask;
+                } else if (i4flag.mId > 0) {
+                    tags.add(i4flag.mName);
+                } else if (i4flag.mPositive) {
+                    flags |= i4flag.mBitmask;
+                } else {
+                    flags &= ~i4flag.mBitmask;
+                }
             }
         }
         flagNames = null;
@@ -137,10 +148,11 @@ class AppendMessage {
     public int storeContent(Object mboxObj, Object folderObj) throws IOException, ServiceException {
         try {
             checkDate(content);
-            if (mboxObj instanceof Mailbox)
+            if (mboxObj instanceof Mailbox) {
                 return store((Mailbox) mboxObj, (Folder) folderObj);
-            else
+            } else {
                 return store((ZMailbox) mboxObj, (ZFolder) folderObj);
+            }
         } finally {
             cleanup();
         }
@@ -158,7 +170,7 @@ class AppendMessage {
             }
         } catch (Exception e) { }
 
-        DeliveryOptions dopt = new DeliveryOptions().setFolderId(folder).setNoICal(true).setFlags(flags).setTags(Tag.bitmaskToTags(tags));
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(folder).setNoICal(true).setFlags(flags).setTags(tags);
         Message msg = mbox.addMessage(handler.getContext(), pm, dopt, null);
         if (msg != null && sflags != 0 && handler.getState() == ImapHandler.State.SELECTED) {
             ImapFolder selectedFolder = handler.getSelectedFolder();
@@ -166,8 +178,9 @@ class AppendMessage {
             //   (note that this leaves session flags unset on remote appended messages)
             if (selectedFolder != null) {
                 ImapMessage i4msg = selectedFolder.getById(msg.getId());
-                if (i4msg != null)
+                if (i4msg != null) {
                     i4msg.setSessionFlags(sflags, selectedFolder);
+                }
             }
         }
         return msg == null ? -1 : msg.getId();
@@ -201,8 +214,9 @@ class AppendMessage {
             }
             return bb.finish();
         } finally {
-            for (Part part : parts)
+            for (Part part : parts) {
                 part.cleanup();
+            }
             parts = null;
         }
     }
@@ -224,8 +238,9 @@ class AppendMessage {
 
     private void checkDate(Blob blob) throws IOException, ServiceException {
         // if we're using Thunderbird, try to set INTERNALDATE to the message's Date: header
-        if (date == null && getCredentials().isHackEnabled(ImapCredentials.EnabledHack.THUNDERBIRD))
+        if (date == null && getCredentials().isHackEnabled(ImapCredentials.EnabledHack.THUNDERBIRD)) {
             date = getSentDate(blob);
+        }
 
         // server uses UNIX time, so range-check specified date (is there a better place for this?)
         // FIXME: Why is this different from INTERNALDATE range check?
@@ -277,15 +292,17 @@ class AppendMessage {
         }
 
         InputStream getInputStream() throws IOException, ImapParseException {
-            if (literal != null)
+            if (literal != null) {
                 return literal.getInputStream();
-            else
+            } else {
                 return url.getContentAsStream(handler, handler.getCredentials(), tag).getSecond();
+            }
         }
 
         void cleanup() {
-            if (literal != null)
+            if (literal != null) {
                 literal.cleanup();
+            }
         }
     }
 }

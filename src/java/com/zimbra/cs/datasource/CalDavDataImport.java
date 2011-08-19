@@ -586,8 +586,7 @@ public class CalDavDataImport extends MailItemImport {
                 ZimbraLog.datasource.warn("Error parsing appointment ", e);
                 return null;
             }
-            mi = mbox.setCalendarItem(octxt, where.getId(), 0, 0,
-                    main, exceptions, null, CalendarItem.NEXT_ALARM_KEEP_CURRENT);
+            mi = mbox.setCalendarItem(octxt, where.getId(), 0, null, main, exceptions, null, CalendarItem.NEXT_ALARM_KEEP_CURRENT);
             dsItem.itemId = mi.getId();
             dsItem.folderId = mi.getFolderId();
             if (isCreate) {
@@ -608,6 +607,7 @@ public class CalDavDataImport extends MailItemImport {
         }
         return mi;
     }
+
     private void sync(OperationContext octxt, CalendarFolder cf) throws ServiceException, IOException, DavException {
         Folder syncFolder = cf.folder;
         int lastSync = (int)syncFolder.getLastSyncDate();  // hack alert: caldav import uses sync date field to store sync token

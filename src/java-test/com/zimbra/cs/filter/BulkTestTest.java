@@ -22,6 +22,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -67,7 +68,7 @@ public final class BulkTestTest {
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         Message msg = mbox.getMessageById(null, ids.get(0).getId());
-        Assert.assertEquals("bulk", msg.getTagList().get(0).getName());
+        Assert.assertEquals("bulk", ArrayUtil.getFirstElement(msg.getTags()));
 
         // X-Report-Abuse
         ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
@@ -75,7 +76,7 @@ public final class BulkTestTest {
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         msg = mbox.getMessageById(null, ids.get(0).getId());
-        Assert.assertEquals("bulk", msg.getTagList().get(0).getName());
+        Assert.assertEquals("bulk", ArrayUtil.getFirstElement(msg.getTags()));
 
         // X-CampaignId
         ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
@@ -83,7 +84,7 @@ public final class BulkTestTest {
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         msg = mbox.getMessageById(null, ids.get(0).getId());
-        Assert.assertEquals("bulk", msg.getTagList().get(0).getName());
+        Assert.assertEquals("bulk", ArrayUtil.getFirstElement(msg.getTags()));
     }
 
 }

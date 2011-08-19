@@ -38,6 +38,7 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPendingAclPush;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.imap.ImapSession;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.session.PendingModifications.Change;
@@ -62,13 +63,15 @@ public class Folder extends MailItem {
         }
 
         public boolean alreadySeen(String guid, Date date) {
-            if (date != null)
+            if (date != null) {
                 return lastDate >= date.getTime();
-            if (stop)
+            } else if (stop) {
                 return true;
-            if (guid == null || lastGuid == null || !guid.trim().equalsIgnoreCase(lastGuid))
+            } else if (guid == null || lastGuid == null || !guid.trim().equalsIgnoreCase(lastGuid)) {
                 return false;
-            return (stop = true);
+            } else {
+                return (stop = true);
+            }
         }
 
         public long getLastSyncDate() { return lastDate; }
@@ -78,7 +81,7 @@ public class Folder extends MailItem {
     public static final byte FOLDER_DONT_TRACK_COUNTS = 0x02;
 
     protected byte    attributes;
-    protected MailItem.Type defaultView;
+    protected Type    defaultView;
     private List<Folder> subfolders;
     private long      totalSize;
     private Folder    parent;
@@ -90,7 +93,7 @@ public class Folder extends MailItem {
     private int       imapRECENTCutoff;
     private int       deletedCount;
     private int       deletedUnreadCount;
-    private long conversationCount = -1;
+    private long      conversationCount = -1;
     private RetentionPolicy retentionPolicy;
 
     Folder(Mailbox mbox, UnderlyingData ud) throws ServiceException {
@@ -105,7 +108,7 @@ public class Folder extends MailItem {
                 throw new IllegalArgumentException();
         }
 
-        assert(retentionPolicy != null); // Should have been set in decodeMetadata().
+        assert retentionPolicy != null; // Should have been set in decodeMetadata().
     }
 
     @Override public String getSender() {
@@ -117,8 +120,9 @@ public class Folder extends MailItem {
      *  root folder ({@link Mailbox#ID_FOLDER_USER_ROOT}), which has the path
      *  <tt>"/"</tt>.  So the Inbox's path is <tt>"/Inbox"</tt>, etc. */
     @Override public String getPath() {
-        if (mId == Mailbox.ID_FOLDER_ROOT || mId == Mailbox.ID_FOLDER_USER_ROOT)
+        if (mId == Mailbox.ID_FOLDER_ROOT || mId == Mailbox.ID_FOLDER_USER_ROOT) {
             return "/";
+        }
         String parentPath = parent.getPath();
         return parentPath + (parentPath.equals("/") ? "" : "/") + getName();
     }
@@ -368,7 +372,7 @@ public class Folder extends MailItem {
         if (granted != null)
             return (short) (granted.shortValue() & rightsNeeded);
         // no ACLs apply; can we check parent folder for inherited rights?
-        if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(Flag.ID_NO_INHERIT))
+        if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(Flag.FlagInfo.NO_INHERIT))
             return 0;
         return parent.checkACL(rightsNeeded, authuser, asAdmin);
     }
@@ -476,10 +480,15 @@ public class Folder extends MailItem {
     /** Returns a copy of the ACL that applies to the folder (possibly
      *  inherited from a parent), or <tt>null</tt> if one is not set. */
     public ACL getEffectiveACL() {
-        if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(Flag.ID_NO_INHERIT) || parent == null) {
+        if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(Flag.FlagInfo.NO_INHERIT) || parent == null) {
             return getACL();
         }
         return parent.getEffectiveACL();
+    }
+
+    /** Returns the retention policy for this folder.  Does not return {@code null}. */
+    public RetentionPolicy getRetentionPolicy() {
+        return retentionPolicy;
     }
 
     public void setRetentionPolicy(RetentionPolicy rp)
@@ -487,18 +496,10 @@ public class Folder extends MailItem {
         if (!canAccess(ACL.RIGHT_ADMIN)) {
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
         }
-        markItemModified(Change.MODIFIED_RETENTION_POLICY);
-        if (rp == null) {
-            retentionPolicy = new RetentionPolicy();
-        } else {
-            retentionPolicy = rp;
-        }
-        saveMetadata();
-    }
 
-    /** Returns the retention policy for this folder.  Does not return {@code null}. */
-    public RetentionPolicy getRetentionPolicy() {
-        return retentionPolicy;
+        markItemModified(Change.MODIFIED_RETENTION_POLICY);
+        retentionPolicy = rp == null ? new RetentionPolicy() : rp;
+        saveMetadata();
     }
 
     /** Returns this folder's parent folder.  The root folder's parent is
@@ -661,8 +662,9 @@ public class Folder extends MailItem {
             deletedUnreadCount = Math.min(Math.max(0, deletedUnreadCount + deletedDelta), mData.unreadCount);
         }
 
-        if (delta != 0)
+        if (delta != 0) {
             updateHighestMODSEQ();
+        }
     }
 
     /** Sets the folder's UIDNEXT item ID highwater mark to one more than
@@ -883,7 +885,7 @@ public class Folder extends MailItem {
         data.name = name;
         data.setSubject(name);
         data.metadata = encodeMetadata(color, 1, custom, attributes, view, null, new SyncData(url), id + 1, 0,
-                mbox.getOperationChangeID(), -1, 0, 0, 0);
+                mbox.getOperationChangeID(), -1, 0, 0, 0, null);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("adding folder %s: id=%d, parentId=%d.", name, data.id, data.parentId);
         new DbMailItem(mbox).create(data);
@@ -997,12 +999,13 @@ public class Folder extends MailItem {
      * @perms {@link ACL#RIGHT_READ} on the folder,
      *        {@link ACL#RIGHT_WRITE} on all affected messages. */
     @Override void alterUnread(boolean unread) throws ServiceException {
-        if (unread)
+        if (unread) {
             throw ServiceException.INVALID_REQUEST("folders can only be marked read", null);
-        if (!canAccess(ACL.RIGHT_READ))
+        } else if (!canAccess(ACL.RIGHT_READ)) {
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the folder");
-        if (!isUnread())
+        } else if (!isUnread()) {
             return;
+        }
 
         // first, fault in all the conversations for the folder's unread messages
         //   so that we don't fetch them one by one during the updateUnread()
@@ -1010,8 +1013,9 @@ public class Folder extends MailItem {
         if (canAccess(ACL.RIGHT_WRITE)) {
             Set<Integer> conversations = new HashSet<Integer>(unreaddata.size());
             for (UnderlyingData data : unreaddata) {
-                if (data.parentId > 0)
+                if (data.parentId > 0) {
                     conversations.add(data.parentId);
+                }
             }
             mMailbox.getItemById(conversations, Type.CONVERSATION);
         }
@@ -1019,32 +1023,24 @@ public class Folder extends MailItem {
         // mark all messages in this folder as read in memory; this implicitly
         //   decrements the unread count for its conversation, folder and tags
         List<Integer> targets = new ArrayList<Integer>();
-        boolean missed = false;
         for (UnderlyingData data : unreaddata) {
             Message msg = mMailbox.getMessage(data);
             if (msg.checkChangeID() || !msg.canAccess(ACL.RIGHT_WRITE)) {
-                msg.updateUnread(-1, msg.isTagged(Flag.ID_DELETED) ? -1 : 0);
+                msg.updateUnread(-1, msg.isTagged(Flag.FlagInfo.DELETED) ? -1 : 0);
                 msg.mData.metadataChanged(mMailbox);
                 targets.add(msg.getId());
-            } else {
-                missed = true;
             }
         }
 
         // mark all messages in this folder as read in the database
-        if (!missed) {
-            if (ZimbraLog.mailop.isDebugEnabled())
-                ZimbraLog.mailop.debug("marking all messages in " + getMailopContext(this) + " as " + (unread ? "unread" : "read"));
-            DbMailItem.alterUnread(this, unread);
-        } else {
-            if (ZimbraLog.mailop.isDebugEnabled() && targets.size() > 0) {
-                String state = unread ? "unread" : "read";
-                String context = getMailopContext(this);
-                for (List<Integer> ids : ListUtil.split(targets, 200))
-                    ZimbraLog.mailop.debug("marking messages in %s as %s.  ids: %s", context, state, StringUtil.join(",", ids));
+        if (ZimbraLog.mailop.isDebugEnabled() && targets.size() > 0) {
+            String state = unread ? "unread" : "read";
+            String context = getMailopContext(this);
+            for (List<Integer> ids : ListUtil.split(targets, 200)) {
+                ZimbraLog.mailop.debug("marking messages in %s as %s.  ids: %s", context, state, StringUtil.join(",", ids));
             }
-            DbMailItem.alterUnread(mMailbox, targets, unread);
         }
+        DbMailItem.alterUnread(mMailbox, targets, unread);
     }
 
     /** Tags or untags a folder.  Persists the change to the database and
@@ -1087,7 +1083,7 @@ public class Folder extends MailItem {
         if (ZimbraLog.mailop.isDebugEnabled()) {
             ZimbraLog.mailop.debug("setting " + getMailopContext(tag) + " for " + getMailopContext(this));
         }
-        DbMailItem.alterTag(tag, Arrays.asList(mId), newValue);
+        DbTag.alterTag(tag, Arrays.asList(mId), newValue);
 
         if (isNoInheritFlag) {
             markItemModified(Change.MODIFIED_ACL);
@@ -1324,8 +1320,8 @@ public class Folder extends MailItem {
         // get the full list of things that are being removed
         boolean allFolders = (folder == null);
         List<Folder> folders = (allFolders ? null : folder.getSubfolderHierarchy());
-        PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, null, (int) (beforeDate / 1000), allFolders, unread, useChangeDate, maxItems);
-        delete(mbox, info, null, MailItem.DeleteScope.ENTIRE_ITEM, false);
+        PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, (int) (beforeDate / 1000), allFolders, unread, useChangeDate, maxItems);
+        delete(mbox, info, null, DeleteScope.ENTIRE_ITEM, false);
 
         if (deleteEmptySubfolders) {
             // Iterate folder list in order of decreasing depth.
@@ -1362,31 +1358,32 @@ public class Folder extends MailItem {
         // avoid a painful data migration...
         Type view;
         switch (mId) {
-        case Mailbox.ID_FOLDER_INBOX:
-        case Mailbox.ID_FOLDER_SPAM:
-        case Mailbox.ID_FOLDER_SENT:
-        case Mailbox.ID_FOLDER_DRAFTS:
-            view = Type.MESSAGE;
-            break;
-        case Mailbox.ID_FOLDER_CALENDAR:
-            view = Type.APPOINTMENT;
-            break;
-        case Mailbox.ID_FOLDER_TASKS:
-            view = Type.TASK;
-            break;
-        case Mailbox.ID_FOLDER_AUTO_CONTACTS:
-        case Mailbox.ID_FOLDER_CONTACTS:
-            view = Type.CONTACT;
-            break;
-        case Mailbox.ID_FOLDER_IM_LOGS:
-            view = Type.MESSAGE;
-            break;
-        default:
-            view = Type.UNKNOWN;
-            break;
+            case Mailbox.ID_FOLDER_INBOX:
+            case Mailbox.ID_FOLDER_SPAM:
+            case Mailbox.ID_FOLDER_SENT:
+            case Mailbox.ID_FOLDER_DRAFTS:
+                view = Type.MESSAGE;
+                break;
+            case Mailbox.ID_FOLDER_CALENDAR:
+                view = Type.APPOINTMENT;
+                break;
+            case Mailbox.ID_FOLDER_TASKS:
+                view = Type.TASK;
+                break;
+            case Mailbox.ID_FOLDER_AUTO_CONTACTS:
+            case Mailbox.ID_FOLDER_CONTACTS:
+                view = Type.CONTACT;
+                break;
+            case Mailbox.ID_FOLDER_IM_LOGS:
+                view = Type.MESSAGE;
+                break;
+            default:
+                view = Type.UNKNOWN;
+                break;
         }
         byte bview = (byte) meta.getLong(Metadata.FN_VIEW, -1);
         defaultView = bview >= 0 ? Type.of(bview) : view;
+
         attributes  = (byte) meta.getLong(Metadata.FN_ATTRS, 0);
         totalSize   = meta.getLong(Metadata.FN_TOTAL_SIZE, 0L);
         imapUIDNEXT = (int) meta.getLong(Metadata.FN_UIDNEXT, 0);
@@ -1400,11 +1397,12 @@ public class Folder extends MailItem {
             syncData = new SyncData(meta.get(Metadata.FN_URL, null), meta.get(Metadata.FN_SYNC_GUID, null),
                     meta.getLong(Metadata.FN_SYNC_DATE, 0));
         }
+
         MetadataList mlistACL = meta.getList(Metadata.FN_RIGHTS, true);
         if (mlistACL != null) {
             ACL acl = new ACL(mlistACL);
             rights = acl.isEmpty() ? null : acl;
-            if (!isTagged(Flag.ID_NO_INHERIT)) {
+            if (!isTagged(Flag.FlagInfo.NO_INHERIT)) {
                 alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
             }
         }
@@ -1421,51 +1419,62 @@ public class Folder extends MailItem {
     Metadata encodeMetadata(Metadata meta) {
         Metadata m = encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, attributes, defaultView, rights, syncData,
                 imapUIDNEXT, totalSize, imapMODSEQ, imapRECENT, imapRECENTCutoff, deletedCount,
-                deletedUnreadCount);
-        if (retentionPolicy.isSet()) {
-            m.put(Metadata.FN_RETENTION_POLICY, RetentionPolicyManager.toMetadata(retentionPolicy, true));
-        }
+                deletedUnreadCount, retentionPolicy);
         return m;
     }
 
     private static String encodeMetadata(Color color, int version, CustomMetadata custom, byte attributes, Type view,
             ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq, int imapRecent, int imapRecentCutoff,
-            int deleted, int deletedUnread) {
+            int deleted, int deletedUnread, RetentionPolicy rp) {
         CustomMetadataList extended = (custom == null ? null : custom.asList());
         return encodeMetadata(new Metadata(), color, version, extended, attributes, view, rights, fsd, uidnext,
-                              totalSize, modseq, imapRecent, imapRecentCutoff, deleted, deletedUnread).toString();
+                              totalSize, modseq, imapRecent, imapRecentCutoff, deleted, deletedUnread, rp).toString();
     }
 
     static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended,
             byte attributes, Type view, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq,
-            int imapRecent, int imapRecentCutoff, int deleted, int deletedUnread) {
+            int imapRecent, int imapRecentCutoff, int deleted, int deletedUnread, RetentionPolicy rp) {
         if (view != Type.UNKNOWN) {
             meta.put(Metadata.FN_VIEW, view.toByte());
         }
-        if (attributes != 0)
+        if (attributes != 0) {
             meta.put(Metadata.FN_ATTRS, attributes);
-        if (totalSize > 0)
+        }
+        if (totalSize > 0) {
             meta.put(Metadata.FN_TOTAL_SIZE, totalSize);
-        if (uidnext > 0)
+        }
+        if (uidnext > 0) {
             meta.put(Metadata.FN_UIDNEXT, uidnext);
-        if (modseq > 0)
+        }
+        if (modseq > 0) {
             meta.put(Metadata.FN_MODSEQ, modseq);
-        if (imapRecent > 0)
+        }
+        if (imapRecent > 0) {
             meta.put(Metadata.FN_RECENT, imapRecent);
-        if (imapRecentCutoff > 0)
+        }
+        if (imapRecentCutoff > 0) {
             meta.put(Metadata.FN_RECENT_CUTOFF, imapRecentCutoff);
-        if (rights != null)
+        }
+        if (rights != null) {
             meta.put(Metadata.FN_RIGHTS, rights.encode());
-        if (fsd != null && fsd.url != null && !fsd.url.equals("")) {
+        }
+        if (fsd != null && fsd.url != null && !fsd.url.isEmpty()) {
             meta.put(Metadata.FN_URL, fsd.url);
             meta.put(Metadata.FN_SYNC_GUID, fsd.lastGuid);
         }
-        if (fsd != null && fsd.lastDate > 0)
+        if (fsd != null && fsd.lastDate > 0) {
             meta.put(Metadata.FN_SYNC_DATE, fsd.lastDate);
-        if (deleted > 0)
+        }
+        if (deleted > 0) {
             meta.put(Metadata.FN_DELETED, deleted);
-        if (deletedUnread > 0)
+        }
+        if (deletedUnread > 0) {
             meta.put(Metadata.FN_DELETED_UNREAD, deletedUnread);
+        }
+        if (rp != null && rp.isSet()) {
+            meta.put(Metadata.FN_RETENTION_POLICY, RetentionPolicyManager.toMetadata(rp, true));
+        }
+
         return MailItem.encodeMetadata(meta, color, version, extended);
     }
 

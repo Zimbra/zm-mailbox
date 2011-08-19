@@ -18,6 +18,7 @@ import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.AutoSendDraftTask;
@@ -26,6 +27,7 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.util.ItemId;
@@ -86,7 +88,7 @@ public class SaveDraft extends MailDocumentHandler {
         else if (folderId != null && iidFolder.getId() <= 0)
             throw MailServiceException.NO_SUCH_FOLDER(iidFolder.getId());
         String flags = msgElem.getAttribute(MailConstants.A_FLAGS, null);
-        String tags  = msgElem.getAttribute(MailConstants.A_TAGS, null);
+        String[] tags = TagUtil.parseTags(msgElem, mbox, octxt);
         Color color = ItemAction.getColor(msgElem);
 
         // check to see whether the entire message has been uploaded under separate cover
@@ -137,7 +139,7 @@ public class SaveDraft extends MailDocumentHandler {
             FileUploadServlet.deleteUploads(mimeData.uploads);
 
         // try to set the metadata on the new/revised draft
-        if (folderId != null || flags != null || tags != null || color != null) {
+        if (folderId != null || flags != null || !ArrayUtil.isEmpty(tags) || color != null) {
             try {
                 // best not to fail if there's an error here...
                 ItemActionHelper.UPDATE(octxt, mbox, zsc.getResponseProtocol(), Arrays.asList(msg.getId()),

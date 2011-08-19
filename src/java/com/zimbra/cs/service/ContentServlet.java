@@ -53,6 +53,7 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.util.*;
@@ -144,12 +145,14 @@ public class ContentServlet extends ZimbraServlet {
                     StringBuffer hdr = new StringBuffer();
                     if (sync) {
                         // for sync, return metadata as headers to avoid extra SOAP round-trips
-                        resp.addHeader("X-Zimbra-Tags", item.getTagString());
+                        resp.addHeader("X-Zimbra-Tags", TagUtil.getTagIdString(item));
+                        resp.addHeader("X-Zimbra-Tag-Names", TagUtil.encodeTags(item.getTags()));
                         resp.addHeader("X-Zimbra-Flags", item.getFlagString());
                         resp.addHeader("X-Zimbra-Received", Long.toString(item.getDate()));
                         resp.addHeader("X-Zimbra-Modified", Long.toString(item.getChangeDate()));
                         // also return metadata inline in the message content for now
-                        hdr.append("X-Zimbra-Tags: ").append(item.getTagString()).append("\n");
+                        hdr.append("X-Zimbra-Tags: ").append(TagUtil.getTagIdString(item)).append("\n");
+                        hdr.append("X-Zimbra-Tag-Names: ").append(TagUtil.encodeTags(item.getTags()));
                         hdr.append("X-Zimbra-Flags: ").append(item.getFlagString()).append("\n");
                         hdr.append("X-Zimbra-Received: ").append(item.getDate()).append("\n");
                         hdr.append("X-Zimbra-Modified: ").append(item.getChangeDate()).append("\n");

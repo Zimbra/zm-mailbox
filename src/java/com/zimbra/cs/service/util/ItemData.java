@@ -19,10 +19,12 @@ import java.io.IOException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.google.common.base.Strings;
+import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mailbox.util.TagUtil;
 
 public class ItemData {
     public String sender, extra, flags, path, tags;
@@ -46,7 +48,7 @@ public class ItemData {
             extra = userData;
             flags = mi.getFlagString();
             path = mi.getPath();
-            tagsOldFmt = mi.getTagString();
+            tagsOldFmt = TagUtil.getTagIdString(mi);
             tags = getTagString(mi);
             ud = mi.getUnderlyingData();
         } catch (Exception e) {
@@ -63,7 +65,7 @@ public class ItemData {
                 throw new IOException("unsupported data version");
             ud = new MailItem.UnderlyingData();
             ud.id = json.getInt(Keys.id.toString());
-            ud.type = (byte)json.getInt(Keys.type.toString());
+            ud.type = (byte) json.getInt(Keys.type.toString());
             ud.parentId = json.getInt(Keys.parent_id.toString());
             ud.folderId = json.getInt(Keys.folder_id.toString());
             // indexId and volumeId changed to optional strings from mandatory ints which breaks sync with 5.0 clients
@@ -74,11 +76,8 @@ public class ItemData {
             ud.size = json.getLong(Keys.size.toString());
             ud.setBlobDigest(json.optString(Keys.blob_digest.toString()));
             ud.unreadCount = json.getInt(Keys.unread.toString());
-            ud.setFlags(json.getInt(Keys.flags.toString()) |
-                Flag.BITMASK_UNCACHED);
-            if (!json.isNull(Keys.tags.toString())) {
-                ud.tags = json.getLong(Keys.tags.toString());
-            }
+            ud.setFlags(json.getInt(Keys.flags.toString()) | Flag.BITMASK_UNCACHED);
+//            ud.tags = json.getLong(Keys.tags.toString());
             ud.setSubject(json.optString(Keys.subject.toString()));
             ud.name = json.optString(Keys.name.toString());
             ud.metadata = json.optString(Keys.metadata.toString());
@@ -116,7 +115,7 @@ public class ItemData {
                 putOpt(Keys.blob_digest.toString(), ud.getBlobDigest()).
                 put(Keys.unread.toString(), ud.unreadCount).
                 put(Keys.flags.toString(), ud.getFlags()).
-                put(Keys.tags.toString(), ud.tags).
+//                put(Keys.tags.toString(), ud.getTags()).
                 putOpt(Keys.subject.toString(), ud.getSubject()).
                 putOpt(Keys.name.toString(), ud.name).
                 putOpt(Keys.metadata.toString(), ud.metadata).
@@ -151,19 +150,8 @@ public class ItemData {
         }
     }
 
-    private String getTagString(MailItem mi) throws IOException {
-        String tags = "";
-
-        try {
-            for (Tag tag : mi.getTagList()) {
-                if (tags.length() > 0)
-                    tags += ':';
-                tags += tag.getName();
-            }
-        } catch (Exception e) {
-            throw new IOException("tag error: " + e);
-        }
-        return tags;
+    private String getTagString(MailItem mi) {
+        return Strings.nullToEmpty(DbTag.serializeTags(mi.getTags()));
     }
 
     private boolean isOldTags() {
@@ -180,7 +168,7 @@ public class ItemData {
         }
     }
 
-    public boolean tagsEqual(MailItem mi) throws IOException {
-        return isOldTags() ? tags.equals(mi.getTagString()) : tags.equals(getTagString(mi));
+    public boolean tagsEqual(MailItem mi) {
+        return isOldTags() ? tags.equals(mi.getTags()) : tags.equals(getTagString(mi));
     }
 }

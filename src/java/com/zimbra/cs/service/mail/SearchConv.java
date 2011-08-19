@@ -88,11 +88,11 @@ public final class SearchConv extends Search {
 
                 // filter out IMAP \Deleted messages from the message lists
                 Conversation conv = mbox.getConversationById(octxt, cid.getId());
-                if (conv.isTagged(Flag.ID_DELETED)) {
+                if (conv.isTagged(Flag.FlagInfo.DELETED)) {
                     List<Message> raw = msgs;
                     msgs = new ArrayList<Message>();
                     for (Message msg : raw) {
-                        if (!msg.isTagged(Flag.ID_DELETED)) {
+                        if (!msg.isTagged(Flag.FlagInfo.DELETED)) {
                             msgs.add(msg);
                         }
                     }
@@ -161,7 +161,8 @@ public final class SearchConv extends Search {
      * @throws ServiceException
      */
     private boolean putHits(OperationContext octxt, ItemIdFormatter ifmt, SearchResponse resp, List<Message> msgs,
-            ZimbraQueryResults results, SearchParams params) throws ServiceException {
+            ZimbraQueryResults results, SearchParams params)
+    throws ServiceException {
 
         int offset = params.getOffset();
         int limit = params.getLimit();
@@ -209,7 +210,7 @@ public final class SearchConv extends Search {
         if (inline && msg.isUnread() && params.getMarkRead()) {
             // Mark the message as READ
             try {
-                msg.getMailbox().alterTag(octxt, msg.getId(), msg.getType(), Flag.ID_UNREAD, false);
+                msg.getMailbox().alterTag(octxt, msg.getId(), msg.getType(), Flag.FlagInfo.UNREAD, false, null);
             } catch (ServiceException e) {
                 ZimbraLog.search.warn("problem marking message as read (ignored): %d", msg.getId(), e);
             }

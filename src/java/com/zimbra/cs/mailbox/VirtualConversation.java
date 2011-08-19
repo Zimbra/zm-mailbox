@@ -17,6 +17,7 @@ package com.zimbra.cs.mailbox;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.SortBy;
@@ -43,12 +44,14 @@ public class VirtualConversation extends Conversation {
         return -mId;
     }
 
-    @Override boolean loadSenderList() throws ServiceException {
+    @Override
+    boolean loadSenderList() throws ServiceException {
         mSenderList = new SenderList(getMessage());
         return false;
     }
 
-    @Override SenderList recalculateMetadata(List<Message> msgs) throws ServiceException {
+    @Override
+    SenderList recalculateMetadata(List<Message> msgs) throws ServiceException {
         Message msg = msgs.get(0);
         mData = wrapMessage(msg);
         mExtendedData = MetadataCallback.duringConversationAdd(null, msg);
@@ -85,42 +88,50 @@ public class VirtualConversation extends Conversation {
         data.size = 1;
         data.unreadCount = msg.getUnreadCount();
         data.setFlags(msg.getInternalFlagBitmask());
-        data.tags = msg.getTagBitmask();
+        data.setTags(new Tag.NormalizedTags(msg.getTags()));
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, extended, new SenderList(msg));
         return data;
     }
 
-    @Override void open(String hash) throws ServiceException {
+    @Override
+    void open(String hash) throws ServiceException {
         DbMailItem.openConversation(hash, getMessage());
     }
 
-    @Override void close(String hash) throws ServiceException {
+    @Override
+    void close(String hash) throws ServiceException {
         DbMailItem.closeConversation(hash, getMessage());
     }
 
-    @Override void alterTag(Tag tag, boolean add) throws ServiceException {
+    @Override
+    void alterTag(Tag tag, boolean add) throws ServiceException {
         getMessage().alterTag(tag, add);
     }
 
-    @Override protected void inheritedTagChanged(Tag tag, boolean add) throws ServiceException {
+    @Override
+    protected void inheritedTagChanged(Tag tag, boolean add) throws ServiceException {
         if (tag == null || add == isTagged(tag))
             return;
         markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
         tagChanged(tag, add);
     }
 
-    @Override protected void inheritedCustomDataChanged(Message msg, CustomMetadata custom) {
+    @Override
+    protected void inheritedCustomDataChanged(Message msg, CustomMetadata custom) {
         markItemModified(Change.MODIFIED_METADATA);
         mExtendedData = MetadataCallback.duringConversationAdd(null, msg);
     }
 
-    @Override void addChild(MailItem child) throws ServiceException {
+    @Override
+    void addChild(MailItem child) throws ServiceException {
         throw MailServiceException.CANNOT_PARENT();
     }
 
-    @Override void removeChild(MailItem child) throws ServiceException {
-        if (child.getId() != getMessageId())
+    @Override
+    void removeChild(MailItem child) throws ServiceException {
+        if (child.getId() != getMessageId()) {
             throw MailServiceException.IS_NOT_CHILD();
+        }
         markItemDeleted();
         mMailbox.uncache(this);
     }

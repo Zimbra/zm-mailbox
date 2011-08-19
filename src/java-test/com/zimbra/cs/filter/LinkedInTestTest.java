@@ -22,6 +22,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -68,7 +69,7 @@ public final class LinkedInTestTest {
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         Message msg = mbox.getMessageById(null, ids.get(0).getId());
-        Assert.assertEquals("linkedin", msg.getTagList().get(0).getName());
+        Assert.assertEquals("linkedin", ArrayUtil.getFirstElement(msg.getTags()));
 
         // deals
         ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
@@ -77,7 +78,7 @@ public final class LinkedInTestTest {
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         msg = mbox.getMessageById(null, ids.get(0).getId());
-        Assert.assertEquals("linkedin", msg.getTagList().get(0).getName());
+        Assert.assertEquals("linkedin", ArrayUtil.getFirstElement(msg.getTags()));
     }
 
 }

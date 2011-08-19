@@ -30,10 +30,12 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.Metadata;
+import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.Util;
+import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.redolog.RedoLogInput;
@@ -49,7 +51,8 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
     private String mCalendarItemPartStat = IcalXmlStrMap.PARTSTAT_NEEDS_ACTION;
     private boolean mAttachmentIndexingEnabled;
     private int mFlags;
-    private long mTags;
+    private String[] mTags;
+    private long mTagBitmask;
     private Mailbox.SetCalendarItemData mDefaultInvite;
     private Mailbox.SetCalendarItemData mExceptions[];
     private List<ReplyInfo> mReplies;
@@ -81,8 +84,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         }
     }
 
-    private Mailbox.SetCalendarItemData deserializeSetCalendarItemData(
-            RedoLogInput in, boolean attachmentIndexingEnabled)
+    private Mailbox.SetCalendarItemData deserializeSetCalendarItemData(RedoLogInput in, boolean attachmentIndexingEnabled)
     throws IOException, MessagingException {
         Mailbox.SetCalendarItemData toRet = new Mailbox.SetCalendarItemData();
 
@@ -96,10 +98,11 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
             toRet.invite = Invite.decodeMetadata(mboxId, new Metadata(in.readUTF()), null, localTz);
 
             boolean hasPm;
-            if (getVersion().atLeast(1, 24))
+            if (getVersion().atLeast(1, 24)) {
                 hasPm = in.readBoolean();
-            else
+            } else {
                 hasPm = true;
+            }
             // If version is earlier than 1.24, we always have ParsedMessage array.
             if (hasPm) {
                 long receivedDate = in.readLong();
@@ -123,16 +126,23 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
     @Override protected void serializeData(RedoLogOutput out) throws IOException {
         assert(getMailboxId() != 0);
         out.writeInt(mFolderId);
-        if (getVersion().atLeast(1, 0))
+        if (getVersion().atLeast(1, 0)) {
             out.writeShort((short) -1);
+        }
         out.writeInt(mCalendarItemId);
-        if (getVersion().atLeast(1, 1))
+        if (getVersion().atLeast(1, 1)) {
             out.writeUTF(mCalendarItemPartStat);
-        if (getVersion().atLeast(1, 2))
+        }
+        if (getVersion().atLeast(1, 2)) {
             out.writeBoolean(mAttachmentIndexingEnabled);
+        }
         if (getVersion().atLeast(1, 11)) {
             out.writeInt(mFlags);
-            out.writeLong(mTags);
+            if (getVersion().atLeast(1, 33)) {
+                out.writeUTFArray(mTags);
+            } else {
+                out.writeLong(mTagBitmask);
+            }
         }
 
         boolean hasDefaultInvite = mDefaultInvite != null;
@@ -173,24 +183,32 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
 
     @Override protected void deserializeData(RedoLogInput in) throws IOException {
         mFolderId = in.readInt();
-        if (getVersion().atLeast(1, 0))
+        if (getVersion().atLeast(1, 0)) {
             in.readShort();
+        }
         mCalendarItemId = in.readInt();
-        if (getVersion().atLeast(1, 1))
+        if (getVersion().atLeast(1, 1)) {
             mCalendarItemPartStat = in.readUTF();
-        if (getVersion().atLeast(1, 2))
+        }
+        if (getVersion().atLeast(1, 2)) {
             mAttachmentIndexingEnabled = in.readBoolean();
-        else
+        } else {
             mAttachmentIndexingEnabled = false;
+        }
         if (getVersion().atLeast(1, 11)) {
             mFlags = in.readInt();
-            mTags = in.readLong();
+            if (getVersion().atLeast(1, 33)) {
+                mTags = in.readUTFArray();
+            } else {
+                mTagBitmask = in.readLong();
+            }
         }
 
         Invite tzmapInv = null;
         boolean hasDefaultInvite = true;
-        if (getVersion().atLeast(1, 17))
+        if (getVersion().atLeast(1, 17)) {
             hasDefaultInvite = in.readBoolean();
+        }
         try {
             if (hasDefaultInvite) {
                 mDefaultInvite = deserializeSetCalendarItemData(in, mAttachmentIndexingEnabled);
@@ -249,8 +267,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         }
     }
 
-    public SetCalendarItem(int mailboxId, boolean attachmentIndexingEnabled,
-                           int flags, long tags) {
+    public SetCalendarItem(int mailboxId, boolean attachmentIndexingEnabled, int flags, String[] tags) {
         this();
         setMailboxId(mailboxId);
         mAttachmentIndexingEnabled = attachmentIndexingEnabled;
@@ -282,20 +299,24 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         return mExceptions[exceptionNum];
     }
 
-    @Override public void setCalendarItemAttrs(int calItemId, int folderId) {
+    @Override
+    public void setCalendarItemAttrs(int calItemId, int folderId) {
         mCalendarItemId = calItemId;
         mFolderId = folderId;
     }
 
-    @Override public int getCalendarItemId() {
+    @Override
+    public int getCalendarItemId() {
         return mCalendarItemId;
     }
 
-    @Override public String getCalendarItemPartStat() {
+    @Override
+    public String getCalendarItemPartStat() {
         return mCalendarItemPartStat;
     }
 
-    @Override public void setCalendarItemPartStat(String partStat) {
+    @Override
+    public void setCalendarItemPartStat(String partStat) {
         mCalendarItemPartStat = partStat;
     }
 
@@ -304,18 +325,20 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         return mFolderId;
     }
 
-    @Override protected String getPrintableData() {
+    @Override
+    protected String getPrintableData() {
         StringBuffer toRet = new StringBuffer();
         toRet.append("calItemId=").append(mCalendarItemId);
         toRet.append(", calItemPartStat=").append(mCalendarItemPartStat);
         toRet.append(", folder=").append(mFolderId);
         if (getVersion().atLeast(1, 11)) {
             toRet.append(", flags=").append(mFlags);
-            toRet.append(", tags=").append(mTags);
+            toRet.append(", tags=").append(TagUtil.encodeTags(mTags));
         }
         toRet.append("\n");
-        if (mDefaultInvite != null)
+        if (mDefaultInvite != null) {
             toRet.append("Default=").append(mDefaultInvite.toString()).append("\n");
+        }
         if (mExceptions != null) {
             for (int i = 0; i < mExceptions.length; i++) {
                 toRet.append("Exception").append(i).append("=").append(mExceptions[i].toString()).append("\n");
@@ -332,9 +355,15 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
         return toRet.toString();
     }
 
-    @Override public void redo() throws Exception {
+    @Override
+    public void redo() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        mbox.setCalendarItem(getOperationContext(), mFolderId, mFlags, mTags,
-                             mDefaultInvite, mExceptions, mReplies, mNextAlarm);
+        OperationContext octxt = getOperationContext();
+
+        if (mTags == null && mTagBitmask != 0) {
+            mTags = TagUtil.tagBitmaskToNames(mbox, octxt, mTagBitmask);
+        }
+
+        mbox.setCalendarItem(octxt, mFolderId, mFlags, mTags,mDefaultInvite, mExceptions, mReplies, mNextAlarm);
     }
 }

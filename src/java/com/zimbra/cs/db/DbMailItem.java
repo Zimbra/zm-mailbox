@@ -44,18 +44,17 @@ import org.apache.commons.codec.net.BCodec;
 
 import com.google.common.base.Strings;
 import com.google.common.base.Supplier;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.TimeoutMap;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.imap.ImapMessage;
@@ -76,8 +75,10 @@ import com.zimbra.cs.mailbox.Note;
 import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.VirtualConversation;
+import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mailbox.util.TypedIdList;
 import com.zimbra.cs.pop3.Pop3Message;
+import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
 
@@ -99,16 +100,6 @@ public class DbMailItem {
 
     private static Log sLog = LogFactory.getLog(DbMailItem.class);
 
-    /** Maps the mailbox id to the set of all tag combinations stored for all
-     *  items in the mailbox.  Enables fast database lookup by tag. */
-    private static final Map<Integer, TagsetCache> sTagsetCache =
-        new TimeoutMap<Integer, TagsetCache>(120 * Constants.MILLIS_PER_MINUTE);
-
-    /** Maps the mailbox id to the set of all flag combinations stored for all
-     *  items in the mailbox.  Enables fast database lookup by flag. */
-    private static final Map<Integer, TagsetCache> sFlagsetCache =
-        new TimeoutMap<Integer, TagsetCache>(120 * Constants.MILLIS_PER_MINUTE);
-
     public static final int MAX_SENDER_LENGTH  = 128;
     public static final int MAX_RECIPIENTS_LENGTH = 128;
     public static final int MAX_SUBJECT_LENGTH = 1024;
@@ -119,13 +110,14 @@ public class DbMailItem {
     public static final String MAILBOX_ID = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
     public static final String MAILBOX_ID_VALUE = DebugConfig.disableMailboxGroups ? "" : "?, ";
 
-    private static final int RESULTS_STREAMING_MIN_ROWS = 10000;
+    static final int RESULTS_STREAMING_MIN_ROWS = 10000;
 
     public static final int setMailboxId(PreparedStatement stmt, Mailbox mbox, int pos) throws SQLException {
+        int nextPos = pos;
         if (!DebugConfig.disableMailboxGroups) {
-            stmt.setInt(pos++, mbox.getId());
+            stmt.setInt(nextPos++, mbox.getId());
         }
-        return pos;
+        return nextPos;
     }
 
     public static final String getInThisMailboxAnd(int mboxId, String miAlias, String apAlias) {
@@ -150,10 +142,11 @@ public class DbMailItem {
         DbConnection conn = mailbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            String mailbox_id = DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ";
-            stmt = conn.prepareStatement("INSERT INTO " + getMailItemTableName(mailbox) + "(" + mailbox_id +
+            MailItem.Type type = MailItem.Type.of(data.type);
+
+            stmt = conn.prepareStatement("INSERT INTO " + getMailItemTableName(mailbox) + "(" + MAILBOX_ID +
                     " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest, unread," +
-                    " flags, tags, sender, recipients, subject, name, metadata, mod_metadata, change_date," +
+                    " flags, tag_names, sender, recipients, subject, name, metadata, mod_metadata, change_date," +
                     " mod_content) VALUES (" + MAILBOX_ID_VALUE +
                     "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             int pos = 1;
@@ -185,7 +178,7 @@ public class DbMailItem {
                 stmt.setNull(pos++, Types.VARCHAR);
             }
             stmt.setString(pos++, data.getBlobDigest());
-            switch (MailItem.Type.of(data.type)) {
+            switch (type) {
                 case MESSAGE:
                 case CHAT:
                 case FOLDER:
@@ -196,7 +189,7 @@ public class DbMailItem {
                     break;
             }
             stmt.setInt(pos++, data.getFlags());
-            stmt.setLong(pos++, data.tags);
+            stmt.setString(pos++, DbTag.serializeTags(data.getTags()));
             stmt.setString(pos++, sender);
             stmt.setString(pos++, recipients);
             stmt.setString(pos++, data.getSubject());
@@ -214,13 +207,8 @@ public class DbMailItem {
                 throw ServiceException.FAILURE("failed to create object", null);
             }
 
-            // Track the tags and flags for fast lookup later
-            if (areTagsetsLoaded(mailbox)) {
-                getTagsetCache(conn, mailbox).addTagset(data.tags);
-            }
-            if (areFlagsetsLoaded(mailbox)) {
-                getFlagsetCache(conn, mailbox).addTagset(data.getFlags());
-            }
+            DbTag.storeTagReferences(mailbox, data.id, type, data.getFlags(), data.unreadCount > 0);
+            DbTag.storeTagReferences(mailbox, data.id, type, data.getTags());
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
             if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
@@ -264,8 +252,9 @@ public class DbMailItem {
     public static void copy(MailItem item, int id, Folder folder, int indexId, int parentId, String locator, String metadata, boolean fromDumpster)
     throws ServiceException {
         Mailbox mbox = item.getMailbox();
-        if (id <= 0 || folder == null || parentId == 0)
+        if (id <= 0 || folder == null || parentId == 0) {
             throw ServiceException.FAILURE("invalid data for DB item copy", null);
+        }
 
         checkNamingConstraint(mbox, folder.getId(), item.getName(), id);
 
@@ -278,18 +267,19 @@ public class DbMailItem {
             stmt = conn.prepareStatement("INSERT INTO " + destTable +
                         "(" + mailbox_id +
                         " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
-                        " unread, flags, tags, sender, subject, name, metadata, mod_metadata, change_date, mod_content) " +
+                        " unread, flags, tag_names, sender, subject, name, metadata, mod_metadata, change_date, mod_content) " +
                         "SELECT " + MAILBOX_ID_VALUE +
                         " ?, type, ?, ?, ?, ?, date, size, ?, blob_digest, unread," +
-                        " flags, tags, sender, subject, name, ?, ?, ?, ? FROM " + srcTable +
+                        " flags, tag_names, sender, subject, name, ?, ?, ?, ? FROM " + srcTable +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, id);                            // ID
-            if (parentId <= 0)
+            if (parentId <= 0) {
                 stmt.setNull(pos++, Types.INTEGER);            // PARENT_ID null for messages in virtual convs
-            else
+            } else {
                 stmt.setInt(pos++, parentId);                  //   or, PARENT_ID specified by caller
+            }
             stmt.setInt(pos++, folder.getId());                // FOLDER_ID
             if (indexId == MailItem.IndexStatus.NO.id()) {
                 stmt.setNull(pos++, Types.INTEGER);
@@ -297,10 +287,11 @@ public class DbMailItem {
                 stmt.setInt(pos++, indexId);
             }
             stmt.setInt(pos++, id);                            // IMAP_ID is initially the same as ID
-            if (locator != null)
-                stmt.setString(pos++, locator);      // VOLUME_ID specified by caller
-            else
+            if (locator != null) {
+                stmt.setString(pos++, locator);                // VOLUME_ID specified by caller
+            } else {
                 stmt.setNull(pos++, Types.VARCHAR);            //   or, no VOLUME_ID
+            }
             stmt.setString(pos++, checkMetadataLength(metadata));  // METADATA
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_METADATA
             stmt.setInt(pos++, mbox.getOperationTimestamp());  // CHANGE_DATE
@@ -308,8 +299,12 @@ public class DbMailItem {
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             int num = stmt.executeUpdate();
-            if (num != 1)
+            if (num != 1) {
                 throw ServiceException.FAILURE("failed to create object", null);
+            }
+
+            DbTag.storeTagReferences(mbox, id, item.getType(), item.getInternalFlagBitmask(), item.isUnread());
+            DbTag.storeTagReferences(mbox, id, item.getType(), item.getTags());
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
             if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
@@ -325,8 +320,9 @@ public class DbMailItem {
     public static void copyCalendarItem(CalendarItem calItem, int newId, boolean fromDumpster)
     throws ServiceException {
         Mailbox mbox = calItem.getMailbox();
-        if (newId <= 0)
+        if (newId <= 0) {
             throw ServiceException.FAILURE("invalid data for DB item copy", null);
+        }
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -348,10 +344,11 @@ public class DbMailItem {
                 throw ServiceException.FAILURE("failed to create object", null);
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
-            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
                 throw MailServiceException.ALREADY_EXISTS(newId, e);
-            else
+            } else {
                 throw ServiceException.FAILURE("copying " + calItem.getType() + ": " + calItem.getId(), e);
+            }
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -360,8 +357,9 @@ public class DbMailItem {
     public static void copyRevision(MailItem revision, int newId, String locator, boolean fromDumpster)
     throws ServiceException {
         Mailbox mbox = revision.getMailbox();
-        if (newId <= 0)
+        if (newId <= 0) {
             throw ServiceException.FAILURE("invalid data for DB item copy", null);
+        }
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -379,16 +377,18 @@ public class DbMailItem {
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, newId);
-            if (locator != null)
+            if (locator != null) {
                 stmt.setString(pos++, locator);       // VOLUME_ID specified by caller
-            else
+            } else {
                 stmt.setNull(pos++, Types.VARCHAR);      //   or, no VOLUME_ID
+            }
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, revision.getId());
             stmt.setInt(pos++, revision.getVersion());
             int num = stmt.executeUpdate();
-            if (num != 1)
+            if (num != 1) {
                 throw ServiceException.FAILURE("failed to create object", null);
+            }
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
             if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
@@ -404,8 +404,9 @@ public class DbMailItem {
 
     public static void icopy(MailItem source, UnderlyingData data, boolean shared) throws ServiceException {
         Mailbox mbox = source.getMailbox();
-        if (data == null || data.id <= 0 || data.folderId <= 0 || data.parentId == 0)
+        if (data == null || data.id <= 0 || data.folderId <= 0 || data.parentId == 0) {
             throw ServiceException.FAILURE("invalid data for DB item i-copy", null);
+        }
         checkNamingConstraint(mbox, data.folderId, source.getName(), data.id);
 
         DbConnection conn = mbox.getOperationConnection();
@@ -425,10 +426,10 @@ public class DbMailItem {
             stmt = conn.prepareStatement("INSERT INTO " + table +
                         "(" + mailbox_id +
                         " id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest," +
-                        " unread, flags, tags, sender, subject, name, metadata, mod_metadata, change_date, mod_content) " +
+                        " unread, flags, tag_names, sender, subject, name, metadata, mod_metadata, change_date, mod_content) " +
                         "SELECT " + mailbox_id +
                         " ?, type, parent_id, ?, ?, ?, date, size, ?, blob_digest," +
-                        " unread, " + flags + ", tags, sender, subject, name, metadata, ?, ?, ? FROM " + table +
+                        " unread, " + flags + ", tag_names, sender, subject, name, metadata, ?, ?, ? FROM " + table +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, data.id);                       // ID
@@ -439,10 +440,11 @@ public class DbMailItem {
                 stmt.setInt(pos++, data.indexId);
             }
             stmt.setInt(pos++, data.imapId);                   // IMAP_ID
-            if (data.locator != null)
+            if (data.locator != null) {
                 stmt.setString(pos++, data.locator);           // VOLUME_ID
-            else
+            } else {
                 stmt.setNull(pos++, Types.TINYINT);            //   or, no VOLUME_ID
+            }
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_METADATA
             stmt.setInt(pos++, mbox.getOperationTimestamp());  // CHANGE_DATE
             stmt.setInt(pos++, mbox.getOperationChangeID());   // MOD_CONTENT
@@ -451,10 +453,7 @@ public class DbMailItem {
             stmt.executeUpdate();
             stmt.close();
 
-            boolean needsTag = shared && !source.isTagged(Flag.ID_COPIED);
-
-            if (needsTag && areFlagsetsLoaded(mbox))
-                getFlagsetCache(conn, mbox).addTagset(source.getInternalFlagBitmask() | Flag.BITMASK_COPIED);
+            boolean needsTag = shared && !source.isTagged(Flag.FlagInfo.COPIED);
 
             if (needsTag || source.getParentId() > 0) {
                 boolean altersMODSEQ = source.getParentId() > 0;
@@ -473,8 +472,13 @@ public class DbMailItem {
                 stmt.close();
             }
 
-            if (source instanceof Message && source.getParentId() <= 0)
+            if (source instanceof Message && source.getParentId() <= 0) {
                 changeOpenTargets(source, data.id);
+            }
+
+            MailItem.Type type = MailItem.Type.of(data.type);
+            DbTag.storeTagReferences(mbox, data.id, type, data.getFlags() | (shared ? Flag.BITMASK_COPIED : 0), data.unreadCount > 0);
+            DbTag.storeTagReferences(mbox, data.id, type, data.getTags());
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
             if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
@@ -673,7 +677,7 @@ public class DbMailItem {
     }
 
     public static SetMultimap<MailItem.Type, Integer> getIndexDeferredIds(DbConnection conn, Mailbox mbox)
-            throws ServiceException {
+    throws ServiceException {
         try {
             PreparedStatement stmt = conn.prepareStatement("SELECT type, id FROM " + getMailItemTableName(mbox) +
                     " WHERE " + IN_THIS_MAILBOX_AND + "index_id <= 1"); // 0: deferred, 1: stale
@@ -940,7 +944,7 @@ public class DbMailItem {
             int pos = 1;
             stmt.setInt(pos++, (int) (item.getDate() / 1000));
             stmt.setLong(pos++, item.getSize());
-            stmt.setInt(pos++, item.getInternalFlagBitmask());
+            stmt.setLong(pos++, item.getInternalFlagBitmask());
             stmt.setString(pos++, name);
             stmt.setString(pos++, name);
             stmt.setInt(pos++, folderId);
@@ -954,12 +958,17 @@ public class DbMailItem {
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
+
+            if (mbox.isItemModified(item, Change.MODIFIED_FLAGS)) {
+                DbTag.updateTagReferences(mbox, item.getId(), item.getType(), item.getInternalFlagBitmask(), item.isUnread(), item.getTags());
+            }
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
-            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
                 throw MailServiceException.ALREADY_EXISTS(name, e);
-            else
+            } else {
                 throw ServiceException.FAILURE("writing name for mailbox " + item.getMailboxId() + ", item " + item.getId(), e);
+            }
         } finally {
             DbPool.closeStatement(stmt);
         }
@@ -973,10 +982,10 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                    " SET type = ?, imap_id = ?, index_id = ?, parent_id = ?, date = ?, size = ?, flags = ?, " +
-                    "blob_digest = ?, sender = ?, recipients = ?, subject = ?, name = ?, " +
-                    "metadata = ?, mod_metadata = ?, change_date = ?, mod_content = ?, volume_id = ? WHERE " +
-                    IN_THIS_MAILBOX_AND + "id = ?");
+                    " SET type = ?, imap_id = ?, index_id = ?, parent_id = ?, date = ?, size = ?, flags = ?," +
+                    "  blob_digest = ?, sender = ?, recipients = ?, subject = ?, name = ?," +
+                    "  metadata = ?, mod_metadata = ?, change_date = ?, mod_content = ?, volume_id = ?" +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setByte(pos++, item.getType().toByte());
             if (item.getImapUid() >= 0) {
@@ -997,7 +1006,7 @@ public class DbMailItem {
             }
             stmt.setInt(pos++, (int) (item.getDate() / 1000));
             stmt.setLong(pos++, item.getSize());
-            stmt.setInt(pos++, item.getInternalFlagBitmask());
+            stmt.setLong(pos++, item.getInternalFlagBitmask());
             stmt.setString(pos++, item.getDigest());
             stmt.setString(pos++, item.getSortSender());
             stmt.setString(pos++, item.getSortRecipients());
@@ -1016,9 +1025,8 @@ public class DbMailItem {
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
 
-            // Update the flagset cache.  Assume that the item's in-memory data has already been updated.
-            if (areFlagsetsLoaded(mailbox)) {
-                getFlagsetCache(conn, mailbox).addTagset(item.getInternalFlagBitmask());
+            if (mailbox.isItemModified(item, Change.MODIFIED_FLAGS)) {
+                DbTag.updateTagReferences(mailbox, item.getId(), item.getType(), item.getInternalFlagBitmask(), item.isUnread(), item.getTags());
             }
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
@@ -1043,10 +1051,11 @@ public class DbMailItem {
             int pos = 1;
             stmt.setLong(pos++, item.getSize());
             stmt.setString(pos++, item.getDigest());
-            if (item.getLocator() != null)
+            if (item.getLocator() != null) {
                 stmt.setString(pos++, item.getLocator());
-            else
+            } else {
                 stmt.setNull(pos++, Types.TINYINT);
+            }
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
@@ -1212,205 +1221,6 @@ public class DbMailItem {
         }
     }
 
-    public static void alterTag(MailItem item, Tag tag, boolean add) throws ServiceException {
-        Mailbox mbox = item.getMailbox();
-        if (mbox != tag.getMailbox()) {
-            throw MailServiceException.WRONG_MAILBOX();
-        }
-        if (tag.getId() == Flag.ID_UNREAD) {
-            throw ServiceException.FAILURE("unread state must be updated with alterUnread()", null);
-        }
-        DbConnection conn = mbox.getOperationConnection();
-        PreparedStatement stmt = null;
-        try {
-            boolean isFlag = tag instanceof Flag;
-            boolean altersModseq = !isFlag || (tag.getBitmask() & Flag.FLAGS_SYSTEM) == 0;
-            String column = (isFlag ? "flags" : "tags");
-
-            String primaryUpdate = column + " = " + column + (add ? " + ?" : " - ?");
-            String updateChangeID = (altersModseq ? ", mod_metadata = ?, change_date = ?" : "");
-            String precondition = Db.getInstance().bitAND(column, "?") + (add ? " = 0" : " <> 0");
-
-            String relation;
-            if (item instanceof VirtualConversation) {
-                relation = "id = ?";
-            } else if (item instanceof Conversation) {
-                relation = "parent_id = ?";
-            } else if (item instanceof Folder) {
-                relation = "folder_id = ?";
-            } else if (item instanceof Flag) {
-                relation = Db.getInstance().bitAND("flags", "?") + " <> 0";
-            } else if (item instanceof Tag) {
-                relation = Db.getInstance().bitAND("tags", "?") + " <> 0";
-            } else {
-                relation = "id = ?";
-            }
-
-            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                    " SET " + primaryUpdate + updateChangeID +
-                    " WHERE " + IN_THIS_MAILBOX_AND + precondition + " AND " + relation);
-
-            int pos = 1;
-            stmt.setLong(pos++, tag.getBitmask());
-            if (altersModseq) {
-                stmt.setInt(pos++, mbox.getOperationChangeID());
-                stmt.setInt(pos++, mbox.getOperationTimestamp());
-            }
-            pos = setMailboxId(stmt, mbox, pos);
-            stmt.setLong(pos++, tag.getBitmask());
-            if (item instanceof Tag) {
-                stmt.setLong(pos++, ((Tag) item).getBitmask());
-            } else if (item instanceof VirtualConversation) {
-                stmt.setInt(pos++, ((VirtualConversation) item).getMessageId());
-            } else {
-                stmt.setInt(pos++, item.getId());
-            }
-            stmt.executeUpdate();
-
-            // Update the flagset or tagset cache.  Assume that the item's in-memory
-            // data has already been updated.
-            if (tag instanceof Flag && areFlagsetsLoaded(mbox))
-                getFlagsetCache(conn, mbox).addTagset(item.getInternalFlagBitmask());
-            else if (areTagsetsLoaded(mbox))
-                getTagsetCache(conn, mbox).addTagset(item.getTagBitmask());
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("updating tag data for item " + item.getId(), e);
-        } finally {
-            DbPool.closeStatement(stmt);
-        }
-    }
-
-    public static void alterTag(Tag tag, List<Integer> itemIDs, boolean add) throws ServiceException {
-        if (itemIDs == null || itemIDs.isEmpty()) {
-            return;
-        }
-        Mailbox mbox = tag.getMailbox();
-
-        DbConnection conn = mbox.getOperationConnection();
-        PreparedStatement stmt = null;
-        try {
-            boolean isFlag = tag instanceof Flag;
-            boolean altersModseq = !isFlag || (tag.getBitmask() & Flag.FLAGS_SYSTEM) == 0;
-            String column = (isFlag ? "flags" : "tags");
-
-            String primaryUpdate = column + " = " + column + (add ? " + ?" : " - ?");
-            String updateChangeID = (altersModseq ? ", mod_metadata = ?, change_date = ?" : "");
-            String precondition = Db.getInstance().bitAND(column, "?") + (add ? " = 0" : " <> 0");
-
-            for (int i = 0; i < itemIDs.size(); i += Db.getINClauseBatchSize()) {
-                int count = Math.min(Db.getINClauseBatchSize(), itemIDs.size() - i);
-                stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(tag) +
-                            " SET " + primaryUpdate + updateChangeID +
-                            " WHERE " + IN_THIS_MAILBOX_AND + precondition + " AND " + DbUtil.whereIn("id", count));
-
-                int pos = 1;
-                stmt.setLong(pos++, tag.getBitmask());
-                if (altersModseq) {
-                    stmt.setInt(pos++, mbox.getOperationChangeID());
-                    stmt.setInt(pos++, mbox.getOperationTimestamp());
-                }
-                pos = setMailboxId(stmt, mbox, pos);
-                stmt.setLong(pos++, tag.getBitmask());
-                for (int index = i; index < i + count; index++) {
-                    stmt.setInt(pos++, itemIDs.get(index));
-                }
-                stmt.executeUpdate();
-                stmt.close();
-                stmt = null;
-            }
-
-            // Update the flagset or tagset cache.  Assume that the item's in-memory
-            // data has already been updated.
-            if (tag instanceof Flag && areFlagsetsLoaded(mbox)) {
-                getFlagsetCache(conn, mbox).applyMask(tag.getBitmask(), add);
-            } else if (areTagsetsLoaded(mbox)) {
-                getTagsetCache(conn, mbox).applyMask(tag.getBitmask(), add);
-            }
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("updating tag data for " + itemIDs.size() + " items: " + getIdListForLogging(itemIDs), e);
-        } finally {
-            DbPool.closeStatement(stmt);
-        }
-    }
-
-    public static void clearTag(Tag tag) throws ServiceException {
-        Mailbox mbox = tag.getMailbox();
-
-        DbConnection conn = mbox.getOperationConnection();
-        PreparedStatement stmt = null;
-        try {
-            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(tag) +
-                        " SET tags = tags - ?, mod_metadata = ?, change_date = ?" +
-                        " WHERE " + IN_THIS_MAILBOX_AND + Db.getInstance().bitAND("tags", "?") + " <> 0");
-            int pos = 1;
-            stmt.setLong(pos++, tag.getBitmask());
-            stmt.setInt(pos++, mbox.getOperationChangeID());
-            stmt.setInt(pos++, mbox.getOperationTimestamp());
-            pos = setMailboxId(stmt, mbox, pos);
-            stmt.setLong(pos++, tag.getBitmask());
-            stmt.executeUpdate();
-
-            if (areTagsetsLoaded(mbox)) {
-                getTagsetCache(conn, mbox).applyMask(tag.getTagBitmask(), false);
-            }
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("clearing all references to tag " + tag.getId(), e);
-        } finally {
-            DbPool.closeStatement(stmt);
-        }
-    }
-
-    /**
-     * Sets the <code>unread</code> column for the specified <code>MailItem</code>.
-     * If the <code>MailItem</code> is a <code>Conversation</code>, <code>Tag</code>
-     * or <code>Folder</code>, sets the <code>unread</code> column for all related items.
-     */
-    public static void alterUnread(MailItem item, boolean unread) throws ServiceException {
-        Mailbox mbox = item.getMailbox();
-
-        DbConnection conn = mbox.getOperationConnection();
-        PreparedStatement stmt = null;
-        try {
-            String relation;
-            if (item instanceof VirtualConversation) {
-                relation = "id = ?";
-            } else if (item instanceof Conversation) {
-                relation = "parent_id = ?";
-            } else if (item instanceof Folder) {
-                relation = "folder_id = ?";
-            } else if (item instanceof Flag) {
-                relation = Db.getInstance().bitAND("flags", "?") + " <> 0";
-            } else if (item instanceof Tag) {
-                relation = Db.getInstance().bitAND("tags", "?") + " <> 0";
-            } else {
-                relation = "id = ?";
-            }
-
-            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
-                        " SET unread = ?, mod_metadata = ?, change_date = ?" +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "unread = ? AND " + relation +
-                        "  AND " + typeIn(MailItem.Type.MESSAGE));
-            int pos = 1;
-            stmt.setInt(pos++, unread ? 1 : 0);
-            stmt.setInt(pos++, mbox.getOperationChangeID());
-            stmt.setInt(pos++, mbox.getOperationTimestamp());
-            pos = setMailboxId(stmt, mbox, pos);
-            stmt.setInt(pos++, unread ? 0 : 1);
-            if (item instanceof Tag) {
-                stmt.setLong(pos++, ((Tag) item).getBitmask());
-            } else if (item instanceof VirtualConversation) {
-                stmt.setInt(pos++, ((VirtualConversation) item).getMessageId());
-            } else {
-                stmt.setInt(pos++, item.getId());
-            }
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("updating unread state for item " + item.getId(), e);
-        } finally {
-            DbPool.closeStatement(stmt);
-        }
-    }
-
     public static void alterUnread(Mailbox mbox, List<Integer> itemIDs, boolean unread)
     throws ServiceException {
         if (itemIDs == null || itemIDs.isEmpty())
@@ -1432,11 +1242,18 @@ public class DbMailItem {
                 stmt.setInt(pos++, mbox.getOperationTimestamp());
                 pos = setMailboxId(stmt, mbox, pos);
                 stmt.setInt(pos++, unread ? 0 : 1);
-                for (int index = i; index < i + count; index++)
+                for (int index = i; index < i + count; index++) {
                     stmt.setInt(pos++, itemIDs.get(index));
+                }
                 stmt.executeUpdate();
                 stmt.close();
                 stmt = null;
+
+                if (unread) {
+                    DbTag.addTaggedItemEntries(mbox, Flag.ID_UNREAD, itemIDs.subList(i, i + count));
+                } else {
+                    DbTag.removeTaggedItemEntries(mbox, Flag.ID_UNREAD, itemIDs.subList(i, i + count));
+                }
             }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("updating unread state for " +
@@ -1649,6 +1466,8 @@ public class DbMailItem {
      * deletes any corresponding messages.  Does not delete subfolders.
      */
     public static void delete(MailItem item, boolean fromDumpster) throws ServiceException {
+        if (item instanceof Tag)
+            return;
         deleteContents(item, fromDumpster);
         if (item instanceof VirtualConversation)
             return;
@@ -1665,10 +1484,11 @@ public class DbMailItem {
             return;
         List<Integer> targets = new ArrayList<Integer>();
         for (int id : ids) {
-            if (id > 0)
+            if (id > 0) {
                 targets.add(id);
+            }
         }
-        if (targets.size() == 0)
+        if (targets.isEmpty())
             return;
 
         DbConnection conn = mbox.getOperationConnection();
@@ -1756,11 +1576,11 @@ public class DbMailItem {
     private static String MAIL_ITEM_DUMPSTER_COPY_SRC_FIELDS =
         (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") +
         "id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest, " +
-        "unread, flags, tags, sender, recipients, subject, name, metadata, mod_metadata, ?, mod_content";
+        "unread, flags, tag_names, sender, recipients, subject, name, metadata, mod_metadata, ?, mod_content";
     private static String MAIL_ITEM_DUMPSTER_COPY_DEST_FIELDS =
         (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") +
         "id, type, parent_id, folder_id, index_id, imap_id, date, size, volume_id, blob_digest, " +
-        "unread, flags, tags, sender, recipients, subject, name, metadata, mod_metadata, change_date, mod_content";
+        "unread, flags, tag_names, sender, recipients, subject, name, metadata, mod_metadata, change_date, mod_content";
 
     /**
      * Copy rows from mail_item, appointment and revision table to the corresponding dumpster tables.
@@ -1844,9 +1664,9 @@ public class DbMailItem {
         for (Map.Entry<MailItem.Type, List<Integer>> entry : tombstones) {
             MailItem.Type type = entry.getKey();
             switch (type) {
-            case CONVERSATION:
-            case VIRTUAL_CONVERSATION:
-                continue;
+                case CONVERSATION:
+                case VIRTUAL_CONVERSATION:
+                    continue;
             }
             StringBuilder ids = new StringBuilder();
             for (Integer id : entry.getValue()) {
@@ -1977,16 +1797,11 @@ public class DbMailItem {
         MailItem.Type.SEARCHFOLDER.toByte() + ',' +
         MailItem.Type.MOUNTPOINT.toByte() + ')';
 
-    private static final String FOLDER_AND_TAG_TYPES = "(" +
-        MailItem.Type.FOLDER.toByte() + ',' +
-        MailItem.Type.SEARCHFOLDER.toByte() + ',' +
-        MailItem.Type.MOUNTPOINT.toByte() + ',' +
-        MailItem.Type.TAG.toByte() + ')';
-
     private static final String MESSAGE_TYPES = "(" +
         MailItem.Type.MESSAGE.toByte() + ',' +
         MailItem.Type.CHAT.toByte() + ')';
 
+    @SuppressWarnings("deprecation")
     private static final String DOCUMENT_TYPES = "(" +
         MailItem.Type.DOCUMENT.toByte() + ',' +
         MailItem.Type.LINK.toByte() + ',' +
@@ -2006,7 +1821,7 @@ public class DbMailItem {
         MailItem.Type.CHAT.toByte() + ',' +
         MailItem.Type.COMMENT.toByte() + ')';
 
-    static final String NON_SEARCHABLE_TYPES = "(" +
+    public static final String NON_SEARCHABLE_TYPES = "(" +
         MailItem.Type.FOLDER.toByte() + ',' +
         MailItem.Type.SEARCHFOLDER.toByte() + ',' +
         MailItem.Type.MOUNTPOINT.toByte() + ',' +
@@ -2035,16 +1850,19 @@ public class DbMailItem {
         }
     }
 
-    public static Mailbox.MailboxData getFoldersAndTags(Mailbox mbox, FolderTagMap folderData, FolderTagMap tagData, boolean reload)
+    public static Mailbox.MailboxData getFoldersAndTags(Mailbox mbox, FolderTagMap folderData, FolderTagMap tagData, boolean forceReload)
     throws ServiceException {
+        boolean reload = forceReload;
+
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
             String table = getMailItemTableName(mbox, "mi");
 
+            // folder data is loaded from the MAIL_ITEM table...
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS + " FROM " + table +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "type IN " + FOLDER_AND_TAG_TYPES);
+                        " WHERE " + IN_THIS_MAILBOX_AND + "type IN " + FOLDER_TYPES);
             setMailboxId(stmt, mbox, 1);
             rs = stmt.executeQuery();
             while (rs.next()) {
@@ -2061,6 +1879,9 @@ public class DbMailItem {
             }
             rs.close();
 
+            // tag data is loaded from a different table...
+            reload |= DbTag.getAllTags(mbox, tagData);
+
             for (UnderlyingData data : folderData.keySet()) {
                 if (data.parentId != data.folderId) {
                     // we had a small folder data inconsistency issue, so resolve it here
@@ -2075,12 +1896,13 @@ public class DbMailItem {
                     stmt.executeUpdate();
 
                     data.parentId = data.folderId;
-                    ZimbraLog.mailbox.info("correcting PARENT_ID column for " + MailItem.Type.of(data.type) + " " + data.id);
+                    ZimbraLog.mailbox.info("correcting PARENT_ID column for %s %d", MailItem.Type.of(data.type), data.id);
                 }
             }
 
-            if (!reload)
+            if (!reload) {
                 return null;
+            }
 
             Map<Integer, UnderlyingData> lookup = new HashMap<Integer, UnderlyingData>(folderData.size() + tagData.size());
 
@@ -2097,21 +1919,21 @@ public class DbMailItem {
             rs.close();
             stmt.close();
 
+            // recalculate the counts for all folders and the overall mailbox size...
             Mailbox.MailboxData mbd = new Mailbox.MailboxData();
-            stmt = conn.prepareStatement("SELECT folder_id, type, tags, flags, COUNT(*), SUM(unread), SUM(size)" +
+            stmt = conn.prepareStatement("SELECT folder_id, type, flags, COUNT(*), SUM(unread), SUM(size)" +
                         " FROM " + table + " WHERE " + IN_THIS_MAILBOX_AND + "type NOT IN " + NON_SEARCHABLE_TYPES +
-                        " GROUP BY folder_id, type, tags, flags");
+                        " GROUP BY folder_id, type, flags");
             setMailboxId(stmt, mbox, 1);
             rs = stmt.executeQuery();
 
             while (rs.next()) {
                 int folderId = rs.getInt(1);
                 byte type  = rs.getByte(2);
-                long tags  = rs.getLong(3);
-                boolean deleted = (rs.getInt(4) & Flag.BITMASK_DELETED) != 0;
-                int count  = rs.getInt(5);
-                int unread = rs.getInt(6);
-                long size  = rs.getLong(7);
+                boolean deleted = (rs.getInt(3) & Flag.BITMASK_DELETED) != 0;
+                int count  = rs.getInt(4);
+                int unread = rs.getInt(5);
+                long size  = rs.getLong(6);
 
                 if (type == MailItem.Type.CONTACT.toByte()) {
                     mbd.contacts += count;
@@ -2130,26 +1952,12 @@ public class DbMailItem {
                         fcounts.deletedUnreadCount += unread;
                     }
                 } else {
-                    ZimbraLog.mailbox.warn("inconsistent DB state: items with no corresponding folder (folder ID " + folderId + ")");
-                }
-
-                for (int i = 0; tags != 0 && i < MailItem.MAX_TAG_COUNT - 1; i++) {
-                    if ((tags & (1L << i)) != 0) {
-                        data = lookup.get(i + MailItem.TAG_ID_OFFSET);
-                        if (data != null) {
-                            // not keeping track of item counts on tags, just unread counts
-                            data.unreadCount += unread;
-                            if (deleted) {
-                                tagData.get(data).deletedUnreadCount += unread;
-                            }
-                        } else {
-                            ZimbraLog.mailbox.warn("inconsistent DB state: items with no corresponding tag (tag ID " + (i + MailItem.TAG_ID_OFFSET) + ")");
-                        }
-                        // could track cumulative count if desired...
-                        tags &= ~(1L << i);
-                    }
+                    ZimbraLog.mailbox.warn("inconsistent DB state: items with no corresponding folder (folder id %d)", folderId);
                 }
             }
+
+            // recalculate the counts for all tags...
+            DbTag.recalculateTagCounts(mbox, lookup);
 
             rs.close();
             stmt.close();
@@ -2272,6 +2080,10 @@ public class DbMailItem {
     }
 
     public static List<UnderlyingData> getUnreadMessages(MailItem relativeTo) throws ServiceException {
+        if (relativeTo instanceof Tag) {
+            return DbTag.getUnreadMessages((Tag) relativeTo);
+        }
+
         Mailbox mbox = relativeTo.getMailbox();
         ArrayList<UnderlyingData> result = new ArrayList<UnderlyingData>();
 
@@ -2286,10 +2098,6 @@ public class DbMailItem {
                 relation = "parent_id = ?";
             } else if (relativeTo instanceof Folder) {
                 relation = "folder_id = ?";
-            } else if (relativeTo instanceof Flag) {
-                relation = Db.getInstance().bitAND("flags", "?") + " <> 0";
-            } else if (relativeTo instanceof Tag) {
-                relation = Db.getInstance().bitAND("tags", "?") + " <> 0";
             } else {
                 relation = "id = ?";
             }
@@ -2297,13 +2105,12 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
                     " FROM " + getMailItemTableName(relativeTo.getMailbox(), " mi") +
                     " WHERE " + IN_THIS_MAILBOX_AND + "unread > 0 AND " + relation + " AND type NOT IN " + NON_SEARCHABLE_TYPES);
-            if (relativeTo.getUnreadCount() > RESULTS_STREAMING_MIN_ROWS)
+            if (relativeTo.getUnreadCount() > RESULTS_STREAMING_MIN_ROWS) {
                 Db.getInstance().enableStreaming(stmt);
+            }
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
-            if (relativeTo instanceof Tag) {
-                stmt.setLong(pos++, ((Tag) relativeTo).getBitmask());
-            } else if (relativeTo instanceof VirtualConversation) {
+            if (relativeTo instanceof VirtualConversation) {
                 stmt.setInt(pos++, ((VirtualConversation) relativeTo).getMessageId());
             } else {
                 stmt.setInt(pos++, relativeTo.getId());
@@ -2351,8 +2158,9 @@ public class DbMailItem {
             stmt.setInt(pos++, folder.getId());
             rs = stmt.executeQuery();
 
-            while (rs.next())
+            while (rs.next()) {
                 result.add(constructItem(rs));
+            }
             return result;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching items in folder " + folder.getId(), e);
@@ -2363,9 +2171,10 @@ public class DbMailItem {
     }
 
     public static UnderlyingData getById(Mailbox mbox, int id, MailItem.Type type, boolean fromDumpster)
-            throws ServiceException {
-        if (Mailbox.isCachedType(type))
+    throws ServiceException {
+        if (Mailbox.isCachedType(type)) {
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
+        }
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -2391,10 +2200,11 @@ public class DbMailItem {
             }
             return data;
         } catch (SQLException e) {
-            if (!fromDumpster)
+            if (!fromDumpster) {
                 throw ServiceException.FAILURE("fetching item " + id, e);
-            else
+            } else {
                 throw ServiceException.FAILURE("fetching item " + id + " from dumpster", e);
+            }
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
@@ -2432,13 +2242,15 @@ public class DbMailItem {
     }
 
     public static List<UnderlyingData> getById(Mailbox mbox, Collection<Integer> ids, MailItem.Type type)
-            throws ServiceException {
-        if (Mailbox.isCachedType(type))
+    throws ServiceException {
+        if (Mailbox.isCachedType(type)) {
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
+        }
 
         List<UnderlyingData> result = new ArrayList<UnderlyingData>();
-        if (ids.isEmpty())
+        if (ids.isEmpty()) {
             return result;
+        }
         List<UnderlyingData> conversations = new ArrayList<UnderlyingData>();
 
         DbConnection conn = mbox.getOperationConnection();
@@ -2453,8 +2265,9 @@ public class DbMailItem {
                             " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count));
                 int pos = 1;
                 pos = setMailboxId(stmt, mbox, pos);
-                for (int index = i; index < i + count; index++)
+                for (int index = i; index < i + count; index++) {
                     stmt.setInt(pos++, it.next());
+                }
 
                 rs = stmt.executeQuery();
                 while (rs.next()) {
@@ -2528,8 +2341,9 @@ public class DbMailItem {
     }
 
     public static List<UnderlyingData> getByHashes(Mailbox mbox, List<String> hashes) throws ServiceException {
-        if (ListUtil.isEmpty(hashes))
+        if (ListUtil.isEmpty(hashes)) {
             return null;
+        }
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -2563,8 +2377,8 @@ public class DbMailItem {
         }
     }
 
-    public static Pair<List<Integer>,TypedIdList> getModifiedItems(Mailbox mbox, MailItem.Type type, long lastSync,
-            Set<Integer> visible) throws ServiceException {
+    public static Pair<List<Integer>,TypedIdList> getModifiedItems(Mailbox mbox, MailItem.Type type, long lastSync, Set<Integer> visible)
+    throws ServiceException {
         if (Mailbox.isCachedType(type)) {
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
         }
@@ -2589,10 +2403,11 @@ public class DbMailItem {
             rs = stmt.executeQuery();
 
             while (rs.next()) {
-                if (visible == null || visible.contains(rs.getInt(3)))
+                if (visible == null || visible.contains(rs.getInt(3))) {
                     modified.add(rs.getInt(1));
-                else
+                } else {
                     missed.add(MailItem.Type.of(rs.getByte(2)), rs.getInt(1));
+                }
             }
 
             return new Pair<List<Integer>,TypedIdList>(modified, missed);
@@ -2627,7 +2442,7 @@ public class DbMailItem {
         for (int i = 0; i < convData.size(); i += Db.getINClauseBatchSize()) {
             try {
                 int count = Math.min(Db.getINClauseBatchSize(), convData.size() - i);
-                stmt = conn.prepareStatement("SELECT parent_id, unread, flags, tags" +
+                stmt = conn.prepareStatement("SELECT parent_id, unread, flags, tag_names" +
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("parent_id", count));
                 int pos = 1;
@@ -2637,17 +2452,34 @@ public class DbMailItem {
                     stmt.setInt(pos++, data.id);
                     conversations.put(data.id, data);
                     // don't assume that the UnderlyingData structure was new...
-                    data.tags = data.unreadCount = 0;
+                    data.unreadCount = 0;
                     data.setFlags(0);
+                    data.setTags(null);
                 }
                 rs = stmt.executeQuery();
 
+                HashMultimap<Integer, String> convTags = HashMultimap.create();
+                
                 while (rs.next()) {
-                    UnderlyingData data = conversations.get(rs.getInt(1));
-                    assert(data != null);
+                    Integer convId = rs.getInt(1);
+                    UnderlyingData data = conversations.get(convId);
+                    assert data != null;
+
                     data.unreadCount += rs.getInt(2);
                     data.setFlags(data.getFlags() | rs.getInt(3));
-                    data.tags |= rs.getLong(4);
+
+                    String[] tags = DbTag.deserializeTags(rs.getString(4));
+                    if (tags != null) {
+                        convTags.putAll(convId, Arrays.asList(tags));
+                    }
+                }
+
+                for (Map.Entry<Integer, Collection<String>> entry : convTags.asMap().entrySet()) {
+                    UnderlyingData data = conversations.get(entry.getKey());
+                    if (data != null) {
+                        Collection<String> tags = entry.getValue();
+                        data.setTags(new Tag.NormalizedTags(tags));
+                    }
                 }
             } catch (SQLException e) {
                 throw ServiceException.FAILURE("completing conversation data", e);
@@ -2660,8 +2492,8 @@ public class DbMailItem {
         }
     }
 
-    private static final String LEAF_NODE_FIELDS = "id, size, type, unread, folder_id, parent_id, blob_digest," +
-                                                   " mod_content, mod_metadata, flags, index_id, volume_id";
+    static final String LEAF_NODE_FIELDS = "id, size, type, unread, folder_id, parent_id, blob_digest," +
+                                           " mod_content, mod_metadata, flags, index_id, volume_id, tag_names";
 
     private static final int LEAF_CI_ID           = 1;
     private static final int LEAF_CI_SIZE         = 2;
@@ -2675,11 +2507,11 @@ public class DbMailItem {
     private static final int LEAF_CI_FLAGS        = 10;
     private static final int LEAF_CI_INDEX_ID     = 11;
     private static final int LEAF_CI_VOLUME_ID    = 12;
+    private static final int LEAF_CI_TAGS         = 13;
 
     public static PendingDelete getLeafNodes(Folder folder) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
 
-        PendingDelete info = new PendingDelete();
         int folderId = folder.getId();
 
         DbConnection conn = mbox.getOperationConnection();
@@ -2689,20 +2521,16 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type NOT IN " + FOLDER_TYPES);
-            if (folder.getSize() > RESULTS_STREAMING_MIN_ROWS)
+            if (folder.getSize() > RESULTS_STREAMING_MIN_ROWS) {
                 Db.getInstance().enableStreaming(stmt);
+            }
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, folderId);
-            rs = stmt.executeQuery();
 
+            PendingDelete info = accumulateDeletionInfo(mbox, stmt);
+            stmt = null;
             info.rootId = folderId;
-            info.size   = 0;
-            List<Integer> versionedIds = accumulateLeafNodes(info, mbox, rs);
-            rs.close(); rs = null;
-            stmt.close(); stmt = null;
-            accumulateLeafRevisions(info, mbox, versionedIds);
-
             // make sure that the folder is in the list of deleted item ids
             info.itemIds.add(folder.getType(), folderId);
 
@@ -2715,11 +2543,9 @@ public class DbMailItem {
         }
     }
 
-    public static PendingDelete getLeafNodes(Mailbox mbox, List<Folder> folders, Tag tag, int before, boolean globalMessages,
+    public static PendingDelete getLeafNodes(Mailbox mbox, List<Folder> folders, int before, boolean globalMessages,
                                              Boolean unread, boolean useChangeDate, Integer maxItems)
     throws ServiceException {
-        PendingDelete info = new PendingDelete();
-
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -2730,7 +2556,6 @@ public class DbMailItem {
         try {
             StringBuilder constraint = new StringBuilder();
             String dateColumn = (useChangeDate ? "change_date" : "date");
-            Set<Long> tagsets = Collections.emptySet();
 
             if (globalMessages) {
                 constraint.append(dateColumn).append(" < ? AND ").append(typeIn(MailItem.Type.MESSAGE));
@@ -2738,12 +2563,6 @@ public class DbMailItem {
                 constraint.append(dateColumn).append(" < ? AND type NOT IN ").append(NON_SEARCHABLE_TYPES);
                 if (!folders.isEmpty()) {
                     constraint.append(" AND ").append(DbUtil.whereIn("folder_id", folders.size()));
-                }
-                if (tag != null) {
-                    tagsets = getTagsetCache(conn, mbox).getMatchingTagsets(tag.getBitmask(), tag.getBitmask());
-                    if (!tagsets.isEmpty()) {
-                        constraint.append(" AND ").append(DbUtil.whereIn("tags", tagsets.size()));
-                    }
                 }
             }
             if (unread != null) {
@@ -2757,8 +2576,9 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
                         " FROM " + getMailItemTableName(mbox) +
                         " WHERE " + IN_THIS_MAILBOX_AND + constraint + orderByLimit);
-            if (globalMessages || getTotalFolderSize(folders) > RESULTS_STREAMING_MIN_ROWS)
+            if (globalMessages || getTotalFolderSize(folders) > RESULTS_STREAMING_MIN_ROWS) {
                 Db.getInstance().enableStreaming(stmt);
+            }
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, before);
@@ -2766,20 +2586,13 @@ public class DbMailItem {
                 for (Folder folder : folders) {
                     stmt.setInt(pos++, folder.getId());
                 }
-                for (long tagset : tagsets) {
-                    stmt.setLong(pos++, tagset);
-                }
             }
-            if (unread != null)
+            if (unread != null) {
                 stmt.setBoolean(pos++, unread);
-            rs = stmt.executeQuery();
+            }
 
-            info.rootId = 0;
-            info.size   = 0;
-            List<Integer> versionedIds = accumulateLeafNodes(info, mbox, rs);
-            rs.close(); rs = null;
-            stmt.close(); stmt = null;
-            accumulateLeafRevisions(info, mbox, versionedIds);
+            PendingDelete info = accumulateDeletionInfo(mbox, stmt);
+            stmt = null;
             return info;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("fetching list of items for purge", e);
@@ -2789,7 +2602,33 @@ public class DbMailItem {
         }
     }
 
-    private static int getTotalFolderSize(Collection<Folder> folders) {
+    static PendingDelete accumulateDeletionInfo(Mailbox mbox, PreparedStatement stmt)
+    throws ServiceException {
+        ResultSet rs = null;
+        try {
+            rs = stmt.executeQuery();
+    
+            PendingDelete info = new PendingDelete();
+            info.size = 0;
+    
+            List<Integer> versionedIds = accumulateLeafNodes(info, mbox, rs);
+            rs.close();
+            rs = null;
+            stmt.close();
+            stmt = null;
+    
+            accumulateLeafRevisions(info, mbox, versionedIds);
+    
+            return info;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("accumulating deletion info", e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    static int getTotalFolderSize(Collection<Folder> folders) {
         int totalSize = 0;
         if (folders != null) {
             for (Folder folder : folders) {
@@ -2799,59 +2638,11 @@ public class DbMailItem {
         return totalSize;
     }
 
-    public static PendingDelete getImapDeleted(Mailbox mbox, Set<Folder> folders) throws ServiceException {
-        PendingDelete info = new PendingDelete();
-        if (folders != null && folders.isEmpty())
-            return info;
-
-        DbConnection conn = mbox.getOperationConnection();
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        try {
-            // figure out the set of FLAGS bitmasks containing the \Deleted flag
-            Set<Long> flagsets = getFlagsetCache(conn, mbox).getMatchingTagsets(Flag.BITMASK_DELETED, Flag.BITMASK_DELETED);
-            if (flagsets != null && flagsets.isEmpty())
-                return info;
-
-            String flagconstraint = flagsets == null ? "" : " AND " + DbUtil.whereIn("flags", flagsets.size());
-            String folderconstraint = folders == null ? "" : " AND " + DbUtil.whereIn("folder_id", folders.size());
-
-            stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
-                        " FROM " + getMailItemTableName(mbox) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "type IN " + IMAP_TYPES + flagconstraint + folderconstraint);
-            if (getTotalFolderSize(folders) > RESULTS_STREAMING_MIN_ROWS)
-                Db.getInstance().enableStreaming(stmt);
-            int pos = 1;
-            pos = setMailboxId(stmt, mbox, pos);
-            if (flagsets != null) {
-                for (long flags : flagsets)
-                    stmt.setInt(pos++, (int) flags);
-            }
-            if (folders != null) {
-                for (Folder folder : folders)
-                    stmt.setInt(pos++, folder.getId());
-            }
-            rs = stmt.executeQuery();
-
-            info.rootId = 0;
-            info.size   = 0;
-            List<Integer> versionedIds = accumulateLeafNodes(info, mbox, rs);
-            rs.close(); rs = null;
-            stmt.close(); stmt = null;
-            accumulateLeafRevisions(info, mbox, versionedIds);
-            return info;
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("fetching list of \\Deleted items for purge", e);
-        } finally {
-            DbPool.closeResults(rs);
-            DbPool.closeStatement(stmt);
-        }
-    }
-
     public static class LocationCount {
         public int count;
         public int deleted;
         public long size;
+
         public LocationCount(int c, int d, long sz)            { count = c;  deleted += d;  size = sz; }
         public LocationCount(LocationCount lc)                 { count = lc.count;  deleted = lc.deleted;  size = lc.size; }
         public LocationCount increment(int c, int d, long sz)  { count += c;  deleted += d;  size += sz;  return this; }
@@ -2863,7 +2654,7 @@ public class DbMailItem {
      * @return a <tt>List</tt> of all versioned items, to be used in a subsequent call to
      * {@link DbMailItem#accumulateLeafRevisions}, or an empty list.
      */
-    private static List<Integer> accumulateLeafNodes(PendingDelete info, Mailbox mbox, ResultSet rs) throws SQLException, ServiceException {
+    static List<Integer> accumulateLeafNodes(PendingDelete info, Mailbox mbox, ResultSet rs) throws SQLException, ServiceException {
         boolean dumpsterEnabled = mbox.dumpsterEnabled();
         boolean useDumpsterForSpam = mbox.useDumpsterForSpam();
         StoreManager sm = StoreManager.getInstance();
@@ -2891,13 +2682,13 @@ public class DbMailItem {
             }
             boolean isMessage = false;
             switch (type) {
-            case CONTACT:
-                info.contacts++;
-                break;
-            case CHAT:
-            case MESSAGE:
-                isMessage = true;
-                break;
+                case CONTACT:
+                    info.contacts++;
+                    break;
+                case CHAT:
+                case MESSAGE:
+                    isMessage = true;
+                    break;
             }
 
             // record deleted virtual conversations and modified-or-deleted real conversations
@@ -2911,16 +2702,30 @@ public class DbMailItem {
             }
 
             int flags = rs.getInt(LEAF_CI_FLAGS);
-            if ((flags & Flag.BITMASK_VERSIONED) != 0)
+            if ((flags & Flag.BITMASK_VERSIONED) != 0) {
                 versioned.add(id);
+            }
 
             Integer folderId = rs.getInt(LEAF_CI_FOLDER_ID);
             boolean isDeleted = (flags & Flag.BITMASK_DELETED) != 0;
-            LocationCount count = info.messages.get(folderId);
-            if (count == null)
-                info.messages.put(folderId, new LocationCount(1, isDeleted ? 1 : 0, size));
-            else
-                count.increment(1, isDeleted ? 1 : 0, size);
+            LocationCount fcount = info.folderCounts.get(folderId);
+            if (fcount == null) {
+                info.folderCounts.put(folderId, new LocationCount(1, isDeleted ? 1 : 0, size));
+            } else {
+                fcount.increment(1, isDeleted ? 1 : 0, size);
+            }
+
+            String[] tags = DbTag.deserializeTags(rs.getString(LEAF_CI_TAGS));
+            if (tags != null) {
+                for (String tag : tags) {
+                    LocationCount tcount = info.tagCounts.get(tag);
+                    if (tcount == null) {
+                        info.tagCounts.put(tag, new LocationCount(1, isDeleted ? 1 : 0, size));
+                    } else {
+                        tcount.increment(1, isDeleted ? 1 : 0, size);
+                    }
+                }
+            }
 
             int fid = folderId != null ? folderId.intValue() : -1;
             if (!dumpsterEnabled || fid == Mailbox.ID_FOLDER_DRAFTS || (fid == Mailbox.ID_FOLDER_SPAM && !useDumpsterForSpam)) {
@@ -2930,18 +2735,20 @@ public class DbMailItem {
                     String locator = rs.getString(LEAF_CI_VOLUME_ID);
                     try {
                         MailboxBlob mblob = sm.getMailboxBlob(mbox, id, revision, locator);
-                        if (mblob == null)
+                        if (mblob == null) {
                             sLog.warn("missing blob for id: " + id + ", change: " + revision);
-                        else
+                        } else {
                             info.blobs.add(mblob);
+                        }
                     } catch (Exception e1) { }
                 }
 
                 int indexId = rs.getInt(LEAF_CI_INDEX_ID);
                 boolean indexed = !rs.wasNull();
                 if (indexed) {
-                    if (info.sharedIndex == null)
+                    if (info.sharedIndex == null) {
                         info.sharedIndex = new HashSet<Integer>();
+                    }
                     boolean shared = (flags & Flag.BITMASK_COPIED) != 0;
                     if (shared) {
                         info.sharedIndex.add(indexId);
@@ -2951,10 +2758,11 @@ public class DbMailItem {
                 }
             }
         }
+
         return versioned;
     }
 
-    private static void accumulateLeafRevisions(PendingDelete info, Mailbox mbox, List<Integer> versioned) throws ServiceException {
+    static void accumulateLeafRevisions(PendingDelete info, Mailbox mbox, List<Integer> versioned) throws ServiceException {
         if (versioned == null || versioned.size() == 0) {
             return;
         }
@@ -2978,11 +2786,12 @@ public class DbMailItem {
 
             while (rs.next()) {
                 Integer folderId = rs.getInt(2);
-                LocationCount count = info.messages.get(folderId);
-                if (count == null)
-                    info.messages.put(folderId, new LocationCount(0, 0, rs.getLong(3)));
-                else
+                LocationCount count = info.folderCounts.get(folderId);
+                if (count == null) {
+                    info.folderCounts.put(folderId, new LocationCount(0, 0, rs.getLong(3)));
+                } else {
                     count.increment(0, 0, rs.getLong(3));
+                }
 
                 int fid = folderId != null ? folderId.intValue() : -1;
                 if (!dumpsterEnabled || fid == Mailbox.ID_FOLDER_DRAFTS || (fid == Mailbox.ID_FOLDER_SPAM && !useDumpsterForSpam)) {
@@ -2991,10 +2800,11 @@ public class DbMailItem {
                         info.blobDigests.add(blobDigest);
                         try {
                             MailboxBlob mblob = sm.getMailboxBlob(mbox, rs.getInt(1), rs.getInt(4), rs.getString(5));
-                            if (mblob == null)
+                            if (mblob == null) {
                                 sLog.error("missing blob for id: " + rs.getInt(1) + ", change: " + rs.getInt(4));
-                            else
+                            } else {
                                 info.blobs.add(mblob);
+                            }
                         } catch (Exception e1) { }
                     }
                 }
@@ -3069,8 +2879,9 @@ public class DbMailItem {
     }
 
 
-    private static final String IMAP_FIELDS = "mi.id, mi.type, mi.imap_id, mi.unread, mi.flags, mi.tags";
-    private static final String IMAP_TYPES = "(" +
+    private static final String IMAP_FIELDS = "mi.id, mi.type, mi.imap_id, mi.unread, mi.flags, mi.tag_names";
+
+    static final String IMAP_TYPES = "(" +
         MailItem.Type.MESSAGE.toByte() + "," +
         MailItem.Type.CHAT.toByte() + ',' +
         MailItem.Type.CONTACT.toByte() + ")";
@@ -3096,7 +2907,7 @@ public class DbMailItem {
 
             while (rs.next()) {
                 int flags = rs.getBoolean(4) ? Flag.BITMASK_UNREAD | rs.getInt(5) : rs.getInt(5);
-                result.add(new ImapMessage(rs.getInt(1), MailItem.Type.of(rs.getByte(2)), rs.getInt(3), flags, rs.getLong(6)));
+                result.add(new ImapMessage(rs.getInt(1), MailItem.Type.of(rs.getByte(2)), rs.getInt(3), flags, DbTag.deserializeTags(rs.getString(6))));
             }
             return result;
         } catch (SQLException e) {
@@ -3179,7 +2990,7 @@ public class DbMailItem {
     public static List<UnderlyingData> getRevisionInfo(MailItem item, boolean fromDumpster) throws ServiceException {
         Mailbox mbox = item.getMailbox();
         List<UnderlyingData> dlist = new ArrayList<UnderlyingData>();
-        if (!item.isTagged(Flag.ID_VERSIONED)) {
+        if (!item.isTagged(Flag.FlagInfo.VERSIONED)) {
             return dlist;
         }
         DbConnection conn = mbox.getOperationConnection();
@@ -3290,10 +3101,10 @@ public class DbMailItem {
     public static final int CI_SAVED       = 19;
 
     static final String DB_FIELDS = "mi.id, mi.type, mi.parent_id, mi.folder_id, mi.index_id, mi.imap_id, mi.date, " +
-        "mi.size, mi.volume_id, mi.blob_digest, mi.unread, mi.flags, mi.tags, mi.subject, mi.name, " +
+        "mi.size, mi.volume_id, mi.blob_digest, mi.unread, mi.flags, mi.tag_names, mi.subject, mi.name, " +
         "mi.metadata, mi.mod_metadata, mi.change_date, mi.mod_content";
 
-    private static UnderlyingData constructItem(ResultSet rs) throws SQLException, ServiceException {
+    static UnderlyingData constructItem(ResultSet rs) throws SQLException, ServiceException {
         return constructItem(rs, 0, false);
     }
 
@@ -3330,7 +3141,7 @@ public class DbMailItem {
         } else {
             data.setFlags(flags | Flag.BITMASK_UNCACHED | Flag.BITMASK_IN_DUMPSTER);
         }
-        data.tags = rs.getLong(CI_TAGS + offset);
+        data.setTags(new Tag.NormalizedTags(DbTag.deserializeTags(rs.getString(CI_TAGS + offset))));
         data.setSubject(rs.getString(CI_SUBJECT + offset));
         data.name = rs.getString(CI_NAME + offset);
         data.metadata = decodeMetadata(rs.getString(CI_METADATA + offset));
@@ -3368,7 +3179,7 @@ public class DbMailItem {
         } else {
             data.setFlags(item.getInternalFlagBitmask() | Flag.BITMASK_UNCACHED | Flag.BITMASK_IN_DUMPSTER);
         }
-        data.tags        = item.getTagBitmask();
+        data.setTags(new Tag.NormalizedTags(item.getTags()));
         data.setSubject(item.getSubject());
         data.name        = rs.getString(5);
         data.metadata    = decodeMetadata(rs.getString(6));
@@ -3376,8 +3187,12 @@ public class DbMailItem {
         data.dateChanged = rs.getInt(8);
         data.modContent  = rs.getInt(9);
         // make sure to handle NULL column values
-        if (data.parentId <= 0)     data.parentId = -1;
-        if (data.dateChanged == 0)  data.dateChanged = -1;
+        if (data.parentId <= 0) {
+            data.parentId = -1;
+        }
+        if (data.dateChanged == 0) {
+            data.dateChanged = -1;
+        }
         return data;
     }
 
@@ -3856,7 +3671,7 @@ public class DbMailItem {
             if (dbdata.type != MailItem.Type.CONVERSATION.toByte()) {
                 if (data.unreadCount != dbdata.unreadCount)  failures += " UNREAD";
                 if (data.getFlags() != dbdata.getFlags())    failures += " FLAGS";
-                if (data.tags != dbdata.tags)                failures += " TAGS";
+                if (!TagUtil.tagsMatch(data.getTags(), dbdata.getTags()))  failures += " TAGS";
             }
             if (data.modMetadata != dbdata.modMetadata)  failures += " MOD_METADATA";
             if (data.dateChanged != dbdata.dateChanged)  failures += " CHANGE_DATE";
@@ -4059,82 +3874,20 @@ public class DbMailItem {
         return DbMailbox.qualifyTableName(mbox, TABLE_TOMBSTONE);
     }
 
-    private static boolean areTagsetsLoaded(Mailbox mbox) {
-        synchronized (sTagsetCache) {
-            return sTagsetCache.containsKey(mbox.getId());
-        }
-    }
-
-    static TagsetCache getTagsetCache(DbConnection conn, Mailbox mbox) throws ServiceException {
-        int mailboxId = mbox.getId();
-        Integer id = new Integer(mailboxId);
-        TagsetCache tagsets = null;
-
-        synchronized (sTagsetCache) {
-            tagsets = sTagsetCache.get(id);
-        }
-
-        // All access to a mailbox is synchronized, so we can initialize
-        // the tagset cache for a single mailbox outside the
-        // synchronized block.
-        if (tagsets == null) {
-            ZimbraLog.cache.info("Loading tagset cache");
-            tagsets = new TagsetCache("Mailbox " + mailboxId + " tags");
-            tagsets.addTagsets(DbMailbox.getDistinctTagsets(conn, mbox));
-
-            synchronized (sTagsetCache) {
-                sTagsetCache.put(id, tagsets);
-            }
-        }
-
-        return tagsets;
-    }
-
-    private static boolean areFlagsetsLoaded(Mailbox mbox) {
-        synchronized(sFlagsetCache) {
-            return sFlagsetCache.containsKey(mbox.getId());
-        }
-    }
-
-    static TagsetCache getFlagsetCache(DbConnection conn, Mailbox mbox) throws ServiceException {
-        int mailboxId = mbox.getId();
-        Integer id = new Integer(mailboxId);
-        TagsetCache flagsets = null;
-
-        synchronized (sFlagsetCache) {
-            flagsets = sFlagsetCache.get(id);
-        }
-
-        // All access to a mailbox is synchronized, so we can initialize
-        // the flagset cache for a single mailbox outside the
-        // synchronized block.
-        if (flagsets == null) {
-            ZimbraLog.cache.info("Loading flagset cache");
-            flagsets = new TagsetCache("Mailbox " + mailboxId + " flags");
-            flagsets.addTagsets(DbMailbox.getDistinctFlagsets(conn, mbox));
-
-            synchronized (sFlagsetCache) {
-                sFlagsetCache.put(id, flagsets);
-            }
-        }
-
-        return flagsets;
-    }
-
-    /**
-     * Returns a comma-separated list of ids for logging.  If the <tt>String</tt> is
-     * more than 200 characters long, cuts off the list and appends &quot...&quot.
-     */
-    private static String getIdListForLogging(Collection<Integer> ids) {
+    /** Returns a comma-separated list of ids for logging.  If the {@code
+     *  String} is more than 200 characters long, cuts off the list and appends
+     *  &quot...&quot. */
+    static String getIdListForLogging(Collection<Integer> ids) {
         if (ids == null)
             return null;
         StringBuilder idList = new StringBuilder();
         boolean firstTime = true;
         for (Integer id : ids) {
-            if (firstTime)
+            if (firstTime) {
                 firstTime = false;
-            else
+            } else {
                 idList.append(',');
+            }
             idList.append(id);
             if (idList.length() > 200) {
                 idList.append("...");

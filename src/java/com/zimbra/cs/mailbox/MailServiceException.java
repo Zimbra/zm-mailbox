@@ -71,7 +71,6 @@ public class MailServiceException extends ServiceException {
 
     public static final String SCAN_ERROR      = "mail.SCAN_ERROR";
     public static final String UPLOAD_REJECTED = "mail.UPLOAD_REJECTED";
-    public static final String TOO_MANY_TAGS   = "mail.TOO_MANY_TAGS";
     public static final String TOO_MANY_UPLOADS  = "mail.TOO_MANY_UPLOADS";
     public static final String TOO_MANY_CONTACTS = "mail.TOO_MANY_CONTACTS";
     public static final String TOO_MUCH_METADATA = "mail.TOO_MUCH_METADATA";
@@ -283,10 +282,6 @@ public class MailServiceException extends ServiceException {
     // note that this logs "service.TOO_MANY_HOPS" rather than "mail.*"
     public static MailServiceException TOO_MANY_HOPS(ItemId iid) {
         return new MailServiceException("proxy loop detected", TOO_MANY_HOPS, SENDERS_FAULT, new Argument(ITEM_ID, iid.toString(), Argument.Type.IID));
-    }
-
-    public static MailServiceException TOO_MANY_TAGS() {
-        return new MailServiceException("exceeded limit of " + MailItem.MAX_TAG_COUNT + " tags", TOO_MANY_TAGS, SENDERS_FAULT, new Argument(LIMIT, MailItem.MAX_TAG_COUNT, Argument.Type.NUM));
     }
 
     public static MailServiceException TOO_MANY_UPLOADS(String uploadId) {

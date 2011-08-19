@@ -58,7 +58,7 @@ public abstract class FilterHandler {
      * for the same message.
      * @return the new message, or <tt>null</tt> if it was a duplicate
      */
-    public abstract Message implicitKeep(Collection<ActionFlag> flagActions, String tags)
+    public abstract Message implicitKeep(Collection<ActionFlag> flagActions, String[] tags)
     throws ServiceException;
     
     /**
@@ -67,7 +67,7 @@ public abstract class FilterHandler {
      * for the same message. 
      * @return the new message, or <tt>null</tt> if it was a duplicate
      */
-    public abstract Message explicitKeep(Collection<ActionFlag> flagActions, String tags)
+    public abstract Message explicitKeep(Collection<ActionFlag> flagActions, String[] tags)
     throws ServiceException;
     
     /**
@@ -75,7 +75,7 @@ public abstract class FilterHandler {
      * This method will not be called multiple times for the same path.
      * @return the new message, or <tt>null</tt> if it was a duplicate
      */
-    public abstract ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String tags)
+    public abstract ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String[] tags)
     throws ServiceException;
 
     /**

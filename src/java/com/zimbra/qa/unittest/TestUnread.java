@@ -135,9 +135,9 @@ public class TestUnread extends TestCase {
         mMbox.move(null, mMessage1Id, getMessage1().getType(), mFolder1Id);
         mMbox.move(null, mMessage2Id, getMessage1().getType(), mFolder2Id);
         mMbox.move(null, mMessage3Id, getMessage1().getType(), mFolder2Id);
-        mMbox.alterTag(null, mMessage1Id, getMessage1().getType(), getTag1().getId(), true);
-        mMbox.alterTag(null, mMessage1Id, getMessage1().getType(), getTag2().getId(), true);
-        mMbox.alterTag(null, mMessage2Id, getMessage2().getType(), getTag2().getId(), true);
+        mMbox.alterTag(null, mMessage1Id, getMessage1().getType(), getTag1().getName(), true, null);
+        mMbox.alterTag(null, mMessage1Id, getMessage1().getType(), getTag2().getName(), true, null);
+        mMbox.alterTag(null, mMessage2Id, getMessage2().getType(), getTag2().getName(), true, null);
     }
 
     public void testReadMessage1()
@@ -305,15 +305,15 @@ public class TestUnread extends TestCase {
         verifySetUp();
 
         // Add T3 to M3
-        mMbox.alterTag(null, mMessage3Id, getMessage3().getType(), getTag3().getId(), true);
+        mMbox.alterTag(null, mMessage3Id, getMessage3().getType(), getTag3().getName(), true, null);
         assertEquals("getTag3().getUnreadCount()", 1, getTag3().getUnreadCount());
 
         // Add T3 to M2
-        mMbox.alterTag(null, mMessage2Id, getMessage2().getType(), getTag3().getId(), true);
+        mMbox.alterTag(null, mMessage2Id, getMessage2().getType(), getTag3().getName(), true, null);
         assertEquals("getTag3().getUnreadCount()", 2, getTag3().getUnreadCount());
 
         // Remove T3 from M3
-        mMbox.alterTag(null, mMessage3Id, getMessage3().getType(), getTag3().getId(), false);
+        mMbox.alterTag(null, mMessage3Id, getMessage3().getType(), getTag3().getName(), false, null);
         assertEquals("getTag3().getUnreadCount()", 1, getTag3().getUnreadCount());
     }
 
@@ -323,11 +323,11 @@ public class TestUnread extends TestCase {
         verifySetUp();
 
         // Add T3 to C
-        mMbox.alterTag(null, getConv().getId(), getConv().getType(), getTag3().getId(), true);
+        mMbox.alterTag(null, getConv().getId(), getConv().getType(), getTag3().getName(), true, null);
         assertEquals("getTag3().getUnreadCount()", 3, getTag3().getUnreadCount());
 
         // Remove T3 from C
-        mMbox.alterTag(null, getConv().getId(), getConv().getType(), getTag3().getId(), false);
+        mMbox.alterTag(null, getConv().getId(), getConv().getType(), getTag3().getName(), false, null);
         assertEquals("getTag3().getUnreadCount()", 0, getTag3().getUnreadCount());
     }
 
@@ -486,7 +486,7 @@ public class TestUnread extends TestCase {
     }
 
     private void setUnread(MailItem item, boolean unread) throws Exception {
-        mMbox.alterTag(null, item.getId(), item.getType(), Flag.ID_UNREAD, unread);
+        mMbox.alterTag(null, item.getId(), item.getType(), Flag.FlagInfo.UNREAD, unread, null);
         item = mMbox.getItemById(null, item.getId(), item.getType());
         verifyUnreadFlag(item);
     }

@@ -30,20 +30,23 @@ public class CreateChat extends CreateMessage {
         mOperation = MailboxOperation.CreateChat;
     }
 
-    public CreateChat(int mailboxId, String digest, int msgSize, int folderId, int flags, String tags) {
+    public CreateChat(int mailboxId, String digest, int msgSize, int folderId, int flags, String[] tags) {
         super(mailboxId, ":API:", false, digest, msgSize, folderId, true, flags, tags);
         mOperation = MailboxOperation.CreateChat;
     }
     
-    @Override protected void serializeData(RedoLogOutput out) throws IOException {
+    @Override
+    protected void serializeData(RedoLogOutput out) throws IOException {
         super.serializeData(out);
     }
 
-    @Override protected void deserializeData(RedoLogInput in) throws IOException {
+    @Override
+    protected void deserializeData(RedoLogInput in) throws IOException {
         super.deserializeData(in);
     }
     
-    @Override public void redo() throws Exception {
+    @Override
+    public void redo() throws Exception {
         int mboxId = getMailboxId();
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
 

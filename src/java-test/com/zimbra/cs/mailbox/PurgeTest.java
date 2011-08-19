@@ -111,8 +111,8 @@ public class PurgeTest {
         Message older = TestUtil.addMessage(mbox, inbox.getId(), "test1", System.currentTimeMillis() - (60 * Constants.MILLIS_PER_MINUTE));
         Message newer = TestUtil.addMessage(mbox, inbox.getId(), "test2", System.currentTimeMillis() - (30 * Constants.MILLIS_PER_MINUTE));
         Message notTagged = TestUtil.addMessage(mbox, inbox.getId(), "test3", System.currentTimeMillis() - (90 * Constants.MILLIS_PER_MINUTE));
-        mbox.setTags(null, older.getId(), older.getType(), 0, tag.getBitmask());
-        mbox.setTags(null, newer.getId(), newer.getType(), 0, tag.getBitmask());
+        mbox.setTags(null, older.getId(), older.getType(), 0, new String[] { tag.getName() });
+        mbox.setTags(null, newer.getId(), newer.getType(), 0, new String[] { tag.getName() });
         
         // Run purge with default settings and make sure nothing was deleted.
         mbox.purgeMessages(null);
@@ -620,7 +620,7 @@ public class PurgeTest {
     
     private Message alterUnread(Message msg, boolean unread) throws Exception {
         Mailbox mbox = getMailbox();
-        mbox.alterTag(null, msg.getId(), msg.getType(), Flag.ID_UNREAD, unread);
+        mbox.alterTag(null, msg.getId(), msg.getType(), Flag.FlagInfo.UNREAD, unread, null);
         return mbox.getMessageById(null, msg.getId());
     }
     

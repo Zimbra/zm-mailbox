@@ -102,7 +102,7 @@ public class GetMsg extends MailDocumentHandler {
         } else {
             Message msg = getMsg(octxt, mbox, iid, read);
             if (raw) {
-                ToXML.encodeMessageAsMIME(response, ifmt, msg, part, false);
+                ToXML.encodeMessageAsMIME(response, ifmt, octxt, msg, part, false);
             } else {
                 ToXML.encodeMessageAsMP(response, ifmt, octxt, msg, part, maxSize, wantHTML, neuter, headers, false);
             }
@@ -129,12 +129,12 @@ public class GetMsg extends MailDocumentHandler {
         Message msg = mbox.getMessageById(octxt, iid.getId());
         if (read && msg.isUnread() && !RedoLogProvider.getInstance().isSlave()) {
             try {
-                mbox.alterTag(octxt, msg.getId(), MailItem.Type.MESSAGE, Flag.ID_UNREAD, false);
+                mbox.alterTag(octxt, msg.getId(), MailItem.Type.MESSAGE, Flag.FlagInfo.UNREAD, false, null);
             } catch (ServiceException e) {
                 if (e.getCode().equals(ServiceException.PERM_DENIED)) {
-                    ZimbraLog.mailbox.info("no permissions to mark message as read (ignored): " + msg.getId());
+                    ZimbraLog.mailbox.info("no permissions to mark message as read (ignored): %d", msg.getId());
                 } else {
-                    ZimbraLog.mailbox.warn("problem marking message as read (ignored): " + msg.getId(), e);
+                    ZimbraLog.mailbox.warn("problem marking message as read (ignored): %d", msg.getId(), e);
                 }
             }
         }
@@ -144,14 +144,15 @@ public class GetMsg extends MailDocumentHandler {
     public static List<Message> getMsgs(OperationContext octxt, Mailbox mbox, List<Integer> iids, boolean read) throws ServiceException {
         int i = 0;
         int[] msgIdArray = new int[iids.size()];
-        for (int id : iids)
+        for (int id : iids) {
             msgIdArray[i++] = id;
+        }
 
         List<Message> toRet = new ArrayList<Message>(msgIdArray.length);
         for (MailItem item : mbox.getItemById(octxt, msgIdArray, MailItem.Type.MESSAGE)) {
             toRet.add((Message) item);
             if (read && item.isUnread() && !RedoLogProvider.getInstance().isSlave()) {
-                mbox.alterTag(octxt, item.getId(), MailItem.Type.MESSAGE, Flag.ID_UNREAD, false);
+                mbox.alterTag(octxt, item.getId(), MailItem.Type.MESSAGE, Flag.FlagInfo.UNREAD, false, null);
             }
         }
         return toRet;

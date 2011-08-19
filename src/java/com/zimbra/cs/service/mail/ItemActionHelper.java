@@ -47,6 +47,7 @@ import com.zimbra.cs.mailbox.*;
 import com.zimbra.cs.mailbox.MailItem.TargetConstraint;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
+import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
@@ -63,11 +64,11 @@ import com.zimbra.client.ZMountpoint;
 public class ItemActionHelper {
 
     public static ItemActionHelper TAG(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
-            List<Integer> ids, MailItem.Type type, boolean flagValue, TargetConstraint tcon, int tagId)
+            List<Integer> ids, MailItem.Type type, String tagName, boolean flagValue, TargetConstraint tcon)
             throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto,
                     ids, Op.TAG, type, flagValue, tcon);
-        ia.setTagId(tagId);
+        ia.setTagName(tagName);
         ia.schedule();
         return ia;
     }
@@ -162,7 +163,7 @@ public class ItemActionHelper {
 
     public static ItemActionHelper UPDATE(OperationContext octxt, Mailbox mbox, SoapProtocol responseProto,
             List<Integer> ids, MailItem.Type type, TargetConstraint tcon, String name, ItemId iidFolder, String flags,
-            String tags, Color color) throws ServiceException {
+            String[] tags, Color color) throws ServiceException {
         ItemActionHelper ia = new ItemActionHelper(octxt, mbox, responseProto, ids, Op.UPDATE, type, true, tcon);
         ia.setName(name);
         ia.setIidFolder(iidFolder);
@@ -228,7 +229,7 @@ public class ItemActionHelper {
     protected int mHopCount;
 
     // only when Op=TAG
-    protected int mTagId;
+    protected String mTagName;
 
     // only when OP=COLOR or OP=UPDATE
     protected Color mColor;
@@ -241,7 +242,7 @@ public class ItemActionHelper {
 
     // only when OP=UPDATE
     protected String mFlags;
-    protected String mTags;
+    protected String[] mTags;
 
     protected ItemIdFormatter mIdFormatter;
     protected Account mAuthenticatedAccount;
@@ -254,48 +255,59 @@ public class ItemActionHelper {
         toRet.append(" Op=").append(mOperation.toString());
         toRet.append(" Type=").append(type);
         toRet.append(" FlagValue=").append(mFlagValue);
-        if (mTargetConstraint != null)
+        if (mTargetConstraint != null) {
             toRet.append(" TargetConst=").append(mTargetConstraint.toString());
+        }
 
-        if (mOperation == Op.TAG)
-            toRet.append(" TagId=").append(mTagId);
+        if (mOperation == Op.TAG) {
+            toRet.append(" TagName=").append(mTagName);
+        }
 
-        if (mOperation == Op.COLOR || mOperation == Op.UPDATE)
+        if (mOperation == Op.COLOR || mOperation == Op.UPDATE) {
             toRet.append(" Color=").append(mColor);
+        }
 
-        if (mOperation == Op.MOVE || mOperation == Op.SPAM || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.UPDATE)
+        if (mOperation == Op.MOVE || mOperation == Op.SPAM || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.UPDATE) {
             toRet.append(" iidFolder=").append(mIidFolder);
+        }
 
         if (mOperation == Op.UPDATE) {
-            if (mFlags != null)
+            if (mFlags != null) {
                 toRet.append(" flags=").append(mFlags);
-            if (mTags != null)
-                toRet.append(" tags=").append(mTags);
+            }
+            if (mTags != null) {
+                toRet.append(" tags=").append(TagUtil.encodeTags(mTags));
+            }
         }
         return toRet.toString();
     }
 
-    public void setTagId(int tagId) {
+    public void setTagName(String tagName) {
         assert(mOperation == Op.TAG);
-        mTagId = tagId;
+        mTagName = tagName;
     }
+
     public void setColor(Color color) {
         assert(mOperation == Op.COLOR || mOperation == Op.UPDATE);
         mColor = color;
     }
+
     public void setName(String name) {
         assert(mOperation == Op.RENAME || mOperation == Op.UPDATE);
         mName = name;
     }
+
     public void setIidFolder(ItemId iidFolder)  {
         assert(mOperation == Op.MOVE || mOperation == Op.SPAM || mOperation == Op.COPY || mOperation == Op.RENAME || mOperation == Op.UPDATE || mOperation == Op.RECOVER);
         mIidRequestedFolder = mIidFolder = iidFolder;
     }
+
     public void setFlags(String flags) {
         assert(mOperation == Op.UPDATE);
         mFlags = flags;
     }
-    public void setTags(String tags) {
+
+    public void setTags(String[] tags) {
         assert(mOperation == Op.UPDATE);
         mTags = tags;
     }
@@ -374,16 +386,16 @@ public class ItemActionHelper {
         // iterate over the local items and perform the requested operation
         switch (mOperation) {
             case FLAG:
-                getMailbox().alterTag(getOpCtxt(), mIds, type, Flag.ID_FLAGGED, mFlagValue, mTargetConstraint);
+                getMailbox().alterTag(getOpCtxt(), mIds, type, Flag.FlagInfo.FLAGGED, mFlagValue, mTargetConstraint);
                 break;
             case PRIORITY:
-                getMailbox().alterTag(getOpCtxt(), mIds, type, Flag.ID_PRIORITY, mFlagValue, mTargetConstraint);
+                getMailbox().alterTag(getOpCtxt(), mIds, type, Flag.FlagInfo.PRIORITY, mFlagValue, mTargetConstraint);
                 break;
             case READ:
-                getMailbox().alterTag(getOpCtxt(), mIds, type, Flag.ID_UNREAD, !mFlagValue, mTargetConstraint);
+                getMailbox().alterTag(getOpCtxt(), mIds, type, Flag.FlagInfo.UNREAD, !mFlagValue, mTargetConstraint);
                 break;
             case TAG:
-                getMailbox().alterTag(getOpCtxt(), mIds, type, mTagId, mFlagValue, mTargetConstraint);
+                getMailbox().alterTag(getOpCtxt(), mIds, type, mTagName, mFlagValue, mTargetConstraint);
                 break;
             case COLOR:
                 getMailbox().setColor(getOpCtxt(), mIds, type, mColor);
@@ -423,7 +435,7 @@ public class ItemActionHelper {
                     getMailbox().move(getOpCtxt(), mIds, type, mIidFolder.getId(), mTargetConstraint);
                 }
                 if (mTags != null || mFlags != null) {
-                    getMailbox().setTags(getOpCtxt(), mIds, type, mFlags, mTags, mTargetConstraint);
+                    getMailbox().setTags(getOpCtxt(), mIds, type, Flag.toBitmask(mFlags), mTags, mTargetConstraint);
                 }
                 if (mColor != null) {
                     getMailbox().setColor(getOpCtxt(), mIds, type, mColor);

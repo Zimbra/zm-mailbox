@@ -78,16 +78,16 @@ public final class Flag extends Tag {
         IN_DUMPSTER(-30,  "\\InDumpster", HIDDEN),
         UNCACHED(-31, "\\Uncached", HIDDEN);
 
-        private final String name;
-        private final int id;
-        private final char ch;
-        private final int bitmask;
+        final String name;
+        final int id;
+        final char ch;
+        final int bitmask;
 
         private FlagInfo(int id, String name, char ch) {
             this.id = id;
             this.name = name;
             this.ch = ch;
-            bitmask = 1 << (-id - 1);
+            this.bitmask = 1 << (-id - 1);
 
             INDEX2FLAG[getIndex(id)] = this;
             NAME2FLAG.put(name.toLowerCase(), this);
@@ -103,11 +103,21 @@ public final class Flag extends Tag {
             data.folderId = Mailbox.ID_FOLDER_TAGS;
             data.setFlags(BITMASK_UNCACHED);
             data.name = name;
+            data.contentChanged(mbox);
             return new Flag(mbox, data, this);
         }
 
         public int toBitmask() {
             return bitmask;
+        }
+
+        static FlagInfo of(String fname) {
+            return NAME2FLAG.get(fname.toLowerCase());
+        }
+
+        static FlagInfo of(int id) {
+            int index = getIndex(id);
+            return index < 0 || index >= INDEX2FLAG.length ? null : INDEX2FLAG[index];
         }
     }
 
@@ -200,7 +210,7 @@ public final class Flag extends Tag {
 
     private final FlagInfo info;
 
-    private Flag(Mailbox mbox, UnderlyingData ud, FlagInfo info) throws ServiceException {
+    Flag(Mailbox mbox, UnderlyingData ud, FlagInfo info) throws ServiceException {
         super(mbox, ud);
         if (mData.type != Type.FLAG.toByte()) {
             throw new IllegalArgumentException();
@@ -221,6 +231,7 @@ public final class Flag extends Tag {
         if (index < 0 || index >= INDEX2FLAG.length) {
             return HIDDEN;
         }
+
         FlagInfo finfo = INDEX2FLAG[index];
         return finfo == null ? HIDDEN : finfo.ch;
     }
@@ -306,7 +317,6 @@ public final class Flag extends Tag {
         return result;
     }
 
-    @Override
     public byte getIndex() {
         return getIndex(mId);
     }
@@ -357,7 +367,11 @@ public final class Flag extends Tag {
         return meta;
     }
 
-    int toBitmask() {
+    public int toBitmask() {
         return info.bitmask;
+    }
+
+    public boolean isSystemFlag() {
+        return (toBitmask() & Flag.FLAGS_SYSTEM) != 0;
     }
 }

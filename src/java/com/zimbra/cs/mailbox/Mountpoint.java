@@ -197,7 +197,7 @@ public class Mountpoint extends Folder {
         meta.put(Metadata.FN_REMOTE_ID, remoteId);
         if (reminderEnabled)
             meta.put(Metadata.FN_REMINDER_ENABLED, reminderEnabled);
-        return Folder.encodeMetadata(meta, color, version, extended, attrs, view, null, null, 0, 0, 0, 0, 0, 0, 0);
+        return Folder.encodeMetadata(meta, color, version, extended, attrs, view, null, null, 0, 0, 0, 0, 0, 0, 0, null);
     }
 
     @Override

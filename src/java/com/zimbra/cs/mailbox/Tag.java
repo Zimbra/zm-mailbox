@@ -15,14 +15,20 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ArrayUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbTag;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 
@@ -30,8 +36,66 @@ import com.zimbra.soap.mail.type.RetentionPolicy;
  * @since Jul 12, 2004
  */
 public class Tag extends MailItem {
+    public static class NormalizedTags {
+        private static final String[] NO_TAGS = new String[0];
 
-    private int deletedUnreadCount;
+        private String[] tags;
+
+        NormalizedTags(Mailbox mbox, String[] tagsFromClient) throws ServiceException {
+            this(mbox, tagsFromClient, true);
+        }
+
+        NormalizedTags(Mailbox mbox, String[] tagsFromClient, boolean create) throws ServiceException {
+            assert mbox.isTransactionActive() : "cannot instantiate NormalizedTags outside of a transaction";
+
+            if (ArrayUtil.isEmpty(tagsFromClient)) {
+                this.tags = NO_TAGS;
+            } else {
+                Set<Tag> tlist = Sets.newLinkedHashSet();
+                for (String tag : tagsFromClient) {
+                    try {
+                        tlist.add(mbox.getTagByName(tag));
+                        continue;
+                    } catch (NoSuchItemException nsie) { }
+
+                    if (create) {
+                        try {
+                            tlist.add(mbox.createTagInternal(tag, new Color(DEFAULT_COLOR), Mailbox.ID_AUTO_INCREMENT));
+                            continue;
+                        } catch (ServiceException e) {
+                            if (!e.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
+                                throw e;
+                            }
+                        }
+                    }
+                }
+
+                this.tags = new String[tlist.size()];
+                int i = 0;
+                for (Tag t : tlist) {
+                    this.tags[i++] = t.getName();
+                }
+            }
+        }
+
+        public NormalizedTags(Collection<String> tagsFromDB) {
+            this(tagsFromDB == null ? null : tagsFromDB.toArray(new String[tagsFromDB.size()]));
+        }
+
+        public NormalizedTags(String[] tagsFromDB) {
+            this.tags = tagsFromDB == null ? NO_TAGS : tagsFromDB;
+        }
+
+        String[] getTags() {
+            return tags;
+        }
+
+        @Override
+        public String toString() {
+            return tags.toString();
+        }
+    }
+
     private RetentionPolicy retentionPolicy;
 
     Tag(Mailbox mbox, UnderlyingData ud) throws ServiceException {
@@ -46,101 +110,35 @@ public class Tag extends MailItem {
         }
     }
 
-    @Override public String getSender() {
+    @Override
+    public String getSender() {
         return "";
     }
 
-    public byte getIndex() {
-        return getIndex(mId);
+    public int getItemCount() {
+        return (int) getSize();
     }
 
-    public static byte getIndex(int id) {
-        return (byte) (id - TAG_ID_OFFSET);
-    }
+    /** Updates the number of items with the tag and their total size.
+     *  <i>(Total size not currently tracked.)</i>
+     * @param countDelta    The change in item count, negative or positive.
+     * @param deletedDelta  The change in number of IMAP \Deleted items.*/
+    void updateSize(int countDelta, int deletedDelta) {
+        int delta = countDelta - deletedDelta;
+        if (delta == 0 || !trackUnread())
+            return;
 
-    /** Returns whether this id falls in the acceptable tag ID range (64..127).
-     *  Does <u>not</u> verify that such a tag exists.
-     *
-     * @param id  Item id to check.
-     * @see MailItem#TAG_ID_OFFSET
-     * @see MailItem#MAX_TAG_COUNT */
-    public static boolean validateId(int id) {
-        return (id >= MailItem.TAG_ID_OFFSET && id < MailItem.TAG_ID_OFFSET + MailItem.MAX_TAG_COUNT);
-    }
-
-    public long getBitmask() {
-        return 1L << getIndex();
-    }
-
-    public int getDeletedUnreadCount() {
-        return deletedUnreadCount;
-    }
-
-    void setSize(int deletedUnread) {
-        // we don't track number of tagged items, total size of tagged items, or number of \Deleted items
-        deletedUnreadCount = deletedUnread;
+        markItemModified(Change.MODIFIED_SIZE);
+        // if we go negative, that's OK!  just pretend we're at 0.
+        mData.size = Math.max(0, mData.size + delta);
     }
 
     @Override
     protected void updateUnread(int delta, int deletedDelta) throws ServiceException {
-        super.updateUnread(delta, deletedDelta);
-
-        if (deletedDelta != 0 && trackUnread()) {
-            markItemModified(Change.MODIFIED_UNREAD);
-            deletedUnreadCount = Math.min(Math.max(0, deletedUnreadCount + deletedDelta), mData.unreadCount);
-        }
+        // we track unread un-\Deleted items only
+        super.updateUnread(delta - deletedDelta, 0);
     }
 
-
-    public static long tagsToBitmask(String csv) {
-        long bitmask = 0;
-        if (csv != null && !csv.equals("")) {
-            String[] tags = csv.split(",");
-            for (int i = 0; i < tags.length; i++) {
-                int value = 0;
-                try {
-                    value = Integer.parseInt(tags[i]);
-                } catch (NumberFormatException e) {
-                    ZimbraLog.mailbox.error("unable to parse tags: '" + csv + "'", e);
-                    throw e;
-                }
-
-                if (!validateId(value))
-                    continue;
-                // FIXME: should really check this against the existing tags in the mailbox
-                bitmask |= 1L << Tag.getIndex(value);
-            }
-        }
-        return bitmask;
-    }
-
-    public static String bitmaskToTags(long bitmask) {
-        if (bitmask == 0)
-            return "";
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; bitmask != 0 && i < MAX_TAG_COUNT - 1; i++) {
-            if ((bitmask & (1L << i)) != 0) {
-                if (sb.length() > 0)
-                    sb.append(',');
-                sb.append(i + TAG_ID_OFFSET);
-                bitmask &= ~(1L << i);
-            }
-        }
-        return sb.toString();
-    }
-
-    static List<Tag> bitmaskToTagList(Mailbox mbox, long bitmask) throws ServiceException {
-        if (bitmask == 0)
-            return Collections.emptyList();
-        ArrayList<Tag> tags = new ArrayList<Tag>();
-        for (int i = 0; bitmask != 0 && i < MAX_TAG_COUNT - 1; i++) {
-            if ((bitmask & (1L << i)) != 0) {
-                tags.add(mbox.getTagById(i + TAG_ID_OFFSET));
-                bitmask &= ~(1L << i);
-            }
-        }
-        return tags;
-    }
 
     @Override
     boolean isTaggable() {
@@ -171,19 +169,23 @@ public class Tag extends MailItem {
         return item.isTaggable();
     }
     
+    /** Returns the retention policy for this tag.  Does not return {@code null}. */
     public RetentionPolicy getRetentionPolicy() {
         return retentionPolicy;
     }
 
-    static Tag create(Mailbox mbox, int id, String name, Color color) throws ServiceException {
-        if (!validateId(id)) {
-            throw MailServiceException.INVALID_ID(id);
+    public void setRetentionPolicy(RetentionPolicy rp) throws ServiceException {
+        if (!canAccess(ACL.RIGHT_ADMIN)) {
+            throw ServiceException.PERM_DENIED("you do not have admin rights to tag " + getName());
         }
-        Folder tagFolder = mbox.getFolderById(Mailbox.ID_FOLDER_TAGS);
-        if (!tagFolder.canAccess(ACL.RIGHT_INSERT)) {
-            throw ServiceException.PERM_DENIED("you do not have the necessary permissions");
-        }
-        name = validateItemName(name);
+
+        markItemModified(Change.MODIFIED_RETENTION_POLICY);
+        retentionPolicy = rp == null ? new RetentionPolicy() : rp;
+        saveMetadata();
+    }
+
+    static Tag create(Mailbox mbox, int id, String requestedName, Color color) throws ServiceException {
+        String name = validateItemName(requestedName);
         try {
             // if we can successfully get a tag with that name, we've got a naming conflict
             mbox.getTagByName(name);
@@ -193,14 +195,13 @@ public class Tag extends MailItem {
         UnderlyingData data = new UnderlyingData();
         data.id = id;
         data.type = Type.TAG.toByte();
-        data.folderId = tagFolder.getId();
-        data.date = mbox.getOperationTimestamp();
+        data.folderId = Mailbox.ID_FOLDER_TAGS;
         data.name = name;
         data.setSubject(name);
-        data.metadata = encodeMetadata(color, 1, 0);
+        data.metadata = encodeMetadata(color, 1, null);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding Tag %s: id=%d.", name, data.id);
-        new DbMailItem(mbox).create(data);
+        DbTag.createTag(mbox, data, color);
 
         Tag tag = new Tag(mbox, data);
         tag.finishCreation(null);
@@ -214,67 +215,82 @@ public class Tag extends MailItem {
      *
      * @perms {@link ACL#RIGHT_READ} on the folder,
      *        {@link ACL#RIGHT_WRITE} on all affected messages. */
-    @Override void alterUnread(boolean unread) throws ServiceException {
-        if (unread)
+    @Override
+    void alterUnread(boolean unread) throws ServiceException {
+        if (unread) {
             throw ServiceException.INVALID_REQUEST("tags can only be marked read", null);
-        if (!canAccess(ACL.RIGHT_READ))
-            throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the tag");
-        if (!isUnread())
-            return;
+        }
 
         // decrement the in-memory unread count of each message.  each message will
         // then implicitly decrement the unread count for its conversation, folder
         // and tags.
         List<Integer> targets = new ArrayList<Integer>();
-        boolean missed = false;
         int delta = unread ? 1 : -1;
-        for (UnderlyingData data : DbMailItem.getUnreadMessages(this)) {
+        for (UnderlyingData data : DbTag.getUnreadMessages(this)) {
             Message msg = mMailbox.getMessage(data);
             if (msg.checkChangeID() || !msg.canAccess(ACL.RIGHT_WRITE)) {
-                msg.updateUnread(delta, msg.isTagged(Flag.ID_DELETED) ? delta : 0);
+                msg.updateUnread(delta, msg.isTagged(Flag.FlagInfo.DELETED) ? delta : 0);
                 msg.mData.metadataChanged(mMailbox);
                 targets.add(msg.getId());
-            } else {
-                missed = true;
             }
         }
 
         // Mark all messages with this tag as read in the database
-        if (!missed)
-            DbMailItem.alterUnread(this, unread);
-        else
-            DbMailItem.alterUnread(mMailbox, targets, unread);
+        DbMailItem.alterUnread(mMailbox, targets, unread);
     }
 
-    private static final String INVALID_PREFIX = "\\";
+    static final String FLAG_NAME_PREFIX = "\\";
 
     static String validateItemName(String name) throws ServiceException {
-        name = MailItem.validateItemName(name == null ? null : name.trim());
-        if (name.startsWith(INVALID_PREFIX))
+        // reject invalid characters in the name
+        if (name == null || name != StringUtil.stripControlCharacters(name)) {
             throw MailServiceException.INVALID_NAME(name);
-        return name;
+        }
+        // strip trailing whitespace and validate length of resulting name
+        String trimmed = name.trim().replace('\t', ' ').replace('\r', ' ').replace('\n', ' ');
+        if (trimmed.isEmpty() || trimmed.length() > MAX_NAME_LENGTH || trimmed.startsWith(FLAG_NAME_PREFIX)) {
+            throw MailServiceException.INVALID_NAME(name);
+        }
+        return trimmed;
     }
 
     /** Overrides {@link MailItem#rename(String, Folder) to update filter rules
      *  if necessary. */
-    @Override void rename(String name, Folder target) throws ServiceException {
-        String originalName = getName();
-        super.rename(name, target);
+    @Override
+    void rename(String name, Folder target) throws ServiceException {
+        String originalName = getName(), newName = validateItemName(name);
 
-        if (!originalName.equals(name)) {
-            // any folder that contains items might have seen some of its contents change
-            touchAllFolders();
+        if (target.getId() != Mailbox.ID_FOLDER_TAGS) {
+            throw MailServiceException.CANNOT_CONTAIN();
+        } else if (originalName.equals(newName)) {
+            return;
+        } else if (!canAccess(ACL.RIGHT_WRITE)) {
+            throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
         }
+
+        if (ZimbraLog.mailop.isDebugEnabled()) {
+            ZimbraLog.mailop.debug("renaming " + getMailopContext(this) + " to " + newName);
+        }
+
+        // actually rename the tag
+        markItemModified(Change.MODIFIED_NAME);
+        mData.name = newName;
+        mData.contentChanged(mMailbox);
+        DbTag.renameTag(this);
+        // dump entire item cache because tag names on cached items are now stale
+        mMailbox.purge(Type.MESSAGE);
+        // any folder that contains items might have seen some of its contents change
+        touchAllFolders();
     }
 
     @Override
     void purgeCache(PendingDelete info, boolean purgeItem) throws ServiceException {
         ZimbraLog.mailop.debug("Removing %s from all items.", getMailopContext(this));
         // remove the tag from all items in the database
-        DbMailItem.clearTag(this);
+        DbTag.deleteTag(this);
         // any folder that contains items might have seen some of its contents change
         touchAllFolders();
-        // dump entire item cache (necessary now because we reuse tag ids)
+        // dump entire item cache because tag names on cached items are now stale
         mMailbox.purge(Type.MESSAGE);
         // remove tag from tag cache
         super.purgeCache(info, purgeItem);
@@ -294,13 +310,17 @@ public class Tag extends MailItem {
 
     /** Persists the tag's current unread count to the database. */
     protected void saveTagCounts() throws ServiceException {
-        DbMailItem.persistCounts(this, encodeMetadata());
-        ZimbraLog.mailbox.debug("\"%s\": updating tag counts (u%d/du%d)", getName(), mData.unreadCount, deletedUnreadCount);
+        DbTag.persistCounts(this);
+        ZimbraLog.mailbox.debug("\"%s\": updating tag counts (s%d/u%d)", getName(), (int) mData.size, mData.unreadCount);
     }
 
+    @Override
+    protected void saveMetadata(String ignored) throws ServiceException {
+        DbTag.saveMetadata(this);
+    }
 
-    @Override void decodeMetadata(Metadata meta) throws ServiceException {
-        deletedUnreadCount = (int) meta.getLong(Metadata.FN_DELETED_UNREAD, 0);
+    @Override
+    void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
 
         Metadata rp = meta.getMap(Metadata.FN_RETENTION_POLICY, true);
@@ -311,45 +331,27 @@ public class Tag extends MailItem {
         }
     }
 
-    @Override Metadata encodeMetadata(Metadata meta) {
-        Metadata m = encodeMetadata(meta, mRGBColor, mVersion, deletedUnreadCount);
-        if (retentionPolicy.isSet()) {
-            m.put(Metadata.FN_RETENTION_POLICY, RetentionPolicyManager.toMetadata(retentionPolicy, true));
-        }
-        return m;
+    @Override
+    Metadata encodeMetadata(Metadata meta) {
+        return encodeMetadata(meta, mRGBColor, mVersion, retentionPolicy);
     }
 
-    private static String encodeMetadata(Color color, int version, int deletedUnread) {
-        return encodeMetadata(new Metadata(), color, version, deletedUnread).toString();
+    public static String encodeMetadata(Color color, int version, RetentionPolicy rp) {
+        return encodeMetadata(new Metadata(), color, version, rp).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, Color color, int version, int deletedUnread) {
-        if (deletedUnread > 0)
-            meta.put(Metadata.FN_DELETED_UNREAD, deletedUnread);
-        return MailItem.encodeMetadata(meta, color, version, null);
-    }
-
-    private static final String CN_DELETED_UNREAD = "del_unread";
-
-    public void setRetentionPolicy(RetentionPolicy rp)
-    throws ServiceException {
-        if (!canAccess(ACL.RIGHT_ADMIN)) {
-            throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
+    static Metadata encodeMetadata(Metadata meta, Color color, int version, RetentionPolicy rp) {
+        MailItem.encodeMetadata(meta, color, version, null);
+        if (rp != null && rp.isSet()) {
+            meta.put(Metadata.FN_RETENTION_POLICY, RetentionPolicyManager.toMetadata(rp, true));
         }
-        markItemModified(Change.MODIFIED_RETENTION_POLICY);
-        if (rp == null) {
-            retentionPolicy = new RetentionPolicy();
-        } else {
-            retentionPolicy = rp;
-        }
-        saveMetadata();
+        return meta;
     }
 
     @Override
     public String toString() {
         Objects.ToStringHelper helper = Objects.toStringHelper(this);
         appendCommonMembers(helper);
-        helper.add(CN_DELETED_UNREAD, deletedUnreadCount);
         return helper.toString();
     }
 }

@@ -57,7 +57,6 @@ public class ImapSession extends Session {
         void endSelect();
 
         void handleTagDelete(int changeId, int tagId, Change chg);
-        void handleTagCreate(int changeId, Tag tag);
         void handleTagRename(int changeId, Tag tag, Change chg);
         void handleItemDelete(int changeId, int itemId, Change chg);
         void handleItemCreate(int changeId, MailItem item, AddedItems added);
@@ -406,9 +405,7 @@ public class ImapSession extends Session {
     }
 
     private void handleCreate(int changeId, MailItem item, AddedItems added) {
-        if (item instanceof Tag) {
-            mFolder.handleTagCreate(changeId, (Tag) item);
-        } else if (item == null || item.getId() <= 0) {
+        if (item == null || item.getId() <= 0) {
             return;
         } else if (item.getFolderId() == mFolderId && (item instanceof Message || item instanceof Contact)) {
             mFolder.handleItemCreate(changeId, item, added);
@@ -577,10 +574,6 @@ public class ImapSession extends Session {
 
         @Override public void handleTagDelete(int changeId, int tagId, Change chg) {
             queueDelete(changeId, tagId, chg);
-        }
-
-        @Override public void handleTagCreate(int changeId, Tag tag) {
-            queueCreate(changeId, tag);
         }
 
         @Override public void handleTagRename(int changeId, Tag tag, Change chg) {

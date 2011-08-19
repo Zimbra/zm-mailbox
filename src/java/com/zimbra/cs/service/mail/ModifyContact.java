@@ -78,7 +78,7 @@ public class ModifyContact extends MailDocumentHandler  {
         Element response = zsc.createElement(MailConstants.MODIFY_CONTACT_RESPONSE);
         if (con != null) {
             if (verbose)
-                ToXML.encodeContact(response, ifmt, con, true, null);
+                ToXML.encodeContact(response, ifmt, octxt, con, true, null);
             else
                 response.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, con.getId());
         }

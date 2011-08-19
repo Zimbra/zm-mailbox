@@ -65,7 +65,7 @@ public final class FolderTest {
         modseq = checkMODSEQ("message add", mbox, folderId, modseq);
 
         // mark message read
-        mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, Flag.ID_UNREAD, false);
+        mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, Flag.FlagInfo.UNREAD, false, null);
         modseq = checkMODSEQ("mark read", mbox, folderId, modseq);
 
         // move message out of folder
@@ -77,7 +77,7 @@ public final class FolderTest {
         modseq = checkMODSEQ("move msg in", mbox, folderId, modseq);
 
         // mark message answered
-        mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, Flag.ID_REPLIED, true);
+        mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, Flag.FlagInfo.REPLIED, true, null);
         modseq = checkMODSEQ("mark answered", mbox, folderId, modseq);
 
         // move virtual conversation out of folder
@@ -103,25 +103,25 @@ public final class FolderTest {
         modseq = checkMODSEQ("move conv in", mbox, folderId, modseq);
 
         // tag message
-        int tagId = mbox.createTag(null, "taggity", (byte) 3).getId();
+        Tag tag = mbox.createTag(null, "taggity", (byte) 3);
         modseq = mbox.getFolderById(null, folderId).getImapMODSEQ();
-        mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, tagId, true);
+        mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, tag.getName(), true, null);
         modseq = checkMODSEQ("add tag", mbox, folderId, modseq);
 
         // rename tag
-        mbox.rename(null, tagId, MailItem.Type.TAG, "blaggity", Mailbox.ID_AUTO_INCREMENT);
+        mbox.rename(null, tag.getId(), MailItem.Type.TAG, "blaggity", Mailbox.ID_AUTO_INCREMENT);
         modseq = checkMODSEQ("rename tag", mbox, folderId, modseq);
 
         // untag message
-        mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, tagId, false);
+        mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, tag.getName(), false, null);
         modseq = checkMODSEQ("remove tag", mbox, folderId, modseq);
 
         // retag message
-        mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, tagId, true);
+        mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, tag.getName(), true, null);
         modseq = checkMODSEQ("re-add tag", mbox, folderId, modseq);
 
         // delete tag
-        mbox.delete(null, tagId, MailItem.Type.TAG);
+        mbox.delete(null, tag.getId(), MailItem.Type.TAG);
         modseq = checkMODSEQ("tag delete", mbox, folderId, modseq);
 
         // hard delete message

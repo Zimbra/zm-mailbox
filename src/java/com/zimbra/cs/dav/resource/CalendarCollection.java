@@ -332,10 +332,10 @@ public class CalendarCollection extends Collection {
             }
 
             // prepare to call Mailbox.setCalendarItem()
-            int flags = 0; long tags = 0; List<ReplyInfo> replies = null;
+            int flags = 0; String[] tags = null; List<ReplyInfo> replies = null;
             if (calItem != null) {
                 flags = calItem.getFlagBitmask();
-                tags = calItem.getTagBitmask();
+                tags = calItem.getTags();
                 replies = calItem.getAllReplies();
             }
             SetCalendarItemData scidDefault = new SetCalendarItemData();

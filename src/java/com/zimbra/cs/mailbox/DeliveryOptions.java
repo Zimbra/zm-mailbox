@@ -15,6 +15,8 @@
 
 package com.zimbra.cs.mailbox;
 
+import java.util.Collection;
+
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata;
 
 /**
@@ -25,7 +27,7 @@ public class DeliveryOptions {
     private int mFolderId = -1;
     private boolean mNoICal = false;
     private int mFlags = 0;
-    private String mTags = null;
+    private String[] mTags = null;
     private int mConversationId = Mailbox.ID_AUTO_INCREMENT;
     private String mRecipientEmail = ":API:";
     private Message.DraftInfo mDraftInfo = null;
@@ -34,7 +36,7 @@ public class DeliveryOptions {
     public int getFolderId() { return mFolderId; }
     public boolean getNoICal() { return mNoICal; }
     public int getFlags() { return mFlags; }
-    public String getTags() { return mTags; }
+    public String[] getTags() { return mTags; }
     public int getConversationId() { return mConversationId; }
     public String getRecipientEmail() { return mRecipientEmail; }
     public Message.DraftInfo getDraftInfo() { return mDraftInfo; }
@@ -59,9 +61,14 @@ public class DeliveryOptions {
         mFlags = flags;
         return this;
     }
-    
-    public DeliveryOptions setTags(String tagString) {
-        mTags = tagString;
+
+    public DeliveryOptions setTags(Collection<String> tags) {
+        mTags = tags == null ? null : tags.toArray(new String[tags.size()]);
+        return this;
+    }
+
+    public DeliveryOptions setTags(String[] tags) {
+        mTags = tags;
         return this;
     }
     

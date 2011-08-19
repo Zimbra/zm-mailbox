@@ -22,10 +22,8 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Tag;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -1029,19 +1027,16 @@ public final class ContactCSV {
                 sb.append(fieldSeparator);
             }
             if (col.colType == ColType.TAG) {
-                try {
-                    boolean firstTag = true;
-                    sb.append('"');
-                    for (Tag t : c.getTagList()) {
-                        if (!firstTag) {
-                            sb.append(fieldSeparator);
-                        }
-                        sb.append(t.getName());
-                        firstTag = false;
+                boolean firstTag = true;
+                sb.append('"');
+                for (String tname : c.getTags()) {
+                    if (!firstTag) {
+                        sb.append(fieldSeparator);
                     }
-                    sb.append('"');
-                } catch (ServiceException se) {
+                    sb.append(tname.replace("\\", "\\\\").replace("\"", "\\\""));
+                    firstTag = false;
                 }
+                sb.append('"');
             } else {
                 addFieldValue(c.getFields(), col.name, col.field, sb);
             }

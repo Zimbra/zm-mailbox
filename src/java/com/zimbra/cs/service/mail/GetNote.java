@@ -52,7 +52,7 @@ public class GetNote extends MailDocumentHandler {
 			throw MailServiceException.NO_SUCH_NOTE(iid.getId());
 		
 		Element response = zsc.createElement(MailConstants.GET_NOTE_RESPONSE);
-		ToXML.encodeNote(response, ifmt, note);
+		ToXML.encodeNote(response, ifmt, octxt, note);
 		return response;
 	}
 }

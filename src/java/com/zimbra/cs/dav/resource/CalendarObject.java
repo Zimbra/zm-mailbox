@@ -190,7 +190,7 @@ public interface CalendarObject {
                 if (mbox.getAccount().isPrefDeleteInviteOnReply()) {
                     super.delete(ctxt);
                 } else {
-                    mbox.alterTag(ctxt.getOperationContext(), mId, MailItem.Type.MESSAGE, Flag.ID_UNREAD, false);
+                    mbox.alterTag(ctxt.getOperationContext(), mId, MailItem.Type.MESSAGE, Flag.FlagInfo.UNREAD, false, null);
                 }
             } catch (ServiceException se) {
                 int resCode = se instanceof MailServiceException.NoSuchItemException ?

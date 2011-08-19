@@ -82,7 +82,7 @@ public class RemoveAttachments extends MailDocumentHandler {
             } else {
                 DeliveryOptions dopt = new DeliveryOptions();
                 dopt.setFolderId(msg.getFolderId()).setNoICal(true);
-                dopt.setFlags(msg.getFlagBitmask()).setTags(msg.getTagString());
+                dopt.setFlags(msg.getFlagBitmask()).setTags(msg.getTags());
                 if (msg.getConversationId() > 0)
                     dopt.setConversationId(msg.getConversationId());
                 // FIXME: copy custom metadata to new item

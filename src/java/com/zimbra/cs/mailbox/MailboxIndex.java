@@ -56,6 +56,7 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbSearch;
+import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.index.CassandraIndex;
 import com.zimbra.cs.index.DbSearchConstraints;
@@ -567,7 +568,7 @@ public final class MailboxIndex {
                                 item.tagChanged(indexingDeferredFlag, false);
                             }
                             mailbox.getOperationConnection(); // we must call this before DbMailItem.alterTag
-                            DbMailItem.alterTag(indexingDeferredFlag, deferredTagsToClear, false);
+                            DbTag.alterTag(indexingDeferredFlag, deferredTagsToClear, false);
                             success = true;
                         } finally {
                             mailbox.endTransaction(success);

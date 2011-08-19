@@ -109,7 +109,7 @@ public final class SyncUtil {
     }
 
     public static void setSyncEnabled(Mailbox mbox, int folderId, boolean enabled) throws ServiceException {
-        mbox.alterTag(new OperationContext(mbox), folderId, MailItem.Type.FOLDER, Flag.ID_SYNC, enabled);
+        mbox.alterTag(new OperationContext(mbox), folderId, MailItem.Type.FOLDER, Flag.FlagInfo.SYNC, enabled, null);
     }
 
     public static Log getTraceLogger(Log parent, String id) {

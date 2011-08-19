@@ -102,7 +102,7 @@ public class ExistingMessageHandler extends FilterHandler {
 
 
     @Override
-    public Message implicitKeep(Collection<ActionFlag> flagActions, String tags)
+    public Message implicitKeep(Collection<ActionFlag> flagActions, String[] tags)
     throws ServiceException {
         ZimbraLog.filter.debug("Implicitly keeping existing message %d.", messageId);
         Message msg = mailbox.getMessageById(octxt, messageId);
@@ -112,7 +112,7 @@ public class ExistingMessageHandler extends FilterHandler {
     }
 
     @Override
-    public Message explicitKeep(Collection<ActionFlag> flagActions, String tags)
+    public Message explicitKeep(Collection<ActionFlag> flagActions, String[] tags)
     throws ServiceException {
         ZimbraLog.filter.debug("Explicitly keeping existing message %d.", messageId);
         Message msg = mailbox.getMessageById(octxt, messageId);
@@ -121,20 +121,20 @@ public class ExistingMessageHandler extends FilterHandler {
         return msg;
     }
 
-    private void updateTagsAndFlagsIfNecessary(Message msg, Collection<ActionFlag> flagActions, String tagString)
+    private void updateTagsAndFlagsIfNecessary(Message msg, Collection<ActionFlag> flagActions, String[] newTags)
     throws ServiceException {
-        long tags = msg.getTagBitmask() | Tag.tagsToBitmask(tagString);
+        String[] existingTags = msg.getTags(), tags = FilterUtil.getTagsUnion(existingTags, newTags);
         int flags = FilterUtil.getFlagBitmask(flagActions, msg.getFlagBitmask(), mailbox);
-        if (msg.getTagBitmask() != tags || msg.getFlagBitmask() != flags) {
-            ZimbraLog.filter.info("Updating flags to %d, tags to %d on message %d.",
-                flags, tags, msg.getId());
+        if (existingTags != tags || msg.getFlagBitmask() != flags) {
+            ZimbraLog.filter.info("Updating flags to %d, tags to %s on message %d.",
+                    flags, tags, msg.getId());
             mailbox.setTags(octxt, msg.getId(), MailItem.Type.MESSAGE, flags, tags);
             filtered = true;
         }
     }
-    
+
     @Override
-    public ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String tags) throws ServiceException {
+    public ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String[] tags) throws ServiceException {
         Message source = mailbox.getMessageById(octxt, messageId);
 
         // See if the message is already in the target folder.
@@ -161,7 +161,7 @@ public class ExistingMessageHandler extends FilterHandler {
             // Apply flags and tags
             mailbox.setTags(octxt, newMsg.getId(), MailItem.Type.MESSAGE,
                             FilterUtil.getFlagBitmask(flagActions, source.getFlagBitmask(), mailbox),
-                            source.getTagBitmask() | Tag.tagsToBitmask(tags));
+                            FilterUtil.getTagsUnion(source.getTags(), tags));
             return new ItemId(mailbox, messageId);
         }
 

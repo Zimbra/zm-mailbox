@@ -51,6 +51,7 @@ import com.zimbra.cs.mailbox.MessageDataSource;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.ContactGroup.Member;
+import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedContact;
 import com.zimbra.cs.mime.ParsedContact.FieldDelta;
@@ -88,7 +89,7 @@ public class CreateContact extends MailDocumentHandler  {
 
         Element cn = request.getElement(MailConstants.E_CONTACT);
         ItemId iidFolder = new ItemId(cn.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER), zsc);
-        String tagsStr = cn.getAttribute(MailConstants.A_TAGS, null);
+        String[] tags = TagUtil.parseTags(cn, mbox, octxt);
 
         Element vcard = cn.getOptionalElement(MailConstants.E_VCARD);
 
@@ -107,7 +108,7 @@ public class CreateContact extends MailDocumentHandler  {
             }
         }
         
-        List<Contact> contacts = createContacts(octxt, mbox, iidFolder, pclist, tagsStr);
+        List<Contact> contacts = createContacts(octxt, mbox, iidFolder, pclist, tags);
         Contact con = null;
         if (contacts.size() > 0)
             con = contacts.get(0);
@@ -115,7 +116,7 @@ public class CreateContact extends MailDocumentHandler  {
         Element response = zsc.createElement(MailConstants.CREATE_CONTACT_RESPONSE);
         if (con != null) {
             if (verbose)
-                ToXML.encodeContact(response, ifmt, con, true, null);
+                ToXML.encodeContact(response, ifmt, octxt, con, true, null);
             else
                 response.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, con.getId());
         }
@@ -294,8 +295,9 @@ public class CreateContact extends MailDocumentHandler  {
                     if (part != null && !part.equals("")) {
                         try {
                             MimePart mp = Mime.getMimePart(msg.getMimeMessage(), part);
-                            if (mp == null)
+                            if (mp == null) {
                                 throw MailServiceException.NO_SUCH_PART(part);
+                            }
                             DataSource ds = new MimePartDataSource(mp);
                             return new Attachment(new DataHandler(ds), name);
                         } catch (MessagingException me) {
@@ -307,8 +309,9 @@ public class CreateContact extends MailDocumentHandler  {
                     }
                 } else if (item instanceof Document) {
                     Document doc = (Document) item;
-                    if (part != null && !part.equals(""))
+                    if (part != null && !part.equals("")) {
                         throw MailServiceException.NO_SUCH_PART(part);
+                    }
                     DataSource ds = new DocumentDataSource(doc);
                     return new Attachment(new DataHandler(ds), name, (int) doc.getSize());
                 }
@@ -357,15 +360,15 @@ public class CreateContact extends MailDocumentHandler  {
         return pclist;
     }
 
-    public static List<Contact> createContacts(OperationContext oc, Mailbox mbox,
-            ItemId iidFolder, List<ParsedContact> list, String tagsStr) throws ServiceException {
+    public static List<Contact> createContacts(OperationContext oc, Mailbox mbox, ItemId iidFolder, List<ParsedContact> list, String[] tags)
+    throws ServiceException {
 
         List<Contact> toRet = new ArrayList<Contact>();
 
         mbox.lock.lock();
         try {
             for (ParsedContact pc : list) {
-                toRet.add(mbox.createContact(oc, pc, iidFolder.getId(), tagsStr));
+                toRet.add(mbox.createContact(oc, pc, iidFolder.getId(), tags));
             }
         } finally {
             mbox.lock.release();
@@ -381,8 +384,9 @@ public class CreateContact extends MailDocumentHandler  {
         try {
             if (iid.isLocal()) {
                 // fetch from local store
-                if (!mbox.getAccountId().equals(iid.getAccountId()))
+                if (!mbox.getAccountId().equals(iid.getAccountId())) {
                     mbox = MailboxManager.getInstance().getMailboxByAccountId(iid.getAccountId());
+                }
                 Message msg = mbox.getMessageById(octxt, iid.getId());
                 MimePart mp = Mime.getMimePart(msg.getMimeMessage(), part);
                 String ctype = new ContentType(mp.getContentType()).getContentType();

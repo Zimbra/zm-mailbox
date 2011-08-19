@@ -26,12 +26,12 @@ public class OutgoingMessageHandler extends FilterHandler {
     private int defaultFolderId;
     private boolean noICal;
     private int defaultFlags;
-    private String defaultTags;
+    private String[] defaultTags;
     private int convId;
     private OperationContext octxt;
 
     public OutgoingMessageHandler(Mailbox mailbox, ParsedMessage pm, int sentFolderId, boolean noICal,
-                                  int flags, String tags, int convId, OperationContext octxt) {
+                                  int flags, String[] tags, int convId, OperationContext octxt) {
         this.mailbox = mailbox;
         this.parsedMessage = pm;
         this.defaultFolderId = sentFolderId;
@@ -69,7 +69,7 @@ public class OutgoingMessageHandler extends FilterHandler {
     }
 
     @Override
-    public Message explicitKeep(Collection<ActionFlag> flagActions, String tags)
+    public Message explicitKeep(Collection<ActionFlag> flagActions, String[] tags)
     throws ServiceException {
         try {
             DeliveryOptions dopt = new DeliveryOptions().setFolderId(defaultFolderId).setConversationId(convId);
@@ -99,12 +99,12 @@ public class OutgoingMessageHandler extends FilterHandler {
     }
 
     @Override
-    public Message implicitKeep(Collection<ActionFlag> flagActions, String tags) throws ServiceException {
+    public Message implicitKeep(Collection<ActionFlag> flagActions, String[] tags) throws ServiceException {
         return explicitKeep(flagActions, tags);
     }
 
     @Override
-    public ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String tags) throws ServiceException {
+    public ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String[] tags) throws ServiceException {
         return FilterUtil.addMessage(null, mailbox, parsedMessage, null, folderPath, noICal,
                                      FilterUtil.getFlagBitmask(flagActions, defaultFlags, mailbox),
                                      FilterUtil.getTagsUnion(tags, defaultTags), convId, octxt);

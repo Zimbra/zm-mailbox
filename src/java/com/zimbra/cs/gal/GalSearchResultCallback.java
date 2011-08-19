@@ -91,17 +91,17 @@ public class GalSearchResultCallback implements GalContact.Visitor {
     	if (mIdOnly) {
     	    eContact = mResponse.addElement(MailConstants.E_CONTACT).addAttribute(MailConstants.A_ID, mFormatter.formatItemId(c));
     	} else if (mOp == GalOp.sync) {
-    	    eContact = ToXML.encodeContact(mResponse, mFormatter, c, true, c.getAllFields().keySet());
+    	    eContact = ToXML.encodeContact(mResponse, mFormatter, null, c, true, c.getAllFields().keySet());
     	} else if (mNeedsSMIMECerts) {
     		// this is the case only when proxying SearcgGalRequest for the call from 
     	    // GetSMIMEPublicCerts (in ZimbraNetwork)
     	    Set<String> fieldSet = new HashSet<String>(c.getFields().keySet());
     		fieldSet.addAll(Contact.getSMIMECertFields());
-    	    eContact = ToXML.encodeContact(mResponse, mFormatter, c, true, fieldSet);
+    	    eContact = ToXML.encodeContact(mResponse, mFormatter, null, c, true, fieldSet);
     	} else {
     	    Set<String> fieldSet = new HashSet<String>(c.getFields().keySet());
             fieldSet.removeAll(Contact.getSMIMECertFields());
-    	    eContact = ToXML.encodeContact(mResponse, mFormatter, c, true, fieldSet);
+    	    eContact = ToXML.encodeContact(mResponse, mFormatter, null, c, true, fieldSet);
     	}
     	
     	eContact.addAttribute(AccountConstants.A_REF, c.get(ContactConstants.A_dn));

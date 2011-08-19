@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Metadata;
 
@@ -30,7 +31,8 @@ public class CalendarItemData {
     private int mFolderId;
     private int mCalItemId;
     private String mFlags;
-    private String mTags;
+    private String[] mTags;
+    private String mTagIds;
     private boolean mIsPublic;
     private int mModMetadata; // mod_metadata db column; this serves the function of last-modified-time
     private int mModContent;  // mod_content db column
@@ -64,7 +66,8 @@ public class CalendarItemData {
     public int getFolderId()  { return mFolderId; }
     public int getCalItemId() { return mCalItemId; }
     public String getFlags()  { return mFlags; }
-    public String getTags()   { return mTags; }
+    public String[] getTags()   { return mTags; }
+    public String getTagIds()   { return mTagIds; }
     public boolean isPublic() { return mIsPublic; }
     public int getModMetadata()  { return mModMetadata; }
     public int getModContent()   { return mModContent; }
@@ -89,7 +92,7 @@ public class CalendarItemData {
         mActualRangeEnd = end;
     }
 
-    CalendarItemData(MailItem.Type type, int folderId, int calItemId, String flags, String tags, int modMetadata,
+    CalendarItemData(MailItem.Type type, int folderId, int calItemId, String flags, String[] tags, String tagIds, int modMetadata,
             int modContent, long date, long changeDate, long size, String uid, boolean isRecurring, boolean isPublic,
             AlarmData alarm, FullInstanceData defaultData) {
         this.type = type;
@@ -97,6 +100,7 @@ public class CalendarItemData {
         mCalItemId = calItemId;
         mFlags = flags;
         mTags = tags;
+        mTagIds = tagIds;
         mModMetadata = modMetadata;
         mModContent = modContent;
         mDate = date;
@@ -121,7 +125,7 @@ public class CalendarItemData {
     public CalendarItemData getSubRange(long rangeStart, long rangeEnd) {
         if (rangeStart <= mActualRangeStart && rangeEnd >= mActualRangeEnd)
             return this;
-        CalendarItemData calItemData = new CalendarItemData(type, mFolderId, mCalItemId, mFlags, mTags, mModMetadata,
+        CalendarItemData calItemData = new CalendarItemData(type, mFolderId, mCalItemId, mFlags, mTags, mTagIds, mModMetadata,
                 mModContent, mDate, mChangeDate, mSize, mUid, mIsRecurring, mIsPublic, mAlarm, mDefaultData);
         long defaultDuration =
             mDefaultData.getDuration() != null ? mDefaultData.getDuration().longValue() : 0;
@@ -176,7 +180,7 @@ public class CalendarItemData {
         mFolderId = (int) meta.getLong(FN_FOLDER_ID);
         mCalItemId = (int) meta.getLong(FN_CALITEM_ID);
         mFlags = meta.get(FN_FLAGS, null);
-        mTags = meta.get(FN_TAGS, null);
+        mTags = DbTag.deserializeTags(meta.get(FN_TAGS, null));
         mIsPublic = meta.getBool(FN_IS_PUBLIC);
         mModMetadata = (int) meta.getLong(FN_MOD_METADATA);
         mModContent = (int) meta.getLong(FN_MOD_CONTENT);
@@ -219,7 +223,7 @@ public class CalendarItemData {
         meta.put(FN_FOLDER_ID, mFolderId);
         meta.put(FN_CALITEM_ID, mCalItemId);
         meta.put(FN_FLAGS, mFlags);
-        meta.put(FN_TAGS, mTags);
+        meta.put(FN_TAGS, DbTag.serializeTags(mTags));
         meta.put(FN_IS_PUBLIC, mIsPublic);
         meta.put(FN_MOD_METADATA, mModMetadata);
         meta.put(FN_MOD_CONTENT, mModContent);

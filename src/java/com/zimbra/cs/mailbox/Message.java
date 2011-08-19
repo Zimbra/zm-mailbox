@@ -206,7 +206,7 @@ public class Message extends MailItem {
      *  can only be set when the Message is created; it cannot be altered
      *  thereafter. */
     public boolean isDraft() {
-        return isTagged(Flag.ID_DRAFT);
+        return isTagged(Flag.FlagInfo.DRAFT);
     }
 
     /**
@@ -469,7 +469,7 @@ public class Message extends MailItem {
 
     @Override
     boolean isMutable() {
-        return isTagged(Flag.ID_DRAFT);
+        return isTagged(Flag.FlagInfo.DRAFT);
     }
 
     @Override
@@ -493,16 +493,17 @@ public class Message extends MailItem {
     }
 
     static Message create(int id, Folder folder, Conversation conv, ParsedMessage pm, StagedBlob staged,
-                          boolean unread, int flags, long tags, DraftInfo dinfo,
+                          boolean unread, int flags, Tag.NormalizedTags ntags, DraftInfo dinfo,
                           boolean noICal, ZVCalendar cal, CustomMetadataList extended)
     throws ServiceException {
-        return createInternal(id, folder, conv, pm, staged, unread, flags, tags,
+        return createInternal(id, folder, conv, pm, staged, unread, flags, ntags,
                               dinfo, noICal, cal, extended, new MessageCreateFactory());
     }
 
     static Message createInternal(int id, Folder folder, Conversation conv, ParsedMessage pm, StagedBlob staged,
-            boolean unread, int flags, long tags, DraftInfo dinfo, boolean noICal, ZVCalendar cal,
-            CustomMetadataList extended, MessageCreateFactory fact) throws ServiceException {
+            boolean unread, int flags, Tag.NormalizedTags ntags, DraftInfo dinfo, boolean noICal, ZVCalendar cal,
+            CustomMetadataList extended, MessageCreateFactory fact)
+    throws ServiceException {
         if (folder == null || !folder.canContain(Type.MESSAGE)) {
             throw MailServiceException.CANNOT_CONTAIN(folder, Type.MESSAGE);
         }
@@ -562,7 +563,7 @@ public class Message extends MailItem {
         data.size = staged.getSize();
         data.setBlobDigest(staged.getDigest());
         data.setFlags(flags & (Flag.FLAGS_MESSAGE | Flag.FLAGS_GENERIC));
-        data.tags = tags;
+        data.setTags(ntags);
         data.setSubject(pm.getNormalizedSubject());
         data.metadata = encodeMetadata(DEFAULT_COLOR_RGB, 1, extended, pm, dinfo, null, null).toString();
         data.unreadCount = unread ? 1 : 0;
@@ -898,7 +899,7 @@ public class Message extends MailItem {
 //                                  int flags = Flag.BITMASK_INDEXING_DEFERRED;
 //                                  mMailbox.incrementIndexDeferredCount(1);
                                     int defaultFolder = cur.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
-                                    calItem = mMailbox.createCalendarItem(defaultFolder, flags, 0, cur.getUid(), pm, cur, null);
+                                    calItem = mMailbox.createCalendarItem(defaultFolder, flags, null, cur.getUid(), pm, cur, null);
                                     calItemIsNew = true;
                                     calItemFolderId = calItem.getFolderId();
                                 }
@@ -1159,6 +1160,7 @@ public class Message extends MailItem {
     @Override protected void updateUnread(int delta, int deletedDelta) throws ServiceException {
         if ((delta == 0 && deletedDelta == 0) || !trackUnread())
             return;
+
         markItemModified(Change.MODIFIED_UNREAD);
 
         // grab the parent *before* we make any other changes
@@ -1166,15 +1168,17 @@ public class Message extends MailItem {
 
         // update our unread count (should we check that we don't have too many unread?)
         mData.unreadCount += delta;
-        if (mData.unreadCount < 0)
+        if (mData.unreadCount < 0) {
             throw ServiceException.FAILURE("inconsistent state: unread < 0 for " + getClass().getName() + " " + mId, null);
+        }
 
         // update the folder's unread count
         getFolder().updateUnread(delta, deletedDelta);
 
         // update the conversation's unread count
-        if (parent != null)
+        if (parent != null) {
             parent.updateUnread(delta, deletedDelta);
+        }
 
         // tell the tags about the new read/unread item
         updateTagUnread(delta, deletedDelta);
@@ -1185,8 +1189,9 @@ public class Message extends MailItem {
     @Override MailItem copy(Folder folder, int id, MailItem newParent) throws IOException, ServiceException {
         Message copy = (Message) super.copy(folder, id, newParent);
 
-        if (isDraft())
+        if (isDraft()) {
             copy.setDraftAutoSendTime(0);
+        }
 
         Conversation parent = (Conversation) getParent();
         if (parent instanceof VirtualConversation &&

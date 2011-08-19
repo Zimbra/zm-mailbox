@@ -16,11 +16,13 @@ package com.zimbra.cs.filter;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.mail.Address;
 import javax.mail.Header;
@@ -30,6 +32,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.jsieve.mail.Action;
 
+import com.google.common.collect.Sets;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
@@ -54,7 +57,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -142,7 +144,7 @@ public class FilterUtil {
      * @return the id of the new message, or <tt>null</tt> if it was a duplicate
      */
     public static ItemId addMessage(DeliveryContext context, Mailbox mbox, ParsedMessage pm, String recipient,
-                                    String folderPath, boolean noICal, int flags, String tags, int convId, OperationContext octxt)
+                                    String folderPath, boolean noICal, int flags, String[] tags, int convId, OperationContext octxt)
     throws ServiceException {
         // Do initial lookup.
         Pair<Folder, String> folderAndPath = mbox.getFolderByPathLongestMatch(
@@ -466,10 +468,11 @@ public class FilterUtil {
             int flagId = flagAction.getFlagId();
             try {
                 com.zimbra.cs.mailbox.Flag flag = mailbox.getFlagById(flagId);
-                if (flagAction.isSetFlag())
-                    flagBits |= flag.getBitmask();
-                else
-                    flagBits &= (~flag.getBitmask());
+                if (flagAction.isSetFlag()) {
+                    flagBits |= flag.toBitmask();
+                } else {
+                    flagBits &= (~flag.toBitmask());
+                }
             } catch (ServiceException e) {
                 ZimbraLog.filter.warn("Unable to flag message", e);
             }
@@ -477,8 +480,16 @@ public class FilterUtil {
         return flagBits;
     }
 
-    public static String getTagsUnion(String tags1, String tags2) {
-        return Tag.bitmaskToTags(Tag.tagsToBitmask(tags1) | Tag.tagsToBitmask(tags2));
+    public static String[] getTagsUnion(String[] tags1, String[] tags2) {
+        if (tags2 == null) {
+            return tags1;
+        } else if (tags1 == null) {
+            return tags2;
+        }
+
+        Set<String> tags = Sets.newHashSet(tags1);
+        tags.addAll(Arrays.asList(tags2));
+        return tags.toArray(new String[tags.size()]);
     }
 }
 

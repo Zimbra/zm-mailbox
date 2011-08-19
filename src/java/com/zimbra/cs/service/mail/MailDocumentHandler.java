@@ -32,9 +32,17 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public abstract class MailDocumentHandler extends DocumentHandler {
 
-    protected String[] getProxiedIdPath(Element request)     { return null; }
-    protected boolean checkMountpointProxy(Element request)  { return false; }
-    protected String[] getResponseItemPath()  { return null; }
+    protected String[] getProxiedIdPath(Element request) {
+        return null;
+    }
+
+    protected boolean checkMountpointProxy(Element request) {
+        return false;
+    }
+
+    protected String[] getResponseItemPath() {
+        return null;
+    }
 
     @Override
     protected Element proxyIfNecessary(Element request, Map<String, Object> context) throws ServiceException {
@@ -49,42 +57,50 @@ public abstract class MailDocumentHandler extends DocumentHandler {
 
             // if the "target item" is remote, proxy.
             ItemId iidTarget = getProxyTarget(zsc, octxt, iid, checkMountpointProxy(request));
-            if (iidTarget != null)
+            if (iidTarget != null) {
                 return proxyRequest(request, context, iid, iidTarget);
+            }
         }
 
         return super.proxyIfNecessary(request, context);
     }
 
     protected static ItemId getProxyTarget(ZimbraSoapContext zsc, OperationContext octxt, ItemId iid, boolean checkMountpoint) throws ServiceException {
-        if (zsc == null || iid == null)
+        if (zsc == null || iid == null) {
             return null;
+        }
         Account acct = getRequestedAccount(zsc);
-        if (!iid.belongsTo(acct))
+        if (!iid.belongsTo(acct)) {
             return iid;
+        }
 
-        if (!checkMountpoint || !Provisioning.onLocalServer(acct))
+        if (!checkMountpoint || !Provisioning.onLocalServer(acct)) {
             return null;
+        }
         Mailbox mbox = getRequestedMailbox(zsc);
         MailItem item = mbox.getItemById(octxt, iid.getId(), MailItem.Type.UNKNOWN);
-        if (!(item instanceof Mountpoint))
+        if (!(item instanceof Mountpoint)) {
             return null;
+        }
         return ((Mountpoint) item).getTarget();
     }
 
     private void insertMountpointReferences(Element response, String[] xpath, ItemId iidMountpoint, ItemId iidLocal, ZimbraSoapContext lc) {
         int depth = 0;
-        while (depth < xpath.length && response != null)
+        while (depth < xpath.length && response != null) {
             response = response.getOptionalElement(xpath[depth++]);
-        if (response == null)
+        }
+        if (response == null) {
             return;
+        }
 
         ItemIdFormatter ifmt = new ItemIdFormatter(lc);
         String local = iidLocal.toString(ifmt);
         for (Element elt : response.listElements()) {
             String folder = elt.getAttribute(MailConstants.A_FOLDER, null);
-            if (local.equalsIgnoreCase(folder))
+            if (local.equalsIgnoreCase(folder)) {
                 elt.addAttribute(MailConstants.A_FOLDER, iidMountpoint.toString(ifmt));
+            }
         }
     }
 
@@ -92,8 +108,9 @@ public abstract class MailDocumentHandler extends DocumentHandler {
     throws ServiceException {
         // prepare the request for re-processing
         boolean mountpoint = iidRequested != iidResolved;
-        if (mountpoint)
+        if (mountpoint) {
             setXPath(request, getProxiedIdPath(request), iidResolved.toString());
+        }
 
         Element response = proxyRequest(request, context, iidResolved.getAccountId(), mountpoint);
 
@@ -110,8 +127,9 @@ public abstract class MailDocumentHandler extends DocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         // new context for proxied request has a different "requested account"
         ZimbraSoapContext zscTarget = new ZimbraSoapContext(zsc, acctId);
-        if (mountpoint)
+        if (mountpoint) {
             zscTarget.recordMountpointTraversal();
+        }
 
         return proxyRequest(request, context, getServer(acctId), zscTarget);
     }

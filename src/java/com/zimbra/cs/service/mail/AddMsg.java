@@ -36,6 +36,7 @@ import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.util.ItemId;
@@ -72,7 +73,7 @@ public class AddMsg extends MailDocumentHandler {
         Element msgElem = request.getElement(MailConstants.E_MSG);
 
         String flagsStr = msgElem.getAttribute(MailConstants.A_FLAGS, null);
-        String tagsStr = msgElem.getAttribute(MailConstants.A_TAGS, null);
+        String[] tags = TagUtil.parseTags(msgElem, mbox, octxt);
         String folderStr = msgElem.getAttribute(MailConstants.A_FOLDER);
         boolean noICal = msgElem.getAttributeBool(MailConstants.A_NO_ICAL, false);
         long date = msgElem.getAttributeLong(MailConstants.A_DATE, System.currentTimeMillis());
@@ -80,25 +81,14 @@ public class AddMsg extends MailDocumentHandler {
 
         if (mLog.isDebugEnabled()) {
             StringBuffer toPrint = new StringBuffer("<AddMsg ");
-            if (tagsStr != null)
-                toPrint.append(" tags=\"").append(tagsStr).append("\"");
-            if (folderStr != null)
+            if (tags != null) {
+                toPrint.append(" tags=\"").append(TagUtil.encodeTags(tags)).append("\"");
+            }
+            if (folderStr != null) {
                 toPrint.append(" folder=\"").append(folderStr).append("\"");
+            }
             toPrint.append(">");
             mLog.debug(toPrint);
-        }
-
-        // sanity-check the supplied tag list
-        if (tagsStr != null) {
-            String[] splitTags = tagsStr.split("\\s*,\\s*");
-            if (splitTags.length > 0)
-                for (int i = 0; i < splitTags.length; i++) {
-                    try {
-                        int tagId = Integer.parseInt(splitTags[i]);
-                        if (mbox.getTagById(octxt, tagId) == null)
-                            throw ServiceException.INVALID_REQUEST("Unknown tag: \"" + tagId + "\"", null);
-                    } catch (NumberFormatException e) {};
-                }
         }
 
         int folderId = -1;
@@ -112,18 +102,18 @@ public class AddMsg extends MailDocumentHandler {
             folder = mbox.getFolderByPath(octxt, folderStr);
             folderId = folder.getId();
         }
-        if (mLog.isDebugEnabled())
-            mLog.debug("folder = " + folder.getName());
+        mLog.debug("folder = %s", folder.getName());
 
         // check to see whether the entire message has been uploaded under separate cover
         String attachment = msgElem.getAttribute(MailConstants.A_ATTACHMENT_ID, null);
 
         ParseMimeMessage.MimeMessageData mimeData = new ParseMimeMessage.MimeMessageData();
         MimeMessage mm;
-        if (attachment != null)
+        if (attachment != null) {
             mm = SendMsg.parseUploadedMessage(zsc, attachment, mimeData);
-        else
+        } else {
             mm = ParseMimeMessage.importMsgSoap(msgElem);
+        }
 
         Message msg;
         int flagsBitMask = Flag.toBitmask(flagsStr);
@@ -133,10 +123,10 @@ public class AddMsg extends MailDocumentHandler {
                     (flagsBitMask & Flag.BITMASK_FROM_ME) != 0) {
                 List<ItemId> addedItemIds =
                         RuleManager.applyRulesToOutgoingMessage(
-                            octxt, mbox, pm, folderId, noICal, flagsBitMask, tagsStr, Mailbox.ID_AUTO_INCREMENT);
+                            octxt, mbox, pm, folderId, noICal, flagsBitMask, tags, Mailbox.ID_AUTO_INCREMENT);
                 msg = addedItemIds.isEmpty() ? null : mbox.getMessageById(octxt, addedItemIds.get(0).getId());
             } else {
-                DeliveryOptions dopt = new DeliveryOptions().setFolderId(folderId).setNoICal(noICal).setFlags(flagsBitMask).setTags(tagsStr);
+                DeliveryOptions dopt = new DeliveryOptions().setFolderId(folderId).setNoICal(noICal).setFlags(flagsBitMask).setTags(tags);
                 msg = mbox.addMessage(octxt, pm, dopt, null);
             }
         } catch(IOException ioe) {
@@ -144,12 +134,14 @@ public class AddMsg extends MailDocumentHandler {
         }
 
         // we can now purge the uploaded attachments
-        if (mimeData.uploads != null)
+        if (mimeData.uploads != null) {
             FileUploadServlet.deleteUploads(mimeData.uploads);
+        }
 
         Element response = zsc.createElement(MailConstants.ADD_MSG_RESPONSE);
-        if (msg != null)
+        if (msg != null) {
             ToXML.encodeMessageSummary(response, ifmt, octxt, msg, null, GetMsgMetadata.SUMMARY_FIELDS);
+        }
 
         return response;
     }

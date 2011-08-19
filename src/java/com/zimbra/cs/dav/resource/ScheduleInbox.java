@@ -186,12 +186,12 @@ public class ScheduleInbox extends CalendarCollection {
             if ((f.getFlagBitmask() & Flag.BITMASK_EXCLUDE_FREEBUSY) == 0)
                 continue;
             ZimbraLog.dav.debug("clearing EXCLUDE_FREEBUSY for "+path);
-            mbox.alterTag(ctxt.getOperationContext(), f.getId(), MailItem.Type.FOLDER, Flag.ID_EXCLUDE_FREEBUSY, false);
+            mbox.alterTag(ctxt.getOperationContext(), f.getId(), MailItem.Type.FOLDER, Flag.FlagInfo.EXCLUDE_FREEBUSY, false, null);
         }
         if (!folders.isEmpty()) {
             for (Folder f : folders.values()) {
                 ZimbraLog.dav.debug("setting EXCLUDE_FREEBUSY for "+f.getPath());
-                mbox.alterTag(ctxt.getOperationContext(), f.getId(), MailItem.Type.FOLDER, Flag.ID_EXCLUDE_FREEBUSY, true);
+                mbox.alterTag(ctxt.getOperationContext(), f.getId(), MailItem.Type.FOLDER, Flag.FlagInfo.EXCLUDE_FREEBUSY, true, null);
             }
         }
     }

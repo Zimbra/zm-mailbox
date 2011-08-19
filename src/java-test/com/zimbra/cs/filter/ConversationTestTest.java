@@ -22,6 +22,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -72,7 +73,7 @@ public final class ConversationTestTest {
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         Message msg = mbox.getMessageById(null, ids.get(0).getId());
-        Assert.assertEquals(0, msg.getTagList().size());
+        Assert.assertEquals(0, msg.getTags().length);
 
         DeliveryOptions dopt = new DeliveryOptions();
         dopt.setFolderId(Mailbox.ID_FOLDER_SENT);
@@ -86,7 +87,7 @@ public final class ConversationTestTest {
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         msg = mbox.getMessageById(null, ids.get(0).getId());
-        Assert.assertEquals("participated", msg.getTagList().get(0).getName());
+        Assert.assertEquals("participated", ArrayUtil.getFirstElement(msg.getTags()));
     }
 
     @Test
@@ -112,7 +113,7 @@ public final class ConversationTestTest {
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         Message msg = mbox.getMessageById(null, ids.get(0).getId());
-        Assert.assertEquals(0, msg.getTagList().size());
+        Assert.assertEquals(0, msg.getTags().length);
 
         dopt = new DeliveryOptions();
         dopt.setFolderId(Mailbox.ID_FOLDER_SENT);
@@ -126,7 +127,7 @@ public final class ConversationTestTest {
                 new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         msg = mbox.getMessageById(null, ids.get(0).getId());
-        Assert.assertEquals("started", msg.getTagList().get(0).getName());
+        Assert.assertEquals("started", ArrayUtil.getFirstElement(msg.getTags()));
     }
 
 }

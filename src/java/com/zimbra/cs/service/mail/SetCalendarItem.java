@@ -39,6 +39,7 @@ import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.Mailbox.SetCalendarItemData;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
+import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.service.mail.ParseMimeMessage.InviteParserResult;
@@ -100,10 +101,8 @@ public class SetCalendarItem extends CalendarRequest {
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
 
-        String flagsStr = request.getAttribute(MailConstants.A_FLAGS, null);
-        int flags = flagsStr != null ? Flag.toBitmask(flagsStr) : 0;
-        String tagsStr = request.getAttribute(MailConstants.A_TAGS, null);
-        long tags = tagsStr != null ? Tag.tagsToBitmask(tagsStr) : 0;
+        int flags = Flag.toBitmask(request.getAttribute(MailConstants.A_FLAGS, null));
+        String[] tags = TagUtil.parseTags(request, mbox, octxt);
 
         mbox.lock.lock();
         try {
@@ -115,8 +114,8 @@ public class SetCalendarItem extends CalendarRequest {
             SetCalendarItemParseResult parsed = parseSetAppointmentRequest(request, zsc, octxt, folder, getItemType(), false);
 
             CalendarItem calItem = mbox.setCalendarItem(octxt, iidFolder.getId(),
-                flags, tags, parsed.defaultInv, parsed.exceptions,
-                parsed.replies, parsed.nextAlarm);
+                    flags, tags, parsed.defaultInv, parsed.exceptions,
+                    parsed.replies, parsed.nextAlarm);
 
             Element response = getResponseElement(zsc);
 

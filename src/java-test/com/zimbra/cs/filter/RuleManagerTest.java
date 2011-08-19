@@ -22,6 +22,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -66,7 +67,7 @@ public final class RuleManagerTest {
         Assert.assertEquals(1, ids.size());
         Message msg = mbox.getMessageById(null, ids.get(0).getId());
         Assert.assertEquals("socialcast", mbox.getFolderById(null, msg.getFolderId()).getName());
-        Assert.assertEquals("priority", msg.getTagList().get(0).getName());
+        Assert.assertEquals("priority", ArrayUtil.getFirstElement(msg.getTags()));
 
         RuleManager.clearCachedRules(account);
         account.setMailSieveScript("if socialcast { tag \"priority\"; }\n" +
@@ -77,7 +78,7 @@ public final class RuleManagerTest {
         Assert.assertEquals(1, ids.size());
         msg = mbox.getMessageById(null, ids.get(0).getId());
         Assert.assertEquals("zimbra", mbox.getFolderById(null, msg.getFolderId()).getName());
-        Assert.assertEquals("priority", msg.getTagList().get(0).getName());
+        Assert.assertEquals("priority", ArrayUtil.getFirstElement(msg.getTags()));
     }
 
     @Test
@@ -92,8 +93,7 @@ public final class RuleManagerTest {
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         Message msg = mbox.getMessageById(null, ids.get(0).getId());
-        Assert.assertEquals("priority", msg.getTagList().get(0).getName());
-        Assert.assertEquals("socialcast", msg.getTagList().get(1).getName());
+        Assert.assertArrayEquals(new String[] { "priority", "socialcast" }, msg.getTags());
 
         RuleManager.clearCachedRules(account);
         account.setMailSieveScript("if socialcast { tag \"priority\"; }\n" +
@@ -103,8 +103,7 @@ public final class RuleManagerTest {
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         msg = mbox.getMessageById(null, ids.get(0).getId());
-        Assert.assertEquals("priority", msg.getTagList().get(0).getName());
-        Assert.assertEquals("zimbra", msg.getTagList().get(1).getName());
+        Assert.assertArrayEquals(new String[] { "priority", "zimbra" }, msg.getTags());
     }
 
 }
