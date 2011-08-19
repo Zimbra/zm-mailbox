@@ -938,7 +938,7 @@ public class ProxyConfGen
     private static String loadAllClientCertCA() {
         // to avoid redundancy CA if some domains share the same CA
         HashSet<String> caSet = new HashSet<String>(); 
-        String globalCA = mServer.getAttr(Provisioning.A_zimbraReverseProxyClientCertCA, "");
+        String globalCA = ProxyConfVar.serverSource.getAttr(Provisioning.A_zimbraReverseProxyClientCertCA, "");
         if (!ProxyConfUtil.isEmptyString(globalCA)) {
             caSet.add(globalCA);
         }
@@ -1648,7 +1648,8 @@ public class ProxyConfGen
      * @return
      */
     static boolean isClientCertVerifyEnabled() {
-        String globalMode = mServer.getAttr(Provisioning.A_zimbraReverseProxyClientCertMode, "off");
+        String globalMode = ProxyConfVar.serverSource.getAttr(
+                Provisioning.A_zimbraReverseProxyClientCertMode, "off");
         
         if (globalMode.equals("on") ||
             globalMode.equals("optional")) {
