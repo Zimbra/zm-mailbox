@@ -671,7 +671,9 @@ public final class MailConstants {
     public static final String A_REF = "ref";
     public static final String A_TARGET_CONSTRAINT = "tcon";
     public static final String A_TAG = "tag";
+    @Deprecated
     public static final String A_TAGS = "t";
+    public static final String A_TAG_NAMES = "tn";
     public static final String A_FOLDER = "l";
     public static final String A_VISIBLE = "visible";
     public static final String A_URL = "url";
