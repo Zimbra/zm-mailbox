@@ -54,4 +54,13 @@ public final class SearchFolderTest {
                 "test", "test", "message", "none", 0, (byte) 0);
         Assert.assertTrue(folder.isFlagSet(Flag.BITMASK_SUBSCRIBED));
     }
+
+    @Test
+    public void flagGuard() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        SearchFolder folder = mbox.createSearchFolder(null, Mailbox.ID_FOLDER_USER_ROOT,
+                "test", "test", "message", "none", Flag.BITMASK_UNCACHED, (byte) 0);
+        Assert.assertFalse(folder.isFlagSet(Flag.BITMASK_UNCACHED));
+    }
+
 }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -11,10 +11,6 @@
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on Aug 23, 2004
  */
 package com.zimbra.cs.mailbox;
 
@@ -29,9 +25,10 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
+ * @since Aug 23, 2004
  * @author dkarp
  */
-public class SearchFolder extends Folder {
+public final class SearchFolder extends Folder {
 
     /** The search folder's query. */
     private String mQuery;
@@ -137,7 +134,7 @@ public class SearchFolder extends Folder {
         data.folderId = parent.getId();
         data.parentId = parent.getId();
         data.date = mbox.getOperationTimestamp();
-        data.setFlags(flags | Flag.toBitmask(mbox.getAccount().getDefaultFolderFlags()));
+        data.setFlags((flags | Flag.toBitmask(mbox.getAccount().getDefaultFolderFlags())) & Flag.FLAGS_FOLDER);
         data.name = name;
         data.setSubject(name);
         data.metadata = encodeMetadata(color, 1, custom, query, types, sort);
