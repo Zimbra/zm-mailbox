@@ -122,6 +122,8 @@ public class ZFeatures {
     public boolean getPortalEnabled() { return getBool(ZAttrProvisioning.A_zimbraFeaturePortalEnabled); }
 
     public boolean getContactsDetailedSearch() { return getBool(ZAttrProvisioning.A_zimbraFeatureContactsDetailedSearchEnabled); }
+
+    public boolean getDiscardFilterEnabled() { return getBool(ZAttrProvisioning.A_zimbraFeatureDiscardInFiltersEnabled); }
     
     // defaults to TRUE
     public boolean getWebSearchEnabled() { return get(ZAttrProvisioning.A_zimbraFeatureWebSearchEnabled) == null ||
