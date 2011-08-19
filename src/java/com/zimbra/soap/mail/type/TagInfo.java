@@ -49,8 +49,8 @@ public class TagInfo {
     @XmlAttribute(name=MailConstants.A_UNREAD /* u */, required=false)
     private Integer unread;
 
-    @XmlAttribute(name=MailConstants.A_IMAP_UNREAD /* i4u */, required=false)
-    private Integer imapUnread;
+    @XmlAttribute(name=MailConstants.A_NUM /* n */, required=false)
+    private Integer count;
 
     @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
     private Long date;
@@ -83,9 +83,7 @@ public class TagInfo {
     public void setColor(Byte color) { this.color = color; }
     public void setRgb(String rgb) { this.rgb = rgb; }
     public void setUnread(Integer unread) { this.unread = unread; }
-    public void setImapUnread(Integer imapUnread) {
-        this.imapUnread = imapUnread;
-    }
+    public void setCount(Integer count) { this.count = count; }
     public void setDate(Long date) { this.date = date; }
     public void setRevision(Integer revision) { this.revision = revision; }
     public void setChangeDate(Long changeDate) { this.changeDate = changeDate; }
@@ -106,7 +104,7 @@ public class TagInfo {
     public Byte getColor() { return color; }
     public String getRgb() { return rgb; }
     public Integer getUnread() { return unread; }
-    public Integer getImapUnread() { return imapUnread; }
+    public Integer getCount() { return count; }
     public Long getDate() { return date; }
     public Integer getRevision() { return revision; }
     public Long getChangeDate() { return changeDate; }
@@ -123,7 +121,7 @@ public class TagInfo {
             .add("color", color)
             .add("rgb", rgb)
             .add("unread", unread)
-            .add("imapUnread", imapUnread)
+            .add("count", count)
             .add("date", date)
             .add("revision", revision)
             .add("changeDate", changeDate)
