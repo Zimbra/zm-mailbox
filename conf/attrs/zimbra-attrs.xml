@@ -1030,7 +1030,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="173" name="zimbraAttachmentsIndexingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>TRUE</defaultCOSValue>
-  <desc>whether or not to index attachemts</desc>
+  <desc>whether or not to index attachments</desc>
 </attr>
 
 <attr id="174" name="zimbraImapEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
@@ -1198,7 +1198,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="204" name="zimbraSpamTagPercent" type="integer" min="0" cardinality="single" optionalIn="globalConfig"  requiresRestart="antispam">
   <globalConfigValue>33</globalConfigValue>
-  <desc>Spaminess percentage beyound which a message is marked as spam</desc>
+  <desc>Spaminess percentage beyond which a message is marked as spam</desc>
 </attr>
 
 <attr id="205" name="zimbraVirusBlockEncryptedArchive" type="boolean" cardinality="single" optionalIn="globalConfig" requiresRestart="mta">
@@ -1360,7 +1360,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="242" name="zimbraComponentAvailable" type="string" max="64" cardinality="multi" optionalIn="globalConfig">
-  <desc>Names of additonal components that have been installed</desc>
+  <desc>Names of additional components that have been installed</desc>
 </attr>
 
 <attr id="243" name="zimbraCalendarCompatibilityMode" type="enum" value="standard,exchange" cardinality="single" optionalIn="globalConfig">
@@ -1411,7 +1411,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="256" name="zimbraAuthLdapExternalDn" type="string" max="256" cardinality="single" optionalIn="account" flags="domainAdminModifiable">
-  <desc>explict mapping to an external LDAP dn for a given account</desc>
+  <desc>explicit mapping to an external LDAP dn for a given account</desc>
 </attr>
 
 <attr id="257" name="zimbraAuthFallbackToLocal" type="boolean" cardinality="single" optionalIn="domain">
@@ -1873,7 +1873,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="358" name="zimbraGalInternalSearchBase"  type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited">
   <globalConfigValue>DOMAIN</globalConfigValue>
-  <desc>LDAP search base for interal GAL queries (special values: "ROOT" for top, "DOMAIN" for domain only, "SUBDOMAINS" for domain and subdomains)</desc>
+  <desc>LDAP search base for internal GAL queries (special values: "ROOT" for top, "DOMAIN" for domain only, "SUBDOMAINS" for domain and subdomains)</desc>
 </attr>
 
 <attr id="359" name="zimbraFeatureGalAutoCompleteEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
@@ -2417,7 +2417,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="471" name="zimbraPrefShowSelectionCheckbox" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>TRUE</defaultCOSValue>
-  <desc>show selection checkbox for selecting email, contact, voicemial items in a list view for batch operations</desc>
+  <desc>show selection checkbox for selecting email, contact, voicemail items in a list view for batch operations</desc>
 </attr>
 
 <attr id="472" name="zimbraReverseProxyMailHostQuery" type="string" cardinality="single" optionalIn="globalConfig">
@@ -2749,7 +2749,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
             suspended   - maintenance + no creating/deleting/modifying accounts/DLs under the domain.  
             shutdown    - suspended + cannot modify domain attrs + cannot delete the domain
                           Indicating server is doing major and lengthy maintenance work on the domain, 
-                          e.g. renaming the domain and moving LDAP enteries.  Modification and deletion 
+                          e.g. renaming the domain and moving LDAP entries.  Modification and deletion 
                           of the domain can only be done internally by the server when it is safe to release 
                           the domain, they cannot be done in admin console or zmprov.
         
@@ -3555,7 +3555,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="682" name="zimbraPrefCalendarReminderFlashTitle" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.7">
   <defaultCOSValue>TRUE</defaultCOSValue>
-  <desc>Flash title when on appointment remimnder notification</desc>
+  <desc>Flash title when on appointment reminder notification</desc>
 </attr>
 
 <attr id="683" name="zimbraDataSourceEnableTrace" type="boolean" cardinality="single" optionalIn="dataSource" flags="domainAdminModifiable" since="5.0.7">
@@ -4304,7 +4304,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="823" name="zimbraPrefReadReceiptsToAddress" type="string" max="256" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable" since="6.0.0_BETA1" deprecatedSince="6.0.8">
   <desc>
     address to put in reply-to header of read receipt messages, 
-    if it is not set, then the compose identitys primary email address is used.
+    if it is not set, then the compose identities primary email address is used.
   </desc>
   <deprecateDesc>Deprecated per bug 46988.  This feature was never fully implemented.</deprecateDesc>
 </attr>
@@ -4961,7 +4961,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <attr id="1087" name="zimbraCalendarResourceDoubleBookingAllowed" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="6.0.7">
   <defaultCOSValue>TRUE</defaultCOSValue>
-  <desc>whether calendar reasources can be double booked</desc>
+  <desc>whether calendar resources can be double booked</desc>
 </attr>
 
 <attr id="1088" name="zimbraContactEmailFields" type="string" max="4096" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.7">
@@ -5139,7 +5139,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 
 <!--
 No longer need KDC/admin server, jetty does not consult them during spnego auth
-TODO: delete them permerntly from here
+TODO: delete them permanently from here
 
 <attr id="1120" name="zimbraSpnegoAuthKDC" type="string" cardinality="single" optionalIn="globalConfig" requiresRestart="mailbox" since="7.0.0">
   <desc>ip or hostname for spnego auth KDC</desc>
@@ -5163,7 +5163,7 @@ TODO: delete them permerntly from here
 </attr>
 
 <attr id="1125" name="zimbraPrefForwardReplySignatureId" type="id" cardinality="single" optionalIn="account,identity,dataSource" flags="domainAdminModifiable" since="7.0.0">
-  <desc>forword/reply signature id for account/identity/dataSource</desc>
+  <desc>forward/reply signature id for account/identity/dataSource</desc>
 </attr>
 
 <attr id="1126" name="zimbraDataSourceIsInternal" type="boolean" cardinality="single" optionalIn="dataSource" since="7.0.0">
@@ -5195,7 +5195,7 @@ TODO: delete them permerntly from here
 
 <attr id="1132" name="zimbraReverseProxyUseExternalRouteIfAccountNotExist" type="boolean" cardinality="single" optionalIn="domain" flags="domainAdminModifiable" since="7.0.0">
   <desc>
-      Use external route configured on doamin if account cannot be found.
+      Use external route configured on domain if account cannot be found.
       Also see zimbraReverseProxyUseExternalRoute.
   </desc>
 </attr>
@@ -5461,7 +5461,7 @@ TODO: delete them permerntly from here
 
 <attr id="1176" name="zimbraSMIMELdapURL" type="string" max="256" cardinality="multi" optionalIn="domain,globalConfig" immutable="1"  since="7.1.0">
   <desc>
-    LDAP URL(s) for public key lookup for S/MIME via external LDAP.  Multiple URLs for error fallback purpose can be seperated by space.
+    LDAP URL(s) for public key lookup for S/MIME via external LDAP.  Multiple URLs for error fallback purpose can be separated by space.
     
     All SMIME attributes are in the format of {config-name}:{value}.  A 'SMIME config' is a set of SMIME attribute values with the same {config-name}.
     Multiple SMIME configs can be configured on a domain or on globalconfig.  Note: SMIME attributes on domains do not inherited values from globalconfig, 
@@ -5565,7 +5565,7 @@ TODO: delete them permerntly from here
 
 <attr id="1186" name="zimbraFeatureSMIMEEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited"  since="7.1.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
-  <desc>whether S/MIME feature is enabled.  Note: SMIME is a Network feature, this attribute is effective only if SMIME is permited by license.</desc>
+  <desc>whether S/MIME feature is enabled.  Note: SMIME is a Network feature, this attribute is effective only if SMIME is permitted by license.</desc>
 </attr>
 
 <attr id="1187" name="zimbraPrefCalendarDefaultApptDuration" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0.0">
@@ -5588,10 +5588,10 @@ TODO: delete them permerntly from here
     enable authentication via X.509 Client Certificate.
     Disabled: client authentication is disabled.
     NeedClientAuth: client authentication is required during SSL handshake on the SSL mutual authentication port(see zimbraMailSSLClientCertPort). 
-        The SSL handshake will fail if the client does not present a certificate to autenticate.
+        The SSL handshake will fail if the client does not present a certificate to authenticate.
     WantClientAuth: client authentication is requested during SSL handshake on the SSL mutual authentication port(see zimbraMailSSLClientCertPort).  
-        The SSL handshake will still proceed if the client does not present a certificate to autenticate.  In the case when client does not send a 
-        certificate, user will be redirected to the usual entry page of the requested webapp, where username/password is ptompted.
+        The SSL handshake will still proceed if the client does not present a certificate to authenticate.  In the case when client does not send a 
+        certificate, user will be redirected to the usual entry page of the requested webapp, where username/password is prompted.
   </desc>
 </attr>
 
@@ -5743,7 +5743,7 @@ TODO: delete them permerntly from here
   <desc>
     Map from a certificate field to a Zimbra account key that can uniquely identify a Zimbra account for client certificate authentication.
     Value is a comma-separated  list of mapping rules, each mapping maps a certificate field to a Zimbra account key.
-    Each is attempted in sequence untill a unique account can be resolved.  
+    Each is attempted in sequence until a unique account can be resolved.  
     
     e.g. a value can be: 
          SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
@@ -5947,7 +5947,7 @@ TODO: delete them permerntly from here
   
     Attribute map for mapping attribute values from the external entry to Zimbra account attributes.
     Values are in the format of {external attribute}={zimbra attribute}.
-    If not set, no attributes from the external directory will be populated in Zimrba directory.
+    If not set, no attributes from the external directory will be populated in Zimbra directory.
     
     Invalid mapping configuration will cause the account creation to fail.
     Examples of bad mapping:
@@ -6015,7 +6015,7 @@ TODO: delete them permerntly from here
     
     For EAGER auto provision, a domain can be scheduled on multiple server.  To avoid conflict, only 
     one server can perform provisioning for a domain at one time.  This attribute servers a lock 
-    for the test-and-set LDAP operation to shchronize EAGER auto provision attempts between servers.
+    for the test-and-set LDAP operation to synchronize EAGER auto provision attempts between servers.
   </desc>
 </attr>
 
