@@ -38,7 +38,7 @@ public final class MailboxVersion {
 
     MailboxVersion(MailboxVersion other) {
         majorVer = other.majorVer;
-        minorVer = other.majorVer;
+        minorVer = other.minorVer;
     }
 
     static MailboxVersion fromMetadata(Metadata md) throws ServiceException {
