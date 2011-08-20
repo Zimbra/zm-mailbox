@@ -333,15 +333,17 @@ public final class DbMailbox {
             }
             sTables.add(DbMailItem.TABLE_MAIL_ITEM);
             sTables.add(DbMailItem.TABLE_MAIL_ITEM_DUMPSTER);
+            sTables.add(DbMailItem.TABLE_REVISION);
+            sTables.add(DbMailItem.TABLE_REVISION_DUMPSTER);
+            sTables.add(DbTag.TABLE_TAG);
+            sTables.add(DbTag.TABLE_TAGGED_ITEM);
             sTables.add(DbMailItem.TABLE_OPEN_CONVERSATION);
             sTables.add(DbMailItem.TABLE_APPOINTMENT);
             sTables.add(DbMailItem.TABLE_APPOINTMENT_DUMPSTER);
-            sTables.add(DbMailItem.TABLE_REVISION);
-            sTables.add(DbMailItem.TABLE_REVISION_DUMPSTER);
             sTables.add(DbMailItem.TABLE_TOMBSTONE);
+            sTables.add(DbPop3Message.TABLE_POP3_MESSAGE);
             sTables.add(DbImapFolder.TABLE_IMAP_FOLDER);
             sTables.add(DbImapMessage.TABLE_IMAP_MESSAGE);
-            sTables.add(DbPop3Message.TABLE_POP3_MESSAGE);
             sTables.add(DbDataSource.TABLE_DATA_SOURCE_ITEM);
         };
 

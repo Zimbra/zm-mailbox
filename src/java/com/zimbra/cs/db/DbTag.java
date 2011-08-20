@@ -783,6 +783,10 @@ public class DbTag {
         return getTagTableName(mbox) + " AS " + alias;
     }
 
+    public static String getTaggedItemTableName(int mailboxId, int groupId) {
+        return DbMailbox.qualifyTableName(groupId, TABLE_TAGGED_ITEM);
+    }
+
     public static String getTaggedItemTableName(Mailbox mbox) {
         return DbMailbox.qualifyTableName(mbox, TABLE_TAGGED_ITEM);
     }
