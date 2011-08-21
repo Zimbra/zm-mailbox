@@ -25,13 +25,14 @@ public final class MailboxVersion {
     private short minorVer;
 
     static final MailboxVersion CURRENT = new MailboxVersion();
+    public static MailboxVersion getCurrent() { return CURRENT; }
 
     MailboxVersion() {
         majorVer = CURRENT_MAJOR;
         minorVer = CURRENT_MINOR;
     }
 
-    MailboxVersion(short major, short minor) {
+    public MailboxVersion(short major, short minor) {
         majorVer = major;
         minorVer = minor;
     }
@@ -40,6 +41,9 @@ public final class MailboxVersion {
         majorVer = other.majorVer;
         minorVer = other.minorVer;
     }
+
+    public short getMajor() { return majorVer; }
+    public short getMinor() { return minorVer; }
 
     static MailboxVersion fromMetadata(Metadata md) throws ServiceException {
         // unknown version are set to 1.0
