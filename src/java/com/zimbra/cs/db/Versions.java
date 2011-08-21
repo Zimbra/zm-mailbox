@@ -43,7 +43,7 @@ public class Versions {
      * UPDATE THESE TO REQUIRE RESET-WORLD TO BE RUN
      *  
      */
-    public static final String DB_VERSION = "65";
+    public static final int DB_VERSION = 65;
 
     /**
      * The INDEX_VERSION is stored into the config table of the DB when the DB is created.  
@@ -52,7 +52,7 @@ public class Versions {
      * UPDATE THESE TO REQUIRE RESET-WORLD TO BE RUN
      *  
      */
-    public static final String INDEX_VERSION = "2";
+    public static final int INDEX_VERSION = 2;
 
 
     /////////////////////////////////////////////////////////////
@@ -64,7 +64,7 @@ public class Versions {
 
     public static boolean checkDBVersion() {
         String val = Config.getString("db.version", "0");
-        if (val.equals(DB_VERSION)) {
+        if (val.equals(Integer.toString(DB_VERSION))) {
             return true;
         } else {
             mLog.error("DB Version Mismatch: ours=\""+DB_VERSION+"\" from DB=\""+val+"\"");
@@ -74,7 +74,7 @@ public class Versions {
 
     public static boolean checkIndexVersion() {
         String val = Config.getString("index.version", "0");
-        if (val.equals(INDEX_VERSION)) {
+        if (val.equals(Integer.toString(INDEX_VERSION))) {
             return true;
         } else {
             mLog.error("Index Version Mismatch: ours=\""+INDEX_VERSION+"\" from DB=\""+val+"\"");
@@ -82,6 +82,13 @@ public class Versions {
         }
     }
 
+    public static int getDbVersion() {
+        return DB_VERSION;
+    }
+
+    public static int getIndexVersion() {
+        return INDEX_VERSION;
+    }
 
     /////////////////////////////////////////////////////////////
     // main and command-line parsing
