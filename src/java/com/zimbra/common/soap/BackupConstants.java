@@ -39,6 +39,8 @@ public final class BackupConstants {
     public static final String E_SCHEDULE_BACKUPS_RESPONSE = "ScheduleBackupsResponse";
     public static final String E_MOVE_MAILBOX_REQUEST = "MoveMailboxRequest";
     public static final String E_MOVE_MAILBOX_RESPONSE = "MoveMailboxResponse";
+    public static final String E_GET_MAILBOX_VERSION_REQUEST = "GetMailboxVersionRequest";
+    public static final String E_GET_MAILBOX_VERSION_RESPONSE = "GetMailboxVersionResponse";
     public static final String E_GET_MAILBOX_VOLUMES_REQUEST = "GetMailboxVolumesRequest";
     public static final String E_GET_MAILBOX_VOLUMES_RESPONSE = "GetMailboxVolumesResponse";
     public static final String E_UNLOAD_MAILBOX_REQUEST = "UnloadMailboxRequest";
@@ -74,6 +76,8 @@ public final class BackupConstants {
 
     public static final QName MOVE_MAILBOX_REQUEST = QName.get(E_MOVE_MAILBOX_REQUEST, NAMESPACE);
     public static final QName MOVE_MAILBOX_RESPONSE = QName.get(E_MOVE_MAILBOX_RESPONSE, NAMESPACE);
+    public static final QName GET_MAILBOX_VERSION_REQUEST = QName.get(E_GET_MAILBOX_VERSION_REQUEST, NAMESPACE);
+    public static final QName GET_MAILBOX_VERSION_RESPONSE = QName.get(E_GET_MAILBOX_VERSION_RESPONSE, NAMESPACE);
     public static final QName GET_MAILBOX_VOLUMES_REQUEST = QName.get(E_GET_MAILBOX_VOLUMES_REQUEST, NAMESPACE);
     public static final QName GET_MAILBOX_VOLUMES_RESPONSE = QName.get(E_GET_MAILBOX_VOLUMES_RESPONSE, NAMESPACE);
     public static final QName UNLOAD_MAILBOX_REQUEST = QName.get(E_UNLOAD_MAILBOX_REQUEST, NAMESPACE);
@@ -162,6 +166,10 @@ public final class BackupConstants {
     public static final String A_TEMP_DIR = "tempDir";
     public static final String A_CHECK_PEER = "checkPeer";
     public static final String A_NO_PEER = "noPeer";
+    public static final String A_MAJOR_VERSION = "majorVer";
+    public static final String A_MINOR_VERSION = "minorVer";
+    public static final String A_DB_VERSION = "dbVer";
+    public static final String A_INDEX_VERSION = "indexVer";
 
     // FileCopier options
     public static final String E_FILE_COPIER = "fileCopier";
