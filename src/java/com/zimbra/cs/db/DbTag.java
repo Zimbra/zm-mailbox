@@ -330,11 +330,13 @@ public class DbTag {
         }
 
         List<Integer> flagIds = Lists.newArrayList();
-        for (int i = 0; i < 31; i++) {
-            if ((flags & 1 << i) != 0) {
-                flagIds.add(-i - 1);
+        for (int tagId : Mailbox.REIFIED_FLAGS) {
+            if ((flags & 1 << (-tagId - 1)) != 0) {
+                flagIds.add(tagId);
             }
         }
+        if (flagIds.isEmpty())
+            return;
 
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -401,7 +403,7 @@ public class DbTag {
                 sanityCheckAnd = Db.getInstance().bitAND("flags", "?") + (add ? " = 0" : " <> 0") + " AND ";
             } else {
                 if (add) {
-                    primaryUpdate = "tag_names = CASE WHEN tag_names IS NULL THEN ? ELSE CONCAT(tag_names, ?) END";
+                    primaryUpdate = "tag_names = CASE WHEN tag_names IS NULL THEN ? ELSE " + Db.getInstance().concat("tag_names", "?") + " END";
                     sanityCheckAnd = "(tag_names IS NULL OR tag_names NOT LIKE ?) AND ";
                 } else {
                     primaryUpdate = "tag_names = CASE tag_names WHEN ? THEN NULL ELSE REPLACE(tag_names, ?, '\0') END";
@@ -459,6 +461,9 @@ public class DbTag {
 
     // FIXME: optimize into single query
     static void addTaggedItemEntries(Mailbox mbox, int tagId, List<Integer> itemIds) throws ServiceException {
+        if (tagId < 0 && !Mailbox.REIFIED_FLAGS.contains(tagId))
+            return;
+
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
 
@@ -481,6 +486,9 @@ public class DbTag {
     }
 
     static void removeTaggedItemEntries(Mailbox mbox, int tagId, List<Integer> itemIds) throws ServiceException {
+        if (tagId < 0 && !Mailbox.REIFIED_FLAGS.contains(tagId))
+            return;
+
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -612,7 +620,7 @@ public class DbTag {
                 pos = DbMailItem.setMailboxId(stmt, mbox, pos);
                 stmt.setInt(pos++, tag.getId());
             } else {
-                stmt = conn.prepareStatement("UPDATE " + DbMailItem.getMailItemTableName(mbox, "mi") +
+                stmt = conn.prepareStatement("UPDATE " + DbMailItem.getMailItemTableName(mbox) +
                         " SET tag_names = REPLACE(tag_names, ?, ?), mod_metadata = ?, change_date = ?" +
                         " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "id IN" +
                         " (SELECT ti.item_id FROM " + getTaggedItemTableName(mbox, "ti") + " WHERE " + inThisMailboxAnd("ti") + "ti.tag_id = ?)");
@@ -728,15 +736,13 @@ public class DbTag {
         }
     }
 
-    // update mail_item mi set tag_names =
-    //    (select (concat('\\0', group_concat(t.name SEPARATOR '\\0'), '\\0')
-    //     FROM tag t join tagged_item ti on t.mailbox_id = ti.mailbox_id AND t.id = ti.tag_id
-    //     WHERE ti.item_id = mi.id)
-    public static void recalculateTagStrings(Mailbox mbox, Tag taggedWith) throws ServiceException {
+    // test code; not portable
+    @SuppressWarnings("unused")
+    private static void recalculateTagStrings(Mailbox mbox, Tag taggedWith) throws ServiceException {
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement("UPDATE " + DbMailItem.getMailItemTableName(mbox, "mi") +
+            stmt = conn.prepareStatement("UPDATE " + DbMailItem.getMailItemTableName(mbox) +
                     " SET tag_names = " +
                         "(SELECT (CONCAT('\\0', GROUP_CONCAT(t.name SEPARATOR '\\0'), '\\0')" +
                         " FROM tag t INNER JOIN tagged_item ti ON t.mailbox_id = ti.mailbox_id AND t.id = ti.tag_id" +

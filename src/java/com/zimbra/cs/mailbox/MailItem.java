@@ -2126,7 +2126,8 @@ public abstract class MailItem implements Comparable<MailItem> {
                 mData.unsetFlag((Flag) tag);
             }
         } else {
-            Set<String> tags = Sets.newHashSet(mData.getTags());
+            Set<String> tags = Sets.newLinkedHashSet();
+            Collections.addAll(tags, mData.getTags());
             if (add) {
                 tags.add(tag.getName());
             } else {

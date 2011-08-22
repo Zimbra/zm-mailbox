@@ -23,7 +23,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.mailbox.Color;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbTag;
@@ -56,7 +55,7 @@ public class TagTest {
         try {
             mbox.createTag(null, tag1, MailItem.DEFAULT_COLOR);
             Assert.fail("failed to detect naming conflict when creating tag");
-        } catch (ServiceException e) {
+        } catch (MailServiceException e) {
             Assert.assertEquals("incorrect error code when creating tag", MailServiceException.ALREADY_EXISTS, e.getCode());
         }
 
@@ -76,7 +75,7 @@ public class TagTest {
         try {
             mbox.rename(null, tag.getId(), tag.getType(), tag1, -1);
             Assert.fail("failed to detect naming conflict when renaming tag");
-        } catch (ServiceException e) {
+        } catch (MailServiceException e) {
             Assert.assertEquals("incorrect error code when renaming tag", MailServiceException.ALREADY_EXISTS, e.getCode());
         }
     }
@@ -136,9 +135,14 @@ public class TagTest {
     }
 
     private void checkTagCounts(String msg, Mailbox mbox, String tagName, int count, int unread) throws Exception {
-        Tag tag = mbox.getTagByName(tagName);
-        Assert.assertEquals(msg + " (tag messages)", count, tag.getSize());
-        Assert.assertEquals(msg + " (tag unread)", unread, tag.getUnreadCount());
+        try {
+            Tag tag = mbox.getTagByName(tagName);
+            Assert.assertEquals(msg + " (tag messages)", count, tag.getSize());
+            Assert.assertEquals(msg + " (tag unread)", unread, tag.getUnreadCount());
+        } catch (MailServiceException.NoSuchItemException nsie) {
+            Assert.assertEquals(msg + " (tag messages)", count, 0);
+            Assert.assertEquals(msg + " (tag unread)", unread, 0);
+        }
     }
 
     private void doubleCheckTagCounts(String msg, Mailbox mbox, String tagName, int count, int unread) throws Exception {
@@ -338,5 +342,58 @@ public class TagTest {
 
         mbox.delete(null, msg6.getConversationId(), MailItem.Type.CONVERSATION);
         checkThreeTagCounts("delete the entire conversation", mbox, 0, 0, 0, 0, 0, 0);
+    }
+
+    @Test
+    public void folder() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        mbox.alterTag(null, Mailbox.ID_FOLDER_INBOX, MailItem.Type.FOLDER, Flag.FlagInfo.SUBSCRIBED, true, null);
+        mbox.alterTag(null, Mailbox.ID_FOLDER_INBOX, MailItem.Type.FOLDER, Flag.FlagInfo.SUBSCRIBED, false, null);
+
+        try {
+            mbox.alterTag(null, Mailbox.ID_FOLDER_INBOX, MailItem.Type.FOLDER, Flag.FlagInfo.FORWARDED, false, null);
+            Assert.fail("failed to error on invalid flag on folder");
+        } catch (MailServiceException e) {
+            Assert.assertEquals("incorrect error code when tagging folder", MailServiceException.CANNOT_TAG, e.getCode());
+        }
+    }
+
+    private void checkItemTags(Mailbox mbox, int itemId, String[] expectedTags) throws Exception {
+        String[] tags = mbox.getMessageById(null, itemId).getTags();
+        Assert.assertEquals("number of tags on item", expectedTags.length, tags.length);
+        for (int i = 0; i < expectedTags.length; i++) {
+            Assert.assertEquals("item tag #" + i, expectedTags[i], tags[i]);
+        }
+
+        mbox.purge(MailItem.Type.MESSAGE);
+
+        tags = mbox.getMessageById(null, itemId).getTags();
+        Assert.assertEquals("number of tags on item", expectedTags.length, tags.length);
+        for (int i = 0; i < expectedTags.length; i++) {
+            Assert.assertEquals("item tag #" + i, expectedTags[i], tags[i]);
+        }
+    }
+
+    @Test
+    public void alterTag() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD).setTags(new String[] { tag1 });
+        int msgId = mbox.addMessage(null, ThreaderTest.getRootMessage(), dopt, null).getId();
+        checkThreeTagCounts("add an unread message", mbox, 1, 1, 0, 0, 0, 0);
+
+        mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, tag2, true, null);
+        checkThreeTagCounts("add a second tag", mbox, 1, 1, 1, 1, 0, 0);
+
+        mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, tag1, false, null);
+        checkThreeTagCounts("remove the first tag", mbox, 0, 0, 1, 1, 0, 0);
+
+        mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, tag1, false, null);
+        checkThreeTagCounts("duplicate remove the first tag", mbox, 0, 0, 1, 1, 0, 0);
+
+        mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, tag1, true, null);
+        checkThreeTagCounts("add the first tag back", mbox, 1, 1, 1, 1, 0, 0);
+        checkItemTags(mbox, msgId, new String[] { tag2, tag1 });
     }
 }

@@ -1497,7 +1497,7 @@ public class Mailbox {
         ZimbraLog.cache.debug("purged type=%s", type);
     }
 
-    public static final List<Integer> REIFIED_FLAGS = ImmutableList.of(
+    public static final Set<Integer> REIFIED_FLAGS = ImmutableSet.of(
             Flag.ID_FROM_ME, Flag.ID_ATTACHED, Flag.ID_REPLIED, Flag.ID_FORWARDED,
             Flag.ID_COPIED, Flag.ID_FLAGGED, Flag.ID_DRAFT, Flag.ID_DELETED,
             Flag.ID_NOTIFIED, Flag.ID_UNREAD, Flag.ID_HIGH_PRIORITY, Flag.ID_LOW_PRIORITY,
