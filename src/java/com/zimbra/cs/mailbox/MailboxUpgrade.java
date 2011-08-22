@@ -391,7 +391,8 @@ public final class MailboxUpgrade {
         try {
             String mailboxesMatchAnd = DebugConfig.disableMailboxGroups ? "" : "ti.mailbox_id = mi.mailbox_id AND ";
             stmt = conn.prepareStatement("UPDATE " + DbTag.getTagTableName(mbox) + ", " +
-                    "(SELECT ti.tag_id tid, COUNT(ti.item_id) count, SUM(mi.unread) unread_count FROM " + DbTag.getTaggedItemTableName(mbox, "ti") +
+                    "(SELECT ti.tag_id tid, COUNT(ti.item_id) count, " + Db.clauseIFNULL("SUM(mi.unread)", "0") + " unread_count" +
+                    "  FROM " + DbTag.getTaggedItemTableName(mbox, "ti") +
                     "  INNER JOIN " + DbMailItem.getMailItemTableName(mbox, "mi") + " ON " + mailboxesMatchAnd + "mi.id = ti.item_id" +
                     "  WHERE " + DbTag.inThisMailboxAnd("ti") + "ti.tag_id > 0 AND " + Db.getInstance().bitAND("mi.flags", String.valueOf(Flag.BITMASK_DELETED)) + " = 0" +
                     "  GROUP BY ti.tag_id) AS x" +

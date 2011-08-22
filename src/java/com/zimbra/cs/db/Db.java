@@ -111,6 +111,7 @@ public abstract class Db {
      *  connection pool.  Permits the DB implementation to iterate over
      *  the connections or to operate on the pool itself before any
      *  connections are returned to callers. */
+    @SuppressWarnings("unused")
     void startup(PoolingDataSource pool, int poolSize) throws SQLException {
         // default is to do nothing
     }
@@ -123,12 +124,14 @@ public abstract class Db {
     }
 
     /** Callback invoked immediately after a new connection is created for the pool. */
+    @SuppressWarnings("unused")
     void postCreate(Connection conn) throws SQLException {
         // default is to do nothing
     }
 
     /** Callback invoked immediately before a connection is fetched from
      *  the pool and returned to the user. */
+    @SuppressWarnings("unused")
     void postOpen(DbConnection conn) throws SQLException {
         // default is to do nothing
     }
@@ -152,6 +155,7 @@ public abstract class Db {
      * level 1: quick file optimization and analysis
      * level 2: full file optimization and analysis
      */
+    @SuppressWarnings("unused")
     public void optimize(DbConnection conn, String name, int level) throws ServiceException {}
 
     /** Indicates that the connection will be accessing the given Mailbox's
@@ -165,6 +169,7 @@ public abstract class Db {
         }
     }
 
+    @SuppressWarnings("unused")
     void registerDatabaseInterest(DbConnection conn, String dbname) throws SQLException, ServiceException {
         // default is to do nothing
     }
@@ -172,6 +177,7 @@ public abstract class Db {
     /** Callback invoked immediately before a connection is returned to the
      *  pool by the user.  Note that <tt>COMMIT</tt>/<tt>ROLLBACK</tt> must
      *  already have been called before this method is invoked. */
+    @SuppressWarnings("unused")
     void preClose(DbConnection conn) throws SQLException {
         // default is to do nothing
     }
@@ -226,10 +232,11 @@ public abstract class Db {
      *  clause that evaluates to 1 when the given BOOLEAN clause is true and
      *  0 when it's false. */
     static String selectBOOLEAN(String clause) {
-        if (supports(Capability.BOOLEAN_DATATYPE))
+        if (supports(Capability.BOOLEAN_DATATYPE)) {
             return clause;
-        else
+        } else {
             return "CASE WHEN " + clause + " THEN 1 ELSE 0 END";
+        }
     }
 
     /** Generates a WHERE-type clause that evaluates to true when the given
@@ -238,10 +245,11 @@ public abstract class Db {
      *  pass an upcased version of the comparison string in the subsequent
      *  call to <tt>stmt.setString()</tt>. */
     static String equalsSTRING(String column) {
-        if (supports(Capability.CASE_SENSITIVE_COMPARISON))
+        if (supports(Capability.CASE_SENSITIVE_COMPARISON)) {
             return "UPPER(" + column + ") = UPPER(?)";
-        else
+        } else {
             return column + " = ?";
+        }
     }
 
     /** Generates a WHERE-type clause that evaluates to true when the given
@@ -250,10 +258,11 @@ public abstract class Db {
      *  the caller *MUST NOT* pass an upcased version of the comparison string in
      *  the subsequent call to <tt>stmt.setString()</tt>. */
     static String likeSTRING(String column) {
-        if (supports(Capability.CASE_SENSITIVE_COMPARISON))
+        if (supports(Capability.CASE_SENSITIVE_COMPARISON)) {
             return "UPPER(" + column + ") LIKE UPPER(?)";
-        else
+        } else {
             return column + " LIKE ?";
+        }
     }
 
     /**
@@ -261,10 +270,11 @@ public abstract class Db {
      */
     public abstract String bitAND(String expr1, String expr2);
 
+    @SuppressWarnings("unused")
     public void enableStreaming(Statement stmt) throws SQLException {}
 
-    /** Generates a WHERE-type clause that evaluates to <code>expr1</code> if
-     *  its value is non-<tt>NULL</tt> and <code>expr2</code> otherwise. */
+    /** Generates a WHERE-type clause that evaluates to {@code expr1} if
+     *  its value is non-<tt>NULL</tt> and {@code expr2} otherwise. */
     public static String clauseIFNULL(String expr1, String expr2) {
         return getInstance().getIFNULLClause(expr1, expr2);
     }
@@ -289,14 +299,11 @@ public abstract class Db {
      */
     public abstract String lpad(String field, int padSize, String padString);
     
-    /**
-     * Returns a {@code LIMIT} clause that is appended to a {@code SELECT} statement
-     * to limit the number of rows in the result set.  If the database does not support
-     * this feature, returns an empty string.
+    /** Returns a {@code LIMIT} clause that is appended to a {@code SELECT}
+     *  statement to limit the number of rows in the result set.  If the
+     *  database does not support this feature, returns an empty string.
      * 
-     * @param limit number of rows to return
-     * @return
-     */
+     * @param limit number of rows to return */
     public String limit(int limit) {
         return limit(0, limit);
     }

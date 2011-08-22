@@ -269,7 +269,7 @@ public class DbTag {
         ResultSet rs = null;
         try {
             String mailboxesMatchAnd = DebugConfig.disableMailboxGroups ? "" : "mi.mailbox_id = ti.mailbox_id AND ";
-            stmt = conn.prepareStatement("SELECT ti.tag_id, COUNT(*), SUM(mi.unread)" +
+            stmt = conn.prepareStatement("SELECT ti.tag_id, COUNT(*), " + Db.clauseIFNULL("SUM(mi.unread)", "0") +
                     " FROM " + DbMailItem.getMailItemTableName(mbox, "mi") +
                     " INNER JOIN " + getTaggedItemTableName(mbox, "ti") + " ON " + mailboxesMatchAnd + "ti.item_id = mi.id" +
                     " WHERE " + inThisMailboxAnd("ti") + "ti.tag_id > 0 AND type NOT IN " + DbMailItem.NON_SEARCHABLE_TYPES +
@@ -927,7 +927,7 @@ public class DbTag {
         ResultSet rs = null;
         try {
             String mailboxesMatchAnd = DebugConfig.disableMailboxGroups ? "" : "ti.mailbox_id = mi.mailbox_id AND ";
-            stmt = conn.prepareStatement("SELECT ti.tag_id, COUNT(ti.item_id), SUM(mi.unread)" +
+            stmt = conn.prepareStatement("SELECT ti.tag_id, COUNT(ti.item_id), " + Db.clauseIFNULL("SUM(mi.unread)", "0") +
                     " FROM " + getTaggedItemTableName(mbox, "ti") +
                     " INNER JOIN " + DbMailItem.getMailItemTableName(mbox, "mi") + " ON " + mailboxesMatchAnd + "mi.id = ti.item_id" +
                     " WHERE " + inThisMailboxAnd("ti") + "ti.tag_id > 0 AND " + Db.getInstance().bitAND("mi.flags", String.valueOf(Flag.BITMASK_DELETED)) + " = 0" +
