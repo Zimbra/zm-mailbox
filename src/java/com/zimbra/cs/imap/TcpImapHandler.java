@@ -124,13 +124,15 @@ final class TcpImapHandler extends ImapHandler {
             }
             return CONTINUE_PROCESSING;
         } catch (TcpImapRequest.ImapTerminatedException e) {
-            if (socket.isInputShutdown()) { // drop connection requested
-                dropConnection();
-            }
             return STOP_PROCESSING;
         } catch (ImapParseException e) {
             handleParseException(e);
             return mConsecutiveBAD >= MAXIMUM_CONSECUTIVE_BAD ? STOP_PROCESSING : CONTINUE_PROCESSING;
+        } catch (IOException e) {
+            if (socket.isClosed()) {
+                return STOP_PROCESSING;
+            }
+            throw e;
         } finally {
             if (complete) {
                 clearRequest();
@@ -227,12 +229,25 @@ final class TcpImapHandler extends ImapHandler {
         }
     }
 
+    /**
+     * Close the IMAP connection immediately without sending an untagged BYE.
+     *
+     * This is necessarily violating RFC 3501 3.4:
+     * <pre>
+     *   A server MUST NOT unilaterally close the connection without
+     *   sending an untagged BYE response that contains the reason for
+     *   having done so.
+     * </pre>
+     * because there is no easy way to interrupt a blocking read from the socket ({@link Socket#shutdownInput()} is
+     * not supported by {@link SSLSocket}) and trying to send an untagged BYE not from this IMAP handler has
+     * concurrency issues.
+     */
     @Override
-    void dropConnectionAsynchronously() {
+    void close() {
         try {
-            socket.shutdownInput(); // blocking read from this socket will return EOF
+            socket.close(); // blocking read from this socket will throw throw SocketException
         } catch (IOException e) {
-            ZimbraLog.imap.debug("Failed to close socket input", e);
+            ZimbraLog.imap.debug("Failed to close socket", e);
         }
     }
 

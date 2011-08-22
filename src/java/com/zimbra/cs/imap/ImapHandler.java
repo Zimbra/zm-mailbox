@@ -3842,15 +3842,15 @@ abstract class ImapHandler extends ProtocolHandler {
     /**
      * Close the connection.
      *
-     * If closing from outside of this IMAP handler, you must use {@link #dropConnectionAsynchronously()} instead,
-     * otherwise concurrency issues arise.
+     * If closing from outside of this IMAP handler, you must use {@link #close()} instead, otherwise concurrency issues
+     * arise.
      */
     abstract protected void dropConnection(boolean sendBanner);
 
     /**
-     * Request to close the connection.
+     * Close the connection. It's safe to call from outside of this IMAP handler.
      */
-    abstract void dropConnectionAsynchronously();
+    abstract void close();
 
     abstract protected void flushOutput() throws IOException;
 
