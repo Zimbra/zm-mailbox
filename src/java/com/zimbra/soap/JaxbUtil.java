@@ -190,6 +190,8 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.DeclineCounterAppointmentResponse.class,
             com.zimbra.soap.mail.message.DeleteDataSourceRequest.class,
             com.zimbra.soap.mail.message.DeleteDataSourceResponse.class,
+            com.zimbra.soap.mail.message.DeleteDeviceRequest.class,
+            com.zimbra.soap.mail.message.DeleteDeviceResponse.class,
             com.zimbra.soap.mail.message.DestroyWaitSetRequest.class,
             com.zimbra.soap.mail.message.DestroyWaitSetResponse.class,
             com.zimbra.soap.mail.message.DiffDocumentRequest.class,
