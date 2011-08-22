@@ -123,12 +123,9 @@ public final class HSQLDB extends Db {
         return "";
     }
 
-    /**
-     * TODO
-     */
     @Override
     String getIFNULLClause(String expr1, String expr2) {
-        return "";
+        return "COALESCE(" + expr1 + ", " + expr2 + ")";
     }
 
     @Override
