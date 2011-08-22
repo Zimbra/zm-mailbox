@@ -350,7 +350,7 @@ public class DataSourceManager {
             attrs.put(Provisioning.A_zimbraDataSourceFailingSince, DateUtil.toGeneralizedTime(new Date()));
         }
         try {
-            Provisioning.getInstance().modifyAttrs(ds, attrs);
+            Provisioning.getInstance().modifyDataSource(ds.getAccount(), ds.getId(), attrs);
         } catch (ServiceException e) {
             ZimbraLog.datasource.warn("Unable to set error status for data source %s.", ds.getName());
         }
