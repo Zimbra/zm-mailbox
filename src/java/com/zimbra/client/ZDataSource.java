@@ -15,7 +15,7 @@
 
 package com.zimbra.client;
 
-import com.zimbra.common.datasource.DataSourceType;
+import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.soap.Element;
 
 public interface ZDataSource  {
