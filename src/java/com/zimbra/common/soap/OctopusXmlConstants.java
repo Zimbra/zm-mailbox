@@ -37,6 +37,9 @@ public final class OctopusXmlConstants {
     public static final String E_GET_ALL_DEVICES_REQUEST = "GetAllDevicesRequest";
     public static final String E_GET_ALL_DEVICES_RESPONSE = "GetAllDevicesResponse";
 
+    public static final String E_DELETE_DEVICE_REQUEST = "DeleteDeviceRequest";
+    public static final String E_DELETE_DEVICE_RESPONSE = "DeleteDeviceResponse";
+
     public static final String E_DOCUMENT_ACTION_REQUEST = "DocumentActionRequest";
     public static final String E_DOCUMENT_ACTION_RESPONSE = "DocumentActionResponse";
     
@@ -60,6 +63,9 @@ public final class OctopusXmlConstants {
 
     public static final QName GET_ALL_DEVICES_REQUEST = QName.get(E_GET_ALL_DEVICES_REQUEST, NAMESPACE);
     public static final QName GET_ALL_DEVICES_RESPONSE = QName.get(E_GET_ALL_DEVICES_RESPONSE, NAMESPACE);
+
+    public static final QName DELETE_DEVICE_REQUEST = QName.get(E_DELETE_DEVICE_REQUEST, NAMESPACE);
+    public static final QName DELETE_DEVICE_RESPONSE = QName.get(E_DELETE_DEVICE_RESPONSE, NAMESPACE);
 
     public static final QName DOCUMENT_ACTION_REQUEST = QName.get(E_DOCUMENT_ACTION_REQUEST, NAMESPACE);
     public static final QName DOCUMENT_ACTION_RESPONSE = QName.get(E_DOCUMENT_ACTION_RESPONSE, NAMESPACE);
