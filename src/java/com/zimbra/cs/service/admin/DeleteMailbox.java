@@ -71,9 +71,9 @@ public class DeleteMailbox extends AdminDocumentHandler {
             checkAccountRight(zsc, account, Admin.R_deleteAccount);   
         }
 
-        if (account != null)
+        if (account != null && Provisioning.getInstance().getLocalServer().getBooleanAttr(Provisioning.A_zimbraXMPPEnabled, false)) {
             IMPersona.deleteIMPersona(account.getName());
-        
+        }
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(accountId, false);
         int mailboxId = -1;
         if (mbox != null) {
