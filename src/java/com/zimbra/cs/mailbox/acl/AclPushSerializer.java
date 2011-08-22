@@ -14,7 +14,10 @@
  */
 package com.zimbra.cs.mailbox.acl;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ShareInfoData;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
@@ -51,6 +54,28 @@ public class AclPushSerializer {
 
     public static String serialize(int folderId, String folderPath, MailItem.Type folderDefaultView, String granteeId,
                                    String granteeName, byte granteeType, short rights) {
+        // Mailbox ACLs typically persist grantee id but not grantee name
+        if (granteeName == null && granteeId != null) {
+            try {
+                switch (granteeType) {
+                    case ACL.GRANTEE_USER:
+                        granteeName = Provisioning.getInstance().get(Key.AccountBy.id, granteeId).getName();
+                        break;
+                    case ACL.GRANTEE_GROUP:
+                        granteeName = Provisioning.getInstance().get(Key.DistributionListBy.id, granteeId).getName();
+                        break;
+                    case ACL.GRANTEE_DOMAIN:
+                        granteeName = Provisioning.getInstance().get(Key.DomainBy.id, granteeId).getName();
+                        break;
+                    case ACL.GRANTEE_COS:
+                        granteeName = Provisioning.getInstance().get(Key.CosBy.id, granteeId).getName();
+                        break;
+                    default:
+                }
+            } catch (ServiceException e) {
+                ZimbraLog.misc.info("Error in getting grantee name for grantee id %s", granteeId, e);
+            }
+        }
         return new StringBuilder().
                 append("granteeId:").append(granteeId).
                 append(";granteeName:").append(granteeName).
@@ -65,8 +90,11 @@ public class AclPushSerializer {
     public static ShareInfoData deserialize(String sharedItemInfo) throws ServiceException {
         String[] parts = sharedItemInfo.split(";");
         ShareInfoData obj = new ShareInfoData();
-        obj.setGranteeId(parts[0].substring("granteeId:".length()));
-        obj.setGranteeName(parts[1].substring("granteeName:".length()));
+        // granteeId and granteeName could be "null", e.g. for public/all shares
+        String granteeId = parts[0].substring("granteeId:".length());
+        obj.setGranteeId("null".equals(granteeId) ? null : granteeId);
+        String granteeName = parts[1].substring("granteeName:".length());
+        obj.setGranteeName("null".equals(granteeName) ? null : granteeName);
         obj.setGranteeType(ACL.stringToType(parts[2].substring("granteeType:".length())));
         obj.setFolderId(Integer.valueOf(parts[3].substring("folderId:".length())));
         obj.setFolderPath(parts[4].substring("folderPath:".length()));

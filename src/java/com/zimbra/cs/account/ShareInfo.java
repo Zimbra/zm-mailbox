@@ -416,13 +416,20 @@ public class ShareInfo {
             throws ServiceException {
 
             List<String> granteeIds = new LinkedList<String>();
-            boolean includePublic = false;
+            boolean includePublicShares = false;
+            boolean includeAllAuthedShares = false;
             if (granteeType == 0) {
-                // no grantee type specified, return all published shares
+                // no grantee type specified, return all accessible shares
                 granteeIds.add(acct.getId());
                 GroupMembership aclGroups = prov.getGroupMembership(acct, false);
                 granteeIds.addAll(aclGroups.groupIds());
-                includePublic = true;
+                granteeIds.add(prov.getDomain(acct).getId());
+                Cos cos = prov.getCOS(acct);
+                if (cos != null) {
+                    granteeIds.add(cos.getId());
+                }
+                includePublicShares = true;
+                includeAllAuthedShares = true;
 
             } else if (granteeType == ACL.GRANTEE_USER) {
                 granteeIds.add(acct.getId());
@@ -432,14 +439,26 @@ public class ShareInfo {
                 granteeIds.addAll(aclGroups.groupIds());
 
             } else if (granteeType == ACL.GRANTEE_PUBLIC) {
-                includePublic = true;
+                includePublicShares = true;
+
+            } else if (granteeType == ACL.GRANTEE_DOMAIN) {
+                granteeIds.add(prov.getDomain(acct).getId());
+
+            } else if (granteeType == ACL.GRANTEE_COS) {
+                Cos cos = prov.getCOS(acct);
+                if (cos != null) {
+                    granteeIds.add(cos.getId());
+                }
+
+            } else if (granteeType == ACL.GRANTEE_AUTHUSER) {
+                includeAllAuthedShares = true;
 
             } else {
                 throw ServiceException.INVALID_REQUEST(
                         "unsupported grantee type: " + ACL.typeToString(granteeType), null);
             }
 
-            getSharesPublished(prov, visitor, owner, granteeIds, includePublic);
+            getSharesPublished(prov, visitor, owner, granteeIds, includePublicShares, includeAllAuthedShares);
         }
 
         public static void getPublished(Provisioning prov, DistributionList dl, boolean directOnly, Account owner,
@@ -453,24 +472,27 @@ public class ShareInfo {
             } else {
                 granteeIds.addAll(prov.getGroupMembership(dl, false).groupIds());
             }
-            getSharesPublished(prov, visitor, owner, granteeIds, false);
+            getSharesPublished(prov, visitor, owner, granteeIds, false, false);
         }
 
         private static void getSharesPublished(Provisioning prov, PublishedShareInfoVisitor visitor, Account owner,
-                                               List<String> granteeIds, boolean includePublic)
+                List<String> granteeIds, boolean includePublicShares, boolean includeAllAuthedShares)
                 throws ServiceException {
 
-            if (granteeIds.isEmpty() && !includePublic) {
+            if (granteeIds.isEmpty() && !includePublicShares && !includeAllAuthedShares) {
                 return;
             }
 
             // construct search query
             StringBuilder searchQuery = new StringBuilder().append("(&(objectclass=zimbraAccount)(|");
             for (String id : granteeIds) {
-                searchQuery.append("(zimbraSharedItem=granteeId:").append(id).append("*)");
+                searchQuery.append(String.format("(zimbraSharedItem=granteeId:%s*)", id));
             }
-            if (includePublic) {
+            if (includePublicShares) {
                 searchQuery.append("(zimbraSharedItem=*granteeType:pub*)");
+            }
+            if (includeAllAuthedShares) {
+                searchQuery.append("(zimbraSharedItem=*granteeType:all*)");
             }
             searchQuery.append("))");
 
@@ -494,7 +516,8 @@ public class ShareInfo {
                 for (String sharedItem : sharedItems) {
                     ShareInfoData shareData = AclPushSerializer.deserialize(sharedItem);
                     if (granteeIds.contains(shareData.getGranteeId()) ||
-                            (includePublic && shareData.getGranteeTypeCode() == ACL.GRANTEE_PUBLIC)) {
+                            (includePublicShares && shareData.getGranteeTypeCode() == ACL.GRANTEE_PUBLIC) ||
+                            (includeAllAuthedShares && shareData.getGranteeTypeCode() == ACL.GRANTEE_AUTHUSER)) {
                         shareData.setOwnerAcctId(account.getId());
                         shareData.setOwnerAcctEmail(account.getName());
                         shareData.setOwnerAcctDisplayName(account.getDisplayName());
