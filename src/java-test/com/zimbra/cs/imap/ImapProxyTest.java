@@ -107,7 +107,7 @@ public final class ImapProxyTest {
         }
 
         @Override
-        void dropConnectionAsynchronously() {
+        void close() {
         }
 
         @Override

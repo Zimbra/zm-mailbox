@@ -201,7 +201,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     }
 
     @Override
-    void dropConnectionAsynchronously() {
+    void close() {
         dropConnection(true);
     }
 

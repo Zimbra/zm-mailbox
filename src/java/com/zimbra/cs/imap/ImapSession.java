@@ -228,7 +228,7 @@ public class ImapSession extends Session {
         ImapHandler i4handler = handler;
         if (i4handler != null) {
             ZimbraLog.imap.debug("dropping connection because Session is closing");
-            i4handler.dropConnectionAsynchronously();
+            i4handler.close();
         }
     }
 
