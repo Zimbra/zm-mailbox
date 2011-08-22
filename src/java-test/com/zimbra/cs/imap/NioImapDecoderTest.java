@@ -35,7 +35,7 @@ import com.zimbra.cs.imap.NioImapDecoder.TooLongLineException;
  *
  * @author ysasaki
  */
-public class NioImapDecoderTest {
+public final class NioImapDecoderTest {
     private static final CharsetEncoder CHARSET = Charsets.ISO_8859_1.newEncoder();
     private static final IoBuffer IN = IoBuffer.allocate(1024).setAutoExpand(true);
 
@@ -137,6 +137,7 @@ public class NioImapDecoderTest {
 
     @Test
     public void maxLiteralSize() throws Exception {
+        decoder.setMaxLiteralSize(1024L);
         IN.clear().putString("XXX {1025}\r\nrecover\r\n", CHARSET).flip();
         try {
             decoder.decode(session, IN, session.getDecoderOutput());

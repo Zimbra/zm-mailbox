@@ -38,7 +38,8 @@ public final class NioImapServer extends NioServer implements ImapServer, Realti
         super(config);
         decoder = new NioImapDecoder();
         decoder.setMaxChunkSize(config.getWriteChunkSize());
-        decoder.setMaxLiteralSize(config.getMaxRequestSize());
+        decoder.setMaxLineLength(config.getMaxRequestSize());
+        decoder.setMaxLiteralSize(config.getMaxMessageSize());
         registerMBean(getName());
         ZimbraPerf.addStatsCallback(this);
     }
@@ -82,6 +83,6 @@ public final class NioImapServer extends NioServer implements ImapServer, Realti
     public Map<String, Object> getStatData() {
         String connStatName = getConfig().isSslEnabled() ? ZimbraPerf.RTS_IMAP_SSL_CONN : ZimbraPerf.RTS_IMAP_CONN;
         String threadStatName = getConfig().isSslEnabled() ? ZimbraPerf.RTS_IMAP_SSL_THREADS : ZimbraPerf.RTS_IMAP_THREADS;
-        return ImmutableMap.of(connStatName, (Object) getNumConnections(), threadStatName, getNumThreads()); 
+        return ImmutableMap.of(connStatName, (Object) getNumConnections(), threadStatName, getNumThreads());
     }
 }

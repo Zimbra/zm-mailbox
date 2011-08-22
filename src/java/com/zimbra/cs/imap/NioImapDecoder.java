@@ -37,7 +37,7 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
 
     private int maxChunkSize = 1024;
     private int maxLineLength = 1024;
-    private int maxLiteralSize = 1024;
+    private long maxLiteralSize = -1L;
 
     void setMaxChunkSize(int bytes) {
         Preconditions.checkArgument(bytes > 0);
@@ -57,11 +57,11 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
 
     /**
      * Sets the allowed maximum size of a literal to be decoded. If the size of the literal to be decoded exceeds this
-     * value, the decoder will throw a {@link TooBigLiteralException}. The default value is 1024 (1KB).
+     * value, the decoder will throw a {@link TooBigLiteralException}. The default is unlimited.
      *
      * @param bytes max literal size in bytes
      */
-    void setMaxLiteralSize(int bytes) {
+    void setMaxLiteralSize(long bytes) {
         Preconditions.checkArgument(bytes > 0);
         maxLiteralSize = bytes;
     }
@@ -134,7 +134,7 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
                             throw new InvalidLiteralFormatException();
                         }
                         if (li != null) {
-                            if (li.count > maxLiteralSize) {
+                            if (maxLiteralSize >= 0 && li.count > maxLiteralSize) {
                                 if (li.isBlocking()) { // return a negative continuation response
                                     throw new TooBigLiteralException(line);
                                 } else { // non-blocking, swallow the entire literal
