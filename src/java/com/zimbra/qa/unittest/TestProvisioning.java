@@ -30,7 +30,7 @@ import junit.framework.TestCase;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.account.ProvisioningConstants;
-import com.zimbra.common.datasource.DataSourceType;
+import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.SetUtil;

@@ -14,7 +14,7 @@
  */
 package com.zimbra.cs.datasource;
 
-import com.zimbra.common.datasource.DataSourceType;
+import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.DateUtil;

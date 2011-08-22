@@ -17,7 +17,7 @@ package com.zimbra.cs.account.soap;
 
 import java.util.Map;
 
-import com.zimbra.common.datasource.DataSourceType;
+import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.cs.account.Account;

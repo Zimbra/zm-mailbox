@@ -34,7 +34,7 @@ import org.testng.annotations.Test;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DataSourceBy;
 import com.zimbra.common.account.ProvisioningConstants;
-import com.zimbra.common.datasource.DataSourceType;
+import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
