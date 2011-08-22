@@ -2544,9 +2544,9 @@ named system retention policies that users can apply to folders and tags.
     <keep>
       <policy id="{id}" name="{name}" type="system" lifetime="{interval}"/>*
     </keep>
-    <delete>
+    <purge>
       <policy id="{id}" name="{name}" type="system" lifetime="{interval}"/>*
-    </delete>
+    </purge>
   </retentionPolicy>
 </GetSystemRetentionPolicyResponse>
 
@@ -2555,9 +2555,9 @@ named system retention policies that users can apply to folders and tags.
   <keep>
     <policy name="{name}" lifetime="{interval}" xmlns="urn:zimbraMail"/>
   </keep> |
-  <delete>
+  <purge>
     <policy name="{name}" lifetime="{interval}" xmlns="urn:zimbraMail"/>
-  </delete>
+  </purge>
 </CreateSystemRetentionPolicyRequest>
 
 <CreateSystemRetentionPolicyResponse>
