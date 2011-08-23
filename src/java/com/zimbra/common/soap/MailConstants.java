@@ -949,6 +949,7 @@ public final class MailConstants {
     public static final String A_CAL_OTHER_ATTENDEES = "otherAtt";
     public static final String A_CAL_ALARM = "alarm";
     public static final String A_CAL_RECUR = "recur";
+    public static final String A_CAL_HAS_EXCEPTIONS = "hasEx";
     public static final String A_CAL_UPDATE_ORGANIZER = "updateOrganizer";
     public static final String A_CAL_THIS_AND_FUTURE = "thisAndFuture";
     public static final String A_CAL_TIMEZONE= "tz";
