@@ -1,0 +1,19 @@
+ant "test" target
+=================
+These tests do not require Zimbra to be installed on the system under test.
+Useful for exercising marshaling and unmarshaling for JAXB objects under src/java/
+
+ant "wsdl-test" target
+======================
+These tests require Zimbra to be installed on the system under test with starndard test users in place.
+They rely on Java API files automatically generated from WSDL files by the ant target "wsdl-client-support".
+The main intention is to validate that correct, working WSDL client software can be written based on our WSDL.
+The JAXB classes under src/java/ are NOT typically tested directly by these tests, although to some extent
+their correctness is being validated as the WSDL files are based on them and the test API is based on the WSDL.
+
+zmsoap -z RunUnitTestsRequest
+=============================
+Where ZimbraServer has been updated to use the JAXB classes, some tests have been added to the
+RunUnitTests framework.
+e.g. see com.zimbra.qa.unittest.TestJaxbProvisioning whose source is under the ZimbraServer project.
+
