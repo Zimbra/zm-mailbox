@@ -58,12 +58,14 @@ import com.zimbra.cs.mailbox.calendar.InviteChanges;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
+import com.zimbra.cs.mailbox.calendar.Recurrence.SimpleRepeatingRule;
 import com.zimbra.cs.mailbox.calendar.Util;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
 import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
 import com.zimbra.cs.mailbox.calendar.Recurrence.RecurrenceRule;
+import com.zimbra.cs.mailbox.calendar.ZRecur.Frequency;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -1508,13 +1510,49 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                     ParsedDateTime newDtStart = newInvite.getStartTime();
                     //if (newDtStart != null && oldDtStart != null && !newDtStart.sameTime(oldDtStart)) {
                     if (newDtStart != null && oldDtStart != null && !newDtStart.equals(oldDtStart)) {
-                        // Do the RECURRENCE-ID adjustment only when DTSTART moved by 7 days or less.
-                        // If it moved by more, it gets too complicated to figure out what the old RECURRENCE-ID
-                        // is in the new series.  Just blow away all exceptions.
-                        ParsedDuration delta = newDtStart.difference(oldDtStart);
-                        if (delta.abs().compareTo(ParsedDuration.ONE_WEEK) < 0) {
-                            needRecurrenceIdUpdate = true;
-                            dtStartMovedBy = delta;
+                        // Find the series frequency.
+                        Frequency freq = null;
+                        IRecurrence recurrence = newInvite.getRecurrence();
+                        if (recurrence != null) {
+                            Iterator rulesIter = recurrence.addRulesIterator();
+                            if (rulesIter != null) {
+                                for (; rulesIter.hasNext(); ) {
+                                    Object ruleObj = rulesIter.next();
+                                    if (ruleObj instanceof SimpleRepeatingRule) {
+                                        SimpleRepeatingRule series = (SimpleRepeatingRule) ruleObj;
+                                        ZRecur recur = series.getRule();
+                                        freq = recur.getFrequency();
+                                        break;
+                                     }
+                                }
+                            }
+                        }
+                        // Maximum allowed delta depends on the frequency.
+                        ParsedDuration deltaLimit = null;
+                        if (freq != null) {
+                            switch (freq) {
+                            case DAILY:
+                                deltaLimit = ParsedDuration.ONE_DAY;
+                                break;
+                            case WEEKLY:
+                            case MONTHLY:
+                            case YEARLY:
+                                // Do the RECURRENCE-ID adjustment only when DTSTART moved by 7 days or less.
+                                // If it moved by more, it gets too complicated to figure out what the old RECURRENCE-ID
+                                // should be in the new series.  Just blow away all exceptions.
+                                deltaLimit = ParsedDuration.ONE_WEEK;
+                                break;
+                            default:
+                                // Secondly/minutely/hourly rules are too frequent to allow recurrence id shifting.
+                                break;
+                            }
+                        }
+                        if (deltaLimit != null) {
+                            ParsedDuration delta = newDtStart.difference(oldDtStart);
+                            if (delta.abs().compareTo(deltaLimit) < 0) {
+                                needRecurrenceIdUpdate = true;
+                                dtStartMovedBy = delta;
+                            }
                         }
                     }
                 }
