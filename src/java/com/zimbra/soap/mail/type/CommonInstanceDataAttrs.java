@@ -43,6 +43,11 @@ public class CommonInstanceDataAttrs {
     @XmlAttribute(name=MailConstants.A_CAL_RECUR /* recur */, required=false)
     private Boolean isRecurring;
 
+    // The hasEx attribute should be set at <appt>/<task> level only and should not be overridden at <inst> level.
+    // This is because the presence of exceptions instances is a property of the entire appointment/task.
+    @XmlAttribute(name=MailConstants.A_CAL_HAS_EXCEPTIONS /* hasEx */, required=false)
+    private Boolean hasExceptions;
+
     @XmlAttribute(name=MailConstants.A_CAL_PRIORITY /* priority */, required=false)
     private String priority;
 
@@ -109,6 +114,9 @@ public class CommonInstanceDataAttrs {
     public void setIsRecurring(Boolean isRecurring) {
         this.isRecurring = isRecurring;
     }
+    public void setHasExceptions(Boolean hasExceptions) {
+        this.hasExceptions = hasExceptions;
+    }
     public void setPriority(String priority) { this.priority = priority; }
     public void setFreeBusyIntended(String freeBusyIntended) {
         this.freeBusyIntended = freeBusyIntended;
@@ -146,6 +154,7 @@ public class CommonInstanceDataAttrs {
     public String getFreeBusyActual() { return freeBusyActual; }
     public String getTaskPercentComplete() { return taskPercentComplete; }
     public Boolean getIsRecurring() { return isRecurring; }
+    public Boolean getHasExceptions() { return hasExceptions; }
     public String getPriority() { return priority; }
     public String getFreeBusyIntended() { return freeBusyIntended; }
     public String getTransparency() { return transparency; }
@@ -173,6 +182,7 @@ public class CommonInstanceDataAttrs {
             .add("freeBusyActual", freeBusyActual)
             .add("taskPercentComplete", taskPercentComplete)
             .add("isRecurring", isRecurring)
+            .add("hasExceptions", hasExceptions)
             .add("priority", priority)
             .add("freeBusyIntended", freeBusyIntended)
             .add("transparency", transparency)
