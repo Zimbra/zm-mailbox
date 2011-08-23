@@ -114,7 +114,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 if (sharedFolderName == null) {
                     throw new ServletException("share not found");
                 }
-                String mountpointName = owner.getDisplayName() + "'s " + sharedFolderName;
+                String mountpointName = getMountpointName(owner, sharedFolderName);
 
                 ZMailbox.Options options = new ZMailbox.Options();
                 options.setNoSession(true);
@@ -171,6 +171,11 @@ public class ExternalUserProvServlet extends ZimbraServlet {
         } catch (ServiceException e) {
             throw new ServletException(e);
         }
+    }
+
+    private static String getMountpointName(Account owner, String sharedFolderName) {
+        return owner.getDisplayName() != null ?
+                owner.getDisplayName() + "'s " + sharedFolderName : owner.getName() + "'s " + sharedFolderName;
     }
 
     private static String mapExtEmailToAcctName(String extUserEmail, Domain domain) {
@@ -248,7 +253,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 for (String sharedItem : sharedItems) {
                     ShareInfoData shareData = AclPushSerializer.deserialize(sharedItem);
                     String sharedFolderName = getSharedFolderName(shareData.getFolderPath());
-                    String mountpointName = account.getDisplayName() + "'s " + sharedFolderName;
+                    String mountpointName = getMountpointName(account, sharedFolderName);
                     Mountpoint mtpt = granteeMbox.createMountpoint(
                             null, Mailbox.ID_FOLDER_USER_ROOT, mountpointName, account.getId(), shareData.getFolderId(),
                             shareData.getFolderDefaultViewCode(), 0, MailItem.DEFAULT_COLOR, false);
