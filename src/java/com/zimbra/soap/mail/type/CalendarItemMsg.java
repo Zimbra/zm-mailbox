@@ -7,7 +7,7 @@
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -28,11 +28,12 @@ import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {"content", "mimePart", "attachments", "invite",
+@XmlType(propOrder = {"content", "headers", "mimePart", "attachments", "invite",
            "emailAddresses", "timezones", "fragment", "extraElements"})
 public class CalendarItemMsg {
 
@@ -50,6 +51,9 @@ public class CalendarItemMsg {
 
     @XmlAttribute(name=MailConstants.E_SUBJECT /* su */, required=false)
     private String subject;
+
+    @XmlElement(name=MailConstants.E_HEADER /* header */, required=false)
+    private List<Header> headers;
 
     @XmlAttribute(name=MailConstants.E_IN_REPLY_TO /* irt */, required=false)
     private String inReplyTo;
@@ -99,6 +103,7 @@ public class CalendarItemMsg {
         this.identityId = identityId;
     }
     public void setSubject(String subject) { this.subject = subject; }
+    public void setHeaders(List<Header> headers) { this.headers = headers; }
     public void setInReplyTo(String inReplyTo) { this.inReplyTo = inReplyTo; }
     public void setFolderId(String folderId) { this.folderId = folderId; }
     public void setFlags(String flags) { this.flags = flags; }
@@ -147,6 +152,7 @@ public class CalendarItemMsg {
     public String getReplyType() { return replyType; }
     public String getIdentityId() { return identityId; }
     public String getSubject() { return subject; }
+    public List<Header> getHeaders() { return headers; }
     public String getInReplyTo() { return inReplyTo; }
     public String getFolderId() { return folderId; }
     public String getFlags() { return flags; }
@@ -190,5 +196,29 @@ public class CalendarItemMsg {
     public String toString() {
         return addToStringInfo(Objects.toStringHelper(this))
                 .toString();
+    }
+
+    public static final class Header {
+        @XmlAttribute(name=MailConstants.A_NAME)
+        private String name;
+
+        @XmlValue
+        private String value;
+
+        public Header() {
+        }
+
+        public Header(String name, String value) {
+            this.name = name;
+            this.value = value;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getValue() {
+            return value;
+        }
     }
 }
