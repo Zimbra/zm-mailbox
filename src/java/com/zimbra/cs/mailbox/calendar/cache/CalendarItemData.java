@@ -42,6 +42,7 @@ public class CalendarItemData {
 
     // time/recurrence
     private boolean mIsRecurring;
+    private boolean mHasExceptions;
 
     // alarm
     private AlarmData mAlarm;
@@ -70,7 +71,8 @@ public class CalendarItemData {
 
     public String getUid()   { return mUid; }
 
-    public boolean isRecurring() { return mIsRecurring; }
+    public boolean isRecurring()   { return mIsRecurring; }
+    public boolean hasExceptions() { return mHasExceptions; }
 
     public AlarmData getAlarm() { return mAlarm; }
     public boolean hasAlarm()   { return mAlarm != null; }
@@ -89,7 +91,7 @@ public class CalendarItemData {
             byte type, int folderId, int calItemId, String flags, String tags,
             int modMetadata, int modContent, long date, long changeDate, long size,
             String uid,
-            boolean isRecurring, boolean isPublic,
+            boolean isRecurring, boolean hasExceptions, boolean isPublic,
             AlarmData alarm,
             FullInstanceData defaultData) {
         mType = type; mFolderId = folderId; mCalItemId = calItemId;
@@ -97,7 +99,7 @@ public class CalendarItemData {
         mModMetadata = modMetadata; mModContent = modContent;
         mDate = date; mChangeDate = changeDate; mSize = size;
         mUid = uid;
-        mIsRecurring = isRecurring; mIsPublic = isPublic;
+        mIsRecurring = isRecurring; mHasExceptions = hasExceptions; mIsPublic = isPublic;
         mAlarm = alarm;
         mDefaultData = defaultData;
         mInstances = new ArrayList<InstanceData>();
@@ -117,7 +119,7 @@ public class CalendarItemData {
         CalendarItemData calItemData = new CalendarItemData(
                 mType, mFolderId, mCalItemId, mFlags, mTags,
                 mModMetadata, mModContent, mDate, mChangeDate, mSize,
-                mUid, mIsRecurring, mIsPublic, mAlarm,
+                mUid, mIsRecurring, mHasExceptions, mIsPublic, mAlarm,
                 mDefaultData);
         long defaultDuration =
             mDefaultData.getDuration() != null ? mDefaultData.getDuration().longValue() : 0;
@@ -160,6 +162,7 @@ public class CalendarItemData {
     private static final String FN_SIZE = "sz";
     private static final String FN_UID = "uid";
     private static final String FN_IS_RECURRING = "isRecur";
+    private static final String FN_HAS_EXCEPTIONS = "hasEx";
     private static final String FN_ALARM = "alarm";
     private static final String FN_DEFAULT_INST = "defInst";
     private static final String FN_NUM_INST = "numInst";
@@ -181,6 +184,7 @@ public class CalendarItemData {
         mSize = meta.getLong(FN_SIZE);
         mUid = meta.get(FN_UID, null);
         mIsRecurring = meta.getBool(FN_IS_RECURRING);
+        mHasExceptions = meta.getBool(FN_HAS_EXCEPTIONS, false);
         Metadata metaAlarm = meta.getMap(FN_ALARM, true);
         if (metaAlarm != null)
             mAlarm = new AlarmData(metaAlarm);
@@ -224,6 +228,7 @@ public class CalendarItemData {
         meta.put(FN_SIZE, mSize);
         meta.put(FN_UID, mUid);
         meta.put(FN_IS_RECURRING, mIsRecurring);
+        meta.put(FN_HAS_EXCEPTIONS, mHasExceptions);
         if (mAlarm != null)
             meta.put(FN_ALARM, mAlarm.encodeMetadata());
         if (mDefaultData != null)
