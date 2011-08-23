@@ -147,6 +147,12 @@ SECTION mta DEPENDS amavis
 	POSTCONF always_add_missing_headers           LOCAL postfix_always_add_missing_headers
 	POSTCONF smtpd_sasl_security_options		LOCAL postfix_smtpd_sasl_security_options
 	POSTCONF smtpd_sasl_tls_security_options	LOCAL postfix_smtpd_sasl_tls_security_options
+	POSTCONF smtp_cname_overrides_servername	LOCAL postfix_smtp_cname_overrides_servername
+	POSTCONF smtp_sasl_auth_enable			LOCAL postfix_smtp_sasl_auth_enable
+	POSTCONF smtp_sasl_security_options		LOCAL postfix_smtp_sasl_security_options
+	POSTCONF smtp_tls_security_level		LOCAL postfix_smtp_tls_security_level
+	POSTCONF smtp_sasl_mechanism_filter		LOCAL postfix_smtp_sasl_mechanism_filter
+	POSTCONF smtp_sasl_password_maps		LOCAL postfix_smtp_sasl_password_maps
 	RESTART mta
 
 SECTION sasl
