@@ -146,7 +146,7 @@ public class CalSummaryCache {
                     calItem.getFlagString(), calItem.getTags(), TagUtil.getTagIdString(calItem),
                     calItem.getModifiedSequence(), calItem.getSavedSequence(),
                     calItem.getDate(), calItem.getChangeDate(), calItem.getSize(),
-                    defaultInvite.getUid(), defaultInvite.isRecurrence(), calItem.isPublic(),
+                    defaultInvite.getUid(), defaultInvite.isRecurrence(), calItem.hasExceptions(), calItem.isPublic(),
                     alarm, defaultData);
 
             long actualRangeStart = 0;

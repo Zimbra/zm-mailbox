@@ -600,7 +600,9 @@ OR
 //      [draft="1"]              // set if invite has changes that haven't been sent to attendees; for organizer only
 //      [neverSent="0|1"]        // set if attendees were never notified of this invite; for organizer only
 //      [otherAtt="1"]           // if set, this appointment has other attendees
-//      [alarm="1"] [recur="1"]
+//      [alarm="1"]
+//      [recur="1"]              // if set, this is a recurring appointment
+//      [hasEx="1"]              // if set, this is a recurring appointment with exceptions
 //      [name="NAME"] [loc="LOCATION"]
 //      invId="default_invite_mail_item_id" compNum="default_invite_component_number"
 //      isOrg="default_am_i_organizer_flag"

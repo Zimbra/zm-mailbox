@@ -431,6 +431,9 @@ public class GetCalendarItemSummaries extends CalendarRequest {
                     calItemElem.addAttribute(MailConstants.A_CAL_NEVER_SENT, defaultInvite.isNeverSent());
                 if (defaultInvite.isRecurrence())
                     calItemElem.addAttribute(MailConstants.A_CAL_RECUR, defaultInvite.isRecurrence());
+                if (calItem.hasExceptions()) {
+                    calItemElem.addAttribute(MailConstants.A_CAL_HAS_EXCEPTIONS, true);
+                }
                 
                 toRet.element = calItemElem;
             }

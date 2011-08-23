@@ -176,6 +176,17 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         return (mRecurrence != null);
     }
 
+    public boolean hasExceptions() {
+        if (isRecurring()) {
+            for (Invite inv : mInvites) {
+                if (inv.hasRecurId()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     @Override
     public String getSender() {
         String sender = null;
