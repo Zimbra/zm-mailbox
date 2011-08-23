@@ -559,6 +559,14 @@ public final class LC {
     public static final KnownKey postfix_queue_run_delay = KnownKey.newKey("300s");
     public static final KnownKey postfix_sender_canonical_maps = KnownKey.newKey("proxy:ldap:${zimbra_home}/conf/ldap-scm.cf");
     public static final KnownKey postfix_sendmail_path = KnownKey.newKey("${zimbra_home}/postfix/sbin/sendmail");
+
+    public static final KnownKey postfix_smtp_cname_overrides_servername = KnownKey.newKey("no");
+    public static final KnownKey postfix_smtp_sasl_auth_enable = KnownKey.newKey("no");
+    public static final KnownKey postfix_smtp_sasl_security_options = KnownKey.newKey("noplaintext,noanonymous");
+    public static final KnownKey postfix_smtp_tls_security_level = KnownKey.newKey(null);
+    public static final KnownKey postfix_smtp_sasl_mechanism_filter = KnownKey.newKey(null);
+    public static final KnownKey postfix_smtp_sasl_password_maps = KnownKey.newKey(null);
+
     public static final KnownKey postfix_smtpd_sasl_authenticated_header = KnownKey.newKey("no");
     public static final KnownKey postfix_smtpd_sasl_security_options = KnownKey.newKey("noanonymous");
     public static final KnownKey postfix_smtpd_sasl_tls_security_options = KnownKey.newKey("$smtpd_sasl_security_options");
