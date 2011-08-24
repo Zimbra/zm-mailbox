@@ -31,7 +31,7 @@ public class TestDefangFilter {
         String fileName = "bug_37098.txt";
         InputStream htmlStream = getHtmlBody(fileName);
         
-        String result = HtmlDefang.defang(htmlStream, false);
+        String result = HtmlDefang.defang(htmlStream, true);
         // Make sure it didn't delete ftp://
         Assert.assertTrue(result.contains("ftp://ftp.perftech.com/hidden/aaeon/cpupins.jpg"));
         
@@ -46,7 +46,7 @@ public class TestDefangFilter {
         String fileName = "bug_46948.txt";
         InputStream htmlStream = getHtmlBody(fileName);
         
-        String result = HtmlDefang.defang(htmlStream, false);
+        String result = HtmlDefang.defang(htmlStream, true);
         // Make sure each area tag has a target
         int index = result.indexOf("<area");
         while(index >= 0){
@@ -69,7 +69,7 @@ public class TestDefangFilter {
         String fileName = "bug_49452.txt";
         InputStream htmlStream = getHtmlBody(fileName);
         
-        String result = HtmlDefang.defang(htmlStream, false);
+        String result = HtmlDefang.defang(htmlStream, true);
         // make sure the link is still there 
         // There should be a bunch of data after this link, but there's a few \n that seem to break it up.
         Assert.assertTrue(result.contains("https://www.plus1staging.net/plus1staging.net/companyAuthorization.jsp"));
@@ -84,7 +84,7 @@ public class TestDefangFilter {
         String fileName = "bug_11464.txt";
         InputStream htmlStream = getHtmlBody(fileName);
         
-        String result = HtmlDefang.defang(htmlStream, false);
+        String result = HtmlDefang.defang(htmlStream, true);
         
         // Make sure this has been replaced
         Assert.assertTrue(!result.contains("src=\"_media/zimbra_logo.gif\""));
@@ -124,9 +124,9 @@ public class TestDefangFilter {
         String fileName = "bug_60769.txt";
         InputStream htmlStream = getHtmlBody(fileName);
         
-        String result = HtmlDefang.defang(htmlStream, false);
+        String result = HtmlDefang.defang(htmlStream, true);
                 
-        // Make sure this has been replaced
+        Assert.assertTrue(!result.contains("dfsrc=\"image001.gif\""));
         Assert.assertTrue(result.contains("src=\"image001.gif\""));
     }
     
@@ -140,12 +140,29 @@ public class TestDefangFilter {
         String fileName = "bug_62605.txt";
         InputStream htmlStream = getHtmlBody(fileName);
         long startTime = System.currentTimeMillis();
-        String result = HtmlDefang.defang(htmlStream, false);
+        String result = HtmlDefang.defang(htmlStream, true);
         long endTime = System.currentTimeMillis();
         
         // Make sure this takes less than one second
         Assert.assertTrue("Possible slowness in a regex", (endTime - startTime) < 1000);
         // Make sure this has been replaced
+        Assert.assertTrue(result.contains("src=\"data:"));
+    }
+    
+    /**
+     * Makes sure we don't defang inline images
+     * @throws Exception
+     */
+    @Test
+    public void testBug62632() throws Exception {
+        String fileName = "bug_62632.txt";
+        InputStream htmlStream = getHtmlBody(fileName);
+        
+        String result = HtmlDefang.defang(htmlStream, true);
+                
+        // Mare sure dfsrc isn't in there
+        Assert.assertTrue(!result.contains("dfsrc=\"data:"));
+        // and make sure we still have the src link..
         Assert.assertTrue(result.contains("src=\"data:"));
     }
 }
