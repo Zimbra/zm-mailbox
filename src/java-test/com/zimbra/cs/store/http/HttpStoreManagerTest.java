@@ -20,10 +20,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
 
-import junit.framework.Assert;
-
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;

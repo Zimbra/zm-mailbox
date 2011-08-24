@@ -25,13 +25,12 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetHeaders;
 
-import org.testng.v6.Maps;
-
+import com.google.common.collect.Maps;
 import com.zimbra.common.util.ByteUtil;
 
 public class MockHttpStore {
     static final int PORT = 7678;
-    static final String URL_PREFIX = "http://localhost:" + MockHttpStore.PORT + "/store/";
+    static final String URL_PREFIX = "http://localhost:" + PORT + "/store/";
 
     private static ServerSocket ssock;
     private static Map<String, byte[]> blobs = Maps.newHashMap();
