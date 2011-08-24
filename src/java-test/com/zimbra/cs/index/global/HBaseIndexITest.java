@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.index;
+package com.zimbra.cs.index.global;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,6 +32,8 @@ import org.junit.Test;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.index.Indexer;
+import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;

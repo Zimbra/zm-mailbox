@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.index;
+package com.zimbra.cs.index.global;
 
 import java.io.IOException;
 
@@ -32,11 +32,15 @@ import com.zimbra.cs.mailbox.Mailbox;
  * @author ysasaki
  */
 final class HBaseIndexTestUtils {
-    private static final String INDEX_TABLE = "__zimbra.index";
+    private static final String TEST_INDEX_TABLE = "__zimbra.index";
+    private static final String TEST_GLOBAL_INDEX_TABLE = "__zimbra.global.index";
     private static final HBaseIndex.Factory FACTORY;
     static {
         Configuration conf = HBaseConfiguration.create();
-        conf.set("zimbra.index", INDEX_TABLE);
+        conf.set("hbase.zookeeper.quorum", "localhost");
+        conf.setInt(HBaseIndex.TABLE_POOL_SIZE, 2);
+        conf.set(HBaseIndex.INDEX_TABLE, TEST_INDEX_TABLE);
+        conf.set(GlobalIndex.GLOBAL_INDEX_TABLE, TEST_GLOBAL_INDEX_TABLE);
         FACTORY = new HBaseIndex.Factory(conf);
     }
 
@@ -50,21 +54,36 @@ final class HBaseIndexTestUtils {
     static void initSchema() throws IOException {
         HBaseAdmin admin = new HBaseAdmin(FACTORY.getConfiguration());
         try {
-            admin.disableTable(INDEX_TABLE);
-            admin.deleteTable(INDEX_TABLE);
+            admin.disableTable(TEST_INDEX_TABLE);
+            admin.deleteTable(TEST_INDEX_TABLE);
         } catch (TableNotFoundException ignore) {
         }
-        HTableDescriptor indexTableDesc = new HTableDescriptor(INDEX_TABLE);
+        try {
+            admin.disableTable(TEST_GLOBAL_INDEX_TABLE);
+            admin.deleteTable(TEST_GLOBAL_INDEX_TABLE);
+        } catch (TableNotFoundException ignore) {
+        }
+
+        HTableDescriptor indexTableDesc = new HTableDescriptor(TEST_INDEX_TABLE);
         HColumnDescriptor mboxCF = new HColumnDescriptor(HBaseIndex.MBOX_CF);
         mboxCF.setMaxVersions(1);
         indexTableDesc.addFamily(mboxCF);
         HColumnDescriptor termCF = new HColumnDescriptor(HBaseIndex.TERM_CF);
         termCF.setMaxVersions(Integer.MAX_VALUE);
         indexTableDesc.addFamily(termCF);
-        HColumnDescriptor docCF = new HColumnDescriptor(HBaseIndex.DOC_CF);
-        docCF.setMaxVersions(Integer.MAX_VALUE);
-        indexTableDesc.addFamily(docCF);
+        HColumnDescriptor itemCF = new HColumnDescriptor(HBaseIndex.ITEM_CF);
+        itemCF.setMaxVersions(Integer.MAX_VALUE);
+        indexTableDesc.addFamily(itemCF);
         admin.createTable(indexTableDesc);
+
+        HTableDescriptor globalIndexTableDesc = new HTableDescriptor(TEST_GLOBAL_INDEX_TABLE);
+        HColumnDescriptor globalTermCF = new HColumnDescriptor(HBaseIndex.TERM_CF);
+        globalTermCF.setMaxVersions(1);
+        globalIndexTableDesc.addFamily(globalTermCF);
+        HColumnDescriptor globalItemCF = new HColumnDescriptor(HBaseIndex.ITEM_CF);
+        globalItemCF.setMaxVersions(1);
+        globalIndexTableDesc.addFamily(globalItemCF);
+        admin.createTable(globalIndexTableDesc);
     }
 
 }

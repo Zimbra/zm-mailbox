@@ -60,7 +60,6 @@ import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.index.CassandraIndex;
 import com.zimbra.cs.index.DbSearchConstraints;
-import com.zimbra.cs.index.HBaseIndex;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneIndex;
@@ -72,6 +71,7 @@ import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.index.global.HBaseIndex;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
 import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
@@ -305,12 +305,14 @@ public final class MailboxIndex {
      * is {@code 0}, all items are indexed immediately when they are added.
      */
     public int getBatchThreshold() {
-        try {
-            return mailbox.getAccount().getBatchedIndexingSize();
-        } catch (ServiceException e) {
-            ZimbraLog.index.warn("Failed to get " + Provisioning.A_zimbraBatchedIndexingSize, e);
-            return 0;
+        if (indexStore instanceof LuceneIndex) {
+            try {
+                return mailbox.getAccount().getBatchedIndexingSize();
+            } catch (ServiceException e) {
+                ZimbraLog.index.warn("Failed to get %s",Provisioning.A_zimbraBatchedIndexingSize, e);
+            }
         }
+        return 0; // disable batch indexing for non Lucene index stores
     }
 
     public int getMaxWildcardTerms() {

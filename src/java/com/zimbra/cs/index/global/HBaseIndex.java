@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.index;
+package com.zimbra.cs.index.global;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -74,8 +74,16 @@ import com.google.common.primitives.UnsignedBytes;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.index.IndexStore;
+import com.zimbra.cs.index.Indexer;
+import com.zimbra.cs.index.LuceneFields;
+import com.zimbra.cs.index.global.GlobalIndex;
+import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
 
 /**
  * {@link IndexStore} implementation using Apache HBase.
@@ -83,15 +91,22 @@ import com.zimbra.cs.mailbox.Mailbox;
  * @author ysasaki
  */
 public final class HBaseIndex implements IndexStore {
-    private static final byte[] INDEX_TABLE = Bytes.toBytes("zimbra.index");
+    static final String INDEX_TABLE = "zimbra.index";
+    static final String TABLE_POOL_SIZE = "hbase.table.pool.size";
     static final byte[] MBOX_CF = Bytes.toBytes("mbox");
     static final byte[] TERM_CF = Bytes.toBytes("term");
-    static final byte[] DOC_CF = Bytes.toBytes("doc");
+    static final byte[] ITEM_CF = Bytes.toBytes("item");
     private static final byte[] VERSION_COL = Bytes.toBytes("ver");
-    private static final byte[] DATE_COL = Bytes.toBytes("date");
-    private static final byte[] NAME_COL = Bytes.toBytes("name");
-    private static final byte[] SIZE_COL = Bytes.toBytes("size");
-    private static final byte[] SUBJECT_COL = Bytes.toBytes("subj");
+    static final byte[] TYPE_COL = Bytes.toBytes("type");
+    static final byte[] DATE_COL = Bytes.toBytes("date");
+    static final byte[] SIZE_COL = Bytes.toBytes("size");
+    static final byte[] NAME_COL = Bytes.toBytes("name");
+    static final byte[] SUBJECT_COL = Bytes.toBytes("subj");
+    static final byte[] SORT_SUBJECT_COL = Bytes.toBytes("^subj");
+    static final byte[] FRAGMENT_COL = Bytes.toBytes("frag");
+    static final byte[] SENDER_COL = Bytes.toBytes("from");
+    static final byte[] SORT_SENDER_COL = Bytes.toBytes("^from");
+    static final byte[] MIME_TYPE_COL = Bytes.toBytes("mime");
 
     private static final ObjectMapper JSON_MAPPER = new ObjectMapper(new SmileFactory());
     static {
@@ -123,7 +138,7 @@ public final class HBaseIndex implements IndexStore {
         .put(LuceneFields.L_FIELD, 'N')
         .build();
 
-    private final Mailbox mailbox;
+    final Mailbox mailbox;
     private final Factory factory;
     private byte[] row; // Account UUID + row version
 
@@ -141,6 +156,10 @@ public final class HBaseIndex implements IndexStore {
             .add("mbox", mailbox.getId())
             .add("ver", UnsignedBytes.toInt(row[row.length - 1]))
             .toString();
+    }
+
+    public GlobalIndex getGlobalIndex() {
+        return factory.getGlobalIndex();
     }
 
     private byte[] getRow(String account) throws IOException {
@@ -223,6 +242,34 @@ public final class HBaseIndex implements IndexStore {
         return true;
     }
 
+    Result fetch(int id) throws IOException {
+        Get get = new Get(row);
+        get.setTimeRange(toTimestamp(id, 0), toTimestamp(id, mailbox.getLastChangeID() + 1));
+        get.setMaxVersions(1);
+        HTableInterface table = factory.pool.getTable(factory.indexTableName);
+        try {
+            return table.get(get);
+        } finally {
+            factory.pool.putTable(table);
+        }
+    }
+
+    static byte[] toBytes(Term term) {
+        Character prefix = FIELD2PREFIX.get(term.field());
+        return prefix != null ? Bytes.toBytes(prefix + term.text()) : null;
+    }
+
+    static byte[] toBytes(MailItem.Type type) {
+        return new byte[] {type.toByte()};
+    }
+
+    static MailItem.Type toType(byte[] raw) {
+        if (raw != null && raw.length == 1) {
+            return MailItem.Type.of(raw[0]);
+        }
+        return MailItem.Type.UNKNOWN;
+    }
+
     /**
      * {@code timestamp (64-bit) = id (32-bit) + mod_content (32-bit)}.
      */
@@ -238,22 +285,27 @@ public final class HBaseIndex implements IndexStore {
         private final Configuration config;
         private final HTablePool pool;
         private final byte[] indexTableName;
+        private final GlobalIndex globalIndex;
 
         public Factory() {
-            config = HBaseConfiguration.create();
-            config.set("hbase.zookeeper.quorum", LC.hbase_host.value());
-            pool = new HTablePool(config, LC.hbase_table_pool_size.intValue());
-            indexTableName = INDEX_TABLE;
+            this(HBaseConfiguration.create());
         }
 
         @VisibleForTesting
         Factory(Configuration conf) {
             config = conf;
-            config.set("hbase.zookeeper.quorum", "localhost");
-            pool = new HTablePool(config, 2);
-            String table = conf.get("zimbra.index"); // for testing
-            Preconditions.checkArgument(table != null, "missing 'zimbra.index'");
-            indexTableName = Bytes.toBytes(table);
+            if (conf.get("hbase.zookeeper.quorum") == null) {
+                conf.set("hbase.zookeeper.quorum", LC.hbase_host.value());
+            }
+            // test may override
+            pool = new HTablePool(conf, conf.getInt(TABLE_POOL_SIZE, LC.hbase_table_pool_size.intValue()));
+            indexTableName = Bytes.toBytes(conf.get(INDEX_TABLE, INDEX_TABLE));
+            globalIndex = new GlobalIndex(config, pool);
+        }
+
+        @VisibleForTesting
+        Configuration getConfiguration() {
+            return config;
         }
 
         @Override
@@ -269,9 +321,8 @@ public final class HBaseIndex implements IndexStore {
         public void destroy() {
         }
 
-        @VisibleForTesting
-        Configuration getConfiguration() {
-            return config;
+        public GlobalIndex getGlobalIndex() {
+            return globalIndex;
         }
     }
 
@@ -288,6 +339,8 @@ public final class HBaseIndex implements IndexStore {
     private final class IndexerImpl implements Indexer {
         private final List<Row> batch = new ArrayList<Row>();
         private final HTableInterface table;
+        private final List<Integer> indexGlobal = new ArrayList<Integer>();
+        private final List<Integer> deleteGlobal = new ArrayList<Integer>();
 
         IndexerImpl() {
             table = factory.pool.getTable(factory.indexTableName);
@@ -295,6 +348,8 @@ public final class HBaseIndex implements IndexStore {
 
         @Override
         public void addDocument(MailItem item, List<IndexDocument> docs) throws IOException {
+            long ts = toTimestamp(item.getId(), item.getSavedSequence());
+            batch.add(put(ts, item));
             Map<String, TermInfo> term2info = new HashMap<String, TermInfo>();
             int pos = 0;
             for (IndexDocument doc : docs) {
@@ -325,18 +380,56 @@ public final class HBaseIndex implements IndexStore {
                     }
                 }
             }
-            long ts = toTimestamp(item.getId(), item.getSavedSequence());
             for (Map.Entry<String, TermInfo> entry : term2info.entrySet()) {
                 Put put = new Put(row);
                 put.add(TERM_CF, Bytes.toBytes(entry.getKey()), ts, JSON_MAPPER.writeValueAsBytes(entry.getValue()));
                 batch.add(put);
             }
+
+            // promote shared documents to global index
+            switch (item.getType()) {
+                case DOCUMENT:
+                    try {
+                        ACL acl = mailbox.getFolderById(null, item.getFolderId()).getEffectiveACL();
+                        if (acl != null && !acl.isEmpty()) {
+                            indexGlobal.add(item.getId());
+                        }
+                    } catch (ServiceException e) {
+                        ZimbraLog.index.warn("Failed to get folder", e);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private Put put(long ts, MailItem item) {
             Put put = new Put(row);
-            put.add(DOC_CF, DATE_COL, ts, Bytes.toBytes(item.getDate()));
-            put.add(DOC_CF, NAME_COL, ts, Bytes.toBytes(Strings.nullToEmpty(item.getSender())));
-            put.add(DOC_CF, SIZE_COL, ts, Bytes.toBytes(item.getSize()));
-            put.add(DOC_CF, SUBJECT_COL, ts, Bytes.toBytes(Strings.nullToEmpty(item.getSortSubject())));
-            batch.add(put);
+            put.add(ITEM_CF, TYPE_COL, ts, toBytes(item.getType()));
+            put.add(ITEM_CF, DATE_COL, ts, Bytes.toBytes(item.getDate()));
+            put.add(ITEM_CF, SIZE_COL, ts, Bytes.toBytes(item.getSize()));
+            switch (item.getType()) {
+                case MESSAGE:
+                    Message msg = (Message) item;
+                    put.add(ITEM_CF, SENDER_COL, ts, Bytes.toBytes(msg.getSender()));
+                    put.add(ITEM_CF, SORT_SENDER_COL, ts, Bytes.toBytes(msg.getSortSender()));
+                    put.add(ITEM_CF, SUBJECT_COL, ts, Bytes.toBytes(msg.getSubject()));
+                    put.add(ITEM_CF, SORT_SUBJECT_COL, ts, Bytes.toBytes(msg.getSortSubject()));
+                    put.add(ITEM_CF, FRAGMENT_COL, ts, Bytes.toBytes(msg.getFragment()));
+                    break;
+                case CONTACT:
+                    Contact contact = (Contact) item;
+                    put.add(ITEM_CF, NAME_COL, ts, Bytes.toBytes(contact.getSender()));
+                    break;
+                case DOCUMENT:
+                    com.zimbra.cs.mailbox.Document doc = (com.zimbra.cs.mailbox.Document) item;
+                    put.add(ITEM_CF, SENDER_COL, ts, Bytes.toBytes(doc.getCreator()));
+                    put.add(ITEM_CF, NAME_COL, ts, Bytes.toBytes(doc.getName()));
+                    put.add(ITEM_CF, FRAGMENT_COL, ts, Bytes.toBytes(doc.getFragment()));
+                    put.add(ITEM_CF, MIME_TYPE_COL, ts, Bytes.toBytes(doc.getContentType()));
+                    break;
+            }
+            return put;
         }
 
         /**
@@ -362,6 +455,8 @@ public final class HBaseIndex implements IndexStore {
                 }
             }
             batch.add(del);
+            // don't bother with checking the existence, attempt to delete from global index no matter what
+            deleteGlobal.addAll(ids);
         }
 
         /**
@@ -376,6 +471,12 @@ public final class HBaseIndex implements IndexStore {
             } finally {
                 factory.pool.putTable(table);
             }
+            for (int id : indexGlobal) {
+                getGlobalIndex().index(HBaseIndex.this, id);
+            }
+            for (int id : deleteGlobal) {
+                getGlobalIndex().delete(new GlobalItemID(mailbox.getAccountId(), id));
+            }
         }
 
         /**
@@ -385,7 +486,6 @@ public final class HBaseIndex implements IndexStore {
         public void optimize() {
         }
     }
-
 
     private final class IndexReaderImpl extends IndexReader {
         private final HTableInterface table;
@@ -438,7 +538,7 @@ public final class HBaseIndex implements IndexStore {
         @Override
         public Document document(int id, FieldSelector selector) throws IOException {
             Get get = new Get(row);
-            get.addFamily(DOC_CF);
+            get.addFamily(ITEM_CF);
             get.setTimeRange(toTimestamp(id, 0), toTimestamp(id, Integer.MAX_VALUE));
             get.setMaxVersions(1);
             Result result = table.get(get);
@@ -447,13 +547,16 @@ public final class HBaseIndex implements IndexStore {
             }
             IndexDocument doc = new IndexDocument();
             doc.addMailboxBlobId(id);
-            KeyValue date = result.getColumnLatest(DOC_CF, DATE_COL);
+            KeyValue date = result.getColumnLatest(ITEM_CF, DATE_COL);
             doc.addSortDate(date != null ? Bytes.toLong(date.getValue()) : 0L);
-            KeyValue name = result.getColumnLatest(DOC_CF, NAME_COL);
+            KeyValue name = result.getColumnLatest(ITEM_CF, SORT_SENDER_COL);
+            if (name == null) {
+                name = result.getColumnLatest(ITEM_CF, NAME_COL);
+            }
             doc.addSortName(name != null ? Bytes.toString(name.getValue()) : "");
-            KeyValue size = result.getColumnLatest(DOC_CF, SIZE_COL);
+            KeyValue size = result.getColumnLatest(ITEM_CF, SIZE_COL);
             doc.addSortSize(size != null ? Bytes.toLong(size.getValue()) : 0L);
-            KeyValue subject = result.getColumnLatest(DOC_CF, SUBJECT_COL);
+            KeyValue subject = result.getColumnLatest(ITEM_CF, SORT_SUBJECT_COL);
             doc.addSortSubject(subject != null ? Bytes.toString(subject.getValue()) : "");
             return doc.toDocument();
         }
