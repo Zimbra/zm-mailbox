@@ -181,7 +181,7 @@ public final class LC {
     public static final KnownKey zimbra_mailbox_change_checkpoint_frequency = KnownKey.newKey(100);
 
     public static final KnownKey zimbra_mailbox_lock_max_waiting_threads = KnownKey.newKey(5);
-    public static final KnownKey zimbra_mailbox_lock_timeout = KnownKey.newKey(10); // 10 seconds
+    public static final KnownKey zimbra_mailbox_lock_timeout = KnownKey.newKey(60); // seconds
 
     @Supported
     public static final KnownKey zimbra_index_threads = KnownKey.newKey(10);
