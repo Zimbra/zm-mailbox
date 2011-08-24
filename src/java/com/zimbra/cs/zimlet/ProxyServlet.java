@@ -171,18 +171,31 @@ public class ProxyServlet extends ZimbraServlet {
     private void doProxy(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         ZimbraLog.clearContext();
         boolean isAdmin = isAdminRequest(req);
-        AuthToken authToken = isAdmin ? getAdminAuthTokenFromCookie(req, resp) : getAuthTokenFromCookie(req, resp);      
+        AuthToken authToken = isAdmin ?
+                getAdminAuthTokenFromCookie(req, resp, true) : getAuthTokenFromCookie(req, resp, true);
         if (authToken == null) {
             String zAuthToken = req.getParameter(QP_ZAUTHTOKEN);
-            if (zAuthToken != null)
+            if (zAuthToken != null) {
                 try {
                     authToken = AuthProvider.getAuthToken(zAuthToken);
+                    if (authToken.isExpired()) {
+                        resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "authtoken expired");
+                        return;
+                    }
+                    if (isAdmin && !authToken.isAdmin()) {
+                        resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "permission denied");
+                        return;
+                    }
                 } catch (AuthTokenException e) {
-                    resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "unable to parse auth token");
+                    resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "unable to parse authtoken");
+                    return;
                 }
+            }
         }
-        if (authToken == null)
+        if (authToken == null) {
+            resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "no authtoken cookie");
             return;
+        }
 
         // get the posted body before the server read and parse them.
         byte[] body = copyPostedData(req);
