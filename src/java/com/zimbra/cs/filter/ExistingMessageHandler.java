@@ -18,6 +18,7 @@ import java.util.Collection;
 
 import javax.mail.internet.MimeMessage;
 
+import com.google.common.collect.Sets;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
@@ -30,7 +31,6 @@ import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.ParsedMessageOptions;
@@ -123,9 +123,10 @@ public class ExistingMessageHandler extends FilterHandler {
 
     private void updateTagsAndFlagsIfNecessary(Message msg, Collection<ActionFlag> flagActions, String[] newTags)
     throws ServiceException {
-        String[] existingTags = msg.getTags(), tags = FilterUtil.getTagsUnion(existingTags, newTags);
+        String[] existingTags = msg.getTags();
+        String[] tags = FilterUtil.getTagsUnion(existingTags, newTags);
         int flags = FilterUtil.getFlagBitmask(flagActions, msg.getFlagBitmask(), mailbox);
-        if (existingTags != tags || msg.getFlagBitmask() != flags) {
+        if (!Sets.newHashSet(existingTags).equals(Sets.newHashSet(tags)) || msg.getFlagBitmask() != flags) {
             ZimbraLog.filter.info("Updating flags to %d, tags to %s on message %d.",
                     flags, tags, msg.getId());
             mailbox.setTags(octxt, msg.getId(), MailItem.Type.MESSAGE, flags, tags);
