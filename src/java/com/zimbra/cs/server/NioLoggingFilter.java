@@ -17,22 +17,19 @@ package com.zimbra.cs.server;
 
 import com.zimbra.common.util.Log;
 
-import javax.net.ssl.SSLException;
-
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.filterchain.IoFilterAdapter;
 import org.apache.mina.core.session.IoSession;
-import org.apache.mina.core.write.WriteException;
 import org.apache.mina.core.write.WriteRequest;
 import org.apache.mina.filter.codec.ProtocolDecoderException;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.net.SocketException;
 
 /**
  * Optionally logs all MINA protocol events to the server log.
  */
-class NioLoggingFilter extends IoFilterAdapter {
+final class NioLoggingFilter extends IoFilterAdapter {
     private final Log log;
     private final boolean hexDump;
 
@@ -47,7 +44,7 @@ class NioLoggingFilter extends IoFilterAdapter {
         String msg = "Exception caught: " + cause;
         if (cause instanceof ProtocolDecoderException) {
             log.debug(msg, cause);
-        } else if (isSocketError(cause)) {
+        } else if (cause instanceof IOException) {
             // If connection error, then only log full stack trace if debug enabled
             if (log.isDebugEnabled()) {
                 log.debug(msg, cause);
@@ -58,10 +55,6 @@ class NioLoggingFilter extends IoFilterAdapter {
             log.error(msg, cause);
         }
         nextFilter.exceptionCaught(session, cause);
-    }
-
-    private static boolean isSocketError(Throwable e) {
-        return e instanceof SocketException || e instanceof SSLException || e instanceof WriteException;
     }
 
     @Override
