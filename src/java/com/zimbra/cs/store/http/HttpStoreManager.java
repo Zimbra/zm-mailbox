@@ -188,7 +188,7 @@ public abstract class HttpStoreManager extends StoreManager {
 
     @Override
     public StagedBlob stage(Blob blob, Mailbox mbox) throws IOException, ServiceException {
-        InputStream is = new BlobInputStream(blob);
+        InputStream is = getContent(blob);
         try {
             return stage(is, blob.getRawSize(), mbox);
         } finally {
