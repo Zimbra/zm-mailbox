@@ -165,4 +165,19 @@ public class TestDefangFilter {
         // and make sure we still have the src link..
         Assert.assertTrue(result.contains("src=\"data:"));
     }
+    
+    /**
+     * Makes sure we don't defang inline images
+     * @throws Exception
+     */
+    @Test
+    public void testBug63150() throws Exception {
+        String fileName = "bug_63150.txt";
+        InputStream htmlStream = getHtmlBody(fileName);
+        
+        String result = HtmlDefang.defang(htmlStream, true);
+                
+        // Check to make sure the link needed is still in there.
+        Assert.assertTrue(result.contains("BillingInfoDisplayCmd?bi_URL"));
+    }
 }

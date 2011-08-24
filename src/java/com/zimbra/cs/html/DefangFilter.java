@@ -634,6 +634,8 @@ public class DefangFilter extends DefaultFilter {
      */
     private boolean removeAttrValue(String eName, String aName, XMLAttributes attributes, int i) {
         String value = attributes.getValue(i);
+        // get rid of any spaces that might throw off the regex
+        value = value == null? null: value.trim();
         if (aName.equalsIgnoreCase("href") || aName.equalsIgnoreCase("longdesc") || aName.equalsIgnoreCase("usemap")){
             if (!VALID_URL.matcher(value).find()) {
                 return true;
