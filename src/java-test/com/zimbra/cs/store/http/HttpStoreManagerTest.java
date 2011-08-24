@@ -18,7 +18,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.UUID;
 
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.junit.After;
@@ -56,7 +55,7 @@ public class HttpStoreManagerTest {
 
         @Override
         protected String getPostUrl(Mailbox mbox) {
-            return MockHttpStore.URL_PREFIX + UUID.randomUUID().toString();
+            return MockHttpStore.URL_PREFIX;
         }
 
         @Override
@@ -81,7 +80,8 @@ public class HttpStoreManagerTest {
             if (locator == null || locator.isEmpty()) {
                 throw ServiceException.FAILURE("no locator returned from POST", null);
             } else {
-                return new HttpStagedBlob(mbox, postDigest, postSize, locator);
+                String[] parts = locator.trim().split("/");
+                return new HttpStagedBlob(mbox, postDigest, postSize, parts[parts.length - 1]);
             }
         }
 

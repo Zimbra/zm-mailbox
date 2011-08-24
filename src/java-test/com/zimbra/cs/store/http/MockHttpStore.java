@@ -21,6 +21,7 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetHeaders;
@@ -80,11 +81,11 @@ public class MockHttpStore {
                     InternetHeaders headers = new InternetHeaders(in);
 
                     if (method.equals("GET")) {
-                        doGet(filename, version, out);
+                        doGet(version, filename, out);
                     } else if (method.equals("POST") || method.equals("PUT")) {
-                        doPost(filename, version, headers, in, out);
+                        doPost(version, headers, in, out);
                     } else if (method.equals("DELETE")) {
-                        doDelete(filename, version, out);
+                        doDelete(version, filename, out);
                     } else {
                         out.write((version + " 400 unknown method: " + reqparts[0] + "\r\n\r\n").getBytes());
                     }
@@ -101,7 +102,7 @@ public class MockHttpStore {
         }
     }
 
-    private static void doGet(String filename, String httpversion, OutputStream out) throws IOException {
+    private static void doGet(String httpversion, String filename, OutputStream out) throws IOException {
         // send the content
         byte[] content = blobs.get(filename);
         if (content == null) {
@@ -113,17 +114,19 @@ public class MockHttpStore {
         }
     }
 
-    private static void doPost(String filename, String httpversion, InternetHeaders headers, InputStream in, OutputStream out)
+    private static void doPost(String httpversion, InternetHeaders headers, InputStream in, OutputStream out)
     throws IOException {
         String clen = headers.getHeader("Content-Length", null);
         int length = clen == null ? -1 : Integer.parseInt(clen);
+
+        String filename = UUID.randomUUID().toString();
 
         blobs.put(filename, ByteUtil.readInput(in, length, length));
         out.write((httpversion + " 201 Created\r\n").getBytes());
         out.write(("Location: " + URL_PREFIX + filename + "\r\n\r\n").getBytes());
     }
 
-    private static void doDelete(String filename, String httpversion, OutputStream out) throws IOException {
+    private static void doDelete(String httpversion, String filename, OutputStream out) throws IOException {
         blobs.remove(filename);
         out.write((httpversion + " 204 No Content\r\n\r\n").getBytes());
     }
