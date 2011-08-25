@@ -448,39 +448,43 @@ public class ImapSession extends Session {
      *  cache up to date in case of restart. */
     static final int RESERIALIZATION_THRESHOLD = DebugConfig.imapSerializedSessionNotificationOverloadThreshold;
 
-    private class PagedFolderData implements ImapFolderData {
-        private String mCacheKey;
-        private int mOriginalSize;
-        private PagedSessionData mPagedSessionData;
-        private Map<Integer, PendingModifications> mQueuedChanges;
+    private final class PagedFolderData implements ImapFolderData {
+        private final String cacheKey;
+        private final int originalSize;
+        private PagedSessionData pagedSessionData; // guarded by PagedFolderData.this
+        private Map<Integer, PendingModifications> queuedChanges;
 
         PagedFolderData(String cachekey, ImapFolder i4folder) {
-            mCacheKey = cachekey;
-            mOriginalSize = i4folder.getSize();
-            mPagedSessionData = i4folder.getSessionData() == null ? null : new PagedSessionData(i4folder);
+            cacheKey = cachekey;
+            originalSize = i4folder.getSize();
+            pagedSessionData = i4folder.getSessionData() == null ? null : new PagedSessionData(i4folder);
         }
 
-        @Override public int getId() {
+        @Override
+        public int getId() {
             return ImapSession.this.getFolderId();
         }
 
-        @Override public int getSize() {
-            return mOriginalSize;
+        @Override
+        public int getSize() {
+            return originalSize;
         }
 
-        @Override public boolean isWritable() {
-            return mPagedSessionData == null ? false : mPagedSessionData.mOriginalSessionData.mWritable;
+        @Override
+        public synchronized boolean isWritable() {
+            return pagedSessionData == null ? false : pagedSessionData.mOriginalSessionData.mWritable;
         }
 
-        @Override public synchronized boolean hasExpunges() {
+        @Override
+        public synchronized boolean hasExpunges() {
             // hugely overbroad, but this should never be called in the first place...
-            if (mPagedSessionData != null && mPagedSessionData.mOriginalSessionData.mExpungedCount > 0) {
+            if (pagedSessionData != null && pagedSessionData.mOriginalSessionData.mExpungedCount > 0) {
                 return true;
             }
-            if (mQueuedChanges == null || mQueuedChanges.isEmpty()) {
+            if (queuedChanges == null || queuedChanges.isEmpty()) {
                 return false;
             }
-            for (PendingModifications pms : mQueuedChanges.values()) {
+            for (PendingModifications pms : queuedChanges.values()) {
                 if (pms.deleted != null && !pms.deleted.isEmpty()) {
                     return true;
                 }
@@ -491,42 +495,45 @@ public class ImapSession extends Session {
             return false;
         }
 
-        @Override public boolean hasNotifications() {
-            if (mPagedSessionData != null && mPagedSessionData.hasNotifications()) {
+        @Override
+        public synchronized boolean hasNotifications() {
+            if (pagedSessionData != null && pagedSessionData.hasNotifications()) {
                 return true;
             }
-            return mQueuedChanges != null && !mQueuedChanges.isEmpty();
+            return queuedChanges != null && !queuedChanges.isEmpty();
         }
 
         synchronized boolean notificationsFull() {
-            if (mQueuedChanges == null || mQueuedChanges.isEmpty()) {
+            if (queuedChanges == null || queuedChanges.isEmpty()) {
                 return false;
             }
 
             int count = 0;
-            for (PendingModifications pms : mQueuedChanges.values()) {
+            for (PendingModifications pms : queuedChanges.values()) {
                 count += pms.getScaledNotificationCount();
             }
             return count > RESERIALIZATION_THRESHOLD;
         }
 
         String getCacheKey() {
-            return mCacheKey;
+            return cacheKey;
         }
 
-        @Override public void doEncodeState(Element imap) {
+        @Override
+        public void doEncodeState(Element imap) {
             imap.addAttribute("paged", true);
         }
 
-        @Override public void endSelect() {
-            mPagedSessionData = null;
+        @Override
+        public synchronized void endSelect() {
+            pagedSessionData = null;
         }
 
         synchronized void restore(ImapFolder i4folder) throws ServiceException {
-            ImapFolder.SessionData sdata = mPagedSessionData == null ? null : mPagedSessionData.asFolderData(i4folder);
+            ImapFolder.SessionData sdata = pagedSessionData == null ? null : pagedSessionData.asFolderData(i4folder);
             i4folder.restore(ImapSession.this, sdata);
-            if (mPagedSessionData != null && mPagedSessionData.mSessionFlags != null) {
-                int[] sflags = mPagedSessionData.mSessionFlags;
+            if (pagedSessionData != null && pagedSessionData.mSessionFlags != null) {
+                int[] sflags = pagedSessionData.mSessionFlags;
                 for (int i = 0; i < sflags.length; i += 2) {
                     ImapMessage i4msg = i4folder.getByImapId(sflags[i]);
                     if (i4msg != null) {
@@ -537,12 +544,12 @@ public class ImapSession extends Session {
         }
 
         private PendingModifications getQueuedNotifications(int changeId) {
-            if (mQueuedChanges == null) {
-                mQueuedChanges = new TreeMap<Integer, PendingModifications>();
+            if (queuedChanges == null) {
+                queuedChanges = new TreeMap<Integer, PendingModifications>();
             }
-            PendingModifications pns = mQueuedChanges.get(changeId);
+            PendingModifications pns = queuedChanges.get(changeId);
             if (pns == null) {
-                mQueuedChanges.put(changeId, pns = new PendingModifications());
+                queuedChanges.put(changeId, pns = new PendingModifications());
             }
             return pns;
         }
@@ -565,44 +572,52 @@ public class ImapSession extends Session {
             // it's an error if we're replaying changes back into this same queuer...
             assert mFolder != this;
 
-            if (mQueuedChanges == null) {
+            if (queuedChanges == null) {
                 return;
             }
 
-            for (Iterator<Map.Entry<Integer, PendingModifications>> it = mQueuedChanges.entrySet().iterator(); it.hasNext();) {
+            for (Iterator<Map.Entry<Integer, PendingModifications>> it = queuedChanges.entrySet().iterator(); it.hasNext();) {
                 Map.Entry<Integer, PendingModifications> entry = it.next();
                 notifyPendingChanges(entry.getValue(), entry.getKey(), null);
                 it.remove();
             }
         }
 
-        @Override public void handleTagDelete(int changeId, int tagId, Change chg) {
+        @Override
+        public void handleTagDelete(int changeId, int tagId, Change chg) {
             queueDelete(changeId, tagId, chg);
         }
 
-        @Override public void handleTagRename(int changeId, Tag tag, Change chg) {
+        @Override
+        public void handleTagRename(int changeId, Tag tag, Change chg) {
             queueModify(changeId, chg);
         }
 
-        @Override public void handleItemDelete(int changeId, int itemId, Change chg) {
+        @Override
+        public void handleItemDelete(int changeId, int itemId, Change chg) {
             queueDelete(changeId, itemId, chg);
         }
 
-        @Override public void handleItemCreate(int changeId, MailItem item, AddedItems added) {
+        @Override
+        public void handleItemCreate(int changeId, MailItem item, AddedItems added) {
             queueCreate(changeId, item);
         }
 
-        @Override public void handleFolderRename(int changeId, Folder folder, Change chg) {
+        @Override
+        public void handleFolderRename(int changeId, Folder folder, Change chg) {
             queueModify(changeId, chg);
         }
 
-        @Override public void handleItemUpdate(int changeId, Change chg, AddedItems added) {
+        @Override
+        public void handleItemUpdate(int changeId, Change chg, AddedItems added) {
             queueModify(changeId, chg);
         }
 
-        @Override public void handleAddedMessages(int changeId, AddedItems added) {}
+        @Override
+        public void handleAddedMessages(int changeId, AddedItems added) {}
 
-        @Override public void finishNotification(int changeId) throws IOException {
+        @Override
+        public void finishNotification(int changeId) throws IOException {
             // idle sessions need to be notified immediately
             ImapHandler handler = getHandler();
             if (handler != null && handler.isIdle()) {
