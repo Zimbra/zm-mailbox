@@ -20,6 +20,7 @@ import java.util.Map;
 
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
@@ -55,7 +56,7 @@ public class AddDistributionListAlias extends AdminDocumentHandler {
         }
         
         if (group.isDynamic()) {
-            checkDistributionListRight(lc, (DistributionList) group, Admin.R_addGroupAlias);
+            checkDynamicGroupRight(lc, (DynamicGroup) group, Admin.R_addGroupAlias);
         } else {
             checkDistributionListRight(lc, (DistributionList) group, Admin.R_addDistributionListAlias);
         }
@@ -65,10 +66,9 @@ public class AddDistributionListAlias extends AdminDocumentHandler {
 
         prov.addGroupAlias(group, alias);
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                new String[] {"cmd", "AddDistributionListAlias", "name", group.getName(), "alias", alias})); 
-        
-	    Element response = lc.createElement(AdminConstants.ADD_DISTRIBUTION_LIST_ALIAS_RESPONSE);
-	    return response;
+                new String[] {"cmd", "AddDistributionListAlias", "name", group.getName(), "alias", alias}));
+
+        return lc.createElement(AdminConstants.ADD_DISTRIBUTION_LIST_ALIAS_RESPONSE);
 	}
 	
 	@Override
