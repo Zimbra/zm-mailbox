@@ -88,6 +88,15 @@ public class InviteChanges {
         return changed(LOCATION | TIME | RECURRENCE);
     }
 
+    /**
+     * Returns true if the change is for a recurrence series and it causes exception instances to be removed.
+     * Includes changes to time or recurrence.
+     * @return
+     */
+    public boolean isExceptionRemovingChange() {
+        return changedTime() || changedRecurrence();
+    }
+
     private void diffInvites(Invite inv1, Invite inv2) {
         // Subject
         if (!StringUtil.equal(inv1.getName(), inv2.getName()))
