@@ -376,9 +376,13 @@ public class ImapSession extends Session {
         } catch (IOException e) {
             // ImapHandler.dropConnection clears our mHandler and calls SessionCache.clearSession,
             //   which calls Session.doCleanup, which calls Mailbox.removeListener
-            ZimbraLog.imap.debug("dropping connection due to IOException during IDLE notification", e);
+            if (ZimbraLog.imap.isDebugEnabled()) { // with stack trace
+                ZimbraLog.imap.debug("Failed to notify, closing %s", this, e);
+            } else { // without stack trace
+                ZimbraLog.imap.info("Failed to notify (%s), closing %s", e.toString(), this);
+            }
             if (i4handler != null) {
-                i4handler.dropConnection(false);
+                i4handler.close();
             }
         }
     }
@@ -397,7 +401,7 @@ public class ImapSession extends Session {
             //                mailbox, but disconnect all other clients who have the
             //                mailbox accessed by sending a untagged BYE response."
             if (handler != null) {
-                handler.dropConnection(true);
+                handler.close();
             }
         } else if (ImapMessage.SUPPORTED_TYPES.contains(type)) {
             mFolder.handleItemDelete(changeId, id, chg);
@@ -423,7 +427,7 @@ public class ImapSession extends Session {
                 //                mailbox, but disconnect all other clients who have the
                 //                mailbox accessed by sending a untagged BYE response."
                 if (handler != null) {
-                    handler.dropConnection(true);
+                    handler.close();
                 }
             } else if ((chg.why & (Change.MODIFIED_FOLDER | Change.MODIFIED_NAME)) != 0) {
                 mFolder.handleFolderRename(changeId, folder, chg);
