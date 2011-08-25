@@ -2613,13 +2613,21 @@ public class LdapProvisioning extends LdapProv {
             // delete account base DN
             acctBaseDn = mDIT.domainDNToAccountBaseDN(d.getDN());
             if (!acctBaseDn.equals(d.getDN())) {
-                zlc.deleteEntry(acctBaseDn);
+                try {
+                    zlc.deleteEntry(acctBaseDn);
+                } catch (LdapEntryNotFoundException e) {
+                    ZimbraLog.account.info("entry %s not found", acctBaseDn);
+                }
             }
 
             // delete dynamic groups base DN
             dynGroupsBaseDn = mDIT.domainDNToDynamicGroupsBaseDN(d.getDN());
             if (!dynGroupsBaseDn.equals(d.getDN())) {
-                zlc.deleteEntry(dynGroupsBaseDn);
+                try {
+                    zlc.deleteEntry(dynGroupsBaseDn);
+                } catch (LdapEntryNotFoundException e) {
+                    ZimbraLog.account.info("entry %s not found", dynGroupsBaseDn);
+                }
             }
 
             try {
