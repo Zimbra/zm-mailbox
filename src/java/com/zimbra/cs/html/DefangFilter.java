@@ -89,7 +89,7 @@ public class DefangFilter extends DefaultFilter {
     
     // regex for URLs href. TODO: beef this up
 	private static final Pattern VALID_URL = Pattern.compile("^(https?://[\\w-].*|mailto:.*|cid:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)", Pattern.CASE_INSENSITIVE);
-	private static final Pattern VALID_IMG = Pattern.compile("^data:|\\.(jpg|jpeg|png|gif)$");
+    private static final Pattern VALID_IMG = Pattern.compile("^data:|^cid|\\.(jpg|jpeg|png|gif)$");
 
     //
     // Data
@@ -543,12 +543,14 @@ public class DefangFilter extends DefaultFilter {
             }
             fixUrlBase(attributes, "background");
 
-            if (eName.equals("img") && mNeuterImages) {
-                neuterTag(attributes, "src");
-            } else if (eName.equals("a") || eName.equals("area")) {
+                            
+            if (eName.equals("a") || eName.equals("area")) {
                 fixATag(attributes);
             }
             if (mNeuterImages) {
+                if(eName.equals("img") && !VALID_IMG.matcher(attributes.getValue("src")).find()){
+                        neuterTag(attributes, "src");    
+                }
                 neuterTag(attributes, "background");
             }
 
@@ -632,6 +634,8 @@ public class DefangFilter extends DefaultFilter {
      */
     private boolean removeAttrValue(String eName, String aName, XMLAttributes attributes, int i) {
         String value = attributes.getValue(i);
+        // get rid of any spaces that might throw off the regex
+        value = value == null? null: value.trim();
         if (aName.equalsIgnoreCase("href") || aName.equalsIgnoreCase("longdesc") || aName.equalsIgnoreCase("usemap")){
             if (!VALID_URL.matcher(value).find()) {
                 return true;
@@ -660,7 +664,6 @@ public class DefangFilter extends DefaultFilter {
         String value = attributes.getValue(i);
         String result = AV_JS_ENTITY.matcher(value).replaceAll("JS-ENTITY-BLOCKED");
         result = AV_SCRIPT_TAG.matcher(result).replaceAll("SCRIPT-TAG-BLOCKED");
-                
         if (aName.equalsIgnoreCase("style")) {
             result = value.replaceAll("/\\*.*\\*/","");
             result = result.replaceAll("[uU][Rr][Ll]\\s*\\(.*\\)","none");
