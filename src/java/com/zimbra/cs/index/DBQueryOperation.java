@@ -745,7 +745,8 @@ public class DBQueryOperation extends QueryOperation {
             luceneChunk = luceneOp.getNextResultsChunk(Math.min(Db.getINClauseBatchSize(), hitsPerChunk));
 
             DbSearchConstraints.Leaf sc = getTopLeafConstraint();
-            sc.indexIds = luceneChunk.getIndexIds();
+            sc.indexIds.clear();
+            sc.indexIds.addAll(luceneChunk.getIndexIds());
 
             // exponentially expand the chunk size in case we have to go back to the DB
             hitsPerChunk *= 2;

@@ -145,63 +145,63 @@ public interface DbSearchConstraints extends Cloneable {
         // These are the main constraints
 
         /** optional - SPECIAL CASE -- ALL listed tags must be present. */
-        public Set<Tag> tags = new HashSet<Tag>();
+        public final Set<Tag> tags = new HashSet<Tag>();
 
         /** optional - ALL listed tags must be NOT present. */
-        public Set<Tag> excludeTags = new HashSet<Tag>();
+        public final Set<Tag> excludeTags = new HashSet<Tag>();
 
         /** optional - ANY of these folders are OK. */
-        public Set<Folder> folders = new HashSet<Folder>();
+        public final Set<Folder> folders = new HashSet<Folder>();
 
         /** optional - ALL listed folders not allowed. */
-        public Set<Folder> excludeFolders = new HashSet<Folder>();
+        public final Set<Folder> excludeFolders = new HashSet<Folder>();
 
         /** optional - ANY of these folders are OK. */
-        public Set<RemoteFolderDescriptor> remoteFolders = new HashSet<RemoteFolderDescriptor>();
+        public final Set<RemoteFolderDescriptor> remoteFolders = new HashSet<RemoteFolderDescriptor>();
 
         /** optional - ALL listed folders are not OK. */
-        public Set<RemoteFolderDescriptor> excludeRemoteFolders = new HashSet<RemoteFolderDescriptor>();
+        public final Set<RemoteFolderDescriptor> excludeRemoteFolders = new HashSet<RemoteFolderDescriptor>();
 
         /** optional - must match this convId. */
         public int convId = 0;
 
         /** optional - ALL listed convs not allowed. */
-        public Set<Integer> prohibitedConvIds = new HashSet<Integer>();
+        public final Set<Integer> prohibitedConvIds = new HashSet<Integer>();
 
         /** optional. */
-        public ItemId remoteConvId = null;
+        public ItemId remoteConvId;
 
         /** optional - ALL listed convs not allowed. */
-        public Set<ItemId> prohibitedRemoteConvIds = new HashSet<ItemId>();
+        public final Set<ItemId> prohibitedRemoteConvIds = new HashSet<ItemId>();
 
         /** optional - ANY of these itemIDs are OK. */
-        public Set<Integer> itemIds = new HashSet<Integer>();
+        public final Set<Integer> itemIds = new HashSet<Integer>();
 
         /** optional - ALL of these itemIDs are excluded. */
-        public Set<Integer> prohibitedItemIds = new HashSet<Integer>();
+        public final Set<Integer> prohibitedItemIds = new HashSet<Integer>();
 
         /** optional - ANY of these itemIDs are OK. */
-        public Set<ItemId> remoteItemIds = new HashSet<ItemId>();
+        public final Set<ItemId> remoteItemIds = new HashSet<ItemId>();
 
         /** optional - ALL of these itemIDs are excluded. */
-        public Set<ItemId> prohibitedRemoteItemIds = new HashSet<ItemId>();
+        public final Set<ItemId> prohibitedRemoteItemIds = new HashSet<ItemId>();
 
         /** optional - ANY of these indexIDs are OK. */
-        public Set<Integer> indexIds = new HashSet<Integer>();
+        public final Set<Integer> indexIds = new HashSet<Integer>();
 
         /** optional - index_id must be present. */
-        public Boolean hasIndexId = null;
+        public Boolean hasIndexId;
 
         /** optional - ANY of these types are OK. */
-        public Set<MailItem.Type> types = EnumSet.noneOf(MailItem.Type.class);
+        public final Set<MailItem.Type> types = EnumSet.noneOf(MailItem.Type.class);
 
         /** optional - ALL of these types are excluded. */
-        public Set<MailItem.Type> excludeTypes = EnumSet.noneOf(MailItem.Type.class);
+        public final Set<MailItem.Type> excludeTypes = EnumSet.noneOf(MailItem.Type.class);
 
         // A possible result must match *ALL* the range constraints below.  It might seem strange that we don't
         // just combine the ranges -- yes this would be easy for positive ranges (foo>5 AND foo >7 and foo<10)
         // but it quickly gets very complicated with negative ranges such as (3<foo<100 AND NOT 7<foo<20)
-        public Multimap<RangeType, Range> ranges = Multimaps.newMultimap(
+        public final Multimap<RangeType, Range> ranges = Multimaps.newMultimap(
                 new EnumMap<RangeType, Collection<Range>>(RangeType.class), new Supplier<Set<Range>>() {
                     @Override
                     public Set<Range> get() {
@@ -284,30 +284,27 @@ public interface DbSearchConstraints extends Cloneable {
 
         @Override
         public Leaf clone() {
-            Leaf result;
-            try {
-                result = (Leaf) super.clone();
-            } catch (CloneNotSupportedException e) { // should never happen
-                return null;
-            }
-            result.tags = new HashSet<Tag>(tags);
-            result.excludeTags = new HashSet<Tag>(excludeTags);
-            result.folders = new HashSet<Folder>(folders);
-            result.excludeFolders = new HashSet<Folder>(excludeFolders);
-            result.remoteFolders = new HashSet<RemoteFolderDescriptor>(remoteFolders);
-            result.excludeRemoteFolders = new HashSet<RemoteFolderDescriptor>(excludeRemoteFolders);
+            Leaf result = new Leaf();
+            result.tags.addAll(tags);
+            result.excludeTags.addAll(excludeTags);
+            result.folders.addAll(folders);
+            result.excludeFolders.addAll(excludeFolders);
+            result.remoteFolders.addAll(remoteFolders);
+            result.excludeRemoteFolders.addAll(excludeRemoteFolders);
             result.convId = convId;
-            result.prohibitedConvIds = new HashSet<Integer>(prohibitedConvIds);
+            result.prohibitedConvIds.addAll(prohibitedConvIds);
             result.remoteConvId = remoteConvId;
-            result.prohibitedRemoteConvIds = new HashSet<ItemId>(prohibitedRemoteConvIds);
-            result.itemIds = new HashSet<Integer>(itemIds);
-            result.prohibitedItemIds = new HashSet<Integer>(prohibitedItemIds);
-            result.remoteItemIds = new HashSet<ItemId>(remoteItemIds);
-            result.prohibitedRemoteItemIds = new HashSet<ItemId>(prohibitedRemoteItemIds);
-            result.indexIds = new HashSet<Integer>(indexIds);
-            result.types = EnumSet.copyOf(types);
-            result.excludeTypes = EnumSet.copyOf(excludeTypes);
-            result.ranges.putAll(ranges);
+            result.prohibitedRemoteConvIds.addAll(prohibitedRemoteConvIds);
+            result.itemIds.addAll(itemIds);
+            result.prohibitedItemIds.addAll(prohibitedItemIds);
+            result.remoteItemIds.addAll(remoteItemIds);
+            result.prohibitedRemoteItemIds.addAll(prohibitedRemoteItemIds);
+            result.indexIds.addAll(indexIds);
+            result.types.addAll(types);
+            result.excludeTypes.addAll(excludeTypes);
+            for (Map.Entry<RangeType, Range> entry : ranges.entries()) {
+                result.ranges.put(entry.getKey(), entry.getValue().clone());
+            }
             return result;
         }
 
@@ -635,8 +632,9 @@ public interface DbSearchConstraints extends Cloneable {
         }
 
         @Override
-        public void setTypes(Set<MailItem.Type> types) {
-            this.types = types;
+        public void setTypes(Set<MailItem.Type> set) {
+            types.clear();
+            types.addAll(set);
             if (types.isEmpty()) {
                 noResults = true;
             }
@@ -1146,7 +1144,7 @@ public interface DbSearchConstraints extends Cloneable {
         }
     }
 
-    static abstract class Range {
+    static abstract class Range implements Cloneable {
         public final boolean bool;
         public final boolean minInclusive;
         public final boolean maxInclusive;
@@ -1158,6 +1156,9 @@ public interface DbSearchConstraints extends Cloneable {
         }
 
         abstract StringBuilder toQueryString(String name, StringBuilder out);
+
+        @Override
+        public abstract Range clone();
     }
 
     static final class StringRange extends Range {
@@ -1169,6 +1170,11 @@ public interface DbSearchConstraints extends Cloneable {
             super(minInclusive, maxInclusive, bool);
             this.min = min;
             this.max = max;
+        }
+
+        @Override
+        public StringRange clone() {
+            return new StringRange(min, minInclusive, max, maxInclusive, bool);
         }
 
         @Override
@@ -1244,6 +1250,11 @@ public interface DbSearchConstraints extends Cloneable {
             super(minInclusive, maxInclusive, bool);
             this.min = min;
             this.max = max;
+        }
+
+        @Override
+        public NumericRange clone() {
+            return new NumericRange(min, minInclusive, max, maxInclusive, bool);
         }
 
         @Override
