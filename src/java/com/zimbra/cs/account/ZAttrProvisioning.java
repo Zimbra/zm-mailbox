@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 ysasaki 20110817-1141 */
+    /* build: 7.0.0_BETA1_1111 administrator 20110818-1727 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -8790,6 +8790,24 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=564)
     public static final String A_zimbraSSLPrivateKey = "zimbraSSLPrivateKey";
+
+    /**
+     * description of the custom tab in the Preferences page in HTML client
+     * in the format {tab-name},{associated-URL}
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1267)
+    public static final String A_zimbraStandardClientCustomPrefTab = "zimbraStandardClientCustomPrefTab";
+
+    /**
+     * whether extra custom tabs in the Preferences page in HTML client are
+     * enabled
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1266)
+    public static final String A_zimbraStandardClientCustomPrefTabsEnabled = "zimbraStandardClientCustomPrefTabsEnabled";
 
     /**
      * Prefixes of thread names. Each value is a column in threads.csv that

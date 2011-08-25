@@ -5654,4 +5654,13 @@ TODO: delete them permerntly from here
   <desc>Custom RFC822 header names (case-sensitive) allowed to specify in SendMsgRequest</desc>
 </attr>
 
+<attr id="1266" name="zimbraStandardClientCustomPrefTabsEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited" since="7.1.3">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether extra custom tabs in the Preferences page in HTML client are enabled</desc>
+</attr>
+
+<attr id="1267" name="zimbraStandardClientCustomPrefTab" type="string" max="256" cardinality="multi" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited" since="7.1.3">
+  <desc>description of the custom tab in the Preferences page in HTML client in the format {tab-name},{associated-URL}</desc>
+</attr>
+
 </attrs>
