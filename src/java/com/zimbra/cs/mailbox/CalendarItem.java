@@ -1504,7 +1504,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             if (defInv != null && defInv.isRecurrence()) {
                 if (!getAccount().isCalendarKeepExceptionsOnSeriesTimeChange()) {  // Exchange compatibility mode
                     InviteChanges ic = new InviteChanges(defInv, newInvite);
-                    if (ic.changedTime() || ic.changedRecurrence()) {
+                    if (ic.isExceptionRemovingChange()) {
                         discardExistingInvites = true;
                     }
                 } else {  // old ZCS behavior
