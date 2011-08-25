@@ -261,4 +261,20 @@ public final class MailboxTest {
             MailboxListener.unregister(ml);
         }
     }
+
+    @Test
+    public void dumpster() throws Exception {
+        Account acct = Provisioning.getInstance().getAccount("test@zimbra.com");
+        acct.setDumpsterEnabled(true);
+
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        int msgId = mbox.addMessage(null, generateMessage("test"), dopt, null).getId();
+
+        mbox.index.indexDeferredItems();
+
+        mbox.delete(null, msgId, MailItem.Type.MESSAGE);
+        mbox.recover(null, new int[] { msgId }, MailItem.Type.MESSAGE, Mailbox.ID_FOLDER_INBOX);
+    }
 }

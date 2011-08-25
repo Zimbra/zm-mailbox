@@ -2291,7 +2291,8 @@ public abstract class MailItem implements Comparable<MailItem> {
         // We'll share the index entry if this item can't change out from under us. Re-index the copy if existing item
         // (a) wasn't indexed or (b) is mutable or (c) existing item is in dumpster (which implies copy is not in
         // dumpster)
-        boolean shareIndex = !isMutable() && getIndexStatus() == IndexStatus.DONE && !folder.inSpam();
+        boolean inDumpster = inDumpster();
+        boolean shareIndex = !inDumpster && !isMutable() && getIndexStatus() == IndexStatus.DONE && !folder.inSpam();
 
         // if the copy or original is in Spam, put the copy in its own conversation
         boolean detach = parent == null || isTagged(Flag.FlagInfo.DRAFT) || inSpam() != folder.inSpam();
@@ -2303,8 +2304,6 @@ public abstract class MailItem implements Comparable<MailItem> {
                 ZimbraLog.mailop.debug("setting copied flag for %s", getMailopContext(this));
             }
         }
-
-        boolean inDumpster = inDumpster();
         StoreManager sm = StoreManager.getInstance();
 
         // main item
