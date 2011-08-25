@@ -45,7 +45,6 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ICalTimeZone;
@@ -1890,7 +1889,12 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("reanalyze", null);
-            MailItem item = getItemById(null, id, type);
+            MailItem item;
+            try {
+                item = getItemById(id, type, false);
+            } catch (NoSuchItemException e) { // fallback to dumpster
+                item = getItemById(id, type, true);
+            }
             item.reanalyze(data, size);
             success = true;
         } finally {
@@ -8256,7 +8260,7 @@ public class Mailbox {
             endTransaction(success);
         }
     }
-    
+
     protected void migrateWikiFolders() throws ServiceException {
         MigrateToDocuments migrate = new MigrateToDocuments();
         try {

@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.db;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 
 import org.junit.Assert;
@@ -21,10 +22,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool.DbConnection;
@@ -33,35 +33,30 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxTestUtil;
 
 /**
  * Unit test for {@link DbMailItem}.
  *
  * @author ysasaki
  */
-public class DbMailItemTest {
+public final class DbMailItemTest {
 
     @BeforeClass
     public static void init() throws Exception {
-        Provisioning prov = new MockProvisioning();
+        MailboxTestUtil.initServer();
+        Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
-        Provisioning.setInstance(prov);
-
-        LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
-        DbPool.startup();
-        HSQLDB.createDatabase();
     }
 
     @Before
     public void setUp() throws Exception {
-        HSQLDB.clearDatabase();
-        MailboxManager.getInstance().clearCache();
+        MailboxTestUtil.clearData();
     }
 
     @Test
     public void getIndexDeferredIds() throws Exception {
-        Account account = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
         DbConnection conn = DbPool.getConnection(mbox);
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
@@ -85,19 +80,135 @@ public class DbMailItemTest {
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
                 "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 202, MailItem.Type.CONTACT.toByte(), 202);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 300, MailItem.Type.MESSAGE.toByte(), 0);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 301, MailItem.Type.MESSAGE.toByte(), 0);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 302, MailItem.Type.MESSAGE.toByte(), 0);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 303, MailItem.Type.MESSAGE.toByte(), 303);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 400, MailItem.Type.CONTACT.toByte(), 0);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 401, MailItem.Type.CONTACT.toByte(), 0);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 402, MailItem.Type.CONTACT.toByte(), 402);
 
         Multimap<MailItem.Type, Integer> result = DbMailItem.getIndexDeferredIds(conn, mbox);
-        Assert.assertEquals(5, result.size());
-        Assert.assertEquals(ImmutableSet.of(100, 101, 102), result.get(MailItem.Type.MESSAGE));
-        Assert.assertEquals(ImmutableSet.of(200, 201), result.get(MailItem.Type.CONTACT));
+        Assert.assertEquals(10, result.size());
+        Assert.assertEquals(ImmutableSet.of(100, 101, 102, 300, 301, 302), result.get(MailItem.Type.MESSAGE));
+        Assert.assertEquals(ImmutableSet.of(200, 201, 400, 401), result.get(MailItem.Type.CONTACT));
+        conn.closeQuietly();
+    }
 
-        DbPool.quietClose(conn);
+    @Test
+    public void setIndexIds() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        DbConnection conn = DbPool.getConnection(mbox);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 100, MailItem.Type.MESSAGE.toByte(), 0);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 200, MailItem.Type.MESSAGE.toByte(), 0);
+
+        DbMailItem.setIndexIds(conn, mbox, ImmutableList.of(100, 200));
+        Assert.assertEquals(100, DbUtil.executeQuery(conn,
+                "SELECT index_id FROM mboxgroup1.mail_item WHERE id = ?", 100).getInt(1));
+        Assert.assertEquals(200, DbUtil.executeQuery(conn,
+                "SELECT index_id FROM mboxgroup1.mail_item_dumpster WHERE id = ?", 200).getInt(1));
+        conn.closeQuietly();
+    }
+
+    @Test
+    public void getReIndexIds() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        DbConnection conn = DbPool.getConnection(mbox);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 100, MailItem.Type.MESSAGE.toByte(), 0);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 101, MailItem.Type.MESSAGE.toByte(), 0);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 102, MailItem.Type.MESSAGE.toByte(), 0);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 103, MailItem.Type.MESSAGE.toByte(), null);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 200, MailItem.Type.CONTACT.toByte(), 0);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 201, MailItem.Type.CONTACT.toByte(), 0);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 202, MailItem.Type.CONTACT.toByte(), null);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 300, MailItem.Type.MESSAGE.toByte(), 0);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 301, MailItem.Type.MESSAGE.toByte(), 0);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 302, MailItem.Type.MESSAGE.toByte(), 0);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 303, MailItem.Type.MESSAGE.toByte(), null);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 400, MailItem.Type.CONTACT.toByte(), 0);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 401, MailItem.Type.CONTACT.toByte(), 0);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 402, MailItem.Type.CONTACT.toByte(), null);
+
+        Assert.assertEquals(ImmutableList.of(100, 101, 102, 300, 301, 302),
+                DbMailItem.getReIndexIds(conn, mbox, EnumSet.<MailItem.Type>of(MailItem.Type.MESSAGE)));
+        Assert.assertEquals(ImmutableList.of(200, 201, 400, 401),
+                DbMailItem.getReIndexIds(conn, mbox, EnumSet.<MailItem.Type>of(MailItem.Type.CONTACT)));
+        Assert.assertEquals(ImmutableList.of(100, 101, 102, 200, 201, 300, 301, 302, 400, 401),
+                DbMailItem.getReIndexIds(conn, mbox, EnumSet.<MailItem.Type>noneOf(MailItem.Type.class)));
+        conn.closeQuietly();
+    }
+
+    @Test
+    public void resetIndexId() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        DbConnection conn = DbPool.getConnection(mbox);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 100, MailItem.Type.MESSAGE.toByte(), 100);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
+                "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 200, MailItem.Type.MESSAGE.toByte(), 200);
+
+        DbMailItem.resetIndexId(conn, mbox);
+        Assert.assertEquals(0, DbUtil.executeQuery(conn,
+                "SELECT index_id FROM mboxgroup1.mail_item WHERE id = ?", 100).getInt(1));
+        Assert.assertEquals(0, DbUtil.executeQuery(conn,
+                "SELECT index_id FROM mboxgroup1.mail_item_dumpster WHERE id = ?", 200).getInt(1));
+        conn.closeQuietly();
     }
 
     @Test
     public void getConversationCount() throws Exception {
-        Account account = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Folder folder = mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
 
         DbConnection conn = DbPool.getConnection(mbox);
@@ -144,8 +255,7 @@ public class DbMailItemTest {
 
     @Test
     public void completeConversation() throws Exception {
-        Account account = Provisioning.getInstance().getAccountById(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
         DbConnection conn = DbPool.getConnection(mbox);
 

@@ -73,6 +73,7 @@ import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.global.HBaseIndex;
 import com.zimbra.cs.mailbox.MailItem.Type;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
 import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
 import com.zimbra.cs.util.Zimbra;
@@ -402,7 +403,14 @@ public final class MailboxIndex {
     }
 
     public void startReIndexByType(Set<MailItem.Type> types) throws ServiceException {
-        startReIndexById(DbMailItem.getReIndexIds(mailbox, types));
+        List<Integer> ids;
+        DbConnection conn = DbPool.getConnection(mailbox);
+        try {
+            ids = DbMailItem.getReIndexIds(conn, mailbox, types);
+        } finally {
+            conn.closeQuietly();
+        }
+        startReIndexById(ids);
     }
 
     private synchronized void startReIndex(ReIndexTask task) throws ServiceException {
@@ -636,12 +644,17 @@ public final class MailboxIndex {
             // index.
             ZimbraLog.index.debug("Tokenizing id=%d", id);
             MailItem item = null;
+            mailbox.beginTransaction("IndexItemList-Fetch", null);
             try {
-                item = mailbox.getItemById(null, id, MailItem.Type.UNKNOWN);
-            } catch (Exception  e) {
+                item = mailbox.getItemById(id, MailItem.Type.UNKNOWN, false);
+            } catch (NoSuchItemException e) { // fallback to dumpster
+                item = mailbox.getItemById(id, MailItem.Type.UNKNOWN, true);
+            } catch (Exception e) {
                 ZimbraLog.index.warn("Failed to fetch deferred item id=%d", id, e);
                 status.addFailed(1);
                 continue;
+            } finally {
+                mailbox.endTransaction(item != null);
             }
             try {
                 chunk.add(new Mailbox.IndexItemEntry(item, item.generateIndexData()));
@@ -665,7 +678,7 @@ public final class MailboxIndex {
                     try {
                         boolean success = false;
                         try {
-                            mailbox.beginTransaction("IndexItemList_Chunk", null);
+                            mailbox.beginTransaction("IndexItemList-Commit", null);
                             for (Mailbox.IndexItemEntry entry : chunk) {
                                 mailbox.addIndexItemToCurrentChange(entry);
                             }
@@ -688,9 +701,10 @@ public final class MailboxIndex {
     /**
      * Mailbox version (1.0,1.1)->1.2 Re-Index all contacts.
      */
-    void upgradeMailboxTo1_2() {
+    void upgradeMailboxTo1_2() throws ServiceException {
+        DbConnection conn = DbPool.getConnection(mailbox);
         try {
-            List<Integer> ids = DbMailItem.getReIndexIds(mailbox, EnumSet.of(MailItem.Type.CONTACT));
+            List<Integer> ids = DbMailItem.getReIndexIds(conn, mailbox, EnumSet.of(MailItem.Type.CONTACT));
             if (ids.isEmpty()) {
                 return;
             }
@@ -716,6 +730,8 @@ public final class MailboxIndex {
         } catch (ServiceException e) {
             ZimbraLog.mailbox.warn("Failed to reindex contacts on mailbox upgrade initialization." +
                 " Skipping (you will have to manually reindex contacts for this mailbox)");
+        } finally {
+            conn.closeQuietly();
         }
     }
 
@@ -816,7 +832,11 @@ public final class MailboxIndex {
             }
         }
 
-        DbMailItem.setIndexIds(mailbox, indexed);
+        List<Integer> ids = new ArrayList<Integer>(indexed.size());
+        for (MailItem item : indexed) {
+            ids.add(item.getId());
+        }
+        DbMailItem.setIndexIds(mailbox.getOperationConnection(), mailbox, ids);
         for (MailItem item : indexed) {
             item.mData.indexId = item.getId();
             removeDeferredId(item.getId());
