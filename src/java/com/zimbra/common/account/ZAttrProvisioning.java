@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 ysasaki 20110817-1640 */
+    /* build: 8.0.0_BETA1_1111 administrator 20110824-1223 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1754,7 +1754,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAttachmentsIndexedTextLimit = "zimbraAttachmentsIndexedTextLimit";
 
     /**
-     * whether or not to index attachemts
+     * whether or not to index attachments
      */
     @ZAttr(id=173)
     public static final String A_zimbraAttachmentsIndexingEnabled = "zimbraAttachmentsIndexingEnabled";
@@ -1804,7 +1804,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAuthLdapBindDn = "zimbraAuthLdapBindDn";
 
     /**
-     * explict mapping to an external LDAP dn for a given account
+     * explicit mapping to an external LDAP dn for a given account
      */
     @ZAttr(id=256)
     public static final String A_zimbraAuthLdapExternalDn = "zimbraAuthLdapExternalDn";
@@ -1913,7 +1913,7 @@ public class ZAttrProvisioning {
      * Attribute map for mapping attribute values from the external entry to
      * Zimbra account attributes. Values are in the format of {external
      * attribute}={zimbra attribute}. If not set, no attributes from the
-     * external directory will be populated in Zimrba directory. Invalid
+     * external directory will be populated in Zimbra directory. Invalid
      * mapping configuration will cause the account creation to fail.
      * Examples of bad mapping: - invalid external attribute name. - invalid
      * Zimbra attribute name. - external attribute has multiple values but
@@ -2060,7 +2060,7 @@ public class ZAttrProvisioning {
      * mode: N/A MANUAL mode: N/A For EAGER auto provision, a domain can be
      * scheduled on multiple server. To avoid conflict, only one server can
      * perform provisioning for a domain at one time. This attribute servers
-     * a lock for the test-and-set LDAP operation to shchronize EAGER auto
+     * a lock for the test-and-set LDAP operation to synchronize EAGER auto
      * provision attempts between servers.
      *
      * @since ZCS 8.0.0
@@ -2450,7 +2450,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraCalendarReminderDeviceEmail = "zimbraCalendarReminderDeviceEmail";
 
     /**
-     * whether calendar reasources can be double booked
+     * whether calendar resources can be double booked
      *
      * @since ZCS 6.0.7
      */
@@ -2628,7 +2628,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraClusterType = "zimbraClusterType";
 
     /**
-     * Names of additonal components that have been installed
+     * Names of additional components that have been installed
      */
     @ZAttr(id=242)
     public static final String A_zimbraComponentAvailable = "zimbraComponentAvailable";
@@ -3309,12 +3309,12 @@ public class ZAttrProvisioning {
      * creating/deleting/modifying accounts/DLs under the domain. shutdown -
      * suspended + cannot modify domain attrs + cannot delete the domain
      * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
+     * domain, e.g. renaming the domain and moving LDAP entries. Modification
+     * and deletion of the domain can only be done internally by the server
+     * when it is safe to release the domain, they cannot be done in admin
+     * console or zmprov. How zimbraDomainStatus affects account behavior :
+     * ------------------------------------- zimbraDomainStatus account
+     * behavior ------------------------------------- active
      * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
      * pending or closed, else locked maintenance zimbraAccountStatus if it
      * is pending or closed, else maintenance suspended zimbraAccountStatus
@@ -3974,7 +3974,7 @@ public class ZAttrProvisioning {
 
     /**
      * whether S/MIME feature is enabled. Note: SMIME is a Network feature,
-     * this attribute is effective only if SMIME is permited by license.
+     * this attribute is effective only if SMIME is permitted by license.
      *
      * @since ZCS 7.1.0
      */
@@ -4235,7 +4235,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraGalGroupIndicatorEnabled = "zimbraGalGroupIndicatorEnabled";
 
     /**
-     * LDAP search base for interal GAL queries (special values:
+     * LDAP search base for internal GAL queries (special values:
      * &quot;ROOT&quot; for top, &quot;DOMAIN&quot; for domain only,
      * &quot;SUBDOMAINS&quot; for domain and subdomains)
      */
@@ -5547,14 +5547,14 @@ public class ZAttrProvisioning {
      * authentication is disabled. NeedClientAuth: client authentication is
      * required during SSL handshake on the SSL mutual authentication
      * port(see zimbraMailSSLClientCertPort). The SSL handshake will fail if
-     * the client does not present a certificate to autenticate.
+     * the client does not present a certificate to authenticate.
      * WantClientAuth: client authentication is requested during SSL
      * handshake on the SSL mutual authentication port(see
      * zimbraMailSSLClientCertPort). The SSL handshake will still proceed if
-     * the client does not present a certificate to autenticate. In the case
+     * the client does not present a certificate to authenticate. In the case
      * when client does not send a certificate, user will be redirected to
      * the usual entry page of the requested webapp, where username/password
-     * is ptompted.
+     * is prompted.
      *
      * @since ZCS 7.1.0
      */
@@ -5574,7 +5574,7 @@ public class ZAttrProvisioning {
      * identify a Zimbra account for client certificate authentication. Value
      * is a comma-separated list of mapping rules, each mapping maps a
      * certificate field to a Zimbra account key. Each is attempted in
-     * sequence untill a unique account can be resolved. e.g. a value can be:
+     * sequence until a unique account can be resolved. e.g. a value can be:
      * SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
      * value: comma-separated mapping-rule mapping-rule:
      * {cert-field-to-zimbra-key-map} | {LDAP-filter}
@@ -7040,7 +7040,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarReminderEmail = "zimbraPrefCalendarReminderEmail";
 
     /**
-     * Flash title when on appointment remimnder notification
+     * Flash title when on appointment reminder notification
      *
      * @since ZCS 5.0.7
      */
@@ -7329,7 +7329,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefForwardReplyPrefixChar = "zimbraPrefForwardReplyPrefixChar";
 
     /**
-     * forword/reply signature id for account/identity/dataSource
+     * forward/reply signature id for account/identity/dataSource
      *
      * @since ZCS 7.0.0
      */
@@ -7957,8 +7957,8 @@ public class ZAttrProvisioning {
     /**
      * Deprecated since: 6.0.8. Deprecated per bug 46988. This feature was
      * never fully implemented.. Orig desc: address to put in reply-to header
-     * of read receipt messages, if it is not set, then the compose identitys
-     * primary email address is used.
+     * of read receipt messages, if it is not set, then the compose
+     * identities primary email address is used.
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -8067,7 +8067,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefShowSearchString = "zimbraPrefShowSearchString";
 
     /**
-     * show selection checkbox for selecting email, contact, voicemial items
+     * show selection checkbox for selecting email, contact, voicemail items
      * in a list view for batch operations
      */
     @ZAttr(id=471)
@@ -8859,7 +8859,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyUseExternalRoute = "zimbraReverseProxyUseExternalRoute";
 
     /**
-     * Use external route configured on doamin if account cannot be found.
+     * Use external route configured on domain if account cannot be found.
      * Also see zimbraReverseProxyUseExternalRoute.
      *
      * @since ZCS 7.0.0
@@ -9241,7 +9241,7 @@ public class ZAttrProvisioning {
 
     /**
      * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
-     * Multiple URLs for error fallback purpose can be seperated by space.
+     * Multiple URLs for error fallback purpose can be separated by space.
      * All SMIME attributes are in the format of {config-name}:{value}. A
      * &#039;SMIME config&#039; is a set of SMIME attribute values with the
      * same {config-name}. Multiple SMIME configs can be configured on a
@@ -9432,7 +9432,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraSpamSubjectTag = "zimbraSpamSubjectTag";
 
     /**
-     * Spaminess percentage beyound which a message is marked as spam
+     * Spaminess percentage beyond which a message is marked as spam
      */
     @ZAttr(id=204)
     public static final String A_zimbraSpamTagPercent = "zimbraSpamTagPercent";
@@ -9565,6 +9565,24 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=564)
     public static final String A_zimbraSSLPrivateKey = "zimbraSSLPrivateKey";
+
+    /**
+     * description of the custom tab in the Preferences page in HTML client
+     * in the format {tab-name},{associated-URL}
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1267)
+    public static final String A_zimbraStandardClientCustomPrefTab = "zimbraStandardClientCustomPrefTab";
+
+    /**
+     * whether extra custom tabs in the Preferences page in HTML client are
+     * enabled
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1266)
+    public static final String A_zimbraStandardClientCustomPrefTabsEnabled = "zimbraStandardClientCustomPrefTabsEnabled";
 
     /**
      * Prefixes of thread names. Each value is a column in threads.csv that
