@@ -43,7 +43,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 ysasaki 20110817-1640 */
+    /* build: 8.0.0_BETA1_1111 administrator 20110824-1223 */
 
     /**
      * RFC2256: descriptive information
@@ -1734,7 +1734,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * Attribute map for mapping attribute values from the external entry to
      * Zimbra account attributes. Values are in the format of {external
      * attribute}={zimbra attribute}. If not set, no attributes from the
-     * external directory will be populated in Zimrba directory. Invalid
+     * external directory will be populated in Zimbra directory. Invalid
      * mapping configuration will cause the account creation to fail.
      * Examples of bad mapping: - invalid external attribute name. - invalid
      * Zimbra attribute name. - external attribute has multiple values but
@@ -1756,7 +1756,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * Attribute map for mapping attribute values from the external entry to
      * Zimbra account attributes. Values are in the format of {external
      * attribute}={zimbra attribute}. If not set, no attributes from the
-     * external directory will be populated in Zimrba directory. Invalid
+     * external directory will be populated in Zimbra directory. Invalid
      * mapping configuration will cause the account creation to fail.
      * Examples of bad mapping: - invalid external attribute name. - invalid
      * Zimbra attribute name. - external attribute has multiple values but
@@ -1781,7 +1781,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * Attribute map for mapping attribute values from the external entry to
      * Zimbra account attributes. Values are in the format of {external
      * attribute}={zimbra attribute}. If not set, no attributes from the
-     * external directory will be populated in Zimrba directory. Invalid
+     * external directory will be populated in Zimbra directory. Invalid
      * mapping configuration will cause the account creation to fail.
      * Examples of bad mapping: - invalid external attribute name. - invalid
      * Zimbra attribute name. - external attribute has multiple values but
@@ -1807,7 +1807,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * Attribute map for mapping attribute values from the external entry to
      * Zimbra account attributes. Values are in the format of {external
      * attribute}={zimbra attribute}. If not set, no attributes from the
-     * external directory will be populated in Zimrba directory. Invalid
+     * external directory will be populated in Zimbra directory. Invalid
      * mapping configuration will cause the account creation to fail.
      * Examples of bad mapping: - invalid external attribute name. - invalid
      * Zimbra attribute name. - external attribute has multiple values but
@@ -1832,7 +1832,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * Attribute map for mapping attribute values from the external entry to
      * Zimbra account attributes. Values are in the format of {external
      * attribute}={zimbra attribute}. If not set, no attributes from the
-     * external directory will be populated in Zimrba directory. Invalid
+     * external directory will be populated in Zimbra directory. Invalid
      * mapping configuration will cause the account creation to fail.
      * Examples of bad mapping: - invalid external attribute name. - invalid
      * Zimbra attribute name. - external attribute has multiple values but
@@ -1858,7 +1858,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * Attribute map for mapping attribute values from the external entry to
      * Zimbra account attributes. Values are in the format of {external
      * attribute}={zimbra attribute}. If not set, no attributes from the
-     * external directory will be populated in Zimrba directory. Invalid
+     * external directory will be populated in Zimbra directory. Invalid
      * mapping configuration will cause the account creation to fail.
      * Examples of bad mapping: - invalid external attribute name. - invalid
      * Zimbra attribute name. - external attribute has multiple values but
@@ -1883,7 +1883,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * Attribute map for mapping attribute values from the external entry to
      * Zimbra account attributes. Values are in the format of {external
      * attribute}={zimbra attribute}. If not set, no attributes from the
-     * external directory will be populated in Zimrba directory. Invalid
+     * external directory will be populated in Zimbra directory. Invalid
      * mapping configuration will cause the account creation to fail.
      * Examples of bad mapping: - invalid external attribute name. - invalid
      * Zimbra attribute name. - external attribute has multiple values but
@@ -1909,7 +1909,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * Attribute map for mapping attribute values from the external entry to
      * Zimbra account attributes. Values are in the format of {external
      * attribute}={zimbra attribute}. If not set, no attributes from the
-     * external directory will be populated in Zimrba directory. Invalid
+     * external directory will be populated in Zimbra directory. Invalid
      * mapping configuration will cause the account creation to fail.
      * Examples of bad mapping: - invalid external attribute name. - invalid
      * Zimbra attribute name. - external attribute has multiple values but
@@ -1933,7 +1933,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * Attribute map for mapping attribute values from the external entry to
      * Zimbra account attributes. Values are in the format of {external
      * attribute}={zimbra attribute}. If not set, no attributes from the
-     * external directory will be populated in Zimrba directory. Invalid
+     * external directory will be populated in Zimbra directory. Invalid
      * mapping configuration will cause the account creation to fail.
      * Examples of bad mapping: - invalid external attribute name. - invalid
      * Zimbra attribute name. - external attribute has multiple values but
@@ -3085,7 +3085,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * mode: N/A MANUAL mode: N/A For EAGER auto provision, a domain can be
      * scheduled on multiple server. To avoid conflict, only one server can
      * perform provisioning for a domain at one time. This attribute servers
-     * a lock for the test-and-set LDAP operation to shchronize EAGER auto
+     * a lock for the test-and-set LDAP operation to synchronize EAGER auto
      * provision attempts between servers.
      *
      * @return zimbraAutoProvLock, or null if unset
@@ -3102,7 +3102,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * mode: N/A MANUAL mode: N/A For EAGER auto provision, a domain can be
      * scheduled on multiple server. To avoid conflict, only one server can
      * perform provisioning for a domain at one time. This attribute servers
-     * a lock for the test-and-set LDAP operation to shchronize EAGER auto
+     * a lock for the test-and-set LDAP operation to synchronize EAGER auto
      * provision attempts between servers.
      *
      * @param zimbraAutoProvLock new value
@@ -3122,7 +3122,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * mode: N/A MANUAL mode: N/A For EAGER auto provision, a domain can be
      * scheduled on multiple server. To avoid conflict, only one server can
      * perform provisioning for a domain at one time. This attribute servers
-     * a lock for the test-and-set LDAP operation to shchronize EAGER auto
+     * a lock for the test-and-set LDAP operation to synchronize EAGER auto
      * provision attempts between servers.
      *
      * @param zimbraAutoProvLock new value
@@ -3143,7 +3143,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * mode: N/A MANUAL mode: N/A For EAGER auto provision, a domain can be
      * scheduled on multiple server. To avoid conflict, only one server can
      * perform provisioning for a domain at one time. This attribute servers
-     * a lock for the test-and-set LDAP operation to shchronize EAGER auto
+     * a lock for the test-and-set LDAP operation to synchronize EAGER auto
      * provision attempts between servers.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3162,7 +3162,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * mode: N/A MANUAL mode: N/A For EAGER auto provision, a domain can be
      * scheduled on multiple server. To avoid conflict, only one server can
      * perform provisioning for a domain at one time. This attribute servers
-     * a lock for the test-and-set LDAP operation to shchronize EAGER auto
+     * a lock for the test-and-set LDAP operation to synchronize EAGER auto
      * provision attempts between servers.
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -4983,12 +4983,12 @@ public abstract class ZAttrDomain extends NamedEntry {
      * creating/deleting/modifying accounts/DLs under the domain. shutdown -
      * suspended + cannot modify domain attrs + cannot delete the domain
      * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
+     * domain, e.g. renaming the domain and moving LDAP entries. Modification
+     * and deletion of the domain can only be done internally by the server
+     * when it is safe to release the domain, they cannot be done in admin
+     * console or zmprov. How zimbraDomainStatus affects account behavior :
+     * ------------------------------------- zimbraDomainStatus account
+     * behavior ------------------------------------- active
      * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
      * pending or closed, else locked maintenance zimbraAccountStatus if it
      * is pending or closed, else maintenance suspended zimbraAccountStatus
@@ -5024,12 +5024,12 @@ public abstract class ZAttrDomain extends NamedEntry {
      * creating/deleting/modifying accounts/DLs under the domain. shutdown -
      * suspended + cannot modify domain attrs + cannot delete the domain
      * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
+     * domain, e.g. renaming the domain and moving LDAP entries. Modification
+     * and deletion of the domain can only be done internally by the server
+     * when it is safe to release the domain, they cannot be done in admin
+     * console or zmprov. How zimbraDomainStatus affects account behavior :
+     * ------------------------------------- zimbraDomainStatus account
+     * behavior ------------------------------------- active
      * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
      * pending or closed, else locked maintenance zimbraAccountStatus if it
      * is pending or closed, else maintenance suspended zimbraAccountStatus
@@ -5065,12 +5065,12 @@ public abstract class ZAttrDomain extends NamedEntry {
      * creating/deleting/modifying accounts/DLs under the domain. shutdown -
      * suspended + cannot modify domain attrs + cannot delete the domain
      * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
+     * domain, e.g. renaming the domain and moving LDAP entries. Modification
+     * and deletion of the domain can only be done internally by the server
+     * when it is safe to release the domain, they cannot be done in admin
+     * console or zmprov. How zimbraDomainStatus affects account behavior :
+     * ------------------------------------- zimbraDomainStatus account
+     * behavior ------------------------------------- active
      * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
      * pending or closed, else locked maintenance zimbraAccountStatus if it
      * is pending or closed, else maintenance suspended zimbraAccountStatus
@@ -5109,12 +5109,12 @@ public abstract class ZAttrDomain extends NamedEntry {
      * creating/deleting/modifying accounts/DLs under the domain. shutdown -
      * suspended + cannot modify domain attrs + cannot delete the domain
      * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
+     * domain, e.g. renaming the domain and moving LDAP entries. Modification
+     * and deletion of the domain can only be done internally by the server
+     * when it is safe to release the domain, they cannot be done in admin
+     * console or zmprov. How zimbraDomainStatus affects account behavior :
+     * ------------------------------------- zimbraDomainStatus account
+     * behavior ------------------------------------- active
      * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
      * pending or closed, else locked maintenance zimbraAccountStatus if it
      * is pending or closed, else maintenance suspended zimbraAccountStatus
@@ -5154,12 +5154,12 @@ public abstract class ZAttrDomain extends NamedEntry {
      * creating/deleting/modifying accounts/DLs under the domain. shutdown -
      * suspended + cannot modify domain attrs + cannot delete the domain
      * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
+     * domain, e.g. renaming the domain and moving LDAP entries. Modification
+     * and deletion of the domain can only be done internally by the server
+     * when it is safe to release the domain, they cannot be done in admin
+     * console or zmprov. How zimbraDomainStatus affects account behavior :
+     * ------------------------------------- zimbraDomainStatus account
+     * behavior ------------------------------------- active
      * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
      * pending or closed, else locked maintenance zimbraAccountStatus if it
      * is pending or closed, else maintenance suspended zimbraAccountStatus
@@ -5198,12 +5198,12 @@ public abstract class ZAttrDomain extends NamedEntry {
      * creating/deleting/modifying accounts/DLs under the domain. shutdown -
      * suspended + cannot modify domain attrs + cannot delete the domain
      * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
+     * domain, e.g. renaming the domain and moving LDAP entries. Modification
+     * and deletion of the domain can only be done internally by the server
+     * when it is safe to release the domain, they cannot be done in admin
+     * console or zmprov. How zimbraDomainStatus affects account behavior :
+     * ------------------------------------- zimbraDomainStatus account
+     * behavior ------------------------------------- active
      * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
      * pending or closed, else locked maintenance zimbraAccountStatus if it
      * is pending or closed, else maintenance suspended zimbraAccountStatus
@@ -5243,12 +5243,12 @@ public abstract class ZAttrDomain extends NamedEntry {
      * creating/deleting/modifying accounts/DLs under the domain. shutdown -
      * suspended + cannot modify domain attrs + cannot delete the domain
      * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
+     * domain, e.g. renaming the domain and moving LDAP entries. Modification
+     * and deletion of the domain can only be done internally by the server
+     * when it is safe to release the domain, they cannot be done in admin
+     * console or zmprov. How zimbraDomainStatus affects account behavior :
+     * ------------------------------------- zimbraDomainStatus account
+     * behavior ------------------------------------- active
      * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
      * pending or closed, else locked maintenance zimbraAccountStatus if it
      * is pending or closed, else maintenance suspended zimbraAccountStatus
@@ -5286,12 +5286,12 @@ public abstract class ZAttrDomain extends NamedEntry {
      * creating/deleting/modifying accounts/DLs under the domain. shutdown -
      * suspended + cannot modify domain attrs + cannot delete the domain
      * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
+     * domain, e.g. renaming the domain and moving LDAP entries. Modification
+     * and deletion of the domain can only be done internally by the server
+     * when it is safe to release the domain, they cannot be done in admin
+     * console or zmprov. How zimbraDomainStatus affects account behavior :
+     * ------------------------------------- zimbraDomainStatus account
+     * behavior ------------------------------------- active
      * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
      * pending or closed, else locked maintenance zimbraAccountStatus if it
      * is pending or closed, else maintenance suspended zimbraAccountStatus
@@ -7982,7 +7982,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP search base for interal GAL queries (special values:
+     * LDAP search base for internal GAL queries (special values:
      * &quot;ROOT&quot; for top, &quot;DOMAIN&quot; for domain only,
      * &quot;SUBDOMAINS&quot; for domain and subdomains)
      *
@@ -7994,7 +7994,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP search base for interal GAL queries (special values:
+     * LDAP search base for internal GAL queries (special values:
      * &quot;ROOT&quot; for top, &quot;DOMAIN&quot; for domain only,
      * &quot;SUBDOMAINS&quot; for domain and subdomains)
      *
@@ -8009,7 +8009,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP search base for interal GAL queries (special values:
+     * LDAP search base for internal GAL queries (special values:
      * &quot;ROOT&quot; for top, &quot;DOMAIN&quot; for domain only,
      * &quot;SUBDOMAINS&quot; for domain and subdomains)
      *
@@ -8025,7 +8025,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP search base for interal GAL queries (special values:
+     * LDAP search base for internal GAL queries (special values:
      * &quot;ROOT&quot; for top, &quot;DOMAIN&quot; for domain only,
      * &quot;SUBDOMAINS&quot; for domain and subdomains)
      *
@@ -8039,7 +8039,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * LDAP search base for interal GAL queries (special values:
+     * LDAP search base for internal GAL queries (special values:
      * &quot;ROOT&quot; for top, &quot;DOMAIN&quot; for domain only,
      * &quot;SUBDOMAINS&quot; for domain and subdomains)
      *
@@ -11411,7 +11411,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * identify a Zimbra account for client certificate authentication. Value
      * is a comma-separated list of mapping rules, each mapping maps a
      * certificate field to a Zimbra account key. Each is attempted in
-     * sequence untill a unique account can be resolved. e.g. a value can be:
+     * sequence until a unique account can be resolved. e.g. a value can be:
      * SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
      * value: comma-separated mapping-rule mapping-rule:
      * {cert-field-to-zimbra-key-map} | {LDAP-filter}
@@ -11451,7 +11451,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * identify a Zimbra account for client certificate authentication. Value
      * is a comma-separated list of mapping rules, each mapping maps a
      * certificate field to a Zimbra account key. Each is attempted in
-     * sequence untill a unique account can be resolved. e.g. a value can be:
+     * sequence until a unique account can be resolved. e.g. a value can be:
      * SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
      * value: comma-separated mapping-rule mapping-rule:
      * {cert-field-to-zimbra-key-map} | {LDAP-filter}
@@ -11494,7 +11494,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * identify a Zimbra account for client certificate authentication. Value
      * is a comma-separated list of mapping rules, each mapping maps a
      * certificate field to a Zimbra account key. Each is attempted in
-     * sequence untill a unique account can be resolved. e.g. a value can be:
+     * sequence until a unique account can be resolved. e.g. a value can be:
      * SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
      * value: comma-separated mapping-rule mapping-rule:
      * {cert-field-to-zimbra-key-map} | {LDAP-filter}
@@ -11538,7 +11538,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * identify a Zimbra account for client certificate authentication. Value
      * is a comma-separated list of mapping rules, each mapping maps a
      * certificate field to a Zimbra account key. Each is attempted in
-     * sequence untill a unique account can be resolved. e.g. a value can be:
+     * sequence until a unique account can be resolved. e.g. a value can be:
      * SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
      * value: comma-separated mapping-rule mapping-rule:
      * {cert-field-to-zimbra-key-map} | {LDAP-filter}
@@ -11580,7 +11580,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      * identify a Zimbra account for client certificate authentication. Value
      * is a comma-separated list of mapping rules, each mapping maps a
      * certificate field to a Zimbra account key. Each is attempted in
-     * sequence untill a unique account can be resolved. e.g. a value can be:
+     * sequence until a unique account can be resolved. e.g. a value can be:
      * SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
      * value: comma-separated mapping-rule mapping-rule:
      * {cert-field-to-zimbra-key-map} | {LDAP-filter}
@@ -13485,7 +13485,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Use external route configured on doamin if account cannot be found.
+     * Use external route configured on domain if account cannot be found.
      * Also see zimbraReverseProxyUseExternalRoute.
      *
      * @return zimbraReverseProxyUseExternalRouteIfAccountNotExist, or false if unset
@@ -13498,7 +13498,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Use external route configured on doamin if account cannot be found.
+     * Use external route configured on domain if account cannot be found.
      * Also see zimbraReverseProxyUseExternalRoute.
      *
      * @param zimbraReverseProxyUseExternalRouteIfAccountNotExist new value
@@ -13514,7 +13514,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Use external route configured on doamin if account cannot be found.
+     * Use external route configured on domain if account cannot be found.
      * Also see zimbraReverseProxyUseExternalRoute.
      *
      * @param zimbraReverseProxyUseExternalRouteIfAccountNotExist new value
@@ -13531,7 +13531,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Use external route configured on doamin if account cannot be found.
+     * Use external route configured on domain if account cannot be found.
      * Also see zimbraReverseProxyUseExternalRoute.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -13546,7 +13546,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Use external route configured on doamin if account cannot be found.
+     * Use external route configured on domain if account cannot be found.
      * Also see zimbraReverseProxyUseExternalRoute.
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -15266,7 +15266,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
-     * Multiple URLs for error fallback purpose can be seperated by space.
+     * Multiple URLs for error fallback purpose can be separated by space.
      * All SMIME attributes are in the format of {config-name}:{value}. A
      * &#039;SMIME config&#039; is a set of SMIME attribute values with the
      * same {config-name}. Multiple SMIME configs can be configured on a
@@ -15290,7 +15290,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
-     * Multiple URLs for error fallback purpose can be seperated by space.
+     * Multiple URLs for error fallback purpose can be separated by space.
      * All SMIME attributes are in the format of {config-name}:{value}. A
      * &#039;SMIME config&#039; is a set of SMIME attribute values with the
      * same {config-name}. Multiple SMIME configs can be configured on a
@@ -15317,7 +15317,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
-     * Multiple URLs for error fallback purpose can be seperated by space.
+     * Multiple URLs for error fallback purpose can be separated by space.
      * All SMIME attributes are in the format of {config-name}:{value}. A
      * &#039;SMIME config&#039; is a set of SMIME attribute values with the
      * same {config-name}. Multiple SMIME configs can be configured on a
@@ -15345,7 +15345,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
-     * Multiple URLs for error fallback purpose can be seperated by space.
+     * Multiple URLs for error fallback purpose can be separated by space.
      * All SMIME attributes are in the format of {config-name}:{value}. A
      * &#039;SMIME config&#039; is a set of SMIME attribute values with the
      * same {config-name}. Multiple SMIME configs can be configured on a
@@ -15372,7 +15372,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
-     * Multiple URLs for error fallback purpose can be seperated by space.
+     * Multiple URLs for error fallback purpose can be separated by space.
      * All SMIME attributes are in the format of {config-name}:{value}. A
      * &#039;SMIME config&#039; is a set of SMIME attribute values with the
      * same {config-name}. Multiple SMIME configs can be configured on a
@@ -15400,7 +15400,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
-     * Multiple URLs for error fallback purpose can be seperated by space.
+     * Multiple URLs for error fallback purpose can be separated by space.
      * All SMIME attributes are in the format of {config-name}:{value}. A
      * &#039;SMIME config&#039; is a set of SMIME attribute values with the
      * same {config-name}. Multiple SMIME configs can be configured on a
@@ -15427,7 +15427,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
-     * Multiple URLs for error fallback purpose can be seperated by space.
+     * Multiple URLs for error fallback purpose can be separated by space.
      * All SMIME attributes are in the format of {config-name}:{value}. A
      * &#039;SMIME config&#039; is a set of SMIME attribute values with the
      * same {config-name}. Multiple SMIME configs can be configured on a
@@ -15455,7 +15455,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
-     * Multiple URLs for error fallback purpose can be seperated by space.
+     * Multiple URLs for error fallback purpose can be separated by space.
      * All SMIME attributes are in the format of {config-name}:{value}. A
      * &#039;SMIME config&#039; is a set of SMIME attribute values with the
      * same {config-name}. Multiple SMIME configs can be configured on a
@@ -15481,7 +15481,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
-     * Multiple URLs for error fallback purpose can be seperated by space.
+     * Multiple URLs for error fallback purpose can be separated by space.
      * All SMIME attributes are in the format of {config-name}:{value}. A
      * &#039;SMIME config&#039; is a set of SMIME attribute values with the
      * same {config-name}. Multiple SMIME configs can be configured on a
@@ -16718,6 +16718,226 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetSpamTrashAlias(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSpamTrashAlias, "");
+        return attrs;
+    }
+
+    /**
+     * description of the custom tab in the Preferences page in HTML client
+     * in the format {tab-name},{associated-URL}
+     *
+     * @return zimbraStandardClientCustomPrefTab, or empty array if unset
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1267)
+    public String[] getStandardClientCustomPrefTab() {
+        return getMultiAttr(Provisioning.A_zimbraStandardClientCustomPrefTab);
+    }
+
+    /**
+     * description of the custom tab in the Preferences page in HTML client
+     * in the format {tab-name},{associated-URL}
+     *
+     * @param zimbraStandardClientCustomPrefTab new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1267)
+    public void setStandardClientCustomPrefTab(String[] zimbraStandardClientCustomPrefTab) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStandardClientCustomPrefTab, zimbraStandardClientCustomPrefTab);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * description of the custom tab in the Preferences page in HTML client
+     * in the format {tab-name},{associated-URL}
+     *
+     * @param zimbraStandardClientCustomPrefTab new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1267)
+    public Map<String,Object> setStandardClientCustomPrefTab(String[] zimbraStandardClientCustomPrefTab, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStandardClientCustomPrefTab, zimbraStandardClientCustomPrefTab);
+        return attrs;
+    }
+
+    /**
+     * description of the custom tab in the Preferences page in HTML client
+     * in the format {tab-name},{associated-URL}
+     *
+     * @param zimbraStandardClientCustomPrefTab new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1267)
+    public void addStandardClientCustomPrefTab(String zimbraStandardClientCustomPrefTab) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraStandardClientCustomPrefTab, zimbraStandardClientCustomPrefTab);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * description of the custom tab in the Preferences page in HTML client
+     * in the format {tab-name},{associated-URL}
+     *
+     * @param zimbraStandardClientCustomPrefTab new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1267)
+    public Map<String,Object> addStandardClientCustomPrefTab(String zimbraStandardClientCustomPrefTab, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraStandardClientCustomPrefTab, zimbraStandardClientCustomPrefTab);
+        return attrs;
+    }
+
+    /**
+     * description of the custom tab in the Preferences page in HTML client
+     * in the format {tab-name},{associated-URL}
+     *
+     * @param zimbraStandardClientCustomPrefTab existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1267)
+    public void removeStandardClientCustomPrefTab(String zimbraStandardClientCustomPrefTab) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraStandardClientCustomPrefTab, zimbraStandardClientCustomPrefTab);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * description of the custom tab in the Preferences page in HTML client
+     * in the format {tab-name},{associated-URL}
+     *
+     * @param zimbraStandardClientCustomPrefTab existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1267)
+    public Map<String,Object> removeStandardClientCustomPrefTab(String zimbraStandardClientCustomPrefTab, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraStandardClientCustomPrefTab, zimbraStandardClientCustomPrefTab);
+        return attrs;
+    }
+
+    /**
+     * description of the custom tab in the Preferences page in HTML client
+     * in the format {tab-name},{associated-URL}
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1267)
+    public void unsetStandardClientCustomPrefTab() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStandardClientCustomPrefTab, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * description of the custom tab in the Preferences page in HTML client
+     * in the format {tab-name},{associated-URL}
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1267)
+    public Map<String,Object> unsetStandardClientCustomPrefTab(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStandardClientCustomPrefTab, "");
+        return attrs;
+    }
+
+    /**
+     * whether extra custom tabs in the Preferences page in HTML client are
+     * enabled
+     *
+     * @return zimbraStandardClientCustomPrefTabsEnabled, or false if unset
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1266)
+    public boolean isStandardClientCustomPrefTabsEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraStandardClientCustomPrefTabsEnabled, false);
+    }
+
+    /**
+     * whether extra custom tabs in the Preferences page in HTML client are
+     * enabled
+     *
+     * @param zimbraStandardClientCustomPrefTabsEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1266)
+    public void setStandardClientCustomPrefTabsEnabled(boolean zimbraStandardClientCustomPrefTabsEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStandardClientCustomPrefTabsEnabled, zimbraStandardClientCustomPrefTabsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether extra custom tabs in the Preferences page in HTML client are
+     * enabled
+     *
+     * @param zimbraStandardClientCustomPrefTabsEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1266)
+    public Map<String,Object> setStandardClientCustomPrefTabsEnabled(boolean zimbraStandardClientCustomPrefTabsEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStandardClientCustomPrefTabsEnabled, zimbraStandardClientCustomPrefTabsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether extra custom tabs in the Preferences page in HTML client are
+     * enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1266)
+    public void unsetStandardClientCustomPrefTabsEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStandardClientCustomPrefTabsEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether extra custom tabs in the Preferences page in HTML client are
+     * enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1266)
+    public Map<String,Object> unsetStandardClientCustomPrefTabsEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStandardClientCustomPrefTabsEnabled, "");
         return attrs;
     }
 

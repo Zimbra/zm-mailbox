@@ -42,7 +42,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 ysasaki 20110817-1640 */
+    /* build: 8.0.0_BETA1_1111 administrator 20110824-1223 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -917,7 +917,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether or not to index attachemts
+     * whether or not to index attachments
      *
      * @return zimbraAttachmentsIndexingEnabled, or true if unset
      */
@@ -927,7 +927,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether or not to index attachemts
+     * whether or not to index attachments
      *
      * @param zimbraAttachmentsIndexingEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -940,7 +940,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether or not to index attachemts
+     * whether or not to index attachments
      *
      * @param zimbraAttachmentsIndexingEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -954,7 +954,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether or not to index attachemts
+     * whether or not to index attachments
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -966,7 +966,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether or not to index attachemts
+     * whether or not to index attachments
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -2043,7 +2043,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether calendar reasources can be double booked
+     * whether calendar resources can be double booked
      *
      * @return zimbraCalendarResourceDoubleBookingAllowed, or true if unset
      *
@@ -2055,7 +2055,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether calendar reasources can be double booked
+     * whether calendar resources can be double booked
      *
      * @param zimbraCalendarResourceDoubleBookingAllowed new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -2070,7 +2070,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether calendar reasources can be double booked
+     * whether calendar resources can be double booked
      *
      * @param zimbraCalendarResourceDoubleBookingAllowed new value
      * @param attrs existing map to populate, or null to create a new map
@@ -2086,7 +2086,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether calendar reasources can be double booked
+     * whether calendar resources can be double booked
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -2100,7 +2100,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether calendar reasources can be double booked
+     * whether calendar resources can be double booked
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -9071,7 +9071,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * whether S/MIME feature is enabled. Note: SMIME is a Network feature,
-     * this attribute is effective only if SMIME is permited by license.
+     * this attribute is effective only if SMIME is permitted by license.
      *
      * @return zimbraFeatureSMIMEEnabled, or false if unset
      *
@@ -9084,7 +9084,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * whether S/MIME feature is enabled. Note: SMIME is a Network feature,
-     * this attribute is effective only if SMIME is permited by license.
+     * this attribute is effective only if SMIME is permitted by license.
      *
      * @param zimbraFeatureSMIMEEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -9100,7 +9100,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * whether S/MIME feature is enabled. Note: SMIME is a Network feature,
-     * this attribute is effective only if SMIME is permited by license.
+     * this attribute is effective only if SMIME is permitted by license.
      *
      * @param zimbraFeatureSMIMEEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -9117,7 +9117,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * whether S/MIME feature is enabled. Note: SMIME is a Network feature,
-     * this attribute is effective only if SMIME is permited by license.
+     * this attribute is effective only if SMIME is permitted by license.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -9132,7 +9132,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     /**
      * whether S/MIME feature is enabled. Note: SMIME is a Network feature,
-     * this attribute is effective only if SMIME is permited by license.
+     * this attribute is effective only if SMIME is permitted by license.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -19230,7 +19230,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Flash title when on appointment remimnder notification
+     * Flash title when on appointment reminder notification
      *
      * @return zimbraPrefCalendarReminderFlashTitle, or true if unset
      *
@@ -19242,7 +19242,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Flash title when on appointment remimnder notification
+     * Flash title when on appointment reminder notification
      *
      * @param zimbraPrefCalendarReminderFlashTitle new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -19257,7 +19257,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Flash title when on appointment remimnder notification
+     * Flash title when on appointment reminder notification
      *
      * @param zimbraPrefCalendarReminderFlashTitle new value
      * @param attrs existing map to populate, or null to create a new map
@@ -19273,7 +19273,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Flash title when on appointment remimnder notification
+     * Flash title when on appointment reminder notification
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -19287,7 +19287,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Flash title when on appointment remimnder notification
+     * Flash title when on appointment reminder notification
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -27948,7 +27948,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * show selection checkbox for selecting email, contact, voicemial items
+     * show selection checkbox for selecting email, contact, voicemail items
      * in a list view for batch operations
      *
      * @return zimbraPrefShowSelectionCheckbox, or true if unset
@@ -27959,7 +27959,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * show selection checkbox for selecting email, contact, voicemial items
+     * show selection checkbox for selecting email, contact, voicemail items
      * in a list view for batch operations
      *
      * @param zimbraPrefShowSelectionCheckbox new value
@@ -27973,7 +27973,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * show selection checkbox for selecting email, contact, voicemial items
+     * show selection checkbox for selecting email, contact, voicemail items
      * in a list view for batch operations
      *
      * @param zimbraPrefShowSelectionCheckbox new value
@@ -27988,7 +27988,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * show selection checkbox for selecting email, contact, voicemial items
+     * show selection checkbox for selecting email, contact, voicemail items
      * in a list view for batch operations
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -28001,7 +28001,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * show selection checkbox for selecting email, contact, voicemial items
+     * show selection checkbox for selecting email, contact, voicemail items
      * in a list view for batch operations
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -30324,6 +30324,226 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetSpamApplyUserFilters(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraSpamApplyUserFilters, "");
+        return attrs;
+    }
+
+    /**
+     * description of the custom tab in the Preferences page in HTML client
+     * in the format {tab-name},{associated-URL}
+     *
+     * @return zimbraStandardClientCustomPrefTab, or empty array if unset
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1267)
+    public String[] getStandardClientCustomPrefTab() {
+        return getMultiAttr(Provisioning.A_zimbraStandardClientCustomPrefTab);
+    }
+
+    /**
+     * description of the custom tab in the Preferences page in HTML client
+     * in the format {tab-name},{associated-URL}
+     *
+     * @param zimbraStandardClientCustomPrefTab new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1267)
+    public void setStandardClientCustomPrefTab(String[] zimbraStandardClientCustomPrefTab) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStandardClientCustomPrefTab, zimbraStandardClientCustomPrefTab);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * description of the custom tab in the Preferences page in HTML client
+     * in the format {tab-name},{associated-URL}
+     *
+     * @param zimbraStandardClientCustomPrefTab new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1267)
+    public Map<String,Object> setStandardClientCustomPrefTab(String[] zimbraStandardClientCustomPrefTab, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStandardClientCustomPrefTab, zimbraStandardClientCustomPrefTab);
+        return attrs;
+    }
+
+    /**
+     * description of the custom tab in the Preferences page in HTML client
+     * in the format {tab-name},{associated-URL}
+     *
+     * @param zimbraStandardClientCustomPrefTab new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1267)
+    public void addStandardClientCustomPrefTab(String zimbraStandardClientCustomPrefTab) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraStandardClientCustomPrefTab, zimbraStandardClientCustomPrefTab);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * description of the custom tab in the Preferences page in HTML client
+     * in the format {tab-name},{associated-URL}
+     *
+     * @param zimbraStandardClientCustomPrefTab new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1267)
+    public Map<String,Object> addStandardClientCustomPrefTab(String zimbraStandardClientCustomPrefTab, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraStandardClientCustomPrefTab, zimbraStandardClientCustomPrefTab);
+        return attrs;
+    }
+
+    /**
+     * description of the custom tab in the Preferences page in HTML client
+     * in the format {tab-name},{associated-URL}
+     *
+     * @param zimbraStandardClientCustomPrefTab existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1267)
+    public void removeStandardClientCustomPrefTab(String zimbraStandardClientCustomPrefTab) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraStandardClientCustomPrefTab, zimbraStandardClientCustomPrefTab);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * description of the custom tab in the Preferences page in HTML client
+     * in the format {tab-name},{associated-URL}
+     *
+     * @param zimbraStandardClientCustomPrefTab existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1267)
+    public Map<String,Object> removeStandardClientCustomPrefTab(String zimbraStandardClientCustomPrefTab, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraStandardClientCustomPrefTab, zimbraStandardClientCustomPrefTab);
+        return attrs;
+    }
+
+    /**
+     * description of the custom tab in the Preferences page in HTML client
+     * in the format {tab-name},{associated-URL}
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1267)
+    public void unsetStandardClientCustomPrefTab() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStandardClientCustomPrefTab, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * description of the custom tab in the Preferences page in HTML client
+     * in the format {tab-name},{associated-URL}
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1267)
+    public Map<String,Object> unsetStandardClientCustomPrefTab(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStandardClientCustomPrefTab, "");
+        return attrs;
+    }
+
+    /**
+     * whether extra custom tabs in the Preferences page in HTML client are
+     * enabled
+     *
+     * @return zimbraStandardClientCustomPrefTabsEnabled, or false if unset
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1266)
+    public boolean isStandardClientCustomPrefTabsEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraStandardClientCustomPrefTabsEnabled, false);
+    }
+
+    /**
+     * whether extra custom tabs in the Preferences page in HTML client are
+     * enabled
+     *
+     * @param zimbraStandardClientCustomPrefTabsEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1266)
+    public void setStandardClientCustomPrefTabsEnabled(boolean zimbraStandardClientCustomPrefTabsEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStandardClientCustomPrefTabsEnabled, zimbraStandardClientCustomPrefTabsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether extra custom tabs in the Preferences page in HTML client are
+     * enabled
+     *
+     * @param zimbraStandardClientCustomPrefTabsEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1266)
+    public Map<String,Object> setStandardClientCustomPrefTabsEnabled(boolean zimbraStandardClientCustomPrefTabsEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStandardClientCustomPrefTabsEnabled, zimbraStandardClientCustomPrefTabsEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether extra custom tabs in the Preferences page in HTML client are
+     * enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1266)
+    public void unsetStandardClientCustomPrefTabsEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStandardClientCustomPrefTabsEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether extra custom tabs in the Preferences page in HTML client are
+     * enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1266)
+    public Map<String,Object> unsetStandardClientCustomPrefTabsEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraStandardClientCustomPrefTabsEnabled, "");
         return attrs;
     }
 

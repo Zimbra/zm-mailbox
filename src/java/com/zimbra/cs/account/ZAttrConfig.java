@@ -43,7 +43,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 ysasaki 20110817-1640 */
+    /* build: 8.0.0_BETA1_1111 administrator 20110824-1223 */
 
     /**
      * RFC2256: descriptive information
@@ -5430,7 +5430,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Names of additonal components that have been installed
+     * Names of additional components that have been installed
      *
      * @return zimbraComponentAvailable, or empty array if unset
      */
@@ -5440,7 +5440,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Names of additonal components that have been installed
+     * Names of additional components that have been installed
      *
      * @param zimbraComponentAvailable new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5453,7 +5453,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Names of additonal components that have been installed
+     * Names of additional components that have been installed
      *
      * @param zimbraComponentAvailable new value
      * @param attrs existing map to populate, or null to create a new map
@@ -5467,7 +5467,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Names of additonal components that have been installed
+     * Names of additional components that have been installed
      *
      * @param zimbraComponentAvailable new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5480,7 +5480,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Names of additonal components that have been installed
+     * Names of additional components that have been installed
      *
      * @param zimbraComponentAvailable new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -5494,7 +5494,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Names of additonal components that have been installed
+     * Names of additional components that have been installed
      *
      * @param zimbraComponentAvailable existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -5507,7 +5507,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Names of additonal components that have been installed
+     * Names of additional components that have been installed
      *
      * @param zimbraComponentAvailable existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -5521,7 +5521,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Names of additonal components that have been installed
+     * Names of additional components that have been installed
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -5533,7 +5533,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Names of additonal components that have been installed
+     * Names of additional components that have been installed
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -7520,12 +7520,12 @@ public abstract class ZAttrConfig extends Entry {
      * creating/deleting/modifying accounts/DLs under the domain. shutdown -
      * suspended + cannot modify domain attrs + cannot delete the domain
      * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
+     * domain, e.g. renaming the domain and moving LDAP entries. Modification
+     * and deletion of the domain can only be done internally by the server
+     * when it is safe to release the domain, they cannot be done in admin
+     * console or zmprov. How zimbraDomainStatus affects account behavior :
+     * ------------------------------------- zimbraDomainStatus account
+     * behavior ------------------------------------- active
      * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
      * pending or closed, else locked maintenance zimbraAccountStatus if it
      * is pending or closed, else maintenance suspended zimbraAccountStatus
@@ -7561,12 +7561,12 @@ public abstract class ZAttrConfig extends Entry {
      * creating/deleting/modifying accounts/DLs under the domain. shutdown -
      * suspended + cannot modify domain attrs + cannot delete the domain
      * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
+     * domain, e.g. renaming the domain and moving LDAP entries. Modification
+     * and deletion of the domain can only be done internally by the server
+     * when it is safe to release the domain, they cannot be done in admin
+     * console or zmprov. How zimbraDomainStatus affects account behavior :
+     * ------------------------------------- zimbraDomainStatus account
+     * behavior ------------------------------------- active
      * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
      * pending or closed, else locked maintenance zimbraAccountStatus if it
      * is pending or closed, else maintenance suspended zimbraAccountStatus
@@ -7602,12 +7602,12 @@ public abstract class ZAttrConfig extends Entry {
      * creating/deleting/modifying accounts/DLs under the domain. shutdown -
      * suspended + cannot modify domain attrs + cannot delete the domain
      * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
+     * domain, e.g. renaming the domain and moving LDAP entries. Modification
+     * and deletion of the domain can only be done internally by the server
+     * when it is safe to release the domain, they cannot be done in admin
+     * console or zmprov. How zimbraDomainStatus affects account behavior :
+     * ------------------------------------- zimbraDomainStatus account
+     * behavior ------------------------------------- active
      * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
      * pending or closed, else locked maintenance zimbraAccountStatus if it
      * is pending or closed, else maintenance suspended zimbraAccountStatus
@@ -7646,12 +7646,12 @@ public abstract class ZAttrConfig extends Entry {
      * creating/deleting/modifying accounts/DLs under the domain. shutdown -
      * suspended + cannot modify domain attrs + cannot delete the domain
      * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
+     * domain, e.g. renaming the domain and moving LDAP entries. Modification
+     * and deletion of the domain can only be done internally by the server
+     * when it is safe to release the domain, they cannot be done in admin
+     * console or zmprov. How zimbraDomainStatus affects account behavior :
+     * ------------------------------------- zimbraDomainStatus account
+     * behavior ------------------------------------- active
      * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
      * pending or closed, else locked maintenance zimbraAccountStatus if it
      * is pending or closed, else maintenance suspended zimbraAccountStatus
@@ -7691,12 +7691,12 @@ public abstract class ZAttrConfig extends Entry {
      * creating/deleting/modifying accounts/DLs under the domain. shutdown -
      * suspended + cannot modify domain attrs + cannot delete the domain
      * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
+     * domain, e.g. renaming the domain and moving LDAP entries. Modification
+     * and deletion of the domain can only be done internally by the server
+     * when it is safe to release the domain, they cannot be done in admin
+     * console or zmprov. How zimbraDomainStatus affects account behavior :
+     * ------------------------------------- zimbraDomainStatus account
+     * behavior ------------------------------------- active
      * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
      * pending or closed, else locked maintenance zimbraAccountStatus if it
      * is pending or closed, else maintenance suspended zimbraAccountStatus
@@ -7735,12 +7735,12 @@ public abstract class ZAttrConfig extends Entry {
      * creating/deleting/modifying accounts/DLs under the domain. shutdown -
      * suspended + cannot modify domain attrs + cannot delete the domain
      * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
+     * domain, e.g. renaming the domain and moving LDAP entries. Modification
+     * and deletion of the domain can only be done internally by the server
+     * when it is safe to release the domain, they cannot be done in admin
+     * console or zmprov. How zimbraDomainStatus affects account behavior :
+     * ------------------------------------- zimbraDomainStatus account
+     * behavior ------------------------------------- active
      * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
      * pending or closed, else locked maintenance zimbraAccountStatus if it
      * is pending or closed, else maintenance suspended zimbraAccountStatus
@@ -7780,12 +7780,12 @@ public abstract class ZAttrConfig extends Entry {
      * creating/deleting/modifying accounts/DLs under the domain. shutdown -
      * suspended + cannot modify domain attrs + cannot delete the domain
      * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
+     * domain, e.g. renaming the domain and moving LDAP entries. Modification
+     * and deletion of the domain can only be done internally by the server
+     * when it is safe to release the domain, they cannot be done in admin
+     * console or zmprov. How zimbraDomainStatus affects account behavior :
+     * ------------------------------------- zimbraDomainStatus account
+     * behavior ------------------------------------- active
      * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
      * pending or closed, else locked maintenance zimbraAccountStatus if it
      * is pending or closed, else maintenance suspended zimbraAccountStatus
@@ -7823,12 +7823,12 @@ public abstract class ZAttrConfig extends Entry {
      * creating/deleting/modifying accounts/DLs under the domain. shutdown -
      * suspended + cannot modify domain attrs + cannot delete the domain
      * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP enteries.
-     * Modification and deletion of the domain can only be done internally by
-     * the server when it is safe to release the domain, they cannot be done
-     * in admin console or zmprov. How zimbraDomainStatus affects account
-     * behavior : ------------------------------------- zimbraDomainStatus
-     * account behavior ------------------------------------- active
+     * domain, e.g. renaming the domain and moving LDAP entries. Modification
+     * and deletion of the domain can only be done internally by the server
+     * when it is safe to release the domain, they cannot be done in admin
+     * console or zmprov. How zimbraDomainStatus affects account behavior :
+     * ------------------------------------- zimbraDomainStatus account
+     * behavior ------------------------------------- active
      * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
      * pending or closed, else locked maintenance zimbraAccountStatus if it
      * is pending or closed, else maintenance suspended zimbraAccountStatus
@@ -9245,7 +9245,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * LDAP search base for interal GAL queries (special values:
+     * LDAP search base for internal GAL queries (special values:
      * &quot;ROOT&quot; for top, &quot;DOMAIN&quot; for domain only,
      * &quot;SUBDOMAINS&quot; for domain and subdomains)
      *
@@ -9257,7 +9257,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * LDAP search base for interal GAL queries (special values:
+     * LDAP search base for internal GAL queries (special values:
      * &quot;ROOT&quot; for top, &quot;DOMAIN&quot; for domain only,
      * &quot;SUBDOMAINS&quot; for domain and subdomains)
      *
@@ -9272,7 +9272,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * LDAP search base for interal GAL queries (special values:
+     * LDAP search base for internal GAL queries (special values:
      * &quot;ROOT&quot; for top, &quot;DOMAIN&quot; for domain only,
      * &quot;SUBDOMAINS&quot; for domain and subdomains)
      *
@@ -9288,7 +9288,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * LDAP search base for interal GAL queries (special values:
+     * LDAP search base for internal GAL queries (special values:
      * &quot;ROOT&quot; for top, &quot;DOMAIN&quot; for domain only,
      * &quot;SUBDOMAINS&quot; for domain and subdomains)
      *
@@ -9302,7 +9302,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * LDAP search base for interal GAL queries (special values:
+     * LDAP search base for internal GAL queries (special values:
      * &quot;ROOT&quot; for top, &quot;DOMAIN&quot; for domain only,
      * &quot;SUBDOMAINS&quot; for domain and subdomains)
      *
@@ -16017,14 +16017,14 @@ public abstract class ZAttrConfig extends Entry {
      * authentication is disabled. NeedClientAuth: client authentication is
      * required during SSL handshake on the SSL mutual authentication
      * port(see zimbraMailSSLClientCertPort). The SSL handshake will fail if
-     * the client does not present a certificate to autenticate.
+     * the client does not present a certificate to authenticate.
      * WantClientAuth: client authentication is requested during SSL
      * handshake on the SSL mutual authentication port(see
      * zimbraMailSSLClientCertPort). The SSL handshake will still proceed if
-     * the client does not present a certificate to autenticate. In the case
+     * the client does not present a certificate to authenticate. In the case
      * when client does not send a certificate, user will be redirected to
      * the usual entry page of the requested webapp, where username/password
-     * is ptompted.
+     * is prompted.
      *
      * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
@@ -16042,14 +16042,14 @@ public abstract class ZAttrConfig extends Entry {
      * authentication is disabled. NeedClientAuth: client authentication is
      * required during SSL handshake on the SSL mutual authentication
      * port(see zimbraMailSSLClientCertPort). The SSL handshake will fail if
-     * the client does not present a certificate to autenticate.
+     * the client does not present a certificate to authenticate.
      * WantClientAuth: client authentication is requested during SSL
      * handshake on the SSL mutual authentication port(see
      * zimbraMailSSLClientCertPort). The SSL handshake will still proceed if
-     * the client does not present a certificate to autenticate. In the case
+     * the client does not present a certificate to authenticate. In the case
      * when client does not send a certificate, user will be redirected to
      * the usual entry page of the requested webapp, where username/password
-     * is ptompted.
+     * is prompted.
      *
      * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
@@ -16067,14 +16067,14 @@ public abstract class ZAttrConfig extends Entry {
      * authentication is disabled. NeedClientAuth: client authentication is
      * required during SSL handshake on the SSL mutual authentication
      * port(see zimbraMailSSLClientCertPort). The SSL handshake will fail if
-     * the client does not present a certificate to autenticate.
+     * the client does not present a certificate to authenticate.
      * WantClientAuth: client authentication is requested during SSL
      * handshake on the SSL mutual authentication port(see
      * zimbraMailSSLClientCertPort). The SSL handshake will still proceed if
-     * the client does not present a certificate to autenticate. In the case
+     * the client does not present a certificate to authenticate. In the case
      * when client does not send a certificate, user will be redirected to
      * the usual entry page of the requested webapp, where username/password
-     * is ptompted.
+     * is prompted.
      *
      * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
@@ -16095,14 +16095,14 @@ public abstract class ZAttrConfig extends Entry {
      * authentication is disabled. NeedClientAuth: client authentication is
      * required during SSL handshake on the SSL mutual authentication
      * port(see zimbraMailSSLClientCertPort). The SSL handshake will fail if
-     * the client does not present a certificate to autenticate.
+     * the client does not present a certificate to authenticate.
      * WantClientAuth: client authentication is requested during SSL
      * handshake on the SSL mutual authentication port(see
      * zimbraMailSSLClientCertPort). The SSL handshake will still proceed if
-     * the client does not present a certificate to autenticate. In the case
+     * the client does not present a certificate to authenticate. In the case
      * when client does not send a certificate, user will be redirected to
      * the usual entry page of the requested webapp, where username/password
-     * is ptompted.
+     * is prompted.
      *
      * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
@@ -16124,14 +16124,14 @@ public abstract class ZAttrConfig extends Entry {
      * authentication is disabled. NeedClientAuth: client authentication is
      * required during SSL handshake on the SSL mutual authentication
      * port(see zimbraMailSSLClientCertPort). The SSL handshake will fail if
-     * the client does not present a certificate to autenticate.
+     * the client does not present a certificate to authenticate.
      * WantClientAuth: client authentication is requested during SSL
      * handshake on the SSL mutual authentication port(see
      * zimbraMailSSLClientCertPort). The SSL handshake will still proceed if
-     * the client does not present a certificate to autenticate. In the case
+     * the client does not present a certificate to authenticate. In the case
      * when client does not send a certificate, user will be redirected to
      * the usual entry page of the requested webapp, where username/password
-     * is ptompted.
+     * is prompted.
      *
      * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
@@ -16152,14 +16152,14 @@ public abstract class ZAttrConfig extends Entry {
      * authentication is disabled. NeedClientAuth: client authentication is
      * required during SSL handshake on the SSL mutual authentication
      * port(see zimbraMailSSLClientCertPort). The SSL handshake will fail if
-     * the client does not present a certificate to autenticate.
+     * the client does not present a certificate to authenticate.
      * WantClientAuth: client authentication is requested during SSL
      * handshake on the SSL mutual authentication port(see
      * zimbraMailSSLClientCertPort). The SSL handshake will still proceed if
-     * the client does not present a certificate to autenticate. In the case
+     * the client does not present a certificate to authenticate. In the case
      * when client does not send a certificate, user will be redirected to
      * the usual entry page of the requested webapp, where username/password
-     * is ptompted.
+     * is prompted.
      *
      * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
@@ -16181,14 +16181,14 @@ public abstract class ZAttrConfig extends Entry {
      * authentication is disabled. NeedClientAuth: client authentication is
      * required during SSL handshake on the SSL mutual authentication
      * port(see zimbraMailSSLClientCertPort). The SSL handshake will fail if
-     * the client does not present a certificate to autenticate.
+     * the client does not present a certificate to authenticate.
      * WantClientAuth: client authentication is requested during SSL
      * handshake on the SSL mutual authentication port(see
      * zimbraMailSSLClientCertPort). The SSL handshake will still proceed if
-     * the client does not present a certificate to autenticate. In the case
+     * the client does not present a certificate to authenticate. In the case
      * when client does not send a certificate, user will be redirected to
      * the usual entry page of the requested webapp, where username/password
-     * is ptompted.
+     * is prompted.
      *
      * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
@@ -16208,14 +16208,14 @@ public abstract class ZAttrConfig extends Entry {
      * authentication is disabled. NeedClientAuth: client authentication is
      * required during SSL handshake on the SSL mutual authentication
      * port(see zimbraMailSSLClientCertPort). The SSL handshake will fail if
-     * the client does not present a certificate to autenticate.
+     * the client does not present a certificate to authenticate.
      * WantClientAuth: client authentication is requested during SSL
      * handshake on the SSL mutual authentication port(see
      * zimbraMailSSLClientCertPort). The SSL handshake will still proceed if
-     * the client does not present a certificate to autenticate. In the case
+     * the client does not present a certificate to authenticate. In the case
      * when client does not send a certificate, user will be redirected to
      * the usual entry page of the requested webapp, where username/password
-     * is ptompted.
+     * is prompted.
      *
      * <p>Valid values: [NeedClientAuth, WantClientAuth, Disabled]
      *
@@ -16355,7 +16355,7 @@ public abstract class ZAttrConfig extends Entry {
      * identify a Zimbra account for client certificate authentication. Value
      * is a comma-separated list of mapping rules, each mapping maps a
      * certificate field to a Zimbra account key. Each is attempted in
-     * sequence untill a unique account can be resolved. e.g. a value can be:
+     * sequence until a unique account can be resolved. e.g. a value can be:
      * SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
      * value: comma-separated mapping-rule mapping-rule:
      * {cert-field-to-zimbra-key-map} | {LDAP-filter}
@@ -16395,7 +16395,7 @@ public abstract class ZAttrConfig extends Entry {
      * identify a Zimbra account for client certificate authentication. Value
      * is a comma-separated list of mapping rules, each mapping maps a
      * certificate field to a Zimbra account key. Each is attempted in
-     * sequence untill a unique account can be resolved. e.g. a value can be:
+     * sequence until a unique account can be resolved. e.g. a value can be:
      * SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
      * value: comma-separated mapping-rule mapping-rule:
      * {cert-field-to-zimbra-key-map} | {LDAP-filter}
@@ -16438,7 +16438,7 @@ public abstract class ZAttrConfig extends Entry {
      * identify a Zimbra account for client certificate authentication. Value
      * is a comma-separated list of mapping rules, each mapping maps a
      * certificate field to a Zimbra account key. Each is attempted in
-     * sequence untill a unique account can be resolved. e.g. a value can be:
+     * sequence until a unique account can be resolved. e.g. a value can be:
      * SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
      * value: comma-separated mapping-rule mapping-rule:
      * {cert-field-to-zimbra-key-map} | {LDAP-filter}
@@ -16482,7 +16482,7 @@ public abstract class ZAttrConfig extends Entry {
      * identify a Zimbra account for client certificate authentication. Value
      * is a comma-separated list of mapping rules, each mapping maps a
      * certificate field to a Zimbra account key. Each is attempted in
-     * sequence untill a unique account can be resolved. e.g. a value can be:
+     * sequence until a unique account can be resolved. e.g. a value can be:
      * SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
      * value: comma-separated mapping-rule mapping-rule:
      * {cert-field-to-zimbra-key-map} | {LDAP-filter}
@@ -16524,7 +16524,7 @@ public abstract class ZAttrConfig extends Entry {
      * identify a Zimbra account for client certificate authentication. Value
      * is a comma-separated list of mapping rules, each mapping maps a
      * certificate field to a Zimbra account key. Each is attempted in
-     * sequence untill a unique account can be resolved. e.g. a value can be:
+     * sequence until a unique account can be resolved. e.g. a value can be:
      * SUBJECTALTNAME_OTHERNAME_UPN=zimbraForeignPrincipal,(uid=%{SUBJECT_CN})
      * value: comma-separated mapping-rule mapping-rule:
      * {cert-field-to-zimbra-key-map} | {LDAP-filter}
@@ -31405,7 +31405,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
-     * Multiple URLs for error fallback purpose can be seperated by space.
+     * Multiple URLs for error fallback purpose can be separated by space.
      * All SMIME attributes are in the format of {config-name}:{value}. A
      * &#039;SMIME config&#039; is a set of SMIME attribute values with the
      * same {config-name}. Multiple SMIME configs can be configured on a
@@ -31429,7 +31429,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
-     * Multiple URLs for error fallback purpose can be seperated by space.
+     * Multiple URLs for error fallback purpose can be separated by space.
      * All SMIME attributes are in the format of {config-name}:{value}. A
      * &#039;SMIME config&#039; is a set of SMIME attribute values with the
      * same {config-name}. Multiple SMIME configs can be configured on a
@@ -31456,7 +31456,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
-     * Multiple URLs for error fallback purpose can be seperated by space.
+     * Multiple URLs for error fallback purpose can be separated by space.
      * All SMIME attributes are in the format of {config-name}:{value}. A
      * &#039;SMIME config&#039; is a set of SMIME attribute values with the
      * same {config-name}. Multiple SMIME configs can be configured on a
@@ -31484,7 +31484,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
-     * Multiple URLs for error fallback purpose can be seperated by space.
+     * Multiple URLs for error fallback purpose can be separated by space.
      * All SMIME attributes are in the format of {config-name}:{value}. A
      * &#039;SMIME config&#039; is a set of SMIME attribute values with the
      * same {config-name}. Multiple SMIME configs can be configured on a
@@ -31511,7 +31511,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
-     * Multiple URLs for error fallback purpose can be seperated by space.
+     * Multiple URLs for error fallback purpose can be separated by space.
      * All SMIME attributes are in the format of {config-name}:{value}. A
      * &#039;SMIME config&#039; is a set of SMIME attribute values with the
      * same {config-name}. Multiple SMIME configs can be configured on a
@@ -31539,7 +31539,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
-     * Multiple URLs for error fallback purpose can be seperated by space.
+     * Multiple URLs for error fallback purpose can be separated by space.
      * All SMIME attributes are in the format of {config-name}:{value}. A
      * &#039;SMIME config&#039; is a set of SMIME attribute values with the
      * same {config-name}. Multiple SMIME configs can be configured on a
@@ -31566,7 +31566,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
-     * Multiple URLs for error fallback purpose can be seperated by space.
+     * Multiple URLs for error fallback purpose can be separated by space.
      * All SMIME attributes are in the format of {config-name}:{value}. A
      * &#039;SMIME config&#039; is a set of SMIME attribute values with the
      * same {config-name}. Multiple SMIME configs can be configured on a
@@ -31594,7 +31594,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
-     * Multiple URLs for error fallback purpose can be seperated by space.
+     * Multiple URLs for error fallback purpose can be separated by space.
      * All SMIME attributes are in the format of {config-name}:{value}. A
      * &#039;SMIME config&#039; is a set of SMIME attribute values with the
      * same {config-name}. Multiple SMIME configs can be configured on a
@@ -31620,7 +31620,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * LDAP URL(s) for public key lookup for S/MIME via external LDAP.
-     * Multiple URLs for error fallback purpose can be seperated by space.
+     * Multiple URLs for error fallback purpose can be separated by space.
      * All SMIME attributes are in the format of {config-name}:{value}. A
      * &#039;SMIME config&#039; is a set of SMIME attribute values with the
      * same {config-name}. Multiple SMIME configs can be configured on a
@@ -34491,7 +34491,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Spaminess percentage beyound which a message is marked as spam
+     * Spaminess percentage beyond which a message is marked as spam
      *
      * @return zimbraSpamTagPercent, or 33 if unset
      */
@@ -34501,7 +34501,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Spaminess percentage beyound which a message is marked as spam
+     * Spaminess percentage beyond which a message is marked as spam
      *
      * @param zimbraSpamTagPercent new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -34514,7 +34514,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Spaminess percentage beyound which a message is marked as spam
+     * Spaminess percentage beyond which a message is marked as spam
      *
      * @param zimbraSpamTagPercent new value
      * @param attrs existing map to populate, or null to create a new map
@@ -34528,7 +34528,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Spaminess percentage beyound which a message is marked as spam
+     * Spaminess percentage beyond which a message is marked as spam
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -34540,7 +34540,7 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Spaminess percentage beyound which a message is marked as spam
+     * Spaminess percentage beyond which a message is marked as spam
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
