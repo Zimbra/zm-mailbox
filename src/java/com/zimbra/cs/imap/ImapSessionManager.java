@@ -333,9 +333,6 @@ final class ImapSessionManager {
                 synchronized (i4listener) {
                     try {
                         ImapFolder i4selected = i4listener.getImapFolder();
-                        if (i4selected == null) {
-                            return null;
-                        }
                         // found a matching session, so just copy its contents!
                         ZimbraLog.imap.debug("copying message data from existing session: %s", i4listener.getPath());
                         final List<ImapMessage> i4list = new ArrayList<ImapMessage>(i4selected.getSize());
@@ -356,6 +353,8 @@ final class ImapSessionManager {
                         }
 
                         return i4list;
+                    } catch (ImapSessionClosedException e) {
+                        return null;
                     } catch (IOException e) {
                         ZimbraLog.imap.warn("skipping error while trying to page in for copy (%s)",
                                 i4listener.getPath(), e);
@@ -466,10 +465,10 @@ final class ImapSessionManager {
         if (SERIALIZE_ON_CLOSE) {
             try {
                 // could use session.serialize() if we want to leave it in memory...
-                ZimbraLog.imap.debug("paging session during close: " + session.getPath());
+                ZimbraLog.imap.debug("paging session during close: %s", session.getPath());
                 session.unload();
             } catch (Exception e) {
-                ZimbraLog.imap.warn("skipping error while trying to serialize during close (" + session.getPath() + ")", e);
+                ZimbraLog.imap.warn("skipping error while trying to serialize during close (%s)", session.getPath(), e);
             }
         }
 

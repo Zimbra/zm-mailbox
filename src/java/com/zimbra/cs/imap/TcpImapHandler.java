@@ -65,12 +65,14 @@ final class TcpImapHandler extends ImapHandler {
         return true;
     }
 
-    @Override protected boolean authenticate() {
+    @Override
+    protected boolean authenticate() {
         // we auth with the LOGIN command (and more to come)
         return true;
     }
 
-    @Override protected void setIdle(boolean idle) {
+    @Override
+    protected void setIdle(boolean idle) {
         super.setIdle(idle);
         ImapSession i4selected = mSelectedFolder;
         if (i4selected != null)
@@ -128,8 +130,12 @@ final class TcpImapHandler extends ImapHandler {
         } catch (ImapParseException e) {
             handleParseException(e);
             return mConsecutiveBAD >= MAXIMUM_CONSECUTIVE_BAD ? STOP_PROCESSING : CONTINUE_PROCESSING;
+        } catch (ImapException e) { // session closed
+            ZimbraLog.imap.debug("stop processing", e);
+            return STOP_PROCESSING;
         } catch (IOException e) {
             if (socket.isClosed()) {
+                ZimbraLog.imap.debug("stop processing", e);
                 return STOP_PROCESSING;
             }
             throw e;

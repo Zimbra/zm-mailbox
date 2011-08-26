@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -42,7 +42,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 
-class ImapURL {
+final class ImapURL {
     private static class ImapUrlException extends ImapParseException {
         private static final long serialVersionUID = 174398702563521440L;
 
@@ -199,7 +199,7 @@ class ImapURL {
         }
     }
 
-    public byte[] getContent(ImapHandler handler, ImapCredentials creds, String tag) throws ImapParseException {
+    public byte[] getContent(ImapHandler handler, ImapCredentials creds, String tag) throws ImapException {
         Pair<Long, InputStream> content = getContentAsStream(handler, creds, tag);
         try {
             return ByteUtil.getContent(content.getSecond(), (int) Math.min(content.getFirst(), Integer.MAX_VALUE));
@@ -209,16 +209,17 @@ class ImapURL {
         throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content");
     }
 
-    public Pair<Long, InputStream> getContentAsStream(ImapHandler handler, ImapCredentials creds, String tag) throws ImapParseException {
+    public Pair<Long, InputStream> getContentAsStream(ImapHandler handler, ImapCredentials creds, String tag)
+            throws ImapException {
         ImapHandler.State state = handler.getState();
-        if (state == ImapHandler.State.NOT_AUTHENTICATED)
+        if (state == ImapHandler.State.NOT_AUTHENTICATED) {
             throw new ImapUrlException(tag, mURL, "must be in AUTHENTICATED state");
-
+        }
         try {
             Account acct = Provisioning.getInstance().get(AccountBy.name, mUsername);
-            if (acct == null)
+            if (acct == null) {
                 throw new ImapUrlException(tag, mURL, "cannot find user: " + mUsername);
-
+            }
             ImapSession i4session = handler.getCurrentSession();
             OperationContext octxt = creds.getContext().setSession(i4session);
             Pair<Long, InputStream> content = null;
@@ -227,8 +228,9 @@ class ImapURL {
             if (state == ImapHandler.State.SELECTED && i4session != null && i4folder != null) {
                 if (acct.getId().equals(i4session.getTargetAccountId()) && mPath.isEquivalent(i4folder.getPath())) {
                     ImapMessage i4msg = i4folder.getByImapId(mUid);
-                    if (i4msg == null || i4msg.isExpunged())
+                    if (i4msg == null || i4msg.isExpunged()) {
                         throw new ImapUrlException(tag, mURL, "no such message");
+                    }
                     MailItem item = i4folder.getMailbox().getItemById(octxt, i4msg.msgId, i4msg.getType());
                     content = ImapMessage.getContent(item);
                 }
@@ -237,8 +239,9 @@ class ImapURL {
             if (content == null && mPath.onLocalServer()) {
                 Mailbox mbox = (Mailbox) mPath.getOwnerMailbox();
                 MailItem item = mbox.getItemByImapId(octxt, mUid, mPath.asItemId().getId());
-                if (!ImapMessage.SUPPORTED_TYPES.contains(item.getType()))
+                if (!ImapMessage.SUPPORTED_TYPES.contains(item.getType())) {
                     throw new ImapUrlException(tag, mURL, "no such message");
+                }
                 content = ImapMessage.getContent(item);
             }
             // last option: handle off-server URLs
@@ -252,9 +255,9 @@ class ImapURL {
             }
 
             // fetch the content of the message
-            if (mPart == null)
+            if (mPart == null) {
                 return content;
-
+            }
             // and return the appropriate subpart of the selected message
             MimeMessage mm;
             try {
@@ -263,8 +266,9 @@ class ImapURL {
                 content.getSecond().close();
             }
             Pair<Long, InputStream> part = mPart.getContent(mm);
-            if (part == null)
+            if (part == null) {
                 throw new ImapUrlException(tag, mURL, "no such part");
+            }
             return part;
 
         } catch (NoSuchItemException e) {

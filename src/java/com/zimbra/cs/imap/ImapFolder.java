@@ -853,10 +853,10 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
         return removed;
     }
 
-    void restore(ImapSession session, SessionData sdata) throws ServiceException {
+    void restore(ImapSession session, SessionData sdata) throws ImapSessionClosedException, ServiceException {
         mMailbox = session.getMailbox();
-        if (mMailbox == null) { // stale session
-            return;
+        if (mMailbox == null) {
+            throw new ImapSessionClosedException();
         }
         mSession = session;
         mPath = session.getPath();

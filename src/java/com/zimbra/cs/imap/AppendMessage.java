@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -50,7 +50,7 @@ import java.text.ParseException;
 /**
  * Encapsulates append message data for an APPEND request.
  */
-class AppendMessage {
+final class AppendMessage {
     final ImapHandler handler;
     final String tag;
 
@@ -133,27 +133,30 @@ class AppendMessage {
         flagNames = null;
     }
 
-    public int storeContent(Object mboxObj, Object folderObj) throws IOException, ServiceException {
+    public int storeContent(Object mboxObj, Object folderObj)
+            throws ImapSessionClosedException, IOException, ServiceException {
         try {
             checkDate(content);
-            if (mboxObj instanceof Mailbox)
+            if (mboxObj instanceof Mailbox) {
                 return store((Mailbox) mboxObj, (Folder) folderObj);
-            else
+            } else {
                 return store((ZMailbox) mboxObj, (ZFolder) folderObj);
+            }
         } finally {
             cleanup();
         }
     }
 
-    private int store(Mailbox mbox, Folder folder) throws ServiceException, IOException {
+    private int store(Mailbox mbox, Folder folder) throws ImapSessionClosedException, ServiceException, IOException {
         boolean idxAttach = mbox.attachmentsIndexingEnabled();
         Long receivedDate = date != null ? date.getTime() : null;
         ParsedMessage pm = new ParsedMessage(content, receivedDate, idxAttach);
         try {
-            if (!pm.getSender().equals("")) {
+            if (!pm.getSender().isEmpty()) {
                 InternetAddress ia = new JavaMailInternetAddress(pm.getSender());
-                if (AccountUtil.addressMatchesAccountOrSendAs(mbox.getAccount(), ia.getAddress()))
+                if (AccountUtil.addressMatchesAccountOrSendAs(mbox.getAccount(), ia.getAddress())) {
                     flags |= Flag.BITMASK_FROM_ME;
+                }
             }
         } catch (Exception e) { }
 
@@ -164,8 +167,9 @@ class AppendMessage {
             //   (note that this leaves session flags unset on remote appended messages)
             if (selectedFolder != null) {
                 ImapMessage i4msg = selectedFolder.getById(msg.getId());
-                if (i4msg != null)
+                if (i4msg != null) {
                     i4msg.setSessionFlags(sflags, selectedFolder);
+                }
             }
         }
         return msg == null ? -1 : msg.getId();
@@ -177,7 +181,7 @@ class AppendMessage {
         return new ItemId(id, getCredentials().getAccountId()).getId();
     }
 
-    public void checkContent() throws IOException, ImapParseException, ServiceException {
+    public void checkContent() throws IOException, ImapException, ServiceException {
         content = catenate ? doCatenate() : parts.get(0).literal.getBlob();
         if (content.getRawSize() > handler.getConfig().getMaxMessageSize()) {
             cleanup();
@@ -189,7 +193,7 @@ class AppendMessage {
         }
     }
 
-    private Blob doCatenate() throws IOException, ImapParseException, ServiceException {
+    private Blob doCatenate() throws IOException, ImapException, ServiceException {
         // translate CATENATE (...) directives into Blob
         BlobBuilder bb = StoreManager.getInstance().getBlobBuilder();
         try {
@@ -199,8 +203,9 @@ class AppendMessage {
             }
             return bb.finish();
         } finally {
-            for (Part part : parts)
+            for (Part part : parts) {
                 part.cleanup();
+            }
             parts = null;
         }
     }
@@ -274,16 +279,18 @@ class AppendMessage {
             this.url = url;
         }
 
-        InputStream getInputStream() throws IOException, ImapParseException {
-            if (literal != null)
+        InputStream getInputStream() throws IOException, ImapException {
+            if (literal != null) {
                 return literal.getInputStream();
-            else
+            } else {
                 return url.getContentAsStream(handler, handler.getCredentials(), tag).getSecond();
+            }
         }
 
         void cleanup() {
-            if (literal != null)
+            if (literal != null) {
                 literal.cleanup();
+            }
         }
     }
 }
