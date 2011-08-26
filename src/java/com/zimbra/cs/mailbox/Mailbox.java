@@ -7716,7 +7716,10 @@ public class Mailbox {
      */
     protected void endTransaction(boolean success) throws ServiceException {
         assert !Thread.holdsLock(this) : "Use MailboxLock";
-
+        if (!lock.isLocked()) {
+            ZimbraLog.mailbox.warn("transaction canceled because of lock failure");
+            return;
+        }
         PendingDelete deletes = null; // blob and index to delete
         List<Object> rollbackDeletes = null; // blob to delete for failure cases
         try {
@@ -7725,7 +7728,6 @@ public class Mailbox {
                 ZimbraLog.mailbox.warn("cannot end a transaction when not inside a transaction", new Exception());
                 return;
             }
-            assert(lock.isLocked());
             if (!currentChange.endChange()) {
                 return;
             }
