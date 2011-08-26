@@ -87,7 +87,7 @@ public class ImapSession extends Session {
         return handler;
     }
 
-    ImapFolder getImapFolder() {
+    ImapFolder getImapFolder() throws ImapSessionClosedException {
         MANAGER.recordAccess(this);
         return reload();
     }
@@ -272,10 +272,10 @@ public class ImapSession extends Session {
         }
     }
 
-    ImapFolder reload() {
+    ImapFolder reload() throws ImapSessionClosedException {
         Mailbox mbox = mailbox;
         if (mbox == null) {
-            return null;
+            throw new ImapSessionClosedException();
         }
         // Mailbox.endTransaction() -> ImapSession.notifyPendingChanges() locks in the order of Mailbox -> ImapSession.
         // Need to lock in the same order here, otherwise can result in deadlock.
@@ -529,7 +529,7 @@ public class ImapSession extends Session {
             pagedSessionData = null;
         }
 
-        synchronized void restore(ImapFolder i4folder) throws ServiceException {
+        synchronized void restore(ImapFolder i4folder) throws ImapSessionClosedException, ServiceException {
             ImapFolder.SessionData sdata = pagedSessionData == null ? null : pagedSessionData.asFolderData(i4folder);
             i4folder.restore(ImapSession.this, sdata);
             if (pagedSessionData != null && pagedSessionData.mSessionFlags != null) {
@@ -621,7 +621,10 @@ public class ImapSession extends Session {
             // idle sessions need to be notified immediately
             ImapHandler handler = getHandler();
             if (handler != null && handler.isIdle()) {
-                reload();
+                try {
+                    reload();
+                } catch (ImapSessionClosedException ignore) {
+                }
             }
         }
 
@@ -711,4 +714,5 @@ public class ImapSession extends Session {
             }
         }
     }
+
 }

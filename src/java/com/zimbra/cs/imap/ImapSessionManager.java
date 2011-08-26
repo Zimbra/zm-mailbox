@@ -336,8 +336,10 @@ final class ImapSessionManager {
             if (i4listener.getFolderId() == folderId) {
                 //   FIXME: may want to prefer loaded folders over paged-out folders
                 synchronized (i4listener) {
-                    ImapFolder i4selected = i4listener.getImapFolder();
-                    if (i4selected == null) {
+                    ImapFolder i4selected;
+                    try {
+                        i4selected = i4listener.getImapFolder();
+                    } catch (ImapSessionClosedException e) {
                         return null;
                     }
                     // found a matching session, so just copy its contents!

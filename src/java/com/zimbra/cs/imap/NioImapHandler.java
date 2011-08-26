@@ -124,9 +124,12 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
                 ZimbraLog.imap.debug("proxy failed", e);
                 sendNO(req.getTag(), "Shared folder temporally unavailable");
                 return false; // disconnect
-            } catch (ImapParseException ipe) {
-                handleParseException(ipe);
+            } catch (ImapParseException e) {
+                handleParseException(e);
                 return true;
+            } catch (ImapException e) { // session closed
+                ZimbraLog.imap.debug("stop processing", e);
+                return false;
             }
         } finally {
             ZimbraPerf.STOPWATCH_IMAP.stop(start);

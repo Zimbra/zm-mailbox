@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -42,7 +42,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 
-class ImapURL {
+final class ImapURL {
     private static class ImapUrlException extends ImapParseException {
         private static final long serialVersionUID = 174398702563521440L;
 
@@ -101,7 +101,9 @@ class ImapURL {
         }
     }
 
-    String getURL() { return mURL; }
+    String getURL() {
+        return mURL;
+    }
 
     private void parse(String tag, ImapCredentials creds, String url) throws ImapParseException {
         String lcurl = url.toLowerCase();
@@ -112,8 +114,9 @@ class ImapURL {
             // iserver = [iuserauth "@"] hostport
             pos += 7;
             int slash = url.indexOf('/', pos), ampersand = url.indexOf('@', pos);
-            if (slash == -1 || slash == pos)
+            if (slash == -1 || slash == pos) {
                 throw new ImapUrlException(tag, url, "malformed IMAP URL");
+            }
             if (ampersand != -1 && ampersand < slash) {
                 // iuserauth = enc_user [iauth] / [enc_user] iauth
                 // iauth     = ";AUTH=" ( "*" / enc_auth_type )
@@ -124,15 +127,19 @@ class ImapURL {
             }
             // hostport = host [ ":" port ]
             int colon = url.indexOf(':', pos);
-            if (colon != -1 && colon < slash)
+            if (colon != -1 && colon < slash) {
                 try {
                     mPort = Short.parseShort(url.substring(colon + 1, slash));
-                } catch (NumberFormatException nfe) { throw new ImapUrlException(tag, url, "invalid port: " + url.substring(colon + 1, slash)); }
+                } catch (NumberFormatException nfe) {
+                    throw new ImapUrlException(tag, url, "invalid port: " + url.substring(colon + 1, slash));
+                }
+            }
             mHostname = url.substring(pos, colon != -1 && colon < slash ? colon : slash);
             pos = slash + 1;
         } else {
-            if (url.charAt(0) != '/')
+            if (url.charAt(0) != '/') {
                 throw new ImapUrlException(tag, url, "relative IMAP URLs must begin with '/'");
+            }
         }
 
         // icommand     = imailboxlist / imessagelist / imessagepart
@@ -141,8 +148,9 @@ class ImapURL {
         // iuid         = "/;UID=" nz_number
         // isection     = "/;SECTION=" enc_section
         int iuid = lcurl.indexOf("/;uid=", pos), uvv = lcurl.indexOf(";uidvalidity=", pos);
-        if (iuid == -1)
+        if (iuid == -1) {
             throw new ImapUrlException(tag, url, "only \"imessagepart\"-type IMAP URLs supported");
+        }
         mPath = new ImapPath(urlDecode(url.substring(pos, uvv != -1 && uvv < iuid ? uvv : iuid)), creds);
         pos = iuid + 6;
 
@@ -158,8 +166,9 @@ class ImapURL {
                 try {
                     ImapRequest req = new ParserImapRequest(tag, section);
                     mPart = req.readPartSpecifier(false, false);
-                    if (!req.eof())
+                    if (!req.eof()) {
                         throw new ImapUrlException(tag, url, "extra chars at end of IMAP URL SECTION");
+                    }
                 } catch (ImapParseException ipe) {
                     throw new ImapUrlException(tag, url, ipe.getMessage());
                 } catch (IOException ioe) {
@@ -199,7 +208,7 @@ class ImapURL {
         }
     }
 
-    public byte[] getContent(ImapHandler handler, ImapCredentials creds, String tag) throws ImapParseException {
+    public byte[] getContent(ImapHandler handler, ImapCredentials creds, String tag) throws ImapException {
         Pair<Long, InputStream> content = getContentAsStream(handler, creds, tag);
         try {
             return ByteUtil.getContent(content.getSecond(), (int) Math.min(content.getFirst(), Integer.MAX_VALUE));
@@ -209,16 +218,17 @@ class ImapURL {
         throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content");
     }
 
-    public Pair<Long, InputStream> getContentAsStream(ImapHandler handler, ImapCredentials creds, String tag) throws ImapParseException {
+    public Pair<Long, InputStream> getContentAsStream(ImapHandler handler, ImapCredentials creds, String tag)
+            throws ImapException {
         ImapHandler.State state = handler.getState();
-        if (state == ImapHandler.State.NOT_AUTHENTICATED)
+        if (state == ImapHandler.State.NOT_AUTHENTICATED) {
             throw new ImapUrlException(tag, mURL, "must be in AUTHENTICATED state");
-
+        }
         try {
             Account acct = Provisioning.getInstance().get(AccountBy.name, mUsername);
-            if (acct == null)
+            if (acct == null) {
                 throw new ImapUrlException(tag, mURL, "cannot find user: " + mUsername);
-
+            }
             ImapSession i4session = handler.getCurrentSession();
             OperationContext octxt = creds.getContext().setSession(i4session);
             Pair<Long, InputStream> content = null;
@@ -227,8 +237,9 @@ class ImapURL {
             if (state == ImapHandler.State.SELECTED && i4session != null && i4folder != null) {
                 if (acct.getId().equals(i4session.getTargetAccountId()) && mPath.isEquivalent(i4folder.getPath())) {
                     ImapMessage i4msg = i4folder.getByImapId(mUid);
-                    if (i4msg == null || i4msg.isExpunged())
+                    if (i4msg == null || i4msg.isExpunged()) {
                         throw new ImapUrlException(tag, mURL, "no such message");
+                    }
                     MailItem item = i4folder.getMailbox().getItemById(octxt, i4msg.msgId, i4msg.getType());
                     content = ImapMessage.getContent(item);
                 }
@@ -237,8 +248,9 @@ class ImapURL {
             if (content == null && mPath.onLocalServer()) {
                 Mailbox mbox = (Mailbox) mPath.getOwnerMailbox();
                 MailItem item = mbox.getItemByImapId(octxt, mUid, mPath.asItemId().getId());
-                if (!ImapMessage.SUPPORTED_TYPES.contains(item.getType()))
+                if (!ImapMessage.SUPPORTED_TYPES.contains(item.getType())) {
                     throw new ImapUrlException(tag, mURL, "no such message");
+                }
                 content = ImapMessage.getContent(item);
             }
             // last option: handle off-server URLs
@@ -252,9 +264,9 @@ class ImapURL {
             }
 
             // fetch the content of the message
-            if (mPart == null)
+            if (mPart == null) {
                 return content;
-
+            }
             // and return the appropriate subpart of the selected message
             MimeMessage mm;
             try {
@@ -263,8 +275,9 @@ class ImapURL {
                 content.getSecond().close();
             }
             Pair<Long, InputStream> part = mPart.getContent(mm);
-            if (part == null)
+            if (part == null) {
                 throw new ImapUrlException(tag, mURL, "no such part");
+            }
             return part;
 
         } catch (NoSuchItemException e) {
@@ -281,7 +294,8 @@ class ImapURL {
         throw new ImapUrlException(tag, mURL, "error fetching IMAP URL content");
     }
 
-    @Override public String toString() {
+    @Override
+    public String toString() {
         try {
             return "imap://" + URLEncoder.encode(mUsername, "utf-8") + '@' + mHostname + (mPort > 0 ? ":" + mPort : "") +
                    '/' + URLEncoder.encode(mPath.asImapPath(), "utf-8") + "/;UID=" + mUid +

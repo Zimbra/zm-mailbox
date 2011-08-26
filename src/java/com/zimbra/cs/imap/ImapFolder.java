@@ -580,23 +580,25 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
 
     boolean checkpointSize() {
         SessionData sdata = mSessionData;
-        if (sdata == null)
+        if (sdata == null) {
             return false;
-
+        }
         int last = sdata.mLastSize;
         return last != (sdata.mLastSize = getSize());
     }
 
     void disableNotifications() {
         SessionData sdata = mSessionData;
-        if (sdata != null)
+        if (sdata != null) {
             sdata.mNotificationsSuspended = true;
+        }
     }
 
     void enableNotifications() {
         SessionData sdata = mSessionData;
-        if (sdata != null)
+        if (sdata != null) {
             sdata.mNotificationsSuspended = false;
+        }
     }
 
     void saveSearchResults(ImapMessageSet i4set) {
@@ -681,7 +683,11 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
                 String[] range = subset.split(":", 2);
                 lower = (range[0].equals("*") ? lastID : parseId(range[0]));
                 upper = (range[1].equals("*") ? lastID : parseId(range[1]));
-                if (lower > upper)  { int tmp = upper; upper = lower; lower = tmp; }
+                if (lower > upper)  {
+                    int tmp = upper;
+                    upper = lower;
+                    lower = tmp;
+                }
             }
 
             // add to list, merging with existing ranges if needed
@@ -712,7 +718,8 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
         return getSubsequence(tag, subseqStr, byUID, isSEARCH, false);
     }
 
-    ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID, boolean isSEARCH, boolean isFETCH) throws ImapParseException {
+    ImapMessageSet getSubsequence(String tag, String subseqStr, boolean byUID, boolean isSEARCH, boolean isFETCH)
+            throws ImapParseException {
         ImapMessageSet result = new ImapMessageSet();
         if (subseqStr == null || subseqStr.trim().isEmpty()) {
             return result;
@@ -739,8 +746,12 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
                 } else {
                     ImapMessage i4msg;
                     int start = uidSearch(lower), end = uidSearch(upper);
-                    if (start < 0)  start = -start - 1;
-                    if (end < 0)    end = -end - 2;
+                    if (start < 0) {
+                        start = -start - 1;
+                    }
+                    if (end < 0) {
+                        end = -end - 2;
+                    }
                     for (int seq = start; seq <= end; seq++) {
                         if ((i4msg = getBySequence(seq + 1)) != null) {
                             result.add(i4msg);
@@ -754,8 +765,9 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
     }
 
     String cropSubsequence(String subseqStr, boolean byUID, int croplow, int crophigh) {
-        if (croplow <= 0 && crophigh <= 0)
+        if (croplow <= 0 && crophigh <= 0) {
             return subseqStr;
+        }
         StringBuilder sb = new StringBuilder(subseqStr.length());
         for (Pair<Integer, Integer> range : normalizeSubsequence(subseqStr, byUID)) {
             int lower = range.getFirst(), upper = range.getSecond();
@@ -785,22 +797,31 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
             return subseqStr;
         }
         Pair<Integer, Integer> range = itrange.next();
-        int lower = range.getFirst(), upper = range.getSecond();
+        int lower = range.getFirst();
+        int upper = range.getSecond();
         int id = !i4it.hasNext() ? -1 : (byUID ? i4it.next().imapUid : i4it.next().sequence);
 
         while (lower != -1) {
             if (lower > upper) {
                 // no valid values remaining in this range, so go to the next one
-                if (!itrange.hasNext())  break;
-                range = itrange.next();  lower = range.getFirst();  upper = range.getSecond();
+                if (!itrange.hasNext()) {
+                    break;
+                }
+                range = itrange.next();
+                lower = range.getFirst();
+                upper = range.getSecond();
             } else if (id == -1 || id > upper) {
                 // the remainder of the range qualifies, so serialize it and go to the next range
                 sb.append(sb.length() == 0 ? "" : ",").append(lower).append(lower == upper ? "" : ":" + upper);
-                if (!itrange.hasNext())  break;
+                if (!itrange.hasNext()) {
+                    break;
+                }
                 range = itrange.next();  lower = range.getFirst();  upper = range.getSecond();
             } else if (id <= lower) {
                 // the current ID is too low for this range, so fetch the next ID
-                if (id == lower)  lower++;
+                if (id == lower) {
+                    lower++;
+                }
                 id = !i4it.hasNext() ? -1 : (byUID ? i4it.next().imapUid : i4it.next().sequence);
             } else {
                 // the current ID lies within this range, so serialize part and fetch the next ID
@@ -903,13 +924,12 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
         return removed;
     }
 
-    void restore(ImapSession session, SessionData sdata) throws ServiceException {
+    void restore(ImapSession session, SessionData sdata) throws ImapSessionClosedException, ServiceException {
         mailbox = session.getMailbox();
-        if (mailbox == null) { // stale session
-            return;
+        if (mailbox == null) {
+            throw new ImapSessionClosedException();
         }
         mSession = session;
-        mPath = session.getPath();
         mFlags = ImapFlagCache.getSystemFlags(mailbox);
         // FIXME: NOT RESTORING sequence.msg.sflags PROPERLY -- need to serialize it!!!
         mSessionData = sdata;
@@ -1037,7 +1057,7 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
                 getMailbox().resetImapUid(null, renumber);
             } catch (ServiceException e) {
                 if (debug) {
-                    ZimbraLog.imap.debug("  ** moved; imap uid change failed; msg hidden (ntfn): %d" + renumber);
+                    ZimbraLog.imap.debug("  ** moved; imap uid change failed; msg hidden (ntfn): %d", renumber);
                 }
             }
         }

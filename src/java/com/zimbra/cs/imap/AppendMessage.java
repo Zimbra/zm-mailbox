@@ -53,7 +53,7 @@ import java.text.ParseException;
 /**
  * Encapsulates append message data for an APPEND request.
  */
-class AppendMessage {
+final class AppendMessage {
     final ImapHandler handler;
     final String tag;
 
@@ -145,7 +145,8 @@ class AppendMessage {
         flagNames = null;
     }
 
-    public int storeContent(Object mboxObj, Object folderObj) throws IOException, ServiceException {
+    public int storeContent(Object mboxObj, Object folderObj)
+            throws ImapSessionClosedException, IOException, ServiceException {
         try {
             checkDate(content);
             if (mboxObj instanceof Mailbox) {
@@ -158,15 +159,16 @@ class AppendMessage {
         }
     }
 
-    private int store(Mailbox mbox, Folder folder) throws ServiceException, IOException {
+    private int store(Mailbox mbox, Folder folder) throws ImapSessionClosedException, ServiceException, IOException {
         boolean idxAttach = mbox.attachmentsIndexingEnabled();
         Long receivedDate = date != null ? date.getTime() : null;
         ParsedMessage pm = new ParsedMessage(content, receivedDate, idxAttach);
         try {
-            if (!pm.getSender().equals("")) {
+            if (!pm.getSender().isEmpty()) {
                 InternetAddress ia = new JavaMailInternetAddress(pm.getSender());
-                if (AccountUtil.addressMatchesAccountOrSendAs(mbox.getAccount(), ia.getAddress()))
+                if (AccountUtil.addressMatchesAccountOrSendAs(mbox.getAccount(), ia.getAddress())) {
                     flags |= Flag.BITMASK_FROM_ME;
+                }
             }
         } catch (Exception e) { }
 
@@ -192,7 +194,7 @@ class AppendMessage {
         return new ItemId(id, getCredentials().getAccountId()).getId();
     }
 
-    public void checkContent() throws IOException, ImapParseException, ServiceException {
+    public void checkContent() throws IOException, ImapException, ServiceException {
         content = catenate ? doCatenate() : parts.get(0).literal.getBlob();
         if (content.getRawSize() > handler.getConfig().getMaxMessageSize()) {
             cleanup();
@@ -204,7 +206,7 @@ class AppendMessage {
         }
     }
 
-    private Blob doCatenate() throws IOException, ImapParseException, ServiceException {
+    private Blob doCatenate() throws IOException, ImapException, ServiceException {
         // translate CATENATE (...) directives into Blob
         BlobBuilder bb = StoreManager.getInstance().getBlobBuilder();
         try {
@@ -291,7 +293,7 @@ class AppendMessage {
             this.url = url;
         }
 
-        InputStream getInputStream() throws IOException, ImapParseException {
+        InputStream getInputStream() throws IOException, ImapException {
             if (literal != null) {
                 return literal.getInputStream();
             } else {

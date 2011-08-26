@@ -129,8 +129,12 @@ final class TcpImapHandler extends ProtocolHandler {
         } catch (ImapParseException e) {
             delegate.handleParseException(e);
             return delegate.consecutiveBAD < ImapHandler.MAXIMUM_CONSECUTIVE_BAD;
+        } catch (ImapException e) { // session closed
+            ZimbraLog.imap.debug("stop processing", e);
+            return false;
         } catch (IOException e) {
             if (socket.isClosed()) {
+                ZimbraLog.imap.debug("stop processing", e);
                 return false;
             }
             throw e;
