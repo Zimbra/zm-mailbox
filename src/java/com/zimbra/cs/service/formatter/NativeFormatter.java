@@ -182,9 +182,10 @@ public class NativeFormatter extends Formatter {
             
             boolean html = checkGlobalOverride(Provisioning.A_zimbraAttachmentsViewInHtmlOnly,
                     context.getAuthAccount()) || (context.hasView() && context.getView().equals(HTML_VIEW));
-            if (!html) {
+            
+            if (!html || contentType.startsWith(MimeConstants.CT_TEXT_HTML)) {
                 String defaultCharset = context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
-            	sendbackOriginalDoc(mp, contentType, defaultCharset, context.req, context.resp);
+                sendbackOriginalDoc(mp, contentType, defaultCharset, context.req, context.resp);
             } else {
             	handleConversion(context, mp.getInputStream(), Mime.getFilename(mp), contentType, item.getDigest(), mp.getSize());
             }
@@ -195,14 +196,15 @@ public class NativeFormatter extends Formatter {
         String v = context.params.get(UserServlet.QP_VERSION);
         int version = v != null ? Integer.parseInt(v) : -1;
         String contentType = doc.getContentType();
-
+            
+        boolean neuter = doc.getAccount().getBooleanAttr(Provisioning.A_zimbraNotebookSanitizeHtml, true);
+        String defaultCharset = context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
+        
         doc = (version > 0 ? (Document)doc.getMailbox().getItemRevision(context.opContext, doc.getId(), doc.getType(), version) : doc);
         InputStream is = doc.getContentStream();
-    	if (HTML_VIEW.equals(context.getView())) {
+    	if (HTML_VIEW.equals(context.getView()) && !(contentType != null && contentType.startsWith(MimeConstants.CT_TEXT_HTML))) {
     		handleConversion(context, is, doc.getName(), doc.getContentType(), doc.getDigest(), doc.getSize());
     	} else {
-            String defaultCharset = context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
-            boolean neuter = doc.getAccount().getBooleanAttr(Provisioning.A_zimbraNotebookSanitizeHtml, true);
             if (neuter)
             	sendbackOriginalDoc(is, contentType, defaultCharset, doc.getName(), null, doc.getSize(), context.req, context.resp);
             else
