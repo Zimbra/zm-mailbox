@@ -57,9 +57,9 @@ import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedDocument;
@@ -201,7 +201,7 @@ public class NativeFormatter extends Formatter {
                     context.getAuthAccount()) || (context.hasView() && context.getView().equals(HTML_VIEW));
             InputStream in = null;
             try {
-                if (!html || ExtensionUtil.getExtension("convertd") == null) {
+                if (!html || ExtensionUtil.getExtension("convertd") == null || contentType.startsWith(MimeConstants.CT_TEXT_HTML)) {
                     byte[] data = null;
                     
                     // If this is an image that exceeds the max size, resize it.  Don't resize
@@ -301,7 +301,7 @@ public class NativeFormatter extends Formatter {
         doc = (version > 0 ? (Document)doc.getMailbox().getItemRevision(context.opContext, doc.getId(), doc.getType(), version) : doc);
         InputStream is = doc.getContentStream();
         // If the view is html and the convertd extension is deployed
-        if (HTML_VIEW.equals(context.getView()) && ExtensionUtil.getExtension("convertd") != null) {
+        if (HTML_VIEW.equals(context.getView()) && ExtensionUtil.getExtension("convertd") != null && !(contentType != null && contentType.startsWith(MimeConstants.CT_TEXT_HTML))) {
             handleConversion(context, is, doc.getName(), doc.getContentType(), doc.getDigest(), doc.getSize());
         } else {
             String defaultCharset = context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);

@@ -116,6 +116,30 @@ public class TestDefangFilter {
     }
     
     /**
+     * Utility method that gets the html body part from a mime message and returns its input stream
+     * @param fileName The name of the email file to load from the unit test data dir
+     * @return The input stream for the html body if successful
+     * @throws Exception
+     */
+    private InputStream getHtmlPart(String fileName, int partNum) throws Exception {
+        // Get an input stream of a test pdf to test with
+        InputStream inputStream = new FileInputStream(EMAIL_BASE_DIR + fileName);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ByteUtil.copy(inputStream, true, baos, true);
+        
+        ParsedMessage msg = new ParsedMessage(baos.toByteArray(), false);
+        Set<MPartInfo> bodyparts = Mime.getBody(msg.getMessageParts(), true);
+
+        InputStream htmlStream = null;
+        for(MPartInfo body: bodyparts) {
+            if(body.getPartNum() == partNum){
+                htmlStream=  body.getMimePart().getInputStream();
+            }
+        }
+        return htmlStream;
+    }
+    
+    /**
      * Tests to make sure we allow just image names to come through
      * @throws Exception
      */
@@ -179,5 +203,21 @@ public class TestDefangFilter {
                 
         // Check to make sure the link needed is still in there.
         Assert.assertTrue(result.contains("BillingInfoDisplayCmd?bi_URL"));
+    }
+    
+    /**
+     * Makes sure we don't defang input button images
+     * @throws Exception
+     */
+    @Test
+    public void testBug62346() throws Exception {
+        String fileName = "bug_62346.txt";
+        InputStream htmlStream = getHtmlPart(fileName, 2);
+        Assert.assertNotNull(htmlStream);
+        
+        String result = HtmlDefang.defang(htmlStream, false);
+                
+        // Check to make sure the link needed is still in there.
+        Assert.assertTrue(result.contains("https://secure.sslpost.com/static/images/open_document.png"));
     }
 }
