@@ -365,6 +365,7 @@ public final class MailConstants {
     public static final String A_INDEX = "index";
     public static final String A_TIME = "time";
     public static final String A_MAX_BODY_SIZE = "maxBodySize";
+    public static final String A_ORIG_HEADERS = "origHeaders";
 
     // grants and shares
     public static final String E_ACL = "acl";
