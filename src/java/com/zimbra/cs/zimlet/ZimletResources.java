@@ -92,6 +92,8 @@ public class ZimletResources extends DiskCacheServlet {
         if (!pathInfo.startsWith(RESOURCE_PATH)) {
             // handle requests for individual files included in zimlet in case dev=1 is set.
             ServletContext targetContext = getServletConfig().getServletContext().getContext("/zimlet");
+            if (targetContext == null)
+                throw new ServletException("Could not forward the request to zimlet webapp, possible misconfiguration.");
             RequestDispatcher dispatcher = targetContext.getRequestDispatcher(pathInfo);
             dispatcher.forward(req, resp);
             return;
