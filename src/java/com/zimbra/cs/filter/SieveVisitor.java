@@ -58,7 +58,7 @@ public abstract class SieveVisitor {
     throws ServiceException { }
     
     protected void visitHeaderTest(String testEltName, Node node, VisitPhase phase, RuleProperties props,
-                                   List<String> headers, StringComparison comparison, boolean caseSensitive, String value)
+            List<String> headers, StringComparison comparison, boolean caseSensitive, String value)
     throws ServiceException { }
 
     protected void visitHeaderExistsTest(Node node, VisitPhase phase, RuleProperties props, String header)
@@ -116,8 +116,8 @@ public abstract class SieveVisitor {
     protected void visitReplyAction(Node node, VisitPhase phase, RuleProperties props, String bodyTemplate)
     throws ServiceException { }
 
-    protected void visitNotifyAction(Node node, VisitPhase phase, RuleProperties props,
-                                     String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes)
+    protected void visitNotifyAction(Node node, VisitPhase phase, RuleProperties props, String emailAddr,
+            String subjectTemplate, String bodyTemplate, int maxBodyBytes, List<String> origHeaders)
     throws ServiceException { }
 
     protected void visitStopAction(Node node, VisitPhase phase, RuleProperties props)
@@ -374,11 +374,24 @@ public abstract class SieveVisitor {
             String emailAddr = getValue(node, 0, 0, 0, 0);
             String subjectTemplate = getValue(node, 0, 1, 0, 0);
             String bodyTemplate = getValue(node, 0, 2, 0, 0);
-            int maxBodyBytes =
-                    getNode(node, 0).jjtGetNumChildren() == 4 ? Integer.valueOf(getValue(node, 0, 3)) : -1;
-            visitNotifyAction(node, VisitPhase.begin, props, emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes);
+            int numArgs = getNode(node, 0).jjtGetNumChildren();
+            int maxBodyBytes = -1;
+            List<String> origHeaders = null;
+            if (numArgs == 4) {
+                if (getNode(node, 0, 3).jjtGetNumChildren() == 0) {
+                    maxBodyBytes = Integer.valueOf(getValue(node, 0, 3));
+                } else {
+                    origHeaders = getMultiValue(node, 0, 3, 0);
+                }
+            } else if (numArgs == 5) {
+                maxBodyBytes = Integer.valueOf(getValue(node, 0, 3));
+                origHeaders = getMultiValue(node, 0, 4, 0);
+            }
+            visitNotifyAction(
+                    node, VisitPhase.begin, props, emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes, origHeaders);
             accept(node, props);
-            visitNotifyAction(node, VisitPhase.end, props, emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes);
+            visitNotifyAction(
+                    node, VisitPhase.end, props, emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes, origHeaders);
         } else if ("stop".equalsIgnoreCase(nodeName)) {
             visitStopAction(node, VisitPhase.begin, props);
             accept(node, props);
@@ -440,9 +453,6 @@ public abstract class SieveVisitor {
     private List<String> getMultiValue(Node parent, int ... indexes)
     throws ServiceException {
         Node child = getNode(parent, indexes);
-        if (child.jjtGetNumChildren() == 0) {
-            throw ServiceException.PARSE_ERROR("Subnode has no children", null);
-        }
         List<String> values = new ArrayList<String>();
         for (int i = 0; i < child.jjtGetNumChildren(); i++) {
             Object value = ((SieveNode) child.jjtGetChild(i)).getValue();

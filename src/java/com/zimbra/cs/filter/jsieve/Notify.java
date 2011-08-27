@@ -62,14 +62,29 @@ public class Notify extends AbstractActionCommand {
         String bodyTemplate = list.get(0);
 
         int maxBodyBytes = -1;
+        List<String> origHeaders = null;
         if (args.size() == 4) {
+            nextArg = args.get(3);
+            if (nextArg instanceof NumberArgument)
+                maxBodyBytes = ((NumberArgument) nextArg).getInteger();
+            else if (nextArg instanceof StringListArgument)
+                origHeaders = ((StringListArgument) nextArg).getList();
+            else
+                throw new SyntaxException("Invalid argument");
+        }
+
+        if (args.size() == 5) {
             nextArg = args.get(3);
             if (!(nextArg instanceof NumberArgument))
                 throw new SyntaxException("Expected int");
             maxBodyBytes = ((NumberArgument) nextArg).getInteger();
+            nextArg = args.get(4);
+            if (!(nextArg instanceof StringListArgument))
+                throw new SyntaxException("Expected string list");
+            origHeaders = ((StringListArgument) nextArg).getList();
         }
 
-        mail.addAction(new ActionNotify(emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes));
+        mail.addAction(new ActionNotify(emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes, origHeaders));
         return null;
     }
 

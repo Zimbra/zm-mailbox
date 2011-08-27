@@ -18,6 +18,7 @@ package com.zimbra.cs.filter;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -107,9 +108,11 @@ public class OutgoingMessageHandler extends FilterHandler {
     }
 
     @Override
-    public void notify(String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes)
+    public void notify(
+            String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes, List<String> origHeaders)
             throws ServiceException, MessagingException {
-        FilterUtil.notify(octxt, mailbox, parsedMessage, emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes);
+        FilterUtil.notify(
+                octxt, mailbox, parsedMessage, emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes, origHeaders);
     }
 
     @Override

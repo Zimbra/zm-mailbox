@@ -109,7 +109,8 @@ public abstract class ZFilterAction implements ToZJSONObject {
             String subjectTemplate = actionElement.getAttribute(MailConstants.A_SUBJECT, "");
             String bodyTemplate = actionElement.getAttribute(MailConstants.E_CONTENT, "");
             int maxBodyBytes = actionElement.getAttributeInt(MailConstants.A_MAX_BODY_SIZE, -1);
-            return new ZNotifyAction(emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes);
+            String origHeaders = actionElement.getAttribute(MailConstants.A_ORIG_HEADERS, null);
+            return new ZNotifyAction(emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes, origHeaders);
         } else if (n.equals(MailConstants.E_ACTION_FLAG)) {
             Flag flag = Flag.fromString(actionElement.getAttribute(MailConstants.A_FLAG_NAME));
             MarkOp op = (flag == Flag.flagged ? MarkOp.FLAGGED : MarkOp.READ); 
@@ -223,7 +224,12 @@ public abstract class ZFilterAction implements ToZJSONObject {
         }
 
         public ZNotifyAction(String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes) {
-            super(A_NOTIFY, emailAddr, subjectTemplate, bodyTemplate, Integer.toString(maxBodyBytes));
+            this(emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes, null);
+        }
+
+        public ZNotifyAction(
+                String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes, String origHeaders) {
+            super(A_NOTIFY, emailAddr, subjectTemplate, bodyTemplate, Integer.toString(maxBodyBytes), origHeaders);
         }
 
         public String getEmailAddr() {
@@ -242,6 +248,10 @@ public abstract class ZFilterAction implements ToZJSONObject {
             return Integer.valueOf(mArgs.get(3));
         }
 
+        public String getOrigHeaders() {
+            return mArgs.get(4);
+        }
+
         public String toActionString() {
             return "notify " + getEmailAddr() + " " +
                     (StringUtil.enclose(getSubjectTemplate(), '"')) + " " +
@@ -258,6 +268,8 @@ public abstract class ZFilterAction implements ToZJSONObject {
                 action.addElement(MailConstants.E_CONTENT).addText(getBodyTemplate());
             if (getMaxBodyBytes() != -1)
                 action.addAttribute(MailConstants.A_MAX_BODY_SIZE, getMaxBodyBytes());
+            if (!StringUtil.isNullOrEmpty(getOrigHeaders()))
+                action.addAttribute(MailConstants.A_ORIG_HEADERS, getOrigHeaders());
             return action;
         }
     }

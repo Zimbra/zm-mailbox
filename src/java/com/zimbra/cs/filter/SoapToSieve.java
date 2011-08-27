@@ -204,13 +204,10 @@ public class SoapToSieve {
     private String generateHeaderTest(Element test, String testName)
     throws ServiceException {
         String header = test.getAttribute(MailConstants.A_HEADER);
-        if (!StringUtil.isNullOrEmpty(header)) {
-            String[] headerNames = header.split(",");
-            for (int i = 0; i < headerNames.length; i ++) {
-                headerNames[i] = StringUtil.enclose(FilterUtil.escape(headerNames[i]), '"');
-            }
-            header = new StringBuilder().append('[').append(StringUtil.join(",", headerNames)).append(']').toString();
+        if (header.isEmpty()) {
+            throw ServiceException.INVALID_REQUEST("header value is empty", null);
         }
+        header = getSieveMultiValue(header);
         String s = test.getAttribute(MailConstants.A_STRING_COMPARISON);
         s = s.toLowerCase();
         StringComparison comparison = StringComparison.fromString(s);
@@ -226,7 +223,19 @@ public class SoapToSieve {
         }
         return snippet;
     }
-    
+
+    private static String getSieveMultiValue(String s) {
+        String[] values = new String[0];
+        // empty string means no value
+        if (!s.isEmpty()) {
+            values = s.split(",");
+            for (int i = 0; i < values.length; i++) {
+                values[i] = StringUtil.enclose(FilterUtil.escape(values[i]), '"');
+            }
+        }
+        return new StringBuilder().append('[').append(StringUtil.join(",", values)).append(']').toString();
+    }
+
     private String convertInviteTest(Element test) {
         StringBuilder buf = new StringBuilder("invite");
         List<Element> methods = test.listElements(MailConstants.E_METHOD);
@@ -278,17 +287,31 @@ public class SoapToSieve {
             String subjectTemplate = action.getAttribute(MailConstants.A_SUBJECT, "");
             String bodyTemplate = action.getAttribute(MailConstants.E_CONTENT, "");
             int maxBodyBytes = action.getAttributeInt(MailConstants.A_MAX_BODY_SIZE, -1);
+            String origHeaders = action.getAttribute(MailConstants.A_ORIG_HEADERS, "");
+            if (!subjectTemplate.isEmpty() && containsSubjectHeader(origHeaders)) {
+                throw ServiceException.INVALID_REQUEST("subject conflict", null);
+            }
             return new StringBuilder("notify ").
                     append(StringUtil.enclose(emailAddr, '"')).append(" ").
                     append(StringUtil.enclose(subjectTemplate, '"')).append(" ").
                     append("text:\r\n").append(getDotStuffed(bodyTemplate)).append("\r\n.\r\n").
-                    append(maxBodyBytes == -1 ? "" : " " + maxBodyBytes).toString();
+                    append(maxBodyBytes < 0 ? "" : " " + maxBodyBytes).
+                    append(origHeaders.isEmpty() ? "" : " " + getSieveMultiValue(origHeaders)).toString();
         } else if (name.equals(MailConstants.E_ACTION_STOP)) {
             return "stop";
         } else {
             ZimbraLog.soap.debug("Ignoring unexpected action '%s'", name);
         }
         return null;
+    }
+
+    private static boolean containsSubjectHeader(String origHeaders) {
+        for (String header : origHeaders.split(",")) {
+            if ("Subject".equalsIgnoreCase(header)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String getDotStuffed(String bodyTemplate) {

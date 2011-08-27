@@ -265,7 +265,7 @@ public class SieveToSoap extends SieveVisitor {
 
     @Override
     protected void visitNotifyAction(Node node, VisitPhase phase, RuleProperties props,
-                                     String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes)
+            String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes, List<String> origHeaders)
             throws ServiceException {
         if (phase == VisitPhase.begin) {
             Element action = addAction(MailConstants.E_ACTION_NOTIFY);
@@ -276,6 +276,8 @@ public class SieveToSoap extends SieveVisitor {
                 action.addElement(MailConstants.E_CONTENT).addText(bodyTemplate);
             if (maxBodyBytes != -1)
                 action.addAttribute(MailConstants.A_MAX_BODY_SIZE, maxBodyBytes);
+            if (origHeaders != null && !origHeaders.isEmpty())
+                action.addAttribute(MailConstants.A_ORIG_HEADERS, StringUtil.join(",", origHeaders));
         }
     }
 

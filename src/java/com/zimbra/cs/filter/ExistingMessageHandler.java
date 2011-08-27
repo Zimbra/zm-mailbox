@@ -15,6 +15,7 @@
 package com.zimbra.cs.filter;
 
 import java.util.Collection;
+import java.util.List;
 
 import javax.mail.internet.MimeMessage;
 
@@ -205,7 +206,8 @@ extends FilterHandler {
     }
 
     @Override
-    public void notify(String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes) {
+    public void notify(
+            String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes, List<String> origHeaders) {
         ZimbraLog.filter.debug("Ignoring attempt to notify for existing message %d", messageId);
     }
 
