@@ -258,9 +258,10 @@ public class ZimbraMailAdapter implements MailAdapter
                     ActionNotify notify = (ActionNotify) action;
                     try {
                         handler.notify(notify.getEmailAddr(),
-                                        notify.getSubjectTemplate(),
-                                        notify.getBodyTemplate(),
-                                        notify.getMaxBodyBytes());
+                                       notify.getSubjectTemplate(),
+                                       notify.getBodyTemplate(),
+                                       notify.getMaxBodyBytes(),
+                                       notify.getOrigHeaders());
                     } catch (Exception e) {
                         ZimbraLog.filter.warn("Unable to notify.", e);
                         explicitKeep();

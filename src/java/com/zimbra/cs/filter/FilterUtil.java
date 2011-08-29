@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,6 +31,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import com.google.common.collect.Sets;
 import org.apache.jsieve.mail.Action;
 
 import com.google.common.collect.Sets;
@@ -353,7 +355,7 @@ public class FilterUtil {
     }
 
     public static void notify(OperationContext octxt, Mailbox mailbox, ParsedMessage parsedMessage,
-                              String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes)
+            String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes, List<String> origHeaders)
         throws MessagingException, ServiceException {
         MimeMessage mimeMessage = parsedMessage.getMimeMessage();
         if (isMailLoop(mailbox, mimeMessage)) {
@@ -363,26 +365,47 @@ public class FilterUtil {
 
         MimeMessage notification = new Mime.FixedMimeMessage(JMSession.getSession());
         notification.setHeader(HEADER_FORWARDED, mailbox.getAccount().getName());
-
-        notification.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(emailAddr));
+        MailSender mailSender = mailbox.getMailSender().setSaveToSent(false);
 
         Map<String, String> vars = getVarsMap(mailbox, parsedMessage, mimeMessage);
-
-        if (!StringUtil.isNullOrEmpty(subjectTemplate))
-            notification.setSubject(StringUtil.fillTemplate(subjectTemplate, vars));
+        if (origHeaders == null || origHeaders.isEmpty()) {
+            notification.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(emailAddr));
+            notification.setSentDate(new Date());
+            if (!StringUtil.isNullOrEmpty(subjectTemplate)) {
+                notification.setSubject(StringUtil.fillTemplate(subjectTemplate, vars));
+            }
+        } else {
+            Set<String> headersToCopy = Sets.newHashSet(origHeaders);
+            boolean copySubject = false;
+            for (String header : headersToCopy) {
+                if ("Subject".equalsIgnoreCase(header)) {
+                    copySubject = true;
+                }
+                String[] hdrVals = mimeMessage.getHeader(header);
+                if (hdrVals == null) {
+                    continue;
+                }
+                for (String hdrVal : hdrVals) {
+                    notification.addHeader(header, hdrVal);
+                }
+            }
+            if (!copySubject && !StringUtil.isNullOrEmpty(subjectTemplate)) {
+                notification.setSubject(StringUtil.fillTemplate(subjectTemplate, vars));
+            }
+            mailSender.setSkipSendAsCheck(true);
+            mailSender.setRecipients(emailAddr);
+        }
 
         String body = StringUtil.fillTemplate(bodyTemplate, vars);
         body = truncateBodyIfRequired(body, maxBodyBytes);
         notification.setText(body);
-
-        notification.setSentDate(new Date());
         notification.saveChanges();
 
-        MailSender mailSender = mailbox.getMailSender().setSaveToSent(false).setSkipSendAsCheck(true);
-        if (isDeliveryStatusNotification(mimeMessage))
+        if (isDeliveryStatusNotification(mimeMessage)) {
             mailSender.setEnvelopeFrom("<>");
-        else
+        } else {
             mailSender.setEnvelopeFrom(mailbox.getAccount().getName());
+        }
         mailSender.sendMimeMessage(octxt, mailbox, notification);
     }
 

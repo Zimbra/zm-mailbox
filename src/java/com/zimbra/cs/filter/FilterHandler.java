@@ -15,6 +15,7 @@
 package com.zimbra.cs.filter;
 
 import java.util.Collection;
+import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -96,6 +97,7 @@ public abstract class FilterHandler {
     /**
      * Sends an email notification.
      */
-    public abstract void notify(String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes)
+    public abstract void notify(
+            String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes, List<String> origHeaders)
     throws ServiceException, MessagingException;
 }
