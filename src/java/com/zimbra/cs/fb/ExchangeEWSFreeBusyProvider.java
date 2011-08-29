@@ -521,7 +521,7 @@ public class ExchangeEWSFreeBusyProvider extends FreeBusyProvider {
         }
         ExchangeEWSMessage msg =
             new ExchangeEWSMessage(serverInfo.org, serverInfo.cn, email);
-        String url = serverInfo.url + msg.getUrl();
+        String url = serverInfo.url;
 
         try {
             ZimbraLog.fb.debug("POST " + url);
