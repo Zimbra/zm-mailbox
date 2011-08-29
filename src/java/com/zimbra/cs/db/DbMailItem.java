@@ -2402,12 +2402,13 @@ public class DbMailItem {
             stmt = conn.prepareStatement("SELECT " + DB_FIELDS + " FROM " + getMailItemTableName(mbox, "mi") +
                     " WHERE " + IN_THIS_MAILBOX_AND + "mi.id IN" +
                     " (SELECT DISTINCT conv_id FROM " + getConversationTableName(mbox, "oc") +
-                    "  WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("oc.hash", hashes.size()) + ")");
+                    "  WHERE " + DbUtil.whereIn("oc.hash", hashes.size()) +
+                        (DebugConfig.disableMailboxGroups ? "" : " AND oc.mailbox_id = ?") + ")");
             int pos = setMailboxId(stmt, mbox, 1);
-            pos = setMailboxId(stmt, mbox, pos);
             for (String hash : hashes) {
                 stmt.setString(pos++, hash);
             }
+            pos = setMailboxId(stmt, mbox, pos);
             rs = stmt.executeQuery();
 
             List<UnderlyingData> dlist = new ArrayList<UnderlyingData>(3);
