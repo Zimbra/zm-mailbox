@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -120,25 +120,14 @@ public final class ZimbraLog {
     public static final Log net = LogFactory.getLog("zimbra.net");
 
     /**
-     * the "zimbra.index" logger. For general indexing-related events.
+     * the "zimbra.index" logger. For indexing.
      */
     public static final Log index = LogFactory.getLog("zimbra.index");
 
     /**
-     * the "zimbra.index.lucene" logger. For logging of low-level lucene operations (debug-level only)
+     * the "zimbra.search" logger. For search.
      */
-    public static final Log index_lucene = LogFactory.getLog("zimbra.index.lucene");
-
-    /**
-     * the "zimbra.index.search" logger. For logging of the search side of indexing
-     */
-    public static final Log index_search = LogFactory.getLog("zimbra.index.search");
-
-    /**
-     * the "zimbra.index.add" logger. For the add-to-the-index part of indexing
-     */
-    public static final Log index_add = LogFactory.getLog("zimbra.index.indexadd");
-
+    public static final Log search = LogFactory.getLog("zimbra.search");
 
     /**
      * Fhe "zimbra.searchstat" logger.  For logging statistics about what kinds of searches are run
@@ -215,6 +204,11 @@ public final class ZimbraLog {
      */
     public static final Log account = LogFactory.getLog("zimbra.account");
 
+    /**
+     * the "zimbra.autoprov" logger. For account auto provision related events.
+     */
+    public static final Log autoprov = LogFactory.getLog("zimbra.autoprov");
+    
     /**
      * the "zimbra.gal" logger. For gal-related events.
      */
@@ -396,6 +390,14 @@ public final class ZimbraLog {
     public static final Log tnef = LogFactory.getLog("zimbra.tnef");
 
 
+    public static final Log nginxlookup = LogFactory.getLog("zimbra.nginxlookup");
+    
+    /**
+     * the "zimbra.contact" logger.  Logs contact operations.
+     */
+    public static final Log contact = LogFactory.getLog("zimbra.contact");
+
+
     /**
      * Maps the log category name to its description.
      */
@@ -445,7 +447,8 @@ public final class ZimbraLog {
         // won't be listed in zmprov online help.
         Map<String, String> descriptions = new TreeMap<String, String>();
         descriptions.put(misc.getCategory(), "Miscellaneous");
-        descriptions.put(index.getCategory(), "Index operations");
+        descriptions.put(index.getCategory(), "Indexing operations");
+        descriptions.put(search.getCategory(), "Search operations");
         descriptions.put(redolog.getCategory(), "Redo log operations");
         descriptions.put(lmtp.getCategory(), "LMTP server (incoming mail)");
         descriptions.put(smtp.getCategory(), "SMTP client (outgoing mail)");
@@ -458,6 +461,7 @@ public final class ZimbraLog {
         descriptions.put(calendar.getCategory(), "Calendar operations");
         descriptions.put(im.getCategory(), "Instant messaging operations");
         descriptions.put(account.getCategory(), "Account operations");
+        descriptions.put(autoprov.getCategory(), "Auto provision operations");
         descriptions.put(gal.getCategory(), "GAL operations");
         descriptions.put(ldap.getCategory(), "LDAP operations");
         descriptions.put(acl.getCategory(), "ACL operations");
@@ -480,6 +484,7 @@ public final class ZimbraLog {
         descriptions.put(store.getCategory(), "Mail store disk operations");
         descriptions.put(purge.getCategory(), "Mailbox purge operations");
         descriptions.put(datasource.getCategory(), "Data Source operations");
+        descriptions.put(nginxlookup.getCategory(), "Nginx lookup operations");
         CATEGORY_DESCRIPTIONS = Collections.unmodifiableMap(descriptions);
     }
 

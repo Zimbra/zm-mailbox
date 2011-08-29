@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -88,13 +88,6 @@ public class StringUtilTest {
     }
 
     @Test
-    public void testSimpleClassName() {
-        Assert.assertEquals("MyClass", StringUtil.getSimpleClassName("my.package.MyClass"));
-        Integer i = 0;
-        Assert.assertEquals("Integer", StringUtil.getSimpleClassName(i));
-    }
-
-    @Test
     public void testStripControlCharacters() {
         Assert.assertEquals("null string", StringUtil.stripControlCharacters(null), null);
         Assert.assertEquals("empty string", StringUtil.stripControlCharacters(""), "");
@@ -135,7 +128,7 @@ public class StringUtilTest {
         Assert.assertTrue(m.find());
         Assert.assertEquals("ghij", m.group(1));
     }
-    
+
     @Test
     public void testReplaceAll() {
         Assert.assertEquals("abc456def456ghi", StringUtil.replaceAll("abc123def12223ghi", "1\\d+3", "456"));
