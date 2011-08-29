@@ -60,7 +60,7 @@ public abstract class ZFilterAction implements ToZJSONObject {
 
     private ZFilterAction(String name, String... args) {
         this.name = name;
-        this.args = args != null ? ImmutableList.<String>copyOf(args) : Collections.<String>emptyList();
+        this.args = args != null ? ImmutableList.copyOf(args) : Collections.<String>emptyList();
     }
 
     public String getName() {
@@ -319,7 +319,7 @@ public abstract class ZFilterAction implements ToZJSONObject {
         }
 
         public String getOrigHeaders() {
-            return mArgs.get(4);
+            return args.get(4);
         }
 
         @Override
