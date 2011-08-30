@@ -21,10 +21,13 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
-import org.testng.TestNG;
-import org.testng.annotations.Test;
-
-import com.zimbra.common.service.RemoteServiceException;
+import com.zimbra.cs.zclient.ZCalDataSource;
+import com.zimbra.cs.zclient.ZDataSource;
+import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZGrant.GranteeType;
+import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.zclient.ZMessage;
+import com.zimbra.cs.zclient.ZRssDataSource;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -35,18 +38,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.DataSource.ConnectionType;
 import com.zimbra.cs.account.ldap.LdapUtil;
-import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.ScheduledTask;
-import com.zimbra.cs.zclient.ZCalDataSource;
-import com.zimbra.cs.zclient.ZDataSource;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZImapDataSource;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZRssDataSource;
 
 public class TestDataSource extends TestCase {
 
@@ -301,6 +295,7 @@ public class TestDataSource extends TestCase {
     // XXX bburtin: Disabled this test because it can cause a 10-minute timeout
     // if the HTTP proxy is not configured.  We can look into reenabling it when
     // the timeout delay is shortened for bug 45019.
+    /*
     public void disabledTestRss()
     throws Exception {
         // Create folder.
@@ -343,6 +338,7 @@ public class TestDataSource extends TestCase {
         ds = (ZRssDataSource) getDataSource(mbox, folder.getId());
         assertNull(ds);
     }
+    */
 
     // XXX bburtin: disabled test due to bug 37222 (unable to parse Google calendar).
     public void disabledTestCal()
@@ -409,57 +405,6 @@ public class TestDataSource extends TestCase {
         return null;
     }
 
-    @Test(groups = {"Server"})
-    public void testScheduling()
-    throws Exception {
-        // Create data source.
-        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
-        ZFolder folder = TestUtil.createFolder(zmbox, "/" + NAME_PREFIX + "-testScheduling");
-        Provisioning prov = Provisioning.getInstance();
-        Server server = prov.getLocalServer();
-        int port = server.getImapBindPort();
-        ZImapDataSource zds = new ZImapDataSource(NAME_PREFIX + " testScheduling", true, "localhost", port,
-            "user2", "test123", folder.getId(), ConnectionType.cleartext);
-        String dsId = zmbox.createDataSource(zds);
-        
-        // Test scheduling based on polling interval. 
-        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        String attrName = Provisioning.A_zimbraDataSourcePollingInterval;
-        String imapAttrName = Provisioning.A_zimbraDataSourceImapPollingInterval;
-        TestUtil.setDataSourceAttr(USER_NAME, zds.getName(), attrName, "0");
-        checkSchedule(mbox, dsId, null);
-        
-        TestUtil.setDataSourceAttr(USER_NAME, zds.getName(), attrName, "10m");
-        checkSchedule(mbox, dsId, 600000);
-
-        TestUtil.setAccountAttr(USER_NAME, imapAttrName, "");
-        TestUtil.setDataSourceAttr(USER_NAME, zds.getName(), attrName, "");
-        checkSchedule(mbox, dsId, null);
-        
-        TestUtil.setAccountAttr(USER_NAME, imapAttrName, "5m");
-        checkSchedule(mbox, dsId, 300000);
-        
-        TestUtil.setDataSourceAttr(USER_NAME, zds.getName(), attrName, "0");
-        checkSchedule(mbox, dsId, null);
-        
-        // Bug 44502: test changing polling interval from 0 to unset when
-        // interval is set on the account.
-        TestUtil.setDataSourceAttr(USER_NAME, zds.getName(), attrName, "");
-        checkSchedule(mbox, dsId, 300000);
-        
-        TestUtil.setDataSourceAttr(USER_NAME, zds.getName(), Provisioning.A_zimbraDataSourceEnabled, LdapUtil.LDAP_FALSE);
-        checkSchedule(mbox, dsId, null);
-    }
-    
-    private void checkSchedule(Mailbox mbox, String dataSourceId, Integer intervalMillis)
-    throws Exception {
-        ScheduledTask task = DataSourceManager.getTask(mbox, dataSourceId);
-        if (intervalMillis == null) {
-            assertNull(task);
-        } else {
-            assertEquals(intervalMillis.longValue(), task.getIntervalMillis());
-        }
-    }
     
     public void tearDown()
     throws Exception {
@@ -487,10 +432,6 @@ public class TestDataSource extends TestCase {
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();
-        TestNG testng = TestUtil.newTestNG();
-        testng.setJUnit(true);
-        testng.setExcludedGroups("Server");
-        testng.setTestClasses(new Class[] { TestDataSource.class });
-        testng.run();
+        TestUtil.runTest(TestDataSource.class);
     }
 }

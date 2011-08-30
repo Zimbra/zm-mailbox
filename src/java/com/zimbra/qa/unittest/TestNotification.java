@@ -29,14 +29,9 @@ import javax.mail.internet.MimeMessage;
 
 import junit.framework.TestCase;
 
-import org.testng.TestNG;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
-
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapUtil;
@@ -47,9 +42,9 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.zclient.ZEmailAddress;
 import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
+import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZMessage.ZMimePart;
 
 
@@ -57,7 +52,6 @@ public class TestNotification
 extends TestCase {
 
     private static String RECIPIENT_NAME = "user1";
-    private static String SENDER_NAME = "user2";
     private static String TAPPED_NAME = "user1";
     private static String INTERCEPTOR_NAME = "user2";
     private static String INTERCEPTOR2_NAME = "user3";
@@ -66,15 +60,6 @@ extends TestCase {
     
     private static String NAME_PREFIX = TestNotification.class.getSimpleName();
     
-    private static String NEW_MAIL_SUBJECT =
-        NAME_PREFIX + " \u041a\u0440\u043e\u043a\u043e\u0434\u0438\u043b"; // Krokodil
-    private static String NEW_MAIL_BODY =
-        NAME_PREFIX + " \u0427\u0435\u0440\u0435\u043f\u0430\u0445\u0430"; // Cherepaha
-    private static String OUT_OF_OFFICE_SUBJECT =
-        NAME_PREFIX + " \u041e\u0431\u0435\u0437\u044c\u044f\u043d\u0430"; // Obezyana
-    private static String OUT_OF_OFFICE_BODY =
-        NAME_PREFIX + " \u0416\u0438\u0440\u0430\u0444";                   // Jiraf
-
     private boolean mOriginalReplyEnabled;
     private String mOriginalReply;
     private boolean mOriginalNotificationEnabled;
@@ -86,7 +71,6 @@ extends TestCase {
     private String mOriginalSaveToSent;
     private boolean mIsServerTest = false;
 
-    @BeforeMethod
     protected void setUp() throws Exception
     {
         super.setUp();
@@ -104,61 +88,6 @@ extends TestCase {
         mOriginalSaveToSent = account.getAttr(Provisioning.A_zimbraPrefSaveToSent, "");
     }
 
-    /**
-     * Confirms that the subject and body of the out of office and new mail
-     * notification can contain UTF-8 characters.
-     * 
-     * This test causes a change in state to the out_of_office table.  This data
-     * needs to be cleaned up after the test runs, so we categorize this test
-     * as server-only.
-     *  
-     * @throws Exception
-     */
-    @Test(groups = {"Server"})
-    public void testUtf8()
-    throws Exception {
-        mIsServerTest = true;
-        
-        // Turn on auto-reply and notification
-        Account account = TestUtil.getAccount(RECIPIENT_NAME);
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled, Provisioning.TRUE);
-        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReply, OUT_OF_OFFICE_BODY);
-        attrs.put(Provisioning.A_zimbraPrefNewMailNotificationEnabled, Provisioning.TRUE);
-        attrs.put(Provisioning.A_zimbraPrefNewMailNotificationAddress, TestUtil.getAddress(SENDER_NAME));
-        attrs.put(Provisioning.A_zimbraNewMailNotificationSubject, NEW_MAIL_SUBJECT);
-        attrs.put(Provisioning.A_zimbraNewMailNotificationBody, NEW_MAIL_BODY);
-        Provisioning.getInstance().modifyAttrs(account, attrs);
-        
-        ZMailbox senderMbox = TestUtil.getZMailbox(SENDER_NAME);
-        ZMailbox recipMbox = TestUtil.getZMailbox(RECIPIENT_NAME);
-        
-        // Make sure messages don't exist
-        List<ZMessage> messages = TestUtil.search(recipMbox, "in:inbox subject:" + OUT_OF_OFFICE_SUBJECT);
-        assertEquals("Messages in recipient mailbox", 0, messages.size());
-        messages = TestUtil.search(senderMbox, "in:inbox subject:" + OUT_OF_OFFICE_SUBJECT);
-        assertEquals("Messages in sender mailbox", 0, messages.size());        
-        messages = TestUtil.search(senderMbox, NEW_MAIL_SUBJECT);
-        assertEquals("New mail reply", 0, messages.size());
-
-        // Send the message
-        TestUtil.sendMessage(senderMbox, RECIPIENT_NAME, OUT_OF_OFFICE_SUBJECT, "testing");
-        
-        // Make sure the recipient received it
-        TestUtil.waitForMessage(recipMbox, "in:inbox subject:" + OUT_OF_OFFICE_SUBJECT);
-        
-        // Check for out-of-office
-        TestUtil.waitForMessage(senderMbox, "in:inbox subject:" + OUT_OF_OFFICE_SUBJECT);
-        messages = TestUtil.search(senderMbox, "in:inbox content:" + OUT_OF_OFFICE_BODY);
-        assertEquals("Out-of-office body not found", 1, messages.size());
-        
-        // Check for new mail notification
-        TestUtil.waitForMessage(senderMbox, "in:inbox subject:" + NEW_MAIL_SUBJECT);
-        messages = TestUtil.search(senderMbox, "in:inbox content:" + NEW_MAIL_BODY);
-        assertEquals("New mail notification body not found", 1, messages.size());
-    }
-    
-    @Test
     public void testIntercept()
     throws Exception {
         // Turn on legal intercept for recipient account
@@ -232,7 +161,6 @@ extends TestCase {
     /**
      * Confirms that legal intercept works with multiple interceptor addresses (bug 30961).
      */
-    @Test
     public void testInterceptMultiValue()
     throws Exception {
         // Turn on legal intercept for recipient account.
@@ -335,7 +263,6 @@ extends TestCase {
         return headerLines;
     }
 
-    @AfterMethod
     public void tearDown()
     throws Exception {
         cleanUp();
@@ -387,9 +314,6 @@ extends TestCase {
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();
-        TestNG testng = TestUtil.newTestNG();
-        testng.setExcludedGroups("Server");
-        testng.setTestClasses(new Class[] { TestNotification.class });
-        testng.run();
+        TestUtil.runTest(TestNotification.class);
     }
 }

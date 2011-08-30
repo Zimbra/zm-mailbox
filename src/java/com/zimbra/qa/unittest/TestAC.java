@@ -29,8 +29,8 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.GlobalGrant;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.GranteeBy;
@@ -40,10 +40,10 @@ import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.CheckRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
-import com.zimbra.cs.account.accesscontrol.RightManager;
-import com.zimbra.cs.account.accesscontrol.RightCommand.Grants;
-import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
+import com.zimbra.cs.account.accesscontrol.RightCommand.Grants;
+import com.zimbra.cs.account.accesscontrol.RightManager;
+import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 
 public class TestAC extends TestProv {

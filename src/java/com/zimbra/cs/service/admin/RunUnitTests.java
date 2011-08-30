@@ -20,13 +20,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.testng.ITestResult;
-import org.testng.TestListenerAdapter;
-
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.qa.unittest.TestResults;
 import com.zimbra.qa.unittest.ZimbraSuite;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -47,7 +45,7 @@ public class RunUnitTests extends AdminDocumentHandler {
             testNames.add(e.getText());
         }
         
-        TestListenerAdapter results;          
+        TestResults results;          
         if (testNames == null) 
             results = ZimbraSuite.runTestSuite();
         else 
@@ -56,25 +54,25 @@ public class RunUnitTests extends AdminDocumentHandler {
         Element resultsElement = response.addElement("results");
         
         int numPassed = 0;
-        for (ITestResult result : results.getPassedTests()) {
+        for (TestResults.Result result : results.getResults(true)) {
             Element completedElement = resultsElement.addElement("completed");
-            completedElement.addAttribute("name", result.getName());
-            double execSeconds = (double) (result.getEndMillis() - result.getStartMillis()) / 1000;
+            completedElement.addAttribute("name", result.methodName);
+            double execSeconds = (double) result.execMillis / 1000;
             completedElement.addAttribute("execSeconds", String.format("%.2f", execSeconds));
-            completedElement.addAttribute("class", result.getTestClass().getName());
+            completedElement.addAttribute("class", result.className);
             numPassed++;
         }
         
         int numFailed = 0;
-        for (ITestResult result : results.getFailedTests()) {
+        for (TestResults.Result result : results.getResults(false)) {
             Element failureElement = resultsElement.addElement("failure");
-            failureElement.addAttribute("name", result.getName());
-            double execSeconds = (double) (result.getEndMillis() - result.getStartMillis()) / 1000;
+            failureElement.addAttribute("name", result.methodName);
+            double execSeconds = (double) result.execMillis / 1000;
             failureElement.addAttribute("execSeconds", String.format("%.2f", execSeconds));
-            if (result.getThrowable() != null) {
-                failureElement.setText(result.getThrowable().toString());
+            if (result.errorMessage != null) {
+                failureElement.setText(result.errorMessage);
             }
-            failureElement.addAttribute("class", result.getTestClass().getName());
+            failureElement.addAttribute("class", result.className);
             numFailed++;
         }
         
@@ -88,4 +86,3 @@ public class RunUnitTests extends AdminDocumentHandler {
         notes.add(AdminRightCheckPoint.Notes.ALLOW_ALL_ADMINS);
     }
 }
-

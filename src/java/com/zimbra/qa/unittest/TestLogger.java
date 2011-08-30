@@ -14,40 +14,43 @@
  */
 package com.zimbra.qa.unittest;
 
-import org.testng.ITestContext;
-import org.testng.ITestListener;
-import org.testng.ITestResult;
-
 import com.zimbra.common.util.ZimbraLog;
 
-public class TestLogger implements ITestListener {
+import org.junit.runner.Description;
+import org.junit.runner.Result;
+import org.junit.runner.notification.Failure;
+import org.junit.runner.notification.RunListener;
 
-    public void onFinish(ITestContext context) {
-        ZimbraLog.test.info("Finished test suite.");
-    }
+public class TestLogger extends RunListener {
 
-    public void onStart(ITestContext context) {
+    @Override
+    public void testRunStarted(Description description) throws Exception {
         ZimbraLog.test.info("Starting test suite.");
     }
 
-    public void onTestFailedButWithinSuccessPercentage(ITestResult result) {
-        ZimbraLog.test.warn("Test %s.%s failed but within success percentage.",
-            result.getTestClass().getName(), result.getName(), result.getThrowable());
+    @Override
+    public void testRunFinished(Result result) throws Exception {
+        ZimbraLog.test.info("Finished test suite.");
     }
 
-    public void onTestFailure(ITestResult result) {
-        ZimbraLog.test.error("Test %s.%s failed.", result.getTestClass().getName(), result.getName(), result.getThrowable());
+    @Override
+    public void testStarted(Description desc) throws Exception {
+        ZimbraLog.test.info("Starting test %s.%s.", desc.getClassName(), desc.getMethodName());
     }
 
-    public void onTestSkipped(ITestResult result) {
-        ZimbraLog.test.info("Test %s.%s skipped.", result.getTestClass().getName(), result.getName());
+    @Override
+    public void testFinished(Description desc) throws Exception {
+        ZimbraLog.test.info("Test %s.%s completed.", desc.getClassName(), desc.getMethodName());
     }
 
-    public void onTestStart(ITestResult result) {
-        ZimbraLog.test.info("Starting test %s.%s.", result.getTestClass().getName(), result.getName());
+    @Override
+    public void testFailure(Failure failure) throws Exception {
+        Description desc = failure.getDescription();
+        ZimbraLog.test.error("Test %s.%s failed.", desc.getClassName(), desc.getMethodName(), failure.getException());
     }
 
-    public void onTestSuccess(ITestResult result) {
-        ZimbraLog.test.info("Test %s.%s succeeded.", result.getTestClass().getName(), result.getName());
+    @Override
+    public void testIgnored(Description desc) throws Exception {
+        ZimbraLog.test.info("Test %s.%s ignored.", desc.getClassName(), desc.getMethodName());
     }
 }

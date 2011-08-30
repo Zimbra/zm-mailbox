@@ -25,16 +25,13 @@ import javax.mail.util.ByteArrayDataSource;
 
 import junit.framework.TestCase;
 
-import org.testng.TestNG;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import org.junit.Assert;
 
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbResults;
@@ -43,12 +40,11 @@ import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.zclient.ZContact;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMailbox.ContactSortBy;
 import com.zimbra.cs.zclient.ZMailbox.ZAttachmentInfo;
+import com.zimbra.cs.zclient.ZMailbox.ZImportContactsResult;
 
 
 public class TestContacts
@@ -57,8 +53,7 @@ extends TestCase {
     private static final String NAME_PREFIX = TestContacts.class.getSimpleName();
     private static final String USER_NAME = "user1";
     String mOriginalMaxContacts;
-    
-    @BeforeMethod
+
     @Override public void setUp()
     throws Exception {
         cleanUp();
@@ -66,56 +61,8 @@ extends TestCase {
     }
     
     /**
-     * Confirms that volumeId is not set for contacts.
-     */
-    @Test(groups = {"Server"})
-    public void testVolumeId()
-    throws Exception {
-        Account account = Provisioning.getInstance().get(AccountBy.name, TestUtil.getAddress("user1"));
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-        String sql = String.format("SELECT COUNT(*) FROM %s WHERE type = %d AND blob_digest IS NULL AND volume_id IS NOT NULL",
-            DbMailItem.getMailItemTableName(mbox), MailItem.TYPE_CONTACT);
-        DbResults results = DbUtil.executeQuery(sql);
-        int count = results.getInt(1);
-        assertEquals("Found non-null volumeId values for contacts", 0, count);
-    }
-    
-    /**
-     * Tests {@link Attachment#getContent()} (bug 36974).
-     */
-    @Test(groups = {"Server"})
-    public void testGetAttachmentContent()
-    throws Exception {
-        // Create a contact with an attachment.
-        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
-        Map<String, String> attrs = new HashMap<String, String>();
-        attrs.put("fullName", NAME_PREFIX + " testAttachments");
-        
-        String attachment1Text = "attachment 1";
-        int timeout = (int) Constants.MILLIS_PER_MINUTE;
-        String folderId = Integer.toString(Mailbox.ID_FOLDER_CONTACTS);
-        
-        String attachment1Id = zmbox.uploadAttachment("attachment.txt", attachment1Text.getBytes(), "text/plain", timeout);
-        Map<String, ZAttachmentInfo> attachmentMap = new HashMap<String, ZAttachmentInfo>();
-        ZAttachmentInfo info = new ZAttachmentInfo().setAttachmentId(attachment1Id);
-        attachmentMap.put("attachment1", info);
-        zmbox.createContact(folderId, null, attrs, attachmentMap);
-
-        // Call getContent() on all attachments.
-        Account account = Provisioning.getInstance().get(AccountBy.name, TestUtil.getAddress("user1"));
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-        for (Contact contact : mbox.getContactList(null, Mailbox.ID_FOLDER_CONTACTS)) {
-            List<Attachment> attachments = contact.getAttachments();
-            for (Attachment attach : attachments) {
-                attach.getContent();
-            }
-        }
-    }
-    
-    /**
      * Confirms that {@link Provisioning#A_zimbraContactMaxNumEntries} is enforced (bug 29627).
      */
-    @Test
     public void testMaxContacts()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -139,7 +86,6 @@ extends TestCase {
     /**
      * Tests the server-side {@link Attachment} class.
      */
-    @Test
     public void testServerAttachment()
     throws Exception {
         // Specify the attachment size.
@@ -167,8 +113,7 @@ extends TestCase {
         assertEquals("attachment", attach.getName());
         assertEquals("attachment.txt", attach.getFilename());
     }
-    
-    @Test
+
     public void testContactAttachments()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
@@ -263,36 +208,29 @@ extends TestCase {
         data = getAttachmentData(contact, "attachment4");
         assertEquals(attachment4Text, new String(data));
     }
-    
-    /*
-    @Test(groups = {"hack"})
-    public void testLargeFile()
-    throws Exception {
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        
-        // Create a contact with an attachment.
-        Map<String, String> attrs = new HashMap<String, String>();
-        attrs.put("fullName", NAME_PREFIX + " testAttachments");
-        
-        File file = new File("/tmp/u2.zip");
-        FileInputStream in = new FileInputStream(file);
-        String attachId = mbox.uploadContentAsStream("u2.zip", in, "application/zip", file.length(), (int) Constants.MILLIS_PER_DAY);
-        
-        ZAttachmentInfo info = new ZAttachmentInfo().setAttachmentId(attachId);
-        Map<String, ZAttachmentInfo> attachments = new HashMap<String, ZAttachmentInfo>();
-        attachments.put("attachment", info);
-        String folderId = Integer.toString(Mailbox.ID_FOLDER_CONTACTS);
-        mbox.createContact(folderId, null, attrs, attachments);
-    }
-    */
-    
+
     private byte[] getAttachmentData(ZContact contact, String attachmentName)
     throws Exception {
         InputStream in = contact.getAttachmentData(attachmentName);
         return ByteUtil.getContent(in, 0);
     }
-    
-    @AfterMethod
+
+    /**
+     * test zclient contact import
+     */
+    public void testImportContacts()
+    throws Exception {
+        int timeout = (int) Constants.MILLIS_PER_MINUTE;
+        long contactNum = 1;
+        String folderId = Integer.toString(Mailbox.ID_FOLDER_CONTACTS);
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String csvText = "\"email\",\"fullName\"\n\"testImportContacts@example.org\",\"" + NAME_PREFIX + " testImportContacts\"";
+        String attachmentId = mbox.uploadAttachment("ImportContacts.csv", csvText.getBytes(), "text/plain", timeout);
+
+        ZImportContactsResult res = mbox.importContacts(folderId, ZMailbox.CONTACT_IMPORT_TYPE_CSV, attachmentId);
+        Assert.assertEquals("Number of contacts imported", contactNum, res.getCount());
+    }
+
     @Override public void tearDown()
     throws Exception {
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraContactMaxNumEntries, mOriginalMaxContacts);
@@ -307,9 +245,6 @@ extends TestCase {
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();
-        TestNG testng = TestUtil.newTestNG();
-        testng.setExcludedGroups("Server");
-        testng.setTestClasses(new Class[] { TestContacts.class });
-        testng.run();
+        TestUtil.runTest(TestContacts.class);
     }
 }
