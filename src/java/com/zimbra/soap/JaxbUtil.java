@@ -394,6 +394,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.AddDistributionListAliasResponse.class,
             com.zimbra.soap.admin.message.AddDistributionListMemberRequest.class,
             com.zimbra.soap.admin.message.AddDistributionListMemberResponse.class,
+            com.zimbra.soap.admin.message.AddGalSyncDataSourceRequest.class,
+            com.zimbra.soap.admin.message.AddGalSyncDataSourceResponse.class,
             com.zimbra.soap.admin.message.AdminCreateWaitSetRequest.class,
             com.zimbra.soap.admin.message.AdminCreateWaitSetResponse.class,
             com.zimbra.soap.admin.message.AdminDestroyWaitSetRequest.class,

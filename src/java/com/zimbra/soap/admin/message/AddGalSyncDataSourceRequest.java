@@ -27,8 +27,8 @@ import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.admin.type.GalMode;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_CREATE_GAL_SYNC_ACCOUNT_REQUEST)
-public class CreateGalSyncAccountRequest extends AdminAttrsImpl {
+@XmlRootElement(name=AdminConstants.E_ADD_GAL_SYNC_DATASOURCE_REQUEST)
+public class AddGalSyncDataSourceRequest extends AdminAttrsImpl {
 
     // AdminService.getAttrs called on server side
     @XmlAttribute(name=AdminConstants.E_NAME, required=true)
@@ -44,41 +44,31 @@ public class CreateGalSyncAccountRequest extends AdminAttrsImpl {
     @XmlElement(name=AdminConstants.E_ACCOUNT, required=true)
     private final AccountSelector account;
 
-    @XmlAttribute(name=AdminConstants.E_PASSWORD, required=false)
-    private final String password;
-
     @XmlAttribute(name=AdminConstants.E_FOLDER, required=false)
     private final String folder;
-    
-    @XmlAttribute(name=AdminConstants.A_SERVER, required=true)
-    private final String mailHost;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private CreateGalSyncAccountRequest() {
+    private AddGalSyncDataSourceRequest() {
         this((String) null, (String) null, (GalMode) null,
-                (AccountSelector) null, (String) null, (String) null, (String) null);
+                (AccountSelector) null, (String) null, (String) null);
     }
 
-    public CreateGalSyncAccountRequest(String name, String domain,
+    public AddGalSyncDataSourceRequest(String name, String domain,
             GalMode type, AccountSelector account, String password,
-            String folder, String mailHost) {
+            String folder) {
         this.name = name;
         this.domain = domain;
         this.type = type;
         this.account = account;
-        this.password = password;
         this.folder = folder;
-        this.mailHost = mailHost;
     }
 
     public String getName() { return name; }
     public String getDomain() { return domain; }
     public GalMode getType() { return type; }
     public AccountSelector getAccount() { return account; }
-    public String getPassword() { return password; }
     public String getFolder() { return folder; }
-    public String getMailHost() { return mailHost; }
 }
