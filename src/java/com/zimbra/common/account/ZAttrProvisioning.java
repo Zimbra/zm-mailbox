@@ -10072,6 +10072,9 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=282)
     public static final String A_zimbraZimletVersion = "zimbraZimletVersion";
+    
+    @ZAttr(id=1268)
+    public static final String A_zimbraReverseProxyConnectFailedUpstreamTimeout = "zimbraReverseProxyConnectFailedUpstreamTimeout";
 
     ///// END-AUTO-GEN-REPLACE
 }
