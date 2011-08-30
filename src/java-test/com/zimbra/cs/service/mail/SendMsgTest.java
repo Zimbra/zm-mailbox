@@ -26,10 +26,10 @@ import javax.mail.Address;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.testng.Assert;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.soap.Element;
@@ -38,11 +38,11 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailSender;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
-import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.AuthProvider;
@@ -112,6 +112,6 @@ public class SendMsgTest {
             draft = mbox.getMessageById(null, draftId);
         } catch (NoSuchItemException nsie) {
         }
-        Assert.assertNull(draft, "draft message not deleted");
+        Assert.assertNull("draft message not deleted", draft);
     }
 }

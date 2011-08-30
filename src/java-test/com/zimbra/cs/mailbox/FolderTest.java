@@ -15,6 +15,7 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.HashMap;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -22,10 +23,16 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.account.Key;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbResults;
+import com.zimbra.cs.db.DbUtil;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.qa.unittest.TestUtil;
 
 /**
  * Unit test for {@link Folder}.
@@ -192,5 +199,200 @@ public final class FolderTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Folder inbox = mbox.getFolderById(Mailbox.ID_FOLDER_INBOX);
         Assert.assertTrue(inbox.isFlagSet(Flag.BITMASK_SUBSCRIBED));
+    }
+
+    /**
+     * Confirms that deleting a parent folder also deletes the child.
+     */
+    @Test
+    public void deleteParent()
+    throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Folder parent = mbox.createFolder(null, "/" + "deleteParent - parent", (byte) 0, MailItem.Type.UNKNOWN);
+        int parentId = parent.getId();
+        Folder child = mbox.createFolder(
+            null, "deleteParent - child", parent.getId(), MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+        int childId = child.getId();
+        mbox.delete(null, parent.getId(), parent.getType());
+
+        // Look up parent by id
+        try {
+            mbox.getFolderById(null, parentId);
+            Assert.fail("Parent folder lookup by id should have not succeeded");
+        } catch (NoSuchItemException e) {
+        }
+
+        // Look up parent by query
+        String sql =
+            "SELECT id " +
+            "FROM " + DbMailItem.getMailItemTableName(mbox) +
+            " WHERE mailbox_id = " + mbox.getId() + " AND id = " + parentId;
+        DbResults results = DbUtil.executeQuery(sql);
+        Assert.assertEquals("Parent folder query returned data.  id=" + parentId, 0, results.size());
+
+        // Look up child by id
+        try {
+            mbox.getFolderById(null, childId);
+            Assert.fail("Child folder lookup by id should have not succeeded");
+        } catch (NoSuchItemException e) {
+        }
+
+        // Look up child by query
+        sql =
+            "SELECT id " +
+            "FROM " + DbMailItem.getMailItemTableName(mbox) +
+            " WHERE mailbox_id = " + mbox.getId() + " AND id = " + childId;
+        results = DbUtil.executeQuery(sql);
+        Assert.assertEquals("Child folder query returned data.  id=" + childId, 0, results.size());
+    }
+
+    /**
+     * Confirms that emptying a folder removes subfolders only when requested.
+     */
+    @Test
+    public void emptyFolderNonrecursive()
+    throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Folder parent = mbox.createFolder(null, "/" + "parent", (byte) 0, MailItem.Type.UNKNOWN);
+        int parentId = parent.getId();
+        Folder child = mbox.createFolder(
+            null, "child", parent.getId(), MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+        int childId = child.getId();
+        mbox.emptyFolder(null, parent.getId(), false);
+
+        // Look up parent by id
+        mbox.getFolderById(null, parentId);
+
+        // Look up parent by query
+        String sql =
+            "SELECT id " +
+            "FROM " + DbMailItem.getMailItemTableName(mbox) +
+            " WHERE mailbox_id = " + mbox.getId() + " AND id = " + parentId;
+        DbResults results = DbUtil.executeQuery(sql);
+        Assert.assertEquals("Parent folder query returned no data.  id=" + parentId, 1, results.size());
+
+        // Look up child by id
+        mbox.getFolderById(null, childId);
+
+        // Look up child by query
+        sql =
+            "SELECT id " +
+            "FROM " + DbMailItem.getMailItemTableName(mbox) +
+            " WHERE mailbox_id = " + mbox.getId() + " AND id = " + childId;
+        results = DbUtil.executeQuery(sql);
+        Assert.assertEquals("Child folder query returned no data.  id=" + childId, 1, results.size());
+    }
+
+    /**
+     * Confirms that emptying a folder removes subfolders only when requested.
+     */
+    @Test
+    public void testEmptyFolderRecursive()
+    throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Folder parent = mbox.createFolder(null, "/" + "parent", (byte) 0, MailItem.Type.UNKNOWN);
+        int parentId = parent.getId();
+        Folder child = mbox.createFolder(
+            null, "child", parent.getId(), MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+        int childId = child.getId();
+        mbox.emptyFolder(null, parent.getId(), true);
+
+        // Look up parent by id
+        mbox.getFolderById(null, parentId);
+
+        // Look up parent by query
+        String sql =
+            "SELECT id " +
+            "FROM " + DbMailItem.getMailItemTableName(mbox) +
+            " WHERE mailbox_id = " + mbox.getId() + " AND id = " + parentId;
+        DbResults results = DbUtil.executeQuery(sql);
+        Assert.assertEquals("Parent folder query returned no data.  id=" + parentId, 1, results.size());
+
+        // Look up child by id
+        try {
+            mbox.getFolderById(null, childId);
+            Assert.fail("Child folder lookup by id should have not succeeded");
+        } catch (NoSuchItemException e) {
+        }
+
+        // Look up child by query
+        sql =
+            "SELECT id " +
+            "FROM " + DbMailItem.getMailItemTableName(mbox) +
+            " WHERE mailbox_id = " + mbox.getId() + " AND id = " + childId;
+        results = DbUtil.executeQuery(sql);
+        Assert.assertEquals("Child folder query returned data.  id=" + childId, 0, results.size());
+    }
+
+    /**
+     * Creates a hierarchy twenty folders deep.
+     */
+    @Test
+    public void manySubfolders()
+    throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        final int NUM_LEVELS = 20;
+        int parentId = Mailbox.ID_FOLDER_INBOX;
+        Folder top = null;
+
+        for (int i = 1; i <= NUM_LEVELS; i++) {
+            Folder folder = mbox.createFolder(null, "manySubfolders " + i, parentId, MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+            if (i == 1) {
+                top = folder;
+            }
+            parentId = folder.getId();
+        }
+
+        mbox.delete(null, top.getId(), top.getType());
+    }
+
+    /**
+     * Deletes a folder that contains messages in a conversation.  Confirms
+     * that the conversation size was correctly decremented.
+     */
+    @Test
+    public void markDeletionTargets()
+    throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        String name = "MDT";
+
+        // Create three messages and move two of them into a new folder.
+        Message m1 = TestUtil.addMessage(mbox, name);
+        ZimbraLog.test.debug("Created message 1, id=" + m1.getId());
+        Message m2 = TestUtil.addMessage(mbox, "RE: " + name);
+        ZimbraLog.test.debug("Created message 2, id=" + m2.getId());
+        Message m3 = TestUtil.addMessage(mbox, "RE: " + name);
+        ZimbraLog.test.debug("Created message 3, id=" + m3.getId());
+
+        Folder f = mbox.createFolder(null, name, Mailbox.ID_FOLDER_INBOX, MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR, null);
+        mbox.move(null, m1.getId(), m1.getType(), f.getId());
+        mbox.move(null, m2.getId(), m2.getType(), f.getId());
+
+        // Verify conversation size
+        Conversation conv = mbox.getConversationById(null, m1.getConversationId());
+        int convId = conv.getId();
+        Assert.assertEquals("Conversation size before folder delete", 3, conv.getSize());
+
+        // Delete the folder and confirm that the conversation size was decremented
+        mbox.delete(null, f.getId(), f.getType());
+        conv = mbox.getConversationById(null, convId);
+        Assert.assertEquals("Conversation size after folder delete", 1, conv.getSize());
+    }
+
+    /**
+     * Confirms that deleting a subfolder correctly updates the subfolder hierarchy.
+     */
+    @Test
+    public void updateHierarchy()
+    throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Folder f1 = mbox.createFolder(null, "/f1", (byte) 0, MailItem.Type.UNKNOWN);
+        Folder f2 = mbox.createFolder(null, "/f1/f2", (byte) 0, MailItem.Type.UNKNOWN);
+        mbox.createFolder(null, "/f1/f2/f3", (byte) 0, MailItem.Type.UNKNOWN);
+        Assert.assertEquals("Hierarchy size before delete", 3, f1.getSubfolderHierarchy().size());
+        mbox.delete(null, f2.getId(), f2.getType());
+        List<Folder> hierarchy = f1.getSubfolderHierarchy();
+        Assert.assertEquals("Hierarchy size after delete", 1, hierarchy.size());
+        Assert.assertEquals("Folder id", f1.getId(), hierarchy.get(0).getId());
     }
 }

@@ -25,7 +25,6 @@ import java.util.UUID;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ProvisioningConstants;
-import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.auth.AuthContext;
@@ -34,6 +33,7 @@ import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.mime.MockMimeTypeInfo;
 import com.zimbra.cs.mime.handler.UnknownTypeHandler;
 import com.zimbra.cs.redolog.MockRedoLogProvider;
+import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.type.GalSearchType;
 
 /**
@@ -589,7 +589,9 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public List<DataSource> getAllDataSources(Account account) {
-        throw new UnsupportedOperationException();
+        // Don't throw UnsupportedOperationException because Mailbox.updateRssDataSource()
+        // calls this method.
+        return Collections.emptyList();
     }
 
     @Override

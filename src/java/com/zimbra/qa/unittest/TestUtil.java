@@ -33,13 +33,33 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.junit.runner.JUnitCore;
+
 import junit.framework.Assert;
 import junit.framework.TestCase;
 
-import org.testng.TestListenerAdapter;
-import org.testng.TestNG;
-
 import com.google.common.io.Closeables;
+import com.zimbra.client.*;
+import com.zimbra.client.ZGrant.GranteeType;
+import com.zimbra.client.ZInvite.ZAttendee;
+import com.zimbra.client.ZInvite.ZClass;
+import com.zimbra.client.ZInvite.ZComponent;
+import com.zimbra.client.ZInvite.ZOrganizer;
+import com.zimbra.client.ZInvite.ZParticipantStatus;
+import com.zimbra.client.ZInvite.ZRole;
+import com.zimbra.client.ZInvite.ZStatus;
+import com.zimbra.client.ZInvite.ZTransparency;
+import com.zimbra.client.ZMailbox.ContactSortBy;
+import com.zimbra.client.ZMailbox.OwnerBy;
+import com.zimbra.client.ZMailbox.SharedItemBy;
+import com.zimbra.client.ZMailbox.ZAppointmentResult;
+import com.zimbra.client.ZMailbox.ZImportStatus;
+import com.zimbra.client.ZMailbox.ZOutgoingMessage;
+import com.zimbra.client.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
+import com.zimbra.client.ZMailbox.ZOutgoingMessage.MessagePart;
+import com.zimbra.client.ZMessage.ZMimePart;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.lmtp.LmtpClient;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.shim.JavaMailMimeMessage;
@@ -47,11 +67,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.Element.Attribute;
+import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapTransport;
-import com.zimbra.common.soap.Element.Attribute;
-import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.StringUtil;
@@ -62,9 +82,6 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DataSourceBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.client.LmcSession;
 import com.zimbra.cs.client.soap.LmcAdminAuthRequest;
@@ -87,25 +104,6 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.client.*;
-import com.zimbra.client.ZGrant.GranteeType;
-import com.zimbra.client.ZInvite.ZAttendee;
-import com.zimbra.client.ZInvite.ZClass;
-import com.zimbra.client.ZInvite.ZComponent;
-import com.zimbra.client.ZInvite.ZOrganizer;
-import com.zimbra.client.ZInvite.ZParticipantStatus;
-import com.zimbra.client.ZInvite.ZRole;
-import com.zimbra.client.ZInvite.ZStatus;
-import com.zimbra.client.ZInvite.ZTransparency;
-import com.zimbra.client.ZMailbox.ContactSortBy;
-import com.zimbra.client.ZMailbox.OwnerBy;
-import com.zimbra.client.ZMailbox.SharedItemBy;
-import com.zimbra.client.ZMailbox.ZAppointmentResult;
-import com.zimbra.client.ZMailbox.ZImportStatus;
-import com.zimbra.client.ZMailbox.ZOutgoingMessage;
-import com.zimbra.client.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
-import com.zimbra.client.ZMailbox.ZOutgoingMessage.MessagePart;
-import com.zimbra.client.ZMessage.ZMimePart;
 
 /**
  * @author bburtin
@@ -564,21 +562,10 @@ extends Assert {
     }
 
     public static void runTest(Class<?> testClass) {
-        TestNG testng = TestUtil.newTestNG();
-        ZimbraLog.test.info("Starting unit test %s.\nSee %s/index.html for results.",
-            testClass.getName(), testng.getOutputDirectory());
-        TestListenerAdapter listener = new TestListenerAdapter();
-        testng.addListener(listener);
-        testng.addListener(new TestLogger());
-
-        Class<?>[] classArray = new Class<?>[1];
-        classArray[0] = testClass;
-
-        testng.setTestClasses(classArray);
-        if (TestCase.class.isAssignableFrom(testClass)) {
-            testng.setJUnit(true);
-        }
-        testng.run();
+        JUnitCore junit = new JUnitCore();
+        junit.addListener(new TestLogger());
+        ZimbraLog.test.info("Starting unit test %s.", testClass.getName());
+        junit.run(testClass);
     }
 
 
@@ -972,15 +959,6 @@ extends Assert {
             attrStrings.add(String.format("%s=%s", attr.getKey(), attr.getValue()));
         }
         return StringUtil.join(",", attrStrings);
-    }
-    /**
-     * Returns a new <tt>TestNG</tt> object that writes test results to
-     * <tt>/opt/zimbra/test-output</tt>.
-     */
-    public static TestNG newTestNG() {
-        TestNG testng = new TestNG();
-        testng.setOutputDirectory("/opt/zimbra/test-output");
-        return testng;
     }
 
     public static String getHeaderValue(ZMailbox mbox, ZMessage msg, String headerName)

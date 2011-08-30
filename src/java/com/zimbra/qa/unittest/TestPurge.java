@@ -154,7 +154,7 @@ public class TestPurge extends TestCase {
     }
     
     public void testSystemRetentionPolicy() throws Exception {
-        SoapProvisioning prov = (SoapProvisioning) Provisioning.getInstance();
+        SoapProvisioning prov = TestUtil.newSoapProvisioning();
         
         // Test getting empty system policy.
         GetSystemRetentionPolicyRequest getReq = new GetSystemRetentionPolicyRequest();

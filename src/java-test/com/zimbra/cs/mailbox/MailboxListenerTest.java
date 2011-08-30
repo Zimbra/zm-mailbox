@@ -18,10 +18,10 @@ import java.io.ByteArrayInputStream;
 import java.util.HashMap;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.testng.Assert;
 
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;

@@ -25,14 +25,19 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbUtil;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.db.DbResults;
+import com.zimbra.cs.db.DbUtil;
+import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mime.ParsedContact;
 
 /**
@@ -107,6 +112,49 @@ public final class ContactTest {
         contacts = mbox.createAutoContact(null, Sets.newHashSet(
                 new InternetAddress("Test 1", "test1@zimbra.com"), new InternetAddress("Test 2", "test2@zimbra.com")));
         Assert.assertEquals(0, contacts.size());
+    }
+
+    /**
+     * Confirms that volumeId is not set for contacts.
+     */
+    @Test
+    public void volumeId()
+    throws Exception {
+        // Create contact.
+        Map<String, String> attrs = Maps.newHashMap();
+        attrs.put(ContactConstants.A_fullName, "Volume Id");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        mbox.createContact(null, new ParsedContact(attrs), Mailbox.ID_FOLDER_CONTACTS, null);
+        
+        // Check volume id in database.
+        String sql = String.format("SELECT COUNT(*) FROM %s WHERE type = %d AND blob_digest IS NULL AND volume_id IS NOT NULL",
+                DbMailItem.getMailItemTableName(mbox), MailItem.Type.CONTACT.toByte());
+        DbResults results = DbUtil.executeQuery(sql);
+        Assert.assertEquals("Found non-null volumeId values for contacts", 0, results.getInt(1));
+    }
+
+    /**
+     * Tests {@link Attachment#getContent()} (bug 36974).
+     */
+    @Test
+    public void getAttachmentContent()
+    throws Exception {
+        // Create a contact with an attachment.
+        Map<String, String> attrs = new HashMap<String, String>();
+        attrs.put("fullName", "Get Attachment Content");
+        byte[] attachData = "attachment 1".getBytes();
+        Attachment textAttachment = new Attachment(attachData, "text/plain", "customField", "text.txt");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        
+        mbox.createContact(null, new ParsedContact(attrs, Lists.newArrayList(textAttachment)), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        // Call getContent() on all attachments.
+        for (Contact contact : mbox.getContactList(null, Mailbox.ID_FOLDER_CONTACTS)) {
+            List<Attachment> attachments = contact.getAttachments();
+            for (Attachment attach : attachments) {
+                attach.getContent();
+            }
+        }
     }
 
 }

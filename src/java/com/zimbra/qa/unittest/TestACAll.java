@@ -14,7 +14,10 @@
  */
 package com.zimbra.qa.unittest;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,12 +28,11 @@ import java.util.Set;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.testng.v6.Maps;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
@@ -49,14 +51,11 @@ import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.AttrRight;
 import com.zimbra.cs.account.accesscontrol.CheckRight;
 import com.zimbra.cs.account.accesscontrol.ComboRight;
-import com.zimbra.cs.account.accesscontrol.GranteeFlag;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.PresetRight;
 import com.zimbra.cs.account.accesscontrol.Right;
-import com.zimbra.cs.account.accesscontrol.RightCommand;
-import com.zimbra.cs.account.accesscontrol.TargetType;
-import com.zimbra.cs.account.accesscontrol.UserRight;
 import com.zimbra.cs.account.accesscontrol.Right.RightType;
+import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
 import com.zimbra.cs.account.accesscontrol.RightCommand.DomainedRightsByTargetType;
 import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
@@ -64,6 +63,8 @@ import com.zimbra.cs.account.accesscontrol.RightCommand.Grants;
 import com.zimbra.cs.account.accesscontrol.RightCommand.RightAggregation;
 import com.zimbra.cs.account.accesscontrol.RightCommand.RightsByTargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.account.accesscontrol.UserRight;
 import com.zimbra.cs.account.ldap.entry.LdapDomain;
 
 public class TestACAll extends TestAC {
