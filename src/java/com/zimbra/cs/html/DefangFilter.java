@@ -89,7 +89,7 @@ public class DefangFilter extends DefaultFilter {
     
     // regex for URLs href. TODO: beef this up
 	private static final Pattern VALID_URL = Pattern.compile("^(https?://[\\w-].*|mailto:.*|cid:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)", Pattern.CASE_INSENSITIVE);
-	private static final Pattern VALID_IMG = Pattern.compile("(.*?)\\.(jpg|jpeg|png|gif)$");
+	private static final Pattern VALID_IMG = Pattern.compile("^data:|\\.(jpg|jpeg|png|gif)$");
 
     //
     // Data
