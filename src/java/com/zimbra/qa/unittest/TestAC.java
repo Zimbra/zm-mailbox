@@ -16,9 +16,14 @@
  */
 package com.zimbra.qa.unittest;
 
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.BeforeClass;
+
+import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.AccessManager;

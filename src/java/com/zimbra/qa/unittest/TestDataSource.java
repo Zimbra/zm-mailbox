@@ -21,11 +21,13 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
-import org.testng.TestNG;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
-
+import com.zimbra.cs.zclient.ZCalDataSource;
+import com.zimbra.cs.zclient.ZDataSource;
+import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZGrant.GranteeType;
+import com.zimbra.cs.zclient.ZMailbox;
+import com.zimbra.cs.zclient.ZMessage;
+import com.zimbra.cs.zclient.ZRssDataSource;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -38,19 +40,8 @@ import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.DataSource.ConnectionType;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapUtil;
-import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.ScheduledTask;
-import com.zimbra.cs.zclient.ZCalDataSource;
-import com.zimbra.cs.zclient.ZDataSource;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.zclient.ZGrant.GranteeType;
-import com.zimbra.cs.zclient.ZImapDataSource;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZMessage;
-import com.zimbra.cs.zclient.ZRssDataSource;
 
 public class TestDataSource extends TestCase {
 
@@ -67,7 +58,6 @@ public class TestDataSource extends TestCase {
     private String mOriginalCosPop3PollingInterval;
     private String mOriginalCosImapPollingInterval;
     
-    @BeforeTest
     public void setUp()
     throws Exception {
         cleanUp();
@@ -93,7 +83,6 @@ public class TestDataSource extends TestCase {
         mOriginalCosImapPollingInterval = cos.getAttr(Provisioning.A_zimbraDataSourceImapPollingInterval, "");
     }
     
-    @Test
     public void testPollingInterval()
     throws Exception {
         // Create data source
@@ -132,7 +121,6 @@ public class TestDataSource extends TestCase {
      * Tests the <tt>lastError</tt> element and <tt>failingSince</tt> attribute
      * for <tt>GetInfoRequest</tt> and <tt>GetDataSourcesRequest</tt>.
      */
-    @Test
     public void testErrorStatus()
     throws Exception {
         Account account = TestUtil.createAccount(TEST_USER_NAME);
@@ -226,7 +214,6 @@ public class TestDataSource extends TestCase {
     /**
      * Tests {@link DataSource#isScheduled()}.
      */
-    @Test
     public void testIsScheduled()
     throws Exception {
         // Create data source
@@ -262,7 +249,6 @@ public class TestDataSource extends TestCase {
         assertTrue(ds.isScheduled());
     }
     
-    @Test
     public void testMigratePollingInterval()
     throws Exception {
         Account account = TestUtil.getAccount(USER_NAME);
@@ -311,7 +297,6 @@ public class TestDataSource extends TestCase {
      * Creates a folder that syncs to another folder via RSS, and verifies that an
      * RSS data source was implicitly created. 
      */
-    @Test
     public void testRss()
     throws Exception {
         // Create source folder, make it publically readable, and add a message to it.
@@ -425,59 +410,7 @@ public class TestDataSource extends TestCase {
         return null;
     }
 
-    @Test(groups = {"Server"})
-    public void testScheduling()
-    throws Exception {
-        // Create data source.
-        ZMailbox zmbox = TestUtil.getZMailbox(USER_NAME);
-        ZFolder folder = TestUtil.createFolder(zmbox, "/" + NAME_PREFIX + "-testScheduling");
-        Provisioning prov = Provisioning.getInstance();
-        Server server = prov.getLocalServer();
-        int port = server.getImapBindPort();
-        ZImapDataSource zds = new ZImapDataSource(NAME_PREFIX + " testScheduling", true, "localhost", port,
-            "user2", "test123", folder.getId(), ConnectionType.cleartext);
-        String dsId = zmbox.createDataSource(zds);
-        
-        // Test scheduling based on polling interval. 
-        Mailbox mbox = TestUtil.getMailbox(USER_NAME);
-        String attrName = Provisioning.A_zimbraDataSourcePollingInterval;
-        String imapAttrName = Provisioning.A_zimbraDataSourceImapPollingInterval;
-        TestUtil.setDataSourceAttr(USER_NAME, zds.getName(), attrName, "0");
-        checkSchedule(mbox, dsId, null);
-        
-        TestUtil.setDataSourceAttr(USER_NAME, zds.getName(), attrName, "10m");
-        checkSchedule(mbox, dsId, 600000);
-
-        TestUtil.setAccountAttr(USER_NAME, imapAttrName, "");
-        TestUtil.setDataSourceAttr(USER_NAME, zds.getName(), attrName, "");
-        checkSchedule(mbox, dsId, null);
-        
-        TestUtil.setAccountAttr(USER_NAME, imapAttrName, "5m");
-        checkSchedule(mbox, dsId, 300000);
-        
-        TestUtil.setDataSourceAttr(USER_NAME, zds.getName(), attrName, "0");
-        checkSchedule(mbox, dsId, null);
-        
-        // Bug 44502: test changing polling interval from 0 to unset when
-        // interval is set on the account.
-        TestUtil.setDataSourceAttr(USER_NAME, zds.getName(), attrName, "");
-        checkSchedule(mbox, dsId, 300000);
-        
-        TestUtil.setDataSourceAttr(USER_NAME, zds.getName(), Provisioning.A_zimbraDataSourceEnabled, LdapUtil.LDAP_FALSE);
-        checkSchedule(mbox, dsId, null);
-    }
     
-    private void checkSchedule(Mailbox mbox, String dataSourceId, Integer intervalMillis)
-    throws Exception {
-        ScheduledTask task = DataSourceManager.getTask(mbox, dataSourceId);
-        if (intervalMillis == null) {
-            assertNull(task);
-        } else {
-            assertEquals(intervalMillis.longValue(), task.getIntervalMillis());
-        }
-    }
-    
-    @AfterTest
     public void tearDown()
     throws Exception {
         // Reset original polling intervals.
@@ -504,9 +437,6 @@ public class TestDataSource extends TestCase {
     public static void main(String[] args)
     throws Exception {
         TestUtil.cliSetup();
-        TestNG testng = TestUtil.newTestNG();
-        testng.setExcludedGroups("Server");
-        testng.setTestClasses(new Class[] { TestDataSource.class });
-        testng.run();
+        TestUtil.runTest(TestDataSource.class);
     }
 }

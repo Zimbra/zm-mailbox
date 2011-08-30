@@ -591,7 +591,9 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public List<DataSource> getAllDataSources(Account account) {
-        throw new UnsupportedOperationException();
+        // Don't throw UnsupportedOperationException because Mailbox.updateRssDataSource()
+        // calls this method.
+        return Collections.emptyList();
     }
 
     @Override

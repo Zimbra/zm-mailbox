@@ -17,9 +17,9 @@ package com.zimbra.cs.extension;
 import java.io.File;
 import java.net.URL;
 
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.testng.Assert;
 
 import com.zimbra.common.localconfig.LC;
 

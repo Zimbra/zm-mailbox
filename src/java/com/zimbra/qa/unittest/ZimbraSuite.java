@@ -19,15 +19,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.junit.runner.JUnitCore;
+
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import org.testng.TestListenerAdapter;
-import org.testng.TestNG;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.qa.unittest.server.TestDataSourceServer;
+import com.zimbra.qa.unittest.server.TestNotificationServer;
+import com.zimbra.qa.unittest.server.TestPop3ImportServer;
 
 /**
  * Complete unit test suite for the Zimbra code base.
@@ -58,6 +60,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestFolderFilterRules.class);
         sClasses.add(TestTagFilterRules.class);
         sClasses.add(TestPop3Import.class);
+        sClasses.add(TestPop3ImportServer.class);
         sClasses.add(TestFilter.class);
         sClasses.add(TestPop3ImapAuth.class);
         sClasses.add(TestContacts.class);
@@ -72,10 +75,12 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestSmtpClient.class);
         sClasses.add(TestScheduledTaskManager.class);
         sClasses.add(TestDataSource.class);
+        sClasses.add(TestDataSourceServer.class);
         sClasses.add(TestPurge.class);
         sClasses.add(TestImapImport.class);
         sClasses.add(TestImapOneWayImport.class);
         sClasses.add(TestNotification.class);
+        sClasses.add(TestNotificationServer.class);
         sClasses.add(TestMaxMessageSize.class);
         sClasses.add(TestMetadata.class);
         sClasses.add(TestSoap.class);
@@ -109,7 +114,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.remove(clazz);
     }
 
-    public static TestListenerAdapter runUserTests(List<String> testNames) throws ServiceException {
+    public static TestResults runUserTests(List<String> testNames) throws ServiceException {
         List<Class<? extends TestCase>> tests = new ArrayList<Class<? extends TestCase>>();
 
         for (String testName : testNames) {
@@ -148,22 +153,19 @@ public class ZimbraSuite extends TestSuite
      * Runs the entire test suite and writes the output to the specified
      * <code>OutputStream</code>.
      */
-    public static TestListenerAdapter runTestSuite() {
+    public static TestResults runTestSuite() {
         return runTestsInternal(sClasses);
     }
 
-    private static TestListenerAdapter runTestsInternal(Collection<Class<? extends TestCase>> testClasses) {
-        TestNG testng = TestUtil.newTestNG();
-        TestListenerAdapter listener = new TestListenerAdapter();
-        testng.addListener(listener);
-        testng.addListener(new TestLogger());
+    private static TestResults runTestsInternal(Collection<Class<? extends TestCase>> testClasses) {
+        JUnitCore junit = new JUnitCore();
+        junit.addListener(new TestLogger());
+        TestResults results = new TestResults();
+        junit.addListener(results);
 
         Class<?>[] classArray = new Class<?>[testClasses.size()];
         testClasses.toArray(classArray);
-
-        testng.setTestClasses(classArray);
-        testng.setJUnit(true);
-        testng.run();
-        return listener;
+        junit.run(classArray);
+        return results;
     }
 }
