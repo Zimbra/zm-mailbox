@@ -293,9 +293,6 @@ class ProxyConfVar
                 ArrayList<String> servers = new ArrayList<String>();
                 /* $(zmprov garpb) */
                 List<Server> us = mProv.getAllServers();
-                
-                int timeout = Integer.parseInt(
-                        serverSource.getAttr(Provisioning.A_zimbraReverseProxyConnectFailedUpstreamTimeout, "60"));
 
                 for (Server u : us)
                 {
@@ -309,7 +306,8 @@ class ProxyConfVar
                             mode.equalsIgnoreCase(Provisioning.MailMode.mixed.toString()) ||
                             mode.equalsIgnoreCase(Provisioning.MailMode.both.toString())
                         ) {
-                            int serverPort = u.getIntAttr(Provisioning.A_zimbraMailPort,0);
+                            int serverPort = u.getIntAttr(Provisioning.A_zimbraMailPort, 0);
+                            int timeout = u.getIntAttr(Provisioning.A_zimbraMailProxyReconnectTimeout, 60);
                             Formatter f = new Formatter();
                             f.format("%s:%d fail_timeout=%ds", serverName, serverPort, timeout);
                             servers.add(f.toString());
