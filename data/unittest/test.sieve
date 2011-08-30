@@ -53,7 +53,7 @@ if allof (attachment)
     stop;
 }
 # address book
-if anyof (addressbook :in "from" "contacts")
+if anyof (addressbook :in "from")
 {
     flag "flagged";
     stop;
