@@ -38,6 +38,9 @@ public class FilterActionNotify extends FilterAction {
     @XmlElement(name=MailConstants.E_CONTENT, required=false)
     private String content;
 
+    @XmlAttribute(name=MailConstants.A_ORIG_HEADERS, required=false)
+    private String origHeaders;
+
     public FilterActionNotify() {
     }
 
@@ -47,10 +50,12 @@ public class FilterActionNotify extends FilterAction {
         this.maxBodySize = maxBodySize;
     }
     public void setContent(String content) { this.content = content; }
+    public void setOrigHeaders(String origHeaders) { this.origHeaders = origHeaders; }
     public String getAddress() { return address; }
     public String getSubject() { return subject; }
     public Integer getMaxBodySize() { return maxBodySize; }
     public String getContent() { return content; }
+    public String getOrigHeaders() { return origHeaders; }
 
     @Override
     public String toString() {
@@ -59,6 +64,7 @@ public class FilterActionNotify extends FilterAction {
             .add("subject", subject)
             .add("maxBodySize", maxBodySize)
             .add("content", content)
+            .add("origHeaders", origHeaders)
             .toString();
     }
 }
