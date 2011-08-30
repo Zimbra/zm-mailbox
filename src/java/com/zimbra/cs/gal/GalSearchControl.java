@@ -114,13 +114,9 @@ public class GalSearchControl {
         if (useGalSyncAcct) {
             try {
                 Account galAcct = mParams.getGalSyncAccount();
-                if (galAcct != null) {
-                    accountSearch(galAcct);
-                } else {
-                    for (Account galAccount : getGalSyncAccounts()) {
-                        accountSearch(galAccount);
-                    }
-                }
+                if (galAcct == null)
+                    galAcct = getGalSyncAccount();
+                accountSearch(galAcct);
                 return;
             } catch (GalAccountNotConfiguredException e) {
             }
@@ -145,13 +141,9 @@ public class GalSearchControl {
         mParams.setOp(GalOp.search);
         try {
             Account galAcct = mParams.getGalSyncAccount();
-            if (galAcct != null) {
-                accountSearch(galAcct);
-            } else {
-                for (Account galAccount : getGalSyncAccounts()) {
-                    accountSearch(galAccount);
-                }
-            }
+            if (galAcct == null)
+                galAcct = getGalSyncAccount();
+            accountSearch(galAcct);
         } catch (GalAccountNotConfiguredException e) {
             query = Strings.nullToEmpty(query);
             // fallback to ldap search
@@ -209,13 +201,9 @@ public class GalSearchControl {
         mParams.setNeedSMIMECerts(true);
         Account galAcct = mParams.getGalSyncAccount();
         try {
-            if (galAcct != null) {
-                accountSync(galAcct);
-            } else {
-                for (Account galAccount : getGalSyncAccounts()) {
-                    accountSync(galAccount);
-                }
-            }
+            if (galAcct == null)
+                galAcct = getGalSyncAccountForSync();                
+            accountSync(galAcct);
             // account based sync was finished
             // if the presented sync token is old LDAP timestamp format, we need to sync
             // against LDAP server to keep the client up to date.
@@ -229,31 +217,65 @@ public class GalSearchControl {
         ldapSearch();
     }
 
-    private Account[] getGalSyncAccounts() throws GalAccountNotConfiguredException, ServiceException {
+    private Account getGalSyncAccountForSync() throws GalAccountNotConfiguredException, ServiceException {
+        // If the client has already synced with a galsync account use the same
+        // account for subsequent syncs.
+        GalSyncToken gst = mParams.getGalSyncToken();
+        if (gst == null || gst.isEmpty() || !gst.doMailboxSync())
+            return getGalSyncAccount();        
+        Domain d = mParams.getDomain();
+        String[] accts = d.getGalAccountId();
+        if (accts.length == 0)
+            throw new GalAccountNotConfiguredException();
+        Account ret = null;
+        for (String acctId : accts) {
+            if (gst.getChangeId(acctId) > 0) {
+                Account a = Provisioning.getInstance().getAccountById(acctId);
+                if (a != null && isValidGalSyncAccount(a))
+                    ret = a;
+                break;
+            }    
+        }
+        if (ret == null)
+            throw new GalAccountNotConfiguredException();
+        return ret;
+    }
+    
+    private Account getGalSyncAccount() throws GalAccountNotConfiguredException, ServiceException {
         Domain d = mParams.getDomain();
         String[] accts = d.getGalAccountId();
         if (accts.length == 0)
             throw new GalAccountNotConfiguredException();
         Provisioning prov = Provisioning.getInstance();
-        ArrayList<Account> accounts = new ArrayList<Account>();
+        Account ret = null;
         for (String acctId : accts) {
             Account a = prov.getAccountById(acctId);
             if (a == null)
-                throw new GalAccountNotConfiguredException();
-            for (DataSource ds : a.getAllDataSources()) {
-                if (ds.getType() != DataSourceType.gal)
-                    continue;
-                // check if there was any successful import from gal
-                if (ds.getAttr(Provisioning.A_zimbraGalLastSuccessfulSyncTimestamp, null) == null)
-                    throw new GalAccountNotConfiguredException();
-                if (ds.getAttr(Provisioning.A_zimbraGalStatus).compareTo("enabled") != 0)
-                    throw new GalAccountNotConfiguredException();
-                if (ds.getAttr(Provisioning.A_zimbraDataSourceEnabled).compareTo("TRUE") != 0)
-                    throw new GalAccountNotConfiguredException();
+                continue;
+            if (isValidGalSyncAccount(a)) {
+                ret = a;
+                if (Provisioning.onLocalServer(a))
+                    break;
             }
-            accounts.add(a);
+        }        
+        if (ret == null)
+            throw new GalAccountNotConfiguredException();
+        return ret;
+    }
+    
+    private boolean isValidGalSyncAccount(Account a) throws ServiceException {
+        for (DataSource ds : a.getAllDataSources()) {
+            if (ds.getType() != DataSourceType.gal)
+                continue;
+            // check if there was any successful import from gal
+            if (ds.getAttr(Provisioning.A_zimbraGalLastSuccessfulSyncTimestamp, null) == null)
+                return false;
+            if (ds.getAttr(Provisioning.A_zimbraGalStatus).compareTo("enabled") != 0)
+                return false;
+            if (ds.getAttr(Provisioning.A_zimbraDataSourceEnabled).compareTo("TRUE") != 0)
+                return false;
         }
-        return accounts.toArray(new Account[0]);
+        return true;
     }
 
     private void generateSearchQuery(Account galAcct) throws ServiceException {

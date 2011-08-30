@@ -2386,6 +2386,25 @@ Access: domain admin sufficient
 
 ----------------------------
 
+<AddGalSyncDataSourceRequest name="{identifier}" domain="{domain-name}" type="zimbra|ldap" [folder="{contact-folder-name}"] >
+  <account by="id|name">...</account>
+  <a n="attr-name">...</a>+
+</AddGalSyncDataSourceRequest>
+
+<AddGalSyncDataSourceResponse>
+  <name>...</name>
+  <account name="{name}" id="{id}"/>
+</AddGalSyncDataSourceResponse>
+
+Notes: 
+  - Add additional data sources to the existing galsync account.
+  - non-existing account causes an exception.
+  - name attribute is for the name of the data source.
+  
+Access: domain admin sufficient
+
+----------------------------
+
 <SyncGalAccountRequest>
   <account id="{account-id}">
     <datasource by="id|name" [fullSync="true|false"] [reset="true"] />+

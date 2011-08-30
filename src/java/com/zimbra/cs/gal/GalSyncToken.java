@@ -96,6 +96,10 @@ public class GalSyncToken {
 		return mLdapTimestamp.length() == 0 || mChangeIdMap.size() > 0;
 	}
 	
+	public boolean isEmpty() {
+	    return mLdapTimestamp.length() == 0 && mChangeIdMap.size() == 0;
+	}
+	
 	public void merge(GalSyncToken that) {
 		ZimbraLog.gal.debug("merging token "+this+" with "+that);
 		mLdapTimestamp = LdapUtilCommon.getEarlierTimestamp(this.mLdapTimestamp, that.mLdapTimestamp);

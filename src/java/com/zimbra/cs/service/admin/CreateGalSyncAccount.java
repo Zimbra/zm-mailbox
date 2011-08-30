@@ -14,8 +14,6 @@
  */
 package com.zimbra.cs.service.admin;
 
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.ZAttrProvisioning.GalMode;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -26,7 +24,11 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.soap.admin.message.CreateGalSyncAccountRequest;
 import com.zimbra.soap.admin.type.DataSourceType;
+import com.zimbra.soap.admin.type.GalMode;
+import com.zimbra.soap.type.AccountBy;
+import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
@@ -38,6 +40,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import java.util.Arrays;
@@ -60,19 +63,22 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
+        
+        CreateGalSyncAccountRequest cgaRequest = JaxbUtil.elementToJaxb(request);
 
-        String name = request.getAttribute(AdminConstants.E_NAME);
-        String domainStr = request.getAttribute(AdminConstants.E_DOMAIN);
-        String typeStr = request.getAttribute(AdminConstants.A_TYPE);
+        String name = cgaRequest.getName();
+        String domainStr = cgaRequest.getDomain();
+        GalMode type = cgaRequest.getType();
 
-        Element acctElem = request.getElement(AdminConstants.E_ACCOUNT);
-        String acctKey = acctElem.getAttribute(AdminConstants.A_BY);
-        String acctValue = acctElem.getText();
+        AccountSelector acctSelector = cgaRequest.getAccount();
+        AccountBy acctBy = acctSelector.getBy();
+        String acctValue = acctSelector.getKey();
 
-        String password = request.getAttribute(AdminConstants.E_PASSWORD, null);
-        String folder = request.getAttribute(AdminConstants.E_FOLDER, null);
+        String password = cgaRequest.getPassword();
+        String folder = cgaRequest.getFolder();
+        
+        String mailHost = cgaRequest.getMailHost();
 
-        GalMode type = GalMode.fromString(typeStr);
         Domain domain = prov.getDomainByName(domainStr);
 
         if (domain == null)
@@ -80,28 +86,20 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
 
         Account account = null;
         try {
-            account = prov.get(AccountBy.fromString(acctKey), acctValue, zsc.getAuthToken());
+            account = prov.get(acctBy.toKeyDomainBy(), acctValue, zsc.getAuthToken());
         } catch (ServiceException se) {
             ZimbraLog.gal.warn("error checking GalSyncAccount", se);
         }
 
         // create the system account if not already exists.
         if (account == null) {
-            if (AccountBy.fromString(acctKey) != AccountBy.name)
+            if (acctBy != AccountBy.name)
                 throw AccountServiceException.NO_SUCH_ACCOUNT(acctValue);
-            // there should be one zimbra gal sync account per domain
-            if (type == GalMode.zimbra) {
-                for (String acctId : domain.getGalAccountId()) {
-                    Account acct = prov.getAccountById(acctId);
-                    if (acct != null) {
-                        for (DataSource ds : prov.getAllDataSources(acct)) {
-                            if (!ds.getType().equals(DataSourceType.gal))
-                                continue;
-                            if (ds.getAttr(Provisioning.A_zimbraGalType).compareTo("zimbra") == 0)
-                                throw AccountServiceException.ACCOUNT_EXISTS(acct.getName());
-                        }
-                    }
-                }
+            // there should be one gal sync account per domain per mailhost
+            for (String acctId : domain.getGalAccountId()) {
+                Account acct = prov.getAccountById(acctId);
+                if ((acct != null) && (acct.getMailHost().equals(mailHost)))
+                    throw AccountServiceException.ACCOUNT_EXISTS(acct.getName());
             }
             // XXX revisit
             checkDomainRightByEmail(zsc, acctValue, Admin.R_createAccount);
@@ -110,6 +108,7 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
             StringUtil.addToMultiMap(accountAttrs, Provisioning.A_zimbraIsSystemAccount, LdapConstants.LDAP_TRUE);
             StringUtil.addToMultiMap(accountAttrs, Provisioning.A_zimbraHideInGal, LdapConstants.LDAP_TRUE);
             StringUtil.addToMultiMap(accountAttrs, Provisioning.A_zimbraContactMaxNumEntries, "0");
+            StringUtil.addToMultiMap(accountAttrs, Provisioning.A_zimbraMailHost, mailHost);
             checkSetAttrsOnCreate(zsc, TargetType.account, acctValue, accountAttrs);
             account = prov.createAccount(acctValue, password, accountAttrs);
         }
@@ -119,7 +118,15 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
             Server server = prov.getServerByName(host);
             return proxyRequest(request, context, server);
         }
+        addDataSource(request, zsc, account, domain, folder, name, type);
+        
+        Element response = zsc.createElement(AdminConstants.CREATE_GAL_SYNC_ACCOUNT_RESPONSE);
+        ToXML.encodeAccount(response, account, false, emptySet, null);
+        return response;
+    }    
 
+    static void addDataSource(Element request, ZimbraSoapContext zsc, Account account, 
+            Domain domain, String folder, String name, GalMode type)  throws ServiceException {
         String acctName = account.getName();
         String acctId = account.getId();
         HashSet<String> galAcctIds = new HashSet<String>();
@@ -161,7 +168,7 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
                 attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapConstants.LDAP_TRUE);
             if (!attrs.containsKey(Provisioning.A_zimbraGalStatus))
                 attrs.put(Provisioning.A_zimbraGalStatus, "enabled");
-            prov.createDataSource(account, DataSourceType.gal, name, attrs);
+            Provisioning.getInstance().createDataSource(account, DataSourceType.gal, name, attrs);
         } catch (ServiceException e) {
             ZimbraLog.gal.error("error creating datasource for GalSyncAccount", e);
             throw e;
@@ -169,10 +176,6 @@ public class CreateGalSyncAccount extends AdminDocumentHandler {
 
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                 new String[] {"cmd", "CreateGalSyncAccount", "name", acctName} ));
-
-        Element response = zsc.createElement(AdminConstants.CREATE_GAL_SYNC_ACCOUNT_RESPONSE);
-        ToXML.encodeAccount(response, account, false, emptySet, null);
-        return response;
     }
 
     private static final Set<String> emptySet = Collections.emptySet();

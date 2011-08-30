@@ -41,14 +41,14 @@ import com.zimbra.cs.httpclient.URLUtil;
 
 public class GalSyncAccountUtil {
 	private static final int CREATE_ACCOUNT = 10;
-	private static final int CREATE_DATASOURCE = 11;  // CREATE_DATASOURCE is just an alias of CREATE_ACCOUNT, see https://bugzilla.zimbra.com/show_bug.cgi?id=41322#c2
+	private static final int ADD_DATASOURCE = 11;
 	private static final int DELETE_ACCOUNT = 12;
 	private static final int TRICKLE_SYNC = 13;
 	private static final int FULL_SYNC = 14;
 	private static final int FORCE_SYNC = 15;
 
 	private static final String CREATE_ACCOUNT_COMMAND = "createaccount";
-	private static final String CREATE_DATASOURCE_COMMAND = "createdatasource";
+	private static final String ADD_DATASOURCE_COMMAND = "adddatasource";
 	private static final String DELETE_ACCOUNT_COMMAND = "deleteaccount";
 	private static final String TRICKLE_SYNC_COMMAND = "tricklesync";
 	private static final String FULL_SYNC_COMMAND = "fullsync";
@@ -58,8 +58,8 @@ public class GalSyncAccountUtil {
 	
 	private static void usage() {
 		System.out.println("zmgsautil: {command}");
-		System.out.println("\tcreateAccount -a {account-name} -n {datasource-name} --domain {domain-name} -t zimbra|ldap [-f {folder-name}] [-p {polling-interval}]");
-		System.out.println("\tcreateDataSource -a {account-name} -n {datasource-name} --domain {domain-name} -t zimbra|ldap [-f {folder-name}] [-p {polling-interval}]");
+		System.out.println("\tcreateAccount -a {account-name} -n {datasource-name} --domain {domain-name} -t zimbra|ldap -s {server} [-f {folder-name}] [-p {polling-interval}]");
+		System.out.println("\taddDataSource -a {account-name} -n {datasource-name} --domain {domain-name} -t zimbra|ldap [-f {folder-name}] [-p {polling-interval}]");
 		System.out.println("\tdeleteAccount [-a {account-name} | -i {account-id}]");
 		System.out.println("\ttrickleSync [-a {account-name} | -i {account-id}] [-d {datasource-id}] [-n {datasource-name}]");
 		System.out.println("\tfullSync [-a {account-name} | -i {account-id}] [-d {datasource-id}] [-n {datasource-name}]");
@@ -82,7 +82,7 @@ public class GalSyncAccountUtil {
 	private static void setup() {
 		mCommands = new HashMap<String,Integer>();
 		addCommand(CREATE_ACCOUNT_COMMAND, CREATE_ACCOUNT);
-		addCommand(CREATE_DATASOURCE_COMMAND, CREATE_DATASOURCE);
+		addCommand(ADD_DATASOURCE_COMMAND, ADD_DATASOURCE);
 		addCommand(DELETE_ACCOUNT_COMMAND, DELETE_ACCOUNT);
 		addCommand(TRICKLE_SYNC_COMMAND, TRICKLE_SYNC);
 		addCommand(FULL_SYNC_COMMAND, FULL_SYNC);
@@ -119,6 +119,7 @@ public class GalSyncAccountUtil {
 	private String mDataSourceName;
 	private boolean mFullSync;
 	private boolean mForceSync;
+	private String mServer;
 	
 	private void syncGalAccount() throws ServiceException, IOException {
 		checkArgs();
@@ -146,7 +147,7 @@ public class GalSyncAccountUtil {
                 mTransport.shutdown();
         }                        
 	}
-	private Element createGalSyncAccount(String accountName, String dsName, String domain, String type, String folder, String pollingInterval) throws ServiceException, IOException {
+	private Element createGalSyncAccount(String accountName, String dsName, String domain, String type, String folder, String pollingInterval, String mailHost) throws ServiceException, IOException {
         mTransport = null;
         try {
             mTransport = new SoapHttpTransport(mAdminURL);
@@ -158,6 +159,7 @@ public class GalSyncAccountUtil {
     		req.addAttribute(AdminConstants.A_TYPE, type);
     		if (folder != null)
         		req.addAttribute(AdminConstants.E_FOLDER, folder);
+    		req.addAttribute(AdminConstants.A_SERVER, mailHost);
     		Element acct = req.addElement(AdminConstants.E_ACCOUNT);
     		acct.addAttribute(AdminConstants.A_BY, AccountBy.name.name());
     		acct.setText(accountName);
@@ -169,6 +171,30 @@ public class GalSyncAccountUtil {
             if (mTransport != null)
                 mTransport.shutdown();
         }                        
+	}
+	private Element addGalSyncDataSource(String accountName, String dsName, String domain, String type, String folder, String pollingInterval) throws ServiceException, IOException {
+	    mTransport = null;
+	    try {
+	        mTransport = new SoapHttpTransport(mAdminURL);
+	        auth();
+	        mTransport.setAuthToken(mAuth);
+	        XMLElement req = new XMLElement(AdminConstants.ADD_GAL_SYNC_DATASOURCE_REQUEST);
+	        req.addAttribute(AdminConstants.A_NAME, dsName);
+	        req.addAttribute(AdminConstants.A_DOMAIN, domain);
+	        req.addAttribute(AdminConstants.A_TYPE, type);
+	        if (folder != null)
+	            req.addAttribute(AdminConstants.E_FOLDER, folder);
+	        Element acct = req.addElement(AdminConstants.E_ACCOUNT);
+	        acct.addAttribute(AdminConstants.A_BY, AccountBy.name.name());
+	        acct.setText(accountName);
+	        if (pollingInterval != null)
+	            req.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, Provisioning.A_zimbraDataSourcePollingInterval).setText(pollingInterval);
+	                
+	        return mTransport.invokeWithoutSession(req);
+	    } finally {
+	        if (mTransport != null)
+	            mTransport.shutdown();
+	    }                        
 	}
 	private Element deleteGalSyncAccount(String name, String id) throws ServiceException, IOException {
         mTransport = null;
@@ -235,6 +261,7 @@ public class GalSyncAccountUtil {
         options.addOption("f", "folder", true, "folder id");
         options.addOption("p", "polling", true, "polling interval");
         options.addOption("t", "type", true, "gal type");
+        options.addOption("s", "server", true, "mailhost");
         options.addOption("h", "help", true, "help");
         CommandLine cl = null;
         boolean err = false;
@@ -272,19 +299,31 @@ public class GalSyncAccountUtil {
 				cli.setForceSync();
 				cli.syncGalAccount();
 				break;
-			case CREATE_ACCOUNT:
-			case CREATE_DATASOURCE:    
+			case CREATE_ACCOUNT:    
 				String acctName = cl.getOptionValue('a');
 				String dsName = cl.getOptionValue('n');
 				String domain = cl.getOptionValue('x');
 				String type = cl.getOptionValue('t');
 				String folderName = cl.getOptionValue('f');
 				String pollingInterval = cl.getOptionValue('p');
-				if (acctName == null || dsName == null || type == null || type.compareTo("zimbra") != 0 && type.compareTo("ldap") != 0)
+				String mailHost = cl.getOptionValue('s');
+				if (acctName == null || mailHost == null || dsName == null || type == null || type.compareTo("zimbra") != 0 && type.compareTo("ldap") != 0)
 					usage();
-				for (Element account : cli.createGalSyncAccount(acctName, dsName, domain, type, folderName, pollingInterval).listElements(AdminConstants.A_ACCOUNT))
+				for (Element account : cli.createGalSyncAccount(acctName, dsName, domain, type, folderName, pollingInterval, mailHost).listElements(AdminConstants.A_ACCOUNT))
 					System.out.println(account.getAttribute(AdminConstants.A_NAME)+"\t"+account.getAttribute(AdminConstants.A_ID));
 				break;
+	        case ADD_DATASOURCE:
+	            acctName = cl.getOptionValue('a');
+	            dsName = cl.getOptionValue('n');
+	            domain = cl.getOptionValue('x');
+	            type = cl.getOptionValue('t');
+	            folderName = cl.getOptionValue('f');
+	            pollingInterval = cl.getOptionValue('p');
+	            if (acctName == null || dsName == null || type == null || type.compareTo("zimbra") != 0 && type.compareTo("ldap") != 0)
+	                usage();
+	            for (Element account : cli.addGalSyncDataSource(acctName, dsName, domain, type, folderName, pollingInterval).listElements(AdminConstants.A_ACCOUNT))
+	                System.out.println(account.getAttribute(AdminConstants.A_NAME)+"\t"+account.getAttribute(AdminConstants.A_ID));
+	            break;
 			case DELETE_ACCOUNT:
 				String name = cl.getOptionValue('a');
 				String id = cl.getOptionValue('i');
