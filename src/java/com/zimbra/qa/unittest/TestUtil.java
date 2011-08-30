@@ -221,7 +221,7 @@ extends Assert {
         return mbox.addMessage(null, pm, dopt, null);
     }
 
-    private static String getTestMessage(String subject)
+    public static String getTestMessage(String subject)
     throws ServiceException, MessagingException, IOException {
         return new MessageBuilder().withSubject(subject).create();
     }
