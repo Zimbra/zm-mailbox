@@ -34,7 +34,7 @@ public class JavaMailInternetHeadersTest {
         headers.addHeader("From", FROM_1);
         headers.addHeader("From", FROM_2);
 
-        Assert.assertEquals(headers.getHeader("FROM", null), FROM_1, "select first From");
-        Assert.assertEquals(headers.getHeader("content-TYPE", null), CTYPE_2, "select last Content-Type");
+        Assert.assertEquals("select first From", FROM_1, headers.getHeader("FROM", null));
+        Assert.assertEquals("select last Content-Type", CTYPE_2, headers.getHeader("content-TYPE", null));
     }
 }
