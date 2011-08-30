@@ -17,6 +17,7 @@ package com.zimbra.cs.filter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -248,6 +249,7 @@ public class ZimbraMailAdapter implements MailAdapter
                 } else if (action instanceof ActionReply) {
                     // reply to mail
                     ActionReply reply = (ActionReply) action;
+                    ZimbraLog.filter.debug("Replying to message");
                     try {
                         handler.reply(reply.getBodyTemplate());
                     } catch (Exception e) {
@@ -256,6 +258,7 @@ public class ZimbraMailAdapter implements MailAdapter
                     }
                 } else if (action instanceof ActionNotify) {
                     ActionNotify notify = (ActionNotify) action;
+                    ZimbraLog.filter.debug("Sending notification message to %s.", notify.getEmailAddr());
                     try {
                         handler.notify(notify.getEmailAddr(),
                                        notify.getSubjectTemplate(),
@@ -353,6 +356,11 @@ public class ZimbraMailAdapter implements MailAdapter
     private Message explicitKeep()
     throws ServiceException {
         String folderPath = handler.getDefaultFolderPath();
+        if (ZimbraLog.filter.isDebugEnabled()) {
+            ZimbraLog.filter.debug(
+                    appendFlagTagActionsInfo(
+                            "Explicit keep - fileinto " + folderPath, getFlagActions(), getTagActions()));
+        }
         Message msg = null;
         if (filedIntoPaths.contains(folderPath)) {
             ZimbraLog.filter.info("Ignoring second attempt to file into %s.", folderPath);
@@ -373,6 +381,10 @@ public class ZimbraMailAdapter implements MailAdapter
      */
     private void fileInto(String folderPath)
     throws ServiceException {
+        if (ZimbraLog.filter.isDebugEnabled()) {
+            ZimbraLog.filter.debug(
+                    appendFlagTagActionsInfo("fileinto " + folderPath, getFlagActions(), getTagActions()));
+        }
         if (filedIntoPaths.contains(folderPath)) {
             ZimbraLog.filter.info("Ignoring second attempt to file into %s.", folderPath);
         } else {
@@ -382,6 +394,18 @@ public class ZimbraMailAdapter implements MailAdapter
                 addedMessageIds.add(id);
             }
         }
+    }
+
+    private static String appendFlagTagActionsInfo(
+            String deliveryActionInfo, Collection<ActionFlag> flagActions,  Collection<ActionTag> tagActions) {
+        StringBuilder builder = new StringBuilder(deliveryActionInfo);
+        for (ActionFlag flagAction : flagActions) {
+            builder.append(",Flag ").append(flagAction.getName());
+        }
+        for (ActionTag tagAction : tagActions) {
+            builder.append(",Tag ").append(tagAction.getTagName());
+        }
+        return builder.toString();
     }
 
     private String[] getTags() {
