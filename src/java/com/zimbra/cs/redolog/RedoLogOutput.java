@@ -56,9 +56,9 @@ public class RedoLogOutput {
 
     public void writeUTFArray(String[] v) throws IOException {
         if (v == null) {
-            mOUT.write(-1);
+            writeInt(-1);
         } else {
-            mOUT.write(v.length);
+            writeInt(v.length);
             for (String s : v) {
                 writeUTF(s);
             }
