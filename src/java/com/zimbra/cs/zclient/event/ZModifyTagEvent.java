@@ -54,11 +54,7 @@ public class ZModifyTagEvent implements ZModifyItemEvent, ToZJSONObject {
     public Color getColor(Color defaultValue) {
         String newColor = mTagEl.getAttribute(MailConstants.A_RGB, null);
         if (newColor != null) {
-            try {
-                return Color.fromString(newColor);
-            } catch (ServiceException se) {
-                return defaultValue;
-            }
+                return Color.rgbColor.setRgbColor(newColor);
         } else {
             String s = mTagEl.getAttribute(MailConstants.A_COLOR, null);
             if (s != null) {

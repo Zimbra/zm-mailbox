@@ -482,7 +482,7 @@ public class ZMailbox implements ToZJSONObject {
             }
         }
     }
-    
+
     private ZAuthResult authByPassword(Options options, String password) throws ServiceException {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling authenticate", null);
         
@@ -501,13 +501,13 @@ public class ZMailbox implements ToZJSONObject {
 
     private ZAuthResult authByAuthToken(Options options) throws ServiceException {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling authenticate", null);
-        
+
         AuthRequest req = new AuthRequest();
         ZAuthToken zat = options.getAuthToken(); // cannot be null here
         req.setAuthToken(zat.getValue());
         req.setRequestedSkin(options.getRequestedSkin());
         addAttrsAndPrefs(req, options);
-        
+
         AuthResponse res = invokeJaxb(req);
         ZAuthResult r = new ZAuthResult(res);
         r.setSessionId(mTransport.getSessionId());
@@ -550,7 +550,7 @@ public class ZMailbox implements ToZJSONObject {
         Element res = invoke(req);
         return (T) JaxbUtil.elementToJaxb(res);
     }
-    
+
     public Element invoke(Element request) throws ServiceException {
         return invoke(request, null);
     }
@@ -1091,7 +1091,13 @@ public class ZMailbox implements ToZJSONObject {
         Element req = newRequestElement(MailConstants.CREATE_TAG_REQUEST);
         Element tagEl = req.addUniqueElement(MailConstants.E_TAG);
         tagEl.addAttribute(MailConstants.A_NAME, name);
-        if (color != null) tagEl.addAttribute(MailConstants.A_COLOR, color.getValue());
+        if (color != null) {
+            if (color == ZTag.Color.rgbColor) {
+                tagEl.addAttribute(MailConstants.A_RGB, color.getRgbColor());
+            } else {
+                tagEl.addAttribute(MailConstants.A_COLOR, color.getValue());
+            }
+        }
         Element createdTagEl = invoke(req).getElement(MailConstants.E_TAG);
         ZTag tag = getTagById(createdTagEl.getAttribute(MailConstants.A_ID));
         return tag != null ? tag : new ZTag(createdTagEl, this);
@@ -1107,8 +1113,13 @@ public class ZMailbox implements ToZJSONObject {
      */
     public ZActionResult updateTag(String id, String name, ZTag.Color color) throws ServiceException {
         Element action = tagAction("update", id);
-        if (color != null)
-            action.addAttribute(MailConstants.A_COLOR, color.getValue());
+        if (color != null) {
+            if (color == ZTag.Color.rgbColor) {
+                action.addAttribute(MailConstants.A_RGB, color.getRgbColor());
+            } else {
+                action.addAttribute(MailConstants.A_COLOR, color.getValue());
+            }
+        }
         if (name != null && name.length() > 0)
             action.addAttribute(MailConstants.A_NAME, name);
         return doAction(action);
@@ -1122,7 +1133,11 @@ public class ZMailbox implements ToZJSONObject {
      * @throws com.zimbra.common.service.ServiceException on error
      */
     public ZActionResult modifyTagColor(String id, ZTag.Color color) throws ServiceException {
-        return doAction(tagAction("color", id).addAttribute(MailConstants.A_COLOR, color.getValue()));
+        if (color == ZTag.Color.rgbColor) {
+            return doAction(tagAction("color", id).addAttribute(MailConstants.A_RGB, color.getRgbColor()));
+        } else {
+            return doAction(tagAction("color", id).addAttribute(MailConstants.A_COLOR, color.getValue()));
+        }
     }
 
     /** mark all items with tag as read
@@ -2571,7 +2586,13 @@ public class ZMailbox implements ToZJSONObject {
         folderEl.addAttribute(MailConstants.A_NAME, name);
         folderEl.addAttribute(MailConstants.A_FOLDER, parentId);
         if (defaultView != null) folderEl.addAttribute(MailConstants.A_DEFAULT_VIEW, defaultView.name());
-        if (color != null) folderEl.addAttribute(MailConstants.A_COLOR, color.getValue());
+        if (color != null) {
+            if (color == ZFolder.Color.rgbColor) {
+                folderEl.addAttribute(MailConstants.A_RGB, color.getRgbColor());
+            } else {
+                folderEl.addAttribute(MailConstants.A_COLOR, color.getValue());
+            }
+        }
         if (flags != null) folderEl.addAttribute(MailConstants.A_FLAGS, flags);
         if (url != null && url.length() > 0) folderEl.addAttribute(MailConstants.A_URL, url);
         Element newFolderEl = invoke(req).getElement(MailConstants.E_FOLDER);
@@ -2599,7 +2620,13 @@ public class ZMailbox implements ToZJSONObject {
         folderEl.addAttribute(MailConstants.A_NAME, name);
         folderEl.addAttribute(MailConstants.A_FOLDER, parentId);
         folderEl.addAttribute(MailConstants.A_QUERY, query);
-        if (color != null) folderEl.addAttribute(MailConstants.A_COLOR, color.getValue());
+        if (color != null) {
+            if (color == ZFolder.Color.rgbColor) {
+                folderEl.addAttribute(MailConstants.A_RGB, color.getRgbColor());
+            } else {
+                folderEl.addAttribute(MailConstants.A_COLOR, color.getValue());
+            }
+        }
         if (types != null) folderEl.addAttribute(MailConstants.A_SEARCH_TYPES, types);
         if (sortBy != null) folderEl.addAttribute(MailConstants.A_SORTBY, sortBy.name());
         Element newSearchEl = invoke(req).getElement(MailConstants.E_SEARCH);
@@ -3149,7 +3176,13 @@ public class ZMailbox implements ToZJSONObject {
         linkEl.addAttribute(MailConstants.A_NAME, name);
         linkEl.addAttribute(MailConstants.A_FOLDER, parentId);
         if (defaultView != null) linkEl.addAttribute(MailConstants.A_DEFAULT_VIEW, defaultView.name());
-        if (color != null) linkEl.addAttribute(MailConstants.A_COLOR, color.getValue());
+        if (color != null) {
+            if (color == ZFolder.Color.rgbColor) {
+                linkEl.addAttribute(MailConstants.A_RGB, color.getRgbColor());
+            } else {
+                linkEl.addAttribute(MailConstants.A_COLOR, color.getValue());
+            }
+        }
         if (flags != null) linkEl.addAttribute(MailConstants.A_FLAGS, flags);
         linkEl.addAttribute(ownerBy == OwnerBy.BY_ID ? MailConstants.A_ZIMBRA_ID : MailConstants.A_OWNER_NAME, owner);
         linkEl.addAttribute(itemBy == SharedItemBy.BY_ID ? MailConstants.A_REMOTE_ID: MailConstants.A_PATH, sharedItem);
@@ -4351,7 +4384,7 @@ public class ZMailbox implements ToZJSONObject {
         Element req = newRequestElement(MailConstants.GET_APPOINTMENT_REQUEST);
         req.addAttribute(MailConstants.A_ID, id);
         req.addAttribute(MailConstants.A_SYNC, true);
-        return new ZAppointment(invoke(req));
+        return new ZAppointment(invoke(req).getElement(MailConstants.E_APPOINTMENT));
     }
 
     public void clearMessageCache() {

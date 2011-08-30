@@ -41,26 +41,37 @@ public class ZTag implements Comparable, ZItem, ToZJSONObject {
         yellow(6),
         pink(7),
         gray(8),
-        orange(9);
-        
-        private int mValue;
+        orange(9),
+        rgbColor;
 
-        public int getValue() { return mValue; }
+        private long mValue;
+
+        public long getValue() { return mValue; }
 
         public static Color fromString(String s) throws ServiceException {
             return Color.values()[MailItem.Color.getMappedColor(s)];
         }
 
-        Color(int value) { mValue = value; } 
+        public Color setRgbColor(String s) {
+            mValue = new MailItem.Color(s).getValue();
+            return this;
+        }
+
+        public String getRgbColor() {
+            return new MailItem.Color(mValue).toString();
+        }
+
+        Color(long value) { mValue = value; }
+        Color() {}
     }
 
     public ZTag(Element e, ZMailbox mailbox) throws ServiceException {
         mMailbox = mailbox;
-		String rgb = e.getAttribute(MailConstants.A_RGB, null);
+        String rgb = e.getAttribute(MailConstants.A_RGB, null);
         // Server reports color or rgb attribute on mail items but not both. 
         // If rgb, map the color to the rgb value. If the attr is color, return the value as is.
         if (rgb != null) {
-            mColor =  Color.fromString(rgb);
+            mColor =  Color.rgbColor.setRgbColor(rgb);
         } else {
             String s = e.getAttribute(MailConstants.A_COLOR, "0");
             mColor = Color.values()[(byte)Long.parseLong(s)];
