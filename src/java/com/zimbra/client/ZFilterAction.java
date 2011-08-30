@@ -294,12 +294,17 @@ public abstract class ZFilterAction implements ToZJSONObject {
         }
 
         public ZNotifyAction(String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes) {
-            this(emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes, null);
+            this(emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes, "");
         }
 
         public ZNotifyAction(
                 String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes, String origHeaders) {
-            super(A_NOTIFY, emailAddr, subjectTemplate, bodyTemplate, Integer.toString(maxBodyBytes), origHeaders);
+            super(A_NOTIFY,
+                    emailAddr,
+                    subjectTemplate == null ? "" : subjectTemplate,
+                    bodyTemplate == null ? "" : bodyTemplate,
+                    Integer.toString(maxBodyBytes),
+                    origHeaders == null ? "" : origHeaders);
         }
 
         public String getEmailAddr() {
