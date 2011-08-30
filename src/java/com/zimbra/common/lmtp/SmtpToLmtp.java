@@ -31,9 +31,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.testng.v6.Lists;
-
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.ZimbraLog;

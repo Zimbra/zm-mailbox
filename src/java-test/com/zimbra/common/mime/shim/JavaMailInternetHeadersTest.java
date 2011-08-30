@@ -16,8 +16,8 @@ package com.zimbra.common.mime.shim;
 
 import javax.mail.internet.InternetHeaders;
 
+import org.junit.Assert;
 import org.junit.Test;
-import org.testng.Assert;
 
 public class JavaMailInternetHeadersTest {
 
