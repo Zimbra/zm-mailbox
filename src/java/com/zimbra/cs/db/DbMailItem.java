@@ -48,6 +48,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Sets;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ListUtil;
@@ -2399,12 +2400,11 @@ public class DbMailItem {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT " + DB_FIELDS + " FROM " + getMailItemTableName(mbox, "mi") +
-                    " WHERE " + IN_THIS_MAILBOX_AND + "mi.id IN" +
-                    " (SELECT DISTINCT conv_id FROM " + getConversationTableName(mbox, "oc") +
-                    "  WHERE " + DbUtil.whereIn("oc.hash", hashes.size()) +
-                        (DebugConfig.disableMailboxGroups ? "" : " AND oc.mailbox_id = ?") + ")");
-            int pos = setMailboxId(stmt, mbox, 1);
+            stmt = conn.prepareStatement("SELECT " + DB_FIELDS +
+                    " FROM " + getMailItemTableName(mbox, "mi") + ", " + getConversationTableName(mbox, "oc") +
+                    " WHERE mi.id = oc.conv_id AND " + DbUtil.whereIn("oc.hash", hashes.size()) +
+                    (DebugConfig.disableMailboxGroups ? "" : " AND oc.mailbox_id = ? AND mi.mailbox_id = oc.mailbox_id"));
+            int pos = 1;
             for (String hash : hashes) {
                 stmt.setString(pos++, hash);
             }
@@ -2412,12 +2412,18 @@ public class DbMailItem {
             rs = stmt.executeQuery();
 
             List<UnderlyingData> dlist = new ArrayList<UnderlyingData>(3);
+            Set<Integer> convIds = Sets.newHashSetWithExpectedSize(3);
             while (rs.next()) {
+                int id = rs.getInt(CI_ID);
+                if (convIds.contains(id))
+                    continue;
+
                 UnderlyingData data = constructItem(rs);
                 if (data.type == MailItem.Type.CONVERSATION.toByte()) {
                     completeConversation(mbox, conn, data);
                 }
                 dlist.add(data);
+                convIds.add(data.id);
             }
             return dlist.isEmpty() ? null : dlist;
         } catch (SQLException e) {
