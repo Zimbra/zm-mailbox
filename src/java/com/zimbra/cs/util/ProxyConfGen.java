@@ -293,6 +293,9 @@ class ProxyConfVar
                 ArrayList<String> servers = new ArrayList<String>();
                 /* $(zmprov garpb) */
                 List<Server> us = mProv.getAllServers();
+                
+                int timeout = Integer.parseInt(
+                        serverSource.getAttr(Provisioning.A_zimbraReverseProxyConnectFailedUpstreamTimeout, "60"));
 
                 for (Server u : us)
                 {
@@ -308,7 +311,7 @@ class ProxyConfVar
                         ) {
                             int serverPort = u.getIntAttr(Provisioning.A_zimbraMailPort,0);
                             Formatter f = new Formatter();
-                            f.format("%s:%d", serverName, serverPort);
+                            f.format("%s:%d fail_timeout=%ds", serverName, serverPort, timeout);
                             servers.add(f.toString());
                             mLog.info("Added server to HTTP upstream: " + serverName);
                         } else {
@@ -401,12 +404,17 @@ class ProxyConfVar
             else if ("web.upstream.:servers".equalsIgnoreCase(mKeyword))
             {
                 ArrayList<String> servers = (ArrayList<String>) o;
-                String conf = "";
-                for (String s: servers)
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < servers.size(); i++)
                 {
-                    conf = conf + "    server   " + s + ";" + "\n";
+                    String s = servers.get(i);
+                    if (i == 0) {
+                        sb.append(String.format("server    %s;\n", s));
+                    } else {
+                        sb.append(String.format("        server    %s;\n", s));
+                    }
                 }
-                return conf;
+                return sb.toString();
             }
             else if ("mail.pop3.greeting".equalsIgnoreCase(mKeyword))
             {

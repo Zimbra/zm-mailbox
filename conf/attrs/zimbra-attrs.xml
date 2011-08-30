@@ -6176,4 +6176,10 @@ TODO: delete them permanently from here
   <desc>description of the custom tab in the Preferences page in HTML client in the format {tab-name},{associated-URL}</desc>
 </attr>
 
+<attr id="1268" name="zimbraReverseProxyConnectFailedUpstreamTimeout" type="string" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.0">
+  <globalConfigValue>60</globalConfigValue>
+  <desc>
+    the time in sec that proxy will reconnect an upstream server after connection error happened before</desc>
+</attr>
+
 </attrs>
