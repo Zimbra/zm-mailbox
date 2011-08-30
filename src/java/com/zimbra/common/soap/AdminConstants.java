@@ -41,6 +41,8 @@ public final class AdminConstants {
     public static final String E_CREATE_ACCOUNT_RESPONSE = "CreateAccountResponse";
     public static final String E_CREATE_GAL_SYNC_ACCOUNT_REQUEST = "CreateGalSyncAccountRequest";
     public static final String E_CREATE_GAL_SYNC_ACCOUNT_RESPONSE = "CreateGalSyncAccountResponse";
+    public static final String E_ADD_GAL_SYNC_DATASOURCE_REQUEST = "AddGalSyncDataSourceRequest";
+    public static final String E_ADD_GAL_SYNC_DATASOURCE_RESPONSE = "AddGalSyncDataSourceResponse";
     public static final String E_DELEGATE_AUTH_REQUEST = "DelegateAuthRequest";
     public static final String E_DELEGATE_AUTH_RESPONSE = "DelegateAuthResponse";
     public static final String E_DELETE_GAL_SYNC_ACCOUNT_REQUEST = "DeleteGalSyncAccountRequest";
@@ -471,6 +473,8 @@ public final class AdminConstants {
     public static final QName CREATE_ACCOUNT_RESPONSE = QName.get(E_CREATE_ACCOUNT_RESPONSE, NAMESPACE);
     public static final QName CREATE_GAL_SYNC_ACCOUNT_REQUEST = QName.get(E_CREATE_GAL_SYNC_ACCOUNT_REQUEST, NAMESPACE);
     public static final QName CREATE_GAL_SYNC_ACCOUNT_RESPONSE = QName.get(E_CREATE_GAL_SYNC_ACCOUNT_RESPONSE, NAMESPACE);
+    public static final QName ADD_GAL_SYNC_DATASOURCE_REQUEST = QName.get(E_ADD_GAL_SYNC_DATASOURCE_REQUEST, NAMESPACE);
+    public static final QName ADD_GAL_SYNC_DATASOURCE_RESPONSE = QName.get(E_ADD_GAL_SYNC_DATASOURCE_RESPONSE, NAMESPACE);
     public static final QName DELEGATE_AUTH_REQUEST = QName.get(E_DELEGATE_AUTH_REQUEST, NAMESPACE);
     public static final QName DELEGATE_AUTH_RESPONSE = QName.get(E_DELEGATE_AUTH_RESPONSE, NAMESPACE);
     public static final QName DELETE_GAL_SYNC_ACCOUNT_REQUEST = QName.get(E_DELETE_GAL_SYNC_ACCOUNT_REQUEST, NAMESPACE);
