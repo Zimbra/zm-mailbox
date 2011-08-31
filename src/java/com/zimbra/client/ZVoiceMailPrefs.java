@@ -20,6 +20,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.VoiceConstants;
 
 import java.util.HashMap;
+import java.util.Set;
 
 public class ZVoiceMailPrefs extends ZCallFeature {
     private HashMap<String, String> mMap;
