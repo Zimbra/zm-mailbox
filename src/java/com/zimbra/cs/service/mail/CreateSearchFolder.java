@@ -66,13 +66,13 @@ public class CreateSearchFolder extends MailDocumentHandler  {
         String sort      = t.getAttribute(MailConstants.A_SORTBY, null);
         String flags     = t.getAttribute(MailConstants.A_FLAGS, null);
         byte color       = (byte) t.getAttributeLong(MailConstants.A_COLOR, MailItem.DEFAULT_COLOR);
-		String rgb       = t.getAttribute(MailConstants.A_RGB, null);
-		Color itemColor = rgb != null ? new Color(rgb) : new Color(color);
+        String rgb       = t.getAttribute(MailConstants.A_RGB, null);
 
+        Color itemColor = rgb != null ? new Color(rgb) : new Color(color);
         ItemId iidParent = new ItemId(t.getAttribute(MailConstants.A_FOLDER), zsc);
 
         SearchFolder search = mbox.createSearchFolder(octxt, iidParent.getId(),
-                name, query, types, sort, Flag.toBitmask(flags), itemColor);
+            name, query, types, sort, Flag.toBitmask(flags), itemColor);
 
         Element response = zsc.createElement(MailConstants.CREATE_SEARCH_FOLDER_RESPONSE);
         if (search != null)
