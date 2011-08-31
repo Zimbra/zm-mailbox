@@ -28,6 +28,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.common.mailbox.Color;
 import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.client.event.ZModifyFolderEvent;
 import com.zimbra.soap.mail.type.Folder;
@@ -138,11 +139,12 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         yellow(6),
         pink(7),
         gray(8),
-        orange(9);
+        orange(9),
+        rgbColor;
 
-        private int mValue;
+        private long mValue;
 
-        public int getValue() { return mValue; }
+        public long getValue() { return mValue; }
 
         public static Color fromString(String s) throws ServiceException {
             try {
@@ -158,7 +160,18 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
             }
         }
 
-        Color(int value) { mValue = value; }
+        Color(long value) { mValue = value; }
+
+        Color() {}
+
+        public Color setRgbColor(String s) {
+            mValue = new com.zimbra.common.mailbox.Color(s).getValue();
+            return this;
+        }
+
+        public String getRgbColor() {
+            return new com.zimbra.common.mailbox.Color(mValue).toString();
+        }
 
         public static Color fromInt(int i) throws ServiceException {
             try {
@@ -205,11 +218,12 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         mParentId = e.getAttribute(MailConstants.A_FOLDER, null);
         mIsPlaceholder = mParentId == null;
         mFlags = e.getAttribute(MailConstants.A_FLAGS, null);
-        mRgb = e.getAttribute(MailConstants.A_RGB, "null");
-        try {
-            mColor = ZFolder.Color.fromString(e.getAttribute(MailConstants.A_COLOR, "0"));
-        } catch (ServiceException se) {
-            mColor = ZFolder.Color.orange;
+        mRgb = e.getAttribute(MailConstants.A_RGB, null);
+        if (mRgb != null) {
+            mColor =  Color.rgbColor.setRgbColor(mRgb);
+        } else {
+            String s = e.getAttribute(MailConstants.A_COLOR, "0");
+            mColor = Color.values()[(byte)Long.parseLong(s)];
         }
         mUnreadCount = (int) e.getAttributeLong(MailConstants.A_UNREAD, 0);
         mImapUnreadCount = (int) e.getAttributeLong(MailConstants.A_IMAP_UNREAD, mUnreadCount);
@@ -261,13 +275,12 @@ public class ZFolder implements ZItem, Comparable<Object>, ToZJSONObject {
         mParentId = f.getParentId();
         mIsPlaceholder = mParentId == null;
         mFlags = f.getFlags();
-        mRgb = f.getRgb() == null ? "null" : f.getRgb();
-        try {
+        mRgb = f.getRgb();
+        if (mRgb != null) {
+            mColor =  Color.rgbColor.setRgbColor(mRgb);
+        } else {
             mColor = ZFolder.Color.fromInt(SystemUtil.coalesce(f.getColor(), 0));
-        } catch (ServiceException se) {
-            mColor = ZFolder.Color.orange;
         }
-        
         mUnreadCount = SystemUtil.coalesce(f.getUnreadCount(), 0);
         mImapUnreadCount = SystemUtil.coalesce(f.getImapUnreadCount(), mUnreadCount);
         mMessageCount = SystemUtil.coalesce(f.getItemCount(), 0);
