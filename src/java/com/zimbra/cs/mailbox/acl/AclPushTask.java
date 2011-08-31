@@ -51,7 +51,7 @@ public class AclPushTask extends TimerTask {
         doWork();
     }
 
-    public static void doWork() {
+    public static synchronized void doWork() {
         if (!supported)
             return;
         ZimbraLog.misc.info("Starting pending ACL push");
@@ -60,7 +60,13 @@ public class AclPushTask extends TimerTask {
             Multimap<Integer, Integer> mboxIdToItemIds = DbPendingAclPush.getEntries(now);
 
             for (int mboxId : mboxIdToItemIds.keySet()) {
-                Mailbox mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+                Mailbox mbox;
+                try {
+                    mbox = MailboxManager.getInstance().getMailboxById(mboxId);
+                } catch (ServiceException e) {
+                    ZimbraLog.misc.info("Exception occurred while getting mailbox for id %s during ACL push", mboxId, e);
+                    continue;
+                }
                 Collection<Integer> itemIds = mboxIdToItemIds.get(mboxId);
                 MailItem[] folders = null;
                 try {
