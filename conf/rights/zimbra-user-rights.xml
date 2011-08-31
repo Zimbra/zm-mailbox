@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <rights>
-
-<!--
+    
+<!-- 
 *******************
     user rights
 *******************
@@ -24,10 +24,6 @@
 
 <right name="sendAs" userRight="1" cache="1">
   <desc>reply to messages in a shared folder as the owner of the folder</desc>
-</right>
-
-<right name="sendOnBehalfOf" userRight="1" cache="1">
-  <desc>send messages on behalf of the grantor</desc>
 </right>
 
 <right name="sendToDistList" userRight="1" targetType="dl" cache="1">
