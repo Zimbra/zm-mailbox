@@ -114,7 +114,7 @@ SECTION mta DEPENDS amavis
 	POSTCONF mailq_path							              LOCAL postfix_mailq_path
 	POSTCONF manpage_directory					          LOCAL postfix_manpage_directory
 	POSTCONF newaliases_path					            LOCAL postfix_newaliases_path
-  POSTCONF notify_classes                       LOCAL postfix_notify_classes
+	POSTCONF notify_classes                       LOCAL postfix_notify_classes
 	POSTCONF policy_time_limit				LOCAL postfix_policy_time_limit
 	POSTCONF queue_directory					            LOCAL postfix_queue_directory
 	POSTCONF smtpd_sasl_authenticated_header			LOCAL postfix_smtpd_sasl_authenticated_header
@@ -142,7 +142,8 @@ SECTION mta DEPENDS amavis
 	POSTCONF virtual_mailbox_domains			        LOCAL postfix_virtual_mailbox_domains
 	POSTCONF virtual_mailbox_maps				          LOCAL postfix_virtual_mailbox_maps
 	POSTCONF virtual_transport					          LOCAL postfix_virtual_transport
-  POSTCONF always_add_missing_headers           LOCAL postfix_always_add_missing_headers
+	POSTCONF always_add_missing_headers           LOCAL postfix_always_add_missing_headers
+	POSTCONF inet_protocols				VAR zimbraPostconfProtocol
   RESTART mta
 
 SECTION sasl
