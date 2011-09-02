@@ -43,7 +43,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20110824-1223 */
+    /* build: 8.0.0_BETA1_1111 administrator 20110830-1047 */
 
     /**
      * RFC2256: descriptive information
@@ -15483,6 +15483,83 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMailProxyPort(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailProxyPort, "");
+        return attrs;
+    }
+
+    /**
+     * the time in sec that proxy will reconnect the current server (as an
+     * upstream) after connection errors happened before
+     *
+     * @return zimbraMailProxyReconnectTimeout, or "60" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1268)
+    public String getMailProxyReconnectTimeout() {
+        return getAttr(Provisioning.A_zimbraMailProxyReconnectTimeout, "60");
+    }
+
+    /**
+     * the time in sec that proxy will reconnect the current server (as an
+     * upstream) after connection errors happened before
+     *
+     * @param zimbraMailProxyReconnectTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1268)
+    public void setMailProxyReconnectTimeout(String zimbraMailProxyReconnectTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailProxyReconnectTimeout, zimbraMailProxyReconnectTimeout);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the time in sec that proxy will reconnect the current server (as an
+     * upstream) after connection errors happened before
+     *
+     * @param zimbraMailProxyReconnectTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1268)
+    public Map<String,Object> setMailProxyReconnectTimeout(String zimbraMailProxyReconnectTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailProxyReconnectTimeout, zimbraMailProxyReconnectTimeout);
+        return attrs;
+    }
+
+    /**
+     * the time in sec that proxy will reconnect the current server (as an
+     * upstream) after connection errors happened before
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1268)
+    public void unsetMailProxyReconnectTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailProxyReconnectTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the time in sec that proxy will reconnect the current server (as an
+     * upstream) after connection errors happened before
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1268)
+    public Map<String,Object> unsetMailProxyReconnectTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailProxyReconnectTimeout, "");
         return attrs;
     }
 
@@ -38029,6 +38106,83 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetXMPPServerDialbackKey(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraXMPPServerDialbackKey, "");
+        return attrs;
+    }
+
+    /**
+     * whether zimlets that send sensitive data are disabled in
+     * &quot;mixed&quot; zimbraMailMode
+     *
+     * @return zimbraZimletDataSensitiveInMixedModeDisabled, or true if unset
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1269)
+    public boolean isZimletDataSensitiveInMixedModeDisabled() {
+        return getBooleanAttr(Provisioning.A_zimbraZimletDataSensitiveInMixedModeDisabled, true);
+    }
+
+    /**
+     * whether zimlets that send sensitive data are disabled in
+     * &quot;mixed&quot; zimbraMailMode
+     *
+     * @param zimbraZimletDataSensitiveInMixedModeDisabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1269)
+    public void setZimletDataSensitiveInMixedModeDisabled(boolean zimbraZimletDataSensitiveInMixedModeDisabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletDataSensitiveInMixedModeDisabled, zimbraZimletDataSensitiveInMixedModeDisabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether zimlets that send sensitive data are disabled in
+     * &quot;mixed&quot; zimbraMailMode
+     *
+     * @param zimbraZimletDataSensitiveInMixedModeDisabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1269)
+    public Map<String,Object> setZimletDataSensitiveInMixedModeDisabled(boolean zimbraZimletDataSensitiveInMixedModeDisabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletDataSensitiveInMixedModeDisabled, zimbraZimletDataSensitiveInMixedModeDisabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether zimlets that send sensitive data are disabled in
+     * &quot;mixed&quot; zimbraMailMode
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1269)
+    public void unsetZimletDataSensitiveInMixedModeDisabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletDataSensitiveInMixedModeDisabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether zimlets that send sensitive data are disabled in
+     * &quot;mixed&quot; zimbraMailMode
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1269)
+    public Map<String,Object> unsetZimletDataSensitiveInMixedModeDisabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraZimletDataSensitiveInMixedModeDisabled, "");
         return attrs;
     }
 

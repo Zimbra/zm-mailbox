@@ -42,7 +42,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20110824-1223 */
+    /* build: 8.0.0_BETA1_1111 administrator 20110830-1047 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -8097,6 +8097,83 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetMailProxyPort(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailProxyPort, "");
+        return attrs;
+    }
+
+    /**
+     * the time in sec that proxy will reconnect the current server (as an
+     * upstream) after connection errors happened before
+     *
+     * @return zimbraMailProxyReconnectTimeout, or "60" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1268)
+    public String getMailProxyReconnectTimeout() {
+        return getAttr(Provisioning.A_zimbraMailProxyReconnectTimeout, "60");
+    }
+
+    /**
+     * the time in sec that proxy will reconnect the current server (as an
+     * upstream) after connection errors happened before
+     *
+     * @param zimbraMailProxyReconnectTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1268)
+    public void setMailProxyReconnectTimeout(String zimbraMailProxyReconnectTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailProxyReconnectTimeout, zimbraMailProxyReconnectTimeout);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the time in sec that proxy will reconnect the current server (as an
+     * upstream) after connection errors happened before
+     *
+     * @param zimbraMailProxyReconnectTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1268)
+    public Map<String,Object> setMailProxyReconnectTimeout(String zimbraMailProxyReconnectTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailProxyReconnectTimeout, zimbraMailProxyReconnectTimeout);
+        return attrs;
+    }
+
+    /**
+     * the time in sec that proxy will reconnect the current server (as an
+     * upstream) after connection errors happened before
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1268)
+    public void unsetMailProxyReconnectTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailProxyReconnectTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the time in sec that proxy will reconnect the current server (as an
+     * upstream) after connection errors happened before
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1268)
+    public Map<String,Object> unsetMailProxyReconnectTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailProxyReconnectTimeout, "");
         return attrs;
     }
 

@@ -6182,4 +6182,9 @@ TODO: delete them permanently from here
     the time in sec that proxy will reconnect the current server (as an upstream) after connection errors happened before</desc>
 </attr>
 
+<attr id="1269" name="zimbraZimletDataSensitiveInMixedModeDisabled" type="boolean" cardinality="single" optionalIn="domain,globalConfig" flags="domainInfo,domainInherited" since="7.1.3">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>whether zimlets that send sensitive data are disabled in "mixed" zimbraMailMode</desc>
+</attr>
+
 </attrs>
