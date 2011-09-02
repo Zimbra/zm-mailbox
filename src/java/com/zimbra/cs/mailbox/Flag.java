@@ -78,14 +78,14 @@ public final class Flag extends Tag {
         IN_DUMPSTER(-30,  "\\InDumpster", HIDDEN),
         UNCACHED(-31, "\\Uncached", HIDDEN);
 
-        final String name;
+        final String flagName;
         final int id;
         final char ch;
         final int bitmask;
 
         private FlagInfo(int id, String name, char ch) {
             this.id = id;
-            this.name = name;
+            this.flagName = name;
             this.ch = ch;
             this.bitmask = 1 << (-id - 1);
 
@@ -102,7 +102,7 @@ public final class Flag extends Tag {
             data.type = MailItem.Type.FLAG.toByte();
             data.folderId = Mailbox.ID_FOLDER_TAGS;
             data.setFlags(BITMASK_UNCACHED);
-            data.name = name;
+            data.name = flagName;
             data.contentChanged(mbox);
             return new Flag(mbox, data, this);
         }

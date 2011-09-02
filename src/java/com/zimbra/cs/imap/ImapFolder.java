@@ -101,7 +101,7 @@ public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializa
 
     /** Initializes an empty ImapFolder from a {@link Folder}, specified by
      *  path.
-     * @param name     The target folder's path.
+     * @param path     The target folder's path.
      * @param params   Optional SELECT parameters (e.g. READONLY).
      * @param handler  The authenticated user's current IMAP session. */
     ImapFolder(ImapPath path, byte params, ImapHandler handler) throws ServiceException {

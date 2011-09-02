@@ -32,6 +32,7 @@ import javax.activation.DataSource;
 import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.mailbox.Conversation;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.DeliveryOptions;
@@ -302,7 +303,8 @@ implements CreateCalendarItemPlayer, CreateCalendarItemRecorder {
         if (mExtendedData != null) {
             sb.append(", extended=").append(mExtendedData);
         }
-        sb.append(", flags=").append(mFlags).append(", tags=\"").append(mTags).append("\"");
+        sb.append(", flags=").append(mFlags);
+        sb.append(", tags=[").append(mTags == null ? "" : StringUtil.join(",", mTags)).append("]");
         sb.append(", bodyType=").append(mMsgBodyType);
         if (mMsgBodyType == MSGBODY_LINK) {
             sb.append(", linkSourcePath=").append(mPath);

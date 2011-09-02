@@ -5425,7 +5425,7 @@ public class Mailbox {
     public void alterTag(OperationContext octxt, int[] itemIds, MailItem.Type type, Flag.FlagInfo finfo,
             boolean addTag, TargetConstraint tcon)
     throws ServiceException {
-        AlterItemTag redoRecorder = new AlterItemTag(mId, itemIds, type, finfo.name(), addTag, tcon);
+        AlterItemTag redoRecorder = new AlterItemTag(mId, itemIds, type, finfo.flagName, addTag, tcon);
 
         boolean success = false;
         try {
