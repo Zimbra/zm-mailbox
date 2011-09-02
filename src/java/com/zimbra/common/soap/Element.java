@@ -569,8 +569,12 @@ public abstract class Element implements Cloneable {
     }
 
     public static Element parseJSON(String js, ElementFactory factory) throws SoapParseException {
+        return parseJSON(js, SoapProtocol.SoapJS.getEnvelopeQName(), factory);
+    }
+
+    public static Element parseJSON(String js, QName qn, ElementFactory factory) throws SoapParseException {
         try {
-            return JSONElement.parseElement(new JSONElement.JSRequest(js), SoapProtocol.SoapJS.getEnvelopeQName(), factory);
+            return JSONElement.parseElement(new JSONElement.JSRequest(js), qn, factory);
         } catch (ContainerException ce) {
             SoapParseException spe = new SoapParseException(ce.getMessage(), js);
             spe.initCause(ce);
@@ -692,9 +696,9 @@ public abstract class Element implements Cloneable {
     public static class JSONElement extends Element {
         public static final ElementFactory mFactory = new JSONFactory();
 
-        private static final String E_ATTRS     = "_attrs";
-        private static final String A_CONTENT   = "_content";
-        private static final String A_NAMESPACE = "_jsns";
+        public static final String E_ATTRS     = "_attrs";
+        public static final String A_CONTENT   = "_content";
+        public static final String A_NAMESPACE = "_jsns";
 
         public JSONElement(String name) {
             mName = name;
@@ -1184,7 +1188,10 @@ public abstract class Element implements Cloneable {
             }
 
             void skipChar(char c) throws SoapParseException {
-                if (readChar() != c) error("expected character: " + c);
+                char nxtChar = readChar();
+                if (nxtChar != c) {
+                    error("expected character: " + c + " found:" + nxtChar);
+                }
             }
 
             private void skipWhitespace() throws SoapParseException {
@@ -1877,7 +1884,9 @@ public abstract class Element implements Cloneable {
 
         @Override
         public void destroy() {
-            ZimbraLog.misc.debug("FileBackedElement destroy - rm {}", backedFile);
+            if (ZimbraLog.misc.isDebugEnabled()) {
+                ZimbraLog.misc.debug("FileBackedElement destroy - rm %s", backedFile);
+            }
             backedFile.delete();
         }
 
