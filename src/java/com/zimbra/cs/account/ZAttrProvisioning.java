@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 administrator 20110818-1727 */
+    /* build: 7.0.0_BETA1_1111 administrator 20110826-1045 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -9193,6 +9193,15 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=288)
     public static final String A_zimbraZimletContentObject = "zimbraZimletContentObject";
+
+    /**
+     * whether zimlets that send sensitive data are disabled in
+     * &quot;mixed&quot; zimbraMailMode
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1269)
+    public static final String A_zimbraZimletDataSensitiveInMixedModeDisabled = "zimbraZimletDataSensitiveInMixedModeDisabled";
 
     /**
      * Zimlet description

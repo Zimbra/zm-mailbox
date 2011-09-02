@@ -5663,4 +5663,9 @@ TODO: delete them permerntly from here
   <desc>description of the custom tab in the Preferences page in HTML client in the format {tab-name},{associated-URL}</desc>
 </attr>
 
+<attr id="1269" name="zimbraZimletDataSensitiveInMixedModeDisabled" type="boolean" cardinality="single" optionalIn="domain,globalConfig" flags="domainInfo,domainInherited" since="7.1.3">
+  <globalConfigValue>TRUE</globalConfigValue>
+  <desc>whether zimlets that send sensitive data are disabled in "mixed" zimbraMailMode</desc>
+</attr>
+
 </attrs>
