@@ -102,7 +102,8 @@
     <schemagen srcdir="${src.java.dir}" destdir="${xml.schema.dir}">
       <classpath refid="class.path"/>
       <exclude name="com/zimbra/soap/*.java"/>
-      <exclude name="com/zimbra/soap/util/*.java"/>
+      <exclude name="com/zimbra/soap/util/**"/>
+      <exclude name="com/zimbra/soap/json/**"/>
       <schema namespace="urn:zimbra" file="zimbra.xsd" />
       <schema namespace="urn:zimbraAccount" file="zimbraAccount.xsd" />
       <schema namespace="urn:zimbraAdmin" file="zimbraAdmin.xsd" />

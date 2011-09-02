@@ -17,6 +17,7 @@ package com.zimbra.soap;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+
 import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
@@ -32,6 +33,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+
 import org.dom4j.Document;
 import org.dom4j.io.DocumentResult;
 import org.dom4j.io.DocumentSource;
@@ -999,9 +1001,6 @@ public final class JaxbUtil {
         }
 
         JaxbInfo jaxbInfo = JaxbInfo.getFromCache(klass);
-        if (jaxbInfo == null) {
-            jaxbInfo = new JaxbInfo(klass);
-        }
         NodeList list = elem.getChildNodes();
         for (int i=0; i < list.getLength(); i++) {
             Node subnode = list.item(i);

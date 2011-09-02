@@ -38,7 +38,7 @@ extends CommonCalendaringData
 implements CalendaringDataInterface {
 
     @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
-    private long date;
+    private Long date;
 
     @XmlElement(name=MailConstants.E_CAL_ORGANIZER /* or */, required=false)
     private CalOrganizer organizer;
@@ -71,7 +71,7 @@ implements CalendaringDataInterface {
     }
 
     @Override
-    public void setDate(long date) { this.date = date; }
+    public void setDate(Long date) { this.date = date; }
 
     @Override
     public void setOrganizer(CalOrganizer organizer) {
@@ -111,7 +111,7 @@ implements CalendaringDataInterface {
     }
 
     @Override
-    public long getDate() { return date; }
+    public Long getDate() { return date; }
     @Override
     public CalOrganizer getOrganizer() { return organizer; }
     @Override

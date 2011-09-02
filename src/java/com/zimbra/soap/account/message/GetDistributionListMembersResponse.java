@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -28,9 +28,12 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.AccountConstants;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.json.jackson.ContentListSerializer;
+
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_DISTRIBUTION_LIST_MEMBERS_RESPONSE)
 public class GetDistributionListMembersResponse {
 
@@ -41,6 +44,7 @@ public class GetDistributionListMembersResponse {
     private Integer total;
 
     @XmlElement(name=AccountConstants.E_DLM, required=false)
+    @JsonSerialize(using=ContentListSerializer.class)
     private List<String> dlMembers = Lists.newArrayList();
 
     public GetDistributionListMembersResponse() {

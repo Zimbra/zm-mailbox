@@ -22,7 +22,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class InstanceDataAttrs extends CommonInstanceDataAttrs {
 
     @XmlAttribute(name=MailConstants.A_CAL_NEW_DURATION /* dur */, required=false)

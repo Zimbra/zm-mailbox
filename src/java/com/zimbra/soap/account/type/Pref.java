@@ -20,11 +20,12 @@ import javax.xml.bind.annotation.XmlValue;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.zimbra.soap.base.KeyAndValue;
 
 /*
    <pref name="{name}" modified="{modified-time}">{value}</pref>
  */
-public class Pref {
+public class Pref implements KeyAndValue {
     
     @XmlAttribute private String name;
     @XmlAttribute(name="modified") private Long modifiedTimestamp;
@@ -48,6 +49,7 @@ public class Pref {
     public Long getModifiedTimestamp() { return modifiedTimestamp; }
     public Pref setModifiedTimestamp(Long timestamp) { this.modifiedTimestamp = timestamp; return this; }
     
+    @Override
     public String getValue() { return value; }
     public Pref setValue(String value) { this.value = value; return this; }
     
@@ -57,5 +59,10 @@ public class Pref {
             map.put(p.getName(), p.getValue());
         }
         return map;
+    }
+
+    @Override
+    public String getKey() {
+        return getName();
     }
 }

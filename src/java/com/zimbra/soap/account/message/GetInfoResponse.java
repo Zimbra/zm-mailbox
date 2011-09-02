@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -18,12 +18,16 @@ package com.zimbra.soap.account.message;
 import java.util.Collections;
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -43,12 +47,15 @@ import com.zimbra.soap.account.type.Pref;
 import com.zimbra.soap.account.type.Prop;
 import com.zimbra.soap.account.type.Signature;
 import com.zimbra.soap.account.type.ZimletInfo;
-
+import com.zimbra.soap.json.jackson.StringListSerializer;
+import com.zimbra.soap.json.jackson.WrappedAttrListSerializer;
 
 /**
  * TODO: Note that LicenseAdminService and LicenseService both register a handler which
  *       extends com.zimbra.cs.service.account.GetInfo.  Need to support the
  *       additional elements added by those.
+ * TODO: Check how "zimlets" are handled.
+ * TODO: Don't yet support "license" child element
  *
 <GetInfoResponse>
    <version>{version}</version>
@@ -118,6 +125,7 @@ import com.zimbra.soap.account.type.ZimletInfo;
    [<license status="inGracePeriod|bad"/>]
 </GetInfoResponse>
  */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_INFO_RESPONSE)
 @XmlType(propOrder = {"version", "accountId", "accountName", "crumb",
         "lifetime", "adminDelegated", "restUrl", "quotaUsed",
@@ -126,7 +134,6 @@ import com.zimbra.soap.account.type.ZimletInfo;
         "signatures", "dataSources", "childAccounts", "changePasswordURL",
         "soapURLs", "publicURL"})
 public class GetInfoResponse {
-    // TODO: "zimlets" are not yet fully handled.
     @XmlAttribute(name=AccountConstants.A_ATTACHMENT_SIZE_LIMIT, required=false)
     private Long attachmentSizeLimit;
     @XmlAttribute(name=AccountConstants.A_DOCUMENT_SIZE_LIMIT, required=false)
@@ -159,10 +166,12 @@ public class GetInfoResponse {
 
     @XmlElementWrapper(name=AccountConstants.E_PREFS, required=false)
     @XmlElement(name=AccountConstants.E_PREF, required=false)
+    @JsonSerialize(using=WrappedAttrListSerializer.class)
     private List<Pref> prefs = Lists.newArrayList();
 
     @XmlElementWrapper(name=AccountConstants.E_ATTRS, required=false)
     @XmlElement(name=AccountConstants.E_ATTR, required=false)
+    @JsonSerialize(using=WrappedAttrListSerializer.class)
     private List<Attr> attrs = Lists.newArrayList();
     
     @XmlElementWrapper(name=AccountConstants.E_ZIMLETS, required=false)
@@ -200,6 +209,7 @@ public class GetInfoResponse {
     private String changePasswordURL;
 
     @XmlElement(name=AccountConstants.E_SOAP_URL)
+    @JsonSerialize(using=StringListSerializer.class)
     private List<String> soapURLs = Lists.newArrayList();
     @XmlElement
     private String publicURL;

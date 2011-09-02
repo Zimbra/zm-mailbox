@@ -19,7 +19,7 @@ import java.util.List;
 
 public interface CalendaringDataInterface
 extends CommonInstanceDataAttrsInterface {
-    public void setDate(long date);
+    public void setDate(Long date);
     public void setOrganizer(CalOrganizer organizer);
     public void setCategories(Iterable <String> categories);
     public void addCategory(String category);
@@ -32,7 +32,7 @@ extends CommonInstanceDataAttrsInterface {
     public void addCalendaringInstance(InstanceDataInterface instance);
     public void setAlarmData(AlarmDataInfo alarmData);
 
-    public long getDate();
+    public Long getDate();
     public CalOrganizer getOrganizer();
     public List<String> getCategories();
     public GeoInfo getGeo();
@@ -45,10 +45,10 @@ extends CommonInstanceDataAttrsInterface {
     public void setFlags(String flags);
     public void setTags(String tags);
     public void setFolderId(String folderId);
-    public void setSize(long size);
-    public void setChangeDate(long changeDate);
-    public void setModifiedSequence(int modifiedSequence);
-    public void setRevision(int revision);
+    public void setSize(Long size);
+    public void setChangeDate(Long changeDate);
+    public void setModifiedSequence(Integer modifiedSequence);
+    public void setRevision(Integer revision);
     public void setId(String id);
 
     public String getXUid();
@@ -56,9 +56,9 @@ extends CommonInstanceDataAttrsInterface {
     public String getFlags();
     public String getTags();
     public String getFolderId();
-    public long getSize();
-    public long getChangeDate();
-    public int getModifiedSequence();
-    public int getRevision();
+    public Long getSize();
+    public Long getChangeDate();
+    public Integer getModifiedSequence();
+    public Integer getRevision();
     public String getId();
 }

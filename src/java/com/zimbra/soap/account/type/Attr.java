@@ -31,11 +31,12 @@ import com.google.common.collect.Multimap;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.soap.base.KeyAndValue;
 
 /*
 <attr name="{name}">{value}</attr>
  */
-public class Attr {
+public class Attr implements KeyAndValue {
 
     public static Function<Attr, Attr> COPY = new Function<Attr, Attr>() {
         @Override
@@ -67,6 +68,7 @@ public class Attr {
     public String getName() { return name; }
     public Attr setName(String name) { this.name = name; return this; }
 
+    @Override
     public String getValue() { return value; }
     public Attr setValue(String value) { this.value = value; return this; }
 
@@ -127,5 +129,10 @@ public class Attr {
             }
         }
         return newAttrs;
+    }
+
+    @Override
+    public String getKey() {
+        return getName();
     }
 }

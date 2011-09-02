@@ -70,7 +70,7 @@ implements CalendaringDataInterface {
     }
 
     @Override
-    public void setDate(long date) { super.setDuration(date) /* Bug compatible... */; }
+    public void setDate(Long date) { super.setDuration(date) /* Bug compatible... */; }
 
     @Override
     public void setOrganizer(CalOrganizer organizer) {
@@ -110,7 +110,7 @@ implements CalendaringDataInterface {
     }
 
     @Override
-    public long getDate() { return super.getDuration(); }
+    public Long getDate() { return super.getDuration(); }
     @Override
     public CalOrganizer getOrganizer() { return organizer; }
     @Override

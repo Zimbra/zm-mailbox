@@ -31,11 +31,12 @@ import com.google.common.collect.Multimap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.soap.base.KeyAndValue;
 
 /* e.g. For element name "a":
  *         <a n="{key}">{value}</a>
  */
-public class KeyValuePair {
+public class KeyValuePair implements KeyAndValue {
 
     @XmlAttribute(name=AdminConstants.A_N, required=true)
     private final String key;
@@ -62,8 +63,10 @@ public class KeyValuePair {
         this.value = value;
     }
 
+    @Override
     public String getKey() { return key; }
 
+    @Override
     public String getValue() { return value; }
 
     public static Multimap<String, String> toMultimap(

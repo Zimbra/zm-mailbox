@@ -25,11 +25,13 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
 
@@ -70,6 +72,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.StringUtil;
 
 /**
  * Unit test for {@link GetInfoResponse} which exercises
@@ -85,7 +88,7 @@ public class JaxbToElementTest {
     //     elementToJaxbUsingDom4jTest time="41.165"
     //     elementToJaxbUsingByteArrayTest time="122.265"
     private static int iterationNum = 2;
-    static GetInfoResponse getInfoResp;
+    static GetInfoResponse getInfoRespJaxb;
     static String getInfoResponseXml;
     static String getInfoResponseJSON;
     static String getInfoResponseJSONwithEnv;
@@ -114,28 +117,55 @@ public class JaxbToElementTest {
         }
     }
 
+    public static Unmarshaller getGetInfoResponseUnmarshaller() throws JAXBException {
+        if (unmarshaller == null) {
+            JAXBContext jaxb = JAXBContext.newInstance(GetInfoResponse.class);
+            unmarshaller = jaxb.createUnmarshaller();
+        }
+        return unmarshaller;
+    }
+    public static GetInfoResponse getInfoResponsefromXml() throws JAXBException {
+        if (getInfoRespJaxb == null) {
+            getGetInfoResponseUnmarshaller();
+            getInfoRespJaxb = (GetInfoResponse) unmarshaller.unmarshal(
+                JaxbToElementTest.class.getResourceAsStream("GetInfoResponse.xml"));
+        }
+        return getInfoRespJaxb;
+    }
+
+    public static String getTestInfoResponseXml() throws IOException {
+        if (getInfoResponseXml == null) {
+            InputStream is = JaxbToElementTest.class.getResourceAsStream(
+                    "GetInfoResponse.xml");
+            getInfoResponseXml = streamToString(is, Charsets.UTF_8);
+        }
+        return getInfoResponseXml;
+    }
+
+    public static String getTestInfoResponseJson() throws IOException {
+        if (getInfoResponseJSON == null) {
+            InputStream is = JaxbToElementTest.class.getResourceAsStream(
+                    "GetInfoResponse.json");
+            getInfoResponseJSON = streamToString(is, Charsets.UTF_8);
+        }
+        return getInfoResponseJSON;
+    }
+
     @BeforeClass
     public static void init() throws Exception {
-        JAXBContext jaxb = JAXBContext.newInstance(GetInfoResponse.class);
-        unmarshaller = jaxb.createUnmarshaller();
-        getInfoResp = (GetInfoResponse) unmarshaller.unmarshal(
-            JaxbToElementTest.class.getResourceAsStream("GetInfoResponse.xml"));
-        InputStream is = JaxbToElementTest.class.getResourceAsStream(
-                "GetInfoResponse.xml");
-        getInfoResponseXml = streamToString(is, Charsets.UTF_8);
-        is = JaxbToElementTest.class.getResourceAsStream(
-                "GetInfoResponse.json");
-        getInfoResponseJSON = streamToString(is, Charsets.UTF_8);
+        getInfoResponsefromXml();
+        getTestInfoResponseXml();
+        getTestInfoResponseJson();
         StringBuffer sb = new StringBuffer();
         sb.append("{\n\"GetInfoResponse\": ").append(getInfoResponseJSON).append("\n}");
         getInfoResponseJSONwithEnv = sb.toString();
-        getInfoRespElem = JaxbUtil.jaxbToElement(getInfoResp);
+        getInfoRespElem = JaxbUtil.jaxbToElement(getInfoRespJaxb);
     }
 
     @Test
     public void jaxBToElementTest() throws Exception {
         for (int cnt = 1; cnt <= iterationNum;cnt++) {
-            Element el = JaxbUtil.jaxbToElement(getInfoResp);
+            Element el = JaxbUtil.jaxbToElement(getInfoRespJaxb);
             String actual = el.prettyPrint();
             // TODO: At present some stuff is wrong/missing 
             // so just check the first part.
@@ -168,7 +198,7 @@ public class JaxbToElementTest {
     @Test
     public void jaxBToJSONElementTest() throws Exception {
             Element el = JaxbUtil.jaxbToElement(
-                    getInfoResp, JSONElement.mFactory);
+                    getInfoRespJaxb, JSONElement.mFactory);
             // el.toString() and el.prettyPrint() don't provide the
             // name of the element - that only happens when it is a
             // child of other elements (the "soap" envelop)
@@ -182,13 +212,15 @@ public class JaxbToElementTest {
 
     @Test
     public void elementToJaxbTest() throws Exception {
-        Element el = JaxbUtil.jaxbToElement(getInfoResp);
+        Element el = JaxbUtil.jaxbToElement(getInfoRespJaxb);
         org.w3c.dom.Document doc = el.toW3cDom();
         if (LOG.isDebugEnabled())
             LOG.debug("(XML)elementToJaxbTest toW3cDom() Xml:\n" +
                     JaxbUtil.domToString(doc));
         for (int cnt = 1; cnt <= iterationNum;cnt++) {
-            getInfoResp = JaxbUtil.elementToJaxb(getInfoRespElem);
+            GetInfoResponse getInfoResp = JaxbUtil.elementToJaxb(getInfoRespElem);
+            Assert.assertEquals("Account name", "user1@ysasaki.local",
+                 getInfoResp.getAccountName());
         }
     }
 
@@ -196,7 +228,9 @@ public class JaxbToElementTest {
     @Test
     public void elementToJaxbUsingDom4jTest() throws Exception {
         for (int cnt = 1; cnt <= iterationNum;cnt++) {
-            getInfoResp = JaxbUtil.elementToJaxbUsingDom4j(getInfoRespElem);
+            GetInfoResponse getInfoResp = JaxbUtil.elementToJaxbUsingDom4j(getInfoRespElem);
+            Assert.assertEquals("Account name", "user1@ysasaki.local",
+                 getInfoResp.getAccountName());
         }
     }
 
@@ -204,7 +238,9 @@ public class JaxbToElementTest {
     @Test
     public void elementToJaxbUsingByteArrayTest() throws Exception {
         for (int cnt = 1; cnt <= iterationNum;cnt++) {
-            getInfoResp = JaxbUtil.elementToJaxbUsingByteArray(getInfoRespElem);
+            GetInfoResponse getInfoResp = JaxbUtil.elementToJaxbUsingByteArray(getInfoRespElem);
+            Assert.assertEquals("Account name", "user1@ysasaki.local",
+                 getInfoResp.getAccountName());
         }
     }
 
@@ -216,7 +252,7 @@ public class JaxbToElementTest {
         if (LOG.isDebugEnabled())
             LOG.debug("JSONelementToJaxbTest toW3cDom Xml:\n" +
                     JaxbUtil.domToString(doc));
-        getInfoResp = JaxbUtil.elementToJaxb(el);
+        GetInfoResponse getInfoResp = JaxbUtil.elementToJaxb(el);
         Assert.assertEquals("Account name", "user1@ysasaki.local",
              getInfoResp.getAccountName());
     }
@@ -231,7 +267,7 @@ public class JaxbToElementTest {
         for (int cnt = 1; cnt <= 4;cnt++) {
             Element env = Element.parseJSON(getInfoResponseJSONwithEnv);
             Element el = env.listElements().get(0);
-            getInfoResp = JaxbUtil.elementToJaxbUsingDom4j(el);
+            GetInfoResponse getInfoResp = JaxbUtil.elementToJaxbUsingDom4j(el);
             Assert.assertEquals("Account name", "user1@ysasaki.local",
                  getInfoResp.getAccountName());
         }
@@ -546,5 +582,36 @@ public class JaxbToElementTest {
         CreateXMbxSearchRequest soapObj = jaxbElem.getValue();
         Assert.assertNotNull("Unmarshal soap object", soapObj);
         Assert.assertEquals("Number of attributes", 10, soapObj.getKeyValuePairs().size());
+    }
+
+    // TODO - enable when bug fixed
+    // @Test
+    public void bug62571_zmsoapRequestPrefsSupport() throws Exception {
+        HashMap<String, Object> prefs;
+        final String zmsoapRequest = "{ \"pref\": [" +
+                "{ \"_content\": \"TRUE\", \"name\": \"zimbraPrefSharedAddrBookAutoCompleteEnabled\" }," +
+                "{ \"_content\": \"carbon\", \"name\": \"zimbraPrefSkin\" }" +
+                "], \"_jsns\": \"urn:zimbraAccount\" }";
+        final String idealRequest = "{ \"_attrs\": { " +
+                "\"zimbraPrefSharedAddrBookAutoCompleteEnabled\": \"TRUE\"," +
+                "\"zimbraPrefSkin\": \"carbon\"" +
+                "}, \"_jsns\": \"urn:zimbraAccount\" }";
+        // SoapEngine uses this to parse the Whole soapMessage for a request where "in" is a ByteArrayInputStream
+        //        document = Element.parseJSON(in);
+        // That parseJSON seems to extract the string from the stream and end up calling something similar to this...
+        Element zmsoapElem = Element.parseJSON(zmsoapRequest);
+        Element idealElem = Element.parseJSON(idealRequest);
+        prefs = Maps.newHashMap();
+        for (Element.KeyValuePair kvp : idealElem.listKeyValuePairs(AccountConstants.E_PREF, AccountConstants.A_NAME)) {
+            String name = kvp.getKey(), value = kvp.getValue();
+            StringUtil.addToMultiMap(prefs, name, value);
+        }
+        Assert.assertEquals("Ideal request - number of prefs found", 2, prefs.size());
+        prefs = Maps.newHashMap();
+        for (Element.KeyValuePair kvp : zmsoapElem.listKeyValuePairs(AccountConstants.E_PREF, AccountConstants.A_NAME)) {
+            String name = kvp.getKey(), value = kvp.getValue();
+            StringUtil.addToMultiMap(prefs, name, value);
+        }
+        Assert.assertEquals("zmsoap request - number of prefs found", 2, prefs.size());
     }
 }

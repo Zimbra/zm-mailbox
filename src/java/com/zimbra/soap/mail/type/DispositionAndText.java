@@ -21,18 +21,30 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
+import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.MailConstants;
+import org.codehaus.jackson.annotate.JsonProperty;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class DispositionAndText {
 
     @XmlAttribute(name=MailConstants.A_DISP /* disp */, required=false)
     private String disposition;
 
+    @JsonProperty(JSONElement.A_CONTENT)
     @XmlValue
     private String text;
 
     public DispositionAndText() {
+    }
+
+    public DispositionAndText(String disp, String txt) {
+        setDisposition(disp);
+        setText(txt);
+    }
+
+    public static DispositionAndText create(String disp, String txt) {
+        return new DispositionAndText(disp, txt);
     }
 
     public void setDisposition(String disposition) {

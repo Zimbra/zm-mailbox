@@ -93,6 +93,7 @@ public class JaxbInfo {
     public static HashMap<String,JaxbInfo> cache = Maps.newHashMap();
 
     private HashMap<String,Class<?>> element2class = Maps.newHashMap();
+    private HashMap<String,Class<?>> attr2class = Maps.newHashMap();
     private HashMap<String,WrappedElementInfo> wrappedElemInfo =
                                 Maps.newHashMap();
 
@@ -167,7 +168,7 @@ public class JaxbInfo {
      * @param klass is a JAXB annotated class associated with a particular 
      * element
      */
-    public JaxbInfo(Class<?> klass) {
+    private JaxbInfo(Class<?> klass) {
         this.klass = klass;
         if (klass == null) {
             LOG.error("null class provided to JaxbInfo constructor");
@@ -181,11 +182,15 @@ public class JaxbInfo {
     }
 
     public static JaxbInfo getFromCache(Class<?> klass) {
-        if (klass == null)
+        if (klass == null || klass.isPrimitive())
             return null;
+        JaxbInfo jbi = null;
         synchronized(cache) {
-            return cache.get(klass.getName());
+            jbi = cache.get(klass.getName());
         }
+        if (jbi == null)
+            jbi = new JaxbInfo(klass);
+        return jbi;
     }
 
     public static void clearCache() {
@@ -283,7 +288,7 @@ public class JaxbInfo {
 
     public List<String> getPropOrder() {
         List<String> propOrder = Lists.newArrayList();
-        if (null == xmlType.propOrder())
+        if ( (null == xmlType) || (null == xmlType.propOrder()) )
             return propOrder;
         for (String prop : xmlType.propOrder())
             propOrder.add(prop);
@@ -324,14 +329,42 @@ public class JaxbInfo {
         return klass;
     }
 
+    public Class<?> getClassForAttribute(String name) {
+        Class<?> klass =  attr2class.get(name);
+        if (klass == null) {
+            JaxbInfo encClassInfo = getSuperClassInfo();
+            if (encClassInfo != null) {
+                return encClassInfo.getClassForElement(name);
+            }
+        }
+        return klass;
+    }
+
+    private void setXmlAttributeInfo(XmlAttribute attr, String defaultName,
+                    Type defaultGenericType) {
+        Class<?> kls = classFromType(defaultGenericType);
+        if (kls == null) {
+            LOG.debug("%s Ignoring attribute with annotation '%s' unable to determine class", stamp, attr);
+            return;
+        }
+        String name = attr.name();
+        if ((name == null) || DEFAULT_MARKER.equals(name)) {
+            name = defaultName;
+        }
+        if (name == null) {
+            LOG.debug("%s Ignoring element with annotation '%s' unable to determine name", stamp, attr);
+            return;
+        }
+        attr2class.put(name, kls);
+    }
+
     private void setXmlElementInfo(XmlElement elem, String defaultName,
                     Type defaultGenericType) {
         Class<?> kls = elem.type();
         if (kls == XmlElement.DEFAULT.class)
             kls = classFromType(defaultGenericType);
         if (kls == null) {
-            LOG.debug(stamp + "Ignoring element with annotation '" +
-                    elem.toString() + "' unable to determine class");
+            LOG.debug("%s Ignoring element with annotation '%s' unable to determine class", stamp, elem);
             return;
         }
         String name = elem.name();
@@ -339,8 +372,7 @@ public class JaxbInfo {
             name = defaultName;
         }
         if (name == null) {
-            LOG.debug(stamp + "Ignoring element with annotation '" +
-                    elem.toString() + "' unable to determine name");
+            LOG.debug("%s Ignoring element with annotation '%s' unable to determine name", stamp, elem);
             return;
         }
         element2class.put(name, kls);
@@ -388,6 +420,7 @@ public class JaxbInfo {
                 if ((attrName == null) || DEFAULT_MARKER.equals(attrName)) {
                     attrName = defaultName;
                 }
+                this.setXmlAttributeInfo(attr, defaultName, defaultGenericType);
                 this.attributeNames.add(attrName);
             } else if (annot instanceof XmlElement) {
                 XmlElement xmlElem = (XmlElement) annot;
