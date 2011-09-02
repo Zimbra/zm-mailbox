@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20110824-1223 */
+    /* build: 8.0.0_BETA1_1111 administrator 20110830-1047 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5437,6 +5437,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailProxyPort = "zimbraMailProxyPort";
 
     /**
+     * the time in sec that proxy will reconnect the current server (as an
+     * upstream) after connection errors happened before
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1268)
+    public static final String A_zimbraMailProxyReconnectTimeout = "zimbraMailProxyReconnectTimeout";
+
+    /**
      * Maximum number of messages to delete from a folder during a single
      * purge operation. If the limit is exceeded, the mailbox is purged again
      * at the end of the purge cycle until all qualifying messages are
@@ -9970,6 +9979,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraZimletContentObject = "zimbraZimletContentObject";
 
     /**
+     * whether zimlets that send sensitive data are disabled in
+     * &quot;mixed&quot; zimbraMailMode
+     *
+     * @since ZCS 7.1.3
+     */
+    @ZAttr(id=1269)
+    public static final String A_zimbraZimletDataSensitiveInMixedModeDisabled = "zimbraZimletDataSensitiveInMixedModeDisabled";
+
+    /**
      * Zimlet description
      */
     @ZAttr(id=283)
@@ -10072,9 +10090,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=282)
     public static final String A_zimbraZimletVersion = "zimbraZimletVersion";
-    
-    @ZAttr(id=1268)
-    public static final String A_zimbraMailProxyReconnectTimeout = "zimbraMailProxyReconnectTimeout";
 
     ///// END-AUTO-GEN-REPLACE
 }
