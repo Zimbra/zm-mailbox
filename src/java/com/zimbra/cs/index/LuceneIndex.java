@@ -463,6 +463,10 @@ public final class LuceneIndex implements IndexStore {
      */
     @Override
     public boolean verify(PrintStream out) throws IOException {
+        if (!IndexReader.indexExists(luceneDirectory)) {
+            out.println("index does not exist or no segments file found: " + luceneDirectory.getDirectory());
+            return true;
+        }
         CheckIndex check = new CheckIndex(luceneDirectory);
         if (out != null) {
             check.setInfoStream(out);
