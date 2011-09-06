@@ -173,8 +173,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     mechanisms that are replacing the deprecated attribute.  Required if
     deprecatedSince is present.  Cannot be present if deprecatedSince is not
     present.
-    
-    
+
+
 -->
 
 <attr name="c" type="string" optionalIn="account" flags="domainAdminModifiable">
@@ -1863,7 +1863,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="356" name="zimbraFeatureNotebookEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" deprecatedSince="7.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Whether notebook feature should be allowed for this account or in this cos</desc>
-  <deprecateDesc>Deprecated per bug 50465</deprecateDesc>
+  <deprecateDesc>Deprecated per bugs 50465, 56201</deprecateDesc>
 </attr>
 
 <attr id="357" name="zimbraShareInfo" type="string" max="1024" cardinality="multi" optionalIn="account,distributionList" deprecatedSince="8.0.0">
@@ -5079,10 +5079,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>authorizationId for SASL authentication</desc>
 </attr>
 
-<attr id="1109" name="zimbraFeaturePeopleSearchEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="7.0.0">
+<attr id="1109" name="zimbraFeaturePeopleSearchEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="7.0.0" deprecatedSince="8.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <defaultExternalCOSValue>FALSE</defaultExternalCOSValue>
   <desc>whether people search feature is enabled</desc>
+  <deprecateDesc>Deprecated per bug 56924</deprecateDesc>>
 </attr>
 
 <attr id="1110" name="zimbraGalLdapValueMap" type="string" max="4096" cardinality="multi" optionalIn="globalConfig,domain,galDataSource" flags="domainInherited" since="7.0.0">
