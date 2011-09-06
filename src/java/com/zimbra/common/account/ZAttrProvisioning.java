@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20110830-1047 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110906-1229 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -700,6 +700,22 @@ public class ZAttrProvisioning {
         }
         public boolean isList() { return this == list;}
         public boolean isCards() { return this == cards;}
+    }
+
+    public static enum PrefConversationMode {
+        CLV2("CLV2"),
+        CLV("CLV");
+        private String mValue;
+        private PrefConversationMode(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefConversationMode fromString(String s) throws ServiceException {
+            for (PrefConversationMode value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isCLV2() { return this == CLV2;}
+        public boolean isCLV() { return this == CLV;}
     }
 
     public static enum PrefConversationOrder {
@@ -7219,6 +7235,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefContactsPerPage = "zimbraPrefContactsPerPage";
 
     /**
+     * mode for conversation view
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1270)
+    public static final String A_zimbraPrefConversationMode = "zimbraPrefConversationMode";
+
+    /**
      * order of messages displayed within a conversation
      *
      * @since ZCS 6.0.0_BETA1
@@ -9686,6 +9710,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
