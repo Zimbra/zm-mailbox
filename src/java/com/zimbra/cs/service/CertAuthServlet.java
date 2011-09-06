@@ -67,7 +67,7 @@ public class CertAuthServlet extends SSOServlet {
             } catch (SSOAuthenticatorServiceException e) {
                 if (SSOAuthenticatorServiceException.NO_CLIENT_CERTIFICATE.equals(e.getCode())) {
                     if (missingClientCertOK()) {
-                        redirectToErrorPage(req, resp, isAdminRequest, null);
+                        redirectToErrorPage(req, resp, false, isAdminRequest, null);
                         return;
                     } else {
                         throw e;
@@ -76,7 +76,7 @@ public class CertAuthServlet extends SSOServlet {
             }
             
             AuthToken authToken = authorize(req, AuthContext.Protocol.client_certificate, principal, isAdminRequest);
-            setAuthTokenCookieAndRedirect(req, resp, principal.getAccount(), authToken);
+            setAuthTokenCookieAndRedirect(req, resp, false, principal.getAccount(), authToken);
             
         } catch (ServiceException e) {
             if (e instanceof AuthFailedServiceException) {
