@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -40,19 +40,20 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.store.*;
 
 public abstract class HttpStoreManager extends StoreManager {
-    private final IncomingDirectory mIncoming = new IncomingDirectory(LC.zimbra_store_directory.value() + File.separator + "incoming");
-    private final LocalBlobCache mLocalCache = new LocalBlobCache(LC.zimbra_tmp_directory.value() + File.separator + "blobs");
+    private final IncomingDirectory incoming = new IncomingDirectory(LC.zimbra_tmp_directory.value() + File.separator + "incoming");
+    private final LocalBlobCache localCache = new LocalBlobCache(LC.zimbra_tmp_directory.value() + File.separator + "blobs");
 
     protected abstract String getPostUrl(Mailbox mbox);
     protected abstract String getGetUrl(Mailbox mbox, String locator);
     protected abstract String getDeleteUrl(Mailbox mbox, String locator);
 
-    @Override public void startup() throws IOException, ServiceException {
+    @Override
+    public void startup() throws IOException, ServiceException {
         ZimbraLog.store.info("starting up store " + this.getClass().getName());
 
         // set up sweeping for the incoming blob directory
-        FileUtil.mkdirs(new File(mIncoming.getPath()));
-        IncomingDirectory.setSweptDirectories(mIncoming);
+        FileUtil.mkdirs(new File(incoming.getPath()));
+        IncomingDirectory.setSweptDirectories(incoming);
         IncomingDirectory.startSweeper();
 
         // initialize file uncompressed file cache and file descriptor cache
@@ -62,49 +63,60 @@ public abstract class HttpStoreManager extends StoreManager {
         BlobInputStream.setFileDescriptorCache(new FileDescriptorCache(ufcache).loadSettings());
 
         // create a local cache for downloading remote blobs
-        mLocalCache.startup();
+        localCache.startup();
     }
 
-    @Override public void shutdown() {
+    @Override
+    public void shutdown() {
         IncomingDirectory.stopSweeper();
     }
 
     LocalBlobCache getBlobCache() {
-        return mLocalCache;
+        return localCache;
     }
 
     /** Private subclass to get around Blob constructor visibility issues. */
     private static class HttpBlob extends Blob {
-        HttpBlob(File incoming)  { super(incoming); }
+        HttpBlob(File incomingFile) {
+            super(incomingFile);
+        }
     }
 
     /** Private subclass to get around BlobBuilder constructor visibility issues. */
     private static class HttpBlobBuilder extends BlobBuilder {
-        HttpBlobBuilder(Blob targetBlob)  { super(targetBlob); }
+        HttpBlobBuilder(Blob targetBlob)  {
+            super(targetBlob);
+        }
     }
 
-    @Override public BlobBuilder getBlobBuilder() {
-        return new HttpBlobBuilder(new HttpBlob(mIncoming.getNewIncomingFile()));
+    @Override
+    public BlobBuilder getBlobBuilder() {
+        return new HttpBlobBuilder(new HttpBlob(incoming.getNewIncomingFile()));
     }
 
-    @Override public InputStream getContent(Blob blob) throws IOException {
+    @Override
+    public InputStream getContent(Blob blob) throws IOException {
         return new BlobInputStream(blob);
     }
 
-    @Override public InputStream getContent(MailboxBlob mblob) throws IOException {
-        if (mblob == null)
+    @Override
+    public InputStream getContent(MailboxBlob mblob) throws IOException {
+        if (mblob == null) {
             return null;
+        }
         return getContent(mblob.getMailbox(), mblob.getLocator());
     }
 
     private InputStream getContent(Mailbox mbox, String locator) throws IOException {
-        if (mbox == null || locator == null)
+        if (mbox == null || locator == null) {
             return null;
+        }
 
         // check the local cache before doing a GET
-        Blob blob = mLocalCache.get(locator);
-        if (blob != null)
+        Blob blob = localCache.get(locator);
+        if (blob != null) {
             return getContent(blob);
+        }
 
         HttpClient client = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
         GetMethod get = new GetMethod(getGetUrl(mbox, locator));
@@ -117,14 +129,15 @@ public abstract class HttpStoreManager extends StoreManager {
     }
 
     Blob getLocalBlob(Mailbox mbox, String locator, long sizeHint) throws IOException {
-        Blob blob = mLocalCache.get(locator);
-        if (blob != null)
+        Blob blob = localCache.get(locator);
+        if (blob != null) {
             return blob;
+        }
 
         InputStream is = getContent(mbox, locator);
         try {
             blob = storeIncoming(is, sizeHint, null);
-            return mLocalCache.cache(locator, blob);
+            return localCache.cache(locator, blob);
         } catch (ServiceException e) {
             throw new IOException("fetching local blob: " + e);
         } finally {
@@ -132,11 +145,13 @@ public abstract class HttpStoreManager extends StoreManager {
         }
     }
 
-    @Override public MailboxBlob getMailboxBlob(Mailbox mbox, int msgId, int revision, String locator) {
+    @Override
+    public MailboxBlob getMailboxBlob(Mailbox mbox, int msgId, int revision, String locator) {
         return new HttpMailboxBlob(mbox, msgId, revision, locator);
     }
 
-    @Override public Blob storeIncoming(InputStream data, long sizeHint, StorageCallback callback, boolean storeAsIs)
+    @Override
+    public Blob storeIncoming(InputStream data, long sizeHint, StorageCallback callback, boolean storeAsIs)
     throws IOException, ServiceException {
         BlobBuilder builder = getBlobBuilder().setSizeHint(sizeHint).setStorageCallback(callback);
         // if the blob is already compressed, *don't* calculate a digest/size from what we write
@@ -145,11 +160,13 @@ public abstract class HttpStoreManager extends StoreManager {
         return builder.init().append(data).finish();
     }
 
-    @Override public StagedBlob stage(InputStream in, long actualSize, StorageCallback callback, Mailbox mbox)
+    @Override
+    public StagedBlob stage(InputStream in, long actualSize, StorageCallback callback, Mailbox mbox)
     throws IOException, ServiceException {
         // just stream straight to the remote http server if we can
-        if (actualSize >= 0 && callback == null)
+        if (actualSize >= 0 && callback == null) {
             return stage(in, actualSize, mbox);
+        }
 
         // for some reason, we need to route through the local filesystem
         Blob blob = storeIncoming(in, actualSize, callback);
@@ -160,7 +177,8 @@ public abstract class HttpStoreManager extends StoreManager {
         }
     }
 
-    @Override public StagedBlob stage(Blob blob, Mailbox mbox) throws IOException, ServiceException {
+    @Override
+    public StagedBlob stage(Blob blob, Mailbox mbox) throws IOException, ServiceException {
         InputStream is = getContent(blob);
         try {
             return stage(is, blob.getRawSize(), mbox);
@@ -187,20 +205,23 @@ public abstract class HttpStoreManager extends StoreManager {
         try {
             HttpClientUtil.addInputStreamToHttpMethod(post, pin, actualSize, "application/octet-stream");
             int statusCode = HttpClientUtil.executeMethod(client, post);
-            if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED && statusCode != HttpStatus.SC_NO_CONTENT)
+            if (statusCode != HttpStatus.SC_OK && statusCode != HttpStatus.SC_CREATED && statusCode != HttpStatus.SC_NO_CONTENT) {
                 throw ServiceException.FAILURE("error POSTing blob: " + post.getStatusText(), null);
+            }
             return getStagedBlob(post, ByteUtil.encodeFSSafeBase64(digest.digest()), pin.getPosition(), mbox);
         } finally {
             post.releaseConnection();
         }
     }
 
-    @Override public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
+    @Override
+    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
     throws IOException, ServiceException {
         return link(src, destMbox, destMsgId, destRevision);
     }
 
-    @Override public MailboxBlob link(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
+    @Override
+    public MailboxBlob link(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
     throws IOException, ServiceException {
         // default implementation is a GET fed directly into a POST
         InputStream is = getContent(src);
@@ -212,12 +233,14 @@ public abstract class HttpStoreManager extends StoreManager {
         }
     }
 
-    @Override public MailboxBlob link(StagedBlob staged, Mailbox destMbox, int destMsgId, int destRevision) {
+    @Override
+    public MailboxBlob link(StagedBlob staged, Mailbox destMbox, int destMsgId, int destRevision) {
         // link is a noop
         return renameTo(staged, destMbox, destMsgId, destRevision);
     }
 
-    @Override public MailboxBlob renameTo(StagedBlob staged, Mailbox destMbox, int destMsgId, int destRevision) {
+    @Override
+    public MailboxBlob renameTo(StagedBlob staged, Mailbox destMbox, int destMsgId, int destRevision) {
         // rename is a noop
         HttpStagedBlob hsb = (HttpStagedBlob) staged;
         hsb.markInserted();
@@ -226,17 +249,21 @@ public abstract class HttpStoreManager extends StoreManager {
         return mblob.setSize(hsb.getStagedSize()).setDigest(hsb.getStagedDigest());
     }
 
-    @Override public boolean delete(MailboxBlob mblob) throws IOException {
-        if (mblob == null)
+    @Override
+    public boolean delete(MailboxBlob mblob) throws IOException {
+        if (mblob == null) {
             return true;
+        }
         return delete(mblob.getMailbox(), mblob.getLocator());
     }
 
-    @Override public boolean delete(StagedBlob staged) throws IOException {
+    @Override
+    public boolean delete(StagedBlob staged) throws IOException {
         HttpStagedBlob hsb = (HttpStagedBlob) staged;
         // we only delete a staged blob if it hasn't already been added to the mailbox 
-        if (hsb == null || hsb.isInserted())
+        if (hsb == null || hsb.isInserted()) {
             return true;
+        }
         return delete(hsb.getMailbox(), hsb.getStagedLocator());
     }
 
@@ -256,11 +283,13 @@ public abstract class HttpStoreManager extends StoreManager {
         }
     }
 
-    @Override public boolean delete(Blob blob) {
+    @Override
+    public boolean delete(Blob blob) {
         return blob.getFile().delete();
     }
 
-    @Override public boolean deleteStore(Mailbox mbox) {
+    @Override
+    public boolean deleteStore(Mailbox mbox) {
         // TODO Auto-generated method stub
         return false;
     }
