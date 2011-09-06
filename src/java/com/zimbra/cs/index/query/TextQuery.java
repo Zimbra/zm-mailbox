@@ -34,6 +34,7 @@ import com.google.common.base.Joiner;
 import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.index.AllQueryOperation;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation;
 import com.zimbra.cs.index.NoResultsQueryOperation;
@@ -145,7 +146,7 @@ public class TextQuery extends Query {
             }
 
             if (terms.isEmpty()) {
-                return new NoResultsQueryOperation();
+                return bool ? new NoResultsQueryOperation() : new AllQueryOperation();
             } else {
                 MultiPhraseQuery query = new MultiPhraseQuery();
                 for (Token token : tokens) {
