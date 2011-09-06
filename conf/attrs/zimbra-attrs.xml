@@ -6187,4 +6187,9 @@ TODO: delete them permanently from here
   <desc>whether zimlets that send sensitive data are disabled in "mixed" zimbraMailMode</desc>
 </attr>
 
+<attr id="1270" name="zimbraPrefConversationMode" type="enum" value="CLV,CLV2" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0.0">
+  <defaultCOSValue>CLV2</defaultCOSValue>
+  <desc>mode for conversation view</desc>
+</attr>
+
 </attrs>

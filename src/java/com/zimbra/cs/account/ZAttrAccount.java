@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20110830-1047 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110906-1229 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -28895,6 +28895,137 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * mode for conversation view
+     *
+     * <p>Valid values: [CLV2, CLV]
+     *
+     * @return zimbraPrefConversationMode, or ZAttrProvisioning.PrefConversationMode.CLV2 if unset and/or has invalid value
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1270)
+    public ZAttrProvisioning.PrefConversationMode getPrefConversationMode() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefConversationMode); return v == null ? ZAttrProvisioning.PrefConversationMode.CLV2 : ZAttrProvisioning.PrefConversationMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefConversationMode.CLV2; }
+    }
+
+    /**
+     * mode for conversation view
+     *
+     * <p>Valid values: [CLV2, CLV]
+     *
+     * @return zimbraPrefConversationMode, or "CLV2" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1270)
+    public String getPrefConversationModeAsString() {
+        return getAttr(Provisioning.A_zimbraPrefConversationMode, "CLV2");
+    }
+
+    /**
+     * mode for conversation view
+     *
+     * <p>Valid values: [CLV2, CLV]
+     *
+     * @param zimbraPrefConversationMode new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1270)
+    public void setPrefConversationMode(ZAttrProvisioning.PrefConversationMode zimbraPrefConversationMode) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefConversationMode, zimbraPrefConversationMode.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * mode for conversation view
+     *
+     * <p>Valid values: [CLV2, CLV]
+     *
+     * @param zimbraPrefConversationMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1270)
+    public Map<String,Object> setPrefConversationMode(ZAttrProvisioning.PrefConversationMode zimbraPrefConversationMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefConversationMode, zimbraPrefConversationMode.toString());
+        return attrs;
+    }
+
+    /**
+     * mode for conversation view
+     *
+     * <p>Valid values: [CLV2, CLV]
+     *
+     * @param zimbraPrefConversationMode new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1270)
+    public void setPrefConversationModeAsString(String zimbraPrefConversationMode) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefConversationMode, zimbraPrefConversationMode);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * mode for conversation view
+     *
+     * <p>Valid values: [CLV2, CLV]
+     *
+     * @param zimbraPrefConversationMode new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1270)
+    public Map<String,Object> setPrefConversationModeAsString(String zimbraPrefConversationMode, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefConversationMode, zimbraPrefConversationMode);
+        return attrs;
+    }
+
+    /**
+     * mode for conversation view
+     *
+     * <p>Valid values: [CLV2, CLV]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1270)
+    public void unsetPrefConversationMode() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefConversationMode, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * mode for conversation view
+     *
+     * <p>Valid values: [CLV2, CLV]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1270)
+    public Map<String,Object> unsetPrefConversationMode(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefConversationMode, "");
+        return attrs;
+    }
+
+    /**
      * order of messages displayed within a conversation
      *
      * <p>Valid values: [dateAsc, dateDesc]
@@ -41728,6 +41859,174 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetTextAnalyzer(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraTextAnalyzer, "");
+        return attrs;
+    }
+
+    /**
+     * binary data
+     *
+     * @return zimbraUnittestBinary, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public byte[] getUnittestBinary() {
+        return getBinaryAttr(Provisioning.A_zimbraUnittestBinary);
+    }
+
+    /**
+     * binary data
+     *
+     * @return zimbraUnittestBinary, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public String getUnittestBinaryAsString() {
+        return getAttr(Provisioning.A_zimbraUnittestBinary, null);
+    }
+
+    /**
+     * binary data
+     *
+     * @param zimbraUnittestBinary new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public void setUnittestBinary(byte[] zimbraUnittestBinary) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestBinary, zimbraUnittestBinary==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestBinary));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * binary data
+     *
+     * @param zimbraUnittestBinary new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public Map<String,Object> setUnittestBinary(byte[] zimbraUnittestBinary, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestBinary, zimbraUnittestBinary==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestBinary));
+        return attrs;
+    }
+
+    /**
+     * binary data
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public void unsetUnittestBinary() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestBinary, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * binary data
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public Map<String,Object> unsetUnittestBinary(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestBinary, "");
+        return attrs;
+    }
+
+    /**
+     * binary data
+     *
+     * @return zimbraUnittestCertificate, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public byte[] getUnittestCertificate() {
+        return getBinaryAttr(Provisioning.A_zimbraUnittestCertificate);
+    }
+
+    /**
+     * binary data
+     *
+     * @return zimbraUnittestCertificate, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public String getUnittestCertificateAsString() {
+        return getAttr(Provisioning.A_zimbraUnittestCertificate, null);
+    }
+
+    /**
+     * binary data
+     *
+     * @param zimbraUnittestCertificate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public void setUnittestCertificate(byte[] zimbraUnittestCertificate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestCertificate, zimbraUnittestCertificate==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestCertificate));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * binary data
+     *
+     * @param zimbraUnittestCertificate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public Map<String,Object> setUnittestCertificate(byte[] zimbraUnittestCertificate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestCertificate, zimbraUnittestCertificate==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestCertificate));
+        return attrs;
+    }
+
+    /**
+     * binary data
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public void unsetUnittestCertificate() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestCertificate, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * binary data
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public Map<String,Object> unsetUnittestCertificate(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestCertificate, "");
         return attrs;
     }
 
