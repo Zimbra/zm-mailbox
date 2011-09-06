@@ -104,7 +104,7 @@ public abstract class SSOServlet extends ZimbraServlet {
     }
     
     protected void setAuthTokenCookieAndRedirect(HttpServletRequest req, HttpServletResponse resp, 
-            Account acct, AuthToken authToken) 
+            boolean relative, Account acct, AuthToken authToken) 
     throws IOException, ServiceException {
         
         boolean isAdmin = AuthToken.isAnyAdmin(authToken);
@@ -116,23 +116,23 @@ public abstract class SSOServlet extends ZimbraServlet {
         
         String redirectUrl;
         if (isAdmin) {
-            redirectUrl = getAdminUrl(server);
+            redirectUrl = getAdminUrl(server, relative);
         } else {
-            redirectUrl = getMailUrl(server);
+            redirectUrl = getMailUrl(server, relative);
         }
         
         // always append the ignore loginURL query so we do not get into a redirect loop.
         redirectUrl = redirectUrl + IGNORE_LOGIN_URL;  // not yet supported for admin console
         
-        /*
-        URL url = new URL(redirectUrl);
-        boolean isRedirectProtocolSecure = isProtocolSecure(url.getProtocol());
-        
-        if (secureCookie && !isRedirectProtocolSecure) {
-            throw ServiceException.INVALID_REQUEST("cannot redirect to non-secure protocol: " + redirectUrl, null);
+        if (!relative) {
+            URL url = new URL(redirectUrl);
+            boolean isRedirectProtocolSecure = isProtocolSecure(url.getProtocol());
+            
+            if (secureCookie && !isRedirectProtocolSecure) {
+                throw ServiceException.INVALID_REQUEST("cannot redirect to non-secure protocol: " + redirectUrl, null);
+            }
         }
-        */
-        
+                
         ZimbraLog.account.debug("SSOServlet - redirecting (with auth token) to: " + redirectUrl);
         resp.sendRedirect(redirectUrl);
     }
@@ -141,7 +141,8 @@ public abstract class SSOServlet extends ZimbraServlet {
     // The default error page is the webapp's regular entry page where user can
     // enter his username/password.
     protected void redirectToErrorPage(HttpServletRequest req, HttpServletResponse resp, 
-            boolean isAdminRequest, String errorUrl) throws IOException, ServiceException {
+            boolean relative, boolean isAdminRequest, String errorUrl) 
+    throws IOException, ServiceException {
         String redirectUrl;
         
         if (errorUrl == null) {
@@ -149,9 +150,9 @@ public abstract class SSOServlet extends ZimbraServlet {
             Server server = Provisioning.getInstance().getLocalServer();
             
             if (isAdminRequest) {
-                redirectUrl = getAdminUrl(server); 
+                redirectUrl = getAdminUrl(server, relative); 
             } else {
-                redirectUrl = getMailUrl(server);
+                redirectUrl = getMailUrl(server, relative);
             }
             
             // always append the ignore loginURL query so we do not get into a redirect loop.
@@ -170,19 +171,27 @@ public abstract class SSOServlet extends ZimbraServlet {
         return URLUtil.PROTO_HTTPS.equalsIgnoreCase(protocol);
     }
     
-    protected String getMailUrl(Server server) throws ServiceException {
+    private String getMailUrl(Server server, boolean relative) throws ServiceException {
         final String DEFAULT_MAIL_URL = "/zimbra";
     
         String serviceUrl = server.getAttr(Provisioning.A_zimbraMailURL, DEFAULT_MAIL_URL);
-        return serviceUrl;
-        // return URLUtil.getServiceURL(server, serviceUrl, true);
+        
+        if (relative) {
+            return serviceUrl;
+        } else {
+            return URLUtil.getServiceURL(server, serviceUrl, true);
+        }
     }
     
-    protected String getAdminUrl(Server server) throws ServiceException {
+    private String getAdminUrl(Server server, boolean relative) throws ServiceException {
         final String DEFAULT_ADMIN_URL = "/zimbraAdmin";
         
         String serviceUrl = server.getAttr(Provisioning.A_zimbraAdminURL, DEFAULT_ADMIN_URL);
-        return serviceUrl;
-        // return URLUtil.getAdminURL(server, serviceUrl, true);
+        
+        if (relative) {
+            return serviceUrl;
+        } else {
+            return URLUtil.getAdminURL(server, serviceUrl, true);
+        }
     }
 }
