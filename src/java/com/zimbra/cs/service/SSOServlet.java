@@ -39,6 +39,7 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 public abstract class SSOServlet extends ZimbraServlet {
     private final static String IGNORE_LOGIN_URL = "/?ignoreLoginURL=1";
     
+    protected abstract boolean redirectToRelativeURL();
     
     public void init() throws ServletException {
         String name = getServletName();
@@ -104,7 +105,7 @@ public abstract class SSOServlet extends ZimbraServlet {
     }
     
     protected void setAuthTokenCookieAndRedirect(HttpServletRequest req, HttpServletResponse resp, 
-            boolean relative, Account acct, AuthToken authToken) 
+            Account acct, AuthToken authToken) 
     throws IOException, ServiceException {
         
         boolean isAdmin = AuthToken.isAnyAdmin(authToken);
@@ -113,6 +114,8 @@ public abstract class SSOServlet extends ZimbraServlet {
 
         Provisioning prov = Provisioning.getInstance();
         Server server = prov.getServer(acct);
+        
+        boolean relative = redirectToRelativeURL();
         
         String redirectUrl;
         if (isAdmin) {
@@ -141,12 +144,12 @@ public abstract class SSOServlet extends ZimbraServlet {
     // The default error page is the webapp's regular entry page where user can
     // enter his username/password.
     protected void redirectToErrorPage(HttpServletRequest req, HttpServletResponse resp, 
-            boolean relative, boolean isAdminRequest, String errorUrl) 
+            boolean isAdminRequest, String errorUrl) 
     throws IOException, ServiceException {
         String redirectUrl;
         
         if (errorUrl == null) {
-            
+            boolean relative = redirectToRelativeURL();
             Server server = Provisioning.getInstance().getLocalServer();
             
             if (isAdminRequest) {

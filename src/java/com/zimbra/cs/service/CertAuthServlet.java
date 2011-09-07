@@ -67,7 +67,7 @@ public class CertAuthServlet extends SSOServlet {
             } catch (SSOAuthenticatorServiceException e) {
                 if (SSOAuthenticatorServiceException.NO_CLIENT_CERTIFICATE.equals(e.getCode())) {
                     if (missingClientCertOK()) {
-                        redirectToErrorPage(req, resp, false, isAdminRequest, null);
+                        redirectToErrorPage(req, resp, isAdminRequest, null);
                         return;
                     } else {
                         throw e;
@@ -76,7 +76,7 @@ public class CertAuthServlet extends SSOServlet {
             }
             
             AuthToken authToken = authorize(req, AuthContext.Protocol.client_certificate, principal, isAdminRequest);
-            setAuthTokenCookieAndRedirect(req, resp, false, principal.getAccount(), authToken);
+            setAuthTokenCookieAndRedirect(req, resp, principal.getAccount(), authToken);
             
         } catch (ServiceException e) {
             if (e instanceof AuthFailedServiceException) {
@@ -109,6 +109,11 @@ public class CertAuthServlet extends SSOServlet {
         } catch (ServiceException e) {
             ZimbraLog.account.debug("unable to get local server", e);
         }
+        return false;
+    }
+
+    @Override
+    protected boolean redirectToRelativeURL() {
         return false;
     }
 

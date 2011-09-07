@@ -61,7 +61,7 @@ public class SpnegoAuthServlet extends SSOServlet {
             if (isFromZCO) {
                 setAuthTokenCookieAndReturn(req, resp, authToken);
             } else {
-                setAuthTokenCookieAndRedirect(req, resp, true, zimbraPrincipal.getAccount(), authToken);
+                setAuthTokenCookieAndRedirect(req, resp, zimbraPrincipal.getAccount(), authToken);
             }
             
         } catch (ServiceException e) {
@@ -77,7 +77,7 @@ public class SpnegoAuthServlet extends SSOServlet {
                 resp.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
             } else {
                 try {
-                    redirectToErrorPage(req, resp, true, isAdminRequest, 
+                    redirectToErrorPage(req, resp, isAdminRequest, 
                             Provisioning.getInstance().getConfig().getSpnegoAuthErrorURL());
                 } catch (ServiceException se) {
                     ZimbraLog.account.info("failed to redirect to error page: " + se.getMessage());
@@ -90,5 +90,10 @@ public class SpnegoAuthServlet extends SSOServlet {
     @Override
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         doGet(req, resp);
+    }
+
+    @Override
+    protected boolean redirectToRelativeURL() {
+        return true;
     }
 }
