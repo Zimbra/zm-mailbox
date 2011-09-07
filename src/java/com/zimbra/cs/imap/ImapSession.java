@@ -286,7 +286,7 @@ public class ImapSession extends Session {
                 if (mFolder instanceof PagedFolderData) {
                     PagedFolderData paged = (PagedFolderData) mFolder;
                     ImapFolder i4folder = MANAGER.deserialize(paged.getCacheKey());
-                    if (i4folder == null) {
+                    if (i4folder == null) { // cache miss
                         return null;
                     }
                     try {

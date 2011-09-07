@@ -342,6 +342,9 @@ final class ImapSessionManager {
                     } catch (ImapSessionClosedException e) {
                         return null;
                     }
+                    if (i4selected == null) { // cache miss
+                        return null;
+                    }
                     // found a matching session, so just copy its contents!
                     ZimbraLog.imap.info("copying message data from existing session: %s", i4listener.getPath());
 
