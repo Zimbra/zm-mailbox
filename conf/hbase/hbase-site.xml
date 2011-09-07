@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  HBase configuration for dev environment
+
+  Install HBase at /opt/hbase and replace conf/hbase-site.xml with this file.
+-->
+<configuration>
+  <property>
+    <name>hbase.rootdir</name>
+    <value>file:///opt/hbase/data</value>
+  </property>
+  <property>
+    <name>hbase.tmp.dir</name>
+    <value>tmp</value>
+  </property>
+</configuration>
