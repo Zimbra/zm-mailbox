@@ -353,6 +353,11 @@ public class NativeFormatter extends Formatter {
             String disp = req.getParameter(UserServlet.QP_DISP);
             disposition = (disp == null || disp.toLowerCase().startsWith("i") ) ? Part.INLINE : Part.ATTACHMENT;
     	}
+    	// bug 64051 Make sure to ask IE to actually download the file
+    	if(!"html".equals(req.getParameter(UserServlet.QP_VIEW))) {
+    	    resp.addHeader("X-Content-Type-Options", "nosniff"); // turn off content detection..
+    	    resp.addHeader("X-Download-Options", "noopen"); // ask it to save the file
+    	}
         PushbackInputStream pis = new PushbackInputStream(in, READ_AHEAD_BUFFER_SIZE);
         boolean isSafe = false;
         String ua = req.getHeader("User-Agent");
