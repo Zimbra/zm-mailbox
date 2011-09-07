@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -61,11 +61,9 @@ public final class BuildInfo {
             minorversion = (String) clz.getField("MINORVERSION").get(null);
             microversion = (String) clz.getField("MICROVERSION").get(null);
             buildnum = (String) clz.getField("BUILDNUM").get(null);
-        } catch (Exception e) {
-            System.err.println("Exception occurred during introspecting; version information incomplete");
-            e.printStackTrace(System.err);
+        } catch (Throwable e) {
+            System.out.println("build information not available: " + e);
         }
-
 
         VERSION = version;
         TYPE = type;
