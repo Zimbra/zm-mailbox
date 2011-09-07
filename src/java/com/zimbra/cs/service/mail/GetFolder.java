@@ -117,7 +117,7 @@ public class GetFolder extends MailDocumentHandler {
     throws ServiceException {
         Element eFolder;
         if (node.mFolder != null) {
-            if (node.mFolder.getId() != Mailbox.ID_FOLDER_USER_ROOT && view != null && view != MailItem.Type.UNKNOWN && !node.mFolder.getDefaultView().equals(view)) {
+            if (node.mFolder.getId() != Mailbox.ID_FOLDER_USER_ROOT && node.mFolder.getId() != Mailbox.ID_FOLDER_TRASH && view != null && view != MailItem.Type.UNKNOWN && !node.mFolder.getDefaultView().equals(view)) {
                 return null;
             }
             eFolder = ToXML.encodeFolder(parent, ifmt, octxt, node.mFolder, ToXML.NOTIFY_FIELDS, exposeAclAccessKey);
