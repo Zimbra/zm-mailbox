@@ -1749,25 +1749,25 @@ public class ZimletUtil {
 	
 	private static void dispatch(String[] args) {
 		boolean localInstall = false;
-		if (args[argPos].equals("-l")) {
-			localInstall = true;
-			argPos++;
-		}
-		String adminURL = null;
-		String uploadURL = null;
-		if (args[argPos].equals("-a")) {
-			adminURL = args[++argPos];
-			argPos++;
-		}
-        if (args[argPos].equals("-u")) {
-            uploadURL = args[++argPos];
-            argPos++;
-        }		
-        if (argPos >= args.length)
-            usage();
+	    try {
+	        if (args[argPos].equals("-l")) {
+	            localInstall = true;
+	            argPos++;
+	        }
+	        String adminURL = null;
+	        String uploadURL = null;
+	        if (args[argPos].equals("-a")) {
+	            adminURL = args[++argPos];
+	            argPos++;
+	        }
+	        if (args[argPos].equals("-u")) {
+	            uploadURL = args[++argPos];
+	            argPos++;
+	        }		
+	        if (argPos >= args.length)
+	            usage();
 
-		int cmd = lookupCmd(args[argPos++]);
-		try {
+	        int cmd = lookupCmd(args[argPos++]);
 			switch (cmd) {
 			case LIST_ZIMLETS:
 				boolean everything = false;
@@ -1854,6 +1854,8 @@ public class ZimletUtil {
 				usage();
 				break;
 			}
+	    } catch (ArrayIndexOutOfBoundsException ex) {
+	        usage();
 		} catch (Exception e) {
 		    e.printStackTrace();
 			if (sQuietMode)
