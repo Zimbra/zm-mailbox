@@ -219,19 +219,41 @@ public final class MailboxUpgrade {
     public static void upgradeTo2_1(Mailbox mbox) throws ServiceException {
         DbConnection conn = DbPool.getConnection(mbox);
         try {
-            migrateFlagColumn(conn, mbox);
-            migrateTagColumn(conn, mbox);
-
-            // the tag load when the Mailbox object was constructed returned no tags
-            //   because we hadn't migrated the tags yet, so force a reload 
-            mbox.purge(MailItem.Type.TAG);
-
+            if (alreadyUpgradedTo2_1(conn, mbox)) {
+                ZimbraLog.mailbox.warn("detected already-migrated mailbox %d during migration to version 2.1; skipping.", mbox.getId());
+            } else {
+                migrateFlagColumn(conn, mbox);
+                migrateTagColumn(conn, mbox);
+    
+                // the tag load when the Mailbox object was constructed returned no tags
+                //   because we hadn't migrated the tags yet, so force a reload 
+                mbox.purge(MailItem.Type.TAG);
+            }
             conn.commit();
         } catch (ServiceException e) {
             conn.rollback();
             throw e;
         } finally {
             conn.closeQuietly();
+        }
+    }
+
+    private static boolean alreadyUpgradedTo2_1(DbConnection conn, Mailbox mbox) throws ServiceException {
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT id FROM " + DbTag.getTagTableName(mbox) +
+                    (DebugConfig.disableMailboxGroups ? "" : " WHERE mailbox_id = ?"));
+            int pos = 1;
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos);
+
+            rs = stmt.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("checking for repeated 2.1 upgrade for mbox " + mbox.getId(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
         }
     }
 
