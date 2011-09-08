@@ -594,6 +594,7 @@ public final class MailConstants {
     public static final String E_LIST_TEST = "listTest";
     public static final String E_BULK_TEST = "bulkTest";
     public static final String E_METHOD = "method";
+    public static final String E_IMPORTANCE_TEST = "importanceTest";
 
     public static final String E_FILTER_ACTIONS = "filterActions";
     public static final String E_ACTION_KEEP = "actionKeep";
@@ -621,6 +622,7 @@ public final class MailConstants {
     public static final String A_MAX_BODY_SIZE = "maxBodySize";
     public static final String A_ORIG_HEADERS = "origHeaders";
     public static final String A_WHERE = "where";
+    public static final String A_IMP = "imp";
 
     // grants and shares
     public static final String E_ACL = "acl";
