@@ -321,6 +321,9 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             return new ZListCondition(isNegative ? SimpleOp.NOT_IS : SimpleOp.IS);
         } else if (name.equals(MailConstants.E_BULK_TEST)) {
             return new ZBulkCondition(isNegative ? SimpleOp.NOT_IS : SimpleOp.IS);
+        } else if (name.equals(MailConstants.E_IMPORTANCE_TEST)) {
+            return new ZImportanceCondition(isNegative ? SimpleOp.NOT_IS : SimpleOp.IS,
+                    Sieve.Importance.fromString(condEl.getAttribute(MailConstants.A_IMP)));
         } else if (name.equals(MailConstants.E_TRUE_TEST)) {
             return new ZTrueCondition();
         } else {
@@ -472,7 +475,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
 
         @Override
         public String getName() {
-            return "list";
+            return "bulk";
         }
 
         @Override
@@ -487,6 +490,36 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         @Override
         public String toConditionString() {
             return "bulk" + (op == SimpleOp.IS ? "" : " not");
+        }
+    }
+
+    public static final class ZImportanceCondition extends ZFilterCondition {
+        private final SimpleOp op;
+        private final Sieve.Importance importance;
+
+        public ZImportanceCondition(SimpleOp op, Sieve.Importance importance) {
+            this.op = op;
+            this.importance = importance;
+        }
+
+        @Override
+        public String getName() {
+            return "importance";
+        }
+
+        @Override
+        Element toElement(Element parent) {
+            Element test = parent.addElement(MailConstants.E_IMPORTANCE_TEST);
+            test.addAttribute(MailConstants.A_IMP, importance.toString());
+            if (op == SimpleOp.NOT_IS) {
+                test.addAttribute(MailConstants.A_NEGATIVE, true);
+            }
+            return test;
+        }
+
+        @Override
+        public String toConditionString() {
+            return "importance " +  (op == SimpleOp.IS ? "is " : "not_is ") + importance;
         }
     }
 

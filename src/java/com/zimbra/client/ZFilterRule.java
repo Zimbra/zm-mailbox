@@ -434,6 +434,14 @@ public final class ZFilterRule implements ToZJSONObject {
                     op = ZFilterCondition.SimpleOp.IS;
                 }
                 conditions.add(new ZFilterCondition.ZBulkCondition(op));
+            } else if (a.equals("importance")) {
+                if (i + 2 > args.length) {
+                    throw ZClientException.CLIENT_ERROR("missing args", null);
+                }
+                String op = args[i++];
+                String importance = args[i++];
+                conditions.add(new ZFilterCondition.ZImportanceCondition(SimpleOp.fromString(op),
+                        Sieve.Importance.fromString(importance)));
             } else if (a.equals("keep")) {
                 actions.add(new ZKeepAction());
             } else if (a.equals("discard")) {
