@@ -33,7 +33,7 @@ public final class NioOutputStream extends OutputStream {
     }
 
     @Override
-    public void write(byte[] b, int off, int len) throws IOException {
+    public synchronized void write(byte[] b, int off, int len) throws IOException {
         if ((off | len | (b.length - (len + off)) | (off + len)) < 0) {
             throw new IndexOutOfBoundsException();
         }
@@ -49,7 +49,7 @@ public final class NioOutputStream extends OutputStream {
         }
     }
 
-    public void write(String s) throws IOException {
+    public synchronized void write(String s) throws IOException {
         int len = s.length();
         // If the request is larger than the capacity, flush the buffer and write it directly.
         if (len > buf.capacity()) {
@@ -64,7 +64,7 @@ public final class NioOutputStream extends OutputStream {
     }
 
     @Override
-    public void write(int b) throws IOException {
+    public synchronized void write(int b) throws IOException {
         if (!buf.hasRemaining()) { // If not enough space left, flush the buffer first.
             flush();
         }
@@ -72,7 +72,7 @@ public final class NioOutputStream extends OutputStream {
     }
 
     @Override
-    public void flush() throws IOException {
+    public synchronized void flush() throws IOException {
         if (buf.position() > 0) {
             buf.flip();
             session.write(buf.duplicate());
@@ -81,7 +81,7 @@ public final class NioOutputStream extends OutputStream {
     }
 
     @Override
-    public void close() throws IOException {
+    public synchronized void close() throws IOException {
         flush();
         buf.free();
         session.close(false);
