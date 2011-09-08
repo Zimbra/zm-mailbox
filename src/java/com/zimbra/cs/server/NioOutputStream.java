@@ -25,12 +25,11 @@ import org.apache.mina.core.session.IoSession;
 
 public final class NioOutputStream extends OutputStream {
     private final IoSession session;
-    private final int chunkSize;
-    private IoBuffer buf;
+    private final IoBuffer buf;
 
-    public NioOutputStream(IoSession session, int chunkSize) {
+    NioOutputStream(IoSession session, int chunkSize) {
         this.session = session;
-        this.chunkSize = chunkSize;
+        buf = IoBuffer.allocate(chunkSize);
     }
 
     @Override
@@ -38,55 +37,53 @@ public final class NioOutputStream extends OutputStream {
         if ((off | len | (b.length - (len + off)) | (off + len)) < 0) {
             throw new IndexOutOfBoundsException();
         }
-        while (len > 0) {
-            if (buf == null) {
-                buf = IoBuffer.allocate(chunkSize);
-            }
-            int count = Math.min(len, buf.remaining());
-            buf.put(b, off, count);
-            if (!buf.hasRemaining()) {
+        // If the request is larger than the capacity, flush the buffer and write it directly.
+        if (len > buf.capacity()) {
+            flush();
+            session.write(IoBuffer.wrap(b, off, len));
+        } else {
+            if (len > buf.remaining()) { // If not enough space left, flush the buffer first.
                 flush();
             }
-            len -= count;
-            off += count;
+            buf.put(b, off, len);
         }
     }
 
     public void write(String s) throws IOException {
-        assert s.length() <= chunkSize : s;
-        if (buf == null) {
-            buf = IoBuffer.allocate(chunkSize);
-        } else if (buf.remaining() < s.length()) {
+        int len = s.length();
+        // If the request is larger than the capacity, flush the buffer and write it directly.
+        if (len > buf.capacity()) {
             flush();
-            buf = IoBuffer.allocate(chunkSize);
+            session.write(IoBuffer.allocate(len).putString(s, Charsets.UTF_8.newEncoder()).flip());
+        } else {
+            if (len > buf.remaining()) { // If not enough space left, flush the buffer first.
+                flush();
+            }
+            buf.putString(s, Charsets.UTF_8.newEncoder());
         }
-        buf.putString(s, Charsets.UTF_8.newEncoder());
     }
 
     @Override
     public void write(int b) throws IOException {
-        if (buf == null) {
-            buf = IoBuffer.allocate(chunkSize);
+        if (!buf.hasRemaining()) { // If not enough space left, flush the buffer first.
+            flush();
         }
         buf.put((byte) b);
     }
 
     @Override
     public void flush() throws IOException {
-        if (buf != null && buf.position() > 0) {
+        if (buf.position() > 0) {
             buf.flip();
-            session.write(buf);
-            buf = null;
+            session.write(buf.duplicate());
+            buf.clear();
         }
     }
 
     @Override
     public void close() throws IOException {
         flush();
-        if (buf != null) {
-            buf.free();
-            buf = null;
-        }
+        buf.free();
         session.close(false);
     }
 }
