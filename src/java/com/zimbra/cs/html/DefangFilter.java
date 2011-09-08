@@ -243,7 +243,7 @@ public class DefangFilter extends DefaultFilter {
             acceptElement("button", CORE_LANG+KBD+"disabled,name,type,value");
             acceptElement("fieldset", CORE_LANG);
             acceptElement("form", CORE_LANG+"action,accept,acceptcharset,enctype,method,name,target");
-            acceptElement("input", CORE_LANG+"accept,align,alt,checked,disabled,maxlength,name,readonly,size,type,value");
+            acceptElement("input", CORE_LANG+"accept,align,alt,checked,disabled,maxlength,name,readonly,size,src,type,value");
             acceptElement("legend", CORE_LANG+"align");
             acceptElement("map", CORE_LANG+"name");
             acceptElement("optgroup", CORE_LANG+"disabled,label");
@@ -548,7 +548,9 @@ public class DefangFilter extends DefaultFilter {
                 fixATag(attributes);
             }
             if (mNeuterImages) {
-                if(eName.equals("img") && !VALID_IMG.matcher(attributes.getValue("src")).find()){
+                if(eName.equals("img") &&
+                   attributes.getValue("src") != null &&
+                   !VALID_IMG.matcher(attributes.getValue("src")).find()){
                         neuterTag(attributes, "src");    
                 }
                 neuterTag(attributes, "background");

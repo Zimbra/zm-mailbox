@@ -3,6 +3,7 @@ package com.zimbra.cs.html;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.Assert;
@@ -128,13 +129,13 @@ public class TestDefangFilter {
         ByteUtil.copy(inputStream, true, baos, true);
         
         ParsedMessage msg = new ParsedMessage(baos.toByteArray(), false);
-        Set<MPartInfo> bodyparts = Mime.getBody(msg.getMessageParts(), true);
+        List<MPartInfo> parts = msg.getMessageParts();//Mime.getBody(msg.getMessageParts(), true);
 
         InputStream htmlStream = null;
-        for(MPartInfo body: bodyparts) {
-            if(body.getPartNum() == partNum){
+        for(MPartInfo body: parts) {
+               if(body.getPartNum() == partNum){
                 htmlStream=  body.getMimePart().getInputStream();
-            }
+               }
         }
         return htmlStream;
     }
@@ -219,5 +220,20 @@ public class TestDefangFilter {
                 
         // Check to make sure the link needed is still in there.
         Assert.assertTrue(result.contains("https://secure.sslpost.com/static/images/open_document.png"));
+    }
+    /**
+     * Test to make sure there aren't NPE's when there isn't an src in an img tag
+     * @throws Exception
+     */
+    @Test
+    public void testBug64188() throws Exception {
+        String fileName = "bug_64188.txt";
+        InputStream htmlStream = getHtmlBody(fileName);
+        Assert.assertNotNull(htmlStream);
+        
+        String result = HtmlDefang.defang(htmlStream, true);
+         // just make sure we made it here, as this was NPEing out..
+        Assert.assertNotNull(result);
+       
     }
 }
