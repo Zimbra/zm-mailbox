@@ -2900,6 +2900,7 @@ Tests:
   <twitterTest/>
   <listTest/>
   <bulkTest/>
+  <importanceTest imp="{high|normal|low}"/>
 
 Each test has the following optional attributes:
     * "negative": specifies a "not" condition for that test

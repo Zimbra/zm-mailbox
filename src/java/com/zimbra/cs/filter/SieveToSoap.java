@@ -283,6 +283,14 @@ public final class SieveToSoap extends SieveVisitor {
         }
     }
 
+    @Override
+    protected void visitImportanceTest(Node node, VisitPhase phase, RuleProperties props, Sieve.Importance importance)
+            throws ServiceException {
+        if (phase == VisitPhase.begin) {
+            addTest(MailConstants.E_IMPORTANCE_TEST, props).addAttribute(MailConstants.A_IMP, importance.toString());
+        }
+    }
+
     private String getCurrentRuleName() {
         if (ruleNames == null || currentRuleIndex >= ruleNames.size()) {
             return null;

@@ -199,6 +199,9 @@ public final class SoapToSieve {
             snippet = "list";
         } else if (name.equals(MailConstants.E_BULK_TEST)) {
             snippet = "bulk";
+        } else if (name.equals(MailConstants.E_IMPORTANCE_TEST)) {
+            snippet = String.format("importance \"%s\"",
+                    Sieve.Importance.fromString(test.getAttribute(MailConstants.A_IMP)));
         } else if (name.equals(MailConstants.E_TRUE_TEST)) {
             snippet = "true";
         } else {

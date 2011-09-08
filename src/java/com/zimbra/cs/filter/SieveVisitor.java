@@ -123,6 +123,11 @@ public abstract class SieveVisitor {
     }
 
     @SuppressWarnings("unused")
+    protected void visitImportanceTest(Node node, VisitPhase phase, RuleProperties props, Sieve.Importance importance)
+            throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
     protected void visitTrueTest(Node node, VisitPhase phase, RuleProperties props) throws ServiceException {
     }
 
@@ -450,6 +455,11 @@ public abstract class SieveVisitor {
                 visitBulkTest(node, VisitPhase.begin, props);
                 accept(node, props);
                 visitBulkTest(node, VisitPhase.end, props);
+            } else if ("importance".equalsIgnoreCase(nodeName)) {
+                Sieve.Importance importance = Sieve.Importance.fromString(getValue(node, 0, 0, 0, 0));
+                visitImportanceTest(node, VisitPhase.begin, props, importance);
+                accept(node, props);
+                visitImportanceTest(node, VisitPhase.end, props, importance);
             } else if ("true".equalsIgnoreCase(nodeName)) {
                 visitTrueTest(node, VisitPhase.begin, props);
                 accept(node, props);

@@ -264,6 +264,7 @@ public class ZMailboxUtil implements DebugListener {
                 "    twitter [not]\n" +
                 "    list [not]\n" +
                 "    bulk [not]\n" +
+                "    importance is|not_is high|normal|low\n" +
                 "\n" +
                 "  {actions}:\n" +
                 "    keep\n" +

@@ -105,6 +105,7 @@ public final class RuleManager {
         testMap.put("twitter", com.zimbra.cs.filter.jsieve.TwitterTest.class.getName());
         testMap.put("list", com.zimbra.cs.filter.jsieve.ListTest.class.getName());
         testMap.put("bulk", com.zimbra.cs.filter.jsieve.BulkTest.class.getName());
+        testMap.put("importance", com.zimbra.cs.filter.jsieve.ImportanceTest.class.getName());
         return mgr.build();
     }
 
