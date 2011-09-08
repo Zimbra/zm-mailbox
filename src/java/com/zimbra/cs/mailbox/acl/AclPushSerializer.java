@@ -17,6 +17,10 @@ package com.zimbra.cs.mailbox.acl;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Cos;
+import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ShareInfoData;
 import com.zimbra.cs.mailbox.ACL;
@@ -59,16 +63,28 @@ public class AclPushSerializer {
             try {
                 switch (granteeType) {
                     case ACL.GRANTEE_USER:
-                        granteeName = Provisioning.getInstance().get(Key.AccountBy.id, granteeId).getName();
+                        Account granteeAcct = Provisioning.getInstance().get(Key.AccountBy.id, granteeId);
+                        if (granteeAcct != null) {
+                            granteeName = granteeAcct.getName();
+                        }
                         break;
                     case ACL.GRANTEE_GROUP:
-                        granteeName = Provisioning.getInstance().get(Key.DistributionListBy.id, granteeId).getName();
+                        DistributionList granteeDL = Provisioning.getInstance().get(Key.DistributionListBy.id, granteeId);
+                        if (granteeDL != null) {
+                            granteeName = granteeDL.getName();
+                        }
                         break;
                     case ACL.GRANTEE_DOMAIN:
-                        granteeName = Provisioning.getInstance().get(Key.DomainBy.id, granteeId).getName();
+                        Domain granteeDomain = Provisioning.getInstance().get(Key.DomainBy.id, granteeId);
+                        if (granteeDomain != null) {
+                            granteeName = granteeDomain.getName();
+                        }
                         break;
                     case ACL.GRANTEE_COS:
-                        granteeName = Provisioning.getInstance().get(Key.CosBy.id, granteeId).getName();
+                        Cos granteeCos = Provisioning.getInstance().get(Key.CosBy.id, granteeId);
+                        if (granteeCos != null) {
+                            granteeName = granteeCos.getName();
+                        }
                         break;
                     default:
                 }
