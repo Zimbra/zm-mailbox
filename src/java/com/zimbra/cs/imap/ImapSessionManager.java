@@ -41,6 +41,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.SearchFolder;
+import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.util.Zimbra;
@@ -387,7 +388,6 @@ final class ImapSessionManager {
                 }
                 return null;
             }
-
         });
         return i4list;
     }
@@ -415,9 +415,9 @@ final class ImapSessionManager {
                             fid, msg1.msgId, msg1.imapUid, msg2.msgId, msg2.imapUid);
                     clearCache(folder);
                     return actualContents;
-                } else if (msg1.tags != msg2.tags || msg1.flags != msg2.flags || msg1.sflags != msg2.sflags) {
-                    ZimbraLog.imap.error("IMAP session cache consistency check failed (%s): flag/tag/sflag mismatch (%X/%X/%X vs %X/%X/%X)",
-                            fid, msg1.flags, msg1.tags, msg1.sflags, msg2.flags, msg2.tags, msg2.sflags);
+                } else if (msg1.flags != msg2.flags || msg1.sflags != msg2.sflags || !TagUtil.tagsMatch(msg1.tags, msg2.tags)) {
+                    ZimbraLog.imap.error("IMAP session cache consistency check failed (%s): flag/tag/sflag mismatch (%X/[%s]/%X vs %X/[%s]/%X)",
+                            fid, msg1.flags, TagUtil.encodeTags(msg1.tags), msg1.sflags, msg2.flags, TagUtil.encodeTags(msg2.tags), msg2.sflags);
                     clearCache(folder);
                     return actualContents;
                 }
