@@ -59,6 +59,8 @@ public class FilterTests {
             type=FilterTestCurrentTime.class),
         @XmlElement(name=MailConstants.E_CURRENT_DAY_OF_WEEK_TEST,
             type=FilterTestCurrentDayOfWeek.class),
+        @XmlElement(name=MailConstants.E_IMPORTANCE_TEST,
+            type=FilterTestImportance.class),
         @XmlElement(name=MailConstants.E_TRUE_TEST,
             type=FilterTestTrue.class)
     })
