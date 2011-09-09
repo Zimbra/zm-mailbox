@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110909-1204 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110909-1346 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3892,14 +3892,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMAPIConnectorEnabled = "zimbraFeatureMAPIConnectorEnabled";
 
     /**
-     * whether message prioritization feature is enabled
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1271)
-    public static final String A_zimbraFeatureMessagePrioritizationEnabled = "zimbraFeatureMessagePrioritizationEnabled";
-
-    /**
      * whether to enforce mobile policy
      *
      * @since ZCS 6.0.0_BETA1
@@ -3980,6 +3972,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeaturePortalEnabled = "zimbraFeaturePortalEnabled";
 
     /**
+     * whether priority inbox feature is enabled
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1271)
+    public static final String A_zimbraFeaturePriorityInboxEnabled = "zimbraFeaturePriorityInboxEnabled";
+
+    /**
      * whether the web UI shows UI elements related to read receipts
      *
      * @since ZCS 6.0.0_BETA1
@@ -4028,7 +4028,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureSMIMEEnabled = "zimbraFeatureSMIMEEnabled";
 
     /**
-     * message social filters enabled
+     * message social filters enabled in the web client UI
      *
      * @since ZCS 8.0.0
      */
