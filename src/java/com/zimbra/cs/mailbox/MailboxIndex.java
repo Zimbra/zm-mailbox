@@ -28,10 +28,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -46,6 +44,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.SetMultimap;
 import com.google.common.io.Closeables;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
@@ -91,11 +90,12 @@ public final class MailboxIndex {
 
     private static final ThreadPoolExecutor INDEX_EXECUTOR = new ThreadPoolExecutor(
             LC.zimbra_index_threads.intValue(), LC.zimbra_index_threads.intValue(),
-            Long.MAX_VALUE, TimeUnit.NANOSECONDS, new SynchronousQueue<Runnable>(), new IndexThreadFactory("Index"));
+            Long.MAX_VALUE, TimeUnit.NANOSECONDS, new SynchronousQueue<Runnable>(),
+            new ThreadFactoryBuilder().setNameFormat("Index-%d").setDaemon(true).build());
     // Re-index threads are created on demand basis. The number of threads are capped.
     private static final ExecutorService REINDEX_EXECUTOR = new ThreadPoolExecutor(
-            0, LC.zimbra_reindex_threads.intValue(), 0L, TimeUnit.SECONDS,
-            new SynchronousQueue<Runnable>(), new IndexThreadFactory("ReIndex"));
+            0, LC.zimbra_reindex_threads.intValue(), 0L, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
+            new ThreadFactoryBuilder().setNameFormat("ReIndex-%d").setDaemon(true).build());
     private static IndexStore.Factory indexStoreFactory;
     static {
         setIndexStoreFactory(LC.index_store.value());
@@ -147,13 +147,6 @@ public final class MailboxIndex {
 
     public Analyzer getAnalyzer() {
         return analyzer;
-    }
-
-    /**
-     * Returns true if the current thread was spawned by {@link #INDEX_EXECUTOR}.
-     */
-    public static boolean isIndexThread() {
-        return Thread.currentThread().getThreadGroup() == IndexThreadFactory.GROUP;
     }
 
     void open() throws ServiceException {
@@ -1195,26 +1188,6 @@ public final class MailboxIndex {
         @Override
         boolean isCancelled() {
             return cancel;
-        }
-    }
-
-    private static final class IndexThreadFactory implements ThreadFactory {
-        private static final ThreadGroup GROUP = new ThreadGroup("Index");
-        static {
-            GROUP.setDaemon(true);
-        }
-        private final String name;
-        private final AtomicInteger count = new AtomicInteger(1);
-
-        IndexThreadFactory(String name) {
-            this.name = name;
-        }
-
-        @Override
-        public Thread newThread(Runnable runnable) {
-            Thread thread = new Thread(GROUP, runnable, name + '-' + count.getAndIncrement());
-            thread.setDaemon(true);
-            return thread;
         }
     }
 

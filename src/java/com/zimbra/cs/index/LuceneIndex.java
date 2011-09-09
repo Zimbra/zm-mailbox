@@ -391,9 +391,7 @@ public final class LuceneIndex implements IndexStore {
         ZimbraLog.index.debug("Commit IndexWriter");
 
         MergeTask task = new MergeTask(writerRef);
-        if (MailboxIndex.isIndexThread()) { // batch index running in background
-            task.exec();
-        } else { // catch-up index running in foreground
+        if (mailbox.lock.isLocked()) {
             boolean success = false;
             try {
                 try {
@@ -423,6 +421,8 @@ public final class LuceneIndex implements IndexStore {
                     writerRef.dec();
                 }
             }
+        } else { // Unless holding the mailbox lock, merge synchronously.
+            task.exec();
         }
     }
 
