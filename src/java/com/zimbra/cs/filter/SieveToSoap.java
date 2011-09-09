@@ -21,6 +21,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.ElementFactory;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.soap.mail.type.FilterTestImportance;
 import org.apache.jsieve.parser.generated.Node;
 
 import java.util.Date;
@@ -284,7 +285,7 @@ public final class SieveToSoap extends SieveVisitor {
     }
 
     @Override
-    protected void visitImportanceTest(Node node, VisitPhase phase, RuleProperties props, Sieve.Importance importance)
+    protected void visitImportanceTest(Node node, VisitPhase phase, RuleProperties props, FilterTestImportance.Importance importance)
             throws ServiceException {
         if (phase == VisitPhase.begin) {
             addTest(MailConstants.E_IMPORTANCE_TEST, props).addAttribute(MailConstants.A_IMP, importance.toString());

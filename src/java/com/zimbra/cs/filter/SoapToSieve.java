@@ -27,6 +27,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.soap.mail.type.FilterTestImportance;
 
 public final class SoapToSieve {
 
@@ -201,7 +202,7 @@ public final class SoapToSieve {
             snippet = "bulk";
         } else if (name.equals(MailConstants.E_IMPORTANCE_TEST)) {
             snippet = String.format("importance \"%s\"",
-                    Sieve.Importance.fromString(test.getAttribute(MailConstants.A_IMP)));
+                    FilterTestImportance.Importance.fromString(test.getAttribute(MailConstants.A_IMP)));
         } else if (name.equals(MailConstants.E_TRUE_TEST)) {
             snippet = "true";
         } else {

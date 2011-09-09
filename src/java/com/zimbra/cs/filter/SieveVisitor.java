@@ -19,6 +19,7 @@ import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.soap.mail.type.FilterTestImportance;
 import org.apache.jsieve.TagArgument;
 import org.apache.jsieve.parser.SieveNode;
 import org.apache.jsieve.parser.generated.ASTcommand;
@@ -123,7 +124,7 @@ public abstract class SieveVisitor {
     }
 
     @SuppressWarnings("unused")
-    protected void visitImportanceTest(Node node, VisitPhase phase, RuleProperties props, Sieve.Importance importance)
+    protected void visitImportanceTest(Node node, VisitPhase phase, RuleProperties props, FilterTestImportance.Importance importance)
             throws ServiceException {
     }
 
@@ -456,7 +457,7 @@ public abstract class SieveVisitor {
                 accept(node, props);
                 visitBulkTest(node, VisitPhase.end, props);
             } else if ("importance".equalsIgnoreCase(nodeName)) {
-                Sieve.Importance importance = Sieve.Importance.fromString(getValue(node, 0, 0, 0, 0));
+                FilterTestImportance.Importance importance = FilterTestImportance.Importance.fromString(getValue(node, 0, 0, 0, 0));
                 visitImportanceTest(node, VisitPhase.begin, props, importance);
                 accept(node, props);
                 visitImportanceTest(node, VisitPhase.end, props, importance);
