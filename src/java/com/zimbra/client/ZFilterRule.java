@@ -52,6 +52,7 @@ import com.zimbra.client.ZFilterCondition.ZInviteCondition;
 import com.zimbra.client.ZFilterCondition.ZMeCondition;
 import com.zimbra.client.ZFilterCondition.ZMimeHeaderCondition;
 import com.zimbra.client.ZFilterCondition.ZSizeCondition;
+import com.zimbra.soap.mail.type.FilterTestImportance;
 import org.json.JSONException;
 
 import java.util.ArrayList;
@@ -441,7 +442,7 @@ public final class ZFilterRule implements ToZJSONObject {
                 String op = args[i++];
                 String importance = args[i++];
                 conditions.add(new ZFilterCondition.ZImportanceCondition(SimpleOp.fromString(op),
-                        Sieve.Importance.fromString(importance)));
+                        FilterTestImportance.Importance.fromString(importance)));
             } else if (a.equals("keep")) {
                 actions.add(new ZKeepAction());
             } else if (a.equals("discard")) {

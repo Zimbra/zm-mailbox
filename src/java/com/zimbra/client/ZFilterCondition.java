@@ -20,6 +20,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.soap.mail.type.FilterTestImportance;
 import org.json.JSONException;
 
 import java.text.ParseException;
@@ -323,7 +324,7 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             return new ZBulkCondition(isNegative ? SimpleOp.NOT_IS : SimpleOp.IS);
         } else if (name.equals(MailConstants.E_IMPORTANCE_TEST)) {
             return new ZImportanceCondition(isNegative ? SimpleOp.NOT_IS : SimpleOp.IS,
-                    Sieve.Importance.fromString(condEl.getAttribute(MailConstants.A_IMP)));
+                    FilterTestImportance.Importance.fromString(condEl.getAttribute(MailConstants.A_IMP)));
         } else if (name.equals(MailConstants.E_TRUE_TEST)) {
             return new ZTrueCondition();
         } else {
@@ -495,9 +496,9 @@ public abstract class ZFilterCondition implements ToZJSONObject {
 
     public static final class ZImportanceCondition extends ZFilterCondition {
         private final SimpleOp op;
-        private final Sieve.Importance importance;
+        private final FilterTestImportance.Importance importance;
 
-        public ZImportanceCondition(SimpleOp op, Sieve.Importance importance) {
+        public ZImportanceCondition(SimpleOp op, FilterTestImportance.Importance importance) {
             this.op = op;
             this.importance = importance;
         }
