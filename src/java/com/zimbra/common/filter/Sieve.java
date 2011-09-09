@@ -155,19 +155,4 @@ public final class Sieve {
         }
     }
 
-    public enum Importance {
-        high, normal, low;
-
-        public static Importance fromString(String value) throws ServiceException {
-            if (value == null) {
-                return null;
-            }
-            try {
-                return Importance.valueOf(value);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.PARSE_ERROR(
-                        "Invalid value: " + value + ", valid values: " + Arrays.asList(Importance.values()), e);
-            }
-        }
-    }
 }
