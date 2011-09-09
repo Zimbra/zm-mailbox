@@ -64,6 +64,7 @@ public class SyncGal extends GalDocumentHandler {
         params.setRequest(request);
         params.setResponseName(AccountConstants.SYNC_GAL_RESPONSE);
         params.setIdOnly(idOnly);
+        params.setUserAgent(zsc.getUserAgent());
         if (galAcctId != null)
         	params.setGalSyncAccount(Provisioning.getInstance().getAccountById(galAcctId));
         params.setResultCallback(new SyncGalCallback(params));

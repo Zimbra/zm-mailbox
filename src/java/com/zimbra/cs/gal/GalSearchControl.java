@@ -168,63 +168,75 @@ public class GalSearchControl {
     }
     
     public void sync() throws ServiceException {
-        String id = Thread.currentThread().getName();
-        int capacity = mParams.getDomain().getGalSyncMaxConcurrentClients();
-        boolean doSync = false;
-        
-        try {
-            synchronized (SyncClients) {
-                // allow the sync only when the # of sync clients
-                // are within the capacity.
-                if (SyncClients.size() < capacity) {
-                    SyncClients.add(id);
-                    doSync = true;
-                }
-            }
-            if (doSync) {
-                doSync();
-            } else {
-                // return "no change".
-                mParams.getResultCallback().setNewToken(mParams.getGalSyncToken());
-                return;
-            }
-        } finally {
-            synchronized (SyncClients) {
-                SyncClients.remove(id);
-            }
-        }
-    }
-    
-    private void doSync() throws ServiceException {
 
         checkFeatureEnabled(Provisioning.A_zimbraFeatureGalSyncEnabled);
 
+        String id = Thread.currentThread().getName() + " / " + mParams.getUserInfo();
+        int capacity = mParams.getDomain().getGalSyncMaxConcurrentClients();
+        boolean limitReached = true;
+        
         mParams.setQuery("");
         mParams.setOp(GalOp.sync);
         mParams.setFetchGroupMembers(true);
         mParams.setNeedSMIMECerts(true);
         Account galAcct = mParams.getGalSyncAccount();
-        try {
-            if (galAcct != null) {
-                accountSync(galAcct);
-            } else {
-                for (Account galAccount : getGalSyncAccounts()) {
-                    accountSync(galAccount);
+        GalSyncToken gst = mParams.getGalSyncToken();
+        
+        // if the presented sync token is old LDAP timestamp format, we need to sync
+        // against LDAP server to keep the client up to date.
+        boolean useGalSyncAccount = mParams.isIdOnly() && gst.doMailboxSync();
+        if (useGalSyncAccount) {
+            try {
+                synchronized (SyncClients) {
+                    // allow the sync only when the # of sync clients
+                    // are within the capacity.
+                    if (SyncClients.size() < capacity) {
+                        SyncClients.add(id);
+                        limitReached = false;
+                    }
+                }
+                if (limitReached) {
+                    logCurrentSyncClients();
+                    // return "no change".
+                    mParams.getResultCallback().setNewToken(mParams.getGalSyncToken());
+                    return;
+                }
+                if (galAcct != null) {
+                    accountSync(galAcct);
+                } else {
+                    for (Account galAccount : getGalSyncAccounts()) {
+                        accountSync(galAccount);
+                    }
+                }
+                // account based sync was finished
+                return;
+            } catch (GalAccountNotConfiguredException e) {
+                // if there was an error in GAL sync account based sync,
+                // fallback to ldap search
+                mParams.getResultCallback().reset(mParams);
+            } finally {
+                synchronized (SyncClients) {
+                    SyncClients.remove(id);
                 }
             }
-            // account based sync was finished
-            // if the presented sync token is old LDAP timestamp format, we need to sync
-            // against LDAP server to keep the client up to date.
-            GalSyncToken gst = mParams.getGalSyncToken();
-            if (mParams.isIdOnly() && gst.doMailboxSync())
-                return;
-        } catch (GalAccountNotConfiguredException e) {
-            // fallback to ldap search
-            mParams.getResultCallback().reset(mParams);
         }
         ldapSearch();
     }
 
+    private void logCurrentSyncClients() {
+        if (!ZimbraLog.galconcurrency.isDebugEnabled())
+            return;
+        StringBuilder buf = new StringBuilder();
+        buf.append("limit reached, turning away ").append(mParams.getUserInfo());
+        buf.append(", busy sync clients:");
+        synchronized (SyncClients) {
+            for (String id : SyncClients) {
+                buf.append(" [").append(id).append("]");
+            }
+        }
+        ZimbraLog.galconcurrency.debug(buf.toString());
+    }
+    
     private Account[] getGalSyncAccounts() throws GalAccountNotConfiguredException, ServiceException {
         Domain d = mParams.getDomain();
         String[] accts = d.getGalAccountId();

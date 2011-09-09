@@ -45,6 +45,7 @@ public class GalSearchParams {
 	private ZimbraSoapContext mSoapContext;
 	
 	private Account mAccount;
+	private String mUserAgent;
 	private Account mGalSyncAccount;
 	private Domain mDomain;
     private SearchParams mSearchParams;
@@ -309,8 +310,15 @@ public class GalSearchParams {
         mFetchGroupMembers = fetchGroupMembers;
     }
 
-	
 	public void setOp(GalOp op) {
 	    mOp = op;
+	}
+	
+	public void setUserAgent(String ua) {
+	    mUserAgent = ua;
+	}
+	
+	public String getUserInfo() {
+	    return mAccount.getName() + " (" + ((mUserAgent == null) ? "" : mUserAgent) + ")";
 	}
 }
