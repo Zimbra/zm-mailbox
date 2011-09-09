@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -32,13 +32,12 @@ import com.zimbra.cs.stats.ZimbraPerf;
  *
  * @author ysasaki
  */
-public class LuceneDirectoryTest {
+public final class LuceneDirectoryTest {
     private static File tmpDir;
 
     @BeforeClass
     public static void init() throws Exception {
-        tmpDir = new File("build/test/" +
-                LuceneDirectoryTest.class.getSimpleName());
+        tmpDir = new File("build/test/" + LuceneDirectoryTest.class.getSimpleName());
         if (!tmpDir.isDirectory()) {
             tmpDir.mkdirs();
         }
@@ -56,11 +55,8 @@ public class LuceneDirectoryTest {
         IndexInput in = dir.openInput("read");
         in.readBytes(new byte[5], 0, 5);
         in.close();
-        Assert.assertEquals(5, dir.getBytesRead());
-        Assert.assertEquals(1,
-                ZimbraPerf.COUNTER_IDX_BYTES_READ.getCount() - count);
-        Assert.assertEquals(5,
-                ZimbraPerf.COUNTER_IDX_BYTES_READ.getTotal() - total);
+        Assert.assertEquals(1, ZimbraPerf.COUNTER_IDX_BYTES_READ.getCount() - count);
+        Assert.assertEquals(5, ZimbraPerf.COUNTER_IDX_BYTES_READ.getTotal() - total);
     }
 
     @Test
@@ -72,11 +68,8 @@ public class LuceneDirectoryTest {
         out.writeBytes(new byte[] { 0, 1, 2 }, 3);
         out.close();
 
-        Assert.assertEquals(3, dir.getBytesWritten());
-        Assert.assertEquals(1,
-                ZimbraPerf.COUNTER_IDX_BYTES_WRITTEN.getCount() - count);
-        Assert.assertEquals(3,
-                ZimbraPerf.COUNTER_IDX_BYTES_WRITTEN.getTotal() - total);
+        Assert.assertEquals(1, ZimbraPerf.COUNTER_IDX_BYTES_WRITTEN.getCount() - count);
+        Assert.assertEquals(3, ZimbraPerf.COUNTER_IDX_BYTES_WRITTEN.getTotal() - total);
     }
 
 }

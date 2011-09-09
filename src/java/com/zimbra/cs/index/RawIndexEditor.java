@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -20,18 +20,15 @@ import java.text.ParseException;
 
 import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.SingleInstanceLockFactory;
 
-public class RawIndexEditor {
+public final class RawIndexEditor {
 
     private final Directory luceneDirectory;
 
-    RawIndexEditor(String idxPath) throws IOException {
-        luceneDirectory = LuceneDirectory.open(new File(idxPath),
-                new SingleInstanceLockFactory());
+    RawIndexEditor(String path) throws IOException {
+        luceneDirectory = LuceneDirectory.open(new File(path));
     }
 
     public static String Format(String s, int len) {
@@ -52,30 +49,24 @@ public class RawIndexEditor {
         return toRet.toString();
     }
 
-    public boolean dumpDocument(Document d, boolean isDeleted) {
+    public boolean dumpDocument(Document doc, boolean isDeleted) {
         if (isDeleted) {
             System.out.print("DELETED ");
         }
-        String subj, blobId;
-        Field f;
-        f = d.getField(LuceneFields.L_H_SUBJECT);
-        if (f != null) {
-            subj = f.stringValue();
-        } else {
-            subj = "MISSING_SUBJECT";
+        String subject = doc.get(LuceneFields.L_H_SUBJECT);
+        if (subject == null) {
+            subject = "MISSING_SUBJECT";
         }
-        f = d.getField(LuceneFields.L_MAILBOX_BLOB_ID);
-        if (f != null) {
-            blobId = f.stringValue();
-        } else {
+        String blobId = doc.get(LuceneFields.L_MAILBOX_BLOB_ID);
+        if (blobId == null) {
             blobId = "MISSING";
         }
-        String part = d.get(LuceneFields.L_PARTNAME);
+        String part = doc.get(LuceneFields.L_PARTNAME);
         if (part == null) {
             part = "NULL_PART";
         }
 
-        String dateStr = d.get(LuceneFields.L_SORT_DATE);
+        String dateStr = doc.get(LuceneFields.L_SORT_DATE);
         if (dateStr == null) {
             dateStr = "";
         } else {
@@ -85,13 +76,13 @@ public class RawIndexEditor {
                 assert false;
             }
         }
-        String sizeStr = d.get(LuceneFields.L_SORT_SIZE);
+        String sizeStr = doc.get(LuceneFields.L_SORT_SIZE);
         if (sizeStr == null) {
             sizeStr = "";
         }
 
         System.out.println(Format(blobId, 10) + Format(dateStr, 30) +
-                Format(part, 10) + Format(sizeStr, 10) + "\"" + subj + "\"");
+                Format(part, 10) + Format(sizeStr, 10) + "\"" + subject + "\"");
 
         return true;
     }

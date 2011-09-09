@@ -127,13 +127,11 @@ public final class LuceneIndex implements IndexStore {
             }
         }
 
-        long start = System.currentTimeMillis();
         try {
-            luceneDirectory = LuceneDirectory.open(root, new SingleInstanceLockFactory());
+            luceneDirectory = LuceneDirectory.open(root);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Failed to create LuceneDirectory: " + root, e);
         }
-        ZimbraLog.index.info("OpenLuceneIndex dir=%s,elapsed=%d", root, System.currentTimeMillis() - start);
     }
 
     @Override
