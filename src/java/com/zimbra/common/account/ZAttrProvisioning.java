@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110906-1229 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110909-1204 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -282,6 +282,26 @@ public class ZAttrProvisioning {
         }
         public boolean isBlacklist() { return this == blacklist;}
         public boolean isWhitelist() { return this == whitelist;}
+    }
+
+    public static enum FeatureSocialFiltersEnabled {
+        Facebook("Facebook"),
+        LinkedIn("LinkedIn"),
+        SocialCast("SocialCast"),
+        Twitter("Twitter");
+        private String mValue;
+        private FeatureSocialFiltersEnabled(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static FeatureSocialFiltersEnabled fromString(String s) throws ServiceException {
+            for (FeatureSocialFiltersEnabled value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isFacebook() { return this == Facebook;}
+        public boolean isLinkedIn() { return this == LinkedIn;}
+        public boolean isSocialCast() { return this == SocialCast;}
+        public boolean isTwitter() { return this == Twitter;}
     }
 
     public static enum FreebusyExchangeAuthScheme {
@@ -3872,6 +3892,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureMAPIConnectorEnabled = "zimbraFeatureMAPIConnectorEnabled";
 
     /**
+     * whether message prioritization feature is enabled
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1271)
+    public static final String A_zimbraFeatureMessagePrioritizationEnabled = "zimbraFeatureMessagePrioritizationEnabled";
+
+    /**
      * whether to enforce mobile policy
      *
      * @since ZCS 6.0.0_BETA1
@@ -3901,8 +3929,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureNewMailNotificationEnabled = "zimbraFeatureNewMailNotificationEnabled";
 
     /**
-     * Deprecated since: 7.0.0. Deprecated per bug 50465. Orig desc: Whether
-     * notebook feature should be allowed for this account or in this cos
+     * Deprecated since: 7.0.0. Deprecated per bugs 50465, 56201. Orig desc:
+     * Whether notebook feature should be allowed for this account or in this
+     * cos
      */
     @ZAttr(id=356)
     public static final String A_zimbraFeatureNotebookEnabled = "zimbraFeatureNotebookEnabled";
@@ -3929,7 +3958,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureOutOfOfficeReplyEnabled = "zimbraFeatureOutOfOfficeReplyEnabled";
 
     /**
-     * whether people search feature is enabled
+     * Deprecated since: 8.0.0. Deprecated per bug 56924. Orig desc: whether
+     * people search feature is enabled
      *
      * @since ZCS 7.0.0
      */
@@ -3996,6 +4026,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1186)
     public static final String A_zimbraFeatureSMIMEEnabled = "zimbraFeatureSMIMEEnabled";
+
+    /**
+     * message social filters enabled
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1272)
+    public static final String A_zimbraFeatureSocialFiltersEnabled = "zimbraFeatureSocialFiltersEnabled";
 
     /**
      * tagging feature
