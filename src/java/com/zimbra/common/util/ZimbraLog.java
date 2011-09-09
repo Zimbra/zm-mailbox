@@ -215,6 +215,11 @@ public final class ZimbraLog {
     public static final Log gal = LogFactory.getLog("zimbra.gal");
 
     /**
+     * the "zimbra.gal.concurrency" logger. For gal concurrency events.
+     */
+    public static final Log galconcurrency = LogFactory.getLog("zimbra.gal.concurrency");
+
+    /**
      * the "zimbra.ldap" logger. For ldap-related events.
      */
     public static final Log ldap = LogFactory.getLog("zimbra.ldap");
