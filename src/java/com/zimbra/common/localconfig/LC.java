@@ -217,6 +217,8 @@ public final class LC {
     @Reloadable
     public static final KnownKey zimbra_index_max_pending_deletes = KnownKey.newKey(20);
 
+    public static final KnownKey zimbra_index_lucene_io_impl = KnownKey.newKey(null);
+
     @Supported
     public static final KnownKey zimbra_index_lucene_merge_policy = KnownKey.newKey(true);
 
