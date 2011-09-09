@@ -31,11 +31,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 public final class NoResultsQueryOperation extends QueryOperation {
 
     @Override
-    public long getTotalHitCount() {
-        return 0;
-    }
-
-    @Override
     public long getCursorOffset() {
         return 0;
     }

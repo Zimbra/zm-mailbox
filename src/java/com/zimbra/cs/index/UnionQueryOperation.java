@@ -36,11 +36,6 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
     private ZimbraHit cachedNextHit = null;
 
     @Override
-    public long getTotalHitCount() {
-        return -1;
-    }
-
-    @Override
     public long getCursorOffset() {
         return -1;
     }

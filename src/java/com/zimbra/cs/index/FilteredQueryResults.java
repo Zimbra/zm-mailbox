@@ -50,12 +50,6 @@ public final class FilteredQueryResults implements ZimbraQueryResults {
         allowedTaskStatuses = allowed;
     }
 
-    //TODO The filtered count is not subtracted, yet we can't simply subtract it from the total conversation count.
-    @Override
-    public long getTotalHitCount() {
-        return results.getTotalHitCount();
-    }
-
     @Override
     public long getCursorOffset() {
         return results.getCursorOffset();

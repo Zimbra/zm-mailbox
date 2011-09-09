@@ -101,10 +101,6 @@ public class Search extends MailDocumentHandler  {
             // must use results.getSortBy() because the results might have ignored our sortBy
             // request and used something else...
             response.addAttribute(MailConstants.A_SORTBY, results.getSortBy().toString());
-            long total = results.getTotalHitCount();
-            if (total >= 0) {
-                response.addAttribute(MailConstants.A_TOTAL_SIZE, total);
-            }
             putHits(zsc, octxt, response, results, params);
             return response;
         } finally {

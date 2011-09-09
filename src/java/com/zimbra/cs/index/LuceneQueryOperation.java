@@ -425,8 +425,7 @@ public final class LuceneQueryOperation extends QueryOperation {
      *
      * @return number of hits in this search
      */
-    @Override
-    public long getTotalHitCount() {
+    private long getTotalHitCount() {
         return hits != null ? hits.totalHits : 0;
     }
 

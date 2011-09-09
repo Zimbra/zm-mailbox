@@ -48,11 +48,6 @@ public abstract class BufferingResultsGrouper implements ZimbraQueryResults {
     }
 
     @Override
-    public long getTotalHitCount() {
-        return hits.getTotalHitCount();
-    }
-
-    @Override
     public long getCursorOffset() {
         return hits.getCursorOffset();
     }

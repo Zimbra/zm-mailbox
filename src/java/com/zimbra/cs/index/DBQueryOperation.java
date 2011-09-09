@@ -73,7 +73,6 @@ public class DBQueryOperation extends QueryOperation {
     private Iterator<DbSearch.Result> dbHitsIter;
     private boolean atStart = true; // don't re-fill buffer twice if they call hasNext() then reset() w/o actually getting next
     private int hitsPerChunk = 100;
-    private long totalHitCount = -1;
 
     /**
      * TRUE if we know there are no more hits to get for mDBHitsIter, i.e. there is no need to call getChunk() anymore.
@@ -833,8 +832,6 @@ public class DBQueryOperation extends QueryOperation {
         }
 
         constraints.setTypes(toDbQueryTypes(context.getResults().getTypes()));
-        // calculate the total hit count before adding cursor constraint
-        totalHitCount = calcTotalHitCount();
         addCursorConstraint();
         addCalItemExpandRange();
 
@@ -843,19 +840,6 @@ public class DBQueryOperation extends QueryOperation {
             luceneOp.setDBOperation(this);
             // this is 2nd time to call begin() of this Lucene op.
             luceneOp.begin(new QueryContext(ctx.getMailbox(), ctx.getResults(), ctx.getParams(), hitsPerChunk));
-        }
-    }
-
-    private long calcTotalHitCount() throws ServiceException {
-        Folder folder = getTopLeafConstraint().getOnlyFolder();
-        if (folder != null) {
-            if (context.getResults().getTypes().contains(MailItem.Type.CONVERSATION)) {
-                return folder.getConversationCount();
-            } else {
-                return folder.getItemCount();
-            }
-        } else {
-            return -1;
         }
     }
 
@@ -1189,11 +1173,6 @@ public class DBQueryOperation extends QueryOperation {
             }
         }
         return dbHitCount;
-    }
-
-    @Override
-    public long getTotalHitCount() {
-        return totalHitCount;
     }
 
     @Override

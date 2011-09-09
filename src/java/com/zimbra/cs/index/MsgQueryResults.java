@@ -48,11 +48,6 @@ final class MsgQueryResults extends ZimbraQueryResultsImpl {
     }
 
     @Override
-    public long getTotalHitCount()  {
-        return results.getTotalHitCount();
-    }
-
-    @Override
     public long getCursorOffset() {
         return results.getCursorOffset();
     }

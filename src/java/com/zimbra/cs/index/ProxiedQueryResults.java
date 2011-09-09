@@ -135,11 +135,6 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
     }
 
     @Override
-    public long getTotalHitCount() {
-        return -1;
-    }
-
-    @Override
     public long getCursorOffset() {
         return -1;
     }

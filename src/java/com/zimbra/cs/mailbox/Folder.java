@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.base.Objects;
-import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
@@ -36,8 +35,6 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPendingAclPush;
-import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.imap.ImapSession;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
@@ -93,7 +90,6 @@ public class Folder extends MailItem {
     private int       imapRECENTCutoff;
     private int       deletedCount;
     private int       deletedUnreadCount;
-    private long      conversationCount = -1;
     private RetentionPolicy retentionPolicy;
 
     Folder(Mailbox mbox, UnderlyingData ud) throws ServiceException {
@@ -157,22 +153,6 @@ public class Folder extends MailItem {
 
     public int getDeletedUnreadCount() {
         return deletedUnreadCount;
-    }
-
-    /**
-     * Returns the number of conversations in the folder. A conversation consists of either a single message or a group
-     * of messages that share a same {@code parent_id}.
-     */
-    public long getConversationCount() throws ServiceException {
-        if (DebugConfig.enableConversationCount && conversationCount < 0) {
-            DbConnection conn = DbPool.getConnection(getMailbox());
-            try {
-                conversationCount = DbMailItem.getConversationCount(conn, this);
-            } finally {
-                DbPool.quietClose(conn);
-            }
-        }
-        return conversationCount;
     }
 
     /** Returns the sum of the sizes of all items in the folder.  <i>(Note
@@ -614,7 +594,6 @@ public class Folder extends MailItem {
         }
         if (countDelta != 0) {
             updateHighestMODSEQ();
-            conversationCount = -1; // invalidate the cache
         }
         // reset the RECENT count unless it's just a change of \Deleted flags
         if (countDelta != 0 || sizeDelta != 0 || deletedDelta == 0) {
@@ -642,7 +621,6 @@ public class Folder extends MailItem {
         if (count != mData.size) {
             updateHighestMODSEQ();
             imapRECENT = -1;
-            conversationCount = -1; // invalidate the cache
         }
 
         mData.size = count;

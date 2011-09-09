@@ -28,7 +28,7 @@ import com.zimbra.cs.mailbox.Mailbox;
  *
  * @author ysasaki
  */
-public class MockQueryResults extends ZimbraQueryResultsImpl {
+public final class MockQueryResults extends ZimbraQueryResultsImpl {
 
     private List<ZimbraHit> hits = new ArrayList<ZimbraHit>();
     private int next = 0;
@@ -40,11 +40,6 @@ public class MockQueryResults extends ZimbraQueryResultsImpl {
 
     public void add(ZimbraHit hit) {
         hits.add(hit);
-    }
-
-    @Override
-    public long getTotalHitCount() {
-        return -1;
     }
 
     @Override

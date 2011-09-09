@@ -82,14 +82,6 @@ public interface ZimbraQueryResults extends Closeable {
      */
     List<QueryInfo> getResultInfo();
 
-
-    /**
-     * Returns the number of total hits, or -1 if undetermined.
-     *
-     * @return number of total hits
-     */
-    long getTotalHitCount();
-
     /**
      * Returns the cursor offset from the top, or -1 if undetermined.
      *

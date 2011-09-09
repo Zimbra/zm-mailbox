@@ -32,11 +32,6 @@ final class EmptyQueryResults extends ZimbraQueryResultsImpl {
     }
 
     @Override
-    public long getTotalHitCount() {
-        return 0;
-    }
-
-    @Override
     public long getCursorOffset() {
         return 0;
     }

@@ -35,11 +35,6 @@ public final class IntersectionQueryOperation extends CombiningQueryOperation {
     private HitGrouper messageGrouper[] = null;
 
     @Override
-    public long getTotalHitCount() {
-        return -1;
-    }
-
-    @Override
     public long getCursorOffset() {
         return -1;
     }

@@ -37,12 +37,6 @@ final class RemoteQueryOperation extends FilterQueryOperation {
     private ProxiedQueryResults results = null;
     private QueryTarget queryTarget = null;
 
-
-    @Override
-    public long getTotalHitCount() {
-        return -1;
-    }
-
     @Override
     public long getCursorOffset() {
         return -1;

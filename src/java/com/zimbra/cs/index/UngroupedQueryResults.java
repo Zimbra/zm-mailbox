@@ -28,18 +28,13 @@ import com.zimbra.cs.mailbox.Mailbox;
  *
  * @since Nov 3, 2004
  */
-class UngroupedQueryResults extends ZimbraQueryResultsImpl {
+final class UngroupedQueryResults extends ZimbraQueryResultsImpl {
     private final ZimbraQueryResults results;
 
     UngroupedQueryResults(ZimbraQueryResults results, Set<MailItem.Type> types,
             SortBy sort, Mailbox.SearchResultMode mode) {
         super(types, sort, mode);
         this.results = results;
-    }
-
-    @Override
-    public long getTotalHitCount() {
-        return results.getTotalHitCount();
     }
 
     @Override

@@ -43,11 +43,6 @@ public final class ReSortingQueryResults implements ZimbraQueryResults {
     }
 
     @Override
-    public long getTotalHitCount() {
-        return results.getTotalHitCount();
-    }
-
-    @Override
     public long getCursorOffset() {
         return -1;
     }

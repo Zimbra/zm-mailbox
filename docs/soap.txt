@@ -1462,7 +1462,7 @@ if recip="1" is specified
 conversation result:
 --------------------
 
-<SearchResponse sortBy="sort-by" offset="..." more="{more-flag}" [total="{total hit count}"]>
+<SearchResponse sortBy="sort-by" offset="..." more="{more-flag}">
   [<info>
     [<wildcard str="foo*" expanded="1|0"/>]
     [<suggest>{suggested query string}</suggest>]
@@ -1485,12 +1485,9 @@ Info block:
        wildcard was not specific enough and therefore no wildcard
        matches are included (exact-match *is* included in results).
 
-total hit count:
-  The total hit count is only available for simple queries (e.g. in:inbox).
-
 message result:
 ---------------
-<SearchResponse sortBy="sort-by" offset="..." more="{more-flag}" [total="{total hit count}"]>
+<SearchResponse sortBy="sort-by" offset="..." more="{more-flag}">
    [<info>...</info>]
    <m id="{message-id}" tn="{tag-names}" f="{flags}" s="{size}" d="{date}" cid="{conv-id}" l="{location}" [mbx="UID"] sf="SORT-FIELD-VALUE" [cm="1"]>
      <e .../>*  <!- from only -->
@@ -1501,9 +1498,6 @@ message result:
      <hp part="{mime-part-name}"/>+ // Hit Part -- indicator that the named part matched the search string
    </m>
 </SearchResponse>
-
-total hit count:
-  The total hit count is only available for simple queries (e.g. in:inbox).
 
 contact result:
 ---------------
