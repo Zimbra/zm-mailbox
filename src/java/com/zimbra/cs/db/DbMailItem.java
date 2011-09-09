@@ -52,8 +52,6 @@ import com.google.common.collect.Sets;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ListUtil;
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -89,7 +87,6 @@ import com.zimbra.cs.store.StoreManager;
  * @since Aug 13, 2004
  */
 public class DbMailItem {
-
     public static final String TABLE_MAIL_ITEM = "mail_item";
     public static final String TABLE_MAIL_ITEM_DUMPSTER = "mail_item_dumpster";
     public static final String TABLE_REVISION = "revision";
@@ -98,8 +95,6 @@ public class DbMailItem {
     public static final String TABLE_APPOINTMENT_DUMPSTER = "appointment_dumpster";
     public static final String TABLE_OPEN_CONVERSATION = "open_conversation";
     public static final String TABLE_TOMBSTONE = "tombstone";
-
-    private static Log sLog = LogFactory.getLog(DbMailItem.class);
 
     public static final int MAX_SENDER_LENGTH  = 128;
     public static final int MAX_RECIPIENTS_LENGTH = 128;
@@ -120,18 +115,6 @@ public class DbMailItem {
         }
         return nextPos;
     }
-
-    public static final String getInThisMailboxAnd(int mboxId, String miAlias, String apAlias) {
-        if (DebugConfig.disableMailboxGroups)
-            return "";
-
-        StringBuilder sb = new StringBuilder(miAlias).append(".mailbox_id = ").append(mboxId).append(" AND ");
-        if (apAlias != null) {
-            sb.append(apAlias).append(".mailbox_id = ").append(mboxId).append(" AND ");
-        }
-        return sb.toString();
-    }
-
 
     public void create(UnderlyingData data) throws ServiceException {
         if (data.id <= 0 || data.folderId <= 0 || data.parentId == 0) {
@@ -2793,7 +2776,7 @@ public class DbMailItem {
                     try {
                         MailboxBlob mblob = sm.getMailboxBlob(mbox, id, revision, locator);
                         if (mblob == null) {
-                            sLog.warn("missing blob for id: " + id + ", change: " + revision);
+                            ZimbraLog.mailbox.warn("missing blob for id: %d, change: %d", id, revision);
                         } else {
                             info.blobs.add(mblob);
                         }
@@ -2858,7 +2841,8 @@ public class DbMailItem {
                         try {
                             MailboxBlob mblob = sm.getMailboxBlob(mbox, rs.getInt(1), rs.getInt(4), rs.getString(5));
                             if (mblob == null) {
-                                sLog.error("missing blob for id: " + rs.getInt(1) + ", change: " + rs.getInt(4));
+                                ZimbraLog.mailbox.error("missing blob for id: %d, change: %s",
+                                        rs.getInt(1), rs.getInt(4));
                             } else {
                                 info.blobs.add(mblob);
                             }

@@ -28,7 +28,6 @@ import java.util.Set;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
-import com.google.common.collect.Sets;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -218,7 +217,7 @@ public final class DbSearch {
     }
 
     private static final StringBuilder encodeSelect(Mailbox mbox, StringBuilder out, SortBy sort, FetchMode fetch,
-            boolean includeCalTable, DbSearchConstraints node, boolean validLIMIT, boolean inDumpster) {
+            boolean joinAppt, DbSearchConstraints node, boolean validLIMIT, boolean inDumpster) {
         // SELECT mi.id, ...
         // If you change the first for parameters, you must change the COLUMN_* constants.
         out.append("SELECT ");
@@ -243,19 +242,14 @@ public final class DbSearch {
                 break;
         }
         addSortColumn(out, sort);
-
-        // FROM mail_item AS mi FORCE INDEX (...) [, appointment AS ap]
         out.append(" FROM ").append(DbMailItem.getMailItemTableName(mbox, "mi", inDumpster));
         out.append(getForceIndexClause(node, sort, validLIMIT));
-        if (includeCalTable) {
+        if (joinAppt) {
             out.append(", ").append(DbMailItem.getCalendarItemTableName(mbox, "ap", inDumpster));
         }
-        // WHERE mi.mailboxId=? [AND ap.mailboxId=? AND mi.id = ap.id ] AND "
-        out.append(" WHERE ");
-        //TODO don't put a bare mailbox_id, but use a parameter
-        out.append(DbMailItem.getInThisMailboxAnd(mbox.getId(), "mi", includeCalTable ? "ap" : null));
-        if (includeCalTable) {
-            out.append(" mi.id = ap.item_id AND ");
+        out.append(" WHERE mi.mailbox_id = ? AND ");
+        if (joinAppt) {
+            out.append("mi.mailbox_id = ap.mailbox_id AND mi.id = ap.item_id AND ");
         }
         return out;
     }
@@ -292,8 +286,7 @@ public final class DbSearch {
         assert(node instanceof DbSearchConstraints.Leaf && constraint != null);
 
         // if there are no possible matches, short-circuit here...
-        TagConstraints tc = TagConstraints.getTagConstraints(mbox, constraint, conn);
-        if (tc.noMatches) {
+        if (constraint.noResults) {
             out.append(Db.supports(Db.Capability.BOOLEAN_DATATYPE) ? "FALSE" : "0=1");
             return num;
         }
@@ -308,30 +301,13 @@ public final class DbSearch {
             num += constraint.types.size();
         }
 
-
         num += encode(out, "mi.type", false, constraint.excludeTypes);
         num += encode(out, "mi.type", inCalTable, calTypes);
-
-        if (tc.flagMask != 0) {
-            out.append(" AND ").append(Db.getInstance().bitAND("mi.flags", "?")).append(" = ?");
-            num += 2;
-        }
-        if (tc.tags != null) {
-            for (int i = 0; i < tc.tags.size(); i++) {
-                out.append(" AND mi.tag_names LIKE ?");
-                num++;
-            }
-        }
-        if (tc.excludeTags != null) {
-            for (int i = 0; i < tc.excludeTags.size(); i++) {
-                out.append(" AND mi.tag_names NOT LIKE ?");
-                num++;
-            }
-        }
-        num += encode(out, "unread", true, tc.unread);
-
+        num += encode(out, constraint.tags, true);
+        num += encode(out, constraint.excludeTags, false);
         num += encode(out, "mi.folder_id", true, constraint.folders);
         num += encode(out, "mi.folder_id", false, constraint.excludeFolders);
+
         if (constraint.convId > 0) {
             num += encode(out, "mi.parent_id", true);
         } else {
@@ -537,9 +513,7 @@ public final class DbSearch {
         try {
             // Create the statement and bind all our parameters!
             stmt = conn.prepareStatement(sql.toString());
-            int param = 1;
-
-
+            int param = DbMailItem.setMailboxId(stmt, mbox, 1);
             if (hasMailItemOnlyConstraints) {
                 param = setSearchVars(stmt, node, param, (hasAppointmentTableConstraints ? APPOINTMENT_TABLE_TYPES : null), false);
             }
@@ -553,7 +527,7 @@ public final class DbSearch {
                 stmt.setMaxRows(offset + limit + 1);
             }
 
-            assert(param == numParams + 1);
+            assert(param == numParams + 2);
             rs = stmt.executeQuery();
 
             List<Result> result = new ArrayList<Result>();
@@ -704,27 +678,11 @@ public final class DbSearch {
         return param;
     }
 
-    private static final int setLongs(PreparedStatement stmt, int param, Collection<Long> c) throws SQLException {
-        if (!ListUtil.isEmpty(c)) {
-            for (long l : c) {
-                stmt.setLong(param++, l);
-            }
-        }
-        return param;
-    }
-
     private static final int setFolders(PreparedStatement stmt, int param, Collection<Folder> c) throws SQLException {
         if (!ListUtil.isEmpty(c)) {
             for (Folder f : c) {
                 stmt.setInt(param++, f.getId());
             }
-        }
-        return param;
-    }
-
-    private static final int setBooleanAsInt(PreparedStatement stmt, int param, Boolean b) throws SQLException {
-        if (b != null) {
-            stmt.setInt(param++, b.booleanValue() ? 1 : 0);
         }
         return param;
     }
@@ -739,23 +697,6 @@ public final class DbSearch {
     private static final int encode(StringBuilder statement, String column, boolean truthiness) {
         statement.append(" AND ").append(column).append(truthiness ? " = ?" : " != ?");
         return 1;
-    }
-
-    /**
-     * @param statement
-     * @param column
-     * @param truthiness
-     *           if FALSE then sense is reversed (!=)
-     * @param o
-     *            if NULL, this function is a NoOp, otherwise puts ? to bind one value
-     * @return number of parameters bound
-     */
-    private static final int encode(StringBuilder statement, String column, boolean truthiness, Object o) {
-        if (o != null) {
-            statement.append(" AND ").append(column).append(truthiness ? " = ?" : " != ?");
-            return 1;
-        }
-        return 0;
     }
 
     /**
@@ -788,6 +729,18 @@ public final class DbSearch {
             return c.length;
         }
         return 0;
+    }
+
+    private static final int encode(StringBuilder out, Set<Tag> tags, boolean bool) {
+        for (Tag tag : tags) {
+            out.append(" AND ");
+            if (!bool) {
+                out.append(" NOT ");
+            }
+            out.append("EXISTS (SELECT * FROM ").append(DbTag.getTaggedItemTableName(tag.getMailbox(), "ti"));
+            out.append(" WHERE mi.mailbox_id = ti.mailbox_id AND mi.id = ti.item_id AND ti.tag_id = ?)");
+        }
+        return tags.size();
     }
 
     /**
@@ -865,67 +818,8 @@ public final class DbSearch {
         return params;
     }
 
-    public static final class TagConstraints {
-        int setFlagMask, flagMask;
-        Set<Tag> tags, excludeTags;
-        Boolean unread;
-        boolean noMatches;
-
-        static TagConstraints getTagConstraints(Mailbox mbox, DbSearchConstraints.Leaf leaf, DbConnection conn) {
-            TagConstraints tc = leaf.tagConstraints = new TagConstraints();
-            if (leaf.tags.isEmpty() && leaf.excludeTags.isEmpty()) {
-                return tc;
-            }
-
-            if (!ListUtil.isEmpty(leaf.tags)) {
-                for (Tag tag : leaf.tags) {
-                    if (tag.getId() == Flag.ID_UNREAD) {
-                        tc.unread = Boolean.TRUE;
-                    } else if (tag instanceof Flag) {
-                        tc.flagMask |= ((Flag) tag).toBitmask();
-                    } else {
-                        if (tc.tags == null) {
-                            tc.tags = Sets.newHashSet(tag);
-                        } else {
-                            tc.tags.add(tag);
-                        }
-                    }
-                }
-                tc.setFlagMask = tc.flagMask;
-            }
-
-
-            if (!ListUtil.isEmpty(leaf.excludeTags)) {
-                for (Tag tag : leaf.excludeTags) {
-                    if (tag.getId() == Flag.ID_UNREAD) {
-                        if (tc.unread == Boolean.TRUE) {
-                            tc.noMatches = true;
-                        }
-                        tc.unread = Boolean.FALSE;
-                    } else if (tag instanceof Flag) {
-                        if ((tc.setFlagMask & ((Flag) tag).toBitmask()) != 0) {
-                            tc.noMatches = true;
-                        }
-                        tc.flagMask |= ((Flag) tag).toBitmask();
-                    } else {
-                        if (tc.tags != null && tc.tags.contains(tag)) {
-                            tc.noMatches = true;
-                        }
-                        if (tc.excludeTags == null) {
-                            tc.excludeTags = Sets.newHashSet(tag);
-                        } else {
-                            tc.excludeTags.add(tag);
-                        }
-                    }
-                }
-            }
-
-            return tc;
-        }
-    }
-
-    private static int setSearchVars(PreparedStatement stmt, DbSearchConstraints node, int param, byte[] calTypes, boolean inCalTable)
-    throws SQLException {
+    private static int setSearchVars(PreparedStatement stmt, DbSearchConstraints node, int param, byte[] calTypes,
+            boolean inCalTable) throws SQLException {
         /*
          *( SUB-NODE AND/OR (SUB-NODE...) ) AND/OR ( SUB-NODE ) AND
          *    (
@@ -946,7 +840,7 @@ public final class DbSearch {
         assert(node instanceof DbSearchConstraints.Leaf && leaf != null);
 
         // if there are no possible matches, short-circuit here...
-        if (leaf.tagConstraints.noMatches) {
+        if (leaf.noResults) {
             return param;
         }
         for (MailItem.Type type : leaf.types) {
@@ -956,22 +850,12 @@ public final class DbSearch {
             stmt.setByte(param++, type.toByte());
         }
         param = setBytes(stmt, param, calTypes);
-
-        if (leaf.tagConstraints.flagMask != 0) {
-            stmt.setInt(param++, leaf.tagConstraints.flagMask);
-            stmt.setInt(param++, leaf.tagConstraints.setFlagMask);
+        for (Tag tag : leaf.tags) {
+            stmt.setInt(param++, tag.getId());
         }
-        if (leaf.tagConstraints.tags != null) {
-            for (Tag tag : leaf.tagConstraints.tags) {
-                stmt.setString(param++, DbTag.tagLIKEPattern(tag.getName()));
-            }
+        for (Tag tag : leaf.excludeTags) {
+            stmt.setInt(param++, tag.getId());
         }
-        if (leaf.tagConstraints.excludeTags != null) {
-            for (Tag tag : leaf.tagConstraints.excludeTags) {
-                stmt.setString(param++, DbTag.tagLIKEPattern(tag.getName()));
-            }
-        }
-        param = setBooleanAsInt(stmt, param, leaf.tagConstraints.unread);
         param = setFolders(stmt, param, leaf.folders);
         param = setFolders(stmt, param, leaf.excludeFolders);
         if (leaf.convId > 0) {

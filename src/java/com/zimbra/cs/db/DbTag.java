@@ -51,11 +51,14 @@ import com.zimbra.cs.mailbox.MailItem.PendingDelete;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 
-public class DbTag {
+public final class DbTag {
     public static final String TABLE_TAG = "tag";
     public static final String TABLE_TAGGED_ITEM = "tagged_item";
 
     private static final String TAG_FIELDS = "id, name, color, item_count, unread, listed, sequence, policy";
+
+    private DbTag() {
+    }
 
     private static UnderlyingData asUnderlyingData(ResultSet rs) throws SQLException, ServiceException {
         UnderlyingData data = new UnderlyingData();
@@ -101,7 +104,7 @@ public class DbTag {
         return TAG_SEPARATOR + name + TAG_SEPARATOR;
     }
 
-    static String tagLIKEPattern(String tagName) {
+    private static String tagLIKEPattern(String tagName) {
         return '%' + delimitTagName(tagName).replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + '%';
     }
 
@@ -801,7 +804,7 @@ public class DbTag {
         return getTaggedItemTableName(mbox) + " AS " + alias;
     }
 
-    
+
     @VisibleForTesting
     public static void debugConsistencyCheck(Mailbox mbox) throws ServiceException {
         DbConnection conn = mbox.lock.isLocked() ? mbox.getOperationConnection() : DbPool.getConnection(mbox);
@@ -842,6 +845,7 @@ public class DbTag {
         }
     }
 
+    //TODO remove JUnit dependency from non test class
     private static void validateTaggedItem(DbConnection conn, Mailbox mbox, Map<Integer, UnderlyingData> tdata) throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -867,6 +871,7 @@ public class DbTag {
         }
     }
 
+    //TODO remove JUnit dependency from non test class
     private static void verifyTaggedItem(DbConnection conn, Mailbox mbox, Map<Integer, UnderlyingData> tdata) throws ServiceException {
         int flagMask = 0;
         for (int flagId : Mailbox.REIFIED_FLAGS) {
@@ -928,6 +933,7 @@ public class DbTag {
         }
     }
 
+    //TODO remove JUnit dependency from non test class
     private static void verifyTagCounts(DbConnection conn, Mailbox mbox, Map<Integer, UnderlyingData> tdata) throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -988,6 +994,7 @@ public class DbTag {
 //        }
 //    }
 
+    //TODO remove JUnit dependency from non test class
     public static <T> void assertCollectionsEqual(String msg, java.util.Collection<T> expected, java.util.Collection<T> actual) {
         String prefix = msg == null ? "" : msg + ": ";
         if (expected == null) {

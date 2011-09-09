@@ -31,9 +31,9 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import com.google.common.collect.Sets;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.db.DbSearch;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -144,50 +144,50 @@ public interface DbSearchConstraints extends Cloneable {
 
         // These are the main constraints
 
-        /** optional - SPECIAL CASE -- ALL listed tags must be present. */
-        public final Set<Tag> tags = new HashSet<Tag>();
+        /** optional - ALL listed tags/flags must be present. */
+        public final Set<Tag> tags = Sets.newHashSetWithExpectedSize(0);
 
-        /** optional - ALL listed tags must be NOT present. */
-        public final Set<Tag> excludeTags = new HashSet<Tag>();
+        /** optional - ALL listed tags/flags must be NOT present. */
+        public final Set<Tag> excludeTags = Sets.newHashSetWithExpectedSize(0);
 
         /** optional - ANY of these folders are OK. */
-        public final Set<Folder> folders = new HashSet<Folder>();
+        public final Set<Folder> folders = Sets.newHashSetWithExpectedSize(0);
 
         /** optional - ALL listed folders not allowed. */
-        public final Set<Folder> excludeFolders = new HashSet<Folder>();
+        public final Set<Folder> excludeFolders = Sets.newHashSetWithExpectedSize(0);
 
         /** optional - ANY of these folders are OK. */
-        public final Set<RemoteFolderDescriptor> remoteFolders = new HashSet<RemoteFolderDescriptor>();
+        public final Set<RemoteFolderDescriptor> remoteFolders = Sets.newHashSetWithExpectedSize(0);
 
         /** optional - ALL listed folders are not OK. */
-        public final Set<RemoteFolderDescriptor> excludeRemoteFolders = new HashSet<RemoteFolderDescriptor>();
+        public final Set<RemoteFolderDescriptor> excludeRemoteFolders = Sets.newHashSetWithExpectedSize(0);
 
         /** optional - must match this convId. */
         public int convId = 0;
 
         /** optional - ALL listed convs not allowed. */
-        public final Set<Integer> prohibitedConvIds = new HashSet<Integer>();
+        public final Set<Integer> prohibitedConvIds = Sets.newHashSetWithExpectedSize(0);
 
         /** optional. */
         public ItemId remoteConvId;
 
         /** optional - ALL listed convs not allowed. */
-        public final Set<ItemId> prohibitedRemoteConvIds = new HashSet<ItemId>();
+        public final Set<ItemId> prohibitedRemoteConvIds = Sets.newHashSetWithExpectedSize(0);
 
         /** optional - ANY of these itemIDs are OK. */
-        public final Set<Integer> itemIds = new HashSet<Integer>();
+        public final Set<Integer> itemIds = Sets.newHashSetWithExpectedSize(0);
 
         /** optional - ALL of these itemIDs are excluded. */
-        public final Set<Integer> prohibitedItemIds = new HashSet<Integer>();
+        public final Set<Integer> prohibitedItemIds = Sets.newHashSetWithExpectedSize(0);
 
         /** optional - ANY of these itemIDs are OK. */
-        public final Set<ItemId> remoteItemIds = new HashSet<ItemId>();
+        public final Set<ItemId> remoteItemIds = Sets.newHashSetWithExpectedSize(0);
 
         /** optional - ALL of these itemIDs are excluded. */
-        public final Set<ItemId> prohibitedRemoteItemIds = new HashSet<ItemId>();
+        public final Set<ItemId> prohibitedRemoteItemIds = Sets.newHashSetWithExpectedSize(0);
 
         /** optional - ANY of these indexIDs are OK. */
-        public final Set<Integer> indexIds = new HashSet<Integer>();
+        public final Set<Integer> indexIds = Sets.newHashSetWithExpectedSize(0);
 
         /** optional - index_id must be present. */
         public Boolean hasIndexId;
@@ -307,13 +307,6 @@ public interface DbSearchConstraints extends Cloneable {
             }
             return result;
         }
-
-        /**
-         * Hackhackhack -- the TagConstraints are generated during the query generating process during
-         * DbMailItem.encodeConstraint, and then they are cached in this object.  This is pretty ugly
-         * but works for now.  TODO cleanup.
-         */
-        public DbSearch.TagConstraints tagConstraints;
 
         @Override
         public StringBuilder toQueryString(StringBuilder out) {
@@ -628,7 +621,7 @@ public interface DbSearchConstraints extends Cloneable {
 
         @Override
         public boolean tryDbFirst(Mailbox mbox) throws ServiceException {
-            return (convId != 0 || (tags != null && tags.contains(mbox.getFlagById(Flag.ID_UNREAD))));
+            return convId != 0 || tags.contains(mbox.getFlagById(Flag.ID_UNREAD));
         }
 
         @Override
@@ -858,16 +851,14 @@ public interface DbSearchConstraints extends Cloneable {
             }
         }
 
-        void addTag(Tag tag, boolean bool) {
+        public void addTag(Tag tag, boolean bool) {
             if (bool) {
-                if (excludeTags != null && excludeTags.contains(tag)) {
-                    ZimbraLog.search.debug("TAG and NOT TAG = no results");
+                if (excludeTags.contains(tag)) { // TAG and NOT TAG = no results
                     noResults = true;
                 }
                 tags.add(tag);
             } else {
-                if (tags.contains(tag)) {
-                    ZimbraLog.search.debug("TAG and NOT TAG = no results");
+                if (tags.contains(tag)) { // TAG and NOT TAG = no results
                     noResults = true;
                 }
                 excludeTags.add(tag);

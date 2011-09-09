@@ -374,4 +374,15 @@ public final class Flag extends Tag {
     public boolean isSystemFlag() {
         return (toBitmask() & Flag.FLAGS_SYSTEM) != 0;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Flag && info == ((Flag) o).info;
+    }
+
+    @Override
+    public int hashCode() {
+        return info.hashCode();
+    }
+
 }

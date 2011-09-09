@@ -14,8 +14,15 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.HashMap;
+
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
+
+import com.zimbra.cs.account.MockProvisioning;
+import com.zimbra.cs.account.Provisioning;
 
 /**
  * Unit test for {@link Flag}.
@@ -23,6 +30,18 @@ import org.junit.Test;
  * @author ysasaki
  */
 public final class FlagTest {
+
+    @BeforeClass
+    public static void init() throws Exception {
+        MailboxTestUtil.initServer();
+        Provisioning prov = Provisioning.getInstance();
+        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        MailboxTestUtil.clearData();
+    }
 
     @SuppressWarnings("deprecation")
     @Test
@@ -90,6 +109,13 @@ public final class FlagTest {
         Assert.assertEquals(268435456, Flag.BITMASK_GLOBAL);
         Assert.assertEquals(536870912, Flag.BITMASK_IN_DUMPSTER);
         Assert.assertEquals(1073741824, Flag.BITMASK_UNCACHED);
+    }
+
+    @Test
+    public void equals() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Assert.assertEquals(Flag.FlagInfo.UNREAD.toFlag(mbox), Flag.FlagInfo.UNREAD.toFlag(mbox));
+        Assert.assertEquals(Flag.FlagInfo.UNREAD.toFlag(mbox).hashCode(), Flag.FlagInfo.UNREAD.toFlag(mbox).hashCode());
     }
 
 }
