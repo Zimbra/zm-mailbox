@@ -42,7 +42,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110909-1204 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110909-1346 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -8256,78 +8256,6 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether message prioritization feature is enabled
-     *
-     * @return zimbraFeatureMessagePrioritizationEnabled, or true if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1271)
-    public boolean isFeatureMessagePrioritizationEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraFeatureMessagePrioritizationEnabled, true);
-    }
-
-    /**
-     * whether message prioritization feature is enabled
-     *
-     * @param zimbraFeatureMessagePrioritizationEnabled new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1271)
-    public void setFeatureMessagePrioritizationEnabled(boolean zimbraFeatureMessagePrioritizationEnabled) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureMessagePrioritizationEnabled, zimbraFeatureMessagePrioritizationEnabled ? Provisioning.TRUE : Provisioning.FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * whether message prioritization feature is enabled
-     *
-     * @param zimbraFeatureMessagePrioritizationEnabled new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1271)
-    public Map<String,Object> setFeatureMessagePrioritizationEnabled(boolean zimbraFeatureMessagePrioritizationEnabled, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureMessagePrioritizationEnabled, zimbraFeatureMessagePrioritizationEnabled ? Provisioning.TRUE : Provisioning.FALSE);
-        return attrs;
-    }
-
-    /**
-     * whether message prioritization feature is enabled
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1271)
-    public void unsetFeatureMessagePrioritizationEnabled() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureMessagePrioritizationEnabled, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * whether message prioritization feature is enabled
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1271)
-    public Map<String,Object> unsetFeatureMessagePrioritizationEnabled(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraFeatureMessagePrioritizationEnabled, "");
-        return attrs;
-    }
-
-    /**
      * whether to enforce mobile policy
      *
      * @return zimbraFeatureMobilePolicyEnabled, or true if unset
@@ -9080,6 +9008,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * whether priority inbox feature is enabled
+     *
+     * @return zimbraFeaturePriorityInboxEnabled, or true if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1271)
+    public boolean isFeaturePriorityInboxEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeaturePriorityInboxEnabled, true);
+    }
+
+    /**
+     * whether priority inbox feature is enabled
+     *
+     * @param zimbraFeaturePriorityInboxEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1271)
+    public void setFeaturePriorityInboxEnabled(boolean zimbraFeaturePriorityInboxEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePriorityInboxEnabled, zimbraFeaturePriorityInboxEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether priority inbox feature is enabled
+     *
+     * @param zimbraFeaturePriorityInboxEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1271)
+    public Map<String,Object> setFeaturePriorityInboxEnabled(boolean zimbraFeaturePriorityInboxEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePriorityInboxEnabled, zimbraFeaturePriorityInboxEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether priority inbox feature is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1271)
+    public void unsetFeaturePriorityInboxEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePriorityInboxEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether priority inbox feature is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1271)
+    public Map<String,Object> unsetFeaturePriorityInboxEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeaturePriorityInboxEnabled, "");
+        return attrs;
+    }
+
+    /**
      * whether the web UI shows UI elements related to read receipts
      *
      * @return zimbraFeatureReadReceiptsEnabled, or true if unset
@@ -9544,7 +9544,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * message social filters enabled
+     * message social filters enabled in the web client UI
      *
      * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
      *
@@ -9558,7 +9558,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * message social filters enabled
+     * message social filters enabled in the web client UI
      *
      * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
      *
@@ -9575,7 +9575,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * message social filters enabled
+     * message social filters enabled in the web client UI
      *
      * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
      *
@@ -9593,7 +9593,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * message social filters enabled
+     * message social filters enabled in the web client UI
      *
      * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
      *
@@ -9610,7 +9610,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * message social filters enabled
+     * message social filters enabled in the web client UI
      *
      * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
      *
@@ -9628,7 +9628,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * message social filters enabled
+     * message social filters enabled in the web client UI
      *
      * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
      *
@@ -9644,7 +9644,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * message social filters enabled
+     * message social filters enabled in the web client UI
      *
      * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
      *

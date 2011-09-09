@@ -6193,9 +6193,9 @@ TODO: delete them permanently from here
   <desc>mode for conversation view</desc>
 </attr>
 
-<attr id="1271" name="zimbraFeatureMessagePrioritizationEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited"  since="8.0.0">
+<attr id="1271" name="zimbraFeaturePriorityInboxEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited"  since="8.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
-  <desc>whether message prioritization feature is enabled</desc>
+  <desc>whether priority inbox feature is enabled</desc>
 </attr>
 
 <attr id="1272" name="zimbraFeatureSocialFiltersEnabled" type="enum" value="SocialCast,LinkedIn,Twitter,Facebook" cardinality="multi" optionalIn="account,cos" flags="accountInfo,accountInherited"  since="8.0.0">
@@ -6203,7 +6203,7 @@ TODO: delete them permanently from here
   <defaultCOSValue>LinkedIn</defaultCOSValue>
   <defaultCOSValue>Twitter</defaultCOSValue>
   <defaultCOSValue>Facebook</defaultCOSValue>
-  <desc>message social filters enabled</desc>
+  <desc>message social filters enabled in the web client UI</desc>
 </attr>
 
 
