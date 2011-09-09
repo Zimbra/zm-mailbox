@@ -43,7 +43,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110906-1229 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110909-1204 */
 
     /**
      * RFC2256: descriptive information
@@ -1962,24 +1962,6 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
      *
-     * @return zimbraAutoProvAuthMech, or null if unset and/or has invalid value
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1222)
-    public ZAttrProvisioning.AutoProvAuthMech getAutoProvAuthMech() {
-        try { String v = getAttr(Provisioning.A_zimbraAutoProvAuthMech); return v == null ? null : ZAttrProvisioning.AutoProvAuthMech.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
-    }
-
-    /**
-     * EAGER mode: N/A LAZY mode: required MANUAL mode: N/A Auth mechanisms
-     * enabled for auto provision in LAZY mode. When a user authenticates via
-     * one of the external auth mechanisms enabled in this attribute, and
-     * when the user account does not yet exist in Zimbra directory, an
-     * account entry will be automatically created in Zimbra directory.
-     *
-     * <p>Valid values: [KRB5, LDAP, PREAUTH, SPNEGO]
-     *
      * @return zimbraAutoProvAuthMech, or empty array if unset
      *
      * @since ZCS 8.0.0
@@ -3175,34 +3157,6 @@ public abstract class ZAttrDomain extends NamedEntry {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLock, "");
         return attrs;
-    }
-
-    /**
-     * Auto provision modes enabled. Multiple modes can be enabled on a
-     * domain. EAGER: A server maintenance thread automatically polls the
-     * configured external auto provision LDAP source at a configured
-     * interval for entries due to be auto provisioned in Zimbra, and then
-     * auto creates the accounts in Zimbra directory. LAZY: auto creates the
-     * Zimbra account when user first login via one of the external auth
-     * mechanisms enabled for auto provisioning. Auth mechanisms enabled for
-     * auto provisioning are configured in zimbraAutoProvAuthMech. MANUAL:
-     * admin to search from the configured external auto provision LDAP
-     * source and select an entry from the search result to create the
-     * corresponding Zimbra account for the external entry. In all cases,
-     * localpart of the Zimbra account is mapped from an attribute on the
-     * external entry based on zimbraAutoProvAccountNameMap. The Zimbra
-     * account is populated with attributes mapped from the external entry
-     * based on zimbraAutoProvAttrMap.
-     *
-     * <p>Valid values: [MANUAL, LAZY, EAGER]
-     *
-     * @return zimbraAutoProvMode, or null if unset and/or has invalid value
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1221)
-    public ZAttrProvisioning.AutoProvMode getAutoProvMode() {
-        try { String v = getAttr(Provisioning.A_zimbraAutoProvMode); return v == null ? null : ZAttrProvisioning.AutoProvMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
     }
 
     /**

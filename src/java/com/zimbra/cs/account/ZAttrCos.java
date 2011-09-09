@@ -42,7 +42,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110906-1229 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110909-1204 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -8256,6 +8256,78 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * whether message prioritization feature is enabled
+     *
+     * @return zimbraFeatureMessagePrioritizationEnabled, or true if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1271)
+    public boolean isFeatureMessagePrioritizationEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFeatureMessagePrioritizationEnabled, true);
+    }
+
+    /**
+     * whether message prioritization feature is enabled
+     *
+     * @param zimbraFeatureMessagePrioritizationEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1271)
+    public void setFeatureMessagePrioritizationEnabled(boolean zimbraFeatureMessagePrioritizationEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMessagePrioritizationEnabled, zimbraFeatureMessagePrioritizationEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether message prioritization feature is enabled
+     *
+     * @param zimbraFeatureMessagePrioritizationEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1271)
+    public Map<String,Object> setFeatureMessagePrioritizationEnabled(boolean zimbraFeatureMessagePrioritizationEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMessagePrioritizationEnabled, zimbraFeatureMessagePrioritizationEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether message prioritization feature is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1271)
+    public void unsetFeatureMessagePrioritizationEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMessagePrioritizationEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether message prioritization feature is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1271)
+    public Map<String,Object> unsetFeatureMessagePrioritizationEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureMessagePrioritizationEnabled, "");
+        return attrs;
+    }
+
+    /**
      * whether to enforce mobile policy
      *
      * @return zimbraFeatureMobilePolicyEnabled, or true if unset
@@ -8529,8 +8601,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 7.0.0. Deprecated per bug 50465. Orig desc: Whether
-     * notebook feature should be allowed for this account or in this cos
+     * Deprecated since: 7.0.0. Deprecated per bugs 50465, 56201. Orig desc:
+     * Whether notebook feature should be allowed for this account or in this
+     * cos
      *
      * @return zimbraFeatureNotebookEnabled, or false if unset
      */
@@ -8540,8 +8613,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 7.0.0. Deprecated per bug 50465. Orig desc: Whether
-     * notebook feature should be allowed for this account or in this cos
+     * Deprecated since: 7.0.0. Deprecated per bugs 50465, 56201. Orig desc:
+     * Whether notebook feature should be allowed for this account or in this
+     * cos
      *
      * @param zimbraFeatureNotebookEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -8554,8 +8628,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 7.0.0. Deprecated per bug 50465. Orig desc: Whether
-     * notebook feature should be allowed for this account or in this cos
+     * Deprecated since: 7.0.0. Deprecated per bugs 50465, 56201. Orig desc:
+     * Whether notebook feature should be allowed for this account or in this
+     * cos
      *
      * @param zimbraFeatureNotebookEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -8569,8 +8644,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 7.0.0. Deprecated per bug 50465. Orig desc: Whether
-     * notebook feature should be allowed for this account or in this cos
+     * Deprecated since: 7.0.0. Deprecated per bugs 50465, 56201. Orig desc:
+     * Whether notebook feature should be allowed for this account or in this
+     * cos
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -8582,8 +8658,9 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Deprecated since: 7.0.0. Deprecated per bug 50465. Orig desc: Whether
-     * notebook feature should be allowed for this account or in this cos
+     * Deprecated since: 7.0.0. Deprecated per bugs 50465, 56201. Orig desc:
+     * Whether notebook feature should be allowed for this account or in this
+     * cos
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -8797,7 +8874,8 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether people search feature is enabled
+     * Deprecated since: 8.0.0. Deprecated per bug 56924. Orig desc: whether
+     * people search feature is enabled
      *
      * @return zimbraFeaturePeopleSearchEnabled, or true if unset
      *
@@ -8809,7 +8887,8 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether people search feature is enabled
+     * Deprecated since: 8.0.0. Deprecated per bug 56924. Orig desc: whether
+     * people search feature is enabled
      *
      * @param zimbraFeaturePeopleSearchEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -8824,7 +8903,8 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether people search feature is enabled
+     * Deprecated since: 8.0.0. Deprecated per bug 56924. Orig desc: whether
+     * people search feature is enabled
      *
      * @param zimbraFeaturePeopleSearchEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -8840,7 +8920,8 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether people search feature is enabled
+     * Deprecated since: 8.0.0. Deprecated per bug 56924. Orig desc: whether
+     * people search feature is enabled
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -8854,7 +8935,8 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * whether people search feature is enabled
+     * Deprecated since: 8.0.0. Deprecated per bug 56924. Orig desc: whether
+     * people search feature is enabled
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -9458,6 +9540,123 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetFeatureSkinChangeEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureSkinChangeEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * message social filters enabled
+     *
+     * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
+     *
+     * @return zimbraFeatureSocialFiltersEnabled, or empty array if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1272)
+    public String[] getFeatureSocialFiltersEnabledAsString() {
+        String[] value = getMultiAttr(Provisioning.A_zimbraFeatureSocialFiltersEnabled); return value.length > 0 ? value : new String[] {"SocialCast","LinkedIn","Twitter","Facebook"};
+    }
+
+    /**
+     * message social filters enabled
+     *
+     * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
+     *
+     * @param zimbraFeatureSocialFiltersEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1272)
+    public void setFeatureSocialFiltersEnabled(ZAttrProvisioning.FeatureSocialFiltersEnabled zimbraFeatureSocialFiltersEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialFiltersEnabled, zimbraFeatureSocialFiltersEnabled.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * message social filters enabled
+     *
+     * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
+     *
+     * @param zimbraFeatureSocialFiltersEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1272)
+    public Map<String,Object> setFeatureSocialFiltersEnabled(ZAttrProvisioning.FeatureSocialFiltersEnabled zimbraFeatureSocialFiltersEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialFiltersEnabled, zimbraFeatureSocialFiltersEnabled.toString());
+        return attrs;
+    }
+
+    /**
+     * message social filters enabled
+     *
+     * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
+     *
+     * @param zimbraFeatureSocialFiltersEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1272)
+    public void setFeatureSocialFiltersEnabledAsString(String[] zimbraFeatureSocialFiltersEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialFiltersEnabled, zimbraFeatureSocialFiltersEnabled);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * message social filters enabled
+     *
+     * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
+     *
+     * @param zimbraFeatureSocialFiltersEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1272)
+    public Map<String,Object> setFeatureSocialFiltersEnabledAsString(String[] zimbraFeatureSocialFiltersEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialFiltersEnabled, zimbraFeatureSocialFiltersEnabled);
+        return attrs;
+    }
+
+    /**
+     * message social filters enabled
+     *
+     * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1272)
+    public void unsetFeatureSocialFiltersEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialFiltersEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * message social filters enabled
+     *
+     * <p>Valid values: [LinkedIn, Facebook, SocialCast, Twitter]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1272)
+    public Map<String,Object> unsetFeatureSocialFiltersEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFeatureSocialFiltersEnabled, "");
         return attrs;
     }
 
