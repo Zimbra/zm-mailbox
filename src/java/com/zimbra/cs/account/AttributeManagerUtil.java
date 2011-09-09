@@ -935,7 +935,9 @@ public class AttributeManagerUtil {
                case TYPE_GENTIME:
                case TYPE_ENUM:
                case TYPE_PORT:
-                   generateGetter(result, ai, false, ac);
+                   if (ai.getCardinality() != AttributeCardinality.multi) {
+                       generateGetter(result, ai, false, ac);
+                   }
                    generateGetter(result, ai, true, ac);
                    generateSetters(result, ai, false, SetterType.set);
                    if (ai.getType() == AttributeType.TYPE_GENTIME ||
