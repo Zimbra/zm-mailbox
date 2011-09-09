@@ -25,7 +25,7 @@ public class LdapGalValueMap {
             mReplacement  = matcher.group(3);
             ZimbraLog.gal.debug("Gal value map: field=" + mFieldName + ", regex=" + mRegex + ", replacement=" + mReplacement);
         } else {
-            ZimbraLog.gal.warn("unable to parse gal attr map map: " + valueMap);
+            ZimbraLog.gal.warn("unable to parse gal attr value map: " + valueMap);
         }
     }
     
