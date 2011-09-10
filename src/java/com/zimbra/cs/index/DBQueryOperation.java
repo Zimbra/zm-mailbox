@@ -964,10 +964,10 @@ public class DBQueryOperation extends QueryOperation {
 
         if (offsetConstraints != null) {
             assert cursorOffset < 0 : cursorOffset;
-            DbConnection conn = DbPool.getConnection(context.getMailbox());
+            Mailbox mbox = context.getMailbox();
+            DbConnection conn = DbPool.getConnection(mbox);
             try {
-                cursorOffset = DbSearch.countResults(conn, offsetConstraints, context.getMailbox(),
-                        context.getParams().inDumpster());
+                cursorOffset = new DbSearch(mbox, context.getParams().inDumpster()).countResults(conn, offsetConstraints);
             } finally {
                 conn.closeQuietly();
             }
@@ -1167,7 +1167,7 @@ public class DBQueryOperation extends QueryOperation {
             Mailbox mbox = context.getMailbox();
             DbConnection conn = DbPool.getConnection(mbox);
             try {
-                dbHitCount = DbSearch.countResults(conn, constraints, mbox, context.getParams().inDumpster());
+                dbHitCount = new DbSearch(mbox, context.getParams().inDumpster()).countResults(conn, constraints);
             } finally {
                 conn.closeQuietly();
             }

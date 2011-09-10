@@ -70,8 +70,8 @@ public final class DbSearchTest {
                 "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0)", mbox.getId(), 102, MailItem.Type.MESSAGE.toByte(),
                 Flag.BITMASK_REPLIED);
 
-        List<DbSearch.Result> result = DbSearch.search(conn, mbox, new DbSearchConstraints.Leaf(),
-                SortBy.ATTACHMENT_ASC, 0, 100, DbSearch.FetchMode.ID, false);
+        List<DbSearch.Result> result = new DbSearch(mbox).search(conn, new DbSearchConstraints.Leaf(),
+                SortBy.ATTACHMENT_ASC, 0, 100, DbSearch.FetchMode.ID);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(100, result.get(0).getId());
         Assert.assertEquals("00000000100", result.get(0).getSortValue());
@@ -80,8 +80,8 @@ public final class DbSearchTest {
         Assert.assertEquals(101, result.get(2).getId());
         Assert.assertEquals("10000000101", result.get(2).getSortValue());
 
-        result = DbSearch.search(conn, mbox, new DbSearchConstraints.Leaf(), SortBy.ATTACHMENT_DESC,
-                0, 100, DbSearch.FetchMode.ID, false);
+        result = new DbSearch(mbox).search(conn, new DbSearchConstraints.Leaf(), SortBy.ATTACHMENT_DESC,
+                0, 100, DbSearch.FetchMode.ID);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(101, result.get(0).getId());
         Assert.assertEquals("10000000101", result.get(0).getSortValue());
@@ -111,8 +111,8 @@ public final class DbSearchTest {
                 "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0)", mbox.getId(), 102, MailItem.Type.MESSAGE.toByte(),
                 Flag.BITMASK_REPLIED);
 
-        List<DbSearch.Result> result = DbSearch.search(conn, mbox, new DbSearchConstraints.Leaf(), SortBy.FLAG_ASC,
-                0, 100, DbSearch.FetchMode.ID, false);
+        List<DbSearch.Result> result = new DbSearch(mbox).search(conn, new DbSearchConstraints.Leaf(), SortBy.FLAG_ASC,
+                0, 100, DbSearch.FetchMode.ID);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(100, result.get(0).getId());
         Assert.assertEquals("00000000100", result.get(0).getSortValue());
@@ -121,8 +121,8 @@ public final class DbSearchTest {
         Assert.assertEquals(101, result.get(2).getId());
         Assert.assertEquals("10000000101", result.get(2).getSortValue());
 
-        result = DbSearch.search(conn, mbox, new DbSearchConstraints.Leaf(), SortBy.FLAG_DESC,
-                0, 100, DbSearch.FetchMode.ID, false);
+        result = new DbSearch(mbox).search(conn, new DbSearchConstraints.Leaf(), SortBy.FLAG_DESC,
+                0, 100, DbSearch.FetchMode.ID);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(101, result.get(0).getId());
         Assert.assertEquals("10000000101", result.get(0).getSortValue());
@@ -152,8 +152,8 @@ public final class DbSearchTest {
                 "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0)", mbox.getId(), 102, MailItem.Type.MESSAGE.toByte(),
                 Flag.BITMASK_REPLIED);
 
-        List<DbSearch.Result> result = DbSearch.search(conn, mbox, new DbSearchConstraints.Leaf(), SortBy.PRIORITY_ASC,
-                0, 100, DbSearch.FetchMode.ID, false);
+        List<DbSearch.Result> result = new DbSearch(mbox).search(conn, new DbSearchConstraints.Leaf(),
+                SortBy.PRIORITY_ASC, 0, 100, DbSearch.FetchMode.ID);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(100, result.get(0).getId());
         Assert.assertEquals("00000000100", result.get(0).getSortValue());
@@ -162,8 +162,8 @@ public final class DbSearchTest {
         Assert.assertEquals(101, result.get(2).getId());
         Assert.assertEquals("20000000101", result.get(2).getSortValue());
 
-        result = DbSearch.search(conn, mbox, new DbSearchConstraints.Leaf(), SortBy.PRIORITY_DESC,
-                0, 100, DbSearch.FetchMode.ID, false);
+        result = new DbSearch(mbox).search(conn, new DbSearchConstraints.Leaf(), SortBy.PRIORITY_DESC,
+                0, 100, DbSearch.FetchMode.ID);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(101, result.get(0).getId());
         Assert.assertEquals("20000000101", result.get(0).getSortValue());
@@ -199,8 +199,8 @@ public final class DbSearchTest {
         DbSearchConstraints.Leaf constraints = new DbSearchConstraints.Leaf();
         constraints.cursorRange = new DbSearchConstraints.CursorRange("SUBJECT0000000102", true, null, false,
                 SortBy.SUBJ_ASC);
-        List<DbSearch.Result> result = DbSearch.search(conn, mbox, constraints, SortBy.SUBJ_ASC, 0, 100,
-                DbSearch.FetchMode.ID, false);
+        List<DbSearch.Result> result = new DbSearch(mbox).search(conn, constraints, SortBy.SUBJ_ASC, 0, 100,
+                DbSearch.FetchMode.ID);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(102, result.get(0).getId());
         Assert.assertEquals("SUBJECT0000000102", result.get(0).getSortValue());
@@ -235,15 +235,15 @@ public final class DbSearchTest {
 
         DbSearchConstraints.Leaf constraints = new DbSearchConstraints.Leaf();
         constraints.addDateRange(200000, true, 400000, false, true);
-        List<DbSearch.Result> result = DbSearch.search(conn, mbox, constraints, SortBy.DATE_ASC, 0, 100,
-                DbSearch.FetchMode.ID, false);
+        List<DbSearch.Result> result = new DbSearch(mbox).search(conn, constraints, SortBy.DATE_ASC, 0, 100,
+                DbSearch.FetchMode.ID);
         Assert.assertEquals(2, result.size());
         Assert.assertEquals(102, result.get(0).getId());
         Assert.assertEquals(103, result.get(1).getId());
 
         constraints = new DbSearchConstraints.Leaf();
         constraints.addMDateRange(2000000, true, 4000000, false, true);
-        result = DbSearch.search(conn, mbox, constraints, SortBy.DATE_ASC, 0, 100, DbSearch.FetchMode.ID, false);
+        result = new DbSearch(mbox).search(conn, constraints, SortBy.DATE_ASC, 0, 100, DbSearch.FetchMode.ID);
         Assert.assertEquals(2, result.size());
         Assert.assertEquals(102, result.get(0).getId());
         Assert.assertEquals(103, result.get(1).getId());
@@ -283,15 +283,15 @@ public final class DbSearchTest {
 
         DbSearchConstraints.Leaf constraints = new DbSearchConstraints.Leaf();
         constraints.addTag(mbox.getTagByName("\\Unread"), true);
-        List<DbSearch.Result> result = DbSearch.search(conn, mbox, constraints, SortBy.NONE, 0, 100,
-                DbSearch.FetchMode.ID, false);
+        List<DbSearch.Result> result = new DbSearch(mbox).search(conn, constraints, SortBy.NONE, 0, 100,
+                DbSearch.FetchMode.ID);
         Assert.assertEquals(2, result.size());
         Assert.assertEquals(101, result.get(0).getId());
         Assert.assertEquals(103, result.get(1).getId());
 
         constraints = new DbSearchConstraints.Leaf();
         constraints.addTag(mbox.getTagByName("\\Unread"), false);
-        result = DbSearch.search(conn, mbox, constraints, SortBy.NONE, 0, 100, DbSearch.FetchMode.ID, false);
+        result = new DbSearch(mbox).search(conn, constraints, SortBy.NONE, 0, 100, DbSearch.FetchMode.ID);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(102, result.get(0).getId());
         Assert.assertEquals(104, result.get(1).getId());
@@ -300,20 +300,20 @@ public final class DbSearchTest {
         constraints = new DbSearchConstraints.Leaf();
         constraints.addTag(mbox.getTagByName("\\Unread"), true);
         constraints.addTag(mbox.getTagByName("\\Unread"), false);
-        result = DbSearch.search(conn, mbox, constraints, SortBy.NONE, 0, 100, DbSearch.FetchMode.ID, false);
+        result = new DbSearch(mbox).search(conn, constraints, SortBy.NONE, 0, 100, DbSearch.FetchMode.ID);
         Assert.assertEquals(0, result.size());
 
         constraints = new DbSearchConstraints.Leaf();
         constraints.addTag(mbox.getTagByName("\\Unread"), true);
         constraints.addTag(mbox.getTagByName("\\Flagged"), true);
-        result = DbSearch.search(conn, mbox, constraints, SortBy.NONE, 0, 100, DbSearch.FetchMode.ID, false);
+        result = new DbSearch(mbox).search(conn, constraints, SortBy.NONE, 0, 100, DbSearch.FetchMode.ID);
         Assert.assertEquals(1, result.size());
         Assert.assertEquals(103, result.get(0).getId());
 
         constraints = new DbSearchConstraints.Leaf();
         constraints.addTag(mbox.getTagByName("\\Unread"), true);
         constraints.addTag(mbox.getTagByName("\\Flagged"), false);
-        result = DbSearch.search(conn, mbox, constraints, SortBy.NONE, 0, 100, DbSearch.FetchMode.ID, false);
+        result = new DbSearch(mbox).search(conn, constraints, SortBy.NONE, 0, 100, DbSearch.FetchMode.ID);
         Assert.assertEquals(1, result.size());
         Assert.assertEquals(101, result.get(0).getId());
 
@@ -336,15 +336,15 @@ public final class DbSearchTest {
                 "VALUES(?, ?, ?, 0, 0, 0, 0, 0, 0, ?)", mbox.getId(), 103, MailItem.Type.CONTACT.toByte(), "aaa");
 
         DbSearchConstraints.Leaf constraints = new DbSearchConstraints.Leaf();
-        List<DbSearch.Result> result = DbSearch.search(conn, mbox, constraints, SortBy.NAME_ASC, 0, 100,
-                DbSearch.FetchMode.ID, false);
+        List<DbSearch.Result> result = new DbSearch(mbox).search(conn, constraints, SortBy.NAME_ASC, 0, 100,
+                DbSearch.FetchMode.ID);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(102, result.get(0).getId());
         Assert.assertEquals(103, result.get(1).getId());
         Assert.assertEquals(101, result.get(2).getId());
 
         constraints = new DbSearchConstraints.Leaf();
-        result = DbSearch.search(conn, mbox, constraints, SortBy.NAME_DESC, 0, 100, DbSearch.FetchMode.ID, false);
+        result = new DbSearch(mbox).search(conn, constraints, SortBy.NAME_DESC, 0, 100, DbSearch.FetchMode.ID);
         Assert.assertEquals(3, result.size());
         Assert.assertEquals(101, result.get(0).getId());
         Assert.assertEquals(103, result.get(1).getId());

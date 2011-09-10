@@ -537,8 +537,8 @@ public final class MailboxIndex {
             mailbox.beginTransaction("indexAllDeferredFlagItems", null);
             DbSearchConstraints.Leaf c = new DbSearchConstraints.Leaf();
             c.tags.add(mailbox.getFlagById(Flag.ID_INDEXING_DEFERRED));
-            List<DbSearch.Result> list = DbSearch.search(mailbox.getOperationConnection(), mailbox,
-                    c, SortBy.NONE, -1, -1, DbSearch.FetchMode.ID, false);
+            List<DbSearch.Result> list = new DbSearch(mailbox).search(mailbox.getOperationConnection(),
+                    c, SortBy.NONE, -1, -1, DbSearch.FetchMode.ID);
             for (DbSearch.Result sr : list) {
                 ids.add(sr.getId());
             }
@@ -558,8 +558,8 @@ public final class MailboxIndex {
                             mailbox.beginTransaction("indexAllDeferredFlagItems", null);
                             DbSearchConstraints.Leaf c = new DbSearchConstraints.Leaf();
                             c.tags.add(mailbox.getFlagById(Flag.ID_INDEXING_DEFERRED));
-                            List<DbSearch.Result> list = DbSearch.search(mailbox.getOperationConnection(),
-                                    mailbox, c, SortBy.NONE, -1, -1, DbSearch.FetchMode.MODCONTENT, false);
+                            List<DbSearch.Result> list = new DbSearch(mailbox).search(mailbox.getOperationConnection(),
+                                    c, SortBy.NONE, -1, -1, DbSearch.FetchMode.MODCONTENT);
 
                             List<Integer> deferredTagsToClear = new ArrayList<Integer>();
 
@@ -869,8 +869,8 @@ public final class MailboxIndex {
         boolean success = false;
         try {
             mailbox.beginTransaction("search", null);
-            result = DbSearch.search(mailbox.getOperationConnection(), mailbox,
-                    constraints, sort, offset, size, fetch, inDumpster);
+            result = new DbSearch(mailbox, inDumpster).search(mailbox.getOperationConnection(),
+                    constraints, sort, offset, size, fetch);
             if (fetch == DbSearch.FetchMode.MAIL_ITEM) {
                 // Convert UnderlyingData to MailItem
                 ListIterator<DbSearch.Result> itr = result.listIterator();
