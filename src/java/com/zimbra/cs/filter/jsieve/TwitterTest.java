@@ -20,14 +20,17 @@ import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
+import com.google.common.base.Strings;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
+import com.zimbra.cs.mime.ParsedAddress;
 
 /**
  * SIEVE test for Twitter notifications.
  * <p>
  * Built-in test for Twitter notifications:
  * <ul>
- *  <li>{@code X-Twitteremailtype} header exists.
+ *  <li>direct message email - {@code From: <dm-*@postmaster.twitter.com>}
+ *  <li>mention email - {@code From: <mention-*@postmaster.twitter.com>}
  * </ul>
  *
  * @author ysasaki
@@ -40,9 +43,13 @@ public final class TwitterTest extends AbstractTest {
             return false;
         }
         ZimbraMailAdapter adapter = (ZimbraMailAdapter) mail;
-
-        if (!adapter.getHeader("X-Twitteremailtype").isEmpty()) {
-            return true;
+        ParsedAddress sender = adapter.getParsedMessage().getParsedSender();
+        if (!Strings.isNullOrEmpty(sender.emailPart)) {
+            String email = sender.emailPart.toLowerCase();
+            if (email.endsWith("@postmaster.twitter.com") &&
+                    (email.startsWith("dm-") || email.startsWith("mention-"))) {
+                return true;
+            }
         }
         return false;
     }

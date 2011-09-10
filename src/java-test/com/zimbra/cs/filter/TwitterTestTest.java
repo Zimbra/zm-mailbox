@@ -62,14 +62,21 @@ public final class TwitterTestTest {
         account.setMailSieveScript("if twitter { tag \"twitter\"; }");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-        // notifications
-        List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
-                new ParsedMessage("X-Twitteremailtype: direct_message\n".getBytes(), false),
+        // direct message email
+        List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox, new ParsedMessage(
+                "From: Twitter <dm-lfnfnxv=mvzoen.pbz-4fa92@postmaster.twitter.com>\n".getBytes(), false),
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         Message msg = mbox.getMessageById(null, ids.get(0).getId());
         Assert.assertEquals("twitter", ArrayUtil.getFirstElement(msg.getTags()));
 
+        // mention email
+        ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox, new ParsedMessage(
+                "From: Twitter <mention-lfnfnxv=mvzoen.pbz-4fa92@postmaster.twitter.com>\n".getBytes(), false),
+                0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+        Assert.assertEquals(1, ids.size());
+        msg = mbox.getMessageById(null, ids.get(0).getId());
+        Assert.assertEquals("twitter", ArrayUtil.getFirstElement(msg.getTags()));
     }
 
 }
