@@ -630,18 +630,45 @@ public final class DbSearch {
     }
 
     private void encodeTag(Set<Tag> tags, boolean bool) {
-        for (Tag tag : tags) {
-            sql.append(" AND ");
-            if (!bool) {
-                sql.append(" NOT ");
+        if (dumpster) { // There is no corresponding table to TAGGED_ITEM in dumpster, hence brute-force search.
+            int flags = 0;
+            for (Tag tag : tags) {
+                if (tag instanceof Flag) {
+                    Flag flag = (Flag) tag;
+                    if (flag.getId() == Flag.ID_UNREAD) {
+                        sql.append(" AND mi.unread = ?");
+                        params.add(bool ? 1 : 0);
+                    } else {
+                        flags |= flag.toBitmask();
+                    }
+                } else {
+                    sql.append(" AND (mi.tag_names");
+                    if (!bool) { // Include NULL because LIKE does not match NULL.
+                        sql.append(" IS NULL OR mi.tag_names NOT");
+                    }
+                    sql.append(" LIKE ?)");
+                    params.add(DbTag.tagLIKEPattern(tag.getName()));
+                }
             }
-            sql.append("EXISTS (SELECT * FROM ").append(DbTag.getTaggedItemTableName(tag.getMailbox(), "ti"));
-            sql.append(" WHERE ");
-            if (!DebugConfig.disableMailboxGroups) {
-                sql.append("mi.mailbox_id = ti.mailbox_id AND ");
+            if (flags != 0) {
+                sql.append(" AND ").append(Db.getInstance().bitAND("mi.flags", "?")).append(" = ?");
+                params.add(flags);
+                params.add(bool ? flags : 0);
             }
-            sql.append("mi.id = ti.item_id AND ti.tag_id = ?)");
-            params.add(tag.getId());
+        } else {
+            for (Tag tag : tags) {
+                sql.append(" AND ");
+                if (!bool) {
+                    sql.append(" NOT ");
+                }
+                sql.append("EXISTS (SELECT * FROM ").append(DbTag.getTaggedItemTableName(tag.getMailbox(), "ti"));
+                sql.append(" WHERE ");
+                if (!DebugConfig.disableMailboxGroups) {
+                    sql.append("mi.mailbox_id = ti.mailbox_id AND ");
+                }
+                sql.append("mi.id = ti.item_id AND ti.tag_id = ?)");
+                params.add(tag.getId());
+            }
         }
     }
 

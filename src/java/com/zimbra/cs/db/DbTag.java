@@ -104,7 +104,7 @@ public final class DbTag {
         return TAG_SEPARATOR + name + TAG_SEPARATOR;
     }
 
-    private static String tagLIKEPattern(String tagName) {
+    static String tagLIKEPattern(String tagName) {
         return '%' + delimitTagName(tagName).replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + '%';
     }
 

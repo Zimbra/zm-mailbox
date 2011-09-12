@@ -321,6 +321,73 @@ public final class DbSearchTest {
     }
 
     @Test
+    public void tagInDumpster() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        DbConnection conn = DbPool.getConnection();
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
+                "(mailbox_id, id, type, flags, unread, tag_names, date, size, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, ?, ?, ?, ?, 0, 0)",
+                mbox.getId(), 101, MailItem.Type.MESSAGE.toByte(), 0, 1, null, 100, 1000);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
+                "(mailbox_id, id, type, flags, unread, tag_names, date, size, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, ?, ?, ?, ?, 0, 0)",
+                mbox.getId(), 102, MailItem.Type.MESSAGE.toByte(), Flag.BITMASK_FLAGGED, 0, null, 200, 2000);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
+                "(mailbox_id, id, type, flags, unread, tag_names, date, size, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, ?, ?, ?, ?, 0, 0)",
+                mbox.getId(), 103, MailItem.Type.MESSAGE.toByte(), Flag.BITMASK_FLAGGED, 1, null, 300, 3000);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
+                "(mailbox_id, id, type, flags, unread, tag_names, date, size, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, ?, ?, ?, ?, 0, 0)",
+                mbox.getId(), 104, MailItem.Type.MESSAGE.toByte(), 0, 0, "\0test\0", 400, 4000);
+        DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
+                "(mailbox_id, id, type, flags, unread, tag_names, date, size, mod_metadata, mod_content) " +
+                "VALUES(?, ?, ?, ?, ?, ?, ?, ?, 0, 0)",
+                mbox.getId(), 105, MailItem.Type.MESSAGE.toByte(), 0, 0, "\0test\0", 500, 5000);
+        mbox.createTag(null, "test", (byte) 0);
+
+        DbSearchConstraints.Leaf constraints = new DbSearchConstraints.Leaf();
+        constraints.addTag(mbox.getTagByName("\\Unread"), true);
+        List<DbSearch.Result> result = new DbSearch(mbox, true).search(conn, constraints, SortBy.NONE, 0, 100,
+                DbSearch.FetchMode.ID);
+        Assert.assertEquals(2, result.size());
+        Assert.assertEquals(101, result.get(0).getId());
+        Assert.assertEquals(103, result.get(1).getId());
+
+        constraints = new DbSearchConstraints.Leaf();
+        constraints.addTag(mbox.getTagByName("\\Unread"), false);
+        result = new DbSearch(mbox, true).search(conn, constraints, SortBy.NONE, 0, 100, DbSearch.FetchMode.ID);
+        Assert.assertEquals(3, result.size());
+        Assert.assertEquals(102, result.get(0).getId());
+        Assert.assertEquals(104, result.get(1).getId());
+        Assert.assertEquals(105, result.get(2).getId());
+
+        constraints = new DbSearchConstraints.Leaf();
+        constraints.addTag(mbox.getTagByName("\\Unread"), true);
+        constraints.addTag(mbox.getTagByName("\\Unread"), false);
+        result = new DbSearch(mbox, true).search(conn, constraints, SortBy.NONE, 0, 100, DbSearch.FetchMode.ID);
+        Assert.assertEquals(0, result.size());
+
+        constraints = new DbSearchConstraints.Leaf();
+        constraints.addTag(mbox.getTagByName("\\Unread"), true);
+        constraints.addTag(mbox.getTagByName("\\Flagged"), true);
+        result = new DbSearch(mbox, true).search(conn, constraints, SortBy.NONE, 0, 100, DbSearch.FetchMode.ID);
+        Assert.assertEquals(1, result.size());
+        Assert.assertEquals(103, result.get(0).getId());
+
+        constraints = new DbSearchConstraints.Leaf();
+        constraints.addTag(mbox.getTagByName("\\Unread"), true);
+        constraints.addTag(mbox.getTagByName("\\Flagged"), false);
+        result = new DbSearch(mbox, true).search(conn, constraints, SortBy.NONE, 0, 100, DbSearch.FetchMode.ID);
+        Assert.assertEquals(1, result.size());
+        Assert.assertEquals(101, result.get(0).getId());
+
+        //TODO Can't test tag_names because HSQLDB's LIKE doesn't match NUL.
+        conn.closeQuietly();
+    }
+
+    @Test
     public void caseInsensitiveSort() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
