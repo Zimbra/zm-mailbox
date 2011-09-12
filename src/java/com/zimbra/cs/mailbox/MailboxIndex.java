@@ -641,7 +641,12 @@ public final class MailboxIndex {
             try {
                 item = mailbox.getItemById(id, MailItem.Type.UNKNOWN, false);
             } catch (NoSuchItemException e) { // fallback to dumpster
-                item = mailbox.getItemById(id, MailItem.Type.UNKNOWN, true);
+                try {
+                    item = mailbox.getItemById(id, MailItem.Type.UNKNOWN, true);
+                } catch (NoSuchItemException again) { // The item has just been deleted.
+                    ZimbraLog.index.debug("deferred item no longer exist id=%d", id);
+                    continue;
+                }
             } catch (Exception e) {
                 ZimbraLog.index.warn("Failed to fetch deferred item id=%d", id, e);
                 status.addFailed(1);
