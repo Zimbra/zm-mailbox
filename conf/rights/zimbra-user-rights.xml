@@ -40,4 +40,12 @@
   <default>allow</default>
 </right>
 
+<right name="createDistList" userRight="1" targetType="domain" cache="1">
+  <desc>create distribution lists in a domain</desc>
+</right>
+
+<right name="ownDistList" userRight="1" targetType="dl" cache="1">
+  <desc>own distribution list</desc>
+</right>
+
 </rights>
