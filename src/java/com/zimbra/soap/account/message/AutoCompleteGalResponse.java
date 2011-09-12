@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.account.message;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -27,16 +27,17 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.admin.type.AutoCompleteGalContactInfo;
+import com.zimbra.soap.account.type.AutoCompleteGalContactInfo;
 import com.zimbra.soap.base.AutoCompleteGalContactInterface;
 import com.zimbra.soap.base.AutoCompleteGalInterface;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_AUTO_COMPLETE_GAL_RESPONSE)
+@XmlRootElement(name=AccountConstants.E_AUTO_COMPLETE_GAL_RESPONSE)
+@XmlType(propOrder = {})
 public class AutoCompleteGalResponse implements AutoCompleteGalInterface {
 
     @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)

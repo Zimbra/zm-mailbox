@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.account.type;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -86,7 +86,7 @@ public class AutoCompleteGalContactInfo implements AutoCompleteGalContactInterfa
     private String dlist;
 
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
-    private List<AdminCustomMetadata> metadatas = Lists.newArrayList();
+    private List<AccountCustomMetadata> metadatas = Lists.newArrayList();
 
     @XmlElement(name=MailConstants.E_A /* a */, required=false)
     private List<ContactAttr> attrs = Lists.newArrayList();
@@ -136,14 +136,14 @@ public class AutoCompleteGalContactInfo implements AutoCompleteGalContactInterfa
     public void setType(String type) { this.type = type; }
     @Override
     public void setDlist(String dlist) { this.dlist = dlist; }
-    public void setMetadatas(Iterable <AdminCustomMetadata> metadatas) {
+    public void setMetadatas(Iterable <AccountCustomMetadata> metadatas) {
         this.metadatas.clear();
         if (metadatas != null) {
             Iterables.addAll(this.metadatas,metadatas);
         }
     }
 
-    public void addMetadata(AdminCustomMetadata metadata) {
+    public void addMetadata(AccountCustomMetadata metadata) {
         this.metadatas.add(metadata);
     }
 
@@ -193,7 +193,7 @@ public class AutoCompleteGalContactInfo implements AutoCompleteGalContactInterfa
     @Override
     public String getDlist() { return dlist; }
 
-    public List<AdminCustomMetadata> getMetadatas() {
+    public List<AccountCustomMetadata> getMetadatas() {
         return metadatas;
     }
     @Override
@@ -205,19 +205,19 @@ public class AutoCompleteGalContactInfo implements AutoCompleteGalContactInterfa
     @Override
     public void setMetadataInterfaces(
             Iterable<CustomMetadataInterface> metadatas) {
-        this.metadatas = AdminCustomMetadata.fromInterfaces(metadatas);
+        this.metadatas = AccountCustomMetadata.fromInterfaces(metadatas);
     }
 
     // non-JAXB method
     @Override
     public void addMetadataInterfaces(CustomMetadataInterface metadata) {
-        addMetadata((AdminCustomMetadata)metadata);
+        addMetadata((AccountCustomMetadata)metadata);
     }
 
     // non-JAXB method
     @Override
     public List<CustomMetadataInterface> getMetadataInterfaces() {
-        return AdminCustomMetadata.toInterfaces(metadatas);
+        return AccountCustomMetadata.toInterfaces(metadatas);
     }
 
     public static Iterable <AutoCompleteGalContactInfo> fromInterfaces(Iterable <AutoCompleteGalContactInterface> params) {

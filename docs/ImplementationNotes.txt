@@ -97,3 +97,24 @@ Steps to add a new namespace
 7.  Update build.xml so that wsdl-client-support depends on the target created
     above.
 
+FAQ
+===
+1. How do you define an XmlAttribute or XmlElement whose value is an enum
+    You need to create an enum in ZimbraSoap.  Ideally, used this new enum in all code rather than duplicating
+    from somewhere else.  For a fairly simple example - see
+        //depot/zimbra/main/ZimbraSoap/src/java/com/zimbra/soap/type/AccountBy.java
+    which uses the @XmlEnum annotation.  See
+        //depot/zimbra/main/ZimbraSoap/src/java/com/zimbra/soap/admin/type/AccountSelector.java
+    for how this enum is used for an @XmlAttribute.
+    If you want the enum values to differ from what is in the xml, see another example - Folder.View 
+        //depot/zimbra/main/ZimbraSoap/src/java/com/zimbra/soap/mail/type/Folder.java
+    This also uses @XmlEnumValue annotations.
+
+2. For some JAXB classes, @XmlElement or @XmlAttribute might have property "required" set as "false" even when it
+   is not optional.  Is this intentional? 
+
+   If the @XmlElement or @XmlAttribute is required in all contexts then this is an error.  When the original
+   implementor was constructing JAXB classes, situations were encountered where looking at the first use of a
+   JAXB type some of these were clearly required but later uses had them as optional.   As this situation can
+   be a bit difficult to spot a lot of newer JAXB classes were written with a more relaxed view of whether
+   things were required or not.

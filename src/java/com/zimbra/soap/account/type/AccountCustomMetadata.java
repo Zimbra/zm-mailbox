@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.account.type;
 
 import java.util.Collections;
 import java.util.List;
@@ -32,8 +32,8 @@ import com.zimbra.soap.base.CustomMetadataInterface;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_METADATA)
-public class AdminCustomMetadata
-extends AdminKeyValuePairs
+public class AccountCustomMetadata
+extends AccountKeyValuePairs
 implements CustomMetadataInterface {
 
     // Normally present but sometimes an empty element is created to show that
@@ -41,7 +41,7 @@ implements CustomMetadataInterface {
     @XmlAttribute(name=MailConstants.A_SECTION /* section */, required=false)
     private String section;
 
-    public AdminCustomMetadata() {
+    public AccountCustomMetadata() {
     }
 
     @Override
@@ -49,17 +49,17 @@ implements CustomMetadataInterface {
     @Override
     public String getSection() { return section; }
 
-    public static List <AdminCustomMetadata> fromInterfaces(Iterable <CustomMetadataInterface> params) {
+    public static List <AccountCustomMetadata> fromInterfaces(Iterable <CustomMetadataInterface> params) {
         if (params == null)
             return null;
-        List <AdminCustomMetadata> newList = Lists.newArrayList();
+        List <AccountCustomMetadata> newList = Lists.newArrayList();
         for (CustomMetadataInterface param : params) {
-            newList.add((AdminCustomMetadata) param);
+            newList.add((AccountCustomMetadata) param);
         }
         return newList;
     }
 
-    public static List <CustomMetadataInterface> toInterfaces(Iterable <AdminCustomMetadata> params) {
+    public static List <CustomMetadataInterface> toInterfaces(Iterable <AccountCustomMetadata> params) {
         if (params == null)
             return null;
         List <CustomMetadataInterface> newList = Lists.newArrayList();

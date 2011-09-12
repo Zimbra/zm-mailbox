@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.account.message;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -28,9 +28,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.admin.type.CalTZInfo;
+import com.zimbra.soap.account.type.CalTZInfo;
 import com.zimbra.soap.base.AutoCompleteGalSpecInterface;
 import com.zimbra.soap.base.CalTZInfoInterface;
 import com.zimbra.soap.type.AttributeName;
@@ -38,14 +37,11 @@ import com.zimbra.soap.type.CursorInfo;
 import com.zimbra.soap.type.GalSearchType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_AUTO_COMPLETE_GAL_REQUEST)
+@XmlRootElement(name=AccountConstants.E_AUTO_COMPLETE_GAL_REQUEST)
 public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
 
-    @XmlAttribute(name=AdminConstants.A_DOMAIN /* domain */, required=true)
-    private String domain;
-
-    @XmlAttribute(name=AdminConstants.A_LIMIT /* limit */, required=false)
-    private Integer limit;
+    @XmlAttribute(name=AccountConstants.A_NEED_EXP /* needExp */, required=false)
+    private Boolean needCanExpand;
 
     @XmlAttribute(name=AccountConstants.E_NAME /* name */, required=true)
     private String name;
@@ -132,20 +128,18 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
      * no-argument constructor wanted by JAXB
      */
     private AutoCompleteGalRequest() {
-        this((String) null, (String) null);
+        this((String) null);
     }
 
-    private AutoCompleteGalRequest(String domain, String name) {
-        this.setDomain(domain);
+    private AutoCompleteGalRequest(String name) {
         this.name = name;
     }
 
-    public AutoCompleteGalRequest createForDomainAndName(String domain, String name) {
-        return new AutoCompleteGalRequest(domain, name);
+    public AutoCompleteGalRequest createForName(String name) {
+        return new AutoCompleteGalRequest(name);
     }
 
-    public void setDomain(String domain) { this.domain = domain; }
-    public void setLimit(Integer limit) { this.limit = limit; }
+    public void setNeedCanExpand(Boolean needCanExpand) { this.needCanExpand = needCanExpand; }
     @Override
     public void setName(String name) {this.name = name; }
     @Override
@@ -204,14 +198,12 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
         this.headers.add(header);
     }
 
+    public Boolean getNeedCanExpand() { return needCanExpand; }
     public void setCalTz(CalTZInfo calTz) { this.calTz = calTz; }
     @Override
     public void setLocale(String locale) { this.locale = locale; }
     @Override
     public void setCursor(CursorInfo cursor) { this.cursor = cursor; }
-
-    public String getDomain() { return domain; }
-    public Integer getLimit() { return limit; }
     @Override
     public String getName() { return name; }
     @Override
@@ -277,10 +269,9 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("domain", domain)
             .add("name", name)
-            .add("limit", limit)
             .add("type", type)
+            .add("needCanExpand", needCanExpand)
             .add("galAccountId", galAccountId)
             .add("includeTagDeleted", includeTagDeleted)
             .add("allowableTaskStatus", allowableTaskStatus)

@@ -22,7 +22,7 @@ import javax.xml.bind.annotation.XmlElements;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.SearchFilterCondition;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class EntrySearchFilterInfo {
 
     @XmlElements({

@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.account.type;
 
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +31,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.soap.type.KeyValuePair;
 import com.zimbra.soap.type.KeyValuePairs;
@@ -42,21 +42,21 @@ import com.zimbra.soap.json.jackson.KeyAndValueListSerializer;
  *     <a n="{key}">{value}</a>
  */
 @XmlAccessorType(XmlAccessType.NONE)
-public class AdminKeyValuePairs implements KeyValuePairs {
+public class AccountKeyValuePairs implements KeyValuePairs {
 
     @JsonSerialize(using=KeyAndValueListSerializer.class)
     @JsonProperty("_attrs")
-    @XmlElement(name=AdminConstants.E_A)
+    @XmlElement(name=AccountConstants.E_A)
     private List<KeyValuePair> keyValuePairs;
 
-    public AdminKeyValuePairs() {
+    public AccountKeyValuePairs() {
     }
 
-    public AdminKeyValuePairs(Iterable<KeyValuePair> keyValuePairs) {
+    public AccountKeyValuePairs(Iterable<KeyValuePair> keyValuePairs) {
         setKeyValuePairs(keyValuePairs);
     }
 
-    public AdminKeyValuePairs (Map<String, ? extends Object> keyValuePairs)
+    public AccountKeyValuePairs (Map<String, ? extends Object> keyValuePairs)
     throws ServiceException {
         setKeyValuePairs(keyValuePairs);
     }
