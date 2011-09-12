@@ -28,6 +28,7 @@ import java.util.Set;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
+import com.google.common.collect.Iterables;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -630,6 +631,9 @@ public final class DbSearch {
     }
 
     private void encodeTag(Set<Tag> tags, boolean bool) {
+        if (tags.isEmpty()) {
+            return;
+        }
         if (dumpster) { // There is no corresponding table to TAGGED_ITEM in dumpster, hence brute-force search.
             int flags = 0;
             for (Tag tag : tags) {
@@ -655,18 +659,24 @@ public final class DbSearch {
                 params.add(flags);
                 params.add(bool ? flags : 0);
             }
-        } else {
+        } else if (bool) { // Repeats "EXISTS (SELECT...)" as many times as tags.
             for (Tag tag : tags) {
-                sql.append(" AND ");
-                if (!bool) {
-                    sql.append(" NOT ");
-                }
-                sql.append("EXISTS (SELECT * FROM ").append(DbTag.getTaggedItemTableName(tag.getMailbox(), "ti"));
+                sql.append(" AND EXISTS (SELECT * FROM ").append(DbTag.getTaggedItemTableName(mailbox, "ti"));
                 sql.append(" WHERE ");
                 if (!DebugConfig.disableMailboxGroups) {
                     sql.append("mi.mailbox_id = ti.mailbox_id AND ");
                 }
                 sql.append("mi.id = ti.item_id AND ti.tag_id = ?)");
+                params.add(tag.getId());
+            }
+        } else { // NOT EXISTS (SELECT... WHERE... tag_id IN...)
+            sql.append(" AND NOT EXISTS (SELECT * FROM ").append(DbTag.getTaggedItemTableName(mailbox, "ti"));
+            sql.append(" WHERE ");
+            if (!DebugConfig.disableMailboxGroups) {
+                sql.append("mi.mailbox_id = ti.mailbox_id AND ");
+            }
+            sql.append("mi.id = ti.item_id AND ").append(DbUtil.whereIn("ti.tag_id", tags.size())).append(')');
+            for (Tag tag : tags) {
                 params.add(tag.getId());
             }
         }
