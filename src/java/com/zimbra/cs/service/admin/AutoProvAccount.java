@@ -11,13 +11,14 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AutoProvPrincipalBy;
+import com.zimbra.soap.type.AutoProvPrincipalBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class AutoProvAccount extends AdminDocumentHandler {
     
+    @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();

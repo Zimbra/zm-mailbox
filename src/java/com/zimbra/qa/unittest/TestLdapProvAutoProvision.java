@@ -44,7 +44,6 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.account.Provisioning.AutoProvPrincipalBy;
 import com.zimbra.cs.account.Provisioning.DirectoryEntryVisitor;
 import com.zimbra.cs.account.Provisioning.EagerAutoProvisionScheduler;
 import com.zimbra.cs.account.ldap.AutoProvisionEager;
@@ -56,6 +55,7 @@ import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.ZLdapContext;
+import com.zimbra.soap.type.AutoProvPrincipalBy;
 
 public class TestLdapProvAutoProvision extends TestLdap {
 

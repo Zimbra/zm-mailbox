@@ -51,6 +51,7 @@ import com.zimbra.soap.admin.type.DistributionListSelector;
 import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.ServerSelector;
 import com.zimbra.soap.type.AccountSelector;
+import com.zimbra.soap.type.AutoProvPrincipalBy;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.NamedElement;
 
@@ -729,20 +730,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
             AutoProvAuthMech authMech) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
-    
-    public static enum AutoProvPrincipalBy {
-        dn,    // DN in external LDAP source
-        name;  // name to be applied to the auto provision search or bind DN template configured on the domain
-        
-        static public AutoProvPrincipalBy fromString(String str) throws ServiceException {
-            try {
-                return AutoProvPrincipalBy.valueOf(str);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("Invalid AutoProvPrincipalBy: " + str, null);
-            }
-        }
-    };
-    
+
     /**
      * Auto provisioning account in MANUAL mode.
      * 
