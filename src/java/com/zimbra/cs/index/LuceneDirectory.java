@@ -82,10 +82,10 @@ public final class LuceneDirectory extends Directory {
     public static LuceneDirectory open(File path) throws IOException {
         String impl = LC.zimbra_index_lucene_io_impl.value();
         FSDirectory dir;
-        if ("mmap".equals(impl)) {
-            dir = new MMapDirectory(path, new SingleInstanceLockFactory());
-        } else if ("nio".equals(impl)) {
+        if ("nio".equals(impl)) {
             dir = new NIOFSDirectory(path, new SingleInstanceLockFactory());
+        } else if ("mmap".equals(impl)) {
+            dir = new MMapDirectory(path, new SingleInstanceLockFactory());
         } else if ("simple".equals(impl)) {
             dir = new SimpleFSDirectory(path, new SingleInstanceLockFactory());
         } else {
