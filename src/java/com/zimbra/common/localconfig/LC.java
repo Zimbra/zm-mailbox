@@ -388,6 +388,7 @@ public final class LC {
     @Supported
     public static final KnownKey ldap_amavis_password = KnownKey.newKey("zmamavis");
     public static final KnownKey ldap_nginx_password = KnownKey.newKey("zmnginx");
+    public static final KnownKey ldap_bes_searcher_password = KnownKey.newKey("zmbes-searcher");
 
     @Supported
     public static final KnownKey ldap_starttls_supported = KnownKey.newKey(0);
