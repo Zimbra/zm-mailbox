@@ -172,11 +172,11 @@ public abstract class RightBearer {
             return true;
         } else if (ace.getGranteeType() == GranteeType.GT_EXT_GROUP) {
             if (grantee.isAccount()) {
-                return ace.matchesGrantee(grantee.getAccount());
+                return ace.matchesGrantee(grantee.getAccount(), true);
             } else {
                 // we are collecting rights for a group grantee
                 // TODO
-                throw ServiceException.FAILURE("Nnot yet implemented", null);
+                throw ServiceException.FAILURE("Not yet implemented", null);
             }
         } else {
             return false;

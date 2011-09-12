@@ -62,17 +62,7 @@ public class GrantPermission extends MailDocumentHandler {
             for (ZimbraACE ace : granted)
                 ToXML.encodeACE(response, ace);
         }
-        /*
-         * This is done in FolderAction.OP_GRANT, should we do the same?
-         * 
-        // kinda hacky -- return the zimbra id and name of the grantee in the response
-        result.addAttribute(MailConstants.A_ZIMBRA_ID, zid);
-        if (nentry != null)
-            result.addAttribute(MailConstants.A_DISPLAY, nentry.getName());
-        else if (gtype == ACL.GRANTEE_GUEST)
-            result.addAttribute(MailConstants.A_DISPLAY, zid);
-     
-        */ 
+
         return response;
     }
     

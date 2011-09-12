@@ -122,7 +122,7 @@ public class CheckPresetRight extends CheckRight {
         if (getGranteeGroups().groupIds().contains(ace.getGrantee())) {
             return true;
         } else if (ace.getGranteeType() == GranteeType.GT_EXT_GROUP) {
-            return ace.matchesGrantee(mGranteeAcct);
+            return ace.matchesGrantee(mGranteeAcct, !mRightNeeded.isUserRight());
         } else {
             return false;
         }
@@ -379,7 +379,7 @@ public class CheckPresetRight extends CheckRight {
             // This is so callsite default will not be honored.
             mSeenRight.setSeenRight();
                 
-            if (ace.matchesGrantee(mGranteeAcct)) {
+            if (ace.matchesGrantee(mGranteeAcct, !mRightNeeded.isUserRight())) {
                 return gotResult(ace);
             }
         }

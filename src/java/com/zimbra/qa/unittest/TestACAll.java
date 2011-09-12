@@ -144,11 +144,11 @@ public class TestACAll extends TestAC {
         switch (rightTarget) {
         case account:
             return targetType == TargetType.account ||
-            targetType == TargetType.calresource ||
-            targetType == TargetType.dl ||
-            targetType == TargetType.group ||
-            targetType == TargetType.domain ||
-            targetType == TargetType.global;
+                   targetType == TargetType.calresource ||
+                   targetType == TargetType.dl ||
+                   targetType == TargetType.group ||
+                   targetType == TargetType.domain ||
+                   targetType == TargetType.global;
         case calresource:
             fail();
         case cos:
@@ -159,6 +159,8 @@ public class TestACAll extends TestAC {
                    targetType == TargetType.domain ||
                    targetType == TargetType.global;
         case domain:
+            return targetType == TargetType.domain ||
+                   targetType == TargetType.global;
         case server:
         case xmppcomponent:
         case zimlet:
@@ -357,7 +359,12 @@ public class TestACAll extends TestAC {
                     // Configure the domain for external AD auth
                     //
                     Map<String, Object> domainAttrs = Maps.newHashMap();
-                    domain.setAuthMechAdmin(Provisioning.AM_AD, domainAttrs);
+                    
+                    if (isUserRight) {
+                        domain.setAuthMech(Provisioning.AM_AD, domainAttrs);
+                    } else {
+                        domain.setAuthMechAdmin(Provisioning.AM_AD, domainAttrs);
+                    }
                     
                     /*  ==== mock test ====
                     // setup auth
@@ -385,12 +392,12 @@ public class TestACAll extends TestAC {
                     domain.addAuthLdapURL("***", domainAttrs);
                     domain.setAuthLdapSearchBindDn("***", domainAttrs);
                     domain.setAuthLdapSearchBindPassword("***", domainAttrs);
-                    domain.setExternalGroupLdapSearchBase("OU=Groups,OU=Corp,DC=vmware,DC=com", domainAttrs);
+                    domain.setExternalGroupLdapSearchBase("OU=Engineering,DC=vmware,DC=com", domainAttrs);
                     domain.setExternalGroupLdapSearchFilter("(&(objectClass=group)(mail=%n))", domainAttrs);
                     domain.setExternalGroupHandlerClass("com.zimbra.cs.account.grouphandler.ADGroupHandler", domainAttrs);
                     mProv.modifyAttrs(domain, domainAttrs);
                     
-                    String extGroupName = "ESPPEnrollment-USA@vmware.com";
+                    String extGroupName = "ENG_pao_users_home4@vmware.com"; // "ESPPEnrollment-USA@vmware.com";
                     
                     // create the admin account in Zimbra directory and map it to the external account
                     Account zimbraAcct = createDelegatedAdminAccount(acctLocalpart, domain);
@@ -1549,8 +1556,10 @@ public class TestACAll extends TestAC {
         // doTest("1/1", TargetType.domain, GranteeType.GT_USER, ADMIN_PRESET_LOGIN_AS);
         // doTest("1/1", TargetType.domain, GranteeType.GT_USER, ADMIN_PRESET_DISTRIBUTION_LIST);
         // doTest("1/1", TargetType.domain, GranteeType.GT_USER, ADMIN_PRESET_DOMAIN);
+        // doTest("1/1", TargetType.domain, GranteeType.GT_EXT_GROUP, ADMIN_PRESET_DOMAIN);
+        doTest("1/1", TargetType.domain, GranteeType.GT_EXT_GROUP, USER_RIGHT_DOMAIN);
         
-        doTest("1/1", TargetType.config, GranteeType.GT_EXT_GROUP, ADMIN_ATTR_GETALL_CONFIG);
+        // doTest("1/1", TargetType.config, GranteeType.GT_EXT_GROUP, ADMIN_ATTR_GETALL_CONFIG);
                
         // doTest("1/1", TargetType.zimlet, TestGranteeType.GRANTEE_DYNAMIC_GROUP, ADMIN_COMBO_XMPP_COMPONENT);
 
@@ -1563,7 +1572,7 @@ public class TestACAll extends TestAC {
     public void test() throws Exception {
         // testAll();
         // testTarget();
-        testGrantee();
-        // testOne();
+        // testGrantee();
+        testOne();
     }
 }

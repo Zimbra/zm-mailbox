@@ -76,8 +76,8 @@ public class ExternalGroup extends NamedEntry {
         return zimbraDomainId;
     }
     
-    boolean inGroup(Account acct) throws ServiceException {
-        return groupHandler.inDelegatedAdminGroup(this, acct);
+    boolean inGroup(Account acct, boolean asAdmin) throws ServiceException {
+        return groupHandler.inDelegatedAdminGroup(this, acct, asAdmin);
     }
     
     private static GroupHandler getGroupHandler(Domain domain) {
@@ -102,7 +102,7 @@ public class ExternalGroup extends NamedEntry {
      *         
      */
     static ExternalGroup get(/* AuthToken authToken, */ DomainBy domainBy, 
-            String extGroupGrantee) throws ServiceException {
+            String extGroupGrantee, boolean asAdmin) throws ServiceException {
         ExternalGroup group = null;
         
         if (DomainBy.name == domainBy) {
@@ -115,7 +115,7 @@ public class ExternalGroup extends NamedEntry {
             return group;
         }
         
-        group = searchGroup(domainBy, extGroupGrantee);
+        group = searchGroup(domainBy, extGroupGrantee, asAdmin);
         
         if (group != null) {
             CACHE.put(group);
@@ -124,13 +124,13 @@ public class ExternalGroup extends NamedEntry {
         return group;
     }
     
-    private static ExternalGroup searchGroup(DomainBy domainBy, String extGroupGrantee) 
-    throws ServiceException {
+    private static ExternalGroup searchGroup(DomainBy domainBy, String extGroupGrantee,
+            boolean asAdmin) throws ServiceException {
         LdapProv prov = LdapProv.getInst();
         
-        ExternalGroupInfo extGrpInfp = ExternalGroupInfo.parse(extGroupGrantee);
-        String zimbraDomain = extGrpInfp.getZimbraDmain();
-        String extGroupName = extGrpInfp.getExternalGroupName();
+        ExternalGroupInfo extGrpInfo = ExternalGroupInfo.parse(extGroupGrantee);
+        String zimbraDomain = extGrpInfo.getZimbraDmain();
+        String extGroupName = extGrpInfo.getExternalGroupName();
         
         Domain domain = prov.get(domainBy, zimbraDomain);
         if (domain == null) {
@@ -149,7 +149,7 @@ public class ExternalGroup extends NamedEntry {
         
         ZLdapContext zlc = null;
         try {
-            zlc = groupHandler.getExternalDelegatedAdminGroupsLdapContext(domain);
+            zlc = groupHandler.getExternalDelegatedAdminGroupsLdapContext(domain, asAdmin);
             
             ZSearchResultEntry entry = prov.getHelper().searchForEntry(
                     searchBase, searchFilter, zlc, new String[]{"mail"});

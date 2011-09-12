@@ -124,6 +124,9 @@ public abstract class AccessManager {
     public abstract boolean canAccessDomain(AuthToken at, Domain domain) throws ServiceException;
     
     public abstract boolean canAccessCos(AuthToken at, Cos cos) throws ServiceException;
+    
+    public abstract boolean canCreateGroup(AuthToken at, String groupEmail) throws ServiceException;
+    public abstract boolean canAccessGroup(AuthToken at, Group group) throws ServiceException;
 
     public abstract boolean canAccessEmail(AuthToken at, String email) throws ServiceException;
 
@@ -191,6 +194,11 @@ public abstract class AccessManager {
     
     protected void checkDomainStatus(Account acct) throws ServiceException {
         Domain domain = Provisioning.getInstance().getDomain(acct);
+        checkDomainStatus(domain);
+    }
+    
+    protected void checkDomainStatus(Group group) throws ServiceException {
+        Domain domain = group.getDomain();
         checkDomainStatus(domain);
     }
     

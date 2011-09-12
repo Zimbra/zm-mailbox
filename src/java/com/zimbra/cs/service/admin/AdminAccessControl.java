@@ -56,6 +56,7 @@ import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.names.NameUtil;
 
 /**
  * This class serves as:
@@ -316,18 +317,6 @@ public abstract class AdminAccessControl {
         
         // will throw if domain is not in an accessible state
         mAccessMgr.checkDomainStatus(domain); 
-    }
-    
-    // static just for called from AdminDocumentHandler.canAccessEmail
-    // that method should have been cleaned up 
-    // (see comments on AdminDocumentHandler.canAccessEmail)
-    // and after that this methods can be protected and non-static.
-    static String getDomainFromEmail(String email) throws ServiceException {
-        String parts[] = EmailUtil.getLocalPartAndDomain(email);
-        if (parts == null) {
-            throw ServiceException.INVALID_REQUEST("must be valid email address: "+email, null);
-        }
-        return parts[1];
     }
     
     protected void soapOnly() throws ServiceException {
@@ -593,7 +582,7 @@ public abstract class AdminAccessControl {
                 String email, AdminRight needed) throws ServiceException {
             soapOnly();
             
-            String domainName = getDomainFromEmail(email);
+            String domainName = NameUtil.EmailAddress.getDomainNameFromEmail(email);
             Domain domain = Provisioning.getInstance().get(Key.DomainBy.name, domainName);
             if (domain == null) {
                 throw AccountServiceException.NO_SUCH_DOMAIN(domainName);
@@ -849,7 +838,7 @@ public abstract class AdminAccessControl {
                 String email, AdminRight needed) throws ServiceException {
             soapOnly();
             
-            String domainName = getDomainFromEmail(email);
+            String domainName = NameUtil.EmailAddress.getDomainNameFromEmail(email);
             Domain domain = Provisioning.getInstance().get(Key.DomainBy.name, domainName);
             if (domain == null) {
                 throw AccountServiceException.NO_SUCH_DOMAIN(domainName);

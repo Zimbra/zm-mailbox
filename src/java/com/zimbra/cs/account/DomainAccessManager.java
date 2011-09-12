@@ -23,6 +23,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.names.NameUtil;
 
 public class DomainAccessManager extends AccessManager {
 
@@ -134,6 +135,21 @@ public class DomainAccessManager extends AccessManager {
         }
         return false;
     }
+    
+
+    @Override
+    public boolean canCreateGroup(AuthToken at, String groupEmail)
+            throws ServiceException {
+        String domainName = NameUtil.EmailAddress.getDomainNameFromEmail(groupEmail);
+        return canAccessDomain(at, domainName);
+    }
+    
+    @Override
+    public boolean canAccessGroup(AuthToken at, Group group)
+            throws ServiceException {
+        Domain domain = group.getDomain();
+        return canAccessDomain(at, domain);
+    }
 
     public boolean canAccessEmail(AuthToken at, String email) throws ServiceException {
         String parts[] = EmailUtil.getLocalPartAndDomain(email);
@@ -235,6 +251,5 @@ public class DomainAccessManager extends AccessManager {
     public boolean canSetAttrs(AuthToken grantee, Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException {
         return false;
     }
-
     
 }

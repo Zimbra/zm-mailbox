@@ -19,6 +19,7 @@ import javax.mail.internet.InternetAddress;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.EmailUtil;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 
@@ -123,6 +124,11 @@ public class NameUtil {
         
         public static String getAddress(String localPart, String domain) {
             return localPart + "@" + domain;
+        }
+        
+        public static String getDomainNameFromEmail(String addr) throws ServiceException {
+            EmailAddress email = new EmailAddress(addr);
+            return email.getDomain();
         }
         
         public String getLocalPart() {

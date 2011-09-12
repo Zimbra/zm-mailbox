@@ -30,11 +30,13 @@ public class UserRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110730-1155 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110911-1608 */
 
 
+    public static UserRight R_createDistList;
     public static UserRight R_invite;
     public static UserRight R_loginAs;
+    public static UserRight R_ownDistList;
     public static UserRight R_sendAs;
     public static UserRight R_sendOnBehalfOf;
     public static UserRight R_sendToDistList;
@@ -43,8 +45,10 @@ public class UserRights {
 
 
     public static void init(RightManager rm) throws ServiceException {
+        R_createDistList                       = rm.getUserRight(Right.RT_createDistList);
         R_invite                               = rm.getUserRight(Right.RT_invite);
         R_loginAs                              = rm.getUserRight(Right.RT_loginAs);
+        R_ownDistList                          = rm.getUserRight(Right.RT_ownDistList);
         R_sendAs                               = rm.getUserRight(Right.RT_sendAs);
         R_sendOnBehalfOf                       = rm.getUserRight(Right.RT_sendOnBehalfOf);
         R_sendToDistList                       = rm.getUserRight(Right.RT_sendToDistList);

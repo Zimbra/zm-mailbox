@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110730-1155 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110911-1608 */
 
 
     public static AdminRight R_accessGAL;

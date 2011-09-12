@@ -28,16 +28,19 @@ import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
+import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 
 public class ACLAccessManager extends AccessManager implements AdminConsoleCapable {
@@ -118,30 +121,41 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
 
     @Override
     public boolean canAccessCos(AuthToken at, Cos cos) throws ServiceException {
-        // TODO Auto-generated method stub
         return false;
+    }
+    
+    @Override
+    public boolean canCreateGroup(AuthToken at, String groupEmail)
+            throws ServiceException {
+        String domainName = NameUtil.EmailAddress.getDomainNameFromEmail(groupEmail);
+        Domain domain = Provisioning.getInstance().get(Key.DomainBy.name, domainName);
+        if (domain == null) {
+            throw AccountServiceException.NO_SUCH_DOMAIN(domainName);
+        }
+        checkDomainStatus(domain);
+        
+        return canDo(at, domain, User.R_createDistList, true);
+    }
+    
+    @Override
+    public boolean canAccessGroup(AuthToken at, Group group)
+            throws ServiceException {
+        checkDomainStatus(group);
+        return canDo(at, group, User.R_ownDistList, true);
     }
 
     @Override
     public boolean canAccessDomain(AuthToken at, String domainName) throws ServiceException {
-        // TODO Auto-generated method stub
-        // return false;
-        
         throw ServiceException.FAILURE("internal error", null);  // should never be called
     }
 
     @Override
     public boolean canAccessDomain(AuthToken at, Domain domain) throws ServiceException {
-        // TODO Auto-generated method stub
-        // return false;
-        
         throw ServiceException.FAILURE("internal error", null);  // should never be called
     }
 
     @Override
     public boolean canAccessEmail(AuthToken at, String email) throws ServiceException {
-        // TODO Auto-generated method stub
-        // return false;
         throw ServiceException.FAILURE("internal error", null);  // should never be called
     }
 

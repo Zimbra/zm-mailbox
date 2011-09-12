@@ -117,17 +117,18 @@ public class ADGroupHandler extends GroupHandler {
     }
 
     @Override
-    public ZLdapContext getExternalDelegatedAdminGroupsLdapContext(Domain domain) 
+    public ZLdapContext getExternalDelegatedAdminGroupsLdapContext(Domain domain, boolean asAdmin) 
     throws ServiceException {
-        if (!domainAdminAuthMechIsAD(domain)) {
+        if (!domainAdminAuthMechIsAD(domain, asAdmin)) {
             throw ServiceException.INVALID_REQUEST("domain auth mech must be AD", null);
         }
         
-        return super.getExternalDelegatedAdminGroupsLdapContext(domain);
+        return super.getExternalDelegatedAdminGroupsLdapContext(domain, asAdmin);
     }
     
-    private static boolean domainAdminAuthMechIsAD(Domain domain) {
-        return Provisioning.AM_AD.equals(domain.getAuthMechAdmin());
+    private static boolean domainAdminAuthMechIsAD(Domain domain, boolean asAdmin) {
+        return asAdmin ? Provisioning.AM_AD.equals(domain.getAuthMechAdmin()) :
+                         Provisioning.AM_AD.equals(domain.getAuthMech());
     }
     
     /*
@@ -137,8 +138,8 @@ public class ADGroupHandler extends GroupHandler {
      *   
      * TODO: pass in auth token and validate that the auth was indeed via AD 
      */
-    private boolean legitimateDelegatedAdminAsGroupMember(ExternalGroup group, Account acct) 
-    throws ServiceException {
+    private boolean legitimateDelegatedAdminAsGroupMember(ExternalGroup group, 
+            Account acct, boolean asAdmin) throws ServiceException {
         String zimbraDomainId = group.getZimbraDomainId();
         Domain domain = Provisioning.getInstance().getDomain(acct);
         
@@ -146,7 +147,7 @@ public class ADGroupHandler extends GroupHandler {
             return false;
         }
         
-        if (!domainAdminAuthMechIsAD(domain)) {
+        if (!domainAdminAuthMechIsAD(domain, asAdmin)) {
             return false;
         }
         
@@ -158,10 +159,10 @@ public class ADGroupHandler extends GroupHandler {
     }
 
     @Override
-    public boolean inDelegatedAdminGroup(ExternalGroup group, Account acct) 
+    public boolean inDelegatedAdminGroup(ExternalGroup group, Account acct, boolean asAdmin) 
     throws ServiceException {
         
-        if (!legitimateDelegatedAdminAsGroupMember(group, acct)) {
+        if (!legitimateDelegatedAdminAsGroupMember(group, acct, asAdmin)) {
             return false;
         }
         
@@ -175,14 +176,14 @@ public class ADGroupHandler extends GroupHandler {
         }
         
         // get groups DNs this account belongs to in the external group
-        groupDNs = getDelegatedAdminGroups(acct);
+        groupDNs = getDelegatedAdminGroups(acct, asAdmin);
                 
         acct.setCachedData(EntryCacheDataKey.GROUPEDENTRY_EXTERNAL_GROUP_DNS, groupDNs);
         
         return groupDNs.contains(group.getDN());
     }
     
-    private List<String> getDelegatedAdminGroups(Account acct) throws ServiceException {
+    private List<String> getDelegatedAdminGroups(Account acct, boolean asAdmin) throws ServiceException {
         LdapProv prov = LdapProv.getInst();
         
         Domain domain = prov.getDomain(acct);
@@ -210,7 +211,7 @@ public class ADGroupHandler extends GroupHandler {
         
         ZLdapContext zlc = null;
         try {
-            zlc = getExternalDelegatedAdminGroupsLdapContext(domain);
+            zlc = getExternalDelegatedAdminGroupsLdapContext(domain, asAdmin);
             
             ZAttributes attrs = prov.getHelper().getAttributes(extDN, zlc, new String[]{MEMBER_OF_ATTR});
             

@@ -10,13 +10,16 @@ import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
+import com.zimbra.cs.account.names.NameUtil;
 
 public class GlobalAccessManager extends AccessManager implements AdminConsoleCapable {
 
@@ -90,6 +93,44 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
             return false;
         
         return isGlobalAdmin(at);
+    }
+    
+
+    @Override
+    public boolean canCreateGroup(AuthToken at, String groupEmail)
+            throws ServiceException {
+        String domainName = NameUtil.EmailAddress.getDomainNameFromEmail(groupEmail);
+        Domain domain = Provisioning.getInstance().get(Key.DomainBy.name, domainName);
+        if (domain == null) {
+            throw AccountServiceException.NO_SUCH_DOMAIN(domainName);
+        }
+        checkDomainStatus(domain);
+        
+        boolean asAdmin = true;
+        Right rightNeeded = User.R_createDistList;
+        Account authedAcct = AccessControlUtil.authTokenToAccount(at, rightNeeded);
+        
+        if (AccessControlUtil.isGlobalAdmin(authedAcct, asAdmin)) {
+            return true;
+        }
+        
+        return canDo(at, domain, rightNeeded, asAdmin);
+    }
+    
+    @Override
+    public boolean canAccessGroup(AuthToken at, Group group)
+            throws ServiceException {
+        checkDomainStatus(group);
+        
+        boolean asAdmin = true;
+        Right rightNeeded = User.R_ownDistList;
+        Account authedAcct = AccessControlUtil.authTokenToAccount(at, rightNeeded);
+        
+        if (AccessControlUtil.isGlobalAdmin(authedAcct, asAdmin)) {
+            return true;
+        }
+        
+        return canDo(at, group, rightNeeded, asAdmin);
     }
     
     @Override

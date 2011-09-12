@@ -3747,3 +3747,19 @@ added to Documents only.
 </GetSystemRetentionPolicyResponse>
 
 -----------------------------
+
+<CreateDistributionListRequest [dynamic="1"]>
+  <name>...</name>
+  <a n="...">...</a>+
+</CreateDistributionListRequest>
+
+<CreateDistributionListResponse>
+  <dl name="{name}" id="{id}">
+    <a n="...">...</a>+
+  </dl>
+</CreateDistributionListResponse>
+
+Notes:
+  dynamic: create a dynamic distribution list
+  
+-----------------------------  

@@ -41,6 +41,7 @@ import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.common.soap.AdminConstants;
@@ -236,7 +237,7 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      *        only call this method from there.
      */
     public boolean canAccessEmail(ZimbraSoapContext zsc, String email) throws ServiceException {
-        return canAccessDomain(zsc, AdminAccessControl.getDomainFromEmail(email));
+        return canAccessDomain(zsc, NameUtil.EmailAddress.getDomainNameFromEmail(email));
     }
 
 

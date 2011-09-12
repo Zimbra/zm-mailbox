@@ -1231,8 +1231,8 @@ public class RightCommand {
          * 
          * Only a global admin can grant/revoke rights for external group grantees.
          * 
-         * if authedAcct==null, the call site is LdapProvisioning, treat it 
-         * as a system admin and skip this check.
+         * if authedAcct==null, the call site is either LdapProvisioning or internal code, 
+         * treat it as a system admin and skip this check.
          */
         if (authedAcct != null) {
             AccessManager am = AccessManager.getInstance();
@@ -1273,6 +1273,9 @@ public class RightCommand {
         TargetType tt = TargetType.fromCode(targetType);
         Entry targetEntry = TargetType.lookupTarget(prov, tt, targetBy, target);
         
+        // right
+        Right r = RightManager.getInstance().getRight(right);
+        
         // grantee
         GranteeType gt = GranteeType.fromCode(granteeType);
         NamedEntry granteeEntry = null;
@@ -1281,7 +1284,8 @@ public class RightCommand {
             granteeEntry = GranteeType.lookupGrantee(prov, gt, granteeBy, grantee);
             granteeId = granteeEntry.getId();
         } else if (gt == GranteeType.GT_EXT_GROUP) {
-            ExternalGroup extGroup = ExternalGroup.get(DomainBy.name, grantee);
+            boolean asAdmin = !r.isUserRight();
+            ExternalGroup extGroup = ExternalGroup.get(DomainBy.name, grantee, asAdmin);
             if (extGroup == null) {
                 throw ServiceException.INVALID_REQUEST("unable to find external group " + 
                         grantee, null);
@@ -1294,9 +1298,6 @@ public class RightCommand {
             // for key, grantee id is the display name
             granteeId = grantee;
         }
-        
-        // right
-        Right r = RightManager.getInstance().getRight(right);
         
         validateGrant(authedAcct, tt, targetEntry, gt, granteeEntry, secret, r, rightModifier, false);
         

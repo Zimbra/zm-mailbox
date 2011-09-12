@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110730-1155 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110911-1608 */
 
 
     /*
@@ -33,6 +33,11 @@ public class RightConsts {
     ============
     */
 
+
+    /**
+     * create distribution lists in a domain
+     */
+    public static final String RT_createDistList = "createDistList";
 
     /**
      * automatically add meeting invites from grantee to the target&#039;s
@@ -45,6 +50,11 @@ public class RightConsts {
      * login.
      */
     public static final String RT_loginAs = "loginAs";
+
+    /**
+     * own distribution list
+     */
+    public static final String RT_ownDistList = "ownDistList";
 
     /**
      * reply to messages in a shared folder as the owner of the folder

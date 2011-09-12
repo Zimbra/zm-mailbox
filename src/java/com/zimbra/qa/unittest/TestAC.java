@@ -39,6 +39,7 @@ public class TestAC extends TestProv {
     protected static Right USER_LOGIN_AS;
     protected static Right USER_RIGHT;
     protected static Right USER_RIGHT_DISTRIBUTION_LIST;
+    protected static Right USER_RIGHT_DOMAIN;
     
     // admin preset rights
     protected static Right ADMIN_PRESET_LOGIN_AS;
@@ -122,6 +123,7 @@ public class TestAC extends TestProv {
             USER_LOGIN_AS                 = User.R_loginAs;
             USER_RIGHT                    = getRight("test-user");
             USER_RIGHT_DISTRIBUTION_LIST  = getRight("test-user-distributionlist");
+            USER_RIGHT_DOMAIN             = User.R_createDistList;
             
             ADMIN_PRESET_LOGIN_AS          = Admin.R_adminLoginAs;
             ADMIN_PRESET_ACCOUNT           = getRight("test-preset-account");

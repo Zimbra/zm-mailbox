@@ -367,7 +367,7 @@ public class ZimbraACE {
      *  If <tt>acct</tt> is <tt>null</tt>, only return
      *  <tt>true</tt> if the grantee is {@link ACL#GRANTEE_PUBLIC}. */
     // orig: ACL.Grant.matches
-    private boolean matches(Account acct) throws ServiceException {
+    private boolean matches(Account acct, boolean asAdmin) throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         if (acct == null)
             return mGranteeType == GranteeType.GT_PUBLIC;
@@ -383,12 +383,12 @@ public class ZimbraACE {
             case GT_GROUP:
                 return prov.inDistributionList(acct, mGrantee); 
             case GT_EXT_GROUP:
-                ExternalGroup extGroup = ExternalGroup.get(DomainBy.id, mGrantee);
+                ExternalGroup extGroup = ExternalGroup.get(DomainBy.id, mGrantee, asAdmin);
                 if (extGroup == null) {
                     ZimbraLog.account.warn("unable to find external group grantee " + mGrantee);
                     return false;
                 }
-                return extGroup.inGroup(acct);
+                return extGroup.inGroup(acct, asAdmin);
             case GT_DOMAIN:
                 return mGrantee.equals(acct.getDomainId());
             case GT_USER:
@@ -422,8 +422,8 @@ public class ZimbraACE {
     }
     */
     
-    boolean matchesGrantee(Account grantee) throws ServiceException {
-        return matches(grantee);
+    boolean matchesGrantee(Account grantee, boolean asAdmin) throws ServiceException {
+        return matches(grantee, asAdmin);
     }
     
     public String getGranteeDisplayName() {

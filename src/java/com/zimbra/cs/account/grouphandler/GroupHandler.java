@@ -41,10 +41,11 @@ public abstract class GroupHandler {
     public abstract String[] getMembers(ILdapContext ldapContext, String searchBase, 
             String entryDN, IAttributes ldapAttrs);
     
-    public abstract boolean inDelegatedAdminGroup(ExternalGroup group, Account acct) 
-    throws ServiceException;
+    public abstract boolean inDelegatedAdminGroup(ExternalGroup group, 
+            Account acct, boolean asAdmin) throws ServiceException;
     
-    private static Map<String, HandlerInfo> sHandlers = new ConcurrentHashMap<String,HandlerInfo>();
+    private static Map<String, HandlerInfo> sHandlers = 
+        new ConcurrentHashMap<String,HandlerInfo>();
     
     private static class HandlerInfo {
         Class<? extends GroupHandler> mClass;
@@ -105,7 +106,7 @@ public abstract class GroupHandler {
      *   - we no longer have the user's external LDAP password
      *   - it makes perfect sense to do this task using the admin's credentials.
      */
-    public ZLdapContext getExternalDelegatedAdminGroupsLdapContext(Domain domain) 
+    public ZLdapContext getExternalDelegatedAdminGroupsLdapContext(Domain domain, boolean asAdmin) 
     throws ServiceException {
         String[] ldapUrl = domain.getAuthLdapURL();
         if (ldapUrl == null || ldapUrl.length == 0) {

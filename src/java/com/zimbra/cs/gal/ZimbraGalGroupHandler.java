@@ -59,7 +59,7 @@ public class ZimbraGalGroupHandler extends GroupHandler {
     }
 
     @Override
-    public boolean inDelegatedAdminGroup(ExternalGroup group, Account acct) 
+    public boolean inDelegatedAdminGroup(ExternalGroup group, Account acct, boolean asAdmin) 
     throws ServiceException {
         // this method is used for checking external group membership for checking 
         // delegated admin rights.  Internal group grantees do not go through
