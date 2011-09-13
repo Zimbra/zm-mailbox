@@ -34,7 +34,6 @@ SECTION antivirus DEPENDS amavis
 	VAR zimbraVirusDefinitionsUpdateFrequency
 	VAR zimbraVirusBlockEncryptedArchive
   	VAR zimbraMtaMaxMessageSize
-	VAR zimbraIPMode
 	RESTART antivirus mta
 
 SECTION antispam DEPENDS amavis
