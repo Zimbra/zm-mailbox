@@ -97,24 +97,24 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 resp.addCookie(new Cookie("ZM_PRELIM_AUTH_TOKEN", param));
                 resp.sendRedirect("/zimbra/public/extuserprov.jsp");
             } else {
-                // create a new mountpoint in the external user's mailbox in not already created
+                // create a new mountpoint in the external user's mailbox if not already created
 
                 String[] sharedItems = owner.getSharedItem();
                 int sharedFolderId = Integer.valueOf(folderId);
-                String sharedFolderName = null;
+                String sharedFolderPath = null;
                 MailItem.Type sharedFolderView = null;
                 for (String sharedItem : sharedItems) {
                     ShareInfoData sid = AclPushSerializer.deserialize(sharedItem);
                     if (sid.getFolderId() == sharedFolderId) {
-                        sharedFolderName = getSharedFolderName(sid.getFolderPath());
+                        sharedFolderPath = sid.getFolderPath();
                         sharedFolderView = sid.getFolderDefaultViewCode();
                         break;
                     }
                 }
-                if (sharedFolderName == null) {
+                if (sharedFolderPath == null) {
                     throw new ServletException("share not found");
                 }
-                String mountpointName = getMountpointName(owner, sharedFolderName);
+                String mountpointName = getMountpointName(owner, sharedFolderPath);
 
                 ZMailbox.Options options = new ZMailbox.Options();
                 options.setNoSession(true);
@@ -173,9 +173,13 @@ public class ExternalUserProvServlet extends ZimbraServlet {
         }
     }
 
-    private static String getMountpointName(Account owner, String sharedFolderName) {
-        return owner.getDisplayName() != null ?
-                owner.getDisplayName() + "'s " + sharedFolderName : owner.getName() + "'s " + sharedFolderName;
+    private static String getMountpointName(Account owner, String sharedFolderPath) {
+        String pfx = (owner.getDisplayName() != null ? owner.getDisplayName() : owner.getName()) + "'s";
+        String sfx = sharedFolderPath.replace("/", " ");
+        if (!sfx.startsWith(" ")) {
+            sfx = " " + sfx;
+        }
+        return pfx + sfx;
     }
 
     private static String mapExtEmailToAcctName(String extUserEmail, Domain domain) {
@@ -252,8 +256,8 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 String[] sharedItems = account.getSharedItem();
                 for (String sharedItem : sharedItems) {
                     ShareInfoData shareData = AclPushSerializer.deserialize(sharedItem);
-                    String sharedFolderName = getSharedFolderName(shareData.getFolderPath());
-                    String mountpointName = getMountpointName(account, sharedFolderName);
+                    String sharedFolderPath = shareData.getFolderPath();
+                    String mountpointName = getMountpointName(account, sharedFolderPath);
                     Mountpoint mtpt = granteeMbox.createMountpoint(
                             null, Mailbox.ID_FOLDER_USER_ROOT, mountpointName, account.getId(), shareData.getFolderId(),
                             shareData.getFolderDefaultViewCode(), 0, MailItem.DEFAULT_COLOR, false);
@@ -296,10 +300,6 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             }
         }
         grantee.modify(appFeatureAttrs);
-    }
-
-    private static String getSharedFolderName(String folderPath) {
-        return folderPath.substring(folderPath.lastIndexOf("/") + 1);
     }
 
     private static Map<Object, Object> validatePrelimToken(String param) throws ServletException {
