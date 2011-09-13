@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -20,14 +20,10 @@ import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
 
 import org.dom4j.DocumentException;
-import org.dom4j.ElementHandler;
-import org.dom4j.io.SAXReader;
 
 import java.io.IOException;
-import java.io.Reader;
 import java.util.Deque;
 import java.util.LinkedList;
-import java.util.Map;
 
 /**
  * Abstract class for sending a soap message.
@@ -311,22 +307,6 @@ public abstract class SoapTransport {
         if (mDebugListener != null) mDebugListener.receiveSoapMessage(env);
 
         return raw ? env : extractBodyElement(env);
-    }
-
-    /* use SAXReader to parse large soap response. caller must provide list of handlers, which are <path, handler> pairs.
-     * to reduce memory usage, a handler may call Element.detach() in ElementHandler.onEnd() to prune off processed elements
-     * */
-    void parseLargeSoapResponse(Reader inputReader, Map<String, ElementHandler> handlers) throws ServiceException {
-        SAXReader saxReader = com.zimbra.common.soap.Element.getSAXReader();
-        for(Map.Entry<String, ElementHandler> entry : handlers.entrySet()) {
-            saxReader.addHandler(entry.getKey(), entry.getValue());
-        }
-
-        try {
-            saxReader.read(inputReader);
-        } catch (DocumentException e) {
-            throw ServiceException.SAX_READER_ERROR(e.getMessage(), e.getCause());
-        }
     }
 
     public Element extractBodyElement(Element env) throws SoapParseException, SoapFaultException {

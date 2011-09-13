@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -43,6 +43,9 @@ public class L10nUtil {
      * List all message keys here
      */
     public static enum MsgKey {
+        // account auto provisioning messages
+        accountAutoProvisionedBody,
+        accountAutoProvisionedSubject,
 
         // calendar messages
         calendarSubjectCancelled,

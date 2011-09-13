@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -56,6 +56,7 @@ public final class ContactConstants {
     public static final String A_canExpand = Attr.canExpand.name();
     public static final String A_carPhone = Attr.callbackPhone.name();
     public static final String A_company = Attr.company.name();
+    public static final String A_dn = Attr.dn.name();
     public static final String A_phoneticCompany = Attr.phoneticCompany.name();
     public static final String A_companyPhone = Attr.companyPhone.name();
     public static final String A_department = Attr.department.name();
@@ -67,6 +68,7 @@ public final class ContactConstants {
     public static final String A_firstName = Attr.firstName.name();
     public static final String A_phoneticFirstName = Attr.phoneticFirstName.name();
     public static final String A_fullName = Attr.fullName.name();
+    public static final String A_groupMember = Attr.groupMember.name();
     public static final String A_homeCity = Attr.homeCity.name();
     public static final String A_homeCountry = Attr.homeCountry.name();
     public static final String A_homeFax = Attr.homeFax.name();
@@ -146,7 +148,12 @@ public final class ContactConstants {
     public static final String A_vCardXProps = "vcardXProps";
 
     public static final String TYPE_GROUP = "group";
-
+    
+    // move to ZimbraSoap?
+    public static final String GROUP_MEMBER_TYPE_CONTACT_REF = "C";
+    public static final String GROUP_MEMBER_TYPE_GAL_REF = "G";
+    public static final String GROUP_MEMBER_TYPE_INLINE = "I";
+    
     /**
      * "well known attrs". keep in sync with ContactConstants.A_* above.
      */
@@ -158,11 +165,12 @@ public final class ContactConstants {
         canExpand,
         carPhone,
         company,
+        dn,
         phoneticCompany,
         companyPhone,
         description,
         department,
-        dlist,
+        dlist,  //TODO deprecate? or use use?  don't touch/keep for backward compatibility?
         email,
         email2,
         email3,
@@ -170,6 +178,7 @@ public final class ContactConstants {
         firstName,
         phoneticFirstName,
         fullName,
+        groupMember,
         homeCity,
         homeCountry,
         homeFax,
