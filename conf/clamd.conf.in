@@ -69,7 +69,7 @@ DatabaseDirectory /opt/zimbra/data/clamav/db
 
 # Path to a local socket file the daemon will listen on.
 # Default: disabled (must be specified by a user)
-# LocalSocket /opt/zimbra/data/clamav/clamav.sock
+LocalSocket /opt/zimbra/data/clamav/clamav.sock
 
 # Remove stale socket after unclean shutdown.
 # Default: yes
@@ -77,14 +77,14 @@ DatabaseDirectory /opt/zimbra/data/clamav/db
 
 # TCP port address.
 # Default: no
-TCPSocket 3310
+#TCPSocket 3310
 
 # TCP address.
 # By default we bind to INADDR_ANY, probably not wise.
 # Enable the following to provide some degree of protection
 # from the outside world.
 # Default: no
-TCPAddr 127.0.0.1
+#TCPAddr %%zimbraIPv4BindAddress%%
 
 # Maximum length the queue of pending connections may grow to.
 # Default: 15
