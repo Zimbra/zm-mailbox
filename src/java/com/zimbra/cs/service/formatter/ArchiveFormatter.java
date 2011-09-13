@@ -188,7 +188,6 @@ public abstract class ArchiveFormatter extends Formatter {
         String filename = context.params.get("filename");
         String lock = context.params.get("lock");
         MailboxLock ml = null;
-        Set<String> names = new HashSet<String>(4096);
         String query = context.getQueryString();
         byte sysTypes[] = {
             MailItem.TYPE_FOLDER, MailItem.TYPE_SEARCHFOLDER, MailItem.TYPE_TAG,
@@ -255,7 +254,7 @@ public abstract class ArchiveFormatter extends Formatter {
             if (context.requestedItems != null) {
                 try {
                     for (UserServletContext.Item item : context.requestedItems)
-                        aos = saveItem(context, item.mailItem, fldrs, cnts, names, item.versioned,
+                        aos = saveItem(context, item.mailItem, fldrs, cnts, item.versioned,
                                 aos, encoder);
                 } catch (Exception e) {
                     warn(e);
@@ -263,7 +262,7 @@ public abstract class ArchiveFormatter extends Formatter {
             } else if (context.target != null && !(context.target instanceof
                 Folder)) {
                 try {
-                    aos = saveItem(context, context.target, fldrs, cnts, names,
+                    aos = saveItem(context, context.target, fldrs, cnts,
                             false, aos, encoder);
                 } catch (Exception e) {
                     warn(e);
@@ -292,7 +291,7 @@ public abstract class ArchiveFormatter extends Formatter {
 
                         Collections.sort(items, sp);
                         for (MailItem item : items)
-                            aos = saveItem(context, item, fldrs, cnts, names,
+                            aos = saveItem(context, item, fldrs, cnts,
                                     false, aos, encoder);
                     }
                     if (types == null || types.equals(""))
@@ -300,21 +299,24 @@ public abstract class ArchiveFormatter extends Formatter {
                     query = "is:local";
                 }
                 results = context.targetMailbox.search(context.opContext,
-                    query, searchTypes, SortBy.NONE, 4096);
+                    query, searchTypes, SortBy.NONE,
+                    LC.zimbra_archive_formatter_search_chunk_size.intValue());
                 try {
                     while (results.hasNext()) {
                         if (saveTargetFolder) {
                             saveTargetFolder = false;
                             aos = saveItem(context, context.target,
-                                    fldrs, cnts, names, false, aos, encoder);
+                                    fldrs, cnts, false, aos, encoder);
                         }
                         aos = saveItem(context, results.getNext().getMailItem(),
-                                fldrs, cnts, names, false, aos, encoder);
+                                fldrs, cnts, false, aos, encoder);
                     }
+                    results.doneWithSearchResults();
+                    results = null;
                     if (conversations) {
                         for (MailItem item : context.targetMailbox.getItemList(
                             context.opContext, MailItem.TYPE_CONVERSATION))
-                            aos = saveItem(context, item, fldrs, cnts, names,
+                            aos = saveItem(context, item, fldrs, cnts,
                                     false, aos, encoder);
                     }
                 } catch (Exception e) {
@@ -380,7 +382,7 @@ public abstract class ArchiveFormatter extends Formatter {
 
     private ArchiveOutputStream saveItem(UserServletContext context, MailItem mi,
         Map<Integer, String> fldrs, Map<Integer, Integer> cnts,
-        Set<String> names, boolean version, ArchiveOutputStream aos,
+        boolean version, ArchiveOutputStream aos,
         CharsetEncoder charsetEncoder) throws ServiceException {
 
         String ext = null, name = null;
@@ -395,7 +397,7 @@ public abstract class ArchiveFormatter extends Formatter {
             for (MailItem rev : context.targetMailbox.getAllRevisions(
                 context.opContext, mi.getId(), mi.getType())) {
                 if (mi.getVersion() != rev.getVersion())
-                    aos = saveItem(context, rev, fldrs, cnts, names, true,
+                    aos = saveItem(context, rev, fldrs, cnts, true,
                             aos, charsetEncoder);
             }
         }
@@ -495,7 +497,7 @@ public abstract class ArchiveFormatter extends Formatter {
         try {
             ArchiveOutputEntry aoe;
             byte data[] = null;
-            String path = getEntryName(mi, fldr, name, ext, names, charsetEncoder);
+            String path = getEntryName(mi, fldr, name, ext, charsetEncoder);
             long miSize = mi.getSize();
 
             try {
@@ -571,7 +573,7 @@ public abstract class ArchiveFormatter extends Formatter {
                         bs = new BufferStream(sz, 1024 * 1024);
                         bs.readFrom(mp.getInputStream());
                         aoe = aos.newOutputEntry(
-                                getEntryName(mi, "", name, ext, names, charsetEncoder),
+                                getEntryName(mi, "", name, ext, charsetEncoder),
                                 MailItem.getNameForType(mi), mi.getType(), mi.getDate());
                         sz = bs.getSize();
                         aoe.setSize(sz);
@@ -638,9 +640,8 @@ public abstract class ArchiveFormatter extends Formatter {
     }
 
     private String getEntryName(MailItem mi, String fldr, String name,
-            String ext, Set<String> names, CharsetEncoder encoder) {
-        int counter = 0;
-        String lpath, path;
+            String ext, CharsetEncoder encoder) {
+        String path;
 
         if (Strings.isNullOrEmpty(name)) {
             name = mi.getName();
@@ -649,7 +650,8 @@ public abstract class ArchiveFormatter extends Formatter {
             name = mi.getSubject();
         }
         if (!Strings.isNullOrEmpty(name)) {
-            name = sanitize(name, encoder);
+            name = Strings.padStart(mi.getId()+"", 10, '0') + "-" +
+                sanitize(name, encoder);
         }
         if (Strings.isNullOrEmpty(name)) {
             name = MailItem.getNameForType(mi) + '-' + mi.getId();
@@ -666,18 +668,13 @@ public abstract class ArchiveFormatter extends Formatter {
             }
         }
         name = ILLEGAL_FILE_CHARS.matcher(name).replaceAll("_").trim();
-        while (name.endsWith("."))
+        while (name.endsWith(".")) {
             name = name.substring(0, name.length() - 1).trim();
-        do {
-            path = fldr.equals("") ? name : fldr + '/' + name;
-            if (counter > 0)
-                path += String.format("-%02d", counter);
-            if (ext != null)
-                path += '.' + ext;
-            counter++;
-            lpath = path.toLowerCase();
-        } while (names.contains(lpath));
-        names.add(lpath);
+        }
+        path = fldr.equals("") ? name : fldr + '/' + name;
+        if (ext != null) {
+            path += '.' + ext;
+        }
         return path;
     }
 
