@@ -34,6 +34,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ShareInfoData;
 import com.zimbra.cs.account.ZimbraAuthToken;
+import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -256,6 +257,10 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 String[] sharedItems = account.getSharedItem();
                 for (String sharedItem : sharedItems) {
                     ShareInfoData shareData = AclPushSerializer.deserialize(sharedItem);
+                    if (!(shareData.getGranteeTypeCode() == ACL.GRANTEE_GUEST &&
+                            extUserEmail.equalsIgnoreCase(shareData.getGranteeId()))) {
+                        continue;
+                    }
                     String sharedFolderPath = shareData.getFolderPath();
                     String mountpointName = getMountpointName(account, sharedFolderPath);
                     Mountpoint mtpt = granteeMbox.createMountpoint(
