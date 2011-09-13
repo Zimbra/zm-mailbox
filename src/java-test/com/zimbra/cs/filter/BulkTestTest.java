@@ -18,7 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -42,48 +41,78 @@ import com.zimbra.cs.service.util.ItemId;
  * @author ysasaki
  */
 public final class BulkTestTest {
+    private static Account account;
+    private static Mailbox mailbox;
 
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
-    }
-
-    @Before
-    public void setUp() throws Exception {
         MailboxTestUtil.clearData();
+        account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        RuleManager.clearCachedRules(account);
+        account.setMailSieveScript("if bulk { tag \"bulk\"; }");
+        mailbox = MailboxManager.getInstance().getMailboxByAccount(account);
     }
 
     @Test
-    public void test() throws Exception {
-        Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        RuleManager.clearCachedRules(account);
-        account.setMailSieveScript("if bulk { tag \"bulk\"; }");
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
-
-        // Precedence: bulk
-        List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+    public void precidence() throws Exception {
+        List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mailbox), mailbox,
                 new ParsedMessage("From: sender@zimbra.com\nPrecedence: bulk\nSubject: bulk".getBytes(), false),
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
-        Message msg = mbox.getMessageById(null, ids.get(0).getId());
+        Message msg = mailbox.getMessageById(null, ids.get(0).getId());
         Assert.assertEquals("bulk", ArrayUtil.getFirstElement(msg.getTags()));
+    }
 
-        // X-Report-Abuse
-        ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+    @Test
+    public void abuse() throws Exception {
+        List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mailbox), mailbox,
                 new ParsedMessage("From: sender@zimbra.com\nX-Report-Abuse: test\nSubject: bulk".getBytes(), false),
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
-        msg = mbox.getMessageById(null, ids.get(0).getId());
+        Message msg = mailbox.getMessageById(null, ids.get(0).getId());
         Assert.assertEquals("bulk", ArrayUtil.getFirstElement(msg.getTags()));
+    }
 
-        // X-CampaignId
-        ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+    @Test
+    public void campaign() throws Exception {
+        List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mailbox), mailbox,
                 new ParsedMessage("From: sender@zimbra.com\nX-CampaignId: test\nSubject: bulk".getBytes(), false),
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
-        msg = mbox.getMessageById(null, ids.get(0).getId());
+        Message msg = mailbox.getMessageById(null, ids.get(0).getId());
+        Assert.assertEquals("bulk", ArrayUtil.getFirstElement(msg.getTags()));
+    }
+
+    @Test
+    public void unsubscribe() throws Exception {
+        List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mailbox), mailbox,
+                new ParsedMessage("To: list@zimbra.com\nList-Unsubscribe: test\nSubject: bulk".getBytes(), false),
+                0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+        Assert.assertEquals(1, ids.size());
+        Message msg = mailbox.getMessageById(null, ids.get(0).getId());
+        Assert.assertEquals(0, msg.getTags().length);
+
+        ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mailbox), mailbox,
+                new ParsedMessage("To: test@zimbra.com\nList-Unsubscribe: test\nSubject: bulk".getBytes(), false),
+                0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+        Assert.assertEquals(1, ids.size());
+        msg = mailbox.getMessageById(null, ids.get(0).getId());
+        Assert.assertEquals("bulk", ArrayUtil.getFirstElement(msg.getTags()));
+    }
+
+    @Test
+    public void proofpoint() throws Exception {
+        List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mailbox), mailbox,
+                new ParsedMessage(("To: list@zimbra.com\nX-Proofpoint-Spam-Details: rule=tag_notspam policy=tag " +
+                        "score=0 spamscore=0 ipscore=0 suspectscore=49 phishscore=0 bulkscore=100 adultscore=0 " +
+                        "classifier=spam adjust=0 reason=mlx engine=6.0.2-1012030000 definitions=main-1108230088\n" +
+                        "Subject: bulk").getBytes(), false),
+                        0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+        Assert.assertEquals(1, ids.size());
+        Message msg = mailbox.getMessageById(null, ids.get(0).getId());
         Assert.assertEquals("bulk", ArrayUtil.getFirstElement(msg.getTags()));
     }
 
