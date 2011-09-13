@@ -809,6 +809,7 @@ public final class LC {
     // This is a workaround for an issue in Jetty 6.1.22.zc6m when we upgrade
     // we should re-evaluate/remove these settings and the code that uses them
     public static final KnownKey zimbra_archive_formatter_disable_timeout = KnownKey.newKey(true);
+    public static final KnownKey zimbra_archive_formatter_search_chunk_size = KnownKey.newKey(4096);
     public static final KnownKey zimbra_gal_sync_disable_timeout = KnownKey.newKey(true);
 
     public static final KnownKey zimbra_admin_waitset_default_request_timeout = KnownKey.newKey(300);
