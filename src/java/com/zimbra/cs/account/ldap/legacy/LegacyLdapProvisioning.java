@@ -7304,7 +7304,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             SearchLdapOptions.SearchLdapVisitor visitor) throws ServiceException {
 
         final int batchSize = 10;  // num ids per search
-        final String queryStart = "(&(objectClass=" + objectClass + ")(";
+        final String queryStart = "(&(objectClass=" + objectClass + ")(|";
         final String queryEnd = "))";
 
         StringBuilder query = new StringBuilder();
@@ -7312,7 +7312,7 @@ public class LegacyLdapProvisioning extends LdapProv {
 
         int i = 0;
         for (String id : unresolvedIds) {
-            query.append("|(" + Provisioning.A_zimbraId + "=" + id + ")");
+            query.append("(" + Provisioning.A_zimbraId + "=" + id + ")");
             if ((++i) % batchSize == 0) {
                 query.append(queryEnd);
                 searchLdapOnReplica(base, query.toString(), returnAttrs, visitor);
@@ -7471,5 +7471,4 @@ public class LegacyLdapProvisioning extends LdapProv {
             }
         }
     }
-    
 }
