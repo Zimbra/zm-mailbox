@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -43,7 +43,7 @@ import org.apache.lucene.util.BitVector;
  */
 final class LuceneIndexRepair {
     // need to sync with SegmentInfos#CURRENT_FORMAT
-    private static final int FORMAT = SegmentInfos.FORMAT_DIAGNOSTICS;
+    private static final int FORMAT = SegmentInfos.FORMAT_3_1;
     // need to sync with IndexFileNames#SEGMENTS_GEN
     private static final String SEGMENTS_GEN = "segments.gen";
     // need to sync with IndexFileNames#SEGMENTS
@@ -120,9 +120,7 @@ final class LuceneIndexRepair {
         directory.sync(Collections.singleton(SEGMENTS_GEN));
     }
 
-    private void convert(ChecksumIndexInput input, ChecksumIndexOutput output)
-        throws IOException {
-
+    private void convert(ChecksumIndexInput input, ChecksumIndexOutput output) throws IOException {
         int format = input.readInt();
         if (format < 0) {
             if (format < FORMAT) {
@@ -141,6 +139,9 @@ final class LuceneIndexRepair {
         int num = input.readInt();
         output.writeInt(num);
         for (int i = 0; i < num; i++) {
+            if (format <= SegmentInfos.FORMAT_3_1) {
+                output.writeString(input.readString()); // version
+            }
             String name = input.readString();
             output.writeString(name);
             int count = input.readInt();
@@ -184,6 +185,9 @@ final class LuceneIndexRepair {
             }
             if (format <= SegmentInfos.FORMAT_DIAGNOSTICS) {
                 output.writeStringStringMap(input.readStringStringMap()); // diagnostics
+            }
+            if (format <= SegmentInfos.FORMAT_HAS_VECTORS) {
+                output.writeByte(input.readByte()); // hasVectors
             }
         }
 
