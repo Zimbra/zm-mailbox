@@ -36,44 +36,24 @@ import org.cyberneko.html.HTMLConfiguration;
 
 import com.zimbra.common.util.ByteUtil;
 
-public class HtmlDefang
+public class HtmlDefang extends AbstractDefang
 {
-    public static String defang(String html, boolean neuterImages) throws IOException {
-        return defang(new StringReader(html), neuterImages);
-    }
-    
-    public static String defang(InputStream html, boolean neuterImages)
-    throws IOException {
-        StringWriter writer = new StringWriter();
-        defang(html, neuterImages, writer);
-        return writer.toString(); 
-    }
-    
-    public static void defang(InputStream html, boolean neuterImages, Writer out)
-    throws IOException {
-        XMLInputSource source = new XMLInputSource(null, null, null, html, null);
-        defang(source, neuterImages, out);        
-    }
-    
-    public static String defang(Reader htmlReader, boolean neuterImages)
-    throws IOException {
-        StringWriter writer = new StringWriter();
-        defang(htmlReader, neuterImages, writer);
-        return writer.toString();
-    }
-    
-    public static void defang(Reader htmlReader, boolean neuterImages, Writer out)
+    public void defang(Reader htmlReader, boolean neuterImages, Writer out)
     throws IOException {
         XMLInputSource source = new XMLInputSource(null, null, null, htmlReader, null);
         defang(source, neuterImages, out);
     }
-    
+    public void defang(InputStream html, boolean neuterImages, Writer out)
+    throws IOException {
+        XMLInputSource source = new XMLInputSource(null, null, null, html, null);
+        defang(source, neuterImages, out);        
+    }
     /**
      * @param source HTML source
      * @param neuterImages <tt>true</tt> to remove images
      * @param maxChars maximum number of characters to return, or <tt><=0</tt> for no limit
      */
-    public static void defang(XMLInputSource source, boolean neuterImages, Writer out)
+    protected void defang(XMLInputSource source, boolean neuterImages, Writer out)
     throws IOException {
         // create writer filter
         // TODO: uft-8 right?
@@ -105,6 +85,7 @@ public class HtmlDefang
 
     public static void main(String[] args) throws IOException {
         String html = new String(ByteUtil.getContent(new File(args[0])));
-        System.out.println(defang(html, true));
+        HtmlDefang defanger = new HtmlDefang();
+        System.out.println(defanger.defang(html, true));
     }
 }

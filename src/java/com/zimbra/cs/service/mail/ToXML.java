@@ -69,6 +69,8 @@ import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.gal.GalGroupInfoProvider;
 import com.zimbra.cs.gal.GalGroup.GroupInfo;
+import com.zimbra.cs.html.BrowserDefang;
+import com.zimbra.cs.html.DefangFactory;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
@@ -1545,10 +1547,11 @@ public class ToXML {
                     descElem.setText(desc);
                 }
                 String descHtml = invite.getDescriptionHtml();
+                BrowserDefang defanger = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML);
                 if (descHtml != null) {
                     try {
                         descHtml = StringUtil.stripControlCharacters(descHtml);
-                        descHtml = HtmlDefang.defang(descHtml, neuter);
+                        descHtml = defanger.defang(descHtml, neuter);
                         Element descHtmlElem = e.addElement(MailConstants.E_CAL_DESC_HTML);
                         descHtmlElem.setText(descHtml);
                     } catch (IOException ex) {
@@ -1995,20 +1998,21 @@ public class ToXML {
                     stream = mp.getInputStream();
                     // make sure to feed getTextReader() a full Content-Type header, not just the primary/subtype portion
                     reader = Mime.getTextReader(stream, mp.getContentType(), defaultCharset);
-                    HtmlDefang.defang(reader, neuter, out);
+                    BrowserDefang defanger = DefangFactory.getDefanger(mp.getContentType());
+                    defanger.defang(reader, neuter, out);
                     data = sw.toString();
                 } else {
                     String cte = mp.getEncoding();
                     if (cte != null && !cte.trim().toLowerCase().equals(MimeConstants.ET_7BIT)) {
                         try {
                             stream = mp.getInputStream();
-                            HtmlDefang.defang(stream, neuter, out);
+                            DefangFactory.getDefanger(ctype).defang(stream, neuter, out);
                             data = sw.toString();
                         } catch (IOException ioe) { }
                     }
                     if (data == null) {
                         reader = Mime.getContentAsReader(mp, defaultCharset);
-                        HtmlDefang.defang(reader, neuter, out);
+                        DefangFactory.getDefanger(ctype).defang(stream, neuter, out);
                         data = sw.toString();
                     }
                 }

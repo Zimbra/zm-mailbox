@@ -36,6 +36,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.html.BrowserDefang;
+import com.zimbra.cs.html.DefangFactory;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -257,20 +259,20 @@ public class NativeFormatter extends Formatter {
         if (desc != null)
             resp.addHeader("Content-Description", desc);
 
-        // defang when the html attachment was requested with disposition inline
-        if (contentType.startsWith(MimeConstants.CT_TEXT_HTML) &&
-                disp.equals(Part.INLINE)) {
+        // defang when the html and svg attachment was requested with disposition inline
+        if (disp.equals(Part.INLINE) &&
+                (contentType.startsWith(MimeConstants.CT_TEXT_HTML) ||
+                 contentType.startsWith(MimeConstants.CT_IMAGE_SVG) || 
+                 contentType.startsWith(MimeConstants.CT_APPLICATION_XHTML))) {
             String charset = Mime.getCharset(contentType);
             String content;
+            BrowserDefang defanger = DefangFactory.getDefanger(contentType);
             
             if (charset != null && !charset.equals("")) {
                 Reader reader = Mime.getTextReader(is, contentType, defaultCharset);
-                
-                contentType = MimeConstants.CT_TEXT_HTML + "; charset=" + charset; 
-                content = HtmlDefang.defang(reader, false);
+                content = defanger.defang(reader, false);
             } else {
-                contentType = MimeConstants.CT_TEXT_HTML;
-                content = HtmlDefang.defang(is, false);
+                content = defanger.defang(is, false);
             }
             resp.setContentType(contentType);
             if (content.length() > 0)
@@ -353,11 +355,7 @@ public class NativeFormatter extends Formatter {
             String disp = req.getParameter(UserServlet.QP_DISP);
             disposition = (disp == null || disp.toLowerCase().startsWith("i") ) ? Part.INLINE : Part.ATTACHMENT;
     	}
-    	// bug 64051 Make sure to ask IE to actually download the file
-    	if(!"html".equals(req.getParameter(UserServlet.QP_VIEW))) {
-    	    resp.addHeader("X-Content-Type-Options", "nosniff"); // turn off content detection..
-    	    resp.addHeader("X-Download-Options", "noopen"); // ask it to save the file
-    	}
+
         PushbackInputStream pis = new PushbackInputStream(in, READ_AHEAD_BUFFER_SIZE);
         boolean isSafe = false;
         String ua = req.getHeader("User-Agent");
@@ -366,6 +364,7 @@ public class NativeFormatter extends Formatter {
         if (disposition != null && disposition.equals(Part.ATTACHMENT))
             isSafe = true;
 
+        
         if (!isSafe) {
             byte[] buf = new byte[READ_AHEAD_BUFFER_SIZE];
             int bytesRead = pis.read(buf, 0, READ_AHEAD_BUFFER_SIZE);
@@ -393,6 +392,9 @@ public class NativeFormatter extends Formatter {
         if (disposition != null) {
             String cd = disposition + "; filename=" + HttpUtil.encodeFilename(req, filename == null ? "unknown" : filename);
             resp.addHeader("Content-Disposition", cd);
+            // bug 64051 Make sure to ask IE to actually download the file
+            resp.addHeader("X-Content-Type-Options", "nosniff"); // turn off content detection..
+            resp.addHeader("X-Download-Options", "noopen"); // ask it to save the file
         }
         if (size > 0)
             resp.setContentLength((int)size);

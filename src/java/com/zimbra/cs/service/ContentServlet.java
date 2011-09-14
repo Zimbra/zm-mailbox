@@ -42,6 +42,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.Provisioning.ServerBy;
+import com.zimbra.cs.html.DefangFactory;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
@@ -329,7 +330,7 @@ public class ContentServlet extends ZimbraServlet {
         resp.setContentType(contentType);
         InputStream is = null;
         try {
-            String html = HtmlDefang.defang(is = mp.getInputStream(), FORMAT_DEFANGED_HTML.equals(fmt));
+            String html = DefangFactory.getDefanger(contentType).defang(is = mp.getInputStream(), FORMAT_DEFANGED_HTML.equals(fmt));
             ByteArrayInputStream bais = new ByteArrayInputStream(html.getBytes("utf-8"));
             ByteUtil.copy(bais, false, resp.getOutputStream(), false);
         } finally {
