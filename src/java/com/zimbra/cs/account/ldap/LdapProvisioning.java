@@ -6868,7 +6868,7 @@ public class LdapProvisioning extends Provisioning {
             LdapUtil.SearchLdapVisitor visitor) throws ServiceException {
 
         final int batchSize = 10;  // num ids per search
-        final String queryStart = "(&(objectClass=" + objectClass + ")(";
+        final String queryStart = "(&(objectClass=" + objectClass + ")(|";
         final String queryEnd = "))";
 
         StringBuilder query = new StringBuilder();
@@ -6876,7 +6876,7 @@ public class LdapProvisioning extends Provisioning {
 
         int i = 0;
         for (String id : unresolvedIds) {
-            query.append("|(" + Provisioning.A_zimbraId + "=" + id + ")");
+            query.append("(" + Provisioning.A_zimbraId + "=" + id + ")");
             if ((++i) % batchSize == 0) {
                 query.append(queryEnd);
                 LdapUtil.searchLdapOnReplica(base, query.toString(), returnAttrs, visitor);
@@ -6940,4 +6940,5 @@ public class LdapProvisioning extends Provisioning {
         System.out.println(LdapUtil.computeAuthDn("schemers@example.zimbra.com", "n(%n)u(%u)d(%d)D(%D)(%%)"));
     }
 
+    
 }
