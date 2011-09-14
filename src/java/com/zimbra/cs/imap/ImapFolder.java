@@ -51,8 +51,9 @@ import com.zimbra.client.ZFolder;
 /**
  * @since Apr 30, 2005
  */
-public class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializable {
-    private static final long serialVersionUID = -7279453727601658427L;
+public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Serializable {
+    // Update serialVersionUID when changing any instance members. Otherwise serialization won't work correctly.
+    private static final long serialVersionUID = 5962563686976203094L;
 
     static final byte SELECT_READONLY  = 0x01;
     static final byte SELECT_CONDSTORE = 0x02;
