@@ -37,15 +37,17 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
 import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.html.BrowserDefang;
+import com.zimbra.cs.html.DefangFactory;
 import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.html.HtmlEntityMapper;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -201,7 +203,8 @@ class ChatWriter {
 
             // defang it
             try {
-                msgBodyHtml = HtmlDefang.defang(msgBodyHtml, true);
+                BrowserDefang defanger = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML);
+                msgBodyHtml = defanger.defang(msgBodyHtml, true);
             } catch (IOException ex) {
                 ZimbraLog.im.warn("Unable to htmldefang text: "+msgBodyHtml);
                 msgBodyHtml = "defang_error";

@@ -21,8 +21,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.html.BrowserDefang;
+import com.zimbra.cs.html.DefangFactory;
 import com.zimbra.cs.html.HtmlDefang;
 
 /**
@@ -195,7 +198,8 @@ public class IMMessage {
                 try {
                     if (mBody.hasXHTML()) {
                         e.addAttribute("html", true);
-                        e.setText(HtmlDefang.defang(mBody.getXHTMLAsString(), true));
+                        BrowserDefang defanger = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML);
+                        e.setText(defanger.defang(mBody.getXHTMLAsString(), true));
                     } else {
                         e.addAttribute("html", false);
                         e.setText(mBody.getPlainText());
