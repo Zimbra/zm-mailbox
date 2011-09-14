@@ -29,6 +29,7 @@ public class MimeConstants {
     public static final String CT_TEXT_XML = "text/xml";
     public static final String CT_TEXT_XML_LEGACY = "application/xml";
     public static final String CT_MESSAGE_RFC822 = "message/rfc822";
+    public static final String CT_APPLICATION_XHTML = "application/xhtml+xml";
     public static final String CT_APPLICATION_OCTET_STREAM = "application/octet-stream";
     public static final String CT_APPLICATION_BINARY = "application/binary";
     public static final String CT_APPLICATION_MSWORD = "application/msword";
@@ -48,6 +49,7 @@ public class MimeConstants {
     public static final String CT_MESSAGE_PREFIX = "message/";
     public static final String CT_APPLICATION_WILD = "application/.*";
     public static final String CT_IMAGE_WILD = "image/.*";
+    public static final String CT_IMAGE_SVG = "image/svg+xml";
     public static final String CT_AUDIO_WILD = "audio/.*";
     public static final String CT_VIDEO_WILD = "video/.*";
     public static final String CT_MULTIPART_WILD = "multipart/.*";
