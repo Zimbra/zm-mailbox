@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+
+<localconfig>
+  <key name="zimbra_mailbox_groups">
+    <value>1</value>
+  </key>
+</localconfig>
