@@ -510,7 +510,8 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                     if (rd != null) {
                         switch (rd.action) {
                         case discard:
-                            ZimbraLog.lmtp.info("accepted and discarded message for " + rcptEmail + ": local delivery is disabled");
+                            ZimbraLog.lmtp.info("accepted and discarded message from=%s,to=%s: local delivery is disabled",
+                                    envSender, rcptEmail);
                             reply = LmtpReply.DELIVERY_OK;
                             break;
                         case deliver:
@@ -594,33 +595,35 @@ public class ZimbraLmtpBackend implements LmtpBackend {
                             // Delivery to mailbox skipped.  Let MTA retry again later.
                             // This case happens for shared delivery to a mailbox in
                             // backup mode.
-                            ZimbraLog.lmtp.info("try again for message " + rcptEmail + ": mailbox skipped");
+                            ZimbraLog.lmtp.info("try again for message from=%s,to=%s: mailbox skipped",
+                                    envSender, rcptEmail);
                             reply = LmtpReply.TEMPORARY_FAILURE;
                             break;
                         }
                     } else {
                         // Account or mailbox not found.
-                        ZimbraLog.lmtp.info("rejecting message " + rcptEmail + ": account or mailbox not found");
+                        ZimbraLog.lmtp.info("rejecting message from=%s,to=%s: account or mailbox not found",
+                                envSender, rcptEmail);
                         reply = LmtpReply.PERMANENT_FAILURE;
                     }
-                } catch (ServiceException se) {
-                    if (se.getCode().equals(MailServiceException.QUOTA_EXCEEDED)) {
-                        ZimbraLog.lmtp.info("rejecting message " + rcptEmail + ": overquota");
+                } catch (ServiceException e) {
+                    if (e.getCode().equals(MailServiceException.QUOTA_EXCEEDED)) {
+                        ZimbraLog.lmtp.info("rejecting message from=%s,to=%s: overquota", envSender, rcptEmail);
                         if (mConfig.isPermanentFailureWhenOverQuota()) {
                             reply = LmtpReply.PERMANENT_FAILURE_OVER_QUOTA;
                         } else {
                             reply = LmtpReply.TEMPORARY_FAILURE_OVER_QUOTA;
                         }
-                    } else if (se.isReceiversFault()) {
-                        ZimbraLog.lmtp.info("try again for message " + rcptEmail + ": exception occurred", se);
+                    } else if (e.isReceiversFault()) {
+                        ZimbraLog.lmtp.info("try again for message from=%s,to=%s", envSender, rcptEmail, e);
                         reply = LmtpReply.TEMPORARY_FAILURE;
                     } else {
-                        ZimbraLog.lmtp.info("rejecting message " + rcptEmail + ": exception occurred", se);
+                        ZimbraLog.lmtp.info("rejecting message from=%s,to=%s", envSender, rcptEmail, e);
                         reply = LmtpReply.PERMANENT_FAILURE;
                     }
                 } catch (Exception e) {
                     reply = LmtpReply.TEMPORARY_FAILURE;
-                    ZimbraLog.lmtp.warn("try again for message " + rcptEmail + ": exception occurred", e);
+                    ZimbraLog.lmtp.warn("try again for message from=%s,to=%s", envSender, rcptEmail, e);
                 } finally {
                     if (rd.action == DeliveryAction.deliver && !success) {
                         // Message was not delivered.  Remove it from the dedupe

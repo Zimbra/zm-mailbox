@@ -1361,7 +1361,8 @@ public class Mailbox {
 
     private Map<Integer, MailItem> getItemCache() throws ServiceException {
         if (!currentChange.isActive()) {
-            throw ServiceException.FAILURE("cannot access item cache outside a transaction", null);
+            throw ServiceException.FAILURE("cannot access item cache outside a transaction active=" +
+                    currentChange.active + ",depth=" + currentChange.depth, null);
         }
         return currentChange.itemCache;
     }
