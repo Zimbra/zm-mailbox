@@ -38,7 +38,6 @@ import com.zimbra.common.util.HttpUtil;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.html.BrowserDefang;
 import com.zimbra.cs.html.DefangFactory;
-import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.index.MailboxIndex;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Contact;
@@ -67,7 +66,6 @@ public class NativeFormatter extends Formatter {
     public static final String ATTR_CONTENTTYPE = "contenttype";
     public static final String ATTR_CONTENTLENGTH = "contentlength";
 
-    
     @Override
     public FormatType getType() {
         return FormatType.HTML_CONVERTED;
@@ -80,7 +78,13 @@ public class NativeFormatter extends Formatter {
 
     public void formatCallback(UserServletContext context) throws IOException, ServiceException, UserServletException, ServletException {
         try {
-        	sendZimbraHeaders(context.resp, context.target);
+            sendZimbraHeaders(context.resp, context.target);
+            String ua = context.req.getHeader("User-Agent");
+            if (ua != null && ua.contains("MSIE")) {
+                // bug 64051 Make sure to ask IE to actually download the file
+                context.resp.addHeader("X-Content-Type-Options", "nosniff"); // turn off content detection..
+                context.resp.addHeader("X-Download-Options", "noopen"); // ask it to save the file
+            }
             if (context.target instanceof Message) {
                 handleMessage(context, (Message) context.target);
             } else if (context.target instanceof CalendarItem) {
@@ -251,8 +255,8 @@ public class NativeFormatter extends Formatter {
         sendbackOriginalDoc(is, contentType, defaultCharset, filename, desc, 0, req, resp);
     }
     
-    public static void sendbackOriginalDoc(InputStream is, String contentType, String defaultCharset, String filename, String desc, long size,
-        HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    private static void sendbackOriginalDoc(InputStream is, String contentType, String defaultCharset, String filename, String desc, long size,
+            HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String disp = req.getParameter(UserServlet.QP_DISP);
         
         disp = (disp == null || disp.toLowerCase().startsWith("i") ) ? Part.INLINE : Part.ATTACHMENT;
@@ -262,12 +266,12 @@ public class NativeFormatter extends Formatter {
         // defang when the html and svg attachment was requested with disposition inline
         if (disp.equals(Part.INLINE) &&
                 (contentType.startsWith(MimeConstants.CT_TEXT_HTML) ||
-                 contentType.startsWith(MimeConstants.CT_IMAGE_SVG) || 
+                 contentType.startsWith(MimeConstants.CT_IMAGE_SVG) ||
                  contentType.startsWith(MimeConstants.CT_APPLICATION_XHTML))) {
             String charset = Mime.getCharset(contentType);
             String content;
             BrowserDefang defanger = DefangFactory.getDefanger(contentType);
-            
+
             if (charset != null && !charset.equals("")) {
                 Reader reader = Mime.getTextReader(is, contentType, defaultCharset);
                 content = defanger.defang(reader, false);
@@ -361,10 +365,9 @@ public class NativeFormatter extends Formatter {
         String ua = req.getHeader("User-Agent");
         if (ua == null || ua.indexOf("MSIE") == -1)
             isSafe = true;
-        if (disposition != null && disposition.equals(Part.ATTACHMENT))
+        if (disposition.equals(Part.ATTACHMENT))
             isSafe = true;
 
-        
         if (!isSafe) {
             byte[] buf = new byte[READ_AHEAD_BUFFER_SIZE];
             int bytesRead = pis.read(buf, 0, READ_AHEAD_BUFFER_SIZE);
@@ -389,13 +392,8 @@ public class NativeFormatter extends Formatter {
             if (bytesRead > 0)
                 pis.unread(buf, 0, bytesRead);
         }
-        if (disposition != null) {
-            String cd = disposition + "; filename=" + HttpUtil.encodeFilename(req, filename == null ? "unknown" : filename);
-            resp.addHeader("Content-Disposition", cd);
-            // bug 64051 Make sure to ask IE to actually download the file
-            resp.addHeader("X-Content-Type-Options", "nosniff"); // turn off content detection..
-            resp.addHeader("X-Download-Options", "noopen"); // ask it to save the file
-        }
+        String cd = disposition + "; filename=" + HttpUtil.encodeFilename(req, filename == null ? "unknown" : filename);
+        resp.addHeader("Content-Disposition", cd);
         if (size > 0)
             resp.setContentLength((int)size);
         ByteUtil.copy(pis, true, resp.getOutputStream(), false);
