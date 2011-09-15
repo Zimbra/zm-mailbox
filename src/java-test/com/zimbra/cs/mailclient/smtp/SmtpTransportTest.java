@@ -32,6 +32,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.google.common.base.Charsets;
+import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.cs.util.MockTcpServer;
 import com.zimbra.cs.util.JMSession;
@@ -206,6 +207,43 @@ public final class SmtpTransportTest {
         server.shutdown(1000);
         Assert.assertEquals("EHLO localhost\r\n", server.replay());
         Assert.assertEquals("MAIL FROM:<from@zimbra.com>\r\n", server.replay());
+        Assert.assertEquals("RCPT TO:<rcpt@zimbra.com>\r\n", server.replay());
+        Assert.assertEquals("DATA\r\n", server.replay());
+        Assert.assertEquals("QUIT\r\n", server.replay());
+        Assert.assertNull(server.replay());
+    }
+
+    @Test(timeout = 3000)
+    public void nullMailFrom() throws Exception {
+        server = MockTcpServer.scenario()
+            .sendLine("220 test ready")
+            .recvLine() // EHLO
+            .sendLine("250 OK")
+            .recvLine() // MAIL FROM
+            .sendLine("250 OK")
+            .recvLine() // RCPT TO
+            .sendLine("250 OK")
+            .recvLine() // DATA
+            .sendLine("354 OK")
+            .swallowUntil("\r\n.\r\n")
+            .sendLine("250 OK")
+            .recvLine() // QUIT
+            .sendLine("221 bye")
+            .build().start(PORT);
+
+        Session session = JMSession.getSession();
+        session.getProperties().setProperty("mail.smtp.from", "from@zimbra.com");
+        Transport transport = session.getTransport("smtp");
+        transport.connect("localhost", PORT, null, null);
+        String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
+        SMTPMessage msg = new SMTPMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        msg.setEnvelopeFrom("<>"); // this should override the previously set mail.smtp.from
+        transport.sendMessage(msg, msg.getAllRecipients());
+        transport.close();
+
+        server.shutdown(1000);
+        Assert.assertEquals("EHLO localhost\r\n", server.replay());
+        Assert.assertEquals("MAIL FROM:<>\r\n", server.replay());
         Assert.assertEquals("RCPT TO:<rcpt@zimbra.com>\r\n", server.replay());
         Assert.assertEquals("DATA\r\n", server.replay());
         Assert.assertEquals("QUIT\r\n", server.replay());
