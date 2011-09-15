@@ -30,11 +30,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         // TODO Auto-generated method stub
         
     }
-    
-    @Override
-    public ZLdapFilter fromStringFilter(String stringFilter) throws LdapException {
-        return new UBIDLdapFilter(stringFilter);
-    }
+
     
     /*
      * canned filters
@@ -605,4 +601,5 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter allZimlets() {
         return FILTER_ALL_ZIMLETS;
     }
+
 }

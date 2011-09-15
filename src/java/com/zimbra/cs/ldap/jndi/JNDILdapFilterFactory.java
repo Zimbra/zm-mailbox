@@ -27,11 +27,7 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
         // TODO Auto-generated method stub
         
     }
-    
-    @Override
-    public ZLdapFilter fromStringFilter(String stringFilter) {
-        return new JNDILdapFilter(stringFilter);
-    }
+
     
     /*
      * operational

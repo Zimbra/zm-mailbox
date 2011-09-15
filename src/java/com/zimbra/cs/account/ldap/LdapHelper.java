@@ -149,7 +149,7 @@ public abstract class LdapHelper {
     public ZSearchResultEntry searchForEntry(String base, String filter, 
             ZLdapContext initZlc, String[] returnAttrs) 
     throws LdapMultipleEntriesMatchedException, ServiceException {
-        ZLdapFilter zFilter = ZLdapFilterFactory.getInstance().fromStringFilter(filter);
+        ZLdapFilter zFilter = ZLdapFilterFactory.getInstance().fromFilterString(filter);
         return searchForEntry(base, zFilter, initZlc, returnAttrs); 
     }
     

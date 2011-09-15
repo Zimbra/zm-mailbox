@@ -32,12 +32,9 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         return SINGLETON;
     }
     
-    public abstract ZLdapFilter fromStringFilter(String stringFilter) throws LdapException;
-    
     /*
      * operational
      */
-    
     public abstract ZLdapFilter hasSubordinates();
     
     /*
