@@ -920,6 +920,8 @@ public final class AdminConstants {
     public static final String E_DOMAIN = "domain";
     public static final String E_DL = "dl";
     public static final String E_DLM = "dlm";
+    public static final String E_DL_OWNER = "owner";
+    public static final String E_DL_OWNERS = "owners";
     public static final String E_HOSTNAME = "hostname";
     public static final String E_LIFETIME = "lifetime";
     public static final String E_MESSAGE = "message";
