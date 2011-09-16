@@ -2341,7 +2341,7 @@ returns all shares owned by user1@test.com that are shared with dl@test.com.
 
 ----------------------------
 
-<CreateGalSyncAccountRequest name="{identifier}" domain="{domain-name}" type="zimbra|ldap" [folder="{contact-folder-name}"] >
+<CreateGalSyncAccountRequest name="{identifier}" domain="{domain-name}" type="zimbra|ldap" server="{server}" [folder="{contact-folder-name}"] >
   <account by="id|name">...</account>
   <a n="attr-name">...</a>+
 </CreateGalSyncAccountRequest>
@@ -2358,17 +2358,18 @@ Notes:
     - name attribute is for the name of the data source.
     - if folder attr is not present it'll default to Contacts folder.
     - passed in attrs in <a/> are used to initialize the gal data source.
+  - server is a required parameter and specifies the mailhost on which this account resides.  
 
 
 example for creating gal sync account for Zimbra LDAP server.
 
-    <CreateGalSyncAccountRequest name="zimbra" domain="mydomain.com" type="zimbra">
+    <CreateGalSyncAccountRequest name="zimbra" domain="mydomain.com" type="zimbra" server="mailhost.mydomain.com">
       <account by="name">gal@mydomain.com</account>
     </CreateGalSyncAccountRequest>
 
 example for creating domain gal sync account.
 
-    <CreateGalSyncAccountRequest name="mydomain" domain="mydomain.com" type="ldap">
+    <CreateGalSyncAccountRequest name="mydomain" domain="mydomain.com" type="ldap" server="mailhost.mydomain.com">
       <account by="name">gal@mydomain.com</account>
       <a n="zimbraGalSyncLdapURL">ldap://ldap.mydomain.com</a>
       <a n="zimbraGalSyncLdapStartTlsEnabled">TRUE</a>
