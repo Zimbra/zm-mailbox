@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110909-1346 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110915-1429 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -688,6 +688,22 @@ public class ZAttrProvisioning {
         }
         public boolean isStandard() { return this == standard;}
         public boolean isAdvanced() { return this == advanced;}
+    }
+
+    public static enum PrefComposeDirection {
+        RTL("RTL"),
+        LTR("LTR");
+        private String mValue;
+        private PrefComposeDirection(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefComposeDirection fromString(String s) throws ServiceException {
+            for (PrefComposeDirection value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isRTL() { return this == RTL;}
+        public boolean isLTR() { return this == LTR;}
     }
 
     public static enum PrefComposeFormat {
@@ -6351,7 +6367,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraNewMailNotificationSubject = "zimbraNewMailNotificationSubject";
 
     /**
-     * Account for storing templates and providing space for public wiki
+     * Deprecated since: 7.0.0. See bug 39647. Orig desc: Account for storing
+     * templates and providing space for public wiki
      */
     @ZAttr(id=363)
     public static final String A_zimbraNotebookAccount = "zimbraNotebookAccount";
@@ -7228,6 +7245,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=453)
     public static final String A_zimbraPrefClientType = "zimbraPrefClientType";
+
+    /**
+     * direction for composing messages in the web client UI
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1273)
+    public static final String A_zimbraPrefComposeDirection = "zimbraPrefComposeDirection";
 
     /**
      * whether or not to compose in html or text.
@@ -8124,6 +8149,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1045)
     public static final String A_zimbraPrefShowCalendarWeek = "zimbraPrefShowCalendarWeek";
+
+    /**
+     * whether or not to show direction buttons in compose toolbar
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1274)
+    public static final String A_zimbraPrefShowComposeDirection = "zimbraPrefShowComposeDirection";
 
     /**
      * show fragments in conversation and message lists
