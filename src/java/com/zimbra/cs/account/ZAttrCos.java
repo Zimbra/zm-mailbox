@@ -42,7 +42,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110909-1346 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110915-1429 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -20467,6 +20467,137 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * direction for composing messages in the web client UI
+     *
+     * <p>Valid values: [RTL, LTR]
+     *
+     * @return zimbraPrefComposeDirection, or null if unset and/or has invalid value
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1273)
+    public ZAttrProvisioning.PrefComposeDirection getPrefComposeDirection() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefComposeDirection); return v == null ? null : ZAttrProvisioning.PrefComposeDirection.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * direction for composing messages in the web client UI
+     *
+     * <p>Valid values: [RTL, LTR]
+     *
+     * @return zimbraPrefComposeDirection, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1273)
+    public String getPrefComposeDirectionAsString() {
+        return getAttr(Provisioning.A_zimbraPrefComposeDirection, null);
+    }
+
+    /**
+     * direction for composing messages in the web client UI
+     *
+     * <p>Valid values: [RTL, LTR]
+     *
+     * @param zimbraPrefComposeDirection new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1273)
+    public void setPrefComposeDirection(ZAttrProvisioning.PrefComposeDirection zimbraPrefComposeDirection) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefComposeDirection, zimbraPrefComposeDirection.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * direction for composing messages in the web client UI
+     *
+     * <p>Valid values: [RTL, LTR]
+     *
+     * @param zimbraPrefComposeDirection new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1273)
+    public Map<String,Object> setPrefComposeDirection(ZAttrProvisioning.PrefComposeDirection zimbraPrefComposeDirection, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefComposeDirection, zimbraPrefComposeDirection.toString());
+        return attrs;
+    }
+
+    /**
+     * direction for composing messages in the web client UI
+     *
+     * <p>Valid values: [RTL, LTR]
+     *
+     * @param zimbraPrefComposeDirection new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1273)
+    public void setPrefComposeDirectionAsString(String zimbraPrefComposeDirection) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefComposeDirection, zimbraPrefComposeDirection);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * direction for composing messages in the web client UI
+     *
+     * <p>Valid values: [RTL, LTR]
+     *
+     * @param zimbraPrefComposeDirection new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1273)
+    public Map<String,Object> setPrefComposeDirectionAsString(String zimbraPrefComposeDirection, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefComposeDirection, zimbraPrefComposeDirection);
+        return attrs;
+    }
+
+    /**
+     * direction for composing messages in the web client UI
+     *
+     * <p>Valid values: [RTL, LTR]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1273)
+    public void unsetPrefComposeDirection() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefComposeDirection, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * direction for composing messages in the web client UI
+     *
+     * <p>Valid values: [RTL, LTR]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1273)
+    public Map<String,Object> unsetPrefComposeDirection(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefComposeDirection, "");
+        return attrs;
+    }
+
+    /**
      * whether or not to compose in html or text.
      *
      * <p>Valid values: [text, html]
@@ -28150,6 +28281,78 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPrefShowCalendarWeek(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefShowCalendarWeek, "");
+        return attrs;
+    }
+
+    /**
+     * whether or not to show direction buttons in compose toolbar
+     *
+     * @return zimbraPrefShowComposeDirection, or false if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1274)
+    public boolean isPrefShowComposeDirection() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefShowComposeDirection, false);
+    }
+
+    /**
+     * whether or not to show direction buttons in compose toolbar
+     *
+     * @param zimbraPrefShowComposeDirection new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1274)
+    public void setPrefShowComposeDirection(boolean zimbraPrefShowComposeDirection) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShowComposeDirection, zimbraPrefShowComposeDirection ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not to show direction buttons in compose toolbar
+     *
+     * @param zimbraPrefShowComposeDirection new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1274)
+    public Map<String,Object> setPrefShowComposeDirection(boolean zimbraPrefShowComposeDirection, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShowComposeDirection, zimbraPrefShowComposeDirection ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether or not to show direction buttons in compose toolbar
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1274)
+    public void unsetPrefShowComposeDirection() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShowComposeDirection, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not to show direction buttons in compose toolbar
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1274)
+    public Map<String,Object> unsetPrefShowComposeDirection(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefShowComposeDirection, "");
         return attrs;
     }
 

@@ -6207,5 +6207,13 @@ TODO: delete them permanently from here
   <desc>message social filters enabled in the web client UI</desc>
 </attr>
 
+<attr id="1273" name="zimbraPrefComposeDirection" type="enum" value="LTR,RTL" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0.0">
+  <desc>direction for composing messages in the web client UI</desc>
+</attr>
+
+<attr id="1274" name="zimbraPrefShowComposeDirection" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether or not to show direction buttons in compose toolbar</desc>
+</attr>
 
 </attrs>

@@ -43,7 +43,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110909-1346 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110915-1429 */
 
     /**
      * RFC2256: descriptive information
@@ -21211,7 +21211,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Account for storing templates and providing space for public wiki
+     * Deprecated since: 7.0.0. See bug 39647. Orig desc: Account for storing
+     * templates and providing space for public wiki
      *
      * @return zimbraNotebookAccount, or null if unset
      */
@@ -21221,7 +21222,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Account for storing templates and providing space for public wiki
+     * Deprecated since: 7.0.0. See bug 39647. Orig desc: Account for storing
+     * templates and providing space for public wiki
      *
      * @param zimbraNotebookAccount new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -21234,7 +21236,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Account for storing templates and providing space for public wiki
+     * Deprecated since: 7.0.0. See bug 39647. Orig desc: Account for storing
+     * templates and providing space for public wiki
      *
      * @param zimbraNotebookAccount new value
      * @param attrs existing map to populate, or null to create a new map
@@ -21248,7 +21251,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Account for storing templates and providing space for public wiki
+     * Deprecated since: 7.0.0. See bug 39647. Orig desc: Account for storing
+     * templates and providing space for public wiki
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -21260,7 +21264,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Account for storing templates and providing space for public wiki
+     * Deprecated since: 7.0.0. See bug 39647. Orig desc: Account for storing
+     * templates and providing space for public wiki
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
