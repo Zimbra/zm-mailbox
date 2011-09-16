@@ -201,7 +201,7 @@ public class BodyTest extends AbstractTest {
         int matchIndex = 0;
         if (!caseSensitive)
             substring = substring.toLowerCase();
-        PushbackReader pb = new PushbackReader(reader, substring.length() - 1);
+        PushbackReader pb = new PushbackReader(reader, substring.length());
         char[] substringArray = substring.toCharArray();
         int c;
         while ((c = getNextChar(pb)) > 0) {
