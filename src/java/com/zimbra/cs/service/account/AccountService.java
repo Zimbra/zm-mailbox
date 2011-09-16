@@ -87,7 +87,10 @@ public class AccountService implements DocumentService {
         
         // distribution list
         dispatcher.registerHandler(AccountConstants.CREATE_DISTRIBUTION_LIST_REQUEST, new CreateDistributionList());
+        dispatcher.registerHandler(AccountConstants.DISTRIBUTION_LIST_ACTION_REQUEST, new DistributionListAction());
+        dispatcher.registerHandler(AccountConstants.GET_DISTRIBUTION_LIST_REQUEST, new GetDistributionList());
         dispatcher.registerHandler(AccountConstants.GET_DISTRIBUTION_LIST_MEMBERS_REQUEST, new GetDistributionListMembers());
+        dispatcher.registerHandler(AccountConstants.SUBSCRIBE_DISTRIBUTION_LIST_REQUEST, new SubscribeDistributionList());
         
         // misc
         dispatcher.registerHandler(AccountConstants.GET_VERSION_INFO_REQUEST, new GetVersionInfo());

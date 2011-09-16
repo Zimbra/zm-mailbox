@@ -21,7 +21,6 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
@@ -31,7 +30,6 @@ import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.UserRight;
-import com.zimbra.cs.service.admin.GetDistributionList;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class CreateDistributionList extends AccountDocumentHandler {
@@ -42,7 +40,7 @@ public class CreateDistributionList extends AccountDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         
-        String name = request.getAttribute(AdminConstants.E_NAME).toLowerCase();
+        String name = request.getAttribute(AccountConstants.E_NAME).toLowerCase();
         
         if (!AccessManager.getInstance().canCreateGroup(zsc.getAuthToken(), name)) {
             throw ServiceException.PERM_DENIED("you do not have sufficient rights to create distribution list");
@@ -50,7 +48,7 @@ public class CreateDistributionList extends AccountDocumentHandler {
         
         Map<String, Object> attrs = AccountService.getAttrs(request, true, AccountConstants.A_N);
         
-        boolean dynamic = request.getAttributeBool(AdminConstants.A_DYNAMIC, false);
+        boolean dynamic = request.getAttributeBool(AccountConstants.A_DYNAMIC, false);
         
         Group group = prov.createGroup(name, attrs, dynamic);
         
@@ -65,9 +63,11 @@ public class CreateDistributionList extends AccountDocumentHandler {
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                  new String[] {"cmd", "CreateDistributionList","name", name}, attrs));         
 
-        Element response = zsc.createElement(AdminConstants.CREATE_DISTRIBUTION_LIST_RESPONSE);
+        Element response = zsc.createElement(AccountConstants.CREATE_DISTRIBUTION_LIST_RESPONSE);
         
-        GetDistributionList.encodeDistributionList(response, group);
+        // get the group again so ACL is on the instance
+        group = prov.getGroup(Key.DistributionListBy.id, group.getId());
+        com.zimbra.cs.service.admin.GetDistributionList.encodeDistributionList(response, group);
 
         return response;
     }

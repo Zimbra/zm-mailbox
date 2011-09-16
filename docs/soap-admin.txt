@@ -1385,7 +1385,7 @@ Access: domain admin sufficient
 
 <RenameDistributionListRequest>
   <id>{value-of-zimbraId}</id>
-  <newName>{new-account-name}</newName>
+  <newName>{new-DL-name}</newName>
 </RenameDistributionListRequest>
 
 <RenameDistributionListResponse>

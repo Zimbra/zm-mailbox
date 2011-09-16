@@ -186,19 +186,22 @@ public abstract class AdminDocumentHandler extends DocumentHandler implements Ad
      */
     protected Set<String> getReqAttrs(Element request, AttributeClass klass) throws ServiceException {
         String attrsStr = request.getAttribute(AdminConstants.A_ATTRS, null);
-        if (attrsStr == null)
+        if (attrsStr == null) {
             return null;
-
+        }
+        
         String[] attrs = attrsStr.split(",");
 
         Set<String> attrsOnEntry = AttributeManager.getInstance().getAllAttrsInClass(klass);
         Set<String> validAttrs = new HashSet<String>();
 
         for (String attr : attrs) {
-            if (attrsOnEntry.contains(attr))
+            if (attrsOnEntry.contains(attr)) {
                 validAttrs.add(attr);
-            else
-                throw ServiceException.INVALID_REQUEST("requested attribute " + attr + " is not on " + klass.name(), null);
+            } else {
+                throw ServiceException.INVALID_REQUEST("requested attribute " + attr + 
+                        " is not on " + klass.name(), null);
+            }
         }
 
         // check and throw if validAttrs is empty?

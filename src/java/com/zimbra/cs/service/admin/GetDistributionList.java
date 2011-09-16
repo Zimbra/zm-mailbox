@@ -33,8 +33,12 @@ import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AccessManager.AttrRightChecker;
+import com.zimbra.cs.account.accesscontrol.ACLUtil;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
+import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetDistributionList extends AdminDocumentHandler {
@@ -135,13 +139,13 @@ public class GetDistributionList extends AdminDocumentHandler {
         return encodeDistributionList(e, group, true, null, null);
     }
     
-    public static Element encodeDistributionList(Element e, Group group, boolean hideMembers, 
-            Set<String> reqAttrs, AttrRightChecker attrRightChecker) 
+    public static Element encodeDistributionList(Element e, Group group, 
+            boolean hideMembers, Set<String> reqAttrs, AttrRightChecker attrRightChecker) 
     throws ServiceException {
-        Element distributionList = e.addElement(AdminConstants.E_DL);
-        distributionList.addAttribute(AdminConstants.A_NAME, group.getUnicodeName());
-        distributionList.addAttribute(AdminConstants.A_ID,group.getId());
-        distributionList.addAttribute(AdminConstants.A_DYNAMIC, group.isDynamic());
+        Element eDL = e.addElement(AdminConstants.E_DL);
+        eDL.addAttribute(AdminConstants.A_NAME, group.getUnicodeName());
+        eDL.addAttribute(AdminConstants.A_ID,group.getId());
+        eDL.addAttribute(AdminConstants.A_DYNAMIC, group.isDynamic());
         
         Set<String> hideAttrs = null;
         if (hideMembers) {
@@ -152,10 +156,38 @@ public class GetDistributionList extends AdminDocumentHandler {
                 hideAttrs.add(Provisioning.A_zimbraMailForwardingAddress);
             }
         }
-        ToXML.encodeAttrs(distributionList, group.getUnicodeAttrs(), 
+        
+        encodeOwners(eDL, group);
+        
+        ToXML.encodeAttrs(eDL, group.getUnicodeAttrs(), 
                 AdminConstants.A_N, reqAttrs, hideAttrs, attrRightChecker);
         
-        return distributionList;
+        return eDL;
+    }
+    
+    private static Element encodeOwners(Element eDL, Group group) throws ServiceException {
+        Element eOwners = null;
+        
+        List<ZimbraACE> acl = ACLUtil.getAllACEs(group);
+        if (acl != null) {
+            for (ZimbraACE ace : acl) {
+                Right right = ace.getRight();
+                if (User.R_ownDistList == right) {
+                    if (eOwners == null) {
+                        eOwners = eDL.addElement(AdminConstants.E_DL_OWNERS);
+                    }
+                    
+                    // encode the owner
+                    Element eOwner = eOwners.addElement(AdminConstants.E_DL_OWNER);
+                    
+                    eOwner.addAttribute(AdminConstants.A_TYPE, ace.getGranteeType().getCode());
+                    eOwner.addAttribute(AdminConstants.A_ID, ace.getGrantee());
+                    eOwner.addAttribute(AdminConstants.A_NAME, ace.getGranteeDisplayName());
+                }
+            }
+        }
+        
+        return eOwners;
     }
 
     @Override

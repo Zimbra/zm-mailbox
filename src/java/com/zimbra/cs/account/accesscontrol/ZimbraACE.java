@@ -431,19 +431,25 @@ public class ZimbraACE {
             switch (mGranteeType) {
             case GT_USER: 
                 Account acct = Provisioning.getInstance().get(AccountBy.id, mGrantee);
-                if (acct != null)
+                if (acct != null) {
                     return acct.getName();
+                }
                 break;
             case GT_GROUP:
                 DistributionList group = Provisioning.getInstance().getDLBasic(
                         Key.DistributionListBy.id, mGrantee);
-                if (group != null)
+                if (group != null) {
                     return group.getName();
+                }
                 break;
+            case GT_EXT_GROUP:
+                ExternalGroupInfo extGroupInfo = ExternalGroupInfo.parse(mGrantee);
+                return extGroupInfo.getExternalGroupName();
             case GT_DOMAIN:
                 Domain domain = Provisioning.getInstance().get(Key.DomainBy.id, mGrantee);
-                if (domain != null)
+                if (domain != null) {
                     return domain.getName();
+                }
                 break;
             case GT_GUEST:
             case GT_KEY:    
