@@ -1039,6 +1039,8 @@ public final class LC {
     public static final KnownKey zimbra_activesync_contact_image_size = KnownKey.newKey(2*1024*1024);
     public static final KnownKey zimbra_activesync_autodiscover_url = KnownKey.newKey(null);
     public static final KnownKey zimbra_activesync_autodiscover_use_service_url = KnownKey.newKey(false);
+    public static final KnownKey zimbra_activesync_metadata_cache_expiration = KnownKey.newKey(3600);
+    public static final KnownKey zimbra_activesync_metadata_cache_max_size = KnownKey.newKey(5000);
 
     public static final KnownKey zimbra_slow_logging_enabled = KnownKey.newKey(false);
     public static final KnownKey zimbra_slow_logging_threshold = KnownKey.newKey(5000);
