@@ -39,6 +39,7 @@ import javax.security.auth.login.LoginException;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
+import com.sun.mail.smtp.SMTPMessage;
 import com.sun.mail.util.PropUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.util.BuildInfo;
@@ -207,6 +208,12 @@ public class SmtpTransport extends Transport {
         Preconditions.checkState(connection != null);
 
         String sender = session.getProperty("mail." + protocol + ".from");
+        if (msg instanceof SMTPMessage) {
+            SMTPMessage smtpMsg = (SMTPMessage) msg;
+            if (smtpMsg.getEnvelopeFrom() != null) {
+                sender = smtpMsg.getEnvelopeFrom();
+            }
+        }
         try {
             if (sender != null) {
                 connection.sendMessage(sender, rcpts, (MimeMessage) msg);
