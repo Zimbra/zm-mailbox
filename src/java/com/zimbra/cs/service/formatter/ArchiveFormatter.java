@@ -350,10 +350,9 @@ public abstract class ArchiveFormatter extends Formatter {
      * works over a queue and closes endpoints that have been timed out. This plays havoc with downloads to slow connections
      * and whenever we have a long pause while working to create an archive.
      *
-     * This method removes this request from the queue to check timeout via the mechanisms that are normally used
-     * after jetty completes a request. Given that we don't send a content-length down to the browser for
-     * archive responses, we have to close the socket to tell the browser its done. Since we have to do that.. leaving this
-     * endpoint without a timeout is safe. If the connection was being reused (ie keep-alive) this could have issues, but its not
+     * This method instructs Jetty not to close the connection when the idle time is reached. Given that we don't send a content-length
+     * down to the browser for archive responses, we have to close the socket to tell the browser its done. Since we have to do that.. 
+     * leaving this endpoint without a timeout is safe. If the connection was being reused (ie keep-alive) this could have issues, but its not 
      * in this case.
      */
     private void disableJettyTimeout() {
@@ -361,10 +360,7 @@ public abstract class ArchiveFormatter extends Formatter {
             EndPoint endPoint = HttpConnection.getCurrentConnection().getEndPoint();
             if (endPoint instanceof SelectChannelEndPoint) {
                 SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
-                Timeout.Task task = scEndPoint.getTimeoutTask();
-                if (task != null) {
-                    task.cancel();
-                }
+                scEndPoint.setIdleExpireEnabled(false);
             }
         }
     }
