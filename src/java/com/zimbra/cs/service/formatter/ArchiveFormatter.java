@@ -31,6 +31,10 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletResponse;
 
+import org.mortbay.io.EndPoint;
+import org.mortbay.io.nio.SelectChannelEndPoint;
+import org.mortbay.jetty.HttpConnection;
+
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
@@ -132,6 +136,9 @@ public abstract class ArchiveFormatter extends Formatter {
     
     @Override public void formatCallback(Context context) throws IOException,
         ServiceException, UserServletException {
+        // Disable the jetty timeout
+        disableJettyTimeout();
+        
         HashMap<Integer, Integer> cnts = new HashMap<Integer, Integer>();
         boolean conversations = false;
         int dot;
@@ -297,6 +304,32 @@ public abstract class ArchiveFormatter extends Formatter {
                     aos.close();
                 } catch (Exception e) {
                 }
+            }
+        }
+    }
+    
+    /**
+     * Implemented for bug 56458..
+     *
+     * Disable the Jetty timeout for the SelectChannelConnector and the SSLSelectChannelConnector
+     * for this request.
+     *
+     * By default (and our normal configuration) Jetty has a 30 second idle timeout (10 if the server is busy) for
+     * connection endpoints. There's another task that keeps track of what connections have timeouts and periodically
+     * works over a queue and closes endpoints that have been timed out. This plays havoc with downloads to slow connections
+     * and whenever we have a long pause while working to create an archive.
+     *
+     * This method instructs Jetty not to close the connection when the idle time is reached. Given that we don't send a content-length
+     * down to the browser for archive responses, we have to close the socket to tell the browser its done. Since we have to do that.. 
+     * leaving this endpoint without a timeout is safe. If the connection was being reused (ie keep-alive) this could have issues, but its not 
+     * in this case.
+     */
+    private void disableJettyTimeout() {
+        if (LC.zimbra_archive_formatter_disable_timeout.booleanValue()) {
+            EndPoint endPoint = HttpConnection.getCurrentConnection().getEndPoint();
+            if (endPoint instanceof SelectChannelEndPoint) {
+                SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
+                scEndPoint.setIdleExpireEnabled(false);
             }
         }
     }
