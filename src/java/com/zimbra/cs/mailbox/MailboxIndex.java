@@ -72,6 +72,7 @@ import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.global.HBaseIndex;
 import com.zimbra.cs.mailbox.MailItem.Type;
+import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
 import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
@@ -646,6 +647,15 @@ public final class MailboxIndex {
                 } catch (NoSuchItemException again) { // The item has just been deleted.
                     ZimbraLog.index.debug("deferred item no longer exist id=%d", id);
                     continue;
+                }
+            } catch (MailServiceException e) {
+                // fetch without metadata because reindex will regenerate metadata
+                if (MailServiceException.INVALID_METADATA.equals(e.getCode()) && isReIndexInProgress()) {
+                    UnderlyingData ud = DbMailItem.getById(mailbox, id, MailItem.Type.UNKNOWN, false);
+                    ud.metadata = null; // ignore corrupted metadata
+                    item = mailbox.getItem(ud);
+                } else {
+                    throw e;
                 }
             } catch (Exception e) {
                 ZimbraLog.index.warn("Failed to fetch deferred item id=%d", id, e);

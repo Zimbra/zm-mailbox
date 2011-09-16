@@ -53,6 +53,7 @@ public class MailServiceException extends ServiceException {
     public static final String INVALID_NAME    = "mail.INVALID_NAME";
     public static final String INVALID_TYPE    = "mail.INVALID_TYPE";
     public static final String INVALID_CONTENT_TYPE = "mail.INVALID_CONTENT_TYPE";
+    public static final String INVALID_METADATA = "mail.INVALID_METADATA";
     public static final String IS_NOT_CHILD    = "mail.IS_NOT_CHILD";
     public static final String CANNOT_CONTAIN  = "mail.CANNOT_CONTAIN";
     public static final String CANNOT_COPY     = "mail.CANNOT_COPY";
@@ -330,6 +331,10 @@ public class MailServiceException extends ServiceException {
 
     public static MailServiceException INVALID_CONTENT_TYPE(String type) {
         return new MailServiceException("invalid content type: " + type, INVALID_CONTENT_TYPE, SENDERS_FAULT, new Argument(TYPE, type, Argument.Type.STR));
+    }
+
+    public static MailServiceException INVALID_METADATA(String metadata, Throwable t) {
+        return new MailServiceException("invalid metadata: " + metadata, INVALID_METADATA, RECEIVERS_FAULT, t);
     }
 
     public static MailServiceException WRONG_MAILBOX() {

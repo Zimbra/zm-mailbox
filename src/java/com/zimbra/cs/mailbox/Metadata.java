@@ -127,11 +127,7 @@ public final class Metadata {
         this.version = version;
     }
 
-    public Metadata(String encoded) throws ServiceException {
-        this(encoded, null);
-    }
-
-    public Metadata(String encoded, MailItem item) throws ServiceException  {
+    public Metadata(String encoded) throws MailServiceException {
         if (Strings.isNullOrEmpty(encoded)) {
             map = new HashMap<Object, Object>();
             return;
@@ -145,8 +141,7 @@ public final class Metadata {
                 return;
             } catch (BlobMetaDataEncodingException e1) {
             }
-            throw ServiceException.FAILURE("error decoding " +
-                    (item == null ? "" : item.getType() + " " + item.getId() + ' ') + "metadata: " + encoded, e);
+            throw MailServiceException.INVALID_METADATA(encoded, e);
         } finally {
             if (map != null && map.containsKey(FN_MD_VERSION)) {
                 try {

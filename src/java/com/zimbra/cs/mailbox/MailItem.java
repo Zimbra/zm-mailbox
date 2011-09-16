@@ -2593,7 +2593,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             mData.setSubject(name);
             mData.dateChanged = mMailbox.getOperationTimestamp();
             mData.metadataChanged(mMailbox);
-            
+
             saveName(target.getId());
         }
 
@@ -3114,7 +3114,12 @@ public abstract class MailItem implements Comparable<MailItem> {
     }
 
     void decodeMetadata(String metadata) throws ServiceException {
-        decodeMetadata(new Metadata(metadata, this));
+        try {
+            decodeMetadata(new Metadata(metadata));
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.error("Failed to parse metadata id=%d,type=%s", mId, getType(), e);
+            throw e;
+        }
     }
 
     void decodeMetadata(Metadata meta) throws ServiceException {
@@ -3173,7 +3178,7 @@ public abstract class MailItem implements Comparable<MailItem> {
     void markMetadataChanged() throws ServiceException {
         saveData(new DbMailItem(mMailbox));
     }
-    
+
     /**
      * Locks this MailItem with exclusive write lock.
      * When a MailItem is locked, only the user who locked the item

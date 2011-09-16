@@ -821,12 +821,12 @@ public class Conversation extends MailItem {
         //   in that case, leave mSenderList unset and fault it in as necessary
         if (metadata != null) {
             try {
-                Metadata meta = new Metadata(metadata, this);
+                Metadata meta = new Metadata(metadata);
                 if (meta.containsKey(Metadata.FN_PARTICIPANTS)) {
                     decodeMetadata(meta);
                 }
             } catch (ServiceException e) {
-                ZimbraLog.mailbox.info("Unable to parse conversation metadata: id= " + mId + ", data='" + metadata + "'", e);
+                ZimbraLog.mailbox.error("Failed to parse metadata id=%d,type=%s", mId, getType(), e);
             }
         }
     }
