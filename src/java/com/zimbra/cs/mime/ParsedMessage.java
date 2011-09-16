@@ -25,8 +25,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 
@@ -136,7 +138,7 @@ public final class ParsedMessage {
     private CalendarPartInfo calendarPartInfo;
     private boolean wasMutated;
     private InputStream sharedStream;
-    private Threader threader;
+    private final Map<Mailbox, Threader> threaders = new HashMap<Mailbox, Threader>();
 
     public ParsedMessage(MimeMessage msg, boolean indexAttachments) throws ServiceException {
         this(msg, getZimbraDateHeader(msg), indexAttachments);
@@ -1305,9 +1307,15 @@ public final class ParsedMessage {
         return trimPrefixes(subject).getSecond();
     }
 
+    /**
+     * {@link Threader} is cached per mailbox as {@link ParsedMessage} is shared by multiple mailboxes in shared
+     * delivery.
+     */
     public Threader getThreader(Mailbox mbox) throws ServiceException {
+        Threader threader = threaders.get(mbox);
         if (threader == null) {
             threader = new Threader(mbox, this);
+            threaders.put(mbox, threader);
         }
         return threader;
     }
