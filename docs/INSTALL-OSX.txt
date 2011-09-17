@@ -4,7 +4,7 @@ Setup Development Environment for Mac OSX
 1. Download Perforce - P4 Command-Line Client
   http://www.perforce.com/perforce/downloads/index.html
   Macintosh > Mac OSX for PPC/x86 > P4
-2. $ mv p4 /usr/local/bin
+2. $ sudo mv p4 /usr/local/bin
 3. $ chmod +x /usr/local/bin/p4
 
 You may also want to download and install P4V, a visual Perforce client.
@@ -16,19 +16,22 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
 
   export P4PORT=perforce-zimbra.eng.vmware.com:1666
   export P4USER={your p4 username}
-  export P4PASSWD={your p4 password}
   export P4CONFIG=.p4config
   export P4HOST=localhost
   export P4EDITOR=/usr/bin/vi
   export PATH=$PATH:/opt/zimbra/bin
-  export ZIMBRA_HOSTNAME={your computer name}.local
+  export ZIMBRA_HOSTNAME={your computer name}
 
 5. $ source ~/.bash_profile
 6. $ mkdir -p /opt/zimbra
-7. $ mkdir ~/p4/main & cd ~/p4/main
+7. $ mkdir ~/p4 
+   $ mkdir ~/p4/main
+   $ cd ~/p4/main
 8. $ vi .p4config
   P4CLIENT={your p4 username}-main
-9. $ p4 client
+9. $ p4 login
+  * enter your NT domain password
+10. $ p4 client
 
   View:
 	//depot/zimbra/main/... //{workspace}/...
@@ -47,36 +50,36 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
    That view may have a lot more than you need, so you may want to consider explicitly listing
    only what you need. Take a look at the clients of others in your group for examples.
 
-10. $ p4 sync
+11. $ p4 sync
 
-11. Download MySQL - MySQL Community Server & install it.
+12. Download MySQL - MySQL Community Server & install it.
   http://dev.mysql.com/downloads/mysql/
   GA > Mac OSX ver 10.6 (x86, 64-bit)
 
   Grab the DMG version and install the two packages (MySQL and the startup item).
 
-12. $ sudo ln -s /usr/local/mysql /opt/zimbra/mysql
-13. $ sudo vi /opt/zimbra/mysql/data/my.cnf
+13. $ sudo ln -s /usr/local/mysql /opt/zimbra/mysql
+14. $ sudo vi /opt/zimbra/mysql/data/my.cnf
 
   [mysqld]
-  bind-address = localhost
   port = 7306
 
-14. $ sudo -b /opt/zimbra/mysql/bin/mysqld_safe --user=mysql
+15. $ sudo -b /opt/zimbra/mysql/bin/mysqld_safe --user=mysql
   * With MySQLStartupItem package installed, mysqld will start automatically on reboot.
   * MySQL log file can be found at: /opt/zimbra/mysql/data/{server-name}.err
+  * May need to press Enter to return to the prompt
 
-15. $ /opt/zimbra/mysql/bin/mysqladmin -u root password zimbra
+16. $ /opt/zimbra/mysql/bin/mysqladmin -u root password zimbra
 
 
-16. $ sudo visudo
+17. $ sudo visudo
 
   {username} ALL=NOPASSWD:/opt/zimbra/libexec/zmslapd
 
   * {username} is your local username and be sure to insert a [TAB] between {username} and "ALL".
 
-17. $ cd ~/p4/main/ZimbraServer
-18. $ ant reset-all
+18. $ cd ~/p4/main/ZimbraServer
+19. $ ant reset-all
 
   * $ ant -p
   Buildfile: build.xml
@@ -100,7 +103,7 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
    test                    Run unit tests
   Default target: jar
 
-19. open http://localhost:7070/zimbra
+20. open http://localhost:7070/zimbra
 
   Username: user1 / Password: test123
 
