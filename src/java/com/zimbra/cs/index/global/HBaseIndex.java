@@ -79,7 +79,6 @@ import com.zimbra.cs.index.IndexStore;
 import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.global.GlobalIndex;
-import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -339,7 +338,7 @@ public final class HBaseIndex implements IndexStore {
     private final class IndexerImpl implements Indexer {
         private final List<Row> batch = new ArrayList<Row>();
         private final HTableInterface table;
-        private final List<Integer> indexGlobal = new ArrayList<Integer>();
+        private final List<MailItem> indexGlobal = new ArrayList<MailItem>();
         private final List<Integer> deleteGlobal = new ArrayList<Integer>();
 
         IndexerImpl() {
@@ -386,17 +385,10 @@ public final class HBaseIndex implements IndexStore {
                 batch.add(put);
             }
 
-            // promote shared documents to global index
+            // promote all documents to global index
             switch (item.getType()) {
                 case DOCUMENT:
-                    try {
-                        ACL acl = mailbox.getFolderById(null, item.getFolderId()).getEffectiveACL();
-                        if (acl != null && !acl.isEmpty()) {
-                            indexGlobal.add(item.getId());
-                        }
-                    } catch (ServiceException e) {
-                        ZimbraLog.index.warn("Failed to get folder", e);
-                    }
+                    indexGlobal.add(item);
                     break;
                 default:
                     break;
@@ -471,8 +463,8 @@ public final class HBaseIndex implements IndexStore {
             } finally {
                 factory.pool.putTable(table);
             }
-            for (int id : indexGlobal) {
-                getGlobalIndex().index(HBaseIndex.this, id);
+            for (MailItem item : indexGlobal) {
+                getGlobalIndex().index(HBaseIndex.this, item);
             }
             for (int id : deleteGlobal) {
                 getGlobalIndex().delete(new GlobalItemID(mailbox.getAccountId(), id));

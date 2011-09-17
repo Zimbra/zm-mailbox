@@ -26,8 +26,18 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.filter.CompareFilter;
+import org.apache.hadoop.hbase.filter.SingleColumnValueExcludeFilter;
+import org.apache.hadoop.hbase.filter.SubstringComparator;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.lucene.search.TermQuery;
+
+import com.google.common.base.Joiner;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 
 /**
  * Global Index Store.
@@ -36,6 +46,7 @@ import org.apache.lucene.search.TermQuery;
  */
 public final class GlobalIndex {
     static final String GLOBAL_INDEX_TABLE = "zimbra.global.index";
+    static final byte[] ACL_COL = Bytes.toBytes("acl");
 
     private final HTablePool pool;
     private final byte[] indexTableName;
@@ -47,14 +58,14 @@ public final class GlobalIndex {
 
     /**
      * Fetch the item and associated terms from the private (per-mailbox) index (we can do this because everything in a
-     * private index is contained in a single row and item IDs are stored as timestamp, and this is more more efficient
-     * than re-tokenizing the original content), then copy to the global index.
+     * private index is contained in a single row and item IDs are stored as timestamp, and this is more efficient than
+     * re-tokenizing the original content), then copy to the global index.
      *
      * TODO: move this logic to HBase backend using coprocessor.
      */
-    void index(HBaseIndex index, int id) throws IOException {
-        byte[] gid = GlobalItemID.toBytes(index.mailbox.getAccountId(), id);
-        Result result = index.fetch(id);
+    void index(HBaseIndex index, MailItem item) throws IOException {
+        byte[] gid = GlobalItemID.toBytes(index.mailbox.getAccountId(), item.getId());
+        Result result = index.fetch(item.getId());
         List<Put> batch = new ArrayList<Put>(result.size());
         Put doc = new Put(gid);
         batch.add(doc);
@@ -67,12 +78,47 @@ public final class GlobalIndex {
                 doc.add(HBaseIndex.ITEM_CF, kv.getQualifier(), kv.getValue());
             }
         }
-
+        indexACL(item, doc);
         HTableInterface table = pool.getTable(indexTableName);
         try {
             table.put(batch);
         } finally {
             pool.putTable(table);
+        }
+    }
+
+    /**
+     * Denormalize the ACL down to the item level.
+     */
+    private void indexACL(MailItem item, Put put) {
+        try {
+            Folder folder = item.getMailbox().getFolderById(null, item.getFolderId());
+            List<String> grantees = new ArrayList<String>();
+            grantees.add(item.getMailbox().getAccountId()); // owner
+            ACL acl = folder.getEffectiveACL();
+            if (acl != null) {
+                for (ACL.Grant grant : acl.getGrants()) {
+                    if ((grant.getGrantedRights() & ACL.RIGHT_READ) == 0) {
+                        continue; // no read access
+                    }
+                    switch (grant.getGranteeType()) {
+                        case ACL.GRANTEE_USER:
+                            break;
+                        case ACL.GRANTEE_GROUP: //TODO support group sharing
+                        case ACL.GRANTEE_DOMAIN: //TODO support domain sharing
+                        case ACL.GRANTEE_COS: //TODO support CoS sharing
+                        case ACL.GRANTEE_AUTHUSER: //TODO support authenticated user sharing
+                        case ACL.GRANTEE_PUBLIC: //TODO support public sharing
+                        case ACL.GRANTEE_GUEST: //TODO support guest sharing
+                        case ACL.GRANTEE_KEY: //TODO support access key sharing
+                            continue;
+                    }
+                    grantees.add(grant.getGranteeId());
+                }
+            }
+            put.add(HBaseIndex.ITEM_CF, ACL_COL, Bytes.toBytes(Joiner.on('\0').join(grantees)));
+        } catch (ServiceException e) {
+            ZimbraLog.index.error("Failed to index ACL id=%d,folder=%d", item.getId(), item.getFolderId());
         }
     }
 
@@ -99,17 +145,21 @@ public final class GlobalIndex {
      *
      * TODO: only TermQuery (simplest query) is supported so far.
      */
-    public List<GlobalDocument> search(TermQuery query) throws IOException {
+    public List<GlobalDocument> search(String principal, TermQuery query) throws IOException {
         Get get = new Get(HBaseIndex.toBytes(query.getTerm()));
         get.addFamily(HBaseIndex.TERM_CF);
         HTableInterface table = pool.getTable(indexTableName);
         Result[] results;
         try {
             Result result = table.get(get);
+            SingleColumnValueExcludeFilter filter = new SingleColumnValueExcludeFilter(HBaseIndex.ITEM_CF, ACL_COL,
+                    CompareFilter.CompareOp.EQUAL, new SubstringComparator(principal));
+            filter.setFilterIfMissing(true);
             List<Get> batch = new ArrayList<Get>(result.size());
             for (KeyValue kv : result.raw()) {
                 get = new Get(kv.getQualifier());
                 get.addFamily(HBaseIndex.ITEM_CF);
+                get.setFilter(filter);
                 batch.add(get);
             }
             results = table.get(batch);
@@ -148,8 +198,6 @@ public final class GlobalIndex {
                     }
                     docs.add(doc);
                     break;
-                case MESSAGE: //TODO not supported yet
-                case CONTACT: //TODO not supported yet
                 default:
                     break;
             }
