@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110915-1429 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110916-2114 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -226,6 +226,42 @@ public class ZAttrProvisioning {
         public boolean isTls() { return this == tls;}
         public boolean isSsl() { return this == ssl;}
         public boolean isCleartext() { return this == cleartext;}
+    }
+
+    public static enum DistributionListSubscriptionPolicy {
+        APPROVAL("APPROVAL"),
+        ACCEPT("ACCEPT"),
+        REJECT("REJECT");
+        private String mValue;
+        private DistributionListSubscriptionPolicy(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static DistributionListSubscriptionPolicy fromString(String s) throws ServiceException {
+            for (DistributionListSubscriptionPolicy value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isAPPROVAL() { return this == APPROVAL;}
+        public boolean isACCEPT() { return this == ACCEPT;}
+        public boolean isREJECT() { return this == REJECT;}
+    }
+
+    public static enum DistributionListUnsubscriptionPolicy {
+        APPROVAL("APPROVAL"),
+        ACCEPT("ACCEPT"),
+        REJECT("REJECT");
+        private String mValue;
+        private DistributionListUnsubscriptionPolicy(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static DistributionListUnsubscriptionPolicy fromString(String s) throws ServiceException {
+            for (DistributionListUnsubscriptionPolicy value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isAPPROVAL() { return this == APPROVAL;}
+        public boolean isACCEPT() { return this == ACCEPT;}
+        public boolean isREJECT() { return this == REJECT;}
     }
 
     public static enum DomainStatus {
@@ -3211,6 +3247,24 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=810)
     public static final String A_zimbraDistributionListSendShareMessageToNewMembers = "zimbraDistributionListSendShareMessageToNewMembers";
+
+    /**
+     * distribution subscription policy. ACCEPT: always accept, REJECT:
+     * always reject, APPROVAL: require owners approval.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1275)
+    public static final String A_zimbraDistributionListSubscriptionPolicy = "zimbraDistributionListSubscriptionPolicy";
+
+    /**
+     * distribution subscription policy. ACCEPT: always accept, REJECT:
+     * always reject, APPROVAL: require owners approval.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1276)
+    public static final String A_zimbraDistributionListUnsubscriptionPolicy = "zimbraDistributionListUnsubscriptionPolicy";
 
     /**
      * This attribute is used for DNS check by customers that configure their
