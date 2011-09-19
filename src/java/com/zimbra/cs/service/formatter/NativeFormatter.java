@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.io.PushbackInputStream;
 import java.io.Reader;
 import java.util.List;
+import java.util.Set;
 
 import javax.mail.MessagingException;
 import javax.mail.Part;
@@ -30,6 +31,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.common.service.ServiceException;
@@ -56,6 +59,7 @@ import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 
+
 public class NativeFormatter extends Formatter {
 
     private static final String CONVERSION_PATH = "/extension/convertd";
@@ -65,6 +69,12 @@ public class NativeFormatter extends Formatter {
     public static final String ATTR_CONTENTURL = "contenturl";
     public static final String ATTR_CONTENTTYPE = "contenttype";
     public static final String ATTR_CONTENTLENGTH = "contentlength";
+    
+    private static final Set<String> SCRIPTABLE_CONTENT_TYPES = ImmutableSet.of(MimeConstants.CT_TEXT_HTML,
+                                                                                MimeConstants.CT_APPLICATION_XHTML,
+                                                                                MimeConstants.CT_TEXT_XML,
+                                                                                MimeConstants.CT_IMAGE_SVG);
+
 
     @Override
     public FormatType getType() {
@@ -262,10 +272,7 @@ public class NativeFormatter extends Formatter {
             resp.addHeader("Content-Description", desc);
 
         // defang when the html and svg attachment was requested with disposition inline
-        if (disp.equals(Part.INLINE) &&
-                (contentType.startsWith(MimeConstants.CT_TEXT_HTML) ||
-                 contentType.startsWith(MimeConstants.CT_IMAGE_SVG) ||
-                 contentType.startsWith(MimeConstants.CT_APPLICATION_XHTML))) {
+        if (disp.equals(Part.INLINE) && isScriptableContent(contentType)) {
             String charset = Mime.getCharset(contentType);
             String content;
             BrowserDefang defanger = DefangFactory.getDefanger(contentType);
@@ -363,9 +370,7 @@ public class NativeFormatter extends Formatter {
             String disp = req.getParameter(UserServlet.QP_DISP);
             disposition = (disp == null || disp.toLowerCase().startsWith("i") ) ? Part.INLINE : Part.ATTACHMENT;
     	}
-    	// Make sure we don't have to worry about a null content type;
-    	contentType = contentType == null ?"":contentType;
-    	
+
         PushbackInputStream pis = new PushbackInputStream(in, READ_AHEAD_BUFFER_SIZE);
         boolean isSafe = false;
         HttpUtil.Browser browser = HttpUtil.guessBrowser(req);
@@ -373,12 +378,11 @@ public class NativeFormatter extends Formatter {
             isSafe = true;
         } else if (disposition.equals(Part.ATTACHMENT)) {
             isSafe = true;
+
             // only set no-open for 'script type content'
-            if(contentType.startsWith(MimeConstants.CT_TEXT_HTML) ||
-               contentType.startsWith(MimeConstants.CT_TEXT_XML) ||
-               contentType.startsWith(MimeConstants.CT_APPLICATION_XHTML) ||
-               contentType.startsWith(MimeConstants.CT_IMAGE_SVG)){
-                resp.addHeader("X-Download-Options", "noopen"); // ask it to save the file
+            if (isScriptableContent(contentType)) {
+                // ask it to save the file
+                resp.addHeader("X-Download-Options", "noopen"); 
             }
         }
 
@@ -411,5 +415,21 @@ public class NativeFormatter extends Formatter {
         if (size > 0)
             resp.setContentLength((int)size);
         ByteUtil.copy(pis, true, resp.getOutputStream(), false);
+    }
+    
+    /**
+     * Determines whether or not the contentType passed might contain script or other unsavory tags.
+     * @param contentType The content type to check
+     * @return true if there's a possiblilty that <script> is valid, false if not
+     */
+    private static boolean isScriptableContent(String contentType) {
+        // Make sure we don't have to worry about a null content type;
+        if (Strings.isNullOrEmpty(contentType)) {
+            return false;
+        }
+        contentType = Mime.getContentType(contentType).toLowerCase();
+        // only set no-open for 'script type content'
+        return SCRIPTABLE_CONTENT_TYPES.contains(contentType);
+        
     }
 }
