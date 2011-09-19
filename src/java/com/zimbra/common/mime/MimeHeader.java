@@ -14,16 +14,12 @@
  */
 package com.zimbra.common.mime;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.mime.HeaderUtils.ByteBuilder;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -392,56 +388,21 @@ public class MimeHeader implements Cloneable {
 
             int invalidQ = 0;
             for (byte b : content) {
-                if (b < 0 || Q2047Encoder.FORCE_ENCODE[b]) {
+                if (b < 0 || HeaderUtils.Q2047Encoder.FORCE_ENCODE[b]) {
                     invalidQ++;
                 }
             }
 
-            InputStream encoder;
             if (invalidQ > content.length / 3) {
-                sb.append("?B?");  encoder = new B2047Encoder(content);
+                sb.append("?B?");
+                sb.append(HeaderUtils.encodeB2047(content));
             } else {
-                sb.append("?Q?");  encoder = new Q2047Encoder(content);
-            }
-
-            try {
-                sb.append(new String(ByteUtil.readInput(encoder, 0, Integer.MAX_VALUE)));
-            } catch (IOException ioe) {
+                sb.append("?Q?");
+                sb.append(HeaderUtils.encodeQ2047(content));
             }
             sb.append("?=");
 
             return sb.toString();
-        }
-
-        private static class Q2047Encoder extends ContentTransferEncoding.QuotedPrintableEncoderStream {
-            static final boolean[] FORCE_ENCODE = new boolean[128];
-            static {
-                for (int i = 0; i < FORCE_ENCODE.length; i++) {
-                    FORCE_ENCODE[i] = true;
-                }
-                for (int c : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!*+-/ ".getBytes()) {
-                    FORCE_ENCODE[c] = false;
-                }
-            }
-
-            Q2047Encoder(final byte[] content) {
-                super(new ByteArrayInputStream(content), null);
-                disableFolding();
-                setForceEncode(FORCE_ENCODE);
-            }
-
-            @Override
-            public int read() throws IOException {
-                int c = super.read();
-                return c == ' ' ? '_' : c;
-            }
-        }
-
-        private static class B2047Encoder extends ContentTransferEncoding.Base64EncoderStream {
-            B2047Encoder(byte[] content) {
-                super(new ByteArrayInputStream(content));
-                disableFolding();
-            }
         }
     }
 
