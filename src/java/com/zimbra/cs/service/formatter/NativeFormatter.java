@@ -212,7 +212,7 @@ public class NativeFormatter extends Formatter {
             if (neuter)
             	sendbackOriginalDoc(is, contentType, defaultCharset, doc.getName(), null, doc.getSize(), context.req, context.resp);
             else
-            	sendbackBinaryData(context.req, context.resp, is, null, doc.getName(), doc.getSize());
+            	sendbackBinaryData(context.req, context.resp, is, contentType, null, doc.getName(), doc.getSize());
         }
     }
     
@@ -285,7 +285,7 @@ public class NativeFormatter extends Formatter {
             if (contentType.startsWith(MimeConstants.CT_APPLICATION_SHOCKWAVE_FLASH))
                 disp = Part.ATTACHMENT;
             resp.setContentType(contentType);
-            sendbackBinaryData(req, resp, is, disp, filename, size);
+            sendbackBinaryData(req, resp, is, contentType, disp, filename, size);
         }
     }
 
@@ -352,12 +352,20 @@ public class NativeFormatter extends Formatter {
         { '<', 'S', 'C', 'R', 'I', 'P', 'T' } 
     };
 
-    public static void sendbackBinaryData(HttpServletRequest req, HttpServletResponse resp, InputStream in, String disposition, String filename, long size) throws IOException {
+    public static void sendbackBinaryData(HttpServletRequest req, 
+                                          HttpServletResponse resp, 
+                                          InputStream in, 
+                                          String contentType,
+                                          String disposition, 
+                                          String filename, 
+                                          long size) throws IOException {
     	if (disposition == null) {
             String disp = req.getParameter(UserServlet.QP_DISP);
             disposition = (disp == null || disp.toLowerCase().startsWith("i") ) ? Part.INLINE : Part.ATTACHMENT;
     	}
-
+    	// Make sure we don't have to worry about a null content type;
+    	contentType = contentType == null ?"":contentType;
+    	
         PushbackInputStream pis = new PushbackInputStream(in, READ_AHEAD_BUFFER_SIZE);
         boolean isSafe = false;
         HttpUtil.Browser browser = HttpUtil.guessBrowser(req);
@@ -365,7 +373,13 @@ public class NativeFormatter extends Formatter {
             isSafe = true;
         } else if (disposition.equals(Part.ATTACHMENT)) {
             isSafe = true;
-            resp.addHeader("X-Download-Options", "noopen"); // ask it to save the file
+            // only set no-open for 'script type content'
+            if(contentType.startsWith(MimeConstants.CT_TEXT_HTML) ||
+               contentType.startsWith(MimeConstants.CT_TEXT_XML) ||
+               contentType.startsWith(MimeConstants.CT_APPLICATION_XHTML) ||
+               contentType.startsWith(MimeConstants.CT_IMAGE_SVG)){
+                resp.addHeader("X-Download-Options", "noopen"); // ask it to save the file
+            }
         }
 
         if (!isSafe) {
