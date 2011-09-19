@@ -37,7 +37,7 @@ public abstract class ZAttrDynamicGroup extends Group {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110915-1429 */
+    /* build: 8.0.0_BETA1_1111 pshao 20110916-2114 */
 
     /**
      * RFC2256: descriptive information
@@ -591,6 +591,284 @@ public abstract class ZAttrDynamicGroup extends Group {
     public Map<String,Object> unsetCreateTimestamp(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraCreateTimestamp, "");
+        return attrs;
+    }
+
+    /**
+     * distribution subscription policy. ACCEPT: always accept, REJECT:
+     * always reject, APPROVAL: require owners approval.
+     *
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
+     *
+     * @return zimbraDistributionListSubscriptionPolicy, or null if unset and/or has invalid value
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1275)
+    public ZAttrProvisioning.DistributionListSubscriptionPolicy getDistributionListSubscriptionPolicy() {
+        try { String v = getAttr(Provisioning.A_zimbraDistributionListSubscriptionPolicy); return v == null ? null : ZAttrProvisioning.DistributionListSubscriptionPolicy.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * distribution subscription policy. ACCEPT: always accept, REJECT:
+     * always reject, APPROVAL: require owners approval.
+     *
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
+     *
+     * @return zimbraDistributionListSubscriptionPolicy, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1275)
+    public String getDistributionListSubscriptionPolicyAsString() {
+        return getAttr(Provisioning.A_zimbraDistributionListSubscriptionPolicy, null);
+    }
+
+    /**
+     * distribution subscription policy. ACCEPT: always accept, REJECT:
+     * always reject, APPROVAL: require owners approval.
+     *
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
+     *
+     * @param zimbraDistributionListSubscriptionPolicy new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1275)
+    public void setDistributionListSubscriptionPolicy(ZAttrProvisioning.DistributionListSubscriptionPolicy zimbraDistributionListSubscriptionPolicy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListSubscriptionPolicy, zimbraDistributionListSubscriptionPolicy.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * distribution subscription policy. ACCEPT: always accept, REJECT:
+     * always reject, APPROVAL: require owners approval.
+     *
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
+     *
+     * @param zimbraDistributionListSubscriptionPolicy new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1275)
+    public Map<String,Object> setDistributionListSubscriptionPolicy(ZAttrProvisioning.DistributionListSubscriptionPolicy zimbraDistributionListSubscriptionPolicy, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListSubscriptionPolicy, zimbraDistributionListSubscriptionPolicy.toString());
+        return attrs;
+    }
+
+    /**
+     * distribution subscription policy. ACCEPT: always accept, REJECT:
+     * always reject, APPROVAL: require owners approval.
+     *
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
+     *
+     * @param zimbraDistributionListSubscriptionPolicy new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1275)
+    public void setDistributionListSubscriptionPolicyAsString(String zimbraDistributionListSubscriptionPolicy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListSubscriptionPolicy, zimbraDistributionListSubscriptionPolicy);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * distribution subscription policy. ACCEPT: always accept, REJECT:
+     * always reject, APPROVAL: require owners approval.
+     *
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
+     *
+     * @param zimbraDistributionListSubscriptionPolicy new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1275)
+    public Map<String,Object> setDistributionListSubscriptionPolicyAsString(String zimbraDistributionListSubscriptionPolicy, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListSubscriptionPolicy, zimbraDistributionListSubscriptionPolicy);
+        return attrs;
+    }
+
+    /**
+     * distribution subscription policy. ACCEPT: always accept, REJECT:
+     * always reject, APPROVAL: require owners approval.
+     *
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1275)
+    public void unsetDistributionListSubscriptionPolicy() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListSubscriptionPolicy, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * distribution subscription policy. ACCEPT: always accept, REJECT:
+     * always reject, APPROVAL: require owners approval.
+     *
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1275)
+    public Map<String,Object> unsetDistributionListSubscriptionPolicy(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListSubscriptionPolicy, "");
+        return attrs;
+    }
+
+    /**
+     * distribution subscription policy. ACCEPT: always accept, REJECT:
+     * always reject, APPROVAL: require owners approval.
+     *
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
+     *
+     * @return zimbraDistributionListUnsubscriptionPolicy, or null if unset and/or has invalid value
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1276)
+    public ZAttrProvisioning.DistributionListUnsubscriptionPolicy getDistributionListUnsubscriptionPolicy() {
+        try { String v = getAttr(Provisioning.A_zimbraDistributionListUnsubscriptionPolicy); return v == null ? null : ZAttrProvisioning.DistributionListUnsubscriptionPolicy.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * distribution subscription policy. ACCEPT: always accept, REJECT:
+     * always reject, APPROVAL: require owners approval.
+     *
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
+     *
+     * @return zimbraDistributionListUnsubscriptionPolicy, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1276)
+    public String getDistributionListUnsubscriptionPolicyAsString() {
+        return getAttr(Provisioning.A_zimbraDistributionListUnsubscriptionPolicy, null);
+    }
+
+    /**
+     * distribution subscription policy. ACCEPT: always accept, REJECT:
+     * always reject, APPROVAL: require owners approval.
+     *
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
+     *
+     * @param zimbraDistributionListUnsubscriptionPolicy new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1276)
+    public void setDistributionListUnsubscriptionPolicy(ZAttrProvisioning.DistributionListUnsubscriptionPolicy zimbraDistributionListUnsubscriptionPolicy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListUnsubscriptionPolicy, zimbraDistributionListUnsubscriptionPolicy.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * distribution subscription policy. ACCEPT: always accept, REJECT:
+     * always reject, APPROVAL: require owners approval.
+     *
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
+     *
+     * @param zimbraDistributionListUnsubscriptionPolicy new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1276)
+    public Map<String,Object> setDistributionListUnsubscriptionPolicy(ZAttrProvisioning.DistributionListUnsubscriptionPolicy zimbraDistributionListUnsubscriptionPolicy, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListUnsubscriptionPolicy, zimbraDistributionListUnsubscriptionPolicy.toString());
+        return attrs;
+    }
+
+    /**
+     * distribution subscription policy. ACCEPT: always accept, REJECT:
+     * always reject, APPROVAL: require owners approval.
+     *
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
+     *
+     * @param zimbraDistributionListUnsubscriptionPolicy new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1276)
+    public void setDistributionListUnsubscriptionPolicyAsString(String zimbraDistributionListUnsubscriptionPolicy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListUnsubscriptionPolicy, zimbraDistributionListUnsubscriptionPolicy);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * distribution subscription policy. ACCEPT: always accept, REJECT:
+     * always reject, APPROVAL: require owners approval.
+     *
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
+     *
+     * @param zimbraDistributionListUnsubscriptionPolicy new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1276)
+    public Map<String,Object> setDistributionListUnsubscriptionPolicyAsString(String zimbraDistributionListUnsubscriptionPolicy, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListUnsubscriptionPolicy, zimbraDistributionListUnsubscriptionPolicy);
+        return attrs;
+    }
+
+    /**
+     * distribution subscription policy. ACCEPT: always accept, REJECT:
+     * always reject, APPROVAL: require owners approval.
+     *
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1276)
+    public void unsetDistributionListUnsubscriptionPolicy() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListUnsubscriptionPolicy, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * distribution subscription policy. ACCEPT: always accept, REJECT:
+     * always reject, APPROVAL: require owners approval.
+     *
+     * <p>Valid values: [ACCEPT, APPROVAL, REJECT]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1276)
+    public Map<String,Object> unsetDistributionListUnsubscriptionPolicy(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDistributionListUnsubscriptionPolicy, "");
         return attrs;
     }
 

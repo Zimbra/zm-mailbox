@@ -6216,4 +6216,13 @@ TODO: delete them permanently from here
   <desc>whether or not to show direction buttons in compose toolbar</desc>
 </attr>
 
+<attr id="1275" name="zimbraDistributionListSubscriptionPolicy" type="enum" value="ACCEPT,REJECT,APPROVAL" cardinality="single" optionalIn="distributionList,group" since="8.0.0">
+  <desc>distribution subscription policy. ACCEPT: always accept, REJECT: always reject, APPROVAL: require owners approval.</desc>
+</attr>
+
+<attr id="1276" name="zimbraDistributionListUnsubscriptionPolicy" type="enum" value="ACCEPT,REJECT,APPROVAL" cardinality="single" optionalIn="distributionList,group" since="8.0.0">
+  <desc>distribution subscription policy. ACCEPT: always accept, REJECT: always reject, APPROVAL: require owners approval.</desc>
+</attr>
+
+
 </attrs>

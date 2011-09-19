@@ -17,6 +17,8 @@ package com.zimbra.cs.account;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.account.ZAttrProvisioning.DistributionListSubscriptionPolicy;
+import com.zimbra.common.account.ZAttrProvisioning.DistributionListUnsubscriptionPolicy;
 import com.zimbra.common.service.ServiceException;
 
 public abstract class Group extends MailTarget implements AliasedEntry {
@@ -31,6 +33,9 @@ public abstract class Group extends MailTarget implements AliasedEntry {
     public abstract String[] getAllMembers() throws ServiceException;
     
     public abstract Set<String> getAllMembersSet() throws ServiceException;
+    
+    public abstract DistributionListSubscriptionPolicy getDistributionListSubscriptionPolicy();
+    public abstract DistributionListUnsubscriptionPolicy getDistributionListUnsubscriptionPolicy();
 
     @Override
     public boolean isAddrOfEntry(String addr) {

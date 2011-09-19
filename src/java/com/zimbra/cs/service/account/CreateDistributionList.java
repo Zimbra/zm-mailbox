@@ -18,6 +18,8 @@ package com.zimbra.cs.service.account;
 import java.util.Map;
 
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.ZAttrProvisioning.DistributionListSubscriptionPolicy;
+import com.zimbra.common.account.ZAttrProvisioning.DistributionListUnsubscriptionPolicy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AccountConstants;
@@ -27,12 +29,15 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
-import com.zimbra.cs.account.accesscontrol.RightCommand;
-import com.zimbra.cs.account.accesscontrol.TargetType;
-import com.zimbra.cs.account.accesscontrol.UserRight;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class CreateDistributionList extends AccountDocumentHandler {
+    
+    static final DistributionListSubscriptionPolicy 
+            DEFAULT_SUBSCRIPTION_POLICY = DistributionListSubscriptionPolicy.REJECT;
+    
+    static final DistributionListUnsubscriptionPolicy 
+            DEFAULT_UNSUBSCRIPTION_POLICY = DistributionListUnsubscriptionPolicy.REJECT;
 
     public Element handle(Element request, Map<String, Object> context) 
     throws ServiceException {
@@ -48,20 +53,28 @@ public class CreateDistributionList extends AccountDocumentHandler {
         
         Map<String, Object> attrs = AccountService.getAttrs(request, true, AccountConstants.A_N);
         
+        if (attrs.get(Provisioning.A_zimbraDistributionListSubscriptionPolicy) == null) {
+            attrs.put(Provisioning.A_zimbraDistributionListSubscriptionPolicy, 
+                    DEFAULT_SUBSCRIPTION_POLICY.name());
+        }
+        
+        if (attrs.get(Provisioning.A_zimbraDistributionListUnsubscriptionPolicy) == null) {
+            attrs.put(Provisioning.A_zimbraDistributionListUnsubscriptionPolicy, 
+                    DEFAULT_UNSUBSCRIPTION_POLICY.name());
+        }
+        
+        
         boolean dynamic = request.getAttributeBool(AccountConstants.A_DYNAMIC, false);
         
         Group group = prov.createGroup(name, attrs, dynamic);
         
         // make creator a owner of the DL
         Account authedAcct = getAuthenticatedAccount(zsc);
-        RightCommand.grantRight(prov,
-                null,  // grant the right as a a system admin
-                TargetType.dl.getCode(), Key.TargetBy.id, group.getId(),
-                GranteeType.GT_USER.getCode(), Key.GranteeBy.id, authedAcct.getId(), null,
-                UserRight.RT_ownDistList, null);
+        DistributionListAction.AddOwnerHandler.addOwner(prov, group,
+                GranteeType.GT_USER, Key.GranteeBy.id, authedAcct.getId());
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                 new String[] {"cmd", "CreateDistributionList","name", name}, attrs));         
+                 new String[] {"cmd", "CreateDistributionList", "name", name}, attrs));         
 
         Element response = zsc.createElement(AccountConstants.CREATE_DISTRIBUTION_LIST_RESPONSE);
         
@@ -71,5 +84,6 @@ public class CreateDistributionList extends AccountDocumentHandler {
 
         return response;
     }
+
 }
 

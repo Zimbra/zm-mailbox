@@ -43,13 +43,13 @@ public class GetDistributionList extends AccountDocumentHandler {
                 group.isDynamic() ?  AttributeClass.group : AttributeClass.distributionList);
         
         Element response = zsc.createElement(AccountConstants.GET_DISTRIBUTION_LIST_RESPONSE);
-        Element eDL = com.zimbra.cs.service.admin.GetDistributionList.encodeDistributionList(
+        com.zimbra.cs.service.admin.GetDistributionList.encodeDistributionList(
                 response, group, true, reqAttrs, null);
 
         return response;
     }
     
-    public static Group getGroup(Element request, ZimbraSoapContext zsc, Provisioning prov) 
+    public static Group getGroup(Element request, Provisioning prov) 
     throws ServiceException {
         Element d = request.getElement(AccountConstants.E_DL);
         String key = d.getAttribute(AccountConstants.A_BY);
@@ -61,8 +61,16 @@ public class GetDistributionList extends AccountDocumentHandler {
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);
         }
         
+        return group;
+    }
+    
+    public static Group getGroup(Element request, ZimbraSoapContext zsc, Provisioning prov) 
+    throws ServiceException {
+        Group group = getGroup(request, prov);
+        
         if (!AccessManager.getInstance().canAccessGroup(zsc.getAuthToken(), group)) {
-            throw ServiceException.PERM_DENIED("you do not have sufficient rights to access this distribution list");
+            throw ServiceException.PERM_DENIED(
+                    "you do not have sufficient rights to access this distribution list");
         }
         
         return group;

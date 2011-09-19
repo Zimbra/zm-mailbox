@@ -165,7 +165,7 @@ public class GetDistributionList extends AdminDocumentHandler {
         return eDL;
     }
     
-    private static Element encodeOwners(Element eDL, Group group) throws ServiceException {
+    public static Element encodeOwners(Element eParent, Group group) throws ServiceException {
         Element eOwners = null;
         
         List<ZimbraACE> acl = ACLUtil.getAllACEs(group);
@@ -174,7 +174,7 @@ public class GetDistributionList extends AdminDocumentHandler {
                 Right right = ace.getRight();
                 if (User.R_ownDistList == right) {
                     if (eOwners == null) {
-                        eOwners = eDL.addElement(AdminConstants.E_DL_OWNERS);
+                        eOwners = eParent.addElement(AdminConstants.E_DL_OWNERS);
                     }
                     
                     // encode the owner

@@ -3760,6 +3760,105 @@ added to Documents only.
 </CreateDistributionListResponse>
 
 Notes:
+  authed account must have the privilege to create dist lists in the domain
+  
   dynamic: create a dynamic distribution list
   
 -----------------------------  
+
+<GetDistributionListRequest [attrs="{req-attrs}"]>
+  <dl by="id|name">...</dl>
+</GetDistributionListRequest>
+
+<GetDistributionListResponse>
+  <dl name="{name}" id="{id}" dynamic="1|0">
+    <owners>
+      <owner type="{owner-type}" id="{owner-id}" name="{owner-name}"/>+
+    </owners>  
+    <a n="...">...</a>+
+  </dl>
+</GetDistributionListResponse>
+
+Notes:
+   authed account must be one of the list owners
+   
+   req-attrs = comma-seperated list of attrs to return
+   dynamic = whether this is a dynamic distribution list
+   owner-type= = usr | grp | egp
+                 usr: a Zimbra internal user
+                 grp: a Zimbra internal group
+                 egp: an external AD group
+
+-----------------------------  
+
+<DistributionListActionRequest>
+  <dl by="id|name">...</dl>
+  <action op="delete|modify|rename|addAlias|removeAlias|addOwner|removeOwner|addMembers|removeMembers"/>
+  [<a n="...">...</a>+]
+  [<newName>{new-DL-name}</newName>]
+  [<alias>...</alias>]
+  [<owner type={owner-type} by="name|id}">{owner-name-or-id}</owner>]
+  [<dlm>{member}</dlm>+]
+  
+<DistributionListActionRequest>
+
+Notes:
+  authed account must be one of the list owners
+
+  op = delete         delete the list
+       rename         rename the list
+       modify         modify the list
+       addOwner       add list owner
+       removeOwner    remove list owner
+       addAlias       add list alias
+       removeAlias    remove list alias
+       addMembers     add list members
+       removeMembers  remove list members
+       
+  <a>       required if op=modify     
+  <newName> required if op=rename
+  <alias>   required if op=addAlias or or=removeAlias
+  <owner>   required if op=addOwner or op=removeOwner
+  <dlm>     required if op=addMembers or op=removeMembers
+
+<DistributionListActionResponse/>  
+   
+----------------------------- 
+
+<SubscribeDistributionListRequest op="subscribe/unsubscribe">
+  <dl by="id|name">...</dl>
+</SubscribeDistributionListRequest>  
+
+  op = subscribe: subscribe the requested account to the list
+       unsubscribe: unsubscribe the requested account from the list
+       
+<SubscribeDistributionListResponse/>
+   
+-----------------------------  
+
+<GetAccountMembershipRequest directOnly="1|0">
+</GetAccountMembershipRequest>
+
+<GetAccountMembershipResponse>
+  <dl name="{name}" id="{id}"  via="{via-dl-name}"/>+
+</GetAccountMembershipResponse>
+
+{directOnly}  = 1 (default): return only lists the account is a direct member of
+                0: return all lists the account is a direct or indirect member of
+
+{via-dl-name} = is present if the account is a member of the returned list because they are either a direct
+                or indirect member of another list that is a member of the returned list. For example,
+                if a user is a member of engineering@domain.com, and engineering@domain.com is a member of all@domain.com,
+                then <dl name="all@domain.com" ... via="engineering@domain.com"/> would be returned. 
+                
+----------------------------- 
+
+<GetDistributionListOwnersRequest>  
+    <dl name="{name}" id="{id}"  via="{via-dl-name}">
+</GetDistributionListOwnersRequest> 
+
+<GetDistributionListOwnersResponse> 
+  <owners>
+    <owner type="{owner-type}" id="{owner-id}" name="{owner-name}"/>+
+  </owners>
+</GetDistributionListOwnersResponse>
