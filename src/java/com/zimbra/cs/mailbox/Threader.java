@@ -14,7 +14,6 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -25,14 +24,12 @@ import java.util.Random;
 
 import javax.mail.internet.MimeMessage;
 
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
-
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.ZAttrProvisioning.MailThreadingAlgorithm;
 import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.mime.HeaderUtils;
 import com.zimbra.common.mime.MimeHeader;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -184,7 +181,7 @@ public final class Threader {
         public static String newThreadIndex() {
             byte[] random = new byte[22];
             new Random().nextBytes(random);
-            return new BASE64Encoder().encode(random).trim();
+            return HeaderUtils.encodeB2047(random).trim();
         }
 
         /** Generates a new {@code Thread-Index} value suitable for adding as
@@ -192,26 +189,28 @@ public final class Threader {
          *  header.  This value is created by appending 5 random bytes to the
          *  end of the parent's decoded {@code Thread-Index} value. */
         public static String addChild(byte[] oldTIndex) {
-            if (oldTIndex == null)
+            if (oldTIndex == null) {
                 return null;
+            }
 
             int oldLength = oldTIndex.length;
             byte[] tindex = new byte[oldLength + 5], random = new byte[5];
             new Random().nextBytes(random);
             System.arraycopy(oldTIndex, 0, tindex, 0, oldLength);
             System.arraycopy(random, 0, tindex, oldLength, 5);
-            return new BASE64Encoder().encode(tindex).trim();
+            return HeaderUtils.encodeB2047(tindex).trim();
         }
 
         /** Parses the contents of a {@code Thread-Index} header and returns
          *  the base64-decoded thread-index {@code byte} array.  Such arrays
          *  must be of length 22, 27, 32, 37, 42, etc.; if the decoded array
          *  does not match the pattern, {@code null} is returned instead. */
-        public static byte[] parseHeader(String tidxHdr) throws IOException {
-            if (tidxHdr == null || tidxHdr.trim().isEmpty())
+        public static byte[] parseHeader(String tidxHdr) {
+            if (tidxHdr == null || tidxHdr.trim().isEmpty()) {
                 return null;
+            }
 
-            byte[] tindex = new BASE64Decoder().decodeBuffer(tidxHdr.trim());
+            byte[] tindex = HeaderUtils.decodeB2047(tidxHdr.trim());
             if (tindex.length % 5 != 2) {
                 ZimbraLog.mailbox.debug("  ignoring Thread-Index of decoded length %d", tindex.length);
                 return null;
@@ -280,8 +279,9 @@ public final class Threader {
      *  header.  Several popular mailers do this, including at least some
      *  versions of Outlook and Lotus Notes. */
     private boolean isReplyWithoutReferences() {
-        if (!pm.isReply())
+        if (!pm.isReply()) {
             return false;
+        }
 
         MimeMessage mm = pm.getMimeMessage();
         return Mime.getReferences(mm, "In-Reply-To").isEmpty() && Mime.getReferences(mm, "References").isEmpty();
@@ -361,8 +361,9 @@ public final class Threader {
      * @see #CONVERSATION_NONREPLY_WINDOW
      * @see #CONVERSATION_NONREPLY_SIZE_LIMIT */
     private List<Conversation> lookupBySubject() throws ServiceException {
-        if (subjHash == null)
+        if (subjHash == null) {
             return null;
+        }
 
         ZimbraLog.mailbox.debug("  lookup by subject (%s): %s", mode, pm.getNormalizedSubject());
         Conversation conv = mbox.getConversationByHash(subjHash);

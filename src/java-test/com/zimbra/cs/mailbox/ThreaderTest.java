@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 
 import javax.mail.internet.MimeMessage;
@@ -31,6 +32,7 @@ import org.junit.Test;
 import com.zimbra.common.account.ZAttrProvisioning.MailThreadingAlgorithm;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Threader.ThreadIndex;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.JMSession;
@@ -268,6 +270,19 @@ public final class ThreaderTest {
         threadMessage("outlook", MailThreadingAlgorithm.references, pm, mbox, match);
         threadMessage("outlook", MailThreadingAlgorithm.subjrefs, pm, mbox, match);
         threadMessage("outlook", MailThreadingAlgorithm.strict, pm, mbox, Collections.<Integer>emptyList());
+    }
+
+    @Test
+    public void threadIndex() throws Exception {
+        Assert.assertEquals("new thread index length", 32, ThreadIndex.newThreadIndex().length());
+
+        byte[] oldIndex = new byte[82];
+        new Random().nextBytes(oldIndex);
+        String newIndex = ThreadIndex.addChild(oldIndex);
+        Assert.assertEquals("child index length", 116, newIndex.length());
+        byte[] head = new byte[oldIndex.length];
+        System.arraycopy(ThreadIndex.parseHeader(newIndex), 0, head, 0, oldIndex.length);
+        Assert.assertArrayEquals("preserving old index", oldIndex, head);
     }
 
 }
