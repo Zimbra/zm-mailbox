@@ -79,11 +79,9 @@ public class NativeFormatter extends Formatter {
     public void formatCallback(UserServletContext context) throws IOException, ServiceException, UserServletException, ServletException {
         try {
             sendZimbraHeaders(context.resp, context.target);
-            String ua = context.req.getHeader("User-Agent");
-            if (ua != null && ua.contains("MSIE")) {
-                // bug 64051 Make sure to ask IE to actually download the file
+            HttpUtil.Browser browser = HttpUtil.guessBrowser(context.req);
+            if (browser == HttpUtil.Browser.IE) {
                 context.resp.addHeader("X-Content-Type-Options", "nosniff"); // turn off content detection..
-                context.resp.addHeader("X-Download-Options", "noopen"); // ask it to save the file
             }
             if (context.target instanceof Message) {
                 handleMessage(context, (Message) context.target);
@@ -132,7 +130,7 @@ public class NativeFormatter extends Formatter {
 
     private void handleCalendarItem(UserServletContext context, CalendarItem calItem) throws IOException, ServiceException, MessagingException, ServletException {
         if (context.hasPart()) {
-            MimePart mp = null;
+            MimePart mp;
             if (context.itemId.hasSubpart()) {
                 MimeMessage mbp = calItem.getSubpartMessage(context.itemId.getSubpartId());
                 mp = Mime.getMimePart(mbp, context.getPart());
@@ -182,8 +180,8 @@ public class NativeFormatter extends Formatter {
             contentType = contentType.replace('\r', ' ').replace('\n', ' ');
 
             // IE displays garbage if the content-type header is too long
-            String ua = context.req.getHeader("User-Agent");
-            if (ua != null && ua.indexOf("MSIE") != -1 && contentType.length() > 80)
+            HttpUtil.Browser browser = HttpUtil.guessBrowser(context.req);
+            if (browser == HttpUtil.Browser.IE && contentType.length() > 80)
                 contentType = shortContentType;
             
             boolean html = checkGlobalOverride(Provisioning.A_zimbraAttachmentsViewInHtmlOnly,
@@ -362,16 +360,18 @@ public class NativeFormatter extends Formatter {
 
         PushbackInputStream pis = new PushbackInputStream(in, READ_AHEAD_BUFFER_SIZE);
         boolean isSafe = false;
-        String ua = req.getHeader("User-Agent");
-        if (ua == null || ua.indexOf("MSIE") == -1)
+        HttpUtil.Browser browser = HttpUtil.guessBrowser(req);
+        if (browser != HttpUtil.Browser.IE) {
             isSafe = true;
-        if (disposition.equals(Part.ATTACHMENT))
+        } else if (disposition.equals(Part.ATTACHMENT)) {
             isSafe = true;
+            resp.addHeader("X-Download-Options", "noopen"); // ask it to save the file
+        }
 
         if (!isSafe) {
             byte[] buf = new byte[READ_AHEAD_BUFFER_SIZE];
             int bytesRead = pis.read(buf, 0, READ_AHEAD_BUFFER_SIZE);
-            boolean hasScript = false;
+            boolean hasScript;
             for (int i = 0; i < bytesRead; i++) {
                 if (buf[i] == SCRIPT_PATTERN[0][0] || buf[i] == SCRIPT_PATTERN[1][0]) {
                     hasScript = true;
