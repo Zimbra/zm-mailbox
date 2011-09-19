@@ -40,7 +40,6 @@ import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.NoSuchDirectoryException;
-import org.apache.lucene.store.SingleInstanceLockFactory;
 import org.apache.lucene.util.Version;
 
 import com.google.common.base.Objects;
@@ -545,7 +544,7 @@ public final class LuceneIndex implements IndexStore {
                 if (scheduler.tryLock()) {
                     int dels = writer.maxDoc() - writer.numDocs();
                     if (dels >= LC.zimbra_index_max_pending_deletes.intValue()) {
-                        ZimbraLog.index.debug("Expunge deletes %d", dels);
+                        ZimbraLog.index.info("Expunge deletes %d", dels);
                         writer.expungeDeletes();
                     }
                     writer.maybeMerge();
