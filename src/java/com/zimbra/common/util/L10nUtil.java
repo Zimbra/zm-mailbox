@@ -132,6 +132,11 @@ public class L10nUtil {
         shareNotifBodyActionFreebusy,
         shareNotifBodyActionSubfolder,
         //////////////////////
+        
+        // group subscription approval
+        groupSubscriptionAppravalSubject,
+        groupSubscriptionAppravalText,
+        groupUnsubscriptionAppravalText,
 
         // read-receipt notification body
         readReceiptNotification,
