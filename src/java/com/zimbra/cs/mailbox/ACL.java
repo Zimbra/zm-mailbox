@@ -162,15 +162,23 @@ public final class ACL {
                 return mType == ACL.GRANTEE_PUBLIC;
             switch (mType) {
                 case ACL.GRANTEE_PUBLIC:   return true;
-                case ACL.GRANTEE_AUTHUSER: return !acct.getId().equals(GuestAccount.GUID_PUBLIC);
+                case ACL.GRANTEE_AUTHUSER: return isInternalAccount(acct);
                 case ACL.GRANTEE_COS:      return mGrantee.equals(getId(prov.getCOS(acct)));
-                case ACL.GRANTEE_DOMAIN:   return mGrantee.equals(getId(prov.getDomain(acct)));
+                case ACL.GRANTEE_DOMAIN:   return matchesDomainGrantee(acct, prov);
                 case ACL.GRANTEE_GROUP:    return prov.inACLGroup(acct, mGrantee);
                 case ACL.GRANTEE_USER:     return mGrantee.equals(acct.getId());
                 case ACL.GRANTEE_GUEST:    return matchesGuestAccount(acct);
                 case ACL.GRANTEE_KEY:      return matchesAccessKey(acct);
                 default:  throw ServiceException.FAILURE("unknown ACL grantee type: " + mType, null);
             }
+        }
+
+        private boolean matchesDomainGrantee(Account acct, Provisioning prov) throws ServiceException {
+            return !acct.isIsExternalVirtualAccount() && mGrantee.equals(getId(prov.getDomain(acct)));
+        }
+
+        private boolean isInternalAccount(Account acct) {
+            return !acct.getId().equals(GuestAccount.GUID_PUBLIC) && !acct.isIsExternalVirtualAccount();
         }
 
         private boolean matchesGuestAccount(Account acct) {
