@@ -215,7 +215,7 @@ public final class LC {
 
     @Supported
     @Reloadable
-    public static final KnownKey zimbra_index_max_pending_deletes = KnownKey.newKey(20);
+    public static final KnownKey zimbra_index_max_pending_deletes = KnownKey.newKey(10000);
 
     public static final KnownKey zimbra_index_lucene_io_impl = KnownKey.newKey("nio");
 
