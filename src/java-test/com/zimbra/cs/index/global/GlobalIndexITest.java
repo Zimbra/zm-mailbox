@@ -32,6 +32,7 @@ import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Document;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -114,6 +115,41 @@ public final class GlobalIndexITest {
         Assert.assertEquals(doc.getDate(), hits.get(0).getDate());
 
         hits = index.getGlobalIndex().search(GRANTEE2, query);
+        Assert.assertEquals(0, hits.size());
+    }
+
+    @Test
+    public void updateACL() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Folder closed = mbox.createFolder(null, "closed", Mailbox.ID_FOLDER_BRIEFCASE, MailItem.Type.DOCUMENT,
+                0, (byte) 0, null);
+        Folder shared = mbox.createFolder(null, "shared", Mailbox.ID_FOLDER_BRIEFCASE, MailItem.Type.DOCUMENT,
+                0, (byte) 0, null);
+        mbox.grantAccess(null, shared.getId(), GRANTEE1, ACL.GRANTEE_USER, ACL.RIGHT_READ, null);
+        ParsedDocument pdoc = new ParsedDocument(IOUtils.toInputStream("shared"),
+                "acl-test.txt", "text/plain", 12345L, "creator", "description");
+        Document doc = mbox.createDocument(null, closed.getId(), pdoc, MailItem.Type.DOCUMENT, 0);
+
+        HBaseIndex index = HBaseIndexTestUtils.createIndex(mbox);
+        index.deleteIndex();
+
+        Indexer indexer = index.openIndexer();
+        indexer.addDocument(doc, doc.generateIndexData());
+        indexer.close();
+
+        TermQuery query = new TermQuery(new Term(LuceneFields.L_CONTENT, "shared"));
+        List<GlobalDocument> hits = index.getGlobalIndex().search(GRANTEE1, query);
+        hits = index.getGlobalIndex().search(GRANTEE1, query);
+        Assert.assertEquals(0, hits.size());
+
+        mbox.move(null, doc.getId(), doc.getType(), shared.getId()); // move closed to shared
+        hits = index.getGlobalIndex().search(GRANTEE1, query);
+        Assert.assertEquals(1, hits.size());
+        Assert.assertEquals(doc.getName(), hits.get(0).getFilename());
+        Assert.assertEquals(doc.getDate(), hits.get(0).getDate());
+
+        mbox.revokeAccess(null, shared.getId(), GRANTEE1); // revoke the right
+        hits = index.getGlobalIndex().search(GRANTEE1, query);
         Assert.assertEquals(0, hits.size());
     }
 

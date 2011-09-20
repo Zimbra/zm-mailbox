@@ -16,7 +16,10 @@ package com.zimbra.cs.index.global;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.KeyValue;
@@ -36,8 +39,11 @@ import com.google.common.base.Joiner;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailboxListener;
+import com.zimbra.cs.session.PendingModifications;
 
 /**
  * Global Index Store.
@@ -54,6 +60,7 @@ public final class GlobalIndex {
     GlobalIndex(Configuration conf, HTablePool pool) {
         this.pool = pool;
         indexTableName = Bytes.toBytes(conf.get(GLOBAL_INDEX_TABLE, GLOBAL_INDEX_TABLE)); // test may override
+        MailboxListener.register(new GlobalIndexMailboxListener());
     }
 
     /**
@@ -93,33 +100,84 @@ public final class GlobalIndex {
     private void indexACL(MailItem item, Put put) {
         try {
             Folder folder = item.getMailbox().getFolderById(null, item.getFolderId());
-            List<String> grantees = new ArrayList<String>();
-            grantees.add(item.getMailbox().getAccountId()); // owner
-            ACL acl = folder.getEffectiveACL();
-            if (acl != null) {
-                for (ACL.Grant grant : acl.getGrants()) {
-                    if ((grant.getGrantedRights() & ACL.RIGHT_READ) == 0) {
-                        continue; // no read access
-                    }
-                    switch (grant.getGranteeType()) {
-                        case ACL.GRANTEE_USER:
-                            break;
-                        case ACL.GRANTEE_GROUP: //TODO support group sharing
-                        case ACL.GRANTEE_DOMAIN: //TODO support domain sharing
-                        case ACL.GRANTEE_COS: //TODO support CoS sharing
-                        case ACL.GRANTEE_AUTHUSER: //TODO support authenticated user sharing
-                        case ACL.GRANTEE_PUBLIC: //TODO support public sharing
-                        case ACL.GRANTEE_GUEST: //TODO support guest sharing
-                        case ACL.GRANTEE_KEY: //TODO support access key sharing
-                            continue;
-                    }
-                    grantees.add(grant.getGranteeId());
-                }
-            }
-            put.add(HBaseIndex.ITEM_CF, ACL_COL, Bytes.toBytes(Joiner.on('\0').join(grantees)));
+            put.add(HBaseIndex.ITEM_CF, ACL_COL, encodeACL(folder));
         } catch (ServiceException e) {
             ZimbraLog.index.error("Failed to index ACL id=%d,folder=%d", item.getId(), item.getFolderId());
         }
+    }
+
+    /**
+     * Update ACL for the item.
+     */
+    private void updateACL(MailItem item) throws IOException {
+        byte[] gid = GlobalItemID.toBytes(item.getMailbox().getAccountId(), item.getId());
+        Put put = new Put(gid);
+        indexACL(item, put);
+        HTableInterface table = pool.getTable(indexTableName);
+        try {
+            table.put(put);
+        } finally {
+            pool.putTable(table);
+        }
+    }
+
+    /**
+     * Update ACL for all items under the folder.
+     */
+    private void updateACL(Folder folder) throws IOException {
+        List<Put> batch = new ArrayList<Put>();
+        for (Folder sub : folder.getSubfolderHierarchy()) { // this folder and its descendants
+            if (sub.getDefaultView() == MailItem.Type.DOCUMENT) {
+                byte[] acl = encodeACL(sub);
+                try {
+                    for (int id : folder.getMailbox().listItemIds(null, MailItem.Type.DOCUMENT, sub.getId())) {
+                        byte[] gid = GlobalItemID.toBytes(folder.getMailbox().getAccountId(), id);
+                        Put put = new Put(gid);
+                        put.add(HBaseIndex.ITEM_CF, ACL_COL, acl);
+                        batch.add(put);
+                    }
+                } catch (ServiceException e) {
+                    ZimbraLog.index.error("Failed to update ACL account=%s,folder=%d",
+                            folder.getMailbox().getAccountId(), sub.getId());
+                }
+            }
+        }
+        if (batch.isEmpty()) {
+            return;
+        }
+        HTableInterface table = pool.getTable(indexTableName);
+        try {
+            table.put(batch);
+        } finally {
+            pool.putTable(table);
+        }
+    }
+
+    private byte[] encodeACL(Folder folder) {
+        List<String> grantees = new ArrayList<String>(1);
+        grantees.add(folder.getMailbox().getAccountId()); // owner
+        ACL acl = folder.getEffectiveACL();
+        if (acl != null) {
+            for (ACL.Grant grant : acl.getGrants()) {
+                if ((grant.getGrantedRights() & ACL.RIGHT_READ) == 0) {
+                    continue; // no read access
+                }
+                switch (grant.getGranteeType()) {
+                    case ACL.GRANTEE_USER:
+                        break;
+                    case ACL.GRANTEE_GROUP: //TODO support group sharing
+                    case ACL.GRANTEE_DOMAIN: //TODO support domain sharing
+                    case ACL.GRANTEE_COS: //TODO support CoS sharing
+                    case ACL.GRANTEE_AUTHUSER: //TODO support authenticated user sharing
+                    case ACL.GRANTEE_PUBLIC: //TODO support public sharing
+                    case ACL.GRANTEE_GUEST: //TODO support guest sharing
+                    case ACL.GRANTEE_KEY: //TODO support access key sharing
+                        continue;
+                }
+                grantees.add(grant.getGranteeId());
+            }
+        }
+        return Bytes.toBytes(Joiner.on('\0').join(grantees));
     }
 
     /**
@@ -206,4 +264,45 @@ public final class GlobalIndex {
         return docs;
     }
 
+    private final class GlobalIndexMailboxListener extends MailboxListener {
+
+        @Override
+        public Set<MailItem.Type> registerForItemTypes() {
+            return EnumSet.of(MailItem.Type.FOLDER, MailItem.Type.DOCUMENT);
+        }
+
+        @Override
+        public void notify(ChangeNotification event) {
+            if (event.mods.modified != null) {
+                onModify(event.mods.modified);
+            }
+        }
+
+        private void onModify(Map<PendingModifications.ModificationKey, PendingModifications.Change> changes) {
+            for (Map.Entry<PendingModifications.ModificationKey, PendingModifications.Change> entry : changes.entrySet()) {
+                PendingModifications.Change change = entry.getValue();
+                if (change.what instanceof Document &&
+                        (change.why & PendingModifications.Change.MODIFIED_FOLDER) != 0) {
+                    // Update ACL for the document.
+                    Document doc = (Document) change.what;
+                    try {
+                        updateACL(doc);
+                    } catch (IOException e) {
+                        ZimbraLog.index.error("Failed to update ACL account=%s,id=%d",
+                                doc.getMailbox().getAccountId(), doc.getId());
+                    }
+                } else if (change.what instanceof Folder && (change.why &
+                        (PendingModifications.Change.MODIFIED_FOLDER | PendingModifications.Change.MODIFIED_ACL)) != 0) {
+                    // Update ACL for all items under the folder.
+                    Folder folder = (Folder) change.what;
+                    try {
+                        updateACL(folder);
+                    } catch (IOException e) {
+                        ZimbraLog.index.error("Failed to update ACL account=%s,folder=%d",
+                                folder.getMailbox().getAccountId(), folder.getId());
+                    }
+                }
+            }
+        }
+    }
 }
