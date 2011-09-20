@@ -88,8 +88,8 @@ public class DefangFilter extends DefaultFilter {
     private static final Pattern AV_SCRIPT_TAG = Pattern.compile("</?script/?>", Pattern.CASE_INSENSITIVE);
     
     // regex for URLs href. TODO: beef this up
-    private static final Pattern VALID_URL = Pattern.compile("^(https?://[\\w-].*|mailto:.*|cid:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)", Pattern.CASE_INSENSITIVE);
-    private static final Pattern VALID_IMG = Pattern.compile("^data:|^cid|\\.(jpg|jpeg|png|gif)$");
+    private static final Pattern VALID_EXT_URL = Pattern.compile("^(https?://[\\w-].*|mailto:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern VALID_INT_IMG = Pattern.compile("^data:|^cid:|\\.(jpg|jpeg|png|gif)$");
 
     //
     // Data
@@ -550,9 +550,8 @@ public class DefangFilter extends DefaultFilter {
             if (mNeuterImages) {
                 if(eName.equals("img") &&
                    attributes.getValue("src") != null &&
-                   (VALID_URL.matcher(attributes.getValue("src")).find() || // check for valid urls, and definitely defang
-                   !VALID_IMG.matcher(attributes.getValue("src")).find())) { // if the url isn't valid, but happens to look like an image filename, 
-                                                                             // leave it alone and the web client will attempt to fix it.
+                   (VALID_EXT_URL.matcher(attributes.getValue("src")).find() || 
+                   !VALID_INT_IMG.matcher(attributes.getValue("src")).find())) {                                                                             
                         neuterTag(attributes, "src");    
                 }
                 neuterTag(attributes, "background");
@@ -641,7 +640,7 @@ public class DefangFilter extends DefaultFilter {
         // get rid of any spaces that might throw off the regex
         value = value == null? null: value.trim();
         if (aName.equalsIgnoreCase("href") || aName.equalsIgnoreCase("longdesc") || aName.equalsIgnoreCase("usemap")){
-            if (!VALID_URL.matcher(value).find()) {
+            if (!VALID_EXT_URL.matcher(value).find()) {
                 return true;
             }
         }
@@ -650,8 +649,8 @@ public class DefangFilter extends DefaultFilter {
         // a valid url as well as just a valid filename in the
         // case that its an inline image
         if(aName.equals("src")) {
-            if (!(VALID_URL.matcher(value).find() ||
-                VALID_IMG.matcher(value).find())) {
+            if (!(VALID_EXT_URL.matcher(value).find() ||
+                VALID_INT_IMG.matcher(value).find())) {
                 attributes.setValue(i, "#");
                 return false;
             }
