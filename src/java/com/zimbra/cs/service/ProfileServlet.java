@@ -78,14 +78,14 @@ public class ProfileServlet extends ZimbraServlet {
                 Document profileImage = (Document)mbox.getItemByPath(null, IMAGE_URI, Mailbox.ID_FOLDER_PROFILE);
                 String contentType = MimeDetect.getMimeDetect().detect(profileImage.getContentStream());
                 resp.setContentType(contentType);
-                NativeFormatter.sendbackBinaryData(req, resp, profileImage.getContentStream(), null, null, profileImage.getSize());
+                NativeFormatter.sendbackBinaryData(req, resp, profileImage.getContentStream(), contentType, null, null, profileImage.getSize());
             } catch (ServiceException e) {
                 if (e instanceof MailServiceException.NoSuchItemException) {
                     // return default image;
                     File defaultImage = new File(LC.default_profile_image.value());
                     String contentType = MimeDetect.getMimeDetect().detect(new FileInputStream(defaultImage));
                     resp.setContentType(contentType);
-                    NativeFormatter.sendbackBinaryData(req, resp, new FileInputStream(defaultImage), null, null, defaultImage.length());
+                    NativeFormatter.sendbackBinaryData(req, resp, new FileInputStream(defaultImage), contentType, null, null, defaultImage.length());
                 } else {
                     throw e;
                 }

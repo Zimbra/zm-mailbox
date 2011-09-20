@@ -1,8 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
- *
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
+ * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
@@ -39,6 +39,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.MimeDetect;
@@ -82,6 +84,10 @@ public class NativeFormatter extends Formatter {
 
     private static final Log log = LogFactory.getLog(NativeFormatter.class);
 
+    private static final Set<String> SCRIPTABLE_CONTENT_TYPES = ImmutableSet.of(MimeConstants.CT_TEXT_HTML,
+                                                                                MimeConstants.CT_APPLICATION_XHTML,
+                                                                                MimeConstants.CT_TEXT_XML,
+                                                                                MimeConstants.CT_IMAGE_SVG);
     @Override
     public FormatType getType() {
         return FormatType.HTML_CONVERTED;
@@ -314,7 +320,7 @@ public class NativeFormatter extends Formatter {
             if (neuter)
                 sendbackOriginalDoc(is, contentType, defaultCharset, doc.getName(), null, doc.getSize(), context.req, context.resp);
             else
-                sendbackBinaryData(context.req, context.resp, is, null, doc.getName(), doc.getSize());
+                sendbackBinaryData(context.req, context.resp, is, contentType, null, doc.getName(), doc.getSize());
         }
     }
 
@@ -355,10 +361,7 @@ public class NativeFormatter extends Formatter {
             resp.addHeader("Content-Description", desc);
 
         // defang when the html and svg attachment was requested with disposition inline
-        if (disp.equals(Part.INLINE) &&
-                (contentType.startsWith(MimeConstants.CT_TEXT_HTML) ||
-                 contentType.startsWith(MimeConstants.CT_IMAGE_SVG) ||
-                 contentType.startsWith(MimeConstants.CT_APPLICATION_XHTML))) {
+        if (disp.equals(Part.INLINE) && isScriptableContent(contentType)) {
             String charset = Mime.getCharset(contentType);
             String content;
 
@@ -379,7 +382,7 @@ public class NativeFormatter extends Formatter {
             if (contentType.startsWith(MimeConstants.CT_APPLICATION_SHOCKWAVE_FLASH))
                 disp = Part.ATTACHMENT;
             resp.setContentType(contentType);
-            sendbackBinaryData(req, resp, is, disp, filename, size);
+            sendbackBinaryData(req, resp, is, contentType, disp, filename, size);
         }
     }
 
@@ -451,7 +454,13 @@ public class NativeFormatter extends Formatter {
         { '<', 'S', 'C', 'R', 'I', 'P', 'T' }
     };
 
-    public static void sendbackBinaryData(HttpServletRequest req, HttpServletResponse resp, InputStream in, String disposition, String filename, long size) throws IOException {
+    public static void sendbackBinaryData(HttpServletRequest req, 
+                                          HttpServletResponse resp, 
+                                          InputStream in,
+                                          String contentType,
+                                          String disposition, 
+                                          String filename, 
+                                          long size) throws IOException {
         if (disposition == null) {
             String disp = req.getParameter(UserServlet.QP_DISP);
             disposition = (disp == null || disp.toLowerCase().startsWith("i") ) ? Part.INLINE : Part.ATTACHMENT;
@@ -463,7 +472,9 @@ public class NativeFormatter extends Formatter {
             isSafe = true;
         } else if (disposition.equals(Part.ATTACHMENT)) {
             isSafe = true;
-            resp.addHeader("X-Download-Options", "noopen"); // ask it to save the file
+            if (isScriptableContent(contentType)) {
+                resp.addHeader("X-Download-Options", "noopen"); // ask it to save the file
+            }
         }
 
         if (!isSafe) {
@@ -495,5 +506,20 @@ public class NativeFormatter extends Formatter {
         if (size > 0)
             resp.setContentLength((int)size);
         ByteUtil.copy(pis, true, resp.getOutputStream(), false);
+    }
+    /**
+     * Determines whether or not the contentType passed might contain script or other unsavory tags.
+     * @param contentType The content type to check
+     * @return true if there's a possiblilty that <script> is valid, false if not
+     */
+    private static boolean isScriptableContent(String contentType) {
+        // Make sure we don't have to worry about a null content type;
+        if (Strings.isNullOrEmpty(contentType)) {
+            return false;
+        }
+        contentType = Mime.getContentType(contentType).toLowerCase();
+        // only set no-open for 'script type content'
+        return SCRIPTABLE_CONTENT_TYPES.contains(contentType);
+        
     }
 }
