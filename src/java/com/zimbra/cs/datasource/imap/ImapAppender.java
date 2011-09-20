@@ -29,8 +29,11 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeMessage;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
 import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.datasource.SyncUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailclient.imap.AppendResult;
@@ -38,7 +41,6 @@ import com.zimbra.cs.mailclient.imap.CAtom;
 import com.zimbra.cs.mailclient.imap.Envelope;
 import com.zimbra.cs.mailclient.imap.Flags;
 import com.zimbra.cs.mailclient.imap.ImapConnection;
-import com.zimbra.cs.mailclient.imap.ImapData;
 import com.zimbra.cs.mailclient.imap.ImapRequest;
 import com.zimbra.cs.mailclient.imap.Literal;
 import com.zimbra.cs.mailclient.imap.MailboxInfo;
@@ -69,10 +71,7 @@ public class ImapAppender {
         return append(new MessageInfo(msg));
     }
 
-    public long appendMessage(File file, Flags flags) throws IOException, ServiceException {
-        return append(new MessageInfo(getData(file), flags));
-    }
-
+    @VisibleForTesting
     public long appendMessage(byte[] b, Flags flags) throws IOException, ServiceException {
         return append(new MessageInfo(getData(b), flags));
     }
@@ -138,53 +137,65 @@ public class ImapAppender {
             return -1;
         }
         // Check new messages for the one we just appended
-        long endUid = getUidNext() - 1;
-        if (startUid <= endUid) {
-            List<Long> found = findUids(startUid + ":" + endUid, mi);
-            if (found.size() == 1) {
-                return found.get(0);
-            }
-        }
-        // If not found then server must have de-duped the message. This
-        // is certainly possible with GMail. Search through the entire mailbox
-        // for matching message and hope this is not too slow.
-        List<Long> uids;
         try {
-            // bug 45385: Temporarily increase timeout to 10 minutes in case of slow search.
-            // Not pretty, but hopefully we never get here since most servers now support
-            // UIDPLUS or don't de-dup messages.
-            connection.setReadTimeout(10 * 60);
-            uids = connection.uidSearch(getSearchParams(mi));
-        } finally {
-            connection.setReadTimeout(connection.getConfig().getReadTimeout());
-        }
-        Iterator<Long> it = uids.iterator();
-        while (it.hasNext()) {
-            List<Long> found = findUids(nextSeq(it, 5), mi);
-            // TODO What if we find more than one match?
-            if (found.size() > 0) {
-                return found.get(0);
+            connection.select(mailbox); //exchange doesn't give accurate UIDNEXT unless mbox is selected again.
+            long endUid = getUidNext() - 1;
+            if (startUid <= endUid) {
+                List<Long> found = findUids(startUid + ":" + endUid, mi);
+                if (found.size() == 1) {
+                    return found.get(0);
+                }
             }
+            // If not found then server must have de-duped the message. This
+            // is certainly possible with GMail. Search through the entire mailbox
+            // for matching message and hope this is not too slow.
+            List<Long> uids;
+            try {
+                // bug 45385: Temporarily increase timeout to 10 minutes in case of slow search.
+                // Not pretty, but hopefully we never get here since most servers now support
+                // UIDPLUS or don't de-dup messages.
+                
+                // bug 64062 : let's try 2 minutes. hopefully search shouldn't take too long now that we use msg id rather than subject
+                connection.setReadTimeout(2 * 60);
+                uids = connection.uidSearch(getSearchParams(mi));
+            } finally {
+                connection.setReadTimeout(connection.getConfig().getReadTimeout());
+            }
+            Iterator<Long> it = uids.iterator();
+            while (it.hasNext()) {
+                List<Long> found = findUids(nextSeq(it, 5), mi);
+                if (found.size() > 0) {
+                    if (found.size() > 1) {
+                        ZimbraLog.imap_client.warn("found more than one (%d)"+
+                                "matching UID during appendSlow. Probably a leftover dupe from earlier bugs?",found.size());
+                        if (ZimbraLog.imap_client.isDebugEnabled()) {
+                            ZimbraLog.imap_client.debug("potential duplicate ids = %s",Joiner.on(',').join(found));
+                        }
+                    }
+                    return found.get(0);
+                }
+            }
+        } catch(Exception e) {
+            //if this is a real exception (e.g. network went down) next command will fail regardless. 
+            //otherwise, don't allow appendSlow to create loop
+            ZimbraLog.imap_client.warn("Dedupe search in appendSlow failed.",e);
         }
+        //this usually is OK, and actually the way Exchange has been working due to size check in matches()
+        //we delete the local tracker and allow next sync to get the current version of message
+        ZimbraLog.imap_client.warn("append slow failed to find appended message id"); 
         // If still not found, then give up :(
         return -1;
     }
 
     private Object[] getSearchParams(MessageInfo mi) throws MessagingException {
         List<Object> params = new ArrayList<Object>();
-        String subj = mi.mm.getSubject();
-        if (subj != null) {
-            ImapData data = ImapData.asString(subj);
-            if (data.isLiteral()) {
-                params.add("CHARSET");
-                params.add("UTF-8");
-            }
-            params.add("SUBJECT");
-            params.add(data);
-        }
         params.add("SENTON");
         Date date = mi.mm.getSentDate();
         params.add(String.format("%td-%tb-%tY", date, date, date));
+        String mId = mi.mm.getMessageID();
+        params.add("HEADER");
+        params.add("message-id");
+        params.add(mId);
         return params.toArray();
     }
 
@@ -210,14 +221,12 @@ public class ImapAppender {
     }
 
     private boolean matches(MessageInfo mi, MessageData md) throws IOException, MessagingException {
-        // Message size must match
-        if (mi.data.getSize() == md.getRfc822Size()) {
-            // Message-ID, and optional Subject must match
-            Envelope env = md.getEnvelope();
-            if (env != null) {
-                String subj = mi.mm.getSubject();
-                return mi.mm.getMessageID().equals(env.getMessageId()) && (subj == null || subj.equals(env.getSubject()));
-            }
+        //bug 64062 Exchange misreports RFC 822 size unless configured with: Set-ImapSettings -EnableExactRFC822Size:$true
+        //Message-ID, and optional Subject must match
+        Envelope env = md.getEnvelope();
+        if (env != null) {
+            String subj = mi.mm.getSubject();
+            return mi.mm.getMessageID().equals(env.getMessageId()) && (subj == null || subj.equals(env.getSubject()));
         }
         return false;
     }
