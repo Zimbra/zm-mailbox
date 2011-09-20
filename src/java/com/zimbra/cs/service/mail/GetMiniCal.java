@@ -46,6 +46,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
+import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Util;
 import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarCacheManager;
@@ -225,6 +226,12 @@ public class GetMiniCal extends CalendarRequest {
             CalendarItemData item = itemIter.next();
             for (Iterator<InstanceData> instIter = item.instanceIterator(); instIter.hasNext(); ) {
                 InstanceData inst = instIter.next();
+                // ignore declined meetings.
+                String partStat = inst.getPartStat();
+                if (partStat == null)
+                    partStat = item.getDefaultData().getPartStat();
+                if (IcalXmlStrMap.PARTSTAT_DECLINED.equals(partStat))
+                    continue;   
                 Long start = inst.getDtStart();
                 if (start != null) {
                     String datestampStart = getDatestamp(cal, start);
