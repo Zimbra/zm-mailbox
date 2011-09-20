@@ -88,7 +88,7 @@ public class DefangFilter extends DefaultFilter {
     private static final Pattern AV_SCRIPT_TAG = Pattern.compile("</?script/?>", Pattern.CASE_INSENSITIVE);
     
     // regex for URLs href. TODO: beef this up
-	private static final Pattern VALID_URL = Pattern.compile("^(https?://[\\w-].*|mailto:.*|cid:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern VALID_URL = Pattern.compile("^(https?://[\\w-].*|mailto:.*|cid:.*|notes:.*|smb:.*|ftp:.*|gopher:.*|news:.*|tel:.*|callto:.*|webcal:.*|feed:.*:|file:.*|#.+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern VALID_IMG = Pattern.compile("^data:|^cid|\\.(jpg|jpeg|png|gif)$");
 
     //
@@ -550,7 +550,9 @@ public class DefangFilter extends DefaultFilter {
             if (mNeuterImages) {
                 if(eName.equals("img") &&
                    attributes.getValue("src") != null &&
-                   !VALID_IMG.matcher(attributes.getValue("src")).find()){
+                   (VALID_URL.matcher(attributes.getValue("src")).find() || // check for valid urls, and definitely defang
+                   !VALID_IMG.matcher(attributes.getValue("src")).find())) { // if the url isn't valid, but happens to look like an image filename, 
+                                                                             // leave it alone and the web client will attempt to fix it.
                         neuterTag(attributes, "src");    
                 }
                 neuterTag(attributes, "background");

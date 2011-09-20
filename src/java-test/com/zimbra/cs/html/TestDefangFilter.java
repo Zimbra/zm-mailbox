@@ -237,4 +237,24 @@ public class TestDefangFilter {
         Assert.assertNotNull(result);
        
     }
+    /**
+     * Checks to make sure we actually defang external content
+     * @throws Exception
+     */
+    @Test
+    public void testBug64726() throws Exception {
+        String fileName = "bug_64726.txt";
+        InputStream htmlStream = getHtmlBody(fileName);
+        Assert.assertNotNull(htmlStream);
+        
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+         // just make sure we made it here, as this was NPEing out..
+        
+        
+        Assert.assertNotNull(result);
+        
+        Assert.assertTrue(result.contains("dfsrc=\"http://www.google.com/intl/en_com/images/srpr/logo3w.png\""));
+       
+    }
+    
 }
