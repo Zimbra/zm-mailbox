@@ -939,7 +939,7 @@ public class Mailbox {
             checkSizeChange(size);
         }
 
-        currentChange.dirty.recordModified(currentChange.getOperation(), this, Change.MODIFIED_SIZE, currentChange.timestamp);
+        currentChange.dirty.recordModified(currentChange.getOperation(), this, Change.SIZE, currentChange.timestamp);
         currentChange.size = size;
     }
 
@@ -1349,7 +1349,7 @@ public class Mailbox {
             if (!hasFullAccess()) {
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
             }
-            currentChange.dirty.recordModified(currentChange.getOperation(), this, Change.MODIFIED_CONFIG, currentChange.timestamp);
+            currentChange.dirty.recordModified(currentChange.getOperation(), this, Change.CONFIG, currentChange.timestamp);
             currentChange.config = new Pair<String,Metadata>(section, config);
             DbMailbox.updateConfig(this, section, config);
             success = true;
@@ -1649,7 +1649,7 @@ public class Mailbox {
             boolean persist = stats != null;
             if (stats != null) {
                 if (mData.size != stats.size) {
-                    currentChange.dirty.recordModified(currentChange.getOperation(), this, Change.MODIFIED_SIZE, currentChange.timestamp);
+                    currentChange.dirty.recordModified(currentChange.getOperation(), this, Change.SIZE, currentChange.timestamp);
                     ZimbraLog.mailbox.debug("setting mailbox size to %d (was %d) for mailbox %d", stats.size, mData.size, mId);
                     mData.size = stats.size;
                 }
@@ -3938,7 +3938,7 @@ public class Mailbox {
             MailItem itemSnapshot = calItem.snapshotItem();
             calItem.snapshotRevision();
             calItem.updateNextAlarm(dismissedAt + 1, true);
-            markItemModified(calItem, Change.MODIFIED_INVITE, itemSnapshot);
+            markItemModified(calItem, Change.INVITE, itemSnapshot);
             success = true;
         } finally {
             endTransaction(success);
@@ -3958,7 +3958,7 @@ public class Mailbox {
             MailItem itemSnapshot = calItem.snapshotItem();
             calItem.snapshotRevision();
             calItem.updateNextAlarm(snoozeUntil, false);
-            markItemModified(calItem, Change.MODIFIED_INVITE, itemSnapshot);
+            markItemModified(calItem, Change.INVITE, itemSnapshot);
             success = true;
         } finally {
             endTransaction(success);
@@ -4214,7 +4214,7 @@ public class Mailbox {
                 // or simply invalidate the calendar item and refetch it.
                 uncacheItem(calItemId);
                 calItem = getCalendarItemById(octxt, calItemId);
-                markItemModified(calItem, Change.MODIFIED_CONTENT | Change.MODIFIED_INVITE, itemSnapshot);
+                markItemModified(calItem, Change.CONTENT | Change.INVITE, itemSnapshot);
                 success = true;
 
                 Callback cb = CalendarItem.getCallback();
@@ -4267,7 +4267,7 @@ public class Mailbox {
                 ZimbraLog.calendar.info("Fixed calendar item " + calItem.getId());
                 calItem.snapshotRevision();
                 calItem.saveMetadata();
-                markItemModified(calItem, Change.MODIFIED_CONTENT | Change.MODIFIED_INVITE, itemSnapshot);
+                markItemModified(calItem, Change.CONTENT | Change.INVITE, itemSnapshot);
                 success = true;
             }
             return numFixed;
@@ -4330,7 +4330,7 @@ public class Mailbox {
                 calItem.mData.setFlags(flags);
                 calItem.snapshotRevision();
                 calItem.saveMetadata();
-                markItemModified(calItem, Change.MODIFIED_INVITE, itemSnapshot);
+                markItemModified(calItem, Change.INVITE, itemSnapshot);
                 success = true;
                 numFixed = 1;
             }
@@ -5298,7 +5298,7 @@ public class Mailbox {
             MailItem itemSnapshot = calItem.snapshotItem();
             Account acct = getAccount();
             calItem.modifyPartStat(acct, recurId, cnStr, addressStr, cutypeStr, roleStr, partStatStr, rsvp, seqNo, dtStamp);
-            markItemModified(calItem, Change.MODIFIED_INVITE, itemSnapshot);
+            markItemModified(calItem, Change.INVITE, itemSnapshot);
             success = true;
         } finally {
             endTransaction(success);
@@ -7934,9 +7934,9 @@ public class Mailbox {
 
             if (currentChange.dirty.modified != null) {
                 for (Change change : currentChange.dirty.modified.values()) {
-                    if ((change.why & (Change.MODIFIED_UNREAD | Change.MODIFIED_SIZE)) != 0 && change.what instanceof Folder) {
+                    if ((change.why & (Change.UNREAD | Change.SIZE)) != 0 && change.what instanceof Folder) {
                         ((Folder) change.what).saveFolderCounts(false);
-                    } else if ((change.why & Change.MODIFIED_UNREAD | Change.MODIFIED_SIZE) != 0 && change.what instanceof Tag) {
+                    } else if ((change.why & Change.UNREAD | Change.SIZE) != 0 && change.what instanceof Tag) {
                         ((Tag) change.what).saveTagCounts();
                     }
                 }

@@ -56,7 +56,7 @@ public final class GetContacts extends MailDocumentHandler  {
 
         boolean sync = request.getAttributeBool(MailConstants.A_SYNC, false);
         boolean derefContactGroupMember = request.getAttributeBool(MailConstants.A_DEREF_CONTACT_GROUP_MEMBER, false);
-        
+
         String folderIdStr  = request.getAttribute(MailConstants.A_FOLDER, null);
         int folderId = ALL_FOLDERS;
         if (folderIdStr != null) {
@@ -100,7 +100,7 @@ public final class GetContacts extends MailDocumentHandler  {
                 e.detach();
             }
         }
-        
+
         boolean returnHiddenAttrs = false;
         if (attrs == null) {
             returnHiddenAttrs = request.getAttributeBool(MailConstants.A_RETURN_HIDDEN_ATTRS, false);
@@ -110,17 +110,17 @@ public final class GetContacts extends MailDocumentHandler  {
 
         // want to return modified date only on sync-related requests
         int fields = ToXML.NOTIFY_FIELDS;
-        if (sync)
-            fields |= Change.MODIFIED_CONFLICT;
-
+        if (sync) {
+            fields |= Change.CONFLICT;
+        }
         // for perf reason, derefContactGroupMember is not supported in this mode
         if (derefContactGroupMember) {
             if (ids == null) {
-                throw ServiceException.INVALID_REQUEST(MailConstants.A_DEREF_CONTACT_GROUP_MEMBER + 
+                throw ServiceException.INVALID_REQUEST(MailConstants.A_DEREF_CONTACT_GROUP_MEMBER +
                         " is supported only when specific contact ids are specified", null);
             }
         }
-        
+
         if (ids != null) {
             ArrayList<Integer> local = new ArrayList<Integer>();
             HashMap<String, StringBuffer> remote = new HashMap<String, StringBuffer>();
@@ -155,8 +155,8 @@ public final class GetContacts extends MailDocumentHandler  {
                                     contactGroup.derefAllMembers(con.getMailbox(), octxt);
                                 }
                             }
-                            ToXML.encodeContact(response, ifmt, octxt, con, contactGroup, 
-                                    memberAttrs, false, attrs, fields, migratedDlist, 
+                            ToXML.encodeContact(response, ifmt, octxt, con, contactGroup,
+                                    memberAttrs, false, attrs, fields, migratedDlist,
                                     returnHiddenAttrs);
                         }
                     }
@@ -167,7 +167,7 @@ public final class GetContacts extends MailDocumentHandler  {
         } else {
             for (Contact con : mbox.getContactList(octxt, folderId, sort)) {
                 if (con != null) {
-                    ToXML.encodeContact(response, ifmt, octxt, con, null, null,  
+                    ToXML.encodeContact(response, ifmt, octxt, con, null, null,
                             false, attrs, fields, null, returnHiddenAttrs);
                 }
             }

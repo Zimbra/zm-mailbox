@@ -166,15 +166,18 @@ public final class SearchFolder extends Folder {
      *    <li><code>service.PERM_DENIED</code> - if you don't have
      *        sufficient permissions</ul> */
     void changeQuery(String query, String types, String sort) throws ServiceException {
-        if (!isMutable())
+        if (!isMutable()) {
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
-        if (!canAccess(ACL.RIGHT_WRITE))
+        }
+        if (!canAccess(ACL.RIGHT_WRITE)) {
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the search folder");
+        }
         query = validateQuery(query);
 
-        if (query.equals(mQuery) && getReturnTypes().equals(types) && getSortField().equals(sort))
+        if (query.equals(mQuery) && getReturnTypes().equals(types) && getSortField().equals(sort)) {
             return;
-        markItemModified(Change.MODIFIED_QUERY);
+        }
+        markItemModified(Change.QUERY);
         mQuery = query;
         mTypes = types;
         mSort  = sort;

@@ -281,8 +281,7 @@ public final class GlobalIndex {
         private void onModify(Map<PendingModifications.ModificationKey, PendingModifications.Change> changes) {
             for (Map.Entry<PendingModifications.ModificationKey, PendingModifications.Change> entry : changes.entrySet()) {
                 PendingModifications.Change change = entry.getValue();
-                if (change.what instanceof Document &&
-                        (change.why & PendingModifications.Change.MODIFIED_FOLDER) != 0) {
+                if (change.what instanceof Document && (change.why & PendingModifications.Change.FOLDER) != 0) {
                     // Update ACL for the document.
                     Document doc = (Document) change.what;
                     try {
@@ -291,8 +290,8 @@ public final class GlobalIndex {
                         ZimbraLog.index.error("Failed to update ACL account=%s,id=%d",
                                 doc.getMailbox().getAccountId(), doc.getId());
                     }
-                } else if (change.what instanceof Folder && (change.why &
-                        (PendingModifications.Change.MODIFIED_FOLDER | PendingModifications.Change.MODIFIED_ACL)) != 0) {
+                } else if (change.what instanceof Folder &&
+                        (change.why & (PendingModifications.Change.FOLDER | PendingModifications.Change.ACL)) != 0) {
                     // Update ACL for all items under the folder.
                     Folder folder = (Folder) change.what;
                     try {

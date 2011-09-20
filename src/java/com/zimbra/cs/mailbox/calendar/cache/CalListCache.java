@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -139,14 +139,15 @@ public class CalListCache {
                     if (viewType == MailItem.Type.APPOINTMENT || viewType == MailItem.Type.TASK) {
                         ChangedFolders changedFolders = changeMap.getAccount(entry.getKey().getAccountId());
                         int folderId = folder.getId();
-                        if ((change.why & Change.MODIFIED_FOLDER) != 0) {
+                        if ((change.why & Change.FOLDER) != 0) {
                             // moving the calendar folder to another parent folder
                             int parentFolder = folder.getFolderId();
                             changedFolders.created.add(folderId);
-                            if (parentFolder == Mailbox.ID_FOLDER_TRASH)
+                            if (parentFolder == Mailbox.ID_FOLDER_TRASH) {
                                 changedFolders.deleted.add(folderId);
-                            else
+                            } else {
                                 changedFolders.created.add(folderId);
+                            }
                         } else {
                             // not a folder move, but something else changed, either calendar's metadata
                             // or a child item (appointment/task)
@@ -156,7 +157,7 @@ public class CalListCache {
                 } else if (whatChanged instanceof Message) {
                     Message msg = (Message) whatChanged;
                     if (msg.hasCalendarItemInfos()) {
-                        if (msg.getFolderId() == Mailbox.ID_FOLDER_INBOX || (change.why & Change.MODIFIED_FOLDER) != 0) {
+                        if (msg.getFolderId() == Mailbox.ID_FOLDER_INBOX || (change.why & Change.FOLDER) != 0) {
                             // If message was moved, we don't know which folder it was moved from.
                             // Just invalidate the Inbox because that's the only message folder we care
                             // about in calendaring.

@@ -29,7 +29,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 
-public class MailboxListenerTest {
+public final class MailboxListenerTest {
 
     private static boolean listenerWasCalled;
 
@@ -86,7 +86,7 @@ public class MailboxListenerTest {
             Change change = notification.mods.modified.get(
                     new ModificationKey(MockProvisioning.DEFAULT_ACCOUNT_ID, Mailbox.ID_FOLDER_BRIEFCASE));
             Assert.assertNotNull(change);
-            Assert.assertEquals(change.why, Change.MODIFIED_SIZE);
+            Assert.assertEquals(change.why, Change.SIZE);
             Assert.assertNotNull(change.preModifyObj);
             Assert.assertEquals(((Folder) change.preModifyObj).getId(), Mailbox.ID_FOLDER_BRIEFCASE);
         }

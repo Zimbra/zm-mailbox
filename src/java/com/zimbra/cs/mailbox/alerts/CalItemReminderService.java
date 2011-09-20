@@ -32,7 +32,8 @@ public class CalItemReminderService extends MailboxListener {
             for (Map.Entry<ModificationKey, MailItem> entry : notification.mods.created.entrySet()) {
                 MailItem item = entry.getValue();
                 if (item instanceof CalendarItem) {
-                    ZimbraLog.scheduler.debug("Handling creation of calendar item (id=%s,mailboxId=%s)", item.getId(), item.getMailboxId());
+                    ZimbraLog.scheduler.debug("Handling creation of calendar item (id=%s,mailboxId=%s)",
+                            item.getId(), item.getMailboxId());
                     scheduleNextReminders((CalendarItem) item);
                 }
             }
@@ -42,10 +43,11 @@ public class CalItemReminderService extends MailboxListener {
                 Change change = entry.getValue();
                 if (change.what instanceof CalendarItem) {
                     CalendarItem calItem = (CalendarItem) change.what;
-                    ZimbraLog.scheduler.debug("Handling modification of calendar item (id=%s,mailboxId=%s)", calItem.getId(), calItem.getMailboxId());
+                    ZimbraLog.scheduler.debug("Handling modification of calendar item (id=%s,mailboxId=%s)",
+                            calItem.getId(), calItem.getMailboxId());
                     boolean calItemCanceled = false;
                     try {
-                        if ((change.why & Change.MODIFIED_FOLDER) != 0 && calItem.inTrash()) {
+                        if ((change.why & Change.FOLDER) != 0 && calItem.inTrash()) {
                             calItemCanceled = true;
                         }
                     } catch (ServiceException e) {

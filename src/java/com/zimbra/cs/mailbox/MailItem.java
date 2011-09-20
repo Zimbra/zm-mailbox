@@ -924,13 +924,14 @@ public abstract class MailItem implements Comparable<MailItem> {
      *  metdata contains no metadata key/value pairs, the section is deleted.
      * @see #getCustomData(String) */
     void setCustomData(CustomMetadata custom) throws ServiceException {
-        if (custom == null)
+        if (custom == null) {
             return;
+        }
         if (!canAccess(ACL.RIGHT_WRITE)) {
             throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
         }
 
-        markItemModified(Change.MODIFIED_METADATA);
+        markItemModified(Change.METADATA);
         // first add the new section to the list
         if (mExtendedData != null) {
             mExtendedData.addSection(custom);
@@ -1702,7 +1703,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         } else if (color.equals(mRGBColor)) {
             return;
         }
-        markItemModified(Change.MODIFIED_COLOR);
+        markItemModified(Change.COLOR);
         mRGBColor.set(color);
         saveMetadata();
     }
@@ -1723,7 +1724,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         } else if (color == mRGBColor.getMappedColor()) {
             return;
         }
-        markItemModified(Change.MODIFIED_COLOR);
+        markItemModified(Change.COLOR);
         mRGBColor.setColor(color);
         saveMetadata();
     }
@@ -1741,7 +1742,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         } else if (!canAccess(ACL.RIGHT_WRITE)) {
             throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
         }
-        markItemModified(Change.MODIFIED_DATE);
+        markItemModified(Change.DATE);
         mData.date = (int)(date / 1000L);
         mData.metadataChanged(mMailbox);
         if (ZimbraLog.mailop.isDebugEnabled()) {
@@ -1754,13 +1755,13 @@ public abstract class MailItem implements Comparable<MailItem> {
      *  not update the containing folder's IMAP UID highwater mark; that is
      *  done implicitly whenever the folder size increases. */
     void setImapUid(int imapId) throws ServiceException {
-        if (mData.imapId == imapId)
+        if (mData.imapId == imapId) {
             return;
-
-        if (ZimbraLog.mailop.isDebugEnabled())
+        }
+        if (ZimbraLog.mailop.isDebugEnabled()) {
             ZimbraLog.mailop.debug("Setting imapId of %s to %d.", getMailopContext(this), imapId);
-
-        markItemModified(Change.MODIFIED_IMAP_UID);
+        }
+        markItemModified(Change.IMAP_UID);
         mData.imapId = imapId;
         mData.metadataChanged(mMailbox);
         DbMailItem.saveImapUid(this);
@@ -1772,22 +1773,22 @@ public abstract class MailItem implements Comparable<MailItem> {
         addRevision(false);
 
         // update the item's relevant attributes
-        markItemModified(Change.MODIFIED_CONTENT  | Change.MODIFIED_DATE |
-                         Change.MODIFIED_IMAP_UID | Change.MODIFIED_SIZE);
+        markItemModified(Change.CONTENT  | Change.DATE | Change.IMAP_UID | Change.SIZE);
 
         // delete the old blob *unless* we've already rewritten it in this transaction
         if (getSavedSequence() != mMailbox.getOperationChangeID()) {
-            if (!canAccess(ACL.RIGHT_WRITE))
+            if (!canAccess(ACL.RIGHT_WRITE)) {
                 throw ServiceException.PERM_DENIED("you do not have the necessary permissions on the item");
-
+            }
             boolean delete = true;
             // don't delete blob if last revision uses it
             if (isTagged(Flag.FlagInfo.VERSIONED)) {
                 List<MailItem> revisions = loadRevisions();
                 if (!revisions.isEmpty()) {
                     MailItem lastRev = revisions.get(revisions.size() - 1);
-                    if (lastRev.getSavedSequence() == getSavedSequence())
+                    if (lastRev.getSavedSequence() == getSavedSequence()) {
                         delete = false;
+                    }
                 }
             }
             if (delete) {
@@ -1986,9 +1987,9 @@ public abstract class MailItem implements Comparable<MailItem> {
      *        permissions</ul> */
     void alterUnread(boolean unread) throws ServiceException {
         // detect NOOPs and bail
-        if (unread == isUnread())
+        if (unread == isUnread()) {
             return;
-
+        }
         Flag unreadFlag = Flag.FlagInfo.UNREAD.toFlag(mMailbox);
         if (!unreadFlag.canTag(this)) {
             throw MailServiceException.CANNOT_TAG(unreadFlag, this);
@@ -1996,7 +1997,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
         }
 
-        markItemModified(Change.MODIFIED_UNREAD);
+        markItemModified(Change.UNREAD);
         int delta = unread ? 1 : -1;
         mData.metadataChanged(mMailbox);
         updateUnread(delta, isTagged(Flag.FlagInfo.DELETED) ? delta : 0);
@@ -2113,7 +2114,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      *             <tt>false</tt> if the item was untagged. */
     protected void tagChanged(Tag tag, boolean add) throws ServiceException {
         boolean isFlag = tag instanceof Flag;
-        markItemModified(isFlag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
+        markItemModified(isFlag ? Change.FLAGS : Change.TAGS);
         // changing a system flag is not a syncable event
         if (!isFlag || !((Flag) tag).isSystemFlag()) {
             mData.metadataChanged(mMailbox);
@@ -2146,11 +2147,11 @@ public abstract class MailItem implements Comparable<MailItem> {
      *
      * @param delta  The change in unread count for this item. */
     protected void updateUnread(int delta, int deletedDelta) throws ServiceException {
-        if (delta == 0 || !trackUnread())
+        if (delta == 0 || !trackUnread()) {
             return;
-
+        }
         // update our unread count (should we check that we don't have too many unread?)
-        markItemModified(Change.MODIFIED_UNREAD);
+        markItemModified(Change.UNREAD);
         mData.unreadCount += delta;
         if (mData.unreadCount < 0) {
             throw ServiceException.FAILURE("inconsistent state: unread < 0 for item " + mId, null);
@@ -2225,7 +2226,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         flags = (flags & ~Flag.FLAGS_SYSTEM) | (getFlagBitmask() & Flag.FLAGS_SYSTEM);
         // handle flags first...
         if (flags != mData.getFlags()) {
-            markItemModified(Change.MODIFIED_FLAGS);
+            markItemModified(Change.FLAGS);
             for (int flagId : Flag.toId(flags ^ mData.getFlags())) {
                 Flag flag = Flag.of(mMailbox, flagId);
                 if (flag != null) {
@@ -2443,8 +2444,8 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
 
         if (parent != null && parent.getId() > 0) {
-            markItemModified(Change.MODIFIED_PARENT);
-            parent.markItemModified(Change.MODIFIED_CHILDREN);
+            markItemModified(Change.PARENT);
+            parent.markItemModified(Change.CHILDREN);
             mData.metadataChanged(mMailbox);
             mData.parentId = mData.type == Type.MESSAGE.toByte() ? -mId : -1;
         }
@@ -2588,7 +2589,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
             // XXX: note that we don't update mData.folderId here, as we need the subsequent
             //   move() to execute (it does several things that this code does not)
-            markItemModified(Change.MODIFIED_NAME);
+            markItemModified(Change.NAME);
             mData.name = name;
             mData.setSubject(name);
             mData.dateChanged = mMailbox.getOperationTimestamp();
@@ -2623,20 +2624,24 @@ public abstract class MailItem implements Comparable<MailItem> {
      *        permissions</ul>
      * @return whether anything was actually moved */
     boolean move(Folder target) throws ServiceException {
-        if (mData.folderId == target.getId())
+        if (mData.folderId == target.getId()) {
             return false;
-        markItemModified(Change.MODIFIED_FOLDER);
-        if (!isMovable())
+        }
+        markItemModified(Change.FOLDER);
+        if (!isMovable()) {
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
-        if (!target.canContain(this))
+        }
+        if (!target.canContain(this)) {
             throw MailServiceException.CANNOT_CONTAIN();
-
+        }
         Folder oldFolder = getFolder();
-        if (!oldFolder.canAccess(ACL.RIGHT_DELETE))
+        if (!oldFolder.canAccess(ACL.RIGHT_DELETE)) {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the source folder");
-        if (target.getId() != Mailbox.ID_FOLDER_TRASH && target.getId() != Mailbox.ID_FOLDER_SPAM && !target.canAccess(ACL.RIGHT_INSERT))
+        }
+        if (target.getId() != Mailbox.ID_FOLDER_TRASH && target.getId() != Mailbox.ID_FOLDER_SPAM &&
+                !target.canAccess(ACL.RIGHT_INSERT)) {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the target folder");
-
+        }
         if (isLeafNode()) {
             boolean isDeleted = isTagged(Flag.FlagInfo.DELETED);
             oldFolder.updateSize(-1, isDeleted ? -1 : 0, -getTotalSize());
@@ -2645,17 +2650,18 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         if (!inTrash() && target.inTrash()) {
             // moving something to Trash also marks it as read
-            if (mData.unreadCount > 0)
+            if (mData.unreadCount > 0) {
                 alterUnread(false);
+            }
         } else {
             boolean isDeleted = isTagged(Flag.FlagInfo.DELETED);
             oldFolder.updateUnread(-mData.unreadCount, isDeleted ? -mData.unreadCount : 0);
             target.updateUnread(mData.unreadCount, isDeleted? mData.unreadCount : 0);
         }
         // moving a message (etc.) to Spam removes it from its conversation
-        if (!inSpam() && target.inSpam())
+        if (!inSpam() && target.inSpam()) {
             detach();
-
+        }
         // item moved out of spam, so update the index id (will be written to DB in DbMailItem.setFolder());
         if (inSpam() && !target.inSpam() && getIndexStatus() == IndexStatus.DONE) {
             mMailbox.index.add(this);
@@ -2675,25 +2681,30 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @param imapId     The new IMAP ID for the item after the operation.
      * @throws ServiceException if we're not in a transaction */
     void folderChanged(Folder newFolder, int imapId) throws ServiceException {
-        if (mData.folderId == newFolder.getId())
+        if (mData.folderId == newFolder.getId()) {
             return;
-        markItemModified(Change.MODIFIED_FOLDER);
+        }
+        markItemModified(Change.FOLDER);
         mData.metadataChanged(mMailbox);
         mData.folderId = newFolder.getId();
         mData.imapId   = mMailbox.isTrackingImap() ? imapId : mData.imapId;
     }
 
     void addChild(MailItem child) throws ServiceException {
-        markItemModified(Change.MODIFIED_CHILDREN);
-        if (!canParent(child))
+        markItemModified(Change.CHILDREN);
+        if (!canParent(child)) {
             throw MailServiceException.CANNOT_PARENT();
-        if (mMailbox != child.getMailbox())
+        }
+        if (mMailbox != child.getMailbox()) {
             throw MailServiceException.WRONG_MAILBOX();
+        }
     }
 
-    @SuppressWarnings("unused")
+    /**
+     * @throws ServiceException subclass may throw
+     */
     void removeChild(MailItem child) throws ServiceException {
-        markItemModified(Change.MODIFIED_CHILDREN);
+        markItemModified(Change.CHILDREN);
 
         // remove parent reference from the child
         if (child.mData.parentId == mId) {

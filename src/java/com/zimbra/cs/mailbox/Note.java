@@ -194,7 +194,7 @@ public class Note extends MailItem {
             return;
         }
         addRevision(false);
-        markItemModified(Change.MODIFIED_CONTENT | Change.MODIFIED_DATE);
+        markItemModified(Change.CONTENT | Change.DATE);
         // XXX: should probably update both mData.size and the Mailbox's size
         mData.setSubject(content);
         mData.date = mMailbox.getOperationTimestamp();
@@ -207,16 +207,19 @@ public class Note extends MailItem {
     }
 
     void reposition(Rectangle bounds) throws ServiceException {
-        if (!isMutable())
+        if (!isMutable()) {
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
-        if (!canAccess(ACL.RIGHT_WRITE))
+        }
+        if (!canAccess(ACL.RIGHT_WRITE)) {
             throw ServiceException.PERM_DENIED("you do not have sufficient permissions on the note");
-        if (bounds == null)
+        }
+        if (bounds == null) {
             throw ServiceException.INVALID_REQUEST("must specify bounds", null);
-
-        if (bounds.equals(mBounds))
+        }
+        if (bounds.equals(mBounds)) {
             return;
-        markItemModified(Change.MODIFIED_POSITION);
+        }
+        markItemModified(Change.POSITION);
         mBounds = new Rectangle(bounds);
         saveMetadata();
     }

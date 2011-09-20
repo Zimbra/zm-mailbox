@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,9 +31,8 @@ import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetMsgMetadata extends MailDocumentHandler {
 
-    static final int SUMMARY_FIELDS = Change.MODIFIED_SIZE | Change.MODIFIED_PARENT | Change.MODIFIED_FOLDER |
-                                      Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS  | Change.MODIFIED_UNREAD |
-                                      Change.MODIFIED_DATE | Change.MODIFIED_CONFLICT;
+    static final int SUMMARY_FIELDS = Change.SIZE | Change.PARENT | Change.FOLDER | Change.TAGS | Change.FLAGS |
+            Change.UNREAD | Change.DATE | Change.CONFLICT;
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -54,7 +53,7 @@ public class GetMsgMetadata extends MailDocumentHandler {
             for (Element e : responses)
                 response.addElement(e);
         }
-        
+
         if (local.size() > 0) {
             List<Message> msgs = GetMsg.getMsgs(octxt, mbox, local, false);
             for (Message msg : msgs) {

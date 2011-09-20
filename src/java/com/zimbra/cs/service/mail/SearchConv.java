@@ -51,8 +51,7 @@ import com.zimbra.soap.ZimbraSoapContext;
  */
 public final class SearchConv extends Search {
 
-    private static final int CONVERSATION_FIELD_MASK =
-        Change.MODIFIED_SIZE | Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS;
+    private static final int CONVERSATION_FIELD_MASK = Change.SIZE | Change.TAGS | Change.FLAGS;
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {

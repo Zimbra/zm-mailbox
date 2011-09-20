@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -252,7 +252,7 @@ public class CtagInfoCache {
                 } else if (whatChanged instanceof Message) {
                     Message msg = (Message) whatChanged;
                     if (msg.hasCalendarItemInfos()) {
-                        if (msg.getFolderId() == inboxFolder || (change.why & Change.MODIFIED_FOLDER) != 0) {
+                        if (msg.getFolderId() == inboxFolder || (change.why & Change.FOLDER) != 0) {
                             // If message was moved, we don't know which folder it was moved from.
                             // Just invalidate the Inbox because that's the only message folder we care
                             // about in calendaring.

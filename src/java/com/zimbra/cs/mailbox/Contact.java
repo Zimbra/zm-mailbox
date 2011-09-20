@@ -725,7 +725,7 @@ public class Contact extends MailItem {
         }
         ParsedContact pc = (ParsedContact) data;
 
-        markItemModified(Change.MODIFIED_CONTENT | Change.MODIFIED_DATE | Change.MODIFIED_FLAGS);
+        markItemModified(Change.CONTENT | Change.DATE | Change.FLAGS);
         fields = pc.getFields();
         if (fields == null || fields.isEmpty()) {
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);

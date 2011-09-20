@@ -963,7 +963,7 @@ public class DbMailItem {
 
     public static void saveName(MailItem item, int folderId, Metadata metadata) throws ServiceException {
         Mailbox mbox = item.getMailbox();
-        String name = item.getName().equals("") ? null : item.getName();
+        String name = item.getName().isEmpty() ? null : item.getName();
         checkNamingConstraint(mbox, folderId, name, item.getId());
 
         DbConnection conn = mbox.getOperationConnection();
@@ -993,8 +993,9 @@ public class DbMailItem {
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
 
-            if (mbox.isItemModified(item, Change.MODIFIED_FLAGS)) {
-                DbTag.updateTagReferences(mbox, item.getId(), item.getType(), item.getInternalFlagBitmask(), item.isUnread(), item.getTags());
+            if (mbox.isItemModified(item, Change.FLAGS)) {
+                DbTag.updateTagReferences(mbox, item.getId(), item.getType(), item.getInternalFlagBitmask(),
+                        item.isUnread(), item.getTags());
             }
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure
@@ -1009,7 +1010,7 @@ public class DbMailItem {
     }
 
     public void update(MailItem item, Metadata metadata) throws ServiceException {
-        String name = item.getName().equals("") ? null : item.getName();
+        String name = item.getName().isEmpty() ? null : item.getName();
         checkNamingConstraint(mailbox, item.getFolderId(), name, item.getId());
 
         DbConnection conn = mailbox.getOperationConnection();
@@ -1059,8 +1060,9 @@ public class DbMailItem {
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
 
-            if (mailbox.isItemModified(item, Change.MODIFIED_FLAGS)) {
-                DbTag.updateTagReferences(mailbox, item.getId(), item.getType(), item.getInternalFlagBitmask(), item.isUnread(), item.getTags());
+            if (mailbox.isItemModified(item, Change.FLAGS)) {
+                DbTag.updateTagReferences(mailbox, item.getId(), item.getType(), item.getInternalFlagBitmask(),
+                        item.isUnread(), item.getTags());
             }
         } catch (SQLException e) {
             // catch item_id uniqueness constraint violation and return failure

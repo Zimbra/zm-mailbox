@@ -138,7 +138,7 @@ public class SoapSession extends Session {
                 SoapSession.this.notifyExternalEvent(extra);
             }
         }
-        
+
         /**
          * Returns true if the MailItem should be excluded from notification serialization
          * @throws ServiceException
@@ -196,17 +196,16 @@ public class SoapSession extends Session {
             }
             if (!recalc && pms.modified != null && !pms.modified.isEmpty()) {
                 for (Change chg : pms.modified.values()) {
-                    if ((chg.why & (Change.MODIFIED_ACL | Change.MODIFIED_FOLDER)) != 0 && chg.what instanceof Folder)
+                    if ((chg.why & (Change.ACL | Change.FOLDER)) != 0 && chg.what instanceof Folder) {
                         return true;
+                    }
                 }
             }
             return false;
         }
 
-        private static final int BASIC_CONVERSATION_FLAGS =
-                Change.MODIFIED_FLAGS | Change.MODIFIED_TAGS | Change.MODIFIED_UNREAD;
-        private static final int MODIFIED_CONVERSATION_FLAGS =
-                BASIC_CONVERSATION_FLAGS | Change.MODIFIED_SIZE  | Change.MODIFIED_SENDERS;
+        private static final int BASIC_CONVERSATION_FLAGS = Change.FLAGS | Change.TAGS | Change.UNREAD;
+        private static final int MODIFIED_CONVERSATION_FLAGS = BASIC_CONVERSATION_FLAGS | Change.SIZE  | Change.SENDERS;
 
         private PendingModifications filterNotifications(PendingModifications pms) throws ServiceException {
             // first, recalc visible folders if any folders got created or moved or had their ACL changed
@@ -252,7 +251,7 @@ public class SoapSession extends Session {
                         }
                         boolean isVisible =
                                 visible.contains(item instanceof Folder ? item.getId() : item.getFolderId());
-                        boolean moved = (chg.why & Change.MODIFIED_FOLDER) != 0;
+                        boolean moved = (chg.why & Change.FOLDER) != 0;
                         if (item instanceof Conversation) {
                             filtered.recordModified(chg.op, item, chg.why | MODIFIED_CONVERSATION_FLAGS, chg.when,
                                                     (MailItem) chg.preModifyObj);
@@ -884,7 +883,7 @@ public class SoapSession extends Session {
         }
         if (pms.modified != null && !pms.modified.isEmpty()) {
             for (Change chg : pms.modified.values()) {
-                if (!(chg.what instanceof Mailbox) || chg.why != Change.MODIFIED_CONFIG) {
+                if (!(chg.what instanceof Mailbox) || chg.why != Change.CONFIG) {
                     return true;
                 }
             }

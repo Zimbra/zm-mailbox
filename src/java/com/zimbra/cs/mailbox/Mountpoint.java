@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -62,7 +62,7 @@ public class Mountpoint extends Folder {
     }
 
     /** Returns true if reminders are enabled on the shared calendar.
-     * 
+     *
      * @return
      */
     public boolean isReminderEnabled() {
@@ -212,8 +212,6 @@ public class Mountpoint extends Folder {
 
     /**
      * Enables/disables showing reminders for items in shared calendar.
-     * @param show
-     * @throws ServiceException
      */
     void enableReminder(boolean enable) throws ServiceException {
         if (!isMutable()) {
@@ -225,7 +223,7 @@ public class Mountpoint extends Folder {
         if (mReminderEnabled == enable) {
             return;
         }
-        markItemModified(Change.MODIFIED_SHAREDREM);
+        markItemModified(Change.SHAREDREM);
         mReminderEnabled = enable;
         saveMetadata();
     }

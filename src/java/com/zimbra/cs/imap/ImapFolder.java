@@ -993,14 +993,14 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
             }
         } else if (!inFolder && !isVirtual()) {
             markMessageExpunged(i4msg);
-        } else if ((chg.why & Change.MODIFIED_IMAP_UID) != 0) {
+        } else if ((chg.why & Change.IMAP_UID) != 0) {
             // if the IMAP uid changed, need to bump it to the back of the sequence!
             markMessageExpunged(i4msg);
             if (!isVirtual()) {
                 added.add(item);
             }
             ZimbraLog.imap.debug("  ** imap uid changed (ntfn): %d", item.getId());
-        } else if ((chg.why & (Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD)) != 0) {
+        } else if ((chg.why & (Change.TAGS | Change.FLAGS | Change.UNREAD)) != 0) {
             i4msg.setPermanentFlags(item.getFlagBitmask(), item.getTags(), changeId, this);
         }
     }

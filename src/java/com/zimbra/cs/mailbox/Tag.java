@@ -125,10 +125,10 @@ public class Tag extends MailItem {
      * @param deletedDelta  The change in number of IMAP \Deleted items.*/
     void updateSize(int countDelta, int deletedDelta) {
         int delta = countDelta - deletedDelta;
-        if (delta == 0 || !trackUnread())
+        if (delta == 0 || !trackUnread()) {
             return;
-
-        markItemModified(Change.MODIFIED_SIZE);
+        }
+        markItemModified(Change.SIZE);
         // if we go negative, that's OK!  just pretend we're at 0.
         mData.size = Math.max(0, mData.size + delta);
     }
@@ -168,7 +168,7 @@ public class Tag extends MailItem {
     boolean canTag(MailItem item) {
         return item.isTaggable();
     }
-    
+
     /** Returns the retention policy for this tag.  Does not return {@code null}. */
     public RetentionPolicy getRetentionPolicy() {
         return retentionPolicy;
@@ -179,7 +179,7 @@ public class Tag extends MailItem {
             throw ServiceException.PERM_DENIED("you do not have admin rights to tag " + getName());
         }
 
-        markItemModified(Change.MODIFIED_RETENTION_POLICY);
+        markItemModified(Change.RETENTION_POLICY);
         retentionPolicy = rp == null ? new RetentionPolicy() : rp;
         saveMetadata();
     }
@@ -273,7 +273,7 @@ public class Tag extends MailItem {
         }
 
         // actually rename the tag
-        markItemModified(Change.MODIFIED_NAME);
+        markItemModified(Change.NAME);
         mData.name = newName;
         mData.contentChanged(mMailbox);
         DbTag.renameTag(this);

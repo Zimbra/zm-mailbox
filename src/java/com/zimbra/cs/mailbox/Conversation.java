@@ -130,7 +130,7 @@ public class Conversation extends MailItem {
     }
 
     void recalculateCounts(List<Message> msgs) {
-        markItemModified(Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS | Change.MODIFIED_UNREAD);
+        markItemModified(Change.TAGS | Change.FLAGS | Change.UNREAD);
         Set<String> tags = new HashSet<String>();
         mData.unreadCount = 0;
         mData.setFlags(0);
@@ -144,8 +144,8 @@ public class Conversation extends MailItem {
         mData.setTags(new Tag.NormalizedTags(tags));
     }
 
-    private static final int RECALCULATE_CHANGE_MASK = Change.MODIFIED_TAGS | Change.MODIFIED_FLAGS  | Change.MODIFIED_SENDERS |
-                                                       Change.MODIFIED_SIZE | Change.MODIFIED_UNREAD | Change.MODIFIED_METADATA;
+    private static final int RECALCULATE_CHANGE_MASK = Change.TAGS | Change.FLAGS  | Change.SENDERS | Change.SIZE |
+            Change.UNREAD | Change.METADATA;
 
     SenderList recalculateMetadata() throws ServiceException {
         return recalculateMetadata(getMessages());
@@ -248,8 +248,9 @@ public class Conversation extends MailItem {
     static Conversation create(Mailbox mbox, int id, Message... msgs) throws ServiceException {
         if (ZimbraLog.mailop.isDebugEnabled()) {
             StringBuilder msgIds = new StringBuilder();
-            for (int i = 0; i < msgs.length; i++)
+            for (int i = 0; i < msgs.length; i++) {
                 msgIds.append(i > 0 ? "," : "").append(msgs[i].getId());
+            }
             ZimbraLog.mailop.debug("Adding Conversation: id=%d, message(s): %s.", id, msgIds);
         }
 
@@ -261,8 +262,9 @@ public class Conversation extends MailItem {
         Set<String> tags = new HashSet<String>();
         for (int i = 0; i < msgs.length; i++) {
             Message msg = msgs[i];
-            if (msg == null)
+            if (msg == null) {
                 throw ServiceException.FAILURE("null Message in list", null);
+            }
             date = Math.max(date, msg.mData.date);
             unread += msg.mData.unreadCount;
             flags  |= msg.mData.getFlags();
@@ -291,7 +293,7 @@ public class Conversation extends MailItem {
 
         DbMailItem.setParent(msgs, conv);
         for (int i = 0; i < msgs.length; i++) {
-            mbox.markItemModified(msgs[i], Change.MODIFIED_PARENT, msgs[i].snapshotItem());
+            mbox.markItemModified(msgs[i], Change.PARENT, msgs[i].snapshotItem());
             msgs[i].mData.parentId = id;
             msgs[i].mData.metadataChanged(mbox);
         }
@@ -331,7 +333,7 @@ public class Conversation extends MailItem {
      * @perms {@link ACL#RIGHT_WRITE} on all the messages */
     @Override
     void alterUnread(boolean unread) throws ServiceException {
-        markItemModified(Change.MODIFIED_UNREAD);
+        markItemModified(Change.UNREAD);
 
         boolean excludeAccess = false;
 
@@ -358,8 +360,9 @@ public class Conversation extends MailItem {
 
         // mark the selected messages in this conversation as read in the database
         if (targets.isEmpty()) {
-            if (excludeAccess)
+            if (excludeAccess) {
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+            }
         } else {
             DbMailItem.alterUnread(mMailbox, targets, unread);
         }
@@ -398,7 +401,7 @@ public class Conversation extends MailItem {
         if (tag instanceof Flag && ((Flag) tag).isSystemFlag()) {
             throw MailServiceException.CANNOT_TAG(tag, this);
         }
-        markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
+        markItemModified(tag instanceof Flag ? Change.FLAGS : Change.TAGS);
 
         TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
         boolean excludeAccess = false;
@@ -453,10 +456,10 @@ public class Conversation extends MailItem {
 
     @Override
     protected void inheritedTagChanged(Tag tag, boolean add) throws ServiceException {
-        if (tag == null || add == isTagged(tag))
+        if (tag == null || add == isTagged(tag)) {
             return;
-
-        markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
+        }
+        markItemModified(tag instanceof Flag ? Change.FLAGS : Change.TAGS);
         if (add) {
             tagChanged(tag, add);
         } else {
@@ -465,10 +468,10 @@ public class Conversation extends MailItem {
     }
 
     protected void inheritedCustomDataChanged(Message msg, CustomMetadata custom) throws ServiceException {
-        if (custom == null)
+        if (custom == null) {
             return;
-
-        markItemModified(Change.MODIFIED_METADATA);
+        }
+        markItemModified(Change.METADATA);
         if (!custom.isEmpty()) {
             mExtendedData = MetadataCallback.duringConversationAdd(mExtendedData, msg);
             saveMetadata();
@@ -504,7 +507,7 @@ public class Conversation extends MailItem {
         if (!target.canContain(Type.MESSAGE)) {
             throw MailServiceException.CANNOT_CONTAIN();
         }
-        markItemModified(Change.UNMODIFIED);
+        markItemModified(Change.NONE);
 
         List<Message> msgs = getMessages();
         TargetConstraint tcon = mMailbox.getOperationTargetConstraint();
@@ -617,7 +620,7 @@ public class Conversation extends MailItem {
         int oldFlags = mData.getFlags();
         mData.setFlags(mData.getFlags() | msg.getInternalFlagBitmask());
         if (mData.getFlags() != oldFlags) {
-            markItemModified(Change.MODIFIED_FLAGS);
+            markItemModified(Change.FLAGS);
         }
 
         // update inherited tags
@@ -629,18 +632,18 @@ public class Conversation extends MailItem {
                 tags.add(msgTag);
             }
             if (tags.size() != oldCount) {
-                markItemModified(Change.MODIFIED_TAGS);
+                markItemModified(Change.TAGS);
                 mData.setTags(new Tag.NormalizedTags(tags));
             }
         }
 
         // update unread counts
         if (msg.isUnread()) {
-            markItemModified(Change.MODIFIED_UNREAD);
+            markItemModified(Change.UNREAD);
             updateUnread(child.mData.unreadCount, child.isTagged(Flag.FlagInfo.DELETED) ? child.mData.unreadCount : 0);
         }
 
-        markItemModified(Change.MODIFIED_SIZE | Change.MODIFIED_SENDERS | Change.MODIFIED_METADATA);
+        markItemModified(Change.SIZE | Change.SENDERS | Change.METADATA);
 
         MetadataCallback.duringConversationAdd(mExtendedData, msg);
 
@@ -684,12 +687,12 @@ public class Conversation extends MailItem {
             return;
         }
 
-        markItemModified(Change.MODIFIED_SIZE | Change.MODIFIED_SENDERS);
+        markItemModified(Change.SIZE | Change.SENDERS);
 
         if (!mMailbox.hasListeners(Session.Type.SOAP)) {
             // update unread counts
             if (child.isUnread()) {
-                markItemModified(Change.MODIFIED_UNREAD);
+                markItemModified(Change.UNREAD);
                 updateUnread(-child.mData.unreadCount, child.isTagged(Flag.FlagInfo.DELETED) ? -child.mData.unreadCount : 0);
             }
 
@@ -701,10 +704,10 @@ public class Conversation extends MailItem {
                 DbMailItem.completeConversation(mMailbox, mMailbox.getOperationConnection(), mData);
 
                 if (mData.getFlags() != oldFlags) {
-                    markItemModified(Change.MODIFIED_FLAGS);
+                    markItemModified(Change.FLAGS);
                 }
                 if (mData.getTags().length != oldTagCount) {
-                    markItemModified(Change.MODIFIED_TAGS);
+                    markItemModified(Change.TAGS);
                 }
             }
 
@@ -720,15 +723,15 @@ public class Conversation extends MailItem {
     }
 
     void merge(Conversation other) throws ServiceException {
-        if (other == this)
+        if (other == this) {
             return;
-
+        }
         // make sure to add conversation to dirty list before mucking with it
         //   (the actual dirty mask gets applied during recalculateMetadata)
         markItemModified(Change.INTERNAL_ONLY);
 
         for (Message msg : other.getMessages()) {
-            msg.markItemModified(Change.MODIFIED_PARENT);
+            msg.markItemModified(Change.PARENT);
             msg.mData.parentId = mId;
             MetadataCallback.duringConversationAdd(mExtendedData, msg);
         }

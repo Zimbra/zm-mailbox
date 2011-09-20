@@ -81,7 +81,7 @@ public class GetCalendarItem extends CalendarRequest {
         // want to return modified date only on sync-related requests
         int fields = ToXML.NOTIFY_FIELDS;
         if (sync) {
-            fields |= Change.MODIFIED_CONFLICT;
+            fields |= Change.CONFLICT;
         }
         Element response = getResponseElement(zsc);
         mbox.lock.lock();

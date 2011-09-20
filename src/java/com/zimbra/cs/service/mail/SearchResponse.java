@@ -246,7 +246,7 @@ final class SearchResponse {
                     params.getWantHtml(), params.getNeuterImages(), params.getInlinedHeaders(), true);
         } else {
             el = ToXML.encodeMessageSummary(element, ifmt, octxt, msg, params.getWantRecipients(),
-                    params.isQuick() ? PendingModifications.Change.MODIFIED_CONTENT : ToXML.NOTIFY_FIELDS);
+                    params.isQuick() ? PendingModifications.Change.CONTENT : ToXML.NOTIFY_FIELDS);
         }
 
         el.addAttribute(MailConstants.A_CONTENTMATCHED, true);

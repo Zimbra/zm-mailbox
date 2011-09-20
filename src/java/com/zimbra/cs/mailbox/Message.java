@@ -1157,11 +1157,12 @@ public class Message extends MailItem {
      *  uncached {@link Conversation}s when a {@link Message} changes state.
      *
      * @param delta  The change in unread count for this item. */
-    @Override protected void updateUnread(int delta, int deletedDelta) throws ServiceException {
-        if ((delta == 0 && deletedDelta == 0) || !trackUnread())
+    @Override
+    protected void updateUnread(int delta, int deletedDelta) throws ServiceException {
+        if ((delta == 0 && deletedDelta == 0) || !trackUnread()) {
             return;
-
-        markItemModified(Change.MODIFIED_UNREAD);
+        }
+        markItemModified(Change.UNREAD);
 
         // grab the parent *before* we make any other changes
         MailItem parent = getParent();
@@ -1266,7 +1267,7 @@ public class Message extends MailItem {
 
         // make sure the SUBJECT is correct
         if (!getSubject().equals(pm.getSubject())) {
-            markItemModified(Change.MODIFIED_SUBJECT);
+            markItemModified(Change.SUBJECT);
         }
         rawSubject = pm.getSubject();
         mData.setSubject(pm.getNormalizedSubject());
@@ -1281,7 +1282,7 @@ public class Message extends MailItem {
             mData.setFlag(Flag.FlagInfo.ATTACHED);
         }
         if (hadAttachment != pm.hasAttachments()) {
-            markItemModified(Change.MODIFIED_FLAGS);
+            markItemModified(Change.FLAGS);
             parent.tagChanged(mMailbox.getFlagById(Flag.ID_ATTACHED), pm.hasAttachments());
         }
 
@@ -1292,7 +1293,7 @@ public class Message extends MailItem {
         mData.unsetFlag(Flag.FlagInfo.LOW_PRIORITY);
         mData.setFlags(mData.getFlags() | urgency);
         if (oldUrgency != urgency) {
-            markItemModified(Change.MODIFIED_FLAGS);
+            markItemModified(Change.FLAGS);
             if (urgency == Flag.BITMASK_HIGH_PRIORITY || oldUrgency == Flag.BITMASK_HIGH_PRIORITY) {
                 parent.tagChanged(mMailbox.getFlagById(Flag.ID_HIGH_PRIORITY), urgency == Flag.BITMASK_HIGH_PRIORITY);
             }
@@ -1303,7 +1304,7 @@ public class Message extends MailItem {
 
         // update the SIZE and METADATA
         if (mData.size != newSize) {
-            markItemModified(Change.MODIFIED_SIZE);
+            markItemModified(Change.SIZE);
             mMailbox.updateSize(newSize - mData.size, false);
             getFolder().updateSize(0, 0, newSize - mData.size);
             mData.size = newSize;
@@ -1321,13 +1322,14 @@ public class Message extends MailItem {
     @Override
     void detach() throws ServiceException {
         MailItem parent = getParent();
-        if (!(parent instanceof Conversation))
+        if (!(parent instanceof Conversation)) {
             return;
+        }
         if (parent.getSize() <= 1) {
             mMailbox.closeConversation((Conversation) parent, null);
         } else {
             // remove this message from its (real) conversation
-            markItemModified(Change.MODIFIED_PARENT);
+            markItemModified(Change.PARENT);
             parent.removeChild(this);
             // and place it in a new, non-"opened", virtual conversation
             VirtualConversation vconv = new VirtualConversation(mMailbox, this);

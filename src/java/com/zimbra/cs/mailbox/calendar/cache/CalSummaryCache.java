@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -736,14 +736,15 @@ public class CalSummaryCache {
                     invalidateItem(mbox, folderId, itemId);
 
                     // If this is a folder move, invalidate the item from the old folder too.
-                    if ((change.why & Change.MODIFIED_FOLDER) != 0) {
+                    if ((change.why & Change.FOLDER) != 0) {
                         String accountId = mbox.getAccountId();
                         int prevFolderId;
                         synchronized (mSummaryCache) {
                             prevFolderId = mSummaryCache.getFolderForItem(accountId, itemId);
                         }
-                        if (prevFolderId != folderId && prevFolderId != SummaryLRU.FOLDER_NOT_FOUND)
+                        if (prevFolderId != folderId && prevFolderId != SummaryLRU.FOLDER_NOT_FOUND) {
                             invalidateItem(mbox, prevFolderId, itemId);
+                        }
                     }
                 }
             }

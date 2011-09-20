@@ -2028,7 +2028,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                         // TIM: modifyBlob will save the metadata for us as a side-effect
 //                      saveMetadata();
                     } else {
-                        markItemModified(Change.MODIFIED_INVITE);
+                        markItemModified(Change.INVITE);
                         try {
                             // call setContent here so that MOD_CONTENT is updated...this is required
                             // for the index entry to be correctly updated (bug 39463)
@@ -2667,7 +2667,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                     acctMatcher = new AccountAddressMatcher(acct);
                 }
             }
-            
+
             for (Iterator<ReplyInfo> iter = mReplies.iterator(); iter.hasNext();) {
                 ReplyInfo cur = iter.next();
                 if (at.addressesMatch(cur.mAttendee) ||
@@ -3094,10 +3094,11 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             sLog.info("Invite-Reply "+reply.toString()+" is outdated ignoring!");
             return false;
         }
-        if (invMatchingRecurId != null)
+        if (invMatchingRecurId != null) {
             invMatchingRecurId.updateMatchingAttendeesFromReply(reply);
+        }
         saveMetadata();
-        getMailbox().markItemModified(this, Change.MODIFIED_INVITE, itemSnapshot);
+        getMailbox().markItemModified(this, Change.INVITE, itemSnapshot);
         return true;
     }
 
@@ -3284,7 +3285,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
          * @return
          */
         public long getNextAt() {
-            return mSnoozeUntil != NO_SNOOZE ? mSnoozeUntil : mNextAt; 
+            return mSnoozeUntil != NO_SNOOZE ? mSnoozeUntil : mNextAt;
         }
 
         private long getNextAtBase() { return mNextAt; }
@@ -3543,7 +3544,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
      * on alarms than appointments do.  In particular, the absolute trigger time of tasks need not be before DTSTART
      * or DUE, whereas alarms for appointments are meaningful only if it triggers before DTSTART.  A reminder for a
      * meeting that has already started is useless, but a reminder for an over-due task can be quite useful.
-     * 
+     *
      * @param atOrAfter
      * @param snoozeUntil
      * @param forEmailAction
@@ -3590,15 +3591,15 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
      * Client/caller supplies atOrAfter to indicate the next alarm to trigger should go off no sooner that this time.
      * The actual trigger time can be deferred with snoozeUntil.  If snoozeUntil is specified, atOrAfter is the time
      * based on the alarm definition, and snoozeUntil is the re-trigger time.
-     * 
+     *
      * The two surrounding alarms passed in must satisfy the following condition:
-     * 
+     *
      *     t(alarm 1) <= atOrAfter < t(alarm 2)
-     * 
+     *
      * atOrAfter and snoozeUntil are related thusly, if snoozeUntil != AlarmData.NO_SNOOZE.
-     * 
+     *
      *     atOrAfter < snoozeUntil
-     * 
+     *
      * From these, there are several cases possible.
      *
      * 1. There is no snoozed alarm if snoozeUntil == atOrAfter or snoozeUntil == AlarmData.NO_SNOOZE.

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,17 +31,17 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
 
 public class FilterListener extends MailboxListener {
-    
+
     public static final ImmutableSet<MailboxOperation> EVENTS = ImmutableSet.of(
-            MailboxOperation.MoveItem, MailboxOperation.DeleteItem, 
+            MailboxOperation.MoveItem, MailboxOperation.DeleteItem,
             MailboxOperation.RenameItem, MailboxOperation.RenameItemPath,
             MailboxOperation.RenameTag
     );
-    
+
     public static final ImmutableSet<MailItem.Type> ITEMTYPES = ImmutableSet.of(
             MailItem.Type.FOLDER, MailItem.Type.TAG
     );
-    
+
     @Override
     public void notify(ChangeNotification notification) {
         if (notification.mods.modified != null) {
@@ -49,8 +49,9 @@ public class FilterListener extends MailboxListener {
                 if (!EVENTS.contains(change.op))
                     continue;
                 if (change.what instanceof Folder) {
-                    if ((change.why & Change.MODIFIED_PARENT) == 0 && (change.why & Change.MODIFIED_NAME) == 0)
+                    if ((change.why & Change.PARENT) == 0 && (change.why & Change.NAME) == 0) {
                         continue;
+                    }
                     Folder folder = (Folder) change.what;
                     Folder oldFolder = (Folder) change.preModifyObj;
                     if (oldFolder == null) {
@@ -59,8 +60,9 @@ public class FilterListener extends MailboxListener {
                     }
                     updateFilterRules(notification.mailboxAccount, folder, oldFolder.getPath());
                 } else if (change.what instanceof Tag) {
-                    if ((change.why & Change.MODIFIED_NAME) == 0)
+                    if ((change.why & Change.NAME) == 0) {
                         continue;
+                    }
                     Tag tag = (Tag) change.what;
                     Tag oldTag = (Tag) change.preModifyObj;
                     if (oldTag == null) {

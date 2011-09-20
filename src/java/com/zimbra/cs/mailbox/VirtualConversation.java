@@ -17,7 +17,6 @@ package com.zimbra.cs.mailbox;
 import java.util.Collections;
 import java.util.List;
 
-import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.SortBy;
@@ -110,15 +109,16 @@ public class VirtualConversation extends Conversation {
 
     @Override
     protected void inheritedTagChanged(Tag tag, boolean add) throws ServiceException {
-        if (tag == null || add == isTagged(tag))
+        if (tag == null || add == isTagged(tag)) {
             return;
-        markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
+        }
+        markItemModified(tag instanceof Flag ? Change.FLAGS : Change.TAGS);
         tagChanged(tag, add);
     }
 
     @Override
     protected void inheritedCustomDataChanged(Message msg, CustomMetadata custom) {
-        markItemModified(Change.MODIFIED_METADATA);
+        markItemModified(Change.METADATA);
         mExtendedData = MetadataCallback.duringConversationAdd(null, msg);
     }
 

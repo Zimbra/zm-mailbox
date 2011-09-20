@@ -33,35 +33,35 @@ import com.zimbra.cs.mailbox.util.TypedIdList;
 
 public final class PendingModifications {
     public static final class Change {
-        public static final int UNMODIFIED                = 0x00000000;
-        public static final int MODIFIED_UNREAD           = 0x00000001;
-        public static final int MODIFIED_TAGS             = 0x00000002;
-        public static final int MODIFIED_FLAGS            = 0x00000004;
-        public static final int MODIFIED_CONFIG           = 0x00000008;
-        public static final int MODIFIED_SIZE             = 0x00000010;
-        public static final int MODIFIED_DATE             = 0x00000020;
-        public static final int MODIFIED_SUBJECT          = 0x00000040;
-        public static final int MODIFIED_IMAP_UID         = 0x00000080;
-        public static final int MODIFIED_FOLDER           = 0x00000100;
-        public static final int MODIFIED_PARENT           = 0x00000200;
-        public static final int MODIFIED_CHILDREN         = 0x00000400;
-        public static final int MODIFIED_SENDERS          = 0x00000800;
-        public static final int MODIFIED_NAME             = 0x00001000;
-        public static final int MODIFIED_COLOR            = 0x00002000;
-        public static final int MODIFIED_POSITION         = 0x00004000;
-        public static final int MODIFIED_QUERY            = 0x00008000;
-        public static final int MODIFIED_CONTENT          = 0x00010000;
-        public static final int MODIFIED_INVITE           = 0x00020000;
-        public static final int MODIFIED_URL              = 0x00040000;
-        public static final int MODIFIED_METADATA         = 0x00080000;
-        public static final int MODIFIED_VIEW             = 0x00100000;
-        public static final int MODIFIED_ACL              = 0x00200000;
-        public static final int MODIFIED_CONFLICT         = 0x00400000;
-        public static final int MODIFIED_LOCK             = 0x00800000;
-        public static final int MODIFIED_SHAREDREM        = 0x01000000;
-        public static final int MODIFIED_RETENTION_POLICY = 0x02000000;
-        public static final int INTERNAL_ONLY             = 0x10000000;
-        public static final int ALL_FIELDS         = ~0;
+        public static final int NONE             = 0x00000000;
+        public static final int UNREAD           = 0x00000001;
+        public static final int TAGS             = 0x00000002;
+        public static final int FLAGS            = 0x00000004;
+        public static final int CONFIG           = 0x00000008;
+        public static final int SIZE             = 0x00000010;
+        public static final int DATE             = 0x00000020;
+        public static final int SUBJECT          = 0x00000040;
+        public static final int IMAP_UID         = 0x00000080;
+        public static final int FOLDER           = 0x00000100;
+        public static final int PARENT           = 0x00000200;
+        public static final int CHILDREN         = 0x00000400;
+        public static final int SENDERS          = 0x00000800;
+        public static final int NAME             = 0x00001000;
+        public static final int COLOR            = 0x00002000;
+        public static final int POSITION         = 0x00004000;
+        public static final int QUERY            = 0x00008000;
+        public static final int CONTENT          = 0x00010000;
+        public static final int INVITE           = 0x00020000;
+        public static final int URL              = 0x00040000;
+        public static final int METADATA         = 0x00080000;
+        public static final int VIEW             = 0x00100000;
+        public static final int ACL              = 0x00200000;
+        public static final int CONFLICT         = 0x00400000;
+        public static final int LOCK             = 0x00800000;
+        public static final int SHAREDREM        = 0x01000000;
+        public static final int RETENTION_POLICY = 0x02000000;
+        public static final int INTERNAL_ONLY    = 0x10000000;
+        public static final int ALL_FIELDS       = ~0;
 
         public MailboxOperation op;
         public Object what;
@@ -87,34 +87,34 @@ public final class PendingModifications {
                 sb.append("mailbox:");
             }
 
-            if (why == 0)                        sb.append(" **UNMODIFIED**");
-            if ((why & MODIFIED_UNREAD) != 0)    sb.append(" UNREAD");
-            if ((why & MODIFIED_TAGS) != 0)      sb.append(" TAGS");
-            if ((why & MODIFIED_FLAGS) != 0)     sb.append(" FLAGS");
-            if ((why & MODIFIED_CONFIG) != 0)    sb.append(" CONFIG");
-            if ((why & MODIFIED_SIZE) != 0)      sb.append(" SIZE");
-            if ((why & MODIFIED_DATE) != 0)      sb.append(" DATE");
-            if ((why & MODIFIED_SUBJECT) != 0)   sb.append(" SUBJECT");
-            if ((why & MODIFIED_IMAP_UID) != 0)  sb.append(" IMAP_UID");
-            if ((why & MODIFIED_FOLDER) != 0)    sb.append(" FOLDER");
-            if ((why & MODIFIED_PARENT) != 0)    sb.append(" PARENT");
-            if ((why & MODIFIED_CHILDREN) != 0)  sb.append(" CHILDREN");
-            if ((why & MODIFIED_SENDERS) != 0)   sb.append(" SENDERS");
-            if ((why & MODIFIED_NAME) != 0)      sb.append(" NAME");
-            if ((why & MODIFIED_COLOR) != 0)     sb.append(" COLOR");
-            if ((why & MODIFIED_POSITION) != 0)  sb.append(" POSITION");
-            if ((why & MODIFIED_QUERY) != 0)     sb.append(" QUERY");
-            if ((why & MODIFIED_CONTENT) != 0)   sb.append(" CONTENT");
-            if ((why & MODIFIED_INVITE) != 0)    sb.append(" INVITE");
-            if ((why & MODIFIED_URL) != 0)       sb.append(" URL");
-            if ((why & MODIFIED_METADATA) != 0)  sb.append(" METADATA");
-            if ((why & MODIFIED_VIEW) != 0)      sb.append(" VIEW");
-            if ((why & MODIFIED_ACL) != 0)       sb.append(" ACL");
-            if ((why & MODIFIED_CONFLICT) != 0)  sb.append(" CONFLICT");
-            if ((why & MODIFIED_LOCK) != 0)      sb.append(" LOCK");
-            if ((why & MODIFIED_SHAREDREM) != 0) sb.append(" SHAREDREM");
-            if ((why & MODIFIED_RETENTION_POLICY) != 0) sb.append(" RETENTION_POLICY");
-            if ((why & INTERNAL_ONLY) != 0)      sb.append(" **INTERNAL**");
+            if (why == 0) sb.append(" **NONE**");
+            if ((why & UNREAD) != 0)    sb.append(" UNREAD");
+            if ((why & TAGS) != 0)      sb.append(" TAGS");
+            if ((why & FLAGS) != 0)     sb.append(" FLAGS");
+            if ((why & CONFIG) != 0)    sb.append(" CONFIG");
+            if ((why & SIZE) != 0)      sb.append(" SIZE");
+            if ((why & DATE) != 0)      sb.append(" DATE");
+            if ((why & SUBJECT) != 0)   sb.append(" SUBJECT");
+            if ((why & IMAP_UID) != 0)  sb.append(" IMAP_UID");
+            if ((why & FOLDER) != 0)    sb.append(" FOLDER");
+            if ((why & PARENT) != 0)    sb.append(" PARENT");
+            if ((why & CHILDREN) != 0)  sb.append(" CHILDREN");
+            if ((why & SENDERS) != 0)   sb.append(" SENDERS");
+            if ((why & NAME) != 0)      sb.append(" NAME");
+            if ((why & COLOR) != 0)     sb.append(" COLOR");
+            if ((why & POSITION) != 0)  sb.append(" POSITION");
+            if ((why & QUERY) != 0)     sb.append(" QUERY");
+            if ((why & CONTENT) != 0)   sb.append(" CONTENT");
+            if ((why & INVITE) != 0)    sb.append(" INVITE");
+            if ((why & URL) != 0)       sb.append(" URL");
+            if ((why & METADATA) != 0)  sb.append(" METADATA");
+            if ((why & VIEW) != 0)      sb.append(" VIEW");
+            if ((why & ACL) != 0)       sb.append(" ACL");
+            if ((why & CONFLICT) != 0)  sb.append(" CONFLICT");
+            if ((why & LOCK) != 0)      sb.append(" LOCK");
+            if ((why & SHAREDREM) != 0) sb.append(" SHAREDREM");
+            if ((why & RETENTION_POLICY) != 0) sb.append(" RETENTION_POLICY");
+            if ((why & INTERNAL_ONLY) != 0)    sb.append(" **INTERNAL**");
 
             return sb.toString();
         }
@@ -234,9 +234,9 @@ public final class PendingModifications {
         }
     }
 
-    private void delete(
-            ModificationKey key, MailItem.Type type, MailboxOperation op, long timestamp, MailItem itemSnapshot) {
-        delete(key, new Change(op, type, Change.UNMODIFIED, timestamp, itemSnapshot));
+    private void delete(ModificationKey key, MailItem.Type type, MailboxOperation op, long timestamp,
+            MailItem itemSnapshot) {
+        delete(key, new Change(op, type, Change.NONE, timestamp, itemSnapshot));
     }
 
     private void delete(ModificationKey key, Change chg) {

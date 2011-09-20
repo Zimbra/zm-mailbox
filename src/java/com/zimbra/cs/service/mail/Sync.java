@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -211,11 +211,8 @@ public class Sync extends MailDocumentHandler {
     private static final int FETCH_BATCH_SIZE = 200;
     private static final int MAXIMUM_CHANGE_COUNT = 3990;
 
-    private static final int MUTABLE_FIELDS = Change.MODIFIED_FLAGS  | Change.MODIFIED_TAGS |
-                                              Change.MODIFIED_FOLDER | Change.MODIFIED_PARENT |
-                                              Change.MODIFIED_NAME   | Change.MODIFIED_CONFLICT |
-                                              Change.MODIFIED_COLOR  | Change.MODIFIED_POSITION |
-                                              Change.MODIFIED_DATE;
+    private static final int MUTABLE_FIELDS = Change.FLAGS  | Change.TAGS | Change.FOLDER | Change.PARENT |
+            Change.NAME | Change.CONFLICT | Change.COLOR  | Change.POSITION | Change.DATE;
 
     private static final Set<MailItem.Type> FOLDER_TYPES = EnumSet.of(MailItem.Type.FOLDER,
             MailItem.Type.SEARCHFOLDER, MailItem.Type.MOUNTPOINT);
@@ -290,7 +287,7 @@ public class Sync extends MailDocumentHandler {
                 // content servlet's "include metadata in headers" hack.
                 // If it's just the metadata that changed, send back the set of mutable attributes.
                 boolean created = item.getSavedSequence() > begin;
-                ToXML.encodeItem(response, ifmt, octxt, item, created ? Change.MODIFIED_FOLDER | Change.MODIFIED_CONFLICT : MUTABLE_FIELDS);
+                ToXML.encodeItem(response, ifmt, octxt, item, created ? Change.FOLDER | Change.CONFLICT : MUTABLE_FIELDS);
                 itemCount++;
             }
             batch.clear();

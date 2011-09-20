@@ -207,22 +207,22 @@ public class Folder extends MailItem {
      *  since the last such IMAP session. */
     int getImapRECENT() throws ServiceException {
         // no contents means no \Recent items (duh)
-        if (getSize() == 0)
+        if (getSize() == 0) {
             return 0;
-
+        }
         // if there's a READ-WRITE IMAP session active on the folder, by definition there are no \Recent messages
         for (Session s : mMailbox.getListeners(Session.Type.IMAP)) {
             ImapSession i4session = (ImapSession) s;
-            if (i4session.getFolderId() == mId && i4session.isWritable())
+            if (i4session.getFolderId() == mId && i4session.isWritable()) {
                 return 0;
+            }
         }
-
         // if no active sessions, use a cached value if possible
-        if (imapRECENT >= 0)
+        if (imapRECENT >= 0) {
             return imapRECENT;
-
+        }
         // final option is to calculate the number of \Recent messages
-        markItemModified(Change.MODIFIED_SIZE);
+        markItemModified(Change.SIZE);
         imapRECENT = DbMailItem.countImapRecent(this, getImapRECENTCutoff());
         return imapRECENT;
     }
@@ -369,17 +369,19 @@ public class Folder extends MailItem {
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul> */
     ACL.Grant grantAccess(String zimbraId, byte type, short rights, String args) throws ServiceException {
-        if (!canAccess(ACL.RIGHT_ADMIN))
+        if (!canAccess(ACL.RIGHT_ADMIN)) {
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
-        if (type == ACL.GRANTEE_USER && zimbraId.equalsIgnoreCase(getMailbox().getAccountId()))
+        }
+        if (type == ACL.GRANTEE_USER && zimbraId.equalsIgnoreCase(getMailbox().getAccountId())) {
             throw ServiceException.PERM_DENIED("cannot grant access to the owner of the folder");
-
+        }
         // if there's an ACL on the folder, the folder does not inherit from its parent
         alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
 
-        markItemModified(Change.MODIFIED_ACL);
-        if (this.rights == null)
+        markItemModified(Change.ACL);
+        if (this.rights == null) {
             this.rights = new ACL();
+        }
         ACL.Grant grant = this.rights.grantAccess(zimbraId, type, rights, args);
         saveMetadata();
 
@@ -402,22 +404,24 @@ public class Folder extends MailItem {
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul> */
     void revokeAccess(String zimbraId) throws ServiceException {
-        if (!canAccess(ACL.RIGHT_ADMIN))
+        if (!canAccess(ACL.RIGHT_ADMIN)) {
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
-        if (zimbraId.equalsIgnoreCase(getMailbox().getAccountId()))
+        }
+        if (zimbraId.equalsIgnoreCase(getMailbox().getAccountId())) {
             throw ServiceException.PERM_DENIED("cannot revoke access from the owner of the folder");
-
+        }
         ACL acl = getEffectiveACL();
-        if (acl == null || !acl.revokeAccess(zimbraId))
+        if (acl == null || !acl.revokeAccess(zimbraId)) {
             return;
-
+        }
         // if there's an ACL on the folder, the folder does not inherit from its parent
         alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
 
-        markItemModified(Change.MODIFIED_ACL);
+        markItemModified(Change.ACL);
         rights.revokeAccess(zimbraId);
-        if (rights.isEmpty())
+        if (rights.isEmpty()) {
             rights = null;
+        }
         saveMetadata();
 
         queueForAclPush();
@@ -438,7 +442,7 @@ public class Folder extends MailItem {
         // if we're setting an ACL on the folder, the folder does not inherit from its parent
         alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
 
-        markItemModified(Change.MODIFIED_ACL);
+        markItemModified(Change.ACL);
         if (acl != null && acl.isEmpty()) {
             acl = null;
         }
@@ -471,13 +475,12 @@ public class Folder extends MailItem {
         return retentionPolicy;
     }
 
-    public void setRetentionPolicy(RetentionPolicy rp)
-    throws ServiceException {
+    public void setRetentionPolicy(RetentionPolicy rp) throws ServiceException {
         if (!canAccess(ACL.RIGHT_ADMIN)) {
             throw ServiceException.PERM_DENIED("you do not have admin rights to folder " + getPath());
         }
 
-        markItemModified(Change.MODIFIED_RETENTION_POLICY);
+        markItemModified(Change.RETENTION_POLICY);
         retentionPolicy = rp == null ? new RetentionPolicy() : rp;
         saveMetadata();
     }
@@ -588,7 +591,7 @@ public class Folder extends MailItem {
         if (!trackSize()) {
             return;
         }
-        markItemModified(Change.MODIFIED_SIZE);
+        markItemModified(Change.SIZE);
         if (countDelta > 0) {
             updateUIDNEXT();
         }
@@ -614,7 +617,7 @@ public class Folder extends MailItem {
         if (!trackSize()) {
             return;
         }
-        markItemModified(Change.MODIFIED_SIZE);
+        markItemModified(Change.SIZE);
         if (count > mData.size) {
             updateUIDNEXT();
         }
@@ -630,13 +633,13 @@ public class Folder extends MailItem {
     }
 
     @Override protected void updateUnread(int delta, int deletedDelta) throws ServiceException {
-        if (!trackUnread())
+        if (!trackUnread()) {
             return;
-
+        }
         super.updateUnread(delta, deletedDelta);
 
         if (deletedDelta != 0) {
-            markItemModified(Change.MODIFIED_UNREAD);
+            markItemModified(Change.UNREAD);
             deletedUnreadCount = Math.min(Math.max(0, deletedUnreadCount + deletedDelta), mData.unreadCount);
         }
 
@@ -650,7 +653,7 @@ public class Folder extends MailItem {
     void updateUIDNEXT() {
         int uidnext = mMailbox.getLastItemId() + 1;
         if (trackImapStats() && imapUIDNEXT < uidnext) {
-            markItemModified(Change.MODIFIED_SIZE);
+            markItemModified(Change.SIZE);
             imapUIDNEXT = uidnext;
         }
     }
@@ -660,7 +663,7 @@ public class Folder extends MailItem {
     void updateHighestMODSEQ() throws ServiceException {
         int modseq = mMailbox.getOperationChangeID();
         if (trackImapStats() && imapMODSEQ < modseq) {
-            markItemModified(Change.MODIFIED_SIZE);
+            markItemModified(Change.SIZE);
             imapMODSEQ = modseq;
         }
     }
@@ -878,7 +881,6 @@ public class Folder extends MailItem {
      * folder created with wrong view.
      *
      * @param view the new default view of this folder
-     * @throws ServiceException
      */
     void setDefaultView(Type view) throws ServiceException {
         if (!isMutable()) {
@@ -890,7 +892,7 @@ public class Folder extends MailItem {
         if (view == defaultView) {
             return;
         }
-        markItemModified(Change.MODIFIED_VIEW);
+        markItemModified(Change.VIEW);
         defaultView = view;
         saveMetadata();
     }
@@ -914,18 +916,22 @@ public class Folder extends MailItem {
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul> */
     void setUrl(String url) throws ServiceException {
-        if (url == null)
+        if (url == null) {
             url = "";
-        if (getUrl().equals(url))
+        }
+        if (getUrl().equals(url)) {
             return;
-        if (getUrl().equals("") && !url.equals(""))
+        }
+        if (getUrl().isEmpty() && !url.isEmpty()) {
             throw MailServiceException.CANNOT_SUBSCRIBE(mId);
-        if (!isMutable())
+        }
+        if (!isMutable()) {
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
-        if (!canAccess(ACL.RIGHT_WRITE))
+        }
+        if (!canAccess(ACL.RIGHT_WRITE)) {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
-
-        markItemModified(Change.MODIFIED_URL);
+        }
+        markItemModified(Change.URL);
         syncData = new SyncData(url);
         saveMetadata();
     }
@@ -944,27 +950,30 @@ public class Folder extends MailItem {
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul> */
     void setSubscriptionData(String guid, long date) throws ServiceException {
-        if (getUrl().equals(""))
+        if (getUrl().isEmpty()) {
             return;
-        if (!isMutable())
+        }
+        if (!isMutable()) {
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
-        if (!canAccess(ACL.RIGHT_WRITE))
+        }
+        if (!canAccess(ACL.RIGHT_WRITE)) {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
-
-        markItemModified(Change.MODIFIED_URL);
+        }
+        markItemModified(Change.URL);
         syncData = new SyncData(getUrl(), guid, date);
         saveMetadata();
     }
 
     void setSyncDate(long date) throws ServiceException {
-        if (!canAccess(ACL.RIGHT_WRITE))
+        if (!canAccess(ACL.RIGHT_WRITE)) {
             throw ServiceException.PERM_DENIED("you do not have the required rights on the folder");
-
-        markItemModified(Change.MODIFIED_URL);
-        if (syncData == null)
+        }
+        markItemModified(Change.URL);
+        if (syncData == null) {
             syncData = new SyncData(null, null, date);
-        else
+        } else {
             syncData.lastDate = date;
+        }
         saveMetadata();
     }
 
@@ -1055,7 +1064,7 @@ public class Folder extends MailItem {
             effectiveACL = null;
         }
         // change the tag on the Folder itself, not on its contents
-        markItemModified(tag instanceof Flag ? Change.MODIFIED_FLAGS : Change.MODIFIED_TAGS);
+        markItemModified(tag instanceof Flag ? Change.FLAGS : Change.TAGS);
         tagChanged(tag, newValue);
 
         if (ZimbraLog.mailop.isDebugEnabled()) {
@@ -1064,7 +1073,7 @@ public class Folder extends MailItem {
         DbTag.alterTag(tag, Arrays.asList(mId), newValue);
 
         if (isNoInheritFlag) {
-            markItemModified(Change.MODIFIED_ACL);
+            markItemModified(Change.ACL);
             if (!newValue && rights != null) {
                 // clearing the "no inherit" flag sets inherit ON and thus must clear the folder's ACL
                 rights = null;
@@ -1109,7 +1118,7 @@ public class Folder extends MailItem {
      *        {@link ACL#RIGHT_DELETE} on the folder being moved */
     @Override
     boolean move(Folder target) throws ServiceException {
-        markItemModified(Change.MODIFIED_FOLDER | Change.MODIFIED_PARENT);
+        markItemModified(Change.FOLDER | Change.PARENT);
         if (mData.folderId == target.getId()) {
             return false;
         }
@@ -1177,7 +1186,7 @@ public class Folder extends MailItem {
             super.addChild(child);
         } else {
             if (newChild) {
-                markItemModified(Change.MODIFIED_CHILDREN);
+                markItemModified(Change.CHILDREN);
             }
             Folder subfolder = (Folder) child;
             if (subfolders == null) {
@@ -1203,7 +1212,7 @@ public class Folder extends MailItem {
         } else if (!(child instanceof Folder)) {
             super.removeChild(child);
         } else {
-            markItemModified(Change.MODIFIED_CHILDREN);
+            markItemModified(Change.CHILDREN);
             Folder subfolder = (Folder) child;
             if (subfolders == null) {
                 throw MailServiceException.IS_NOT_CHILD();
@@ -1324,7 +1333,7 @@ public class Folder extends MailItem {
         if (view == defaultView) {
             return;
         }
-        markItemModified(Change.MODIFIED_VIEW);
+        markItemModified(Change.VIEW);
         defaultView = view;
         saveMetadata();
     }
