@@ -25,7 +25,7 @@ import com.zimbra.common.soap.AccountConstants;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class AccountInfo extends AdminObjectInfo {
 
-    @XmlAttribute(name=AccountConstants.A_isExternal, required=false)
+    @XmlAttribute(name=AccountConstants.A_IS_EXTERNAL, required=false)
     private final Boolean isExternal;
 
     /**
