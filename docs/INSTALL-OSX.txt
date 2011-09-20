@@ -58,8 +58,8 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
 
   Grab the DMG version and install the two packages (MySQL and the startup item).
 
-13. $ sudo ln -s /usr/local/mysql /opt/zimbra/mysql
-14. $ sudo vi /opt/zimbra/mysql/data/my.cnf
+13. $ sudo ln -s /usr/local/mysql /opt/zimbra/mysql  (RHEL command, sudo ln -s /usr/local/mysql /usr)
+14. $ sudo vi /opt/zimbra/mysql/data/my.cnf (RHEL command, sudo vi /var/lib/mysql)
 
   [mysqld]
   port = 7306
@@ -120,3 +120,9 @@ in /opt/zimbra/java.
 
 1. $ cd /opt/zimbra
 2. $ sudo ln -s /System/Library/Frameworks/JavaVM.framework/Versions/1.6/Home/ java
+
+For RHEL:
+
+1. $ cd /opt/zimbra
+2. $ sudo ln -s /usr/java/latest/ java
+
