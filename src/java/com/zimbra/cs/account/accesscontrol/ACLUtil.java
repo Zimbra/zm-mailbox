@@ -29,6 +29,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.generated.UserRights;
@@ -115,11 +116,13 @@ public final class ACLUtil {
         }
         return result.build();
     }
+    
 
     /**
      * Grant rights on a target entry.
      */
-    public static List<ZimbraACE> grantRight(Provisioning prov, Entry target, Set<ZimbraACE> aces) throws ServiceException {
+    public static List<ZimbraACE> grantRight(Provisioning prov, Entry target, Set<ZimbraACE> aces) 
+    throws ServiceException {
         for (ZimbraACE ace : aces) {
             ZimbraACE.validate(ace);
         }
@@ -151,7 +154,8 @@ public final class ACLUtil {
      * If a right was not previously granted on the target, NO error is thrown.
      * @return a Set of grants that are actually revoked by this call
      */
-    public static List<ZimbraACE> revokeRight(Provisioning prov, Entry target, Set<ZimbraACE> aces) throws ServiceException {
+    public static List<ZimbraACE> revokeRight(Provisioning prov, Entry target, Set<ZimbraACE> aces) 
+    throws ServiceException {
         ZimbraACL acl = getACL(target);
         if (acl == null) {
             return new ArrayList<ZimbraACE>(); // return empty list
@@ -173,7 +177,8 @@ public final class ACLUtil {
     /**
      * Persists grants in LDAP
      */
-    private static void serialize(Provisioning prov, Entry entry, ZimbraACL acl) throws ServiceException {
+    private static void serialize(Provisioning prov, Entry entry, ZimbraACL acl) 
+    throws ServiceException {
         // modifyAttrs will erase cached ACL and permission cache on the target
         prov.modifyAttrs(entry, Collections.singletonMap(Provisioning.A_zimbraACE, acl.serialize()));
     }

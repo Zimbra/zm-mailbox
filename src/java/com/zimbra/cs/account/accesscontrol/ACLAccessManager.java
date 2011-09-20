@@ -127,21 +127,33 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     @Override
     public boolean canCreateGroup(AuthToken at, String groupEmail)
             throws ServiceException {
-        String domainName = NameUtil.EmailAddress.getDomainNameFromEmail(groupEmail);
-        Domain domain = Provisioning.getInstance().get(Key.DomainBy.name, domainName);
-        if (domain == null) {
-            throw AccountServiceException.NO_SUCH_DOMAIN(domainName);
-        }
+        Domain domain = Provisioning.getInstance().getDomainByEmailAddr(groupEmail);
         checkDomainStatus(domain);
         
         return canDo(at, domain, User.R_createDistList, true);
     }
     
     @Override
+    public boolean canCreateGroup(Account credentials, String groupEmail)
+            throws ServiceException {
+        Domain domain = Provisioning.getInstance().getDomainByEmailAddr(groupEmail);
+        checkDomainStatus(domain);
+        
+        return canDo(credentials, domain, User.R_createDistList, true);
+    }
+    
+    @Override
     public boolean canAccessGroup(AuthToken at, Group group)
             throws ServiceException {
         checkDomainStatus(group);
-        return canDo(at, group, User.R_ownDistList, true);
+        return canDo(at, group, Group.GroupOwner.GROUP_OWNER_RIGHT, true);
+    }
+    
+    @Override
+    public boolean canAccessGroup(Account credentials, Group group)
+            throws ServiceException {
+        checkDomainStatus(group);
+        return canDo(credentials, group, Group.GroupOwner.GROUP_OWNER_RIGHT, true);
     }
 
     @Override

@@ -47,12 +47,13 @@ public class DistributionListAction extends AccountDocumentHandler {
         
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
+        Account acct = getRequestedAccount(zsc);
 
-        Group group = GetDistributionList.getGroup(request, zsc, prov);
+        Group group = GetDistributionList.getGroup(request, acct, prov);
         
         Element eAction = request.getElement(AccountConstants.E_ACTION);
         DLAction op = DLAction.fromString(eAction.getAttribute(AccountConstants.A_OP));
-        Account acct = getRequestedAccount(zsc);
+        
         
         DLActionHandler handler = null;
         switch (op) {

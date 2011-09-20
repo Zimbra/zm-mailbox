@@ -58,7 +58,7 @@ public class ToXML {
         if (needsExternalIndicator) {
             try {
                 boolean isExternal = account.isAccountExternal();
-                acctElem.addAttribute(AccountConstants.A_isExternal, isExternal);
+                acctElem.addAttribute(AccountConstants.A_IS_EXTERNAL, isExternal);
             } catch (ServiceException e) {
                 ZimbraLog.account.warn("unable to determine if account is external", e);
             }

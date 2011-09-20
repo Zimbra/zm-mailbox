@@ -33,6 +33,7 @@ import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AccessManager.AttrRightChecker;
+import com.zimbra.cs.account.Group.GroupOwner;
 import com.zimbra.cs.account.accesscontrol.ACLUtil;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -168,22 +169,16 @@ public class GetDistributionList extends AdminDocumentHandler {
     public static Element encodeOwners(Element eParent, Group group) throws ServiceException {
         Element eOwners = null;
         
-        List<ZimbraACE> acl = ACLUtil.getAllACEs(group);
-        if (acl != null) {
-            for (ZimbraACE ace : acl) {
-                Right right = ace.getRight();
-                if (User.R_ownDistList == right) {
-                    if (eOwners == null) {
-                        eOwners = eParent.addElement(AdminConstants.E_DL_OWNERS);
-                    }
-                    
-                    // encode the owner
-                    Element eOwner = eOwners.addElement(AdminConstants.E_DL_OWNER);
-                    
-                    eOwner.addAttribute(AdminConstants.A_TYPE, ace.getGranteeType().getCode());
-                    eOwner.addAttribute(AdminConstants.A_ID, ace.getGrantee());
-                    eOwner.addAttribute(AdminConstants.A_NAME, ace.getGranteeDisplayName());
-                }
+        List<GroupOwner> owners = GroupOwner.getOwners(group, true);
+        if (!owners.isEmpty()) {
+            eOwners = eParent.addElement(AdminConstants.E_DL_OWNERS);
+            
+            for (GroupOwner owner : owners) {
+                Element eOwner = eOwners.addElement(AdminConstants.E_DL_OWNER);
+                
+                eOwner.addAttribute(AdminConstants.A_TYPE, owner.getType().getCode());
+                eOwner.addAttribute(AdminConstants.A_ID, owner.getId());
+                eOwner.addAttribute(AdminConstants.A_NAME, owner.getName());
             }
         }
         

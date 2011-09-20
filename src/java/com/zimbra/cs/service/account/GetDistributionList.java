@@ -23,6 +23,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.AccessManager;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Group;
@@ -36,8 +37,9 @@ public class GetDistributionList extends AccountDocumentHandler {
         
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-
-        Group group = GetDistributionList.getGroup(request, zsc, prov);
+        Account acct = getRequestedAccount(zsc);
+        
+        Group group = GetDistributionList.getGroup(request, acct, prov);
         
         Set<String> reqAttrs = getReqAttrs(request, 
                 group.isDynamic() ?  AttributeClass.group : AttributeClass.distributionList);
@@ -55,7 +57,7 @@ public class GetDistributionList extends AccountDocumentHandler {
         String key = d.getAttribute(AccountConstants.A_BY);
         String value = d.getText();
         
-        Group group = prov.getGroup(Key.DistributionListBy.fromString(key), value);
+        Group group = prov.getGroupBasic(Key.DistributionListBy.fromString(key), value);
         
         if (group == null) {
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);
@@ -64,11 +66,11 @@ public class GetDistributionList extends AccountDocumentHandler {
         return group;
     }
     
-    public static Group getGroup(Element request, ZimbraSoapContext zsc, Provisioning prov) 
+    public static Group getGroup(Element request, Account acct, Provisioning prov) 
     throws ServiceException {
         Group group = getGroup(request, prov);
         
-        if (!AccessManager.getInstance().canAccessGroup(zsc.getAuthToken(), group)) {
+        if (!AccessManager.getInstance().canAccessGroup(acct, group)) {
             throw ServiceException.PERM_DENIED(
                     "you do not have sufficient rights to access this distribution list");
         }

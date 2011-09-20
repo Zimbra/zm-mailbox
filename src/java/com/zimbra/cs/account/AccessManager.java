@@ -126,7 +126,9 @@ public abstract class AccessManager {
     public abstract boolean canAccessCos(AuthToken at, Cos cos) throws ServiceException;
     
     public abstract boolean canCreateGroup(AuthToken at, String groupEmail) throws ServiceException;
+    public abstract boolean canCreateGroup(Account credentials, String groupEmail) throws ServiceException;
     public abstract boolean canAccessGroup(AuthToken at, Group group) throws ServiceException;
+    public abstract boolean canAccessGroup(Account credentials, Group group) throws ServiceException;
 
     public abstract boolean canAccessEmail(AuthToken at, String email) throws ServiceException;
 

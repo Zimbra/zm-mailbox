@@ -95,8 +95,12 @@ public class DomainAccessManager extends AccessManager {
     }
 
     private boolean canAccessDomainInternal(AuthToken at, String domainName) throws ServiceException {
-        if (at.isAdmin()) return true;
-        if (!at.isDomainAdmin()) return false;
+        if (at.isAdmin()) {
+            return true;
+        }
+        if (!at.isDomainAdmin()) {
+            return false;
+        }
         return getDomain(at).getName().equalsIgnoreCase(domainName);
     }
 
@@ -140,15 +144,25 @@ public class DomainAccessManager extends AccessManager {
     @Override
     public boolean canCreateGroup(AuthToken at, String groupEmail)
             throws ServiceException {
-        String domainName = NameUtil.EmailAddress.getDomainNameFromEmail(groupEmail);
-        return canAccessDomain(at, domainName);
+        return false;
+    }
+    
+    @Override
+    public boolean canCreateGroup(Account credentials, String groupEmail)
+            throws ServiceException {
+        return false;
     }
     
     @Override
     public boolean canAccessGroup(AuthToken at, Group group)
             throws ServiceException {
-        Domain domain = group.getDomain();
-        return canAccessDomain(at, domain);
+        return false;
+    }
+    
+    @Override
+    public boolean canAccessGroup(Account credentials, Group group)
+            throws ServiceException {
+        return false;
     }
 
     public boolean canAccessEmail(AuthToken at, String email) throws ServiceException {

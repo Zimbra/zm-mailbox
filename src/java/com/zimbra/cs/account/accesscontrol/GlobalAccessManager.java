@@ -95,15 +95,10 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
         return isGlobalAdmin(at);
     }
     
-
     @Override
     public boolean canCreateGroup(AuthToken at, String groupEmail)
             throws ServiceException {
-        String domainName = NameUtil.EmailAddress.getDomainNameFromEmail(groupEmail);
-        Domain domain = Provisioning.getInstance().get(Key.DomainBy.name, domainName);
-        if (domain == null) {
-            throw AccountServiceException.NO_SUCH_DOMAIN(domainName);
-        }
+        Domain domain = Provisioning.getInstance().getDomainByEmailAddr(groupEmail);
         checkDomainStatus(domain);
         
         boolean asAdmin = true;
@@ -118,12 +113,28 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
     }
     
     @Override
-    public boolean canAccessGroup(AuthToken at, Group group)
+    public boolean canCreateGroup(Account credentials, String groupEmail)
             throws ServiceException {
+        Domain domain = Provisioning.getInstance().getDomainByEmailAddr(groupEmail);
+        checkDomainStatus(domain);
+        
+        boolean asAdmin = true;
+        Right rightNeeded = User.R_createDistList;
+        Account authedAcct = credentials;
+        
+        if (AccessControlUtil.isGlobalAdmin(authedAcct, asAdmin)) {
+            return true;
+        }
+        
+        return canDo(credentials, domain, rightNeeded, asAdmin);
+    }
+    
+    @Override
+    public boolean canAccessGroup(AuthToken at, Group group) throws ServiceException {
         checkDomainStatus(group);
         
         boolean asAdmin = true;
-        Right rightNeeded = User.R_ownDistList;
+        Right rightNeeded = Group.GroupOwner.GROUP_OWNER_RIGHT;
         Account authedAcct = AccessControlUtil.authTokenToAccount(at, rightNeeded);
         
         if (AccessControlUtil.isGlobalAdmin(authedAcct, asAdmin)) {
@@ -131,6 +142,21 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
         }
         
         return canDo(at, group, rightNeeded, asAdmin);
+    }
+    
+    @Override
+    public boolean canAccessGroup(Account credentials, Group group) throws ServiceException {
+        checkDomainStatus(group);
+        
+        boolean asAdmin = true;
+        Right rightNeeded = Group.GroupOwner.GROUP_OWNER_RIGHT;
+        Account authedAcct = credentials;
+        
+        if (AccessControlUtil.isGlobalAdmin(authedAcct, asAdmin)) {
+            return true;
+        }
+        
+        return canDo(credentials, group, rightNeeded, asAdmin);
     }
     
     @Override

@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -135,15 +136,7 @@ public class SubscribeDistributionList extends AccountDocumentHandler {
             // list of owner emails
             List<String> owners = new ArrayList<String>();
             
-            List<ZimbraACE> acl = ACLUtil.getAllACEs(group);
-            if (acl != null) {
-                for (ZimbraACE ace : acl) {
-                    Right right = ace.getRight();
-                    if (User.R_ownDistList == right) {
-                        owners.add(ace.getGranteeDisplayName());
-                    }
-                }
-            }
+            Group.GroupOwner.getOwnerEmails(group, owners);
             
             for (String owner : owners) {
                 sendMessage(owner);

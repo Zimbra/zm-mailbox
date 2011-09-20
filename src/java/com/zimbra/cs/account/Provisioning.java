@@ -387,6 +387,15 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return dname == null ? null : getDomain(Key.DomainBy.name, dname, false);
     }
     
+    public Domain getDomainByEmailAddr(String emailAddr) throws ServiceException{
+        String domainName = NameUtil.EmailAddress.getDomainNameFromEmail(emailAddr);
+        Domain domain = Provisioning.getInstance().get(Key.DomainBy.name, domainName);
+        if (domain == null) {
+            throw AccountServiceException.NO_SUCH_DOMAIN(domainName);
+        }
+        return domain;
+    }
+    
     public Domain getDefaultDomain() throws ServiceException {
         String dname = getConfig().getDefaultDomainName();
         return dname == null ? null : getDomain(Key.DomainBy.name, dname, true);

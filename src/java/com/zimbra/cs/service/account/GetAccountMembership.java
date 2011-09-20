@@ -34,9 +34,9 @@ public class GetAccountMembership extends AccountDocumentHandler {
             throws ServiceException {
         
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        Account acct = getRequestedAccount(zsc);
         Provisioning prov = Provisioning.getInstance();
         
-        Account acct = getRequestedAccount(zsc);
         boolean directOnly = request.getAttributeBool(AccountConstants.A_DIRECT_ONLY, true);
         
         HashMap<String,String> via = new HashMap<String, String>();
