@@ -255,9 +255,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
     // attributes (not generated)
     // 
     public static final String A_dc = "dc";
+    public static final String A_dgIdentity = "dgIdentity";
     public static final String A_member = "member";
-
-
 
     public static final String LDAP_AM_NONE = "none";
     public static final String LDAP_AM_SIMPLE = "simple";

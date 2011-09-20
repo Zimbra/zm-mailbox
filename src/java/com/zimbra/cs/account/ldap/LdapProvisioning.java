@@ -7584,7 +7584,7 @@ public class LdapProvisioning extends LdapProv {
             entry.setAttr(A_zimbraId, zimbraId);
             entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
             entry.setAttr(A_mail, groupAddress);
-            // entry.setAttr("dgIdentity", LC.zimbra_ldap_userdn.value());
+            entry.setAttr(A_dgIdentity, LC.zimbra_ldap_userdn.value());
 
             // unlike accounts (which have a zimbraMailDeliveryAddress for the primary,
             // and zimbraMailAliases only for aliases), DLs use zibraMailAlias for both.
@@ -7603,7 +7603,7 @@ public class LdapProvisioning extends LdapProv {
                 String memberURL = DynamicGroup.getDefaultMemberURL(zimbraId);
                 entry.setAttr(Provisioning.A_memberURL, memberURL);
             }
-
+            
             if (!entry.hasAttribute(Provisioning.A_zimbraIsACLGroup)) {
                 entry.setAttr(A_zimbraIsACLGroup, ProvisioningConstants.TRUE);
             }
