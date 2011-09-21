@@ -204,8 +204,10 @@ public class CalDavDataImport extends MailItemImport {
         HashMap<String,DataSourceItem> allFolders = getAllFolderMappings(ds);
         List<Integer> deleted = new ArrayList<Integer>();
         int lastSync = (int)rootFolder.getLastSyncDate();
-        for (int itemId : mbox.getTombstones(lastSync).getAll())
-            deleted.add(itemId);
+        if (lastSync > 0) {
+            for (int itemId : mbox.getTombstones(lastSync).getAll())
+                deleted.add(itemId);
+        }
         for (String name : calendars.keySet()) {
             DavObject obj = calendars.get(name);
             String ctag = obj.getPropertyText(DavElements.E_GETCTAG);
