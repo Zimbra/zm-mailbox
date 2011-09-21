@@ -1241,8 +1241,9 @@ Folders:
                      "all" (all authenticated users), "pub" (public authenticated and unauthenticated access),
                      "guest" (non-Zimbra email address and password),
                      "key" (non-Zimbra email address and access key)
-    {grantee-name} = the display name (*not* the zimbra id) of the principal being granted rights;
-                     optional if {grantee-type} is "all"
+    {grantee-name} = name or email address of the principal being granted rights.
+                     optional if {grantee-type} is "all".  When specified in a request,
+                     this can be just the username portion of the address in the default domain. 
     {pw}           = optional argument.  password when {grantee-type} is "guest"
     {key}          = optional argument.  access key when {grantee-type} is "key"
 
@@ -1250,17 +1251,19 @@ Retention policy:
 
   <retentionPolicy>?
     <keep>
-      <policy type="user" lifetime="{interval}"/>?
-      <policy type="system" id="{id}" name="{name}" lifetime="{interval}"/>*
+      <policy type="user" lifetime="{duration}"/>?
+      <policy type="system" id="{id}" name="{name}" lifetime="{duration}"/>*
     </keep>
     <purge>
-      <policy type="user" lifetime="{interval}"/>?
-      <policy type="system" id="{id}" name="{name}" lifetime="{interval}"/>*
+      <policy type="user" lifetime="{duration}"/>?
+      <policy type="system" id="{id}" name="{name}" lifetime="{duration}"/>*
     </purge>
   </retentionPolicy>
 
+    {duration} = a time duration value in provisioning format, e.g. "30d" for 30 days.
+        
 When applying system retention policy to a folder or tag, only the type and id
-attributes are requited.
+attributes are required.
 
 Mountpoints:
 
@@ -3321,7 +3324,7 @@ If <ace> elements are provided, only those ACEs with specified rights are return
 
     {zimbra-id}    = zimbraId of the grantee
 
-    {grantee-name} = display name of the grantee.
+    {grantee-name} = name or email address of the grantee.
                      ot present if {grantee-type} is "all" or "pub"
 
     {pw}           = optional arguments.  password when {grantee-type} is "gst" (not yet supported)
@@ -3729,6 +3732,8 @@ added to Documents only.
     </share>]*
 </GetShareNotificationsResponse>
 
+    notification-item-id = the id of the share notification message.  The message must be in the Inbox folder. 
+    status is "new" if the message is unread or "seen" if the message is read.
     perm = combination of r (read) w (write) i (insert) d (delete) x (action) a (admin)
 
 -----------------------------
@@ -3738,10 +3743,10 @@ added to Documents only.
 <GetSystemRetentionPolicyResponse>
   <retentionPolicy>
     <keep>
-      <policy id="{id}" name="{name}" type="system" lifetime="{interval}"/>*
+      <policy id="{id}" name="{name}" type="system" lifetime="{duration}"/>*
     </keep>
     <purge>
-      <policy id="{id}" name="{name}" type="system" lifetime="{interval}"/>*
+      <policy id="{id}" name="{name}" type="system" lifetime="{duration}"/>*
     </purge>
   </retentionPolicy>
 </GetSystemRetentionPolicyResponse>
