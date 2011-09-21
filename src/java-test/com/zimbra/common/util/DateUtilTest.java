@@ -16,8 +16,11 @@
 package com.zimbra.common.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
+
+import com.zimbra.common.service.ServiceException;
 
 public class DateUtilTest {
     
@@ -54,5 +57,18 @@ public class DateUtilTest {
         assertEquals(321, DateUtil.getTimeIntervalSecs("321", 0));
         assertEquals(5 * Constants.SECONDS_PER_HOUR, DateUtil.getTimeIntervalSecs("5h", 0));
         assertEquals(5 * Constants.SECONDS_PER_DAY, DateUtil.getTimeIntervalSecs("5d", 0));
+    }
+    
+    @Test
+    public void negativeTimeInterval() throws Exception {
+        assertEquals(1, DateUtil.getTimeInterval("-5", 1));
+        assertEquals(1, DateUtil.getTimeInterval("-5m", 1));
+        assertEquals(1, DateUtil.getTimeInterval("-30d", 1));
+        try {
+            DateUtil.getTimeInterval("-5s");
+            fail("Parse should have failed");
+        } catch (ServiceException e) {
+            assertEquals(ServiceException.INVALID_REQUEST, e.getCode());
+        }
     }
 }
