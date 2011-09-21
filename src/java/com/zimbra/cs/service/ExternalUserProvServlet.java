@@ -247,8 +247,17 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             attrs.put(Provisioning.A_zimbraHideInGal, ProvisioningConstants.TRUE);
             attrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MailStatus.disabled.toString());
             grantee = prov.createAccount(mapExtEmailToAcctName(extUserEmail, domain), password, attrs);
+
             // create external account mailbox
-            Mailbox granteeMbox = MailboxManager.getInstance().getMailboxByAccount(grantee);
+            Mailbox granteeMbox;
+            try {
+                granteeMbox = MailboxManager.getInstance().getMailboxByAccount(grantee);
+            } catch (ServiceException e) {
+                // mailbox creation failed; delete the account also so that it is a clean state before
+                // the next attempt
+                prov.deleteAccount(grantee.getId());
+                throw e;
+            }
 
             // create mountpoints
             Set<MailItem.Type> viewTypes = new HashSet<MailItem.Type>();
