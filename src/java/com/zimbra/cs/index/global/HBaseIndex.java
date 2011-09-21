@@ -70,6 +70,7 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.common.primitives.UnsignedBytes;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -80,6 +81,7 @@ import com.zimbra.cs.index.Indexer;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.global.GlobalIndex;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
@@ -308,7 +310,7 @@ public final class HBaseIndex implements IndexStore {
         }
 
         @Override
-        public HBaseIndex getInstance(Mailbox mbox) throws ServiceException {
+        public HBaseIndex getIndexStore(Mailbox mbox) throws ServiceException {
             try {
                 return new HBaseIndex(mbox, this);
             } catch (IOException e) {
@@ -320,6 +322,7 @@ public final class HBaseIndex implements IndexStore {
         public void destroy() {
         }
 
+        @Override
         public GlobalIndex getGlobalIndex() {
             return globalIndex;
         }
@@ -338,7 +341,7 @@ public final class HBaseIndex implements IndexStore {
     private final class IndexerImpl implements Indexer {
         private final List<Row> batch = new ArrayList<Row>();
         private final HTableInterface table;
-        private final List<MailItem> indexGlobal = new ArrayList<MailItem>();
+        private final Map<MailItem, Folder> indexGlobal = Maps.newHashMapWithExpectedSize(1);
         private final List<Integer> deleteGlobal = new ArrayList<Integer>();
 
         IndexerImpl() {
@@ -346,7 +349,7 @@ public final class HBaseIndex implements IndexStore {
         }
 
         @Override
-        public void addDocument(MailItem item, List<IndexDocument> docs) throws IOException {
+        public void addDocument(Folder folder, MailItem item, List<IndexDocument> docs) throws IOException {
             long ts = toTimestamp(item.getId(), item.getSavedSequence());
             batch.add(put(ts, item));
             Map<String, TermInfo> term2info = new HashMap<String, TermInfo>();
@@ -384,14 +387,8 @@ public final class HBaseIndex implements IndexStore {
                 put.add(TERM_CF, Bytes.toBytes(entry.getKey()), ts, JSON_MAPPER.writeValueAsBytes(entry.getValue()));
                 batch.add(put);
             }
-
-            // promote all documents to global index
-            switch (item.getType()) {
-                case DOCUMENT:
-                    indexGlobal.add(item);
-                    break;
-                default:
-                    break;
+            if (item.getType() == MailItem.Type.DOCUMENT) { // promote all documents to global index
+                indexGlobal.put(item, folder);
             }
         }
 
@@ -463,8 +460,8 @@ public final class HBaseIndex implements IndexStore {
             } finally {
                 factory.pool.putTable(table);
             }
-            for (MailItem item : indexGlobal) {
-                getGlobalIndex().index(HBaseIndex.this, item);
+            if (!indexGlobal.isEmpty()) {
+                getGlobalIndex().index(HBaseIndex.this, indexGlobal);
             }
             for (int id : deleteGlobal) {
                 getGlobalIndex().delete(new GlobalItemID(mailbox.getAccountId(), id));

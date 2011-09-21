@@ -78,6 +78,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.index.global.GlobalIndex;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.util.SmileSerializer;
@@ -185,8 +187,13 @@ public final class CassandraIndex implements IndexStore {
         }
 
         @Override
-        public CassandraIndex getInstance(Mailbox mbox) {
+        public CassandraIndex getIndexStore(Mailbox mbox) {
             return new CassandraIndex(mbox, keyspace);
+        }
+
+        @Override
+        public GlobalIndex getGlobalIndex() {
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -219,7 +226,7 @@ public final class CassandraIndex implements IndexStore {
         private Mutator<UUID> mutator = HFactory.createMutator(keyspace, UUIDSerializer.get());
 
         @Override
-        public void addDocument(MailItem item, List<IndexDocument> docs) throws IOException {
+        public void addDocument(Folder folder, MailItem item, List<IndexDocument> docs) throws IOException {
             for (IndexDocument doc : docs) {
                 setFields(item, doc);
                 UUID docID = UUID.randomUUID(); //TODO use time-based (type 1) UUID

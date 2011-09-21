@@ -50,6 +50,8 @@ import com.google.common.io.NullOutputStream;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.index.global.GlobalIndex;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailboxIndex;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -660,8 +662,13 @@ public final class LuceneIndex implements IndexStore {
         }
 
         @Override
-        public LuceneIndex getInstance(Mailbox mbox) throws ServiceException {
+        public LuceneIndex getIndexStore(Mailbox mbox) throws ServiceException {
             return new LuceneIndex(mbox);
+        }
+
+        @Override
+        public GlobalIndex getGlobalIndex() {
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -713,7 +720,8 @@ public final class LuceneIndex implements IndexStore {
          * is deferred, we are sure that this item is not already in the index, and so we can skip the check-update step.
          */
         @Override
-        public synchronized void addDocument(MailItem item, List<IndexDocument> docs) throws IOException {
+        public synchronized void addDocument(Folder folder, MailItem item, List<IndexDocument> docs)
+                throws IOException {
             if (docs == null || docs.isEmpty()) {
                 return;
             }

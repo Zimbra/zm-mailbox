@@ -70,15 +70,16 @@ public final class GlobalIndexITest {
     @Test
     public void search() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Folder folder = mbox.getFolderById(null, Mailbox.ID_FOLDER_BRIEFCASE);
         ParsedDocument pdoc = new ParsedDocument(IOUtils.toInputStream("test"),
                 "filename.txt", "text/plain", 12345L, "creator", "description");
-        Document doc = mbox.createDocument(null, Mailbox.ID_FOLDER_BRIEFCASE, pdoc, MailItem.Type.DOCUMENT, 0);
+        Document doc = mbox.createDocument(null, folder.getId(), pdoc, MailItem.Type.DOCUMENT, 0);
 
         HBaseIndex index = HBaseIndexTestUtils.createIndex(mbox);
         index.deleteIndex();
 
         Indexer indexer = index.openIndexer();
-        indexer.addDocument(doc, doc.generateIndexData());
+        indexer.addDocument(folder, doc, doc.generateIndexData());
         indexer.close();
 
         TermQuery query = new TermQuery(new Term(LuceneFields.L_CONTENT, "test"));
@@ -91,16 +92,17 @@ public final class GlobalIndexITest {
     @Test
     public void acl() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        mbox.grantAccess(null, Mailbox.ID_FOLDER_BRIEFCASE, GRANTEE1, ACL.GRANTEE_USER, ACL.RIGHT_READ, null);
+        Folder folder = mbox.getFolderById(null, Mailbox.ID_FOLDER_BRIEFCASE);
+        mbox.grantAccess(null, folder.getId(), GRANTEE1, ACL.GRANTEE_USER, ACL.RIGHT_READ, null);
         ParsedDocument pdoc = new ParsedDocument(IOUtils.toInputStream("ACL"),
                 "acl-test.txt", "text/plain", 12345L, "creator", "description");
-        Document doc = mbox.createDocument(null, Mailbox.ID_FOLDER_BRIEFCASE, pdoc, MailItem.Type.DOCUMENT, 0);
+        Document doc = mbox.createDocument(null, folder.getId(), pdoc, MailItem.Type.DOCUMENT, 0);
 
         HBaseIndex index = HBaseIndexTestUtils.createIndex(mbox);
         index.deleteIndex();
 
         Indexer indexer = index.openIndexer();
-        indexer.addDocument(doc, doc.generateIndexData());
+        indexer.addDocument(folder, doc, doc.generateIndexData());
         indexer.close();
 
         TermQuery query = new TermQuery(new Term(LuceneFields.L_CONTENT, "acl"));
@@ -121,20 +123,20 @@ public final class GlobalIndexITest {
     @Test
     public void updateACL() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Folder closed = mbox.createFolder(null, "closed", Mailbox.ID_FOLDER_BRIEFCASE, MailItem.Type.DOCUMENT,
+        Folder personal = mbox.createFolder(null, "closed", Mailbox.ID_FOLDER_BRIEFCASE, MailItem.Type.DOCUMENT,
                 0, (byte) 0, null);
         Folder shared = mbox.createFolder(null, "shared", Mailbox.ID_FOLDER_BRIEFCASE, MailItem.Type.DOCUMENT,
                 0, (byte) 0, null);
         mbox.grantAccess(null, shared.getId(), GRANTEE1, ACL.GRANTEE_USER, ACL.RIGHT_READ, null);
         ParsedDocument pdoc = new ParsedDocument(IOUtils.toInputStream("shared"),
                 "acl-test.txt", "text/plain", 12345L, "creator", "description");
-        Document doc = mbox.createDocument(null, closed.getId(), pdoc, MailItem.Type.DOCUMENT, 0);
+        Document doc = mbox.createDocument(null, personal.getId(), pdoc, MailItem.Type.DOCUMENT, 0);
 
         HBaseIndex index = HBaseIndexTestUtils.createIndex(mbox);
         index.deleteIndex();
 
         Indexer indexer = index.openIndexer();
-        indexer.addDocument(doc, doc.generateIndexData());
+        indexer.addDocument(personal, doc, doc.generateIndexData());
         indexer.close();
 
         TermQuery query = new TermQuery(new Term(LuceneFields.L_CONTENT, "shared"));

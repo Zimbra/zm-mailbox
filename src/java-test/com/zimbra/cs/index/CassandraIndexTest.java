@@ -32,12 +32,14 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
@@ -88,16 +90,17 @@ public final class CassandraIndexTest {
     @Test
     public void searchByTermQuery() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Map<String, Object> fields = new HashMap<String, Object>();
-        fields.put(ContactConstants.A_firstName, "First");
-        fields.put(ContactConstants.A_lastName, "Last");
-        fields.put(ContactConstants.A_email, "test@zimbra.com");
-        Contact contact = mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
+        Folder folder = mbox.getFolderById(null, Mailbox.ID_FOLDER_CONTACTS);
+        Map<String, Object> fields = ImmutableMap.<String, Object>of(
+                ContactConstants.A_firstName, "First",
+                ContactConstants.A_lastName, "Last",
+                ContactConstants.A_email, "test@zimbra.com");
+        Contact contact = mbox.createContact(null, new ParsedContact(fields), folder.getId(), null);
 
-        CassandraIndex index = factory.getInstance(mbox);
+        CassandraIndex index = factory.getIndexStore(mbox);
         index.deleteIndex();
         Indexer indexer = index.openIndexer();
-        indexer.addDocument(contact, contact.generateIndexData());
+        indexer.addDocument(folder, contact, contact.generateIndexData());
         indexer.close();
 
         IndexSearcher searcher = index.openSearcher();
@@ -115,22 +118,23 @@ public final class CassandraIndexTest {
     @Test
     public void searchByPrefixQuery() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Contact contact1 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
-                "abc@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
-        Contact contact2 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
-                "abcd@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
-        Contact contact3 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
-                "xy@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
-        Contact contact4 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
-                "xyz@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+        Folder folder = mbox.getFolderById(null, Mailbox.ID_FOLDER_CONTACTS);
+        Contact contact1 = mbox.createContact(null, new ParsedContact(
+                Collections.singletonMap(ContactConstants.A_email, "abc@zimbra.com")), folder.getId(), null);
+        Contact contact2 = mbox.createContact(null, new ParsedContact(
+                Collections.singletonMap(ContactConstants.A_email, "abcd@zimbra.com")), folder.getId(), null);
+        Contact contact3 = mbox.createContact(null, new ParsedContact(
+                Collections.singletonMap(ContactConstants.A_email, "xy@zimbra.com")), folder.getId(), null);
+        Contact contact4 = mbox.createContact(null, new ParsedContact(
+                Collections.singletonMap(ContactConstants.A_email, "xyz@zimbra.com")), folder.getId(), null);
 
-        CassandraIndex index = factory.getInstance(mbox);
+        CassandraIndex index = factory.getIndexStore(mbox);
         index.deleteIndex();
         Indexer indexer = index.openIndexer();
-        indexer.addDocument(contact1, contact1.generateIndexData());
-        indexer.addDocument(contact2, contact2.generateIndexData());
-        indexer.addDocument(contact3, contact3.generateIndexData());
-        indexer.addDocument(contact4, contact4.generateIndexData());
+        indexer.addDocument(folder, contact1, contact1.generateIndexData());
+        indexer.addDocument(folder, contact2, contact2.generateIndexData());
+        indexer.addDocument(folder, contact3, contact3.generateIndexData());
+        indexer.addDocument(folder, contact4, contact4.generateIndexData());
         indexer.close();
 
         IndexSearcher searcher = index.openSearcher();
@@ -146,16 +150,17 @@ public final class CassandraIndexTest {
     @Test
     public void deleteDocument() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Contact contact1 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
-                "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
-        Contact contact2 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
-                "test2@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+        Folder folder = mbox.getFolderById(null, Mailbox.ID_FOLDER_CONTACTS);
+        Contact contact1 = mbox.createContact(null, new ParsedContact(
+                Collections.singletonMap(ContactConstants.A_email, "test1@zimbra.com")), folder.getId(), null);
+        Contact contact2 = mbox.createContact(null, new ParsedContact(
+                Collections.singletonMap(ContactConstants.A_email, "test2@zimbra.com")), folder.getId(), null);
 
-        CassandraIndex index = factory.getInstance(mbox);
+        CassandraIndex index = factory.getIndexStore(mbox);
         index.deleteIndex();
         Indexer indexer = index.openIndexer();
-        indexer.addDocument(contact1, contact1.generateIndexData());
-        indexer.addDocument(contact2, contact2.generateIndexData());
+        indexer.addDocument(folder, contact1, contact1.generateIndexData());
+        indexer.addDocument(folder, contact2, contact2.generateIndexData());
         indexer.close();
 
         IndexSearcher searcher = index.openSearcher();
@@ -178,22 +183,23 @@ public final class CassandraIndexTest {
     @Test
     public void getCount() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Contact contact1 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
-                "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
-        Contact contact2 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
-                "test2@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
-        Contact contact3 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
-                "test3@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
-        Contact contact4 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
-                "test4@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+        Folder folder = mbox.getFolderById(null, Mailbox.ID_FOLDER_CONTACTS);
+        Contact contact1 = mbox.createContact(null, new ParsedContact(
+                Collections.singletonMap(ContactConstants.A_email, "test1@zimbra.com")), folder.getId(), null);
+        Contact contact2 = mbox.createContact(null, new ParsedContact(
+                Collections.singletonMap(ContactConstants.A_email, "test2@zimbra.com")), folder.getId(), null);
+        Contact contact3 = mbox.createContact(null, new ParsedContact(
+                Collections.singletonMap(ContactConstants.A_email, "test3@zimbra.com")), folder.getId(), null);
+        Contact contact4 = mbox.createContact(null, new ParsedContact(
+                Collections.singletonMap(ContactConstants.A_email, "test4@zimbra.com")), folder.getId(), null);
 
-        CassandraIndex index = factory.getInstance(mbox);
+        CassandraIndex index = factory.getIndexStore(mbox);
         index.deleteIndex();
         Indexer indexer = index.openIndexer();
-        indexer.addDocument(contact1, contact1.generateIndexData());
-        indexer.addDocument(contact2, contact2.generateIndexData());
-        indexer.addDocument(contact3, contact3.generateIndexData());
-        indexer.addDocument(contact4, contact4.generateIndexData());
+        indexer.addDocument(folder, contact1, contact1.generateIndexData());
+        indexer.addDocument(folder, contact2, contact2.generateIndexData());
+        indexer.addDocument(folder, contact3, contact3.generateIndexData());
+        indexer.addDocument(folder, contact4, contact4.generateIndexData());
         indexer.close();
 
         IndexSearcher searcher = index.openSearcher();
@@ -206,16 +212,17 @@ public final class CassandraIndexTest {
     @Test
     public void termEnum() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Contact contact1 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
-                "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
-        Contact contact2 = mbox.createContact(null, new ParsedContact(Collections.singletonMap(ContactConstants.A_email,
-                "test2@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
+        Folder folder = mbox.getFolderById(null, Mailbox.ID_FOLDER_CONTACTS);
+        Contact contact1 = mbox.createContact(null, new ParsedContact(
+                Collections.singletonMap(ContactConstants.A_email, "test1@zimbra.com")), folder.getId(), null);
+        Contact contact2 = mbox.createContact(null, new ParsedContact(
+                Collections.singletonMap(ContactConstants.A_email, "test2@zimbra.com")), folder.getId(), null);
 
-        CassandraIndex index = factory.getInstance(mbox);
+        CassandraIndex index = factory.getIndexStore(mbox);
         index.deleteIndex();
         Indexer indexer = index.openIndexer();
-        indexer.addDocument(contact1, contact1.generateIndexData());
-        indexer.addDocument(contact2, contact2.generateIndexData());
+        indexer.addDocument(folder, contact1, contact1.generateIndexData());
+        indexer.addDocument(folder, contact2, contact2.generateIndexData());
         indexer.close();
 
         IndexSearcher searcher = index.openSearcher();

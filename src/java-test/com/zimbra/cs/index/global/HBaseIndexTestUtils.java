@@ -48,7 +48,7 @@ final class HBaseIndexTestUtils {
     }
 
     static HBaseIndex createIndex(Mailbox mbox) throws ServiceException {
-        return FACTORY.getInstance(mbox);
+        return FACTORY.getIndexStore(mbox);
     }
 
     static void initSchema() throws IOException {

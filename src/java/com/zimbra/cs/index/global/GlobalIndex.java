@@ -70,22 +70,27 @@ public final class GlobalIndex {
      *
      * TODO: move this logic to HBase backend using coprocessor.
      */
-    void index(HBaseIndex index, MailItem item) throws IOException {
-        byte[] gid = GlobalItemID.toBytes(index.mailbox.getAccountId(), item.getId());
-        Result result = index.fetch(item.getId());
-        List<Put> batch = new ArrayList<Put>(result.size());
-        Put doc = new Put(gid);
-        batch.add(doc);
-        for (KeyValue kv : result.raw()) {
-            if (Bytes.equals(kv.getFamily(), HBaseIndex.TERM_CF)) {
-                Put put = new Put(kv.getQualifier());
-                put.add(HBaseIndex.TERM_CF, gid, kv.getValue());
-                batch.add(put);
-            } else if (Bytes.equals(kv.getFamily(), HBaseIndex.ITEM_CF)) {
-                doc.add(HBaseIndex.ITEM_CF, kv.getQualifier(), kv.getValue());
+    void index(HBaseIndex index, Map<MailItem, Folder> items) throws IOException {
+        List<Put> batch = new ArrayList<Put>();
+        for (Map.Entry<MailItem, Folder> entry : items.entrySet()) {
+            MailItem item = entry.getKey();
+            byte[] gid = GlobalItemID.toBytes(index.mailbox.getAccountId(), item.getId());
+            Result result = index.fetch(item.getId());
+            Put doc = new Put(gid);
+            for (KeyValue kv : result.raw()) {
+                if (Bytes.equals(kv.getFamily(), HBaseIndex.TERM_CF)) {
+                    Put put = new Put(kv.getQualifier());
+                    put.add(HBaseIndex.TERM_CF, gid, kv.getValue());
+                    batch.add(put);
+                } else if (Bytes.equals(kv.getFamily(), HBaseIndex.ITEM_CF)) {
+                    doc.add(HBaseIndex.ITEM_CF, kv.getQualifier(), kv.getValue());
+                }
             }
+            // Since we are in the middle of Mailbox.endTransaction(), do not call Mailbox.getFolderById(), which calls
+            // another Mailbox.beginTransaction().
+            indexACL(entry.getValue(), doc);
+            batch.add(doc);
         }
-        indexACL(item, doc);
         HTableInterface table = pool.getTable(indexTableName);
         try {
             table.put(batch);
@@ -97,13 +102,8 @@ public final class GlobalIndex {
     /**
      * Denormalize the ACL down to the item level.
      */
-    private void indexACL(MailItem item, Put put) {
-        try {
-            Folder folder = item.getMailbox().getFolderById(null, item.getFolderId());
-            put.add(HBaseIndex.ITEM_CF, ACL_COL, encodeACL(folder));
-        } catch (ServiceException e) {
-            ZimbraLog.index.error("Failed to index ACL id=%d,folder=%d", item.getId(), item.getFolderId());
-        }
+    private void indexACL(Folder folder, Put put) {
+        put.add(HBaseIndex.ITEM_CF, ACL_COL, encodeACL(folder));
     }
 
     /**
@@ -112,7 +112,12 @@ public final class GlobalIndex {
     private void updateACL(MailItem item) throws IOException {
         byte[] gid = GlobalItemID.toBytes(item.getMailbox().getAccountId(), item.getId());
         Put put = new Put(gid);
-        indexACL(item, put);
+        try {
+            indexACL(item.getMailbox().getFolderById(null, item.getFolderId()), put);
+        } catch (ServiceException e) {
+            ZimbraLog.index.error("Failed to index ACL id=%d,folder=%d", item.getId(), item.getFolderId());
+            return;
+        }
         HTableInterface table = pool.getTable(indexTableName);
         try {
             table.put(put);

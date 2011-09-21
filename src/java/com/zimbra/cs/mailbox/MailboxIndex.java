@@ -16,6 +16,7 @@ package com.zimbra.cs.mailbox;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -33,9 +34,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.TermQuery;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
@@ -70,6 +74,8 @@ import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.index.global.GlobalDocument;
+import com.zimbra.cs.index.global.GlobalSearchQuery;
 import com.zimbra.cs.index.global.HBaseIndex;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
@@ -151,7 +157,7 @@ public final class MailboxIndex {
     }
 
     void open() throws ServiceException {
-        indexStore = indexStoreFactory.getInstance(mailbox);
+        indexStore = indexStoreFactory.getIndexStore(mailbox);
     }
 
     public final IndexStore getIndexStore() {
@@ -260,6 +266,37 @@ public final class MailboxIndex {
             results = new ReSortingQueryResults(results, originalSort, params);
         }
         return results;
+    }
+
+    public List<GlobalDocument> search(GlobalSearchQuery query) throws ServiceException {
+        try {
+            TermQuery term = toTermQuery(query);
+            if (term == null) { // empty after trimming stop words
+                return Collections.emptyList();
+            }
+            return indexStoreFactory.getGlobalIndex().search(mailbox.getAccountId(), term);
+        } catch (UnsupportedOperationException e) { // only supported by HBase backend
+            throw ServiceException.UNSUPPORTED();
+        } catch (IOException e) {
+            throw MailServiceException.FAILURE("Failed to search global index", e);
+        }
+    }
+
+    /**
+     * TODO only support a single term query, everything else is ignored
+     */
+    private TermQuery toTermQuery(GlobalSearchQuery query) throws IOException {
+        TokenStream stream = analyzer.tokenStream(LuceneFields.L_CONTENT, new StringReader(query.getQueryString()));
+        try {
+            CharTermAttribute termAttr = stream.addAttribute(CharTermAttribute.class);
+            stream.reset();
+            if (stream.incrementToken()) {
+                return new TermQuery(new Term(LuceneFields.L_CONTENT, termAttr.toString()));
+            }
+        } finally {
+            Closeables.closeQuietly(stream);
+        }
+        return null;
     }
 
     /**
@@ -751,7 +788,7 @@ public final class MailboxIndex {
         try {
             Indexer indexer = indexStore.openIndexer();
             try {
-                indexer.addDocument(item, docs);
+                indexer.addDocument(item.getFolder(), item, docs);
             } finally {
                 indexer.close();
             }
@@ -823,7 +860,7 @@ public final class MailboxIndex {
                 ZimbraLog.index.debug("Indexing id=%d", entry.item.getId());
 
                 try {
-                    indexer.addDocument(entry.item, entry.documents);
+                    indexer.addDocument(entry.item.getFolder(), entry.item, entry.documents);
                 } catch (IOException e) {
                     ZimbraLog.index.warn("Failed to index item=%s", entry, e);
                     lastFailedTime = System.currentTimeMillis();

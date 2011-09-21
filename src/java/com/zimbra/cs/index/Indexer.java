@@ -18,6 +18,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.List;
 
+import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 
 /**
@@ -31,7 +32,7 @@ public interface Indexer extends Closeable {
     /**
      * Adds index documents.
      */
-    void addDocument(MailItem item, List<IndexDocument> docs) throws IOException;
+    void addDocument(Folder folder, MailItem item, List<IndexDocument> docs) throws IOException;
 
     /**
      * Deletes index documents.

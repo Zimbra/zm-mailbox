@@ -25,7 +25,7 @@ import com.zimbra.common.soap.MailConstants;
  * @since May 26, 2004
  * @author schemers
  */
-public class MailService implements DocumentService {
+public final class MailService implements DocumentService {
 
     @Override
     public void registerHandlers(DocumentDispatcher dispatcher) {
@@ -40,6 +40,7 @@ public class MailService implements DocumentService {
         dispatcher.registerHandler(MailConstants.BROWSE_REQUEST, new Browse());
         dispatcher.registerHandler(MailConstants.SEARCH_REQUEST, new Search());
         dispatcher.registerHandler(MailConstants.SEARCH_CONV_REQUEST, new SearchConv());
+        dispatcher.registerHandler(MailConstants.GLOBAL_SEARCH_REQUEST, new GlobalSearch());
 
         // dumpster
         dispatcher.registerHandler(MailConstants.EMPTY_DUMPSTER_REQUEST, new EmptyDumpster());
@@ -217,7 +218,7 @@ public class MailService implements DocumentService {
 
         // share
         dispatcher.registerHandler(MailConstants.GET_SHARE_NOTIFICATIONS_REQUEST, new GetShareNotifications());
-        
+
         dispatcher.registerHandler(MailConstants.GET_SYSTEM_RETENTION_POLICY_REQUEST, new GetSystemRetentionPolicy());
     }
 }
