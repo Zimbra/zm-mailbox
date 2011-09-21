@@ -3854,8 +3854,8 @@ Notes:
 
 ----------------------------- 
 
-<GetDistributionListInfoRequest needOwners="1">
-  <dl name="{name}" id="{id}"  via="{via-dl-name}">
+<GetDistributionListInfoRequest needOwners="1|0">
+  <dl by="id|name">...</dl>
 </GetDistributionListInfoRequest> 
 
 <GetDistributionListInfoResponse isOwner="1" isMember="1"> 
