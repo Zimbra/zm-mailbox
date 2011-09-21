@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110916-2114 */
+    /* build: unknown unknown unknown unknown */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3553,7 +3553,7 @@ public class ZAttrProvisioning {
     /**
      * list of domains that users cannot share files with
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1264)
     public static final String A_zimbraExternalShareDomainBlackList = "zimbraExternalShareDomainBlackList";
@@ -3561,7 +3561,7 @@ public class ZAttrProvisioning {
     /**
      * flag indicates whether to enable sharing files with external accounts
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1262)
     public static final String A_zimbraExternalShareDomainPolicyType = "zimbraExternalShareDomainPolicyType";
@@ -3569,7 +3569,7 @@ public class ZAttrProvisioning {
     /**
      * list of domains that users can share files with
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1263)
     public static final String A_zimbraExternalShareDomainWhiteList = "zimbraExternalShareDomainWhiteList";
@@ -3580,7 +3580,7 @@ public class ZAttrProvisioning {
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1260)
     public static final String A_zimbraExternalShareLifetime = "zimbraExternalShareLifetime";
@@ -3588,7 +3588,7 @@ public class ZAttrProvisioning {
     /**
      * flag indicates whether to enable sharing files with external accounts
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1261)
     public static final String A_zimbraExternalSharingEnabled = "zimbraExternalSharingEnabled";
@@ -5141,7 +5141,7 @@ public class ZAttrProvisioning {
     /**
      * flag indicates whether to limit lifetime of external shares
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1259)
     public static final String A_zimbraLimitExternalShareLifetime = "zimbraLimitExternalShareLifetime";
@@ -5597,7 +5597,7 @@ public class ZAttrProvisioning {
      * elements to their folders and tags. If the system policy changes, user
      * settings are automatically updated with the change.
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1241)
     public static final String A_zimbraMailPurgeSystemPolicy = "zimbraMailPurgeSystemPolicy";
