@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110916-2114 */
+    /* build: unknown unknown unknown unknown */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -8624,7 +8624,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraExternalShareDomainBlackList, or empty array if unset
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1264)
     public String[] getExternalShareDomainBlackList() {
@@ -8637,7 +8637,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraExternalShareDomainBlackList new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1264)
     public void setExternalShareDomainBlackList(String[] zimbraExternalShareDomainBlackList) throws com.zimbra.common.service.ServiceException {
@@ -8653,7 +8653,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1264)
     public Map<String,Object> setExternalShareDomainBlackList(String[] zimbraExternalShareDomainBlackList, Map<String,Object> attrs) {
@@ -8668,7 +8668,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraExternalShareDomainBlackList new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1264)
     public void addExternalShareDomainBlackList(String zimbraExternalShareDomainBlackList) throws com.zimbra.common.service.ServiceException {
@@ -8684,7 +8684,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1264)
     public Map<String,Object> addExternalShareDomainBlackList(String zimbraExternalShareDomainBlackList, Map<String,Object> attrs) {
@@ -8699,7 +8699,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraExternalShareDomainBlackList existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1264)
     public void removeExternalShareDomainBlackList(String zimbraExternalShareDomainBlackList) throws com.zimbra.common.service.ServiceException {
@@ -8715,7 +8715,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1264)
     public Map<String,Object> removeExternalShareDomainBlackList(String zimbraExternalShareDomainBlackList, Map<String,Object> attrs) {
@@ -8729,7 +8729,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1264)
     public void unsetExternalShareDomainBlackList() throws com.zimbra.common.service.ServiceException {
@@ -8744,7 +8744,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1264)
     public Map<String,Object> unsetExternalShareDomainBlackList(Map<String,Object> attrs) {
@@ -8760,7 +8760,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraExternalShareDomainPolicyType, or ZAttrProvisioning.ExternalShareDomainPolicyType.whitelist if unset and/or has invalid value
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1262)
     public ZAttrProvisioning.ExternalShareDomainPolicyType getExternalShareDomainPolicyType() {
@@ -8774,7 +8774,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraExternalShareDomainPolicyType, or "whitelist" if unset
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1262)
     public String getExternalShareDomainPolicyTypeAsString() {
@@ -8789,7 +8789,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraExternalShareDomainPolicyType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1262)
     public void setExternalShareDomainPolicyType(ZAttrProvisioning.ExternalShareDomainPolicyType zimbraExternalShareDomainPolicyType) throws com.zimbra.common.service.ServiceException {
@@ -8807,7 +8807,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1262)
     public Map<String,Object> setExternalShareDomainPolicyType(ZAttrProvisioning.ExternalShareDomainPolicyType zimbraExternalShareDomainPolicyType, Map<String,Object> attrs) {
@@ -8824,7 +8824,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraExternalShareDomainPolicyType new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1262)
     public void setExternalShareDomainPolicyTypeAsString(String zimbraExternalShareDomainPolicyType) throws com.zimbra.common.service.ServiceException {
@@ -8842,7 +8842,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1262)
     public Map<String,Object> setExternalShareDomainPolicyTypeAsString(String zimbraExternalShareDomainPolicyType, Map<String,Object> attrs) {
@@ -8858,7 +8858,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1262)
     public void unsetExternalShareDomainPolicyType() throws com.zimbra.common.service.ServiceException {
@@ -8875,7 +8875,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1262)
     public Map<String,Object> unsetExternalShareDomainPolicyType(Map<String,Object> attrs) {
@@ -8889,7 +8889,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraExternalShareDomainWhiteList, or empty array if unset
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1263)
     public String[] getExternalShareDomainWhiteList() {
@@ -8902,7 +8902,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraExternalShareDomainWhiteList new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1263)
     public void setExternalShareDomainWhiteList(String[] zimbraExternalShareDomainWhiteList) throws com.zimbra.common.service.ServiceException {
@@ -8918,7 +8918,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1263)
     public Map<String,Object> setExternalShareDomainWhiteList(String[] zimbraExternalShareDomainWhiteList, Map<String,Object> attrs) {
@@ -8933,7 +8933,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraExternalShareDomainWhiteList new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1263)
     public void addExternalShareDomainWhiteList(String zimbraExternalShareDomainWhiteList) throws com.zimbra.common.service.ServiceException {
@@ -8949,7 +8949,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1263)
     public Map<String,Object> addExternalShareDomainWhiteList(String zimbraExternalShareDomainWhiteList, Map<String,Object> attrs) {
@@ -8964,7 +8964,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraExternalShareDomainWhiteList existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1263)
     public void removeExternalShareDomainWhiteList(String zimbraExternalShareDomainWhiteList) throws com.zimbra.common.service.ServiceException {
@@ -8980,7 +8980,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1263)
     public Map<String,Object> removeExternalShareDomainWhiteList(String zimbraExternalShareDomainWhiteList, Map<String,Object> attrs) {
@@ -8994,7 +8994,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1263)
     public void unsetExternalShareDomainWhiteList() throws com.zimbra.common.service.ServiceException {
@@ -9009,7 +9009,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1263)
     public Map<String,Object> unsetExternalShareDomainWhiteList(Map<String,Object> attrs) {
@@ -9030,7 +9030,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraExternalShareLifetime in millseconds, or 7776000000 (90d)  if unset
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1260)
     public long getExternalShareLifetime() {
@@ -9045,7 +9045,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraExternalShareLifetime, or "90d" if unset
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1260)
     public String getExternalShareLifetimeAsString() {
@@ -9061,7 +9061,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraExternalShareLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1260)
     public void setExternalShareLifetime(String zimbraExternalShareLifetime) throws com.zimbra.common.service.ServiceException {
@@ -9080,7 +9080,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1260)
     public Map<String,Object> setExternalShareLifetime(String zimbraExternalShareLifetime, Map<String,Object> attrs) {
@@ -9097,7 +9097,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1260)
     public void unsetExternalShareLifetime() throws com.zimbra.common.service.ServiceException {
@@ -9115,7 +9115,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1260)
     public Map<String,Object> unsetExternalShareLifetime(Map<String,Object> attrs) {
@@ -9129,7 +9129,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraExternalSharingEnabled, or true if unset
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1261)
     public boolean isExternalSharingEnabled() {
@@ -9142,7 +9142,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraExternalSharingEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1261)
     public void setExternalSharingEnabled(boolean zimbraExternalSharingEnabled) throws com.zimbra.common.service.ServiceException {
@@ -9158,7 +9158,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1261)
     public Map<String,Object> setExternalSharingEnabled(boolean zimbraExternalSharingEnabled, Map<String,Object> attrs) {
@@ -9172,7 +9172,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1261)
     public void unsetExternalSharingEnabled() throws com.zimbra.common.service.ServiceException {
@@ -9187,7 +9187,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1261)
     public Map<String,Object> unsetExternalSharingEnabled(Map<String,Object> attrs) {
@@ -17356,7 +17356,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @return zimbraLimitExternalShareLifetime, or true if unset
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1259)
     public boolean isLimitExternalShareLifetime() {
@@ -17369,7 +17369,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param zimbraLimitExternalShareLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1259)
     public void setLimitExternalShareLifetime(boolean zimbraLimitExternalShareLifetime) throws com.zimbra.common.service.ServiceException {
@@ -17385,7 +17385,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1259)
     public Map<String,Object> setLimitExternalShareLifetime(boolean zimbraLimitExternalShareLifetime, Map<String,Object> attrs) {
@@ -17399,7 +17399,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1259)
     public void unsetLimitExternalShareLifetime() throws com.zimbra.common.service.ServiceException {
@@ -17414,7 +17414,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1259)
     public Map<String,Object> unsetLimitExternalShareLifetime(Map<String,Object> attrs) {

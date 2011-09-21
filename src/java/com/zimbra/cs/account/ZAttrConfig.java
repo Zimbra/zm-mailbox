@@ -43,7 +43,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110916-2114 */
+    /* build: unknown unknown unknown unknown */
 
     /**
      * RFC2256: descriptive information
@@ -15769,7 +15769,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @return zimbraMailPurgeSystemPolicy, or null if unset
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1241)
     public String getMailPurgeSystemPolicy() {
@@ -15784,7 +15784,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param zimbraMailPurgeSystemPolicy new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1241)
     public void setMailPurgeSystemPolicy(String zimbraMailPurgeSystemPolicy) throws com.zimbra.common.service.ServiceException {
@@ -15802,7 +15802,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1241)
     public Map<String,Object> setMailPurgeSystemPolicy(String zimbraMailPurgeSystemPolicy, Map<String,Object> attrs) {
@@ -15818,7 +15818,7 @@ public abstract class ZAttrConfig extends Entry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1241)
     public void unsetMailPurgeSystemPolicy() throws com.zimbra.common.service.ServiceException {
@@ -15835,7 +15835,7 @@ public abstract class ZAttrConfig extends Entry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0
+     * @since ZCS 8.0.0
      */
     @ZAttr(id=1241)
     public Map<String,Object> unsetMailPurgeSystemPolicy(Map<String,Object> attrs) {
