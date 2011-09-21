@@ -105,6 +105,7 @@ import com.zimbra.cs.account.soap.SoapProvisioning.ReIndexInfo;
 import com.zimbra.cs.extension.ExtensionDispatcherServlet;
 import com.zimbra.cs.fb.FbCli;
 import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.cs.wiki.WikiUtil;
@@ -718,12 +719,10 @@ public class ProvUtil implements HttpDebugListener {
 
     public void initProvisioning() throws ServiceException {
         if (useLdap) {
-            prov = Provisioning.getInstance();
             if (useLdapMaster) {
-                if (prov instanceof LdapProv) {
-                    ((LdapProv) prov).alwaysUseMaster();
-                }
+                LdapClient.masterOnly();
             }
+            prov = Provisioning.getInstance();
         } else {
             SoapProvisioning sp = new SoapProvisioning();
             sp.soapSetURI(LC.zimbra_admin_service_scheme.value() + serverHostname +
@@ -1305,11 +1304,11 @@ public class ProvUtil implements HttpDebugListener {
         }
         
         // bug 56768
-        ((LdapProv) prov).alwaysUseMaster();
-        
-        // should we disable interactive mode or use a separate CLI (e.g. zmrenamedomain) 
-        // for renameDomain?  After renameDomain, all subsequent LDAP accesses will go to
-        // the master.
+        // if we are not already using master only, force it to use master.  
+        // Note: after rename domain, the zmprov instance will stay in "master only" mode.
+        if (!useLdapMaster) {
+            ((LdapProv) prov).alwaysUseMaster();
+        }
         
         LdapProv lp = (LdapProv) prov;
         Domain domain = lookupDomain(args[1]);
@@ -3186,9 +3185,10 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         pu.setVerbose(cl.hasOption('v'));
-        if (cl.hasOption('l'))
+        if (cl.hasOption('l')) {
             pu.setUseLdap(true, cl.hasOption('m'));
-
+        }
+        
         if (cl.hasOption('L')) {
             if (cl.hasOption('l')) {
                 ZimbraLog.toolSetupLog4j("INFO", cl.getOptionValue('L'));
@@ -3284,6 +3284,7 @@ public class ProvUtil implements HttpDebugListener {
                 if (pu.forceLdapButDontRequireUseLdapOption(cmd)) {
                     pu.setUseLdap(true, false);
                 }
+                
                 pu.initProvisioning();
 
                 try {

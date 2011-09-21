@@ -20,7 +20,6 @@ import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapServerType;
-import com.zimbra.cs.ldap.LdapTODO;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
@@ -31,8 +30,9 @@ import com.zimbra.cs.ldap.ZSearchScope.ZSearchScopeFactory;
 
 public class JNDILdapClient extends LdapClient {
     @Override
-    protected void init() throws LdapException {
-        super.init();
+    protected void init(boolean alwaysUseMaster) throws LdapException {
+        super.init(alwaysUseMaster);
+        JNDILdapContext.init(alwaysUseMaster);
     }
     
     @Override
@@ -57,7 +57,7 @@ public class JNDILdapClient extends LdapClient {
     }
     
     @Override
-    protected void alwaysUseMasterImpl() {
+    protected void alwaysUseMaster() {
         LegacyZimbraLdapContext.forceMasterURL();
     }
     
@@ -104,4 +104,5 @@ public class JNDILdapClient extends LdapClient {
     throws ServiceException {
         JNDILdapContext.zimbraLdapAuthenticate(bindDN, password);
     }
+
 }

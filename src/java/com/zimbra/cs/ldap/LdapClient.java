@@ -29,8 +29,9 @@ import com.zimbra.cs.util.Zimbra;
 public abstract class LdapClient {
     
     private static LdapClient ldapClient;
+    private static boolean ALWAYS_USE_MASTER = false;
     
-    synchronized static LdapClient getInstance() {
+     static synchronized LdapClient getInstance() {
         if (ldapClient == null) {
             String className = LC.zimbra_class_ldap_client.value();
             if (className != null && !className.equals("")) {
@@ -46,7 +47,7 @@ public abstract class LdapClient {
             }
             
             try {
-                ldapClient.init();
+                ldapClient.init(ALWAYS_USE_MASTER);
             } catch (LdapException e) {
                 Zimbra.halt("failed to initialize LDAP client", e);
             }
@@ -54,7 +55,16 @@ public abstract class LdapClient {
         return ldapClient;
     }
     
-    // for unittest only
+    
+    public static synchronized void masterOnly() {
+        ALWAYS_USE_MASTER = true;
+        
+        if (ldapClient != null) {
+            // already initialized
+            ldapClient.alwaysUseMaster();
+        }
+    }
+    
     public static void initialize() {
         LdapClient.getInstance();
     }
@@ -128,10 +138,6 @@ public abstract class LdapClient {
         getInstance().waitForLdapServerImpl();
     }
     
-    public static void alwasyUseMaster() {
-        getInstance().alwaysUseMasterImpl();
-    }
-    
     public static ZLdapContext getContext(LdapUsage usage) throws ServiceException {
         return getContext(LdapServerType.REPLICA, usage);
     }
@@ -189,12 +195,14 @@ public abstract class LdapClient {
      * abstract methods
      * ========================================================
      */
-    protected void init() throws LdapException {
+    protected void init(boolean alwaysUseMaster) throws LdapException {
         ZSearchScope.init(getSearchScopeFactoryInstance());
         ZLdapFilterFactory.setInstance(getLdapFilterFactoryInstance());
     }
     
     protected abstract void terminate();
+    
+    protected abstract void alwaysUseMaster();
     
     protected abstract ZSearchScopeFactory getSearchScopeFactoryInstance(); 
     
@@ -202,8 +210,6 @@ public abstract class LdapClient {
     throws LdapException;
     
     protected abstract void waitForLdapServerImpl();
-    
-    protected abstract void alwaysUseMasterImpl();
     
     protected abstract ZLdapContext getContextImpl(LdapServerType serverType, LdapUsage usage) 
     throws ServiceException;

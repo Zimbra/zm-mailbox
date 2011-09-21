@@ -83,7 +83,7 @@ public class UBIDLdapContext extends ZLdapContext {
     private boolean isZimbraLdap;
     private DereferencePolicy derefAliasPolicy;
     
-    public static synchronized void init() throws LdapException {
+    public static synchronized void init(boolean alwaysUseMaster) throws LdapException {
         assert(!initialized);
         
         if (initialized) {
@@ -92,13 +92,18 @@ public class UBIDLdapContext extends ZLdapContext {
         
         initialized = true;
         
-        replicaConfig = new ZimbraLdapConfig(LdapServerType.REPLICA);
         masterConfig = new ZimbraLdapConfig(LdapServerType.MASTER);
-        
-        replicaConnPool = LdapConnectionPool.createConnectionPool(
-                LdapConnectionPool.CP_ZIMBRA_REPLICA, replicaConfig);
         masterConnPool = LdapConnectionPool.createConnectionPool(
                 LdapConnectionPool.CP_ZIMBRA_MASTER, masterConfig);
+        
+        if (alwaysUseMaster) {
+            replicaConfig = masterConfig;
+            replicaConnPool = masterConnPool;
+        } else {
+            replicaConfig = new ZimbraLdapConfig(LdapServerType.REPLICA);
+            replicaConnPool = LdapConnectionPool.createConnectionPool(
+                    LdapConnectionPool.CP_ZIMBRA_REPLICA, replicaConfig);
+        }
     }
     
     
@@ -107,8 +112,7 @@ public class UBIDLdapContext extends ZLdapContext {
         // TODO Auto-generated method stub
         
     }
-    
-    // for zmprov 
+
     static synchronized void alwaysUseMaster() {
         replicaConnPool = masterConnPool;
     }

@@ -65,6 +65,12 @@ public class JNDILdapContext extends ZLdapContext {
     
     private LegacyZimbraLdapContext zlc;
     
+    public static synchronized void init(boolean alwaysUseMaster) {
+        if (alwaysUseMaster) {
+            LegacyZimbraLdapContext.forceMasterURL();
+        }
+    }
+    
     public JNDILdapContext(LdapServerType serverType, LdapUsage usage) 
     throws ServiceException {
         super(usage);

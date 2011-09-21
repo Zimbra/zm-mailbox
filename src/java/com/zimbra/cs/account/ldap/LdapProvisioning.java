@@ -7305,10 +7305,10 @@ public class LdapProvisioning extends LdapProv {
     public void waitForLdapServer() {
         LdapClient.waitForLdapServer();
     }
-
+    
     @Override
     public void alwaysUseMaster() {
-        LdapClient.alwasyUseMaster();
+        LdapClient.masterOnly();
     }
 
     @Override

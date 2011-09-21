@@ -201,9 +201,6 @@ public class LegacyZimbraLdapContext implements ILdapContext {
         sStartTLSDebugText = startTLSDebugText.toString();
     }
 
-    /*
-     * called from ProvUtil
-     */
     public static synchronized void forceMasterURL() {
         sLdapURL = sLdapMasterURL;
         sConnType = sMasterConnType;

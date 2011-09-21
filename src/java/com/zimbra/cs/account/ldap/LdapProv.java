@@ -36,7 +36,7 @@ public abstract class LdapProv extends Provisioning {
     
     protected LdapDIT mDIT;
     protected LdapHelper helper;
-    
+       
     protected LdapProv() {
         LdapClient.initialize();
     }
