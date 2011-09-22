@@ -486,6 +486,58 @@ public class PurgeTest {
         }
     }
 
+    /**
+     * Confirms that recently moved trash folders do not get purged when ChangeDate is true.
+     */
+    @Test
+    public void testRecentFolderInTrashChangeDate()
+    throws Exception {
+        
+        Account account = getAccount();
+        account.setPrefTrashLifetime("12h");
+        account.setMailPurgeUseChangeDateForTrash(true);
+        
+        // Create a subfolder of inbox with a message in it.
+        Mailbox mbox = getMailbox();
+        String folderPath = "/Inbox/testRecentFolderInTrashChangeDate";
+        Folder f = mbox.createFolder(null, folderPath, (byte) 0, Folder.Type.MESSAGE);
+        String subject = "testRecentFolderInTrashChangeDate";
+        Message msg = TestUtil.addMessage(mbox, f.getId(), subject, System.currentTimeMillis() - Constants.MILLIS_PER_DAY);
+
+        // move the folder to trash
+        mbox.move(null, f.getId(), MailItem.Type.FOLDER, Mailbox.ID_FOLDER_TRASH);
+
+        // Run purge and verify results
+        mbox.purgeMessages(null);
+        assertTrue("msg was purged", messageExists(msg.getId()));
+    }
+    
+    /**
+     * Confirms that recently moved trash folders does get purged when ChangeDate is false.
+     */
+    @Test
+    public void testRecentFolderInTrashNoChangeDate()
+    throws Exception {
+        
+        Account account = getAccount();
+        account.setPrefTrashLifetime("12h");
+        account.setMailPurgeUseChangeDateForTrash(false);
+        
+        // Create a subfolder of inbox with a message in it.
+        Mailbox mbox = getMailbox();
+        String folderPath = "/Inbox/testRecentFolderInTrashNoChangeDate";
+        Folder f = mbox.createFolder(null, folderPath, (byte) 0, Folder.Type.MESSAGE);
+        String subject = "testRecentFolderInTrashNoChangeDate";
+        Message msg = TestUtil.addMessage(mbox, f.getId(), subject, System.currentTimeMillis() - Constants.MILLIS_PER_DAY);
+
+        // move the folder to trash
+        mbox.move(null, f.getId(), MailItem.Type.FOLDER, Mailbox.ID_FOLDER_TRASH);
+
+        // Run purge and verify results
+        mbox.purgeMessages(null);
+        assertFalse("msg was not purged", messageExists(msg.getId()));
+    }
+    
     @Test
     public void invalidFolderMessageLifetime() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);

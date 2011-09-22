@@ -21,6 +21,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -1307,6 +1308,22 @@ public class Folder extends MailItem {
         // get the full list of things that are being removed
         boolean allFolders = (folder == null);
         List<Folder> folders = (allFolders ? null : folder.getSubfolderHierarchy());
+        // If a folder is moved to trash the change_time does not get updated on messages
+        // within the folder. So, check the folder change_time first for the sub-folders.
+        if (folders != null && useChangeDate) {
+            Iterator<Folder> iter = folders.iterator();
+            // skip the first folder which is top-level folder (e.g> Trash)
+            if (iter.hasNext())
+                iter.next();
+            // do not purge the sub-folder if it has been modified after the beforeDate
+            while (iter.hasNext()) {
+                Folder f = iter.next();
+                if  (f.getChangeDate() >= beforeDate) {
+                    ZimbraLog.purge.info("Skipping the recently modified/moved folder %s", f.getPath());
+                    iter.remove();
+                }    
+            }
+        }
         PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, (int) (beforeDate / 1000), allFolders, unread, useChangeDate, maxItems);
         delete(mbox, info, null, DeleteScope.ENTIRE_ITEM, false);
 
