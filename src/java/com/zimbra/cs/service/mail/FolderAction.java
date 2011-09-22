@@ -21,21 +21,18 @@ package com.zimbra.cs.service.mail;
 import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.util.BlobMetaData;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Group;
-import com.zimbra.cs.account.AuthTokenKey;
 import com.zimbra.cs.account.GuestAccount;
+import com.zimbra.cs.account.MailTarget;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
-import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.fb.FreeBusyProvider;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
@@ -44,20 +41,11 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.cs.servlet.ZimbraServlet;
-import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 
-import org.apache.commons.codec.binary.Hex;
-
-import javax.mail.internet.MimeMessage;
-import java.io.ByteArrayOutputStream;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -181,10 +169,27 @@ public class FolderAction extends ItemAction {
                 zid = grant.getAttribute(MailConstants.A_DISPLAY);
                 if (zid == null || zid.indexOf('@') < 0)
                     throw ServiceException.INVALID_REQUEST("invalid guest id or password", null);
-                secret = grant.getAttribute(MailConstants.A_ARGS, null);
-                // password is no longer required for external sharing
-                if (secret == null)
-                    secret = grant.getAttribute(MailConstants.A_PASSWORD, null);
+                // first make sure they didn't accidentally specify "guest" instead of "usr"
+                boolean internalGrantee = false;
+                try {
+                    nentry = lookupGranteeByName(zid, ACL.GRANTEE_USER, zsc);
+                    if (nentry instanceof MailTarget &&
+                            StringUtil.equal(((MailTarget) nentry).getDomainName(),
+                                    mbox.getAccount().getDomainName())) {
+                        internalGrantee = true;
+                        zid = nentry.getId();
+                        gtype = nentry instanceof Group ? ACL.GRANTEE_GROUP : ACL.GRANTEE_USER;
+                    }
+                } catch (ServiceException e) {
+                    // this is the normal path, where lookupGranteeByName throws account.NO_SUCH_USER
+                }
+                if (!internalGrantee) {
+                    secret = grant.getAttribute(MailConstants.A_ARGS, null);
+                    // password is no longer required for external sharing
+                    if (secret == null) {
+                        secret = grant.getAttribute(MailConstants.A_PASSWORD, null);
+                    }
+                }
             } else if (gtype == ACL.GRANTEE_KEY) {
                 zid = grant.getAttribute(MailConstants.A_DISPLAY);
                 // unlike guest, we do not require the display name to be an email address
@@ -287,9 +292,8 @@ public class FolderAction extends ItemAction {
     }
 
     public static NamedEntry lookupEmailAddress(String name) throws ServiceException {
-        NamedEntry nentry = null;
         Provisioning prov = Provisioning.getInstance();
-        nentry = prov.get(AccountBy.name, name);
+        NamedEntry nentry = prov.get(AccountBy.name, name);
         if (nentry == null) {
             nentry = prov.getGroup(Key.DistributionListBy.name, name);
         }
