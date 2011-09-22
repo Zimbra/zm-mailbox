@@ -406,7 +406,7 @@ public class ZMailboxUtil implements DebugListener {
         MODIFY_FOLDER_COLOR("modifyFolderColor", "mfc", "{folder-path} {new-color}", "modify a folder's color", Category.FOLDER, 2, 2),
         MODIFY_FOLDER_EXCLUDE_FREE_BUSY("modifyFolderExcludeFreeBusy", "mfefb", "{folder-path} [0|1*]", "change whether folder is excluded from free-busy", Category.FOLDER, 1, 2),
         MODIFY_FOLDER_FLAGS("modifyFolderFlags", "mff", "{folder-path} {folder-flags}", "replaces the flags on the folder (subscribed, checked, etc.)", Category.FOLDER, 2, 2),
-        MODIFY_FOLDER_GRANT("modifyFolderGrant", "mfg", "{folder-path} {account {name}|group {name}|domain {name}|all|public|guest {email} [{password}]|key {email} [{accesskey}] {permissions|none}}", "add/remove a grant to a folder", Category.FOLDER, 3, 5),
+        MODIFY_FOLDER_GRANT("modifyFolderGrant", "mfg", "{folder-path} {account {name}|group {name}|domain {name}|all|public|guest {email}|key {email} [{accesskey}] {permissions|none}}", "add/remove a grant to a folder", Category.FOLDER, 3, 5),
         MODIFY_FOLDER_URL("modifyFolderURL", "mfu", "{folder-path} {url}", "modify a folder's URL", Category.FOLDER, 2, 2),
         MODIFY_IDENTITY("modifyIdentity", "mid", "{identity-name} [attr1 value1 [attr2 value2...]]", "modify an identity", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         MODIFY_ITEM_FLAGS("modifyItemFlags", "mif", "{item-ids} {item-flags}", "replaces the flags on the items (answered, unread, flagged, etc.)", Category.ITEM, 2, 2),
@@ -1572,10 +1572,6 @@ public class ZMailboxUtil implements DebugListener {
 
 
         } else {
-            // need a password for guest if granting
-            if (type == GranteeType.guest && password == null)
-                throw ZClientException.CLIENT_ERROR("password is required for guest grantee", null);
-
             mMbox.modifyFolderGrant(folderId, type, grantee, perms, password);
         }
     }

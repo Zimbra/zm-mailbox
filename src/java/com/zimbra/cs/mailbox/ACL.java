@@ -127,7 +127,7 @@ public final class ACL {
             if (hasGrantee())
                 mGrantee = meta.get(FN_GRANTEE);
             if (mType == ACL.GRANTEE_GUEST)
-                mSecret = meta.get(FN_PASSWORD);
+                mSecret = meta.get(FN_PASSWORD, null);
             else if (mType == ACL.GRANTEE_KEY)
                 mSecret = meta.get(FN_ACCESSKEY);
         }

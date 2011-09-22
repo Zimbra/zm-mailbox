@@ -182,9 +182,9 @@ public class FolderAction extends ItemAction {
                 if (zid == null || zid.indexOf('@') < 0)
                     throw ServiceException.INVALID_REQUEST("invalid guest id or password", null);
                 secret = grant.getAttribute(MailConstants.A_ARGS, null);
-                // bug 30891 for 5.0.x
+                // password is no longer required for external sharing
                 if (secret == null)
-                    secret = grant.getAttribute(MailConstants.A_PASSWORD);
+                    secret = grant.getAttribute(MailConstants.A_PASSWORD, null);
             } else if (gtype == ACL.GRANTEE_KEY) {
                 zid = grant.getAttribute(MailConstants.A_DISPLAY);
                 // unlike guest, we do not require the display name to be an email address
