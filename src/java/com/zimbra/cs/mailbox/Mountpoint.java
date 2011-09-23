@@ -227,4 +227,10 @@ public class Mountpoint extends Folder {
         mReminderEnabled = enable;
         saveMetadata();
     }
+
+    @Override
+    protected void checkItemCreationAllowed() throws ServiceException {
+        // check nothing
+        // external account mailbox can have mountpoints
+    }
 }

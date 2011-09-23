@@ -699,10 +699,18 @@ public abstract class MailItem implements Comparable<MailItem> {
         mData    = data;
         mMailbox = mbox;
         decodeMetadata(mData.metadata);
+        checkItemCreationAllowed(); // this check may rely on decoded metadata
         mData.metadata = null;
 
         if ((data.getFlags() & Flag.BITMASK_UNCACHED) == 0) {
             mbox.cache(this); // store the item in the mailbox's cache
+        }
+    }
+
+    protected void checkItemCreationAllowed() throws ServiceException {
+        // not allowed in external account mailbox
+        if (getAccount().isIsExternalVirtualAccount()) {
+            throw ServiceException.PERM_DENIED("permission denied for external account");
         }
     }
 

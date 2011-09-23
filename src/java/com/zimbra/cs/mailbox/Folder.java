@@ -1497,4 +1497,12 @@ public class Folder extends MailItem {
         helper.add(CN_ATTRIBUTES, attributes);
         return helper.toString();
     }
+
+    @Override
+    protected void checkItemCreationAllowed() throws ServiceException {
+        // only system folders are allowed in external account mailbox
+        if (isMutable()) {
+            super.checkItemCreationAllowed();
+        }
+    }
 }

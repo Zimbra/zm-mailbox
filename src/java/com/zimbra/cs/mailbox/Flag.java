@@ -385,4 +385,9 @@ public final class Flag extends Tag {
         return info.hashCode();
     }
 
+    @Override
+    protected void checkItemCreationAllowed() throws ServiceException {
+        // check nothing
+        // external account mailbox can have flags on mountpoints
+    }
 }
