@@ -20,6 +20,8 @@ import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
 import org.junit.Assert;
 import org.junit.Before;
@@ -68,7 +70,7 @@ public final class GlobalIndexITest {
     }
 
     @Test
-    public void search() throws Exception {
+    public void termQuery() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Folder folder = mbox.getFolderById(null, Mailbox.ID_FOLDER_BRIEFCASE);
         ParsedDocument pdoc = new ParsedDocument(IOUtils.toInputStream("test"),
@@ -83,6 +85,31 @@ public final class GlobalIndexITest {
         indexer.close();
 
         TermQuery query = new TermQuery(new Term(LuceneFields.L_CONTENT, "test"));
+        List<GlobalDocument> hits = index.getGlobalIndex().search(MockProvisioning.DEFAULT_ACCOUNT_ID, query);
+        Assert.assertEquals(1, hits.size());
+        Assert.assertEquals(doc.getName(), hits.get(0).getFilename());
+        Assert.assertEquals(doc.getDate(), hits.get(0).getDate());
+    }
+
+    @Test
+    public void booleanQuery() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Folder folder = mbox.getFolderById(null, Mailbox.ID_FOLDER_BRIEFCASE);
+        ParsedDocument pdoc = new ParsedDocument(IOUtils.toInputStream("boolean query test"),
+                "filename.txt", "text/plain", 12345L, "creator", "description");
+        Document doc = mbox.createDocument(null, folder.getId(), pdoc, MailItem.Type.DOCUMENT, 0);
+
+        HBaseIndex index = HBaseIndexTestUtils.createIndex(mbox);
+        index.deleteIndex();
+
+        Indexer indexer = index.openIndexer();
+        indexer.addDocument(folder, doc, doc.generateIndexData());
+        indexer.close();
+
+        BooleanQuery query = new BooleanQuery();
+        query.add(new TermQuery(new Term(LuceneFields.L_CONTENT, "boolean")), BooleanClause.Occur.MUST);
+        query.add(new TermQuery(new Term(LuceneFields.L_CONTENT, "query")), BooleanClause.Occur.MUST);
+        query.add(new TermQuery(new Term(LuceneFields.L_CONTENT, "test")), BooleanClause.Occur.MUST);
         List<GlobalDocument> hits = index.getGlobalIndex().search(MockProvisioning.DEFAULT_ACCOUNT_ID, query);
         Assert.assertEquals(1, hits.size());
         Assert.assertEquals(doc.getName(), hits.get(0).getFilename());

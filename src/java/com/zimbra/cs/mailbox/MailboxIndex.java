@@ -38,7 +38,10 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.TermEnum;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -268,13 +271,13 @@ public final class MailboxIndex {
         return results;
     }
 
-    public List<GlobalDocument> search(GlobalSearchQuery query) throws ServiceException {
+    public List<GlobalDocument> search(GlobalSearchQuery params) throws ServiceException {
         try {
-            TermQuery term = toTermQuery(query);
-            if (term == null) { // empty after trimming stop words
+            Query query = toQuery(params);
+            if (query == null) { // empty after trimming stop words
                 return Collections.emptyList();
             }
-            return indexStoreFactory.getGlobalIndex().search(mailbox.getAccountId(), term);
+            return indexStoreFactory.getGlobalIndex().search(mailbox.getAccountId(), query);
         } catch (UnsupportedOperationException e) { // only supported by HBase backend
             throw ServiceException.UNSUPPORTED();
         } catch (IOException e) {
@@ -282,21 +285,31 @@ public final class MailboxIndex {
         }
     }
 
-    /**
-     * TODO only support a single term query, everything else is ignored
-     */
-    private TermQuery toTermQuery(GlobalSearchQuery query) throws IOException {
+    private Query toQuery(GlobalSearchQuery query) throws IOException {
         TokenStream stream = analyzer.tokenStream(LuceneFields.L_CONTENT, new StringReader(query.getQueryString()));
+        List<String> tokens = new ArrayList<String>(1);
         try {
             CharTermAttribute termAttr = stream.addAttribute(CharTermAttribute.class);
             stream.reset();
-            if (stream.incrementToken()) {
-                return new TermQuery(new Term(LuceneFields.L_CONTENT, termAttr.toString()));
+            while (stream.incrementToken()) {
+                tokens.add(termAttr.toString());
             }
+            stream.end();
         } finally {
             Closeables.closeQuietly(stream);
         }
-        return null;
+        switch (tokens.size()) {
+            case 0:
+                return null;
+            case 1:
+                return new TermQuery(new Term(LuceneFields.L_CONTENT, tokens.get(0)));
+            default:
+                BooleanQuery bool = new BooleanQuery();
+                for (String token : tokens) {
+                    bool.add(new TermQuery(new Term(LuceneFields.L_CONTENT, token)), BooleanClause.Occur.MUST);
+                }
+                return bool;
+        }
     }
 
     /**

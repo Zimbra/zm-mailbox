@@ -16,6 +16,8 @@ package com.zimbra.cs.index.global;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -33,9 +35,16 @@ import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueExcludeFilter;
 import org.apache.hadoop.hbase.filter.SubstringComparator;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.ACL;
@@ -205,33 +214,37 @@ public final class GlobalIndex {
      * Lookup TERM CF first collecting global item IDs (may include orphans), then lookup ITEM CF to fetch global items.
      * Global items should include all information required for the search result as we do not want to fetch rows from
      * MAIL_ITEM table across servers.
-     *
-     * TODO: only TermQuery (simplest query) is supported so far.
      */
-    public List<GlobalDocument> search(String principal, TermQuery query) throws IOException {
-        Get get = new Get(HBaseIndex.toBytes(query.getTerm()));
-        get.addFamily(HBaseIndex.TERM_CF);
-        HTableInterface table = pool.getTable(indexTableName);
-        Result[] results;
-        try {
-            Result result = table.get(get);
-            SingleColumnValueExcludeFilter filter = new SingleColumnValueExcludeFilter(HBaseIndex.ITEM_CF, ACL_COL,
-                    CompareFilter.CompareOp.EQUAL, new SubstringComparator(principal));
-            filter.setFilterIfMissing(true);
-            List<Get> batch = new ArrayList<Get>(result.size());
-            for (KeyValue kv : result.raw()) {
-                get = new Get(kv.getQualifier());
-                get.addFamily(HBaseIndex.ITEM_CF);
-                get.setFilter(filter);
-                batch.add(get);
-            }
-            results = table.get(batch);
-        } finally {
-            pool.putTable(table);
+    public List<GlobalDocument> search(String principal, Query query) throws IOException {
+        if (query instanceof BooleanQuery) {
+            return search(principal, (BooleanQuery) query);
+        } else if (query instanceof TermQuery) {
+            return search(principal, (TermQuery) query);
+        } else {
+            throw new UnsupportedOperationException(query.getClass().getSimpleName() + " not supported");
+        }
+    }
+
+    private List<GlobalDocument> fetch(HTableInterface table, String principal, Collection<GlobalItemID> ids)
+            throws IOException {
+        SingleColumnValueExcludeFilter filter = new SingleColumnValueExcludeFilter(HBaseIndex.ITEM_CF, ACL_COL,
+                CompareFilter.CompareOp.EQUAL, new SubstringComparator(principal));
+        filter.setFilterIfMissing(true);
+
+        List<Get> batch = Lists.newArrayListWithCapacity(ids.size());
+        for (GlobalItemID id : ids) {
+            Get get = new Get(id.toBytes());
+            get.addFamily(HBaseIndex.ITEM_CF);
+            get.setFilter(filter);
+            batch.add(get);
         }
 
+        Result[] results = table.get(batch);
         List<GlobalDocument> docs = new ArrayList<GlobalDocument>(results.length);
         for (Result result : results) {
+            if (result == null || result.isEmpty()) {
+                continue;
+            }
             switch (HBaseIndex.toType(result.getValue(HBaseIndex.ITEM_CF, HBaseIndex.TYPE_COL))) {
                 case DOCUMENT:
                     GlobalDocument doc = new GlobalDocument(new GlobalItemID(result.getRow()));
@@ -264,9 +277,89 @@ public final class GlobalIndex {
                 default:
                     break;
             }
-
         }
         return docs;
+    }
+
+    private List<GlobalDocument> search(String principal, TermQuery query) throws IOException {
+        Get term = new Get(HBaseIndex.toBytes(query.getTerm()));
+        term.addFamily(HBaseIndex.TERM_CF);
+        HTableInterface table = pool.getTable(indexTableName);
+        try {
+            Result result = table.get(term); // query TERM CF
+            if (result.isEmpty()) { // no hits
+                return Collections.emptyList();
+            }
+            List<GlobalItemID> ids = Lists.newArrayListWithCapacity(result.size());
+            for (KeyValue kv : result.raw()) {
+                ids.add(new GlobalItemID(kv.getQualifier()));
+            }
+            return fetch(table, principal, ids);
+        } finally {
+            pool.putTable(table);
+        }
+    }
+
+    private List<GlobalDocument> search(String principal, BooleanQuery query) throws IOException {
+        Map<Term, Get> term2get = Maps.newHashMap(); // merge duplicate terms
+        for (BooleanClause clause : query.clauses()) {
+            if (!clause.isRequired()) {
+                throw new UnsupportedOperationException(clause.getOccur() + " not supported");
+            }
+            Query sub = clause.getQuery();
+            if (sub instanceof TermQuery) {
+                Term term = ((TermQuery) sub).getTerm();
+                if (!term2get.containsKey(term)) {
+                    Get get = new Get(HBaseIndex.toBytes(term));
+                    get.addFamily(HBaseIndex.TERM_CF);
+                    term2get.put(term, get);
+                }
+            } else {
+                throw new UnsupportedOperationException(sub.getClass().getSimpleName() + " not supported");
+            }
+        }
+        if (term2get.isEmpty()) { // empty after expansion
+            return Collections.emptyList();
+        }
+
+        Map<Term, Set<GlobalItemID>> term2ids = Maps.newHashMapWithExpectedSize(term2get.size());
+        HTableInterface table = pool.getTable(indexTableName);
+        try {
+            Result[] results = table.get(Lists.newArrayList(term2get.values())); // query TERM CF
+            for (Result result : results) {
+                if (result == null || result.isEmpty()) { // no hit for the term
+                    continue;
+                }
+                Term term = HBaseIndex.toTerm(result.getRow());
+                if (term == null) { // invalid term for some reasons
+                    continue;
+                }
+                Set<GlobalItemID> ids = Sets.newHashSetWithExpectedSize(result.size());
+                for (KeyValue kv : result.raw()) {
+                    ids.add(new GlobalItemID(kv.getQualifier()));
+                }
+                term2ids.put(term, ids);
+            }
+
+            Set<GlobalItemID> conj = Sets.newHashSet(); // raw byte array is not hash-able
+            for (BooleanClause clause : query.clauses()) {
+                Term term = ((TermQuery) clause.getQuery()).getTerm(); // it's all TermQuery at this point
+                Set<GlobalItemID> ids = term2ids.get(term);
+                if (ids == null || ids.isEmpty()) { // no hit if any of terms has no hit
+                    return Collections.emptyList();
+                } else if (conj.isEmpty()) { // first clause
+                    conj.addAll(ids);
+                } else { // apply AND
+                    conj.retainAll(ids);
+                }
+            }
+            if (conj.isEmpty()) { // empty after ANDed
+                return Collections.emptyList();
+            }
+            return fetch(table, principal, conj);
+        } finally {
+            pool.putTable(table);
+        }
     }
 
     private final class GlobalIndexMailboxListener extends MailboxListener {

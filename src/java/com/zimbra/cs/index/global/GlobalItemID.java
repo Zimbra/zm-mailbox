@@ -50,6 +50,19 @@ public final class GlobalItemID {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (o instanceof GlobalItemID) {
+            return toString().equals(o.toString());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return toString().hashCode();
+    }
+
+    @Override
     public String toString() {
         return account.toString() + ':' + id;
     }

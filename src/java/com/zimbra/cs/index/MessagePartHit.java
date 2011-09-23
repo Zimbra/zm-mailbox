@@ -102,9 +102,9 @@ public final class MessagePartHit extends ZimbraHit {
 
     public String getPartName() {
         if (document != null) {
-            String result = document.get(LuceneFields.L_PARTNAME);
-            if (!result.equals(LuceneFields.L_PARTNAME_TOP)) {
-                return result;
+            String part = document.get(LuceneFields.L_PARTNAME);
+            if (part != null && !part.equals(LuceneFields.L_PARTNAME_TOP)) {
+                return part;
             }
         }
         return "";

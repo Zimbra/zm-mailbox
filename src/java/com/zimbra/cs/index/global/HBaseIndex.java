@@ -69,7 +69,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.Maps;
 import com.google.common.primitives.UnsignedBytes;
 import com.zimbra.common.localconfig.LC;
@@ -122,7 +123,7 @@ public final class HBaseIndex implements IndexStore {
             .configure(DeserializationConfig.Feature.AUTO_DETECT_FIELDS, false)
             .configure(DeserializationConfig.Feature.AUTO_DETECT_SETTERS, false);
     }
-    private static final Map<String, Character> FIELD2PREFIX = ImmutableMap.<String, Character>builder()
+    private static final BiMap<String, Character> FIELD2PREFIX = ImmutableBiMap.<String, Character>builder()
         .put(LuceneFields.L_CONTENT, 'A')
         .put(LuceneFields.L_CONTACT_DATA, 'B')
         .put(LuceneFields.L_MIMETYPE, 'C')
@@ -260,6 +261,14 @@ public final class HBaseIndex implements IndexStore {
         return prefix != null ? Bytes.toBytes(prefix + term.text()) : null;
     }
 
+    static Term toTerm(byte[] raw) {
+        if (raw == null || raw.length == 0) {
+            return null;
+        }
+        String field = FIELD2PREFIX.inverse().get((char) raw[0]);
+        return field != null ? new Term(field, new String(raw, 1, raw.length - 1)) : null;
+    }
+
     static byte[] toBytes(MailItem.Type type) {
         return new byte[] {type.toByte()};
     }
@@ -275,11 +284,11 @@ public final class HBaseIndex implements IndexStore {
      * {@code timestamp (64-bit) = id (32-bit) + mod_content (32-bit)}.
      */
     private long toTimestamp(int id, int mod) {
-        return (long) id << 4 | mod;
+        return ((long) id) << 32 | mod;
     }
 
     private int toDocId(long ts) {
-        return (int) ts >> 4;
+        return (int) (ts >> 32);
     }
 
     public static final class Factory implements IndexStore.Factory {
