@@ -14413,6 +14413,692 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * whether the Bluetooth capabilities are allowed on the device. The
+     * available options are Disable, HandsfreeOnly, and Allow. 0 - DISABLE 1
+     * - HANDSFREE 2 - ALLOW ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowBluetooth value is set to -1
+     *
+     * @return zimbraMobilePolicyAllowBluetooth, or 2 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1285)
+    public int getMobilePolicyAllowBluetooth() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyAllowBluetooth, 2);
+    }
+
+    /**
+     * whether the Bluetooth capabilities are allowed on the device. The
+     * available options are Disable, HandsfreeOnly, and Allow. 0 - DISABLE 1
+     * - HANDSFREE 2 - ALLOW ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowBluetooth value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowBluetooth new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1285)
+    public void setMobilePolicyAllowBluetooth(int zimbraMobilePolicyAllowBluetooth) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowBluetooth, Integer.toString(zimbraMobilePolicyAllowBluetooth));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the Bluetooth capabilities are allowed on the device. The
+     * available options are Disable, HandsfreeOnly, and Allow. 0 - DISABLE 1
+     * - HANDSFREE 2 - ALLOW ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowBluetooth value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowBluetooth new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1285)
+    public Map<String,Object> setMobilePolicyAllowBluetooth(int zimbraMobilePolicyAllowBluetooth, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowBluetooth, Integer.toString(zimbraMobilePolicyAllowBluetooth));
+        return attrs;
+    }
+
+    /**
+     * whether the Bluetooth capabilities are allowed on the device. The
+     * available options are Disable, HandsfreeOnly, and Allow. 0 - DISABLE 1
+     * - HANDSFREE 2 - ALLOW ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowBluetooth value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1285)
+    public void unsetMobilePolicyAllowBluetooth() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowBluetooth, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the Bluetooth capabilities are allowed on the device. The
+     * available options are Disable, HandsfreeOnly, and Allow. 0 - DISABLE 1
+     * - HANDSFREE 2 - ALLOW ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowBluetooth value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1285)
+    public Map<String,Object> unsetMobilePolicyAllowBluetooth(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowBluetooth, "");
+        return attrs;
+    }
+
+    /**
+     * whether Microsoft Pocket Internet Explorer is allowed on the mobile
+     * phone. This parameter doesn&#039;t affect third-party browsers.
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowBrowser value is set to -1
+     *
+     * @return zimbraMobilePolicyAllowBrowser, or 1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1300)
+    public int getMobilePolicyAllowBrowser() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyAllowBrowser, 1);
+    }
+
+    /**
+     * whether Microsoft Pocket Internet Explorer is allowed on the mobile
+     * phone. This parameter doesn&#039;t affect third-party browsers.
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowBrowser value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowBrowser new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1300)
+    public void setMobilePolicyAllowBrowser(int zimbraMobilePolicyAllowBrowser) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowBrowser, Integer.toString(zimbraMobilePolicyAllowBrowser));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether Microsoft Pocket Internet Explorer is allowed on the mobile
+     * phone. This parameter doesn&#039;t affect third-party browsers.
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowBrowser value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowBrowser new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1300)
+    public Map<String,Object> setMobilePolicyAllowBrowser(int zimbraMobilePolicyAllowBrowser, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowBrowser, Integer.toString(zimbraMobilePolicyAllowBrowser));
+        return attrs;
+    }
+
+    /**
+     * whether Microsoft Pocket Internet Explorer is allowed on the mobile
+     * phone. This parameter doesn&#039;t affect third-party browsers.
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowBrowser value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1300)
+    public void unsetMobilePolicyAllowBrowser() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowBrowser, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether Microsoft Pocket Internet Explorer is allowed on the mobile
+     * phone. This parameter doesn&#039;t affect third-party browsers.
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowBrowser value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1300)
+    public Map<String,Object> unsetMobilePolicyAllowBrowser(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowBrowser, "");
+        return attrs;
+    }
+
+    /**
+     * whether to allow camera on device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowCamera value is set to -1
+     *
+     * @return zimbraMobilePolicyAllowCamera, or 1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1278)
+    public int getMobilePolicyAllowCamera() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyAllowCamera, 1);
+    }
+
+    /**
+     * whether to allow camera on device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowCamera value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowCamera new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1278)
+    public void setMobilePolicyAllowCamera(int zimbraMobilePolicyAllowCamera) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowCamera, Integer.toString(zimbraMobilePolicyAllowCamera));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to allow camera on device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowCamera value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowCamera new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1278)
+    public Map<String,Object> setMobilePolicyAllowCamera(int zimbraMobilePolicyAllowCamera, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowCamera, Integer.toString(zimbraMobilePolicyAllowCamera));
+        return attrs;
+    }
+
+    /**
+     * whether to allow camera on device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowCamera value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1278)
+    public void unsetMobilePolicyAllowCamera() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowCamera, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to allow camera on device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowCamera value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1278)
+    public Map<String,Object> unsetMobilePolicyAllowCamera(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowCamera, "");
+        return attrs;
+    }
+
+    /**
+     * whether the device user can configure a personal e-mail account on the
+     * mobile phone. This parameter doesn&#039;t control access to e-mails
+     * using third-party mobile phone e-mail programs. ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowConsumerEmail value is set to -1
+     *
+     * @return zimbraMobilePolicyAllowConsumerEmail, or 1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1301)
+    public int getMobilePolicyAllowConsumerEmail() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyAllowConsumerEmail, 1);
+    }
+
+    /**
+     * whether the device user can configure a personal e-mail account on the
+     * mobile phone. This parameter doesn&#039;t control access to e-mails
+     * using third-party mobile phone e-mail programs. ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowConsumerEmail value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowConsumerEmail new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1301)
+    public void setMobilePolicyAllowConsumerEmail(int zimbraMobilePolicyAllowConsumerEmail) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowConsumerEmail, Integer.toString(zimbraMobilePolicyAllowConsumerEmail));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the device user can configure a personal e-mail account on the
+     * mobile phone. This parameter doesn&#039;t control access to e-mails
+     * using third-party mobile phone e-mail programs. ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowConsumerEmail value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowConsumerEmail new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1301)
+    public Map<String,Object> setMobilePolicyAllowConsumerEmail(int zimbraMobilePolicyAllowConsumerEmail, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowConsumerEmail, Integer.toString(zimbraMobilePolicyAllowConsumerEmail));
+        return attrs;
+    }
+
+    /**
+     * whether the device user can configure a personal e-mail account on the
+     * mobile phone. This parameter doesn&#039;t control access to e-mails
+     * using third-party mobile phone e-mail programs. ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowConsumerEmail value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1301)
+    public void unsetMobilePolicyAllowConsumerEmail() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowConsumerEmail, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the device user can configure a personal e-mail account on the
+     * mobile phone. This parameter doesn&#039;t control access to e-mails
+     * using third-party mobile phone e-mail programs. ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowConsumerEmail value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1301)
+    public Map<String,Object> unsetMobilePolicyAllowConsumerEmail(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowConsumerEmail, "");
+        return attrs;
+    }
+
+    /**
+     * whether the device can synchronize with a desktop computer through a
+     * cable; ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowDesktopSync value is set to -1
+     *
+     * @return zimbraMobilePolicyAllowDesktopSync, or 1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1288)
+    public int getMobilePolicyAllowDesktopSync() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyAllowDesktopSync, 1);
+    }
+
+    /**
+     * whether the device can synchronize with a desktop computer through a
+     * cable; ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowDesktopSync value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowDesktopSync new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1288)
+    public void setMobilePolicyAllowDesktopSync(int zimbraMobilePolicyAllowDesktopSync) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowDesktopSync, Integer.toString(zimbraMobilePolicyAllowDesktopSync));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the device can synchronize with a desktop computer through a
+     * cable; ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowDesktopSync value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowDesktopSync new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1288)
+    public Map<String,Object> setMobilePolicyAllowDesktopSync(int zimbraMobilePolicyAllowDesktopSync, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowDesktopSync, Integer.toString(zimbraMobilePolicyAllowDesktopSync));
+        return attrs;
+    }
+
+    /**
+     * whether the device can synchronize with a desktop computer through a
+     * cable; ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowDesktopSync value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1288)
+    public void unsetMobilePolicyAllowDesktopSync() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowDesktopSync, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the device can synchronize with a desktop computer through a
+     * cable; ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowDesktopSync value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1288)
+    public Map<String,Object> unsetMobilePolicyAllowDesktopSync(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowDesktopSync, "");
+        return attrs;
+    }
+
+    /**
+     * whether HTML e-mail is enabled on the device. If set to 0, all e-mail
+     * will be converted to plain text before synchronization occurs. ignored
+     * if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowHTMLEmail value is set to -1
+     *
+     * @return zimbraMobilePolicyAllowHTMLEmail, or 1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1290)
+    public int getMobilePolicyAllowHTMLEmail() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyAllowHTMLEmail, 1);
+    }
+
+    /**
+     * whether HTML e-mail is enabled on the device. If set to 0, all e-mail
+     * will be converted to plain text before synchronization occurs. ignored
+     * if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowHTMLEmail value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowHTMLEmail new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1290)
+    public void setMobilePolicyAllowHTMLEmail(int zimbraMobilePolicyAllowHTMLEmail) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowHTMLEmail, Integer.toString(zimbraMobilePolicyAllowHTMLEmail));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether HTML e-mail is enabled on the device. If set to 0, all e-mail
+     * will be converted to plain text before synchronization occurs. ignored
+     * if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowHTMLEmail value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowHTMLEmail new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1290)
+    public Map<String,Object> setMobilePolicyAllowHTMLEmail(int zimbraMobilePolicyAllowHTMLEmail, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowHTMLEmail, Integer.toString(zimbraMobilePolicyAllowHTMLEmail));
+        return attrs;
+    }
+
+    /**
+     * whether HTML e-mail is enabled on the device. If set to 0, all e-mail
+     * will be converted to plain text before synchronization occurs. ignored
+     * if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowHTMLEmail value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1290)
+    public void unsetMobilePolicyAllowHTMLEmail() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowHTMLEmail, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether HTML e-mail is enabled on the device. If set to 0, all e-mail
+     * will be converted to plain text before synchronization occurs. ignored
+     * if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowHTMLEmail value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1290)
+    public Map<String,Object> unsetMobilePolicyAllowHTMLEmail(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowHTMLEmail, "");
+        return attrs;
+    }
+
+    /**
+     * whether the mobile device can be used as a modem to connect a computer
+     * to the Internet; ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowInternetSharing value is set to -1
+     *
+     * @return zimbraMobilePolicyAllowInternetSharing, or 1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1303)
+    public int getMobilePolicyAllowInternetSharing() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyAllowInternetSharing, 1);
+    }
+
+    /**
+     * whether the mobile device can be used as a modem to connect a computer
+     * to the Internet; ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowInternetSharing value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowInternetSharing new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1303)
+    public void setMobilePolicyAllowInternetSharing(int zimbraMobilePolicyAllowInternetSharing) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowInternetSharing, Integer.toString(zimbraMobilePolicyAllowInternetSharing));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the mobile device can be used as a modem to connect a computer
+     * to the Internet; ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowInternetSharing value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowInternetSharing new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1303)
+    public Map<String,Object> setMobilePolicyAllowInternetSharing(int zimbraMobilePolicyAllowInternetSharing, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowInternetSharing, Integer.toString(zimbraMobilePolicyAllowInternetSharing));
+        return attrs;
+    }
+
+    /**
+     * whether the mobile device can be used as a modem to connect a computer
+     * to the Internet; ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowInternetSharing value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1303)
+    public void unsetMobilePolicyAllowInternetSharing() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowInternetSharing, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the mobile device can be used as a modem to connect a computer
+     * to the Internet; ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowInternetSharing value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1303)
+    public Map<String,Object> unsetMobilePolicyAllowInternetSharing(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowInternetSharing, "");
+        return attrs;
+    }
+
+    /**
+     * whether infrared connections are allowed to the device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowIrDA
+     * value is set to -1
+     *
+     * @return zimbraMobilePolicyAllowIrDA, or 1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1286)
+    public int getMobilePolicyAllowIrDA() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyAllowIrDA, 1);
+    }
+
+    /**
+     * whether infrared connections are allowed to the device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowIrDA
+     * value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowIrDA new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1286)
+    public void setMobilePolicyAllowIrDA(int zimbraMobilePolicyAllowIrDA) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowIrDA, Integer.toString(zimbraMobilePolicyAllowIrDA));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether infrared connections are allowed to the device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowIrDA
+     * value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowIrDA new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1286)
+    public Map<String,Object> setMobilePolicyAllowIrDA(int zimbraMobilePolicyAllowIrDA, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowIrDA, Integer.toString(zimbraMobilePolicyAllowIrDA));
+        return attrs;
+    }
+
+    /**
+     * whether infrared connections are allowed to the device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowIrDA
+     * value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1286)
+    public void unsetMobilePolicyAllowIrDA() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowIrDA, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether infrared connections are allowed to the device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowIrDA
+     * value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1286)
+    public Map<String,Object> unsetMobilePolicyAllowIrDA(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowIrDA, "");
+        return attrs;
+    }
+
+    /**
      * whether to allow non-provisionable devices; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
      *
@@ -14490,6 +15176,93 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * whether the user can configure a POP3 or IMAP4 e-mail account on the
+     * device. This parameter doesn&#039;t control access by third-party
+     * e-mail programs. ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowPOPIMAPEmail value is set to -1
+     *
+     * @return zimbraMobilePolicyAllowPOPIMAPEmail, or 1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1284)
+    public int getMobilePolicyAllowPOPIMAPEmail() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyAllowPOPIMAPEmail, 1);
+    }
+
+    /**
+     * whether the user can configure a POP3 or IMAP4 e-mail account on the
+     * device. This parameter doesn&#039;t control access by third-party
+     * e-mail programs. ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowPOPIMAPEmail value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowPOPIMAPEmail new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1284)
+    public void setMobilePolicyAllowPOPIMAPEmail(int zimbraMobilePolicyAllowPOPIMAPEmail) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowPOPIMAPEmail, Integer.toString(zimbraMobilePolicyAllowPOPIMAPEmail));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the user can configure a POP3 or IMAP4 e-mail account on the
+     * device. This parameter doesn&#039;t control access by third-party
+     * e-mail programs. ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowPOPIMAPEmail value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowPOPIMAPEmail new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1284)
+    public Map<String,Object> setMobilePolicyAllowPOPIMAPEmail(int zimbraMobilePolicyAllowPOPIMAPEmail, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowPOPIMAPEmail, Integer.toString(zimbraMobilePolicyAllowPOPIMAPEmail));
+        return attrs;
+    }
+
+    /**
+     * whether the user can configure a POP3 or IMAP4 e-mail account on the
+     * device. This parameter doesn&#039;t control access by third-party
+     * e-mail programs. ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowPOPIMAPEmail value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1284)
+    public void unsetMobilePolicyAllowPOPIMAPEmail() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowPOPIMAPEmail, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the user can configure a POP3 or IMAP4 e-mail account on the
+     * device. This parameter doesn&#039;t control access by third-party
+     * e-mail programs. ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowPOPIMAPEmail value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1284)
+    public Map<String,Object> unsetMobilePolicyAllowPOPIMAPEmail(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowPOPIMAPEmail, "");
+        return attrs;
+    }
+
+    /**
      * whether to allow partial policy enforcement on device; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
      *
@@ -14563,6 +15336,272 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetMobilePolicyAllowPartialProvisioning(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePolicyAllowPartialProvisioning, "");
+        return attrs;
+    }
+
+    /**
+     * whether the mobile device can initiate a remote desktop connection;
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowRemoteDesktop value is set to -1
+     *
+     * @return zimbraMobilePolicyAllowRemoteDesktop, or 1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1302)
+    public int getMobilePolicyAllowRemoteDesktop() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyAllowRemoteDesktop, 1);
+    }
+
+    /**
+     * whether the mobile device can initiate a remote desktop connection;
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowRemoteDesktop value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowRemoteDesktop new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1302)
+    public void setMobilePolicyAllowRemoteDesktop(int zimbraMobilePolicyAllowRemoteDesktop) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowRemoteDesktop, Integer.toString(zimbraMobilePolicyAllowRemoteDesktop));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the mobile device can initiate a remote desktop connection;
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowRemoteDesktop value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowRemoteDesktop new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1302)
+    public Map<String,Object> setMobilePolicyAllowRemoteDesktop(int zimbraMobilePolicyAllowRemoteDesktop, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowRemoteDesktop, Integer.toString(zimbraMobilePolicyAllowRemoteDesktop));
+        return attrs;
+    }
+
+    /**
+     * whether the mobile device can initiate a remote desktop connection;
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowRemoteDesktop value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1302)
+    public void unsetMobilePolicyAllowRemoteDesktop() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowRemoteDesktop, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the mobile device can initiate a remote desktop connection;
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowRemoteDesktop value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1302)
+    public Map<String,Object> unsetMobilePolicyAllowRemoteDesktop(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowRemoteDesktop, "");
+        return attrs;
+    }
+
+    /**
+     * whether the messaging application on the device can negotiate the
+     * encryption algorithm if a recipient&#039;s certificate doesn&#039;t
+     * support the specified encryption algorithm; 0 - BlockNegotiation 1 -
+     * OnlyStrongAlgorithmNegotiation 2 - AllowAnyAlgorithmNegotiation
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation value is
+     * set to -1
+     *
+     * @return zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation, or 2 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1298)
+    public int getMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation, 2);
+    }
+
+    /**
+     * whether the messaging application on the device can negotiate the
+     * encryption algorithm if a recipient&#039;s certificate doesn&#039;t
+     * support the specified encryption algorithm; 0 - BlockNegotiation 1 -
+     * OnlyStrongAlgorithmNegotiation 2 - AllowAnyAlgorithmNegotiation
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation value is
+     * set to -1
+     *
+     * @param zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1298)
+    public void setMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation(int zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation, Integer.toString(zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the messaging application on the device can negotiate the
+     * encryption algorithm if a recipient&#039;s certificate doesn&#039;t
+     * support the specified encryption algorithm; 0 - BlockNegotiation 1 -
+     * OnlyStrongAlgorithmNegotiation 2 - AllowAnyAlgorithmNegotiation
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation value is
+     * set to -1
+     *
+     * @param zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1298)
+    public Map<String,Object> setMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation(int zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation, Integer.toString(zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation));
+        return attrs;
+    }
+
+    /**
+     * whether the messaging application on the device can negotiate the
+     * encryption algorithm if a recipient&#039;s certificate doesn&#039;t
+     * support the specified encryption algorithm; 0 - BlockNegotiation 1 -
+     * OnlyStrongAlgorithmNegotiation 2 - AllowAnyAlgorithmNegotiation
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation value is
+     * set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1298)
+    public void unsetMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the messaging application on the device can negotiate the
+     * encryption algorithm if a recipient&#039;s certificate doesn&#039;t
+     * support the specified encryption algorithm; 0 - BlockNegotiation 1 -
+     * OnlyStrongAlgorithmNegotiation 2 - AllowAnyAlgorithmNegotiation
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation value is
+     * set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1298)
+    public Map<String,Object> unsetMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation, "");
+        return attrs;
+    }
+
+    /**
+     * whether S/MIME software certificates are allowed; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowSMIMESoftCerts value is set to -1
+     *
+     * @return zimbraMobilePolicyAllowSMIMESoftCerts, or 1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1299)
+    public int getMobilePolicyAllowSMIMESoftCerts() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyAllowSMIMESoftCerts, 1);
+    }
+
+    /**
+     * whether S/MIME software certificates are allowed; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowSMIMESoftCerts value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowSMIMESoftCerts new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1299)
+    public void setMobilePolicyAllowSMIMESoftCerts(int zimbraMobilePolicyAllowSMIMESoftCerts) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowSMIMESoftCerts, Integer.toString(zimbraMobilePolicyAllowSMIMESoftCerts));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether S/MIME software certificates are allowed; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowSMIMESoftCerts value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowSMIMESoftCerts new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1299)
+    public Map<String,Object> setMobilePolicyAllowSMIMESoftCerts(int zimbraMobilePolicyAllowSMIMESoftCerts, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowSMIMESoftCerts, Integer.toString(zimbraMobilePolicyAllowSMIMESoftCerts));
+        return attrs;
+    }
+
+    /**
+     * whether S/MIME software certificates are allowed; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowSMIMESoftCerts value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1299)
+    public void unsetMobilePolicyAllowSMIMESoftCerts() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowSMIMESoftCerts, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether S/MIME software certificates are allowed; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowSMIMESoftCerts value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1299)
+    public Map<String,Object> unsetMobilePolicyAllowSMIMESoftCerts(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowSMIMESoftCerts, "");
         return attrs;
     }
 
@@ -14645,6 +15684,416 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetMobilePolicyAllowSimpleDevicePassword(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePolicyAllowSimpleDevicePassword, "");
+        return attrs;
+    }
+
+    /**
+     * whether to allow removable storage on device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowStorageCard value is set to -1
+     *
+     * @return zimbraMobilePolicyAllowStorageCard, or 1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1277)
+    public int getMobilePolicyAllowStorageCard() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyAllowStorageCard, 1);
+    }
+
+    /**
+     * whether to allow removable storage on device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowStorageCard value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowStorageCard new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1277)
+    public void setMobilePolicyAllowStorageCard(int zimbraMobilePolicyAllowStorageCard) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowStorageCard, Integer.toString(zimbraMobilePolicyAllowStorageCard));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to allow removable storage on device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowStorageCard value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowStorageCard new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1277)
+    public Map<String,Object> setMobilePolicyAllowStorageCard(int zimbraMobilePolicyAllowStorageCard, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowStorageCard, Integer.toString(zimbraMobilePolicyAllowStorageCard));
+        return attrs;
+    }
+
+    /**
+     * whether to allow removable storage on device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowStorageCard value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1277)
+    public void unsetMobilePolicyAllowStorageCard() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowStorageCard, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether to allow removable storage on device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowStorageCard value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1277)
+    public Map<String,Object> unsetMobilePolicyAllowStorageCard(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowStorageCard, "");
+        return attrs;
+    }
+
+    /**
+     * whether text messaging is allowed from the device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowTextMessaging value is set to -1
+     *
+     * @return zimbraMobilePolicyAllowTextMessaging, or 1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1283)
+    public int getMobilePolicyAllowTextMessaging() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyAllowTextMessaging, 1);
+    }
+
+    /**
+     * whether text messaging is allowed from the device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowTextMessaging value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowTextMessaging new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1283)
+    public void setMobilePolicyAllowTextMessaging(int zimbraMobilePolicyAllowTextMessaging) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowTextMessaging, Integer.toString(zimbraMobilePolicyAllowTextMessaging));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether text messaging is allowed from the device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowTextMessaging value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowTextMessaging new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1283)
+    public Map<String,Object> setMobilePolicyAllowTextMessaging(int zimbraMobilePolicyAllowTextMessaging, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowTextMessaging, Integer.toString(zimbraMobilePolicyAllowTextMessaging));
+        return attrs;
+    }
+
+    /**
+     * whether text messaging is allowed from the device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowTextMessaging value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1283)
+    public void unsetMobilePolicyAllowTextMessaging() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowTextMessaging, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether text messaging is allowed from the device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowTextMessaging value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1283)
+    public Map<String,Object> unsetMobilePolicyAllowTextMessaging(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowTextMessaging, "");
+        return attrs;
+    }
+
+    /**
+     * whether unsigned applications are allowed on device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowUnsignedApplications value is set to -1
+     *
+     * @return zimbraMobilePolicyAllowUnsignedApplications, or 1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1280)
+    public int getMobilePolicyAllowUnsignedApplications() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyAllowUnsignedApplications, 1);
+    }
+
+    /**
+     * whether unsigned applications are allowed on device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowUnsignedApplications value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowUnsignedApplications new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1280)
+    public void setMobilePolicyAllowUnsignedApplications(int zimbraMobilePolicyAllowUnsignedApplications) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowUnsignedApplications, Integer.toString(zimbraMobilePolicyAllowUnsignedApplications));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether unsigned applications are allowed on device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowUnsignedApplications value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowUnsignedApplications new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1280)
+    public Map<String,Object> setMobilePolicyAllowUnsignedApplications(int zimbraMobilePolicyAllowUnsignedApplications, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowUnsignedApplications, Integer.toString(zimbraMobilePolicyAllowUnsignedApplications));
+        return attrs;
+    }
+
+    /**
+     * whether unsigned applications are allowed on device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowUnsignedApplications value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1280)
+    public void unsetMobilePolicyAllowUnsignedApplications() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowUnsignedApplications, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether unsigned applications are allowed on device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowUnsignedApplications value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1280)
+    public Map<String,Object> unsetMobilePolicyAllowUnsignedApplications(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowUnsignedApplications, "");
+        return attrs;
+    }
+
+    /**
+     * whether unsigned installation packages are allowed on device; ignored
+     * if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowUnsignedInstallationPackages value is set to -1
+     *
+     * @return zimbraMobilePolicyAllowUnsignedInstallationPackages, or 1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1281)
+    public int getMobilePolicyAllowUnsignedInstallationPackages() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyAllowUnsignedInstallationPackages, 1);
+    }
+
+    /**
+     * whether unsigned installation packages are allowed on device; ignored
+     * if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowUnsignedInstallationPackages value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowUnsignedInstallationPackages new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1281)
+    public void setMobilePolicyAllowUnsignedInstallationPackages(int zimbraMobilePolicyAllowUnsignedInstallationPackages) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowUnsignedInstallationPackages, Integer.toString(zimbraMobilePolicyAllowUnsignedInstallationPackages));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether unsigned installation packages are allowed on device; ignored
+     * if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowUnsignedInstallationPackages value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowUnsignedInstallationPackages new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1281)
+    public Map<String,Object> setMobilePolicyAllowUnsignedInstallationPackages(int zimbraMobilePolicyAllowUnsignedInstallationPackages, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowUnsignedInstallationPackages, Integer.toString(zimbraMobilePolicyAllowUnsignedInstallationPackages));
+        return attrs;
+    }
+
+    /**
+     * whether unsigned installation packages are allowed on device; ignored
+     * if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowUnsignedInstallationPackages value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1281)
+    public void unsetMobilePolicyAllowUnsignedInstallationPackages() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowUnsignedInstallationPackages, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether unsigned installation packages are allowed on device; ignored
+     * if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowUnsignedInstallationPackages value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1281)
+    public Map<String,Object> unsetMobilePolicyAllowUnsignedInstallationPackages(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowUnsignedInstallationPackages, "");
+        return attrs;
+    }
+
+    /**
+     * whether wireless Internet access is allowed on the device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowWiFi
+     * value is set to -1
+     *
+     * @return zimbraMobilePolicyAllowWiFi, or 1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1282)
+    public int getMobilePolicyAllowWiFi() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyAllowWiFi, 1);
+    }
+
+    /**
+     * whether wireless Internet access is allowed on the device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowWiFi
+     * value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowWiFi new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1282)
+    public void setMobilePolicyAllowWiFi(int zimbraMobilePolicyAllowWiFi) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowWiFi, Integer.toString(zimbraMobilePolicyAllowWiFi));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether wireless Internet access is allowed on the device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowWiFi
+     * value is set to -1
+     *
+     * @param zimbraMobilePolicyAllowWiFi new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1282)
+    public Map<String,Object> setMobilePolicyAllowWiFi(int zimbraMobilePolicyAllowWiFi, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowWiFi, Integer.toString(zimbraMobilePolicyAllowWiFi));
+        return attrs;
+    }
+
+    /**
+     * whether wireless Internet access is allowed on the device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowWiFi
+     * value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1282)
+    public void unsetMobilePolicyAllowWiFi() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowWiFi, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether wireless Internet access is allowed on the device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowWiFi
+     * value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1282)
+    public Map<String,Object> unsetMobilePolicyAllowWiFi(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyAllowWiFi, "");
         return attrs;
     }
 
@@ -15054,6 +16503,93 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * the maximum range of calendar days that can be synchronized to the
+     * device; 0 - PAST ALL 4 - Two Weeks 5 - One Month 6 - Three Months 7 -
+     * Six Months ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyMaxCalendarAgeFilter value is set to -1, 1, 2 or, 3
+     *
+     * @return zimbraMobilePolicyMaxCalendarAgeFilter, or 4 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1289)
+    public int getMobilePolicyMaxCalendarAgeFilter() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyMaxCalendarAgeFilter, 4);
+    }
+
+    /**
+     * the maximum range of calendar days that can be synchronized to the
+     * device; 0 - PAST ALL 4 - Two Weeks 5 - One Month 6 - Three Months 7 -
+     * Six Months ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyMaxCalendarAgeFilter value is set to -1, 1, 2 or, 3
+     *
+     * @param zimbraMobilePolicyMaxCalendarAgeFilter new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1289)
+    public void setMobilePolicyMaxCalendarAgeFilter(int zimbraMobilePolicyMaxCalendarAgeFilter) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyMaxCalendarAgeFilter, Integer.toString(zimbraMobilePolicyMaxCalendarAgeFilter));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the maximum range of calendar days that can be synchronized to the
+     * device; 0 - PAST ALL 4 - Two Weeks 5 - One Month 6 - Three Months 7 -
+     * Six Months ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyMaxCalendarAgeFilter value is set to -1, 1, 2 or, 3
+     *
+     * @param zimbraMobilePolicyMaxCalendarAgeFilter new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1289)
+    public Map<String,Object> setMobilePolicyMaxCalendarAgeFilter(int zimbraMobilePolicyMaxCalendarAgeFilter, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyMaxCalendarAgeFilter, Integer.toString(zimbraMobilePolicyMaxCalendarAgeFilter));
+        return attrs;
+    }
+
+    /**
+     * the maximum range of calendar days that can be synchronized to the
+     * device; 0 - PAST ALL 4 - Two Weeks 5 - One Month 6 - Three Months 7 -
+     * Six Months ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyMaxCalendarAgeFilter value is set to -1, 1, 2 or, 3
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1289)
+    public void unsetMobilePolicyMaxCalendarAgeFilter() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyMaxCalendarAgeFilter, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the maximum range of calendar days that can be synchronized to the
+     * device; 0 - PAST ALL 4 - Two Weeks 5 - One Month 6 - Three Months 7 -
+     * Six Months ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyMaxCalendarAgeFilter value is set to -1, 1, 2 or, 3
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1289)
+    public Map<String,Object> unsetMobilePolicyMaxCalendarAgeFilter(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyMaxCalendarAgeFilter, "");
+        return attrs;
+    }
+
+    /**
      * number of consecutive incorrect pin input before device is wiped;
      * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
      * zimbraMobileDevicePasswordEnabled=FALSE
@@ -15132,6 +16668,257 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetMobilePolicyMaxDevicePasswordFailedAttempts(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePolicyMaxDevicePasswordFailedAttempts, "");
+        return attrs;
+    }
+
+    /**
+     * the maximum number of days of e-mail items to synchronize to the
+     * device; 0 - PAST ALL 1 - One Day 2 - Three Days 3 - One Week 4 - Two
+     * Weeks 5 - One Month ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+     * or zimbraMobilePolicyMaxEmailAgeFilter value is set to -1
+     *
+     * @return zimbraMobilePolicyMaxEmailAgeFilter, or 2 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1291)
+    public int getMobilePolicyMaxEmailAgeFilter() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyMaxEmailAgeFilter, 2);
+    }
+
+    /**
+     * the maximum number of days of e-mail items to synchronize to the
+     * device; 0 - PAST ALL 1 - One Day 2 - Three Days 3 - One Week 4 - Two
+     * Weeks 5 - One Month ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+     * or zimbraMobilePolicyMaxEmailAgeFilter value is set to -1
+     *
+     * @param zimbraMobilePolicyMaxEmailAgeFilter new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1291)
+    public void setMobilePolicyMaxEmailAgeFilter(int zimbraMobilePolicyMaxEmailAgeFilter) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyMaxEmailAgeFilter, Integer.toString(zimbraMobilePolicyMaxEmailAgeFilter));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the maximum number of days of e-mail items to synchronize to the
+     * device; 0 - PAST ALL 1 - One Day 2 - Three Days 3 - One Week 4 - Two
+     * Weeks 5 - One Month ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+     * or zimbraMobilePolicyMaxEmailAgeFilter value is set to -1
+     *
+     * @param zimbraMobilePolicyMaxEmailAgeFilter new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1291)
+    public Map<String,Object> setMobilePolicyMaxEmailAgeFilter(int zimbraMobilePolicyMaxEmailAgeFilter, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyMaxEmailAgeFilter, Integer.toString(zimbraMobilePolicyMaxEmailAgeFilter));
+        return attrs;
+    }
+
+    /**
+     * the maximum number of days of e-mail items to synchronize to the
+     * device; 0 - PAST ALL 1 - One Day 2 - Three Days 3 - One Week 4 - Two
+     * Weeks 5 - One Month ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+     * or zimbraMobilePolicyMaxEmailAgeFilter value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1291)
+    public void unsetMobilePolicyMaxEmailAgeFilter() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyMaxEmailAgeFilter, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the maximum number of days of e-mail items to synchronize to the
+     * device; 0 - PAST ALL 1 - One Day 2 - Three Days 3 - One Week 4 - Two
+     * Weeks 5 - One Month ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+     * or zimbraMobilePolicyMaxEmailAgeFilter value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1291)
+    public Map<String,Object> unsetMobilePolicyMaxEmailAgeFilter(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyMaxEmailAgeFilter, "");
+        return attrs;
+    }
+
+    /**
+     * the maximum size at which e-mail messages are truncated when
+     * synchronized to the device; The value is specified in kilobytes (KB).
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @return zimbraMobilePolicyMaxEmailBodyTruncationSize, or -1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1292)
+    public int getMobilePolicyMaxEmailBodyTruncationSize() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyMaxEmailBodyTruncationSize, -1);
+    }
+
+    /**
+     * the maximum size at which e-mail messages are truncated when
+     * synchronized to the device; The value is specified in kilobytes (KB).
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @param zimbraMobilePolicyMaxEmailBodyTruncationSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1292)
+    public void setMobilePolicyMaxEmailBodyTruncationSize(int zimbraMobilePolicyMaxEmailBodyTruncationSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyMaxEmailBodyTruncationSize, Integer.toString(zimbraMobilePolicyMaxEmailBodyTruncationSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the maximum size at which e-mail messages are truncated when
+     * synchronized to the device; The value is specified in kilobytes (KB).
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @param zimbraMobilePolicyMaxEmailBodyTruncationSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1292)
+    public Map<String,Object> setMobilePolicyMaxEmailBodyTruncationSize(int zimbraMobilePolicyMaxEmailBodyTruncationSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyMaxEmailBodyTruncationSize, Integer.toString(zimbraMobilePolicyMaxEmailBodyTruncationSize));
+        return attrs;
+    }
+
+    /**
+     * the maximum size at which e-mail messages are truncated when
+     * synchronized to the device; The value is specified in kilobytes (KB).
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1292)
+    public void unsetMobilePolicyMaxEmailBodyTruncationSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyMaxEmailBodyTruncationSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the maximum size at which e-mail messages are truncated when
+     * synchronized to the device; The value is specified in kilobytes (KB).
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1292)
+    public Map<String,Object> unsetMobilePolicyMaxEmailBodyTruncationSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyMaxEmailBodyTruncationSize, "");
+        return attrs;
+    }
+
+    /**
+     * the maximum size at which HTML-formatted e-mail messages are
+     * synchronized to the devices. The value is specified in KB. ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @return zimbraMobilePolicyMaxEmailHTMLBodyTruncationSize, or -1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1293)
+    public int getMobilePolicyMaxEmailHTMLBodyTruncationSize() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyMaxEmailHTMLBodyTruncationSize, -1);
+    }
+
+    /**
+     * the maximum size at which HTML-formatted e-mail messages are
+     * synchronized to the devices. The value is specified in KB. ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @param zimbraMobilePolicyMaxEmailHTMLBodyTruncationSize new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1293)
+    public void setMobilePolicyMaxEmailHTMLBodyTruncationSize(int zimbraMobilePolicyMaxEmailHTMLBodyTruncationSize) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyMaxEmailHTMLBodyTruncationSize, Integer.toString(zimbraMobilePolicyMaxEmailHTMLBodyTruncationSize));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the maximum size at which HTML-formatted e-mail messages are
+     * synchronized to the devices. The value is specified in KB. ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @param zimbraMobilePolicyMaxEmailHTMLBodyTruncationSize new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1293)
+    public Map<String,Object> setMobilePolicyMaxEmailHTMLBodyTruncationSize(int zimbraMobilePolicyMaxEmailHTMLBodyTruncationSize, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyMaxEmailHTMLBodyTruncationSize, Integer.toString(zimbraMobilePolicyMaxEmailHTMLBodyTruncationSize));
+        return attrs;
+    }
+
+    /**
+     * the maximum size at which HTML-formatted e-mail messages are
+     * synchronized to the devices. The value is specified in KB. ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1293)
+    public void unsetMobilePolicyMaxEmailHTMLBodyTruncationSize() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyMaxEmailHTMLBodyTruncationSize, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the maximum size at which HTML-formatted e-mail messages are
+     * synchronized to the devices. The value is specified in KB. ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1293)
+    public Map<String,Object> unsetMobilePolicyMaxEmailHTMLBodyTruncationSize(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyMaxEmailHTMLBodyTruncationSize, "");
         return attrs;
     }
 
@@ -15537,6 +17324,498 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetMobilePolicyRefreshInterval(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMobilePolicyRefreshInterval, "");
+        return attrs;
+    }
+
+    /**
+     * whether encryption on device is required; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireDeviceEncryption value is set to -1
+     *
+     * @return zimbraMobilePolicyRequireDeviceEncryption, or 0 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1279)
+    public int getMobilePolicyRequireDeviceEncryption() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyRequireDeviceEncryption, 0);
+    }
+
+    /**
+     * whether encryption on device is required; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireDeviceEncryption value is set to -1
+     *
+     * @param zimbraMobilePolicyRequireDeviceEncryption new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1279)
+    public void setMobilePolicyRequireDeviceEncryption(int zimbraMobilePolicyRequireDeviceEncryption) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireDeviceEncryption, Integer.toString(zimbraMobilePolicyRequireDeviceEncryption));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether encryption on device is required; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireDeviceEncryption value is set to -1
+     *
+     * @param zimbraMobilePolicyRequireDeviceEncryption new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1279)
+    public Map<String,Object> setMobilePolicyRequireDeviceEncryption(int zimbraMobilePolicyRequireDeviceEncryption, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireDeviceEncryption, Integer.toString(zimbraMobilePolicyRequireDeviceEncryption));
+        return attrs;
+    }
+
+    /**
+     * whether encryption on device is required; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireDeviceEncryption value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1279)
+    public void unsetMobilePolicyRequireDeviceEncryption() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireDeviceEncryption, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether encryption on device is required; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireDeviceEncryption value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1279)
+    public Map<String,Object> unsetMobilePolicyRequireDeviceEncryption(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireDeviceEncryption, "");
+        return attrs;
+    }
+
+    /**
+     * whether you must encrypt S/MIME messages; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireEncryptedSMIMEMessages value is set to -1
+     *
+     * @return zimbraMobilePolicyRequireEncryptedSMIMEMessages, or 0 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1295)
+    public int getMobilePolicyRequireEncryptedSMIMEMessages() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyRequireEncryptedSMIMEMessages, 0);
+    }
+
+    /**
+     * whether you must encrypt S/MIME messages; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireEncryptedSMIMEMessages value is set to -1
+     *
+     * @param zimbraMobilePolicyRequireEncryptedSMIMEMessages new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1295)
+    public void setMobilePolicyRequireEncryptedSMIMEMessages(int zimbraMobilePolicyRequireEncryptedSMIMEMessages) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireEncryptedSMIMEMessages, Integer.toString(zimbraMobilePolicyRequireEncryptedSMIMEMessages));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether you must encrypt S/MIME messages; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireEncryptedSMIMEMessages value is set to -1
+     *
+     * @param zimbraMobilePolicyRequireEncryptedSMIMEMessages new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1295)
+    public Map<String,Object> setMobilePolicyRequireEncryptedSMIMEMessages(int zimbraMobilePolicyRequireEncryptedSMIMEMessages, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireEncryptedSMIMEMessages, Integer.toString(zimbraMobilePolicyRequireEncryptedSMIMEMessages));
+        return attrs;
+    }
+
+    /**
+     * whether you must encrypt S/MIME messages; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireEncryptedSMIMEMessages value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1295)
+    public void unsetMobilePolicyRequireEncryptedSMIMEMessages() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireEncryptedSMIMEMessages, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether you must encrypt S/MIME messages; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireEncryptedSMIMEMessages value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1295)
+    public Map<String,Object> unsetMobilePolicyRequireEncryptedSMIMEMessages(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireEncryptedSMIMEMessages, "");
+        return attrs;
+    }
+
+    /**
+     * what required algorithm must be used when encrypting a message;
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm value is set to -1
+     *
+     * @return zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm, or 0 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1297)
+    public int getMobilePolicyRequireEncryptionSMIMEAlgorithm() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm, 0);
+    }
+
+    /**
+     * what required algorithm must be used when encrypting a message;
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm value is set to -1
+     *
+     * @param zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1297)
+    public void setMobilePolicyRequireEncryptionSMIMEAlgorithm(int zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm, Integer.toString(zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * what required algorithm must be used when encrypting a message;
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm value is set to -1
+     *
+     * @param zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1297)
+    public Map<String,Object> setMobilePolicyRequireEncryptionSMIMEAlgorithm(int zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm, Integer.toString(zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm));
+        return attrs;
+    }
+
+    /**
+     * what required algorithm must be used when encrypting a message;
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1297)
+    public void unsetMobilePolicyRequireEncryptionSMIMEAlgorithm() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * what required algorithm must be used when encrypting a message;
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1297)
+    public Map<String,Object> unsetMobilePolicyRequireEncryptionSMIMEAlgorithm(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm, "");
+        return attrs;
+    }
+
+    /**
+     * whether the mobile device must synchronize manually while roaming;
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireManualSyncWhenRoaming value is set to -1
+     *
+     * @return zimbraMobilePolicyRequireManualSyncWhenRoaming, or 0 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1287)
+    public int getMobilePolicyRequireManualSyncWhenRoaming() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyRequireManualSyncWhenRoaming, 0);
+    }
+
+    /**
+     * whether the mobile device must synchronize manually while roaming;
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireManualSyncWhenRoaming value is set to -1
+     *
+     * @param zimbraMobilePolicyRequireManualSyncWhenRoaming new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1287)
+    public void setMobilePolicyRequireManualSyncWhenRoaming(int zimbraMobilePolicyRequireManualSyncWhenRoaming) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireManualSyncWhenRoaming, Integer.toString(zimbraMobilePolicyRequireManualSyncWhenRoaming));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the mobile device must synchronize manually while roaming;
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireManualSyncWhenRoaming value is set to -1
+     *
+     * @param zimbraMobilePolicyRequireManualSyncWhenRoaming new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1287)
+    public Map<String,Object> setMobilePolicyRequireManualSyncWhenRoaming(int zimbraMobilePolicyRequireManualSyncWhenRoaming, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireManualSyncWhenRoaming, Integer.toString(zimbraMobilePolicyRequireManualSyncWhenRoaming));
+        return attrs;
+    }
+
+    /**
+     * whether the mobile device must synchronize manually while roaming;
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireManualSyncWhenRoaming value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1287)
+    public void unsetMobilePolicyRequireManualSyncWhenRoaming() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireManualSyncWhenRoaming, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the mobile device must synchronize manually while roaming;
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireManualSyncWhenRoaming value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1287)
+    public Map<String,Object> unsetMobilePolicyRequireManualSyncWhenRoaming(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireManualSyncWhenRoaming, "");
+        return attrs;
+    }
+
+    /**
+     * what required algorithm must be used when signing a message; ignored
+     * if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireSignedSMIMEAlgorithm value is set to -1
+     *
+     * @return zimbraMobilePolicyRequireSignedSMIMEAlgorithm, or 0 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1296)
+    public int getMobilePolicyRequireSignedSMIMEAlgorithm() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyRequireSignedSMIMEAlgorithm, 0);
+    }
+
+    /**
+     * what required algorithm must be used when signing a message; ignored
+     * if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireSignedSMIMEAlgorithm value is set to -1
+     *
+     * @param zimbraMobilePolicyRequireSignedSMIMEAlgorithm new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1296)
+    public void setMobilePolicyRequireSignedSMIMEAlgorithm(int zimbraMobilePolicyRequireSignedSMIMEAlgorithm) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireSignedSMIMEAlgorithm, Integer.toString(zimbraMobilePolicyRequireSignedSMIMEAlgorithm));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * what required algorithm must be used when signing a message; ignored
+     * if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireSignedSMIMEAlgorithm value is set to -1
+     *
+     * @param zimbraMobilePolicyRequireSignedSMIMEAlgorithm new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1296)
+    public Map<String,Object> setMobilePolicyRequireSignedSMIMEAlgorithm(int zimbraMobilePolicyRequireSignedSMIMEAlgorithm, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireSignedSMIMEAlgorithm, Integer.toString(zimbraMobilePolicyRequireSignedSMIMEAlgorithm));
+        return attrs;
+    }
+
+    /**
+     * what required algorithm must be used when signing a message; ignored
+     * if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireSignedSMIMEAlgorithm value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1296)
+    public void unsetMobilePolicyRequireSignedSMIMEAlgorithm() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireSignedSMIMEAlgorithm, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * what required algorithm must be used when signing a message; ignored
+     * if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireSignedSMIMEAlgorithm value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1296)
+    public Map<String,Object> unsetMobilePolicyRequireSignedSMIMEAlgorithm(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireSignedSMIMEAlgorithm, "");
+        return attrs;
+    }
+
+    /**
+     * whether the device must send signed S/MIME messages; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireSignedSMIMEMessages value is set to -1
+     *
+     * @return zimbraMobilePolicyRequireSignedSMIMEMessages, or 0 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1294)
+    public int getMobilePolicyRequireSignedSMIMEMessages() {
+        return getIntAttr(Provisioning.A_zimbraMobilePolicyRequireSignedSMIMEMessages, 0);
+    }
+
+    /**
+     * whether the device must send signed S/MIME messages; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireSignedSMIMEMessages value is set to -1
+     *
+     * @param zimbraMobilePolicyRequireSignedSMIMEMessages new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1294)
+    public void setMobilePolicyRequireSignedSMIMEMessages(int zimbraMobilePolicyRequireSignedSMIMEMessages) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireSignedSMIMEMessages, Integer.toString(zimbraMobilePolicyRequireSignedSMIMEMessages));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the device must send signed S/MIME messages; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireSignedSMIMEMessages value is set to -1
+     *
+     * @param zimbraMobilePolicyRequireSignedSMIMEMessages new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1294)
+    public Map<String,Object> setMobilePolicyRequireSignedSMIMEMessages(int zimbraMobilePolicyRequireSignedSMIMEMessages, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireSignedSMIMEMessages, Integer.toString(zimbraMobilePolicyRequireSignedSMIMEMessages));
+        return attrs;
+    }
+
+    /**
+     * whether the device must send signed S/MIME messages; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireSignedSMIMEMessages value is set to -1
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1294)
+    public void unsetMobilePolicyRequireSignedSMIMEMessages() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireSignedSMIMEMessages, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether the device must send signed S/MIME messages; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireSignedSMIMEMessages value is set to -1
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1294)
+    public Map<String,Object> unsetMobilePolicyRequireSignedSMIMEMessages(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMobilePolicyRequireSignedSMIMEMessages, "");
         return attrs;
     }
 

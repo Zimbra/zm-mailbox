@@ -6223,5 +6223,239 @@ TODO: delete them permanently from here
   <desc>distribution subscription policy. ACCEPT: always accept, REJECT: always reject, APPROVAL: require owners approval.</desc>
 </attr>
 
+<attr id="1277" name="zimbraMobilePolicyAllowStorageCard" type="integer" min="-1" max="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>1</defaultCOSValue>
+  <desc>
+    whether to allow removable storage on device;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowStorageCard value is set to -1
+  </desc>
+</attr>
+
+<attr id="1278" name="zimbraMobilePolicyAllowCamera" type="integer" min="-1" max="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>1</defaultCOSValue>
+  <desc>
+    whether to allow camera on device;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowCamera value is set to -1
+  </desc>
+</attr>
+
+<attr id="1279" name="zimbraMobilePolicyRequireDeviceEncryption" type="integer" min="-1" max="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>
+    whether encryption on device is required;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyRequireDeviceEncryption value is set to -1
+  </desc>
+</attr>
+
+<attr id="1280" name="zimbraMobilePolicyAllowUnsignedApplications" type="integer" min="-1" max="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>1</defaultCOSValue>
+  <desc>
+    whether unsigned applications are allowed on device;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowUnsignedApplications value is set to -1
+  </desc>
+</attr>
+
+<attr id="1281" name="zimbraMobilePolicyAllowUnsignedInstallationPackages" type="integer" min="-1" max="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>1</defaultCOSValue>
+  <desc>
+    whether unsigned installation packages are allowed on device;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowUnsignedInstallationPackages value is set to -1
+  </desc>
+</attr>
+
+<attr id="1282" name="zimbraMobilePolicyAllowWiFi" type="integer" min="-1" max="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>1</defaultCOSValue>
+  <desc>
+    whether wireless Internet access is allowed on the device;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowWiFi value is set to -1
+  </desc>
+</attr>
+
+<attr id="1283" name="zimbraMobilePolicyAllowTextMessaging" type="integer" min="-1" max="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>1</defaultCOSValue>
+  <desc>
+    whether text messaging is allowed from the device;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowTextMessaging value is set to -1
+  </desc>
+</attr>
+
+<attr id="1284" name="zimbraMobilePolicyAllowPOPIMAPEmail" type="integer" min="-1" max="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>1</defaultCOSValue>
+  <desc>
+    whether the user can configure a POP3 or IMAP4 e-mail account on the device. This parameter doesn't control access by third-party e-mail programs.
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowPOPIMAPEmail value is set to -1
+  </desc>
+</attr>
+
+<attr id="1285" name="zimbraMobilePolicyAllowBluetooth" type="integer" min="-1" max="2" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>2</defaultCOSValue>
+  <desc>
+    whether the Bluetooth capabilities are allowed on the device. The available options are Disable, HandsfreeOnly, and Allow.
+    0 - DISABLE
+    1 - HANDSFREE
+    2 - ALLOW
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowBluetooth value is set to -1
+  </desc>
+</attr>
+
+<attr id="1286" name="zimbraMobilePolicyAllowIrDA" type="integer" min="-1" max="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>1</defaultCOSValue>
+  <desc>
+    whether infrared connections are allowed to the device;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowIrDA value is set to -1
+  </desc>
+</attr>
+
+<attr id="1287" name="zimbraMobilePolicyRequireManualSyncWhenRoaming" type="integer" min="-1" max="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>
+    whether the mobile device must synchronize manually while roaming;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyRequireManualSyncWhenRoaming value is set to -1
+  </desc>
+</attr>
+
+<attr id="1288" name="zimbraMobilePolicyAllowDesktopSync" type="integer" min="-1" max="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>1</defaultCOSValue>
+  <desc>
+    whether the device can synchronize with a desktop computer through a cable;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowDesktopSync value is set to -1
+  </desc>
+</attr>
+
+<attr id="1289" name="zimbraMobilePolicyMaxCalendarAgeFilter" type="integer" min="-1" max="7" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>4</defaultCOSValue>
+  <desc>
+    the maximum range of calendar days that can be synchronized to the device;
+    0 - PAST ALL
+    4 - Two Weeks
+    5 - One Month
+    6 - Three Months
+    7 - Six Months
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyMaxCalendarAgeFilter value is set to -1, 1, 2 or, 3
+  </desc>
+</attr>
+
+<attr id="1290" name="zimbraMobilePolicyAllowHTMLEmail" type="integer" min="-1" max="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>1</defaultCOSValue>
+  <desc>
+    whether HTML e-mail is enabled on the device. If set to 0, all e-mail will be converted to plain text before synchronization occurs.
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowHTMLEmail value is set to -1
+  </desc>
+</attr>
+
+<attr id="1291" name="zimbraMobilePolicyMaxEmailAgeFilter" type="integer" min="-1" max="5" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>2</defaultCOSValue>
+  <desc>
+    the maximum number of days of e-mail items to synchronize to the device;
+    0 - PAST ALL
+    1 - One Day
+    2 - Three Days
+    3 - One Week
+    4 - Two Weeks
+    5 - One Month
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyMaxEmailAgeFilter value is set to -1
+  </desc>
+</attr>
+
+<attr id="1292" name="zimbraMobilePolicyMaxEmailBodyTruncationSize" type="integer" min="-1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>-1</defaultCOSValue>
+  <desc>
+    the maximum size at which e-mail messages are truncated when synchronized to the device; The value is specified in kilobytes (KB).
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+  </desc>
+</attr>
+
+<attr id="1293" name="zimbraMobilePolicyMaxEmailHTMLBodyTruncationSize" type="integer" min="-1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>-1</defaultCOSValue>
+  <desc>
+    the maximum size at which HTML-formatted e-mail messages are synchronized to the devices. The value is specified in KB.
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+  </desc>
+</attr>
+
+<attr id="1294" name="zimbraMobilePolicyRequireSignedSMIMEMessages" type="integer" min="-1" max="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>
+    whether the device must send signed S/MIME messages;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyRequireSignedSMIMEMessages value is set to -1
+  </desc>
+</attr>
+
+<attr id="1295" name="zimbraMobilePolicyRequireEncryptedSMIMEMessages" type="integer" min="-1" max="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>
+    whether you must encrypt S/MIME messages;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyRequireEncryptedSMIMEMessages value is set to -1
+  </desc>
+</attr>
+
+<attr id="1296" name="zimbraMobilePolicyRequireSignedSMIMEAlgorithm" type="integer" min="-1" max="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>
+    what required algorithm must be used when signing a message;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyRequireSignedSMIMEAlgorithm value is set to -1
+  </desc>
+</attr>
+
+<attr id="1297" name="zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm" type="integer" min="-1" max="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>0</defaultCOSValue>
+  <desc>
+    what required algorithm must be used when encrypting a message;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm value is set to -1
+  </desc>
+</attr>
+
+<attr id="1298" name="zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation" type="integer" min="-1" max="2" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>2</defaultCOSValue>
+  <desc>
+    whether the messaging application on the device can negotiate the encryption algorithm if a 
+    recipient's certificate doesn't support the specified encryption algorithm;
+    0 - BlockNegotiation
+    1 - OnlyStrongAlgorithmNegotiation
+    2 - AllowAnyAlgorithmNegotiation
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation value is set to -1
+  </desc>
+</attr>
+
+<attr id="1299" name="zimbraMobilePolicyAllowSMIMESoftCerts" type="integer" min="-1" max="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>1</defaultCOSValue>
+  <desc>
+    whether S/MIME software certificates are allowed;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowSMIMESoftCerts value is set to -1
+  </desc>
+</attr>
+
+<attr id="1300" name="zimbraMobilePolicyAllowBrowser" type="integer" min="-1" max="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>1</defaultCOSValue>
+  <desc>
+    whether Microsoft Pocket Internet Explorer is allowed on the mobile phone. This parameter doesn't affect third-party browsers.
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowBrowser value is set to -1
+  </desc>
+</attr>
+
+<attr id="1301" name="zimbraMobilePolicyAllowConsumerEmail" type="integer" min="-1" max="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>1</defaultCOSValue>
+  <desc>
+    whether the device user can configure a personal e-mail account on the mobile phone.
+    This parameter doesn't control access to e-mails using third-party mobile phone e-mail programs.
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowConsumerEmail value is set to -1
+  </desc>
+</attr>
+
+<attr id="1302" name="zimbraMobilePolicyAllowRemoteDesktop" type="integer" min="-1" max="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>1</defaultCOSValue>
+  <desc>
+    whether the mobile device can initiate a remote desktop connection;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowRemoteDesktop value is set to -1
+  </desc>
+</attr>
+
+<attr id="1303" name="zimbraMobilePolicyAllowInternetSharing" type="integer" min="-1" max="1" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>1</defaultCOSValue>
+  <desc>
+    whether the mobile device can be used as a modem to connect a computer to the Internet;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowInternetSharing value is set to -1
+  </desc>
+</attr>
 
 </attrs>
