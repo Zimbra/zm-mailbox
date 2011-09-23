@@ -24,6 +24,7 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
@@ -39,6 +40,9 @@ import com.zimbra.soap.type.NamedElement;
 @XmlType(propOrder = {"operations", "users", "activities"})
 public class GetActivityStreamResponse {
 
+    @XmlAttribute(name=MailConstants.A_SESSION /* session */, required=false)
+    private String sessionId;
+
     @XmlElement(name=OctopusXmlConstants.E_OPERATION /* op */, required=false)
     private List<NamedElement> operations = Lists.newArrayList();
 
@@ -51,6 +55,10 @@ public class GetActivityStreamResponse {
     public GetActivityStreamResponse() {
     }
 
+    public void setSession(String sessionId) {
+        this.sessionId = sessionId;
+    }
+    
     public void setOperations(Iterable <NamedElement> operations) {
         this.operations.clear();
         if (operations != null) {
@@ -84,6 +92,9 @@ public class GetActivityStreamResponse {
         this.activities.add(activity);
     }
 
+    public String getSession() {
+        return sessionId;
+    }
     public List<NamedElement> getOperations() {
         return Collections.unmodifiableList(operations);
     }
@@ -97,6 +108,7 @@ public class GetActivityStreamResponse {
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
+            .add("session", sessionId)
             .add("operations", operations)
             .add("users", users)
             .add("activities", activities);

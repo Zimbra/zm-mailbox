@@ -19,10 +19,12 @@ import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.OctopusXmlConstants;
+import com.zimbra.soap.mail.type.ActivityFilter;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=OctopusXmlConstants.E_GET_ACTIVITY_STREAM_REQUEST)
@@ -36,6 +38,9 @@ public class GetActivityStreamRequest {
 
     @XmlAttribute(name=MailConstants.A_QUERY_LIMIT /* limit */, required=false)
     private Integer queryLimit;
+
+    @XmlElement(name=MailConstants.E_FILTER /* filter */, required=false)
+    private ActivityFilter filter;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -51,9 +56,12 @@ public class GetActivityStreamRequest {
 
     public void setQueryOffset(Integer queryOffset) { this.queryOffset = queryOffset; }
     public void setQueryLimit(Integer queryLimit) { this.queryLimit = queryLimit; }
+    public void setFilter(ActivityFilter filter) { this.filter = filter; }
+    
     public String getId() { return id; }
     public Integer getQueryOffset() { return queryOffset; }
     public Integer getQueryLimit() { return queryLimit; }
+    public ActivityFilter getFilter() { return filter; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
