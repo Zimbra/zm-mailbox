@@ -58,31 +58,31 @@ public class DistributionListAction extends AccountDocumentHandler {
         DLActionHandler handler = null;
         switch (op) {
             case delete:
-                handler = new DeleteHandler(request, group, acct);
+                handler = new DeleteHandler(eAction, group, acct);
                 break;
             case modify:
-                handler = new ModifyHandler(request, group, acct);
+                handler = new ModifyHandler(eAction, group, acct);
                 break;
             case rename:
-                handler = new RenameHandler(request, group, acct);
+                handler = new RenameHandler(eAction, group, acct);
                 break;
             case addAlias:
-                handler = new AddAliasHandler(request, group, acct);
+                handler = new AddAliasHandler(eAction, group, acct);
                 break;
             case removeAlias:
-                handler = new RemoveAliasHandler(request, group, acct);
+                handler = new RemoveAliasHandler(eAction, group, acct);
                 break;
             case addOwner:
-                handler = new AddOwnerHandler(request, group, acct);
+                handler = new AddOwnerHandler(eAction, group, acct);
                 break;
             case removeOwner:
-                handler = new RemoveOwnerHandler(request, group, acct);
+                handler = new RemoveOwnerHandler(eAction, group, acct);
                 break;
             case addMembers:
-                handler = new AddMembersHandler(request, group, acct);
+                handler = new AddMembersHandler(eAction, group, acct);
                 break;
             case removeMembers:
-                handler = new RemoveMembersHandler(request, group, acct);
+                handler = new RemoveMembersHandler(eAction, group, acct);
                 break;
             default:
                 throw ServiceException.FAILURE("unsupported op:" + op.name(), null);
@@ -97,13 +97,13 @@ public class DistributionListAction extends AccountDocumentHandler {
     
     
     private static abstract class DLActionHandler {
-        protected Element request;
+        protected Element eAction;
         protected Group group;
         protected Account requestedAcct;
         protected Provisioning prov;
         
         protected DLActionHandler(Element request, Group group, Account requestedAcct) {
-            this.request = request;
+            this.eAction = request;
             this.group = group;
             this.requestedAcct = requestedAcct;
             this.prov = Provisioning.getInstance();
@@ -115,8 +115,8 @@ public class DistributionListAction extends AccountDocumentHandler {
     
     private static class DeleteHandler extends DLActionHandler {
 
-        protected DeleteHandler(Element request, Group group, Account requestedAcct) {
-            super(request, group, requestedAcct);
+        protected DeleteHandler(Element eAction, Group group, Account requestedAcct) {
+            super(eAction, group, requestedAcct);
         }
 
         @Override
@@ -137,8 +137,8 @@ public class DistributionListAction extends AccountDocumentHandler {
     
     private static class ModifyHandler extends DLActionHandler {
 
-        protected ModifyHandler(Element request, Group group, Account requestedAcct) {
-            super(request, group, requestedAcct);
+        protected ModifyHandler(Element eAction, Group group, Account requestedAcct) {
+            super(eAction, group, requestedAcct);
         }
         
         @Override
@@ -149,7 +149,7 @@ public class DistributionListAction extends AccountDocumentHandler {
         @Override
         void handle() throws ServiceException {
             Map<String, Object> attrs = AccountService.getAttrs(
-                    request, true, AccountConstants.A_N);
+                    eAction, true, AccountConstants.A_N);
             prov.modifyAttrs(group, attrs, true);    
             
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
@@ -160,8 +160,8 @@ public class DistributionListAction extends AccountDocumentHandler {
     
     private static class RenameHandler extends DLActionHandler {
 
-        protected RenameHandler(Element request, Group group, Account requestedAcct) {
-            super(request, group, requestedAcct);
+        protected RenameHandler(Element eAction, Group group, Account requestedAcct) {
+            super(eAction, group, requestedAcct);
         }
         
         @Override
@@ -171,7 +171,7 @@ public class DistributionListAction extends AccountDocumentHandler {
 
         @Override
         void handle() throws ServiceException {
-            Element eNewName = request.getElement(AccountConstants.E_NEW_NAME);
+            Element eNewName = eAction.getElement(AccountConstants.E_NEW_NAME);
             String newName = eNewName.getText();
             
             String oldName = group.getName();
@@ -185,8 +185,8 @@ public class DistributionListAction extends AccountDocumentHandler {
     
     private static class AddAliasHandler extends DLActionHandler {
 
-        protected AddAliasHandler(Element request, Group group, Account requestedAcct) {
-            super(request, group, requestedAcct);
+        protected AddAliasHandler(Element eAction, Group group, Account requestedAcct) {
+            super(eAction, group, requestedAcct);
         }
         
         @Override
@@ -196,7 +196,7 @@ public class DistributionListAction extends AccountDocumentHandler {
 
         @Override
         void handle() throws ServiceException {
-            String alias = request.getAttribute(AccountConstants.E_ALIAS);
+            String alias = eAction.getAttribute(AccountConstants.E_ALIAS);
             prov.addGroupAlias(group, alias);
             
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
@@ -207,8 +207,8 @@ public class DistributionListAction extends AccountDocumentHandler {
     
     private static class RemoveAliasHandler extends DLActionHandler {
 
-        protected RemoveAliasHandler(Element request, Group group, Account requestedAcct) {
-            super(request, group, requestedAcct);
+        protected RemoveAliasHandler(Element eAction, Group group, Account requestedAcct) {
+            super(eAction, group, requestedAcct);
         }
         
         @Override
@@ -218,7 +218,7 @@ public class DistributionListAction extends AccountDocumentHandler {
 
         @Override
         void handle() throws ServiceException {
-            String alias = request.getAttribute(AccountConstants.E_ALIAS);
+            String alias = eAction.getAttribute(AccountConstants.E_ALIAS);
             prov.removeGroupAlias(group, alias);
             
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
@@ -229,8 +229,8 @@ public class DistributionListAction extends AccountDocumentHandler {
     
     static class AddOwnerHandler extends DLActionHandler {
 
-        protected AddOwnerHandler(Element request, Group group, Account requestedAcct) {
-            super(request, group, requestedAcct);
+        protected AddOwnerHandler(Element eAction, Group group, Account requestedAcct) {
+            super(eAction, group, requestedAcct);
         }
         
         @Override
@@ -240,7 +240,7 @@ public class DistributionListAction extends AccountDocumentHandler {
 
         @Override
         void handle() throws ServiceException {
-            Element eOwner = request.getElement(AccountConstants.E_OWNER);
+            Element eOwner = eAction.getElement(AccountConstants.E_OWNER);
             GranteeType ownerType = GranteeType.fromCode(eOwner.getAttribute(AccountConstants.A_TYPE));
             GranteeBy ownerBy = GranteeBy.fromString(eOwner.getAttribute(AccountConstants.A_BY));
             String owner = eOwner.getText();
@@ -266,8 +266,8 @@ public class DistributionListAction extends AccountDocumentHandler {
     
     static class RemoveOwnerHandler extends DLActionHandler {
 
-        protected RemoveOwnerHandler(Element request, Group group, Account requestedAcct) {
-            super(request, group, requestedAcct);
+        protected RemoveOwnerHandler(Element eAction, Group group, Account requestedAcct) {
+            super(eAction, group, requestedAcct);
         }
         
         @Override
@@ -277,7 +277,7 @@ public class DistributionListAction extends AccountDocumentHandler {
 
         @Override
         void handle() throws ServiceException {
-            Element eOwner = request.getElement(AccountConstants.E_OWNER);
+            Element eOwner = eAction.getElement(AccountConstants.E_OWNER);
             GranteeType ownerType = GranteeType.fromCode(eOwner.getAttribute(AccountConstants.A_TYPE));
             GranteeBy ownerBy = GranteeBy.fromString(eOwner.getAttribute(AccountConstants.A_BY));
             String owner = eOwner.getText();
@@ -302,8 +302,8 @@ public class DistributionListAction extends AccountDocumentHandler {
     
     private static class AddMembersHandler extends DLActionHandler {
 
-        protected AddMembersHandler(Element request, Group group, Account requestedAcct) {
-            super(request, group, requestedAcct);
+        protected AddMembersHandler(Element eAction, Group group, Account requestedAcct) {
+            super(eAction, group, requestedAcct);
         }
         
         @Override
@@ -314,7 +314,7 @@ public class DistributionListAction extends AccountDocumentHandler {
         @Override
         void handle() throws ServiceException {
             List<String> memberList = new LinkedList<String>();
-            for (Element elem : request.listElements(AccountConstants.E_DLM)) {
+            for (Element elem : eAction.listElements(AccountConstants.E_DLM)) {
                 memberList.add(elem.getTextTrim());
             }
             
@@ -329,8 +329,8 @@ public class DistributionListAction extends AccountDocumentHandler {
     
     private static class RemoveMembersHandler extends DLActionHandler {
 
-        protected RemoveMembersHandler(Element request, Group group, Account requestedAcct) {
-            super(request, group, requestedAcct);
+        protected RemoveMembersHandler(Element eAction, Group group, Account requestedAcct) {
+            super(eAction, group, requestedAcct);
         }
         
         @Override
@@ -341,7 +341,7 @@ public class DistributionListAction extends AccountDocumentHandler {
         @Override
         void handle() throws ServiceException {
             List<String> memberList = new LinkedList<String>();
-            for (Element elem : request.listElements(AccountConstants.E_DLM)) {
+            for (Element elem : eAction.listElements(AccountConstants.E_DLM)) {
                 memberList.add(elem.getTextTrim());
             }
             

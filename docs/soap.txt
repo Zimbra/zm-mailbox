@@ -3798,13 +3798,13 @@ Notes:
 
 <DistributionListActionRequest>
   <dl by="id|name">...</dl>
-  <action op="delete|modify|rename|addAlias|removeAlias|addOwner|removeOwner|addMembers|removeMembers"/>
-  [<a n="...">...</a>+]
-  [<newName>{new-DL-name}</newName>]
-  [<alias>...</alias>]
-  [<owner type={owner-type} by="name|id}">{owner-name-or-id}</owner>]
-  [<dlm>{member}</dlm>+]
-  
+  <action op="delete|modify|rename|addAlias|removeAlias|addOwner|removeOwner|addMembers|removeMembers">
+      [<a n="...">...</a>+]
+      [<newName>{new-DL-name}</newName>]
+      [<alias>...</alias>]
+      [<owner type={owner-type} by="name|id}">{owner-name-or-id}</owner>]
+      [<dlm>{member}</dlm>+]
+  </action>
 <DistributionListActionRequest>
 
 Notes:

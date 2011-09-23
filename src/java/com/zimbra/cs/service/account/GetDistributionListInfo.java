@@ -40,7 +40,6 @@ public class GetDistributionListInfo extends AccountDocumentHandler {
         Element response = zsc.createElement(AccountConstants.GET_DISTRIBUTION_LIST_INFO_RESPONSE);
         
         // isMember
-        // TODO: handle external group
         boolean isMember = false;
         List<Group> groups = prov.getGroups(acct, false, null); // all groups the account is a member of
         for (Group inGroup : groups) {
