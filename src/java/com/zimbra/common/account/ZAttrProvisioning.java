@@ -6075,6 +6075,92 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMimeType = "zimbraMimeType";
 
     /**
+     * whether the Bluetooth capabilities are allowed on the device. The
+     * available options are Disable, HandsfreeOnly, and Allow. 0 - DISABLE 1
+     * - HANDSFREE 2 - ALLOW ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowBluetooth value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1285)
+    public static final String A_zimbraMobilePolicyAllowBluetooth = "zimbraMobilePolicyAllowBluetooth";
+
+    /**
+     * whether Microsoft Pocket Internet Explorer is allowed on the mobile
+     * phone. This parameter doesn&#039;t affect third-party browsers.
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowBrowser value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1300)
+    public static final String A_zimbraMobilePolicyAllowBrowser = "zimbraMobilePolicyAllowBrowser";
+
+    /**
+     * whether to allow camera on device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowCamera value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1278)
+    public static final String A_zimbraMobilePolicyAllowCamera = "zimbraMobilePolicyAllowCamera";
+
+    /**
+     * whether the device user can configure a personal e-mail account on the
+     * mobile phone. This parameter doesn&#039;t control access to e-mails
+     * using third-party mobile phone e-mail programs. ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowConsumerEmail value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1301)
+    public static final String A_zimbraMobilePolicyAllowConsumerEmail = "zimbraMobilePolicyAllowConsumerEmail";
+
+    /**
+     * whether the device can synchronize with a desktop computer through a
+     * cable; ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowDesktopSync value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1288)
+    public static final String A_zimbraMobilePolicyAllowDesktopSync = "zimbraMobilePolicyAllowDesktopSync";
+
+    /**
+     * whether HTML e-mail is enabled on the device. If set to 0, all e-mail
+     * will be converted to plain text before synchronization occurs. ignored
+     * if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowHTMLEmail value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1290)
+    public static final String A_zimbraMobilePolicyAllowHTMLEmail = "zimbraMobilePolicyAllowHTMLEmail";
+
+    /**
+     * whether the mobile device can be used as a modem to connect a computer
+     * to the Internet; ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowInternetSharing value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1303)
+    public static final String A_zimbraMobilePolicyAllowInternetSharing = "zimbraMobilePolicyAllowInternetSharing";
+
+    /**
+     * whether infrared connections are allowed to the device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowIrDA
+     * value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1286)
+    public static final String A_zimbraMobilePolicyAllowIrDA = "zimbraMobilePolicyAllowIrDA";
+
+    /**
      * whether to allow non-provisionable devices; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
      *
@@ -6093,6 +6179,27 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobilePolicyAllowPartialProvisioning = "zimbraMobilePolicyAllowPartialProvisioning";
 
     /**
+     * whether the user can configure a POP3 or IMAP4 e-mail account on the
+     * device. This parameter doesn&#039;t control access by third-party
+     * e-mail programs. ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowPOPIMAPEmail value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1284)
+    public static final String A_zimbraMobilePolicyAllowPOPIMAPEmail = "zimbraMobilePolicyAllowPOPIMAPEmail";
+
+    /**
+     * whether the mobile device can initiate a remote desktop connection;
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowRemoteDesktop value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1302)
+    public static final String A_zimbraMobilePolicyAllowRemoteDesktop = "zimbraMobilePolicyAllowRemoteDesktop";
+
+    /**
      * whether to allow simple password; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
      * zimbraMobileDevicePasswordEnabled=FALSE
@@ -6101,6 +6208,80 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=839)
     public static final String A_zimbraMobilePolicyAllowSimpleDevicePassword = "zimbraMobilePolicyAllowSimpleDevicePassword";
+
+    /**
+     * whether the messaging application on the device can negotiate the
+     * encryption algorithm if a recipient&#039;s certificate doesn&#039;t
+     * support the specified encryption algorithm; 0 - BlockNegotiation 1 -
+     * OnlyStrongAlgorithmNegotiation 2 - AllowAnyAlgorithmNegotiation
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation value is
+     * set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1298)
+    public static final String A_zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation = "zimbraMobilePolicyAllowSMIMEEncryptionAlgorithmNegotiation";
+
+    /**
+     * whether S/MIME software certificates are allowed; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowSMIMESoftCerts value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1299)
+    public static final String A_zimbraMobilePolicyAllowSMIMESoftCerts = "zimbraMobilePolicyAllowSMIMESoftCerts";
+
+    /**
+     * whether to allow removable storage on device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowStorageCard value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1277)
+    public static final String A_zimbraMobilePolicyAllowStorageCard = "zimbraMobilePolicyAllowStorageCard";
+
+    /**
+     * whether text messaging is allowed from the device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowTextMessaging value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1283)
+    public static final String A_zimbraMobilePolicyAllowTextMessaging = "zimbraMobilePolicyAllowTextMessaging";
+
+    /**
+     * whether unsigned applications are allowed on device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowUnsignedApplications value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1280)
+    public static final String A_zimbraMobilePolicyAllowUnsignedApplications = "zimbraMobilePolicyAllowUnsignedApplications";
+
+    /**
+     * whether unsigned installation packages are allowed on device; ignored
+     * if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyAllowUnsignedInstallationPackages value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1281)
+    public static final String A_zimbraMobilePolicyAllowUnsignedInstallationPackages = "zimbraMobilePolicyAllowUnsignedInstallationPackages";
+
+    /**
+     * whether wireless Internet access is allowed on the device; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyAllowWiFi
+     * value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1282)
+    public static final String A_zimbraMobilePolicyAllowWiFi = "zimbraMobilePolicyAllowWiFi";
 
     /**
      * whether to require alpha-numeric password as device pin; ignored if
@@ -6152,6 +6333,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobilePolicyDevicePasswordHistory = "zimbraMobilePolicyDevicePasswordHistory";
 
     /**
+     * the maximum range of calendar days that can be synchronized to the
+     * device; 0 - PAST ALL 4 - Two Weeks 5 - One Month 6 - Three Months 7 -
+     * Six Months ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyMaxCalendarAgeFilter value is set to -1, 1, 2 or, 3
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1289)
+    public static final String A_zimbraMobilePolicyMaxCalendarAgeFilter = "zimbraMobilePolicyMaxCalendarAgeFilter";
+
+    /**
      * number of consecutive incorrect pin input before device is wiped;
      * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
      * zimbraMobileDevicePasswordEnabled=FALSE
@@ -6160,6 +6352,37 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=845)
     public static final String A_zimbraMobilePolicyMaxDevicePasswordFailedAttempts = "zimbraMobilePolicyMaxDevicePasswordFailedAttempts";
+
+    /**
+     * the maximum number of days of e-mail items to synchronize to the
+     * device; 0 - PAST ALL 1 - One Day 2 - Three Days 3 - One Week 4 - Two
+     * Weeks 5 - One Month ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+     * or zimbraMobilePolicyMaxEmailAgeFilter value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1291)
+    public static final String A_zimbraMobilePolicyMaxEmailAgeFilter = "zimbraMobilePolicyMaxEmailAgeFilter";
+
+    /**
+     * the maximum size at which e-mail messages are truncated when
+     * synchronized to the device; The value is specified in kilobytes (KB).
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1292)
+    public static final String A_zimbraMobilePolicyMaxEmailBodyTruncationSize = "zimbraMobilePolicyMaxEmailBodyTruncationSize";
+
+    /**
+     * the maximum size at which HTML-formatted e-mail messages are
+     * synchronized to the devices. The value is specified in KB. ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1293)
+    public static final String A_zimbraMobilePolicyMaxEmailHTMLBodyTruncationSize = "zimbraMobilePolicyMaxEmailHTMLBodyTruncationSize";
 
     /**
      * max idle time in minutes before device is locked; ignored if
@@ -6209,6 +6432,66 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=836)
     public static final String A_zimbraMobilePolicyRefreshInterval = "zimbraMobilePolicyRefreshInterval";
+
+    /**
+     * whether encryption on device is required; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireDeviceEncryption value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1279)
+    public static final String A_zimbraMobilePolicyRequireDeviceEncryption = "zimbraMobilePolicyRequireDeviceEncryption";
+
+    /**
+     * whether you must encrypt S/MIME messages; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireEncryptedSMIMEMessages value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1295)
+    public static final String A_zimbraMobilePolicyRequireEncryptedSMIMEMessages = "zimbraMobilePolicyRequireEncryptedSMIMEMessages";
+
+    /**
+     * what required algorithm must be used when encrypting a message;
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1297)
+    public static final String A_zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm = "zimbraMobilePolicyRequireEncryptionSMIMEAlgorithm";
+
+    /**
+     * whether the mobile device must synchronize manually while roaming;
+     * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireManualSyncWhenRoaming value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1287)
+    public static final String A_zimbraMobilePolicyRequireManualSyncWhenRoaming = "zimbraMobilePolicyRequireManualSyncWhenRoaming";
+
+    /**
+     * what required algorithm must be used when signing a message; ignored
+     * if zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireSignedSMIMEAlgorithm value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1296)
+    public static final String A_zimbraMobilePolicyRequireSignedSMIMEAlgorithm = "zimbraMobilePolicyRequireSignedSMIMEAlgorithm";
+
+    /**
+     * whether the device must send signed S/MIME messages; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE or
+     * zimbraMobilePolicyRequireSignedSMIMEMessages value is set to -1
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1294)
+    public static final String A_zimbraMobilePolicyRequireSignedSMIMEMessages = "zimbraMobilePolicyRequireSignedSMIMEMessages";
 
     /**
      * indicates whether the application can forward original email as RFC
@@ -9835,22 +10118,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
