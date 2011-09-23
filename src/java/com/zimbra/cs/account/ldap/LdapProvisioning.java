@@ -172,7 +172,7 @@ public class LdapProvisioning extends LdapProv {
             Provisioning.A_zimbraMailDeliveryAddress,
     };
 
-    private static final String[] MINIMAL_DL_ATTRS = {
+    private static final String[] BASIC_DL_ATTRS = {
             Provisioning.A_cn,
             Provisioning.A_displayName,
             Provisioning.A_mail,
@@ -186,7 +186,9 @@ public class LdapProvisioning extends LdapProv {
             Provisioning.A_zimbraMailAlias,
             Provisioning.A_zimbraPrefReplyToAddress,
             Provisioning.A_zimbraPrefReplyToDisplay,
-            Provisioning.A_zimbraPrefReplyToEnabled
+            Provisioning.A_zimbraPrefReplyToEnabled,
+            Provisioning.A_zimbraDistributionListSubscriptionPolicy,
+            Provisioning.A_zimbraDistributionListUnsubscriptionPolicy,
     };
 
     @Override
@@ -4832,7 +4834,7 @@ public class LdapProvisioning extends LdapProv {
         }
         if (addrs.length > 1)
             sb.append(")");
-        String [] attrs = minimalData ? MINIMAL_DL_ATTRS : null;
+        String [] attrs = minimalData ? BASIC_DL_ATTRS : null;
 
         return (List<DistributionList>) searchAccountsInternal(sb.toString(), attrs, null,
                 true, Provisioning.SD_DISTRIBUTION_LIST_FLAG);
@@ -4942,11 +4944,11 @@ public class LdapProvisioning extends LdapProv {
         switch(keyType) {
             case id:
                 dl = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
-                        filterFactory.distributionListById(key), null, MINIMAL_DL_ATTRS);
+                        filterFactory.distributionListById(key), null, BASIC_DL_ATTRS);
                 break;
             case name:
                 dl = getDistributionListByQuery(mDIT.mailBranchBaseDN(),
-                        filterFactory.distributionListByName(key), null, MINIMAL_DL_ATTRS);
+                        filterFactory.distributionListByName(key), null, BASIC_DL_ATTRS);
                 break;
             default:
                return null;
@@ -7512,7 +7514,7 @@ public class LdapProvisioning extends LdapProv {
     private Group getGroupByQuery(ZLdapFilter filter, ZLdapContext initZlc, boolean basicAttrsOnly)
     throws ServiceException {
         try {
-            String[] returnAttrs = basicAttrsOnly ? MINIMAL_DL_ATTRS : null;
+            String[] returnAttrs = basicAttrsOnly ? BASIC_DL_ATTRS : null;
             ZSearchResultEntry sr = helper.searchForEntry(mDIT.mailBranchBaseDN(), filter, initZlc, false, returnAttrs);
             if (sr != null) {
                 ZAttributes attrs = sr.getAttributes();
@@ -7897,7 +7899,7 @@ public class LdapProvisioning extends LdapProv {
     private DynamicGroup getDynamicGroupByQuery(ZLdapFilter filter, ZLdapContext initZlc, boolean basicAttrsOnly)
             throws ServiceException {
         try {
-            String[] returnAttrs = basicAttrsOnly ? MINIMAL_DL_ATTRS : null;
+            String[] returnAttrs = basicAttrsOnly ? BASIC_DL_ATTRS : null;
             ZSearchResultEntry sr = helper.searchForEntry(mDIT.mailBranchBaseDN(), filter, initZlc, false, returnAttrs);
             if (sr != null) {
                 return makeDynamicGroup(sr.getDN(), sr.getAttributes());
