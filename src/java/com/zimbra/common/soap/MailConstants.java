@@ -1154,4 +1154,7 @@ public final class MailConstants {
     public static final String A_RETENTION_POLICY_TYPE = "type";
 
     public static final String E_WATCHER = "watcher";
+    
+    public static final String E_FILTER = "filter";
+    public static final String A_SESSION = "session";
 }
