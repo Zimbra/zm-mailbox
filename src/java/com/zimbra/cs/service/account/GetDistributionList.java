@@ -57,7 +57,9 @@ public class GetDistributionList extends AccountDocumentHandler {
         String key = d.getAttribute(AccountConstants.A_BY);
         String value = d.getText();
         
-        Group group = prov.getGroupBasic(Key.DistributionListBy.fromString(key), value);
+        // temporary fix for the caching bug
+        // Group group = prov.getGroupBasic(Key.DistributionListBy.fromString(key), value);
+        Group group = prov.getGroup(Key.DistributionListBy.fromString(key), value);
         
         if (group == null) {
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);
