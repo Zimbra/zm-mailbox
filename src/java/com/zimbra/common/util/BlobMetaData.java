@@ -25,7 +25,7 @@ import java.util.Map;
  * @since Apr 8, 2004
  * @author schemers
  */
-public class BlobMetaData {
+public final class BlobMetaData {
 
     public static void encodeMetaData(String name, String value, StringBuilder sb) {
         if (value == null) {
@@ -75,7 +75,7 @@ public class BlobMetaData {
             while (p < len && Character.isDigit(metaData.charAt(p))) {
                 p++;
             }
-            if (p > len || metaData.charAt(p) != ':') {
+            if (p >= len || metaData.charAt(p) != ':') {
                 throw new BlobMetaDataEncodingException("error decoding value length");
             }
 
@@ -92,7 +92,7 @@ public class BlobMetaData {
             p += value_len;
 
             // TODO: should throw an exception and remove the meta data from the DB
-            if ((p > len) || (metaData.charAt(p) != ';')) {
+            if (p >= len || metaData.charAt(p) != ';') {
                 throw new BlobMetaDataEncodingException("expecting ';' after value");
             }
             p++;

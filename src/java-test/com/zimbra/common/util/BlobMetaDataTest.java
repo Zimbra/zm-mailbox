@@ -24,7 +24,7 @@ import org.junit.Test;
  *
  * @author ysasaki
  */
-public class BlobMetaDataTest {
+public final class BlobMetaDataTest {
 
     @Test
     public void test() throws Exception {
@@ -47,5 +47,23 @@ public class BlobMetaDataTest {
         Assert.assertEquals(1L, BlobMetaData.getLong(map, "no", 1L));
         Assert.assertEquals(true, BlobMetaData.getBoolean(map, "no", true));
         Assert.assertEquals(false, BlobMetaData.getBoolean(map, "no", false));
+    }
+
+    @Test
+    public void lengthCorrupted() throws Exception {
+        try {
+            BlobMetaData.decode("x=10");
+            Assert.fail();
+        } catch (BlobMetaDataEncodingException expected) {
+        }
+    }
+
+    @Test
+    public void valueCorrupted() throws Exception {
+        try {
+            BlobMetaData.decode("x=1:x");
+            Assert.fail();
+        } catch (BlobMetaDataEncodingException expected) {
+        }
     }
 }
