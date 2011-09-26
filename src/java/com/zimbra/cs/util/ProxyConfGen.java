@@ -734,7 +734,7 @@ class ZMSSODefaultEnablerVar extends ProxyConfVar {
 class DomainAttrItem {
     public String domainName;
     public String virtualHostname;
-    public String virtualIPAddress;
+    public InetAddress virtualIPAddress;
     public String sslCertificate;
     public String sslPrivateKey;
     public Boolean useDomainServerCert;
@@ -742,7 +742,7 @@ class DomainAttrItem {
     public String clientCertMode;
     public String clientCertCa;
 
-    public DomainAttrItem(String dn, String vhn, String vip, String scrt, String spk, 
+    public DomainAttrItem(String dn, String vhn, InetAddress vip, String scrt, String spk, 
             String ccm, String cca) {
         this.domainName = dn;
         this.virtualHostname = vhn;
@@ -913,8 +913,7 @@ public class ProxyConfGen
                 try {
 
                     for( ; i < virtualHostnames.length; i++) {
-                        String vip = InetAddress.getByName(virtualHostnames[i])
-                                                    .getHostAddress();
+                        InetAddress vip = InetAddress.getByName(virtualHostnames[i]);
                         if (!ProxyConfUtil.isEmptyString(clientCertCA)){
 
                             createDomainSSLDirIfNotExists();
@@ -1135,13 +1134,11 @@ public class ProxyConfGen
 
     private static void fillVarsWithDomainAttrs(DomainAttrItem item)
             throws UnknownHostException, ProxyConfException {
-        InetAddress addr = null;
         String defaultVal = null;;
         mVars.put("vhn", item.virtualHostname);
-        addr = InetAddress.getByName(item.virtualIPAddress);
         if (getZimbraIPMode() != IPMode.BOTH) {
             if (getZimbraIPMode() == IPMode.IPV4_ONLY &&
-                        addr.getClass().equals(Inet6Address.class)) {
+                    item.virtualIPAddress instanceof Inet6Address) {
                 String msg = item.virtualIPAddress +
                         " is an IPv6 address but zimbraIPMode is 'ipv4'";
                 mLog.error(msg);
@@ -1149,7 +1146,7 @@ public class ProxyConfGen
             }
 
             if (getZimbraIPMode() == IPMode.IPV6_ONLY &&
-                        addr.getClass().equals(Inet4Address.class)) {
+                    item.virtualIPAddress instanceof Inet4Address) {
                 String msg = item.virtualIPAddress +
                         " is an IPv4 address but zimbraIPMode is 'ipv6'";
                 mLog.error(msg);
@@ -1157,13 +1154,12 @@ public class ProxyConfGen
             }
         }
 
-        if (addr.getClass().equals(Inet6Address.class) &&
-                    !item.virtualIPAddress.startsWith("[")) {
+        if (item.virtualIPAddress instanceof Inet6Address) {
             //ipv6 address has to be enclosed with [ ]
-            mVars.put("vip", "[" + item.virtualIPAddress + "]");
+            mVars.put("vip", "[" + item.virtualIPAddress.getHostAddress() + "]");
 
         } else {
-            mVars.put("vip", item.virtualIPAddress);
+            mVars.put("vip", item.virtualIPAddress.getHostAddress());
         }
 
 
