@@ -252,8 +252,28 @@ public class TestDefangFilter {
         
         
         Assert.assertNotNull(result);
-        
+        // Make sure the input got changed
         Assert.assertTrue(result.contains("dfsrc=\"http://www.google.com/intl/en_com/images/srpr/logo3w.png\""));
+    }
+    
+    /**
+     * Checks to ensure that we're properly swapping src to dfsrc for input tags as well.
+     * @throws Exception
+     */
+    @Test
+    public void testBug58889() throws Exception {
+        String fileName = "bug_58889.txt";
+        InputStream htmlStream = getHtmlBody(fileName);
+        Assert.assertNotNull(htmlStream);
+        
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+         // just make sure we made it here, as this was NPEing out..
+        
+        
+        Assert.assertNotNull(result);
+       
+        Assert.assertFalse(result.contains(" src=\"https://grepular.com/email_privacy_tester/"));
+        Assert.assertTrue(result.contains(" dfsrc=\"https://grepular.com/email_privacy_tester/"));
        
     }
     
