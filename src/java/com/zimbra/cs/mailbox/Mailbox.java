@@ -7145,6 +7145,7 @@ public class Mailbox {
 
             if (globalTimeout > 0) {
                 int numPurged = Folder.purgeMessages(this, null, getOperationTimestampMillis() - globalTimeout, null, false, false, maxItemsPerFolder);
+                ZimbraLog.purge.debug("Purged %d messages from All Folders", numPurged);
                 purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
             }
             if (trashTimeout > 0) {
