@@ -2217,6 +2217,10 @@ abstract class ImapHandler {
             //   The server MUST NOT unilaterally remove an existing mailbox name
             //   from the subscription list even if a mailbox by that name no
             //   longer exists.
+        } catch (AccountServiceException e) { // ignore NO_SUCH_ACCOUNT as well
+            if (!AccountServiceException.NO_SUCH_ACCOUNT.equals(e.getCode())) {
+                throw e;
+            }
         }
         if (pathMatches(path, pattern)) {
             hits.put(path, Boolean.TRUE);
