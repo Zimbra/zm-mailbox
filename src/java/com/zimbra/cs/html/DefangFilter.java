@@ -25,6 +25,8 @@ import org.apache.xerces.xni.XMLString;
 import org.apache.xerces.xni.XNIException;
 import org.cyberneko.html.filters.DefaultFilter;
 
+import com.google.common.base.Strings;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.regex.Pattern;
@@ -536,7 +538,7 @@ public class DefangFilter extends DefaultFilter {
                 attributes.removeAllAttributes();
             }
 
-            if (eName.equals("img")) {
+            if (eName.equals("img") || eName.equals("input")) {
                 fixUrlBase(attributes, "src");
             } else if (eName.equals("a") || eName.equals("area")) {
                 fixUrlBase(attributes, "href");                
@@ -548,10 +550,10 @@ public class DefangFilter extends DefaultFilter {
                 fixATag(attributes);
             }
             if (mNeuterImages) {
-                if(eName.equals("img") && 
-                 attributes.getValue("src") != null &&
-                 (VALID_EXT_URL.matcher(attributes.getValue("src")).find() || // check for valid urls, and definitely defang
-                 !VALID_INT_IMG.matcher(attributes.getValue("src")).find())) {
+                String srcValue = Strings.nullToEmpty(attributes.getValue("src"));
+                if((eName.equals("img") || eName.equals("input")) && 
+                 (VALID_EXT_URL.matcher(srcValue).find() || // check for valid urls, and definitely defang
+                 !VALID_INT_IMG.matcher(srcValue).find())) { 
                         neuterTag(attributes, "src");    
                 }
                 neuterTag(attributes, "background");
