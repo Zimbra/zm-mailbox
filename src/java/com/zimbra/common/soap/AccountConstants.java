@@ -222,6 +222,8 @@ public class AccountConstants {
     public static final String E_CERT = "cert";
     public static final String E_CERTS = "certs";
     public static final String E_DL = "dl";
+    public static final String E_DL_OWNER = "owner";
+    public static final String E_DL_OWNERS = "owners";
     public static final String E_DLM = "dlm";
     public static final String E_EMAIL = "email";
     public static final String E_EMAIL2 = "email2";
@@ -319,6 +321,7 @@ public class AccountConstants {
     public static final String A_STORE = "store";
     public static final String A_SMIME_STORE_LOOKUP_OPT = "storeLookupOpt";
     public static final String A_SMIME_SOURCE_LOOKUP_OPT = "sourceLookupOpt";
+    public static final String A_VIA = "via";
     
     // gal
     public static final String A_IS_GROUP = "isGroup";
