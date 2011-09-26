@@ -32,6 +32,13 @@ import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 
 public abstract class Group extends MailTarget implements AliasedEntry {
+    
+    public static final DistributionListSubscriptionPolicy 
+            DEFAULT_SUBSCRIPTION_POLICY = DistributionListSubscriptionPolicy.REJECT;
+    
+    public static final DistributionListUnsubscriptionPolicy 
+            DEFAULT_UNSUBSCRIPTION_POLICY = DistributionListUnsubscriptionPolicy.REJECT;
+    
     public Group(String name, String id, Map<String, Object> attrs, Provisioning prov) {
         super(name, id, attrs, null, prov);
     }
@@ -44,8 +51,26 @@ public abstract class Group extends MailTarget implements AliasedEntry {
     
     public abstract Set<String> getAllMembersSet() throws ServiceException;
     
-    public abstract DistributionListSubscriptionPolicy getDistributionListSubscriptionPolicy();
-    public abstract DistributionListUnsubscriptionPolicy getDistributionListUnsubscriptionPolicy();
+    abstract DistributionListSubscriptionPolicy getDistributionListSubscriptionPolicy();
+    abstract DistributionListUnsubscriptionPolicy getDistributionListUnsubscriptionPolicy();
+    
+    public DistributionListSubscriptionPolicy getSubscriptionPolicy() {
+        DistributionListSubscriptionPolicy policy = getDistributionListSubscriptionPolicy();
+        if (policy == null) {
+            return DEFAULT_SUBSCRIPTION_POLICY;
+        } else {
+            return policy;
+        }
+    }
+    
+    public DistributionListUnsubscriptionPolicy getUnsubscriptionPolicy() {
+        DistributionListUnsubscriptionPolicy policy = getDistributionListUnsubscriptionPolicy();
+        if (policy == null) {
+            return DEFAULT_UNSUBSCRIPTION_POLICY;
+        } else {
+            return policy;
+        }
+    }
 
     @Override
     public boolean isAddrOfEntry(String addr) {

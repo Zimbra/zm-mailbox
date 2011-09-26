@@ -225,12 +225,12 @@ public class SearchDirectory extends AdminDocumentHandler {
                     reqAttrs, aac.getAttrRightChecker((Account)entry));
         } else if (entry instanceof DistributionList) {
             GetDistributionList.encodeDistributionList(parent, (DistributionList)entry, false, 
-                    reqAttrs, aac.getAttrRightChecker((DistributionList)entry));
+                    false, reqAttrs, aac.getAttrRightChecker((DistributionList)entry));
         } else if (entry instanceof DynamicGroup) {
             // TODO: can combine DistributionList and DynamicGroup after aac.getAttrRightChecker
             // is fixed/implemented for DynamicGroup
             GetDistributionList.encodeDistributionList(parent, (DynamicGroup)entry, false, 
-                    reqAttrs, null);  // TODO: FIXME (aac.getAttrRightChecker)!!!
+                    false, reqAttrs, null);  // TODO: FIXME (aac.getAttrRightChecker)!!!
         } else if (entry instanceof Alias) {
             encodeAlias(parent, prov, (Alias)entry, reqAttrs);
         } else if (entry instanceof Domain) {

@@ -15,9 +15,11 @@
 
 package com.zimbra.cs.service.account;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -32,6 +34,22 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetDistributionList extends AccountDocumentHandler {
+    
+    private static final Set<String> OWNER_ATTRS = Sets.newHashSet(
+            Provisioning.A_description,
+            Provisioning.A_displayName,
+            Provisioning.A_mail,
+            Provisioning.A_zimbraHideInGal,
+            Provisioning.A_zimbraIsAdminGroup,
+            Provisioning.A_zimbraLocale,
+            Provisioning.A_zimbraMailAlias,
+            Provisioning.A_zimbraMailStatus,
+            Provisioning.A_zimbraPrefReplyToAddress,
+            Provisioning.A_zimbraPrefReplyToDisplay,
+            Provisioning.A_zimbraPrefReplyToEnabled);
+    
+    // not used for now
+    private static final Set<String> NON_OWNER_ATTRS = Sets.newHashSet();
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         
@@ -39,14 +57,48 @@ public class GetDistributionList extends AccountDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
         Account acct = getRequestedAccount(zsc);
         
-        Group group = GetDistributionList.getGroup(request, acct, prov);
-        
-        Set<String> reqAttrs = getReqAttrs(request, 
-                group.isDynamic() ?  AttributeClass.group : AttributeClass.distributionList);
+        Group group = GetDistributionList.getGroup(request, prov);
+
+        boolean isOwner = GetDistributionList.isOwner(acct, group);
         
         Element response = zsc.createElement(AccountConstants.GET_DISTRIBUTION_LIST_RESPONSE);
-        com.zimbra.cs.service.admin.GetDistributionList.encodeDistributionList(
-                response, group, true, reqAttrs, null);
+        
+        // isMember
+        boolean isMember = false;
+        List<Group> groups = prov.getGroups(acct, false, null); // all groups the account is a member of
+        for (Group inGroup : groups) {
+            if (inGroup.getId().equalsIgnoreCase(group.getId())) {
+                isMember = true;
+                break;
+            }
+        }
+        response.addAttribute(AccountConstants.A_IS_MEMBER, isMember);  
+        response.addAttribute(AccountConstants.A_IS_OWNER, isOwner);
+        
+        boolean needOwners = request.getAttributeBool(AccountConstants.A_NEED_OWNERS, false);
+        
+        Element eDL;
+        if (isOwner) {
+            eDL = com.zimbra.cs.service.admin.GetDistributionList.encodeDistributionList(
+                response, group, true, !needOwners, OWNER_ATTRS, null);
+        } else {
+            // set encodeAttrs to false fow now since we don't need to return any attr 
+            // other than subscription policies for non owners for now
+            eDL = com.zimbra.cs.service.admin.GetDistributionList.encodeDistributionList(
+                    response, group, true, !needOwners, false, null, null);
+        }
+        
+        // always return subscription policies, they are not included in required attrs 
+        // because we want to  retun a default value if they are not set.
+        //
+        // subscription policies are encoded here using Group API that returns 
+        // default policy if the policy attrs are not set.
+        eDL.addElement(AccountConstants.E_A).
+                addAttribute(AccountConstants.A_N, Provisioning.A_zimbraDistributionListSubscriptionPolicy).
+                setText(group.getSubscriptionPolicy().name());
+        eDL.addElement(AccountConstants.E_A).
+                addAttribute(AccountConstants.A_N, Provisioning.A_zimbraDistributionListUnsubscriptionPolicy).
+                setText(group.getUnsubscriptionPolicy().name()); 
 
         return response;
     }
@@ -72,12 +124,16 @@ public class GetDistributionList extends AccountDocumentHandler {
     throws ServiceException {
         Group group = getGroup(request, prov);
         
-        if (!AccessManager.getInstance().canAccessGroup(acct, group)) {
+        if (!isOwner(acct, group)) {
             throw ServiceException.PERM_DENIED(
                     "you do not have sufficient rights to access this distribution list");
         }
         
         return group;
+    }
+    
+    private static boolean isOwner(Account acct, Group group) throws ServiceException {
+        return AccessManager.getInstance().canAccessGroup(acct, group);
     }
 }
 

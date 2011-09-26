@@ -1,3 +1,17 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2011 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.service.account;
 
 import java.io.ByteArrayInputStream;
@@ -8,7 +22,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -39,70 +52,54 @@ import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.accesscontrol.ACLUtil;
-import com.zimbra.cs.account.accesscontrol.Right;
-import com.zimbra.cs.account.accesscontrol.ZimbraACE;
-import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.account.type.DistributionListSubscribeOp;
+import com.zimbra.soap.account.type.DistributionListSubscribeStatus;
 
 public class SubscribeDistributionList extends AccountDocumentHandler {
-    
-    private enum SubscribeOp {
-        subscribe,
-        unsubscribe;
-        
-        private static SubscribeOp fromString(String str) throws ServiceException {
-            try {
-                return SubscribeOp.valueOf(str);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("invalid op: " + str, e);
-            }
-        }
-    }
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         Group group = GetDistributionList.getGroup(request, prov);
         
-        SubscribeOp op = SubscribeOp.fromString(request.getAttribute(AccountConstants.A_OP));
+        DistributionListSubscribeOp op = DistributionListSubscribeOp.fromString(request.getAttribute(AccountConstants.A_OP));
         
         Account acct = getRequestedAccount(zsc);
         String[] members = new String[]{acct.getName()};
         
+        DistributionListSubscribeStatus status = null;
         boolean accepted = false;
-        if (op == SubscribeOp.subscribe) {
-            DistributionListSubscriptionPolicy policy = group.getDistributionListSubscriptionPolicy();
-            if (policy == null) {
-                policy = CreateDistributionList.DEFAULT_SUBSCRIPTION_POLICY;
-            }
+        if (op == DistributionListSubscribeOp.subscribe) {
+            DistributionListSubscriptionPolicy policy = group.getSubscriptionPolicy();
             
             if (policy == DistributionListSubscriptionPolicy.ACCEPT) {
                 prov.addGroupMembers(group, members);
                 accepted = true;
+                status = DistributionListSubscribeStatus.subscribed;
             } else if (policy == DistributionListSubscriptionPolicy.REJECT) {
                 throw ServiceException.PERM_DENIED("subscription policy for group " + group.getName() + " is reject");
             } else { // REQUEST APPROAVAL
                 ApprovalSender sender = new ApprovalSender(prov, group, acct, op);
                 sender.composeAndSend();
+                status = DistributionListSubscribeStatus.awaiting_approval;
             }
             
         } else {
-            DistributionListUnsubscriptionPolicy policy = group.getDistributionListUnsubscriptionPolicy();
-            if (policy == null) {
-                policy = CreateDistributionList.DEFAULT_UNSUBSCRIPTION_POLICY;
-            }
+            DistributionListUnsubscriptionPolicy policy = group.getUnsubscriptionPolicy();
             
             if (policy == DistributionListUnsubscriptionPolicy.ACCEPT) {
                 prov.removeGroupMembers(group, members);
                 accepted = true;
+                status = DistributionListSubscribeStatus.unsubscribed;
             } else if (policy == DistributionListUnsubscriptionPolicy.REJECT) {
                 throw ServiceException.PERM_DENIED("un-subscription policy for group " + group.getName() + " is reject");
             } else { // REQUEST APPROAVAL
                 ApprovalSender sender = new ApprovalSender(prov, group, acct, op);
                 sender.composeAndSend();
+                status = DistributionListSubscribeStatus.awaiting_approval;
             }
             
         }
@@ -115,7 +112,8 @@ public class SubscribeDistributionList extends AccountDocumentHandler {
         }
         
         Element response = zsc.createElement(AccountConstants.SUBSCRIBE_DISTRIBUTION_LIST_RESPONSE);
-
+        response.addAttribute(AccountConstants.A_STATUS, status.name());
+        
         return response;
     }
     
@@ -123,9 +121,10 @@ public class SubscribeDistributionList extends AccountDocumentHandler {
         private Provisioning prov;
         private Group group;
         private Account requestingAcct;
-        private SubscribeOp op;
+        private DistributionListSubscribeOp op;
         
-        private ApprovalSender(Provisioning prov, Group group, Account requestingAcct, SubscribeOp op) {
+        private ApprovalSender(Provisioning prov, Group group, Account requestingAcct, 
+                DistributionListSubscribeOp op) {
             this.prov = prov;
             this.group = group;
             this.requestingAcct = requestingAcct;
@@ -233,7 +232,7 @@ public class SubscribeDistributionList extends AccountDocumentHandler {
         private String textPart(Locale locale) {
             StringBuilder sb = new StringBuilder();
 
-            MsgKey msgKey = SubscribeOp.subscribe == op ? MsgKey.groupSubscriptionAppravalText :
+            MsgKey msgKey = DistributionListSubscribeOp.subscribe == op ? MsgKey.groupSubscriptionAppravalText :
                 MsgKey.groupUnsubscriptionAppravalText;
             
             sb.append("\n");

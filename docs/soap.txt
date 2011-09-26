@@ -3771,11 +3771,11 @@ Notes:
   
 -----------------------------  
 
-<GetDistributionListRequest [attrs="{req-attrs}"]>
+<GetDistributionListRequest needOwners="1|0">
   <dl by="id|name">...</dl>
 </GetDistributionListRequest>
 
-<GetDistributionListResponse>
+<GetDistributionListResponse isOwner="1" isMember="1">
   <dl name="{name}" id="{id}" dynamic="1|0">
     <owners>
       <owner type="{owner-type}" id="{owner-id}" name="{owner-name}"/>+
@@ -3785,14 +3785,15 @@ Notes:
 </GetDistributionListResponse>
 
 Notes:
-   authed account must be one of the list owners
+   If the authed account is one of the list owners, all (requested) attributes of the DL 
+   are returned in the response.  Otherwise only attributes visible and useful to  
+   non-owners are returned.
    
-   req-attrs = comma-seperated list of attrs to return
    dynamic = whether this is a dynamic distribution list
-   owner-type= = usr | grp | egp
-                 usr: a Zimbra internal user
-                 grp: a Zimbra internal group
-                 egp: an external AD group
+   owner-type = usr | grp | egp
+                usr: a Zimbra internal user
+                grp: a Zimbra internal group
+                egp: an external AD group
 
 -----------------------------  
 
@@ -3834,10 +3835,12 @@ Notes:
   <dl by="id|name">...</dl>
 </SubscribeDistributionListRequest>  
 
-  op = subscribe: subscribe the requested account to the list
+{op} = subscribe: subscribe the requested account to the list
        unsubscribe: unsubscribe the requested account from the list
        
-<SubscribeDistributionListResponse/>
+<SubscribeDistributionListResponse status={status}/>
+
+{status} = subscribed | unsubscribed | awaiting_approval;  
    
 -----------------------------  
 
@@ -3858,18 +3861,4 @@ Notes:
                 
 
 ----------------------------- 
-
-<GetDistributionListInfoRequest needOwners="1|0">
-  <dl by="id|name">...</dl>
-</GetDistributionListInfoRequest> 
-
-<GetDistributionListInfoResponse isOwner="1" isMember="1"> 
-  [<owners>
-    <owner type="{owner-type}" id="{owner-id}" name="{owner-name}"/>+
-  </owners>]
-<GetDistributionListInfoResponse> 
-
-{needOwners} = 1: return all owners of the group
-               0 (default): do not return owners
-               
-<owners> are presented in the resposne only when requested.              
+              

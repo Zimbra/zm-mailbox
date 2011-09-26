@@ -32,12 +32,6 @@ import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class CreateDistributionList extends AccountDocumentHandler {
-    
-    static final DistributionListSubscriptionPolicy 
-            DEFAULT_SUBSCRIPTION_POLICY = DistributionListSubscriptionPolicy.REJECT;
-    
-    static final DistributionListUnsubscriptionPolicy 
-            DEFAULT_UNSUBSCRIPTION_POLICY = DistributionListUnsubscriptionPolicy.REJECT;
 
     public Element handle(Element request, Map<String, Object> context) 
     throws ServiceException {
@@ -53,17 +47,6 @@ public class CreateDistributionList extends AccountDocumentHandler {
         }
         
         Map<String, Object> attrs = AccountService.getAttrs(request, true, AccountConstants.A_N);
-        
-        if (attrs.get(Provisioning.A_zimbraDistributionListSubscriptionPolicy) == null) {
-            attrs.put(Provisioning.A_zimbraDistributionListSubscriptionPolicy, 
-                    DEFAULT_SUBSCRIPTION_POLICY.name());
-        }
-        
-        if (attrs.get(Provisioning.A_zimbraDistributionListUnsubscriptionPolicy) == null) {
-            attrs.put(Provisioning.A_zimbraDistributionListUnsubscriptionPolicy, 
-                    DEFAULT_UNSUBSCRIPTION_POLICY.name());
-        }
-        
         
         boolean dynamic = request.getAttributeBool(AccountConstants.A_DYNAMIC, false);
         

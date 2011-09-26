@@ -16,8 +16,9 @@ package com.zimbra.cs.service.account;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import com.zimbra.common.account.Key.DistributionListBy;
+import com.google.common.collect.Sets;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -56,9 +57,22 @@ public class GetDistributionListInfo extends AccountDocumentHandler {
         response.addAttribute(AccountConstants.A_IS_OWNER, isOwner);
         
         boolean needOwners = request.getAttributeBool(AccountConstants.A_NEED_OWNERS, false);
-        if (needOwners) {
-            com.zimbra.cs.service.admin.GetDistributionList.encodeOwners(response, group);
-        }
+        Set<String> reqAttrs = Sets.newHashSet();
+        reqAttrs.add(Provisioning.A_zimbraDistributionListSubscriptionPolicy);
+        reqAttrs.add(Provisioning.A_zimbraDistributionListUnsubscriptionPolicy);
+        
+        // do not encode attrs in encodeDistributionList
+        // subscription policies are encoded here using Group API that returns 
+        // default policy if the policy attrs are not set.
+        Element eDL = com.zimbra.cs.service.admin.GetDistributionList.encodeDistributionList(
+                response, group, true, !needOwners, false, reqAttrs, null);
+        eDL.addElement(AccountConstants.E_A).
+                addAttribute(AccountConstants.A_N, Provisioning.A_zimbraDistributionListSubscriptionPolicy).
+                setText(group.getSubscriptionPolicy().name());
+        eDL.addElement(AccountConstants.E_A).
+            addAttribute(AccountConstants.A_N, Provisioning.A_zimbraDistributionListUnsubscriptionPolicy).
+            setText(group.getUnsubscriptionPolicy().name()); 
+        
         return response;
     }
 

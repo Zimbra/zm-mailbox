@@ -90,7 +90,7 @@ public class GetDistributionList extends AdminDocumentHandler {
         }
         
         Element response = zsc.createElement(AdminConstants.GET_DISTRIBUTION_LIST_RESPONSE);
-        Element eDL = encodeDistributionList(response, group, true, reqAttrs, arc);
+        Element eDL = encodeDistributionList(response, group, true, false, reqAttrs, arc);
                 
         // return member info only if the authed has right to see zimbraMailForwardingAddress
         boolean allowMembers = true;
@@ -137,31 +137,43 @@ public class GetDistributionList extends AdminDocumentHandler {
 
     public static Element encodeDistributionList(Element e, Group group) 
     throws ServiceException {
-        return encodeDistributionList(e, group, true, null, null);
+        return encodeDistributionList(e, group, true, false, null, null);
     }
     
     public static Element encodeDistributionList(Element e, Group group, 
-            boolean hideMembers, Set<String> reqAttrs, AttrRightChecker attrRightChecker) 
+            boolean hideMembers, boolean hideOwners, Set<String> reqAttrs, 
+            AttrRightChecker attrRightChecker) throws ServiceException {
+        return encodeDistributionList(e, group, hideMembers, hideOwners, true, 
+                reqAttrs, attrRightChecker);
+    }
+    
+    public static Element encodeDistributionList(Element e, Group group, 
+            boolean hideMembers, boolean hideOwners, boolean encodeAttrs, 
+            Set<String> reqAttrs, AttrRightChecker attrRightChecker) 
     throws ServiceException {
         Element eDL = e.addElement(AdminConstants.E_DL);
         eDL.addAttribute(AdminConstants.A_NAME, group.getUnicodeName());
         eDL.addAttribute(AdminConstants.A_ID,group.getId());
         eDL.addAttribute(AdminConstants.A_DYNAMIC, group.isDynamic());
-        
-        Set<String> hideAttrs = null;
-        if (hideMembers) {
-            hideAttrs = new HashSet<String>();
-            if (group.isDynamic()) {
-                hideAttrs.add(Provisioning.A_member);
-            } else {
-                hideAttrs.add(Provisioning.A_zimbraMailForwardingAddress);
-            }
+                
+        if (!hideOwners) {
+            encodeOwners(eDL, group);
         }
         
-        encodeOwners(eDL, group);
-        
-        ToXML.encodeAttrs(eDL, group.getUnicodeAttrs(), 
-                AdminConstants.A_N, reqAttrs, hideAttrs, attrRightChecker);
+        if (encodeAttrs) {
+            Set<String> hideAttrs = null;
+            if (hideMembers) {
+                hideAttrs = new HashSet<String>();
+                if (group.isDynamic()) {
+                    hideAttrs.add(Provisioning.A_member);
+                } else {
+                    hideAttrs.add(Provisioning.A_zimbraMailForwardingAddress);
+                }
+            }
+    
+            ToXML.encodeAttrs(eDL, group.getUnicodeAttrs(), 
+                    AdminConstants.A_N, reqAttrs, hideAttrs, attrRightChecker);
+        }
         
         return eDL;
     }
