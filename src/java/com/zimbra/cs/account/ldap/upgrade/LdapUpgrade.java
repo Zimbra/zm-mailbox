@@ -30,6 +30,8 @@ import com.zimbra.cs.ldap.LdapClient;
 
 public class LdapUpgrade {
 
+    private static final LdapUpgradePrinter printer = new LdapUpgradePrinter();
+    
     private static String O_HELP = "h";
     private static String O_BUG = "b";
     private static String O_DESCRIBE ="d";
@@ -53,7 +55,6 @@ public class LdapUpgrade {
     }
     
     static void usage(ParseException e, UpgradeOp upgradeOp, String errMsg) {
-        LdapUpgradePrinter printer = upgradeOp.printer;
         
         if (e != null) {
             printer.println("Error parsing command line arguments: " + e.getMessage());
@@ -95,8 +96,6 @@ public class LdapUpgrade {
     
     // public for unittest
     public static void upgrade(String[] args) throws ServiceException {
-        LdapUpgradePrinter printer = new LdapUpgradePrinter();
-        
         printer.println("\n\n--------------");
         printer.print(LdapUpgrade.class.getCanonicalName() + " ");
         for (String arg : args) {
@@ -156,6 +155,10 @@ public class LdapUpgrade {
     
     /*
      * zmjava com.zimbra.cs.account.ldap.upgrade.LdapUpgrade -b <bug number>
+     * 
+     * or 
+     * 
+     * zmldapupgrade -b <bug number>
      */
     public static void main(String[] args) throws ServiceException {
         if (LdapClient.isLegacy()) {

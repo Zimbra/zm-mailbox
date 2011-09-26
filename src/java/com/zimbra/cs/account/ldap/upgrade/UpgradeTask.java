@@ -54,7 +54,8 @@ public enum UpgradeTask {
     BUG_58481(BUG_58481.class),
     BUG_58514(BUG_58514.class),
     BUG_59720(BUG_59720.class),
-    BUG_63475(BUG_63475.class);
+    BUG_63475(BUG_63475.class),
+    BUG_63722(BUG_63722.class);
 
     
     private Class<? extends UpgradeOp> upgradeOpClass;
