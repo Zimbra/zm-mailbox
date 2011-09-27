@@ -106,8 +106,8 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 MailItem.Type sharedFolderView = null;
                 for (String sharedItem : sharedItems) {
                     ShareInfoData sid = AclPushSerializer.deserialize(sharedItem);
-                    if (sid.getFolderId() == sharedFolderId) {
-                        sharedFolderPath = sid.getFolderPath();
+                    if (sid.getItemId() == sharedFolderId) {
+                        sharedFolderPath = sid.getPath();
                         sharedFolderView = sid.getFolderDefaultViewCode();
                         break;
                     }
@@ -270,10 +270,10 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                             extUserEmail.equalsIgnoreCase(shareData.getGranteeId()))) {
                         continue;
                     }
-                    String sharedFolderPath = shareData.getFolderPath();
+                    String sharedFolderPath = shareData.getPath();
                     String mountpointName = getMountpointName(account, sharedFolderPath);
                     Mountpoint mtpt = granteeMbox.createMountpoint(
-                            null, Mailbox.ID_FOLDER_USER_ROOT, mountpointName, account.getId(), shareData.getFolderId(),
+                            null, Mailbox.ID_FOLDER_USER_ROOT, mountpointName, account.getId(), shareData.getItemId(),
                             shareData.getFolderDefaultViewCode(), 0, MailItem.DEFAULT_COLOR, false);
                     if (shareData.getFolderDefaultViewCode() == MailItem.Type.APPOINTMENT) {
                         // make sure that the mountpoint is checked in the UI by default

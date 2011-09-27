@@ -27,10 +27,11 @@ public class ShareInfoData {
     private String mOwnerAcctEmail;
     private String mOwnerAcctDisplayName;
 
-    // folder
-    private int mFolderId;
-    private String mFolderPath;
+    // item
+    private int mItemId;
+    private String mPath;
     private MailItem.Type folderDefaultView;
+    private MailItem.Type type;
 
     // rights
     private short mRights;
@@ -97,28 +98,26 @@ public class ShareInfoData {
         return mOwnerAcctDisplayName;
     }
 
-
-
-    public void setFolderId(int folderId) {
-        mFolderId = folderId;
+    public void setItemId(int itemId) {
+        mItemId = itemId;
     }
 
-    public int getFolderId() {
-        return mFolderId;
+    public int getItemId() {
+        return mItemId;
     }
 
-    public void setFolderPath(String folderPath) {
-        mFolderPath = folderPath;
+    public void setPath(String path) {
+        mPath = path;
     }
 
-    public String getFolderPath() {
-        return mFolderPath;
+    public String getPath() {
+        return mPath;
     }
 
-    // returns the leaf folder name
-    public String getFolderName() {
-        String[] fn = mFolderPath.split("/");
-        return fn.length > 0 ? fn[fn.length - 1] : mFolderPath;
+    // returns the leaf name
+    public String getName() {
+        String[] fn = mPath.split("/");
+        return fn.length > 0 ? fn[fn.length - 1] : mPath;
     }
 
     public void setFolderDefaultView(MailItem.Type view) {
@@ -131,6 +130,14 @@ public class ShareInfoData {
 
     public MailItem.Type getFolderDefaultViewCode() {
         return folderDefaultView;
+    }
+    
+    public void setType(MailItem.Type type) {
+        this.type = type;
+    }
+    
+    public MailItem.Type getType() {
+        return type;
     }
 
     public void setRights(short rights) {
@@ -233,8 +240,8 @@ public class ShareInfoData {
         sid.setOwnerAcctId(sInfo.getOwnerId());
         sid.setOwnerAcctEmail(sInfo.getOwnerEmail());
         sid.setOwnerAcctDisplayName(sInfo.getOwnerDisplayName());
-        sid.setFolderId(sInfo.getFolderId());
-        sid.setFolderPath(sInfo.getFolderPath());
+        sid.setItemId(sInfo.getFolderId());
+        sid.setPath(sInfo.getFolderPath());
         sid.setFolderDefaultView(MailItem.Type.of(sInfo.getDefaultView()));
         sid.setRights(ACL.stringToRights(sInfo.getRights()));
         sid.setGranteeType(ACL.stringToType(sInfo.getGranteeType()));
@@ -252,8 +259,8 @@ public class ShareInfoData {
         sid.setOwnerAcctId(eShare.getAttribute(AccountConstants.A_OWNER_ID, null));
         sid.setOwnerAcctEmail(eShare.getAttribute(AccountConstants.A_OWNER_EMAIL, null));
         sid.setOwnerAcctDisplayName(eShare.getAttribute(AccountConstants.A_OWNER_DISPLAY_NAME, null));
-        sid.setFolderId(Integer.valueOf(eShare.getAttribute(AccountConstants.A_FOLDER_ID)));
-        sid.setFolderPath(eShare.getAttribute(AccountConstants.A_FOLDER_PATH, null));
+        sid.setItemId(Integer.valueOf(eShare.getAttribute(AccountConstants.A_FOLDER_ID)));
+        sid.setPath(eShare.getAttribute(AccountConstants.A_FOLDER_PATH, null));
         sid.setFolderDefaultView(MailItem.Type.of(eShare.getAttribute(MailConstants.A_DEFAULT_VIEW, null)));
         sid.setRights(ACL.stringToRights(eShare.getAttribute(AccountConstants.A_RIGHTS)));
         sid.setGranteeType(ACL.stringToType(eShare.getAttribute(AccountConstants.A_GRANTEE_TYPE)));
@@ -271,8 +278,8 @@ public class ShareInfoData {
         eShare.addAttribute(AccountConstants.A_OWNER_ID,             getOwnerAcctId());
         eShare.addAttribute(AccountConstants.A_OWNER_EMAIL,          getOwnerAcctEmail());
         eShare.addAttribute(AccountConstants.A_OWNER_DISPLAY_NAME,   getOwnerAcctDisplayName());
-        eShare.addAttribute(AccountConstants.A_FOLDER_ID,            getFolderId());
-        eShare.addAttribute(AccountConstants.A_FOLDER_PATH,          getFolderPath());
+        eShare.addAttribute(AccountConstants.A_FOLDER_ID,            getItemId());
+        eShare.addAttribute(AccountConstants.A_FOLDER_PATH,          getPath());
         eShare.addAttribute(MailConstants.A_DEFAULT_VIEW,            getFolderDefaultView());
         eShare.addAttribute(AccountConstants.A_RIGHTS,               getRights());
         eShare.addAttribute(AccountConstants.A_GRANTEE_TYPE,         getGranteeType());
@@ -294,9 +301,9 @@ public class ShareInfoData {
         sb.append(String.format(
                 format, "owner display",   getOwnerAcctDisplayName()));
         sb.append(String.format(
-                format, "folder id",       String.valueOf(getFolderId())));
+                format, "folder id",       String.valueOf(getItemId())));
         sb.append(String.format(
-                format, "folder path",     getFolderPath()));
+                format, "folder path",     getPath()));
         sb.append(String.format(
                 format, "view",            getFolderDefaultView()));
         sb.append(String.format(

@@ -6542,18 +6542,18 @@ public class Mailbox {
         return mi.getFlagString();
     }
 
-    public ACL.Grant grantAccess(OperationContext octxt, int folderId, String grantee, byte granteeType, short rights,
+    public ACL.Grant grantAccess(OperationContext octxt, int itemId, String grantee, byte granteeType, short rights,
             String args) throws ServiceException {
-        GrantAccess redoPlayer = new GrantAccess(mId, folderId, grantee, granteeType, rights, args);
+        GrantAccess redoPlayer = new GrantAccess(mId, itemId, grantee, granteeType, rights, args);
 
         boolean success = false;
         ACL.Grant grant = null;
         try {
             beginTransaction("grantAccess", octxt, redoPlayer);
 
-            Folder folder = getFolderById(folderId);
-            checkItemChangeID(folder);
-            grant = folder.grantAccess(grantee, granteeType, rights, args);
+            MailItem item = getItemById(itemId, Type.UNKNOWN);
+            checkItemChangeID(item);
+            grant = item.grantAccess(grantee, granteeType, rights, args);
             success = true;
         } finally {
             endTransaction(success);
@@ -6561,32 +6561,32 @@ public class Mailbox {
         return grant;
     }
 
-    public void revokeAccess(OperationContext octxt, int folderId, String grantee) throws ServiceException {
-        RevokeAccess redoPlayer = new RevokeAccess(mId, folderId, grantee);
+    public void revokeAccess(OperationContext octxt, int itemId, String grantee) throws ServiceException {
+        RevokeAccess redoPlayer = new RevokeAccess(mId, itemId, grantee);
 
         boolean success = false;
         try {
             beginTransaction("revokeAccess", octxt, redoPlayer);
 
-            Folder folder = getFolderById(folderId);
-            checkItemChangeID(folder);
-            folder.revokeAccess(grantee);
+            MailItem item = getItemById(itemId, Type.UNKNOWN);
+            checkItemChangeID(item);
+            item.revokeAccess(grantee);
             success = true;
         } finally {
             endTransaction(success);
         }
     }
 
-    public void setPermissions(OperationContext octxt, int folderId, ACL acl) throws ServiceException {
-        SetPermissions redoPlayer = new SetPermissions(mId, folderId, acl);
+    public void setPermissions(OperationContext octxt, int itemId, ACL acl) throws ServiceException {
+        SetPermissions redoPlayer = new SetPermissions(mId, itemId, acl);
 
         boolean success = false;
         try {
             beginTransaction("setPermissions", octxt, redoPlayer);
 
-            Folder folder = getFolderById(folderId);
-            checkItemChangeID(folder);
-            folder.setPermissions(acl);
+            MailItem item = getItemById(itemId, Type.UNKNOWN);
+            checkItemChangeID(item);
+            item.setPermissions(acl);
             success = true;
         } finally {
             endTransaction(success);

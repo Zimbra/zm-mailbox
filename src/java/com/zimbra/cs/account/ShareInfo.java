@@ -133,7 +133,7 @@ public class ShareInfo {
         StringBuilder sb = new StringBuilder();
         sb.append(mData.getOwnerAcctId());
         sb.append(S_DELIMITER);
-        sb.append(mData.getFolderId());
+        sb.append(mData.getItemId());
 
         return sb.toString();
     }
@@ -146,7 +146,7 @@ public class ShareInfo {
         }
 
         mData.setOwnerAcctId(parts[0]);
-        mData.setFolderId(Integer.valueOf(parts[1]));
+        mData.setItemId(Integer.valueOf(parts[1]));
 
         String encodedMetadata = parts[2];
         mGrants = new MetadataList(encodedMetadata);
@@ -380,8 +380,8 @@ public class ShareInfo {
                     si.mData.setOwnerAcctId(ownerAcct.getId());
                     si.mData.setOwnerAcctEmail(ownerAcct.getName());
                     si.mData.setOwnerAcctDisplayName(ownerAcct.getDisplayName());
-                    si.mData.setFolderId(folder.getId());
-                    si.mData.setFolderPath(folder.getPath());
+                    si.mData.setItemId(folder.getId());
+                    si.mData.setPath(folder.getPath());
                     si.mData.setFolderDefaultView(folder.getDefaultView());
                     si.mData.setRights(grant.getGrantedRights());
                     si.mData.setGranteeType(grant.getGranteeType());
@@ -559,7 +559,7 @@ public class ShareInfo {
             String guestUrl = null;
             if (sid.getGranteeTypeCode() == ACL.GRANTEE_GUEST) {
                 Account owner = Provisioning.getInstance().getAccountById(sid.getOwnerAcctId());
-                guestUrl = getGuestURL(owner, sid.getFolderId(), sid.getGranteeName());
+                guestUrl = getGuestURL(owner, sid.getItemId(), sid.getGranteeName());
                 // before sending out email to external user, push the pending ACLs to LDAP now
                 // so that during external user account provisioning we are able to discover shares
                 // accessible to the external user
@@ -613,7 +613,7 @@ public class ShareInfo {
             }
 
             sb.append(formatTextShareInfo(
-                    MsgKey.shareNotifBodySharedItem, sid.getFolderName(), locale, formatFolderDesc(locale, sid)));
+                    MsgKey.shareNotifBodySharedItem, sid.getName(), locale, formatFolderDesc(locale, sid)));
             sb.append(formatTextShareInfo(MsgKey.shareNotifBodyOwner, sid.getOwnerNotifName(), locale, null));
             sb.append("\n");
             sb.append(formatTextShareInfo(MsgKey.shareNotifBodyGrantee, sid.getGranteeNotifName(), locale, null));
@@ -650,7 +650,7 @@ public class ShareInfo {
 
             sb.append("<p>\n");
             sb.append("<table border=\"0\">\n");
-            sb.append(formatHtmlShareInfo(MsgKey.shareNotifBodySharedItem, sid.getFolderName(), locale, formatFolderDesc(locale, sid)));
+            sb.append(formatHtmlShareInfo(MsgKey.shareNotifBodySharedItem, sid.getName(), locale, formatFolderDesc(locale, sid)));
             sb.append(formatHtmlShareInfo(MsgKey.shareNotifBodyOwner, sid.getOwnerNotifName(), locale, null));
             sb.append("</table>\n");
             sb.append("</p>\n");
@@ -711,7 +711,7 @@ public class ShareInfo {
             sb.append("<share xmlns=\"" + URI + "\" version=\"" + VERSION + "\" action=\"new\">\n");
             sb.append("  <grantee id=\"" + sid.getGranteeId() + "\" email=\"" + sid.getGranteeName() + "\" name=\"" + sid.getGranteeNotifName() +"\"/>\n");
             sb.append("  <grantor id=\"" + sid.getOwnerAcctId() + "\" email=\"" + sid.getOwnerAcctEmail() + "\" name=\"" + sid.getOwnerNotifName() +"\"/>\n");
-            sb.append("  <link id=\"" + sid.getFolderId() + "\" name=\"" + sid.getFolderName() + "\" view=\"" + sid.getFolderDefaultView() + "\" perm=\"" + ACL.rightsToString(sid.getRightsCode()) + "\"/>\n");
+            sb.append("  <link id=\"" + sid.getItemId() + "\" name=\"" + sid.getName() + "\" view=\"" + sid.getFolderDefaultView() + "\" perm=\"" + ACL.rightsToString(sid.getRightsCode()) + "\"/>\n");
             sb.append("  <notes>" + (notes==null?"":notes) + "</notes>\n");
             sb.append("</share>\n");
 
@@ -1116,62 +1116,6 @@ public class ShareInfo {
             public String getName() {
                 return NAME;
             }
-        }
-    }
-
-    /*
-     * for debugging/unittest
-     */
-    public static class DumpShareInfoVisitor implements PublishedShareInfoVisitor {
-
-        private static final String mFormat =
-            "%-36.36s %-15.15s %-15.15s %-5.5s %-20.20s %-10.10s %-10.10s %-5.5s %-5.5s %-36.36s %-15.15s %-15.15s\n";
-
-        public static void printHeadings() {
-            System.out.printf(mFormat,
-                              "owner id",
-                              "owner email",
-                              "owner display",
-                              "fid",
-                              "folder path",
-                              "view",
-                              "rights",
-                              "mid",
-                              "gt",
-                              "grantee id",
-                              "grantee name",
-                              "grantee display");
-
-            System.out.printf(mFormat,
-                              "------------------------------------",      // owner id
-                              "---------------",                           // owner email
-                              "---------------",                           // owner display
-                              "-----",                                     // folder id
-                              "--------------------",                      // folder path
-                              "----------",                                // default view
-                              "----------",                                // rights
-                              "-----",                                     // mountpoint id if mounted
-                              "-----",                                     // grantee type
-                              "------------------------------------",      // grantee id
-                              "---------------",                           // grantee name
-                              "---------------");                          // grantee display
-        }
-
-        @Override
-        public void visit(ShareInfoData shareInfoData) throws ServiceException {
-            System.out.printf(mFormat,
-                    shareInfoData.getOwnerAcctId(),
-                    shareInfoData.getOwnerAcctEmail(),
-                    shareInfoData.getOwnerAcctDisplayName(),
-                    String.valueOf(shareInfoData.getFolderId()),
-                    shareInfoData.getFolderPath(),
-                    shareInfoData.getFolderDefaultView(),
-                    shareInfoData.getRights(),
-                    shareInfoData.getMountpointId_zmprov_only(),
-                    shareInfoData.getGranteeType(),
-                    shareInfoData.getGranteeId(),
-                    shareInfoData.getGranteeName(),
-                    shareInfoData.getGranteeDisplayName());
         }
     }
 }

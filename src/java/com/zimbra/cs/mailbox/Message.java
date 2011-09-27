@@ -1432,7 +1432,7 @@ public class Message extends MailItem {
             meta.put(Metadata.FN_DRAFT, dmeta);
         }
 
-        return MailItem.encodeMetadata(meta, color, version, extended);
+        return MailItem.encodeMetadata(meta, color, null, version, extended);
     }
 
     /**

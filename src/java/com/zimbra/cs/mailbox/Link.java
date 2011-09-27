@@ -79,7 +79,7 @@ public class Link extends Document {
     private static Metadata encodeMetadata(Metadata meta, Color color, int version, String owner, int remoteId, CustomMetadataList extended) {
         meta.put(Metadata.FN_ACCOUNT_ID, owner);
         meta.put(Metadata.FN_REMOTE_ID, remoteId);
-        return encodeMetadata(meta, color, version, extended);
+        return encodeMetadata(meta, color, null, version, extended);
     }
     
     @Override

@@ -792,7 +792,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         if (alarmData != null)
             meta.put(Metadata.FN_ALARM_DATA, alarmData.encodeMetadata());
 
-        return MailItem.encodeMetadata(meta, color, version, extended);
+        return MailItem.encodeMetadata(meta, color, null, version, extended);
     }
 
     /**

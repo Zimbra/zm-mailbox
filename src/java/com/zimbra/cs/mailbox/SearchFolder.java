@@ -223,7 +223,7 @@ public final class SearchFolder extends Folder {
         meta.put(Metadata.FN_QUERY, query);
         meta.put(Metadata.FN_TYPES, types);
         meta.put(Metadata.FN_SORT,  sort);
-        return MailItem.encodeMetadata(meta, color, version, extended);
+        return MailItem.encodeMetadata(meta, color, null, version, extended);
     }
 
 

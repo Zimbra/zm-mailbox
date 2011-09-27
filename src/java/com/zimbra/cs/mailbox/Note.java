@@ -242,7 +242,7 @@ public class Note extends MailItem {
 
     static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended, Rectangle bounds) {
         meta.put(Metadata.FN_BOUNDS, bounds);
-        return MailItem.encodeMetadata(meta, color, version, extended);
+        return MailItem.encodeMetadata(meta, color, null, version, extended);
     }
 
 

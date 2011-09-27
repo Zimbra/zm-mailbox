@@ -113,7 +113,7 @@ public class Comment extends MailItem {
     
     private static Metadata encodeMetadata(Metadata meta, Color color, int version, String accountId, CustomMetadataList extended) {
         meta.put(Metadata.FN_CREATOR, accountId);
-        return encodeMetadata(meta, color, version, extended);
+        return encodeMetadata(meta, color, null, version, extended);
     }
     
     @Override

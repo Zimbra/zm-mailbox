@@ -227,7 +227,7 @@ public class Document extends MailItem {
         data.setSubject(name);
         data.setBlobDigest(pd.getDigest());
         data.metadata = encodeMetadata(meta, DEFAULT_COLOR_RGB, 1, extended, mimeType, pd.getCreator(),
-                skipParsing ? null : pd.getFragment(), null, 0, pd.getDescription(), pd.isDescriptionEnabled()).toString();
+                skipParsing ? null : pd.getFragment(), null, 0, pd.getDescription(), pd.isDescriptionEnabled(), null).toString();
         data.setFlags(flags);
        return data;
     }
@@ -282,12 +282,12 @@ public class Document extends MailItem {
     @Override
     Metadata encodeMetadata(Metadata meta) {
         return encodeMetadata(meta, mRGBColor, mVersion, mExtendedData, contentType, creator, fragment, lockOwner,
-                lockTimestamp, description, descEnabled);
+                lockTimestamp, description, descEnabled, rights);
     }
 
     static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended,
             String mimeType, String creator, String fragment, String lockowner, long lockts, String description,
-            boolean descEnabled) {
+            boolean descEnabled, ACL rights) {
         if (meta == null) {
             meta = new Metadata();
         }
@@ -298,7 +298,7 @@ public class Document extends MailItem {
         meta.put(Metadata.FN_LOCK_TIMESTAMP, lockts);
         meta.put(Metadata.FN_DESCRIPTION, description);
         meta.put(Metadata.FN_DESC_ENABLED, descEnabled);
-        return MailItem.encodeMetadata(meta, color, version, extended);
+        return MailItem.encodeMetadata(meta, color, rights, version, extended);
     }
 
     private static final String CN_FRAGMENT  = "fragment";

@@ -233,7 +233,7 @@ public class GetShareInfo  extends AccountDocumentHandler {
         
         private static class ShareInfoComparator implements Comparator<ShareInfoData> {
             public int compare(ShareInfoData a, ShareInfoData b) {
-                int r = a.getFolderPath().compareToIgnoreCase(b.getFolderPath());
+                int r = a.getPath().compareToIgnoreCase(b.getPath());
                 if (r == 0)
                     r = a.getOwnerAcctEmail().compareToIgnoreCase(b.getOwnerAcctEmail());
                 if (r == 0)
@@ -272,7 +272,7 @@ public class GetShareInfo  extends AccountDocumentHandler {
             
             if (mMountedFolders != null) 
                 mptId = mMountedFolders.getLocalFolderId(
-                    sid.getOwnerAcctId(), sid.getFolderId());
+                    sid.getOwnerAcctId(), sid.getItemId());
             
             sid.toXML(eShare, mptId);
         }

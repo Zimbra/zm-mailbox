@@ -1570,16 +1570,17 @@ public class ProvUtil implements HttpDebugListener {
     private static class ShareInfoVisitor implements PublishedShareInfoVisitor {
 
         private static final String mFormat =
-            "%-36.36s %-15.15s %-15.15s %-5.5s %-20.20s %-10.10s %-10.10s %-5.5s %-5.5s %-36.36s %-15.15s %-15.15s\n";
+            "%-36.36s %-15.15s %-15.15s %-5.5s %-20.20s %-10.10s %-10.10s %-10.10s %-5.5s %-5.5s %-36.36s %-15.15s %-15.15s\n";
 
         private static void printHeadings() {
             console.printf(mFormat,
                               "owner id",
                               "owner email",
                               "owner display",
-                              "fid",
-                              "folder path",
+                              "id",
+                              "path",
                               "view",
+                              "type",
                               "rights",
                               "mid",
                               "gt",
@@ -1591,9 +1592,10 @@ public class ProvUtil implements HttpDebugListener {
                               "------------------------------------",      // owner id
                               "---------------",                           // owner email
                               "---------------",                           // owner display
-                              "-----",                                     // folder id
-                              "--------------------",                      // folder path
+                              "-----",                                     // id
+                              "--------------------",                      // path
                               "----------",                                // default view
+                              "----------",                                // type
                               "----------",                                // rights
                               "-----",                                     // mountpoint id if mounted
                               "-----",                                     // grantee type
@@ -1608,9 +1610,10 @@ public class ProvUtil implements HttpDebugListener {
                     shareInfoData.getOwnerAcctId(),
                     shareInfoData.getOwnerAcctEmail(),
                     shareInfoData.getOwnerAcctDisplayName(),
-                    String.valueOf(shareInfoData.getFolderId()),
-                    shareInfoData.getFolderPath(),
+                    String.valueOf(shareInfoData.getItemId()),
+                    shareInfoData.getPath(),
                     shareInfoData.getFolderDefaultView(),
+                    shareInfoData.getType().name(),
                     shareInfoData.getRights(),
                     shareInfoData.getMountpointId_zmprov_only(),
                     shareInfoData.getGranteeType(),

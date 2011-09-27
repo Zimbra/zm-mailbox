@@ -68,19 +68,19 @@ public class AclPushTask extends TimerTask {
                     continue;
                 }
                 Collection<Integer> itemIds = mboxIdToItemIds.get(mboxId);
-                MailItem[] folders = null;
+                MailItem[] items = null;
                 try {
-                    folders = mbox.getItemById(null, itemIds, MailItem.Type.FOLDER);
+                    items = mbox.getItemById(null, itemIds, MailItem.Type.UNKNOWN);
                 } catch (MailServiceException.NoSuchItemException e) {
                     // one or more folders no longer exist
                     if (itemIds.size() > 1) {
-                        List<MailItem> fList = new ArrayList<MailItem>();
+                        List<MailItem> itemList = new ArrayList<MailItem>();
                         for (int itemId : itemIds) {
                             try {
-                                fList.add(mbox.getItemById(null, itemId, MailItem.Type.FOLDER));
+                                itemList.add(mbox.getItemById(null, itemId, MailItem.Type.UNKNOWN));
                             } catch (MailServiceException.NoSuchItemException ignored) {
                             }
-                            folders = fList.toArray(new MailItem[fList.size()]);
+                            items = itemList.toArray(new MailItem[itemList.size()]);
                         }
                     }
                 }
@@ -91,23 +91,26 @@ public class AclPushTask extends TimerTask {
 
                 for (String sharedItem : existingSharedItems) {
                     ShareInfoData shareData = AclPushSerializer.deserialize(sharedItem);
-                    if (!itemIds.contains(shareData.getFolderId())) {
+                    if (!itemIds.contains(shareData.getItemId())) {
                         updatedSharedItems.add(sharedItem);
                     }
                 }
 
-                if (folders != null) {
-                    for (MailItem folderItem : folders) {
-                        if (folderItem == null || !(folderItem instanceof Folder)) {
+                if (items != null) {
+                    for (MailItem item : items) {
+                        if (item == null) {
                             continue;
                         }
-                        Folder folder = (Folder) folderItem;
-                        ACL acl = folder.getACL();
+                        // for now push the Folder grants to LDAP
+                        if (!(item instanceof Folder)) {
+                            continue;
+                        }
+                        ACL acl = item.getACL();
                         if (acl == null) {
                             continue;
                         }
                         for (ACL.Grant grant : acl.getGrants()) {
-                            updatedSharedItems.add(AclPushSerializer.serialize(folder, grant));
+                            updatedSharedItems.add(AclPushSerializer.serialize(item, grant));
                         }
                     }
                 }

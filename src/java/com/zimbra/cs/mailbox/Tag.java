@@ -341,7 +341,7 @@ public class Tag extends MailItem {
     }
 
     static Metadata encodeMetadata(Metadata meta, Color color, int version, RetentionPolicy rp) {
-        MailItem.encodeMetadata(meta, color, version, null);
+        MailItem.encodeMetadata(meta, color, null, version, null);
         if (rp != null && rp.isSet()) {
             meta.put(Metadata.FN_RETENTION_POLICY, RetentionPolicyManager.toMetadata(rp, true));
         }

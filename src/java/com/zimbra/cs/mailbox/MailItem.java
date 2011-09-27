@@ -49,6 +49,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
+import com.zimbra.cs.db.DbPendingAclPush;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.IndexDocument;
@@ -690,6 +691,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                                                  // if highest byte is zero it's old style
                                                  // color map with 9 fixed colors.
     protected CustomMetadataList mExtendedData;
+    protected ACL                rights;
 
     MailItem(Mailbox mbox, UnderlyingData data) throws ServiceException {
         if (data == null) {
@@ -1136,9 +1138,14 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @see ACL
      * @see Folder#checkRights(short, Account, boolean) */
     short checkRights(short rightsNeeded, Account authuser, boolean asAdmin) throws ServiceException {
+        // authuser has full permission
+        if (authuser == null || authuser.getId().equals(mMailbox.getAccountId()))
+            return rightsNeeded;
         // check to see what access has been granted on the enclosing folder
         Folder folder = !inDumpster() ? getFolder() : getMailbox().getFolderById(Mailbox.ID_FOLDER_TRASH);
-        short granted = folder.checkRights(rightsNeeded, authuser, asAdmin);
+        short granted = (isTagged(Flag.FlagInfo.NO_INHERIT)) ? 
+                checkACL(rightsNeeded, authuser, asAdmin) :
+                folder.checkRights(rightsNeeded, authuser, asAdmin);
         // FIXME: check to see what access has been granted on the item's tags
         //   granted |= getTags().getGrantedRights(rightsNeeded, authuser);
         // and see if the granted rights are sufficient
@@ -3117,7 +3124,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
     abstract Metadata encodeMetadata(Metadata meta);
 
-    static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended) {
+    static Metadata encodeMetadata(Metadata meta, Color color, ACL rights, int version, CustomMetadataList extended) {
         if (color != null && color.getMappedColor() != DEFAULT_COLOR) {
             meta.put(Metadata.FN_COLOR, color.toMetadata());
         }
@@ -3128,6 +3135,9 @@ public abstract class MailItem implements Comparable<MailItem> {
             for (Pair<String, String> mpair : extended) {
                 meta.put(CUSTOM_META_PREFIX + mpair.getFirst(), mpair.getSecond());
             }
+        }
+        if (rights != null) {
+            meta.put(Metadata.FN_RIGHTS, rights.encode());
         }
         return meta;
     }
@@ -3158,6 +3168,15 @@ public abstract class MailItem implements Comparable<MailItem> {
                 mExtendedData.addSection(key.substring(CUSTOM_META_PREFIX.length()), entry.getValue().toString());
             }
         }
+        MetadataList mlistACL = meta.getList(Metadata.FN_RIGHTS, true);
+        if (mlistACL != null) {
+            ACL acl = new ACL(mlistACL);
+            rights = acl.isEmpty() ? null : acl;
+            if (!isTagged(Flag.FlagInfo.NO_INHERIT)) {
+                alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
+            }
+        }
+
     }
 
 
@@ -3335,5 +3354,133 @@ public abstract class MailItem implements Comparable<MailItem> {
         UnderlyingData data = getUnderlyingData().clone();
         data.setFlag(Flag.FlagInfo.UNCACHED);
         return MailItem.constructItem(mMailbox, data);
+    }
+    
+    protected short checkACL(short rightsNeeded, Account authuser, boolean asAdmin) throws ServiceException {
+        // check the ACLs to see if access has been explicitly granted
+        Short granted = rights != null ? rights.getGrantedRights(authuser) : null;
+        if (granted != null)
+            return (short) (granted.shortValue() & rightsNeeded);
+        // no ACLs apply; can we check parent folder for inherited rights?
+        if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(Flag.FlagInfo.NO_INHERIT))
+            return 0;
+        return getParent().checkACL(rightsNeeded, authuser, asAdmin);
+    }
+
+    /** Grants the specified set of rights to the target and persists them
+     *  to the database.
+     *
+     * @param zimbraId  The zimbraId of the entry being granted rights.
+     * @param type      The type of principal the grantee's ID refers to.
+     * @param rights    A bitmask of the rights being granted.
+     * @perms {@link ACL#RIGHT_ADMIN} on the item
+     * @throws ServiceException The following error codes are possible:<ul>
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul> */
+    ACL.Grant grantAccess(String zimbraId, byte type, short rights, String args) throws ServiceException {
+        if (!canAccess(ACL.RIGHT_ADMIN)) {
+            throw ServiceException.PERM_DENIED("you do not have admin rights to item " + getPath());
+        }
+        if (type == ACL.GRANTEE_USER && zimbraId.equalsIgnoreCase(getMailbox().getAccountId())) {
+            throw ServiceException.PERM_DENIED("cannot grant access to the owner of the item");
+        }
+        // if there's an ACL on the item, the item does not inherit from its parent
+        alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
+
+        markItemModified(Change.ACL);
+        if (this.rights == null) {
+            this.rights = new ACL();
+        }
+        ACL.Grant grant = this.rights.grantAccess(zimbraId, type, rights, args);
+        saveMetadata();
+
+        queueForAclPush();
+
+        return grant;
+    }
+
+    protected void queueForAclPush() throws ServiceException {
+        DbPendingAclPush.queue(mMailbox, mId);
+    }
+
+    /** Removes the set of rights granted to the specified (id, type) pair
+     *  and updates the database accordingly.
+     *
+     * @param zimbraId  The zimbraId of the entry being revoked rights.
+     * @perms {@link ACL#RIGHT_ADMIN} on the item
+     * @throws ServiceException The following error codes are possible:<ul>
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul> */
+    void revokeAccess(String zimbraId) throws ServiceException {
+        if (!canAccess(ACL.RIGHT_ADMIN)) {
+            throw ServiceException.PERM_DENIED("you do not have admin rights to item " + getPath());
+        }
+        if (zimbraId.equalsIgnoreCase(getMailbox().getAccountId())) {
+            throw ServiceException.PERM_DENIED("cannot revoke access from the owner of the item");
+        }
+        ACL acl = getEffectiveACL();
+        if (acl == null || !acl.revokeAccess(zimbraId)) {
+            return;
+        }
+        // if there's an ACL on the item, the item does not inherit from its parent
+        alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
+
+        markItemModified(Change.ACL);
+        rights.revokeAccess(zimbraId);
+        if (rights.isEmpty()) {
+            rights = null;
+        }
+        saveMetadata();
+
+        queueForAclPush();
+    }
+
+    /** Replaces the item's {@link ACL} with the supplied one and updates the database accordingly.
+     *
+     * @param acl  The new ACL being applied (<tt>null</tt> is OK).
+     * @perms {@link ACL#RIGHT_ADMIN} on the item
+     * @throws ServiceException The following error codes are possible:<ul>
+     *    <li><tt>service.FAILURE</tt> - if there's a database failure
+     *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
+     *        permissions</ul> */
+    void setPermissions(ACL acl) throws ServiceException {
+        if (!canAccess(ACL.RIGHT_ADMIN)) {
+            throw ServiceException.PERM_DENIED("you do not have admin rights to item " + getPath());
+        }
+        // if we're setting an ACL on the folder, the folder does not inherit from its parent
+        alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
+
+        markItemModified(Change.ACL);
+        if (acl != null && acl.isEmpty()) {
+            acl = null;
+        }
+        if (acl == null && rights == null) {
+            return;
+        }
+        rights = acl;
+        saveMetadata();
+
+        queueForAclPush();
+    }
+
+    /** Returns a copy of the ACL directly set on the item, or <tt>null</tt>
+     *  if one is not set. */
+    public ACL getACL() {
+        return rights == null ? null : rights.duplicate();
+    }
+
+    /** Returns a copy of the ACL that applies to the item (possibly
+     *  inherited from a parent), or <tt>null</tt> if one is not set. */
+    public ACL getEffectiveACL() {
+        MailItem parent = null;
+        try {
+            parent = getParent();
+        } catch (ServiceException e) {}
+        if (mId == Mailbox.ID_FOLDER_ROOT || isTagged(Flag.FlagInfo.NO_INHERIT) || parent == null) {
+            return getACL();
+        }
+        return parent.getEffectiveACL();
     }
 }

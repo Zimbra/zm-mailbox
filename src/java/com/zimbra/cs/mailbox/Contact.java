@@ -815,7 +815,7 @@ public class Contact extends MailItem {
                 mlist.add(attach.asMetadata());
             meta.put(Metadata.FN_ATTACHMENTS, mlist);
         }
-        return MailItem.encodeMetadata(meta, color, version, extended);
+        return MailItem.encodeMetadata(meta, color, null, version, extended);
     }
 
     @Override

@@ -152,7 +152,7 @@ public class SendShareNotification extends MailDocumentHandler {
         sid.setOwnerAcctDisplayName(ownerAcct.getDisplayName());
 
         // folder id used for mounting
-        sid.setFolderId(ownerFolderId);
+        sid.setItemId(ownerFolderId);
 
         //
         // just a display name for the shared folder for the grantee to see.
@@ -161,7 +161,7 @@ public class SendShareNotification extends MailDocumentHandler {
         // if user2 is sharing with user3 a mountpoint that belongs to user1,
         // we should show user3 the folder(mountpoint) name in user2's mailbox,
         // not the folder name in user1's mailbox.
-        sid.setFolderPath(folder.getPath());
+        sid.setPath(folder.getPath());
         sid.setFolderDefaultView(folder.getDefaultView());
 
         // rights

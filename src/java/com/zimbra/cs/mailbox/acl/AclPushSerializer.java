@@ -36,28 +36,30 @@ public class AclPushSerializer {
 
     public static String serialize(ShareInfoData shareInfoData) {
         return serialize(
-                shareInfoData.getFolderId(),
-                shareInfoData.getFolderPath(),
+                shareInfoData.getItemId(),
+                shareInfoData.getPath(),
                 shareInfoData.getFolderDefaultViewCode(),
+                shareInfoData.getType(),
                 shareInfoData.getGranteeId(),
                 shareInfoData.getGranteeName(),
                 shareInfoData.getGranteeTypeCode(),
                 shareInfoData.getRightsCode());
     }
 
-    public static String serialize(Folder folder, ACL.Grant grant) {
+    public static String serialize(MailItem item, ACL.Grant grant) {
         return serialize(
-                folder.getId(),
-                folder.getPath(),
-                folder.getDefaultView(),
+                item.getId(),
+                (item instanceof Folder) ? ((Folder)item).getPath() : item.getName(),
+                (item instanceof Folder) ? ((Folder)item).getDefaultView() : item.getType(),
+                item.getType(),
                 grant.getGranteeId(),
                 grant.getGranteeName(),
                 grant.getGranteeType(),
                 grant.getGrantedRights());
     }
 
-    public static String serialize(int folderId, String folderPath, MailItem.Type folderDefaultView, String granteeId,
-                                   String granteeName, byte granteeType, short rights) {
+    public static String serialize(int itemId, String path, MailItem.Type folderDefaultView, MailItem.Type type,
+            String granteeId, String granteeName, byte granteeType, short rights) {
         // Mailbox ACLs typically persist grantee id but not grantee name
         if (granteeName == null && granteeId != null) {
             try {
@@ -96,26 +98,33 @@ public class AclPushSerializer {
                 append("granteeId:").append(granteeId).
                 append(";granteeName:").append(granteeName).
                 append(";granteeType:").append(ACL.typeToString(granteeType)).
-                append(";folderId:").append(folderId).
-                append(";folderPath:").append(folderPath).
+                append(";folderId:").append(itemId).
+                append(";folderPath:").append(path).
                 append(";folderDefaultView:").append(folderDefaultView).
                 append(";rights:").append(ACL.rightsToString(rights)).
+                append(";type:").append(type).
                 toString();
     }
 
     public static ShareInfoData deserialize(String sharedItemInfo) throws ServiceException {
         String[] parts = sharedItemInfo.split(";");
         ShareInfoData obj = new ShareInfoData();
+        int pos = 0;
         // granteeId and granteeName could be "null", e.g. for public/all shares
-        String granteeId = parts[0].substring("granteeId:".length());
+        String granteeId = parts[pos++].substring("granteeId:".length());
         obj.setGranteeId("null".equals(granteeId) ? null : granteeId);
-        String granteeName = parts[1].substring("granteeName:".length());
+        String granteeName = parts[pos++].substring("granteeName:".length());
         obj.setGranteeName("null".equals(granteeName) ? null : granteeName);
-        obj.setGranteeType(ACL.stringToType(parts[2].substring("granteeType:".length())));
-        obj.setFolderId(Integer.valueOf(parts[3].substring("folderId:".length())));
-        obj.setFolderPath(parts[4].substring("folderPath:".length()));
-        obj.setFolderDefaultView(MailItem.Type.of(parts[5].substring("folderDefaultView:".length())));
-        obj.setRights(ACL.stringToRights(parts[6].substring("rights:".length())));
+        obj.setGranteeType(ACL.stringToType(parts[pos++].substring("granteeType:".length())));
+        obj.setItemId(Integer.valueOf(parts[pos++].substring("folderId:".length())));
+        obj.setPath(parts[pos++].substring("folderPath:".length()));
+        obj.setFolderDefaultView(MailItem.Type.of(parts[pos++].substring("folderDefaultView:".length())));
+        obj.setRights(ACL.stringToRights(parts[pos++].substring("rights:".length())));
+        if (parts.length < pos) {
+            obj.setType(MailItem.Type.of(parts[pos++].substring("type:".length())));
+        } else {
+            obj.setType(MailItem.Type.FOLDER);
+        }
         return obj;
     }
 }
