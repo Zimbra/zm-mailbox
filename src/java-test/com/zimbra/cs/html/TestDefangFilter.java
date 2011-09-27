@@ -1,11 +1,13 @@
 package com.zimbra.cs.html;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Set;
 
+import com.zimbra.common.util.StringBufferStream;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -276,5 +278,16 @@ public class TestDefangFilter {
         Assert.assertTrue(result.contains(" dfsrc=\"https://grepular.com/email_privacy_tester/"));
        
     }
-    
+
+    /**
+     * Checks that CDATA section in HTML is reported as a comment and removed.
+     * @throws Exception
+     */
+    @Test
+    public void testBug64974() throws Exception {
+        String html = "<html><body><![CDATA[--><a href=\"data:text/html;base64,PHNjcmlwdD4KYWxlcnQoZG9jdW1lbnQuY29va2llKQo8L3NjcmlwdD4=\">click</a]]></body></html>";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.equals("<html><body></body></html>"));
+    }
 }
