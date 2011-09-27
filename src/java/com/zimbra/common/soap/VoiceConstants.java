@@ -66,6 +66,7 @@ public class VoiceConstants {
  
     public static final String A_ACCOUNT_NUMBER = "accountNumber";
     public static final String A_NAME          = "name";
+    public static final String A_LABEL         = "label";
     public static final String A_ID            = "id";
     public static final String A_VMSG_DURATION = "du";
     public static final String A_PHONE         = "phone";
