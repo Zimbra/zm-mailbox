@@ -63,6 +63,7 @@ public class VoiceConstants {
     public static final String E_STOREPRINCIPAL= "storeprincipal";
     public static final String E_VOICEMSG      = "vm";
     public static final String E_UPLOAD        = "upload";
+    public static final String E_AUDIO_TYPE    = "audioType";
  
     public static final String A_ACCOUNT_NUMBER = "accountNumber";
     public static final String A_NAME          = "name";
@@ -75,6 +76,7 @@ public class VoiceConstants {
     public static final String A_STATE         = "st";
     public static final String A_COUNTRY       = "co";
     public static final String A_VM            = "vm";
+    public static final String A_CONTENT_TYPE  = "ct";
     
     public static final String FLAG_UNFORWARDABLE = "p";  // 'p'rivate
     
