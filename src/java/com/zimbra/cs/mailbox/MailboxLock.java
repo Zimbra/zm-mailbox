@@ -58,21 +58,6 @@ public final class MailboxLock {
             if (lock.tryLock(LC.zimbra_mailbox_lock_timeout.intValue(), TimeUnit.SECONDS)) {
                 return;
             }
-            // Do a full thread dump if we timeout for debugging
-            if(LC.zimbra_mailbox_lock_fullthread_dump.booleanValue()) {
-                ProcessBuilder processBuilder = new ProcessBuilder("/bin/sh", "-c", "kill -3 $PPID");  
-                processBuilder.redirectErrorStream(true);
-                try {
-                    Process process = processBuilder.start();
-                    InputStream inputStream = process.getInputStream();       
-                    process.waitFor();
-                    ByteUtil.copy(inputStream, true, System.err, false);
-                } catch (IOException ioe) {
-                    // Since we're looking @ system.err for the success
-                    // throw in a message if it failed
-                    System.err.println("Kill -3 failed:" + ioe.getMessage());
-                }       
-            }
             
             LockFailedException e = new LockFailedException("timeout");
             e.logStackTrace();
