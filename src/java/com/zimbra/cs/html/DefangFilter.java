@@ -330,7 +330,7 @@ public class DefangFilter extends DefaultFilter {
         String key = element.toLowerCase();
         Object value = NULL;
         mRemovedElements.put(key, value);
-    } // removeElement(String)
+    }
 
     //
     // XMLDocumentHandler methods
@@ -345,7 +345,7 @@ public class DefangFilter extends DefaultFilter {
     throws XNIException {
         mRemovalElementCount = 0;
         super.startDocument(locator, encoding, nscontext, augs);
-    } // startDocument(XMLLocator,String,NamespaceContext,Augmentations)
+    }
 
     // old methods
 
@@ -353,7 +353,7 @@ public class DefangFilter extends DefaultFilter {
     @Override public void startDocument(XMLLocator locator, String encoding, Augmentations augs)
     throws XNIException {
         startDocument(locator, encoding, null, augs);
-    } // startDocument(XMLLocator,String,Augmentations)
+    }
 
     /** Start prefix mapping. */
     @Override public void startPrefixMapping(String prefix, String uri, Augmentations augs)
@@ -361,7 +361,7 @@ public class DefangFilter extends DefaultFilter {
         if (mRemovalElementName == null) {
             super.startPrefixMapping(prefix, uri, augs);
         }
-    } // startPrefixMapping(String,String,Augmentations)
+    }
 
     /** Start element. */
     @Override public void startElement(QName element, XMLAttributes attributes, Augmentations augs)
@@ -376,7 +376,7 @@ public class DefangFilter extends DefaultFilter {
         }
         if (name.equalsIgnoreCase("style"))
             mStyleDepth++;
-    } // startElement(QName,XMLAttributes,Augmentations)
+    }
 
     /** Empty element. */
     @Override public void emptyElement(QName element, XMLAttributes attributes, Augmentations augs)
@@ -384,15 +384,15 @@ public class DefangFilter extends DefaultFilter {
         if (mRemovalElementName == null && handleOpenTag(element, attributes)) {
             super.emptyElement(element, attributes, augs);
         }
-    } // emptyElement(QName,XMLAttributes,Augmentations)
+    }
 
     /** Comment. */
     @Override public void comment(XMLString text, Augmentations augs)
     throws XNIException {
-        if (mRemovalElementName == null) {
-            super.comment(text, augs);
-        }
-    } // comment(XMLString,Augmentations)
+        // we can safely ignore comments
+        // they can only provide loop holes for hackers to exploit
+        // e.g. CDATA sections are reported as comments with our HTML parser configuration
+    }
 
     /** Processing instruction. */
     @Override public void processingInstruction(String target, XMLString data, Augmentations augs)
@@ -400,7 +400,7 @@ public class DefangFilter extends DefaultFilter {
         if (mRemovalElementName == null) {
             super.processingInstruction(target, data, augs);
         }
-    } // processingInstruction(String,XMLString,Augmentations)
+    }
 
     /** Characters. */
     @Override public void characters(XMLString text, Augmentations augs) 
@@ -414,7 +414,7 @@ public class DefangFilter extends DefaultFilter {
                 super.characters(text, augs);
             }
         }
-    } // characters(XMLString,Augmentations)
+    }
 
     /** Ignorable whitespace. */
     @Override public void ignorableWhitespace(XMLString text, Augmentations augs) 
@@ -422,7 +422,7 @@ public class DefangFilter extends DefaultFilter {
         if (mRemovalElementName == null) {
             super.ignorableWhitespace(text, augs);
         }
-    } // ignorableWhitespace(XMLString,Augmentations)
+    }
 
     /** Start general entity. */
     @Override public void startGeneralEntity(String name, XMLResourceIdentifier id, String encoding, Augmentations augs)
@@ -430,7 +430,7 @@ public class DefangFilter extends DefaultFilter {
         if (mRemovalElementName == null) {
             super.startGeneralEntity(name, id, encoding, augs);
         }
-    } // startGeneralEntity(String,XMLResourceIdentifier,String,Augmentations)
+    }
 
     /** Text declaration. */
     @Override public void textDecl(String version, String encoding, Augmentations augs)
@@ -438,7 +438,7 @@ public class DefangFilter extends DefaultFilter {
         if (mRemovalElementName == null) {
             super.textDecl(version, encoding, augs);
         }
-    } // textDecl(String,String,Augmentations)
+    }
 
     /** End general entity. */
     @Override public void endGeneralEntity(String name, Augmentations augs)
@@ -446,21 +446,21 @@ public class DefangFilter extends DefaultFilter {
         if (mRemovalElementName == null) {
             super.endGeneralEntity(name, augs);
         }
-    } // endGeneralEntity(String,Augmentations)
+    }
 
     /** Start CDATA section. */
     @Override public void startCDATA(Augmentations augs) throws XNIException {
         if (mRemovalElementName == null) {
             super.startCDATA(augs);
         }
-    } // startCDATA(Augmentations)
+    }
 
     /** End CDATA section. */
     @Override public void endCDATA(Augmentations augs) throws XNIException {
         if (mRemovalElementName == null) {
             super.endCDATA(augs);
         }
-    } // endCDATA(Augmentations)
+    }
 
     /** End element. */
     @Override public void endElement(QName element, Augmentations augs)
@@ -475,7 +475,7 @@ public class DefangFilter extends DefaultFilter {
         }
         if (name.equalsIgnoreCase("style"))
             mStyleDepth--;
-    } // endElement(QName,Augmentations)
+    }
 
     /** End prefix mapping. */
     @Override public void endPrefixMapping(String prefix, Augmentations augs)
@@ -483,7 +483,7 @@ public class DefangFilter extends DefaultFilter {
         if (mRemovalElementName == null) {
             super.endPrefixMapping(prefix, augs);
         }
-    } // endPrefixMapping(String,Augmentations)
+    }
 
     //
     // Protected methods
@@ -493,13 +493,13 @@ public class DefangFilter extends DefaultFilter {
     protected static boolean elementAccepted(String element) {
         String key = element.toLowerCase();
         return mAcceptedElements.containsKey(key);
-    } // elementAccepted(String):boolean
+    }
 
     /** Returns true if the specified element should be removed. */
     protected static boolean elementRemoved(String element) {
         String key = element.toLowerCase();
         return mRemovedElements.containsKey(key);
-    } // elementRemoved(String):boolean
+    }
 
     /** Handles an open tag. */
     protected boolean handleOpenTag(QName element, XMLAttributes attributes) {
@@ -565,7 +565,7 @@ public class DefangFilter extends DefaultFilter {
             mRemovalElementCount = 1;
         }
         return false;
-    } // handleOpenTag(QName,XMLAttributes):boolean
+    }
 
     private void fixUrlBase(XMLAttributes attributes, String attrName) {
         int index = attributes.getIndex(attrName);
@@ -680,4 +680,4 @@ public class DefangFilter extends DefaultFilter {
         }
     }
 
-} // class DefaultFilter
+}
