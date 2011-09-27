@@ -20,7 +20,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.index.global.GlobalDocument;
+import com.zimbra.cs.index.global.GlobalSearchHit;
 import com.zimbra.cs.index.global.GlobalSearchQuery;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.JaxbUtil;
@@ -45,21 +45,22 @@ public final class GlobalSearch extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(ctx);
         Mailbox mbox = getRequestedMailbox(zsc);
 
-        List<GlobalDocument> hits = mbox.index.search(new GlobalSearchQuery(req.getQuery()));
+        List<GlobalSearchHit> hits = mbox.index.search(new GlobalSearchQuery(req.getQuery()));
         GlobalSearchResponse resp = new GlobalSearchResponse();
         resp.setDocuments(toResponse(hits));
         return resp;
     }
 
-    private List<GlobalSearchResponse.Document> toResponse(List<GlobalDocument> hits) {
+    private List<GlobalSearchResponse.Document> toResponse(List<GlobalSearchHit> hits) {
         List<GlobalSearchResponse.Document> result = new ArrayList<GlobalSearchResponse.Document>(hits.size());
-        for (GlobalDocument hit : hits) {
+        for (GlobalSearchHit hit : hits) {
             GlobalSearchResponse.Document doc = new GlobalSearchResponse.Document();
-            doc.setID(hit.getGID().toString());
-            doc.setDate(hit.getDate());
-            doc.setSize(hit.getSize());
-            doc.setName(hit.getFilename());
-            doc.setFragment(hit.getFragment());
+            doc.setID(hit.getDocument().getGID().toString());
+            doc.setScore(hit.getScore());
+            doc.setDate(hit.getDocument().getDate());
+            doc.setSize(hit.getDocument().getSize());
+            doc.setName(hit.getDocument().getFilename());
+            doc.setFragment(hit.getDocument().getFragment());
             result.add(doc);
         }
         return result;

@@ -83,6 +83,9 @@ final class HBaseIndexTestUtils {
         HColumnDescriptor globalItemCF = new HColumnDescriptor(HBaseIndex.ITEM_CF);
         globalItemCF.setMaxVersions(1);
         globalIndexTableDesc.addFamily(globalItemCF);
+        HColumnDescriptor globalServerCF = new HColumnDescriptor(GlobalIndex.SERVER_CF);
+        globalServerCF.setMaxVersions(1);
+        globalIndexTableDesc.addFamily(globalServerCF);
         admin.createTable(globalIndexTableDesc);
     }
 

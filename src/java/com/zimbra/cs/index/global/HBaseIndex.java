@@ -18,11 +18,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.StringReader;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -71,7 +68,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.io.Closeables;
 import com.google.common.primitives.UnsignedBytes;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -214,7 +213,7 @@ public final class HBaseIndex implements IndexStore {
 
     @Override
     public void deleteIndex() throws IOException {
-        List<Row> batch = new ArrayList<Row>(2);
+        List<Row> batch = Lists.newArrayListWithCapacity(2);
         // delete the entire row
         Delete del = new Delete(row);
         del.setTimestamp(Long.MAX_VALUE);
@@ -329,6 +328,7 @@ public final class HBaseIndex implements IndexStore {
 
         @Override
         public void destroy() {
+            globalIndex.destroy();
         }
 
         @Override
@@ -337,21 +337,46 @@ public final class HBaseIndex implements IndexStore {
         }
     }
 
-    private static final class TermInfo {
+    static final class TermInfo {
+        @JsonProperty("tc")
+        private int totalTermCount;
+
         @JsonProperty("pos")
-        private final List<Integer> positions = new ArrayList<Integer>();
+        private final List<Integer> positions = Lists.newArrayList();
+
+        /**
+         * Returns the total number of terms in the document.
+         */
+        int getTotalTermCount() {
+            return totalTermCount;
+        }
+
+        /**
+         * Returns the number of times this term occurs in the document.
+         */
+        int getTermCount() {
+            return positions.size();
+        }
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("pos", positions).toString();
+            return Objects.toStringHelper(this).add("tc", getTermCount() + "/" + getTotalTermCount()).toString();
+        }
+
+        static byte[] encode(TermInfo info) throws IOException {
+            return JSON_MAPPER.writeValueAsBytes(info);
+        }
+
+        static TermInfo decode(byte[] raw) throws IOException {
+            return JSON_MAPPER.readValue(raw, TermInfo.class);
         }
     }
 
     private final class IndexerImpl implements Indexer {
-        private final List<Row> batch = new ArrayList<Row>();
+        private final List<Row> batch = Lists.newArrayList();
         private final HTableInterface table;
         private final Map<MailItem, Folder> indexGlobal = Maps.newHashMapWithExpectedSize(1);
-        private final List<Integer> deleteGlobal = new ArrayList<Integer>();
+        private final List<Integer> deleteGlobal = Lists.newArrayList();
 
         IndexerImpl() {
             table = factory.pool.getTable(factory.indexTableName);
@@ -361,7 +386,8 @@ public final class HBaseIndex implements IndexStore {
         public void addDocument(Folder folder, MailItem item, List<IndexDocument> docs) throws IOException {
             long ts = toTimestamp(item.getId(), item.getSavedSequence());
             batch.add(put(ts, item));
-            Map<String, TermInfo> term2info = new HashMap<String, TermInfo>();
+            Map<String, TermInfo> term2info = Maps.newHashMap();
+            Map<Character, Integer> prefix2count = Maps.newHashMapWithExpectedSize(FIELD2PREFIX.size());
             int pos = 0;
             for (IndexDocument doc : docs) {
                 for (Fieldable field : doc.toDocument().getFields()) {
@@ -375,7 +401,9 @@ public final class HBaseIndex implements IndexStore {
                         CharTermAttribute termAttr = stream.addAttribute(CharTermAttribute.class);
                         PositionIncrementAttribute posAttr = stream.addAttribute(PositionIncrementAttribute.class);
                         stream.reset();
+                        int termCount = 0; // number of terms per field
                         while (stream.incrementToken()) {
+                            termCount++;
                             if (termAttr.length() == 0) {
                                 continue;
                             }
@@ -388,12 +416,17 @@ public final class HBaseIndex implements IndexStore {
                             pos += posAttr.getPositionIncrement();
                             info.positions.add(pos);
                         }
+                        stream.end();
+                        Closeables.closeQuietly(stream);
+                        Integer count = prefix2count.get(prefix);
+                        prefix2count.put(prefix, count != null ? count + termCount : termCount);
                     }
                 }
             }
             for (Map.Entry<String, TermInfo> entry : term2info.entrySet()) {
+                entry.getValue().totalTermCount = prefix2count.get(entry.getKey().charAt(0));
                 Put put = new Put(row);
-                put.add(TERM_CF, Bytes.toBytes(entry.getKey()), ts, JSON_MAPPER.writeValueAsBytes(entry.getValue()));
+                put.add(TERM_CF, Bytes.toBytes(entry.getKey()), ts, TermInfo.encode(entry.getValue()));
                 batch.add(put);
             }
             if (item.getType() == MailItem.Type.DOCUMENT) { // promote all documents to global index
@@ -437,7 +470,7 @@ public final class HBaseIndex implements IndexStore {
         @Override
         public void deleteDocument(List<Integer> ids) throws IOException {
             int last = mailbox.getLastChangeID();
-            List<Get> gets = new ArrayList<Get>(ids.size());
+            List<Get> gets = Lists.newArrayListWithCapacity(ids.size());
             for (int id : ids) {
                 Get get = new Get(row);
                 get.setTimeRange(toTimestamp(id, 0), toTimestamp(id, last + 1));
@@ -489,7 +522,7 @@ public final class HBaseIndex implements IndexStore {
         private final HTableInterface table;
 
         IndexReaderImpl() {
-            readerFinishedListeners = new ArrayList<ReaderFinishedListener>(); //TODO
+            readerFinishedListeners = Lists.newArrayList(); //TODO
             table = factory.pool.getTable(factory.indexTableName);
         }
 
@@ -675,7 +708,7 @@ public final class HBaseIndex implements IndexStore {
 
     private final class TermDocsImpl implements TermPositions {
         private final HTableInterface table;
-        private final List<TermDoc> termDocs = new ArrayList<TermDoc>();
+        private final List<TermDoc> termDocs = Lists.newArrayList();
         private int docCursor = -1;
         private int posCursor = -1;
 
@@ -740,7 +773,7 @@ public final class HBaseIndex implements IndexStore {
 
             Result result = table.get(get);
             for (KeyValue kv : result.raw()) {
-                TermInfo info = JSON_MAPPER.readValue(kv.getValue(), TermInfo.class);
+                TermInfo info = TermInfo.decode(kv.getValue());
                 termDocs.add(new TermDoc(toDocId(kv.getTimestamp()), info.positions));
             }
         }
@@ -787,7 +820,7 @@ public final class HBaseIndex implements IndexStore {
     }
 
     private final class TermEnumImpl extends TermEnum {
-        private final Queue<Term> terms = new LinkedList<Term>();
+        private final Queue<Term> terms = Lists.newLinkedList();
 
         private TermEnumImpl(IndexReaderImpl reader, Term term) throws IOException {
             Character prefix = FIELD2PREFIX.get(term.field());

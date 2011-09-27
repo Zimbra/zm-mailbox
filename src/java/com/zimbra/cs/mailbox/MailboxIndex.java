@@ -78,6 +78,7 @@ import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.index.global.GlobalDocument;
+import com.zimbra.cs.index.global.GlobalSearchHit;
 import com.zimbra.cs.index.global.GlobalSearchQuery;
 import com.zimbra.cs.index.global.HBaseIndex;
 import com.zimbra.cs.mailbox.MailItem.Type;
@@ -271,7 +272,7 @@ public final class MailboxIndex {
         return results;
     }
 
-    public List<GlobalDocument> search(GlobalSearchQuery params) throws ServiceException {
+    public List<GlobalSearchHit> search(GlobalSearchQuery params) throws ServiceException {
         try {
             Query query = toQuery(params);
             if (query == null) { // empty after trimming stop words

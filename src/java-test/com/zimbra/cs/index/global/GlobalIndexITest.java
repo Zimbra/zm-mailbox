@@ -85,10 +85,10 @@ public final class GlobalIndexITest {
         indexer.close();
 
         TermQuery query = new TermQuery(new Term(LuceneFields.L_CONTENT, "test"));
-        List<GlobalDocument> hits = index.getGlobalIndex().search(MockProvisioning.DEFAULT_ACCOUNT_ID, query);
+        List<GlobalSearchHit> hits = index.getGlobalIndex().search(MockProvisioning.DEFAULT_ACCOUNT_ID, query);
         Assert.assertEquals(1, hits.size());
-        Assert.assertEquals(doc.getName(), hits.get(0).getFilename());
-        Assert.assertEquals(doc.getDate(), hits.get(0).getDate());
+        Assert.assertEquals(doc.getName(), hits.get(0).getDocument().getFilename());
+        Assert.assertEquals(doc.getDate(), hits.get(0).getDocument().getDate());
     }
 
     @Test
@@ -110,10 +110,10 @@ public final class GlobalIndexITest {
         query.add(new TermQuery(new Term(LuceneFields.L_CONTENT, "boolean")), BooleanClause.Occur.MUST);
         query.add(new TermQuery(new Term(LuceneFields.L_CONTENT, "query")), BooleanClause.Occur.MUST);
         query.add(new TermQuery(new Term(LuceneFields.L_CONTENT, "test")), BooleanClause.Occur.MUST);
-        List<GlobalDocument> hits = index.getGlobalIndex().search(MockProvisioning.DEFAULT_ACCOUNT_ID, query);
+        List<GlobalSearchHit> hits = index.getGlobalIndex().search(MockProvisioning.DEFAULT_ACCOUNT_ID, query);
         Assert.assertEquals(1, hits.size());
-        Assert.assertEquals(doc.getName(), hits.get(0).getFilename());
-        Assert.assertEquals(doc.getDate(), hits.get(0).getDate());
+        Assert.assertEquals(doc.getName(), hits.get(0).getDocument().getFilename());
+        Assert.assertEquals(doc.getDate(), hits.get(0).getDocument().getDate());
     }
 
     @Test
@@ -133,15 +133,15 @@ public final class GlobalIndexITest {
         indexer.close();
 
         TermQuery query = new TermQuery(new Term(LuceneFields.L_CONTENT, "acl"));
-        List<GlobalDocument> hits = index.getGlobalIndex().search(MockProvisioning.DEFAULT_ACCOUNT_ID, query);
+        List<GlobalSearchHit> hits = index.getGlobalIndex().search(MockProvisioning.DEFAULT_ACCOUNT_ID, query);
         Assert.assertEquals(1, hits.size());
-        Assert.assertEquals(doc.getName(), hits.get(0).getFilename());
-        Assert.assertEquals(doc.getDate(), hits.get(0).getDate());
+        Assert.assertEquals(doc.getName(), hits.get(0).getDocument().getFilename());
+        Assert.assertEquals(doc.getDate(), hits.get(0).getDocument().getDate());
 
         hits = index.getGlobalIndex().search(GRANTEE1, query);
         Assert.assertEquals(1, hits.size());
-        Assert.assertEquals(doc.getName(), hits.get(0).getFilename());
-        Assert.assertEquals(doc.getDate(), hits.get(0).getDate());
+        Assert.assertEquals(doc.getName(), hits.get(0).getDocument().getFilename());
+        Assert.assertEquals(doc.getDate(), hits.get(0).getDocument().getDate());
 
         hits = index.getGlobalIndex().search(GRANTEE2, query);
         Assert.assertEquals(0, hits.size());
@@ -167,15 +167,15 @@ public final class GlobalIndexITest {
         indexer.close();
 
         TermQuery query = new TermQuery(new Term(LuceneFields.L_CONTENT, "shared"));
-        List<GlobalDocument> hits = index.getGlobalIndex().search(GRANTEE1, query);
+        List<GlobalSearchHit> hits = index.getGlobalIndex().search(GRANTEE1, query);
         hits = index.getGlobalIndex().search(GRANTEE1, query);
         Assert.assertEquals(0, hits.size());
 
         mbox.move(null, doc.getId(), doc.getType(), shared.getId()); // move closed to shared
         hits = index.getGlobalIndex().search(GRANTEE1, query);
         Assert.assertEquals(1, hits.size());
-        Assert.assertEquals(doc.getName(), hits.get(0).getFilename());
-        Assert.assertEquals(doc.getDate(), hits.get(0).getDate());
+        Assert.assertEquals(doc.getName(), hits.get(0).getDocument().getFilename());
+        Assert.assertEquals(doc.getDate(), hits.get(0).getDocument().getDate());
 
         mbox.revokeAccess(null, shared.getId(), GRANTEE1); // revoke the right
         hits = index.getGlobalIndex().search(GRANTEE1, query);

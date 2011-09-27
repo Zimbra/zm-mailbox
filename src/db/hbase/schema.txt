@@ -14,4 +14,4 @@
 # $ bin/hbase shell < schema.txt
 
 create 'zimbra.index', {NAME => 'mbox', VERSIONS => 1},  {NAME => 'term', VERSIONS => 2147483647}, {NAME => 'item', VERSIONS => 2147483647}
-create 'zimbra.global.index', {NAME => 'term', VERSIONS => 1}, {NAME => 'item', VERSIONS => 1}
+create 'zimbra.global.index', {NAME => 'term', VERSIONS => 1}, {NAME => 'item', VERSIONS => 1}, {NAME => 'server', VERSIONS => 1}

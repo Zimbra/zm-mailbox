@@ -15,13 +15,14 @@
 package com.zimbra.cs.index.global;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.KeyValue;
@@ -31,6 +32,7 @@ import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
 import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueExcludeFilter;
 import org.apache.hadoop.hbase.filter.SubstringComparator;
@@ -42,11 +44,16 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.common.io.Closeables;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.index.global.HBaseIndex.TermInfo;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
@@ -61,15 +68,25 @@ import com.zimbra.cs.session.PendingModifications;
  */
 public final class GlobalIndex {
     static final String GLOBAL_INDEX_TABLE = "zimbra.global.index";
+    static final byte[] SERVER_CF = Bytes.toBytes("server");
+    static final byte[] ITEM_COUNT_COL = Bytes.toBytes("#item"); // number of total items per server
     static final byte[] ACL_COL = Bytes.toBytes("acl");
 
     private final HTablePool pool;
     private final byte[] indexTableName;
+    private final ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(1,
+            new ThreadFactoryBuilder().setNameFormat("GlobalIndex").setDaemon(true).build());
+    private final AtomicLong totalItemCount = new AtomicLong(0L);
 
     GlobalIndex(Configuration conf, HTablePool pool) {
         this.pool = pool;
         indexTableName = Bytes.toBytes(conf.get(GLOBAL_INDEX_TABLE, GLOBAL_INDEX_TABLE)); // test may override
         MailboxListener.register(new GlobalIndexMailboxListener());
+        timer.scheduleWithFixedDelay(new TotalItemCountUpdater(), 0L, 60L, TimeUnit.SECONDS); //TODO LC
+    }
+
+    void destroy() {
+        timer.shutdownNow();
     }
 
     /**
@@ -80,7 +97,7 @@ public final class GlobalIndex {
      * TODO: move this logic to HBase backend using coprocessor.
      */
     void index(HBaseIndex index, Map<MailItem, Folder> items) throws IOException {
-        List<Put> batch = new ArrayList<Put>();
+        List<Put> batch = Lists.newArrayList();
         for (Map.Entry<MailItem, Folder> entry : items.entrySet()) {
             MailItem item = entry.getKey();
             byte[] gid = GlobalItemID.toBytes(index.mailbox.getAccountId(), item.getId());
@@ -103,9 +120,12 @@ public final class GlobalIndex {
         HTableInterface table = pool.getTable(indexTableName);
         try {
             table.put(batch);
+            table.incrementColumnValue(Bytes.toBytes(LC.zimbra_server_hostname.value()),
+                    SERVER_CF, ITEM_COUNT_COL, items.size());
         } finally {
             pool.putTable(table);
         }
+        totalItemCount.addAndGet(items.size());
     }
 
     /**
@@ -139,7 +159,7 @@ public final class GlobalIndex {
      * Update ACL for all items under the folder.
      */
     private void updateACL(Folder folder) throws IOException {
-        List<Put> batch = new ArrayList<Put>();
+        List<Put> batch = Lists.newArrayList();
         for (Folder sub : folder.getSubfolderHierarchy()) { // this folder and its descendants
             if (sub.getDefaultView() == MailItem.Type.DOCUMENT) {
                 byte[] acl = encodeACL(sub);
@@ -168,7 +188,7 @@ public final class GlobalIndex {
     }
 
     private byte[] encodeACL(Folder folder) {
-        List<String> grantees = new ArrayList<String>(1);
+        List<String> grantees = Lists.newArrayListWithExpectedSize(1);
         grantees.add(folder.getMailbox().getAccountId()); // owner
         ACL acl = folder.getEffectiveACL();
         if (acl != null) {
@@ -205,9 +225,12 @@ public final class GlobalIndex {
         HTableInterface table = pool.getTable(indexTableName);
         try {
             table.delete(delete);
+            table.incrementColumnValue(Bytes.toBytes(LC.zimbra_server_hostname.value()),
+                    SERVER_CF, ITEM_COUNT_COL, -1L);
         } finally {
             pool.putTable(table);
         }
+        totalItemCount.addAndGet(-1L);
     }
 
     /**
@@ -215,7 +238,7 @@ public final class GlobalIndex {
      * Global items should include all information required for the search result as we do not want to fetch rows from
      * MAIL_ITEM table across servers.
      */
-    public List<GlobalDocument> search(String principal, Query query) throws IOException {
+    public List<GlobalSearchHit> search(String principal, Query query) throws IOException {
         if (query instanceof BooleanQuery) {
             return search(principal, (BooleanQuery) query);
         } else if (query instanceof TermQuery) {
@@ -225,22 +248,24 @@ public final class GlobalIndex {
         }
     }
 
-    private List<GlobalDocument> fetch(HTableInterface table, String principal, Collection<GlobalItemID> ids)
+    private List<GlobalSearchHit> fetch(HTableInterface table, String principal, List<TermHit> termHits)
             throws IOException {
         SingleColumnValueExcludeFilter filter = new SingleColumnValueExcludeFilter(HBaseIndex.ITEM_CF, ACL_COL,
                 CompareFilter.CompareOp.EQUAL, new SubstringComparator(principal));
         filter.setFilterIfMissing(true);
 
-        List<Get> batch = Lists.newArrayListWithCapacity(ids.size());
-        for (GlobalItemID id : ids) {
-            Get get = new Get(id.toBytes());
+        Map<GlobalItemID, Float> id2score = Maps.newHashMapWithExpectedSize(termHits.size());
+        List<Get> batch = Lists.newArrayListWithCapacity(termHits.size());
+        for (TermHit hit : termHits) {
+            id2score.put(hit.getGID(), hit.score());
+            Get get = new Get(hit.getGID().toBytes());
             get.addFamily(HBaseIndex.ITEM_CF);
             get.setFilter(filter);
             batch.add(get);
         }
 
         Result[] results = table.get(batch);
-        List<GlobalDocument> docs = new ArrayList<GlobalDocument>(results.length);
+        List<GlobalSearchHit> hits = Lists.newArrayListWithCapacity(results.length);
         for (Result result : results) {
             if (result == null || result.isEmpty()) {
                 continue;
@@ -272,16 +297,16 @@ public final class GlobalIndex {
                     if (fragment != null) {
                         doc.setFragment(Bytes.toString(fragment));
                     }
-                    docs.add(doc);
+                    hits.add(new GlobalSearchHit(doc, id2score.get(doc.getGID())));
                     break;
                 default:
                     break;
             }
         }
-        return docs;
+        return hits;
     }
 
-    private List<GlobalDocument> search(String principal, TermQuery query) throws IOException {
+    private List<GlobalSearchHit> search(String principal, TermQuery query) throws IOException {
         Get term = new Get(HBaseIndex.toBytes(query.getTerm()));
         term.addFamily(HBaseIndex.TERM_CF);
         HTableInterface table = pool.getTable(indexTableName);
@@ -290,17 +315,18 @@ public final class GlobalIndex {
             if (result.isEmpty()) { // no hits
                 return Collections.emptyList();
             }
-            List<GlobalItemID> ids = Lists.newArrayListWithCapacity(result.size());
+            List<TermHit> hits = Lists.newArrayListWithCapacity(result.size());
             for (KeyValue kv : result.raw()) {
-                ids.add(new GlobalItemID(kv.getQualifier()));
+                hits.add(new TermHit(kv, 1.0F)); // IDF is irrelevant in a single term query
             }
-            return fetch(table, principal, ids);
+            Collections.sort(hits); // sort by score
+            return fetch(table, principal, hits);
         } finally {
             pool.putTable(table);
         }
     }
 
-    private List<GlobalDocument> search(String principal, BooleanQuery query) throws IOException {
+    private List<GlobalSearchHit> search(String principal, BooleanQuery query) throws IOException {
         Map<Term, Get> term2get = Maps.newHashMap(); // merge duplicate terms
         for (BooleanClause clause : query.clauses()) {
             if (!clause.isRequired()) {
@@ -322,7 +348,7 @@ public final class GlobalIndex {
             return Collections.emptyList();
         }
 
-        Map<Term, Set<GlobalItemID>> term2ids = Maps.newHashMapWithExpectedSize(term2get.size());
+        Map<Term, Set<TermHit>> term2hits = Maps.newHashMapWithExpectedSize(term2get.size());
         HTableInterface table = pool.getTable(indexTableName);
         try {
             Result[] results = table.get(Lists.newArrayList(term2get.values())); // query TERM CF
@@ -334,29 +360,34 @@ public final class GlobalIndex {
                 if (term == null) { // invalid term for some reasons
                     continue;
                 }
-                Set<GlobalItemID> ids = Sets.newHashSetWithExpectedSize(result.size());
+                // idf(t) = log(total number of documents / number of documents where the term(t) appears)
+                float idf = (float) Math.log(totalItemCount.doubleValue() / result.size());
+                Set<TermHit> hits = Sets.newHashSetWithExpectedSize(result.size());
                 for (KeyValue kv : result.raw()) {
-                    ids.add(new GlobalItemID(kv.getQualifier()));
+                    hits.add(new TermHit(kv, idf));
                 }
-                term2ids.put(term, ids);
+                term2hits.put(term, hits);
             }
 
-            Set<GlobalItemID> conj = Sets.newHashSet(); // raw byte array is not hash-able
+            Set<TermHit> conj = Sets.newHashSet();
             for (BooleanClause clause : query.clauses()) {
                 Term term = ((TermQuery) clause.getQuery()).getTerm(); // it's all TermQuery at this point
-                Set<GlobalItemID> ids = term2ids.get(term);
-                if (ids == null || ids.isEmpty()) { // no hit if any of terms has no hit
+                Set<TermHit> hits = term2hits.get(term);
+                if (hits == null || hits.isEmpty()) { // no hit if any of terms has no hit
                     return Collections.emptyList();
                 } else if (conj.isEmpty()) { // first clause
-                    conj.addAll(ids);
+                    conj.addAll(hits);
                 } else { // apply AND
-                    conj.retainAll(ids);
+                    conj.retainAll(hits);
                 }
             }
             if (conj.isEmpty()) { // empty after ANDed
                 return Collections.emptyList();
             }
-            return fetch(table, principal, conj);
+
+            List<TermHit> hits = Lists.newArrayList(conj);
+            Collections.sort(hits); // sort by score
+            return fetch(table, principal, hits);
         } finally {
             pool.putTable(table);
         }
@@ -402,4 +433,82 @@ public final class GlobalIndex {
             }
         }
     }
+
+    /**
+     * Can't do {@code COUNT(*) FROM table} in HBase, so each server updates its own counter in SERVER CF, and
+     * periodically aggregates counters from all servers.
+     *
+     * TODO: Admin util to recalculate from MySQL in case the counter gets skewed.
+     */
+    private final class TotalItemCountUpdater implements Runnable {
+        @Override
+        public void run() {
+            HTableInterface table = pool.getTable(indexTableName);
+            ResultScanner scanner = null;
+            try {
+                scanner = table.getScanner(SERVER_CF, ITEM_COUNT_COL);
+                long total = 0;
+                while (true) {
+                    Result result = scanner.next();
+                    if (result == null) {
+                        break;
+                    }
+                    total += Bytes.toLong(result.getValue(SERVER_CF, ITEM_COUNT_COL));
+                }
+                totalItemCount.set(total);
+            } catch (IOException e) {
+                ZimbraLog.index.error("Failed to update total item count", e);
+            } finally {
+                Closeables.closeQuietly(scanner);
+                pool.putTable(table);
+            }
+        }
+    }
+
+    private static final class TermHit implements Comparable<TermHit> {
+        private final GlobalItemID id;
+        private final TermInfo termInfo;
+        private final float idf;
+
+        TermHit(KeyValue kv, float idf) throws IOException {
+            this.id = new GlobalItemID(kv.getQualifier());
+            this.termInfo = TermInfo.decode(kv.getValue());
+            this.idf = idf;
+        }
+
+        GlobalItemID getGID() {
+            return id;
+        }
+
+        /**
+         * {@code tf-idf(t,d) = tf(t,d) * idf(t)}.
+         */
+        float score() {
+            return ((float) termInfo.getTermCount() / (float) termInfo.getTotalTermCount()) * idf;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof TermHit && id.equals(((TermHit) o).id);
+        }
+
+        @Override
+        public int hashCode() {
+            return id.hashCode();
+        }
+
+        /**
+         * Sort by score in descending order (higher to lower).
+         */
+        @Override
+        public int compareTo(TermHit o) {
+            return Float.compare(o.score(), score());
+        }
+
+        @Override
+        public String toString() {
+            return Objects.toStringHelper(this).add("id", id).add("score", score()).toString();
+        }
+    }
+
 }
