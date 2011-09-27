@@ -1263,6 +1263,9 @@ Access: domain admin sufficient
 
 <GetDistributionListResponse more="{more-flag}" [total="{total}"]>
   <dl name="{name}" id="{id}" dynamic="1|0">
+    [<owners>
+      <owner id="..." name="..." type="..."/>+
+    </owners>]
     <dlm>{member}</dlm>+
     <a n="...">...</a>+
   </dl>
