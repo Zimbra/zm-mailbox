@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -13,14 +13,12 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.account.type;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Collection;
 import java.util.Collections;
 
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -30,21 +28,21 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.account.type.DistributionListOwnerInfo;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.base.DistributionListOwnerInfoInterface;
+import com.zimbra.soap.type.KeyValuePair;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AdminConstants.E_DL)
-public class DistributionListInfo extends AdminObjectInfo {
+@XmlRootElement(name=AccountConstants.E_DL)
+public class DistributionListInfo extends ObjectInfo {
 
-    @XmlAttribute(name=AdminConstants.A_DYNAMIC, required=false)
+    @XmlAttribute(name=AccountConstants.A_DYNAMIC, required=false)
     Boolean dynamic;
-    @XmlElement(name=AdminConstants.E_DLM, required=false)
+    @XmlElement(name=AccountConstants.E_DLM, required=false)
     private List<String> members;
     
-    @XmlElementWrapper(name=AdminConstants.E_DL_OWNERS, required=false)
-    @XmlElement(name=AdminConstants.E_DL_OWNER, required=false)
+    @XmlElementWrapper(name=AccountConstants.E_DL_OWNERS, required=false)
+    @XmlElement(name=AccountConstants.E_DL_OWNER, required=false)
     private List<DistributionListOwnerInfo> owners = Lists.newArrayList();
 
     /**
@@ -53,27 +51,27 @@ public class DistributionListInfo extends AdminObjectInfo {
     @SuppressWarnings("unused")
     private DistributionListInfo() {
         this((String) null, (String) null, 
-            (Collection <String>) null, (Collection <Attr>) null);
+            (Collection <String>) null, (Collection <KeyValuePair>) null);
     }
 
     public DistributionListInfo(String id, String name) {
         this((String)id, (String)name, 
-            (Collection <String>) null, (Collection <Attr>) null);
+            (Collection <String>) null, (Collection <KeyValuePair>) null);
     }
 
     public DistributionListInfo(String id, String name,
-            Collection <String> members, Collection <Attr> attrs) {
+            Collection <String> members, Collection <KeyValuePair> attrs) {
         super(id, name, attrs);
         setMembers(members);
     }
-
+    
     public void setMembers(Collection <String> members) {
         this.members = Lists.newArrayList();
         if (members != null) {
             this.members.addAll(members);
         }
     }
-    
+
     public List<String> getMembers() {
         return Collections.unmodifiableList(members);
     }
@@ -101,5 +99,4 @@ public class DistributionListInfo extends AdminObjectInfo {
     public List<? extends DistributionListOwnerInfoInterface> getOwners() {
         return Collections.unmodifiableList(owners);
     }
-
 }

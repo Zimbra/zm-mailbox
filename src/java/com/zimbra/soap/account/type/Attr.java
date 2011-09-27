@@ -84,7 +84,7 @@ public class Attr implements KeyAndValue {
             .toString();
     }
 
-    public static Multimap<String, String> toMultimap(List<Attr> attrs) {
+    public static Multimap<String, String> toMultimap(List<? extends Attr> attrs) {
         Multimap<String, String> map = ArrayListMultimap.create();
         if (attrs != null) {
             for (Attr a : attrs) {

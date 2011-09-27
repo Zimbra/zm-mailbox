@@ -13,22 +13,22 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.account.type;
+package com.zimbra.soap.type;
 
-import java.util.List;
-import java.util.Map;
-
-import com.google.common.collect.Multimap;
+import javax.xml.bind.annotation.XmlEnum;
 
 import com.zimbra.common.service.ServiceException;
 
-public interface Attrs {
-    public Attrs setAttrs(Iterable<? extends Attr> attrs);
-    public Attrs setAttrs(Map<String, ? extends Object> attrs)
-        throws ServiceException;
-    public Attrs addAttr(Attr attr);
-    public List<? extends Attr> getAttrs();
-    public Multimap<String, String> getAttrsMultimap();
-    public String getFirstMatchingAttr(String name);
-    public Map<String, Object> getAttrsAsOldMultimap();
+@XmlEnum
+public enum DistributionListOwnerType {
+    // case must match protocol
+    usr, grp, all, dom, gst, key, pub;
+    
+    public static DistributionListOwnerType fromString(String s) throws ServiceException {
+        try {
+            return DistributionListOwnerType.valueOf(s);
+        } catch (IllegalArgumentException e) {
+            throw ServiceException.INVALID_REQUEST("unknown type: "+s, e);
+        }
+    }
 }

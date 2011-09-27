@@ -61,7 +61,7 @@ abstract public class AttrsImpl implements Attrs {
     }
 
     @Override
-    public Attrs setAttrs(Iterable<Attr> attrs) {
+    public Attrs setAttrs(Iterable<? extends Attr> attrs) {
         this.attrs.clear();
         if (attrs != null) {
             Iterables.addAll(this.attrs, attrs);

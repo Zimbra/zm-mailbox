@@ -13,22 +13,26 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.account.type;
+package com.zimbra.soap.type;
 
-import java.util.List;
-import java.util.Map;
-
-import com.google.common.collect.Multimap;
+import java.util.Arrays;
+import javax.xml.bind.annotation.XmlEnum;
 
 import com.zimbra.common.service.ServiceException;
 
-public interface Attrs {
-    public Attrs setAttrs(Iterable<? extends Attr> attrs);
-    public Attrs setAttrs(Map<String, ? extends Object> attrs)
-        throws ServiceException;
-    public Attrs addAttr(Attr attr);
-    public List<? extends Attr> getAttrs();
-    public Multimap<String, String> getAttrsMultimap();
-    public String getFirstMatchingAttr(String name);
-    public Map<String, Object> getAttrsAsOldMultimap();
+@XmlEnum
+public enum DistributionListBy {
+    // case must match protocol
+    id, name;
+
+    public static DistributionListBy fromString(String s)
+    throws ServiceException {
+        try {
+            return DistributionListBy.valueOf(s);
+        } catch (IllegalArgumentException e) {
+           throw ServiceException.INVALID_REQUEST("unknown 'By' key: " +
+                   s + ", valid values: " +
+                   Arrays.asList(DistributionListBy.values()), null);
+        }
+    }
 }
