@@ -44,6 +44,9 @@ public final class GlobalSearchResponse {
         @XmlAttribute(name = MailConstants.A_ID)
         private String id;
 
+        @XmlAttribute(name = MailConstants.A_SCORE)
+        private int score;
+
         @XmlAttribute(name = MailConstants.A_NAME)
         private String name;
 
@@ -65,6 +68,14 @@ public final class GlobalSearchResponse {
 
         public void setID(String value) {
             id = value;
+        }
+
+        public int getScore() {
+            return score;
+        }
+
+        public void setScore(int value) {
+            score = value;
         }
 
         public String getName() {
