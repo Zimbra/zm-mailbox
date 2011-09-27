@@ -13,22 +13,12 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.base;
+package com.zimbra.soap.admin.message;
 
-import java.util.List;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.soap.type.AttributeName;
-import com.zimbra.soap.type.CursorInfo;
-import com.zimbra.soap.type.GalSearchType;
+import com.zimbra.common.soap.AdminConstants;
 
-public interface AutoCompleteGalSpecInterface
-extends SearchParameters {
-
-    public void setName(String name);
-    public void setType(GalSearchType type);
-    public void setGalAccountId(String galAccountId);
-
-    public String getName();
-    public GalSearchType getType();
-    public String getGalAccountId();
+@XmlRootElement(name=AdminConstants.E_SYNC_GAL_ACCOUNT_RESPONSE)
+public class SyncGalAccountResponse {
 }

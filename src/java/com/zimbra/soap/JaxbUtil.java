@@ -18,6 +18,7 @@ package com.zimbra.soap;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
+import java.util.Iterator;
 import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
@@ -35,12 +36,14 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.dom4j.Document;
+import org.dom4j.Namespace;
 import org.dom4j.io.DocumentResult;
 import org.dom4j.io.DocumentSource;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -124,6 +127,12 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.ModifyWhiteBlackListResponse.class,
             com.zimbra.soap.account.message.ModifyZimletPrefsRequest.class,
             com.zimbra.soap.account.message.ModifyZimletPrefsResponse.class,
+            com.zimbra.soap.account.message.SearchCalendarResourcesRequest.class,
+            com.zimbra.soap.account.message.SearchCalendarResourcesResponse.class,
+            com.zimbra.soap.account.message.SearchGalRequest.class,
+            com.zimbra.soap.account.message.SearchGalResponse.class,
+            com.zimbra.soap.account.message.SyncGalRequest.class,
+            com.zimbra.soap.account.message.SyncGalResponse.class,
             com.zimbra.soap.account.message.UpdateProfileRequest.class,
             com.zimbra.soap.account.message.UpdateProfileResponse.class,
 
@@ -286,6 +295,10 @@ public final class JaxbUtil {
             com.zimbra.soap.mail.message.GetTaskResponse.class,
             com.zimbra.soap.mail.message.GetTaskSummariesRequest.class,
             com.zimbra.soap.mail.message.GetTaskSummariesResponse.class,
+            com.zimbra.soap.mail.message.GetWatchersRequest.class,
+            com.zimbra.soap.mail.message.GetWatchersResponse.class,
+            com.zimbra.soap.mail.message.GetWatchingItemsRequest.class,
+            com.zimbra.soap.mail.message.GetWatchingItemsResponse.class,
             com.zimbra.soap.mail.message.GetWorkingHoursRequest.class,
             com.zimbra.soap.mail.message.GetWorkingHoursResponse.class,
             com.zimbra.soap.mail.message.GetYahooAuthTokenRequest.class,
@@ -798,14 +811,22 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.ScheduleBackupsResponse.class,
             com.zimbra.soap.admin.message.SearchAccountsRequest.class,
             com.zimbra.soap.admin.message.SearchAccountsResponse.class,
+            com.zimbra.soap.admin.message.SearchAutoProvDirectoryRequest.class,
+            com.zimbra.soap.admin.message.SearchAutoProvDirectoryResponse.class,
             com.zimbra.soap.admin.message.SearchCalendarResourcesRequest.class,
             com.zimbra.soap.admin.message.SearchCalendarResourcesResponse.class,
             com.zimbra.soap.admin.message.SearchDirectoryRequest.class,
             com.zimbra.soap.admin.message.SearchDirectoryResponse.class,
+            com.zimbra.soap.admin.message.SearchGalRequest.class,
+            com.zimbra.soap.admin.message.SearchGalResponse.class,
+            com.zimbra.soap.admin.message.SearchMultiMailboxRequest.class,
+            com.zimbra.soap.admin.message.SearchMultiMailboxResponse.class,
             com.zimbra.soap.admin.message.SetCurrentVolumeRequest.class,
             com.zimbra.soap.admin.message.SetCurrentVolumeResponse.class,
             com.zimbra.soap.admin.message.SetPasswordRequest.class,
             com.zimbra.soap.admin.message.SetPasswordResponse.class,
+            com.zimbra.soap.admin.message.SyncGalAccountRequest.class,
+            com.zimbra.soap.admin.message.SyncGalAccountResponse.class,
             com.zimbra.soap.admin.message.UndeployZimletRequest.class,
             com.zimbra.soap.admin.message.UndeployZimletResponse.class,
             com.zimbra.soap.admin.message.UnloadMailboxRequest.class,
@@ -873,7 +894,9 @@ public final class JaxbUtil {
 
             // zimbraAppblast
             com.zimbra.soap.appblast.message.EditDocumentRequest.class,
-            com.zimbra.soap.appblast.message.EditDocumentResponse.class
+            com.zimbra.soap.appblast.message.EditDocumentResponse.class,
+            com.zimbra.soap.appblast.message.FinishEditDocumentRequest.class,
+            com.zimbra.soap.appblast.message.FinishEditDocumentResponse.class
         };
 
         try {
@@ -891,12 +914,18 @@ public final class JaxbUtil {
     }
 
     /**
-     * @param o - associated class must have an @XmlRootElement annotation
+     * JAXB marshaling creates XML which makes heavy use of namespace prefixes.  Historical Zimbra SOAP XML
+     * has generally not used them inside the SOAP body.  JAXB uses randomly assigned prefixes such as "ns2" which
+     * makes the XML ugly and verbose.  If {@link removePrefixes} is set then all namespace prefix usage is
+     * expunged from the XML.
+     *
+     * @param o - associated JAXB class must have an @XmlRootElement annotation
      * @param factory - e.g. XmlElement.mFactory or JSONElement.mFactory
+     * @param removePrefixes - If true then remove namepace prefixes from unmarshalled XML.
      * @return
      * @throws ServiceException
      */
-    public static Element jaxbToElement(Object o, Element.ElementFactory factory)
+    public static Element jaxbToElement(Object o, Element.ElementFactory factory, boolean removePrefixes)
     throws ServiceException {
         try {
             Marshaller marshaller = getContext().createMarshaller();
@@ -905,6 +934,9 @@ public final class JaxbUtil {
             marshaller.marshal(o, dr);
             Document theDoc = dr.getDocument();
             org.dom4j.Element rootElem = theDoc.getRootElement();
+            if (removePrefixes) {
+                    JaxbUtil.removeNamespacePrefixes(rootElem);
+            }
             return Element.convertDOM(rootElem, factory);
         } catch (Exception e) {
             throw ServiceException.FAILURE("Unable to convert " +
@@ -912,8 +944,39 @@ public final class JaxbUtil {
         }
     }
 
+    /**
+     * @param o - associated JAXB class must have an @XmlRootElement annotation
+     * @param factory - e.g. XmlElement.mFactory or JSONElement.mFactory
+     * @return
+     * @throws ServiceException
+     */
+    public static Element jaxbToElement(Object o, Element.ElementFactory factory)
+    throws ServiceException {
+        return JaxbUtil.jaxbToElement(o, factory, true);
+    }
+
     public static Element jaxbToElement(Object o) throws ServiceException {
         return jaxbToElement(o, XMLElement.mFactory);
+    }
+
+    /**
+     * Use namespace inheritance in preference to prefixes
+     * @param elem
+     * @param defaultNs
+     */
+    private static void removeNamespacePrefixes(org.dom4j.Element elem) {
+        Namespace elemNs = elem.getNamespace();
+        if (elemNs != null) {
+            if (! Strings.isNullOrEmpty(elemNs.getPrefix())) {
+                Namespace newNs = Namespace.get(elemNs.getURI());
+                org.dom4j.QName newQName = new org.dom4j.QName(elem.getName(), newNs);
+                elem.setQName(newQName);
+            }
+        }
+        Iterator<?> elemIter = elem.elementIterator();
+        while (elemIter.hasNext()) {
+            JaxbUtil.removeNamespacePrefixes((org.dom4j.Element) elemIter.next());
+        }
     }
 
     private static JAXBContext getJaxbContext(Class<?> klass)

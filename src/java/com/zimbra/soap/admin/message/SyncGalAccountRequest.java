@@ -13,46 +13,52 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.admin.message;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
+import java.util.Collections;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.soap.base.EntrySearchFilterInterface;
-import com.zimbra.soap.type.SearchFilterCondition;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.admin.type.SyncGalAccountSpec;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class EntrySearchFilterInfo
-implements EntrySearchFilterInterface {
+@XmlRootElement(name=AdminConstants.E_SYNC_GAL_ACCOUNT_REQUEST)
+public class SyncGalAccountRequest {
 
-    @XmlElements({
-        @XmlElement(name=AccountConstants.E_ENTRY_SEARCH_FILTER_MULTICOND /* conds */,
-            type=EntrySearchFilterMultiCond.class),
-        @XmlElement(name=AccountConstants.E_ENTRY_SEARCH_FILTER_SINGLECOND /* cond */,
-            type=EntrySearchFilterSingleCond.class)
-    })
-    private SearchFilterCondition condition;
+    @XmlElement(name=AdminConstants.E_ACCOUNT /* account */, required=false)
+    private List<SyncGalAccountSpec> accounts = Lists.newArrayList();
 
-    public EntrySearchFilterInfo() {
+    public SyncGalAccountRequest() {
     }
 
-    public EntrySearchFilterInfo(SearchFilterCondition condition) {
-        this.setCondition(condition);
+    public void setAccounts(Iterable <SyncGalAccountSpec> accounts) {
+        this.accounts.clear();
+        if (accounts != null) {
+            Iterables.addAll(this.accounts,accounts);
+        }
     }
 
-    @Override
-    public void setCondition(SearchFilterCondition condition) { this.condition = condition; }
-    @Override
-    public SearchFilterCondition getCondition() { return condition; }
+    public void addAccount(SyncGalAccountSpec account) {
+        this.accounts.add(account);
+    }
+
+    public List<SyncGalAccountSpec> getAccounts() {
+        return accounts;
+    }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("condition", condition);
+            .add("accounts", accounts);
     }
 
     @Override

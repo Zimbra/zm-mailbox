@@ -49,7 +49,9 @@ import com.zimbra.soap.account.type.Pref;
 import com.zimbra.soap.admin.message.CreateAccountRequest;
 import com.zimbra.soap.admin.message.CreateXMbxSearchRequest;
 import com.zimbra.soap.admin.message.MailQueueActionRequest;
+import com.zimbra.soap.admin.message.SearchAutoProvDirectoryResponse;
 import com.zimbra.soap.admin.type.Attr;
+import com.zimbra.soap.admin.type.AutoProvDirectoryEntry;
 import com.zimbra.soap.admin.type.MailQueueAction;
 import com.zimbra.soap.admin.type.MailQueueWithAction;
 import com.zimbra.soap.admin.type.QueueQuery;
@@ -66,6 +68,7 @@ import com.zimbra.soap.mail.type.NoteActionSelector;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 import com.zimbra.soap.type.AttributeName;
 import com.zimbra.soap.type.Id;
+import com.zimbra.soap.type.KeyValuePair;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -457,7 +460,7 @@ public class JaxbToElementTest {
         List<Attr> attrs = req.getAttrs();
         Assert.assertEquals("Number of attrs", 1, attrs.size());
         Assert.assertEquals("attr 1 name", "attrName1",
-                attrs.get(0).getN());
+                attrs.get(0).getKey());
         Assert.assertEquals("attr 1 value", "",
                 attrs.get(0).getValue());
     }
@@ -582,6 +585,34 @@ public class JaxbToElementTest {
         CreateXMbxSearchRequest soapObj = jaxbElem.getValue();
         Assert.assertNotNull("Unmarshal soap object", soapObj);
         Assert.assertEquals("Number of attributes", 10, soapObj.getKeyValuePairs().size());
+    }
+
+    // AutoProvDirectoryEntry contains 2 lists - one via extending AdminKeyValuePairs
+    // No order is specified for elements via XmlType propOrder.  Checking how well this works.
+    @Test
+    public void searchAutoProvDirectoryResponse() throws Exception {
+        Element resp = Element.XMLElement.mFactory.createElement(
+                AdminConstants.SEARCH_AUTO_PROV_DIRECTORY_RESPONSE);
+        resp.addAttribute(AdminConstants.A_MORE, false);
+        resp.addAttribute(AdminConstants.A_SEARCH_TOTAL, 1);
+        Element entryE = resp.addElement(AdminConstants.E_ENTRY);
+        entryE.addAttribute(AdminConstants.A_DN, "displayNam");
+        entryE.addElement(AdminConstants.E_KEY).setText("keyValue1");
+        entryE.addElement(AdminConstants.E_KEY).setText("keyValue2");
+        entryE.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, "nVal1").setText("attr1Txt");
+        entryE.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, "nVal2").setText("attr2Txt");
+        SearchAutoProvDirectoryResponse jaxb = JaxbUtil.elementToJaxb(resp);
+        Assert.assertNotNull("Unmarshal soap object", jaxb);
+        List<AutoProvDirectoryEntry> entries = jaxb.getEntries();
+        Assert.assertNotNull("entries list", entries);
+        Assert.assertEquals("Number of entries", 1, entries.size());
+        AutoProvDirectoryEntry entry = entries.get(0);
+        List<KeyValuePair> kvps = entry.getKeyValuePairs();
+        Assert.assertNotNull("entry - attrs list", kvps);
+        Assert.assertEquals("entry - Number of attrs", 2, kvps.size());
+        List<String> keys = entry.getKeys();
+        Assert.assertNotNull("entry - keys list", keys);
+        Assert.assertEquals("entry - Number of keys", 2, keys.size());
     }
 
     // TODO - enable when bug fixed

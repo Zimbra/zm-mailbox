@@ -13,45 +13,30 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.soap.mail.type;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.admin.type.CalTZInfo;
-import com.zimbra.soap.base.AutoCompleteGalSpecInterface;
 import com.zimbra.soap.base.CalTZInfoInterface;
+import com.zimbra.soap.base.SearchParameters;
 import com.zimbra.soap.type.AttributeName;
 import com.zimbra.soap.type.CursorInfo;
-import com.zimbra.soap.type.GalSearchType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_AUTO_COMPLETE_GAL_REQUEST)
-public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
+public class MailSearchParams implements SearchParameters {
 
-    @XmlAttribute(name=AdminConstants.A_DOMAIN /* domain */, required=true)
-    private String domain;
-
-    @XmlAttribute(name=AccountConstants.E_NAME /* name */, required=true)
-    private String name;
-
-    @XmlAttribute(name=AccountConstants.A_TYPE /* type */, required=false)
-    private GalSearchType type;
-
-    @XmlAttribute(name=AccountConstants.A_GAL_ACCOUNT_ID /* galAcctId */, required=false)
-    private String galAccountId;
+    // Handles attributes and elements processed by SearchParams.parse
 
     @XmlAttribute(name=MailConstants.A_INCLUDE_TAG_DELETED /* includeTagDeleted */, required=false)
     private Boolean includeTagDeleted;
@@ -84,7 +69,7 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
     @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
     private String sortBy;
 
-    // Based on ExpandResults but allows "0" and "false" as synonyms for "none" + "1" for "first"
+    // Based on SearchParams.ExpandResults but allows "0" and "false" as synonyms for "none" + "1" for "first"
     @XmlAttribute(name=MailConstants.A_FETCH /* fetch */, required=false)
     private String fetch;
 
@@ -131,29 +116,8 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
     @XmlElement(name=MailConstants.E_CURSOR /* cursor */, required=false)
     private CursorInfo cursor;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    private AutoCompleteGalRequest() {
-        this((String) null, (String) null);
+    public MailSearchParams() {
     }
-
-    private AutoCompleteGalRequest(String domain, String name) {
-        this.setDomain(domain);
-        this.name = name;
-    }
-
-    public AutoCompleteGalRequest createForDomainAndName(String domain, String name) {
-        return new AutoCompleteGalRequest(domain, name);
-    }
-
-    public void setDomain(String domain) { this.domain = domain; }
-    @Override
-    public void setName(String name) {this.name = name; }
-    @Override
-    public void setType(GalSearchType type) { this.type = type; }
-    @Override
-    public void setGalAccountId(String galAccountId) { this.galAccountId = galAccountId; }
 
     @Override
     public void setIncludeTagDeleted(Boolean includeTagDeleted) { this.includeTagDeleted = includeTagDeleted; }
@@ -215,14 +179,6 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
     public void setLocale(String locale) { this.locale = locale; }
     @Override
     public void setCursor(CursorInfo cursor) { this.cursor = cursor; }
-
-    public String getDomain() { return domain; }
-    @Override
-    public String getName() { return name; }
-    @Override
-    public GalSearchType getType() { return type; }
-    @Override
-    public String getGalAccountId() { return galAccountId; }
     @Override
     public Boolean getIncludeTagDeleted() { return includeTagDeleted; }
     @Override
@@ -267,25 +223,18 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
     public Integer getOffset() { return offset; }
     @Override
     public List<AttributeName> getHeaders() {
-        return headers;  // returning unmodifiable collection causes problems for JAXB
+        return Collections.unmodifiableList(headers);
     }
+    @Override
     public CalTZInfo getCalTz() { return calTz; }
     @Override
     public String getLocale() { return locale; }
     @Override
     public CursorInfo getCursor() { return cursor; }
 
-    // Not a JAXB related method
-    @Override
-    public void setCalTz(CalTZInfoInterface calTz) { this.setCalTz((CalTZInfo)calTz); }
-
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("domain", domain)
-            .add("name", name)
-            .add("type", type)
-            .add("galAccountId", galAccountId)
             .add("includeTagDeleted", includeTagDeleted)
             .add("allowableTaskStatus", allowableTaskStatus)
             .add("calItemExpandStart", calItemExpandStart)
@@ -317,5 +266,10 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
     public String toString() {
         return addToStringInfo(Objects.toStringHelper(this))
                 .toString();
+    }
+
+    @Override
+    public void setCalTz(CalTZInfoInterface calTz) {
+        setCalTz((CalTZInfo) calTz);
     }
 }

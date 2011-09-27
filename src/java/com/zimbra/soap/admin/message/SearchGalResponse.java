@@ -27,17 +27,17 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.admin.type.ContactInfo;
-import com.zimbra.soap.base.ContactInterface;
-import com.zimbra.soap.base.AutoCompleteGalInterface;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=AdminConstants.E_AUTO_COMPLETE_GAL_RESPONSE)
-public class AutoCompleteGalResponse implements AutoCompleteGalInterface {
+@XmlRootElement(name=AdminConstants.E_SEARCH_GAL_RESPONSE)
+@XmlType(propOrder = {})
+public class SearchGalResponse {
 
     @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
     private String sortBy;
@@ -48,54 +48,24 @@ public class AutoCompleteGalResponse implements AutoCompleteGalInterface {
     @XmlAttribute(name=MailConstants.A_QUERY_MORE /* more */, required=false)
     private Boolean more;
 
-    // Probably not actually used for AutoCompleteGal
     @XmlAttribute(name=MailConstants.A_TOKEN /* token */, required=false)
     private String token;
 
-    // TODO:Is this actually set anywhere in the server?
+    // TODO:Documented in soap-admin.txt - not sure if this is still used
     @XmlAttribute(name=AccountConstants.A_TOKENIZE_KEY /* tokenizeKey */, required=false)
     private Boolean tokenizeKey;
-
-    @XmlAttribute(name=AccountConstants.A_PAGINATION_SUPPORTED /* paginationSupported */, required=false)
-    private Boolean pagingSupported;
 
     @XmlElement(name=MailConstants.E_CONTACT /* cn */, required=false)
     private List<ContactInfo> contacts = Lists.newArrayList();
 
-    // Believe that GalSearchResultCallback.handleDeleted(ItemId id) is not used for AutoCompleteGal
-    // If it were used - it would matter what order as it would probably be a list of Id
-
-    public AutoCompleteGalResponse() {
-        this((String) null, (Integer) null, (Boolean) null, (Boolean) null);
+    public SearchGalResponse() {
     }
 
-    private AutoCompleteGalResponse(String sortBy, Integer offset,
-                            Boolean more, Boolean tokenizeKey) {
-        this.setSortBy(sortBy);
-        this.setOffset(offset);
-        this.setMore(more);
-        this.tokenizeKey = tokenizeKey;
-    }
-
-    public static AutoCompleteGalResponse createForSortByOffsetMoreAndTokenizeKey(String sortBy, Integer offset,
-                            Boolean more, Boolean tokenizeKey) {
-        return new AutoCompleteGalResponse(sortBy, offset, more, tokenizeKey);
-    }
-
-
-    @Override
     public void setSortBy(String sortBy) { this.sortBy = sortBy; }
-    @Override
     public void setOffset(Integer offset) { this.offset = offset; }
-    @Override
     public void setMore(Boolean more) { this.more = more; }
-    @Override
     public void setToken(String token) { this.token = token; }
-    @Override
     public void setTokenizeKey(Boolean tokenizeKey) { this.tokenizeKey = tokenizeKey; }
-    @Override
-    public void setPagingSupported(Boolean pagingSupported) { this.pagingSupported = pagingSupported; }
-
     public void setContacts(Iterable <ContactInfo> contacts) {
         this.contacts.clear();
         if (contacts != null) {
@@ -107,36 +77,13 @@ public class AutoCompleteGalResponse implements AutoCompleteGalInterface {
         this.contacts.add(contact);
     }
 
-    @Override
     public String getSortBy() { return sortBy; }
-    @Override
     public Integer getOffset() { return offset; }
-    @Override
     public Boolean getMore() { return more; }
-    @Override
     public String getToken() { return token; }
-    @Override
     public Boolean getTokenizeKey() { return tokenizeKey; }
-    @Override
-    public Boolean getPagingSupported() { return pagingSupported; }
     public List<ContactInfo> getContacts() {
-        return contacts;
-    }
-
-    @Override
-    public List<ContactInterface> getContactInterfaces() {
-        return Collections.unmodifiableList(ContactInfo.toInterfaces(contacts));
-    }
-
-    @Override
-    public void setContactInterfaces(
-            Iterable<ContactInterface> contacts) {
-        setContacts(ContactInfo.fromInterfaces(contacts));
-    }
-
-    @Override
-    public void addContactInterface(ContactInterface contact) {
-        addContact((ContactInfo) contact);
+        return Collections.unmodifiableList(contacts);
     }
 
     public Objects.ToStringHelper addToStringInfo(
@@ -147,7 +94,6 @@ public class AutoCompleteGalResponse implements AutoCompleteGalInterface {
             .add("more", more)
             .add("token", token)
             .add("tokenizeKey", tokenizeKey)
-            .add("pagingSupported", pagingSupported)
             .add("contacts", contacts);
     }
 

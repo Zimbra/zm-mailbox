@@ -33,21 +33,22 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.soap.base.KeyAndValue;
 
-/* e.g. For element name "a":
+/**
+ *  e.g. For element name "a":
  *         <a n="{key}">{value}</a>
+ * Note:  where the attribute name is "name" rather than "n" use "Attr"
  */
 public class KeyValuePair implements KeyAndValue {
 
     @XmlAttribute(name=AdminConstants.A_N, required=true)
-    private final String key;
+    private String key;
 
     @XmlValue
-    private final String value;
+    private String value;
 
     /**
      * no-argument constructor wanted by JAXB
      */
-    @SuppressWarnings("unused")
     protected KeyValuePair() {
         this.key = null;
         this.value = null;
@@ -63,9 +64,14 @@ public class KeyValuePair implements KeyAndValue {
         this.value = value;
     }
 
+
+    @Override
+    public void setKey(String key) { this.key = key; }
+    @Override
+    public void setValue(String value) { this.value = value; }
+
     @Override
     public String getKey() { return key; }
-
     @Override
     public String getValue() { return value; }
 
@@ -124,12 +130,16 @@ public class KeyValuePair implements KeyAndValue {
         return newKeyValuePairs;
     }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        return helper
             .add("key", key)
-            .add("value", value)
-            .toString();
+            .add("value", value);
     }
 
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
+    }
 }

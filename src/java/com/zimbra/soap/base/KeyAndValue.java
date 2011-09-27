@@ -20,6 +20,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public interface KeyAndValue {
+    public void setKey(String key);
+    public void setValue(String value);
     public String getKey();
     public String getValue();
 }

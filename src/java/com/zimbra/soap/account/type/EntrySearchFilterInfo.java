@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.account.type;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;

@@ -118,3 +118,31 @@ FAQ
    JAXB type some of these were clearly required but later uses had them as optional.   As this situation can
    be a bit difficult to spot a lot of newer JAXB classes were written with a more relaxed view of whether
    things were required or not.
+
+3. I'm creating new JAXB classes for a request/response in the urn:zimbraAdmin namespace which calls code which
+   is already used for request/responses in the urn:zimbraAccount namespace.  Can I re-use the JAXB objects in
+   package com.zimbra.soap.account.type?
+
+   You need to ensure that you won't have namespace related problems.  If the SOAP handler code uses Element
+   code to build the structure, most elements are added using Element.addElement(String).  This causes the namespace
+   associated with the parent to be associated with the new element, which will often mean that it will differ
+   depending on the main namespace associated with the request/response being handled and the same JAXB class cannot
+   be used.
+
+   There are 2 suggested solutions:
+     1.  If the current code is only used in one namespace, then namespace lock the data structure by changing
+         the creation of the top level Element for the structure from Element.addElement(String) to
+         Element.addElement(QName).  Where possible, this is the preferred option as it avoids propagating almost
+         duplicate JAXB objects for different namespaces.
+     2.  If the current code is used in multiple namespaces, then the approach I'm taking these days is to create
+         almost duplicate JAXB objects in each namespace where the data structure is used and have the objects
+         implement an interface which encapsulates the important aspects of their behavior in package
+         com.zimbra.soap.base.  The plan is that when we move to using JAXB code instead of Element code we will be
+         able to use the interface combined with appropriate JAXB factories.  This is rather fiddly but I don't
+         thing there is a good alternative.
+    Aside:
+        In some cases in the past, if a JAXB class has only had @XmlAttribute (i.e. no @XmlElement)
+        I have moved the JAXB class to com.zimbra.soap.type and re-used it.  This works because we have things
+        setup not to tie @XmlAttribute to a namespace when processing the JAXB.  However, the issue was raised
+        that this is confusing as it isn't clear why this works but objects containing elements don't.
+        So, although this results in simpler code it is a deprecated practise.

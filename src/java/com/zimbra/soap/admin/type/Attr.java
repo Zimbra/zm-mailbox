@@ -27,50 +27,39 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.soap.type.KeyValuePair;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_A)
-public class Attr {
-
-    @XmlAttribute(name=AdminConstants.A_N /* n */, required=true)
-    private String n;
+public class Attr extends KeyValuePair {
 
     @XmlAttribute(name=AdminConstants.A_C /* c */, required=false)
     private Boolean isCosAttr;
-
-    @XmlValue
-    private String value;
 
     public Attr() {
         this(null, null, null);
     }
 
-    public Attr(String n, String value) {
-        this(n, value, null);
+    public Attr(String key, String value) {
+        this(key, value, null);
     }
 
-    public Attr(String n, String value, Boolean isCosAttr) {
-        this.n = n;
-        this.value = value;
+    public Attr(String key, String value, Boolean isCosAttr) {
+        super(key, value);
         this.isCosAttr = isCosAttr;
     }
 
-    public static Attr fromNameValue(String n, String value) {
-        return new Attr(n, value);
+    public static Attr fromNameValue(String key, String value) {
+        return new Attr(key, value);
     }
 
-    public void setN(String n) { this.n = n; }
     public void setIsCosAttr(Boolean isCosAttr) { this.isCosAttr = isCosAttr; }
-    public void setValue(String value) { this.value = value; }
-    public String getN() { return n; }
     public Boolean getIsCosAttr() { return isCosAttr; }
-    public String getValue() { return value; }
 
     public static List <Attr> mapToList(Map<String, ? extends Object> attrs)
     throws ServiceException {
@@ -106,16 +95,17 @@ public class Attr {
     throws ServiceException {
         Map<String, Object> result = new HashMap<String,Object>();
         for (Attr a : attrs) {
-            StringUtil.addToMultiMap(result, a.getN(), a.getValue());
+            StringUtil.addToMultiMap(result, a.getKey(), a.getValue());
         }
         return result;
     }
+
+    @Override
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
+        helper = super.addToStringInfo(helper);
         return helper
-            .add("n", n)
-            .add("isCosAttr", isCosAttr)
-            .add("value", value);
+            .add("isCosAttr", isCosAttr);
     }
 
     @Override

@@ -25,13 +25,13 @@ public interface AutoCompleteGalInterface {
     public void setToken(String token);
     public void setTokenizeKey(Boolean tokenizeKey);
     public void setPagingSupported(Boolean pagingSupported);
-    public void setContactInterfaces(Iterable <AutoCompleteGalContactInterface> contacts);
-    public void addContactInterface(AutoCompleteGalContactInterface contact);
+    public void setContactInterfaces(Iterable <ContactInterface> contacts);
+    public void addContactInterface(ContactInterface contact);
     public String getSortBy();
     public Integer getOffset();
     public Boolean getMore();
     public String getToken();
     public Boolean getTokenizeKey();
     public Boolean getPagingSupported();
-    public List<AutoCompleteGalContactInterface> getContactInterfaces();
+    public List<ContactInterface> getContactInterfaces();
 }

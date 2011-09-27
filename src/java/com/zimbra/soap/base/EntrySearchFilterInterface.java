@@ -15,20 +15,10 @@
 
 package com.zimbra.soap.base;
 
-import java.util.List;
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.type.SearchFilterCondition;
 
-import com.zimbra.soap.type.AttributeName;
-import com.zimbra.soap.type.CursorInfo;
-import com.zimbra.soap.type.GalSearchType;
-
-public interface AutoCompleteGalSpecInterface
-extends SearchParameters {
-
-    public void setName(String name);
-    public void setType(GalSearchType type);
-    public void setGalAccountId(String galAccountId);
-
-    public String getName();
-    public GalSearchType getType();
-    public String getGalAccountId();
+public interface EntrySearchFilterInterface {
+    public void setCondition(SearchFilterCondition condition);
+    public SearchFilterCondition getCondition();
 }

@@ -29,20 +29,25 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.base.AutoCompleteGalContactInterface;
+import com.zimbra.soap.base.ContactInterface;
 import com.zimbra.soap.base.CustomMetadataInterface;
 import com.zimbra.soap.type.ContactAttr;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"metadatas", "attrs"})
-public class AutoCompleteGalContactInfo implements AutoCompleteGalContactInterface {
+public class ContactInfo
+implements ContactInterface {
 
-    @XmlAttribute(name=MailConstants.A_SORT_FIELD /* sf */, required=true)
+    // Added by e.g. GalSearchControl.doLocalGalAccountSearch
+    @XmlAttribute(name=MailConstants.A_SORT_FIELD /* sf */, required=false)
     private String sortField;
 
     @XmlAttribute(name=AccountConstants.A_EXP /* exp */, required=false)
     private Boolean canExpand;
 
+    // id is the only attribute or element that can be required:
+    //    GalSearchResultCallback.handleContact(Contact c) and CreateContact.handle
+    //    sometimes just create E_CONTACT elements with only an A_ID attribute
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private String id;
 
@@ -85,23 +90,34 @@ public class AutoCompleteGalContactInfo implements AutoCompleteGalContactInterfa
     @XmlAttribute(name="dlist", required=false)
     private String dlist;
 
+    // See GalSearchResultCallback.handleContact(Contact c)
+    @XmlAttribute(name=AccountConstants.A_REF, required=false)
+    private String reference;
+
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private List<AdminCustomMetadata> metadatas = Lists.newArrayList();
 
     @XmlElement(name=MailConstants.E_A /* a */, required=false)
     private List<ContactAttr> attrs = Lists.newArrayList();
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private AutoCompleteGalContactInfo() {
-        this((String) null, (String) null);
+    public ContactInfo() {
     }
 
-    public AutoCompleteGalContactInfo(String sortField, String id) {
+    public ContactInfo(String id) {
+        this.id = id;
+    }
+
+    public ContactInfo(String sortField, String id) {
         this.sortField = sortField;
         this.id = id;
+    }
+
+    public static ContactInfo createForId(String id) {
+        return new ContactInfo(id);
+    }
+
+    public static ContactInfo createForSortFieldAndId(String sortField, String id) {
+        return new ContactInfo(sortField, id);
     }
 
     @Override
@@ -119,11 +135,15 @@ public class AutoCompleteGalContactInfo implements AutoCompleteGalContactInterfa
     @Override
     public void setChangeDate(Long changeDate) { this.changeDate = changeDate; }
     @Override
-    public void setModifiedSequenceId(Integer modifiedSequenceId) { this.modifiedSequenceId = modifiedSequenceId; }
+    public void setModifiedSequenceId(Integer modifiedSequenceId) {
+        this.modifiedSequenceId = modifiedSequenceId;
+    }
     @Override
     public void setDate(Long date) { this.date = date; }
     @Override
-    public void setRevisionId(Integer revisionId) { this.revisionId = revisionId; }
+    public void setRevisionId(Integer revisionId) {
+        this.revisionId = revisionId;
+    }
     @Override
     public void setFileAs(String fileAs) { this.fileAs = fileAs; }
     @Override
@@ -136,6 +156,8 @@ public class AutoCompleteGalContactInfo implements AutoCompleteGalContactInterfa
     public void setType(String type) { this.type = type; }
     @Override
     public void setDlist(String dlist) { this.dlist = dlist; }
+    @Override
+    public void setReference(String reference) { this.reference = reference; }
     public void setMetadatas(Iterable <AdminCustomMetadata> metadatas) {
         this.metadatas.clear();
         if (metadatas != null) {
@@ -192,6 +214,8 @@ public class AutoCompleteGalContactInfo implements AutoCompleteGalContactInterfa
     public String getType() { return type; }
     @Override
     public String getDlist() { return dlist; }
+    @Override
+    public String getReference() { return reference; }
 
     public List<AdminCustomMetadata> getMetadatas() {
         return metadatas;
@@ -220,20 +244,20 @@ public class AutoCompleteGalContactInfo implements AutoCompleteGalContactInterfa
         return AdminCustomMetadata.toInterfaces(metadatas);
     }
 
-    public static Iterable <AutoCompleteGalContactInfo> fromInterfaces(Iterable <AutoCompleteGalContactInterface> params) {
+    public static Iterable <ContactInfo> fromInterfaces(Iterable <ContactInterface> params) {
         if (params == null)
             return null;
-        List <AutoCompleteGalContactInfo> newList = Lists.newArrayList();
-        for (AutoCompleteGalContactInterface param : params) {
-            newList.add((AutoCompleteGalContactInfo) param);
+        List <ContactInfo> newList = Lists.newArrayList();
+        for (ContactInterface param : params) {
+            newList.add((ContactInfo) param);
         }
         return newList;
     }
 
-    public static List <AutoCompleteGalContactInterface> toInterfaces(Iterable <AutoCompleteGalContactInfo> params) {
+    public static List <ContactInterface> toInterfaces(Iterable <ContactInfo> params) {
         if (params == null)
             return null;
-        List <AutoCompleteGalContactInterface> newList = Lists.newArrayList();
+        List <ContactInterface> newList = Lists.newArrayList();
         Iterables.addAll(newList, params);
         return newList;
     }
@@ -257,6 +281,7 @@ public class AutoCompleteGalContactInfo implements AutoCompleteGalContactInterfa
             .add("email3", email3)
             .add("type", type)
             .add("dlist", dlist)
+            .add("reference", reference)
             .add("metadatas", metadatas)
             .add("attrs", attrs);
     }

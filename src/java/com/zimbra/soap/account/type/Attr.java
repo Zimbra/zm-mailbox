@@ -33,8 +33,11 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.soap.base.KeyAndValue;
 
-/*
-<attr name="{name}">{value}</attr>
+/**
+ * e.g. For element named "attr":
+ *          <attr name="{name}">{value}</attr>
+ *
+ * Note:  where the attribute name is "n" rather than "name" use {@link KeyValuePair}
  */
 public class Attr implements KeyAndValue {
 
@@ -66,11 +69,12 @@ public class Attr implements KeyAndValue {
     }
 
     public String getName() { return name; }
-    public Attr setName(String name) { this.name = name; return this; }
+    public void setName(String name) { this.name = name; }
 
     @Override
     public String getValue() { return value; }
-    public Attr setValue(String value) { this.value = value; return this; }
+    @Override
+    public void setValue(String value) { this.value = value; }
 
     @Override
     public String toString() {
@@ -132,7 +136,8 @@ public class Attr implements KeyAndValue {
     }
 
     @Override
-    public String getKey() {
-        return getName();
-    }
+    public void setKey(String key) { setName(key); }
+
+    @Override
+    public String getKey() { return getName(); }
 }

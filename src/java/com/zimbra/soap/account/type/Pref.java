@@ -33,26 +33,27 @@ public class Pref implements KeyAndValue {
 
     public Pref() {
     }
-    
+
     public Pref(String name) {
         setName(name);
     }
-    
+
     public Pref(String name, String value) {
         setName(name);
         setValue(value);
     }
-    
+
     public String getName() { return name; }
-    public Pref setName(String name) { this.name = name; return this; }
-    
+    public void setName(String name) { this.name = name; }
+
     public Long getModifiedTimestamp() { return modifiedTimestamp; }
-    public Pref setModifiedTimestamp(Long timestamp) { this.modifiedTimestamp = timestamp; return this; }
-    
+    public void setModifiedTimestamp(Long timestamp) { this.modifiedTimestamp = timestamp; }
+
     @Override
     public String getValue() { return value; }
-    public Pref setValue(String value) { this.value = value; return this; }
-    
+    @Override
+    public void setValue(String value) { this.value = value; }
+
     public static Multimap<String, String> toMultimap(Iterable<Pref> prefs) {
         Multimap<String, String> map = ArrayListMultimap.create();
         for (Pref p : prefs) {
@@ -62,7 +63,7 @@ public class Pref implements KeyAndValue {
     }
 
     @Override
-    public String getKey() {
-        return getName();
-    }
+    public void setKey(String key) { setName(key); }
+    @Override
+    public String getKey() { return getName(); }
 }

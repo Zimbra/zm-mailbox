@@ -13,46 +13,47 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.appblast.message;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.soap.base.EntrySearchFilterInterface;
-import com.zimbra.soap.type.SearchFilterCondition;
+import com.zimbra.common.soap.AppBlastConstants;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.Id;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class EntrySearchFilterInfo
-implements EntrySearchFilterInterface {
+@XmlRootElement(name=AppBlastConstants.E_FINISH_EDIT_REQUEST)
+public class FinishEditDocumentRequest {
 
-    @XmlElements({
-        @XmlElement(name=AccountConstants.E_ENTRY_SEARCH_FILTER_MULTICOND /* conds */,
-            type=EntrySearchFilterMultiCond.class),
-        @XmlElement(name=AccountConstants.E_ENTRY_SEARCH_FILTER_SINGLECOND /* cond */,
-            type=EntrySearchFilterSingleCond.class)
-    })
-    private SearchFilterCondition condition;
+    @XmlElement(name=MailConstants.E_DOC /* doc */, required=true)
+    private Id doc;
 
-    public EntrySearchFilterInfo() {
+    private FinishEditDocumentRequest() {
     }
 
-    public EntrySearchFilterInfo(SearchFilterCondition condition) {
-        this.setCondition(condition);
+    private FinishEditDocumentRequest(Id doc) {
+        setDoc(doc);
     }
 
-    @Override
-    public void setCondition(SearchFilterCondition condition) { this.condition = condition; }
-    @Override
-    public SearchFilterCondition getCondition() { return condition; }
+    public static FinishEditDocumentRequest create(Id doc) {
+        return new FinishEditDocumentRequest(doc);
+    }
+
+    public static FinishEditDocumentRequest create(String id) {
+        return new FinishEditDocumentRequest(new Id(id));
+    }
+
+    public void setDoc(Id doc) { this.doc = doc; }
+    public Id getDoc() { return doc; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("condition", condition);
+            .add("doc", doc);
     }
 
     @Override

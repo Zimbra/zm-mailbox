@@ -76,6 +76,9 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
     @XmlAttribute(name=MailConstants.A_GROUPBY /* groupBy */, required=false)
     private String groupBy;
 
+    @XmlAttribute(name=MailConstants.A_QUICK /* quick */, required=false)
+    private Boolean quick;
+
     // Based on SortBy which is NOT an enum and appears to support runtime construction
     @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
     private String sortBy;
@@ -108,6 +111,9 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
 
     @XmlAttribute(name=MailConstants.A_FIELD /* field */, required=false)
     private String field;
+
+    @XmlAttribute(name=MailConstants.A_QUERY_LIMIT /* limit */, required=false)
+    private Integer limit;
 
     @XmlAttribute(name=MailConstants.A_QUERY_OFFSET /* offset */, required=false)
     private Integer offset;
@@ -164,6 +170,8 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
     @Override
     public void setGroupBy(String groupBy) { this.groupBy = groupBy; }
     @Override
+    public void setQuick(Boolean quick) { this.quick = quick; }
+    @Override
     public void setSortBy(String sortBy) { this.sortBy = sortBy; }
     @Override
     public void setFetch(String fetch) { this.fetch = fetch; }
@@ -183,6 +191,8 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
     public void setResultMode(String resultMode) { this.resultMode = resultMode; }
     @Override
     public void setField(String field) { this.field = field; }
+    @Override
+    public void setLimit(Integer limit) { this.limit = limit; }
     @Override
     public void setOffset(Integer offset) { this.offset = offset; }
     @Override
@@ -227,6 +237,8 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
     @Override
     public String getGroupBy() { return groupBy; }
     @Override
+    public Boolean getQuick() { return quick; }
+    @Override
     public String getSortBy() { return sortBy; }
     @Override
     public String getFetch() { return fetch; }
@@ -247,11 +259,14 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
     @Override
     public String getField() { return field; }
     @Override
+    public Integer getLimit() { return limit; }
+    @Override
     public Integer getOffset() { return offset; }
     @Override
     public List<AttributeName> getHeaders() {
         return headers;  // returning unmodifiable collection causes problems for JAXB
     }
+    @Override
     public CalTZInfo getCalTz() { return calTz; }
     @Override
     public String getLocale() { return locale; }
@@ -260,11 +275,7 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
 
     // Not a JAXB related method
     @Override
-    public void setTimezoneInterface(CalTZInfoInterface calTz) { this.setCalTz((CalTZInfo)calTz); }
-
-    // Not a JAXB related method
-    @Override
-    public CalTZInfoInterface getTimezoneInterface() { return calTz; }
+    public void setCalTz(CalTZInfoInterface calTz) { this.setCalTz((CalTZInfo)calTz); }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
@@ -281,6 +292,7 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
             .add("inDumpster", inDumpster)
             .add("searchTypes", searchTypes)
             .add("groupBy", groupBy)
+            .add("quick", quick)
             .add("sortBy", sortBy)
             .add("fetch", fetch)
             .add("markRead", markRead)
@@ -291,6 +303,7 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
             .add("prefetch", prefetch)
             .add("resultMode", resultMode)
             .add("field", field)
+            .add("limit", limit)
             .add("offset", offset)
             .add("headers", headers)
             .add("calTz", calTz)

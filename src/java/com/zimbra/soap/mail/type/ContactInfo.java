@@ -19,7 +19,6 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
-import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -30,24 +29,30 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.ContactInterface;
+import com.zimbra.soap.base.CustomMetadataInterface;
 import com.zimbra.soap.type.ContactAttr;
 import com.zimbra.soap.type.SearchHit;
 
+/**
+ * {@link SearchHit} is used in {@link SearchResponse} as the element type for a List
+ */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(propOrder = { "metadatas", "attrs" })
+@XmlType(propOrder = {"metadatas", "attrs"})
 public class ContactInfo
-implements SearchHit {
+implements ContactInterface, SearchHit {
 
-    // This is similar to AutoCompleteGalContactInfo.
-    // Namespace issues when have sub-elements prevent sharing.
-
+    // Added by e.g. GalSearchControl.doLocalGalAccountSearch
     @XmlAttribute(name=MailConstants.A_SORT_FIELD /* sf */, required=false)
     private String sortField;
 
     @XmlAttribute(name=AccountConstants.A_EXP /* exp */, required=false)
     private Boolean canExpand;
 
-    @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
+    // id is the only attribute or element that can be required:
+    //    GalSearchResultCallback.handleContact(Contact c) and CreateContact.handle
+    //    sometimes just create E_CONTACT elements with only an A_ID attribute
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private String id;
 
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
@@ -89,6 +94,10 @@ implements SearchHit {
     @XmlAttribute(name="dlist", required=false)
     private String dlist;
 
+    // See GalSearchResultCallback.handleContact(Contact c)
+    @XmlAttribute(name=AccountConstants.A_REF, required=false)
+    private String reference;
+
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private List<MailCustomMetadata> metadatas = Lists.newArrayList();
 
@@ -102,26 +111,57 @@ implements SearchHit {
         this.id = id;
     }
 
+    private ContactInfo(String sortField, String id) {
+        this.sortField = sortField;
+        this.id = id;
+    }
+
+    public static ContactInfo createForId(String id) {
+        return new ContactInfo(id);
+    }
+
+    public static ContactInfo createForSortFieldAndId(String sortField, String id) {
+        return new ContactInfo(sortField, id);
+    }
+
+    @Override
     public void setSortField(String sortField) { this.sortField = sortField; }
+    @Override
     public void setCanExpand(Boolean canExpand) { this.canExpand = canExpand; }
+    @Override
     public void setId(String id) { this.id = id; }
+    @Override
     public void setFolder(String folder) { this.folder = folder; }
+    @Override
     public void setFlags(String flags) { this.flags = flags; }
+    @Override
     public void setTags(String tags) { this.tags = tags; }
+    @Override
     public void setChangeDate(Long changeDate) { this.changeDate = changeDate; }
+    @Override
     public void setModifiedSequenceId(Integer modifiedSequenceId) {
         this.modifiedSequenceId = modifiedSequenceId;
     }
+    @Override
     public void setDate(Long date) { this.date = date; }
+    @Override
     public void setRevisionId(Integer revisionId) {
         this.revisionId = revisionId;
     }
+    @Override
     public void setFileAs(String fileAs) { this.fileAs = fileAs; }
+    @Override
     public void setEmail(String email) { this.email = email; }
+    @Override
     public void setEmail2(String email2) { this.email2 = email2; }
+    @Override
     public void setEmail3(String email3) { this.email3 = email3; }
+    @Override
     public void setType(String type) { this.type = type; }
+    @Override
     public void setDlist(String dlist) { this.dlist = dlist; }
+    @Override
+    public void setReference(String reference) { this.reference = reference; }
     public void setMetadatas(Iterable <MailCustomMetadata> metadatas) {
         this.metadatas.clear();
         if (metadatas != null) {
@@ -133,6 +173,7 @@ implements SearchHit {
         this.metadatas.add(metadata);
     }
 
+    @Override
     public void setAttrs(Iterable <ContactAttr> attrs) {
         this.attrs.clear();
         if (attrs != null) {
@@ -140,31 +181,89 @@ implements SearchHit {
         }
     }
 
+    @Override
     public void addAttr(ContactAttr attr) {
         this.attrs.add(attr);
     }
 
+    @Override
     public String getSortField() { return sortField; }
+    @Override
     public Boolean getCanExpand() { return canExpand; }
+    @Override
     public String getId() { return id; }
+    @Override
     public String getFolder() { return folder; }
+    @Override
     public String getFlags() { return flags; }
+    @Override
     public String getTags() { return tags; }
+    @Override
     public Long getChangeDate() { return changeDate; }
+    @Override
     public Integer getModifiedSequenceId() { return modifiedSequenceId; }
+    @Override
     public Long getDate() { return date; }
+    @Override
     public Integer getRevisionId() { return revisionId; }
+    @Override
     public String getFileAs() { return fileAs; }
+    @Override
     public String getEmail() { return email; }
+    @Override
     public String getEmail2() { return email2; }
+    @Override
     public String getEmail3() { return email3; }
+    @Override
     public String getType() { return type; }
+    @Override
     public String getDlist() { return dlist; }
+    @Override
+    public String getReference() { return reference; }
+
     public List<MailCustomMetadata> getMetadatas() {
-        return Collections.unmodifiableList(metadatas);
+        return metadatas;
     }
+    @Override
     public List<ContactAttr> getAttrs() {
-        return Collections.unmodifiableList(attrs);
+        return attrs;
+    }
+
+    // non-JAXB method
+    @Override
+    public void setMetadataInterfaces(
+            Iterable<CustomMetadataInterface> metadatas) {
+        this.metadatas = MailCustomMetadata.fromInterfaces(metadatas);
+    }
+
+    // non-JAXB method
+    @Override
+    public void addMetadataInterfaces(CustomMetadataInterface metadata) {
+        addMetadata((MailCustomMetadata)metadata);
+    }
+
+    // non-JAXB method
+    @Override
+    public List<CustomMetadataInterface> getMetadataInterfaces() {
+        return MailCustomMetadata.toInterfaces(metadatas);
+    }
+
+    public static Iterable <ContactInfo> fromInterfaces(Iterable <ContactInterface> params) {
+        if (params == null)
+            return null;
+        List <ContactInfo> newList = Lists.newArrayList();
+        for (ContactInterface param : params) {
+            newList.add((ContactInfo) param);
+        }
+        return newList;
+    }
+
+    public static List <ContactInterface> toInterfaces(Iterable <ContactInfo> params) {
+        if (params == null)
+            return null;
+        List <ContactInterface> newList = Lists.newArrayList();
+        Iterables.addAll(newList, params);
+        return newList;
     }
 
     public Objects.ToStringHelper addToStringInfo(
@@ -186,6 +285,7 @@ implements SearchHit {
             .add("email3", email3)
             .add("type", type)
             .add("dlist", dlist)
+            .add("reference", reference)
             .add("metadatas", metadatas)
             .add("attrs", attrs);
     }

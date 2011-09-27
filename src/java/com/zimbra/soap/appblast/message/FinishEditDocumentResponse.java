@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.message;
+package com.zimbra.soap.appblast.message;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -21,47 +21,39 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.zimbra.common.soap.AppBlastConstants;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.MailSearchParams;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=MailConstants.E_SEARCH_CONV_REQUEST)
-public class SearchConvRequest extends MailSearchParams {
+@XmlRootElement(name=AppBlastConstants.E_FINISH_EDIT_RESPONSE)
+public class FinishEditDocumentResponse {
 
-    @XmlAttribute(name=MailConstants.A_NEST_MESSAGES /* nest */, required=false)
-    private Boolean nestMessages;
-
-    @XmlAttribute(name=MailConstants.A_CONV_ID /* cid */, required=true)
-    private final String conversationId;
-
-    @XmlAttribute(name=MailConstants.A_NEED_EXP /* needExp */, required=false)
-    private Boolean needCanExpand;
+    @XmlAttribute(name=MailConstants.A_URL /* url */, required=true)
+    private String url;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private SearchConvRequest() {
+    private FinishEditDocumentResponse() {
         this((String) null);
     }
 
-    public SearchConvRequest(String conversationId) {
-        this.conversationId = conversationId;
+    private FinishEditDocumentResponse(String url) {
+        this.url = url;
     }
 
-    public void setNestMessages(Boolean nestMessages) { this.nestMessages = nestMessages; }
-    public void setNeedCanExpand(Boolean needCanExpand) { this.needCanExpand = needCanExpand; }
-    public Boolean getNestMessages() { return nestMessages; }
-    public String getConversationId() { return conversationId; }
-    public Boolean getNeedCanExpand() { return needCanExpand; }
+    public static FinishEditDocumentResponse createForUrl(String url) {
+        return new FinishEditDocumentResponse(url);
+    }
+
+    public void setUrl(String url) { this.url = url; }
+    public String getUrl() { return url; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
-        helper = super.addToStringInfo(helper);
         return helper
-            .add("nestMessages", nestMessages)
-            .add("conversationId", conversationId)
-            .add("needCanExpand", needCanExpand);
+            .add("url", url);
     }
 
     @Override

@@ -19,7 +19,13 @@ import java.util.List;
 
 import com.zimbra.soap.type.ContactAttr;
 
-public interface AutoCompleteGalContactInterface {
+/**
+ * 
+ * See {@link com.zimbra.cs.service.mail.ToXML} encodeContact, encodeGalContact
+ * Note that encodeContactAttachment forces KeyValuePairs to be represented by list of ContactAttr
+ */
+public interface ContactInterface {
+    public void setId(String id);
     public void setSortField(String sortField);
     public void setCanExpand(Boolean canExpand);
     public void setFolder(String folder);
@@ -35,15 +41,17 @@ public interface AutoCompleteGalContactInterface {
     public void setEmail3(String email3);
     public void setType(String type);
     public void setDlist(String dlist);
+    public void setReference(String reference);
     public void setMetadataInterfaces(Iterable <CustomMetadataInterface> metadatas);
     public void addMetadataInterfaces(CustomMetadataInterface metadata);
+    // ContactAttr extends KeyValuePair.
+    // com.zimbra.cs.service.mail.ToXML.encodeContactAttachment decorates KeyValuePairs with additional attributes
     public void setAttrs(Iterable <ContactAttr> attrs);
     public void addAttr(ContactAttr attr);
 
-    public String getSortField();
-    public void setId(String id);
-    public Boolean getCanExpand();
     public String getId();
+    public String getSortField();
+    public Boolean getCanExpand();
     public String getFolder();
     public String getFlags();
     public String getTags();
@@ -57,6 +65,7 @@ public interface AutoCompleteGalContactInterface {
     public String getEmail3();
     public String getType();
     public String getDlist();
+    public String getReference();
     public List<CustomMetadataInterface> getMetadataInterfaces();
     public List<ContactAttr> getAttrs();
 }

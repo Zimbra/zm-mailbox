@@ -13,46 +13,53 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.admin.message;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
+import java.util.Collections;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.soap.base.EntrySearchFilterInterface;
-import com.zimbra.soap.type.SearchFilterCondition;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.admin.type.MessageInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class EntrySearchFilterInfo
-implements EntrySearchFilterInterface {
+@XmlRootElement(name=AdminConstants.E_SEARCH_MULTIPLE_MAILBOXES_RESPONSE)
+public class SearchMultiMailboxResponse {
 
-    @XmlElements({
-        @XmlElement(name=AccountConstants.E_ENTRY_SEARCH_FILTER_MULTICOND /* conds */,
-            type=EntrySearchFilterMultiCond.class),
-        @XmlElement(name=AccountConstants.E_ENTRY_SEARCH_FILTER_SINGLECOND /* cond */,
-            type=EntrySearchFilterSingleCond.class)
-    })
-    private SearchFilterCondition condition;
+    @XmlElement(name=MailConstants.E_MSG /* m */, required=false)
+    private List<MessageInfo> msgs = Lists.newArrayList();
 
-    public EntrySearchFilterInfo() {
+    public SearchMultiMailboxResponse() {
     }
 
-    public EntrySearchFilterInfo(SearchFilterCondition condition) {
-        this.setCondition(condition);
+    public void setMsgs(Iterable <MessageInfo> msgs) {
+        this.msgs.clear();
+        if (msgs != null) {
+            Iterables.addAll(this.msgs,msgs);
+        }
     }
 
-    @Override
-    public void setCondition(SearchFilterCondition condition) { this.condition = condition; }
-    @Override
-    public SearchFilterCondition getCondition() { return condition; }
+    public void addMsg(MessageInfo msg) {
+        this.msgs.add(msg);
+    }
+
+    public List<MessageInfo> getMsgs() {
+        return Collections.unmodifiableList(msgs);
+    }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("condition", condition);
+            .add("msgs", msgs);
     }
 
     @Override

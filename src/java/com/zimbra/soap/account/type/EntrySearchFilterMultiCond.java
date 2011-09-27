@@ -13,21 +13,35 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.account.type;
 
 import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
+import java.util.Collections;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.soap.base.EntrySearchFilterInterface;
 import com.zimbra.soap.type.SearchFilterCondition;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class EntrySearchFilterInfo
-implements EntrySearchFilterInterface {
+@XmlType(propOrder = {})
+public class EntrySearchFilterMultiCond
+implements SearchFilterCondition {
+
+    @XmlAttribute(name=AccountConstants.A_ENTRY_SEARCH_FILTER_NEGATION /* not */, required=false)
+    private Boolean not;
+
+    @XmlAttribute(name=AccountConstants.A_ENTRY_SEARCH_FILTER_OR /* or */, required=false)
+    private Boolean or;
 
     @XmlElements({
         @XmlElement(name=AccountConstants.E_ENTRY_SEARCH_FILTER_MULTICOND /* conds */,
@@ -35,24 +49,38 @@ implements EntrySearchFilterInterface {
         @XmlElement(name=AccountConstants.E_ENTRY_SEARCH_FILTER_SINGLECOND /* cond */,
             type=EntrySearchFilterSingleCond.class)
     })
-    private SearchFilterCondition condition;
+    private List<SearchFilterCondition> conditions = Lists.newArrayList();
 
-    public EntrySearchFilterInfo() {
-    }
-
-    public EntrySearchFilterInfo(SearchFilterCondition condition) {
-        this.setCondition(condition);
+    public EntrySearchFilterMultiCond() {
     }
 
     @Override
-    public void setCondition(SearchFilterCondition condition) { this.condition = condition; }
+    public void setNot(Boolean not) { this.not = not; }
+    public void setOr(Boolean or) { this.or = or; }
+    public void setConditions(Iterable <SearchFilterCondition> conditions) {
+        this.conditions.clear();
+        if (conditions != null) {
+            Iterables.addAll(this.conditions,conditions);
+        }
+    }
+
+    public void addCondition(SearchFilterCondition condition) {
+        this.conditions.add(condition);
+    }
+
     @Override
-    public SearchFilterCondition getCondition() { return condition; }
+    public Boolean isNot() { return not; }
+    public Boolean isOr() { return or; }
+    public List<SearchFilterCondition> getConditions() {
+        return Collections.unmodifiableList(conditions);
+    }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("condition", condition);
+            .add("not", not)
+            .add("or", or)
+            .add("conditions", conditions);
     }
 
     @Override
