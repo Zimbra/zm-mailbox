@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 8.0.0_BETA1_1111 pshao 20110926-1316 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -302,22 +302,6 @@ public class ZAttrProvisioning {
         }
         public boolean isAlias() { return this == alias;}
         public boolean isLocal() { return this == local;}
-    }
-
-    public static enum ExternalShareDomainPolicyType {
-        blacklist("blacklist"),
-        whitelist("whitelist");
-        private String mValue;
-        private ExternalShareDomainPolicyType(String value) { mValue = value; }
-        public String toString() { return mValue; }
-        public static ExternalShareDomainPolicyType fromString(String s) throws ServiceException {
-            for (ExternalShareDomainPolicyType value : values()) {
-                if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
-        }
-        public boolean isBlacklist() { return this == blacklist;}
-        public boolean isWhitelist() { return this == whitelist;}
     }
 
     public static enum FeatureSocialFiltersEnabled {
@@ -3551,28 +3535,21 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExternalPop3SSLPort = "zimbraExternalPop3SSLPort";
 
     /**
-     * list of domains that users cannot share files with
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1264)
-    public static final String A_zimbraExternalShareDomainBlackList = "zimbraExternalShareDomainBlackList";
-
-    /**
-     * flag indicates whether to enable sharing files with external accounts
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1262)
-    public static final String A_zimbraExternalShareDomainPolicyType = "zimbraExternalShareDomainPolicyType";
-
-    /**
-     * list of domains that users can share files with
+     * list of external domains that users can share files and folders with
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1263)
     public static final String A_zimbraExternalShareDomainWhiteList = "zimbraExternalShareDomainWhiteList";
+
+    /**
+     * whether checking against zimbraExternalShareDomainWhiteList for
+     * external sharing is enabled
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1264)
+    public static final String A_zimbraExternalShareDomainWhiteListEnabled = "zimbraExternalShareDomainWhiteListEnabled";
 
     /**
      * lifetime of external shares. Must be in valid duration format:
@@ -10118,6 +10095,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
