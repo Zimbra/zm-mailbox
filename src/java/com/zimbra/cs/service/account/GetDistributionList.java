@@ -45,7 +45,9 @@ public class GetDistributionList extends DistributionListDocumentHandler {
             Provisioning.A_zimbraPrefReplyToDisplay,
             Provisioning.A_zimbraPrefReplyToEnabled);
     
-    private static final Set<String> NON_OWNER_ATTRS = Sets.newHashSet();
+    private static final Set<String> NON_OWNER_ATTRS = Sets.newHashSet(
+            Provisioning.A_description,
+            Provisioning.A_displayName);
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         
