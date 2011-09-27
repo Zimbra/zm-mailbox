@@ -182,6 +182,7 @@ public final class LC {
 
     public static final KnownKey zimbra_mailbox_lock_max_waiting_threads = KnownKey.newKey(5);
     public static final KnownKey zimbra_mailbox_lock_timeout = KnownKey.newKey(60); // seconds
+    public static final KnownKey zimbra_mailbox_lock_fullthread_dump = KnownKey.newKey(false);
 
     @Supported
     public static final KnownKey zimbra_index_threads = KnownKey.newKey(10);
