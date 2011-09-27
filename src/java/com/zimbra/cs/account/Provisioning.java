@@ -1165,6 +1165,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
         String localhost = getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
         return (target != null && target.equalsIgnoreCase(localhost));
     }
+    
+    public static boolean onLocalServer(Group group) throws ServiceException {
+        String target    = group.getAttr(Provisioning.A_zimbraMailHost);
+        String localhost = getInstance().getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
+        return (target != null && target.equalsIgnoreCase(localhost));
+    }
 
     public abstract Server createServer(String name, Map<String, Object> attrs) throws ServiceException;
 

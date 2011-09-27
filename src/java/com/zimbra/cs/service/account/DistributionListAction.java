@@ -20,7 +20,7 @@ import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.UserRight;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class DistributionListAction extends AccountDocumentHandler {
+public class DistributionListAction extends DistributionListDocumentHandler {
     
     private static enum DLAction {
         delete,
@@ -49,7 +49,7 @@ public class DistributionListAction extends AccountDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
         Account acct = getRequestedAccount(zsc);
 
-        Group group = GetDistributionList.getGroup(request, acct, prov);
+        Group group = getGroup(request, acct, prov);
         
         Element eAction = request.getElement(AccountConstants.E_ACTION);
         DLAction op = DLAction.fromString(eAction.getAttribute(AccountConstants.A_OP));

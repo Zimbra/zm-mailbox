@@ -58,12 +58,12 @@ import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.type.DistributionListSubscribeOp;
 import com.zimbra.soap.account.type.DistributionListSubscribeStatus;
 
-public class SubscribeDistributionList extends AccountDocumentHandler {
+public class SubscribeDistributionList extends DistributionListDocumentHandler {
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        Group group = GetDistributionList.getGroup(request, prov);
+        Group group = getGroup(request, prov);
         
         DistributionListSubscribeOp op = DistributionListSubscribeOp.fromString(request.getAttribute(AccountConstants.A_OP));
         

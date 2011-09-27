@@ -20,20 +20,17 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.zimbra.common.account.Key;
+import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class GetDistributionList extends AccountDocumentHandler {
+public class GetDistributionList extends DistributionListDocumentHandler {
     
     private static final Set<String> OWNER_ATTRS = Sets.newHashSet(
             Provisioning.A_description,
@@ -48,7 +45,6 @@ public class GetDistributionList extends AccountDocumentHandler {
             Provisioning.A_zimbraPrefReplyToDisplay,
             Provisioning.A_zimbraPrefReplyToEnabled);
     
-    // not used for now
     private static final Set<String> NON_OWNER_ATTRS = Sets.newHashSet();
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -57,9 +53,9 @@ public class GetDistributionList extends AccountDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
         Account acct = getRequestedAccount(zsc);
         
-        Group group = GetDistributionList.getGroup(request, prov);
+        Group group = getGroup(request, prov);
 
-        boolean isOwner = GetDistributionList.isOwner(acct, group);
+        boolean isOwner = isOwner(acct, group);
         
         Element response = zsc.createElement(AccountConstants.GET_DISTRIBUTION_LIST_RESPONSE);
         
@@ -78,62 +74,49 @@ public class GetDistributionList extends AccountDocumentHandler {
         boolean needOwners = request.getAttributeBool(AccountConstants.A_NEED_OWNERS, false);
         
         Element eDL;
-        if (isOwner) {
-            eDL = com.zimbra.cs.service.admin.GetDistributionList.encodeDistributionList(
-                response, group, true, !needOwners, OWNER_ATTRS, null);
-        } else {
-            // set encodeAttrs to false fow now since we don't need to return any attr 
-            // other than subscription policies for non owners for now
-            eDL = com.zimbra.cs.service.admin.GetDistributionList.encodeDistributionList(
-                    response, group, true, !needOwners, false, null, null);
-        }
         
-        // always return subscription policies, they are not included in required attrs 
-        // because we want to  retun a default value if they are not set.
-        //
-        // subscription policies are encoded here using Group API that returns 
-        // default policy if the policy attrs are not set.
-        eDL.addElement(AccountConstants.E_A).
-                addAttribute(AccountConstants.A_N, Provisioning.A_zimbraDistributionListSubscriptionPolicy).
-                setText(group.getSubscriptionPolicy().name());
-        eDL.addElement(AccountConstants.E_A).
-                addAttribute(AccountConstants.A_N, Provisioning.A_zimbraDistributionListUnsubscriptionPolicy).
-                setText(group.getUnsubscriptionPolicy().name()); 
+        // set encodeAttrs to false, we will be encoded attrs using addKeyValuePair,
+        // which is more json friendly
+        eDL = com.zimbra.cs.service.admin.GetDistributionList.encodeDistributionList(
+                    response, group, true, !needOwners, false, null, null);
+        
+        encodeAttrs(group, eDL, isOwner ? OWNER_ATTRS : NON_OWNER_ATTRS);
 
         return response;
     }
     
-    public static Group getGroup(Element request, Provisioning prov) 
-    throws ServiceException {
-        Element d = request.getElement(AccountConstants.E_DL);
-        String key = d.getAttribute(AccountConstants.A_BY);
-        String value = d.getText();
+    private void encodeAttrs(Group group, Element eDL, Set<String> specificPrefs) {
+        Map<String, Object> attrsMap = group.getUnicodeAttrs();
         
-        // temporary fix for the caching bug
-        // Group group = prov.getGroupBasic(Key.DistributionListBy.fromString(key), value);
-        Group group = prov.getGroup(Key.DistributionListBy.fromString(key), value);
-        
-        if (group == null) {
-            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);
+        if (specificPrefs == null || !specificPrefs.isEmpty()) {
+            for (Map.Entry<String, Object> entry : attrsMap.entrySet()) {
+                String key = entry.getKey();
+    
+                if (specificPrefs != null && !specificPrefs.contains(key)) {
+                    continue;
+                }
+                
+                Object value = entry.getValue();
+                if (value instanceof String[]) {
+                    String sa[] = (String[]) value;
+                    for (int i = 0; i < sa.length; i++) {
+                        eDL.addKeyValuePair(key, sa[i], AccountConstants.E_A, AccountConstants.A_N);
+                    }
+                } else {
+                    eDL.addKeyValuePair(key, (String) value, AccountConstants.E_A, AccountConstants.A_N);
+                }
+            }
         }
         
-        return group;
-    }
-    
-    public static Group getGroup(Element request, Account acct, Provisioning prov) 
-    throws ServiceException {
-        Group group = getGroup(request, prov);
-        
-        if (!isOwner(acct, group)) {
-            throw ServiceException.PERM_DENIED(
-                    "you do not have sufficient rights to access this distribution list");
-        }
-        
-        return group;
-    }
-    
-    private static boolean isOwner(Account acct, Group group) throws ServiceException {
-        return AccessManager.getInstance().canAccessGroup(acct, group);
-    }
+        // always include subscription policies.
+        // subscription policies are encoded differently, using Group API that returns 
+        // default policy if the policy attrs are not set.
+        eDL.addKeyValuePair(Provisioning.A_zimbraDistributionListSubscriptionPolicy, 
+                group.getSubscriptionPolicy().name(), 
+                AccountConstants.E_A, AccountConstants.A_N);
+        eDL.addKeyValuePair(Provisioning.A_zimbraDistributionListUnsubscriptionPolicy,
+                group.getUnsubscriptionPolicy().name(),
+                AccountConstants.E_A, AccountConstants.A_N);
+    }   
 }
 
