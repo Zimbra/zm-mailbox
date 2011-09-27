@@ -1086,7 +1086,7 @@ public class SoapProvisioning extends Provisioning {
     public Config getConfig(String needAttr) throws ServiceException {
         GetConfigRequest req = new GetConfigRequest();
         Attr attr = new Attr();
-        attr.setN(needAttr);
+        attr.setKey(needAttr);
         req.setAttr(attr);
         GetConfigResponse resp = invokeJaxb(req);
         return new SoapConfig(resp, this);
