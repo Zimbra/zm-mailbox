@@ -799,6 +799,7 @@ public final class MailConstants {
     public static final String A_IN_DUMPSTER = "inDumpster";
     public static final String A_WARMUP = "warmup";
     public static final String A_QUICK = "quick";
+    public static final String A_SCORE = "score";
 
     // search-result paging
     public static final String E_CURSOR = "cursor";
@@ -1154,7 +1155,7 @@ public final class MailConstants {
     public static final String A_RETENTION_POLICY_TYPE = "type";
 
     public static final String E_WATCHER = "watcher";
-    
+
     public static final String E_FILTER = "filter";
     public static final String A_SESSION = "session";
 }
