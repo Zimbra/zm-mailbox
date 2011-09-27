@@ -42,7 +42,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 8.0.0_BETA1_1111 pshao 20110926-1316 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -4348,272 +4348,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * list of domains that users cannot share files with
-     *
-     * @return zimbraExternalShareDomainBlackList, or empty array if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1264)
-    public String[] getExternalShareDomainBlackList() {
-        return getMultiAttr(Provisioning.A_zimbraExternalShareDomainBlackList);
-    }
-
-    /**
-     * list of domains that users cannot share files with
-     *
-     * @param zimbraExternalShareDomainBlackList new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1264)
-    public void setExternalShareDomainBlackList(String[] zimbraExternalShareDomainBlackList) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraExternalShareDomainBlackList, zimbraExternalShareDomainBlackList);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * list of domains that users cannot share files with
-     *
-     * @param zimbraExternalShareDomainBlackList new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1264)
-    public Map<String,Object> setExternalShareDomainBlackList(String[] zimbraExternalShareDomainBlackList, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraExternalShareDomainBlackList, zimbraExternalShareDomainBlackList);
-        return attrs;
-    }
-
-    /**
-     * list of domains that users cannot share files with
-     *
-     * @param zimbraExternalShareDomainBlackList new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1264)
-    public void addExternalShareDomainBlackList(String zimbraExternalShareDomainBlackList) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraExternalShareDomainBlackList, zimbraExternalShareDomainBlackList);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * list of domains that users cannot share files with
-     *
-     * @param zimbraExternalShareDomainBlackList new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1264)
-    public Map<String,Object> addExternalShareDomainBlackList(String zimbraExternalShareDomainBlackList, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraExternalShareDomainBlackList, zimbraExternalShareDomainBlackList);
-        return attrs;
-    }
-
-    /**
-     * list of domains that users cannot share files with
-     *
-     * @param zimbraExternalShareDomainBlackList existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1264)
-    public void removeExternalShareDomainBlackList(String zimbraExternalShareDomainBlackList) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraExternalShareDomainBlackList, zimbraExternalShareDomainBlackList);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * list of domains that users cannot share files with
-     *
-     * @param zimbraExternalShareDomainBlackList existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1264)
-    public Map<String,Object> removeExternalShareDomainBlackList(String zimbraExternalShareDomainBlackList, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraExternalShareDomainBlackList, zimbraExternalShareDomainBlackList);
-        return attrs;
-    }
-
-    /**
-     * list of domains that users cannot share files with
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1264)
-    public void unsetExternalShareDomainBlackList() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraExternalShareDomainBlackList, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * list of domains that users cannot share files with
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1264)
-    public Map<String,Object> unsetExternalShareDomainBlackList(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraExternalShareDomainBlackList, "");
-        return attrs;
-    }
-
-    /**
-     * flag indicates whether to enable sharing files with external accounts
-     *
-     * <p>Valid values: [whitelist, blacklist]
-     *
-     * @return zimbraExternalShareDomainPolicyType, or ZAttrProvisioning.ExternalShareDomainPolicyType.whitelist if unset and/or has invalid value
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1262)
-    public ZAttrProvisioning.ExternalShareDomainPolicyType getExternalShareDomainPolicyType() {
-        try { String v = getAttr(Provisioning.A_zimbraExternalShareDomainPolicyType); return v == null ? ZAttrProvisioning.ExternalShareDomainPolicyType.whitelist : ZAttrProvisioning.ExternalShareDomainPolicyType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.ExternalShareDomainPolicyType.whitelist; }
-    }
-
-    /**
-     * flag indicates whether to enable sharing files with external accounts
-     *
-     * <p>Valid values: [whitelist, blacklist]
-     *
-     * @return zimbraExternalShareDomainPolicyType, or "whitelist" if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1262)
-    public String getExternalShareDomainPolicyTypeAsString() {
-        return getAttr(Provisioning.A_zimbraExternalShareDomainPolicyType, "whitelist");
-    }
-
-    /**
-     * flag indicates whether to enable sharing files with external accounts
-     *
-     * <p>Valid values: [whitelist, blacklist]
-     *
-     * @param zimbraExternalShareDomainPolicyType new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1262)
-    public void setExternalShareDomainPolicyType(ZAttrProvisioning.ExternalShareDomainPolicyType zimbraExternalShareDomainPolicyType) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraExternalShareDomainPolicyType, zimbraExternalShareDomainPolicyType.toString());
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * flag indicates whether to enable sharing files with external accounts
-     *
-     * <p>Valid values: [whitelist, blacklist]
-     *
-     * @param zimbraExternalShareDomainPolicyType new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1262)
-    public Map<String,Object> setExternalShareDomainPolicyType(ZAttrProvisioning.ExternalShareDomainPolicyType zimbraExternalShareDomainPolicyType, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraExternalShareDomainPolicyType, zimbraExternalShareDomainPolicyType.toString());
-        return attrs;
-    }
-
-    /**
-     * flag indicates whether to enable sharing files with external accounts
-     *
-     * <p>Valid values: [whitelist, blacklist]
-     *
-     * @param zimbraExternalShareDomainPolicyType new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1262)
-    public void setExternalShareDomainPolicyTypeAsString(String zimbraExternalShareDomainPolicyType) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraExternalShareDomainPolicyType, zimbraExternalShareDomainPolicyType);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * flag indicates whether to enable sharing files with external accounts
-     *
-     * <p>Valid values: [whitelist, blacklist]
-     *
-     * @param zimbraExternalShareDomainPolicyType new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1262)
-    public Map<String,Object> setExternalShareDomainPolicyTypeAsString(String zimbraExternalShareDomainPolicyType, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraExternalShareDomainPolicyType, zimbraExternalShareDomainPolicyType);
-        return attrs;
-    }
-
-    /**
-     * flag indicates whether to enable sharing files with external accounts
-     *
-     * <p>Valid values: [whitelist, blacklist]
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1262)
-    public void unsetExternalShareDomainPolicyType() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraExternalShareDomainPolicyType, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * flag indicates whether to enable sharing files with external accounts
-     *
-     * <p>Valid values: [whitelist, blacklist]
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1262)
-    public Map<String,Object> unsetExternalShareDomainPolicyType(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraExternalShareDomainPolicyType, "");
-        return attrs;
-    }
-
-    /**
-     * list of domains that users can share files with
+     * list of external domains that users can share files and folders with
      *
      * @return zimbraExternalShareDomainWhiteList, or empty array if unset
      *
@@ -4625,7 +4360,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * list of domains that users can share files with
+     * list of external domains that users can share files and folders with
      *
      * @param zimbraExternalShareDomainWhiteList new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4640,7 +4375,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * list of domains that users can share files with
+     * list of external domains that users can share files and folders with
      *
      * @param zimbraExternalShareDomainWhiteList new value
      * @param attrs existing map to populate, or null to create a new map
@@ -4656,7 +4391,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * list of domains that users can share files with
+     * list of external domains that users can share files and folders with
      *
      * @param zimbraExternalShareDomainWhiteList new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4671,7 +4406,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * list of domains that users can share files with
+     * list of external domains that users can share files and folders with
      *
      * @param zimbraExternalShareDomainWhiteList new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -4687,7 +4422,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * list of domains that users can share files with
+     * list of external domains that users can share files and folders with
      *
      * @param zimbraExternalShareDomainWhiteList existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4702,7 +4437,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * list of domains that users can share files with
+     * list of external domains that users can share files and folders with
      *
      * @param zimbraExternalShareDomainWhiteList existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -4718,7 +4453,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * list of domains that users can share files with
+     * list of external domains that users can share files and folders with
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -4732,7 +4467,7 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * list of domains that users can share files with
+     * list of external domains that users can share files and folders with
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -4743,6 +4478,83 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetExternalShareDomainWhiteList(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraExternalShareDomainWhiteList, "");
+        return attrs;
+    }
+
+    /**
+     * whether checking against zimbraExternalShareDomainWhiteList for
+     * external sharing is enabled
+     *
+     * @return zimbraExternalShareDomainWhiteListEnabled, or false if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1264)
+    public boolean isExternalShareDomainWhiteListEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraExternalShareDomainWhiteListEnabled, false);
+    }
+
+    /**
+     * whether checking against zimbraExternalShareDomainWhiteList for
+     * external sharing is enabled
+     *
+     * @param zimbraExternalShareDomainWhiteListEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1264)
+    public void setExternalShareDomainWhiteListEnabled(boolean zimbraExternalShareDomainWhiteListEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalShareDomainWhiteListEnabled, zimbraExternalShareDomainWhiteListEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether checking against zimbraExternalShareDomainWhiteList for
+     * external sharing is enabled
+     *
+     * @param zimbraExternalShareDomainWhiteListEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1264)
+    public Map<String,Object> setExternalShareDomainWhiteListEnabled(boolean zimbraExternalShareDomainWhiteListEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalShareDomainWhiteListEnabled, zimbraExternalShareDomainWhiteListEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether checking against zimbraExternalShareDomainWhiteList for
+     * external sharing is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1264)
+    public void unsetExternalShareDomainWhiteListEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalShareDomainWhiteListEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether checking against zimbraExternalShareDomainWhiteList for
+     * external sharing is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1264)
+    public Map<String,Object> unsetExternalShareDomainWhiteListEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalShareDomainWhiteListEnabled, "");
         return attrs;
     }
 
@@ -24979,11 +24791,11 @@ public abstract class ZAttrCos extends NamedEntry {
      * whether end-user wants auto-complete from GAL. Feature must also be
      * enabled.
      *
-     * @return zimbraPrefGalAutoCompleteEnabled, or false if unset
+     * @return zimbraPrefGalAutoCompleteEnabled, or true if unset
      */
     @ZAttr(id=372)
     public boolean isPrefGalAutoCompleteEnabled() {
-        return getBooleanAttr(Provisioning.A_zimbraPrefGalAutoCompleteEnabled, false);
+        return getBooleanAttr(Provisioning.A_zimbraPrefGalAutoCompleteEnabled, true);
     }
 
     /**
