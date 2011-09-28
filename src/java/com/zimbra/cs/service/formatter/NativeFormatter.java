@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -18,7 +18,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
-import java.io.Reader;
 import java.util.List;
 import java.util.Set;
 
@@ -31,6 +30,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.mime.MimeConstants;
@@ -60,7 +60,7 @@ import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 
 
-public class NativeFormatter extends Formatter {
+public final class NativeFormatter extends Formatter {
 
     private static final String CONVERSION_PATH = "/extension/convertd";
     public static final String ATTR_INPUTSTREAM = "inputstream";
@@ -69,7 +69,7 @@ public class NativeFormatter extends Formatter {
     public static final String ATTR_CONTENTURL = "contenturl";
     public static final String ATTR_CONTENTTYPE = "contenttype";
     public static final String ATTR_CONTENTLENGTH = "contentlength";
-    
+
     private static final Set<String> SCRIPTABLE_CONTENT_TYPES = ImmutableSet.of(MimeConstants.CT_TEXT_HTML,
                                                                                 MimeConstants.CT_APPLICATION_XHTML,
                                                                                 MimeConstants.CT_TEXT_XML,
@@ -126,7 +126,7 @@ public class NativeFormatter extends Formatter {
                 context.resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "body not found");
             }
         } else if (context.hasPart()) {
-            MimePart mp = getMimePart(msg, context.getPart());            
+            MimePart mp = getMimePart(msg, context.getPart());
             handleMessagePart(context, mp, msg);
         } else {
             context.resp.setContentType(MimeConstants.CT_TEXT_PLAIN);
@@ -170,7 +170,7 @@ public class NativeFormatter extends Formatter {
     }
 
     private static final String HTML_VIEW = "html";
-    
+
     private void handleMessagePart(UserServletContext context, MimePart mp, MailItem item) throws IOException, MessagingException, ServletException {
         if (mp == null) {
             context.resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "part not found");
@@ -193,39 +193,39 @@ public class NativeFormatter extends Formatter {
             HttpUtil.Browser browser = HttpUtil.guessBrowser(context.req);
             if (browser == HttpUtil.Browser.IE && contentType.length() > 80)
                 contentType = shortContentType;
-            
+
             boolean html = checkGlobalOverride(Provisioning.A_zimbraAttachmentsViewInHtmlOnly,
                     context.getAuthAccount()) || (context.hasView() && context.getView().equals(HTML_VIEW));
-            
+
             if (!html || contentType.startsWith(MimeConstants.CT_TEXT_HTML)) {
                 String defaultCharset = context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
                 sendbackOriginalDoc(mp, contentType, defaultCharset, context.req, context.resp);
             } else {
-            	handleConversion(context, mp.getInputStream(), Mime.getFilename(mp), contentType, item.getDigest(), mp.getSize());
+                handleConversion(context, mp.getInputStream(), Mime.getFilename(mp), contentType, item.getDigest(), mp.getSize());
             }
         }
     }
-    
+
     private void handleDocument(UserServletContext context, Document doc) throws IOException, ServiceException, ServletException {
         String v = context.params.get(UserServlet.QP_VERSION);
         int version = v != null ? Integer.parseInt(v) : -1;
         String contentType = doc.getContentType();
-            
+
         boolean neuter = doc.getAccount().getBooleanAttr(Provisioning.A_zimbraNotebookSanitizeHtml, true);
         String defaultCharset = context.targetAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, null);
-        
+
         doc = (version > 0 ? (Document)doc.getMailbox().getItemRevision(context.opContext, doc.getId(), doc.getType(), version) : doc);
         InputStream is = doc.getContentStream();
-    	if (HTML_VIEW.equals(context.getView()) && !(contentType != null && contentType.startsWith(MimeConstants.CT_TEXT_HTML))) {
-    		handleConversion(context, is, doc.getName(), doc.getContentType(), doc.getDigest(), doc.getSize());
-    	} else {
+        if (HTML_VIEW.equals(context.getView()) && !(contentType != null && contentType.startsWith(MimeConstants.CT_TEXT_HTML))) {
+            handleConversion(context, is, doc.getName(), doc.getContentType(), doc.getDigest(), doc.getSize());
+        } else {
             if (neuter)
-            	sendbackOriginalDoc(is, contentType, defaultCharset, doc.getName(), null, doc.getSize(), context.req, context.resp);
+                sendbackOriginalDoc(is, contentType, defaultCharset, doc.getName(), null, doc.getSize(), context.req, context.resp);
             else
-            	sendbackBinaryData(context.req, context.resp, is, contentType, null, doc.getName(), doc.getSize());
+                sendbackBinaryData(context.req, context.resp, is, contentType, null, doc.getName(), doc.getSize());
         }
     }
-    
+
     private void handleConversion(UserServletContext ctxt, InputStream is, String filename, String ct, String digest, long length) throws IOException, ServletException {
         try {
             ctxt.req.setAttribute(ATTR_INPUTSTREAM, is);
@@ -240,7 +240,7 @@ public class NativeFormatter extends Formatter {
             ByteUtil.closeStream(is);
         }
     }
-    
+
     public static MimePart getMimePart(CalendarItem calItem, String part) throws IOException, MessagingException, ServiceException {
         return Mime.getMimePart(calItem.getMimeMessage(), part);
     }
@@ -258,39 +258,35 @@ public class NativeFormatter extends Formatter {
         sendbackOriginalDoc(mp.getInputStream(), contentType, defaultCharset, Mime.getFilename(mp), mp.getDescription(), size, req, resp);
     }
 
-    public static void sendbackOriginalDoc(InputStream is, String contentType, String defaultCharset, String filename, String desc,
-        HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    public static void sendbackOriginalDoc(InputStream is, String contentType, String defaultCharset, String filename,
+            String desc, HttpServletRequest req, HttpServletResponse resp) throws IOException {
         sendbackOriginalDoc(is, contentType, defaultCharset, filename, desc, 0, req, resp);
     }
-    
-    private static void sendbackOriginalDoc(InputStream is, String contentType, String defaultCharset, String filename, String desc, long size,
-            HttpServletRequest req, HttpServletResponse resp) throws IOException {
+
+    private static void sendbackOriginalDoc(InputStream is, String contentType, String defaultCharset, String filename,
+            String desc, long size, HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String disp = req.getParameter(UserServlet.QP_DISP);
-        
+
         disp = (disp == null || disp.toLowerCase().startsWith("i") ) ? Part.INLINE : Part.ATTACHMENT;
         if (desc != null)
             resp.addHeader("Content-Description", desc);
 
         // defang when the html and svg attachment was requested with disposition inline
         if (disp.equals(Part.INLINE) && isScriptableContent(contentType)) {
-            String charset = Mime.getCharset(contentType);
-            String content;
             BrowserDefang defanger = DefangFactory.getDefanger(contentType);
-
-            if (charset != null && !charset.equals("")) {
-                Reader reader = Mime.getTextReader(is, contentType, defaultCharset);
-                content = defanger.defang(reader, false);
-            } else {
-                content = defanger.defang(is, false);
-            }
+            String content = defanger.defang(Mime.getTextReader(is, contentType, defaultCharset), false);
+            String charset = Mime.getCharset(contentType);
+            resp.setCharacterEncoding(Strings.isNullOrEmpty(charset) ? Charsets.UTF_8.name() : charset);
             resp.setContentType(contentType);
-            if (content.length() > 0)
+            if (!content.isEmpty()) {
                 resp.setContentLength(content.length());
+            }
             resp.getWriter().write(content);
         } else {
             // flash attachment may contain a malicious script hence..
-            if (contentType.startsWith(MimeConstants.CT_APPLICATION_SHOCKWAVE_FLASH))
+            if (contentType.startsWith(MimeConstants.CT_APPLICATION_SHOCKWAVE_FLASH)) {
                 disp = Part.ATTACHMENT;
+            }
             resp.setContentType(contentType);
             sendbackBinaryData(req, resp, is, contentType, disp, filename, size);
         }
@@ -336,40 +332,40 @@ public class NativeFormatter extends Formatter {
         }
         sendZimbraHeaders(context.resp, item);
     }
-    
+
     private void sendZimbraHeaders(HttpServletResponse resp, MailItem item) {
-    	if (resp == null || item == null)
-    		return;
-    	resp.addHeader("X-Zimbra-ItemId", item.getId() + "");
-    	resp.addHeader("X-Zimbra-Version", item.getVersion() + "");
-    	resp.addHeader("X-Zimbra-Modified", item.getChangeDate() + "");
-    	resp.addHeader("X-Zimbra-Change", item.getModifiedSequence() + "");
-    	resp.addHeader("X-Zimbra-Revision", item.getSavedSequence() + "");
-    	resp.addHeader("X-Zimbra-ItemType", MailItem.getNameForType(item));
-    	resp.addHeader("X-Zimbra-ItemName", item.getName());
-    	try {
-    		resp.addHeader("X-Zimbra-ItemPath", item.getPath());
-    	} catch (ServiceException e) {
-    	}
+        if (resp == null || item == null)
+            return;
+        resp.addHeader("X-Zimbra-ItemId", item.getId() + "");
+        resp.addHeader("X-Zimbra-Version", item.getVersion() + "");
+        resp.addHeader("X-Zimbra-Modified", item.getChangeDate() + "");
+        resp.addHeader("X-Zimbra-Change", item.getModifiedSequence() + "");
+        resp.addHeader("X-Zimbra-Revision", item.getSavedSequence() + "");
+        resp.addHeader("X-Zimbra-ItemType", MailItem.getNameForType(item));
+        resp.addHeader("X-Zimbra-ItemName", item.getName());
+        try {
+            resp.addHeader("X-Zimbra-ItemPath", item.getPath());
+        } catch (ServiceException e) {
+        }
     }
-    
+
     private static final int READ_AHEAD_BUFFER_SIZE = 256;
-    private static final byte[][] SCRIPT_PATTERN = { 
-        { '<', 's', 'c', 'r', 'i', 'p', 't' }, 
-        { '<', 'S', 'C', 'R', 'I', 'P', 'T' } 
+    private static final byte[][] SCRIPT_PATTERN = {
+        { '<', 's', 'c', 'r', 'i', 'p', 't' },
+        { '<', 'S', 'C', 'R', 'I', 'P', 'T' }
     };
 
-    public static void sendbackBinaryData(HttpServletRequest req, 
-                                          HttpServletResponse resp, 
-                                          InputStream in, 
+    public static void sendbackBinaryData(HttpServletRequest req,
+                                          HttpServletResponse resp,
+                                          InputStream in,
                                           String contentType,
-                                          String disposition, 
-                                          String filename, 
+                                          String disposition,
+                                          String filename,
                                           long size) throws IOException {
-    	if (disposition == null) {
+        if (disposition == null) {
             String disp = req.getParameter(UserServlet.QP_DISP);
             disposition = (disp == null || disp.toLowerCase().startsWith("i") ) ? Part.INLINE : Part.ATTACHMENT;
-    	}
+        }
 
         PushbackInputStream pis = new PushbackInputStream(in, READ_AHEAD_BUFFER_SIZE);
         boolean isSafe = false;
@@ -382,7 +378,7 @@ public class NativeFormatter extends Formatter {
             // only set no-open for 'script type content'
             if (isScriptableContent(contentType)) {
                 // ask it to save the file
-                resp.addHeader("X-Download-Options", "noopen"); 
+                resp.addHeader("X-Download-Options", "noopen");
             }
         }
 
@@ -416,7 +412,7 @@ public class NativeFormatter extends Formatter {
             resp.setContentLength((int)size);
         ByteUtil.copy(pis, true, resp.getOutputStream(), false);
     }
-    
+
     /**
      * Determines whether or not the contentType passed might contain script or other unsavory tags.
      * @param contentType The content type to check
@@ -430,6 +426,6 @@ public class NativeFormatter extends Formatter {
         contentType = Mime.getContentType(contentType).toLowerCase();
         // only set no-open for 'script type content'
         return SCRIPTABLE_CONTENT_TYPES.contains(contentType);
-        
+
     }
 }

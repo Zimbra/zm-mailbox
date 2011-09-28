@@ -2,19 +2,15 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
- */
-
-/*
- * Created on 2004. 9. 15.
  */
 package com.zimbra.cs.service.mail;
 
@@ -41,6 +37,7 @@ import javax.mail.internet.MimeUtility;
 
 import org.json.JSONException;
 
+import com.google.common.io.Closeables;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
@@ -68,7 +65,6 @@ import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.gal.GalGroupInfoProvider;
-import com.zimbra.cs.gal.GalGroup.GroupInfo;
 import com.zimbra.cs.html.BrowserDefang;
 import com.zimbra.cs.html.DefangFactory;
 import com.zimbra.cs.html.HtmlDefang;
@@ -129,10 +125,11 @@ import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.session.PendingModifications.Change;
 
 /**
- * Class containing static methods for encoding various MailItem-derived
- * objects into XML.
+ * Class containing static methods for encoding various MailItem-derived objects into XML.
+ *
+ * @since 2004. 9. 15.
  */
-public class ToXML {
+public final class ToXML {
 
     // we usually don't want to return last modified date...
     public static final int NOTIFY_FIELDS = Change.ALL_FIELDS & ~Change.MODIFIED_CONFLICT;
@@ -152,7 +149,7 @@ public class ToXML {
             return encodeNote(parent, ifmt, (Note) item, fields);
         } else if (item instanceof Contact) {
             return encodeContact(parent, ifmt, (Contact) item, false, null, fields);
-        } else if (item instanceof CalendarItem) { 
+        } else if (item instanceof CalendarItem) {
             return encodeCalendarItemSummary(parent, ifmt, octxt, (CalendarItem) item, fields, true);
         } else if (item instanceof Conversation) {
             return encodeConversationSummary(parent, ifmt, octxt, (Conversation) item, null, OutputParticipants.PUT_SENDERS, fields, false);
@@ -184,11 +181,11 @@ public class ToXML {
             elem.addAttribute(MailConstants.A_SIZE, mbox.getSize());
         return elem;
     }
-    
+
     public static Element encodeFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Folder folder) {
         return encodeFolder(parent, ifmt, octxt, folder, NOTIFY_FIELDS);
     }
-    
+
     public static Element encodeFolder(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Folder folder, int fields) {
         return encodeFolder(parent, ifmt, octxt, folder, fields, false);
     }
@@ -220,12 +217,12 @@ public class ToXML {
                 // that is either RSS or a remote calendar object
                 elem.addAttribute(MailConstants.A_URL, HttpUtil.sanitizeURL(url));
             }
-                
+
         }
 
         Mailbox mbox = folder.getMailbox();
         boolean remote = octxt != null && octxt.isDelegatedRequest(mbox);
-        
+
         boolean canAdminister = !remote;
         if (remote) {
             // return effective permissions only for remote folders
@@ -261,17 +258,17 @@ public class ToXML {
             return eACL;
 
         boolean needDispName = OperationContextData.getNeedGranteeName(octxt);
-        
+
         for (ACL.Grant grant : acl.getGrants()) {
             String name = null;
             byte granteeType = grant.getGranteeType();
-            
+
             if (needDispName) {
                 //
                 // Get name of the grantee
                 //
-    
-                // 1. try getting the name from the Grant, the name is set on the Grant 
+
+                // 1. try getting the name from the Grant, the name is set on the Grant
                 //    if we are in the path of proxying sharing in ZD
                 name = grant.getGranteeName();
                 if (name == null) {
@@ -279,8 +276,8 @@ public class ToXML {
                     OperationContextData.GranteeNames granteeNames = OperationContextData.getGranteeNames(octxt);
                     if (granteeNames != null)
                         name = granteeNames.getNameById(grant.getGranteeId(), granteeType);
-                    
-                    // 3. fallback to the old way to lookup the name using the Provisioning interface, 
+
+                    // 3. fallback to the old way to lookup the name using the Provisioning interface,
                     //    this *may* lead to a LDAP search if the id is not in cache
                     if (name == null) {
                         NamedEntry nentry = FolderAction.lookupGranteeByZimbraId(grant.getGranteeId(), granteeType);
@@ -289,15 +286,15 @@ public class ToXML {
                     }
                 }
             }
-            
+
             Element eGrant = eACL.addElement(MailConstants.E_GRANT);
             eGrant.addAttribute(MailConstants.A_ZIMBRA_ID, grant.getGranteeId())
                   .addAttribute(MailConstants.A_GRANT_TYPE, ACL.typeToString(granteeType))
                   .addAttribute(MailConstants.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()));
-            
+
             if (needDispName) {
-                // Note: use == instead of equals, the if returns true if and only if INVALID_GRANT and name 
-                // refer to the same object 
+                // Note: use == instead of equals, the if returns true if and only if INVALID_GRANT and name
+                // refer to the same object
                 if (OperationContextData.GranteeNames.INVALID_GRANT == name) {
                     eGrant.addAttribute(MailConstants.A_INVALID, true);
                     eGrant.addAttribute(MailConstants.A_DISPLAY, OperationContextData.GranteeNames.EMPTY_NAME);
@@ -305,7 +302,7 @@ public class ToXML {
                     eGrant.addAttribute(MailConstants.A_DISPLAY, name);
                 }
             }
-            
+
             if (granteeType == ACL.GRANTEE_KEY) {
                 if (exposeAclAccessKey)
                     eGrant.addAttribute(MailConstants.A_ACCESSKEY, grant.getPassword());
@@ -314,7 +311,7 @@ public class ToXML {
         }
         return eACL;
     }
-    
+
     // encode account ACE
     public static Element encodeACE(Element parent, ZimbraACE ace) {
         Element eACE = parent.addElement(MailConstants.E_ACE)
@@ -322,7 +319,7 @@ public class ToXML {
                 .addAttribute(MailConstants.A_GRANT_TYPE, ace.getGranteeType().getCode())
                 .addAttribute(MailConstants.A_RIGHT, ace.getRight().getName())
                 .addAttribute(MailConstants.A_DISPLAY, ace.getGranteeDisplayName());
-        
+
         if (ace.getGranteeType() == GranteeType.GT_KEY)
             eACE.addAttribute(MailConstants.A_ACCESSKEY, ace.getSecret());
         else if (ace.getGranteeType() == GranteeType.GT_GUEST)
@@ -330,7 +327,7 @@ public class ToXML {
 
         if (ace.deny())
             eACE.addAttribute(MailConstants.A_DENY, ace.deny());
-       
+
         return eACE;
     }
 
@@ -404,9 +401,9 @@ public class ToXML {
     }
 
     public static Element encodeMountpoint(Element parent, ItemIdFormatter ifmt, OperationContext octx, Mountpoint mpt, int fields) {
-        
+
         Element elem = parent.addElement(MailConstants.E_MOUNT);
-        // check to see if this is a delegate request (like bes) 
+        // check to see if this is a delegate request (like bes)
         boolean remote = octx != null && octx.isDelegatedRequest(mpt.getMailbox());
 
         try {
@@ -420,11 +417,11 @@ public class ToXML {
                 }
             }
         }
-            
+
          catch (ServiceException e) {
             ZimbraLog.soap.warn("unable to create rest url for remote mountpoint", e);
         }
-         
+
 
         encodeFolderCommon(elem, ifmt, mpt, fields);
         if (needToOutput(fields, Change.MODIFIED_CONTENT)) {
@@ -489,21 +486,21 @@ public class ToXML {
         return serialized;
     }
 
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, 
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt,
             Contact contact, boolean summary, Collection<String> attrFilter) {
         return encodeContact(parent, ifmt, contact, summary, attrFilter, NOTIFY_FIELDS);
     }
-    
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, 
-            Contact contact, boolean summary, Collection<String> attrFilter, 
+
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt,
+            Contact contact, boolean summary, Collection<String> attrFilter,
             int fields) {
-        
-        return encodeContact(parent, ifmt, contact, summary, attrFilter, 
+
+        return encodeContact(parent, ifmt, contact, summary, attrFilter,
                 fields, false);
     }
 
-    public static Element encodeContact(Element parent, ItemIdFormatter ifmt, 
-            Contact contact, boolean summary, Collection<String> attrFilter, 
+    public static Element encodeContact(Element parent, ItemIdFormatter ifmt,
+            Contact contact, boolean summary, Collection<String> attrFilter,
             int fields, boolean returnHiddenAttrs) {
         Element elem = parent.addElement(MailConstants.E_CONTACT);
         elem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
@@ -527,18 +524,18 @@ public class ToXML {
                 try {
                     elem.addAttribute(MailConstants.A_FILE_AS_STR, contact.getFileAsString());
                 } catch (ServiceException e) { }
-    
+
                 elem.addAttribute(ContactConstants.A_email, contact.get(ContactConstants.A_email));
                 elem.addAttribute(ContactConstants.A_email2, contact.get(ContactConstants.A_email2));
                 elem.addAttribute(ContactConstants.A_email3, contact.get(ContactConstants.A_email3));
 
                 String type = contact.get(ContactConstants.A_type);
                 String dlist = contact.get(ContactConstants.A_dlist);
-                
+
                 elem.addAttribute(ContactConstants.A_type, type);
                 if (dlist != null)
                     elem.addAttribute(ContactConstants.A_dlist, dlist);
-                
+
                 // send back date with summary via search results
                 elem.addAttribute(MailConstants.A_CHANGE_DATE, contact.getChangeDate() / 1000);
             }
@@ -567,7 +564,7 @@ public class ToXML {
                 }
             }
         } else {
-            Map<String, String> contactFields = returnHiddenAttrs ? 
+            Map<String, String> contactFields = returnHiddenAttrs ?
                     contact.getAllFields() : contact.getFields();
             for (Map.Entry<String, String> me : contactFields.entrySet()) {
                 String name = me.getKey();
@@ -595,7 +592,7 @@ public class ToXML {
         }
         elem.addKeyValuePair(name, value);
     }
-    
+
     private static void encodeContactAttachment(Element elem, Attachment attach) {
         Element.KeyValuePair kvp = elem.addKeyValuePair(attach.getName(), null);
         kvp.addAttribute(MailConstants.A_PART, attach.getPartName()).addAttribute(MailConstants.A_CONTENT_TYPE, attach.getContentType());
@@ -713,13 +710,13 @@ public class ToXML {
     }
 
     /**
-     * This version lets you specify the Date and Fragment -- we use this when sending Query Results back to the client, 
+     * This version lets you specify the Date and Fragment -- we use this when sending Query Results back to the client,
      * the conversation date returned and fragment correspond to those of the matched message.
      * @param ifmt TODO
      * @param conv
      * @param msgHit TODO
      * @param eecache
-     * @throws ServiceException 
+     * @throws ServiceException
      */
     public static Element encodeConversationSummary(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Conversation conv, int fields) throws ServiceException {
         return encodeConversationSummary(parent, ifmt, octxt, conv, null, OutputParticipants.PUT_SENDERS, fields, true);
@@ -959,8 +956,8 @@ public class ToXML {
     }
 
     /**
-     * Encodes the basic search / sync fields onto an existing calendar item element 
-     * 
+     * Encodes the basic search / sync fields onto an existing calendar item element
+     *
      * @param calItemElem
      * @param ifmt
      * @param calItem
@@ -1069,23 +1066,23 @@ public class ToXML {
 
     /**
      * Encode the metadata for a calendar item.
-     * 
+     *
      * The content for the calendar item is a big multipart/digest containing each
-     * invite in the calendar item as a sub-mimepart -- it can be retreived from the content 
-     * servlet: 
+     * invite in the calendar item as a sub-mimepart -- it can be retreived from the content
+     * servlet:
      *    http://servername/service/content/get?id=<calItemId>
-     * 
+     *
      * The client can ALSO request just the content for each individual invite using a
      * compound item-id request:
      *    http://servername/service/content/get?id=<calItemId>-<invite-mail-item-id>
-     *    
-     * DO NOT use the raw invite-mail-item-id to fetch the content: since the invite is a 
+     *
+     * DO NOT use the raw invite-mail-item-id to fetch the content: since the invite is a
      * standard mail-message it can be deleted by the user at any time!
      * @param parent
      * @param ifmt TODO
      * @param calItem
      * @param fields
-     * 
+     *
      * @return
      */
     public static Element encodeCalendarItemSummary(Element parent, ItemIdFormatter ifmt,
@@ -1097,7 +1094,7 @@ public class ToXML {
             elem = parent.addElement(MailConstants.E_APPOINTMENT);
         else
             elem = parent.addElement(MailConstants.E_TASK);
-        
+
         setCalendarItemFields(elem, ifmt, octxt, calItem, fields, includeInvites, includeContent, true);
 
         if (needToOutput(fields, Change.MODIFIED_METADATA))
@@ -1204,7 +1201,7 @@ public class ToXML {
                     mm = (MimeMessage) content;
                 } else
                     part = "";
-    
+
                 if (showAll) {
                     addEmails(m, Mime.parseAddressHeader(mm, "From"), EmailType.FROM);
                     addEmails(m, Mime.parseAddressHeader(mm, "Sender"), EmailType.SENDER);
@@ -1212,17 +1209,17 @@ public class ToXML {
                     addEmails(m, Mime.parseAddressHeader(mm, "To"), EmailType.TO);
                     addEmails(m, Mime.parseAddressHeader(mm, "Cc"), EmailType.CC);
                     addEmails(m, Mime.parseAddressHeader(mm, "Bcc"), EmailType.BCC);
-        
+
                     String subject = Mime.getSubject(mm);
                     if (subject != null)
                         m.addAttribute(MailConstants.E_SUBJECT, StringUtil.stripControlCharacters(subject), Element.Disposition.CONTENT);
                     String messageID = mm.getMessageID();
                     if (messageID != null && !messageID.trim().equals(""))
                         m.addAttribute(MailConstants.E_MSG_ID_HDR, StringUtil.stripControlCharacters(messageID), Element.Disposition.CONTENT);
-        
+
                     if (!wholeMessage)
                         m.addAttribute(MailConstants.A_SIZE, mm.getSize());
-        
+
                     java.util.Date sent = mm.getSentDate();
                     if (sent != null)
                         m.addAttribute(MailConstants.A_SENT_DATE, sent.getTime());
@@ -1251,7 +1248,7 @@ public class ToXML {
                             m.addKeyValuePair(name, values[i], MailConstants.A_HEADER, MailConstants.A_ATTRIBUTE_NAME);
                     }
                 }
-    
+
                 List<MPartInfo> parts = Mime.getParts(mm);
                 if (parts != null && !parts.isEmpty()) {
                     Set<MPartInfo> bodies = Mime.getBody(parts, wantHTML);
@@ -1933,7 +1930,7 @@ public class ToXML {
     /** Adds the decoded text content of a message part to the {@link Element}.
      *  The content is added as the value of a new <tt>&lt;content></tt>
      *  sub-element.  <i>Note: This method will only extract the content of a
-     *  <b>text/*</b> or <b>xml/*</b> message part.</i> 
+     *  <b>text/*</b> or <b>xml/*</b> message part.</i>
      * @param elt  The element to add the <tt>&lt;content></tt> to.
      * @param mpi  The message part to extract the content from.
      * @param maxSize The maximum amount of content to inline (<=0 is unlimited).
@@ -1948,8 +1945,8 @@ public class ToXML {
     /** Adds the decoded text content of a message part to the {@link Element}.
      *  The content is added as the value of a new <tt>&lt;content></tt>
      *  sub-element.  <i>Note: This method will only extract the content of a
-     *  <b>text/*</b> or <b>xml/*</b> message part.</i> 
-     * 
+     *  <b>text/*</b> or <b>xml/*</b> message part.</i>
+     *
      * @param elt     The element to add the <tt>&lt;content></tt> to.
      * @param mpi     The message part to extract the content from.
      * @param maxSize The maximum number of characters to inline (<=0 is unlimited).
@@ -1968,7 +1965,7 @@ public class ToXML {
         MimePart mp = mpi.getMimePart();
         Mime.repairTransferEncoding(mp);
 
-        
+
         String data = null;
         try {
             if (maxSize <= 0) {
@@ -1992,7 +1989,7 @@ public class ToXML {
                 out = tw;
             }
             Reader reader = null;
-            
+
             try {
                 if (charset != null && !charset.trim().equals("")) {
                     stream = mp.getInputStream();
@@ -2012,7 +2009,7 @@ public class ToXML {
                     }
                     if (data == null) {
                         reader = Mime.getContentAsReader(mp, defaultCharset);
-                        DefangFactory.getDefanger(ctype).defang(stream, neuter, out);
+                        DefangFactory.getDefanger(ctype).defang(reader, neuter, out);
                         data = sw.toString();
                     }
                 }
@@ -2020,8 +2017,8 @@ public class ToXML {
                 if (tw != null) {
                     wasTruncated = tw.wasTruncated();
                 }
-                ByteUtil.closeStream(stream);
-                ByteUtil.closeReader(reader);
+                Closeables.closeQuietly(stream);
+                Closeables.closeQuietly(reader);
             }
         } else if (ctype.equals(MimeConstants.CT_TEXT_ENRICHED)) {
             // Enriched text handling is a little funky because TextEnrichedHandler
@@ -2187,7 +2184,7 @@ public class ToXML {
     }
     public static Element encodeDataSource(Element parent, DataSource ds) {
         Element m;
-        
+
         m = parent.addElement(getDsType(ds));
 
         m.addAttribute(MailConstants.A_ID, ds.getId());
@@ -2195,7 +2192,7 @@ public class ToXML {
         m.addAttribute(MailConstants.A_FOLDER, ds.getFolderId());
         m.addAttribute(MailConstants.A_DS_IS_ENABLED, ds.isEnabled());
         m.addAttribute(MailConstants.A_DS_IS_IMPORTONLY, ds.isImportOnly());
-        
+
         if (ds.getType() == DataSource.Type.pop3)
             m.addAttribute(MailConstants.A_DS_LEAVE_ON_SERVER, ds.leaveOnServer());
 
@@ -2223,13 +2220,13 @@ public class ToXML {
         m.addAttribute(MailConstants.A_DS_FROM_ADDRESS, ds.getFromAddress());
         m.addAttribute(MailConstants.A_DS_REPLYTO_ADDRESS, ds.getReplyToAddress());
         m.addAttribute(MailConstants.A_DS_REPLYTO_DISPLAY, ds.getReplyToDisplay());
-        
+
         Date date = ds.getGeneralizedTimeAttr(Provisioning.A_zimbraDataSourceFailingSince, null);
         if (date != null) {
             m.addAttribute(MailConstants.A_DS_FAILING_SINCE, date.getTime() / 1000);
         }
-        
-        String lastError = ds.getAttr(Provisioning.A_zimbraDataSourceLastError); 
+
+        String lastError = ds.getAttr(Provisioning.A_zimbraDataSourceLastError);
         if (lastError != null) {
             m.addElement(MailConstants.E_DS_LAST_ERROR).setText(lastError);
         }
@@ -2256,7 +2253,7 @@ public class ToXML {
             return MailConstants.E_DS_UNKNOWN;
         }
     }
-    
+
     private static void setCalendarItemType(Element elem, byte itemType) {
         elem.addAttribute(MailConstants.A_CAL_ITEM_TYPE,
                 itemType == MailItem.TYPE_APPOINTMENT ? "appt" : "task");
@@ -2295,7 +2292,7 @@ public class ToXML {
             alarmObj.toXml(alarmElem);
         return alarmElem;
     }
-    
+
     public static Element encodeFreeBusy(Element parent, FreeBusy fb) {
         Element resp = parent.addElement(MailConstants.E_FREEBUSY_USER);
         resp.addAttribute(MailConstants.A_ID, fb.getName());
@@ -2437,7 +2434,7 @@ public class ToXML {
             }
         }
     }
-    
+
     public static Element encodeGalContact(Element response, GalContact contact) {
         Element cn = response.addElement(MailConstants.E_CONTACT);
         cn.addAttribute(MailConstants.A_ID, contact.getId());
@@ -2454,7 +2451,7 @@ public class ToXML {
         }
         return cn;
     }
-    
+
     private static void encodeAddrsWithGroupInfo(Provisioning prov, Element eParent,
             String emailElem, Account requestedAcct, Account authedAcct) {
         GalGroupInfoProvider.getInstance().encodeAddrsWithGroupInfo(prov, eParent, emailElem, requestedAcct, authedAcct);
@@ -2465,7 +2462,7 @@ public class ToXML {
         Element eMsg = response.getOptionalElement(MailConstants.E_MSG);
         if (eMsg != null) {
             encodeAddrsWithGroupInfo(prov, eMsg, MailConstants.E_EMAIL, requestedAcct, authedAcct);
-            
+
             Element eInvite = eMsg.getOptionalElement(MailConstants.E_INVITE);
             if (eInvite != null) {
                 Element eComp = eInvite.getOptionalElement(MailConstants.E_INVITE_COMPONENT);
