@@ -45,6 +45,7 @@ import com.google.common.base.Strings;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.google.common.io.Closeables;
 import com.zimbra.common.calendar.CalendarUtil;
 import com.zimbra.common.calendar.Geo;
 import com.zimbra.common.calendar.ICalTimeZone;
@@ -2246,7 +2247,7 @@ public final class ToXML {
                     }
                     if (data == null) {
                         reader = Mime.getContentAsReader(mp, defaultCharset);
-                        DefangFactory.getDefanger(ctype).defang(stream, neuter, out);
+                        DefangFactory.getDefanger(ctype).defang(reader, neuter, out);
                         data = sw.toString();
                     }
                 }
@@ -2254,8 +2255,8 @@ public final class ToXML {
                 if (tw != null) {
                     wasTruncated = tw.wasTruncated();
                 }
-                ByteUtil.closeStream(stream);
-                ByteUtil.closeReader(reader);
+                Closeables.closeQuietly(stream);
+                Closeables.closeQuietly(reader);
             }
         } else if (ctype.equals(MimeConstants.CT_TEXT_ENRICHED)) {
             // Enriched text handling is a little funky because TextEnrichedHandler

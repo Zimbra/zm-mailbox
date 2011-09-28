@@ -2,7 +2,7 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
@@ -20,7 +20,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
-import java.io.Reader;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -39,6 +38,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.localconfig.LC;
@@ -72,7 +72,7 @@ import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 
-public class NativeFormatter extends Formatter {
+public final class NativeFormatter extends Formatter {
 
     private static final String CONVERSION_PATH = "/extension/convertd";
     public static final String ATTR_INPUTSTREAM = "inputstream";
@@ -347,40 +347,34 @@ public class NativeFormatter extends Formatter {
         return Mime.getMimePart(msg.getMimeMessage(), part);
     }
 
-    public static void sendbackOriginalDoc(InputStream is, String contentType, String defaultCharset, String filename, String desc,
-        HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    public static void sendbackOriginalDoc(InputStream is, String contentType, String defaultCharset, String filename,
+            String desc, HttpServletRequest req, HttpServletResponse resp) throws IOException {
         sendbackOriginalDoc(is, contentType, defaultCharset, filename, desc, 0, req, resp);
     }
 
-    private static void sendbackOriginalDoc(InputStream is, String contentType, String defaultCharset, String filename, String desc, long size,
-            HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    private static void sendbackOriginalDoc(InputStream is, String contentType, String defaultCharset, String filename,
+            String desc, long size, HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String disp = req.getParameter(UserServlet.QP_DISP);
-
-        disp = (disp == null || disp.toLowerCase().startsWith("i") ) ? Part.INLINE : Part.ATTACHMENT;
-        if (desc != null)
+        disp = (disp == null || disp.toLowerCase().startsWith("i")) ? Part.INLINE : Part.ATTACHMENT;
+        if (desc != null) {
             resp.addHeader("Content-Description", desc);
-
+        }
         // defang when the html and svg attachment was requested with disposition inline
         if (disp.equals(Part.INLINE) && isScriptableContent(contentType)) {
-            String charset = Mime.getCharset(contentType);
-            String content;
-
             BrowserDefang defanger = DefangFactory.getDefanger(contentType);
-
-            if (charset != null && !charset.equals("")) {
-                Reader reader = Mime.getTextReader(is, contentType, defaultCharset);
-                content = defanger.defang(reader, false);
-            } else {
-                content = defanger.defang(is, false);
-            }
+            String content = defanger.defang(Mime.getTextReader(is, contentType, defaultCharset), false);
+            String charset = Mime.getCharset(contentType);
+            resp.setCharacterEncoding(Strings.isNullOrEmpty(charset) ? Charsets.UTF_8.name() : charset);
             resp.setContentType(contentType);
-            if (content.length() > 0)
+            if (!content.isEmpty()) {
                 resp.setContentLength(content.length());
+            }
             resp.getWriter().write(content);
         } else {
             // flash attachment may contain a malicious script hence..
-            if (contentType.startsWith(MimeConstants.CT_APPLICATION_SHOCKWAVE_FLASH))
+            if (contentType.startsWith(MimeConstants.CT_APPLICATION_SHOCKWAVE_FLASH)) {
                 disp = Part.ATTACHMENT;
+            }
             resp.setContentType(contentType);
             sendbackBinaryData(req, resp, is, contentType, disp, filename, size);
         }
@@ -454,12 +448,12 @@ public class NativeFormatter extends Formatter {
         { '<', 'S', 'C', 'R', 'I', 'P', 'T' }
     };
 
-    public static void sendbackBinaryData(HttpServletRequest req, 
-                                          HttpServletResponse resp, 
+    public static void sendbackBinaryData(HttpServletRequest req,
+                                          HttpServletResponse resp,
                                           InputStream in,
                                           String contentType,
-                                          String disposition, 
-                                          String filename, 
+                                          String disposition,
+                                          String filename,
                                           long size) throws IOException {
         if (disposition == null) {
             String disp = req.getParameter(UserServlet.QP_DISP);
@@ -520,6 +514,6 @@ public class NativeFormatter extends Formatter {
         contentType = Mime.getContentType(contentType).toLowerCase();
         // only set no-open for 'script type content'
         return SCRIPTABLE_CONTENT_TYPES.contains(contentType);
-        
+
     }
 }
