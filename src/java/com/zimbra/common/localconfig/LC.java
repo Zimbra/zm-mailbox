@@ -841,7 +841,7 @@ public final class LC {
     
     @Supported
     @Reloadable
-    public static final KnownKey zimbra_disable_text_extraction = KnownKey.newKey(false);
+    public static final KnownKey zimbra_enable_text_extraction = KnownKey.newKey(true);
 
     /**
      * {@code true} to use Zimbra's SMTP client implementation
