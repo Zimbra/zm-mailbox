@@ -38,6 +38,7 @@ import org.dom4j.Namespace;
 import org.dom4j.QName;
 
 import com.google.common.base.Objects;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element.ElementFactory;
@@ -115,13 +116,13 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
 
     SoapCommandUtil() {
         // Initialize options.
-        mOptions.addOption(new Option("h", LO_HELP, false, "Display this help message.")); 
-        
+        mOptions.addOption(new Option("h", LO_HELP, false, "Display this help message."));
+
         Option opt = new Option("m", LO_MAILBOX, true, "Send mail and account requests to this account.  " +
             "Also used for authentication if -a and -z are not specified.");
         opt.setArgName("account-name");
         mOptions.addOption(opt);
-        
+
         opt = new Option(null, LO_TARGET, true, "Target account name to which requests will be sent.  " +
             "Only used for non-admin sessions.");
         opt.setArgName("account-name");
@@ -322,9 +323,11 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         
         // Do delegate auth if this is a mail or account service request
         if (!mType.equals(TYPE_ADMIN)) {
+            boolean nameIsUUID = StringUtil.isUUID(mMailboxName);
+
             Element getInfo = mFactory.createElement(AdminConstants.GET_ACCOUNT_INFO_REQUEST);
             Element account = getInfo.addElement(AccountConstants.E_ACCOUNT).setText(mMailboxName);
-            account.addAttribute(AdminConstants.A_BY, AdminConstants.BY_NAME);
+            account.addAttribute(AdminConstants.A_BY, nameIsUUID ? AdminConstants.BY_ID : AdminConstants.BY_NAME);
             if (mVeryVerbose) {
                 mOut.println(getInfo.prettyPrint());
             }
@@ -334,7 +337,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             // Get delegate auth token
             Element delegateAuth = mFactory.createElement(AdminConstants.DELEGATE_AUTH_REQUEST);
             account = delegateAuth.addElement(AccountConstants.E_ACCOUNT).setText(mMailboxName);
-            account.addAttribute(AdminConstants.A_BY, AdminConstants.BY_NAME);
+            account.addAttribute(AdminConstants.A_BY, nameIsUUID ? AdminConstants.BY_ID : AdminConstants.BY_NAME);
             response = getTransport().invoke(delegateAuth, false, !mUseSession, null);
             handleAuthResponse(response);
             
@@ -368,13 +371,13 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         if (mVeryVerbose) {
             mOut.println("Sending auth request to " + mUrl);
         }
-        
+
         // Create auth element
         Element auth = mFactory.createElement(AccountConstants.AUTH_REQUEST);
         Element account = auth.addElement(AccountConstants.E_ACCOUNT).setText(mMailboxName);
-        account.addAttribute(AdminConstants.A_BY, AdminConstants.BY_NAME);
+        account.addAttribute(AdminConstants.A_BY, StringUtil.isUUID(mMailboxName) ? AdminConstants.BY_ID : AdminConstants.BY_NAME);
         auth.addElement(AccountConstants.E_PASSWORD).setText(mPassword);
-        
+
         // Authenticate and get auth token
         Element response = getTransport().invoke(auth, false, !mUseSession, null);
         handleAuthResponse(response);
