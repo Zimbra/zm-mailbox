@@ -6455,4 +6455,28 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
+<attr id="1304" name="zimbraMobilePolicyUnapprovedInROMApplication" type="string" max="512" cardinality="multi" optionalIn="account,cos" flags="accountInherited"  since="8.0.0">
+  <desc>
+    application that can't be run in device ROM;
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+  </desc>
+</attr>
+
+<attr id="1305" name="zimbraMobilePolicyApprovedApplication" type="string" max="256" cardinality="multi" optionalIn="account,cos" flags="accountInherited"  since="8.0.0">
+  <desc>
+    approved application for the mobile device
+    the value contains a SHA1 hash (typically 40 characters long) for the application file (.exe, .dll etc)
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+  </desc>
+</attr>
+
+<attr id="1306" name="zimbraMobilePolicySuppressDeviceEncryption" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>
+    when set to TRUE, suppresses DeviceEncryptionEnabled to be sent down to the device;
+    Some devices choke when DeviceEncryptionEnabled policy is downloaded irrespective of their value set to 0 or, 1
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+  </desc>
+</attr>
+
 </attrs>
