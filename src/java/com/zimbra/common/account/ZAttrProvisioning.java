@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110926-1316 */
+    /* build: 8.0.0_BETA1_1111 smukhopadhyay 20110923-0231 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -6271,6 +6271,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMobilePolicyAlphanumericDevicePasswordRequired = "zimbraMobilePolicyAlphanumericDevicePasswordRequired";
 
     /**
+     * approved application for the mobile device the value contains a SHA1
+     * hash (typically 40 characters long) for the application file (.exe,
+     * .dll etc) ignored if zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1305)
+    public static final String A_zimbraMobilePolicyApprovedApplication = "zimbraMobilePolicyApprovedApplication";
+
+    /**
      * require data encryption on device; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE
      *
@@ -6469,6 +6479,26 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1294)
     public static final String A_zimbraMobilePolicyRequireSignedSMIMEMessages = "zimbraMobilePolicyRequireSignedSMIMEMessages";
+
+    /**
+     * when set to TRUE, suppresses DeviceEncryptionEnabled to be sent down
+     * to the device; Some devices choke when DeviceEncryptionEnabled policy
+     * is downloaded irrespective of their value set to 0 or, 1 ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1306)
+    public static final String A_zimbraMobilePolicySuppressDeviceEncryption = "zimbraMobilePolicySuppressDeviceEncryption";
+
+    /**
+     * application that can&#039;t be run in device ROM; ignored if
+     * zimbraFeatureMobilePolicyEnabled=FALSE
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1304)
+    public static final String A_zimbraMobilePolicyUnapprovedInROMApplication = "zimbraMobilePolicyUnapprovedInROMApplication";
 
     /**
      * indicates whether the application can forward original email as RFC
@@ -10095,22 +10125,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
