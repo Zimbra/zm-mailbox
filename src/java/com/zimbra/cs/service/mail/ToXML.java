@@ -2082,6 +2082,15 @@ public final class ToXML {
                 LOG.warn("error writing body part", e);
             } catch (MessagingException e) {
             }
+        } else if (MimeConstants.CT_XML_ZIMBRA_DL_SUBSCRIPTION.equals(ctype)) {
+            // the <dlSubs> dl subscription info goes underneath the top-level <m>
+            Element dlSubs = root.addElement(MailConstants.E_DL_SUBSCRIPTION_NOTIFICATION);
+            try {
+                addContent(dlSubs, mpi, maxSize, defaultCharset);
+            } catch (IOException e) {
+                LOG.warn("error writing body part", e);
+            } catch (MessagingException e) {
+            }
         } else if (MimeConstants.CT_TEXT_ENRICHED.equals(ctype)) {
             // we'll be replacing text/enriched with text/html
             ctype = MimeConstants.CT_TEXT_HTML;

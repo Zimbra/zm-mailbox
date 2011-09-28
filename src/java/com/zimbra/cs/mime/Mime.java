@@ -682,9 +682,11 @@ public class Mime {
         }
 
         // Zimbra folder sharing notifications are not considered attachments.
-        if (ctype.equals(MimeConstants.CT_XML_ZIMBRA_SHARE))
+        if (ctype.equals(MimeConstants.CT_XML_ZIMBRA_SHARE) ||
+            ctype.equals(MimeConstants.CT_XML_ZIMBRA_DL_SUBSCRIPTION)) {
             return false;
-
+        }
+        
         // computer-readable sections of multipart/reports aren't considered attachments
         if (ctype.equals("message/disposition-notification") || ctype.equals("message/delivery-status"))
             return false;

@@ -51,6 +51,8 @@ public abstract class Group extends MailTarget implements AliasedEntry {
     
     public abstract Set<String> getAllMembersSet() throws ServiceException;
     
+    public abstract String getDisplayName();
+    
     abstract DistributionListSubscriptionPolicy getDistributionListSubscriptionPolicy();
     abstract DistributionListUnsubscriptionPolicy getDistributionListUnsubscriptionPolicy();
     

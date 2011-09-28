@@ -46,6 +46,7 @@ import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.L10nUtil.MsgKey;
@@ -211,8 +212,9 @@ public class SubscribeDistributionList extends DistributionListDocumentHandler {
         private MimeMultipart buildMailContent(Locale locale)
         throws MessagingException {
             String text = textPart(locale);
-            String html = htmlPart(locale);;
-        
+            String html = htmlPart(locale);
+            String xml = xmlPart(locale);
+            
             // Body
             MimeMultipart mmp = new JavaMailMimeMultipart("alternative");
         
@@ -226,6 +228,11 @@ public class SubscribeDistributionList extends DistributionListDocumentHandler {
             htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(html)));
             mmp.addBodyPart(htmlPart);
 
+            // XML part
+            MimeBodyPart xmlPart = new JavaMailMimeBodyPart();
+            xmlPart.setDataHandler(new DataHandler(new XmlPartDataSource(xml)));
+            mmp.addBodyPart(xmlPart);
+            
             return mmp;
         }
         
@@ -249,6 +256,32 @@ public class SubscribeDistributionList extends DistributionListDocumentHandler {
             sb.append("<p>" + textPart(locale) + "</p>\n");
             sb.append("</h4>\n");
             sb.append("\n");
+            return sb.toString();
+        }
+        
+        private String xmlPart(Locale locale) {
+            StringBuilder sb = new StringBuilder();
+
+            final String URI = "urn:zimbraDLSubscription";
+            final String VERSION = "0.1";
+
+            // make notes xml friendly
+            // notes = StringEscapeUtils.escapeXml(notes);
+            
+            String groupDisplayName = group.getDisplayName();
+            groupDisplayName = groupDisplayName == null ? "" : groupDisplayName;
+            
+            String userDisplayName = requestingAcct.getDisplayName();
+            userDisplayName = userDisplayName == null ? "" : userDisplayName;
+            
+            sb.append(String.format("<%s xmlns=\"%s\" version=\"%s\" action=\"%s\">\n", 
+                    MailConstants.E_DL_SUBSCRIPTION_NOTIFICATION, URI, VERSION, op.name()));
+            sb.append(String.format("<dl id=\"%s\" email=\"%s\" name=\"%s\">\n",
+                    group.getId(), group.getName(), groupDisplayName));
+            sb.append(String.format("<user id=\"%s\" email=\"%s\" name=\"%s\">\n",
+                    requestingAcct.getId(), requestingAcct.getName(), userDisplayName));
+            sb.append(String.format("</%s>\n", MailConstants.E_DL_SUBSCRIPTION_NOTIFICATION));
+
             return sb.toString();
         }
         
@@ -285,10 +318,32 @@ public class SubscribeDistributionList extends DistributionListDocumentHandler {
         
         private static class HtmlPartDataSource extends MimePartDataSource {
             private static final String CONTENT_TYPE =
-                MimeConstants.CT_TEXT_HTML + "; " + MimeConstants.P_CHARSET + "=" + MimeConstants.P_CHARSET_UTF8;
+                MimeConstants.CT_TEXT_HTML + "; " + 
+                MimeConstants.P_CHARSET + "=" + MimeConstants.P_CHARSET_UTF8;
             private static final String NAME = "HtmlDataSource";
 
             HtmlPartDataSource(String text) {
+                super(text);
+            }
+
+            @Override
+            public String getContentType() {
+                return CONTENT_TYPE;
+            }
+
+            @Override
+            public String getName() {
+                return NAME;
+            }
+        }
+        
+        private static class XmlPartDataSource extends MimePartDataSource {
+            private static final String CONTENT_TYPE =
+                MimeConstants.CT_XML_ZIMBRA_DL_SUBSCRIPTION + "; " + 
+                MimeConstants.P_CHARSET + "=" + MimeConstants.P_CHARSET_UTF8;
+            private static final String NAME = "XmlDataSource";
+
+            XmlPartDataSource(String text) {
                 super(text);
             }
 

@@ -1841,6 +1841,7 @@ if <header>s are requested, any matching headers are inlined into the response
     *(<header n="{header-name}">header content</header>)
     [<mp>...</mp>]
     [<shr><content>{share-announcement-in-xml}</content</shr>]
+    [<dlSubs><content>{dl-subscription-request-in-xml}</content</dlSubs>]
     [<content (url="...")>...</content>]
   </m>
 </GetMsgResponse>
