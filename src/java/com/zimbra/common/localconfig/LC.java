@@ -838,6 +838,10 @@ public final class LC {
     public static final KnownKey zimbra_zmjava_java_ext_dirs = KnownKey.newKey("");
     public static final KnownKey debug_xmpp_disable_client_tls = KnownKey.newKey(0);
     public static final KnownKey im_dnsutil_dnsoverride = KnownKey.newKey("");
+    
+    @Supported
+    @Reloadable
+    public static final KnownKey zimbra_disable_text_extraction = KnownKey.newKey(true);
 
     /**
      * {@code true} to use Zimbra's SMTP client implementation
