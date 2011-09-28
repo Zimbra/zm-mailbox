@@ -70,8 +70,8 @@ public class TestAclPush extends TestCase {
         GetShareInfoRequest req = new GetShareInfoRequest();
         GetShareInfoResponse resp = zMailbox2.invokeJaxb(req);
         List<ShareInfo> shares = resp.getShares();
-        assertEquals(1, shares.size());
-        ShareInfo share = shares.get(0);
+        ShareInfo share = getShare(shares, "/" + NAME_PREFIX + "-folder1");
+        assertNotNull(share);
         assertEquals(acct2.getId(), share.getGranteeId());
         assertEquals(ACL.typeToString(ACL.GRANTEE_USER), share.getGranteeType());
         assertEquals(folder.getPath(), share.getFolderPath());
@@ -85,10 +85,7 @@ public class TestAclPush extends TestCase {
         AclPushTask.doWork();
         resp = zMailbox2.invokeJaxb(req);
         shares = resp.getShares();
-        assertEquals(1, shares.size());
-        share = shares.get(0);
-        // check that folder path is updated in share info
-        assertEquals(folder.getPath(), share.getFolderPath());
+        assertNotNull(getShare(shares, "/" + NAME_PREFIX + "-folder2"));
 
         // create another folder and share with DL
         Folder dlFolder = mbox1.createFolder(null, "/" + NAME_PREFIX + "-dl", (byte) 0, MailItem.Type.DOCUMENT);
@@ -96,8 +93,8 @@ public class TestAclPush extends TestCase {
         AclPushTask.doWork();
         resp = zMailbox2.invokeJaxb(req);
         shares = resp.getShares();
-        assertEquals(2, shares.size());
-        ShareInfo dlShare = getShare(shares, ACL.GRANTEE_GROUP);
+        ShareInfo dlShare = getShare(shares, "/" + NAME_PREFIX + "-dl");
+        assertNotNull(dlShare);
         assertEquals(dl.getId(), dlShare.getGranteeId());
         assertEquals(dlFolder.getPath(), dlShare.getFolderPath());
         assertEquals(dlFolder.getDefaultView().toString(), dlShare.getDefaultView());
@@ -110,8 +107,8 @@ public class TestAclPush extends TestCase {
         AclPushTask.doWork();
         resp = zMailbox2.invokeJaxb(req);
         shares = resp.getShares();
-        assertEquals(3, shares.size());
-        ShareInfo pubShare = getShare(shares, ACL.GRANTEE_PUBLIC);
+        ShareInfo pubShare = getShare(shares, "/" + NAME_PREFIX + "-public");
+        assertNotNull(pubShare);
         assertEquals(pubFolder.getPath(), pubShare.getFolderPath());
         assertEquals(pubFolder.getDefaultView().toString(), pubShare.getDefaultView());
         assertEquals("rw", pubShare.getRights());
@@ -122,11 +119,9 @@ public class TestAclPush extends TestCase {
         AclPushTask.doWork();
         resp = zMailbox2.invokeJaxb(req);
         shares = resp.getShares();
-        assertEquals(2, shares.size());
-        dlShare = getShare(shares, ACL.GRANTEE_GROUP);
-        assertNotNull(dlShare);
-        pubShare = getShare(shares, ACL.GRANTEE_PUBLIC);
-        assertNotNull(pubShare);
+        assertNull(getShare(shares, "/" + NAME_PREFIX + "-folder2"));
+        assertNotNull(getShare(shares, "/" + NAME_PREFIX + "-dl"));
+        assertNotNull(getShare(shares, "/" + NAME_PREFIX + "-public"));
 
         // delete dlFolder and pubFolder
         mbox1.delete(null, dlFolder.getId(), MailItem.Type.FOLDER);
@@ -134,12 +129,13 @@ public class TestAclPush extends TestCase {
         AclPushTask.doWork();
         resp = zMailbox2.invokeJaxb(req);
         shares = resp.getShares();
-        assertEquals(0, shares.size());
+        assertNull(getShare(shares, "/" + NAME_PREFIX + "-dl"));
+        assertNull(getShare(shares, "/" + NAME_PREFIX + "-public"));
     }
 
-    private static ShareInfo getShare(List<ShareInfo> shares, byte granteeType) {
+    private static ShareInfo getShare(List<ShareInfo> shares, String folderPath) {
         for (ShareInfo si : shares) {
-            if (ACL.typeToString(granteeType).equals(si.getGranteeType())) {
+            if (folderPath.equals(si.getFolderPath())) {
                 return si;
             }
         }
