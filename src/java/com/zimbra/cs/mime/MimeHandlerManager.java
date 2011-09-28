@@ -20,16 +20,18 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.cs.mime.handler.NoOpMimeHandler;
 import com.zimbra.cs.mime.handler.UnknownTypeHandler;
 
 
@@ -72,6 +74,10 @@ public class MimeHandlerManager {
     throws MimeHandlerException {
         sLog.debug("Getting MIME handler for type %s, filename '%s'", mimeType, filename);
 
+        if (LC.zimbra_disable_text_extraction.booleanValue()) {
+            return new NoOpMimeHandler();
+        }
+        
         MimeHandler handler = null;
         if (!StringUtil.isNullOrEmpty(mimeType)) {
             mimeType = Mime.getContentType(mimeType);
