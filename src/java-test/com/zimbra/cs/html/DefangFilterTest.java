@@ -23,7 +23,7 @@ import com.zimbra.cs.mime.ParsedMessage;
  * @author jpowers
  *
  */
-public class TestDefangFilter {
+public class DefangFilterTest {
     private static final String EMAIL_BASE_DIR = "./data/unittest/email/";
     
     /**
