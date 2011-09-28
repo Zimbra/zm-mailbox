@@ -123,21 +123,27 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 options.setUri(AccountUtil.getSoapUri(grantee));
                 ZMailbox zMailbox = new ZMailbox(options);
                 ZMountpoint zMtpt = null;
+                int parentId = sharedFolderView == MailItem.Type.DOCUMENT ?
+                        Mailbox.ID_FOLDER_BRIEFCASE : Mailbox.ID_FOLDER_USER_ROOT;
                 try {
                     zMtpt = zMailbox.createMountpoint(
-                            Integer.toString(Mailbox.ID_FOLDER_USER_ROOT), mountpointName,
+                            Integer.toString(parentId), mountpointName,
                             ZFolder.View.fromString(sharedFolderView.toString()), ZFolder.Color.defaultColor, null,
                             ZMailbox.OwnerBy.BY_ID, ownerId, ZMailbox.SharedItemBy.BY_ID, folderId, false);
-                    if (sharedFolderView == MailItem.Type.APPOINTMENT) {
-                        // make sure that the mountpoint is checked in the UI by default
-                        FolderActionSelector actionSelector = new FolderActionSelector(zMtpt.getId(), "check");
-                        FolderActionRequest actionRequest = new FolderActionRequest(actionSelector);
-                        zMailbox.invokeJaxb(actionRequest);
-                    }
                 } catch (ServiceException e) {
                     logger.debug("Error in attempting to create mountpoint. Probably it already exists.", e);
                 }
                 if (zMtpt != null) {
+                    if (sharedFolderView == MailItem.Type.APPOINTMENT) {
+                        // make sure that the mountpoint is checked in the UI by default
+                        FolderActionSelector actionSelector = new FolderActionSelector(zMtpt.getId(), "check");
+                        FolderActionRequest actionRequest = new FolderActionRequest(actionSelector);
+                        try {
+                            zMailbox.invokeJaxb(actionRequest);
+                        } catch (ServiceException e) {
+                            logger.warn("Error in invoking check action on calendar mountpoint", e);
+                        }
+                    }
                     HashSet<MailItem.Type> types = new HashSet<MailItem.Type>();
                     types.add(sharedFolderView);
                     enableAppFeatures(grantee, types);
@@ -272,8 +278,10 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                     }
                     String sharedFolderPath = shareData.getPath();
                     String mountpointName = getMountpointName(account, sharedFolderPath);
+                    int parent = shareData.getFolderDefaultViewCode() == MailItem.Type.DOCUMENT ?
+                            Mailbox.ID_FOLDER_BRIEFCASE : Mailbox.ID_FOLDER_USER_ROOT;
                     Mountpoint mtpt = granteeMbox.createMountpoint(
-                            null, Mailbox.ID_FOLDER_USER_ROOT, mountpointName, account.getId(), shareData.getItemId(),
+                            null, parent, mountpointName, account.getId(), shareData.getItemId(),
                             shareData.getFolderDefaultViewCode(), 0, MailItem.DEFAULT_COLOR, false);
                     if (shareData.getFolderDefaultViewCode() == MailItem.Type.APPOINTMENT) {
                         // make sure that the mountpoint is checked in the UI by default

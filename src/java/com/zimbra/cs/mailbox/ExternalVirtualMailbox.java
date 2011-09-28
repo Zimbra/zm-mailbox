@@ -36,8 +36,10 @@ public class ExternalVirtualMailbox extends Mailbox {
                     MailItem.DEFAULT_COLOR_RGB, null, null);
 
             byte system = Folder.FOLDER_IS_IMMUTABLE;
-            Folder.create(ID_FOLDER_USER_ROOT, this, root, "USER_ROOT", system, MailItem.Type.UNKNOWN, 0,
-                    MailItem.DEFAULT_COLOR_RGB, null, null);
+            Folder userRoot = Folder.create(ID_FOLDER_USER_ROOT, this, root, "USER_ROOT", system,
+                    MailItem.Type.UNKNOWN, 0, MailItem.DEFAULT_COLOR_RGB, null, null);
+            Folder.create(ID_FOLDER_BRIEFCASE, this, userRoot, "Briefcase", system, MailItem.Type.DOCUMENT,
+                    0, MailItem.DEFAULT_COLOR_RGB, null, null);
         } finally {
             lock.release();
         }
