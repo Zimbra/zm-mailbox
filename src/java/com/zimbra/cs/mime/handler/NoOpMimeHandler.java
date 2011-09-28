@@ -16,6 +16,8 @@ package com.zimbra.cs.mime.handler;
 
 import java.io.IOException;
 
+import javax.activation.DataSource;
+
 import org.apache.lucene.document.Document;
 
 import com.zimbra.cs.convert.AttachmentInfo;
@@ -37,6 +39,11 @@ public class NoOpMimeHandler extends MimeHandler {
     }
 
     @Override
+    public boolean isIndexingEnabled() {
+        return false;
+    }
+
+    @Override
     public String convert(AttachmentInfo doc, String urlPart)
             throws IOException, ConversionException {
         return "";
@@ -45,6 +52,24 @@ public class NoOpMimeHandler extends MimeHandler {
     @Override
     public boolean doConversion() {
         return false;
+    }
+
+    @Override
+    public String getContentType() {
+        // TODO Auto-generated method stub
+        return super.getContentType();
+    }
+
+    @Override
+    public String getDescription() {
+        // TODO Auto-generated method stub
+        return super.getDescription();
+    }
+
+    @Override
+    public String getPartName() {
+        // TODO Auto-generated method stub
+        return super.getPartName();
     }
 
     @Override

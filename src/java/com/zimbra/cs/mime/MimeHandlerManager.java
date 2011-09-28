@@ -74,7 +74,7 @@ public class MimeHandlerManager {
     throws MimeHandlerException {
         sLog.debug("Getting MIME handler for type %s, filename '%s'", mimeType, filename);
 
-        if (LC.zimbra_disable_text_extraction.booleanValue()) {
+        if (!LC.zimbra_enable_text_extraction.booleanValue()) {
             return new NoOpMimeHandler();
         }
         

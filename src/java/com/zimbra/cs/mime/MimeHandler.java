@@ -93,11 +93,14 @@ public abstract class MimeHandler {
     }
 
     public String getDescription() {
+        if (mimeTypeInfo == null) {
+            return "";
+        }
         return mimeTypeInfo.getDescription();
     }
 
     public boolean isIndexingEnabled() {
-        return mimeTypeInfo.isIndexingEnabled();
+        return mimeTypeInfo == null? false : mimeTypeInfo.isIndexingEnabled();
     }
 
     /**
