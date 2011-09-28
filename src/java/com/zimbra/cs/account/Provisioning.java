@@ -34,6 +34,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ExceptionToString;
 import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
@@ -2129,13 +2130,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
 
     public static boolean isUUID(String value) {
-        if (value.length() == 36 &&
-            value.charAt(8) == '-' &&
-            value.charAt(13) == '-' &&
-            value.charAt(18) == '-' &&
-            value.charAt(23) == '-')
-            return true;
-        return false;
+        return StringUtil.isUUID(value);
     }
 
     public String getProxyAuthToken(String acctId) throws ServiceException {

@@ -74,6 +74,7 @@ import com.zimbra.client.event.ZDeleteEvent;
 import com.zimbra.client.event.ZEventHandler;
 import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.client.event.ZRefreshEvent;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
@@ -85,14 +86,14 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapTransport.DebugListener;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.GuestAccount;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
+//import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.soap.SoapAccountInfo;
@@ -165,13 +166,13 @@ public class ZMailboxUtil implements DebugListener {
         } catch (NumberFormatException e) {
             throw ServiceException.INVALID_REQUEST("Invalid timeout value " + timeout, e);
         }
-        if (num < 0)
+        if (num < 0) {
             throw ServiceException.INVALID_REQUEST("Timeout can't be negative", null);
+        }
         mTimeout = num * 1000;
     }
 
     private void usage() {
-
         if (mCommand != null) {
             stdout.printf("usage:%n%n%s%n", mCommand.getFullUsage());
         }
@@ -202,7 +203,6 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     public static enum Category {
-
         ADMIN("help on admin-related commands"),
         ACCOUNT("help on account-related commands"),
         APPOINTMENT("help on appoint-related commands",
@@ -528,23 +528,30 @@ public class ZMailboxUtil implements DebugListener {
     private static final long GBYTES = 1024*1024*1024;
 
     private String formatSize(long size) {
-        if (size > GBYTES) return String.format("%.2f GB", (((double)size)/GBYTES));
-        else if (size > MBYTES) return String.format("%.2f MB", (((double)size)/MBYTES));
-        else if (size > KBYTES) return String.format("%.2f KB", (((double)size)/KBYTES));
-        else return String.format("%d B", size);
+        if (size > GBYTES) {
+            return String.format("%.2f GB", (((double) size) / GBYTES));
+        } else if (size > MBYTES) {
+            return String.format("%.2f MB", (((double) size) / MBYTES));
+        } else if (size > KBYTES) {
+            return String.format("%.2f KB", (((double) size) / KBYTES));
+        } else {
+            return String.format("%d B", size);
+        }
     }
 
     private void addCommand(Command command) {
         String name = command.getName().toLowerCase();
-        if (mCommandIndex.get(name) != null)
-            throw new RuntimeException("duplicate command: "+name);
+        if (mCommandIndex.get(name) != null) {
+            throw new RuntimeException("duplicate command: " + name);
+        }
 
         mCommandIndex.put(name, command);
         String alias = command.getAlias();
         if (alias != null) {
             alias = alias.toLowerCase();
-            if (mCommandIndex.get(alias) != null)
-                throw new RuntimeException("duplicate command: "+alias);
+            if (mCommandIndex.get(alias) != null) {
+                throw new RuntimeException("duplicate command: " + alias);
+            }
             mCommandIndex.put(alias, command);
         }
     }
@@ -552,8 +559,9 @@ public class ZMailboxUtil implements DebugListener {
     private void initCommands() {
         mCommandIndex = new HashMap<String, Command>();
 
-        for (Command c : Command.values())
+        for (Command c : Command.values()) {
             addCommand(c);
+        }
     }
 
     private Command lookupCommand(String command) {
@@ -567,7 +575,7 @@ public class ZMailboxUtil implements DebugListener {
     private ZMailbox.Options getMailboxOptions(SoapProvisioning prov, AccountBy by, String key, int lifetimeSeconds)
     throws ServiceException {
         SoapAccountInfo sai = prov.getAccountInfo(by, key);
-        DelegateAuthResponse dar = prov.delegateAuth(by, key, lifetimeSeconds > 0 ? lifetimeSeconds: 60*60*24);
+        DelegateAuthResponse dar = prov.delegateAuth(by, key, lifetimeSeconds > 0 ? lifetimeSeconds: Constants.SECONDS_PER_DAY);
         return new ZMailbox.Options(dar.getAuthToken(), sai.getAdminSoapURL());
     }
 
@@ -582,13 +590,15 @@ public class ZMailboxUtil implements DebugListener {
         }
         mMbox = null; //make sure to null out current value so if select fails any further ops will fail
         mMailboxName = targetAccount;
-        ZMailbox.Options options = getMailboxOptions(prov, AccountBy.name, mMailboxName, 60*60*24);
+        AccountBy by = StringUtil.isUUID(targetAccount) ? AccountBy.id : AccountBy.name;
+        ZMailbox.Options options = getMailboxOptions(prov, by, mMailboxName, Constants.SECONDS_PER_DAY);
         options.setTimeout(mTimeout);
 
-        if (prov.soapGetTransportDebugListener() != null)
+        if (prov.soapGetTransportDebugListener() != null) {
             options.setDebugListener(prov.soapGetTransportDebugListener());
-        else  // use the same debug listener used by zmprov
+        } else {  // use the same debug listener used by zmprov
             options.setHttpDebugListener(prov.soapGetHttpTransportDebugListener());
+        }
 
         mMbox = ZMailbox.getMailbox(options);
         dumpMailboxConnect();
@@ -610,7 +620,9 @@ public class ZMailboxUtil implements DebugListener {
         SoapTransport.DebugListener listener = mDebug ? this : null;
         mProv = new SoapProvisioning();
         mProv.soapSetURI(ZMailbox.resolveUrl(uri, true));
-        if (listener != null) mProv.soapSetTransportDebugListener(listener);
+        if (listener != null) {
+            mProv.soapSetTransportDebugListener(listener);
+        }
         mProv.soapAdminAuthenticate(name, password);
     }
 
@@ -618,7 +630,9 @@ public class ZMailboxUtil implements DebugListener {
         SoapTransport.DebugListener listener = mDebug ? this : null;
         mProv = new SoapProvisioning();
         mProv.soapSetURI(ZMailbox.resolveUrl(uri, true));
-        if (listener != null) mProv.soapSetTransportDebugListener(listener);
+        if (listener != null) {
+            mProv.soapSetTransportDebugListener(listener);
+        }
         mProv.soapAdminAuthenticate(zat);
     }
 
@@ -627,7 +641,7 @@ public class ZMailboxUtil implements DebugListener {
         mPassword = password;
         ZMailbox.Options options = new ZMailbox.Options();
         options.setAccount(mMailboxName);
-        options.setAccountBy(AccountBy.name);
+        options.setAccountBy(StringUtil.isUUID(name) ? AccountBy.id : AccountBy.name);
         options.setPassword(mPassword);
         options.setUri(ZMailbox.resolveUrl(uri, false));
         options.setDebugListener(mDebug ? this : null);
@@ -662,7 +676,8 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     public void initMailbox() throws ServiceException {
-        if (mPassword == null && mAdminAuthToken == null) return;
+        if (mPassword == null && mAdminAuthToken == null)
+            return;
 
         if (mAdminAccountName != null) {
             adminAuth(mAdminAccountName, mPassword, mUrl);
@@ -670,7 +685,8 @@ public class ZMailboxUtil implements DebugListener {
             adminAuth(mAdminAuthToken, mUrl);
         }
 
-        if (mMailboxName == null) return;
+        if (mMailboxName == null)
+            return;
 
         if (mAdminAccountName != null) {
             selectMailbox(mMailboxName);
@@ -681,8 +697,12 @@ public class ZMailboxUtil implements DebugListener {
 
     private ZTag lookupTag(String idOrName) throws ServiceException {
         ZTag tag = mMbox.getTagByName(idOrName);
-        if (tag == null) tag = mMbox.getTagById(idOrName);
-        if (tag == null) throw ZClientException.CLIENT_ERROR("unknown tag: "+idOrName, null);
+        if (tag == null) {
+            tag = mMbox.getTagById(idOrName);
+        }
+        if (tag == null) {
+            throw ZClientException.CLIENT_ERROR("unknown tag: "+idOrName, null);
+        }
         return tag;
     }
 
@@ -697,7 +717,9 @@ public class ZMailboxUtil implements DebugListener {
         StringBuilder ids = new StringBuilder();
         for (String t : idsOrNames.split(",")) {
             ZTag tag = lookupTag(t);
-            if (ids.length() > 0) ids.append(",");
+            if (ids.length() > 0) {
+                ids.append(",");
+            }
             ids.append(tag.getId());
         }
         return ids.toString();
@@ -711,7 +733,9 @@ public class ZMailboxUtil implements DebugListener {
         StringBuilder names = new StringBuilder();
         for (String tid : ids.split(",")) {
             ZTag tag = lookupTag(tid);
-            if (names.length() > 0) names.append(", ");
+            if (names.length() > 0) {
+                names.append(", ");
+            }
             names.append(tag == null ? tid : tag.getName());
         }
         return names.toString();
@@ -725,11 +749,12 @@ public class ZMailboxUtil implements DebugListener {
 
     private String id(String indexOrId) throws ServiceException {
         Matcher m = sTargetConstraint.matcher(indexOrId);
-        if (m.find()) indexOrId = m.replaceAll("");
+        if (m.find()) {
+            indexOrId = m.replaceAll("");
+        }
 
         StringBuilder ids = new StringBuilder();
         for (String t : indexOrId.split(",")) {
-
             if (t.length() > 1 && t.charAt(0) == '#') {
                 t = t.substring(1);
                 //stdout.println(t);
@@ -739,18 +764,28 @@ public class ZMailboxUtil implements DebugListener {
                     int end = Integer.parseInt(t.substring(i+1, t.length()));
                     for (int j = start; j <= end; j++) {
                         String id = mIndexToId.get(j);
-                        if (id == null) throw ZClientException.CLIENT_ERROR("unknown index: "+t, null);
-                        if (ids.length() > 0) ids.append(",");
+                        if (id == null) {
+                            throw ZClientException.CLIENT_ERROR("unknown index: "+t, null);
+                        }
+                        if (ids.length() > 0) {
+                            ids.append(",");
+                        }
                         ids.append(id);
                     }
                 } else {
                     String id = mIndexToId.get(Integer.parseInt(t));
-                    if (id == null) throw ZClientException.CLIENT_ERROR("unknown index: "+t, null);
-                    if (ids.length() > 0) ids.append(",");
+                    if (id == null) {
+                        throw ZClientException.CLIENT_ERROR("unknown index: "+t, null);
+                    }
+                    if (ids.length() > 0) {
+                        ids.append(",");
+                    }
                     ids.append(id);
                 }
             } else {
-                if (ids.length() > 0) ids.append(",");
+                if (ids.length() > 0) {
+                    ids.append(",");
+                }
                 ids.append(t);
             }
         }
@@ -758,19 +793,33 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private String lookupFolderId(String pathOrId, boolean parent) throws ServiceException {
-        if (parent && pathOrId != null) pathOrId = ZMailbox.getParentPath(pathOrId);
-        if (pathOrId == null || pathOrId.length() == 0) return null;
+        if (parent && pathOrId != null) {
+            pathOrId = ZMailbox.getParentPath(pathOrId);
+        }
+        if (pathOrId == null || pathOrId.length() == 0) {
+            return null;
+        }
         ZFolder folder = mMbox.getFolderById(pathOrId);
-        if (folder == null) folder = mMbox.getFolderByPath(pathOrId);
-        if (folder == null) throw ZClientException.CLIENT_ERROR("unknown folder: "+pathOrId, null);
+        if (folder == null) {
+            folder = mMbox.getFolderByPath(pathOrId);
+        }
+        if (folder == null) {
+            throw ZClientException.CLIENT_ERROR("unknown folder: " + pathOrId, null);
+        }
         return folder.getId();
     }
 
     private ZFolder lookupFolder(String pathOrId) throws ServiceException {
-        if (pathOrId == null || pathOrId.length() == 0) return null;
+        if (pathOrId == null || pathOrId.length() == 0) {
+            return null;
+        }
         ZFolder folder = mMbox.getFolderById(pathOrId);
-        if (folder == null) folder = mMbox.getFolderByPath(pathOrId);
-        if (folder == null) throw ZClientException.CLIENT_ERROR("unknown folder: "+pathOrId, null);
+        if (folder == null) {
+            folder = mMbox.getFolderByPath(pathOrId);
+        }
+        if (folder == null) {
+            throw ZClientException.CLIENT_ERROR("unknown folder: "+pathOrId, null);
+        }
         return folder;
     }
 
@@ -793,7 +842,7 @@ public class ZMailboxUtil implements DebugListener {
 
     private String tagsOpt() throws ServiceException {
         String tags = mCommandLine.getOptionValue(O_TAGS.getOpt());
-        return (tags == null) ? null : lookupTagIds(tags);
+        return tags == null ? null : lookupTagIds(tags);
     }
 
     private ZFolder.Color folderColorOpt() throws ServiceException {
@@ -806,7 +855,9 @@ public class ZMailboxUtil implements DebugListener {
         return view == null ? null : ZFolder.View.fromString(view);
     }
 
-    private String flagsOpt()    { return mCommandLine.getOptionValue(O_FLAGS.getOpt()); }
+    private String flagsOpt() {
+        return mCommandLine.getOptionValue(O_FLAGS.getOpt());
+    }
 
     private String urlOpt(boolean admin) {
         String url = mCommandLine.getOptionValue(O_URL.getOpt());
@@ -847,11 +898,17 @@ public class ZMailboxUtil implements DebugListener {
         return ds == null ? def : Long.parseLong(ds);
     }
 
-    private String folderOpt()   { return mCommandLine.getOptionValue(O_FOLDER.getOpt()); }
+    private String folderOpt() {
+        return mCommandLine.getOptionValue(O_FOLDER.getOpt());
+    }
 
-    private boolean ignoreOpt() { return mCommandLine.hasOption(O_IGNORE.getOpt()); }
+    private boolean ignoreOpt() {
+        return mCommandLine.hasOption(O_IGNORE.getOpt());
+    }
 
-    private boolean verboseOpt() { return mCommandLine.hasOption(O_VERBOSE.getOpt()); }
+    private boolean verboseOpt() {
+        return mCommandLine.hasOption(O_VERBOSE.getOpt());
+    }
 
     private boolean currrentOpt() { return mCommandLine.hasOption(O_CURRENT.getOpt()); }
 
@@ -867,15 +924,16 @@ public class ZMailboxUtil implements DebugListener {
 
     private SearchSortBy searchSortByOpt() throws ServiceException {
         String sort = mCommandLine.getOptionValue(O_SORT.getOpt());
-        return (sort == null ? null : SearchSortBy.fromString(sort));
+        return sort == null ? null : SearchSortBy.fromString(sort);
     }
 
-    private boolean validateOpt() { return !mCommandLine.hasOption(O_NO_VALIDATION.getLongOpt()); }
+    private boolean validateOpt() {
+        return !mCommandLine.hasOption(O_NO_VALIDATION.getLongOpt());
+    }
 
     enum ExecuteStatus {OK, EXIT};
 
     public ExecuteStatus execute(String argsIn[]) throws ServiceException, IOException {
-
         mCommand = lookupCommand(argsIn[0]);
 
         // shift them over for parser
@@ -1284,7 +1342,7 @@ public class ZMailboxUtil implements DebugListener {
 
     private void doGetAppointmentSummaries(String args[]) throws ServiceException {
         long startTime = DateUtil.parseDateSpecifier(args[0], new Date().getTime());
-        long endTime = DateUtil.parseDateSpecifier(args[1], (new Date().getTime()) + 1000*60*60*24*7);
+        long endTime = DateUtil.parseDateSpecifier(args[1], (new Date().getTime()) + Constants.MILLIS_PER_WEEK);
         String folderId = args.length == 3 ? lookupFolderId(args[2]) : null;
         List<ZApptSummaryResult> results = mMbox.getApptSummaries(null, startTime, endTime, new String[] {folderId}, TimeZone.getDefault(), ZSearchParams.TYPE_APPOINTMENT);
         if (results.size() != 1) return;
@@ -1340,7 +1398,9 @@ public class ZMailboxUtil implements DebugListener {
                     break;
                 }
             }
-            if (!found) throw ZClientException.CLIENT_ERROR("can't find rule: "+name, null);
+            if (!found) {
+                throw ZClientException.CLIENT_ERROR("can't find rule: "+name, null);
+            }
         } else if (beforeOpt() != null) {
             String name = beforeOpt();
             boolean found = false;
@@ -1351,7 +1411,9 @@ public class ZMailboxUtil implements DebugListener {
                     break;
                 }
             }
-            if (!found) throw ZClientException.CLIENT_ERROR("can't find rule: "+name, null);
+            if (!found) {
+                throw ZClientException.CLIENT_ERROR("can't find rule: "+name, null);
+            }
         } else {
             // add to end
             list.add(newRule);
@@ -1424,14 +1486,14 @@ public class ZMailboxUtil implements DebugListener {
 
     private String getGranteeDisplay(GranteeType type) {
         switch (type) {
-        case usr: return "account";
-        case grp: return "group";
-        case pub: return "public";
-        case all: return "all";
-        case dom: return "domain";
-        case guest: return "guest";
-        case key: return "key";
-        default: return "unknown";
+            case usr: return "account";
+            case grp: return "group";
+            case pub: return "public";
+            case all: return "all";
+            case dom: return "domain";
+            case guest: return "guest";
+            case key: return "key";
+            default: return "unknown";
         }
     }
 
@@ -1456,7 +1518,6 @@ public class ZMailboxUtil implements DebugListener {
                 sb.append(g.dump());
             }
             stdout.format("[%n%s%n]%n", sb.toString());
-
         } else {
             String format = "%11.11s  %8.8s  %s%n";
             stdout.format(format, "Permissions", "Type",     "Display");
@@ -1849,19 +1910,19 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private String lookupSignatureId(String idOrName) throws ServiceException {
-        if (Provisioning.isUUID(idOrName)) {
+        if (StringUtil.isUUID(idOrName)) {
             return idOrName;
         } else {
             for (ZSignature sig : mMbox.getSignatures()) {
-                if (sig.getName().equalsIgnoreCase(idOrName))
+                if (sig.getName().equalsIgnoreCase(idOrName)) {
                     return sig.getId();
+                }
             }
             throw ZClientException.CLIENT_ERROR("unknown signature: "+idOrName, null);
         }
     }
 
     private void doCreateSearchFolder(String args[]) throws ServiceException {
-
         ZSearchFolder csf = mMbox.createSearchFolder(
                 lookupFolderId(args[0], true),
                 ZMailbox.getBasePath(args[0]),
@@ -1879,8 +1940,9 @@ public class ZMailboxUtil implements DebugListener {
         boolean reminderEnabled = paramb(args, 3, false);
 
         OwnerBy ownerBy = OwnerBy.BY_NAME;
-        if (Provisioning.isUUID(cmOwner))
+        if (StringUtil.isUUID(cmOwner)) {
             ownerBy = OwnerBy.BY_ID;
+        }
 
         SharedItemBy sharedItemBy = SharedItemBy.BY_PATH;
         String sharedItem = cmItem;
@@ -1889,7 +1951,7 @@ public class ZMailboxUtil implements DebugListener {
         if (colonAt != -1 && colonAt != 0 && colonAt != cmItem.length()-1) {
             String itemOwnerId = cmItem.substring(0, colonAt);
             String itemId = cmItem.substring(colonAt+1);
-            if (Provisioning.isUUID(itemOwnerId)) {
+            if (StringUtil.isUUID(itemOwnerId)) {
                 sharedItemBy = SharedItemBy.BY_ID;
                 sharedItem = itemId;
             }
