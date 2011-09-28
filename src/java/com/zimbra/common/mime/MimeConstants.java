@@ -44,6 +44,7 @@ public class MimeConstants {
     public static final String CT_MULTIPART_SIGNED = "multipart/signed";
     public static final String CT_MULTIPART_ENCRYPTED = "multipart/encrypted";
     public static final String CT_XML_ZIMBRA_SHARE = "xml/x-zimbra-share";
+    public static final String CT_XML_ZIMBRA_DL_SUBSCRIPTION = "xml/x-zimbra-dl-subscription";
     public static final String CT_MULTIPART_PREFIX = "multipart/";
     public static final String CT_TEXT_PREFIX = "text/";
     public static final String CT_MESSAGE_PREFIX = "message/";
