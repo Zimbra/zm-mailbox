@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.mailclient.imap;
 
+import com.zimbra.common.util.Constants;
 import com.zimbra.cs.mailclient.MailConnection;
 import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.MailInputStream;
@@ -578,19 +579,28 @@ public final class ImapConnection extends MailConnection {
         }
     }
 
-    public synchronized void stopIdle() throws IOException {
+    public synchronized boolean stopIdle() throws IOException {
         if (isIdling()) {
             ImapOutputStream out = getImapOutputStream();
             out.writeLine("DONE");
             out.flush();
+            long waitTime = (getImapConfig().getReadTimeout() > 0 ?
+                getImapConfig().getReadTimeout() : 30) * Constants.MILLIS_PER_SECOND;
             while (isIdling()) {
+                long waitStart = System.currentTimeMillis();
                 try {
-                    wait();
+                    wait(waitTime); //give server a chance to handle DONE normally
                 } catch (InterruptedException e) {
                     // Ignore
                 }
+                waitTime = waitTime - (System.currentTimeMillis() - waitStart);
+                if (waitTime <= 0 && isIdling()) {
+                    close();
+                    return false; //close and return false so connection is not reused
+                }
             }
         }
+        return !isIdling();
     }
 
     private ImapOutputStream getImapOutputStream() {

@@ -303,7 +303,9 @@ final class ConnectionManager {
         try {
             ic.setReadTimeout(ic.getImapConfig().getReadTimeout());
             if (ic.isIdling()) {
-                ic.stopIdle();
+                if (!ic.stopIdle()) {
+                    return false;
+                }
             } else {
                 ic.noop();
             }
