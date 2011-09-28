@@ -77,7 +77,6 @@ import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.ZimbraAnalyzer;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.index.ZimbraQueryResults;
-import com.zimbra.cs.index.global.GlobalDocument;
 import com.zimbra.cs.index.global.GlobalSearchHit;
 import com.zimbra.cs.index.global.GlobalSearchQuery;
 import com.zimbra.cs.index.global.HBaseIndex;
@@ -553,7 +552,7 @@ public final class MailboxIndex {
                 try {
                     ZimbraLog.index.info("Resetting DB index data");
                     mailbox.resetIndex();
-                    ZimbraLog.index.info("Deleting Lucene index data");
+                    ZimbraLog.index.info("Deleting index store data");
                     try {
                         indexStore.deleteIndex();
                     } catch (IOException e) {

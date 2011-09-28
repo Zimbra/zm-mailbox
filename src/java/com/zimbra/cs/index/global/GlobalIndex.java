@@ -33,6 +33,7 @@ import org.apache.hadoop.hbase.client.HTablePool;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.CompareFilter;
 import org.apache.hadoop.hbase.filter.SingleColumnValueExcludeFilter;
 import org.apache.hadoop.hbase.filter.SubstringComparator;
@@ -97,15 +98,17 @@ public final class GlobalIndex {
      * TODO: move this logic to HBase backend using coprocessor.
      */
     void index(HBaseIndex index, Map<MailItem, Folder> items) throws IOException {
+        // item and terms share a same timestamp to filter out stale terms during ITEM CF fetch
+        long ts = System.currentTimeMillis();
         List<Put> batch = Lists.newArrayList();
         for (Map.Entry<MailItem, Folder> entry : items.entrySet()) {
             MailItem item = entry.getKey();
             byte[] gid = GlobalItemID.toBytes(index.mailbox.getAccountId(), item.getId());
             Result result = index.fetch(item.getId());
-            Put doc = new Put(gid);
+            Put doc = new Put(gid, ts);
             for (KeyValue kv : result.raw()) {
                 if (Bytes.equals(kv.getFamily(), HBaseIndex.TERM_CF)) {
-                    Put put = new Put(kv.getQualifier());
+                    Put put = new Put(kv.getQualifier(), ts);
                     put.add(HBaseIndex.TERM_CF, gid, kv.getValue());
                     batch.add(put);
                 } else if (Bytes.equals(kv.getFamily(), HBaseIndex.ITEM_CF)) {
@@ -234,6 +237,35 @@ public final class GlobalIndex {
     }
 
     /**
+     * Delete all rows from ITEM CF for the account leaving associated terms in TERM CF orphan.
+     */
+    void delete(String account) throws IOException {
+        List<Delete> batch = Lists.newArrayList();
+        HTableInterface table = pool.getTable(indexTableName);
+        ResultScanner scanner = null;
+        try {
+            scanner = table.getScanner(new Scan(new GlobalItemID(account, 0).toBytes(),
+                    new GlobalItemID(account, Integer.MAX_VALUE).toBytes()));
+            while (true) {
+                Result result = scanner.next();
+                if (result == null) {
+                    break;
+                }
+                batch.add(new Delete(result.getRow()));
+            }
+            if (!batch.isEmpty()) {
+                table.delete(batch);
+                table.incrementColumnValue(Bytes.toBytes(LC.zimbra_server_hostname.value()),
+                        SERVER_CF, ITEM_COUNT_COL, -batch.size());
+            }
+        } finally {
+            Closeables.closeQuietly(scanner);
+            pool.putTable(table);
+        }
+        totalItemCount.addAndGet(-batch.size());
+    }
+
+    /**
      * Lookup TERM CF first collecting global item IDs (may include orphans), then lookup ITEM CF to fetch global items.
      * Global items should include all information required for the search result as we do not want to fetch rows from
      * MAIL_ITEM table across servers.
@@ -254,11 +286,11 @@ public final class GlobalIndex {
                 CompareFilter.CompareOp.EQUAL, new SubstringComparator(principal));
         filter.setFilterIfMissing(true);
 
-        Map<GlobalItemID, Float> id2score = Maps.newHashMapWithExpectedSize(termHits.size());
+        Map<GlobalItemID, TermHit> id2hit = Maps.newHashMapWithExpectedSize(termHits.size());
         List<Get> batch = Lists.newArrayListWithCapacity(termHits.size());
         for (TermHit hit : termHits) {
-            id2score.put(hit.getGID(), hit.score());
-            Get get = new Get(hit.getGID().toBytes());
+            id2hit.put(hit.id, hit);
+            Get get = new Get(hit.id.toBytes());
             get.addFamily(HBaseIndex.ITEM_CF);
             get.setFilter(filter);
             batch.add(get);
@@ -270,9 +302,15 @@ public final class GlobalIndex {
             if (result == null || result.isEmpty()) {
                 continue;
             }
+            GlobalItemID id = new GlobalItemID(result.getRow());
+            // validate TYPE COL's timestamp, which is immutable in practice, to filter out stale terms
+            KeyValue kv = result.getColumnLatest(HBaseIndex.ITEM_CF, HBaseIndex.TYPE_COL);
+            if (kv != null && kv.getTimestamp() != id2hit.get(id).timestamp) {
+                continue;
+            }
             switch (HBaseIndex.toType(result.getValue(HBaseIndex.ITEM_CF, HBaseIndex.TYPE_COL))) {
                 case DOCUMENT:
-                    GlobalDocument doc = new GlobalDocument(new GlobalItemID(result.getRow()));
+                    GlobalDocument doc = new GlobalDocument(id);
                     byte[] date = result.getValue(HBaseIndex.ITEM_CF, HBaseIndex.DATE_COL);
                     if (date != null) {
                         doc.setDate(Bytes.toLong(date));
@@ -297,7 +335,7 @@ public final class GlobalIndex {
                     if (fragment != null) {
                         doc.setFragment(Bytes.toString(fragment));
                     }
-                    hits.add(new GlobalSearchHit(doc, id2score.get(doc.getGID())));
+                    hits.add(new GlobalSearchHit(doc, id2hit.get(doc.getGID()).score));
                     break;
                 default:
                     break;
@@ -467,24 +505,15 @@ public final class GlobalIndex {
 
     private static final class TermHit implements Comparable<TermHit> {
         private final GlobalItemID id;
+        private final long timestamp;
         private final TermInfo termInfo;
-        private final float idf;
+        private final float score; // tf-idf(t,d) = tf(t,d) * idf(t)
 
         TermHit(KeyValue kv, float idf) throws IOException {
             this.id = new GlobalItemID(kv.getQualifier());
+            this.timestamp = kv.getTimestamp();
             this.termInfo = TermInfo.decode(kv.getValue());
-            this.idf = idf;
-        }
-
-        GlobalItemID getGID() {
-            return id;
-        }
-
-        /**
-         * {@code tf-idf(t,d) = tf(t,d) * idf(t)}.
-         */
-        float score() {
-            return ((float) termInfo.getTermCount() / (float) termInfo.getTotalTermCount()) * idf;
+            this.score = ((float) termInfo.getTermCount() / (float) termInfo.getTotalTermCount()) * idf;
         }
 
         @Override
@@ -502,12 +531,12 @@ public final class GlobalIndex {
          */
         @Override
         public int compareTo(TermHit o) {
-            return Float.compare(o.score(), score());
+            return Float.compare(o.score, score);
         }
 
         @Override
         public String toString() {
-            return Objects.toStringHelper(this).add("id", id).add("score", score()).toString();
+            return Objects.toStringHelper(this).add("id", id).add("score", score).toString();
         }
     }
 

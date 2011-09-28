@@ -233,6 +233,8 @@ public final class HBaseIndex implements IndexStore {
             factory.pool.putTable(table);
         }
         row[row.length - 1] = ver;
+
+        getGlobalIndex().delete(mailbox.getAccountId());
     }
 
     /**
