@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -29,7 +30,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.generated.UserRights;
@@ -104,24 +104,25 @@ public final class ACLUtil {
         ImmutableList.Builder<Identity> result = ImmutableList.<Identity>builder();
         for (Entry entry : rights.get(UserRights.R_sendOnBehalfOf)) {
             Account grantor = (Account) entry;
+            String mail = grantor.getName();
+            String name = Objects.firstNonNull(grantor.getDisplayName(), mail);
             Map<String, Object> attrs = ImmutableMap.<String, Object>builder()
                 .put(Provisioning.A_zimbraPrefIdentityId, grantor.getId())
-                .put(Provisioning.A_zimbraPrefIdentityName, grantor.getDisplayName())
-                .put(Provisioning.A_zimbraPrefFromDisplay, grantor.getDisplayName())
-                .put(Provisioning.A_zimbraPrefFromAddress, grantor.getName())
+                .put(Provisioning.A_zimbraPrefIdentityName, name)
+                .put(Provisioning.A_zimbraPrefFromDisplay, name)
+                .put(Provisioning.A_zimbraPrefFromAddress, mail)
                 .put(Provisioning.A_objectClass, AttributeClass.OC_zimbraAclTarget)
                 .build();
-            result.add(new Identity(grantee, grantor.getPrefFromDisplay(), grantor.getId(), attrs,
-                    grantee.getProvisioning()));
+            result.add(new Identity(grantee, name, grantor.getId(), attrs, grantee.getProvisioning()));
         }
         return result.build();
     }
-    
+
 
     /**
      * Grant rights on a target entry.
      */
-    public static List<ZimbraACE> grantRight(Provisioning prov, Entry target, Set<ZimbraACE> aces) 
+    public static List<ZimbraACE> grantRight(Provisioning prov, Entry target, Set<ZimbraACE> aces)
     throws ServiceException {
         for (ZimbraACE ace : aces) {
             ZimbraACE.validate(ace);
@@ -154,7 +155,7 @@ public final class ACLUtil {
      * If a right was not previously granted on the target, NO error is thrown.
      * @return a Set of grants that are actually revoked by this call
      */
-    public static List<ZimbraACE> revokeRight(Provisioning prov, Entry target, Set<ZimbraACE> aces) 
+    public static List<ZimbraACE> revokeRight(Provisioning prov, Entry target, Set<ZimbraACE> aces)
     throws ServiceException {
         ZimbraACL acl = getACL(target);
         if (acl == null) {
@@ -177,7 +178,7 @@ public final class ACLUtil {
     /**
      * Persists grants in LDAP
      */
-    private static void serialize(Provisioning prov, Entry entry, ZimbraACL acl) 
+    private static void serialize(Provisioning prov, Entry entry, ZimbraACL acl)
     throws ServiceException {
         // modifyAttrs will erase cached ACL and permission cache on the target
         prov.modifyAttrs(entry, Collections.singletonMap(Provisioning.A_zimbraACE, acl.serialize()));
