@@ -423,6 +423,8 @@ public class ParsedContact {
                 }
                 contactAttachments.add(attach);
             }
+        } else {
+            contactAttachments = null;
         }
         
         ContactGroup contactGroup = null;
