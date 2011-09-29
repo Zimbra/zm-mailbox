@@ -276,9 +276,9 @@ public class SubscribeDistributionList extends DistributionListDocumentHandler {
             
             sb.append(String.format("<%s xmlns=\"%s\" version=\"%s\" action=\"%s\">\n", 
                     MailConstants.E_DL_SUBSCRIPTION_NOTIFICATION, URI, VERSION, op.name()));
-            sb.append(String.format("<dl id=\"%s\" email=\"%s\" name=\"%s\">\n",
+            sb.append(String.format("<dl id=\"%s\" email=\"%s\" name=\"%s\"/>\n",
                     group.getId(), group.getName(), groupDisplayName));
-            sb.append(String.format("<user id=\"%s\" email=\"%s\" name=\"%s\">\n",
+            sb.append(String.format("<user id=\"%s\" email=\"%s\" name=\"%s\"/>\n",
                     requestingAcct.getId(), requestingAcct.getName(), userDisplayName));
             sb.append(String.format("</%s>\n", MailConstants.E_DL_SUBSCRIPTION_NOTIFICATION));
 
