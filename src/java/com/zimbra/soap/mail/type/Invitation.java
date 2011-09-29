@@ -64,7 +64,9 @@ public class Invitation {
         @XmlElement(name=MailConstants.E_MIMEPART /* mp */,
             type=PartInfo.class),
         @XmlElement(name=MailConstants.E_SHARE_NOTIFICATION /* shr */,
-            type=ShareNotification.class)
+            type=Notification.class),
+        @XmlElement(name=MailConstants.E_DL_SUBSCRIPTION_NOTIFICATION /* dlSubs */,
+            type=DLSubscriptionNotification.class)    
     })
     private List<Object> contentElems = Lists.newArrayList();
 

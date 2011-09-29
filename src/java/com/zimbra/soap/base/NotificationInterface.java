@@ -19,7 +19,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public interface ShareNotificationInterface {
+public interface NotificationInterface {
     public void setTruncatedContent(Boolean truncatedContent);
     public void setContent(String content);
     public Boolean getTruncatedContent();

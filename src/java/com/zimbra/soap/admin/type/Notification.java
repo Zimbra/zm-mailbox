@@ -22,11 +22,11 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.base.ShareNotificationInterface;
+import com.zimbra.soap.base.NotificationInterface;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class ShareNotification
-implements ShareNotificationInterface {
+public class Notification
+implements NotificationInterface {
 
     @XmlAttribute(name=MailConstants.A_TRUNCATED_CONTENT, required=false)
     private Boolean truncatedContent;
@@ -34,7 +34,7 @@ implements ShareNotificationInterface {
     @XmlElement(name=MailConstants.E_CONTENT, required=false)
     private String content;
 
-    public ShareNotification() {
+    public Notification() {
     }
 
     @Override
