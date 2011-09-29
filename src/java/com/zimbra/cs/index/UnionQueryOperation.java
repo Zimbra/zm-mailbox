@@ -209,27 +209,26 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
 
     @Override
     public QueryOperation optimize(Mailbox mbox) throws ServiceException {
-        restartSubOpt:
-            do {
-                for (Iterator<QueryOperation> iter = operations.iterator(); iter.hasNext(); ) {
-                    QueryOperation q = iter.next();
-                    QueryOperation newQ = q.optimize(mbox);
-                    if (newQ != q) {
-                        iter.remove();
-                        if (newQ != null) {
-                            operations.add(newQ);
-                        }
-                        continue restartSubOpt;
-                    }
+        OPTIMIZE_LOOP: while (true) {
+            for (int i = 0; i < operations.size(); i++) {
+                QueryOperation op = operations.get(i);
+                QueryOperation optimized = op.optimize(mbox);
+                if (optimized == null || optimized instanceof NoTermQueryOperation) {
+                    operations.remove(i);
+                } else if (op != optimized) {
+                    operations.remove(i);
+                    operations.add(optimized);
+                    continue OPTIMIZE_LOOP;
                 }
-                break;
-            } while(true);
+            }
+            break;
+        }
 
         if (operations.isEmpty()) {
             return new NoTermQueryOperation();
         }
 
-        outer: do {
+        JOIN_LOOP: while (true) {
             for (int i = 0; i < operations.size(); i++) {
                 QueryOperation lhs = operations.get(i);
 
@@ -239,7 +238,7 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
                 if (lhs instanceof UnionQueryOperation) {
                     combineOps(lhs, true);
                     operations.remove(i);
-                    continue outer;
+                    continue JOIN_LOOP;
                 }
 
                 for (int j = i+1; j < operations.size(); j++) {
@@ -249,12 +248,12 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
                         operations.remove(j);
                         operations.remove(i);
                         operations.add(joined);
-                        continue outer;
+                        continue JOIN_LOOP;
                     }
                 }
             }
             break;
-        } while (true);
+        }
 
         // now - check to see if we have only one child -- if so, then WE can be eliminated, so push the child up
         if (operations.size() == 1) {

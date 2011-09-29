@@ -494,41 +494,45 @@ public final class IntersectionQueryOperation extends CombiningQueryOperation {
     @Override
     QueryOperation optimize(Mailbox mbox) throws ServiceException {
         // Step 1: optimize each individual sub-operation we have
-        restartSubOpt: do {
-            for (Iterator<QueryOperation> iter = operations.iterator(); iter.hasNext();) {
-                QueryOperation q = iter.next();
-                QueryOperation newQ = q.optimize(mbox);
-                if (newQ != q) {
-                    iter.remove();
-                    if (newQ != null) {
-                        addQueryOp(newQ);
-                    }
-                    continue restartSubOpt;
+        OPTIMIZE_LOOP: while (true) {
+            for (int i = 0; i < operations.size(); i++) {
+                QueryOperation op = operations.get(i);
+                QueryOperation optimized = op.optimize(mbox);
+                if (optimized == null) {
+                    operations.remove(i);
+                } else if (op != optimized) {
+                    operations.remove(i);
+                    operations.add(optimized);
+                    continue OPTIMIZE_LOOP;
                 }
-
             }
             break;
-        } while (true);
+        }
 
         // if all of our sub-ops optimized-away, then we're golden!
         if (operations.isEmpty()) {
             return new NoTermQueryOperation();
         }
 
-        //
         // Step 2: do an N^2 combine() of all of our subops
-        //
-        outer: do {
+        JOIN_LOOP: while (true) {
             for (int i = 0; i < operations.size(); i++) {
                 QueryOperation lhs = operations.get(i);
 
-                // if one of our direct children is an and, then promote all of
-                // its elements to our level -- this can happen if a subquery has
-                // ANDed terms at the top level
+                // if one of our direct children is an AND, then promote all of its children to our level -- this can
+                // happen if a sub-query has ANDed terms at the top level
                 if (lhs instanceof IntersectionQueryOperation) {
                     combineOps(lhs, false);
                     operations.remove(i);
-                    continue outer;
+                    continue JOIN_LOOP;
+                } else if (lhs instanceof NoTermQueryOperation) {
+                    for (QueryOperation op : operations) { // other Lucene operation absorbs it
+                        if (op instanceof LuceneQueryOperation) {
+                            operations.remove(i);
+                            continue JOIN_LOOP;
+                        }
+                    }
+                    return new NoResultsQueryOperation(); // no other Lucene operations results in no results
                 }
 
                 for (int j = i + 1; j < operations.size(); j++) {
@@ -537,20 +541,18 @@ public final class IntersectionQueryOperation extends CombiningQueryOperation {
                     if (joined != null) {
                         operations.remove(j);
                         operations.remove(i);
-                        addQueryOp(joined);
-                        continue outer;
+                        operations.add(joined);
+                        continue JOIN_LOOP;
                     }
                 }
             }
-            break outer;
-        } while (true);
+            break JOIN_LOOP;
+        }
 
-        //
-        // Step 2.5: now we want to eliminate any subtrees that have query targets
-        // which aren't compatible (ie (AorBorC) and (BorC) means we elim A
-        //
+        // Step 2.5: now we want to eliminate any subtrees that have query targets which aren't compatible,
+        // i.e. (A or B or C) and (B or C) means we eliminate A
         QueryTargetSet targets = getQueryTargets();
-        if (targets.size() == 0) {
+        if (targets.isEmpty()) {
             ZimbraLog.search.debug("ELIMINATING %s b/c of incompatible QueryTargets", this);
             return new NoResultsQueryOperation();
         }

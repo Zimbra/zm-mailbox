@@ -21,19 +21,22 @@ import java.util.List;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
- * A QueryOperation which is generated when a query term evaluates to "nothing".
+ * A {@link QueryOperation} which is generated when a query term evaluates to "nothing".
  *
- * This is not the same as a NullQueryOperation because:
- *     RESULTS(Op AND NoTermQuery) = RESULTS(Op)
+ * This is not the same as a {@link NoResultsQueryOperation} because:
+ * <ul>
+ *  <li>{@code LuceneQueryOperation AND NoTermQueryOperation = LuceneQueryOperation}
+ *  <li>{@code DBQueryOperation AND NoTermQueryOperation = NoTermQueryOperation}
+ * </ul>
  *
- * It is also not the same as an AllQueryOperation because:
- *     RESULTS(NoTemQuery) = NONE
+ * It is also not the same as an {@link AllQueryOperation} because:
+ * <ul>
+ *  <li>{@code RESULTS(NoTermQueryOperation) = NONE}
+ * </ul>
  *
- * Basically, this pseudo-Operation is here to handle the situation when a Lucene term
- * evaluates to the empty string (as might happen if a stopword were searched for,
- * eg searching for "the") -- by generating a special-purpose Pseudo-Operation for
- * this case we can hand-tune the Optimizer behavior and make it do the right thing in all
- * cases.
+ * Basically, this pseudo-Operation is here to handle the situation when a Lucene term evaluates to the empty string
+ * (as might happen if a stop-word were searched for, e.g. searching for "the") -- by generating a special-purpose
+ * Pseudo-Operation for this case we can hand-tune the Optimizer behavior and make it do the right thing in all cases.
  *
  * @author tim
  */
@@ -104,7 +107,7 @@ public final class NoTermQueryOperation extends QueryOperation {
 
     @Override
     QueryOperation optimize(Mailbox mbox) {
-        return null;
+        return this;
     }
 
     @Override

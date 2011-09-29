@@ -452,7 +452,7 @@ public final class ZimbraQuery {
         // optimize the query down
         operation = operation.optimize(mailbox);
         ZimbraLog.search.debug("OPTIMIZED=%s", operation);
-        if (operation == null) {
+        if (operation == null || operation instanceof NoTermQueryOperation) {
             operation = new NoResultsQueryOperation();
             return;
         }
@@ -694,11 +694,6 @@ public final class ZimbraQuery {
      */
     public ZimbraQueryResults execute() throws ServiceException {
         compile();
-
-        if (operation == null || operation instanceof NoTermQueryOperation) {
-            ZimbraLog.search.debug("Operation optimized to nothing. Returning no results.");
-            return new EmptyQueryResults(params.getTypes(), params.getSortBy(), params.getMode());
-        }
 
         QueryTargetSet targets = operation.getQueryTargets();
         assert(operation instanceof UnionQueryOperation || targets.countExplicitTargets() <= 1);

@@ -62,13 +62,21 @@ public final class IntersectionQueryOperationTest {
         MailboxTestUtil.index(mbox);
 
         SearchParams params = new SearchParams();
-        params.setQueryString("in:Inbox from:none*");
+        params.setQueryString("in:inbox from:none*"); // wildcard
         params.setTypes(EnumSet.of(MailItem.Type.MESSAGE));
         params.setSortBy(SortBy.NONE);
         ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
         // this wildcard expansion results in no hits
         Assert.assertEquals("ZQ: Q(IN:Inbox) && Q(from:none*[*])", query.toString());
         // then intersection of something and no hits is always no hits
+        Assert.assertEquals("", query.toQueryString());
+
+        params = new SearchParams();
+        params.setQueryString("in:inbox content:the"); // stop-word
+        params.setTypes(EnumSet.of(MailItem.Type.MESSAGE));
+        params.setSortBy(SortBy.NONE);
+        query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
+        Assert.assertEquals("ZQ: Q(IN:Inbox) && Q(l.content:)", query.toString());
         Assert.assertEquals("", query.toQueryString());
     }
 
