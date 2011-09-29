@@ -180,7 +180,10 @@ public final class LC {
     @Supported
     public static final KnownKey zimbra_mailbox_change_checkpoint_frequency = KnownKey.newKey(100);
 
-    public static final KnownKey zimbra_mailbox_lock_max_waiting_threads = KnownKey.newKey(5);
+    @Reloadable
+    public static final KnownKey zimbra_mailbox_lock_max_waiting_threads = KnownKey.newKey(15);
+
+    @Reloadable
     public static final KnownKey zimbra_mailbox_lock_timeout = KnownKey.newKey(60); // seconds
 
     @Supported
@@ -838,7 +841,7 @@ public final class LC {
     public static final KnownKey zimbra_zmjava_java_ext_dirs = KnownKey.newKey("");
     public static final KnownKey debug_xmpp_disable_client_tls = KnownKey.newKey(0);
     public static final KnownKey im_dnsutil_dnsoverride = KnownKey.newKey("");
-    
+
     @Supported
     @Reloadable
     public static final KnownKey zimbra_enable_text_extraction = KnownKey.newKey(true);
