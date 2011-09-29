@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -482,49 +482,38 @@ public final class ZimbraQuery {
 
         // Store some variables that we'll need later
         mParseTree = pt;
-        mOp = null;
 
         // handle the special "sort:" tag in the search string
         if (mSortByOverride != null) {
-            if (ZimbraLog.index_search.isDebugEnabled())
-                ZimbraLog.index_search.debug(
-                        "Overriding SortBy parameter to execute (" +
-                        params.getSortBy().toString() +
-                        ") w/ specification from QueryString: " +
-                        mSortByOverride.toString());
-
+            ZimbraLog.index_search.debug("Overriding SortBy parameter to execute (%s) w/ specification from QueryString: %s",
+                    params.getSortBy(), mSortByOverride);
             params.setSortBy(mSortByOverride);
         }
 
         // Step 3: Convert list of BaseQueries into list of QueryOperations, then Optimize the Ops
-        if (mClauses.size() > 0) {
+        if (!mClauses.isEmpty()) {
             // this generates all of the query operations
             mOp = mParseTree.getQueryOperation();
 
-            if (ZimbraLog.index_search.isDebugEnabled()) {
-                ZimbraLog.index_search.debug("OP=%s", mOp);
-            }
+            ZimbraLog.index_search.debug("OP=%s", mOp);
 
             // expand the is:local and is:remote parts into in:(LIST)'s
             mOp = mOp.expandLocalRemotePart(mbox);
-            if (ZimbraLog.index_search.isDebugEnabled()) {
-                ZimbraLog.index_search.debug("AFTEREXP=%s", mOp);
-            }
+            ZimbraLog.index_search.debug("AFTEREXP=%s", mOp);
 
             // optimize the query down
             mOp = mOp.optimize(mMbox);
-            if (mOp == null)
+            ZimbraLog.index_search.debug("OPTIMIZED=%s", mOp);
+            if (mOp == null || mOp instanceof NoTermQueryOperation) {
                 mOp = new NoResultsQueryOperation();
-            if (ZimbraLog.index_search.isDebugEnabled()) {
-                ZimbraLog.index_search.debug("OPTIMIZED=%s", mOp);
+                return;
             }
         }
 
         // STEP 4: use the OperationContext to update the set of visible referenced folders, local AND remote
         if (mOp != null) {
             QueryTargetSet queryTargets = mOp.getQueryTargets();
-            assert(mOp instanceof UnionQueryOperation ||
-                    queryTargets.countExplicitTargets() <= 1);
+            assert(mOp instanceof UnionQueryOperation || queryTargets.countExplicitTargets() <= 1);
 
             // easiest to treat the query two unions: one the LOCAL and one REMOTE parts
             UnionQueryOperation remoteOps = new UnionQueryOperation();
@@ -619,9 +608,7 @@ public final class ZimbraQuery {
             // For the LOCAL parts of the query, do permission checks, do trash/spam exclusion
             //
             if (!localOps.mQueryOperations.isEmpty()) {
-                if (ZimbraLog.index_search.isDebugEnabled()) {
-                    ZimbraLog.index_search.debug("LOCAL_IN=" + localOps.toString());
-                }
+                ZimbraLog.index_search.debug("LOCAL_IN=%s", localOps);
 
                 Account authAcct = null;
                 if (octxt != null) {
@@ -654,10 +641,7 @@ public final class ZimbraQuery {
                     localOps.mQueryOperations.addAll(toAdd);
                 }
 
-                if (ZimbraLog.index_search.isDebugEnabled()) {
-                    ZimbraLog.index_search.debug(
-                            "LOCAL_AFTERTS=" + localOps.toString());
-                }
+                ZimbraLog.index_search.debug("LOCAL_AFTERTS=%s", localOps);
 
                 //
                 // Check to see if we need to filter out private appointment data
@@ -706,14 +690,10 @@ public final class ZimbraQuery {
 
                 localOps = handleLocalPermissionChecks(localOps, visibleFolders, allowPrivateAccess);
 
-                if (ZimbraLog.index_search.isDebugEnabled()) {
-                    ZimbraLog.index_search.debug("LOCAL_AFTER_PERM_CHECKS=%s", localOps);
-                }
+                ZimbraLog.index_search.debug("LOCAL_AFTER_PERM_CHECKS=%s", localOps);
 
                 if (!hasFolderRightPrivateSet.isEmpty()) {
-                    if (ZimbraLog.index_search.isDebugEnabled()) {
-                        ZimbraLog.index_search.debug("CLONED_LOCAL_BEFORE_PERM=%s", clonedLocal);
-                    }
+                    ZimbraLog.index_search.debug("CLONED_LOCAL_BEFORE_PERM=%s", clonedLocal);
 
                     //
                     // now we're going to setup the clonedLocal tree
@@ -722,26 +702,20 @@ public final class ZimbraQuery {
                     // folder list, so we are
                     clonedLocal = handleLocalPermissionChecks(clonedLocal, hasFolderRightPrivateSet, true);
 
-                    if (ZimbraLog.index_search.isDebugEnabled()) {
-                        ZimbraLog.index_search.debug("CLONED_LOCAL_AFTER_PERM=%s", clonedLocal);
-                    }
+                    ZimbraLog.index_search.debug("CLONED_LOCAL_AFTER_PERM=%s", clonedLocal);
 
                     // clonedLocal should only have the single INTERSECT in it
                     assert(clonedLocal.mQueryOperations.size() == 1);
 
                     QueryOperation optimizedClonedLocal = clonedLocal.optimize(mbox);
-                    if (ZimbraLog.index_search.isDebugEnabled()) {
-                        ZimbraLog.index_search.debug("CLONED_LOCAL_AFTER_OPTIMIZE=%s", optimizedClonedLocal);
-                    }
+                    ZimbraLog.index_search.debug("CLONED_LOCAL_AFTER_OPTIMIZE=%s", optimizedClonedLocal);
 
                     UnionQueryOperation withPrivateExcluded = localOps;
                     localOps = new UnionQueryOperation();
                     localOps.add(withPrivateExcluded);
                     localOps.add(optimizedClonedLocal);
 
-                    if (ZimbraLog.index_search.isDebugEnabled()) {
-                        ZimbraLog.index_search.debug("LOCAL_WITH_CLONED=%s", localOps);
-                    }
+                    ZimbraLog.index_search.debug("LOCAL_WITH_CLONED=%s", localOps);
 
                     //
                     // we should end up with:
@@ -761,14 +735,10 @@ public final class ZimbraQuery {
             UnionQueryOperation union = new UnionQueryOperation();
             union.add(localOps);
             union.add(remoteOps);
-            if (ZimbraLog.index_search.isDebugEnabled()) {
-                ZimbraLog.index_search.debug("BEFORE_FINAL_OPT=%s", union);
-            }
+            ZimbraLog.index_search.debug("BEFORE_FINAL_OPT=%s", union);
             mOp = union.optimize(mbox);
         }
-        if (ZimbraLog.index_search.isDebugEnabled()) {
-            ZimbraLog.index_search.debug("END_ZIMBRAQUERY_CONSTRUCTOR=%s", mOp);
-        }
+        ZimbraLog.index_search.debug("END_ZIMBRAQUERY_CONSTRUCTOR=%s", mOp);
     }
 
     public void doneWithQuery() throws ServiceException {

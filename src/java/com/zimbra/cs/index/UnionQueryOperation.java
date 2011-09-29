@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -208,27 +208,26 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
 
     @Override
     public QueryOperation optimize(Mailbox mbox) throws ServiceException {
-        restartSubOpt:
-            do {
-                for (Iterator<QueryOperation> iter = mQueryOperations.iterator(); iter.hasNext(); ) {
-                    QueryOperation q = iter.next();
-                    QueryOperation newQ = q.optimize(mbox);
-                    if (newQ != q) {
-                        iter.remove();
-                        if (newQ != null) {
-                            mQueryOperations.add(newQ);
-                        }
-                        continue restartSubOpt;
-                    }
+        OPTIMIZE_LOOP: while (true) {
+            for (int i = 0; i < mQueryOperations.size(); i++) {
+                QueryOperation op = mQueryOperations.get(i);
+                QueryOperation optimized = op.optimize(mbox);
+                if (optimized == null || optimized instanceof NoTermQueryOperation) {
+                    mQueryOperations.remove(i);
+                } else if (op != optimized) {
+                    mQueryOperations.remove(i);
+                    mQueryOperations.add(optimized);
+                    continue OPTIMIZE_LOOP;
                 }
-                break;
-            } while(true);
+            }
+            break;
+        }
 
         if (mQueryOperations.size() == 0) {
             return new NoTermQueryOperation();
         }
 
-        outer: do {
+        JOIN_LOOP: while (true) {
             for (int i = 0; i < mQueryOperations.size(); i++) {
                 QueryOperation lhs = mQueryOperations.get(i);
 
@@ -238,7 +237,7 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
                 if (lhs instanceof UnionQueryOperation) {
                     combineOps(lhs, true);
                     mQueryOperations.remove(i);
-                    continue outer;
+                    continue JOIN_LOOP;
                 }
 
                 for (int j = i+1; j < mQueryOperations.size(); j++) {
@@ -248,12 +247,12 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
                         mQueryOperations.remove(j);
                         mQueryOperations.remove(i);
                         mQueryOperations.add(joined);
-                        continue outer;
+                        continue JOIN_LOOP;
                     }
                 }
             }
             break;
-        } while(true);
+        }
 
         // now - check to see if we have only one child -- if so, then WE can be
         // eliminated, so push the child up

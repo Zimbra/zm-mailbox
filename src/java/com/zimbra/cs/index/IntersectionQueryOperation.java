@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -540,41 +540,45 @@ public final class IntersectionQueryOperation extends CombiningQueryOperation {
     @Override
     QueryOperation optimize(Mailbox mbox) throws ServiceException {
         // Step 1: optimize each individual sub-operation we have
-        restartSubOpt: do {
-            for (Iterator<QueryOperation> iter = mQueryOperations.iterator(); iter.hasNext();) {
-                QueryOperation q = iter.next();
-                QueryOperation newQ = q.optimize(mbox);
-                if (newQ != q) {
-                    iter.remove();
-                    if (newQ != null) {
-                        addQueryOp(newQ);
-                    }
-                    continue restartSubOpt;
+        OPTIMIZE_LOOP: while (true) {
+            for (int i = 0; i < mQueryOperations.size(); i++) {
+                QueryOperation op = mQueryOperations.get(i);
+                QueryOperation optimized = op.optimize(mbox);
+                if (optimized == null) {
+                    mQueryOperations.remove(i);
+                } else if (op != optimized) {
+                    mQueryOperations.remove(i);
+                    mQueryOperations.add(optimized);
+                    continue OPTIMIZE_LOOP;
                 }
-
             }
             break;
-        } while (true);
+        }
 
         // if all of our sub-ops optimized-away, then we're golden!
         if (mQueryOperations.size() == 0) {
             return new NoTermQueryOperation();
         }
 
-        //
         // Step 2: do an N^2 combine() of all of our subops
-        //
-        outer: do {
+        JOIN_LOOP: while (true) {
             for (int i = 0; i < mQueryOperations.size(); i++) {
                 QueryOperation lhs = mQueryOperations.get(i);
 
-                // if one of our direct children is an and, then promote all of
-                // its elements to our level -- this can happen if a subquery has
-                // ANDed terms at the top level
+                // if one of our direct children is an AND, then promote all of its children to our level -- this can
+                // happen if a sub-query has ANDed terms at the top level
                 if (lhs instanceof IntersectionQueryOperation) {
                     combineOps(lhs, false);
                     mQueryOperations.remove(i);
-                    continue outer;
+                    continue JOIN_LOOP;
+                } else if (lhs instanceof NoTermQueryOperation) {
+                    for (QueryOperation op : mQueryOperations) { // other Lucene operation absorbs it
+                        if (op instanceof LuceneQueryOperation) {
+                            mQueryOperations.remove(i);
+                            continue JOIN_LOOP;
+                        }
+                    }
+                    return new NoResultsQueryOperation(); // no other Lucene operations results in no results
                 }
 
                 for (int j = i + 1; j < mQueryOperations.size(); j++) {
@@ -583,20 +587,18 @@ public final class IntersectionQueryOperation extends CombiningQueryOperation {
                     if (joined != null) {
                         mQueryOperations.remove(j);
                         mQueryOperations.remove(i);
-                        addQueryOp(joined);
-                        continue outer;
+                        mQueryOperations.add(joined);
+                        continue JOIN_LOOP;
                     }
                 }
             }
-            break outer;
-        } while (true);
+            break JOIN_LOOP;
+        }
 
-        //
-        // Step 2.5: now we want to eliminate any subtrees that have query targets
-        // which aren't compatible (ie (AorBorC) and (BorC) means we elim A
-        //
+        // Step 2.5: now we want to eliminate any subtrees that have query targets which aren't compatible,
+        // i.e. (A or B or C) and (B or C) means we eliminate A
         QueryTargetSet targets = getQueryTargets();
-        if (targets.size() == 0) {
+        if (targets.isEmpty()) {
             mLog.debug("ELIMINATING "+toString()+" b/c of incompatible QueryTargets");
             return new NoResultsQueryOperation();
         }
