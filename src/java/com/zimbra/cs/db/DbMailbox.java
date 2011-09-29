@@ -33,6 +33,7 @@ import java.util.Set;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.mailbox.MailboxVersion;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
@@ -60,6 +61,9 @@ public final class DbMailbox {
     public static final int CI_COMMENT;
     public static final int CI_LAST_SOAP_ACCESS;
     public static final int CI_NEW_MESSAGES;
+    public static final int CI_INDEX_DEFERRED;
+    public static final int CI_HIGHEST_INDEXED;
+    public static final int CI_VERSION;
 
     static {
         int pos = 1;
@@ -79,6 +83,9 @@ public final class DbMailbox {
         CI_COMMENT = pos++;
         CI_LAST_SOAP_ACCESS = pos++;
         CI_NEW_MESSAGES = pos++;
+        CI_INDEX_DEFERRED = pos++;
+        CI_HIGHEST_INDEXED = pos++;
+        CI_VERSION = pos++;
     }
 
     public static final int CI_METADATA_MAILBOX_ID = 1;
@@ -249,17 +256,18 @@ public final class DbMailbox {
 
                 // finally, create the row in MBOXGROUPnn.MAILBOX for mutable state and counts
                 stmt = conn.prepareStatement("INSERT INTO " + qualifyTableName(groupId, TABLE_MAILBOX) +
-                        "(id, account_id, index_volume_id, item_id_checkpoint)" +
-                        " VALUES (?, ?, ?, " + (Mailbox.FIRST_USER_ID - 1) + ")");
+                        "(id, account_id, index_volume_id, item_id_checkpoint, version)" +
+                        " VALUES (?, ?, ?, " + (Mailbox.FIRST_USER_ID - 1) + ", ?)");
                 stmt.setInt(1, mailboxId);
                 stmt.setString(2, accountId.toLowerCase());
                 stmt.setShort(3, indexVolume);
+                stmt.setString(4, MailboxVersion.getCurrent().toString());
                 stmt.executeUpdate();
             } else {
                 // then create the primary lookup row in ZIMBRA.MAILBOX
                 stmt = conn.prepareStatement("INSERT INTO mailbox" +
-                        "(account_id, id, group_id, index_volume_id, item_id_checkpoint, last_backup_at, comment)" +
-                        " VALUES (?, ?, ?, ?, " + (Mailbox.FIRST_USER_ID - 1) + ", ?, ?)");
+                        "(account_id, id, group_id, index_volume_id, item_id_checkpoint, last_backup_at, comment, version)" +
+                        " VALUES (?, ?, ?, ?, " + (Mailbox.FIRST_USER_ID - 1) + ", ?, ?, ?)");
                 stmt.setString(1, accountId.toLowerCase());
                 stmt.setInt(2, mailboxId);
                 stmt.setInt(3, groupId);
@@ -270,6 +278,7 @@ public final class DbMailbox {
                     stmt.setNull(5, Types.INTEGER);
                 }
                 stmt.setString(6, comment);
+                stmt.setString(7, MailboxVersion.getCurrent().toString());
                 stmt.executeUpdate();
             }
 
@@ -279,6 +288,7 @@ public final class DbMailbox {
             data.lastItemId = Mailbox.FIRST_USER_ID - 1;
             data.schemaGroupId = groupId;
             data.indexVolumeId = indexVolume;
+            data.version = MailboxVersion.getCurrent();
             return data;
         } catch (SQLException e) {
             throw ServiceException.FAILURE("writing new mailbox row for account " + accountId, e);
@@ -618,6 +628,24 @@ public final class DbMailbox {
         }
     }
 
+    public static void updateVersion(Mailbox mbox, MailboxVersion version) throws ServiceException {
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("UPDATE " + qualifyZimbraTableName(mbox, TABLE_MAILBOX) +
+                    " SET version = ?" +
+                    (DebugConfig.disableMailboxGroups ? "" : " WHERE id = ?"));
+            int pos = 1;
+            stmt.setString(pos++, version == null ? null : version.toString());
+            pos = DbMailItem.setMailboxId(stmt, mbox, pos++);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("setting mailbox version to '" + version + "' in mailbox " + mbox.getId(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
     /** Returns the zimbra IDs and mailbox IDs for all mailboxes on the
      *  system.  Note that mailboxes are created lazily, so there may be
      *  accounts homed on this system for whom there is is not yet a mailbox
@@ -728,9 +756,10 @@ public final class DbMailbox {
             stmt = conn.prepareStatement(
                     "SELECT account_id," + (DebugConfig.disableMailboxGroups ? mailboxId : " group_id") + "," +
                     " size_checkpoint, contact_count, item_id_checkpoint, change_checkpoint, tracking_sync," +
-                    " tracking_imap, index_volume_id, last_soap_access, new_messages" +
+                    " tracking_imap, index_volume_id, last_soap_access, new_messages, version" +
                     " FROM " + qualifyZimbraTableName(mailboxId, TABLE_MAILBOX) + " WHERE id = ?");
             stmt.setInt(1, mailboxId);
+
             rs = stmt.executeQuery();
 
             if (!rs.next()) {
@@ -758,6 +787,11 @@ public final class DbMailbox {
             mbd.lastWriteDate = rs.getInt(pos++);
             mbd.recentMessages = rs.getInt(pos++);
             mbd.lastBackupDate = -1;
+
+            String version = rs.getString(pos++);
+            if (version != null) {
+                mbd.version = MailboxVersion.parse(version);
+            }
 
             // round lastItemId and lastChangeId up so that they get written on the next change
             mbd.lastItemId += ITEM_CHECKPOINT_INCREMENT - 1;

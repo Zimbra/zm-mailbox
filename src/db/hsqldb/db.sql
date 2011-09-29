@@ -69,6 +69,7 @@ CREATE TABLE mailbox (
    new_messages        INTEGER DEFAULT 0 NOT NULL,
    idx_deferred_count  INTEGER DEFAULT 0 NOT NULL, -- deprecated
    highest_indexed     VARCHAR(21), -- deprecated
+   version             VARCHAR(16),
 
    CONSTRAINT i_account_id UNIQUE (account_id),
    CONSTRAINT fk_mailbox_index_volume_id FOREIGN KEY (index_volume_id) REFERENCES volume(id)

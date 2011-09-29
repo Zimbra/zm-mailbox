@@ -194,8 +194,6 @@ public class Mailbox {
     public static final int HIGHEST_SYSTEM_ID = 18;
     public static final int FIRST_USER_ID     = 256;
 
-    static final String MD_CONFIG_VERSION = "ver";
-
     public static final class MailboxData implements Cloneable {
         public int id;
         public int schemaGroupId;
@@ -212,6 +210,7 @@ public class Mailbox {
         public int trackSync;
         public boolean trackImap;
         public Set<String> configKeys;
+        public MailboxVersion version;
 
         @Override
         protected MailboxData clone() {
@@ -232,6 +231,7 @@ public class Mailbox {
             if (configKeys != null) {
                 mbd.configKeys = new HashSet<String>(configKeys);
             }
+            mbd.version = version;
             return mbd;
         }
     }
@@ -314,7 +314,9 @@ public class Mailbox {
             return (--depth == 0);
         }
 
-        boolean isActive()  { return active; }
+        boolean isActive() {
+            return active;
+        }
 
         DbConnection getConnection() throws ServiceException {
             if (conn == null) {
@@ -324,8 +326,13 @@ public class Mailbox {
             return conn;
         }
 
-        RedoableOp getRedoPlayer()   { return (octxt == null ? null : octxt.getPlayer()); }
-        RedoableOp getRedoRecorder() { return recorder; }
+        RedoableOp getRedoPlayer() {
+            return (octxt == null ? null : octxt.getPlayer());
+        }
+
+        RedoableOp getRedoRecorder() {
+            return recorder;
+        }
 
         /**
          * Add an item to the list of things to be indexed at the end of the current transaction
@@ -399,7 +406,6 @@ public class Mailbox {
 
     private MailboxMaintenance maintenance;
     private IMPersona persona;
-    private MailboxVersion version;
     private volatile boolean open = false;
 
     protected Mailbox(MailboxData data) {
@@ -439,58 +445,63 @@ public class Mailbox {
 
             index.open(); // init the index
 
-            if (version == null) {
+            if (mData.version == null) {
                 // if we've just initialized() the mailbox, then the version will
                 // be set in the config, but it won't be comitted yet -- and unfortunately
                 // getConfig() won't return us the proper value in this case....so just
                 // use the local mVersion value if it is already set (that's the case
                 // if we are initializing a new mailbox) and otherwise we'll read the
                 // mailbox version from config
-                Metadata md = getConfig(null, MD_CONFIG_VERSION);
-                version = MailboxVersion.fromMetadata(md);
+                Metadata md = getConfig(null, MailboxVersion.MD_CONFIG_VERSION);
+                mData.version = MailboxVersion.fromMetadata(md);
             }
 
-            if (!version.atLeast(MailboxVersion.CURRENT)) { // check for mailbox upgrade
-                if (!version.atLeast(1, 2)) {
+            // sanity-check the mailbox version
+            if (mData.version.tooHigh()) {
+                throw ServiceException.FAILURE("invalid mailbox version: " + mData.version + " (too high)", null);
+            }
+
+            if (!mData.version.atLeast(MailboxVersion.CURRENT)) { // check for mailbox upgrade
+                if (!mData.version.atLeast(1, 2)) {
                     ZimbraLog.mailbox.info("Upgrade mailbox from %s to 1.2", getVersion());
                     index.upgradeMailboxTo1_2();
                 }
 
                 // same prescription for both the 1.2 -> 1.3 and 1.3 -> 1.4 migrations
-                if (!version.atLeast(1, 4)) {
+                if (!mData.version.atLeast(1, 4)) {
                     ZimbraLog.mailbox.info("Upgrade mailbox from %s to 1.4", getVersion());
                     recalculateFolderAndTagCounts();
                     updateVersion(new MailboxVersion((short) 1, (short) 4));
                 }
 
-                if (!version.atLeast(1, 5)) {
+                if (!mData.version.atLeast(1, 5)) {
                     ZimbraLog.mailbox.info("Upgrade mailbox from %s to 1.5", getVersion());
                     index.indexAllDeferredFlagItems();
                 }
 
                 // bug 41893: revert folder colors back to mapped value
-                if (!version.atLeast(1, 7)) {
+                if (!mData.version.atLeast(1, 7)) {
                     ZimbraLog.mailbox.info("Upgrade mailbox from %s to 1.7", getVersion());
                     MailboxUpgrade.upgradeTo1_7(this);
                     updateVersion(new MailboxVersion((short) 1, (short) 7));
                 }
 
                 // bug 41850: revert tag colors back to mapped value
-                if (!version.atLeast(1, 8)) {
+                if (!mData.version.atLeast(1, 8)) {
                     ZimbraLog.mailbox.info("Upgrade mailbox from %s to 1.8", getVersion());
                     MailboxUpgrade.upgradeTo1_8(this);
                     updateVersion(new MailboxVersion((short) 1, (short) 8));
                 }
 
                 // bug 20620: track \Deleted counts separately
-                if (!version.atLeast(1, 9)) {
+                if (!mData.version.atLeast(1, 9)) {
                     ZimbraLog.mailbox.info("Upgrade mailbox from %s to 1.9", getVersion());
                     purgeImapDeleted(null);
                     updateVersion(new MailboxVersion((short) 1, (short) 9));
                 }
 
                 // bug 39647: wiki to document migration
-                if (!version.atLeast(1, 10)) {
+                if (!mData.version.atLeast(1, 10)) {
                     ZimbraLog.mailbox.info("Upgrade mailbox from %s to 1.10", getVersion());
                     // update the version first so that the same mailbox
                     // don't have to go through the migration again
@@ -499,17 +510,24 @@ public class Mailbox {
                     migrateWikiFolders();
                 }
 
-                if (!version.atLeast(2, 0)) {
+                if (!mData.version.atLeast(2, 0)) {
                     ZimbraLog.mailbox.info("Upgrade mailbox from %s to 2.0", getVersion());
                     MailboxUpgrade.upgradeTo2_0(this);
                     updateVersion(new MailboxVersion((short) 2, (short) 0));
                 }
 
                 // TAG and TAGGED_ITEM migration
-                if (!version.atLeast(2, 1)) {
+                if (!mData.version.atLeast(2, 1)) {
                     ZimbraLog.mailbox.info("Upgrade mailbox from %s to 2.1", getVersion());
                     MailboxUpgrade.upgradeTo2_1(this);
                     updateVersion(new MailboxVersion((short) 2, (short) 1));
+                }
+
+                // mailbox version in ZIMBRA.MAILBOX table
+                if (!mData.version.atLeast(2, 2)) {
+                    ZimbraLog.mailbox.info("Upgrade mailbox from %s to 2.2", getVersion());
+                    // writing the new version itself performs the upgrade!
+                    updateVersion(new MailboxVersion((short) 2, (short) 2));
                 }
             }
 
@@ -544,12 +562,13 @@ public class Mailbox {
      *
      * @throws AccountServiceException if no account exists */
     public Account getAccount() throws ServiceException {
-        Account acct = Provisioning.getInstance().get(AccountBy.id, getAccountId());
-        if (acct != null)
-            return acct;
-        ZimbraLog.mailbox.warn("no account found in directory for mailbox " + mId +
-                    " (was expecting " + getAccountId() + ')');
-        throw AccountServiceException.NO_SUCH_ACCOUNT(mData.accountId);
+        String accountId = getAccountId();
+        Account acct = Provisioning.getInstance().get(AccountBy.id, accountId);
+        if (acct == null) {
+            ZimbraLog.mailbox.warn("no account found in directory for mailbox %d (was expecting %s)", mId, accountId);
+            throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
+        }
+        return acct;
     }
 
     public IMPersona getPersona() throws ServiceException {
@@ -1444,22 +1463,27 @@ public class Mailbox {
             return;
 
         Collection<? extends MailItem> cached;
-        if (!(parent instanceof Folder))
+        if (!(parent instanceof Folder)) {
             cached = getItemCache().values();
-        else if (mFolderCache != null)
+        } else if (mFolderCache != null) {
             cached = mFolderCache.values();
-        else
+        } else {
             return;
+        }
 
         int parentId = parent.getId();
         List<MailItem> children = new ArrayList<MailItem>();
-        for (MailItem item : cached)
-            if (item.getParentId() == parentId)
+        for (MailItem item : cached) {
+            if (item.getParentId() == parentId) {
                 children.add(item);
+            }
+        }
 
-        if (!children.isEmpty())
-            for (MailItem child : children)
+        if (!children.isEmpty()) {
+            for (MailItem child : children) {
                 uncache(child);
+            }
+        }
     }
 
     /** Removes all items of a specified type from the <tt>Mailbox</tt>'s
@@ -1533,12 +1557,6 @@ public class Mailbox {
 
             currentChange.itemId = getInitialItemId();
             DbMailbox.updateMailboxStats(this);
-
-            // set the version to CURRENT
-            Metadata md = new Metadata();
-            version = new MailboxVersion();
-            version.writeToMetadata(md);
-            DbMailbox.updateConfig(this, MD_CONFIG_VERSION, md);
         } finally {
             lock.release();
         }
@@ -1857,24 +1875,31 @@ public class Mailbox {
     public MailboxVersion getVersion() {
         lock.lock(); // for memory visibility
         try {
-            return version;
+            return mData.version;
         } finally {
             lock.release();
         }
     }
 
     void updateVersion(MailboxVersion vers) throws ServiceException {
-        lock.lock();
+        boolean success = false;
         try {
-            version = new MailboxVersion(vers);
-            Metadata md = getConfig(null, Mailbox.MD_CONFIG_VERSION);
-            if (md == null) {
-                md = new Metadata();
+            beginTransaction("updateVersion", null);
+
+            // remove the deprecated ZIMBRA.MAILBOX_METADATA version value, if present
+            if (mData.configKeys != null && mData.configKeys.contains(MailboxVersion.MD_CONFIG_VERSION)) {
+                currentChange.dirty.recordModified(currentChange.getOperation(), this, Change.CONFIG, currentChange.timestamp);
+                currentChange.config = new Pair<String, Metadata>(MailboxVersion.MD_CONFIG_VERSION, null);
+                DbMailbox.updateConfig(this, MailboxVersion.MD_CONFIG_VERSION, null);
             }
-            version.writeToMetadata(md);
-            setConfig(null, Mailbox.MD_CONFIG_VERSION, md);
+
+            // write the new version to ZIMBRA.MAILBOX
+            MailboxVersion version = new MailboxVersion(vers);
+            DbMailbox.updateVersion(this, version);
+            mData.version = version;
+            success = true;
         } finally {
-            lock.release();
+            endTransaction(success);
         }
     }
 
