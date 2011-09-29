@@ -22,7 +22,6 @@ import java.util.TimeZone;
 
 import org.apache.lucene.document.DateTools;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -53,11 +52,6 @@ public final class QueryParserTest {
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         parser = new QueryParser(mbox, ZimbraAnalyzer.getInstance());
-    }
-
-    @Before
-    public void setUp() throws Exception {
-        MailboxTestUtil.clearData();
     }
 
     @Test
