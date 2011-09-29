@@ -14,14 +14,10 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 /**
@@ -58,7 +54,7 @@ public final class MailboxLock {
             if (lock.tryLock(LC.zimbra_mailbox_lock_timeout.intValue(), TimeUnit.SECONDS)) {
                 return;
             }
-            
+
             LockFailedException e = new LockFailedException("timeout");
             e.logStackTrace();
             throw e;
@@ -81,6 +77,7 @@ public final class MailboxLock {
      * Extend {@link ReentrantLock} to access protected methods.
      */
     private static final class Lock extends ReentrantLock {
+        private static final long serialVersionUID = -3009063384967180207L;
 
         void printStackTrace(StringBuilder out) {
             Thread owner = getOwner();
@@ -110,6 +107,8 @@ public final class MailboxLock {
     }
 
     public final class LockFailedException extends RuntimeException {
+        private static final long serialVersionUID = -6899718561860023270L;
+
         private LockFailedException(String message) {
             super(message);
         }
