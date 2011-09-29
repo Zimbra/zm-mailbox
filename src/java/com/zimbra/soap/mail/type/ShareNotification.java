@@ -12,8 +12,8 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.mail.type;
 
-public class DLSubscriptionNotification extends Notification {
+public class ShareNotification extends Notification {
 
 }
