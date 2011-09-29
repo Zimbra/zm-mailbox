@@ -26,7 +26,11 @@ import com.zimbra.cs.filter.ZimbraMailAdapter;
  * SIEVE test whether or not the message is to a mailing list or distribution list the user belongs to.
  * <p>
  * The presence of List-Id header (RFC 2919) is a clear indicator, however some mailing list distribution software
- * haven't adopted it.
+ * including Zimbra haven't adopted it. {@link ListTest} returns true if any of the following conditions are met:
+ * <ul>
+ *  <li>{@code X-Zimbra-DL} header exists
+ *  <li>{@code List-Id} header exists
+ * </ul>
  *
  * @see http://www.ietf.org/rfc/rfc3685.txt
  * @author ysasaki
@@ -39,9 +43,8 @@ public final class ListTest extends AbstractTest {
             return false;
         }
 
-        // test if List-Id header exists
         ZimbraMailAdapter adapter = (ZimbraMailAdapter) mail;
-        if (!adapter.getHeader("List-Id").isEmpty()) {
+        if (!adapter.getHeader("X-Zimbra-DL").isEmpty() || !adapter.getHeader("List-Id").isEmpty()) {
             return true;
         }
         return false;

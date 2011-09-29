@@ -22,7 +22,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
@@ -62,13 +61,21 @@ public final class ListTestTest {
         account.setMailSieveScript("if list { tag \"list\"; }");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
 
-        // List-Id header exists
+        // X-Zimbra-DL header exists
         List<ItemId> ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
-                new ParsedMessage("From: sender@zimbra.com\nList-Id: test.zimbra.com\nSubject: test".getBytes(), false),
+                new ParsedMessage("From: sender@zimbra.com\nX-Zimbra-DL: list@zimbra.com\nSubject: test".getBytes(), false),
                 0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
         Assert.assertEquals(1, ids.size());
         Message msg = mbox.getMessageById(null, ids.get(0).getId());
-        Assert.assertEquals("list", ArrayUtil.getFirstElement(msg.getTags()));
+        Assert.assertEquals("list", msg.getTags()[0]);
+
+        // List-Id header exists
+        ids = RuleManager.applyRulesToIncomingMessage(new OperationContext(mbox), mbox,
+                new ParsedMessage("From: sender@zimbra.com\nList-Id: list.zimbra.com\nSubject: test".getBytes(), false),
+                0, account.getName(), new DeliveryContext(), Mailbox.ID_FOLDER_INBOX, true);
+        Assert.assertEquals(1, ids.size());
+        msg = mbox.getMessageById(null, ids.get(0).getId());
+        Assert.assertEquals("list", msg.getTags()[0]);
     }
 
 }

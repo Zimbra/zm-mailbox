@@ -16,10 +16,8 @@ package com.zimbra.cs.milter;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -45,8 +43,12 @@ import com.zimbra.cs.server.NioHandler;
  *
  * <ul>
  *  <li>Check ACL to see if the sender is allowed to send a message to the DL.
- *  <li>Add {@code List-Id} header (RFC 2919) if the recipient is a DL.
- *  <li>Add {@code Reply-To} header if the recipient is a DL.
+ *  <li>Add {@code X-Zimbra-DL: DL1, DL2...} header if one or more recipients are a DL. {@code List-Id} header
+ *      (RFC 2919) is not supported because it requires to fork the message. Let's say, "To: listA, listB", user1
+ *      belongs to listA, user2 belongs to listB. The user1 should receive "List-Id: listA", and the user2 should
+ *      receive "List-Id: listB", which requires Milter to fork the message into each DLs. However, this is not
+ *      supported by Milter.
+ *  <li>Add {@code Reply-To: DL1, DL2...} header if one or more recipients are a DL.
  * </ul>
  *
  * @see http://cpansearch.perl.org/src/AVAR/Sendmail-PMilter-1.00/doc/milter-protocol.txt
@@ -87,7 +89,7 @@ public final class MilterHandler implements NioHandler {
     //private static final byte SMFIR_REPLBODY = 'b'; // Replace body (modification action)
     private static final byte SMFIR_CONTINUE = 'c'; // Accept and keep processing (accept/reject action)
     //private static final byte SMFIR_DISCARD = 'd'; // Set discard flag for entire message (accept/reject action)
-    private static final byte SMFIR_ADDHEADER = 'h'; // Add header (modification action)
+    //private static final byte SMFIR_ADDHEADER = 'h'; // Add header (modification action)
     private static final byte SMFIR_CHGHEADER = 'm'; // Change header (modification action)
     //private static final byte SMFIR_PROGRESS = 'p'; // Progress (asynchronous action)
     //private static final byte SMFIR_QUARANTINE = 'q'; // Quarantine message (modification action)
@@ -253,6 +255,7 @@ public final class MilterHandler implements NioHandler {
     }
 
     private void SMFIR_ChgHeader(int index, String name, String value) throws IOException {
+        ZimbraLog.milter.info("Add %s: %s", name, value);
         // sizeof(unit32) + name.length + NUL + value.length + NUL
         IoBuffer buf = IoBuffer.allocate(6 + name.length() + value.length());
         buf.putUnsignedInt(index);
@@ -340,16 +343,10 @@ public final class MilterHandler implements NioHandler {
 
     private void SMFIC_BodyEOB() throws IOException {
         ZimbraLog.milter.debug("SMFIC_BodyEOB");
-        List<String> replyToAddrs = new ArrayList<String>(lists.size());
+        Set<String> listAddrs = Sets.newHashSetWithExpectedSize(lists.size());
+        Set<String> replyToAddrs = Sets.newHashSetWithExpectedSize(lists.size());
         for (DistributionList dl : lists) {
-            String list = dl.getMail().replace('@', '.');
-            ZimbraLog.milter.info("Add List-Id header (RFC 2919): %s", list);
-            // 'h'  SMFIR_ADDHEADER Add header (modification action)
-            // char    name[]      Name of header, NUL terminated
-            // char    value[]     Value of header, NUL terminated
-            String listId = "List-Id\0<" + list + ">\0";
-            connection.send(new MilterPacket(listId.length() + 1, SMFIR_ADDHEADER, listId.getBytes(CHARSET)));
-
+            listAddrs.add(dl.getMail());
             if (dl.isPrefReplyToEnabled()) {
                 String addr = dl.getPrefReplyToAddress();
                 if (Strings.isNullOrEmpty(addr)) {
@@ -362,8 +359,10 @@ public final class MilterHandler implements NioHandler {
                 replyToAddrs.add(new InternetAddress(disp, addr).toString());
             }
         }
+        if (!listAddrs.isEmpty()) {
+            SMFIR_ChgHeader(1, "X-Zimbra-DL", Joiner.on(", ").join(listAddrs));
+        }
         if (!replyToAddrs.isEmpty()) {
-            // replace Reply-To if exists, otherwise add one.
             SMFIR_ChgHeader(1, "Reply-To", Joiner.on(", ").join(replyToAddrs));
         }
         connection.send(new MilterPacket(SMFIR_ACCEPT));
