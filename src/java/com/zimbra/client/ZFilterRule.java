@@ -443,6 +443,18 @@ public final class ZFilterRule implements ToZJSONObject {
                 String importance = args[i++];
                 conditions.add(new ZFilterCondition.ZImportanceCondition(SimpleOp.fromString(op),
                         FilterTestImportance.Importance.fromString(importance)));
+            } else if (a.equals("flagged")) {
+                ZFilterCondition.SimpleOp op;
+                if (i < args.length && args[i].equalsIgnoreCase("not")) {
+                    i++; // not
+                    op = ZFilterCondition.SimpleOp.NOT_IS;
+                } else {
+                    op = ZFilterCondition.SimpleOp.IS;
+                }
+                if (i >= args.length) {
+                    throw ZClientException.CLIENT_ERROR("missing a flag name after 'flagged'", null);
+                }
+                conditions.add(new ZFilterCondition.ZFlaggedCondition(op, Sieve.Flag.fromString(args[i++])));
             } else if (a.equals("keep")) {
                 actions.add(new ZKeepAction());
             } else if (a.equals("discard")) {

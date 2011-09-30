@@ -325,6 +325,9 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         } else if (name.equals(MailConstants.E_IMPORTANCE_TEST)) {
             return new ZImportanceCondition(isNegative ? SimpleOp.NOT_IS : SimpleOp.IS,
                     FilterTestImportance.Importance.fromString(condEl.getAttribute(MailConstants.A_IMP)));
+        } else if (name.equals(MailConstants.E_FLAGGED_TEST)) {
+            return new ZFlaggedCondition(isNegative ? SimpleOp.NOT_IS : SimpleOp.IS,
+                    Sieve.Flag.fromString(condEl.getAttribute(MailConstants.A_FLAG_NAME)));
         } else if (name.equals(MailConstants.E_TRUE_TEST)) {
             return new ZTrueCondition();
         } else {
@@ -491,6 +494,36 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         @Override
         public String toConditionString() {
             return "bulk" + (op == SimpleOp.IS ? "" : " not");
+        }
+    }
+
+    public static final class ZFlaggedCondition extends ZFilterCondition {
+        private final SimpleOp op;
+        private final Sieve.Flag flag;
+
+        public ZFlaggedCondition(SimpleOp op, Sieve.Flag flag) {
+            this.op = op;
+            this.flag = flag;
+        }
+
+        @Override
+        public String getName() {
+            return "flagged";
+        }
+
+        @Override
+        Element toElement(Element parent) {
+            Element test = parent.addElement(MailConstants.E_FLAGGED_TEST);
+            test.addAttribute(MailConstants.A_FLAG_NAME, flag.toString());
+            if (op == SimpleOp.NOT_IS) {
+                test.addAttribute(MailConstants.A_NEGATIVE, true);
+            }
+            return test;
+        }
+
+        @Override
+        public String toConditionString() {
+            return "flagged " + (op == SimpleOp.IS ? "" : "not ") + flag;
         }
     }
 
