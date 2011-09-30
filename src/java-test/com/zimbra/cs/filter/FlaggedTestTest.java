@@ -27,6 +27,7 @@ import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.filter.jsieve.FlaggedTest;
 import com.zimbra.cs.mailbox.DeliveryContext;
+import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -56,7 +57,7 @@ public final class FlaggedTestTest {
     }
 
     @Test
-    public void test() throws Exception {
+    public void incoming() throws Exception {
         Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
         RuleManager.clearCachedRules(account);
         account.setMailSieveScript("if me :in \"To\" { flag \"priority\"; }\n" +
@@ -71,6 +72,24 @@ public final class FlaggedTestTest {
         Message msg = mbox.getMessageById(null, ids.get(0).getId());
         Assert.assertTrue(msg.isTagged(Flag.FlagInfo.PRIORITY));
         Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, msg.getFolderId());
+    }
+
+    @Test
+    public void existing() throws Exception {
+        Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        RuleManager.clearCachedRules(account);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account);
+        OperationContext octx = new OperationContext(mbox);
+        Message msg = mbox.addMessage(octx,
+                new ParsedMessage("From: sender@zimbra.com\nTo: test@zimbra.com\nSubject: test".getBytes(), false),
+                new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_PRIORITY),
+                new DeliveryContext());
+
+        boolean filtered = RuleManager.applyRulesToExistingMessage(new OperationContext(mbox), mbox, msg.getId(),
+                RuleManager.parse("if flagged \"priority\" { stop; }\n" +
+                        "if header :contains \"Subject\" \"test\" { fileinto \"test\"; }"));
+        Assert.assertEquals(false, filtered);
+        Assert.assertEquals(Mailbox.ID_FOLDER_INBOX, mbox.getMessageById(octx, msg.getId()).getFolderId());
     }
 
 }

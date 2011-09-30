@@ -107,6 +107,10 @@ public final class Flag extends Tag {
             return new Flag(mbox, data, this);
         }
 
+        public int toId() {
+            return id;
+        }
+
         public int toBitmask() {
             return bitmask;
         }

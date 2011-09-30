@@ -1,3 +1,17 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.filter;
 
 import java.io.IOException;
@@ -20,7 +34,7 @@ import com.zimbra.cs.service.util.ItemId;
 /**
  * Mail filtering implementation for messages that are sent from a user's account.
  */
-public class OutgoingMessageHandler extends FilterHandler {
+public final class OutgoingMessageHandler implements FilterHandler {
 
     private ParsedMessage parsedMessage;
     private Mailbox mailbox;
@@ -41,6 +55,11 @@ public class OutgoingMessageHandler extends FilterHandler {
         this.defaultTags = tags;
         this.convId = convId;
         this.octxt = octxt;
+    }
+
+    @Override
+    public Message getMessage() {
+        return null;
     }
 
     @Override
@@ -70,11 +89,10 @@ public class OutgoingMessageHandler extends FilterHandler {
     }
 
     @Override
-    public Message explicitKeep(Collection<ActionFlag> flagActions, String[] tags)
-    throws ServiceException {
+    public Message explicitKeep(Collection<ActionFlag> flagActions, String[] tags) throws ServiceException {
         try {
             DeliveryOptions dopt = new DeliveryOptions().setFolderId(defaultFolderId).setConversationId(convId);
-            dopt.setFlags(FilterUtil.getFlagBitmask(flagActions, defaultFlags, mailbox));
+            dopt.setFlags(FilterUtil.getFlagBitmask(flagActions, defaultFlags));
             dopt.setTags(FilterUtil.getTagsUnion(tags, defaultTags));
             return mailbox.addMessage(octxt, parsedMessage, dopt, null);
         } catch (IOException e) {
@@ -107,9 +125,22 @@ public class OutgoingMessageHandler extends FilterHandler {
     }
 
     @Override
-    public ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String[] tags) throws ServiceException {
+    public ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String[] tags)
+            throws ServiceException {
         return FilterUtil.addMessage(null, mailbox, parsedMessage, null, folderPath, noICal,
-                                     FilterUtil.getFlagBitmask(flagActions, defaultFlags, mailbox),
+                                     FilterUtil.getFlagBitmask(flagActions, defaultFlags),
                                      FilterUtil.getTagsUnion(tags, defaultTags), convId, octxt);
+    }
+
+    @Override
+    public void discard() {
+    }
+
+    @Override
+    public void beforeFiltering() {
+    }
+
+    @Override
+    public void afterFiltering() {
     }
 }

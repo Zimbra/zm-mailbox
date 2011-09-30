@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -40,17 +40,18 @@ import com.zimbra.cs.service.util.ItemId;
 /**
  * Mail filtering implementation for messages already in the user's mailbox.
  */
-public class ExistingMessageHandler extends FilterHandler {
+public final class ExistingMessageHandler implements FilterHandler {
 
-    private OperationContext octxt;
-    private Mailbox mailbox;
-    private int messageId;
+    private final OperationContext octxt;
+    private final Mailbox mailbox;
+    private final int messageId;
+    private final int size;
+    private Message message;
     private MimeMessage mimeMessage;
     private ParsedMessage parsedMessage;
     private boolean kept = false;
     private boolean filed = false;
     private boolean filtered = false;
-    private int size;
 
     public ExistingMessageHandler(OperationContext octxt, Mailbox mbox, int messageId, int size) {
         this.octxt = octxt;
@@ -64,16 +65,22 @@ public class ExistingMessageHandler extends FilterHandler {
         return getDefaultFolder().getPath();
     }
 
-    private Folder getDefaultFolder()
-    throws ServiceException {
+    private Folder getDefaultFolder() throws ServiceException {
         return mailbox.getFolderById(octxt, Mailbox.ID_FOLDER_INBOX);
+    }
+
+    @Override
+    public Message getMessage() throws ServiceException {
+        if (message == null) {
+            message = mailbox.getMessageById(octxt, messageId);
+        }
+        return message;
     }
 
     @Override
     public MimeMessage getMimeMessage() throws ServiceException {
         if (mimeMessage == null) {
-            Message msg = mailbox.getMessageById(octxt, messageId);
-            mimeMessage = msg.getMimeMessage();
+            mimeMessage = getMessage().getMimeMessage();
         }
         return mimeMessage;
     }
@@ -81,7 +88,7 @@ public class ExistingMessageHandler extends FilterHandler {
     @Override
     public ParsedMessage getParsedMessage() throws ServiceException {
         if (parsedMessage == null) {
-            Message msg = mailbox.getMessageById(octxt, messageId);
+            Message msg = getMessage();
             ParsedMessageOptions opt = new ParsedMessageOptions()
                 .setContent(msg.getMimeMessage())
                 .setAttachmentIndexing(mailbox.attachmentsIndexingEnabled())
@@ -92,7 +99,9 @@ public class ExistingMessageHandler extends FilterHandler {
         return parsedMessage;
     }
 
-    public boolean filtered() { return filtered; }
+    public boolean filtered() {
+        return filtered;
+    }
 
     @Override
     public void discard() throws ServiceException {
@@ -103,41 +112,39 @@ public class ExistingMessageHandler extends FilterHandler {
 
 
     @Override
-    public Message implicitKeep(Collection<ActionFlag> flagActions, String[] tags)
-    throws ServiceException {
+    public Message implicitKeep(Collection<ActionFlag> flagActions, String[] tags) throws ServiceException {
         ZimbraLog.filter.debug("Implicitly keeping existing message %d.", messageId);
-        Message msg = mailbox.getMessageById(octxt, messageId);
+        Message msg = getMessage();
         updateTagsAndFlagsIfNecessary(msg, flagActions, tags);
         kept = true;
         return msg;
     }
 
     @Override
-    public Message explicitKeep(Collection<ActionFlag> flagActions, String[] tags)
-    throws ServiceException {
+    public Message explicitKeep(Collection<ActionFlag> flagActions, String[] tags) throws ServiceException {
         ZimbraLog.filter.debug("Explicitly keeping existing message %d.", messageId);
-        Message msg = mailbox.getMessageById(octxt, messageId);
+        Message msg = getMessage();
         updateTagsAndFlagsIfNecessary(msg, flagActions, tags);
         kept = true;
         return msg;
     }
 
     private void updateTagsAndFlagsIfNecessary(Message msg, Collection<ActionFlag> flagActions, String[] newTags)
-    throws ServiceException {
+            throws ServiceException {
         String[] existingTags = msg.getTags();
         String[] tags = FilterUtil.getTagsUnion(existingTags, newTags);
-        int flags = FilterUtil.getFlagBitmask(flagActions, msg.getFlagBitmask(), mailbox);
+        int flags = FilterUtil.getFlagBitmask(flagActions, msg.getFlagBitmask());
         if (!Sets.newHashSet(existingTags).equals(Sets.newHashSet(tags)) || msg.getFlagBitmask() != flags) {
-            ZimbraLog.filter.info("Updating flags to %d, tags to %s on message %d.",
-                    flags, tags, msg.getId());
+            ZimbraLog.filter.info("Updating flags to %d, tags to %s on message %d.", flags, tags, msg.getId());
             mailbox.setTags(octxt, msg.getId(), MailItem.Type.MESSAGE, flags, tags);
             filtered = true;
         }
     }
 
     @Override
-    public ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String[] tags) throws ServiceException {
-        Message source = mailbox.getMessageById(octxt, messageId);
+    public ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String[] tags)
+            throws ServiceException {
+        Message source = getMessage();
 
         // See if the message is already in the target folder.
         Folder targetFolder = null;
@@ -162,14 +169,14 @@ public class ExistingMessageHandler extends FilterHandler {
 
             // Apply flags and tags
             mailbox.setTags(octxt, newMsg.getId(), MailItem.Type.MESSAGE,
-                            FilterUtil.getFlagBitmask(flagActions, source.getFlagBitmask(), mailbox),
-                            FilterUtil.getTagsUnion(source.getTags(), tags));
+                    FilterUtil.getFlagBitmask(flagActions, source.getFlagBitmask()),
+                    FilterUtil.getTagsUnion(source.getTags(), tags));
             return new ItemId(mailbox, messageId);
         }
 
         ItemId id = FilterUtil.addMessage(new DeliveryContext(), mailbox, getParsedMessage(),
                                           mailbox.getAccount().getName(), folderPath, false,
-                                          FilterUtil.getFlagBitmask(flagActions, source.getFlagBitmask(), mailbox),
+                                          FilterUtil.getFlagBitmask(flagActions, source.getFlagBitmask()),
                                           tags, Mailbox.ID_AUTO_INCREMENT, octxt);
         if (id != null) {
             filtered = true;
@@ -211,6 +218,10 @@ public class ExistingMessageHandler extends FilterHandler {
     }
 
     @Override
+    public void beforeFiltering() {
+    }
+
+    @Override
     public void afterFiltering() throws ServiceException {
         if (filed && !kept) {
             ZimbraLog.filter.info("Deleting original message %d after filing to another folder.", messageId);
@@ -222,4 +233,5 @@ public class ExistingMessageHandler extends FilterHandler {
     public int getMessageSize() {
         return size;
     }
+
 }

@@ -41,8 +41,7 @@ import java.util.List;
  * Mail filtering implementation for messages that arrive via LMTP or from
  * an external account.
  */
-public class IncomingMessageHandler
-extends FilterHandler {
+public final class IncomingMessageHandler implements FilterHandler {
 
     private OperationContext octxt;
     private DeliveryContext dctxt;
@@ -64,6 +63,11 @@ extends FilterHandler {
         this.size = size;
         this.defaultFolderId = defaultFolderId;
         this.noICal = noICal;
+    }
+
+    @Override
+    public Message getMessage() {
+        return null;
     }
 
     @Override
@@ -89,9 +93,9 @@ extends FilterHandler {
 
     @Override
     public ItemId fileInto(String folderPath, Collection<ActionFlag> flagActions, String[] tags)
-    throws ServiceException {
+            throws ServiceException {
         ItemId id = FilterUtil.addMessage(dctxt, mailbox, parsedMessage, recipientAddress, folderPath,
-                                          false, FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD, mailbox),
+                                          false, FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD),
                                           tags, Mailbox.ID_AUTO_INCREMENT, octxt);
 
         // Do spam training if the user explicitly filed the message into
@@ -120,10 +124,10 @@ extends FilterHandler {
     }
 
     private Message addMessage(int folderId, Collection<ActionFlag> flagActions, String[] tags)
-    throws ServiceException {
+            throws ServiceException {
         try {
             DeliveryOptions dopt = new DeliveryOptions().setFolderId(folderId).setNoICal(noICal).setRecipientEmail(recipientAddress);
-            dopt.setFlags(FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD, mailbox)).setTags(tags);
+            dopt.setFlags(FilterUtil.getFlagBitmask(flagActions, Flag.BITMASK_UNREAD)).setTags(tags);
             return mailbox.addMessage(octxt, parsedMessage, dopt, dctxt);
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to add incoming message", e);
@@ -152,5 +156,17 @@ extends FilterHandler {
     @Override
     public int getMessageSize() {
         return size;
+    }
+
+    @Override
+    public void discard() {
+    }
+
+    @Override
+    public void beforeFiltering() {
+    }
+
+    @Override
+    public void afterFiltering() {
     }
 }

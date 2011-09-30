@@ -15,7 +15,6 @@
 package com.zimbra.cs.filter.jsieve;
 
 import java.util.List;
-import java.util.Map;
 
 import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
@@ -27,28 +26,16 @@ import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.commands.AbstractActionCommand;
 import org.apache.jsieve.mail.MailAdapter;
 
-import com.google.common.collect.ImmutableMap;
-
 /**
  * @since Nov 8, 2004
  */
 public final class Flag extends AbstractActionCommand {
 
-    private static final Map<String, ActionFlag> FLAGS = ImmutableMap.<String, ActionFlag>builder()
-        .put("read", new ActionFlag(com.zimbra.cs.mailbox.Flag.ID_UNREAD, false, "read"))
-        .put("unread", new ActionFlag(com.zimbra.cs.mailbox.Flag.ID_UNREAD, true, "unread"))
-        .put("flagged", new ActionFlag(com.zimbra.cs.mailbox.Flag.ID_FLAGGED, true, "flagged"))
-        .put("unflagged", new ActionFlag(com.zimbra.cs.mailbox.Flag.ID_FLAGGED, false, "unflagged"))
-        .put("priority", new ActionFlag(com.zimbra.cs.mailbox.Flag.ID_PRIORITY, true, "priority"))
-        .put("unpriority", new ActionFlag(com.zimbra.cs.mailbox.Flag.ID_PRIORITY, false, "priority"))
-        .build();
-
     @Override
     protected Object executeBasic(MailAdapter mail, Arguments args, Block arg2, SieveContext context) {
         String flagName = ((StringListArgument) args.getArgumentList().get(0)).getList().get(0);
-        ActionFlag action = FLAGS.get(flagName);
+        ActionFlag action = ActionFlag.of(flagName);
         mail.addAction(action);
-
         return null;
     }
 
@@ -67,7 +54,7 @@ public final class Flag extends AbstractActionCommand {
             throw new SyntaxException("Expecting exactly one argument");
         }
         String flagName = strList.get(0);
-        if (!FLAGS.containsKey(flagName.toLowerCase())) {
+        if (ActionFlag.of(flagName.toLowerCase()) == null) {
             throw new SyntaxException("Invalid flag: " + flagName);
         }
     }

@@ -32,9 +32,7 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import com.google.common.collect.Sets;
-import org.apache.jsieve.mail.Action;
 
-import com.google.common.collect.Sets;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
@@ -69,7 +67,10 @@ import com.zimbra.cs.util.JMSession;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 
-public class FilterUtil {
+public final class FilterUtil {
+
+    private FilterUtil() {
+    }
 
     /**
      * Returns a Sieve-escaped version of the given string.  Replaces <tt>\</tt> with
@@ -293,14 +294,14 @@ public class FilterUtil {
             ZimbraLog.filter.warn("Envelope sender will be set to the default value.", e);
         }
     }
-    
+
     private static boolean isDeliveryStatusNotification(MimeMessage msg)
     throws MessagingException {
         String envelopeSender = msg.getHeader("Return-Path", null);
         String ct = Mime.getContentType(msg, "text/plain");
         ZimbraLog.filter.debug("isDeliveryStatusNotification(): Return-Path=%s, Auto-Submitted=%s, Content-Type=%s.",
             envelopeSender, msg.getHeader("Auto-Submitted", null), ct);
-        
+
         if (StringUtil.isNullOrEmpty(envelopeSender) || envelopeSender.equals("<>")) {
             return true;
         }
@@ -484,23 +485,16 @@ public class FilterUtil {
         return false;
     }
 
-    public static int getFlagBitmask(Collection<ActionFlag> flagActions, int startingBitMask, Mailbox mailbox) {
-        int flagBits = startingBitMask;
-        for (Action action : flagActions) {
-            ActionFlag flagAction = (ActionFlag) action;
-            int flagId = flagAction.getFlagId();
-            try {
-                com.zimbra.cs.mailbox.Flag flag = mailbox.getFlagById(flagId);
-                if (flagAction.isSetFlag()) {
-                    flagBits |= flag.toBitmask();
-                } else {
-                    flagBits &= (~flag.toBitmask());
-                }
-            } catch (ServiceException e) {
-                ZimbraLog.filter.warn("Unable to flag message", e);
+    public static int getFlagBitmask(Collection<ActionFlag> actions, int startingBitMask) {
+        int bitmask = startingBitMask;
+        for (ActionFlag action : actions) {
+            if (action.isSet()) {
+                bitmask |= action.getFlag().toBitmask();
+            } else {
+                bitmask &= ~action.getFlag().toBitmask();
             }
         }
-        return flagBits;
+        return bitmask;
     }
 
     public static String[] getTagsUnion(String[] tags1, String[] tags2) {

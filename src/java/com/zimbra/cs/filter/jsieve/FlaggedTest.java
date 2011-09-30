@@ -27,10 +27,13 @@ import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
 import com.google.common.collect.ImmutableSet;
+import com.zimbra.cs.filter.FilterUtil;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
+import com.zimbra.cs.mailbox.Message;
 
 /**
- * SIEVE test whether or not the message is flagged in a SIEVE rule that was examined before the current SIEVE rule.
+ * SIEVE test whether or not the message is flagged either by a SIEVE rule that was examined before the current SIEVE
+ * rule or on the existing message being filtered.
  * <p>
  * For example, given a SIEVE rule set:
  * <pre>
@@ -46,7 +49,7 @@ import com.zimbra.cs.filter.ZimbraMailAdapter;
  */
 public final class FlaggedTest extends AbstractTest {
 
-    private Set<String> flags;
+    private Set<ActionFlag> flags;
 
     @Override
     protected void validateArguments(Arguments args, SieveContext ctx) throws SieveException {
@@ -54,7 +57,16 @@ public final class FlaggedTest extends AbstractTest {
         if (itr.hasNext()) {
             Argument arg = itr.next();
             if (arg instanceof StringListArgument) {
-                flags = ImmutableSet.copyOf(((StringListArgument) arg).getList());
+                ImmutableSet.Builder<ActionFlag> builder = ImmutableSet.builder();
+                for (String name : ((StringListArgument) arg).getList()) {
+                    ActionFlag flag = ActionFlag.of(name);
+                    if (flag != null) {
+                        builder.add(flag);
+                    } else {
+                        throw ctx.getCoordinate().syntaxException("Invalid flag: " + name);
+                    }
+                }
+                flags = builder.build();
             } else {
                 throw ctx.getCoordinate().syntaxException("Unexpected argument: " + arg.getValue());
             }
@@ -70,14 +82,23 @@ public final class FlaggedTest extends AbstractTest {
             return false;
         }
         ZimbraMailAdapter adapter = (ZimbraMailAdapter) mail;
+
+        // check actions already taken by a previous filter
         for (Action action : adapter.getActions()) {
             if (action instanceof ActionFlag) {
-                ActionFlag flag = (ActionFlag) action;
-                if (flag.isSetFlag() && flags.contains(flag.getName())) {
+                if (flags.contains(action)) {
                     return true;
                 }
             }
         }
+
+        // check the message's flags if this filter is running against the existing messages
+        Message msg = adapter.getMessage();
+        if (msg != null) {
+            int bitmask = msg.getFlagBitmask();
+            return bitmask == FilterUtil.getFlagBitmask(flags, bitmask);
+        }
+
         return false;
     }
 }
