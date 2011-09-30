@@ -316,6 +316,7 @@ public class Tag extends MailItem {
 
     @Override
     protected void saveMetadata(String ignored) throws ServiceException {
+        mData.metadataChanged(mMailbox);
         DbTag.saveMetadata(this);
     }
 
