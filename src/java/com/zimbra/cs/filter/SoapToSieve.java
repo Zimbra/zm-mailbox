@@ -203,6 +203,8 @@ public final class SoapToSieve {
         } else if (name.equals(MailConstants.E_IMPORTANCE_TEST)) {
             snippet = String.format("importance \"%s\"",
                     FilterTestImportance.Importance.fromString(test.getAttribute(MailConstants.A_IMP)));
+        } else if (name.equals(MailConstants.E_FLAGGED_TEST)) {
+            snippet = "flagged \"" + test.getAttribute(MailConstants.A_FLAG_NAME) + "\"";
         } else if (name.equals(MailConstants.E_TRUE_TEST)) {
             snippet = "true";
         } else {

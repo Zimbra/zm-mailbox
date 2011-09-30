@@ -1243,7 +1243,7 @@ Folders:
                      "key" (non-Zimbra email address and access key)
     {grantee-name} = name or email address of the principal being granted rights.
                      optional if {grantee-type} is "all".  When specified in a request,
-                     this can be just the username portion of the address in the default domain. 
+                     this can be just the username portion of the address in the default domain.
     {pw}           = optional argument.  password when {grantee-type} is "guest"
     {key}          = optional argument.  access key when {grantee-type} is "key"
 
@@ -1261,7 +1261,7 @@ Retention policy:
   </retentionPolicy>
 
     {duration} = a time duration value in provisioning format, e.g. "30d" for 30 days.
-        
+
 When applying system retention policy to a folder or tag, only the type and id
 attributes are required.
 
@@ -2874,31 +2874,32 @@ to work in ZCS 6.0, and will be removed in the next major release.
 
 Tests:
 
-  <headerTest header="{comma-separated-header-names}" stringComparison="{type}" [caseSensitive="{0|1}"] value="{value}" />
-  <headerExistsTest header="{header-name}" />
-  <mimeHeaderTest header="{header-name}" stringComparison="{type}" [caseSensitive="{0|1}"] value="{value}" />
+  <addressBookTest header="{header-name}"/>
   <addressTest [part="{all|localpart|domain}"] stringComparison="{type}" [caseSensitive="{0|1}"]
       header="{comma-separated-header-names}" value="{value}"/>
-  <sizeTest numberComparison="{over|under}" s="{size}" />
-  <dateTest dateComparison="{before|after}" d="{date}" />
-  <bodyTest [caseSensitive="{0|1}"] value="{value}" />
-  <attachmentTest />
-  <addressBookTest header="{header-name}"/>
+  <attachmentTest/>
+  <bulkTest/>
   <contactRankingTest header="{header-name}"/>
-  <meTest header="{header-name}"/>
+  <conversationTest [where="{started|participated}"]/>
+  <currentDayOfWeekTest value="comma-separated-day-of-week-indices"/>
+  <currentTimeTest dateComparison="{before|after}" d="time-in-HHmm-format}"/>
+  <bodyTest [caseSensitive="{0|1}"] value="{value}"/>
+  <dateTest dateComparison="{before|after}" d="{date}"/>
+  <facebookTest/>
+  <flaggedTest flagName="{flagged|read|priority}"/>
+  <headerExistsTest header="{header-name}"/>
+  <headerTest header="{comma-separated-header-names}" stringComparison="{type}" [caseSensitive="{0|1}"] value="{value}"/>
+  <importanceTest imp="{high|normal|low}"/>
   <inviteTest>
     <method>{method}</method>+
   </inviteTest>
-  <currentTimeTest dateComparison="{before|after}" d="time-in-HHmm-format}" />
-  <currentDayOfWeekTest value="comma-separated-day-of-week-indices" />
-  <conversationTest [where="{started|participated}"]/>
-  <facebookTest/>
   <linkedinTest/>
+  <listTest/>
+  <meTest header="{header-name}"/>
+  <mimeHeaderTest header="{header-name}" stringComparison="{type}" [caseSensitive="{0|1}"] value="{value}"/>
+  <sizeTest numberComparison="{over|under}" s="{size}"/>
   <socialcastTest/>
   <twitterTest/>
-  <listTest/>
-  <bulkTest/>
-  <importanceTest imp="{high|normal|low}"/>
 
 Each test has the following optional attributes:
     * "negative": specifies a "not" condition for that test
@@ -3733,7 +3734,7 @@ added to Documents only.
     </share>]*
 </GetShareNotificationsResponse>
 
-    notification-item-id = the id of the share notification message.  The message must be in the Inbox folder. 
+    notification-item-id = the id of the share notification message.  The message must be in the Inbox folder.
     status is "new" if the message is unread or "seen" if the message is read.
     perm = combination of r (read) w (write) i (insert) d (delete) x (action) a (admin)
 
@@ -3767,10 +3768,10 @@ added to Documents only.
 
 Notes:
   authed account must have the privilege to create dist lists in the domain
-  
+
   dynamic: create a dynamic distribution list
-  
------------------------------  
+
+-----------------------------
 
 <GetDistributionListRequest needOwners="1|0">
   <dl by="id|name">...</dl>
@@ -3780,23 +3781,23 @@ Notes:
   <dl name="{name}" id="{id}" dynamic="1|0">
     <owners>
       <owner type="{owner-type}" id="{owner-id}" name="{owner-name}"/>+
-    </owners>  
+    </owners>
     <a n="...">...</a>+
   </dl>
 </GetDistributionListResponse>
 
 Notes:
-   If the authed account is one of the list owners, all (requested) attributes of the DL 
-   are returned in the response.  Otherwise only attributes visible and useful to  
+   If the authed account is one of the list owners, all (requested) attributes of the DL
+   are returned in the response.  Otherwise only attributes visible and useful to
    non-owners are returned.
-   
+
    dynamic = whether this is a dynamic distribution list
    owner-type = usr | grp | egp
                 usr: a Zimbra internal user
                 grp: a Zimbra internal group
                 egp: an external AD group
 
------------------------------  
+-----------------------------
 
 <DistributionListActionRequest>
   <dl by="id|name">...</dl>
@@ -3821,29 +3822,29 @@ Notes:
        removeAlias    remove list alias
        addMembers     add list members
        removeMembers  remove list members
-       
-  <a>       required if op=modify     
+
+  <a>       required if op=modify
   <newName> required if op=rename
   <alias>   required if op=addAlias or or=removeAlias
   <owner>   required if op=addOwner or op=removeOwner
   <dlm>     required if op=addMembers or op=removeMembers
 
-<DistributionListActionResponse/>  
-   
------------------------------ 
+<DistributionListActionResponse/>
+
+-----------------------------
 
 <SubscribeDistributionListRequest op="subscribe/unsubscribe">
   <dl by="id|name">...</dl>
-</SubscribeDistributionListRequest>  
+</SubscribeDistributionListRequest>
 
 {op} = subscribe: subscribe the requested account to the list
        unsubscribe: unsubscribe the requested account from the list
-       
+
 <SubscribeDistributionListResponse status={status}/>
 
-{status} = subscribed | unsubscribed | awaiting_approval;  
-   
------------------------------  
+{status} = subscribed | unsubscribed | awaiting_approval;
+
+-----------------------------
 
 <GetAccountMembershipRequest directOnly="1|0">
 </GetAccountMembershipRequest>
@@ -3858,8 +3859,8 @@ Notes:
 {via-dl-name} = is present if the account is a member of the returned list because they are either a direct
                 or indirect member of another list that is a member of the returned list. For example,
                 if a user is a member of engineering@domain.com, and engineering@domain.com is a member of all@domain.com,
-                then <dl name="all@domain.com" ... via="engineering@domain.com"/> would be returned. 
-                
+                then <dl name="all@domain.com" ... via="engineering@domain.com"/> would be returned.
 
------------------------------ 
-              
+
+-----------------------------
+

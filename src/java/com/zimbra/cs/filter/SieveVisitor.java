@@ -124,7 +124,12 @@ public abstract class SieveVisitor {
     }
 
     @SuppressWarnings("unused")
-    protected void visitImportanceTest(Node node, VisitPhase phase, RuleProperties props, FilterTestImportance.Importance importance)
+    protected void visitImportanceTest(Node node, VisitPhase phase, RuleProperties props,
+            FilterTestImportance.Importance importance) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitFlaggedTest(Node node, VisitPhase phase, RuleProperties props, Sieve.Flag flag)
             throws ServiceException {
     }
 
@@ -194,6 +199,7 @@ public abstract class SieveVisitor {
             throws ServiceException {
     }
 
+    @SuppressWarnings("unused")
     protected void visitNotifyAction(Node node, VisitPhase phase, RuleProperties props, String emailAddr,
             String subjectTemplate, String bodyTemplate, int maxBodyBytes, List<String> origHeaders)
     throws ServiceException { }
@@ -461,6 +467,11 @@ public abstract class SieveVisitor {
                 visitImportanceTest(node, VisitPhase.begin, props, importance);
                 accept(node, props);
                 visitImportanceTest(node, VisitPhase.end, props, importance);
+            } else if ("flagged".equalsIgnoreCase(nodeName)) {
+                Sieve.Flag flag = Sieve.Flag.fromString(getValue(node, 0, 0, 0, 0));
+                visitFlaggedTest(node, VisitPhase.begin, props, flag);
+                accept(node, props);
+                visitFlaggedTest(node, VisitPhase.end, props, flag);
             } else if ("true".equalsIgnoreCase(nodeName)) {
                 visitTrueTest(node, VisitPhase.begin, props);
                 accept(node, props);

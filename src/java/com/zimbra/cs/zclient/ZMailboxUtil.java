@@ -243,35 +243,36 @@ public class ZMailboxUtil implements DebugListener {
         CONVERSATION("help on conversation-related commands"),
         FILTER("help on filter-realted commnds",
                 "  {conditions}:\n" +
+                "    address \"comma-separated-header-names\" all|localpart|domain is|not_is|contains|not_contains|matches|not_matches [case_sensitive] \"value\"\n" +
+                "    addressbook in|not_in \"header-name\"\n" +
+                "    attachment exists|not_exists\n" +
+                "    body contains|not_contains [case_sensitive] \"text\"\n" +
+                "    bulk [not]\n" +
+                "    conversation where|not_where started|participated\n" +
+                "    current_day_of_week is|not_is \"comma-separated-days(0=Sun,6=Sat)\"\n" +
+                "    current_time before|not_before|after|not_after \"HHmm\"\n" +
+                "    date before|not_before|after|not_after \"YYYYMMDD\"\n" +
+                "    facebook [not]\n" +
+                "    flagged [not] \"flag\"\n" +
                 "    header \"comma-separated-names\" is|not_is|contains|not_contains|matches|not_matches [case_sensitive] \"value\"\n" +
                 "    header \"comma-separated-names\" exists|not_exists\n" +
-                "    mime_header \"name\" is|not_is|contains|not_contains|matches|not_matches [case_sensitive] \"value\"\n" +
-                "    address \"comma-separated-header-names\" all|localpart|domain is|not_is|contains|not_contains|matches|not_matches [case_sensitive] \"value\"\n" +
-                "    date before|not_before|after|not_after \"YYYYMMDD\"\n" +
-                "    size under|not_under|over|not_over \"1|1K|1M\"\n" +
-                "    body contains|not_contains [case_sensitive] \"text\"\n" +
-                "    addressbook in|not_in \"header-name\"\n" +
-                "    ranking in|not_in \"header-name\"\n" +
-                "    me in|not_in \"header-name\"\n" +
-                "    attachment exists|not_exists\n" +
+                "    importance is|not_is high|normal|low\n" +
                 "    invite exists|not_exists\n" +
-                "    current_time before|not_before|after|not_after \"HHmm\"\n" +
-                "    current_day_of_week is|not_is \"comma-separated-days(0=Sun,6=Sat)\"\n" +
-                "    conversation where|not_where started|participated\n" +
-                "    facebook [not]\n" +
                 "    linkedin [not]\n" +
+                "    list [not]\n" +
+                "    me in|not_in \"header-name\"\n" +
+                "    mime_header \"name\" is|not_is|contains|not_contains|matches|not_matches [case_sensitive] \"value\"\n" +
+                "    ranking in|not_in \"header-name\"\n" +
+                "    size under|not_under|over|not_over \"1|1K|1M\"\n" +
                 "    socialcast [not]\n" +
                 "    twitter [not]\n" +
-                "    list [not]\n" +
-                "    bulk [not]\n" +
-                "    importance is|not_is high|normal|low\n" +
                 "\n" +
                 "  {actions}:\n" +
                 "    keep\n" +
                 "    discard\n" +
                 "    fileinto \"/path\"\n" +
-                "    tag \"/tag\"\n" +
-                "    flag \"/flag\"\n" +
+                "    tag \"tag\"\n" +
+                "    flag \"flag\"\n" +
                 "    mark read|flagged|priority\n" +
                 "    redirect \"address\"\n" +
                 "    reply \"body-template\"\n" +
