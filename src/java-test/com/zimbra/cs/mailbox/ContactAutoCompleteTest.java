@@ -16,12 +16,16 @@
 package com.zimbra.cs.mailbox;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableMap;
+import com.zimbra.common.mailbox.ContactConstants;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 
@@ -35,7 +39,6 @@ public final class ContactAutoCompleteTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
-        
         Provisioning prov = Provisioning.getInstance();
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
         Provisioning.setInstance(prov);
@@ -78,6 +81,29 @@ public final class ContactAutoCompleteTest {
         group.mIsContactGroup = true;
         result.addEntry(group);
         Assert.assertEquals(result.entries.size(), 2);
+    }
+
+    @Test
+    public void addMatchedContacts() throws Exception {
+        Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        ContactAutoComplete comp = new ContactAutoComplete(account, null);
+        ContactAutoComplete.AutoCompleteResult result = new ContactAutoComplete.AutoCompleteResult(10);
+        result.rankings = new ContactRankings(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Map<String, Object> attrs = ImmutableMap.<String, Object>of(
+                ContactConstants.A_firstName, "First",
+                ContactConstants.A_middleName, "Middle",
+                ContactConstants.A_lastName, "Last",
+                ContactConstants.A_email, "first.last@zimbra.com");
+        comp.addMatchedContacts("first f", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        Assert.assertEquals(0, result.entries.size());
+        comp.addMatchedContacts("first mid", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        Assert.assertEquals(1, result.entries.size());
+        result.clear();
+        comp.addMatchedContacts("first la", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        Assert.assertEquals(1, result.entries.size());
+        result.clear();
+        comp.addMatchedContacts("first mid la", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        Assert.assertEquals(1, result.entries.size());
     }
 
 }
