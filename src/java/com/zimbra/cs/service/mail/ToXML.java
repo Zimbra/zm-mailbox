@@ -2437,6 +2437,12 @@ public final class ToXML {
             }
         }
 
+        // return ACLs when they are set
+        if (needToOutput(fields, Change.ACL)) {
+            if (fields != NOTIFY_FIELDS || doc.isTagged(Flag.FlagInfo.NO_INHERIT)) {
+                encodeACL(octxt, m, doc.getEffectiveACL(), false);
+            }
+        }
         for (ToXMLExtension ext : extensions) {
             ext.encodeDocumentAdditionalAttribute(m, ifmt, octxt, doc, fields);
         }
