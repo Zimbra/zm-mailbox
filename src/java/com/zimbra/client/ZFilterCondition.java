@@ -629,6 +629,14 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             return C_ADDRESSBOOK;
         }
 
+        public AddressBookOp getAddressBookOp() {
+            return op;
+        }
+
+        public String getHeader() {
+            return header;
+        }
+
         @Override
         Element toElement(Element parent) {
             Element test = parent.addElement(MailConstants.E_ADDRESS_BOOK_TEST);
