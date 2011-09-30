@@ -23,12 +23,24 @@ public class ElementTest {
         element.addElement("a").addAttribute("n", "pfxPassword").addText("secret");
         element.addElement("a").addAttribute("n", "hostPwd").addText("secret");
         element.addElement("a").addAttribute("n", "webexZimlet_pwd1").addText("secret");
-        element.addElement("dummy2").
-                addAttribute("password", "secret").
-                addAttribute("pass", "secret").
-                addAttribute("pwd", "secret");
+        element.addElement("dummy2")
+               .addAttribute("password", "secret")
+               .addAttribute("pass", "secret")
+               .addAttribute("pwd", "secret");
         element.addElement("prop").addAttribute("name", "passwd").addText("secret");
         String elementStr = element.prettyPrint(true);
         Assert.assertFalse("Sensitive values have not been masked\n" + elementStr, elementStr.contains("secret"));
+    }
+
+    @Test
+    public void jsonNamespace() throws Exception {
+        Element json = Element.parseJSON("{ \"purge\": [{}] }");
+        Assert.assertEquals("default toplevel namespace", "urn:zimbraSoap", json.getNamespaceURI(""));
+
+        json = Element.parseJSON("{ \"purge\": [{}], \"_jsns\": \"urn:zimbraMail\" }");
+        Assert.assertEquals("explicit toplevel namespace", "urn:zimbraMail", json.getNamespaceURI(""));
+
+        json = Element.parseJSON("{ \"purge\": [{}], foo: { a: 1, \"_jsns\": \"urn:zimbraMail\" } }");
+        Assert.assertEquals("explicit child namespace", "urn:zimbraMail", json.getElement("foo").getNamespaceURI(""));
     }
 }

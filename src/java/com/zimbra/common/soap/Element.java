@@ -1248,10 +1248,15 @@ public abstract class Element implements Cloneable {
         }
 
         static Element parseElement(JSRequest jsr, QName qname, ElementFactory factory) throws SoapParseException {
-            return parseElement(jsr, qname.getName(), factory, null).setNamespace("", qname.getNamespaceURI());
+            Element elt = parseElement(jsr, qname.getName(), factory, null);
+            if (elt.getNamespaceURI("") == null) {
+                elt.setNamespace("", qname.getNamespaceURI());
+            }
+            return elt;
         }
 
-        private static Element parseElement(JSRequest jsr, String name, ElementFactory factory, Element parent) throws SoapParseException {
+        private static Element parseElement(JSRequest jsr, String name, ElementFactory factory, Element parent)
+        throws SoapParseException {
             boolean isAttrs = parent != null && name.equals(E_ATTRS);
             Element elt = isAttrs ? null : factory.createElement(name);
             jsr.skipChar('{');
