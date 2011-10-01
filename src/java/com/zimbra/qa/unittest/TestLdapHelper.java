@@ -14,21 +14,30 @@
  */
 package com.zimbra.qa.unittest;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.*;
+
 import static org.junit.Assert.*;
 
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapHelper;
 import com.zimbra.cs.account.ldap.LdapProv;
+import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
 import com.zimbra.cs.ldap.LdapException.LdapMultipleEntriesMatchedException;
 import com.zimbra.cs.ldap.LdapException.LdapSizeLimitExceededException;
+import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
+import com.zimbra.cs.ldap.LdapServerType;
+import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.ZAttributes;
+import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZSearchControls;
@@ -40,6 +49,7 @@ public class TestLdapHelper extends TestLdap {
     private static TestLdap.TestConfig testConfig;
     private static LdapProv prov;
     private static LdapHelper ldapHelper;
+    private static Domain domain;
     
     @BeforeClass
     public static void init() throws Exception {
@@ -47,6 +57,17 @@ public class TestLdapHelper extends TestLdap {
         
         prov = ((LdapProv) Provisioning.getInstance());
         ldapHelper = prov.getHelper();
+        domain = TestLdapProvDomain.createDomain(prov, baseDomainName(), null);
+    }
+    
+    @AfterClass
+    public static void cleanup() throws Exception {
+        String baseDomainName = baseDomainName();
+        TestLdap.deleteEntireBranch(baseDomainName);
+    }
+    
+    private static String baseDomainName() {
+        return TestLdapZLdapContext.class.getName().toLowerCase();
     }
     
     @Test
@@ -92,7 +113,7 @@ public class TestLdapHelper extends TestLdap {
     @Test
     public void getAttributes() throws Exception {
         String dn = prov.getDIT().configDN();
-        ZAttributes attrs = ldapHelper.getAttributes(dn);
+        ZAttributes attrs = ldapHelper.getAttributes(LdapUsage.UNITTEST, dn);
         assertEquals("config", attrs.getAttrString(Provisioning.A_cn));
     }
     
@@ -102,7 +123,7 @@ public class TestLdapHelper extends TestLdap {
         
         boolean caughtException = false;
         try {
-            ZAttributes attrs = ldapHelper.getAttributes(dn);
+            ZAttributes attrs = ldapHelper.getAttributes(LdapUsage.UNITTEST, dn);
             
         } catch (LdapEntryNotFoundException e) {
             caughtException = true;
@@ -201,6 +222,22 @@ public class TestLdapHelper extends TestLdap {
         // is thrown,  See commons on ZLdapContext.searchDir().
         if (testConfig != TestLdap.TestConfig.UBID) {
             assertEquals(SIZE_LIMIT, numFound);
+        }
+    }
+    
+    @Test
+    public void testAndModifyAttributes() throws Exception {
+        ZLdapFilter filter = ZLdapFilterFactory.getInstance().domainLockedForEagerAutoProvision();
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvLock, "blah");
+        
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.UNITTEST);
+            ldapHelper.testAndModifyEntry(zlc, ((LdapEntry)domain).getDN(), 
+                    filter, attrs, domain);
+        } finally {
+            LdapClient.closeContext(zlc);
         }
     }
 }

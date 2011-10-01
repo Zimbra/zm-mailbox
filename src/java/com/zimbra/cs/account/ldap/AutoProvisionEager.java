@@ -166,8 +166,8 @@ public class AutoProvisionEager extends AutoProvision {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLock, localServer.getId());
         
-        return prov.getHelper().testAndModifyEntry(zlc, ((LdapEntry)domain).getDN(), filter, attrs, 
-                domain, LdapUsage.AUTO_PROVISION);
+        return prov.getHelper().testAndModifyEntry(zlc, ((LdapEntry)domain).getDN(), 
+                filter, attrs, domain);
     }
     
     private void unlockDomain(ZLdapContext zlc) throws ServiceException {

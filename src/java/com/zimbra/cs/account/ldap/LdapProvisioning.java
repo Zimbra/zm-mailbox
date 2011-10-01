@@ -374,7 +374,7 @@ public class LdapProvisioning extends LdapProv {
 
         try {
             String dn = ((LdapEntry)entry).getDN();
-            ZAttributes attributes = helper.getAttributes(dn, initZlc, LdapServerType.REPLICA);
+            ZAttributes attributes = helper.getAttributes(initZlc, dn);
 
             Map<String, Object> attrs = attributes.getAttrs();
 
@@ -458,7 +458,7 @@ public class LdapProvisioning extends LdapProv {
         boolean result = false;
 
         try {
-            ZAttributes attrs = helper.getAttributes(mDIT.configDN());
+            ZAttributes attrs = helper.getAttributes(LdapUsage.HEALTH_CHECK, mDIT.configDN());
             result = attrs != null; // not really needed, getAttributes should never return null
         } catch (ServiceException e) {
             mLog.warn("LDAP health check error", e);
@@ -474,7 +474,7 @@ public class LdapProvisioning extends LdapProv {
                 if (sConfig == null) {
                     String configDn = mDIT.configDN();
                     try {
-                        ZAttributes attrs = helper.getAttributes(configDn);
+                        ZAttributes attrs = helper.getAttributes(LdapUsage.GET_GLOBALCONFIG, configDn);
                         sConfig = new LdapConfig(configDn, attrs, this);
                     } catch (ServiceException e) {
                         throw ServiceException.FAILURE("unable to get config", e);
@@ -493,7 +493,7 @@ public class LdapProvisioning extends LdapProv {
                 if (sGlobalGrant == null) {
                     String globalGrantDn = mDIT.globalGrantDN();
                     try {
-                        ZAttributes attrs = helper.getAttributes(globalGrantDn);
+                        ZAttributes attrs = helper.getAttributes(LdapUsage.GET_GLOBALGRANT, globalGrantDn);
                         sGlobalGrant = new LdapGlobalGrant(globalGrantDn, attrs, this);
                     } catch (ServiceException e) {
                         throw ServiceException.FAILURE("unable to get globalgrant", e);
@@ -1658,7 +1658,7 @@ public class LdapProvisioning extends LdapProv {
                  * check if the alias is a dangling alias.  If so remove the dangling alias
                  * and create a new one.
                  */
-                ZAttributes attrs = helper.getAttributes(aliasDn, zlc, LdapServerType.MASTER);
+                ZAttributes attrs = helper.getAttributes(zlc, aliasDn);
 
                 // see if the entry is an alias
                 if (!isEntryAlias(attrs))
@@ -1780,7 +1780,7 @@ public class LdapProvisioning extends LdapProv {
             ZAttributes aliasAttrs = null;
             Alias aliasEntry = null;
             try {
-                aliasAttrs = helper.getAttributes(aliasDn, zlc, LdapServerType.MASTER);
+                aliasAttrs = helper.getAttributes(zlc, aliasDn);
 
                 // see if the entry is an alias
                 if (!isEntryAlias(aliasAttrs))
@@ -2344,7 +2344,8 @@ public class LdapProvisioning extends LdapProv {
 
         try {
             String dn = mDIT.cosNametoDN(name);
-            ZAttributes attrs = helper.getAttributes(dn, initZlc, LdapServerType.REPLICA);
+            ZAttributes attrs = helper.getAttributes(
+                    initZlc, LdapServerType.REPLICA, LdapUsage.GET_COS, dn, null);
             cos = new LdapCos(dn, attrs, this);
             sCosCache.put(cos);
             return cos;
@@ -2881,7 +2882,7 @@ public class LdapProvisioning extends LdapProv {
 
         try {
             String dn = mDIT.serverNameToDN(name);
-            ZAttributes attrs = helper.getAttributes(dn);
+            ZAttributes attrs = helper.getAttributes(LdapUsage.GET_SERVER, dn);
             LdapServer s = new LdapServer(dn, attrs, getConfig().getServerDefaults(), this);
             sServerCache.put(s);
             return s;
@@ -4460,7 +4461,8 @@ public class LdapProvisioning extends LdapProv {
 
         try {
             String dn = mDIT.zimletNameToDN(name);
-            ZAttributes attrs = helper.getAttributes(dn, initZlc, LdapServerType.REPLICA);
+            ZAttributes attrs = helper.getAttributes(
+                    initZlc, LdapServerType.REPLICA, LdapUsage.GET_ZIMLET, dn, null);
             zimlet = new LdapZimlet(dn, attrs, this);
             if (useCache) {
                 ZimletUtil.reloadZimlet(name);
@@ -6570,7 +6572,7 @@ public class LdapProvisioning extends LdapProv {
 
         try {
             String dn = mDIT.xmppcomponentNameToDN(name);
-            ZAttributes attrs = helper.getAttributes(dn);
+            ZAttributes attrs = helper.getAttributes(LdapUsage.GET_XMPPCOMPONENT, dn);
             XMPPComponent x = new LdapXMPPComponent(dn, attrs, this);
             sXMPPComponentCache.put(x);
             return x;

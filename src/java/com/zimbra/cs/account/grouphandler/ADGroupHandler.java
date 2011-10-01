@@ -213,7 +213,7 @@ public class ADGroupHandler extends GroupHandler {
         try {
             zlc = getExternalDelegatedAdminGroupsLdapContext(domain, asAdmin);
             
-            ZAttributes attrs = prov.getHelper().getAttributes(extDN, zlc, new String[]{MEMBER_OF_ATTR});
+            ZAttributes attrs = prov.getHelper().getAttributes(zlc, extDN, new String[]{MEMBER_OF_ATTR});
             
             return attrs.getMultiAttrStringAsList(MEMBER_OF_ATTR, CheckBinary.NOCHECK);
         } finally {

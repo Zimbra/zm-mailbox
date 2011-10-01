@@ -23,6 +23,10 @@ public abstract class ZLdapContext extends ZLdapElement implements ILdapContext 
     protected ZLdapContext(LdapUsage usage) {
         this.usage = usage;
     }
+    
+    public LdapUsage getUsage() {
+        return usage;
+    }
 
     public abstract void closeContext();
     

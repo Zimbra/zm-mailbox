@@ -53,7 +53,6 @@ import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapServerType;
-import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.unboundid.UBIDLogger.LdapOp;
 import com.zimbra.cs.ldap.unboundid.UBIDLogger.Timer;
 import com.zimbra.cs.ldap.LdapUsage;
@@ -162,14 +161,11 @@ public class UBIDLdapContext extends ZLdapContext {
                 start = ZimbraPerf.STOPWATCH_LDAP_DC.start();
             }
             
-            Timer timer = UBIDLogger.beforeTimedOp();
-            LDAPConnection connection = pool.getConnection();
-            UBIDLogger.afterTimedOp(LdapOp.GET_CONN, timer, usage, connection, pool);
+            LDAPConnection connection = UBIDLdapOperation.GET_CONNECTION(this).execute(pool);
             
             if (isZimbraLdap) {
                 ZimbraPerf.STOPWATCH_LDAP_DC.stop(start);
             }
-            
             
             LdapConnectionPool.debugCheckOut(pool, connection);
             return connection;
@@ -185,6 +181,10 @@ public class UBIDLdapContext extends ZLdapContext {
     
     public String getConnectionName() {
         return conn.getConnectionName();
+    }
+    
+    LDAPConnection getConn() {
+        return conn;
     }
     
     private LdapException mapToLdapException(String message, LDAPException e) {
@@ -237,13 +237,10 @@ public class UBIDLdapContext extends ZLdapContext {
     @Override
     public void createEntry(ZMutableEntry entry) throws ServiceException {
         try {
-            Timer timer = UBIDLogger.beforeTimedOp();
-            conn.add(((UBIDMutableEntry) entry).getNative());
-            UBIDLogger.afterTimedOp(LdapOp.CREATE_ENTRY, timer, usage, conn, entry);
+            UBIDLdapOperation.CREATE_ENTRY(this).execute(((UBIDMutableEntry) entry).getNative());
         } catch (LDAPException e) {
             throw mapToLdapException("unable to create entry", e);
         }
-        
     }
     
     @Override
@@ -298,9 +295,7 @@ public class UBIDLdapContext extends ZLdapContext {
                     
             searchRequest.setAttributes("dn");
             
-            Timer timer = UBIDLogger.beforeTimedOp();
-            SearchResult result = conn.search(searchRequest);
-            UBIDLogger.afterTimedOp(LdapOp.SEARCH, timer, usage, conn, dn, filter.toString());
+            SearchResult result = UBIDLdapOperation.SEARCH(this).execute(searchRequest);
             
             List<SearchResultEntry> entries = result.getSearchEntries();
             for (SearchResultEntry entry : entries) {
@@ -314,9 +309,7 @@ public class UBIDLdapContext extends ZLdapContext {
     @Override
     public ZAttributes getAttributes(String dn, String[] attrs) throws LdapException {
         try {
-            Timer timer = UBIDLogger.beforeTimedOp();
-            SearchResultEntry entry = (attrs == null) ? conn.getEntry(dn) : conn.getEntry(dn, attrs);
-            UBIDLogger.afterTimedOp(LdapOp.GET_ENTRY, timer, usage, conn, dn);
+            SearchResultEntry entry = UBIDLdapOperation.GET_ENTRY(this).execute(dn, attrs);
             
             if (entry == null) {
                 throw LdapException.ENTRY_NOT_FOUND("entry not found at " + dn, null);
@@ -330,10 +323,7 @@ public class UBIDLdapContext extends ZLdapContext {
     @Override
     public ZLdapSchema getSchema() throws LdapException {
         try {
-            Timer timer = UBIDLogger.beforeTimedOp();
-            Schema schema = conn.getSchema();
-            UBIDLogger.afterTimedOp(LdapOp.GET_SCHEMA, timer, usage, conn);
-            
+            Schema schema = UBIDLdapOperation.GET_SCHEMA(this).execute();
             return new UBIDLdapSchema(schema);
         } catch (LDAPException e) {
             throw mapToLdapException("unable to get schema", e);
@@ -341,14 +331,11 @@ public class UBIDLdapContext extends ZLdapContext {
     }
     
     @Override
-    @TODO
     public void modifyAttributes(String dn, ZModificationList modList) 
     throws LdapException {
         try {
-            // TODO: need to check result? or can rely on the exception?
-            Timer timer = UBIDLogger.beforeTimedOp();
-            LDAPResult result = conn.modify(dn, ((UBIDModificationList)modList).getModList());
-            UBIDLogger.afterTimedOp(LdapOp.MODIFY_ATTRS, timer, usage, conn, dn, modList);
+            LDAPResult result = UBIDLdapOperation.MODIFY_ATTRS(this).execute(
+                    dn, ((UBIDModificationList)modList).getModList());
         } catch (LDAPException e) {
             throw mapToLdapException("unable to modify attributes", e);
         }
@@ -356,21 +343,19 @@ public class UBIDLdapContext extends ZLdapContext {
 
     @Override
     public boolean testAndModifyAttributes(String dn,
-            ZModificationList modList, ZLdapFilter testFilter) throws LdapException {
+            ZModificationList modList, ZLdapFilter testFilter) 
+    throws LdapException {
         try {
             ModifyRequest modReq = new ModifyRequest(dn, ((UBIDModificationList)modList).getModList());
             modReq.addControl(new AssertionRequestControl(((UBIDLdapFilter) testFilter).getNative()));
             
-            Timer timer = UBIDLogger.beforeTimedOp();
-            LDAPResult result = conn.modify(modReq);
-            UBIDLogger.afterTimedOp(LdapOp.MODIFY_ATTRS, timer, usage, conn, dn, modList);
+            LDAPResult result = UBIDLdapOperation.TEST_AND_MODIFY_ATTRS(this).execute(modReq);
             return true;
         } catch (LDAPException e) {
             if (e.getResultCode() == ResultCode.ASSERTION_FAILED) {
                 // The modification failed because the the filter does not match the target entry
                 return false;
-            }
-            else {
+            } else {
                 // The modification failed for some other reason.
                 throw mapToLdapException("unable to test and modify attributes", e);
             }
@@ -392,9 +377,7 @@ public class UBIDLdapContext extends ZLdapContext {
                     
             searchRequest.setAttributes("dn");
             
-            Timer timerSearch = UBIDLogger.beforeTimedOp();
-            SearchResult result = conn.search(searchRequest);
-            UBIDLogger.afterTimedOp(LdapOp.SEARCH, timerSearch, usage, conn, oldDn, filter.toString());
+            SearchResult result = UBIDLdapOperation.SEARCH(this).execute(searchRequest);
             
             List<SearchResultEntry> entries = result.getSearchEntries();
             for (SearchResultEntry entry : entries) {
@@ -402,10 +385,7 @@ public class UBIDLdapContext extends ZLdapContext {
                 String childDn = entryDN.toNormalizedString();
                 String childRdn = entryDN.getRDNString();
                 
-                Timer timer = UBIDLogger.beforeTimedOp();
-                conn.modifyDN(childDn, childRdn, true, newDn);
-                UBIDLogger.afterTimedOp(LdapOp.MODIFY_DN, timer, usage, conn, entryDN, 
-                        new DN(entryDN.getRDN(), new DN(newDn)));
+                UBIDLdapOperation.MODIFY_DN(this).execute(childDn, childRdn, true, newDn);
             }
         } catch (LDAPException e) {
             throw mapToLdapException("unable to move children", e);
@@ -419,14 +399,10 @@ public class UBIDLdapContext extends ZLdapContext {
             String newRDN = newDN.getRDNString();
             String newSuperiorDN = newDN.getParentString();
             
-            Timer timer = UBIDLogger.beforeTimedOp();
-            conn.modifyDN(oldDn, newRDN, true, newSuperiorDN);
-            UBIDLogger.afterTimedOp(LdapOp.MODIFY_DN, timer, usage, conn, 
-                    new DN(oldDn), new DN(newDn));
+            UBIDLdapOperation.MODIFY_DN(this).execute(oldDn, newRDN, true, newSuperiorDN);
         } catch (LDAPException e) {
             throw mapToLdapException("unable to rename entry", e);
         }
-        
     }
     
     @Override
@@ -471,9 +447,7 @@ public class UBIDLdapContext extends ZLdapContext {
                 
                 SearchResult result = null;
                 try {
-                    Timer timer = UBIDLogger.beforeTimedOp();
-                    result = conn.search(searchRequest);
-                    UBIDLogger.afterTimedOp(LdapOp.SEARCH, timer, usage, conn, base, filter);
+                    result = UBIDLdapOperation.SEARCH(this).execute(searchRequest);
                 } catch (LDAPException e) {
                     if (ResultCode.SIZE_LIMIT_EXCEEDED == e.getResultCode() && wantPartialResult) {
                         // if callsite wants partial result, return them
@@ -536,9 +510,7 @@ public class UBIDLdapContext extends ZLdapContext {
             
             searchRequest.setAttributes(sc.getReturnAttrs());
             
-            Timer timer = UBIDLogger.beforeTimedOp();
-            SearchResult result = conn.search(searchRequest);
-            UBIDLogger.afterTimedOp(LdapOp.SEARCH, timer, usage, conn, baseDN, filter.toFilterString());
+            SearchResult result = UBIDLdapOperation.SEARCH(this).execute(searchRequest);
             
             return new UBIDSearchResultEnumeration(result);
         } catch (LDAPException e) {
@@ -549,9 +521,7 @@ public class UBIDLdapContext extends ZLdapContext {
     @Override
     public void deleteEntry(String dn) throws LdapException {
         try {
-            Timer timer = UBIDLogger.beforeTimedOp();
-            conn.delete(dn);
-            UBIDLogger.afterTimedOp(LdapOp.DELETE_ENTRY, timer, usage, conn, dn);
+            UBIDLdapOperation.DELETE_ENTRY(this).execute(dn);
         } catch (LDAPException e) {
             throw mapToLdapException("unable to delete entry", e);
         }
@@ -597,10 +567,11 @@ public class UBIDLdapContext extends ZLdapContext {
                 
         LdapServerPool serverPool = new LdapServerPool(config);
         LDAPConnection connection = null;
+        BindResult bindResult = null;
         
+        UBIDLdapOperation.GenericOp op = UBIDLdapOperation.GENERIC_OP(LdapOp.OPEN_CONN, usage);
+        op.begin();
         try {
-            Timer timer = UBIDLogger.beforeTimedOp();
-            
             connection = serverPool.getServerSet().getConnection();
             if (serverPool.getConnectionType() == LdapConnType.STARTTLS) {
                 SSLContext startTLSContext = 
@@ -619,16 +590,20 @@ public class UBIDLdapContext extends ZLdapContext {
                 }
             }
             
-            UBIDLogger.afterTimedOp(LdapOp.OPEN_CONN, timer, usage,
-                    connection, serverPool, bindDN);
-            
-            BindResult bindResult = connection.bind(bindDN, password);
+            bindResult = connection.bind(bindDN, password);
             if (bindResult.getResultCode() != ResultCode.SUCCESS) {
                 throw ServiceException.FAILURE("unable to bind", null);
             }
         } catch (LDAPException e) {
             throw UBIDLdapException.mapToExternalLdapException("unable to ldap authenticate", e);    
         } finally {
+            op.end(bindResult, 
+                    String.format("conn=[%d], url=[%s], connType=[%s], bindDN=[%s]",
+                    connection == null ? "null" : connection.getConnectionID(),
+                    serverPool.getRawUrls(),
+                    serverPool.getConnectionType().name(),
+                    bindDN));
+            
             if (connection != null) {
                 UBIDLogger.beforeOp(LdapOp.CLOSE_CONN, connection);
                 connection.close();

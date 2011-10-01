@@ -39,8 +39,9 @@ public class UBIDLogger {
         GET_ENTRY("get entry"),
         GET_SCHEMA("get schema"),
         MODIFY_DN("modify DN"),
-        MODIFY_ATTRS("modify entry"),
-        SEARCH("search");
+        MODIFY_ATTRS("modify attributes"),
+        SEARCH("search"),
+        TEST_AND_MODIFY_ATTRS("test and modify attributes");
         
         private String desc;
         

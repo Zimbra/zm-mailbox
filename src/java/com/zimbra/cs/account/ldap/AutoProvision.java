@@ -296,7 +296,7 @@ public abstract class AutoProvision {
         
         try {
             zlc = LdapClient.getExternalContext(config, LdapUsage.AUTO_PROVISION);
-            return prov.getHelper().getAttributes(dn, zlc, getAttrsToFetch());
+            return prov.getHelper().getAttributes(zlc, dn, getAttrsToFetch());
         } finally {
             LdapClient.closeContext(zlc);
         }
@@ -356,7 +356,7 @@ public abstract class AutoProvision {
                 // get attrs by external DN template
                 String dn = LdapUtilCommon.computeAuthDn(loginName, bindDNTemplate);
                 ZimbraLog.autoprov.debug("AutoProvision: computed external DN" + dn);
-                return new ExternalEntry(dn, prov.getHelper().getAttributes(dn, zlc, attrs));
+                return new ExternalEntry(dn, prov.getHelper().getAttributes(zlc, dn, attrs));
             }
             
         } finally {

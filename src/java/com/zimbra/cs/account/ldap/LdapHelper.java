@@ -100,7 +100,7 @@ public abstract class LdapHelper {
      * @throws ServiceException
      */
     public abstract boolean testAndModifyEntry(ZLdapContext zlc, String dn, ZLdapFilter testFilter,
-            Map<String, ? extends Object> attrs,  Entry entry, LdapUsage ldapUsage)
+            Map<String, ? extends Object> attrs,  Entry entry)
     throws ServiceException;
     
     /**
@@ -168,35 +168,27 @@ public abstract class LdapHelper {
      * @throws LdapEntryNotFoundException  if the entry is not found
      * @throws ServiceException            all other errors
      */
-    public abstract ZAttributes getAttributes(String dn, ZLdapContext initZlc, 
-            LdapServerType ldapServerType, String[] returnAttrs) 
+    public abstract ZAttributes getAttributes(ZLdapContext initZlc, 
+            LdapServerType ldapServerType, LdapUsage usage,
+            String dn, String[] returnAttrs) 
     throws LdapEntryNotFoundException, ServiceException;
     
-    public ZAttributes getAttributes(String dn, ZLdapContext initZlc, 
-            LdapServerType ldapServerType) 
+    public ZAttributes getAttributes(ZLdapContext initZlc, String dn, String[] returnAttrs) 
     throws LdapEntryNotFoundException, ServiceException {
-        return getAttributes(dn, initZlc, ldapServerType, null);
+        assert(initZlc != null);
+        return getAttributes(initZlc, (LdapServerType) null, (LdapUsage) null, dn, returnAttrs);
     }
     
-    public ZAttributes getAttributes(String dn, ZLdapContext initZlc) 
+    public ZAttributes getAttributes(ZLdapContext initZlc, String dn) 
     throws LdapEntryNotFoundException, ServiceException {
-        if (initZlc == null) {
-            throw ServiceException.FAILURE("internal error", null);
-        }
-        return getAttributes(dn, initZlc, null, null);
+        assert(initZlc != null);
+        return getAttributes(initZlc, (LdapServerType) null, (LdapUsage) null, dn, (String[]) null);
     }
     
-    public ZAttributes getAttributes(String dn, ZLdapContext initZlc, String[] returnAttrs) 
+    public ZAttributes getAttributes(LdapUsage usage, String dn) 
     throws LdapEntryNotFoundException, ServiceException {
-        if (initZlc == null) {
-            throw ServiceException.FAILURE("internal error", null);
-        }
-        return getAttributes(dn, initZlc, null, returnAttrs);
-    }
-    
-    public ZAttributes getAttributes(String dn) 
-    throws LdapEntryNotFoundException, ServiceException {
-        return getAttributes(dn, null, LdapServerType.REPLICA, null);
+        return getAttributes((ZLdapContext) null, LdapServerType.REPLICA, usage, 
+                dn, (String[]) null);
     }
     
     /**

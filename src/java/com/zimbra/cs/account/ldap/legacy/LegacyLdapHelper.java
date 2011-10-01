@@ -104,7 +104,7 @@ public class LegacyLdapHelper extends LdapHelper {
     @Override
     public boolean testAndModifyEntry(ZLdapContext zlc, String dn,
             ZLdapFilter testFilter, Map<String, ? extends Object> attrs,
-            Entry entry, LdapUsage ldapUsage) throws ServiceException {
+            Entry entry) throws ServiceException {
         throw new UnsupportedOperationException();
     }
 
@@ -116,8 +116,9 @@ public class LegacyLdapHelper extends LdapHelper {
     }
 
     @Override
-    public ZAttributes getAttributes(String dn, ZLdapContext initZlc, 
-            LdapServerType ldapServerType, String[] returnAttrs) 
+    public ZAttributes getAttributes(ZLdapContext initZlc, 
+            LdapServerType ldapServerType, LdapUsage usage,
+            String dn, String[] returnAttrs) 
     throws LdapEntryNotFoundException, ServiceException {
         throw new UnsupportedOperationException();
     }

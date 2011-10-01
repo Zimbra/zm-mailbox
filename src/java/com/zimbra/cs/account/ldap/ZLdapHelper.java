@@ -181,7 +181,7 @@ public class ZLdapHelper extends LdapHelper {
     @Override
     public boolean testAndModifyEntry(ZLdapContext zlc, String dn,
             ZLdapFilter testFilter, Map<String, ? extends Object> attrs,
-            Entry entry, LdapUsage ldapUsage) throws ServiceException {
+            Entry entry) throws ServiceException {
         ZModificationList modList = getModList(zlc, dn, attrs, entry);
         return zlc.testAndModifyAttributes(dn, modList, testFilter);
     }
@@ -230,13 +230,16 @@ public class ZLdapHelper extends LdapHelper {
     }
 
     @Override
-    public ZAttributes getAttributes(String dn, ZLdapContext initZlc, 
-            LdapServerType ldapServerType, String[] returnAttrs) 
+    public ZAttributes getAttributes(ZLdapContext initZlc, 
+            LdapServerType ldapServerType, LdapUsage usage,
+            String dn, String[] returnAttrs) 
     throws LdapEntryNotFoundException, ServiceException {
         ZLdapContext zlc = initZlc;
         try {
             if (zlc == null) {
-                zlc = LdapClient.getContext(ldapServerType, LdapUsage.GET_ENTRY);
+                assert(ldapServerType != null);
+                assert(usage != null);
+                zlc = LdapClient.getContext(ldapServerType, usage);
             }
             return zlc.getAttributes(dn, returnAttrs);
         /*  all callsites with the following @TODOEXCEPTIONMAPPING pattern can have ease of mind now and remove the 
