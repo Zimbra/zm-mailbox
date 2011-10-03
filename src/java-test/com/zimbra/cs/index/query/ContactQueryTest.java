@@ -81,4 +81,39 @@ public final class ContactQueryTest {
         results.close();
     }
 
+    @Test
+    public void wildcard() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        Map<String, Object> fields = new HashMap<String, Object>();
+        fields.put(ContactConstants.A_firstName, "First*");
+        fields.put(ContactConstants.A_lastName, "Las*t");
+        fields.put(ContactConstants.A_email, "first.last@zimbra.com");
+        Contact contact = mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        ZimbraQueryResults results = mbox.index.search(new OperationContext(mbox), "contact:\"First\"",
+                EnumSet.of(MailItem.Type.CONTACT), SortBy.NONE, 100);
+        Assert.assertTrue(results.hasNext());
+        Assert.assertEquals(contact.getId(), results.getNext().getItemId());
+        results.close();
+
+        results = mbox.index.search(new OperationContext(mbox), "contact:\"First*\"",
+                EnumSet.of(MailItem.Type.CONTACT), SortBy.NONE, 100);
+        Assert.assertTrue(results.hasNext());
+        Assert.assertEquals(contact.getId(), results.getNext().getItemId());
+        results.close();
+
+        results = mbox.index.search(new OperationContext(mbox), "contact:\"Las*\"",
+                EnumSet.of(MailItem.Type.CONTACT), SortBy.NONE, 100);
+        Assert.assertTrue(results.hasNext());
+        Assert.assertEquals(contact.getId(), results.getNext().getItemId());
+        results.close();
+
+        results = mbox.index.search(new OperationContext(mbox), "contact:\"Las*t\"",
+                EnumSet.of(MailItem.Type.CONTACT), SortBy.NONE, 100);
+        Assert.assertTrue(results.hasNext());
+        Assert.assertEquals(contact.getId(), results.getNext().getItemId());
+        results.close();
+    }
+
 }

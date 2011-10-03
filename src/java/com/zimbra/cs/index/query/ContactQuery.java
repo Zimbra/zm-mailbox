@@ -46,7 +46,7 @@ import com.zimbra.cs.mailbox.Mailbox;
  * @author ysasaki
  */
 public final class ContactQuery extends Query {
-    private List<String> tokens = new ArrayList<String>();
+    private final List<String> tokens = new ArrayList<String>();
 
     public ContactQuery(String text) {
         TokenStream stream = new ContactTokenFilter(new AddrCharTokenizer(new StringReader(text)));
@@ -54,7 +54,7 @@ public final class ContactQuery extends Query {
         try {
             stream.reset();
             while (stream.incrementToken()) {
-                tokens.add(CharMatcher.is('*').removeFrom(termAttr)); // remove wildcard characters
+                tokens.add(CharMatcher.is('*').trimTrailingFrom(termAttr)); // remove trailing wildcard characters
             }
             stream.end();
             stream.close();
