@@ -21,51 +21,52 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
+import com.google.common.base.Strings;
 import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.soap.mail.type.FilterTestImportance;
+import com.zimbra.soap.mail.type.FilterAction;
+import com.zimbra.soap.mail.type.FilterRule;
+import com.zimbra.soap.mail.type.FilterTest;
+import com.zimbra.soap.mail.type.FilterTests;
 
 public final class SoapToSieve {
 
-    private final Element root;
+    private final List<FilterRule> rules;
     private StringBuilder buffer;
 
-    public SoapToSieve(Element filterRulesRoot) throws ServiceException {
-        String name = filterRulesRoot.getName();
-        if (!name.equals(MailConstants.E_FILTER_RULES)) {
-            throw ServiceException.FAILURE("Invalid element: " + name, null);
-        }
-        root = filterRulesRoot;
+    public SoapToSieve(List<FilterRule> rules) {
+        this.rules = rules;
     }
 
     public String getSieveScript() throws ServiceException {
         if (buffer == null) {
             buffer = new StringBuilder();
             buffer.append("require [\"fileinto\", \"reject\", \"tag\", \"flag\"];\n");
-            for (Element rule : root.listElements(MailConstants.E_FILTER_RULE)) {
-                buffer.append("\n");
+            for (FilterRule rule : rules) {
+                buffer.append('\n');
                 handleRule(rule);
             }
         }
         return buffer.toString();
     }
 
-    private void handleRule(Element rule) throws ServiceException {
-        String name = rule.getAttribute(MailConstants.A_NAME);
-        boolean isActive = rule.getAttributeBool(MailConstants.A_ACTIVE, true);
+    private void handleRule(FilterRule rule) throws ServiceException {
+        String name = rule.getName();
+        boolean active = rule.isActive();
 
-        Element testsElement = rule.getElement(MailConstants.E_FILTER_TESTS);
-        String s = testsElement.getAttribute(MailConstants.A_CONDITION, Sieve.Condition.allof.toString());
-        s = s.toLowerCase();
-        Sieve.Condition condition = Sieve.Condition.fromString(s);
+        FilterTests tests = rule.getFilterTests();
+        Sieve.Condition condition = Sieve.Condition.fromString(tests.getCondition());
+        if (condition == null) {
+            condition = Sieve.Condition.allof;
+        }
 
         // Rule name
-        buffer.append("# ").append(name).append("\n");
-        if (isActive) {
+        buffer.append("# ").append(name).append('\n');
+        if (active) {
             buffer.append("if ");
         } else {
             buffer.append("disabled_if ");
@@ -73,85 +74,79 @@ public final class SoapToSieve {
         buffer.append(condition).append(" (");
 
         // Handle tests
-        List<Element> testElements = testsElement.listElements();
-        Map<Integer, String> tests = new TreeMap<Integer, String>();
-        for (Element test : testElements) {
-            s = handleTest(test);
-            if (s != null) {
-                int index = FilterUtil.getIndex(test);
-                FilterUtil.addToMap(tests, index, s);
+        Map<Integer, String> index2test = new TreeMap<Integer, String>(); // sort by index
+        for (FilterTest test : tests.getTests()) {
+            String result = handleTest(test);
+            if (result != null) {
+                FilterUtil.addToMap(index2test, test.getIndex(), result);
             }
         }
-        buffer.append(StringUtil.join(",\n  ", tests.values()));
+        Joiner.on(",\n  ").appendTo(buffer, index2test.values());
         buffer.append(") {\n");
 
         // Handle actions
-        Element actionsElement = rule.getElement(MailConstants.E_FILTER_ACTIONS);
-        Map<Integer, String> actions = new TreeMap<Integer, String>(); // Sorts by index
-        for (Element action : actionsElement.listElements()) {
-            s = handleAction(action);
-            if (s != null) {
-                int index = FilterUtil.getIndex(action);
-                FilterUtil.addToMap(actions, index, s);
+        Map<Integer, String> index2action = new TreeMap<Integer, String>(); // sort by index
+        for (FilterAction action : rule.getFilterActions()) {
+            String result = handleAction(action);
+            if (result != null) {
+                FilterUtil.addToMap(index2action, action.getIndex(), result);
             }
         }
-        for (String action : actions.values()) {
+        for (String action : index2action.values()) {
             buffer.append("    ").append(action).append(";\n");
         }
         buffer.append("}\n");
     }
 
-    private String handleTest(Element test) throws ServiceException {
-        String name = test.getName();
+    private String handleTest(FilterTest test) throws ServiceException {
         String snippet = null;
 
-        if (name.equals(MailConstants.E_HEADER_TEST)) {
-            snippet = generateHeaderTest(test, "header");
-        } else if (name.equals(MailConstants.E_MIME_HEADER_TEST)) {
-            snippet = generateHeaderTest(test, "mime_header");
-        } else if (name.equals(MailConstants.E_ADDRESS_TEST)) {
-            snippet = generateAddressTest(test);
-        } else if (name.equals(MailConstants.E_HEADER_EXISTS_TEST)) {
-            String header = test.getAttribute(MailConstants.A_HEADER);
+        if (test instanceof FilterTest.HeaderTest) {
+            snippet = toSieve((FilterTest.HeaderTest) test);
+        } else if (test instanceof FilterTest.MimeHeaderTest) {
+            snippet = toSieve((FilterTest.MimeHeaderTest) test);
+        } else if (test instanceof FilterTest.AddressTest) {
+            snippet = toSieve((FilterTest.AddressTest) test);
+        } else if (test instanceof FilterTest.HeaderExistsTest) {
+            String header = ((FilterTest.HeaderExistsTest) test).getHeader();
             snippet = String.format("exists \"%s\"", FilterUtil.escape(header));
-        } else if (name.equals(MailConstants.E_SIZE_TEST)) {
-            String s = test.getAttribute(MailConstants.A_NUMBER_COMPARISON);
-            s = s.toLowerCase();
-            Sieve.NumberComparison comparison = Sieve.NumberComparison.fromString(s);
-            String sizeString = test.getAttribute(MailConstants.A_SIZE);
+        } else if (test instanceof FilterTest.SizeTest) {
+            FilterTest.SizeTest sizeTest = (FilterTest.SizeTest) test;
+            Sieve.NumberComparison comp = Sieve.NumberComparison.fromString(sizeTest.getNumberComparison());
+            String size = sizeTest.getSize();
             try {
-                FilterUtil.parseSize(sizeString);
+                FilterUtil.parseSize(size);
             } catch (NumberFormatException e) {
-                throw ServiceException.INVALID_REQUEST("Invalid size: " + sizeString, e);
+                throw ServiceException.INVALID_REQUEST("Invalid size: " + size, e);
             }
-            snippet = String.format("size :%s %s", comparison, sizeString);
-        } else if (name.equals(MailConstants.E_DATE_TEST)) {
-            String s = test.getAttribute(MailConstants.A_DATE_COMPARISON);
-            s = s.toLowerCase();
-            Sieve.DateComparison comparison = Sieve.DateComparison.fromString(s);
-            Date date = new Date(test.getAttributeLong(MailConstants.A_DATE) * 1000);
-            snippet = String.format("date :%s \"%s\"",
-                comparison, Sieve.DATE_PARSER.format(date));
-        } else if (name.equals(MailConstants.E_BODY_TEST)) {
-            boolean caseSensitive = test.getAttributeBool(MailConstants.A_CASE_SENSITIVE, false);
-            String value = test.getAttribute(MailConstants.A_VALUE);
-            String snippetFormat = caseSensitive ? "body :contains :comparator \"i;octet\" \"%s\"" : "body :contains \"%s\"";
-            snippet = String.format(snippetFormat, FilterUtil.escape(value));
-        } else if (name.equals(MailConstants.E_ADDRESS_BOOK_TEST)) {
-            snippet = "addressbook :in \"" + FilterUtil.escape(test.getAttribute(MailConstants.A_HEADER)) + '"';
-        } else if (name.equals(MailConstants.E_CONTACT_RANKING_TEST)) {
-            snippet = "contact_ranking :in \"" + FilterUtil.escape(test.getAttribute(MailConstants.A_HEADER)) + '"';
-        } else if (name.equals(MailConstants.E_ME_TEST)) {
-            snippet = "me :in \"" + FilterUtil.escape(test.getAttribute(MailConstants.A_HEADER)) + '"';
-        } else if (name.equals(MailConstants.E_ATTACHMENT_TEST)) {
+            snippet = String.format("size :%s %s", comp, size);
+        } else if (test instanceof FilterTest.DateTest) {
+            FilterTest.DateTest dateTest = (FilterTest.DateTest) test;
+            Sieve.DateComparison comp = Sieve.DateComparison.fromString(dateTest.getDateComparison());
+            Date date = new Date(dateTest.getDate() * 1000L);
+            snippet = String.format("date :%s \"%s\"", comp, Sieve.DATE_PARSER.format(date));
+        } else if (test instanceof FilterTest.BodyTest) {
+            FilterTest.BodyTest bodyTest = (FilterTest.BodyTest) test;
+            String format = bodyTest.isCaseSensitive() ?
+                    "body :contains :comparator \"i;octet\" \"%s\"" : "body :contains \"%s\"";
+            snippet = String.format(format, FilterUtil.escape(bodyTest.getValue()));
+        } else if (test instanceof FilterTest.AddressBookTest) {
+            FilterTest.AddressBookTest abTest = (FilterTest.AddressBookTest) test;
+            snippet = "addressbook :in \"" + FilterUtil.escape(abTest.getHeader()) + '"';
+        } else if (test instanceof FilterTest.ContactRankingTest) {
+            FilterTest.ContactRankingTest rankingTest = (FilterTest.ContactRankingTest) test;
+            snippet = "contact_ranking :in \"" + FilterUtil.escape(rankingTest.getHeader()) + '"';
+        } else if (test instanceof FilterTest.MeTest) {
+            FilterTest.MeTest meTest = (FilterTest.MeTest) test;
+            snippet = "me :in \"" + FilterUtil.escape(meTest.getHeader()) + '"';
+        } else if (test instanceof FilterTest.AttachmentTest) {
             snippet = "attachment";
-        } else if (name.equals(MailConstants.E_INVITE_TEST)) {
-            snippet = convertInviteTest(test);
-        } else if (name.equals(MailConstants.E_CURRENT_TIME_TEST)) {
-            String s = test.getAttribute(MailConstants.A_DATE_COMPARISON);
-            s = s.toLowerCase();
-            Sieve.DateComparison comparison = Sieve.DateComparison.fromString(s);
-            String time = test.getAttribute(MailConstants.A_TIME);
+        } else if (test instanceof FilterTest.InviteTest) {
+            snippet = toSieve((FilterTest.InviteTest) test);
+        } else if (test instanceof FilterTest.CurrentTimeTest) {
+            FilterTest.CurrentTimeTest timeTest = (FilterTest.CurrentTimeTest) test;
+            Sieve.DateComparison comparison = Sieve.DateComparison.fromString(timeTest.getDateComparison());
+            String time = timeTest.getTime();
             // validate time value
             String timeFormat = "HHmm";
             SimpleDateFormat parser = new SimpleDateFormat(timeFormat);
@@ -165,82 +160,91 @@ public final class SoapToSieve {
                 throw ServiceException.INVALID_REQUEST("Time string must be of length " + timeFormat.length(), null);
             }
             snippet = String.format("current_time :%s \"%s\"", comparison, time);
-        } else if (name.equals(MailConstants.E_CURRENT_DAY_OF_WEEK_TEST)) {
-            String value = test.getAttribute(MailConstants.A_VALUE);
+        } else if (test instanceof FilterTest.CurrentDayOfWeekTest) {
+            FilterTest.CurrentDayOfWeekTest dayTest = (FilterTest.CurrentDayOfWeekTest) test;
+            String value = dayTest.getValues();
             String[] daysOfWeek = value.split(",");
             for (int i = 0; i < daysOfWeek.length; i ++) {
                 // first validate value
                 try {
                     int day = Integer.valueOf(daysOfWeek[i]);
-                    if (day < 0 || day > 6)
+                    if (day < 0 || day > 6) {
                         throw ServiceException.INVALID_REQUEST(
                                 "Day of week index must be from 0 (Sunday) to 6 (Saturday)", null);
+                    }
                 } catch (NumberFormatException e) {
                     throw ServiceException.INVALID_REQUEST("Invalid day of week index: " + daysOfWeek[i], e);
                 }
 
                 daysOfWeek[i] = StringUtil.enclose(daysOfWeek[i], '"');
             }
-            snippet = String.format("current_day_of_week :is %s",
-                                    new StringBuilder().append('[').
-                                            append(StringUtil.join(",", daysOfWeek)).
-                                            append(']').toString());
-        } else if (name.equals(MailConstants.E_CONVERSATION_TEST)) {
-            String where = test.getAttribute(MailConstants.A_WHERE, "started");
+            snippet = "current_day_of_week :is [" + Joiner.on(',').join(daysOfWeek) + "]";
+        } else if (test instanceof FilterTest.ConversationTest) {
+            FilterTest.ConversationTest convTest = (FilterTest.ConversationTest) test;
+            String where = Objects.firstNonNull(convTest.getWhere(), "started");
             snippet = String.format("conversation :where \"%s\"", FilterUtil.escape(where));
-        } else if (name.equals(MailConstants.E_FACEBOOK_TEST)) {
+        } else if (test instanceof FilterTest.FacebookTest) {
             snippet = "facebook";
-        } else if (name.equals(MailConstants.E_LINKEDIN_TEST)) {
+        } else if (test instanceof FilterTest.LinkedInTest) {
             snippet = "linkedin";
-        } else if (name.equals(MailConstants.E_SOCIALCAST_TEST)) {
+        } else if (test instanceof FilterTest.SocialcastTest) {
             snippet = "socialcast";
-        } else if (name.equals(MailConstants.E_TWITTER_TEST)) {
+        } else if (test instanceof FilterTest.TwitterTest) {
             snippet = "twitter";
-        } else if (name.equals(MailConstants.E_LIST_TEST)) {
+        } else if (test instanceof FilterTest.ListTest) {
             snippet = "list";
-        } else if (name.equals(MailConstants.E_BULK_TEST)) {
+        } else if (test instanceof FilterTest.BulkTest) {
             snippet = "bulk";
-        } else if (name.equals(MailConstants.E_IMPORTANCE_TEST)) {
-            snippet = String.format("importance \"%s\"",
-                    FilterTestImportance.Importance.fromString(test.getAttribute(MailConstants.A_IMP)));
-        } else if (name.equals(MailConstants.E_FLAGGED_TEST)) {
-            snippet = "flagged \"" + test.getAttribute(MailConstants.A_FLAG_NAME) + "\"";
-        } else if (name.equals(MailConstants.E_TRUE_TEST)) {
+        } else if (test instanceof FilterTest.ImportanceTest) {
+            FilterTest.ImportanceTest impTest = (FilterTest.ImportanceTest) test;
+            snippet = String.format("importance \"%s\"", impTest.getImportance());
+        } else if (test instanceof FilterTest.FlaggedTest) {
+            FilterTest.FlaggedTest flaggedTest = (FilterTest.FlaggedTest) test;
+            snippet = "flagged \"" + flaggedTest.getFlag() + "\"";
+        } else if (test instanceof FilterTest.TrueTest) {
             snippet = "true";
         } else {
-            ZimbraLog.soap.debug("Ignoring unexpected test %s.", name);
+            ZimbraLog.soap.debug("Ignoring unexpected test: %s", test);
         }
 
-        if (snippet != null && test.getAttributeBool(MailConstants.A_NEGATIVE, false)) {
+        if (snippet != null && test.isNegative()) {
             snippet = "not " + snippet;
         }
         return snippet;
     }
 
-    private static String generateHeaderTest(Element test, String testName) throws ServiceException {
-        String header = getSieveHeaderList(test);
-        Sieve.StringComparison comparison =
-                Sieve.StringComparison.fromString(test.getAttribute(MailConstants.A_STRING_COMPARISON).toLowerCase());
-        boolean caseSensitive = test.getAttributeBool(MailConstants.A_CASE_SENSITIVE, false);
-        String value = test.getAttribute(MailConstants.A_VALUE);
-        checkValue(comparison, value);
-        String snippetFormat =
-                caseSensitive ? "%s :%s :comparator \"" + Sieve.Comparator.ioctet + "\" %s \"%s\"" : "%s :%s %s \"%s\"";
-        return String.format(snippetFormat, testName, comparison, header, FilterUtil.escape(value));
+    private static String toSieve(FilterTest.HeaderTest test) throws ServiceException {
+        String header = getSieveHeaderList(test.getHeaders());
+        Sieve.StringComparison comp = Sieve.StringComparison.fromString(test.getStringComparison());
+        return toSieve("header", header, comp, test.isCaseSensitive(), test.getValue());
     }
 
-    private static String generateAddressTest(Element test) throws ServiceException {
-        String header = getSieveHeaderList(test);
-        Sieve.AddressPart part =
-                Sieve.AddressPart.fromString(test.getAttribute(MailConstants.A_ADDRESS_PART, Sieve.AddressPart.all.name()));
-        Sieve.StringComparison comparison =
-                Sieve.StringComparison.fromString(test.getAttribute(MailConstants.A_STRING_COMPARISON).toLowerCase());
-        boolean caseSensitive = test.getAttributeBool(MailConstants.A_CASE_SENSITIVE, false);
-        String value = test.getAttribute(MailConstants.A_VALUE);
-        checkValue(comparison, value);
-        return String.format("address :%s :%s :comparator \"%s\" %s \"%s\"", part, comparison,
-                             caseSensitive ? Sieve.Comparator.ioctet : Sieve.Comparator.iasciicasemap,
-                             header, FilterUtil.escape(value));
+    private static String toSieve(FilterTest.MimeHeaderTest test) throws ServiceException {
+        String header = getSieveHeaderList(test.getHeaders());
+        Sieve.StringComparison comp = Sieve.StringComparison.fromString(test.getStringComparison());
+        return toSieve("mime_header", header, comp, test.isCaseSensitive(), test.getValue());
+    }
+
+    private static String toSieve(String name, String header, Sieve.StringComparison comp, boolean caseSensitive,
+            String value) throws ServiceException {
+        checkValue(comp, value);
+        String format = caseSensitive ? "%s :%s :comparator \"" + Sieve.Comparator.ioctet + "\" %s \"%s\"" :
+            "%s :%s %s \"%s\"";
+        return String.format(format, name, comp, header, FilterUtil.escape(value));
+    }
+
+    private static String toSieve(FilterTest.AddressTest test) throws ServiceException {
+        String header = getSieveHeaderList(test.getHeader());
+        Sieve.AddressPart part = Sieve.AddressPart.fromString(test.getPart());
+        if (part == null) {
+            part = Sieve.AddressPart.all;
+        }
+        Sieve.StringComparison comp = Sieve.StringComparison.fromString(test.getStringComparison());
+        String value = test.getValue();
+        checkValue(comp, value);
+        return String.format("address :%s :%s :comparator \"%s\" %s \"%s\"", part, comp,
+                test.isCaseSensitive() ? Sieve.Comparator.ioctet : Sieve.Comparator.iasciicasemap,
+                        header, FilterUtil.escape(value));
     }
 
     private static void checkValue(Sieve.StringComparison comparison, String value) throws ServiceException {
@@ -251,8 +255,7 @@ public final class SoapToSieve {
         }
     }
 
-    private static String getSieveHeaderList(Element test) throws ServiceException {
-        String header = test.getAttribute(MailConstants.A_HEADER);
+    private static String getSieveHeaderList(String header) throws ServiceException {
         if (header.isEmpty()) {
             throw ServiceException.INVALID_REQUEST("header value is empty", null);
         }
@@ -271,20 +274,20 @@ public final class SoapToSieve {
         return new StringBuilder().append('[').append(StringUtil.join(",", values)).append(']').toString();
     }
 
-    private static String convertInviteTest(Element test) {
+    private static String toSieve(FilterTest.InviteTest test) {
         StringBuilder buf = new StringBuilder("invite");
-        List<Element> methods = test.listElements(MailConstants.E_METHOD);
+        List<String> methods = test.getMethods();
         if (!methods.isEmpty()) {
             buf.append(" :method [");
             boolean firstTime = true;
-            for (Element method : methods) {
+            for (String method : methods) {
                 if (firstTime) {
                     firstTime = false;
                 } else {
                     buf.append(", ");
                 }
                 buf.append('"');
-                buf.append(FilterUtil.escape(method.getText()));
+                buf.append(FilterUtil.escape(method));
                 buf.append('"');
             }
             buf.append("]");
@@ -292,49 +295,49 @@ public final class SoapToSieve {
         return buf.toString();
     }
 
-    private static String handleAction(Element action) throws ServiceException {
-        String name = action.getName();
-        if (name.equals(MailConstants.E_ACTION_KEEP)) {
+    private static String handleAction(FilterAction action) throws ServiceException {
+        if (action instanceof FilterAction.KeepAction) {
             return "keep";
-        } else if (name.equals(MailConstants.E_ACTION_DISCARD)) {
+        } else if (action instanceof FilterAction.DiscardAction) {
             return "discard";
-        } else if (name.equals(MailConstants.E_ACTION_FILE_INTO)) {
-            String folderPath = action.getAttribute(MailConstants.A_FOLDER_PATH);
-            return String.format("fileinto \"%s\"", FilterUtil.escape(folderPath));
-        } else if (name.equals(MailConstants.E_ACTION_TAG)) {
-            String tagName = action.getAttribute(MailConstants.A_TAG_NAME);
-            return String.format("tag \"%s\"", FilterUtil.escape(tagName));
-        } else if (name.equals(MailConstants.E_ACTION_FLAG)) {
-            String s = action.getAttribute(MailConstants.A_FLAG_NAME);
-            Sieve.Flag flag = Sieve.Flag.valueOf(s);
-            return String.format("flag \"%s\"", flag);
-        } else if (name.equals(MailConstants.E_ACTION_REDIRECT)) {
-            String address = action.getAttribute(MailConstants.A_ADDRESS);
-            return String.format("redirect \"%s\"", FilterUtil.escape(address));
-        } else if (name.equals(MailConstants.E_ACTION_REPLY)) {
-            String bodyTemplate = action.getAttribute(MailConstants.E_CONTENT);
-            return new StringBuilder("reply text:\r\n").
-                    append(getDotStuffed(bodyTemplate)).
-                    append("\r\n.\r\n").toString();
-        } else if (name.equals(MailConstants.E_ACTION_NOTIFY)) {
-            String emailAddr = action.getAttribute(MailConstants.A_ADDRESS);
-            String subjectTemplate = action.getAttribute(MailConstants.A_SUBJECT, "");
-            String bodyTemplate = action.getAttribute(MailConstants.E_CONTENT, "");
-            int maxBodyBytes = action.getAttributeInt(MailConstants.A_MAX_BODY_SIZE, -1);
-            String origHeaders = action.getAttribute(MailConstants.A_ORIG_HEADERS, "");
+        } else if (action instanceof FilterAction.FileIntoAction) {
+            FilterAction.FileIntoAction fileinto = (FilterAction.FileIntoAction) action;
+            return String.format("fileinto \"%s\"", FilterUtil.escape(fileinto.getFolder()));
+        } else if (action instanceof FilterAction.TagAction) {
+            FilterAction.TagAction tag = (FilterAction.TagAction) action;
+            return String.format("tag \"%s\"", FilterUtil.escape(tag.getTag()));
+        } else if (action instanceof FilterAction.FlagAction) {
+            FilterAction.FlagAction flag = (FilterAction.FlagAction) action;
+            return String.format("flag \"%s\"", Sieve.Flag.valueOf(flag.getFlag()));
+        } else if (action instanceof FilterAction.RedirectAction) {
+            FilterAction.RedirectAction redirect = (FilterAction.RedirectAction) action;
+            return String.format("redirect \"%s\"", FilterUtil.escape(redirect.getAddress()));
+        } else if (action instanceof FilterAction.ReplyAction) {
+            FilterAction.ReplyAction reply = (FilterAction.ReplyAction) action;
+            return new StringBuilder("reply text:\r\n")
+                .append(getDotStuffed(reply.getContent()))
+                .append("\r\n.\r\n")
+                .toString();
+        } else if (action instanceof FilterAction.NotifyAction) {
+            FilterAction.NotifyAction notify = (FilterAction.NotifyAction) action;
+            String emailAddr = notify.getAddress();
+            String subjectTemplate = Strings.nullToEmpty(notify.getSubject());
+            String bodyTemplate = Strings.nullToEmpty(notify.getContent());
+            int maxBodyBytes = Objects.firstNonNull(notify.getMaxBodySize(), -1);
+            String origHeaders = Strings.nullToEmpty(notify.getOrigHeaders());
             if (!subjectTemplate.isEmpty() && containsSubjectHeader(origHeaders)) {
                 throw ServiceException.INVALID_REQUEST("subject conflict", null);
             }
             return new StringBuilder("notify ").
-                    append(StringUtil.enclose(emailAddr, '"')).append(" ").
-                    append(StringUtil.enclose(subjectTemplate, '"')).append(" ").
+                    append(StringUtil.enclose(emailAddr, '"')).append(' ').
+                    append(StringUtil.enclose(subjectTemplate, '"')).append(' ').
                     append("text:\r\n").append(getDotStuffed(bodyTemplate)).append("\r\n.\r\n").
                     append(maxBodyBytes < 0 ? "" : " " + maxBodyBytes).
                     append(origHeaders.isEmpty() ? "" : " " + getSieveMultiValue(origHeaders)).toString();
-        } else if (name.equals(MailConstants.E_ACTION_STOP)) {
+        } else if (action instanceof FilterAction.StopAction) {
             return "stop";
         } else {
-            ZimbraLog.soap.debug("Ignoring unexpected action '%s'", name);
+            ZimbraLog.soap.debug("Ignoring unexpected action: %s", action);
         }
         return null;
     }

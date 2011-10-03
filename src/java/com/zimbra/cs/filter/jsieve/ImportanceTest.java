@@ -15,7 +15,7 @@
 package com.zimbra.cs.filter.jsieve;
 
 import com.zimbra.common.filter.Sieve;
-import com.zimbra.soap.mail.type.FilterTestImportance;
+import com.zimbra.soap.mail.type.FilterTest;
 import org.apache.jsieve.Argument;
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.SieveContext;
@@ -33,16 +33,16 @@ import java.util.ListIterator;
 /**
  * Checks values of "Importance" and "X-Priority" headers.
  */
-public class ImportanceTest extends Header {
+public final class ImportanceTest extends Header {
 
     @Override
     protected boolean executeBasic(MailAdapter mail, Arguments arguments, SieveContext context) throws SieveException {
         ListIterator<Argument> argumentsIter = arguments.getArgumentList().listIterator();
-        FilterTestImportance.Importance importance;
+        FilterTest.Importance importance;
         if (argumentsIter.hasNext()) {
             Argument argument = argumentsIter.next();
             if (argument instanceof StringListArgument) {
-                importance = FilterTestImportance.Importance.valueOf(((StringListArgument) argument).getList().get(0));
+                importance = FilterTest.Importance.valueOf(((StringListArgument) argument).getList().get(0));
             } else {
                 throw new SyntaxException("Expecting a string");
             }
@@ -84,6 +84,6 @@ public class ImportanceTest extends Header {
                 match(mail, Sieve.Comparator.iasciicasemap.toString(), MatchTypeTags.IS_TAG, headers, values, context);
 
         // normal is when it is neither high importance nor low importance
-        return importance == FilterTestImportance.Importance.normal ? !(result1 || result2) : result1 || result2;
+        return importance == FilterTest.ImportanceTest.Importance.normal ? !(result1 || result2) : result1 || result2;
     }
 }

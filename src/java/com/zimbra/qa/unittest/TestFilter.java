@@ -19,9 +19,6 @@ import com.google.common.base.Strings;
 import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.mime.MimeMessage;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Constants;
@@ -85,8 +82,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
 
-public class TestFilter
-extends TestCase {
+public final class TestFilter extends TestCase {
 
     private static String USER_NAME = "user1";
     private static String REMOTE_USER_NAME = "user2";
@@ -1427,42 +1423,16 @@ extends TestCase {
     }
 
     /**
-     * Tests the old <tt>GetRulesRequest</tt> and <tt>SaveRulesRequest</tt>
-     * SOAP API's (bug 42320).
-     */
-    public void testOldApi()
-    throws Exception {
-        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
-        Account account = TestUtil.getAccount(USER_NAME);
-        String oldRules = account.getMailSieveScript();
-
-        // Get rules and save the same rules.
-        Element response = mbox.invoke(new XMLElement(MailConstants.GET_RULES_REQUEST));
-        Element rulesEl = response.getElement(MailConstants.E_RULES).detach();
-        RuleRewriter.sanitizeRules(rulesEl);
-        Element request = rulesEl.getFactory().createElement(MailConstants.SAVE_RULES_REQUEST);
-        request.addElement(rulesEl);
-        mbox.invoke(request);
-
-        // Make sure the rules haven't changed.
-        account = TestUtil.getAccount(USER_NAME);
-        oldRules = normalize(oldRules);
-        String newRules = normalize(account.getMailSieveScript());
-        assertEquals(oldRules, newRules);
-    }
-
-    /**
      * Converts the script to XML and back again.
      */
-    private String normalize(String script)
-    throws ParseException, ServiceException {
+    private String normalize(String script) throws ParseException, ServiceException {
         List<String> ruleNames = RuleManager.getRuleNames(script);
         Node node = RuleManager.getSieveFactory().parse(new ByteArrayInputStream(script.getBytes()));
 
         // Convert from Sieve to SOAP and back again.
-        SieveToSoap sieveToSoap = new SieveToSoap(XMLElement.mFactory, ruleNames);
+        SieveToSoap sieveToSoap = new SieveToSoap(ruleNames);
         sieveToSoap.accept(node);
-        SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.getRootElement());
+        SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.toFilterRules());
 
         return soapToSieve.getSieveScript();
     }
@@ -1613,32 +1583,20 @@ extends TestCase {
      * Saves the given incoming filter rules.  Then gets them from the server and confirms that
      * the element tree matches.
      */
-    private void saveIncomingRules(ZMailbox mbox, ZFilterRules rules)
-    throws Exception {
-        Element root = new XMLElement("test");
-        Element expected = rules.toElement(root);
+    private void saveIncomingRules(ZMailbox mbox, ZFilterRules rules) throws Exception {
         mbox.saveIncomingFilterRules(rules);
-
-        rules = mbox.getIncomingFilterRules(true);
-        Element actual = rules.toElement(root);
-
-        TestUtil.assertEquals(expected, actual);
+        ZFilterRules result = mbox.getIncomingFilterRules(true);
+        TestUtil.assertEquals(rules.dump(), result.dump());
     }
 
     /**
      * Saves the given outgoing filter rules.  Then gets them from the server and confirms that
      * the element tree matches.
      */
-    private void saveOutgoingRules(ZMailbox mbox, ZFilterRules rules)
-    throws Exception {
-        Element root = new XMLElement("test");
-        Element expected = rules.toElement(root);
+    private void saveOutgoingRules(ZMailbox mbox, ZFilterRules rules) throws Exception {
         mbox.saveOutgoingFilterRules(rules);
-
-        rules = mbox.getOutgoingFilterRules(true);
-        Element actual = rules.toElement(root);
-
-        TestUtil.assertEquals(expected, actual);
+        ZFilterRules result = mbox.getOutgoingFilterRules(true);
+        TestUtil.assertEquals(rules.dump(), result.dump());
     }
 
     public static void main(String[] args)

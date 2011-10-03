@@ -17,9 +17,8 @@ package com.zimbra.cs.filter;
 import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.soap.mail.type.FilterTestImportance;
+import com.zimbra.soap.mail.type.FilterTest;
 import org.apache.jsieve.TagArgument;
 import org.apache.jsieve.parser.SieveNode;
 import org.apache.jsieve.parser.generated.ASTcommand;
@@ -58,9 +57,13 @@ public abstract class SieveVisitor {
     }
 
     @SuppressWarnings("unused")
-    protected void visitHeaderTest(String testEltName, Node node, VisitPhase phase, RuleProperties props,
-            List<String> headers, Sieve.StringComparison comparison, boolean caseSensitive, String value)
-        throws ServiceException {
+    protected void visitHeaderTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
+            Sieve.StringComparison comparison, boolean caseSensitive, String value) throws ServiceException {
+    }
+
+    @SuppressWarnings("unused")
+    protected void visitMimeHeaderTest(Node node, VisitPhase phase, RuleProperties props, List<String> headers,
+            Sieve.StringComparison comparison, boolean caseSensitive, String value) throws ServiceException {
     }
 
     @SuppressWarnings("unused")
@@ -125,7 +128,7 @@ public abstract class SieveVisitor {
 
     @SuppressWarnings("unused")
     protected void visitImportanceTest(Node node, VisitPhase phase, RuleProperties props,
-            FilterTestImportance.Importance importance) throws ServiceException {
+            FilterTest.Importance importance) throws ServiceException {
     }
 
     @SuppressWarnings("unused")
@@ -301,11 +304,15 @@ public abstract class SieveVisitor {
                 headers = getMultiValue(node, 0, headersArgIndex, 0);
                 value = getValue(node, 0, headersArgIndex + 1, 0, 0);
 
-                String testEltName = "header".equalsIgnoreCase(nodeName) ?
-                        MailConstants.E_HEADER_TEST : MailConstants.E_MIME_HEADER_TEST;
-                visitHeaderTest(testEltName, node, VisitPhase.begin, props, headers, comparison, caseSensitive, value);
-                accept(node, props);
-                visitHeaderTest(testEltName, node, VisitPhase.end, props, headers, comparison, caseSensitive, value);
+                if ("header".equalsIgnoreCase(nodeName)) {
+                    visitHeaderTest(node, VisitPhase.begin, props, headers, comparison, caseSensitive, value);
+                    accept(node, props);
+                    visitHeaderTest(node, VisitPhase.end, props, headers, comparison, caseSensitive, value);
+                } else {
+                    visitMimeHeaderTest(node, VisitPhase.begin, props, headers, comparison, caseSensitive, value);
+                    accept(node, props);
+                    visitMimeHeaderTest(node, VisitPhase.end, props, headers, comparison, caseSensitive, value);
+                }
             } else if ("address".equalsIgnoreCase(nodeName)) {
                 Sieve.AddressPart part = Sieve.AddressPart.all;
                 Sieve.StringComparison comparison = Sieve.StringComparison.is;
@@ -463,7 +470,7 @@ public abstract class SieveVisitor {
                 accept(node, props);
                 visitBulkTest(node, VisitPhase.end, props);
             } else if ("importance".equalsIgnoreCase(nodeName)) {
-                FilterTestImportance.Importance importance = FilterTestImportance.Importance.fromString(getValue(node, 0, 0, 0, 0));
+                FilterTest.Importance importance = FilterTest.Importance.fromString(getValue(node, 0, 0, 0, 0));
                 visitImportanceTest(node, VisitPhase.begin, props, importance);
                 accept(node, props);
                 visitImportanceTest(node, VisitPhase.end, props, importance);

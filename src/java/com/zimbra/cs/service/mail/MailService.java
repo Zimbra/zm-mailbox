@@ -107,11 +107,7 @@ public final class MailService implements DocumentService {
         // sync
         dispatcher.registerHandler(MailConstants.SYNC_REQUEST, new Sync());
 
-        // Filter rules - old format
-        dispatcher.registerHandler(MailConstants.GET_RULES_REQUEST, new GetRules());
-        dispatcher.registerHandler(MailConstants.SAVE_RULES_REQUEST, new SaveRules());
-
-        // Filter rules - new format
+        // Filter rules
         dispatcher.registerHandler(MailConstants.GET_FILTER_RULES_REQUEST, new GetFilterRules());
         dispatcher.registerHandler(MailConstants.MODIFY_FILTER_RULES_REQUEST, new ModifyFilterRules());
         dispatcher.registerHandler(MailConstants.APPLY_FILTER_RULES_REQUEST, new ApplyFilterRules());

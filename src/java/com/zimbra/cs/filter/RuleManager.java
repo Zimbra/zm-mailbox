@@ -16,20 +16,18 @@
 package com.zimbra.cs.filter;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.Element.ElementFactory;
-import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.DeliveryContext;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.SpamHandler;
+import com.zimbra.soap.mail.type.FilterRule;
+
 import org.apache.jsieve.ConfigurationManager;
 import org.apache.jsieve.SieveFactory;
 import org.apache.jsieve.exception.SieveException;
@@ -203,46 +201,25 @@ public final class RuleManager {
     }
 
     /**
-     * Returns the <tt>Account</tt>'s incoming filter rules as an XML element tree.  Uses
-     * the old Sieve-style response format.
-     *
-     * @param factory used to create new XML elements
-     * @param account the account
-     */
-    public static Element getIncomingRulesAsXML(ElementFactory factory, Account account) throws ServiceException {
-        return getIncomingRulesAsXML(factory, account, false);
-    }
-
-    /**
      * Returns the XML representation of a user's incoming filter rules.
      *
-     * @param factory used to create elements
      * @param account the user account
-     * @param useNewFormat if <tt>true</tt>, returns the new response format instead of
-     *                     the old Sieve-style one
      */
-    public static Element getIncomingRulesAsXML(ElementFactory factory, Account account, boolean useNewFormat)
-    throws ServiceException {
-        return getRulesAsXML(factory, account, useNewFormat, Provisioning.A_zimbraMailSieveScript, FILTER_RULES_CACHE_KEY);
+    public static List<FilterRule> getIncomingRulesAsXML(Account account) throws ServiceException {
+        return getRulesAsXML(account, Provisioning.A_zimbraMailSieveScript, FILTER_RULES_CACHE_KEY);
     }
 
     /**
      * Returns the XML representation of a user's outgoing filter rules.
      *
-     * @param factory used to create elements
      * @param account the user account
      */
-    public static Element getOutgoingRulesAsXML(ElementFactory factory, Account account)
-    throws ServiceException {
-        return getRulesAsXML(factory, account, true, Provisioning.A_zimbraMailOutgoingSieveScript, OUTGOING_FILTER_RULES_CACHE_KEY);
+    public static List<FilterRule> getOutgoingRulesAsXML(Account account) throws ServiceException {
+        return getRulesAsXML(account, Provisioning.A_zimbraMailOutgoingSieveScript, OUTGOING_FILTER_RULES_CACHE_KEY);
     }
 
-    private static Element getRulesAsXML(ElementFactory factory,
-                                         Account account,
-                                         boolean useNewFormat,
-                                         String sieveScriptAttrName,
-                                         String rulesCacheKey)
-            throws ServiceException {
+    private static List<FilterRule> getRulesAsXML(Account account, String sieveScriptAttrName,
+            String rulesCacheKey) throws ServiceException {
         Node node;
         try {
             node = getRulesNode(account, sieveScriptAttrName, rulesCacheKey);
@@ -251,18 +228,9 @@ public final class RuleManager {
         } catch (TokenMgrError e) {
             throw ServiceException.PARSE_ERROR("parsing Sieve script", e);
         }
-
-        String script = account.getAttr(sieveScriptAttrName);
-        List<String> ruleNames = getRuleNames(script);
-
-        if (!useNewFormat) {
-            RuleRewriter t = RuleRewriterFactory.getInstance().createRuleRewriter(factory, node, ruleNames);
-            return t.getElement();
-        } else {
-            SieveToSoap sieveToSoap = new SieveToSoap(factory, ruleNames);
-            sieveToSoap.accept(node);
-            return sieveToSoap.getRootElement();
-        }
+        SieveToSoap sieveToSoap = new SieveToSoap(getRuleNames(account.getAttr(sieveScriptAttrName)));
+        sieveToSoap.accept(node);
+        return sieveToSoap.toFilterRules();
     }
 
     private static final Pattern PAT_RULE_NAME = Pattern.compile("# (.+)");
@@ -332,39 +300,19 @@ public final class RuleManager {
         }
     }
 
-    /**
-     * Sets incoming filter rules, specified as an XML element tree.  Uses the old
-     * Sieve-style XML format.
-     */
-    public static void setIncomingXMLRules(Account account, Element eltRules) throws ServiceException {
-        setIncomingXMLRules(account, eltRules, false);
+    public static void setIncomingXMLRules(Account account, List<FilterRule> rules) throws ServiceException {
+        setXMLRules(account, rules, Provisioning.A_zimbraMailSieveScript, FILTER_RULES_CACHE_KEY);
     }
 
-    public static void setIncomingXMLRules(Account account, Element eltRules, boolean useNewFormat)
-    throws ServiceException {
-        setXMLRules(account, eltRules, useNewFormat, Provisioning.A_zimbraMailSieveScript, FILTER_RULES_CACHE_KEY);
+    public static void setOutgoingXMLRules(Account account, List<FilterRule> rules) throws ServiceException {
+        setXMLRules(account, rules, Provisioning.A_zimbraMailOutgoingSieveScript, OUTGOING_FILTER_RULES_CACHE_KEY);
     }
 
-    public static void setOutgoingXMLRules(Account account, Element eltRules)
-    throws ServiceException {
-        setXMLRules(account, eltRules, true, Provisioning.A_zimbraMailOutgoingSieveScript, OUTGOING_FILTER_RULES_CACHE_KEY);
-    }
-
-    private static void setXMLRules(Account account,
-                                    Element eltRules,
-                                    boolean useNewFormat,
-                                    String sieveScriptAttrName,
-                                    String rulesCacheKey)
-            throws ServiceException {
-        if (!useNewFormat) {
-            RuleRewriter t = RuleRewriterFactory.getInstance().createRuleRewriter(eltRules, MailboxManager.getInstance().getMailboxByAccount(account));
-            String script = t.getScript();
-            setRules(account, script, sieveScriptAttrName, rulesCacheKey);
-        } else {
-            SoapToSieve soapToSieve = new SoapToSieve(eltRules);
-            String script = soapToSieve.getSieveScript();
-            setRules(account, script, sieveScriptAttrName, rulesCacheKey);
-        }
+    private static void setXMLRules(Account account,List<FilterRule> rules, String sieveScriptAttrName,
+            String rulesCacheKey) throws ServiceException {
+        SoapToSieve soapToSieve = new SoapToSieve(rules);
+        String script = soapToSieve.getSieveScript();
+        setRules(account, script, sieveScriptAttrName, rulesCacheKey);
     }
 
     public static List<ItemId> applyRulesToIncomingMessage(
@@ -521,9 +469,9 @@ public final class RuleManager {
                 // jSieve 0.2 doesn't have an API that generates a script from
                 // a Node tree.
                 List<String> ruleNames = getRuleNames(script);
-                SieveToSoap sieveToSoap = new SieveToSoap(XMLElement.mFactory, ruleNames);
+                SieveToSoap sieveToSoap = new SieveToSoap(ruleNames);
                 sieveToSoap.accept(node);
-                SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.getRootElement());
+                SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.toFilterRules());
                 String newScript = soapToSieve.getSieveScript();
                 setRules(account, newScript, sieveScriptAttrName, rulesCacheKey);
                 ZimbraLog.filter.info("Updated %s due to folder move or rename from %s to %s.",
@@ -562,9 +510,9 @@ public final class RuleManager {
                 // jSieve 0.2 doesn't have an API that generates a script from
                 // a Node tree.
                 List<String> ruleNames = getRuleNames(script);
-                SieveToSoap sieveToSoap = new SieveToSoap(XMLElement.mFactory, ruleNames);
+                SieveToSoap sieveToSoap = new SieveToSoap(ruleNames);
                 sieveToSoap.accept(node);
-                SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.getRootElement());
+                SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.toFilterRules());
                 String newScript = soapToSieve.getSieveScript();
                 setRules(account, newScript, sieveScriptAttrName, rulesCacheKey);
                 ZimbraLog.filter.info("Updated %s filter rules after folder %s was deleted.", sieveScriptAttrName, originalPath);
@@ -623,9 +571,9 @@ public final class RuleManager {
                 // jSieve 0.2 doesn't have an API that generates a script from
                 // a Node tree.
                 List<String> ruleNames = getRuleNames(script);
-                SieveToSoap sieveToSoap = new SieveToSoap(XMLElement.mFactory, ruleNames);
+                SieveToSoap sieveToSoap = new SieveToSoap(ruleNames);
                 sieveToSoap.accept(node);
-                SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.getRootElement());
+                SoapToSieve soapToSieve = new SoapToSieve(sieveToSoap.toFilterRules());
                 String newScript = soapToSieve.getSieveScript();
                 setRules(account, newScript, sieveScriptAttrName, rulesCacheKey);
                 ZimbraLog.filter.info("Updated %s after tag %s was deleted.", sieveScriptAttrName, tagName);
