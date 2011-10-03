@@ -20,7 +20,7 @@ http://www.perforce.com/perforce/doc.current/manuals/p4guide/01_install.html#107
   export P4HOST=localhost
   export P4EDITOR=/usr/bin/vi
   export PATH=$PATH:/opt/zimbra/bin
-  export ZIMBRA_HOSTNAME={your computer name}
+  export ZIMBRA_HOSTNAME={your computer name}.local
 
 5. $ source ~/.bash_profile
 6. $ mkdir -p /opt/zimbra
