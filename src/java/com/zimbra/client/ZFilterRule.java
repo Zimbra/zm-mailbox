@@ -14,11 +14,9 @@
  */
 package com.zimbra.client;
 
+import com.google.common.collect.Lists;
 import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.client.ZFilterAction.MarkOp;
 import com.zimbra.client.ZFilterAction.ZDiscardAction;
@@ -52,146 +50,118 @@ import com.zimbra.client.ZFilterCondition.ZInviteCondition;
 import com.zimbra.client.ZFilterCondition.ZMeCondition;
 import com.zimbra.client.ZFilterCondition.ZMimeHeaderCondition;
 import com.zimbra.client.ZFilterCondition.ZSizeCondition;
-import com.zimbra.soap.mail.type.FilterTestImportance;
+import com.zimbra.soap.mail.type.FilterAction;
+import com.zimbra.soap.mail.type.FilterRule;
+import com.zimbra.soap.mail.type.FilterTest;
+import com.zimbra.soap.mail.type.FilterTests;
+
 import org.json.JSONException;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 public final class ZFilterRule implements ToZJSONObject {
 
-    private String mName;
-    private boolean mActive;
-    private boolean mAllConditions;
-
-    private List<ZFilterCondition> mConditions;
-    private List<ZFilterAction> mActions;
+    private final String name;
+    private final boolean active;
+    private final boolean allConditions;
+    private final List<ZFilterCondition> conditions;
+    private final List<ZFilterAction> actions;
 
     public String getName() {
-        return mName;
+        return name;
     }
 
     public boolean isActive() {
-        return mActive;
+        return active;
     }
 
     public boolean isAllConditions() {
-        return mAllConditions;
+        return allConditions;
     }
 
     public List<ZFilterCondition> getConditions() {
-        return mConditions;
+        return conditions;
     }
 
     public List<ZFilterAction> getActions() {
-        return mActions;
+        return actions;
     }
 
     public ZFilterRule(String name, boolean active, boolean allConditions,
                        List<ZFilterCondition> conditions, List<ZFilterAction> actions) {
-        mName = name;
-        mActive = active;
-        mAllConditions = allConditions;
-        mConditions = conditions;
-        mActions = actions;
+        this.name = name;
+        this.active = active;
+        this.allConditions = allConditions;
+        this.conditions = conditions;
+        this.actions = actions;
     }
 
-    public ZFilterRule(Element e) throws ServiceException {
-        mName = e.getAttribute(MailConstants.A_NAME);
-        mActive = e.getAttributeBool(MailConstants.A_ACTIVE, false);
-        Element testsEl = e.getElement(MailConstants.E_FILTER_TESTS);
+    public ZFilterRule(FilterRule rule) throws ServiceException {
+        this.name = rule.getName();
+        this.active = rule.isActive();
+        this.allConditions = "allof".equalsIgnoreCase(rule.getFilterTests().getCondition());
 
-        // Conditions
-        Map<Integer, ZFilterCondition> conditions = new TreeMap<Integer, ZFilterCondition>(); // Orders by index
-        mAllConditions = testsEl.getAttribute(MailConstants.A_CONDITION, "allof").equalsIgnoreCase("allof");
-        for (Element condEl : testsEl.listElements()) {
-            ZFilterCondition condition = ZFilterCondition.getCondition(condEl);
-            int index = getIndex(condEl);
-            addToMap(conditions, index, condition);
-        }
-        mConditions = new ArrayList<ZFilterCondition>();
-        mConditions.addAll(conditions.values());
-
-        // Actions
-        Element actionsEl = e.getElement(MailConstants.E_FILTER_ACTIONS);
-        Map<Integer, ZFilterAction> actions = new TreeMap<Integer, ZFilterAction>(); // Orders by index
-        for (Element actionEl : actionsEl.listElements()) {
-            ZFilterAction action = ZFilterAction.getAction(actionEl);
-            int index = getIndex(actionEl);
-            addToMap(actions, index, action);
-        }
-        mActions = new ArrayList<ZFilterAction>();
-        mActions.addAll(actions.values());
-    }
-
-    /**
-     * Adds a value to the given <tt>Map</tt>.  If <tt>initialKey</tt> already
-     * exists in the map, uses the next available index instead.  This way we
-     * guarantee that we don't lose data if the client sends two elements with
-     * the same index, or doesn't specify the index at all.
-     *
-     * @return the index used to insert the value
-     */
-    static <T> int addToMap(Map<Integer, T> map, int initialKey, T value) {
-        int i = initialKey;
-        while (true) {
-            if (!map.containsKey(i)) {
-                map.put(i, value);
-                return i;
+        List<FilterTest> tests = Lists.newArrayList(rule.getFilterTests().getTests());
+        Collections.sort(tests, new Comparator<FilterTest>() {
+            @Override
+            public int compare(FilterTest test1, FilterTest test2) {
+                return test1.getIndex() - test2.getIndex();
             }
-            i++;
+        });
+        this.conditions = Lists.newArrayListWithCapacity(tests.size());
+        for (FilterTest test : tests) {
+            this.conditions.add(ZFilterCondition.of(test));
+        }
+
+        List<FilterAction> actions = Lists.newArrayList(rule.getFilterActions());
+        Collections.sort(actions, new Comparator<FilterAction>() {
+            @Override
+            public int compare(FilterAction action1, FilterAction action2) {
+                return action1.getIndex() - action2.getIndex();
+            }
+        });
+        this.actions = Lists.newArrayListWithCapacity(actions.size());
+        for (FilterAction action : actions) {
+            this.actions.add(ZFilterAction.of(action));
         }
     }
 
-    static int getIndex(Element actionElement) {
-        String s = actionElement.getAttribute(MailConstants.A_INDEX, "0");
-        try {
-            return Integer.parseInt(s);
-        } catch (NumberFormatException e) {
-            ZimbraLog.soap.warn("Unable to parse index value %s for element %s.  Ignoring order.",
-                s, actionElement.getName());
-            return 0;
+    FilterRule toJAXB() {
+        FilterRule rule = new FilterRule(name, active);
+        FilterTests tests = new FilterTests(allConditions ? "allof" : "anyof");
+        int index = 0;
+        for (ZFilterCondition condition : conditions) {
+            FilterTest test = condition.toJAXB();
+            test.setIndex(index++);
+            tests.addTest(test);
         }
-    }
-
-    Element toElement(Element parent) {
-        Element r = parent.addElement(MailConstants.E_FILTER_RULE);
-        r.addAttribute(MailConstants.A_NAME, mName);
-        r.addAttribute(MailConstants.A_ACTIVE, mActive);
-
-        Element tests = r.addElement(MailConstants.E_FILTER_TESTS);
-        tests.addAttribute(MailConstants.A_CONDITION, mAllConditions ? "allof" : "anyof");
-        for (ZFilterCondition condition : mConditions) {
-            int index = tests.listElements().size();
-            Element conditionEl = condition.toElement(tests);
-            conditionEl.addAttribute(MailConstants.A_INDEX, index);
+        rule.setFilterTests(tests);
+        index = 0;
+        for (ZFilterAction zaction : actions) {
+            FilterAction action = zaction.toJAXB();
+            action.setIndex(index++);
+            rule.addFilterAction(action);
         }
-
-        Element actions = r.addElement(MailConstants.E_FILTER_ACTIONS);
-        for (ZFilterAction action : mActions) {
-            int index = actions.listElements().size();
-            Element actionElement = action.toElement(actions);
-            actionElement.addAttribute(MailConstants.A_INDEX, index);
-        }
-        return r;
+        return rule;
     }
 
     @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject jo = new ZJSONObject();
-        jo.put("name", mName);
-        jo.put("active", mActive);
-        jo.put("allConditions", mAllConditions);
-        jo.put("conditions", mConditions);
-        jo.put("actions", mActions);
+        jo.put("name", name);
+        jo.put("active", active);
+        jo.put("allConditions", allConditions);
+        jo.put("conditions", conditions);
+        jo.put("actions", actions);
         return jo;
     }
 
     @Override
     public String toString() {
-        return String.format("[ZFilterRule %s]", mName);
+        return String.format("[ZFilterRule %s]", name);
     }
 
     public String dump() {
@@ -208,17 +178,17 @@ public final class ZFilterRule implements ToZJSONObject {
      */
     public String generateFilterRule() {
         StringBuilder sb = new StringBuilder();
-        sb.append(quotedString(mName)).append(' ');
-        sb.append(mActive ? "active" : "inactive").append(' ');
-        sb.append(mAllConditions ? "all" : "any").append(' ');
+        sb.append(quotedString(name)).append(' ');
+        sb.append(active ? "active" : "inactive").append(' ');
+        sb.append(allConditions ? "all" : "any").append(' ');
         boolean needSpace = false;
-        for (ZFilterCondition cond : mConditions) {
+        for (ZFilterCondition cond : conditions) {
             if (needSpace) sb.append(' ');
             sb.append(cond.toConditionString());
             needSpace = true;
         }
 
-        for (ZFilterAction action : mActions) {
+        for (ZFilterAction action : actions) {
             if (needSpace) sb.append(' ');
             sb.append(action.toActionString());
             needSpace = true;
@@ -442,7 +412,7 @@ public final class ZFilterRule implements ToZJSONObject {
                 String op = args[i++];
                 String importance = args[i++];
                 conditions.add(new ZFilterCondition.ZImportanceCondition(SimpleOp.fromString(op),
-                        FilterTestImportance.Importance.fromString(importance)));
+                        FilterTest.Importance.fromString(importance)));
             } else if (a.equals("flagged")) {
                 ZFilterCondition.SimpleOp op;
                 if (i < args.length && args[i].equalsIgnoreCase("not")) {

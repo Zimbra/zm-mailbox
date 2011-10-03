@@ -107,10 +107,16 @@ import com.zimbra.soap.mail.message.CheckSpellingRequest;
 import com.zimbra.soap.mail.message.CheckSpellingResponse;
 import com.zimbra.soap.mail.message.GetDataSourcesRequest;
 import com.zimbra.soap.mail.message.GetDataSourcesResponse;
+import com.zimbra.soap.mail.message.GetFilterRulesRequest;
+import com.zimbra.soap.mail.message.GetFilterRulesResponse;
 import com.zimbra.soap.mail.message.GetFolderRequest;
 import com.zimbra.soap.mail.message.GetFolderResponse;
+import com.zimbra.soap.mail.message.GetOutgoingFilterRulesRequest;
+import com.zimbra.soap.mail.message.GetOutgoingFilterRulesResponse;
 import com.zimbra.soap.mail.message.ImportContactsRequest;
 import com.zimbra.soap.mail.message.ImportContactsResponse;
+import com.zimbra.soap.mail.message.ModifyFilterRulesRequest;
+import com.zimbra.soap.mail.message.ModifyOutgoingFilterRulesRequest;
 import com.zimbra.soap.mail.type.Content;
 import com.zimbra.soap.mail.type.Folder;
 import com.zimbra.soap.mail.type.ImportContact;
@@ -131,7 +137,7 @@ public class ZMailbox implements ToZJSONObject {
     public final static char PATH_SEPARATOR_CHAR = '/';
 
     private static final int CALENDAR_FOLDER_ALL = -1;
-    
+
     static {
         SocketFactories.registerProtocols();
     }
@@ -300,7 +306,7 @@ public class ZMailbox implements ToZJSONObject {
 
         public String getRequestedSkin() { return mRequestedSkin; }
         public Options setRequestedSkin(String skin) { mRequestedSkin = skin;  return this; }
-        
+
         public Map<String, String> getCustomHeaders() {
             if (mCustomHeaders == null)
                 mCustomHeaders = new HashMap<String, String>();
@@ -318,10 +324,10 @@ public class ZMailbox implements ToZJSONObject {
     private ZSearchPagerCache mSearchPagerCache;
     private ZSearchPagerCache mSearchConvPagerCache;
     private ZApptSummaryCache mApptSummaryCache;
-    private Map mMessageCache;
-    private Map mContactCache;
-    private ZFilterRules mIncomingRules;
-    private ZFilterRules mOutgoingRules;
+    private Map<String, CachedMessage> mMessageCache;
+    private Map<String, ZContact> mContactCache;
+    private ZFilterRules incomingRules;
+    private ZFilterRules outgoingRules;
     private ZAuthResult mAuthResult;
     private String mClientIp;
     private List<ZPhoneAccount> mPhoneAccounts;
@@ -605,8 +611,8 @@ public class ZMailbox implements ToZJSONObject {
         ZRefreshEvent event = new ZRefreshEvent(mSize, userRoot, tagList);
         for (ZEventHandler handler : mHandlers)
             handler.handleRefresh(event, this);
-        mIncomingRules = null;
-        mOutgoingRules = null;
+        incomingRules = null;
+        outgoingRules = null;
     }
 
     private void handleModified(Element modified) throws ServiceException {
@@ -800,12 +806,12 @@ public class ZMailbox implements ToZJSONObject {
                     mSize = mme.getSize(mSize);
             } else if (event instanceof ZModifyMessageEvent) {
                 ZModifyMessageEvent mme = (ZModifyMessageEvent) event;
-                CachedMessage cm = (CachedMessage) mMessageCache.get(mme.getId());
+                CachedMessage cm = mMessageCache.get(mme.getId());
                 if (cm != null)
                     cm.zm.modifyNotification(event);
             } else if (event instanceof ZModifyContactEvent) {
                 ZModifyContactEvent mce = (ZModifyContactEvent) event;
-                ZContact contact = (ZContact) mContactCache.get(mce.getId());
+                ZContact contact = mContactCache.get(mce.getId());
                 if (contact != null)
                     contact.modifyNotification(mce);
             }
@@ -981,10 +987,9 @@ public class ZMailbox implements ToZJSONObject {
      * @return current List of all tags in the mailbox
      * @throws com.zimbra.common.service.ServiceException on error
      */
-    @SuppressWarnings("unchecked")
     public List<ZTag> getAllTags() throws ServiceException {
         populateTagCache();
-        List <ZTag> result = new ArrayList<ZTag>(mNameToTag.values());
+        List<ZTag> result = new ArrayList<ZTag>(mNameToTag.values());
         Collections.sort(result);
         return result;
     }
@@ -1383,7 +1388,7 @@ public class ZMailbox implements ToZJSONObject {
      * @throws ServiceException on error
      */
     public synchronized ZContact getContact(String id) throws ServiceException {
-        ZContact result = (ZContact) mContactCache.get(id);
+        ZContact result = mContactCache.get(id);
         if (result == null) {
             Element req = newRequestElement(MailConstants.GET_CONTACTS_REQUEST);
             req.addAttribute(MailConstants.A_SYNC, true);
@@ -2083,7 +2088,7 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public synchronized ZMessage getMessage(ZGetMessageParams params) throws ServiceException {
-        CachedMessage cm = (CachedMessage) mMessageCache.get(params.getId());
+        CachedMessage cm = mMessageCache.get(params.getId());
         if (cm == null || !cm.params.equals(params)) {
             Element req = newRequestElement(MailConstants.GET_MSG_REQUEST);
             Element msgEl = req.addUniqueElement(MailConstants.E_MSG);
@@ -3388,7 +3393,7 @@ public class ZMailbox implements ToZJSONObject {
 
         public List<String> getMessageIdsToAttach() { return mMessageIdsToAttach; }
         public void setMessageIdsToAttach(List<String> messageIdsToAttach) { mMessageIdsToAttach = messageIdsToAttach; }
-        
+
         public String getIdentityId() { return mIdentityId; }
         public void setIdentityId(String id) { mIdentityId = id; }
 
@@ -3581,7 +3586,7 @@ public class ZMailbox implements ToZJSONObject {
         if (message.getIdentityId() != null) {
             m.addAttribute(MailConstants.A_IDENTITY_ID, message.getIdentityId());
         }
-        
+
         String requestedAccountId = mountpoint == null ? null : mGetInfoResult.getId();
         return new ZMessage(invoke(req, requestedAccountId).getElement(MailConstants.E_MSG), this);
     }
@@ -3717,33 +3722,33 @@ public class ZMailbox implements ToZJSONObject {
     }
 
     public synchronized ZFilterRules getIncomingFilterRules(boolean refresh) throws ServiceException {
-        if (mIncomingRules == null || refresh) {
-            Element req = newRequestElement(MailConstants.GET_FILTER_RULES_REQUEST);
-            mIncomingRules = new ZFilterRules(invoke(req).getElement(MailConstants.E_FILTER_RULES));
+        if (incomingRules == null || refresh) {
+            GetFilterRulesResponse resp = invokeJaxb(new GetFilterRulesRequest());
+            incomingRules = new ZFilterRules(resp.getFilterRules());
         }
-        return new ZFilterRules(mIncomingRules);
+        return new ZFilterRules(incomingRules);
     }
 
     public synchronized ZFilterRules getOutgoingFilterRules(boolean refresh) throws ServiceException {
-        if (mOutgoingRules == null || refresh) {
-            Element req = newRequestElement(MailConstants.GET_OUTGOING_FILTER_RULES_REQUEST);
-            mOutgoingRules = new ZFilterRules(invoke(req).getElement(MailConstants.E_FILTER_RULES));
+        if (outgoingRules == null || refresh) {
+            GetOutgoingFilterRulesResponse resp = invokeJaxb(new GetOutgoingFilterRulesRequest());
+            outgoingRules = new ZFilterRules(resp.getFilterRules());
         }
-        return new ZFilterRules(mOutgoingRules);
+        return new ZFilterRules(outgoingRules);
     }
 
     public synchronized void saveIncomingFilterRules(ZFilterRules rules) throws ServiceException {
-        Element req = newRequestElement(MailConstants.MODIFY_FILTER_RULES_REQUEST);
-        rules.toElement(req);
-        invoke(req);
-        mIncomingRules = new ZFilterRules(rules);
+        ModifyFilterRulesRequest req = new ModifyFilterRulesRequest();
+        req.addFilterRule(rules.toJAXB());
+        invokeJaxb(req);
+        incomingRules = new ZFilterRules(rules);
     }
 
     public synchronized void saveOutgoingFilterRules(ZFilterRules rules) throws ServiceException {
-        Element req = newRequestElement(MailConstants.MODIFY_OUTGOING_FILTER_RULES_REQUEST);
-        rules.toElement(req);
-        invoke(req);
-        mOutgoingRules = new ZFilterRules(rules);
+        ModifyOutgoingFilterRulesRequest req = new ModifyOutgoingFilterRulesRequest();
+        req.addFilterRule(rules.toJAXB());
+        invokeJaxb(req);
+        outgoingRules = new ZFilterRules(rules);
     }
 
     public void deleteDataSource(Key.DataSourceBy by, String key) throws ServiceException {
@@ -4933,7 +4938,7 @@ public class ZMailbox implements ToZJSONObject {
             throw ZClientException.CLIENT_ERROR("invalid URL: "+url, e);
         }
     }
-    
+
     /**
      * Given a path, resolves as much of the path as possible and returns the folder and the unmatched part.
      *

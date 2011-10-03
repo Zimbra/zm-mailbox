@@ -19,10 +19,9 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.zimbra.common.filter.Sieve;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.soap.mail.type.FilterAction;
 
 import org.json.JSONException;
 
@@ -63,6 +62,29 @@ public abstract class ZFilterAction implements ToZJSONObject {
         this.args = args != null ? ImmutableList.copyOf(args) : Collections.<String>emptyList();
     }
 
+    public static ZFilterAction of(FilterAction action) throws ServiceException {
+        if (action instanceof FilterAction.DiscardAction) {
+            return new ZDiscardAction();
+        } else if (action instanceof FilterAction.FileIntoAction) {
+            return new ZFileIntoAction((FilterAction.FileIntoAction) action);
+        } else if (action instanceof FilterAction.FlagAction) {
+            return new ZMarkAction((FilterAction.FlagAction) action);
+        } else if (action instanceof FilterAction.KeepAction) {
+            return new ZKeepAction();
+        } else if (action instanceof FilterAction.RedirectAction) {
+            return new ZRedirectAction((FilterAction.RedirectAction) action);
+        } else if (action instanceof FilterAction.ReplyAction) {
+            return new ZReplyAction((FilterAction.ReplyAction) action);
+        } else if (action instanceof FilterAction.NotifyAction) {
+            return new ZNotifyAction((FilterAction.NotifyAction) action);
+        } else if (action instanceof FilterAction.StopAction) {
+            return new ZStopAction();
+        } else if (action instanceof FilterAction.TagAction) {
+            return new ZTagAction((FilterAction.TagAction) action);
+        }
+        throw new IllegalArgumentException(action.getClass().getName());
+    }
+
     public String getName() {
         return name;
     }
@@ -72,55 +94,12 @@ public abstract class ZFilterAction implements ToZJSONObject {
     }
 
     public abstract String toActionString();
-
-    abstract Element toElement(Element parent);
-
-    public static ZFilterAction getAction(Element actionElement) throws ServiceException {
-        String n = actionElement.getName();
-        if (n.equals(MailConstants.E_ACTION_KEEP)) {
-            return new ZKeepAction();
-        } else if (n.equals(MailConstants.E_ACTION_DISCARD)) {
-            return new ZDiscardAction();
-        } else if (n.equals(MailConstants.E_ACTION_STOP)) {
-            return new ZStopAction();
-        } else if (n.equals(MailConstants.E_ACTION_FILE_INTO)) {
-            String folderPath = actionElement.getAttribute(MailConstants.A_FOLDER_PATH);
-            return new ZFileIntoAction(folderPath);
-        } else if (n.equals(MailConstants.E_ACTION_TAG)) {
-            String tagName = actionElement.getAttribute(MailConstants.A_TAG_NAME);
-            return new ZTagAction(tagName);
-        } else if (n.equals(MailConstants.E_ACTION_REDIRECT)) {
-            String address = actionElement.getAttribute(MailConstants.A_ADDRESS);
-            return new ZRedirectAction(address);
-        } else if (n.equals(MailConstants.E_ACTION_REPLY)) {
-            String bodyTemplate = actionElement.getAttribute(MailConstants.E_CONTENT);
-            return new ZReplyAction(bodyTemplate);
-        } else if (n.equals(MailConstants.E_ACTION_NOTIFY)) {
-            String emailAddr = actionElement.getAttribute(MailConstants.A_ADDRESS);
-            String subjectTemplate = actionElement.getAttribute(MailConstants.A_SUBJECT, "");
-            String bodyTemplate = actionElement.getAttribute(MailConstants.E_CONTENT, "");
-            int maxBodyBytes = actionElement.getAttributeInt(MailConstants.A_MAX_BODY_SIZE, -1);
-            String origHeaders = actionElement.getAttribute(MailConstants.A_ORIG_HEADERS, null);
-            return new ZNotifyAction(emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes, origHeaders);
-        } else if (n.equals(MailConstants.E_ACTION_FLAG)) {
-            Sieve.Flag flag = Sieve.Flag.fromString(actionElement.getAttribute(MailConstants.A_FLAG_NAME));
-            switch (flag) {
-                case read:
-                    return new ZMarkAction(MarkOp.READ);
-                case flagged:
-                    return new ZMarkAction(MarkOp.FLAGGED);
-                case priority:
-                    return new ZMarkAction(MarkOp.PRIORITY);
-                default:
-                    throw ZClientException.CLIENT_ERROR("unknown flag: " + flag, null);
-            }
-        } else {
-            throw ZClientException.CLIENT_ERROR("unknown filter action: " + n, null);
-        }
-    }
+    abstract FilterAction toJAXB();
 
     public static final class ZKeepAction extends ZFilterAction {
-        public ZKeepAction() { super(A_KEEP); }
+        public ZKeepAction() {
+            super(A_KEEP);
+        }
 
         @Override
         public String toActionString() {
@@ -128,8 +107,8 @@ public abstract class ZFilterAction implements ToZJSONObject {
         }
 
         @Override
-        Element toElement(Element parent) {
-            return parent.addElement(MailConstants.E_ACTION_KEEP);
+        FilterAction.KeepAction toJAXB() {
+            return new FilterAction.KeepAction();
         }
     }
 
@@ -144,8 +123,8 @@ public abstract class ZFilterAction implements ToZJSONObject {
         }
 
         @Override
-        Element toElement(Element parent) {
-            return parent.addElement(MailConstants.E_ACTION_DISCARD);
+        FilterAction.DiscardAction toJAXB() {
+            return new FilterAction.DiscardAction();
         }
     }
 
@@ -160,14 +139,18 @@ public abstract class ZFilterAction implements ToZJSONObject {
         }
 
         @Override
-        Element toElement(Element parent) {
-            return parent.addElement(MailConstants.E_ACTION_STOP);
+        FilterAction.StopAction toJAXB() {
+            return new FilterAction.StopAction();
         }
     }
 
     public static final class ZFileIntoAction extends ZFilterAction {
         public ZFileIntoAction(String folderPath) {
             super(A_FILEINTO, folderPath);
+        }
+
+        public ZFileIntoAction(FilterAction.FileIntoAction fileinto) {
+            this(fileinto.getFolder());
         }
 
         public String getFolderPath() {
@@ -180,16 +163,18 @@ public abstract class ZFilterAction implements ToZJSONObject {
         }
 
         @Override
-        Element toElement(Element parent) {
-            Element action = parent.addElement(MailConstants.E_ACTION_FILE_INTO);
-            action.addAttribute(MailConstants.A_FOLDER_PATH, getFolderPath());
-            return action;
+        FilterAction.FileIntoAction toJAXB() {
+            return new FilterAction.FileIntoAction(getFolderPath());
         }
     }
 
     public static final class ZTagAction extends ZFilterAction {
         public ZTagAction(String tagName) {
             super(A_TAG, tagName);
+        }
+
+        public ZTagAction(FilterAction.TagAction action) {
+            this(action.getTag());
         }
 
         public String getTagName() {
@@ -202,10 +187,8 @@ public abstract class ZFilterAction implements ToZJSONObject {
         }
 
         @Override
-        Element toElement(Element parent) {
-            Element action = parent.addElement(MailConstants.E_ACTION_TAG);
-            action.addAttribute(MailConstants.A_TAG_NAME, getTagName());
-            return action;
+        FilterAction.TagAction toJAXB() {
+            return new FilterAction.TagAction(getTagName());
         }
     }
 
@@ -215,6 +198,10 @@ public abstract class ZFilterAction implements ToZJSONObject {
         public ZMarkAction(MarkOp op) {
             super(A_FLAG, op.name().toLowerCase());
             this.op = op;
+        }
+
+        public ZMarkAction(FilterAction.FlagAction flag) throws ServiceException {
+            this(MarkOp.fromString(flag.getFlag()));
         }
 
         public String getMarkOp() {
@@ -227,26 +214,27 @@ public abstract class ZFilterAction implements ToZJSONObject {
         }
 
         @Override
-        Element toElement(Element parent) {
-            Element action = parent.addElement(MailConstants.E_ACTION_FLAG);
+        FilterAction.FlagAction toJAXB() {
             switch (op) {
                 case FLAGGED:
-                    action.addAttribute(MailConstants.A_FLAG_NAME, Sieve.Flag.flagged.name());
-                    break;
+                    return new FilterAction.FlagAction(Sieve.Flag.flagged.name());
                 case READ:
-                    action.addAttribute(MailConstants.A_FLAG_NAME, Sieve.Flag.read.name());
-                    break;
+                    return new FilterAction.FlagAction(Sieve.Flag.read.name());
                 case PRIORITY:
-                    action.addAttribute(MailConstants.A_FLAG_NAME, Sieve.Flag.priority.name());
-                    break;
+                    return new FilterAction.FlagAction(Sieve.Flag.priority.name());
+                default:
+                    throw new IllegalStateException(op.toString());
             }
-            return action;
         }
     }
 
     public static final class ZRedirectAction extends ZFilterAction {
         public ZRedirectAction(String address) {
             super(A_REDIRECT, address);
+        }
+
+        public ZRedirectAction(FilterAction.RedirectAction action) {
+            this(action.getAddress());
         }
 
         public String getAddress() {
@@ -259,16 +247,18 @@ public abstract class ZFilterAction implements ToZJSONObject {
         }
 
         @Override
-        Element toElement(Element parent) {
-            Element action = parent.addElement(MailConstants.E_ACTION_REDIRECT);
-            action.addAttribute(MailConstants.A_ADDRESS, getAddress());
-            return action;
+        FilterAction.RedirectAction toJAXB() {
+            return new FilterAction.RedirectAction(getAddress());
         }
     }
 
     public static final class ZReplyAction extends ZFilterAction {
         public ZReplyAction(String bodyTemplate) {
             super(A_REPLY, bodyTemplate);
+        }
+
+        public ZReplyAction(FilterAction.ReplyAction action) {
+            this(action.getContent());
         }
 
         public String getBodyTemplate() {
@@ -281,10 +271,8 @@ public abstract class ZFilterAction implements ToZJSONObject {
         }
 
         @Override
-        Element toElement(Element parent) {
-            Element action = parent.addElement(MailConstants.E_ACTION_REPLY);
-            action.addElement(MailConstants.E_CONTENT).addText(getBodyTemplate());
-            return action;
+        FilterAction.ReplyAction toJAXB() {
+            return new FilterAction.ReplyAction(getBodyTemplate());
         }
     }
 
@@ -297,14 +285,15 @@ public abstract class ZFilterAction implements ToZJSONObject {
             this(emailAddr, subjectTemplate, bodyTemplate, maxBodyBytes, "");
         }
 
-        public ZNotifyAction(
-                String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes, String origHeaders) {
-            super(A_NOTIFY,
-                    emailAddr,
-                    subjectTemplate == null ? "" : subjectTemplate,
-                    bodyTemplate == null ? "" : bodyTemplate,
-                    Integer.toString(maxBodyBytes),
-                    origHeaders == null ? "" : origHeaders);
+        public ZNotifyAction(String emailAddr, String subjectTemplate, String bodyTemplate, int maxBodyBytes,
+                String origHeaders) {
+            super(A_NOTIFY, emailAddr, Strings.nullToEmpty(subjectTemplate), Strings.nullToEmpty(bodyTemplate),
+                    Integer.toString(maxBodyBytes), Strings.nullToEmpty(origHeaders));
+        }
+
+        public ZNotifyAction(FilterAction.NotifyAction action) {
+            this(action.getAddress(), action.getSubject(), action.getContent(), action.getMaxBodySize(),
+                    action.getOrigHeaders());
         }
 
         public String getEmailAddr() {
@@ -336,21 +325,13 @@ public abstract class ZFilterAction implements ToZJSONObject {
         }
 
         @Override
-        Element toElement(Element parent) {
-            Element action = parent.addElement(MailConstants.E_ACTION_NOTIFY);
-            action.addAttribute(MailConstants.A_ADDRESS, getEmailAddr());
-            if (!Strings.isNullOrEmpty(getSubjectTemplate())) {
-                action.addAttribute(MailConstants.A_SUBJECT, getSubjectTemplate());
-            }
-            if (!Strings.isNullOrEmpty(getBodyTemplate())) {
-                action.addElement(MailConstants.E_CONTENT).addText(getBodyTemplate());
-            }
-            if (getMaxBodyBytes() != -1) {
-                action.addAttribute(MailConstants.A_MAX_BODY_SIZE, getMaxBodyBytes());
-            }
-            if (!StringUtil.isNullOrEmpty(getOrigHeaders())) {
-                action.addAttribute(MailConstants.A_ORIG_HEADERS, getOrigHeaders());
-            }
+        FilterAction.NotifyAction toJAXB() {
+            FilterAction.NotifyAction action = new FilterAction.NotifyAction();
+            action.setAddress(getEmailAddr());
+            action.setSubject(getSubjectTemplate());
+            action.setContent(getBodyTemplate());
+            action.setMaxBodySize(getMaxBodyBytes());
+            action.setOrigHeaders(getOrigHeaders());
             return action;
         }
     }
