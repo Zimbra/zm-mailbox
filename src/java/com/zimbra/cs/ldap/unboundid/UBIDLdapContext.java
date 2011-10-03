@@ -598,7 +598,7 @@ public class UBIDLdapContext extends ZLdapContext {
             throw UBIDLdapException.mapToExternalLdapException("unable to ldap authenticate", e);    
         } finally {
             op.end(bindResult, 
-                    String.format("conn=[%d], url=[%s], connType=[%s], bindDN=[%s]",
+                    String.format("conn=[%s], url=[%s], connType=[%s], bindDN=[%s]",
                     connection == null ? "null" : connection.getConnectionID(),
                     serverPool.getRawUrls(),
                     serverPool.getConnectionType().name(),
