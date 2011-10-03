@@ -365,13 +365,7 @@ public final class MailConstants {
     public static final QName SYNC_REQUEST = QName.get(E_SYNC_REQUEST, NAMESPACE);
     public static final QName SYNC_RESPONSE = QName.get(E_SYNC_RESPONSE, NAMESPACE);
 
-    // Filter rules - old format
-    public static final QName GET_RULES_REQUEST = QName.get(E_GET_RULES_REQUEST, NAMESPACE);
-    public static final QName GET_RULES_RESPONSE = QName.get(E_GET_RULES_RESPONSE, NAMESPACE);
-    public static final QName SAVE_RULES_REQUEST = QName.get(E_SAVE_RULES_REQUEST, NAMESPACE);
-    public static final QName SAVE_RULES_RESPONSE = QName.get(E_SAVE_RULES_RESPONSE, NAMESPACE);
-
-    // Filter rules - new format
+    // Filter rules
     public static final QName GET_FILTER_RULES_REQUEST = QName.get(E_GET_FILTER_RULES_REQUEST, NAMESPACE);
     public static final QName GET_FILTER_RULES_RESPONSE = QName.get(E_GET_FILTER_RULES_RESPONSE, NAMESPACE);
     public static final QName MODIFY_FILTER_RULES_REQUEST = QName.get(E_MODIFY_FILTER_RULES_REQUEST, NAMESPACE);

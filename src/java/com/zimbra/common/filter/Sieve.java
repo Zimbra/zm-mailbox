@@ -63,13 +63,12 @@ public final class Sieve {
     public enum StringComparison {
         is, contains, matches;
 
-        public static StringComparison fromString(String value)
-        throws ServiceException {
+        public static StringComparison fromString(String value) throws ServiceException {
             if (value == null) {
                 return null;
             }
             try {
-                return StringComparison.valueOf(value);
+                return StringComparison.valueOf(value.toLowerCase());
             } catch (IllegalArgumentException e) {
                 throw ServiceException.PARSE_ERROR(
                     "Invalid value: "+ value +", valid values: " + Arrays.asList(StringComparison.values()), e);
@@ -124,13 +123,12 @@ public final class Sieve {
     public enum NumberComparison {
         over, under;
 
-        public static NumberComparison fromString(String value)
-        throws ServiceException {
+        public static NumberComparison fromString(String value) throws ServiceException {
             if (value == null) {
                 return null;
             }
             try {
-                return NumberComparison.valueOf(value);
+                return NumberComparison.valueOf(value.toLowerCase());
             } catch (IllegalArgumentException e) {
                 throw ServiceException.PARSE_ERROR(
                     "Invalid value: "+ value +", valid values: " + Arrays.asList(NumberComparison.values()), e);
@@ -141,13 +139,12 @@ public final class Sieve {
     public enum DateComparison {
         before, after;
 
-        public static DateComparison fromString(String value)
-        throws ServiceException {
+        public static DateComparison fromString(String value) throws ServiceException {
             if (value == null) {
                 return null;
             }
             try {
-                return DateComparison.valueOf(value);
+                return DateComparison.valueOf(value.toLowerCase());
             } catch (IllegalArgumentException e) {
                 throw ServiceException.PARSE_ERROR(
                     "Invalid value: "+ value +", valid values: " + Arrays.asList(StringComparison.values()), e);
