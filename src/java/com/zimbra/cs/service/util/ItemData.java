@@ -19,8 +19,10 @@ import java.io.IOException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Tag;
 
@@ -157,17 +159,13 @@ public class ItemData {
         }
     }
 
-    private String getTagString(MailItem mi) throws IOException {
+    private String getTagString(MailItem mi) throws ServiceException {
         String tags = "";
 
-        try {
-            for (Tag tag : mi.getTagList()) {
-                if (tags.length() > 0)
-                    tags += ':';
-                tags += tag.getName();
-            }
-        } catch (Exception e) {
-            throw new IOException("tag error: " + e);
+        for (Tag tag : mi.getTagList()) {
+            if (tags.length() > 0)
+                tags += ':';
+            tags += tag.getName();
         }
         return tags;
     }
@@ -186,7 +184,14 @@ public class ItemData {
         }
     }
     
-    public boolean tagsEqual(MailItem mi) throws IOException {
-        return isOldTags() ? tags.equals(mi.getTagString()) : tags.equals(getTagString(mi));
+    public boolean tagsEqual(MailItem mi) throws ServiceException {
+        try {
+            return isOldTags() ? tags.equals(mi.getTagString()) : tags.equals(getTagString(mi));
+        } catch (MailServiceException.NoSuchItemException e) {
+            if (e.getCode() == MailServiceException.NO_SUCH_TAG)
+                return false;
+            else
+                throw e;                
+        }
     }
 }
