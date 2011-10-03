@@ -32,6 +32,7 @@ import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
 import com.zimbra.cs.ldap.LdapException.LdapMultipleEntriesMatchedException;
 import com.zimbra.cs.ldap.LdapException.LdapSizeLimitExceededException;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapServerType;
@@ -74,7 +75,7 @@ public class TestLdapHelper extends TestLdap {
     public void searchForEntry() throws Exception {
         LdapDIT dit = prov.getDIT();
         String base = dit.configBranchBaseDN();
-        ZLdapFilter filter = ZLdapFilterFactory.getInstance().fromFilterString("(cn=config)");
+        ZLdapFilter filter = ZLdapFilterFactory.getInstance().fromFilterString(FilterId.UNITTEST, "(cn=config)");
         
         ZSearchResultEntry sr = ldapHelper.searchForEntry(
                 base, filter, null, false);
@@ -103,7 +104,7 @@ public class TestLdapHelper extends TestLdap {
     public void searchForEntryNotFound() throws Exception {
         LdapDIT dit = prov.getDIT();
         String base = dit.configBranchBaseDN();
-        ZLdapFilter filter = ZLdapFilterFactory.getInstance().fromFilterString("(cn=bogus)");
+        ZLdapFilter filter = ZLdapFilterFactory.getInstance().fromFilterString(FilterId.UNITTEST, "(cn=bogus)");
         
         ZSearchResultEntry sr = ldapHelper.searchForEntry(
                 base, filter, null, false);

@@ -161,7 +161,7 @@ public class UBIDLdapContext extends ZLdapContext {
                 start = ZimbraPerf.STOPWATCH_LDAP_DC.start();
             }
             
-            LDAPConnection connection = UBIDLdapOperation.GET_CONNECTION(this).execute(pool);
+            LDAPConnection connection = UBIDLdapOperation.GET_CONNECTION.execute(this, pool);
             
             if (isZimbraLdap) {
                 ZimbraPerf.STOPWATCH_LDAP_DC.stop(start);
@@ -237,7 +237,7 @@ public class UBIDLdapContext extends ZLdapContext {
     @Override
     public void createEntry(ZMutableEntry entry) throws ServiceException {
         try {
-            UBIDLdapOperation.CREATE_ENTRY(this).execute(((UBIDMutableEntry) entry).getNative());
+            UBIDLdapOperation.CREATE_ENTRY.execute(this, ((UBIDMutableEntry) entry).getNative());
         } catch (LDAPException e) {
             throw mapToLdapException("unable to create entry", e);
         }
@@ -295,7 +295,7 @@ public class UBIDLdapContext extends ZLdapContext {
                     
             searchRequest.setAttributes("dn");
             
-            SearchResult result = UBIDLdapOperation.SEARCH(this).execute(searchRequest);
+            SearchResult result = UBIDLdapOperation.SEARCH.execute(this, searchRequest);
             
             List<SearchResultEntry> entries = result.getSearchEntries();
             for (SearchResultEntry entry : entries) {
@@ -309,7 +309,7 @@ public class UBIDLdapContext extends ZLdapContext {
     @Override
     public ZAttributes getAttributes(String dn, String[] attrs) throws LdapException {
         try {
-            SearchResultEntry entry = UBIDLdapOperation.GET_ENTRY(this).execute(dn, attrs);
+            SearchResultEntry entry = UBIDLdapOperation.GET_ENTRY.execute(this, dn, attrs);
             
             if (entry == null) {
                 throw LdapException.ENTRY_NOT_FOUND("entry not found at " + dn, null);
@@ -323,7 +323,7 @@ public class UBIDLdapContext extends ZLdapContext {
     @Override
     public ZLdapSchema getSchema() throws LdapException {
         try {
-            Schema schema = UBIDLdapOperation.GET_SCHEMA(this).execute();
+            Schema schema = UBIDLdapOperation.GET_SCHEMA.execute(this);
             return new UBIDLdapSchema(schema);
         } catch (LDAPException e) {
             throw mapToLdapException("unable to get schema", e);
@@ -334,8 +334,8 @@ public class UBIDLdapContext extends ZLdapContext {
     public void modifyAttributes(String dn, ZModificationList modList) 
     throws LdapException {
         try {
-            LDAPResult result = UBIDLdapOperation.MODIFY_ATTRS(this).execute(
-                    dn, ((UBIDModificationList)modList).getModList());
+            LDAPResult result = UBIDLdapOperation.MODIFY_ATTRS.execute(
+                    this, dn, ((UBIDModificationList)modList).getModList());
         } catch (LDAPException e) {
             throw mapToLdapException("unable to modify attributes", e);
         }
@@ -349,7 +349,7 @@ public class UBIDLdapContext extends ZLdapContext {
             ModifyRequest modReq = new ModifyRequest(dn, ((UBIDModificationList)modList).getModList());
             modReq.addControl(new AssertionRequestControl(((UBIDLdapFilter) testFilter).getNative()));
             
-            LDAPResult result = UBIDLdapOperation.TEST_AND_MODIFY_ATTRS(this).execute(modReq);
+            LDAPResult result = UBIDLdapOperation.TEST_AND_MODIFY_ATTRS.execute(this, modReq);
             return true;
         } catch (LDAPException e) {
             if (e.getResultCode() == ResultCode.ASSERTION_FAILED) {
@@ -377,7 +377,7 @@ public class UBIDLdapContext extends ZLdapContext {
                     
             searchRequest.setAttributes("dn");
             
-            SearchResult result = UBIDLdapOperation.SEARCH(this).execute(searchRequest);
+            SearchResult result = UBIDLdapOperation.SEARCH.execute(this, searchRequest);
             
             List<SearchResultEntry> entries = result.getSearchEntries();
             for (SearchResultEntry entry : entries) {
@@ -385,7 +385,7 @@ public class UBIDLdapContext extends ZLdapContext {
                 String childDn = entryDN.toNormalizedString();
                 String childRdn = entryDN.getRDNString();
                 
-                UBIDLdapOperation.MODIFY_DN(this).execute(childDn, childRdn, true, newDn);
+                UBIDLdapOperation.MODIFY_DN.execute(this, childDn, childRdn, true, newDn);
             }
         } catch (LDAPException e) {
             throw mapToLdapException("unable to move children", e);
@@ -399,7 +399,7 @@ public class UBIDLdapContext extends ZLdapContext {
             String newRDN = newDN.getRDNString();
             String newSuperiorDN = newDN.getParentString();
             
-            UBIDLdapOperation.MODIFY_DN(this).execute(oldDn, newRDN, true, newSuperiorDN);
+            UBIDLdapOperation.MODIFY_DN.execute(this, oldDn, newRDN, true, newSuperiorDN);
         } catch (LDAPException e) {
             throw mapToLdapException("unable to rename entry", e);
         }
@@ -447,7 +447,7 @@ public class UBIDLdapContext extends ZLdapContext {
                 
                 SearchResult result = null;
                 try {
-                    result = UBIDLdapOperation.SEARCH(this).execute(searchRequest);
+                    result = UBIDLdapOperation.SEARCH.execute(this, searchRequest);
                 } catch (LDAPException e) {
                     if (ResultCode.SIZE_LIMIT_EXCEEDED == e.getResultCode() && wantPartialResult) {
                         // if callsite wants partial result, return them
@@ -510,7 +510,7 @@ public class UBIDLdapContext extends ZLdapContext {
             
             searchRequest.setAttributes(sc.getReturnAttrs());
             
-            SearchResult result = UBIDLdapOperation.SEARCH(this).execute(searchRequest);
+            SearchResult result = UBIDLdapOperation.SEARCH.execute(this, searchRequest, filter);
             
             return new UBIDSearchResultEnumeration(result);
         } catch (LDAPException e) {
@@ -521,7 +521,7 @@ public class UBIDLdapContext extends ZLdapContext {
     @Override
     public void deleteEntry(String dn) throws LdapException {
         try {
-            UBIDLdapOperation.DELETE_ENTRY(this).execute(dn);
+            UBIDLdapOperation.DELETE_ENTRY.execute(this, dn);
         } catch (LDAPException e) {
             throw mapToLdapException("unable to delete entry", e);
         }
@@ -564,13 +564,12 @@ public class UBIDLdapContext extends ZLdapContext {
          * 
          */
 
-                
+        boolean succeeded = false;        
         LdapServerPool serverPool = new LdapServerPool(config);
         LDAPConnection connection = null;
         BindResult bindResult = null;
         
-        UBIDLdapOperation.GenericOp op = UBIDLdapOperation.GENERIC_OP(LdapOp.OPEN_CONN, usage);
-        op.begin();
+        long startTime = UBIDLdapOperation.GENERIC_OP.begin();
         try {
             connection = serverPool.getServerSet().getConnection();
             if (serverPool.getConnectionType() == LdapConnType.STARTTLS) {
@@ -594,10 +593,13 @@ public class UBIDLdapContext extends ZLdapContext {
             if (bindResult.getResultCode() != ResultCode.SUCCESS) {
                 throw ServiceException.FAILURE("unable to bind", null);
             }
+            succeeded = true;
         } catch (LDAPException e) {
             throw UBIDLdapException.mapToExternalLdapException("unable to ldap authenticate", e);    
         } finally {
-            op.end(bindResult, 
+            UBIDLdapOperation.GENERIC_OP.end(LdapOp.OPEN_CONN, usage, startTime,
+                    succeeded,
+                    bindResult, 
                     String.format("conn=[%s], url=[%s], connType=[%s], bindDN=[%s]",
                     connection == null ? "null" : connection.getConnectionID(),
                     serverPool.getRawUrls(),

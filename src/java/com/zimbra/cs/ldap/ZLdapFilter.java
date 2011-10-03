@@ -14,8 +14,23 @@
  */
 package com.zimbra.cs.ldap;
 
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 
 public abstract class ZLdapFilter extends ZLdapElement {
     
+    private FilterId filterId;
+    
+    protected ZLdapFilter(FilterId filterId) {
+        this.filterId = filterId;
+    }
+    
     public abstract String toFilterString();
+    
+    public String getStatString() {
+        // TODO: mandate factory
+        return filterId == null ? "" : filterId.getStatString();
+        // return filterId.name();
+    }
+
+    
 }

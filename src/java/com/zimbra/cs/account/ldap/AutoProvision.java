@@ -74,6 +74,7 @@ import com.zimbra.cs.ldap.LdapException.LdapSizeLimitExceededException;
 import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 import com.zimbra.cs.ldap.SearchLdapOptions.StopIteratingException;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.util.JMSession;
 
 public abstract class AutoProvision {
@@ -346,7 +347,8 @@ public abstract class AutoProvision {
                 String searchFilter = LdapUtilCommon.computeAuthDn(loginName, searchFilterTemplate);
                 ZimbraLog.autoprov.debug("AutoProvision: computed search filter" + searchFilter);
                 ZSearchResultEntry entry = prov.getHelper().searchForEntry(
-                        searchBase, ZLdapFilterFactory.getInstance().fromFilterString(searchFilter), 
+                        searchBase, ZLdapFilterFactory.getInstance().fromFilterString(
+                                FilterId.AUTO_PROVISION_GET_EXTERNAL_ATTRS, searchFilter), 
                         zlc, attrs);
                 return new ExternalEntry(entry.getDN(), entry.getAttributes());
             }

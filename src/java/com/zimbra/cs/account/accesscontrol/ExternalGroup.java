@@ -43,6 +43,7 @@ import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 
 public class ExternalGroup extends NamedEntry {
     
@@ -152,7 +153,7 @@ public class ExternalGroup extends NamedEntry {
             zlc = groupHandler.getExternalDelegatedAdminGroupsLdapContext(domain, asAdmin);
             
             ZSearchResultEntry entry = prov.getHelper().searchForEntry(
-                    searchBase, searchFilter, zlc, new String[]{"mail"});
+                    searchBase, FilterId.EXTERNAL_GROUP, searchFilter, zlc, new String[]{"mail"});
             
             if (entry != null) {
                 return makeExternalGroup(domain, groupHandler, extGroupName, 

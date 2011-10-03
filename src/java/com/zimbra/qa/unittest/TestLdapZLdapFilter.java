@@ -25,6 +25,7 @@ import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 
 import static org.junit.Assert.*;
 
@@ -46,21 +47,49 @@ public class TestLdapZLdapFilter extends TestLdap {
     @Test
     public void hasSubordinates() throws Exception {
         String filter = LegacyLdapFilter.hasSubordinates();
-        String zFilter = filterDactory.hasSubordinates().toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.hasSubordinates();
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        assertEquals(FilterId.HAS_SUBORDINATES.getStatString(), zLdapFilter.getStatString());
     }
     
     @Test
     public void anyEntry() throws Exception {
         String filter = LegacyLdapFilter.anyEntry();
-        String zFilter = filterDactory.anyEntry().toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.anyEntry();
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        assertEquals(FilterId.ANY_ENTRY.getStatString(), zLdapFilter.getStatString());
     }
+    
+    @Test
+    public void fromFilterString() throws Exception {
+        String FILTER_STR = "(blah=123)";
+        ZLdapFilter zLdapFilter = filterDactory.fromFilterString(
+                FilterId.AUTO_PROVISION_GET_EXTERNAL_ATTRS, FILTER_STR);
+        assertEquals(FILTER_STR, zLdapFilter.toFilterString());
+        assertEquals(FilterId.AUTO_PROVISION_GET_EXTERNAL_ATTRS.getStatString(), zLdapFilter.getStatString());
+    }
+    
+    
+    @Test
+    public void addrsExist() throws Exception {
+        String[] ADDRS = new String[]{"addr1@test.com", "addr2@test.com", "addr2@test.com"};
+        
+        String filter = LegacyLdapFilter.addrsExist(ADDRS);
+        ZLdapFilter zLdapFilter = filterDactory.addrsExist(ADDRS);
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        assertEquals(FilterId.ADDRS_EXIST.getStatString(), zLdapFilter.getStatString());
+    }
+    
     @Test
     public void allAccounts() throws Exception {
         String filter = LegacyLdapFilter.allAccounts();
-        String zFilter = filterDactory.allAccounts().toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.allAccounts();
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        assertEquals(FilterId.ALL_ACCOUNTS.getStatString(), zLdapFilter.getStatString());
     }
     
     @Test
@@ -68,10 +97,12 @@ public class TestLdapZLdapFilter extends TestLdap {
         String filter = LegacyLdapFilter.allNonSystemAccounts();
         // (&(objectclass=zimbraAccount)(!(objectclass=zimbraCalendarResource))(!(zimbraIsSystemResource=TRUE)))
         
-        String zFilter = filterDactory.allNonSystemAccounts().toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.allNonSystemAccounts();
+        String zFilter = zLdapFilter.toFilterString();
         // (&(&(objectclass=zimbraAccount)(!(objectclass=zimbraCalendarResource)))(!(zimbraIsSystemResource=TRUE)))
         
         // assertEquals(filter, zFilter);  the diff is OK
+        assertEquals(FilterId.ALL_NON_SYSTEM_ACCOUNTS.getStatString(), zLdapFilter.getStatString());
     }
     
     @Test
@@ -79,8 +110,10 @@ public class TestLdapZLdapFilter extends TestLdap {
         String FOREIFN_PRINCIPAL = "accountByForeignPrincipal";
         
         String filter = LegacyLdapFilter.accountByForeignPrincipal(FOREIFN_PRINCIPAL);
-        String zFilter = filterDactory.accountByForeignPrincipal(FOREIFN_PRINCIPAL).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.accountByForeignPrincipal(FOREIFN_PRINCIPAL);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        assertEquals(FilterId.ACCOUNT_BY_FOREIGN_PRINCIPAL.getStatString(), zLdapFilter.getStatString());
     }
     
     @Test
@@ -88,8 +121,21 @@ public class TestLdapZLdapFilter extends TestLdap {
         String ID = genUUID();
         
         String filter = LegacyLdapFilter.accountById(ID);
-        String zFilter = filterDactory.accountById(ID).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.accountById(ID);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        assertEquals(FilterId.ACCOUNT_BY_ID.getStatString(), zLdapFilter.getStatString());
+    }
+    
+    @Test
+    public void accountByMemberOf() throws Exception {
+        String MEMBEROF = "accountByMemberOf";
+            
+        String filter = LegacyLdapFilter.accountByMemberOf(MEMBEROF);
+        ZLdapFilter zLdapFilter = filterDactory.accountByMemberOf(MEMBEROF);
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        assertEquals(FilterId.ACCOUNT_BY_MEMBEROF.getStatString(), zLdapFilter.getStatString());
     }
     
     @Test
@@ -97,8 +143,10 @@ public class TestLdapZLdapFilter extends TestLdap {
         String NAME = "accountByName";
             
         String filter = LegacyLdapFilter.accountByName(NAME);
-        String zFilter = filterDactory.accountByName(NAME).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.accountByName(NAME);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        assertEquals(FilterId.ACCOUNT_BY_NAME.getStatString(), zLdapFilter.getStatString());
     }
     
     @Test
@@ -107,15 +155,19 @@ public class TestLdapZLdapFilter extends TestLdap {
         String NAME = "adminAccountByRDN";
         
         String filter = LegacyLdapFilter.adminAccountByRDN(NAMING_RDN_ATTR, NAME);
-        String zFilter = filterDactory.adminAccountByRDN(NAMING_RDN_ATTR, NAME).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.adminAccountByRDN(NAMING_RDN_ATTR, NAME);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        assertEquals(FilterId.ADMIN_ACCOUNT_BY_RDN.getStatString(), zLdapFilter.getStatString());
     }
     
     @Test
     public void adminAccountByAdminFlag() throws Exception {
         String filter = LegacyLdapFilter.adminAccountByAdminFlag();
-        String zFilter = filterDactory.adminAccountByAdminFlag().toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.adminAccountByAdminFlag();
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        assertEquals(FilterId.ADMIN_ACCOUNT_BY_ADMIN_FLAG.getStatString(), zLdapFilter.getStatString());
     }
     
     @Test
@@ -151,7 +203,8 @@ public class TestLdapZLdapFilter extends TestLdap {
         String COS_ID = genUUID();
         
         String filter = LegacyLdapFilter.accountsOnServerOnCosHasSubordinates(SERVER, COS_ID);
-        String zFilter = filterDactory.accountsOnServerOnCosHasSubordinates(SERVER, COS_ID).toFilterString();
+        ZLdapFilter zLapFilter = filterDactory.accountsOnServerOnCosHasSubordinates(SERVER, COS_ID);
+        String zFilter = zLapFilter.toFilterString();
         assertEquals(filter, zFilter);
     }
     
@@ -437,7 +490,7 @@ public class TestLdapZLdapFilter extends TestLdap {
         boolean caughtException = false;
         
         try {
-            filter = filterDactory.fromFilterString(badStringFilter);
+            filter = filterDactory.fromFilterString(FilterId.UNITTEST, badStringFilter);
         } catch (LdapException e) {
             // e.printStackTrace();
             if (LdapException.INVALID_SEARCH_FILTER.equals(e.getCode())) {
@@ -449,7 +502,7 @@ public class TestLdapZLdapFilter extends TestLdap {
         
         String goodStringFilter = "(&(|(displayName=*)(cn=*)(sn=*)(givenName=*)(mail=*))(!(msExchHideFromAddressLists=TRUE))(!(displayName=*\\28EMC\\29))(mailnickname=*)(|(&(objectCategory=person)(objectClass=user)(!(homeMDB=*))(!(msExchHomeServerName=*)))(&(objectCategory=person)(objectClass=user)(|(homeMDB=*)(msExchHomeServerName=*)))(&(objectCategory=person)(objectClass=contact))(objectCategory=group)(objectCategory=publicFolder)(objectCategory=msExchDynamicDistributionList)))";
         // String goodStringFilter = "(displayName=*\\28EMC\\29)";
-        filter = filterDactory.fromFilterString(goodStringFilter);
+        filter = filterDactory.fromFilterString(FilterId.UNITTEST, goodStringFilter);
         // System.out.println(filter.toFilterString());
         
         /*

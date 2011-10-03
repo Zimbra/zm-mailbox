@@ -18,7 +18,6 @@ import java.util.List;
 
 import com.unboundid.ldap.protocol.LDAPResponse;
 import com.unboundid.ldap.sdk.Control;
-import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.Entry;
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
@@ -33,114 +32,96 @@ import com.unboundid.ldap.sdk.schema.Schema;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.ldap.LdapUsage;
+import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.unboundid.UBIDLogger.LdapOp;
+import com.zimbra.cs.stats.ZimbraPerf;
 
 abstract class UBIDLdapOperation {
+    private static final boolean STATS_ENABLED = true;
+    
     private static Log debugLogger = ZimbraLog.ldap;
     
-    protected UBIDLdapContext ctx;
-    protected LDAPResponse resp;
-    protected Timer timer;
+    static final GetConnection GET_CONNECTION = new GetConnection();
+    static final CreateEntry CREATE_ENTRY = new CreateEntry();
+    static final DeleteEntry DELETE_ENTRY = new DeleteEntry();
+    static final Search SEARCH = new Search();
+    static final GetEntry GET_ENTRY = new GetEntry();
+    static final GetSchema GET_SCHEMA = new GetSchema();
+    static final ModifyAttrs MODIFY_ATTRS = new ModifyAttrs();
+    static final TestAndModifyAttrs TEST_AND_MODIFY_ATTRS = new TestAndModifyAttrs();
+    static final ModifyDN MODIFY_DN = new ModifyDN();
+    static final GenericOp GENERIC_OP = new GenericOp();
     
-    static GetConnection GET_CONNECTION(UBIDLdapContext ctx) {
-        return new GetConnection(ctx);
+    protected void stat(long startTime) {
+        stat(startTime, getOp());
     }
     
-    static CreateEntry CREATE_ENTRY(UBIDLdapContext ctx) {
-        return new CreateEntry(ctx);
+    protected void searchStat(long startTime, String param) {
+        if (STATS_ENABLED) {
+            ZimbraPerf.LDAP_TRACKER.addStat(getOp().name() + " " + param, startTime);
+        }
     }
     
-    static DeleteEntry DELETE_ENTRY(UBIDLdapContext ctx) {
-        return new DeleteEntry(ctx);
+    protected void stat(long startTime, LdapOp op) {
+        stat(startTime, op.name());
     }
     
-    static Search SEARCH(UBIDLdapContext ctx) {
-        return new Search(ctx);
-    }
-    
-    static GetEntry GET_ENTRY(UBIDLdapContext ctx) {
-        return new GetEntry(ctx);
-    }
-    
-    static GetSchema GET_SCHEMA(UBIDLdapContext ctx) {
-        return new GetSchema(ctx);
-    }
-    
-    static ModifyAttrs MODIFY_ATTRS(UBIDLdapContext ctx) {
-        return new ModifyAttrs(ctx);
-    }
-    
-    static TestAndModifyAttrs TEST_AND_MODIFY_ATTRS(UBIDLdapContext ctx) {
-        return new TestAndModifyAttrs(ctx);
-    }
-    
-    static ModifyDN MODIFY_DN(UBIDLdapContext ctx) {
-        return new ModifyDN(ctx);
-    }
-    
-    static GenericOp GENERIC_OP(LdapOp op, LdapUsage usage) {
-        return new GenericOp(op, usage);
-    }
-    
-    protected UBIDLdapOperation(UBIDLdapContext ctx) {
-        this.ctx = ctx;
+    private void stat(long startTime, String op) {
+        if (STATS_ENABLED) {
+            ZimbraPerf.LDAP_TRACKER.addStat(op, startTime);
+        }
     }
     
     protected abstract LdapOp getOp();
-    
+
     protected boolean debugEnabled() {
         return debugLogger.isDebugEnabled();
     }
     
-    protected void beginOp() {
-        if (!debugLogger.isDebugEnabled()) {
-            return;
-        }
-        timer = new Timer();
-        timer.start();
+    protected void debug(UBIDLdapContext ctx, long startTime) {
+        debug(ctx, startTime, null);
     }
     
-    protected void endOp() {
-        endOp(ctx.getConn(), null);
+    protected void debug(UBIDLdapContext ctx, long startTime, String extraInfo) {
+        debug(ctx, startTime, ctx.getConn(), extraInfo);
     }
     
-    protected void endOp(String extraInfo) {
-        endOp(ctx.getConn(), extraInfo);
-    }
-    
-    protected void endOp(LDAPConnection conn, String extraInfo) {
-        if (!debugLogger.isDebugEnabled()) {
-            return;
-        }
-        
+    // for ops not returning a LDAPResponse
+    protected void debug(UBIDLdapContext ctx, long startTime, 
+            LDAPConnection conn, String extraInfo) {
         debugLogger.debug(
-                "%s - millis=[%d], resp=[%s], usage=[%s], conn=[%d]%s", 
-                getOp(), 
-                timer.elapsedMillis(), 
-                getRespText(),
-                getUsage().name(),
-                conn.getConnectionID(), 
+                "%s - millis=[%d], usage=[%s], conn=[%s]%s", 
+                getOp().name(), 
+                System.currentTimeMillis() - startTime, 
+                ctx.getUsage().name(),
+                conn == null ? "" : conn.getConnectionID(), 
+                extraInfo == null ? "" : ", " + extraInfo);
+    }
+    
+    // for ops returning a LDAPResponse
+    protected void debug(UBIDLdapContext ctx, long startTime, LDAPResponse resp,
+            String extraInfo) {
+        debugLogger.debug(
+                "%s - millis=[%d], resp=[%s], usage=[%s], conn=[%s]%s", 
+                getOp().name(), 
+                System.currentTimeMillis() - startTime, 
+                getRespText(resp),
+                ctx.getUsage().name(),
+                ctx.getConn().getConnectionID(), 
                 extraInfo == null ? "" : ", " + extraInfo);
     }
     
     // only for GenericOp
-    protected void endOp(LDAPResponse resp, String extraInfo) {
-        if (!debugLogger.isDebugEnabled()) {
-            return;
-        }
-        
+    protected void debug(LdapOp op, LdapUsage usage, long startTime, LDAPResponse resp, 
+            String extraInfo) {
         debugLogger.debug(
                 "%s - millis=[%d], resp=[%s], usage=[%s]%s", 
-                getOp(), 
-                timer.elapsedMillis(), 
-                getRespText(),
-                getUsage().name(),
+                op.name(), 
+                System.currentTimeMillis() - startTime, 
+                getRespText(resp),
+                usage.name(),
                 extraInfo == null ? "" : ", " + extraInfo);
-    }
-    
-    protected LdapUsage getUsage() {
-        return ctx.getUsage();
     }
     
     protected String getConnectionPoolLogName(LDAPConnectionPool connPool) {
@@ -170,7 +151,7 @@ abstract class UBIDLdapOperation {
         return buffer.toString();
     }
     
-    protected String getRespText() {
+    protected String getRespText(LDAPResponse resp) {
         if (resp == null) {
             return "null";
         } else if (resp instanceof LDAPResult) {
@@ -179,72 +160,58 @@ abstract class UBIDLdapOperation {
             return resp.toString();
         }
     }
-    
-    private static class Timer {
-        private long startTime;
-        
-        private void start() {
-            startTime = System.currentTimeMillis();
-        }
-        
-        private long elapsedMillis() {
-            return System.currentTimeMillis() - startTime;
-        }
-    }
+
     
     /**
      * GetConnection
      */
     static class GetConnection extends UBIDLdapOperation {
-        private GetConnection(UBIDLdapContext ctx) {
-            super(ctx);
-        }
                 
         @Override
         protected LdapOp getOp() {
             return LdapOp.GET_CONN;
         }
         
-        LDAPConnection execute(LDAPConnectionPool pool) throws LDAPException {
+        LDAPConnection execute(UBIDLdapContext ctx, LDAPConnectionPool pool) 
+        throws LDAPException {
             LDAPConnection connection = null;
-            
-            beginOp();
+            long startTime = System.currentTimeMillis();
             try {
                 connection = pool.getConnection();
+                stat(startTime);
                 return connection;
             } finally {
                 if (debugEnabled()) {
-                    endOp(connection, String.format("connPool=[%s(%d)]",
+                    debug(ctx, startTime, connection, 
+                            String.format("connPool=[%s(%d)]",
                             getConnectionPoolLogName(pool), 
                             pool.hashCode()));
                 }
             }
         }
     }
-    
-    
+   
     /**
      * CreateEntry
      */
     static class CreateEntry extends UBIDLdapOperation {
-
-        private CreateEntry(UBIDLdapContext ctx) {
-            super(ctx);
-        }
 
         @Override
         protected LdapOp getOp() {
             return LdapOp.CREATE_ENTRY;
         }
         
-        LDAPResult execute(Entry entry) throws LDAPException {
-            beginOp();
+        LDAPResult execute(UBIDLdapContext ctx, Entry entry) throws LDAPException {
+            LDAPResult result = null;
+            long startTime = System.currentTimeMillis();
             try {
-                resp = ctx.getConn().add(entry);
-                return (LDAPResult) resp;
+                result = ctx.getConn().add(entry);
+                stat(startTime);
+                return result;
             } finally {
                 if (debugEnabled()) {
-                    endOp(String.format("entry=[%s]", entry.toString()));
+                    debug(ctx, startTime, result,
+                            String.format("entry=[%s]", entry.toString()));
                 }
             }
         }
@@ -256,23 +223,22 @@ abstract class UBIDLdapOperation {
      */
     static class DeleteEntry extends UBIDLdapOperation {
 
-        private DeleteEntry(UBIDLdapContext ctx) {
-            super(ctx);
-        }
-
         @Override
         protected LdapOp getOp() {
             return LdapOp.DELETE_ENTRY;
         }
         
-        LDAPResult execute(String dn) throws LDAPException {
-            beginOp();
+        LDAPResult execute(UBIDLdapContext ctx, String dn) throws LDAPException {
+            LDAPResult result = null;
+            long startTime = System.currentTimeMillis();
             try {
-                resp = ctx.getConn().delete(dn);
-                return (LDAPResult) resp;
+                result = ctx.getConn().delete(dn);
+                stat(startTime);
+                return result;
             } finally {
                 if (debugEnabled()) {
-                    endOp(String.format("dn=[%s]", dn));
+                    debug(ctx, startTime, result,
+                            String.format("dn=[%s]", dn));
                 }
             }
         }
@@ -283,23 +249,32 @@ abstract class UBIDLdapOperation {
      */
     static class Search extends UBIDLdapOperation {
 
-        private Search(UBIDLdapContext ctx) {
-            super(ctx);
-        }
-
         @Override
         protected LdapOp getOp() {
             return LdapOp.SEARCH;
         }
         
-        SearchResult execute(SearchRequest searchRequest) throws LDAPException {
-            beginOp();
+        SearchResult execute(UBIDLdapContext ctx, SearchRequest searchRequest) 
+        throws LDAPException {
+            return execute(ctx, searchRequest, null);
+        }
+        
+        SearchResult execute(UBIDLdapContext ctx, SearchRequest searchRequest, ZLdapFilter zFilter) 
+        throws LDAPException {
+            SearchResult result = null;
+            long startTime = System.currentTimeMillis();
             try {
-                resp = ctx.getConn().search(searchRequest);
-                return (SearchResult) resp;
+                result = ctx.getConn().search(searchRequest);
+                if (zFilter == null) {
+                    stat(startTime);
+                } else {
+                    searchStat(startTime, zFilter.getStatString());
+                }
+                return result;
             } finally {
                 if (debugEnabled()) {
-                    endOp(String.format("base=[%s], filter=[%s]",
+                    debug(ctx,  startTime, result,
+                            String.format("base=[%s], filter=[%s]",
                             searchRequest.getBaseDN(),
                             searchRequest.getFilter().toString()));
                 }
@@ -313,22 +288,23 @@ abstract class UBIDLdapOperation {
      */
     static class GetEntry extends UBIDLdapOperation {
 
-        private GetEntry(UBIDLdapContext ctx) {
-            super(ctx);
-        }
-
         @Override
         protected LdapOp getOp() {
             return LdapOp.GET_ENTRY;
         }
         
-        SearchResultEntry execute(String dn, String[] attrs) throws LDAPException {
-            beginOp();
+        SearchResultEntry execute(UBIDLdapContext ctx, String dn, String[] attrs) 
+        throws LDAPException {
+            long startTime = System.currentTimeMillis();
             try {
-                return (attrs == null) ? ctx.getConn().getEntry(dn) : ctx.getConn().getEntry(dn, attrs);
+                SearchResultEntry entry = (attrs == null) ? ctx.getConn().getEntry(dn) : 
+                    ctx.getConn().getEntry(dn, attrs);
+                stat(startTime);
+                return entry;
             } finally {
                 if (debugEnabled()) {
-                    endOp(String.format("dn=[%s]", dn));
+                    debug(ctx,  startTime, 
+                            String.format("dn=[%s]", dn));
                 }
             }
         }
@@ -340,22 +316,20 @@ abstract class UBIDLdapOperation {
      */
     static class GetSchema extends UBIDLdapOperation {
 
-        private GetSchema(UBIDLdapContext ctx) {
-            super(ctx);
-        }
-
         @Override
         protected LdapOp getOp() {
             return LdapOp.GET_SCHEMA;
         }
         
-        Schema execute() throws LDAPException {
-            beginOp();
+        Schema execute(UBIDLdapContext ctx) throws LDAPException {
+            long startTime = System.currentTimeMillis();
             try {
-                return ctx.getConn().getSchema();
+                Schema schema = ctx.getConn().getSchema();
+                stat(startTime);
+                return schema;
             } finally {
                 if (debugEnabled()) {
-                    endOp();
+                    debug(ctx, startTime);
                 }
             }
         }
@@ -367,23 +341,23 @@ abstract class UBIDLdapOperation {
      */
     static class ModifyAttrs extends UBIDLdapOperation {
 
-        private ModifyAttrs(UBIDLdapContext ctx) {
-            super(ctx);
-        }
-
         @Override
         protected LdapOp getOp() {
             return LdapOp.MODIFY_ATTRS;
         }
         
-        LDAPResult execute(String dn, List<Modification> modList) throws LDAPException {
-            beginOp();
+        LDAPResult execute(UBIDLdapContext ctx, String dn, List<Modification> modList) 
+        throws LDAPException {
+            LDAPResult result = null;
+            long startTime = System.currentTimeMillis();
             try {
-                resp = ctx.getConn().modify(dn, modList);
-                return (LDAPResult) resp;
+                result = ctx.getConn().modify(dn, modList);
+                stat(startTime);
+                return result;
             } finally {
                 if (debugEnabled()) {
-                    endOp(String.format("dn=[%s], mod=[%s]", dn, getModListText(modList)));
+                    debug(ctx, startTime, result,
+                            String.format("dn=[%s], mod=[%s]", dn, getModListText(modList)));
                 }
             }
         }
@@ -395,24 +369,23 @@ abstract class UBIDLdapOperation {
      */
     static class TestAndModifyAttrs extends UBIDLdapOperation {
 
-        private TestAndModifyAttrs(UBIDLdapContext ctx) {
-            super(ctx);
-        }
-
         @Override
         protected LdapOp getOp() {
             return LdapOp.TEST_AND_MODIFY_ATTRS;
         }
         
-        LDAPResult execute(ModifyRequest modReq) 
+        LDAPResult execute(UBIDLdapContext ctx, ModifyRequest modReq) 
         throws LDAPException {
-            beginOp();
+            LDAPResult result = null;
+            long startTime = System.currentTimeMillis();
             try {
-                resp = ctx.getConn().modify(modReq);
-                return (LDAPResult) resp;
+                result = ctx.getConn().modify(modReq);
+                stat(startTime);
+                return result;
             } finally {
                 if (debugEnabled()) {
-                    endOp(String.format("dn=[%s], mod=[%s] control=[%s]", 
+                    debug(ctx, startTime, result,
+                            String.format("dn=[%s], mod=[%s] control=[%s]", 
                             modReq.getDN(), 
                             getModListText(modReq.getModifications()),
                             getCtlListText(modReq.getControlList())));
@@ -427,25 +400,25 @@ abstract class UBIDLdapOperation {
      */
     static class ModifyDN extends UBIDLdapOperation {
 
-        private ModifyDN(UBIDLdapContext ctx) {
-            super(ctx);
-        }
-
         @Override
         protected LdapOp getOp() {
             return LdapOp.MODIFY_DN;
         }
         
-        LDAPResult execute(String dn, String newRDN, boolean deleteOldRDN, String newSuperiorDN) 
+        LDAPResult execute(UBIDLdapContext ctx, String dn, String newRDN, 
+                boolean deleteOldRDN, String newSuperiorDN) 
         throws LDAPException {
-            beginOp();
+            LDAPResult result = null;
+            long startTime = System.currentTimeMillis();
             try {
-                resp = ctx.getConn().modifyDN(dn, newRDN, deleteOldRDN, newSuperiorDN);
-                return (LDAPResult) resp;
+                result = ctx.getConn().modifyDN(dn, newRDN, deleteOldRDN, newSuperiorDN);
+                stat(startTime);
+                return result;
             } finally {
                 if (debugEnabled()) {
-                    endOp(String.format("dn=[%s] newRDN=[%s] newSuperiorDN=[%s]", 
-                        dn, newRDN, newSuperiorDN));
+                    debug(ctx, startTime, result,
+                            String.format("dn=[%s] newRDN=[%s] newSuperiorDN=[%s]", 
+                            dn, newRDN, newSuperiorDN));
                 }
             }
         }
@@ -462,33 +435,24 @@ abstract class UBIDLdapOperation {
      * LDAP operation(s).
      */
     static class GenericOp extends UBIDLdapOperation {
-        private LdapOp op;
-        private LdapUsage usage;
-        
-        private GenericOp(LdapOp op, LdapUsage usage) {
-            super(null);
-            this.op = op;
-            this.usage = usage;
-        }
 
         @Override
         protected LdapOp getOp() {
-            return op;
+            assert(false);
+            return null;
         }
         
-        @Override
-        protected LdapUsage getUsage() {
-            return usage;
+        long begin() {
+            return System.currentTimeMillis();
         }
         
-        void begin() {
-            beginOp();
-        }
-        
-        void end(LDAPResponse resp, String extraInfo) {
+        void end(LdapOp op, LdapUsage usage, long startTime, boolean needsStat, 
+                LDAPResponse resp, String extraInfo) {
+            if (needsStat) {
+                stat(startTime, op);
+            }
             if (debugEnabled()) {
-                this.resp = resp;
-                endOp(resp, extraInfo);
+                debug(op, usage, startTime, resp, extraInfo);
             }
         }
     }

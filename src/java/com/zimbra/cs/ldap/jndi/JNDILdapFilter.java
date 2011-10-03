@@ -20,7 +20,9 @@ public class JNDILdapFilter extends ZLdapFilter {
     
     private String filter;
     
+    // TODO: return this
     JNDILdapFilter(String filter) {
+        super(null);
         this.filter = filter;
     }
     

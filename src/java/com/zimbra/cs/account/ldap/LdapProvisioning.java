@@ -105,6 +105,7 @@ import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.LdapTODO.TODO;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 import com.zimbra.cs.ldap.SearchLdapOptions.StopIteratingException;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
@@ -3830,7 +3831,7 @@ public class LdapProvisioning extends LdapProv {
         try {
             zlc = LdapClient.getExternalContext(config, LdapUsage.LDAP_AUTH_EXTERNAL);
             ZSearchResultEnumeration ne = zlc.searchDir(searchBase,
-                    filterFactory.fromFilterString(searchFilter),
+                    filterFactory.fromFilterString(FilterId.LDAP_AUTHENTICATE, searchFilter),
                     ZSearchControls.SEARCH_CTLS_SUBTREE());
 
             while (ne.hasMore()) {
@@ -6278,16 +6279,10 @@ public class LdapProvisioning extends LdapProv {
         return new ReplaceAddressResult(oldAddrs, newAddrs);
     }
 
-    protected boolean addressExists(ZLdapContext zlc, String baseDN, String[] addrs) throws ServiceException {
-        StringBuilder query = new StringBuilder();
-        query.append("(|");
-        for (int i=0; i < addrs.length; i++) {
-            query.append(String.format("(%s=%s)", Provisioning.A_zimbraMailDeliveryAddress, addrs[i]));
-            query.append(String.format("(%s=%s)", Provisioning.A_zimbraMailAlias, addrs[i]));
-        }
-        query.append(")");
+    protected boolean addressExists(ZLdapContext zlc, String baseDN, String[] addrs) 
+    throws ServiceException {
 
-        ZLdapFilter filter = filterFactory.fromFilterString(query.toString());
+        ZLdapFilter filter = filterFactory.addrsExist(addrs);
 
         boolean exists = false;
         try {
@@ -6298,7 +6293,8 @@ public class LdapProvisioning extends LdapProv {
             }
             ne.close();
         } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to lookup account via query: "+query.toString()+" message: "+e.getMessage(), e);
+            throw ServiceException.FAILURE("unable to lookup account via query: " +
+                    filter.toFilterString() + ", message: " + e.getMessage(), e);
         }
 
         return exists;

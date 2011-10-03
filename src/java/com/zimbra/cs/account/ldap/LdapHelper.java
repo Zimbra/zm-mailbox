@@ -32,6 +32,7 @@ import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
 import com.zimbra.cs.ldap.LdapException.LdapMultipleEntriesMatchedException;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 
 public abstract class LdapHelper {
     
@@ -146,10 +147,10 @@ public abstract class LdapHelper {
         return searchForEntry(base, filter, initZlc, false, returnAttrs); 
     }
     
-    public ZSearchResultEntry searchForEntry(String base, String filter, 
+    public ZSearchResultEntry searchForEntry(String base, FilterId filterId, String filter, 
             ZLdapContext initZlc, String[] returnAttrs) 
     throws LdapMultipleEntriesMatchedException, ServiceException {
-        ZLdapFilter zFilter = ZLdapFilterFactory.getInstance().fromFilterString(filter);
+        ZLdapFilter zFilter = ZLdapFilterFactory.getInstance().fromFilterString(filterId, filter);
         return searchForEntry(base, zFilter, initZlc, returnAttrs); 
     }
     

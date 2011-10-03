@@ -199,7 +199,8 @@ public class ZimbraPerf {
     public static final ActivityTracker SOAP_TRACKER = new ActivityTracker("soap.csv");
     public static final ActivityTracker IMAP_TRACKER = new ActivityTracker("imap.csv");
     public static final ActivityTracker POP_TRACKER = new ActivityTracker("pop3.csv");
-
+    public static final ActivityTracker LDAP_TRACKER = new ActivityTracker("ldap.csv");
+    
     private static int mailboxCacheSize;
     private static long mailboxCacheSizeTimestamp = 0;
     private static JmxServerStats jmxServerStats;
@@ -459,7 +460,8 @@ public class ZimbraPerf {
         StatsDumper.schedule(SOAP_TRACKER, CSV_DUMP_FREQUENCY);
         StatsDumper.schedule(IMAP_TRACKER, CSV_DUMP_FREQUENCY);
         StatsDumper.schedule(POP_TRACKER, CSV_DUMP_FREQUENCY);
-
+        StatsDumper.schedule(LDAP_TRACKER, CSV_DUMP_FREQUENCY);
+        
         ThreadStats threadStats = new ThreadStats("threads.csv");
         StatsDumper.schedule(threadStats, CSV_DUMP_FREQUENCY);
 

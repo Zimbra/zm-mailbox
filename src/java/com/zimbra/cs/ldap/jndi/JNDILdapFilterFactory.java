@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.ldap.jndi;
 
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
 import com.zimbra.cs.ldap.LdapException;
@@ -46,8 +47,18 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     }
     
     @Override
-    public ZLdapFilter fromFilterString(String filterString) throws LdapException {
+    public ZLdapFilter fromFilterString(FilterId filterId, String filterString) 
+    throws LdapException {
         return new JNDILdapFilter(filterString);
+    }
+    
+    
+    /*
+     * Mail target (accounts and groups)
+     */
+    @Override
+    public ZLdapFilter addrsExist(String[] addrs) {
+        return new JNDILdapFilter(LegacyLdapFilter.addrsExist(addrs));
     }
     
     
@@ -73,24 +84,25 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter accountById(String id) {
         return new JNDILdapFilter(LegacyLdapFilter.accountById(id));
     }
-
-    @Override
-    public ZLdapFilter accountByName(String name) {
-        return new JNDILdapFilter(LegacyLdapFilter.accountByName(name));
-    }
     
+    @Override
     public ZLdapFilter accountByMemberOf(String dynGroupId) {
         return new JNDILdapFilter(LegacyLdapFilter.accountByMemberOf(dynGroupId));
     }
-
+    
     @Override
-    public ZLdapFilter adminAccountByRDN(String namingRdnAttr, String name) {
-        return new JNDILdapFilter(LegacyLdapFilter.adminAccountByRDN(namingRdnAttr, name));
+    public ZLdapFilter accountByName(String name) {
+        return new JNDILdapFilter(LegacyLdapFilter.accountByName(name));
     }
 
     @Override
     public ZLdapFilter adminAccountByAdminFlag() {
         return new JNDILdapFilter(LegacyLdapFilter.adminAccountByAdminFlag());
+    }
+    
+    @Override
+    public ZLdapFilter adminAccountByRDN(String namingRdnAttr, String name) {
+        return new JNDILdapFilter(LegacyLdapFilter.adminAccountByRDN(namingRdnAttr, name));
     }
 
     @Override

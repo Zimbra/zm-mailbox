@@ -41,6 +41,21 @@ public class LegacyLdapFilter {
     }
     
     /*
+     * Mail target (accounts and groups)
+     */
+    public static String addrsExist(String[] addrs) {
+        StringBuilder buf = new StringBuilder();
+        buf.append("(|");
+        for (int i=0; i < addrs.length; i++) {
+            buf.append(String.format("(%s=%s)", Provisioning.A_zimbraMailDeliveryAddress, addrs[i]));
+            buf.append(String.format("(%s=%s)", Provisioning.A_zimbraMailAlias, addrs[i]));
+        }
+        buf.append(")");
+        
+        return buf.toString();
+    }
+    
+    /*
      * account
      */
     public static String allAccounts() {

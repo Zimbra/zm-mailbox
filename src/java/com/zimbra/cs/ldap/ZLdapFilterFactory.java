@@ -32,6 +32,53 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         return SINGLETON;
     }
     
+    public static enum FilterId {
+        ACCOUNT_BY_ID(SINGLETON.accountById("{ACCOUNT-ID}")),
+        ACCOUNT_BY_FOREIGN_PRINCIPAL(SINGLETON.accountByForeignPrincipal("{FOREIGN-PRINCIPAL}")),
+        ACCOUNT_BY_MEMBEROF(SINGLETON.accountByMemberOf("{DYNAMIC-GROUP-ID}")),
+        ACCOUNT_BY_NAME(SINGLETON.accountByName("{ACCOUNT-NAME}")),
+        ADDRS_EXIST(SINGLETON.addrsExist(new String[]{"{ADDR-1}", "ADDR-2", "..."})),
+        ADMIN_ACCOUNT_BY_ADMIN_FLAG(SINGLETON.adminAccountByAdminFlag()),
+        ADMIN_ACCOUNT_BY_RDN(SINGLETON.adminAccountByRDN("{NAMING-RDN-ATTR}", "{NAME}")),
+        ALL_ACCOUNTS(SINGLETON.allAccounts()),
+        ALL_NON_SYSTEM_ACCOUNTS(SINGLETON.allNonSystemAccounts()),
+        ANY_ENTRY(SINGLETON.anyEntry()),
+        HAS_SUBORDINATES(SINGLETON.hasSubordinates()),
+        
+        // ids for fromFilterString(0 calls
+        AUTO_PROVISION_GET_EXTERNAL_ATTRS("Filter in " + Provisioning.A_zimbraAutoProvLdapSearchFilter),
+        EXTERNAL_GROUP("Filter in " + Provisioning.A_zimbraExternalGroupLdapSearchFilter),
+        LDAP_AUTHENTICATE("Filter in " + Provisioning.A_zimbraAuthLdapSearchFilter),
+        NGINX_GET_DOMAIN_BY_SERVER_IP("Filter in "),
+        NGINX_GET_PORT_BY_MAILHOST("Filter in "),
+        NGINX_GET_MAILHOST("Filter in " + Provisioning.A_zimbraReverseProxyMailHostQuery),
+        UNITTEST("UNITTEST");
+        
+        private String template;
+        
+        private FilterId(ZLdapFilter template) {
+            this(template.toFilterString());
+        }
+        
+        private FilterId(String template) {
+            this.template = template;
+        }
+        
+        public String getStatString() {
+            return name() + ": " + template;
+        }
+    }
+    
+    public static void main(String[] args) {
+        LdapClient.getInstance();  // init
+        
+        for (FilterId filderId : FilterId.values()) {
+            System.out.println(filderId.getStatString());
+        }
+        
+    }
+    
+    
     /*
      * operational
      */
@@ -41,7 +88,12 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
      * general
      */
     public abstract ZLdapFilter anyEntry();
-    public abstract ZLdapFilter fromFilterString(String filterString) throws LdapException;
+    public abstract ZLdapFilter fromFilterString(FilterId filterId, String filterString) throws LdapException;
+    
+    /*
+     * Mail target (accounts and groups)
+     */
+    public abstract ZLdapFilter addrsExist(String[] addrs);
     
     /*
      * account
@@ -50,10 +102,11 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter allNonSystemAccounts();
     public abstract ZLdapFilter accountByForeignPrincipal(String foreignPrincipal);
     public abstract ZLdapFilter accountById(String id);
-    public abstract ZLdapFilter accountByName(String name);
     public abstract ZLdapFilter accountByMemberOf(String dynGroupId);
-    public abstract ZLdapFilter adminAccountByRDN(String namingRdnAttr, String name);
+    public abstract ZLdapFilter accountByName(String name);
     public abstract ZLdapFilter adminAccountByAdminFlag();
+    public abstract ZLdapFilter adminAccountByRDN(String namingRdnAttr, String name);
+    
     
     @TODO  // TODO: refactor so com.zimbra.cs.ldap does not have dependency on com.zimbra.cs.account
     public abstract ZLdapFilter accountsHomedOnServer(Server server); 
