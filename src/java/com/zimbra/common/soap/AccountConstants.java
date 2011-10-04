@@ -221,6 +221,7 @@ public class AccountConstants {
     public static final String E_DL_OWNER = "owner";
     public static final String E_DL_OWNERS = "owners";
     public static final String E_DLM = "dlm";
+    public static final String E_DL_SUBS_REQ = "subsReq";
     public static final String E_EMAIL = "email";
     public static final String E_EMAIL2 = "email2";
     public static final String E_EMAIL3 = "email3";
@@ -280,6 +281,7 @@ public class AccountConstants {
     
     public static final String A_ACTIVE = "active";
     public static final String A_ATTRS = "attrs";
+    public static final String A_BCC_OWNERS = "bccOwners";
     public static final String A_DIRECT_ONLY = "directOnly";
     public static final String A_DYNAMIC = "dynamic";
     public static final String A_N = "n";
