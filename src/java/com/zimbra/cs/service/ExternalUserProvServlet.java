@@ -47,6 +47,7 @@ import com.zimbra.soap.mail.message.FolderActionRequest;
 import com.zimbra.soap.mail.type.FolderActionSelector;
 import org.apache.commons.codec.binary.Hex;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -96,7 +97,10 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             if (grantee == null) {
                 // external virtual account not created yet
                 resp.addCookie(new Cookie("ZM_PRELIM_AUTH_TOKEN", param));
-                resp.sendRedirect("/zimbra/public/extuserprov.jsp");
+                req.setAttribute("extuseremail", extUserEmail);
+                RequestDispatcher dispatcher =
+                        getServletContext().getContext("/zimbra").getRequestDispatcher("/public/extuserprov.jsp");
+                dispatcher.forward(req, resp);
             } else {
                 // create a new mountpoint in the external user's mailbox if not already created
 
@@ -181,12 +185,16 @@ public class ExternalUserProvServlet extends ZimbraServlet {
     }
 
     private static String getMountpointName(Account owner, String sharedFolderPath) {
-        String pfx = (owner.getDisplayName() != null ? owner.getDisplayName() : owner.getName()) + "'s";
+        String pfx = getDisplayName(owner) + "'s";
         String sfx = sharedFolderPath.replace("/", " ");
         if (!sfx.startsWith(" ")) {
             sfx = " " + sfx;
         }
         return pfx + sfx;
+    }
+
+    private static String getDisplayName(Account owner) {
+        return owner.getDisplayName() != null ? owner.getDisplayName() : owner.getName();
     }
 
     private static String mapExtEmailToAcctName(String extUserEmail, Domain domain) {
