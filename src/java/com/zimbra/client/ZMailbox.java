@@ -103,6 +103,7 @@ import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
 import com.zimbra.soap.account.type.Account;
 import com.zimbra.soap.account.type.InfoSection;
+import com.zimbra.soap.admin.message.PurgeMessagesRequest;
 import com.zimbra.soap.mail.message.CheckSpellingRequest;
 import com.zimbra.soap.mail.message.CheckSpellingResponse;
 import com.zimbra.soap.mail.message.GetDataSourcesRequest;
@@ -2768,6 +2769,16 @@ public class ZMailbox implements ToZJSONObject {
     public void emptyDumpster() throws ServiceException {
         Element req = newRequestElement(MailConstants.EMPTY_DUMPSTER_REQUEST);
         invoke(req);
+    }
+    
+    /**
+     * Purge Messages
+     * @throws ServiceException
+     */
+    
+    public void purgeMessages() throws ServiceException {
+        PurgeMessagesRequest purgeReq = new PurgeMessagesRequest(mTransport.getTargetAcctId());
+        invokeJaxb(purgeReq);
     }
 
     /** mark all items in folder as read
