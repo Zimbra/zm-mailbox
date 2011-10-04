@@ -244,10 +244,6 @@ public class FriendlyCalendaringDescription {
             }
             sb.append(timeFormat.format(end.getDate()));
         }
-        if (mAccount.getBooleanAttr("zimbraPrefUseTimeZoneListInCalendar", false)) {
-            ICalTimeZone tz = ICalTimeZone.getAccountTimeZone(mAccount);
-            sb.append(", ").append(tz.getDisplayName(mLc));
-        }
         return sb.toString();
     }
     
