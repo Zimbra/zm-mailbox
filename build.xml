@@ -195,8 +195,6 @@
       </fileset>
     </path>
 
-    <taskdef name="deploy" classname="org.apache.catalina.ant.DeployTask" classpathref="class.path"/>
-
     <path id="all.java.path">
         <pathelement location="${src.java.dir}"/>
         <pathelement location="${generated.java.dir}"/>
