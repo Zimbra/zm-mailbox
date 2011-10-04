@@ -35,6 +35,7 @@ import javax.mail.Transport;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
 
+import com.google.common.collect.Lists;
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.DistributionListSubscriptionPolicy;
@@ -83,7 +84,7 @@ public class SubscribeDistributionList extends DistributionListDocumentHandler {
             } else if (policy == DistributionListSubscriptionPolicy.REJECT) {
                 throw ServiceException.PERM_DENIED("subscription policy for group " + group.getName() + " is reject");
             } else { // REQUEST APPROAVAL
-                ApprovalSender sender = new ApprovalSender(prov, group, acct, op);
+                ApprovalRequestSender sender = new ApprovalRequestSender(prov, group, acct, op);
                 sender.composeAndSend();
                 status = DistributionListSubscribeStatus.awaiting_approval;
             }
@@ -98,7 +99,7 @@ public class SubscribeDistributionList extends DistributionListDocumentHandler {
             } else if (policy == DistributionListUnsubscriptionPolicy.REJECT) {
                 throw ServiceException.PERM_DENIED("un-subscription policy for group " + group.getName() + " is reject");
             } else { // REQUEST APPROAVAL
-                ApprovalSender sender = new ApprovalSender(prov, group, acct, op);
+                ApprovalRequestSender sender = new ApprovalRequestSender(prov, group, acct, op);
                 sender.composeAndSend();
                 status = DistributionListSubscribeStatus.awaiting_approval;
             }
@@ -118,18 +119,11 @@ public class SubscribeDistributionList extends DistributionListDocumentHandler {
         return response;
     }
     
-    private static class ApprovalSender {
-        private Provisioning prov;
-        private Group group;
-        private Account requestingAcct;
-        private DistributionListSubscribeOp op;
+    private static class ApprovalRequestSender extends NotificationSender {
         
-        private ApprovalSender(Provisioning prov, Group group, Account requestingAcct, 
-                DistributionListSubscribeOp op) {
-            this.prov = prov;
-            this.group = group;
-            this.requestingAcct = requestingAcct;
-            this.op = op;
+        private ApprovalRequestSender(Provisioning prov, Group group, 
+                Account requestingAcct, DistributionListSubscribeOp op) {
+            super(prov, group, requestingAcct, op);
         }
         
         private void composeAndSend() throws ServiceException {
@@ -138,12 +132,15 @@ public class SubscribeDistributionList extends DistributionListDocumentHandler {
             
             Group.GroupOwner.getOwnerEmails(group, owners);
             
-            for (String owner : owners) {
-                sendMessage(owner);
+            if (owners.size() == 0) {
+                throw ServiceException.PERM_DENIED(
+                        op.name() + "request needs approval but there is no owner for list " + group.getName());
             }
+            
+            sendMessage(owners.toArray(new String[owners.size()]));
         }
         
-        private void sendMessage(String ownerEmail) throws ServiceException {
+        private void sendMessage(String[] owners) throws ServiceException {
             try {
                 SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
                 
@@ -162,54 +159,32 @@ public class SubscribeDistributionList extends DistributionListDocumentHandler {
                 out.setReplyTo(new Address[]{replyToAddr});
                 
                 // To
-                out.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(ownerEmail));
+                List<Address> addrs = Lists.newArrayList();
+                for (String ownerEmail : owners) {
+                    addrs.add(new JavaMailInternetAddress(ownerEmail));
+                }
+                out.addRecipients(javax.mail.Message.RecipientType.TO, addrs.toArray(new Address[addrs.size()]));
                 
                 // Date
                 out.setSentDate(new Date());
                 
+                // since we have multiple recipients, just send in the requester's Locale
+                Locale locale = getLocale(requestingAcct);
+                
                 // Subject
-                Locale locale = getLocale(ownerEmail);
-                String subject = L10nUtil.getMessage(MsgKey.groupSubscriptionAppravalSubject, locale);
+                String subject = L10nUtil.getMessage(MsgKey.dlSubscriptionRequestSubject, locale);
                 out.setSubject(subject);
                 
-                buildContentAndSend(out, locale);
+                buildContentAndSend(out, locale, "group subscription request");
             
             } catch (MessagingException e) {
-                ZimbraLog.account.warn("send share info notification failed rcpt='" + ownerEmail +"'", e);
+                ZimbraLog.account.warn("send share info notification failed, rcpt='" + 
+                        Arrays.deepToString(owners) +"'", e);
             }
         }
         
-        private Locale getLocale(String ownerEmail) throws ServiceException {
-            Locale locale;
-            Account rcptAcct = prov.get(AccountBy.name, ownerEmail);
-            if (rcptAcct != null)
-                locale = rcptAcct.getLocale();
-            else if (requestingAcct != null)
-                locale = requestingAcct.getLocale();
-            else
-                locale = prov.getConfig().getLocale();
-
-            return locale;
-        }
-        
-        private void buildContentAndSend(SMTPMessage out, Locale locale)
-        throws MessagingException {
-        
-            MimeMultipart mmp = buildMailContent(locale);
-            out.setContent(mmp);
-            Transport.send(out);
-        
-            // log
-            Address[] rcpts = out.getRecipients(javax.mail.Message.RecipientType.TO);
-            StringBuilder rcptAddr = new StringBuilder();
-            for (Address a : rcpts) {
-                rcptAddr.append(a.toString());
-            }
-            ZimbraLog.account.info("group subscription request sent: rcpt='" + rcptAddr + 
-                    "' Message-ID=" + out.getMessageID());
-        }
-        
-        private MimeMultipart buildMailContent(Locale locale)
+        @Override
+        protected MimeMultipart buildMailContent(Locale locale)
         throws MessagingException {
             String text = textPart(locale);
             String html = htmlPart(locale);
@@ -239,8 +214,8 @@ public class SubscribeDistributionList extends DistributionListDocumentHandler {
         private String textPart(Locale locale) {
             StringBuilder sb = new StringBuilder();
 
-            MsgKey msgKey = DistributionListSubscribeOp.subscribe == op ? MsgKey.groupSubscriptionAppravalText :
-                MsgKey.groupUnsubscriptionAppravalText;
+            MsgKey msgKey = DistributionListSubscribeOp.subscribe == op ? MsgKey.dlSubscribeRequestText :
+                MsgKey.dlUnsubscribeRequestText;
             
             sb.append("\n");
             sb.append(L10nUtil.getMessage(msgKey, locale, 
@@ -283,79 +258,6 @@ public class SubscribeDistributionList extends DistributionListDocumentHandler {
             sb.append(String.format("</%s>\n", MailConstants.E_DL_SUBSCRIPTION_NOTIFICATION));
 
             return sb.toString();
-        }
-        
-        private static abstract class MimePartDataSource implements DataSource {
-
-            private String mText;
-            private byte[] mBuf = null;
-
-            public MimePartDataSource(String text) {
-                mText = text;
-            }
-
-            @Override
-            public InputStream getInputStream() throws IOException {
-                synchronized(this) {
-                    if (mBuf == null) {
-                        ByteArrayOutputStream buf = new ByteArrayOutputStream();
-                        OutputStreamWriter wout =
-                            new OutputStreamWriter(buf, MimeConstants.P_CHARSET_UTF8);
-                        String text = mText;
-                        wout.write(text);
-                        wout.flush();
-                        mBuf = buf.toByteArray();
-                    }
-                }
-                return new ByteArrayInputStream(mBuf);
-            }
-
-            @Override
-            public OutputStream getOutputStream() {
-                throw new UnsupportedOperationException();
-            }
-        }
-        
-        private static class HtmlPartDataSource extends MimePartDataSource {
-            private static final String CONTENT_TYPE =
-                MimeConstants.CT_TEXT_HTML + "; " + 
-                MimeConstants.P_CHARSET + "=" + MimeConstants.P_CHARSET_UTF8;
-            private static final String NAME = "HtmlDataSource";
-
-            HtmlPartDataSource(String text) {
-                super(text);
-            }
-
-            @Override
-            public String getContentType() {
-                return CONTENT_TYPE;
-            }
-
-            @Override
-            public String getName() {
-                return NAME;
-            }
-        }
-        
-        private static class XmlPartDataSource extends MimePartDataSource {
-            private static final String CONTENT_TYPE =
-                MimeConstants.CT_XML_ZIMBRA_DL_SUBSCRIPTION + "; " + 
-                MimeConstants.P_CHARSET + "=" + MimeConstants.P_CHARSET_UTF8;
-            private static final String NAME = "XmlDataSource";
-
-            XmlPartDataSource(String text) {
-                super(text);
-            }
-
-            @Override
-            public String getContentType() {
-                return CONTENT_TYPE;
-            }
-
-            @Override
-            public String getName() {
-                return NAME;
-            }
         }
     }
 

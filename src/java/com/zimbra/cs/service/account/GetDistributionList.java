@@ -62,14 +62,8 @@ public class GetDistributionList extends DistributionListDocumentHandler {
         Element response = zsc.createElement(AccountConstants.GET_DISTRIBUTION_LIST_RESPONSE);
         
         // isMember
-        boolean isMember = false;
-        List<Group> groups = prov.getGroups(acct, false, null); // all groups the account is a member of
-        for (Group inGroup : groups) {
-            if (inGroup.getId().equalsIgnoreCase(group.getId())) {
-                isMember = true;
-                break;
-            }
-        }
+        boolean isMember = isMember(prov, acct, group);
+
         response.addAttribute(AccountConstants.A_IS_MEMBER, isMember);  
         response.addAttribute(AccountConstants.A_IS_OWNER, isOwner);
         

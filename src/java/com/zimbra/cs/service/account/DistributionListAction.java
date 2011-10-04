@@ -1,16 +1,36 @@
 package com.zimbra.cs.service.account;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
+import javax.activation.DataHandler;
+import javax.mail.Address;
+import javax.mail.MessagingException;
+import javax.mail.Transport;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMultipart;
+
+import com.google.common.collect.Lists;
+import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.GranteeBy;
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
+import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
@@ -18,11 +38,17 @@ import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.UserRight;
+import com.zimbra.cs.service.account.DistributionListDocumentHandler.NotificationSender;
+import com.zimbra.cs.service.account.DistributionListDocumentHandler.NotificationSender.HtmlPartDataSource;
+import com.zimbra.cs.service.account.DistributionListDocumentHandler.NotificationSender.XmlPartDataSource;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.account.type.DistributionListSubscribeOp;
 
 public class DistributionListAction extends DistributionListDocumentHandler {
     
-    private static enum DLAction {
+    private static enum Operation {
         delete,
         modify,
         rename,
@@ -31,11 +57,13 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         addOwner,
         removeOwner,
         addMembers,
-        removeMembers;
+        removeMembers,
+        acceptSubsReq,
+        rejectSubsReq;
         
-        private static DLAction fromString(String str) throws ServiceException {
+        private static Operation fromString(String str) throws ServiceException {
             try {
-                return DLAction.valueOf(str);
+                return Operation.valueOf(str);
             } catch (IllegalArgumentException e) {
                 throw ServiceException.INVALID_REQUEST("invalid op: " + str, e);
             }
@@ -52,7 +80,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         Group group = getGroup(request, acct, prov);
         
         Element eAction = request.getElement(AccountConstants.E_ACTION);
-        DLAction op = DLAction.fromString(eAction.getAttribute(AccountConstants.A_OP));
+        Operation op = Operation.fromString(eAction.getAttribute(AccountConstants.A_OP));
         
         
         DLActionHandler handler = null;
@@ -84,6 +112,12 @@ public class DistributionListAction extends DistributionListDocumentHandler {
             case removeMembers:
                 handler = new RemoveMembersHandler(eAction, group, acct);
                 break;
+            case acceptSubsReq:
+                handler = new AcceptSubsReqHandler(eAction, group, acct);
+                break;
+            case rejectSubsReq:
+                handler = new RejectSubsReqHandler(eAction, group, acct);
+                break;     
             default:
                 throw ServiceException.FAILURE("unsupported op:" + op.name(), null);
         }
@@ -110,7 +144,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         }
         
         abstract void handle() throws ServiceException;
-        abstract DLAction getAction();
+        abstract Operation getAction();
     }
     
     private static class DeleteHandler extends DLActionHandler {
@@ -120,8 +154,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         }
 
         @Override
-        DLAction getAction() {
-            return DLAction.delete;
+        Operation getAction() {
+            return Operation.delete;
         }
         
         @Override
@@ -142,8 +176,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         }
         
         @Override
-        DLAction getAction() {
-            return DLAction.modify;
+        Operation getAction() {
+            return Operation.modify;
         }
 
         @Override
@@ -165,8 +199,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         }
         
         @Override
-        DLAction getAction() {
-            return DLAction.rename;
+        Operation getAction() {
+            return Operation.rename;
         }
 
         @Override
@@ -190,8 +224,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         }
         
         @Override
-        DLAction getAction() {
-            return DLAction.addAlias;
+        Operation getAction() {
+            return Operation.addAlias;
         }
 
         @Override
@@ -212,8 +246,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         }
         
         @Override
-        DLAction getAction() {
-            return DLAction.removeAlias;
+        Operation getAction() {
+            return Operation.removeAlias;
         }
 
         @Override
@@ -234,8 +268,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         }
         
         @Override
-        DLAction getAction() {
-            return DLAction.addOwner;
+        Operation getAction() {
+            return Operation.addOwner;
         }
 
         @Override
@@ -271,8 +305,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         }
         
         @Override
-        DLAction getAction() {
-            return DLAction.removeOwner;
+        Operation getAction() {
+            return Operation.removeOwner;
         }
 
         @Override
@@ -307,8 +341,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         }
         
         @Override
-        DLAction getAction() {
-            return DLAction.addMembers;
+        Operation getAction() {
+            return Operation.addMembers;
         }
 
         @Override
@@ -334,8 +368,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         }
         
         @Override
-        DLAction getAction() {
-            return DLAction.removeMembers;
+        Operation getAction() {
+            return Operation.removeMembers;
         }
 
         @Override
@@ -351,6 +385,260 @@ public class DistributionListAction extends DistributionListDocumentHandler {
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "DistributionListAction", "op", getAction().name(), 
                    "name", group.getName(), "members", Arrays.deepToString(members)})); 
+        }
+    }
+    
+    private static class SubscriptionResponseSender extends NotificationSender {
+        private Account ownerAcct;  // owner who is handling the request
+        private boolean bccOwners;
+        private boolean accepted;
+        
+        private SubscriptionResponseSender(Provisioning prov, Group group, 
+                Account ownerAcct, Account requestingAcct, 
+                DistributionListSubscribeOp op, boolean bccOwners, boolean accepted) {
+            super(prov, group, requestingAcct, op);
+            this.ownerAcct = ownerAcct;
+            this.bccOwners = bccOwners;
+            this.accepted = accepted;
+        }
+        
+        private void sendMessage() throws ServiceException {
+            try {
+                SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
+                
+                Address fromAddr = AccountUtil.getFriendlyEmailAddress(ownerAcct);
+                
+                Address replyToAddr = fromAddr;
+                String replyTo = ownerAcct.getAttr(Provisioning.A_zimbraPrefReplyToAddress);
+                if (replyTo != null) {
+                    replyToAddr = new JavaMailInternetAddress(replyTo);
+                }
+                
+                // From
+                out.setFrom(fromAddr);
+                
+                // Reply-To
+                out.setReplyTo(new Address[]{replyToAddr});
+                
+                // To
+                out.setRecipient(javax.mail.Message.RecipientType.TO, 
+                        new JavaMailInternetAddress(requestingAcct.getName()));
+                
+                // Bcc all other owners of the list
+                if (bccOwners) {
+                    List<String> owners = new ArrayList<String>();
+                    Group.GroupOwner.getOwnerEmails(group, owners);
+                    
+                    List<Address> addrs = Lists.newArrayList();
+                    for (String ownerEmail : owners) {
+                        if (!ownerEmail.equals(ownerAcct.getName())) {
+                            addrs.add(new JavaMailInternetAddress(ownerEmail));
+                        }
+                    }
+                    if (!addrs.isEmpty()) {
+                        out.addRecipients(javax.mail.Message.RecipientType.BCC, 
+                                addrs.toArray(new Address[addrs.size()]));
+                    }
+                }
+                
+                // Date
+                out.setSentDate(new Date());
+                
+                // send in the receiver's(i.e. the requesting account) locale
+                Locale locale = getLocale(requestingAcct);
+                
+                // Subject
+                String subject = L10nUtil.getMessage(MsgKey.dlSubscriptionResponseSubject, locale);
+                out.setSubject(subject);
+                
+                buildContentAndSend(out, locale, "group subscription response");
+            
+            } catch (MessagingException e) {
+                ZimbraLog.account.warn("send share info notification failed, rcpt='" + 
+                        requestingAcct.getName() +"'", e);
+            }
+
+        }
+
+        @Override
+        protected MimeMultipart buildMailContent(Locale locale)
+        throws MessagingException {
+            String text = textPart(locale);
+            String html = htmlPart(locale);
+            
+            // Body
+            MimeMultipart mmp = new JavaMailMimeMultipart("alternative");
+        
+            // TEXT part (add me first!)
+            MimeBodyPart textPart = new JavaMailMimeBodyPart();
+            textPart.setText(text, MimeConstants.P_CHARSET_UTF8);
+            mmp.addBodyPart(textPart);
+
+            // HTML part
+            MimeBodyPart htmlPart = new JavaMailMimeBodyPart();
+            htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(html)));
+            mmp.addBodyPart(htmlPart);
+            
+            return mmp;
+        }
+        
+        private String textPart(Locale locale) {
+            StringBuilder sb = new StringBuilder();
+
+            
+            MsgKey msgKey;
+            if (accepted) {
+                msgKey = DistributionListSubscribeOp.subscribe == op ? MsgKey.dlSubscribeResponseAcceptedText :
+                    MsgKey.dlUnsubscribeResponseAcceptedText;
+            } else {
+                msgKey = DistributionListSubscribeOp.subscribe == op ? MsgKey.dlSubscribeResponseRejectedText :
+                    MsgKey.dlUnsubscribeResponseRejectedText;
+                
+            }
+            
+            sb.append("\n");
+            sb.append(L10nUtil.getMessage(msgKey, locale, 
+                    requestingAcct.getName(), group.getName()));
+            sb.append("\n\n");
+            return sb.toString();
+        }
+
+        private String htmlPart(Locale locale) {
+            StringBuilder sb = new StringBuilder();
+
+            sb.append("<h4>\n");
+            sb.append("<p>" + textPart(locale) + "</p>\n");
+            sb.append("</h4>\n");
+            sb.append("\n");
+            return sb.toString();
+        }
+
+    }
+
+    private static class AcceptSubsReqHandler extends DLActionHandler {
+
+        protected AcceptSubsReqHandler(Element eAction, Group group, Account requestedAcct) {
+            super(eAction, group, requestedAcct);
+        }
+        
+        @Override
+        Operation getAction() {
+            return Operation.acceptSubsReq;
+        }
+
+        @Override
+        void handle() throws ServiceException {
+            
+            Element eSubsReq = eAction.getElement(AccountConstants.E_DL_SUBS_REQ);
+            DistributionListSubscribeOp subsOp = DistributionListSubscribeOp.fromString(
+                    eSubsReq.getAttribute(AccountConstants.A_OP));
+            boolean bccOwners = eSubsReq.getAttributeBool(AccountConstants.A_BCC_OWNERS, true);
+            String memberEmail = eSubsReq.getText();
+            
+            Account memberAcct = prov.get(AccountBy.name, memberEmail);
+            if (memberAcct == null) {
+                throw ServiceException.DEFEND_ACCOUNT_HARVEST(memberEmail);
+            }
+            boolean isMember = DistributionListDocumentHandler.isMember(prov, memberAcct, group);
+            
+            boolean processed = false;
+            if (isMember) {
+                if (subsOp == DistributionListSubscribeOp.subscribe) {
+                    // do nothing
+                    ZimbraLog.account.debug("AcceptSubsReqHandler: " + memberEmail + 
+                            " is currently a member in list " + group.getName() + 
+                            ", no action taken for the subscribe request");
+                } else {
+                    prov.removeGroupMembers(group, new String[]{memberEmail});
+                    processed = true;
+                }
+            } else {
+                // not currently a member
+                if (subsOp == DistributionListSubscribeOp.subscribe) {
+                    prov.addGroupMembers(group, new String[]{memberEmail});
+                    processed = true;
+                } else {
+                    // do nothing
+                    ZimbraLog.account.debug("AcceptSubsReqHandler: " + memberEmail + 
+                            " is currently not a member in list " + group.getName() + 
+                            ", no action taken for the un-subscribe request");
+                }
+            }
+            
+            if (processed) {
+                ZimbraLog.security.info(ZimbraLog.encodeAttrs(
+                        new String[] {"cmd", "DistributionListAction", "op", getAction().name(), 
+                       "name", group.getName(), "subsOp", subsOp.name(), "member", memberEmail})); 
+                
+                // send notification email to the user and bcc other owners
+                SubscriptionResponseSender notifSender = new SubscriptionResponseSender(
+                        prov, group, requestedAcct, memberAcct, 
+                        subsOp, bccOwners, true);
+                notifSender.sendMessage();
+            }
+        }
+        
+    }
+    
+    private static class RejectSubsReqHandler extends DLActionHandler {
+
+        protected RejectSubsReqHandler(Element eAction, Group group, Account requestedAcct) {
+            super(eAction, group, requestedAcct);
+        }
+        
+        @Override
+        Operation getAction() {
+            return Operation.rejectSubsReq;
+        }
+
+        @Override
+        void handle() throws ServiceException {
+            
+            Element eSubsReq = eAction.getElement(AccountConstants.E_DL_SUBS_REQ);
+            DistributionListSubscribeOp subsOp = DistributionListSubscribeOp.fromString(
+                    eSubsReq.getAttribute(AccountConstants.A_OP));
+            boolean bccOwners = eSubsReq.getAttributeBool(AccountConstants.A_BCC_OWNERS, true);
+            String memberEmail = eSubsReq.getText();
+            
+            Account memberAcct = prov.get(AccountBy.name, memberEmail);
+            if (memberAcct == null) {
+                throw ServiceException.DEFEND_ACCOUNT_HARVEST(memberEmail);
+            }
+            boolean isMember = DistributionListDocumentHandler.isMember(prov, memberAcct, group);
+            
+            boolean processed = false;
+            if (isMember) {
+                if (subsOp == DistributionListSubscribeOp.subscribe) {
+                    // do nothing
+                    ZimbraLog.account.debug("RejectSubsReqHandler: " + memberEmail + 
+                            " is currently a member in list " + group.getName() + 
+                            ", no action taken for the subscribe request");
+                } else {
+                    processed = true;
+                }
+            } else {
+                // not currently a member
+                if (subsOp == DistributionListSubscribeOp.subscribe) {
+                    processed = true;
+                } else {
+                    // do nothing
+                    ZimbraLog.account.debug("RejectSubsReqHandler: " + memberEmail + 
+                            " is currently not a member in list " + group.getName() + 
+                            ", no action taken for the un-subscribe request");
+                }
+            }
+            
+            if (processed) {
+                ZimbraLog.security.info(ZimbraLog.encodeAttrs(
+                        new String[] {"cmd", "DistributionListAction", "op", getAction().name(), 
+                       "name", group.getName(), "subsOp", subsOp.name(), "member", memberEmail})); 
+                
+                // send notification email to the user and bcc other owners
+                SubscriptionResponseSender notifSender = new SubscriptionResponseSender(
+                        prov, group, requestedAcct, memberAcct, 
+                        subsOp, bccOwners, false);
+                notifSender.sendMessage();
+            }
         }
     }
 }
