@@ -21,17 +21,23 @@ package com.zimbra.cs.service.admin;
 import java.util.List;
 import java.util.Map;
 
+import com.zimbra.client.ZMailbox;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -66,29 +72,33 @@ public class PurgeMessages extends AdminDocumentHandler {
         
         Element response = zsc.createElement(AdminConstants.PURGE_MESSAGES_RESPONSE);
         for (int i = 0; i < accounts.length; i++) {
-            Mailbox mbox = null;
-            try {
-                mbox = MailboxManager.getInstance().getMailboxByAccountId(accounts[i]);
-                mbox.purgeMessages(null);
-            } catch (ServiceException e) {
-                // ignore NO_SUCH_ACCOUNT and WRONG_HOST errors
-                if (e.getCode() == ServiceException.WRONG_HOST) {
-                    ZimbraLog.mailbox.warn("ignoring mailbox found on wrong host (not cleaned up after migrate?): " + accounts[i], e);
-                    // fall through to the "continue" statement
-                } else if (e.getCode() != AccountServiceException.NO_SUCH_ACCOUNT) {
-                    throw e;
-                }
-            }
-            if (mbox == null)
+            Account account = Provisioning.getInstance().getAccountById(accounts[i]);
+            if (account == null)
                 continue;
-
-            Element mresp = response.addElement(AdminConstants.E_MAILBOX);
-            mresp.addAttribute(AdminConstants.A_MAILBOXID, mbox.getId());
-            mresp.addAttribute(AdminConstants.A_SIZE, mbox.getSize());
+            
+            if (Provisioning.onLocalServer(account)) { // local
+                Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account, false);
+                if (mbox == null)
+                    continue;
+                mbox.purgeMessages(null);
+                Element mresp = response.addElement(AdminConstants.E_MAILBOX);
+                mresp.addAttribute(AdminConstants.A_ACCOUNTID, account.getId());
+                mresp.addAttribute(AdminConstants.A_SIZE, mbox.getSize());
+            } else { // remote
+                AuthToken authToken = zsc.getAuthToken();
+                ZMailbox.Options zoptions = new ZMailbox.Options(authToken.toZAuthToken(), AccountUtil.getAdminSoapUri(account));
+                zoptions.setNoSession(true);
+                zoptions.setTargetAccount(account.getId());
+                zoptions.setTargetAccountBy(Key.AccountBy.id);    
+                ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
+                zmbx.purgeMessages();
+                Element mresp = response.addElement(AdminConstants.E_MAILBOX);
+                mresp.addAttribute(AdminConstants.A_ACCOUNTID, account.getId());
+                mresp.addAttribute(AdminConstants.A_SIZE, zmbx.getSize());
+            }
         }
         return response;
 	}
-	
     
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
