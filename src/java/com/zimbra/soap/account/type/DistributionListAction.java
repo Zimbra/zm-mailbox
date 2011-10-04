@@ -42,7 +42,9 @@ public class DistributionListAction extends AccountKeyValuePairs {
         addOwner, 
         removeOwner, 
         addMembers, 
-        removeMembers;
+        removeMembers,
+        acceptSubsReq,
+        rejectSubsReq;
         
         public static Operation fromString(String s) throws ServiceException {
             try {
@@ -68,7 +70,8 @@ public class DistributionListAction extends AccountKeyValuePairs {
     @XmlElement(name=AccountConstants.E_OWNER, required=false)
     protected DistributionListOwnerSelector owner;
     
-    
+    @XmlElement(name=AccountConstants.E_DL_SUBS_REQ, required=false)
+    protected DistributionListSubscribeReq subsReq;
     
     /**
      * no-argument constructor wanted by JAXB
@@ -122,6 +125,14 @@ public class DistributionListAction extends AccountKeyValuePairs {
     
     public DistributionListOwnerSelector getOwner() {
         return owner;
+    }
+    
+    public void setSubsReq(DistributionListSubscribeReq subsReq) {
+        this.subsReq = subsReq;
+    }
+    
+    public DistributionListSubscribeReq getSubsReq() {
+        return subsReq;
     }
     
 }
