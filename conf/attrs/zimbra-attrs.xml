@@ -6481,4 +6481,8 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
+<attr id="1307" name="zimbraPrefCalendarReminderDeviceInfo" type="string" max="128" cardinality="single" optionalIn="account" since="8.0.0">
+  <desc>device information entered by the user for receiving reminders for appointments and tasks</desc>
+</attr>
+
 </attrs>

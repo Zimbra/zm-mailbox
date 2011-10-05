@@ -29410,6 +29410,83 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * device information entered by the user for receiving reminders for
+     * appointments and tasks
+     *
+     * @return zimbraPrefCalendarReminderDeviceInfo, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1307)
+    public String getPrefCalendarReminderDeviceInfo() {
+        return getAttr(Provisioning.A_zimbraPrefCalendarReminderDeviceInfo, null);
+    }
+
+    /**
+     * device information entered by the user for receiving reminders for
+     * appointments and tasks
+     *
+     * @param zimbraPrefCalendarReminderDeviceInfo new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1307)
+    public void setPrefCalendarReminderDeviceInfo(String zimbraPrefCalendarReminderDeviceInfo) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderDeviceInfo, zimbraPrefCalendarReminderDeviceInfo);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * device information entered by the user for receiving reminders for
+     * appointments and tasks
+     *
+     * @param zimbraPrefCalendarReminderDeviceInfo new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1307)
+    public Map<String,Object> setPrefCalendarReminderDeviceInfo(String zimbraPrefCalendarReminderDeviceInfo, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderDeviceInfo, zimbraPrefCalendarReminderDeviceInfo);
+        return attrs;
+    }
+
+    /**
+     * device information entered by the user for receiving reminders for
+     * appointments and tasks
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1307)
+    public void unsetPrefCalendarReminderDeviceInfo() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderDeviceInfo, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * device information entered by the user for receiving reminders for
+     * appointments and tasks
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1307)
+    public Map<String,Object> unsetPrefCalendarReminderDeviceInfo(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefCalendarReminderDeviceInfo, "");
+        return attrs;
+    }
+
+    /**
      * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
      * used. Orig desc: When to send the first reminder for an event.
      *
