@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111004-1101 */
+    /* build: 8.0.0_BETA1_1111 pshao 20111005-1200 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4147,6 +4147,65 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=544)
     public static final String A_zimbraFeatureZimbraAssistantEnabled = "zimbraFeatureZimbraAssistantEnabled";
+
+    /**
+     * template for constructing the body of a file deletion warning message
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1313)
+    public static final String A_zimbraFileDeletionNotificationBody = "zimbraFileDeletionNotificationBody";
+
+    /**
+     * template for constructing the subject of a file deletion warning
+     * message
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1312)
+    public static final String A_zimbraFileDeletionNotificationSubject = "zimbraFileDeletionNotificationSubject";
+
+    /**
+     * template for constructing the body of a file expiration warning
+     * message
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1311)
+    public static final String A_zimbraFileExpirationWarningBody = "zimbraFileExpirationWarningBody";
+
+    /**
+     * template for constructing the subject of a file expiration warning
+     * message
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1310)
+    public static final String A_zimbraFileExpirationWarningSubject = "zimbraFileExpirationWarningSubject";
+
+    /**
+     * Period of inactivity after which file owner receives a deletion
+     * warning email. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1308)
+    public static final String A_zimbraFileExpirationWarningThreshold = "zimbraFileExpirationWarningThreshold";
+
+    /**
+     * Period of inactivity after which a file gets deleted. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1309)
+    public static final String A_zimbraFileLifetime = "zimbraFileLifetime";
 
     /**
      * Maximum size in bytes for attachments
@@ -10135,6 +10194,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
