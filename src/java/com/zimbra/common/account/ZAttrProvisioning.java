@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 smukhopadhyay 20110923-0231 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111004-1101 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3563,7 +3563,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExternalShareLifetime = "zimbraExternalShareLifetime";
 
     /**
-     * flag indicates whether to enable sharing files with external accounts
+     * switch for turning external sharing on/off
      *
      * @since ZCS 8.0.0
      */
@@ -3589,6 +3589,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFeatureAdminMailEnabled = "zimbraFeatureAdminMailEnabled";
 
     /**
+     * Deprecated since: 8.0.0. Deprecated as of bug 56924. Orig desc:
      * advanced search button enabled
      */
     @ZAttr(id=138)
@@ -5059,7 +5060,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraIsDomainAdminAccount = "zimbraIsDomainAdminAccount";
 
     /**
-     * whether it in an external user account
+     * whether it is an external user account
      *
      * @since ZCS 8.0.0
      */
