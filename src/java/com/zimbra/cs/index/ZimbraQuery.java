@@ -74,7 +74,6 @@ public final class ZimbraQuery {
     private final SoapProtocol protocol;
     private final Mailbox mailbox;
     private final SearchParams params;
-    private int chunkSize;
     private final ParseTree.Node parseTree;
 
     /**
@@ -344,12 +343,6 @@ public final class ZimbraQuery {
         this.protocol = proto;
         this.params = params;
         this.mailbox = mbox;
-        long chunkSize = (long) params.getOffset() + (long) params.getLimit();
-        if (chunkSize > 1000) {
-            chunkSize = 1000;
-        } else {
-            chunkSize = (int) chunkSize;
-        }
 
         // Parse the text using the JavaCC parser.
         try {
@@ -685,12 +678,7 @@ public final class ZimbraQuery {
     /**
      * Runs the search and gets an open result set.
      *
-     * WARNING: You **MUST** call ZimbraQueryResults.doneWithSearchResults() when you are done with them!
-     *
-     * @param octxt The operation context
-     * @param proto The soap protocol the response should be returned with
-     * @return Open ZimbraQueryResults -- YOU MUST CALL doneWithSearchResults() to release the results set!
-     * @throws ServiceException
+     * WARNING: You **MUST** call {@link ZimbraQueryResults#close()} when you are done with them!
      */
     public ZimbraQueryResults execute() throws ServiceException {
         compile();
@@ -701,6 +689,7 @@ public final class ZimbraQuery {
 
         ZimbraLog.search.debug("OPERATION: %s", operation);
 
+        int chunkSize = (int) Math.min((long) params.getOffset() + (long) params.getLimit(), 1000L);
         ZimbraQueryResults results = null;
         try {
             results = operation.run(mailbox, params, chunkSize);
