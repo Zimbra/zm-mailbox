@@ -7438,6 +7438,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefCalendarNotifyDelegatedChanges = "zimbraPrefCalendarNotifyDelegatedChanges";
 
     /**
+     * device information entered by the user for receiving reminders for
+     * appointments and tasks
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1307)
+    public static final String A_zimbraPrefCalendarReminderDeviceInfo = "zimbraPrefCalendarReminderDeviceInfo";
+
+    /**
      * Deprecated since: 6.0.0_BETA1. was added for Yahoo calendar, no longer
      * used. Orig desc: When to send the first reminder for an event.
      *
