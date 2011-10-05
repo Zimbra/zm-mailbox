@@ -8,8 +8,8 @@ import java.util.Map;
 
 
 public class GuestAccount extends Account {
-    private String mDigest;     // for guest grantee
-    private String mAccessKey;  // for key grantee
+    private String digest;     // for guest grantee
+    private String accessKey;  // for key grantee
     
     public static final Account ANONYMOUS_ACCT = new GuestAccount("public", null);
     
@@ -28,21 +28,21 @@ public class GuestAccount extends Account {
     
     public GuestAccount(String emailAddress, String password) {
         super(emailAddress, GuestAccount.GUID_PUBLIC, getAnonAttrs(), null, null);
-        mDigest = AuthToken.generateDigest(emailAddress, password);
+        digest = AuthToken.generateDigest(emailAddress, password);
     }
     
     public GuestAccount(AuthToken auth) {
         // for key grantee type, sometimes there could be no email address
         super(auth.getExternalUserEmail()==null?"":auth.getExternalUserEmail(), GuestAccount.GUID_PUBLIC, getAnonAttrs(), null, null);
-        mDigest = auth.getDigest();
-        mAccessKey = auth.getAccessKey();
+        digest = auth.getDigest();
+        accessKey = auth.getAccessKey();
     }
     
     public boolean matches(String emailAddress, String password) {
         if (getName().compareTo(emailAddress) != 0)
             return false;
         String digest = AuthToken.generateDigest(emailAddress, password);
-        return (mDigest.compareTo(digest) == 0);
+        return (this.digest.compareTo(digest) == 0);
     }
     
     public boolean matchesAccessKey(String emailAddress, String accesskey) {
@@ -50,17 +50,21 @@ public class GuestAccount extends Account {
         if (getName().compareTo(emailAddress) != 0)
             return false;
         */    
-        if (mAccessKey == null)
+        if (accessKey == null)
             return false;
-        return (mAccessKey.compareTo(accesskey) == 0);
+        return (accessKey.compareTo(accesskey) == 0);
     }
     
     public String getDigest() {
-        return mDigest;
+        return digest;
     }
     
     public String getAccessKey() {
-        return mAccessKey;
+        return accessKey;
     }
 
+    @Override
+    public boolean isIsExternalVirtualAccount() {
+        return getDigest() != null && getAccessKey() == null;
+    }
 }

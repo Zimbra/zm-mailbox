@@ -1122,6 +1122,9 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (rightsNeeded == 0) {
             return true;
         }
+        if (!getAccount().isExternalSharingEnabled() && authuser.isIsExternalVirtualAccount()) {
+            throw ServiceException.FAILURE("external sharing not allowed", null);
+        }
         return checkRights(rightsNeeded, authuser, asAdmin) == rightsNeeded;
     }
 
@@ -3379,6 +3382,9 @@ public abstract class MailItem implements Comparable<MailItem> {
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul> */
     ACL.Grant grantAccess(String zimbraId, byte type, short rights, String args) throws ServiceException {
+        if (type == ACL.GRANTEE_GUEST && !getAccount().isExternalSharingEnabled()) {
+            throw ServiceException.FAILURE("external sharing not allowed", null);
+        }
         if (!canAccess(ACL.RIGHT_ADMIN)) {
             throw ServiceException.PERM_DENIED("you do not have admin rights to item " + getPath());
         }

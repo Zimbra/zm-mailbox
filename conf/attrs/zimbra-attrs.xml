@@ -6074,7 +6074,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1243" name="zimbraIsExternalVirtualAccount" type="boolean" cardinality="single" optionalIn="account" flags="accountInfo" since="8.0.0">
-  <desc>whether it in an external user account</desc>
+  <desc>whether it is an external user account</desc>
 </attr>
 
 <attr id="1244" name="zimbraExternalUserMailAddress" type="email" cardinality="single" optionalIn="account" flags="accountInfo" since="8.0.0">
@@ -6149,9 +6149,10 @@ TODO: delete them permanently from here
   <defaultCOSValue>90d</defaultCOSValue>
 </attr>
 
-<attr id="1261" name="zimbraExternalSharingEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0.0">
-  <desc>flag indicates whether to enable sharing files with external accounts</desc>
+<attr id="1261" name="zimbraExternalSharingEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited,domainAdminModifiable" since="8.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
+  <defaultExternalCOSValue>FALSE</defaultExternalCOSValue>
+  <desc>switch for turning external sharing on/off</desc>
 </attr>
 
 <attr id="1263" name="zimbraExternalShareDomainWhiteList" type="string" cardinality="multi" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0.0">

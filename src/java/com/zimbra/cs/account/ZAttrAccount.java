@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 smukhopadhyay 20110923-0231 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111004-1101 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -8937,7 +8937,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * flag indicates whether to enable sharing files with external accounts
+     * switch for turning external sharing on/off
      *
      * @return zimbraExternalSharingEnabled, or true if unset
      *
@@ -8949,7 +8949,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * flag indicates whether to enable sharing files with external accounts
+     * switch for turning external sharing on/off
      *
      * @param zimbraExternalSharingEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -8964,7 +8964,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * flag indicates whether to enable sharing files with external accounts
+     * switch for turning external sharing on/off
      *
      * @param zimbraExternalSharingEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -8980,7 +8980,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * flag indicates whether to enable sharing files with external accounts
+     * switch for turning external sharing on/off
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -8994,7 +8994,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * flag indicates whether to enable sharing files with external accounts
+     * switch for turning external sharing on/off
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -9163,6 +9163,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.0.0. Deprecated as of bug 56924. Orig desc:
      * advanced search button enabled
      *
      * @return zimbraFeatureAdvancedSearchEnabled, or true if unset
@@ -9173,6 +9174,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.0.0. Deprecated as of bug 56924. Orig desc:
      * advanced search button enabled
      *
      * @param zimbraFeatureAdvancedSearchEnabled new value
@@ -9186,6 +9188,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.0.0. Deprecated as of bug 56924. Orig desc:
      * advanced search button enabled
      *
      * @param zimbraFeatureAdvancedSearchEnabled new value
@@ -9200,6 +9203,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.0.0. Deprecated as of bug 56924. Orig desc:
      * advanced search button enabled
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -9212,6 +9216,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Deprecated since: 8.0.0. Deprecated as of bug 56924. Orig desc:
      * advanced search button enabled
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -16760,7 +16765,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether it in an external user account
+     * whether it is an external user account
      *
      * @return zimbraIsExternalVirtualAccount, or false if unset
      *
@@ -16772,7 +16777,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether it in an external user account
+     * whether it is an external user account
      *
      * @param zimbraIsExternalVirtualAccount new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -16787,7 +16792,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether it in an external user account
+     * whether it is an external user account
      *
      * @param zimbraIsExternalVirtualAccount new value
      * @param attrs existing map to populate, or null to create a new map
@@ -16803,7 +16808,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether it in an external user account
+     * whether it is an external user account
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -16817,7 +16822,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether it in an external user account
+     * whether it is an external user account
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
