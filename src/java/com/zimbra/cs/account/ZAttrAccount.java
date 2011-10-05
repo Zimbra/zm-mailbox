@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111004-1101 */
+    /* build: 8.0.0_BETA1_1111 pshao 20111005-1200 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -14436,6 +14436,533 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetFeatureZimbraAssistantEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFeatureZimbraAssistantEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * template for constructing the body of a file deletion warning message
+     *
+     * @return zimbraFileDeletionNotificationBody, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1313)
+    public String getFileDeletionNotificationBody() {
+        return getAttr(Provisioning.A_zimbraFileDeletionNotificationBody, null);
+    }
+
+    /**
+     * template for constructing the body of a file deletion warning message
+     *
+     * @param zimbraFileDeletionNotificationBody new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1313)
+    public void setFileDeletionNotificationBody(String zimbraFileDeletionNotificationBody) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileDeletionNotificationBody, zimbraFileDeletionNotificationBody);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * template for constructing the body of a file deletion warning message
+     *
+     * @param zimbraFileDeletionNotificationBody new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1313)
+    public Map<String,Object> setFileDeletionNotificationBody(String zimbraFileDeletionNotificationBody, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileDeletionNotificationBody, zimbraFileDeletionNotificationBody);
+        return attrs;
+    }
+
+    /**
+     * template for constructing the body of a file deletion warning message
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1313)
+    public void unsetFileDeletionNotificationBody() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileDeletionNotificationBody, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * template for constructing the body of a file deletion warning message
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1313)
+    public Map<String,Object> unsetFileDeletionNotificationBody(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileDeletionNotificationBody, "");
+        return attrs;
+    }
+
+    /**
+     * template for constructing the subject of a file deletion warning
+     * message
+     *
+     * @return zimbraFileDeletionNotificationSubject, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1312)
+    public String getFileDeletionNotificationSubject() {
+        return getAttr(Provisioning.A_zimbraFileDeletionNotificationSubject, null);
+    }
+
+    /**
+     * template for constructing the subject of a file deletion warning
+     * message
+     *
+     * @param zimbraFileDeletionNotificationSubject new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1312)
+    public void setFileDeletionNotificationSubject(String zimbraFileDeletionNotificationSubject) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileDeletionNotificationSubject, zimbraFileDeletionNotificationSubject);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * template for constructing the subject of a file deletion warning
+     * message
+     *
+     * @param zimbraFileDeletionNotificationSubject new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1312)
+    public Map<String,Object> setFileDeletionNotificationSubject(String zimbraFileDeletionNotificationSubject, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileDeletionNotificationSubject, zimbraFileDeletionNotificationSubject);
+        return attrs;
+    }
+
+    /**
+     * template for constructing the subject of a file deletion warning
+     * message
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1312)
+    public void unsetFileDeletionNotificationSubject() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileDeletionNotificationSubject, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * template for constructing the subject of a file deletion warning
+     * message
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1312)
+    public Map<String,Object> unsetFileDeletionNotificationSubject(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileDeletionNotificationSubject, "");
+        return attrs;
+    }
+
+    /**
+     * template for constructing the body of a file expiration warning
+     * message
+     *
+     * @return zimbraFileExpirationWarningBody, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1311)
+    public String getFileExpirationWarningBody() {
+        return getAttr(Provisioning.A_zimbraFileExpirationWarningBody, null);
+    }
+
+    /**
+     * template for constructing the body of a file expiration warning
+     * message
+     *
+     * @param zimbraFileExpirationWarningBody new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1311)
+    public void setFileExpirationWarningBody(String zimbraFileExpirationWarningBody) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileExpirationWarningBody, zimbraFileExpirationWarningBody);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * template for constructing the body of a file expiration warning
+     * message
+     *
+     * @param zimbraFileExpirationWarningBody new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1311)
+    public Map<String,Object> setFileExpirationWarningBody(String zimbraFileExpirationWarningBody, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileExpirationWarningBody, zimbraFileExpirationWarningBody);
+        return attrs;
+    }
+
+    /**
+     * template for constructing the body of a file expiration warning
+     * message
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1311)
+    public void unsetFileExpirationWarningBody() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileExpirationWarningBody, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * template for constructing the body of a file expiration warning
+     * message
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1311)
+    public Map<String,Object> unsetFileExpirationWarningBody(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileExpirationWarningBody, "");
+        return attrs;
+    }
+
+    /**
+     * template for constructing the subject of a file expiration warning
+     * message
+     *
+     * @return zimbraFileExpirationWarningSubject, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1310)
+    public String getFileExpirationWarningSubject() {
+        return getAttr(Provisioning.A_zimbraFileExpirationWarningSubject, null);
+    }
+
+    /**
+     * template for constructing the subject of a file expiration warning
+     * message
+     *
+     * @param zimbraFileExpirationWarningSubject new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1310)
+    public void setFileExpirationWarningSubject(String zimbraFileExpirationWarningSubject) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileExpirationWarningSubject, zimbraFileExpirationWarningSubject);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * template for constructing the subject of a file expiration warning
+     * message
+     *
+     * @param zimbraFileExpirationWarningSubject new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1310)
+    public Map<String,Object> setFileExpirationWarningSubject(String zimbraFileExpirationWarningSubject, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileExpirationWarningSubject, zimbraFileExpirationWarningSubject);
+        return attrs;
+    }
+
+    /**
+     * template for constructing the subject of a file expiration warning
+     * message
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1310)
+    public void unsetFileExpirationWarningSubject() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileExpirationWarningSubject, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * template for constructing the subject of a file expiration warning
+     * message
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1310)
+    public Map<String,Object> unsetFileExpirationWarningSubject(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileExpirationWarningSubject, "");
+        return attrs;
+    }
+
+    /**
+     * Period of inactivity after which file owner receives a deletion
+     * warning email. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * <p>Use getFileExpirationWarningThresholdAsString to access value as a string.
+     *
+     * @see #getFileExpirationWarningThresholdAsString()
+     *
+     * @return zimbraFileExpirationWarningThreshold in millseconds, or -1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1308)
+    public long getFileExpirationWarningThreshold() {
+        return getTimeInterval(Provisioning.A_zimbraFileExpirationWarningThreshold, -1L);
+    }
+
+    /**
+     * Period of inactivity after which file owner receives a deletion
+     * warning email. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @return zimbraFileExpirationWarningThreshold, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1308)
+    public String getFileExpirationWarningThresholdAsString() {
+        return getAttr(Provisioning.A_zimbraFileExpirationWarningThreshold, null);
+    }
+
+    /**
+     * Period of inactivity after which file owner receives a deletion
+     * warning email. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraFileExpirationWarningThreshold new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1308)
+    public void setFileExpirationWarningThreshold(String zimbraFileExpirationWarningThreshold) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileExpirationWarningThreshold, zimbraFileExpirationWarningThreshold);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Period of inactivity after which file owner receives a deletion
+     * warning email. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraFileExpirationWarningThreshold new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1308)
+    public Map<String,Object> setFileExpirationWarningThreshold(String zimbraFileExpirationWarningThreshold, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileExpirationWarningThreshold, zimbraFileExpirationWarningThreshold);
+        return attrs;
+    }
+
+    /**
+     * Period of inactivity after which file owner receives a deletion
+     * warning email. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1308)
+    public void unsetFileExpirationWarningThreshold() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileExpirationWarningThreshold, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Period of inactivity after which file owner receives a deletion
+     * warning email. Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1308)
+    public Map<String,Object> unsetFileExpirationWarningThreshold(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileExpirationWarningThreshold, "");
+        return attrs;
+    }
+
+    /**
+     * Period of inactivity after which a file gets deleted. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getFileLifetimeAsString to access value as a string.
+     *
+     * @see #getFileLifetimeAsString()
+     *
+     * @return zimbraFileLifetime in millseconds, or -1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1309)
+    public long getFileLifetime() {
+        return getTimeInterval(Provisioning.A_zimbraFileLifetime, -1L);
+    }
+
+    /**
+     * Period of inactivity after which a file gets deleted. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraFileLifetime, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1309)
+    public String getFileLifetimeAsString() {
+        return getAttr(Provisioning.A_zimbraFileLifetime, null);
+    }
+
+    /**
+     * Period of inactivity after which a file gets deleted. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraFileLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1309)
+    public void setFileLifetime(String zimbraFileLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileLifetime, zimbraFileLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Period of inactivity after which a file gets deleted. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraFileLifetime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1309)
+    public Map<String,Object> setFileLifetime(String zimbraFileLifetime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileLifetime, zimbraFileLifetime);
+        return attrs;
+    }
+
+    /**
+     * Period of inactivity after which a file gets deleted. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1309)
+    public void unsetFileLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Period of inactivity after which a file gets deleted. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1309)
+    public Map<String,Object> unsetFileLifetime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileLifetime, "");
         return attrs;
     }
 
@@ -44767,6 +45294,174 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetTextAnalyzer(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraTextAnalyzer, "");
+        return attrs;
+    }
+
+    /**
+     * binary data
+     *
+     * @return zimbraUnittestBinary, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public byte[] getUnittestBinary() {
+        return getBinaryAttr(Provisioning.A_zimbraUnittestBinary);
+    }
+
+    /**
+     * binary data
+     *
+     * @return zimbraUnittestBinary, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public String getUnittestBinaryAsString() {
+        return getAttr(Provisioning.A_zimbraUnittestBinary, null);
+    }
+
+    /**
+     * binary data
+     *
+     * @param zimbraUnittestBinary new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public void setUnittestBinary(byte[] zimbraUnittestBinary) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestBinary, zimbraUnittestBinary==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestBinary));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * binary data
+     *
+     * @param zimbraUnittestBinary new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public Map<String,Object> setUnittestBinary(byte[] zimbraUnittestBinary, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestBinary, zimbraUnittestBinary==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestBinary));
+        return attrs;
+    }
+
+    /**
+     * binary data
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public void unsetUnittestBinary() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestBinary, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * binary data
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public Map<String,Object> unsetUnittestBinary(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestBinary, "");
+        return attrs;
+    }
+
+    /**
+     * binary data
+     *
+     * @return zimbraUnittestCertificate, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public byte[] getUnittestCertificate() {
+        return getBinaryAttr(Provisioning.A_zimbraUnittestCertificate);
+    }
+
+    /**
+     * binary data
+     *
+     * @return zimbraUnittestCertificate, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public String getUnittestCertificateAsString() {
+        return getAttr(Provisioning.A_zimbraUnittestCertificate, null);
+    }
+
+    /**
+     * binary data
+     *
+     * @param zimbraUnittestCertificate new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public void setUnittestCertificate(byte[] zimbraUnittestCertificate) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestCertificate, zimbraUnittestCertificate==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestCertificate));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * binary data
+     *
+     * @param zimbraUnittestCertificate new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public Map<String,Object> setUnittestCertificate(byte[] zimbraUnittestCertificate, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestCertificate, zimbraUnittestCertificate==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestCertificate));
+        return attrs;
+    }
+
+    /**
+     * binary data
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public void unsetUnittestCertificate() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestCertificate, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * binary data
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public Map<String,Object> unsetUnittestCertificate(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraUnittestCertificate, "");
         return attrs;
     }
 

@@ -6485,4 +6485,30 @@ TODO: delete them permanently from here
   <desc>device information entered by the user for receiving reminders for appointments and tasks</desc>
 </attr>
 
+<attr id="1308" name="zimbraFileExpirationWarningThreshold" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus"  since="8.0.0">
+  <desc>Period of inactivity after which file owner receives a deletion warning email</desc>
+</attr>
+
+<attr id="1309" name="zimbraFileLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus"  since="8.0.0">
+  <desc>Period of inactivity after which a file gets deleted</desc>
+</attr>
+
+<attr id="1310" name="zimbraFileExpirationWarningSubject" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus"  since="8.0.0">
+  <desc>template for constructing the subject of a file expiration warning message</desc>
+</attr>
+
+<attr id="1311" name="zimbraFileExpirationWarningBody" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus"  since="8.0.0">
+  <desc>template for constructing the body of a file expiration warning message</desc>
+</attr>
+
+<attr id="1312" name="zimbraFileDeletionNotificationSubject" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus"  since="8.0.0">
+  <desc>template for constructing the subject of a file deletion warning message</desc>
+</attr>
+
+<attr id="1313" name="zimbraFileDeletionNotificationBody" type="string" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus"  since="8.0.0">
+  <desc>template for constructing the body of a file deletion warning message</desc>
+</attr>
+
+
+
 </attrs>
