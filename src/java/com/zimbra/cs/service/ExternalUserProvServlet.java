@@ -174,9 +174,12 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 }
                 if (zAuthToken != null && !zAuthToken.isExpired() && grantee.getId().equals(zAuthToken.getAccountId())) {
                     // external virtual account already logged-in
-                    resp.sendRedirect(prov.getLocalServer().getMailURL());
+                    resp.sendRedirect("/");
                 } else {
-                    resp.sendRedirect("/zimbra/public/extuserlogin.jsp?domain=" + domain.getName());
+                    req.setAttribute("virtualacctdomain", domain.getName());
+                    RequestDispatcher dispatcher =
+                            getServletContext().getContext("/zimbra").getRequestDispatcher("/public/login.jsp");
+                    dispatcher.forward(req, resp);
                 }
             }
         } catch (ServiceException e) {
@@ -303,7 +306,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             // set zimbra auth cookie and redirect
             AuthToken authToken = AuthProvider.getAuthToken(grantee);
             authToken.encode(resp, false, req.getScheme().equals("https"));
-            resp.sendRedirect(prov.getLocalServer().getMailURL());
+            resp.sendRedirect("/");
         } catch (Exception e) {
             throw new ServletException(e);
         }
