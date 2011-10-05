@@ -254,11 +254,6 @@ abstract class UBIDLdapOperation {
             return LdapOp.SEARCH;
         }
         
-        SearchResult execute(UBIDLdapContext ctx, SearchRequest searchRequest) 
-        throws LDAPException {
-            return execute(ctx, searchRequest, null);
-        }
-        
         SearchResult execute(UBIDLdapContext ctx, SearchRequest searchRequest, ZLdapFilter zFilter) 
         throws LDAPException {
             SearchResult result = null;

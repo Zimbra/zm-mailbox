@@ -27,10 +27,6 @@ public abstract class ZLdapFilter extends ZLdapElement {
     public abstract String toFilterString();
     
     public String getStatString() {
-        // TODO: mandate factory
-        return filterId == null ? "" : filterId.getStatString();
-        // return filterId.name();
+        return filterId.getStatString();
     }
-
-    
 }

@@ -148,7 +148,7 @@ public class BUG_57866 extends UpgradeOp {
              }
         };
         
-        SearchLdapOptions searchOpts = new SearchLdapOptions(base, query, 
+        SearchLdapOptions searchOpts = new SearchLdapOptions(base, getFilter(query), 
                 returnAttrs, SearchLdapOptions.SIZE_UNLIMITED, null, 
                 ZSearchScope.SEARCH_SCOPE_SUBTREE, visitor);
         
@@ -186,7 +186,7 @@ public class BUG_57866 extends UpgradeOp {
              }
         };
         
-        SearchLdapOptions searchOpts = new SearchLdapOptions(base, query, 
+        SearchLdapOptions searchOpts = new SearchLdapOptions(base, getFilter(query), 
                 returnAttrs, SearchLdapOptions.SIZE_UNLIMITED, null, 
                 ZSearchScope.SEARCH_SCOPE_SUBTREE, visitor);
         

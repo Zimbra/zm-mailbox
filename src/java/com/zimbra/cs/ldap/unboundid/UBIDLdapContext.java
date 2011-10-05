@@ -54,12 +54,12 @@ import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.unboundid.UBIDLogger.LdapOp;
-import com.zimbra.cs.ldap.unboundid.UBIDLogger.Timer;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZLdapFilter;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZLdapSchema;
 import com.zimbra.cs.ldap.ZModificationList;
 import com.zimbra.cs.ldap.ZMutableEntry;
@@ -283,19 +283,23 @@ public class UBIDLdapContext extends ZLdapContext {
     public void deleteChildren(String dn) throws ServiceException {
         
         try {
-            Filter filter = Filter.createPresenceFilter(LdapConstants.ATTR_OBJECTCLASS);
+            // use ZLdapFilter instead of just the native Filter so it's 
+            // convenient for stating
+            ZLdapFilter filter = ZLdapFilterFactory.getInstance().anyEntry();
+            // Filter filter = Filter.createPresenceFilter(LdapConstants.ATTR_OBJECTCLASS);
+            
             SearchRequest searchRequest = new SearchRequest(dn, 
                     SearchScope.ONE,
                     derefAliasPolicy,
                     0,  // size limit
                     0,  // time limit
                     false, // getTypesOnly
-                    filter  
+                    ((UBIDLdapFilter) filter).getNative()  
                     ); 
                     
             searchRequest.setAttributes("dn");
             
-            SearchResult result = UBIDLdapOperation.SEARCH.execute(this, searchRequest);
+            SearchResult result = UBIDLdapOperation.SEARCH.execute(this, searchRequest, filter);
             
             List<SearchResultEntry> entries = result.getSearchEntries();
             for (SearchResultEntry entry : entries) {
@@ -365,19 +369,23 @@ public class UBIDLdapContext extends ZLdapContext {
     @Override
     public void moveChildren(String oldDn, String newDn) throws ServiceException {
         try {
-            Filter filter = Filter.createPresenceFilter(LdapConstants.ATTR_OBJECTCLASS);
+            // use ZLdapFilter instead of just the native Filter so it's 
+            // convenient for stating
+            ZLdapFilter filter = ZLdapFilterFactory.getInstance().anyEntry();
+            // Filter filter = Filter.createPresenceFilter(LdapConstants.ATTR_OBJECTCLASS);
+            
             SearchRequest searchRequest = new SearchRequest(oldDn, 
                     SearchScope.ONE,
                     derefAliasPolicy,
                     0,  // size limit
                     0,  // time limit
                     false, // getTypesOnly
-                    filter
+                    ((UBIDLdapFilter) filter).getNative()  
                     ); 
                     
             searchRequest.setAttributes("dn");
             
-            SearchResult result = UBIDLdapOperation.SEARCH.execute(this, searchRequest);
+            SearchResult result = UBIDLdapOperation.SEARCH.execute(this, searchRequest, filter);
             
             List<SearchResultEntry> entries = result.getSearchEntries();
             for (SearchResultEntry entry : entries) {
@@ -419,7 +427,7 @@ public class UBIDLdapContext extends ZLdapContext {
     public void searchPaged(SearchLdapOptions searchOptions) throws ServiceException {
         int maxResults = searchOptions.getMaxResults();
         String base = searchOptions.getSearchBase();
-        String filter = searchOptions.getFilter();
+        ZLdapFilter filter = searchOptions.getFilter();
         Set<String> binaryAttrs = searchOptions.getBinaryAttrs();
         SearchScope searchScope = ((UBIDSearchScope) searchOptions.getSearchScope()).getNative();
         SearchLdapOptions.SearchLdapVisitor visitor = searchOptions.getVisitor();
@@ -433,7 +441,7 @@ public class UBIDLdapContext extends ZLdapContext {
                     maxResults,
                     0,
                     false,
-                    filter);
+                    ((UBIDLdapFilter) filter).getNative());
 
             searchRequest.setAttributes(searchOptions.getReturnAttrs());
             
@@ -447,7 +455,7 @@ public class UBIDLdapContext extends ZLdapContext {
                 
                 SearchResult result = null;
                 try {
-                    result = UBIDLdapOperation.SEARCH.execute(this, searchRequest);
+                    result = UBIDLdapOperation.SEARCH.execute(this, searchRequest, filter);
                 } catch (LDAPException e) {
                     if (ResultCode.SIZE_LIMIT_EXCEEDED == e.getResultCode() && wantPartialResult) {
                         // if callsite wants partial result, return them

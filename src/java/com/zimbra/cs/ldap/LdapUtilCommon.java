@@ -169,7 +169,7 @@ public class LdapUtilCommon {
       * zimbraAuthLdapURL    ldap://server.example.zimbra.com/
       * zimbraAuthLdapUserDn uid=%u,ou=people,%D
       */
-    public static String computeAuthDn(String name, String bindDnRule) {
+    public static String computeDn(String name, String bindDnRule) {
        if (bindDnRule == null || bindDnRule.equals("") || bindDnRule.equals("%n"))
            return name;
     

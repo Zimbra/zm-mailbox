@@ -26,8 +26,13 @@ import java.io.IOException;
 import static org.junit.Assert.*;
 
 import org.junit.BeforeClass;
+import org.junit.runner.Description;
 import org.junit.runner.JUnitCore;
+import org.junit.runner.Result;
+import org.junit.runner.notification.Failure;
+import org.junit.runner.notification.RunListener;
 
+import com.google.common.collect.Lists;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Constants;
@@ -370,53 +375,59 @@ public class TestLdap {
             // junit.run(TestLdapSDK.class);
         }
         
-        junit.run(TestLdapHelper.class);
-        junit.run(TestLdapProvAccount.class);
-        junit.run(TestLdapProvAlias.class);
-        junit.run(TestLdapProvAutoProvision.class);
-        junit.run(TestLdapProvCos.class);
-        junit.run(TestLdapProvDataSource.class);
-        junit.run(TestLdapProvDistributionList.class);
-        junit.run(TestLdapProvDIT.class);
-        junit.run(TestLdapProvDomain.class);
-        junit.run(TestLdapProvEntry.class);
-        junit.run(TestLdapProvExternalLdapAuth.class);
-        junit.run(TestLdapProvGal.class);
-        junit.run(TestLdapProvGlobalConfig.class);
-        junit.run(TestLdapProvGlobalGrant.class);
-        junit.run(TestLdapProvIdentity.class);
-        junit.run(TestLdapProvMimeType.class);
-        junit.run(TestLdapProvMisc.class);
-        junit.run(TestLdapProvModifyAttrs.class);
-        junit.run(TestLdapProvRenameDomain.class);
-        junit.run(TestLdapProvServer.class);
-        junit.run(TestLdapProvSignature.class);
-        junit.run(TestLdapProvXMPPComponent.class);
-        junit.run(TestLdapProvZimlet.class);
-        junit.run(TestLdapUtil.class);
-        junit.run(TestLdapUpgrade.class);
-        junit.run(TestLdapZLdapContext.class);
-        junit.run(TestLdapZLdapFilter.class);
-        junit.run(TestLdapZMutableEntry.class);
-        junit.run(TestProvAttrCallback.class);
+        List<Class> classes = Lists.newArrayList();
+        
+        classes.add(TestLdapHelper.class);
+        classes.add(TestLdapProvAccount.class);
+        classes.add(TestLdapProvAlias.class);
+        classes.add(TestLdapProvAutoProvision.class);
+        classes.add(TestLdapProvCos.class);
+        classes.add(TestLdapProvDataSource.class);
+        classes.add(TestLdapProvDistributionList.class);
+        classes.add(TestLdapProvDIT.class);
+        classes.add(TestLdapProvDomain.class);
+        classes.add(TestLdapProvEntry.class);
+        classes.add(TestLdapProvExternalLdapAuth.class);
+        classes.add(TestLdapProvGal.class);
+        classes.add(TestLdapProvGlobalConfig.class);
+        classes.add(TestLdapProvGlobalGrant.class);
+        classes.add(TestLdapProvIdentity.class);
+        classes.add(TestLdapProvMimeType.class);
+        classes.add(TestLdapProvMisc.class);
+        classes.add(TestLdapProvModifyAttrs.class);
+        classes.add(TestLdapProvRenameDomain.class);
+        classes.add(TestLdapProvServer.class);
+        classes.add(TestLdapProvSignature.class);
+        classes.add(TestLdapProvXMPPComponent.class);
+        classes.add(TestLdapProvZimlet.class);
+        classes.add(TestLdapUtil.class);
+        classes.add(TestLdapUpgrade.class);
+        classes.add(TestLdapZLdapContext.class);
+        classes.add(TestLdapZLdapFilter.class);
+        classes.add(TestLdapZMutableEntry.class);
+        classes.add(TestProvAttrCallback.class);
+        
+        // Tests need server running
+        classes.add(TestProvDelegatedDL.class);
         
         // old tests, TODO: convert them 
-        junit.run(TestAccountLockout.class);
-        junit.run(TestACPermissionCache.class);
-        junit.run(TestACUserRights.class);
-        junit.run(TestBuildInfo.class);
-        junit.run(TestLdapBinary.class);
-        junit.run(TestLdapUtil.class);
-        junit.run(TestProvAlias.class);
-        junit.run(TestProvAttr.class);
-        junit.run(TestProvCallbackAvailableZimlets.class);
-        junit.run(TestProvCos.class);
-        junit.run(TestProvGroup.class);
-        junit.run(TestProvIDN.class);
-        junit.run(TestProvValidator.class);
-        junit.run(TestProvZimbraId.class);
-        junit.run(TestSearchCalendarResources.class);
-        junit.run(TestSearchGal.class);
+        classes.add(TestAccountLockout.class);
+        classes.add(TestACPermissionCache.class);
+        classes.add(TestACUserRights.class);
+        classes.add(TestBuildInfo.class);
+        classes.add(TestLdapBinary.class);
+        classes.add(TestLdapUtil.class);
+        classes.add(TestProvAlias.class);
+        classes.add(TestProvAttr.class);
+        classes.add(TestProvCallbackAvailableZimlets.class);
+        classes.add(TestProvCos.class);
+        classes.add(TestProvGroup.class);
+        classes.add(TestProvIDN.class);
+        classes.add(TestProvValidator.class);
+        classes.add(TestProvZimbraId.class);
+        classes.add(TestSearchCalendarResources.class);
+        classes.add(TestSearchGal.class);
+        
         
         /*
          * tests in extensions - don't forget to run them:
@@ -446,6 +457,18 @@ public class TestLdap {
         junit.run(TestProvDomainStatus.class);
         */
         
+        Class[] classArray = classes.toArray(new Class[classes.size()]);
+        Result result = junit.run(classArray);
+        
+        System.out.println("===== Number of Failures: " + result.getFailureCount());
+        List<Failure> failures = result.getFailures();
+        for (Failure failure : failures) {
+            System.out.println(failure.toString());
+            System.out.println();
+        }
+        System.out.println();
+
+        
         Date endTime = new Date();
         System.out.println("TestLdap ended at:   " + dateFmt.format(endTime));
         
@@ -459,9 +482,10 @@ public class TestLdap {
     
     // invoked once per JVM
     private static void initTest(TestConfig testConfig) throws Exception {
-        CliUtil.toolSetup();
+        CliUtil.toolSetup(Log.Level.error.name());
+        ZimbraLog.test.setLevel(Log.Level.info);
         // ZimbraLog.account.setLevel(Log.Level.debug);
-        ZimbraLog.ldap.setLevel(Log.Level.debug);
+        // ZimbraLog.ldap.setLevel(Log.Level.debug);
         // ZimbraLog.soap.setLevel(Log.Level.trace);
         
         RightManager.getInstance(true);
@@ -497,11 +521,12 @@ public class TestLdap {
      */
     public static void main(String[] args) throws Exception {
         JUnitCore junit = new JUnitCore();
-        junit.addListener(new ConsoleListener());
+        // junit.addListener(new ConsoleListener());
+        junit.addListener(new TestLogger());
         
-        TestConfig.useConfig(TestConfig.LEGACY);
+        // TestConfig.useConfig(TestConfig.LEGACY);
         
-        // runTests(junit, TestConfig.UBID);
+        runTests(junit, TestConfig.UBID);
         // runTests(junit, TestConfig.JNDI);
         // runTests(junit, TestConfig.LEGACY);
         

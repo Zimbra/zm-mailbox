@@ -20,11 +20,11 @@ import com.zimbra.cs.account.Server;
 
 public class LegacyLdapFilter {
 
-    private static final String FILTER_ACCOUNT_OBJECTCLASS = "(objectclass=zimbraAccount)";
-    private static final String FILTER_CALENDAR_RESOURCE_OBJECTCLASS = "(objectclass=zimbraCalendarResource)";
-    private static final String FILTER_DISTRIBUTION_LIST_OBJECTCLASS = "(objectclass=zimbraDistributionList)";
-    private static final String FILTER_DYNAMIC_GROUP_OBJECTCLASS = "(objectclass=zimbraGroup)";
-    private static final String FILTER_GROUP_OBJECTCLASS = "(|(objectclass=zimbraGroup)(objectclass=zimbraDistributionList))";
+    private static final String FILTER_ACCOUNT_OBJECTCLASS = "(objectClass=zimbraAccount)";
+    private static final String FILTER_CALENDAR_RESOURCE_OBJECTCLASS = "(objectClass=zimbraCalendarResource)";
+    private static final String FILTER_DISTRIBUTION_LIST_OBJECTCLASS = "(objectClass=zimbraDistributionList)";
+    private static final String FILTER_DYNAMIC_GROUP_OBJECTCLASS = "(objectClass=zimbraGroup)";
+    private static final String FILTER_GROUP_OBJECTCLASS = "(|(objectClass=zimbraGroup)(objectClass=zimbraDistributionList))";
     
     /*
      * operational
@@ -33,11 +33,15 @@ public class LegacyLdapFilter {
     	return "(hasSubordinates=TRUE)";
     }
     
+    public static String createdLaterOrEqual(String generalizedTime) {
+        return "(createTimestamp>=" + generalizedTime + ")";
+    }
+    
     /*
      * general
      */
     public static String anyEntry() {
-        return "(objectclass=*)";
+        return "(objectClass=*)";
     }
     
     /*
@@ -65,7 +69,7 @@ public class LegacyLdapFilter {
     public static String allNonSystemAccounts() {
         StringBuilder buf = new StringBuilder();
         buf.append("(&");
-        buf.append("(objectclass=zimbraAccount)(!(objectclass=zimbraCalendarResource))");
+        buf.append("(objectClass=zimbraAccount)(!(objectClass=zimbraCalendarResource))");
         buf.append("(!(zimbraIsSystemResource=TRUE))");
         buf.append(")");
 
@@ -96,22 +100,17 @@ public class LegacyLdapFilter {
         return "(|(zimbraIsAdminAccount=TRUE)(zimbraIsDelegatedAdminAccount=TRUE)(zimbraIsDomainAdminAccount=TRUE))";
     }
     
-    public static String accountsHomedOnServer(Server server) {
-        return "(&" + FILTER_ACCOUNT_OBJECTCLASS + homedOnServer(server) + ")";
+    public static String accountsHomedOnServer(String serverServiceHostname) {
+        return "(&" + FILTER_ACCOUNT_OBJECTCLASS + homedOnServer(serverServiceHostname) + ")";
     }
     
-    public static String homedOnServer(Server server) {
-    	String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname);
-    	return homedOnServer(serverName);
+    public static String homedOnServer(String serverServiceHostname) {
+    	return "(" + Provisioning.A_zimbraMailHost + "=" + serverServiceHostname + ")";
     }
     
-    public static String homedOnServer(String serverName) {
-    	return "(" + Provisioning.A_zimbraMailHost + "=" + serverName + ")";
-    }
-    
-    public static String accountsOnServerOnCosHasSubordinates(Server server, String cosId) {
+    public static String accountsOnServerOnCosHasSubordinates(String serverServiceHostname, String cosId) {
         return "(&" + LegacyLdapFilter.allAccounts() +
-        LegacyLdapFilter.homedOnServer(server) +
+        LegacyLdapFilter.homedOnServer(serverServiceHostname) +
         LegacyLdapFilter.hasSubordinates() +
         "(|(!(" + Provisioning.A_zimbraCOSId + "=*))" + "(" + Provisioning.A_zimbraCOSId + "=" + cosId + ")))";
     }
@@ -120,7 +119,7 @@ public class LegacyLdapFilter {
      * calendar resource
      */
     public static String allCalendarResources() {
-        return "(objectclass=zimbraCalendarResource)";
+        return "(objectClass=zimbraCalendarResource)";
     }
     
     public static String calendarResourceByForeignPrincipal(String foreignPrincipal) {
@@ -139,37 +138,37 @@ public class LegacyLdapFilter {
      * cos
      */
     public static String allCoses() {
-        return "(objectclass=zimbraCOS)";
+        return "(objectClass=zimbraCOS)";
     }
     
     public static String cosById(String id) {
-        return "(&(zimbraId=" + id + ")(objectclass=zimbraCOS))";
+        return "(&(zimbraId=" + id + ")(objectClass=zimbraCOS))";
     }
     
     public static String cosesByMailHostPool(String server) {
-        return "(&(objectclass=zimbraCOS)(zimbraMailHostPool=" + server + "))";
+        return "(&(objectClass=zimbraCOS)(zimbraMailHostPool=" + server + "))";
     }
     
     /*
      * data source
      */
     public static String allDataSources() {
-        return "(objectclass=zimbraDataSource)";
+        return "(objectClass=zimbraDataSource)";
     }
     
     public static String dataSourceById(String id) {
-        return "(&(objectclass=zimbraDataSource)(zimbraDataSourceId=" + id + "))";
+        return "(&(objectClass=zimbraDataSource)(zimbraDataSourceId=" + id + "))";
     }
     
     public static String dataSourceByName(String name) {
-        return "(&(objectclass=zimbraDataSource)(zimbraDataSourceName=" + name + "))";
+        return "(&(objectClass=zimbraDataSource)(zimbraDataSourceName=" + name + "))";
     }
     
     /*
      * distribution list
      */
     public static String allDistributionLists() {
-        return "(objectclass=zimbraDistributionList)";
+        return "(objectClass=zimbraDistributionList)";
     }
     
     public static String distributionListById(String id) {
@@ -213,31 +212,31 @@ public class LegacyLdapFilter {
      * domain
      */
     public static String allDomains() {
-        return "(objectclass=zimbraDomain)";
+        return "(objectClass=zimbraDomain)";
     }
     
     public static String domainById(String id) {
-        return "(&(zimbraId=" + id + ")(objectclass=zimbraDomain))";
+        return "(&(zimbraId=" + id + ")(objectClass=zimbraDomain))";
     }
     
     public static String domainByName(String name) {
-        return "(&(zimbraDomainName=" + name + ")(objectclass=zimbraDomain))";
+        return "(&(zimbraDomainName=" + name + ")(objectClass=zimbraDomain))";
     }
     
     public static String domainByKrb5Realm(String krb5Realm) {
-        return "(&(zimbraAuthKerberos5Realm=" + krb5Realm + ")(objectclass=zimbraDomain))";
+        return "(&(zimbraAuthKerberos5Realm=" + krb5Realm + ")(objectClass=zimbraDomain))";
     }
     
     public static String domainByVirtualHostame(String virtualHostname) {
-        return "(&(zimbraVirtualHostname=" + virtualHostname + ")(objectclass=zimbraDomain))";
+        return "(&(zimbraVirtualHostname=" + virtualHostname + ")(objectClass=zimbraDomain))";
     }
     
     public static String domainByForeignName(String foreignName) {
-        return "(&(zimbraForeignName=" + foreignName + ")(objectclass=zimbraDomain))";
+        return "(&(zimbraForeignName=" + foreignName + ")(objectClass=zimbraDomain))";
     }
     
     public static String domainLabel() {
-        return "(objectclass=dcObject)";
+        return "(objectClass=dcObject)";
     }
     
     public static String domainLockedForEagerAutoProvision() {
@@ -249,7 +248,7 @@ public class LegacyLdapFilter {
      * global config
      */
     public static String globalConfig() {
-        return "cn=config";
+        return "(cn=config)";
     }
     
     
@@ -257,18 +256,18 @@ public class LegacyLdapFilter {
      * identity
      */
     public static String allIdentities() {
-        return "(objectclass=zimbraIdentity)";
+        return "(objectClass=zimbraIdentity)";
     }
     
     public static String identityByName(String name) {
-        return "(&(objectclass=zimbraIdentity)(zimbraPrefIdentityName=" + name + "))";
+        return "(&(objectClass=zimbraIdentity)(zimbraPrefIdentityName=" + name + "))";
     }
     
     /*
      * mime enrty
      */
     public static String allMimeEntries() {
-        return "(objectclass=zimbraMimeEntry)";
+        return "(objectClass=zimbraMimeEntry)";
     }
     
     public static String mimeEntryByMimeType(String mimeType) {
@@ -279,26 +278,26 @@ public class LegacyLdapFilter {
      * server
      */
     public static String allServers() {
-        return "(objectclass=zimbraServer)";
+        return "(objectClass=zimbraServer)";
     }
     
     public static String serverById(String id) {
-        return "(&(zimbraId=" + id + ")(objectclass=zimbraServer))";
+        return "(&(zimbraId=" + id + ")(objectClass=zimbraServer))";
     }
     
     public static String serverByService(String service) {
-        return "(&(objectclass=zimbraServer)(zimbraServiceEnabled=" + service + "))";
+        return "(&(objectClass=zimbraServer)(zimbraServiceEnabled=" + service + "))";
     }
     
     /*
      * signature
      */
     public static String allSignatures() {
-        return "(objectclass=zimbraSignature)";
+        return "(objectClass=zimbraSignature)";
     }
     
     public static String signatureById(String id) {
-        return "(&(objectclass=zimbraSignature)(zimbraSignatureId=" + id +"))";
+        return "(&(objectClass=zimbraSignature)(zimbraSignatureId=" + id +"))";
     }
 
     
@@ -306,15 +305,15 @@ public class LegacyLdapFilter {
      * XMPPComponent
      */
     public static String allXMPPComponents() {
-        return "(objectclass=zimbraXMPPComponent)";
+        return "(objectClass=zimbraXMPPComponent)";
     }
     
     public static String imComponentById(String id) {
-        return "(&(objectclass=zimbraXMPPComponent)(zimbraXMPPComponentId=" + id + "))";
+        return "(&(objectClass=zimbraXMPPComponent)(zimbraXMPPComponentId=" + id + "))";
     }
     
     public static String xmppComponentById(String id) {
-        return "(&(zimbraId=" + id + ")(objectclass=zimbraXMPPComponent))";
+        return "(&(zimbraId=" + id + ")(objectClass=zimbraXMPPComponent))";
     }
     
     
@@ -322,7 +321,15 @@ public class LegacyLdapFilter {
      * zimlet
      */
     public static String allZimlets() {
-        return "(objectclass=zimbraZimletEntry)";
+        return "(objectClass=zimbraZimletEntry)";
+    }
+    
+    
+    /*
+     * AD
+     */
+    public static String memberOf(String dnOfGroup) {
+        return "(memberOf=" + dnOfGroup + ")";
     }
     
     

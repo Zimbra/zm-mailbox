@@ -15,8 +15,6 @@
 package com.zimbra.cs.ldap;
 
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
-import com.zimbra.cs.ldap.LdapTODO.TODO;
 
 public abstract class ZLdapFilterFactory extends ZLdapElement {
     
@@ -37,22 +35,77 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         ACCOUNT_BY_FOREIGN_PRINCIPAL(SINGLETON.accountByForeignPrincipal("{FOREIGN-PRINCIPAL}")),
         ACCOUNT_BY_MEMBEROF(SINGLETON.accountByMemberOf("{DYNAMIC-GROUP-ID}")),
         ACCOUNT_BY_NAME(SINGLETON.accountByName("{ACCOUNT-NAME}")),
+        ACCOUNTS_HOMED_ON_SERVER(SINGLETON.accountsHomedOnServer("{SERVER-SERVICE-HOSTNAME}")),
+        ACCOUNT_ON_SERVER_AND_COS_HAS_SUBORDINATES(SINGLETON.accountsOnServerAndCosHasSubordinates("{SERVER-SERVICE-HOSTNAME}", "{COS-ID}")),
         ADDRS_EXIST(SINGLETON.addrsExist(new String[]{"{ADDR-1}", "ADDR-2", "..."})),
         ADMIN_ACCOUNT_BY_ADMIN_FLAG(SINGLETON.adminAccountByAdminFlag()),
         ADMIN_ACCOUNT_BY_RDN(SINGLETON.adminAccountByRDN("{NAMING-RDN-ATTR}", "{NAME}")),
         ALL_ACCOUNTS(SINGLETON.allAccounts()),
+        ALL_CALENDAR_RESOURCES(SINGLETON.allCalendarResources()),
+        ALL_COSES(SINGLETON.allCoses()),
+        ALL_DATA_SOURCES(SINGLETON.allDataSources()),
+        ALL_DISTRIBUTION_LISTS(SINGLETON.allDistributionLists()),
+        ALL_DOMAINS(SINGLETON.allDomains()),
+        ALL_GROUPS(SINGLETON.allGroups()),
+        ALL_IDENTITIES(SINGLETON.allIdentities()),
+        ALL_MIME_ENTRIES(SINGLETON.allMimeEntries()),
         ALL_NON_SYSTEM_ACCOUNTS(SINGLETON.allNonSystemAccounts()),
+        ALL_SERVERS(SINGLETON.allServers()),
+        ALL_SIGNATURES(SINGLETON.allSignatures()),
+        ALL_XMPP_COMPONENTS(SINGLETON.allXMPPComponents()),
+        ALL_ZIMLETS(SINGLETON.allZimlets()),
         ANY_ENTRY(SINGLETON.anyEntry()),
+        CALENDAR_RESOURCE_BY_FOREIGN_PRINCIPAL(SINGLETON.calendarResourceByForeignPrincipal("{FOREIGN-PRINCIPAL}")),
+        CALENDAR_RESOURCE_BY_ID(SINGLETON.calendarResourceById("{CALENDAR-RESOURCE-ID}")),
+        CALENDAR_RESOURCE_BY_NAME(SINGLETON.calendarResourceByName("{CALENDAR-RESOURCE-NAME}")),
+        COS_BY_ID(SINGLETON.cosById("{COS-ID}")),
+        COSES_BY_MAILHOST_POOL(SINGLETON.cosesByMailHostPool("{SERVER-ID}")),
+        CREATED_LATEROREQUAL(SINGLETON.createdLaterOrEqual("{GENERALIZED_TIME}")),
+        DATA_SOURCE_BY_ID(SINGLETON.dataSourceById("{DATA-SOURCE-ID}")),
+        DATA_SOURCE_BY_NAME(SINGLETON.dataSourceByName("{DATA-SOURCE-NAME}")),
+        DISTRIBUTION_LIST_BY_ID(SINGLETON.distributionListById("{DISTRIBUTION-LIST-ID}")),
+        DISTRIBUTION_LIST_BY_NAME(SINGLETON.distributionListByName("{DISTRIBUTION-LIST-NAME}")),
+        DOMAIN_BY_ID(SINGLETON.domainById("{DOMAIN-ID}")),
+        DOMAIN_BY_NAME(SINGLETON.domainByName("{DOMAIN-NAME}")),
+        DOMAIN_BY_KRB5_REALM(SINGLETON.domainByKrb5Realm("{DOMAIN-KRB5-REALM}")),
+        DOMAIN_BY_VIRTUAL_HOSTNAME(SINGLETON.domainByVirtualHostame("{DOMAIN-VIRTUAL-HOSTNAME}")),
+        DOMAIN_BY_FOREIGN_NAME(SINGLETON.domainByForeignName("{DOMAIN-FOREIGN-NAME}")),
+        DOMAIN_LABEL(SINGLETON.domainLabel()),
+        DOMAIN_LOCKED_FOR_AUTO_PROVISION(SINGLETON.domainLockedForEagerAutoProvision()),
+        DYNAMIC_GROUP_BY_ID(SINGLETON.dynamicGroupById("{DYNAMIC-GROUP-ID}")),
+        DYNAMIC_GROUP_BY_NAME(SINGLETON.dynamicGroupByName("{DYNAMIC-GROUP-NAME}")),
+        GLOBAL_CONFIG(SINGLETON.globalConfig()),
+        GROUP_BY_ID(SINGLETON.groupById("{GROUP-ID}")),
+        GROUP_BY_NAME(SINGLETON.groupByName("{GROUP-NAME}")),
         HAS_SUBORDINATES(SINGLETON.hasSubordinates()),
+        HOMED_ON_SERVER(SINGLETON.homedOnServer("{SERVER-SERVICE-HOSTNAME}")),
+        IDENTITY_BY_NAME(SINGLETON.identityByName("{IDENTITY-NAME}")),
+        MEMBER_OF(SINGLETON.memberOf("{DN-OF-GROUP}")),
+        MIME_ENTRY_BY_MIME_TYPE(SINGLETON.mimeEntryByMimeType("{MIME-TYPE}")),
+        SERVER_BY_ID(SINGLETON.serverById("{SERVER-ID}")),
+        SERVER_BY_SERVICE(SINGLETON.serverByService("{SERVICE}")),
+        SIGNATURE_BY_ID(SINGLETON.signatureById("{SIGNATURE-ID}")),
+        XMPP_COMPONENT_BY_ID(SINGLETON.xmppComponentById("{XMPP-COMPOMENT-ID}")),
+        XMPP_COMPONENT_BY_ZIMBRA_XMPP_COMPONENT_ID(SINGLETON.imComponentById("{ZIMBRA-XMPP-COMPOMENT-ID}")),
         
-        // ids for fromFilterString(0 calls
-        AUTO_PROVISION_GET_EXTERNAL_ATTRS("Filter in " + Provisioning.A_zimbraAutoProvLdapSearchFilter),
+        
+        // ids for fromFilterString() calls
+        AUTO_PROVISION_ADMIN_SEARCH("Admin entered filter"),
+        AUTO_PROVISION_SEARCH("Filter in " + Provisioning.A_zimbraAutoProvLdapSearchFilter),
+        AUTO_PROVISION_SEARCH_CREATED_LATERTHAN("Filter in " + Provisioning.A_zimbraAutoProvLdapSearchFilter + "AND" + SINGLETON.createdLaterOrEqual("{GENERALIZED_TIME}")),
         EXTERNAL_GROUP("Filter in " + Provisioning.A_zimbraExternalGroupLdapSearchFilter),
+        GAL_SEARCH("GAL search"),
         LDAP_AUTHENTICATE("Filter in " + Provisioning.A_zimbraAuthLdapSearchFilter),
         NGINX_GET_DOMAIN_BY_SERVER_IP("Filter in "),
         NGINX_GET_PORT_BY_MAILHOST("Filter in "),
         NGINX_GET_MAILHOST("Filter in " + Provisioning.A_zimbraReverseProxyMailHostQuery),
-        UNITTEST("UNITTEST");
+        SMIME_LOOKUP("Filter in " + Provisioning.A_zimbraSMIMELdapFilter),
+        
+        
+        UNITTEST("UNITTEST"),
+        LDAP_UPGRADE("LDAP_UPGRADE"),
+        
+        TODO("TODO");
         
         private String template;
         
@@ -83,6 +136,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
      * operational
      */
     public abstract ZLdapFilter hasSubordinates();
+    public abstract ZLdapFilter createdLaterOrEqual(String generalizedTime);
     
     /*
      * general
@@ -107,18 +161,10 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter adminAccountByAdminFlag();
     public abstract ZLdapFilter adminAccountByRDN(String namingRdnAttr, String name);
     
-    
-    @TODO  // TODO: refactor so com.zimbra.cs.ldap does not have dependency on com.zimbra.cs.account
-    public abstract ZLdapFilter accountsHomedOnServer(Server server); 
-    
-    @TODO  // TODO: refactor so com.zimbra.cs.ldap does not have dependency on com.zimbra.cs.account
-    public ZLdapFilter homedOnServer(Server server) {
-        String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname);
-        return homedOnServer(serverName);
-    }
-    
-    public abstract ZLdapFilter homedOnServer(String serverName);
-    public abstract ZLdapFilter accountsOnServerOnCosHasSubordinates(Server server, String cosId);
+    public abstract ZLdapFilter accountsHomedOnServer(String serverServiceHostname); 
+    public abstract ZLdapFilter homedOnServer(String serverServiceHostname);
+    public abstract ZLdapFilter accountsOnServerAndCosHasSubordinates(
+            String serverServiceHostname, String cosId);
     
     /*
      * calendar resource
@@ -133,7 +179,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
      */
     public abstract ZLdapFilter allCoses();
     public abstract ZLdapFilter cosById(String id);
-    public abstract ZLdapFilter cosesByMailHostPool(String server);
+    public abstract ZLdapFilter cosesByMailHostPool(String serverId);
     
     /*
      * data source
@@ -208,16 +254,22 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter allSignatures();
     public abstract ZLdapFilter signatureById(String id);
     
-    /*
-     * zimlet
-     */
-    public abstract ZLdapFilter allZimlets();
-    
     /* 
      * XMPPComponent
      */
     public abstract ZLdapFilter allXMPPComponents();
     public abstract ZLdapFilter imComponentById(String id);
-    
     public abstract ZLdapFilter xmppComponentById(String id);
+    
+    /*
+     * zimlet
+     */
+    public abstract ZLdapFilter allZimlets();
+    
+    
+    /*
+     * AD
+     */
+    public abstract ZLdapFilter memberOf(String dnOfGroup);
+
 }

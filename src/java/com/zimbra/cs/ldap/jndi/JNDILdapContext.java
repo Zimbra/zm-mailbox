@@ -220,7 +220,7 @@ public class JNDILdapContext extends ZLdapContext {
     public void searchPaged(SearchLdapOptions searchOptions) throws ServiceException {
         int maxResults = searchOptions.getMaxResults();
         String base = searchOptions.getSearchBase();
-        String query = searchOptions.getFilter();
+        String query = searchOptions.getFilter().toFilterString();
         Set<String> binaryAttrs = searchOptions.getBinaryAttrs();
         int searchScope = ((JNDISearchScope) searchOptions.getSearchScope()).getNative();
         SearchLdapOptions.SearchLdapVisitor visitor = searchOptions.getVisitor();

@@ -14,8 +14,6 @@
  */
 package com.zimbra.cs.ldap.jndi;
 
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZLdapFilter;
@@ -36,6 +34,11 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     @Override
     public ZLdapFilter hasSubordinates() {
         return new JNDILdapFilter(LegacyLdapFilter.hasSubordinates());
+    }
+    
+    @Override
+    public ZLdapFilter createdLaterOrEqual(String generalizedTime) {
+        return new JNDILdapFilter(LegacyLdapFilter.createdLaterOrEqual(generalizedTime));
     }
     
     /*
@@ -106,8 +109,8 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     }
 
     @Override
-    public ZLdapFilter accountsHomedOnServer(Server server) {
-        return new JNDILdapFilter(LegacyLdapFilter.accountsHomedOnServer(server));
+    public ZLdapFilter accountsHomedOnServer(String serverServiceHostname) {
+        return new JNDILdapFilter(LegacyLdapFilter.accountsHomedOnServer(serverServiceHostname));
     }
 
     @Override
@@ -116,8 +119,8 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     }
 
     @Override
-    public ZLdapFilter accountsOnServerOnCosHasSubordinates(Server server, String cosId) {
-        return new JNDILdapFilter(LegacyLdapFilter.accountsOnServerOnCosHasSubordinates(server, cosId));
+    public ZLdapFilter accountsOnServerAndCosHasSubordinates(String serverServiceHostname, String cosId) {
+        return new JNDILdapFilter(LegacyLdapFilter.accountsOnServerOnCosHasSubordinates(serverServiceHostname, cosId));
     }
 
     
@@ -369,5 +372,13 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     @Override
     public ZLdapFilter allZimlets() {
         return new JNDILdapFilter(LegacyLdapFilter.allZimlets());
+    }
+    
+    
+    /*
+     * AD
+     */
+    public ZLdapFilter memberOf(String dnOfGroup) {
+        return new JNDILdapFilter(LegacyLdapFilter.memberOf(dnOfGroup));
     }
 }

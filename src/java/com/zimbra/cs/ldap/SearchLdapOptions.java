@@ -19,6 +19,7 @@ import java.util.Set;
 
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.ldap.LdapTODO.TODO;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 
 
 public class SearchLdapOptions {
@@ -95,7 +96,8 @@ public class SearchLdapOptions {
     private static final int DEFAULT_RESULT_PAGE_SIZE = 1000;
     
     private String searchBase;
-    private String filter;
+    // private String filter;
+    private ZLdapFilter filter;
     private String[] returnAttrs = RETURN_ALL_ATTRS;
     private int maxResults = SIZE_UNLIMITED;
     private Set<String> binaryAttrs;
@@ -103,9 +105,26 @@ public class SearchLdapOptions {
     private ZSearchScope searchScope;
     private SearchLdapOptions.SearchLdapVisitor visitor;
     
-    public SearchLdapOptions(String searchbase, String filter, 
+    // TODO: retire this
+    public SearchLdapOptions(String searchbase, String filterStr, 
+            String[] returnAttrs, int maxResults, Set<String> binaryAttrs, 
+            ZSearchScope searchScope, SearchLdapOptions.SearchLdapVisitor visitor) 
+    throws LdapException {
+        
+        this(searchbase, 
+                ZLdapFilterFactory.getInstance().fromFilterString(FilterId.TODO, filterStr),
+                returnAttrs, maxResults, binaryAttrs, searchScope, visitor);
+    }
+    
+    // TODO: use only this
+    public SearchLdapOptions(String searchbase, ZLdapFilter filter, 
             String[] returnAttrs, int maxResults, Set<String> binaryAttrs, 
             ZSearchScope searchScope, SearchLdapOptions.SearchLdapVisitor visitor) {
+        /*
+        this(searchbase, filter.toFilterString(), // TODO: store ZLdapFilter instead of converting to String
+             returnAttrs, maxResults, binaryAttrs, searchScope, visitor);
+         */
+        
         setSearchBase(searchbase);
         setFilter(filter);
         setReturnAttrs(returnAttrs);
@@ -115,18 +134,10 @@ public class SearchLdapOptions {
         setVisitor(visitor);
     }
     
-    @TODO
-    public SearchLdapOptions(String searchbase, ZLdapFilter filter, 
-            String[] returnAttrs, int maxResults, Set<String> binaryAttrs, 
-            ZSearchScope searchScope, SearchLdapOptions.SearchLdapVisitor visitor) {
-        this(searchbase, filter.toFilterString(), // TODO: store ZLdapFilter instead of converting to String
-             returnAttrs, maxResults, binaryAttrs, searchScope, visitor);
-    }
-    
     public String getSearchBase() {
         return searchBase;
     }
-    public String getFilter() {
+    public ZLdapFilter getFilter() {
         return filter;
     }
     
@@ -158,7 +169,7 @@ public class SearchLdapOptions {
         this.searchBase = searchBase;
     }
     
-    public void setFilter(String filter) {
+    public void setFilter(ZLdapFilter filter) {
         this.filter = filter;
     }
     

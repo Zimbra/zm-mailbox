@@ -26,6 +26,7 @@ import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapException.LdapEntryNotFoundException;
 import com.zimbra.cs.ldap.LdapException.LdapSizeLimitExceededException;
 import com.zimbra.cs.ldap.LdapTODO.*;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapTODO;
@@ -34,6 +35,7 @@ import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZSearchScope;
 
 public class LdapGalSearch {
@@ -329,7 +331,8 @@ public class LdapGalSearch {
       
         SearhcGalVisitor visitor = new SearhcGalVisitor(zlc, galType, base, rules, result);
       
-        SearchLdapOptions searchOpts = new SearchLdapOptions(base, query, 
+        SearchLdapOptions searchOpts = new SearchLdapOptions(base, 
+                ZLdapFilterFactory.getInstance().fromFilterString(FilterId.GAL_SEARCH, query), 
                 reqAttrs, maxResults, null, ZSearchScope.SEARCH_SCOPE_SUBTREE, visitor);
         
         searchOpts.setResultPageSize(pageSize);

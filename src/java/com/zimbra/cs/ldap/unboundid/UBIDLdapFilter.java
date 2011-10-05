@@ -15,9 +15,7 @@
 package com.zimbra.cs.ldap.unboundid;
 
 import com.unboundid.ldap.sdk.Filter;
-import com.unboundid.ldap.sdk.LDAPException;
 
-import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 
@@ -25,24 +23,9 @@ public class UBIDLdapFilter extends ZLdapFilter {
     
     private Filter filter;
     
-    // TODO: retire this one
-    UBIDLdapFilter(Filter filter) {
-        super(null);  // TODO
-        this.filter = filter;
-    }
-    
     UBIDLdapFilter(FilterId filterId, Filter filter) {
         super(filterId);
         this.filter = filter;
-    }
-    
-    UBIDLdapFilter(String stringFilter) throws LdapException {
-        super(null);  // TODO
-        try {
-            this.filter = Filter.create(stringFilter);
-        } catch (LDAPException e) {
-            throw UBIDLdapException.mapToLdapException("invalid filter " + stringFilter, e);
-        }
     }
 
     @Override

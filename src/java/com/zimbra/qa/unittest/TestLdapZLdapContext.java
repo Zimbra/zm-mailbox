@@ -95,7 +95,7 @@ public class TestLdapZLdapContext extends TestLdap {
         };
         
         SearchLdapOptions searchOptions = new SearchLdapOptions(
-                base, filter.toFilterString(), returnAttrs, SIZE_LIMIT, null, 
+                base, filter, returnAttrs, SIZE_LIMIT, null, 
                 ZSearchScope.SEARCH_SCOPE_SUBTREE, visitor);
         
         boolean caughtException = false;

@@ -144,7 +144,7 @@ public class ExternalGroup extends NamedEntry {
         if (searchBase == null) {
             searchBase = LdapConstants.DN_ROOT_DSE;
         }
-        String searchFilter = LdapUtilCommon.computeAuthDn(extGroupName, filterTemplate);
+        String searchFilter = LdapUtilCommon.computeDn(extGroupName, filterTemplate);
         
         GroupHandler groupHandler = getGroupHandler(domain);
         

@@ -67,6 +67,7 @@ import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
+import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchScope;
@@ -344,11 +345,11 @@ public abstract class AutoProvision {
                 if (searchBase == null) {
                     searchBase = LdapConstants.DN_ROOT_DSE;
                 }
-                String searchFilter = LdapUtilCommon.computeAuthDn(loginName, searchFilterTemplate);
+                String searchFilter = LdapUtilCommon.computeDn(loginName, searchFilterTemplate);
                 ZimbraLog.autoprov.debug("AutoProvision: computed search filter" + searchFilter);
                 ZSearchResultEntry entry = prov.getHelper().searchForEntry(
                         searchBase, ZLdapFilterFactory.getInstance().fromFilterString(
-                                FilterId.AUTO_PROVISION_GET_EXTERNAL_ATTRS, searchFilter), 
+                                FilterId.AUTO_PROVISION_SEARCH, searchFilter), 
                         zlc, attrs);
                 return new ExternalEntry(entry.getDN(), entry.getAttributes());
             }
@@ -356,7 +357,7 @@ public abstract class AutoProvision {
             String bindDNTemplate = domain.getAutoProvLdapBindDn();
             if (bindDNTemplate != null) {
                 // get attrs by external DN template
-                String dn = LdapUtilCommon.computeAuthDn(loginName, bindDNTemplate);
+                String dn = LdapUtilCommon.computeDn(loginName, bindDNTemplate);
                 ZimbraLog.autoprov.debug("AutoProvision: computed external DN" + dn);
                 return new ExternalEntry(dn, prov.getHelper().getAttributes(zlc, dn, attrs));
             }
@@ -550,6 +551,7 @@ public abstract class AutoProvision {
         String adminPassword = domain.getAutoProvLdapAdminBindPassword();
         String searchBase = domain.getAutoProvLdapSearchBase();
         String searchFilterTemplate = domain.getAutoProvLdapSearchFilter();
+        FilterId filterId = FilterId.AUTO_PROVISION_SEARCH;
         
         if (searchBase == null) {
             searchBase = LdapConstants.DN_ROOT_DSE;
@@ -569,21 +571,26 @@ public abstract class AutoProvision {
                     throw ServiceException.INVALID_REQUEST(
                             "search filter template is not set on domain " + domain.getName(), null);
                 }
-                searchFilter = LdapUtilCommon.computeAuthDn(name, searchFilterTemplate);
+                searchFilter = LdapUtilCommon.computeDn(name, searchFilterTemplate);
             } else if (filter != null) {
                 searchFilter = filter;
+                filterId = FilterId.AUTO_PROVISION_ADMIN_SEARCH;
             } else {
                 if (searchFilterTemplate == null) {
                     throw ServiceException.INVALID_REQUEST(
                             "search filter template is not set on domain " + domain.getName(), null);
                 }
-                searchFilter = LdapUtilCommon.computeAuthDn("*", searchFilterTemplate);
+                searchFilter = LdapUtilCommon.computeDn("*", searchFilterTemplate);
                 if (createTimestampLaterThan != null) {
-                    searchFilter = "(&" + searchFilter + "(createTimestamp>=" + createTimestampLaterThan + "))";
+                    // searchFilter = "(&" + searchFilter + "(createTimestamp>=" + createTimestampLaterThan + "))";
+                    searchFilter = "(&" + searchFilter + 
+                            ZLdapFilterFactory.getInstance().createdLaterOrEqual(createTimestampLaterThan).toFilterString() + ")";
+                    filterId = FilterId.AUTO_PROVISION_SEARCH_CREATED_LATERTHAN;
                 }
             }
             
-            SearchLdapOptions searchOptions = new SearchLdapOptions(searchBase, searchFilter, 
+            ZLdapFilter zFilter = ZLdapFilterFactory.getInstance().fromFilterString(filterId, searchFilter);
+            SearchLdapOptions searchOptions = new SearchLdapOptions(searchBase, zFilter, 
                     returnAttrs, maxResults, null, ZSearchScope.SEARCH_SCOPE_SUBTREE, ldapVisitor);
             
             zlc.searchPaged(searchOptions);

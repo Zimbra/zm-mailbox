@@ -16,8 +16,6 @@ package com.zimbra.qa.unittest;
 
 import org.junit.*;
 
-import com.unboundid.ldap.sdk.Filter;
-import com.unboundid.ldap.sdk.LDAPException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
@@ -44,13 +42,28 @@ public class TestLdapZLdapFilter extends TestLdap {
         return LdapUtilCommon.generateUUID();
     }
     
+    private void verifyStatString(FilterId filterId, ZLdapFilter zLdapFilter) throws Exception {
+        assertEquals(filterId.getStatString(), zLdapFilter.getStatString());
+    }
+    
     @Test
     public void hasSubordinates() throws Exception {
         String filter = LegacyLdapFilter.hasSubordinates();
         ZLdapFilter zLdapFilter = filterDactory.hasSubordinates();
         String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
-        assertEquals(FilterId.HAS_SUBORDINATES.getStatString(), zLdapFilter.getStatString());
+        verifyStatString(FilterId.HAS_SUBORDINATES, zLdapFilter);
+    }
+    
+    @Test
+    public void createdLaterOrEqual() throws Exception {
+        String GENERALIZED_TIME = "20111005190522Z";
+        
+        String filter = LegacyLdapFilter.createdLaterOrEqual(GENERALIZED_TIME);
+        ZLdapFilter zLdapFilter = filterDactory.createdLaterOrEqual(GENERALIZED_TIME);
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        verifyStatString(FilterId.CREATED_LATEROREQUAL, zLdapFilter);
     }
     
     @Test
@@ -59,16 +72,16 @@ public class TestLdapZLdapFilter extends TestLdap {
         ZLdapFilter zLdapFilter = filterDactory.anyEntry();
         String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
-        assertEquals(FilterId.ANY_ENTRY.getStatString(), zLdapFilter.getStatString());
+        verifyStatString(FilterId.ANY_ENTRY, zLdapFilter);
     }
     
     @Test
     public void fromFilterString() throws Exception {
         String FILTER_STR = "(blah=123)";
         ZLdapFilter zLdapFilter = filterDactory.fromFilterString(
-                FilterId.AUTO_PROVISION_GET_EXTERNAL_ATTRS, FILTER_STR);
+                FilterId.AUTO_PROVISION_SEARCH, FILTER_STR);
         assertEquals(FILTER_STR, zLdapFilter.toFilterString());
-        assertEquals(FilterId.AUTO_PROVISION_GET_EXTERNAL_ATTRS.getStatString(), zLdapFilter.getStatString());
+        verifyStatString(FilterId.AUTO_PROVISION_SEARCH, zLdapFilter);
     }
     
     
@@ -80,7 +93,7 @@ public class TestLdapZLdapFilter extends TestLdap {
         ZLdapFilter zLdapFilter = filterDactory.addrsExist(ADDRS);
         String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
-        assertEquals(FilterId.ADDRS_EXIST.getStatString(), zLdapFilter.getStatString());
+        verifyStatString(FilterId.ADDRS_EXIST, zLdapFilter);
     }
     
     @Test
@@ -89,7 +102,7 @@ public class TestLdapZLdapFilter extends TestLdap {
         ZLdapFilter zLdapFilter = filterDactory.allAccounts();
         String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
-        assertEquals(FilterId.ALL_ACCOUNTS.getStatString(), zLdapFilter.getStatString());
+        verifyStatString(FilterId.ALL_ACCOUNTS, zLdapFilter);
     }
     
     @Test
@@ -102,7 +115,7 @@ public class TestLdapZLdapFilter extends TestLdap {
         // (&(&(objectclass=zimbraAccount)(!(objectclass=zimbraCalendarResource)))(!(zimbraIsSystemResource=TRUE)))
         
         // assertEquals(filter, zFilter);  the diff is OK
-        assertEquals(FilterId.ALL_NON_SYSTEM_ACCOUNTS.getStatString(), zLdapFilter.getStatString());
+        verifyStatString(FilterId.ALL_NON_SYSTEM_ACCOUNTS, zLdapFilter);
     }
     
     @Test
@@ -113,7 +126,7 @@ public class TestLdapZLdapFilter extends TestLdap {
         ZLdapFilter zLdapFilter = filterDactory.accountByForeignPrincipal(FOREIFN_PRINCIPAL);
         String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
-        assertEquals(FilterId.ACCOUNT_BY_FOREIGN_PRINCIPAL.getStatString(), zLdapFilter.getStatString());
+        verifyStatString(FilterId.ACCOUNT_BY_FOREIGN_PRINCIPAL, zLdapFilter);
     }
     
     @Test
@@ -124,7 +137,7 @@ public class TestLdapZLdapFilter extends TestLdap {
         ZLdapFilter zLdapFilter = filterDactory.accountById(ID);
         String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
-        assertEquals(FilterId.ACCOUNT_BY_ID.getStatString(), zLdapFilter.getStatString());
+        verifyStatString(FilterId.ACCOUNT_BY_ID, zLdapFilter);
     }
     
     @Test
@@ -135,7 +148,7 @@ public class TestLdapZLdapFilter extends TestLdap {
         ZLdapFilter zLdapFilter = filterDactory.accountByMemberOf(MEMBEROF);
         String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
-        assertEquals(FilterId.ACCOUNT_BY_MEMBEROF.getStatString(), zLdapFilter.getStatString());
+        verifyStatString(FilterId.ACCOUNT_BY_MEMBEROF, zLdapFilter);
     }
     
     @Test
@@ -146,7 +159,7 @@ public class TestLdapZLdapFilter extends TestLdap {
         ZLdapFilter zLdapFilter = filterDactory.accountByName(NAME);
         String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
-        assertEquals(FilterId.ACCOUNT_BY_NAME.getStatString(), zLdapFilter.getStatString());
+        verifyStatString(FilterId.ACCOUNT_BY_NAME, zLdapFilter);
     }
     
     @Test
@@ -158,7 +171,7 @@ public class TestLdapZLdapFilter extends TestLdap {
         ZLdapFilter zLdapFilter = filterDactory.adminAccountByRDN(NAMING_RDN_ATTR, NAME);
         String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
-        assertEquals(FilterId.ADMIN_ACCOUNT_BY_RDN.getStatString(), zLdapFilter.getStatString());
+        verifyStatString(FilterId.ADMIN_ACCOUNT_BY_RDN, zLdapFilter);
     }
     
     @Test
@@ -167,52 +180,50 @@ public class TestLdapZLdapFilter extends TestLdap {
         ZLdapFilter zLdapFilter = filterDactory.adminAccountByAdminFlag();
         String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
-        assertEquals(FilterId.ADMIN_ACCOUNT_BY_ADMIN_FLAG.getStatString(), zLdapFilter.getStatString());
+        verifyStatString(FilterId.ADMIN_ACCOUNT_BY_ADMIN_FLAG, zLdapFilter);
     }
     
     @Test
     public void accountsHomedOnServer() throws Exception {
         Server SERVER = prov.getLocalServer();
         
-        String filter = LegacyLdapFilter.accountsHomedOnServer(SERVER);
-        String zFilter = filterDactory.accountsHomedOnServer(SERVER).toFilterString();
+        String filter = LegacyLdapFilter.accountsHomedOnServer(SERVER.getServiceHostname());
+        ZLdapFilter zLdapFilter = filterDactory.accountsHomedOnServer(SERVER.getServiceHostname());
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.ACCOUNTS_HOMED_ON_SERVER, zLdapFilter);
     }
     
     @Test
     public void homedOnServer() throws Exception {
         Server SERVER = prov.getLocalServer();
         
-        String filter = LegacyLdapFilter.homedOnServer(SERVER);
-        String zFilter = filterDactory.homedOnServer(SERVER).toFilterString();
+        String filter = LegacyLdapFilter.homedOnServer(SERVER.getServiceHostname());
+        ZLdapFilter zLdapFilter = filterDactory.homedOnServer(SERVER.getServiceHostname());
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.HOMED_ON_SERVER, zLdapFilter);
     }
     
     @Test
-    public void homedOnServerByServerName() throws Exception {
-        String SERVER_NAME = "homedOnServerByServerName";
-        
-        String filter = LegacyLdapFilter.homedOnServer(SERVER_NAME);
-        String zFilter = filterDactory.homedOnServer(SERVER_NAME).toFilterString();
-        assertEquals(filter, zFilter);
-    }
-    
-    @Test
-    public void accountsOnServerOnCosHasSubordinates() throws Exception {
+    public void accountsOnServerAndCosHasSubordinates() throws Exception {
         Server SERVER = prov.getLocalServer();
         String COS_ID = genUUID();
         
-        String filter = LegacyLdapFilter.accountsOnServerOnCosHasSubordinates(SERVER, COS_ID);
-        ZLdapFilter zLapFilter = filterDactory.accountsOnServerOnCosHasSubordinates(SERVER, COS_ID);
-        String zFilter = zLapFilter.toFilterString();
+        String filter = LegacyLdapFilter.accountsOnServerOnCosHasSubordinates(SERVER.getServiceHostname(), COS_ID);
+        ZLdapFilter zLdapFilter = filterDactory.accountsOnServerAndCosHasSubordinates(SERVER.getServiceHostname(), COS_ID);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.ACCOUNT_ON_SERVER_AND_COS_HAS_SUBORDINATES, zLdapFilter);
     }
     
     @Test
     public void allCalendarResources() throws Exception {
         String filter = LegacyLdapFilter.allCalendarResources();
-        String zFilter = filterDactory.allCalendarResources().toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.allCalendarResources();
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.ALL_CALENDAR_RESOURCES, zLdapFilter);
     }
     
     @Test
@@ -220,8 +231,10 @@ public class TestLdapZLdapFilter extends TestLdap {
         String FOREIGN_PRINCIPAL = "calendarResourceByForeignPrincipal";
         
         String filter = LegacyLdapFilter.calendarResourceByForeignPrincipal(FOREIGN_PRINCIPAL);
-        String zFilter = filterDactory.calendarResourceByForeignPrincipal(FOREIGN_PRINCIPAL).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.calendarResourceByForeignPrincipal(FOREIGN_PRINCIPAL);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.CALENDAR_RESOURCE_BY_FOREIGN_PRINCIPAL, zLdapFilter);
     }
     
     @Test
@@ -229,8 +242,10 @@ public class TestLdapZLdapFilter extends TestLdap {
         String ID = genUUID();
         
         String filter = LegacyLdapFilter.calendarResourceById(ID);
-        String zFilter = filterDactory.calendarResourceById(ID).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.calendarResourceById(ID);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.CALENDAR_RESOURCE_BY_ID, zLdapFilter);
     }
     
     @Test
@@ -238,15 +253,19 @@ public class TestLdapZLdapFilter extends TestLdap {
         String NAME = "calendarResourceByName";
         
         String filter = LegacyLdapFilter.calendarResourceByName(NAME);
-        String zFilter = filterDactory.calendarResourceByName(NAME).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.calendarResourceByName(NAME);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.CALENDAR_RESOURCE_BY_NAME, zLdapFilter);
     }
     
     @Test
     public void allCoses() throws Exception {
         String filter = LegacyLdapFilter.allCoses();
-        String zFilter = filterDactory.allCoses().toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.allCoses();
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.ALL_COSES, zLdapFilter);
     }
     
     @Test
@@ -254,24 +273,30 @@ public class TestLdapZLdapFilter extends TestLdap {
         String ID = genUUID();
         
         String filter = LegacyLdapFilter.cosById(ID);
-        String zFilter = filterDactory.cosById(ID).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.cosById(ID);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.COS_BY_ID, zLdapFilter);
     }
     
     @Test
     public void cosesByMailHostPool() throws Exception {
-        String SERVER_NAME = "cosesByMailHostPool";
+        String SERVER_ID = genUUID();
         
-        String filter = LegacyLdapFilter.cosesByMailHostPool(SERVER_NAME);
-        String zFilter = filterDactory.cosesByMailHostPool(SERVER_NAME).toFilterString();
+        String filter = LegacyLdapFilter.cosesByMailHostPool(SERVER_ID);
+        ZLdapFilter zLdapFilter = filterDactory.cosesByMailHostPool(SERVER_ID);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.COSES_BY_MAILHOST_POOL, zLdapFilter);
     }
     
     @Test
     public void allDataSources() throws Exception {
         String filter = LegacyLdapFilter.allDataSources();
-        String zFilter = filterDactory.allDataSources().toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.allDataSources();
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.ALL_DATA_SOURCES, zLdapFilter);
     }
     
     @Test
@@ -279,8 +304,10 @@ public class TestLdapZLdapFilter extends TestLdap {
         String ID = genUUID();
         
         String filter = LegacyLdapFilter.dataSourceById(ID);
-        String zFilter = filterDactory.dataSourceById(ID).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.dataSourceById(ID);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.DATA_SOURCE_BY_ID, zLdapFilter);
     }
     
     @Test
@@ -288,15 +315,19 @@ public class TestLdapZLdapFilter extends TestLdap {
         String NAME = "dataSourceByName";
         
         String filter = LegacyLdapFilter.dataSourceByName(NAME);
-        String zFilter = filterDactory.dataSourceByName(NAME).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.dataSourceByName(NAME);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.DATA_SOURCE_BY_NAME, zLdapFilter);
     }
     
     @Test
     public void allDistributionLists() throws Exception {
         String filter = LegacyLdapFilter.allDistributionLists();
-        String zFilter = filterDactory.allDistributionLists().toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.allDistributionLists();
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.ALL_DISTRIBUTION_LISTS, zLdapFilter);
     }
     
     @Test
@@ -304,8 +335,10 @@ public class TestLdapZLdapFilter extends TestLdap {
         String ID = genUUID();
         
         String filter = LegacyLdapFilter.distributionListById(ID);
-        String zFilter = filterDactory.distributionListById(ID).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.distributionListById(ID);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.DISTRIBUTION_LIST_BY_ID, zLdapFilter);
     }
     
     @Test
@@ -313,15 +346,64 @@ public class TestLdapZLdapFilter extends TestLdap {
         String NAME = "distributionListByName";
         
         String filter = LegacyLdapFilter.distributionListByName(NAME);
-        String zFilter = filterDactory.distributionListByName(NAME).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.distributionListByName(NAME);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.DISTRIBUTION_LIST_BY_NAME, zLdapFilter);
+    }
+    
+    @Test
+    public void dynamicGroupById() throws Exception {
+        String ID = genUUID();
+        
+        String filter = LegacyLdapFilter.dynamicGroupById(ID);
+        ZLdapFilter zLdapFilter = filterDactory.dynamicGroupById(ID);
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        verifyStatString(FilterId.DYNAMIC_GROUP_BY_ID, zLdapFilter);
+    }
+    
+    @Test
+    public void dynamicGroupByName() throws Exception {
+        String NAME = "dynamicGroupByName";
+        
+        String filter = LegacyLdapFilter.dynamicGroupByName(NAME);
+        ZLdapFilter zLdapFilter = filterDactory.dynamicGroupByName(NAME);
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        verifyStatString(FilterId.DYNAMIC_GROUP_BY_NAME, zLdapFilter);
+    }
+    
+    
+    @Test
+    public void groupById() throws Exception {
+        String ID = genUUID();
+        
+        String filter = LegacyLdapFilter.groupById(ID);
+        ZLdapFilter zLdapFilter = filterDactory.groupById(ID);
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        verifyStatString(FilterId.GROUP_BY_ID, zLdapFilter);
+    }
+    
+    @Test
+    public void groupByName() throws Exception {
+        String NAME = "groupByName";
+        
+        String filter = LegacyLdapFilter.groupByName(NAME);
+        ZLdapFilter zLdapFilter = filterDactory.groupByName(NAME);
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        verifyStatString(FilterId.GROUP_BY_NAME, zLdapFilter);
     }
     
     @Test
     public void allDomains() throws Exception {
         String filter = LegacyLdapFilter.allDomains();
-        String zFilter = filterDactory.allDomains().toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.allDomains();
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.ALL_DOMAINS, zLdapFilter);
     }
     
     @Test
@@ -329,8 +411,10 @@ public class TestLdapZLdapFilter extends TestLdap {
         String ID = genUUID();
         
         String filter = LegacyLdapFilter.domainById(ID);
-        String zFilter = filterDactory.domainById(ID).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.domainById(ID);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.DOMAIN_BY_ID, zLdapFilter);
     }
     
     @Test
@@ -338,8 +422,10 @@ public class TestLdapZLdapFilter extends TestLdap {
         String NAME = "domainByName";
         
         String filter = LegacyLdapFilter.domainByName(NAME);
-        String zFilter = filterDactory.domainByName(NAME).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.domainByName(NAME);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.DOMAIN_BY_NAME, zLdapFilter);
     }
     
     @Test
@@ -347,8 +433,10 @@ public class TestLdapZLdapFilter extends TestLdap {
         String REALM = "domainByKrb5Realm";
         
         String filter = LegacyLdapFilter.domainByKrb5Realm(REALM);
-        String zFilter = filterDactory.domainByKrb5Realm(REALM).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.domainByKrb5Realm(REALM);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.DOMAIN_BY_KRB5_REALM, zLdapFilter);
     }
     
     @Test
@@ -356,8 +444,10 @@ public class TestLdapZLdapFilter extends TestLdap {
         String VIRTUAL_HOST_NAME = "domainByVirtualHostame";
         
         String filter = LegacyLdapFilter.domainByVirtualHostame(VIRTUAL_HOST_NAME);
-        String zFilter = filterDactory.domainByVirtualHostame(VIRTUAL_HOST_NAME).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.domainByVirtualHostame(VIRTUAL_HOST_NAME);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.DOMAIN_BY_VIRTUAL_HOSTNAME, zLdapFilter);
     }
     
     @Test
@@ -365,22 +455,46 @@ public class TestLdapZLdapFilter extends TestLdap {
         String FOREIGN_NAME = "domainByForeignName";
         
         String filter = LegacyLdapFilter.domainByForeignName(FOREIGN_NAME);
-        String zFilter = filterDactory.domainByForeignName(FOREIGN_NAME).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.domainByForeignName(FOREIGN_NAME);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.DOMAIN_BY_FOREIGN_NAME, zLdapFilter);
     }
     
     @Test
     public void domainLabel() throws Exception {
         String filter = LegacyLdapFilter.domainLabel();
-        String zFilter = filterDactory.domainLabel().toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.domainLabel();
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.DOMAIN_LABEL, zLdapFilter);
+    }
+    
+    @Test
+    public void domainLockedForEagerAutoProvision() throws Exception {
+        String filter = LegacyLdapFilter.domainLockedForEagerAutoProvision();
+        ZLdapFilter zLdapFilter = filterDactory.domainLockedForEagerAutoProvision();
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        verifyStatString(FilterId.DOMAIN_LOCKED_FOR_AUTO_PROVISION, zLdapFilter);
+    }
+    
+    @Test
+    public void globalConfig() throws Exception {
+        String filter = LegacyLdapFilter.globalConfig();
+        ZLdapFilter zLdapFilter = filterDactory.globalConfig();
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        verifyStatString(FilterId.GLOBAL_CONFIG, zLdapFilter);
     }
     
     @Test
     public void allIdentities() throws Exception {
         String filter = LegacyLdapFilter.allIdentities();
-        String zFilter = filterDactory.allIdentities().toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.allIdentities();
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.ALL_IDENTITIES, zLdapFilter);
     }
     
     @Test
@@ -388,15 +502,19 @@ public class TestLdapZLdapFilter extends TestLdap {
         String NAME = "identityByName";
         
         String filter = LegacyLdapFilter.identityByName(NAME);
-        String zFilter = filterDactory.identityByName(NAME).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.identityByName(NAME);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.IDENTITY_BY_NAME, zLdapFilter);
     }
     
     @Test
     public void allMimeEntries() throws Exception {
         String filter = LegacyLdapFilter.allMimeEntries();
-        String zFilter = filterDactory.allMimeEntries().toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.allMimeEntries();
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.ALL_MIME_ENTRIES, zLdapFilter);
     }
     
     @Test
@@ -404,15 +522,19 @@ public class TestLdapZLdapFilter extends TestLdap {
         String MIME_TYPE = "mimeEntryByMimeType";
         
         String filter = LegacyLdapFilter.mimeEntryByMimeType(MIME_TYPE);
-        String zFilter = filterDactory.mimeEntryByMimeType(MIME_TYPE).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.mimeEntryByMimeType(MIME_TYPE);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.MIME_ENTRY_BY_MIME_TYPE, zLdapFilter);
     }
     
     @Test
     public void allServers() throws Exception {
         String filter = LegacyLdapFilter.allServers();
-        String zFilter = filterDactory.allServers().toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.allServers();
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.ALL_SERVERS, zLdapFilter);
     }
     
     @Test
@@ -420,8 +542,10 @@ public class TestLdapZLdapFilter extends TestLdap {
         String ID = genUUID();
         
         String filter = LegacyLdapFilter.serverById(ID);
-        String zFilter = filterDactory.serverById(ID).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.serverById(ID);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.SERVER_BY_ID, zLdapFilter);
     }
     
     @Test
@@ -429,15 +553,19 @@ public class TestLdapZLdapFilter extends TestLdap {
         String SERVICE = "serverByService";
         
         String filter = LegacyLdapFilter.serverByService(SERVICE);
-        String zFilter = filterDactory.serverByService(SERVICE).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.serverByService(SERVICE);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.SERVER_BY_SERVICE, zLdapFilter);
     }
     
     @Test
     public void allSignatures() throws Exception {
         String filter = LegacyLdapFilter.allSignatures();
-        String zFilter = filterDactory.allSignatures().toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.allSignatures();
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.ALL_SIGNATURES, zLdapFilter);
     }
     
     @Test
@@ -445,15 +573,19 @@ public class TestLdapZLdapFilter extends TestLdap {
         String ID = genUUID();
         
         String filter = LegacyLdapFilter.signatureById(ID);
-        String zFilter = filterDactory.signatureById(ID).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.signatureById(ID);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.SIGNATURE_BY_ID, zLdapFilter);
     }
     
     @Test
     public void allXMPPComponents() throws Exception {
         String filter = LegacyLdapFilter.allXMPPComponents();
-        String zFilter = filterDactory.allXMPPComponents().toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.allXMPPComponents();
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.ALL_XMPP_COMPONENTS, zLdapFilter);
     }
     
     @Test
@@ -461,8 +593,10 @@ public class TestLdapZLdapFilter extends TestLdap {
         String ID = genUUID();
         
         String filter = LegacyLdapFilter.imComponentById(ID);
-        String zFilter = filterDactory.imComponentById(ID).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.imComponentById(ID);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.XMPP_COMPONENT_BY_ZIMBRA_XMPP_COMPONENT_ID, zLdapFilter);
     }
     
     @Test
@@ -470,15 +604,19 @@ public class TestLdapZLdapFilter extends TestLdap {
         String ID = genUUID();
         
         String filter = LegacyLdapFilter.xmppComponentById(ID);
-        String zFilter = filterDactory.xmppComponentById(ID).toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.xmppComponentById(ID);
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.XMPP_COMPONENT_BY_ID, zLdapFilter);
     }
     
     @Test
     public void allZimlets() throws Exception {
         String filter = LegacyLdapFilter.allZimlets();
-        String zFilter = filterDactory.allZimlets().toFilterString();
+        ZLdapFilter zLdapFilter = filterDactory.allZimlets();
+        String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
+        verifyStatString(FilterId.ALL_ZIMLETS, zLdapFilter);
     }
     
     @Test
@@ -520,4 +658,31 @@ zmprov mcf +zimbraGalLdapFilterDef 'ad:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(
          */
     }
     
+    @Test
+    public void autoProvisionSearchCreatedLaterThan() throws Exception {
+        String FILTER = "(foo=bar)";
+        String GENERALIZED_TIME = "20111005190522Z";
+        
+        String filter = "(&" + FILTER + "(createTimestamp>=" + GENERALIZED_TIME + "))";
+        
+        ZLdapFilter createdLaterThanFilter = filterDactory.createdLaterOrEqual(GENERALIZED_TIME);
+        String filter2 = "(&" + FILTER + createdLaterThanFilter.toFilterString() + ")";
+        
+        assertEquals(filter, filter2);
+        
+        ZLdapFilter zLdapFilter = filterDactory.fromFilterString(
+                FilterId.AUTO_PROVISION_SEARCH_CREATED_LATERTHAN, filter2);
+        verifyStatString(FilterId.AUTO_PROVISION_SEARCH_CREATED_LATERTHAN, zLdapFilter);
+    }
+    
+    @Test
+    public void memberOf() throws Exception {
+        String DN = "dc=com";
+        
+        String filter = LegacyLdapFilter.memberOf(DN);
+        ZLdapFilter zLdapFilter = filterDactory.memberOf(DN);
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        verifyStatString(FilterId.MEMBER_OF, zLdapFilter);
+    }
 }

@@ -25,31 +25,31 @@ public class TestLdapUtil extends TestLdap {
     public void testAuthDN() {
         
         assertEquals("schemers@example.zimbra.com", 
-                LdapUtilCommon.computeAuthDn("schemers@example.zimbra.com", null));
+                LdapUtilCommon.computeDn("schemers@example.zimbra.com", null));
         
         assertEquals("schemers@example.zimbra.com",
-                LdapUtilCommon.computeAuthDn("schemers@example.zimbra.com", ""));
+                LdapUtilCommon.computeDn("schemers@example.zimbra.com", ""));
         
         assertEquals("WTF",
-                LdapUtilCommon.computeAuthDn("schemers@example.zimbra.com", "WTF"));
+                LdapUtilCommon.computeDn("schemers@example.zimbra.com", "WTF"));
         
         assertEquals("schemers@example.zimbra.com",
-                LdapUtilCommon.computeAuthDn("schemers@example.zimbra.com", "%n"));
+                LdapUtilCommon.computeDn("schemers@example.zimbra.com", "%n"));
         
         assertEquals("schemers",
-                LdapUtilCommon.computeAuthDn("schemers@example.zimbra.com", "%u"));
+                LdapUtilCommon.computeDn("schemers@example.zimbra.com", "%u"));
         
         assertEquals("example.zimbra.com",
-                LdapUtilCommon.computeAuthDn("schemers@example.zimbra.com", "%d"));
+                LdapUtilCommon.computeDn("schemers@example.zimbra.com", "%d"));
         
         assertEquals("dc=example,dc=zimbra,dc=com",
-                LdapUtilCommon.computeAuthDn("schemers@example.zimbra.com", "%D"));
+                LdapUtilCommon.computeDn("schemers@example.zimbra.com", "%D"));
         
         assertEquals("uid=schemers,ou=people,dc=example,dc=zimbra,dc=com",
-                LdapUtilCommon.computeAuthDn("schemers@example.zimbra.com", "uid=%u,ou=people,%D"));
+                LdapUtilCommon.computeDn("schemers@example.zimbra.com", "uid=%u,ou=people,%D"));
         
         assertEquals("n(schemers@example.zimbra.com)u(schemers)d(example.zimbra.com)D(dc=example,dc=zimbra,dc=com)(%)",
-                LdapUtilCommon.computeAuthDn("schemers@example.zimbra.com", "n(%n)u(%u)d(%d)D(%D)(%%)"));
+                LdapUtilCommon.computeDn("schemers@example.zimbra.com", "n(%n)u(%u)d(%d)D(%D)(%%)"));
     }
     
     @Test

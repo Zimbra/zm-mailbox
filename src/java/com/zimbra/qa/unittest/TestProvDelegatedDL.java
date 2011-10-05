@@ -64,7 +64,7 @@ import com.zimbra.soap.type.DistributionListSelector;
 import com.zimbra.soap.type.KeyValuePair;
 
 public class TestProvDelegatedDL {
-    private static boolean verbose = true;
+    private static boolean verbose = false;
     
     private static String TEST_ID = TestProvisioningUtil.genTestId();
     private static String DOMAIN_NAME = TestProvisioningUtil.baseDomainName("test-delegated-dl", TEST_ID);

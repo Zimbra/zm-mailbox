@@ -218,7 +218,8 @@ public class DataSourceCallback extends AttributeCallback {
     private List<Account> lookupAccountsFromLDAP(Provisioning prov, String cosId)
     throws ServiceException{
 
-        String filter = ZLdapFilterFactory.getInstance().accountsOnServerOnCosHasSubordinates(prov.getLocalServer(), cosId).toFilterString();
+        String filter = ZLdapFilterFactory.getInstance().accountsOnServerAndCosHasSubordinates(
+                prov.getLocalServer().getServiceHostname(), cosId).toFilterString();
 
         List accts = prov.searchAccounts(filter, null, null, false,
                 Provisioning.SD_ACCOUNT_FLAG | Provisioning.SD_CALENDAR_RESOURCE_FLAG | Provisioning.SO_NO_FIXUP_OBJECTCLASS);

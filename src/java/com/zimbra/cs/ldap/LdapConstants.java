@@ -20,16 +20,13 @@ public class LdapConstants {
     public static final String LDAP_FALSE = "FALSE";
     public static final String EARLIEST_SYNC_TOKEN = "19700101000000Z";
 
-    // 
-    // object classes and attributes used in the com.zimbra.cs.ldap package
-    //
-    // We don't want to use Provisioning.A_** constants in the 
-    // in the com.zimbra.cs.ldap package because it should not have any 
-    // dependency on the account package.
     public static final String DN_ROOT_DSE = "";
     public static final String ATTR_DN = "dn";
     public static final String ATTR_OBJECTCLASS = "objectClass";
     public static final String ATTR_CREATE_TIMESTAMP = "createTimestamp";
+    
+    // AD attrs
+    public static final String ATTR_MEMBER_OF = "memberOf";
     
     // milli seconds to wait for checking LDAP server health
     public static final int CHECK_LDAP_SLEEP_MILLIS = 5000;

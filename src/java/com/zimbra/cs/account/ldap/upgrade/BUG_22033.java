@@ -227,7 +227,7 @@ public class BUG_22033 extends UpgradeOp {
             
             visitor = new Bug22033Visitor(this, modZlc);
             
-            SearchLdapOptions searchOpts = new SearchLdapOptions(base, query, 
+            SearchLdapOptions searchOpts = new SearchLdapOptions(base, getFilter(query), 
                     returnAttrs, SearchLdapOptions.SIZE_UNLIMITED, null, 
                     ZSearchScope.SEARCH_SCOPE_SUBTREE, visitor);
 

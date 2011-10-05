@@ -187,7 +187,7 @@ public class BUG_18277 extends UpgradeOp {
             
             Bug18277Visitor visitor = new Bug18277Visitor(this, configBranchBaseDn, domainAdminIds, globalAdminIds);
             
-            SearchLdapOptions searchOpts = new SearchLdapOptions(base, query, 
+            SearchLdapOptions searchOpts = new SearchLdapOptions(base, getFilter(query), 
                     returnAttrs, SearchLdapOptions.SIZE_UNLIMITED, null, 
                     ZSearchScope.SEARCH_SCOPE_SUBTREE, visitor);
             

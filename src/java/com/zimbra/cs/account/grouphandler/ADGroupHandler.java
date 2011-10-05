@@ -30,20 +30,21 @@ import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.ldap.LdapClient;
-import com.zimbra.cs.ldap.LdapUsage;
+import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
+import com.zimbra.cs.ldap.ZLdapFilter;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.ldap.IAttributes.CheckBinary;
-import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 
 public class ADGroupHandler extends GroupHandler {
 
     private static final String MAIL_ATTR = "mail";
-    private static final String MEMBER_OF_ATTR = "memberOf";
+    private static final String MEMBER_OF_ATTR = LdapConstants.ATTR_MEMBER_OF;
     
     @Override
     public boolean isGroup(IAttributes ldapAttrs) {
@@ -98,12 +99,12 @@ public class ADGroupHandler extends GroupHandler {
         
         private TreeSet<String> searchLdap(ILdapContext zlc, String searchBase, String dnOfGroup) {
             
-            String query = "(" + MEMBER_OF_ATTR + "=" + dnOfGroup + ")";
+            ZLdapFilter filter = ZLdapFilterFactory.getInstance().memberOf(dnOfGroup);
             String[] returnAttrs = new String[]{MAIL_ATTR};
             
             try {
                 LdapHelper ldapHelper = LdapProv.getInst().getHelper();
-                SearchLdapOptions searchOptions = new SearchLdapOptions(searchBase, query, 
+                SearchLdapOptions searchOptions = new SearchLdapOptions(searchBase, filter, 
                         returnAttrs, SearchLdapOptions.SIZE_UNLIMITED, null, 
                         ZSearchScope.SEARCH_SCOPE_SUBTREE, this);
                 ldapHelper.searchLdap(zlc, searchOptions);
@@ -200,7 +201,7 @@ public class ADGroupHandler extends GroupHandler {
             //       skip that. See LdapProvisioning.externalLdapAuth
             String dnTemplate = domain.getAuthLdapBindDn();
             if (dnTemplate != null) {
-                extDN = LdapUtilCommon.computeAuthDn(acct.getName(), dnTemplate);
+                extDN = LdapUtilCommon.computeDn(acct.getName(), dnTemplate);
             }
         }
         

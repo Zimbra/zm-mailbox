@@ -3020,7 +3020,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     };
         
     private long getNumAccountsOnServer(Server server) throws ServiceException {        
-        String query = LegacyLdapFilter.accountsHomedOnServer(server);
+        String query = LegacyLdapFilter.accountsHomedOnServer(server.getServiceHostname());
         String base = mDIT.mailBranchBaseDN();
         String attrs[] = new String[] {Provisioning.A_zimbraId};
         
@@ -3943,7 +3943,7 @@ public class LegacyLdapProvisioning extends LdapProv {
                 String searchDn = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchBindDn);
                 String searchBase = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchBase);
                 if (searchBase == null) searchBase = "";
-                searchFilter = LdapUtilCommon.computeAuthDn(name, searchFilter);
+                searchFilter = LdapUtilCommon.computeDn(name, searchFilter);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with search filter of "+searchFilter);
                 ldapAuthenticate(url, requireStartTLS, password, searchBase, searchFilter, searchDn, searchPassword);
                 return new Provisioning.Result(Check.STATUS_OK, "", searchFilter);                
@@ -3951,7 +3951,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         
             String bindDn = (String) attrs.get(Provisioning.A_zimbraAuthLdapBindDn);
             if (bindDn != null) {
-                String dn = LdapUtilCommon.computeAuthDn(name, bindDn);
+                String dn = LdapUtilCommon.computeDn(name, bindDn);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with bind dn template of "+dn);
                 ldapAuthenticate(url, requireStartTLS, dn, password);
                 return new Provisioning.Result(Check.STATUS_OK, "", dn);
@@ -4046,7 +4046,7 @@ public class LegacyLdapProvisioning extends LdapProv {
                 String searchDn = d.getAttr(Provisioning.A_zimbraAuthLdapSearchBindDn);
                 String searchBase = d.getAttr(Provisioning.A_zimbraAuthLdapSearchBase);
                 if (searchBase == null) searchBase = "";
-                searchFilter = LdapUtilCommon.computeAuthDn(principal, searchFilter);
+                searchFilter = LdapUtilCommon.computeDn(principal, searchFilter);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with search filter of "+searchFilter);
                 ldapAuthenticate(url, requireStartTLS, password, searchBase, searchFilter, searchDn, searchPassword);
                 return;
@@ -4054,7 +4054,7 @@ public class LegacyLdapProvisioning extends LdapProv {
 
             String bindDn = d.getAttr(Provisioning.A_zimbraAuthLdapBindDn);
             if (bindDn != null) {
-                String dn = LdapUtilCommon.computeAuthDn(principal, bindDn);
+                String dn = LdapUtilCommon.computeDn(principal, bindDn);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with bind dn template of "+dn);
                 ldapAuthenticate(url, requireStartTLS, dn, password);
                 return;
@@ -5150,7 +5150,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         LdapDomain ld = (LdapDomain) d;
         String filter = mDIT.filterAccountsByDomain(d, false);
         if (s != null) {
-            String serverFilter = LegacyLdapFilter.homedOnServer(s);
+            String serverFilter = LegacyLdapFilter.homedOnServer(s.getServiceHostname());
             if (StringUtil.isNullOrEmpty(filter))
                 filter = serverFilter;
             else

@@ -72,6 +72,7 @@ public class TestLdapUpgrade extends TestLdap {
         return new String[] {"-b", bug};
     }
     
+    /*
     @Test
     public void bug10287() throws Exception {
         HashMap<String, Object> attrs = new HashMap<String, Object>();
@@ -83,6 +84,7 @@ public class TestLdapUpgrade extends TestLdap {
         cos = getFresh(cos);
         assertEquals(ProvisioningConstants.TRUE, cos.getAttr(Provisioning.A_zimbraPrefCalendarReminderSendEmail));
     }
+    */
     
     @Test
     public void bug14531() throws Exception {

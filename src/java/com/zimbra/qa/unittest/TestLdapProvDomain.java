@@ -43,7 +43,9 @@ import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZSearchScope;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 
 public class TestLdapProvDomain extends TestLdap {
     
@@ -205,7 +207,8 @@ public class TestLdapProvDomain extends TestLdap {
         };
         
         SearchLdapOptions searchOpts = new SearchLdapOptions(LdapConstants.DN_ROOT_DSE, 
-                "(objectclass=zimbraDomain)", new String[]{Provisioning.A_zimbraId}, 
+                ZLdapFilterFactory.getInstance().fromFilterString(FilterId.UNITTEST, "(objectclass=zimbraDomain)"), 
+                new String[]{Provisioning.A_zimbraId}, 
                 SearchLdapOptions.SIZE_UNLIMITED, null, ZSearchScope.SEARCH_SCOPE_SUBTREE, 
                 visitor);
         
