@@ -1122,8 +1122,8 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (rightsNeeded == 0) {
             return true;
         }
-        if (authuser != null && !getAccount().isExternalSharingEnabled() && authuser.isIsExternalVirtualAccount()) {
-            throw ServiceException.FAILURE("external sharing not allowed", null);
+        if (authuser != null && authuser.isIsExternalVirtualAccount() && !getAccount().isExternalSharingEnabled()) {
+            return false;
         }
         return checkRights(rightsNeeded, authuser, asAdmin) == rightsNeeded;
     }
