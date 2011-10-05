@@ -42,6 +42,7 @@ import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
@@ -1122,10 +1123,33 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (rightsNeeded == 0) {
             return true;
         }
-        if (authuser != null && authuser.isIsExternalVirtualAccount() && !getAccount().isExternalSharingEnabled()) {
+        if (authuser != null && authuser.isIsExternalVirtualAccount() &&
+                (!getAccount().isExternalSharingEnabled() ||
+                        !isAllowedExternalDomain(authuser.getExternalUserMailAddress()))) {
             return false;
         }
         return checkRights(rightsNeeded, authuser, asAdmin) == rightsNeeded;
+    }
+
+    private boolean isAllowedExternalDomain(String extUserEmail) throws ServiceException {
+        if (!getAccount().isExternalShareDomainWhitelistEnabled()) {
+            return true;
+        }
+        if (extUserEmail == null) {
+            return false;
+        }
+        String[] localPartAndDomain = EmailUtil.getLocalPartAndDomain(extUserEmail);
+        if (localPartAndDomain == null) {
+            return false;
+        }
+        String extUserDomain = localPartAndDomain[1];
+        String[] whitelistDomains = getAccount().getExternalShareWhitelistDomain();
+        for (String domain : whitelistDomains) {
+            if (domain.equalsIgnoreCase(extUserDomain)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Returns the subset of the requested access rights that the user has
@@ -3382,8 +3406,9 @@ public abstract class MailItem implements Comparable<MailItem> {
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul> */
     ACL.Grant grantAccess(String zimbraId, byte type, short rights, String args) throws ServiceException {
-        if (type == ACL.GRANTEE_GUEST && !getAccount().isExternalSharingEnabled()) {
-            throw ServiceException.FAILURE("external sharing not allowed", null);
+        if (type == ACL.GRANTEE_GUEST &&
+                (!getAccount().isExternalSharingEnabled() || !isAllowedExternalDomain(zimbraId))) {
+            throw ServiceException.PERM_DENIED("external sharing not allowed");
         }
         if (!canAccess(ACL.RIGHT_ADMIN)) {
             throw ServiceException.PERM_DENIED("you do not have admin rights to item " + getPath());
