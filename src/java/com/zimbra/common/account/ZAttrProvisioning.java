@@ -3535,21 +3535,13 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExternalPop3SSLPort = "zimbraExternalPop3SSLPort";
 
     /**
-     * list of external domains that users can share files and folders with
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1263)
-    public static final String A_zimbraExternalShareDomainWhiteList = "zimbraExternalShareDomainWhiteList";
-
-    /**
-     * whether checking against zimbraExternalShareDomainWhiteList for
+     * whether checking against zimbraExternalShareWhitelistDomain for
      * external sharing is enabled
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1264)
-    public static final String A_zimbraExternalShareDomainWhiteListEnabled = "zimbraExternalShareDomainWhiteListEnabled";
+    public static final String A_zimbraExternalShareDomainWhitelistEnabled = "zimbraExternalShareDomainWhitelistEnabled";
 
     /**
      * lifetime of external shares. Must be in valid duration format:
@@ -3561,6 +3553,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1260)
     public static final String A_zimbraExternalShareLifetime = "zimbraExternalShareLifetime";
+
+    /**
+     * list of external domains that users can share files and folders with
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1263)
+    public static final String A_zimbraExternalShareWhitelistDomain = "zimbraExternalShareWhitelistDomain";
 
     /**
      * switch for turning external sharing on/off
