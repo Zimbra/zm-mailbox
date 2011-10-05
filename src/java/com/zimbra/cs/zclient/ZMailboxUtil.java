@@ -111,7 +111,8 @@ public class ZMailboxUtil implements DebugListener {
     private boolean mGlobalVerbose = false;
     private boolean mDebug = false;
     private String mAdminAccountName = null;
-    private String mMailboxName = null;
+    private String mAuthAccountName = null;
+    private String mTargetAccountName = null;
     private String mPassword = null;
     private ZAuthToken mAdminAuthToken = null;
 
@@ -149,7 +150,9 @@ public class ZMailboxUtil implements DebugListener {
 
     public void setAdminAccountName(String account) { mAdminAccountName = account; }
 
-    public void setMailboxName(String account) { mMailboxName = account; }
+    public void setAuthAccountName(String account) { mAuthAccountName = account; }
+
+    public void setTargetAccountName(String account) { mTargetAccountName = account; }
 
     public void setPassword(String password) { mPassword = password; }
 
@@ -191,7 +194,10 @@ public class ZMailboxUtil implements DebugListener {
         stdout.println("  -y/--authtoken {authtoken}               " + SoapCLI.OPT_AUTHTOKEN.getDescription());
         stdout.println("  -Y/--authtokenfile {authtoken file}      " + SoapCLI.OPT_AUTHTOKENFILE.getDescription());
         stdout.println("  -m/--mailbox  {name}                     mailbox to open");
-        stdout.println("  -p/--password {pass}                     password for admin account and/or mailbox");
+        stdout.println("     --auth     {name}                     account name to auth as; defaults to -m unless --nodelauth is used");
+        stdout.println("     --nodelauth                           don't do delegated auth; use admin auth in the requests instead");
+        stdout.println("                                           cannot be combined with --auth and requires admin auth");
+        stdout.println("  -p/--password {pass}                     auth password");
         stdout.println("  -P/--passfile {file}                     read password from file");
         stdout.println("  -t/--timeout                             timeout (in seconds)");
         stdout.println("  -v/--verbose                             verbose mode (dumps full exception stack trace)");
@@ -307,6 +313,8 @@ public class ZMailboxUtil implements DebugListener {
         return new Option(shortName, longName, hasArgs, help);
     }
 
+    static Option O_AUTH = new Option(null, "auth", true, "account to auth as");
+    static Option O_NODELAUTH = new Option(null, "nodelauth", false, "don't do delegated auth; use admin auth in the requests instead");
     static Option O_AFTER = new Option("a", "after", true, "add after filter-name");
     static Option O_BEFORE = new Option("b", "before", true, "add before filter-name");
     static Option O_COLOR = new Option("c", "color", true, "color");
@@ -342,7 +350,7 @@ public class ZMailboxUtil implements DebugListener {
         ADD_OUTGOING_FILTER_RULE("addOutgoingFilterRule", "aofrl", "{name}  [*active|inactive] [any|*all] {conditions}+ {actions}+", "add outgoing filter rule", Category.FILTER,  2, Integer.MAX_VALUE, O_AFTER, O_BEFORE, O_FIRST, O_LAST),
         ADD_MESSAGE("addMessage", "am", "{dest-folder-path} {filename-or-dir} [{filename-or-dir} ...]", "add a message to a folder", Category.MESSAGE, 2, Integer.MAX_VALUE, O_TAGS, O_DATE, O_FLAGS, O_NO_VALIDATION),
         ADMIN_AUTHENTICATE("adminAuthenticate", "aa", "{admin-name} {admin-password}", "authenticate as an admin. can only be used by an admin", Category.ADMIN, 2, 2, O_URL),
-        AUTHENTICATE("authenticate", "a", "{name} {password}", "authenticate as account and open mailbox", Category.MISC, 2, 2, O_URL),
+        AUTHENTICATE("authenticate", "a", "{auth-account-name} {password} [target-account-name]", "authenticate as account and open target mailbox; target defaults to auth account if unspecified", Category.MISC, 2, 3, O_URL),
         AUTO_COMPLETE("autoComplete", "ac", "{query}", "contact auto autocomplete", Category.CONTACT,  1, 1, O_VERBOSE),
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{query}", "gal auto autocomplete", Category.CONTACT,  1, 1, O_VERBOSE),
         CHECK_PERMISSION("checkPermission", "cp", "{name} {right}", "check if the user has the specified right on target.", Category.PERMISSION, 2, 2, O_VERBOSE),
@@ -428,12 +436,13 @@ public class ZMailboxUtil implements DebugListener {
         REVOKE_PERMISSION("revokePermission", "rvp", "{account {name}|group {name}|domain {name}||all|public|guest {email} [{password}]|key {email} [{accesskey}] {[-]right}}", "revoke a right previously granted to a grantee or a group of grantees. to revoke a denied right, put a '-' in front of the right", Category.PERMISSION, 2, 4),
         SEARCH("search", "s", "{query}", "perform search", Category.SEARCH, 0, 1, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS, O_DUMPSTER),
         SEARCH_CONVERSATION("searchConv", "sc", "{conv-id} {query}", "perform search on conversation", Category.SEARCH, 0, 2, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),
-        SELECT_MAILBOX("selectMailbox", "sm", "{account-name}", "select a different mailbox. can only be used by an admin", Category.ADMIN, 1, 1),
+        SELECT_MAILBOX("selectMailbox", "sm", "{name}", "select a different mailbox. can only be used by an admin", Category.ADMIN, 1, 1, O_AUTH, O_NODELAUTH),
         SYNC_FOLDER("syncFolder", "sf", "{folder-path}", "synchronize folder's contents to the remote feed specified by folder's {url}", Category.FOLDER, 1, 1),
         TAG_CONTACT("tagContact", "tct", "{contact-ids} {tag-name} [0|1*]", "tag/untag contact(s)", Category.CONTACT, 2, 3),
         TAG_CONVERSATION("tagConversation", "tc", "{conv-ids} {tag-name} [0|1*]", "tag/untag conversation(s)", Category.CONVERSATION, 2, 3),
         TAG_ITEM("tagItem", "ti", "{item-ids} {tag-name} [0|1*]", "tag/untag item(s)", Category.ITEM, 2, 3),
-        TAG_MESSAGE("tagMessage", "tm", "{msg-ids} {tag-name} [0|1*]", "tag/untag message(s)", Category.MESSAGE, 2, 3);
+        TAG_MESSAGE("tagMessage", "tm", "{msg-ids} {tag-name} [0|1*]", "tag/untag message(s)", Category.MESSAGE, 2, 3),
+        WHOAMI("whoami", null, "", "show current auth'd/opened mailbox", Category.MISC, 0, 0);
 
         private String mName;
         private String mAlias;
@@ -573,46 +582,67 @@ public class ZMailboxUtil implements DebugListener {
         initCommands();
     }
 
-    private ZMailbox.Options getMailboxOptions(SoapProvisioning prov, AccountBy by, String key, int lifetimeSeconds)
+    private ZMailbox.Options getMailboxOptions(SoapProvisioning prov, String authAccount, String targetAccount, int lifetimeSeconds)
     throws ServiceException {
-        SoapAccountInfo sai = prov.getAccountInfo(by, key);
-        DelegateAuthResponse dar = prov.delegateAuth(by, key, lifetimeSeconds > 0 ? lifetimeSeconds: Constants.SECONDS_PER_DAY);
-        return new ZMailbox.Options(dar.getAuthToken(), sai.getAdminSoapURL());
+        ZMailbox.Options options;
+        AccountBy targetBy = StringUtil.isUUID(targetAccount) ? AccountBy.id : AccountBy.name;
+        if (!StringUtil.isNullOrEmpty(authAccount)) {
+            AccountBy authBy = StringUtil.isUUID(authAccount) ? AccountBy.id : AccountBy.name;
+            SoapAccountInfo sai = prov.getAccountInfo(authBy, authAccount);
+            DelegateAuthResponse dar = prov.delegateAuth(authBy, authAccount, lifetimeSeconds > 0 ? lifetimeSeconds: Constants.SECONDS_PER_DAY);
+            options = new ZMailbox.Options(dar.getAuthToken(), sai.getAdminSoapURL());
+        } else {
+            SoapAccountInfo sai = prov.getAccountInfo(targetBy, targetAccount);
+            options = new ZMailbox.Options(mAdminAuthToken, sai.getAdminSoapURL());
+        }
+        options.setTargetAccount(targetAccount);
+        options.setTargetAccountBy(targetBy);
+        return options;
     }
 
     /*
      * called when sm command is embeded in zmprov
      */
-    public void selectMailbox(String targetAccount, SoapProvisioning prov) throws ServiceException {
-        if (prov == null) {
-            throw ZClientException.CLIENT_ERROR("can only select mailbox after adminAuthenticate", null);
-        } else if (mProv == null) {
-            mProv = prov;
-        }
-        mMbox = null; //make sure to null out current value so if select fails any further ops will fail
-        mMailboxName = targetAccount;
-        AccountBy by = StringUtil.isUUID(targetAccount) ? AccountBy.id : AccountBy.name;
-        ZMailbox.Options options = getMailboxOptions(prov, by, mMailboxName, Constants.SECONDS_PER_DAY);
-        options.setTimeout(mTimeout);
-
-        if (prov.soapGetTransportDebugListener() != null) {
-            options.setDebugListener(prov.soapGetTransportDebugListener());
-        } else {  // use the same debug listener used by zmprov
-            options.setHttpDebugListener(prov.soapGetHttpTransportDebugListener());
-        }
-
-        mMbox = ZMailbox.getMailbox(options);
-        dumpMailboxConnect();
-        mPrompt = String.format("mbox %s> ", mMbox.getName());
-        mSearchParams = null;
-        mConvSearchParams = null;
-        mConvSearchResult = null;
-        mIndexToId.clear();
-        // TODO: clear all other mailbox-state
+    public void selectMailbox(String authAccount, SoapProvisioning prov) throws ServiceException {
+        selectMailbox(authAccount, authAccount, prov);
     }
 
-    public void selectMailbox(String targetAccount) throws ServiceException {
-        selectMailbox(targetAccount, mProv);
+    public void selectMailbox(String authAccount, String targetAccount, SoapProvisioning prov) throws ServiceException {
+        boolean success = false;
+        try {
+            if (prov == null) {
+                throw ZClientException.CLIENT_ERROR("can only select mailbox after adminAuthenticate", null);
+            } else if (mProv == null) {
+                mProv = prov;
+            }
+            mMbox = null; //make sure to null out current value so if select fails any further ops will fail
+            setAuthAccountName(authAccount);
+            setTargetAccountName(targetAccount);
+            ZMailbox.Options options = getMailboxOptions(prov, authAccount, targetAccount, Constants.SECONDS_PER_DAY);
+            options.setTimeout(mTimeout);
+    
+            if (prov.soapGetTransportDebugListener() != null) {
+                options.setDebugListener(prov.soapGetTransportDebugListener());
+            } else {  // use the same debug listener used by zmprov
+                options.setHttpDebugListener(prov.soapGetHttpTransportDebugListener());
+            }
+    
+            mMbox = ZMailbox.getMailbox(options);
+            dumpMailboxConnect();
+            mPrompt = String.format("mbox %s> ", mMbox.getName());
+            mSearchParams = null;
+            mConvSearchParams = null;
+            mConvSearchResult = null;
+            mIndexToId.clear();
+            // TODO: clear all other mailbox-state
+
+            success = true;
+        } finally {
+            if (!success) {
+                setAuthAccountName(null);
+                setTargetAccountName(null);
+            }
+        }
     }
 
     private void adminAuth(String name, String password, String uri) throws ServiceException {
@@ -625,6 +655,7 @@ public class ZMailboxUtil implements DebugListener {
             mProv.soapSetTransportDebugListener(listener);
         }
         mProv.soapAdminAuthenticate(name, password);
+        mAdminAuthToken = mProv.getAuthToken();
     }
 
     private void adminAuth(ZAuthToken zat, String uri) throws ServiceException {
@@ -637,19 +668,31 @@ public class ZMailboxUtil implements DebugListener {
         mProv.soapAdminAuthenticate(zat);
     }
 
-    private void auth(String name, String password, String uri) throws ServiceException {
-        mMailboxName = name;
-        mPassword = password;
-        ZMailbox.Options options = new ZMailbox.Options();
-        options.setAccount(mMailboxName);
-        options.setAccountBy(StringUtil.isUUID(name) ? AccountBy.id : AccountBy.name);
-        options.setPassword(mPassword);
-        options.setUri(ZMailbox.resolveUrl(uri, false));
-        options.setDebugListener(mDebug ? this : null);
-        options.setTimeout(mTimeout);
-        mMbox = ZMailbox.getMailbox(options);
-        mPrompt = String.format("mbox %s> ", mMbox.getName());
-        dumpMailboxConnect();
+    private void auth(String authAccountName, String password, String targetAccountName, String uri) throws ServiceException {
+        boolean success = false;
+        try {
+            mPassword = password;
+            ZMailbox.Options options = new ZMailbox.Options();
+            options.setAccount(authAccountName);
+            options.setAccountBy(StringUtil.isUUID(authAccountName) ? AccountBy.id : AccountBy.name);
+            options.setPassword(mPassword);
+            options.setTargetAccount(targetAccountName);
+            options.setTargetAccountBy(StringUtil.isUUID(targetAccountName) ? AccountBy.id : AccountBy.name);
+            options.setUri(ZMailbox.resolveUrl(uri, false));
+            options.setDebugListener(mDebug ? this : null);
+            options.setTimeout(mTimeout);
+            mMbox = ZMailbox.getMailbox(options);
+            mPrompt = String.format("mbox %s> ", mMbox.getName());
+            setAuthAccountName(authAccountName);
+            setTargetAccountName(targetAccountName);
+            dumpMailboxConnect();
+            success = true;
+        } finally {
+            if (!success) {
+                setAuthAccountName(null);
+                setTargetAccountName(null);
+            }
+        }
     }
 
     static class Stats {
@@ -667,6 +710,15 @@ public class ZMailboxUtil implements DebugListener {
 
     private void dumpMailboxConnect() throws ServiceException {
         if (!mInteractive) return;
+        if (StringUtil.isNullOrEmpty(mTargetAccountName)) {
+            stdout.format("no mailbox opened%n");
+            if (!StringUtil.isNullOrEmpty(mAdminAccountName)) {
+                stdout.format("authenticated as %s (admin)%n", mAdminAccountName);
+            } else {
+                stdout.format("not authenticated%n");
+            }
+            return;
+        }
         Stats s = new Stats();
         computeStats(mMbox.getUserRoot(), s);
         stdout.format("mailbox: %s, size: %s, messages: %d, unread: %d%n",
@@ -674,6 +726,12 @@ public class ZMailboxUtil implements DebugListener {
                 formatSize(mMbox.getSize()),
                 s.numMessages,
                 s.numUnread);
+        if (StringUtil.equalIgnoreCase(mTargetAccountName, mAuthAccountName) ||
+            !StringUtil.isNullOrEmpty(mAuthAccountName)) {
+            stdout.format("authenticated as %s%n", mAuthAccountName);
+        } else {
+            stdout.format("authenticated as %s (admin)%n", mAdminAccountName);
+        }
     }
 
     public void initMailbox() throws ServiceException {
@@ -686,13 +744,15 @@ public class ZMailboxUtil implements DebugListener {
             adminAuth(mAdminAuthToken, mUrl);
         }
 
-        if (mMailboxName == null)
+        if (mTargetAccountName == null) {
+            mAuthAccountName = null;
             return;
+        }
 
         if (mAdminAccountName != null) {
-            selectMailbox(mMailboxName);
+            selectMailbox(mAuthAccountName, mTargetAccountName, mProv);
         } else {
-            auth(mMailboxName, mPassword, mUrl);
+            auth(mAuthAccountName, mPassword, mTargetAccountName, mUrl);
         }
     }
 
@@ -962,10 +1022,11 @@ public class ZMailboxUtil implements DebugListener {
                 mCommand != Command.HELP &&
                 mCommand != Command.AUTHENTICATE &&
                 mCommand != Command.ADMIN_AUTHENTICATE &&
-                mCommand != Command.SELECT_MAILBOX
+                mCommand != Command.SELECT_MAILBOX &&
+                mCommand != Command.WHOAMI
         ) {
             if (mMbox == null) {
-                throw ZClientException.CLIENT_ERROR("no mailbox selected. select one with authenticate/adminAuthenticate/selectMailbox", null);
+                throw ZClientException.CLIENT_ERROR("no mailbox opened. select one with authenticate/adminAuthenticate/selectMailbox", null);
             }
         }
 
@@ -1238,7 +1299,7 @@ public class ZMailboxUtil implements DebugListener {
             doSearchConv(args);
             break;
         case SELECT_MAILBOX:
-            selectMailbox(args[0]);
+            doSelectMailbox(args);
             break;
         case SYNC_FOLDER:
             mMbox.syncFolder(lookupFolderId(args[0]));
@@ -1254,6 +1315,9 @@ public class ZMailboxUtil implements DebugListener {
             break;
         case TAG_MESSAGE:
             mMbox.tagMessage(id(args[0]), lookupTag(args[1]).getId(), paramb(args, 2, true));
+            break;
+        case WHOAMI:
+            dumpMailboxConnect();
             break;
         default:
             throw ZClientException.CLIENT_ERROR("Unhandled command: ("+mCommand.name()+ ")", null);
@@ -1792,7 +1856,21 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     private void doAuth(String[] args) throws ServiceException {
-        auth(args[0], args[1], urlOpt(true));
+        auth(args[0], args[1], param(args, 2, args[0]), urlOpt(true));
+    }
+
+    private void doSelectMailbox(String[] args) throws ServiceException {
+        String targetAccount = args[0];
+        String authAccount;
+        if (mCommandLine.hasOption(O_NODELAUTH.getLongOpt())) {
+            authAccount = null;
+        } else {
+            authAccount = mCommandLine.getOptionValue(O_AUTH.getLongOpt());
+            if (StringUtil.isNullOrEmpty(authAccount)) {
+                authAccount = targetAccount;
+            }
+        }
+        selectMailbox(authAccount, targetAccount, mProv);
     }
 
     private static PrintWriter stdout;
@@ -2681,14 +2759,16 @@ public class ZMailboxUtil implements DebugListener {
         options.addOption("u", "url", true, "http[s]://host[:port] of server to connect to");
         options.addOption("r", "protocol", true, "protocol to use for request/response [soap11, soap12, json]");
         options.addOption("m", "mailbox", true, "mailbox to open");
-        options.addOption("p", "password", true, "password for admin/mailbox");
+        options.addOption(null, "auth", true, "account name to auth as; defaults to -m unless --nodelauth is used");
+        options.addOption(null, "nodelauth", false, "don't do delegated auth; use admin auth in the requests instead");
+        options.addOption(null, "target", true, "target account name to which requests will be sent");
+        options.addOption("p", "password", true, "auth password");
         options.addOption("P", "passfile", true, "filename with password in it");
         options.addOption("t", "timeout", true, "timeout (in seconds)");
         options.addOption("v", "verbose", false, "verbose mode");
         options.addOption("d", "debug", false, "debug mode");
         options.addOption(SoapCLI.OPT_AUTHTOKEN);
         options.addOption(SoapCLI.OPT_AUTHTOKENFILE);
-
 
         CommandLine cl = null;
         boolean err = false;
@@ -2704,49 +2784,74 @@ public class ZMailboxUtil implements DebugListener {
             pu.usage();
         }
 
-        boolean isAdmin = false;
-        pu.setVerbose(cl.hasOption('v'));
-        if (cl.hasOption('a')) {
-            pu.setAdminAccountName(cl.getOptionValue('a'));
-            pu.setUrl(DEFAULT_ADMIN_URL, true);
-            isAdmin = true;
-        }
-        if (cl.hasOption('z')) {
-            pu.setAdminAccountName(LC.zimbra_ldap_user.value());
-            pu.setPassword(LC.zimbra_ldap_password.value());
-            pu.setUrl(DEFAULT_ADMIN_URL, true);
-            isAdmin = true;
-        }
-
-        if (cl.hasOption(SoapCLI.O_AUTHTOKEN) && cl.hasOption(SoapCLI.O_AUTHTOKENFILE))
-            pu.usage();
-        if (cl.hasOption(SoapCLI.O_AUTHTOKEN)) {
-            pu.setAdminAuthToken(ZAuthToken.fromJSONString(cl.getOptionValue(SoapCLI.O_AUTHTOKEN)));
-            pu.setUrl(DEFAULT_ADMIN_URL, true);
-            isAdmin = true;
-        }
-        if (cl.hasOption(SoapCLI.O_AUTHTOKENFILE)) {
-            String authToken = StringUtil.readSingleLineFromFile(cl.getOptionValue(SoapCLI.O_AUTHTOKENFILE));
-            pu.setAdminAuthToken(ZAuthToken.fromJSONString(authToken));
-            pu.setUrl(DEFAULT_ADMIN_URL, true);
-            isAdmin = true;
-        }
-
-        if (cl.hasOption('u')) pu.setUrl(cl.getOptionValue('u'), isAdmin);
-        if (cl.hasOption('m')) pu.setMailboxName(cl.getOptionValue('m'));
-        if (cl.hasOption('p')) pu.setPassword(cl.getOptionValue('p'));
-        if (cl.hasOption('P')) {
-            pu.setPassword(StringUtil.readSingleLineFromFile(cl.getOptionValue('P')));
-        }
-        if (cl.hasOption('d')) pu.setDebug(true);
-
-        if (cl.hasOption('t')) pu.setTimeout(cl.getOptionValue('t'));
-
-        args = cl.getArgs();
-
-        pu.setInteractive(args.length < 1);
-
         try {
+            boolean isAdmin = false;
+            pu.setVerbose(cl.hasOption('v'));
+            if (cl.hasOption('a')) {
+                pu.setAdminAccountName(cl.getOptionValue('a'));
+                pu.setUrl(DEFAULT_ADMIN_URL, true);
+                isAdmin = true;
+            }
+            if (cl.hasOption('z')) {
+                pu.setAdminAccountName(LC.zimbra_ldap_user.value());
+                pu.setPassword(LC.zimbra_ldap_password.value());
+                pu.setUrl(DEFAULT_ADMIN_URL, true);
+                isAdmin = true;
+            }
+    
+            if (cl.hasOption(SoapCLI.O_AUTHTOKEN) && cl.hasOption(SoapCLI.O_AUTHTOKENFILE))
+                pu.usage();
+            if (cl.hasOption(SoapCLI.O_AUTHTOKEN)) {
+                pu.setAdminAuthToken(ZAuthToken.fromJSONString(cl.getOptionValue(SoapCLI.O_AUTHTOKEN)));
+                pu.setUrl(DEFAULT_ADMIN_URL, true);
+                isAdmin = true;
+            }
+            if (cl.hasOption(SoapCLI.O_AUTHTOKENFILE)) {
+                String authToken = StringUtil.readSingleLineFromFile(cl.getOptionValue(SoapCLI.O_AUTHTOKENFILE));
+                pu.setAdminAuthToken(ZAuthToken.fromJSONString(authToken));
+                pu.setUrl(DEFAULT_ADMIN_URL, true);
+                isAdmin = true;
+            }
+    
+            String authAccount, targetAccount;
+            if (cl.hasOption('m')) {
+                targetAccount = cl.getOptionValue('m');
+            } else {
+                targetAccount = null;
+            }
+            if ((cl.hasOption("nodelauth") || cl.hasOption("auth")) && !cl.hasOption('m')) {
+                throw ZClientException.CLIENT_ERROR("--nodelauth/--auth requires -m", null);
+            }
+            if (cl.hasOption("nodelauth")) {
+                if (!isAdmin) {
+                    throw ZClientException.CLIENT_ERROR("--nodelauth requires admin auth", null);
+                }
+                if (cl.hasOption("auth")) {
+                    throw ZClientException.CLIENT_ERROR("--nodelauth cannot be combined with --auth", null);
+                }
+                authAccount = null;
+            } else if (cl.hasOption("auth")) {
+                authAccount = cl.getOptionValue("auth");
+            } else {
+                // default case
+                authAccount = targetAccount;
+            }
+            if (!StringUtil.isNullOrEmpty(authAccount)) pu.setAuthAccountName(authAccount);
+            if (!StringUtil.isNullOrEmpty(targetAccount)) pu.setTargetAccountName(targetAccount);
+    
+            if (cl.hasOption('u')) pu.setUrl(cl.getOptionValue('u'), isAdmin);
+            if (cl.hasOption('p')) pu.setPassword(cl.getOptionValue('p'));
+            if (cl.hasOption('P')) {
+                pu.setPassword(StringUtil.readSingleLineFromFile(cl.getOptionValue('P')));
+            }
+            if (cl.hasOption('d')) pu.setDebug(true);
+    
+            if (cl.hasOption('t')) pu.setTimeout(cl.getOptionValue('t'));
+    
+            args = cl.getArgs();
+    
+            pu.setInteractive(args.length < 1);
+
             pu.initMailbox();
             if (args.length < 1) {
                 InputStream is = null;
