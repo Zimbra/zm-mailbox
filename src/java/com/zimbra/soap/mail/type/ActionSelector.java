@@ -59,8 +59,12 @@ public class ActionSelector {
     @XmlAttribute(name=MailConstants.A_FLAGS, required=false)
     protected String flags;
 
+    @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS, required=false)
     protected String tags;
+
+    @XmlAttribute(name=MailConstants.A_TAG_NAMES, required=false)
+    protected String tagNames;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -84,7 +88,9 @@ public class ActionSelector {
     public void setColor(Byte color) { this.color = color; }
     public void setName(String name) { this.name = name; }
     public void setFlags(String flags) { this.flags = flags; }
+    @Deprecated
     public void setTags(String tags) { this.tags = tags; }
+    public void setTagNames(String tagNames) { this.tagNames = tagNames; }
     public String getIds() { return ids; }
     public String getOperation() { return operation; }
     public String getConstraint() { return constraint; }
@@ -94,7 +100,9 @@ public class ActionSelector {
     public Byte getColor() { return color; }
     public String getName() { return name; }
     public String getFlags() { return flags; }
+    @Deprecated
     public String getTags() { return tags; }
+    public String getTagNames() { return tagNames; }
 
     @Override
     public String toString() {
@@ -109,6 +117,7 @@ public class ActionSelector {
             .add("name", name)
             .add("flags", flags)
             .add("tags", tags)
+            .add("tagNames", tagNames)
             .toString();
     }
 }

@@ -31,8 +31,12 @@ public class AddMsgSpec {
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
+    @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
+
+    @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
+    private String tagNames;
 
     // Id or path
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
@@ -55,7 +59,9 @@ public class AddMsgSpec {
     }
 
     public void setFlags(String flags) { this.flags = flags; }
+    @Deprecated
     public void setTags(String tags) { this.tags = tags; }
+    public void setTagNames(String tagNames) { this.tagNames = tagNames; }
     public void setFolder(String folder) { this.folder = folder; }
     public void setNoICal(Boolean noICal) { this.noICal = noICal; }
     public void setDateReceived(String dateReceived) {
@@ -66,7 +72,9 @@ public class AddMsgSpec {
     }
     public void setContent(String content) { this.content = content; }
     public String getFlags() { return flags; }
+    @Deprecated
     public String getTags() { return tags; }
+    public String getTagNames() { return tagNames; }
     public String getFolder() { return folder; }
     public Boolean getNoICal() { return noICal; }
     public String getDateReceived() { return dateReceived; }
@@ -78,6 +86,7 @@ public class AddMsgSpec {
         return helper
             .add("flags", flags)
             .add("tags", tags)
+            .add("tagNames", tagNames)
             .add("folder", folder)
             .add("noICal", noICal)
             .add("dateReceived", dateReceived)

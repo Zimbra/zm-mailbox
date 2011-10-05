@@ -35,14 +35,18 @@ import com.zimbra.common.soap.MailConstants;
 public class ContactSpec {
 
     // Used when modifying a contact
-    @XmlAttribute(name=MailConstants.A_ID, required=false)
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private Integer id;
 
-    @XmlAttribute(name=MailConstants.A_FOLDER, required=false)
+    @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folder;
 
-    @XmlAttribute(name=MailConstants.A_TAGS, required=false)
+    @Deprecated
+    @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
+
+    @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
+    private String tagNames;
 
     // Either a vcard or attributes can be specified but not both.
     @XmlElement(name=MailConstants.E_VCARD, required=false)
@@ -56,7 +60,9 @@ public class ContactSpec {
 
     public void setId(Integer id) { this.id = id; }
     public void setFolder(String folder) { this.folder = folder; }
+    @Deprecated
     public void setTags(String tags) { this.tags = tags; }
+    public void setTagNames(String tagNames) { this.tagNames = tagNames; }
     public void setVcard(VCardInfo vcard) { this.vcard = vcard; }
     public void setAttrs(Iterable <NewContactAttr> attrs) {
         this.attrs.clear();
@@ -72,7 +78,9 @@ public class ContactSpec {
 
     public Integer getId() { return id; }
     public String getFolder() { return folder; }
+    @Deprecated
     public String getTags() { return tags; }
+    public String getTagNames() { return tagNames; }
     public VCardInfo getVcard() { return vcard; }
     public List<NewContactAttr> getAttrs() {
         return Collections.unmodifiableList(attrs);
@@ -84,6 +92,7 @@ public class ContactSpec {
             .add("id", id)
             .add("folder", folder)
             .add("tags", tags)
+            .add("tagNames", tagNames)
             .add("vcard", vcard)
             .add("attrs", attrs)
             .toString();

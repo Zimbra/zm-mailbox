@@ -51,8 +51,12 @@ public class NestedSearchConversation {
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
+    @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
+
+    @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
+    private String tagNames;
 
     // TODO:Made an assumption that the only type of hit is a Message hit
     @XmlElement(name=MailConstants.E_MSG /* m */, required=false)
@@ -74,7 +78,9 @@ public class NestedSearchConversation {
     public void setNum(Integer num) { this.num = num; }
     public void setTotalSize(Integer totalSize) { this.totalSize = totalSize; }
     public void setFlags(String flags) { this.flags = flags; }
+    @Deprecated
     public void setTags(String tags) { this.tags = tags; }
+    public void setTagNames(String tagNames) { this.tagNames = tagNames; }
     public void setMessages(Iterable <MessageHitInfo> messages) {
         this.messages.clear();
         if (messages != null) {
@@ -101,7 +107,9 @@ public class NestedSearchConversation {
     public Integer getNum() { return num; }
     public Integer getTotalSize() { return totalSize; }
     public String getFlags() { return flags; }
+    @Deprecated
     public String getTags() { return tags; }
+    public String getTagNames() { return tagNames; }
     public List<MessageHitInfo> getMessages() {
         return Collections.unmodifiableList(messages);
     }
@@ -117,6 +125,7 @@ public class NestedSearchConversation {
             .add("totalSize", totalSize)
             .add("flags", flags)
             .add("tags", tags)
+            .add("tagNames", tagNames)
             .add("messages", messages)
             .add("queryInfos", queryInfos);
     }

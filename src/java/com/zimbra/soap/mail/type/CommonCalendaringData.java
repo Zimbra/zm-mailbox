@@ -34,8 +34,12 @@ public class CommonCalendaringData extends InstanceDataAttrs {
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
+    @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
+
+    @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
+    private String tagNames;
 
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folderId;
@@ -68,7 +72,9 @@ public class CommonCalendaringData extends InstanceDataAttrs {
     }
 
     public void setFlags(String flags) { this.flags = flags; }
+    @Deprecated
     public void setTags(String tags) { this.tags = tags; }
+    public void setTagNames(String tagNames) { this.tagNames = tagNames; }
     public void setFolderId(String folderId) { this.folderId = folderId; }
     public void setSize(Long size) { this.size = size; }
     public void setChangeDate(Long changeDate) { this.changeDate = changeDate; }
@@ -80,7 +86,9 @@ public class CommonCalendaringData extends InstanceDataAttrs {
     public String getXUid() { return xUid; }
     public String getUid() { return uid; }
     public String getFlags() { return flags; }
+    @Deprecated
     public String getTags() { return tags; }
+    public String getTagNames() { return tagNames; }
     public String getFolderId() { return folderId; }
     public Long getSize() { return size; }
     public Long getChangeDate() { return changeDate; }
@@ -88,6 +96,7 @@ public class CommonCalendaringData extends InstanceDataAttrs {
     public Integer getRevision() { return revision; }
     public String getId() { return id; }
 
+    @Override
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
@@ -96,6 +105,7 @@ public class CommonCalendaringData extends InstanceDataAttrs {
             .add("uid", uid)
             .add("flags", flags)
             .add("tags", tags)
+            .add("tagNames", tagNames)
             .add("folderId", folderId)
             .add("size", size)
             .add("changeDate", changeDate)

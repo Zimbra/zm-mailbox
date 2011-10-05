@@ -30,7 +30,9 @@ public interface ContactInterface {
     public void setCanExpand(Boolean canExpand);
     public void setFolder(String folder);
     public void setFlags(String flags);
+    @Deprecated
     public void setTags(String tags);
+    public void setTagNames(String tagNames);
     public void setChangeDate(Long changeDate);
     public void setModifiedSequenceId(Integer modifiedSequenceId);
     public void setDate(Long date);
@@ -54,7 +56,9 @@ public interface ContactInterface {
     public Boolean getCanExpand();
     public String getFolder();
     public String getFlags();
+    @Deprecated
     public String getTags();
+    public String getTagNames();
     public Long getChangeDate();
     public Integer getModifiedSequenceId();
     public Long getDate();

@@ -32,8 +32,12 @@ public class SaveDraftMsg extends CalendarItemMsg {
                             required=false)
     private String draftAccountId;
 
+    @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
+
+    @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
+    private String tagNames;
 
     @XmlAttribute(name=MailConstants.A_RGB /* rgb */, required=false)
     private String rgb;
@@ -52,19 +56,25 @@ public class SaveDraftMsg extends CalendarItemMsg {
     public void setDraftAccountId(String draftAccountId) {
         this.draftAccountId = draftAccountId;
     }
+    @Deprecated
     public void setTags(String tags) { this.tags = tags; }
+    public void setTagNames(String tagNames) { this.tagNames = tagNames; }
     public void setRgb(String rgb) { this.rgb = rgb; }
     public void setColor(Byte color) { this.color = color; }
     public void setAutoSendTime(Long autoSendTime) {
         this.autoSendTime = autoSendTime;
     }
+
     public Integer getId() { return id; }
     public String getDraftAccountId() { return draftAccountId; }
+    @Deprecated
     public String getTags() { return tags; }
+    public String getTagNames() { return tagNames; }
     public String getRgb() { return rgb; }
     public Byte getColor() { return color; }
     public Long getAutoSendTime() { return autoSendTime; }
 
+    @Override
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         helper = super.addToStringInfo(helper);
@@ -72,6 +82,7 @@ public class SaveDraftMsg extends CalendarItemMsg {
             .add("id", id)
             .add("draftAccountId", draftAccountId)
             .add("tags", tags)
+            .add("tagNames", tagNames)
             .add("rgb", rgb)
             .add("color", color)
             .add("autoSendTime", autoSendTime);

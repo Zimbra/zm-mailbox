@@ -47,8 +47,12 @@ public class ConversationInfo {
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
+    @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
+
+    @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
+    private String tagNames;
 
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private List<MailCustomMetadata> metadatas = Lists.newArrayList();
@@ -76,7 +80,9 @@ public class ConversationInfo {
     public void setNum(Integer num) { this.num = num; }
     public void setTotalSize(Integer totalSize) { this.totalSize = totalSize; }
     public void setFlags(String flags) { this.flags = flags; }
+    @Deprecated
     public void setTags(String tags) { this.tags = tags; }
+    public void setTagNames(String tagNames) { this.tagNames = tagNames; }
     public void setMetadatas(Iterable <MailCustomMetadata> metadatas) {
         this.metadatas.clear();
         if (metadatas != null) {
@@ -104,7 +110,9 @@ public class ConversationInfo {
     public Integer getNum() { return num; }
     public Integer getTotalSize() { return totalSize; }
     public String getFlags() { return flags; }
+    @Deprecated
     public String getTags() { return tags; }
+    public String getTagNames() { return tagNames; }
     public List<MailCustomMetadata> getMetadatas() {
         return Collections.unmodifiableList(metadatas);
     }
@@ -121,6 +129,7 @@ public class ConversationInfo {
             .add("totalSize", totalSize)
             .add("flags", flags)
             .add("tags", tags)
+            .add("tagNames", tagNames)
             .add("metadatas", metadatas)
             .add("subject", subject)
             .add("messages", messages);

@@ -62,8 +62,12 @@ public class CommonDocumentInfo {
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
+    @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
+
+    @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
+    private String tagNames;
 
     @XmlAttribute(name=MailConstants.A_DESC /* desc */, required=false)
     private String description;
@@ -112,7 +116,9 @@ public class CommonDocumentInfo {
     public void setChangeDate(Long changeDate) { this.changeDate = changeDate; }
     public void setRevision(Integer revision) { this.revision = revision; }
     public void setFlags(String flags) { this.flags = flags; }
+    @Deprecated
     public void setTags(String tags) { this.tags = tags; }
+    public void setTagNames(String tagNames) { this.tagNames = tagNames; }
     public void setDescription(String description) {
         this.description = description;
     }
@@ -151,7 +157,9 @@ public class CommonDocumentInfo {
     public Long getChangeDate() { return changeDate; }
     public Integer getRevision() { return revision; }
     public String getFlags() { return flags; }
+    @Deprecated
     public String getTags() { return tags; }
+    public String getTagNames() { return tagNames; }
     public String getDescription() { return description; }
     public String getContentType() { return contentType; }
     public Boolean getDescEnabled() { return descEnabled; }
@@ -177,6 +185,7 @@ public class CommonDocumentInfo {
             .add("revision", revision)
             .add("flags", flags)
             .add("tags", tags)
+            .add("tagNames", tagNames)
             .add("description", description)
             .add("contentType", contentType)
             .add("descEnabled", descEnabled)

@@ -23,7 +23,9 @@ public interface MessageCommonInterface {
     public void setFolder(String folder);
     public void setConversationId(String conversationId);
     public void setFlags(String flags);
+    @Deprecated
     public void setTags(String tags);
+    public void setTagNames(String tagNames);
     public void setRevision(Integer revision);
     public void setChangeDate(Long changeDate);
     public void setModifiedSequence(Integer modifiedSequence);
@@ -35,7 +37,9 @@ public interface MessageCommonInterface {
     public String getFolder();
     public String getConversationId();
     public String getFlags();
+    @Deprecated
     public String getTags();
+    public String getTagNames();
     public Integer getRevision();
     public Long getChangeDate();
     public Integer getModifiedSequence();

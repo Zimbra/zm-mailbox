@@ -48,8 +48,12 @@ public class CommentInfo {
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
+    @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
+
+    @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
+    private String tagNames;
 
     @XmlAttribute(name=MailConstants.A_COLOR /* color */, required=false)
     private Byte color;
@@ -76,7 +80,9 @@ public class CommentInfo {
     public void setId(String id) { this.id = id; }
     public void setCreatorEmail(String creatorEmail) { this.creatorEmail = creatorEmail; }
     public void setFlags(String flags) { this.flags = flags; }
+    @Deprecated
     public void setTags(String tags) { this.tags = tags; }
+    public void setTagNames(String tagNames) { this.tagNames = tagNames; }
     public void setColor(Byte color) { this.color = color; }
     public void setRgb(String rgb) { this.rgb = rgb; }
     public void setDate(Long date) { this.date = date; }
@@ -95,7 +101,9 @@ public class CommentInfo {
     public String getId() { return id; }
     public String getCreatorEmail() { return creatorEmail; }
     public String getFlags() { return flags; }
+    @Deprecated
     public String getTags() { return tags; }
+    public String getTagNames() { return tagNames; }
     public Byte getColor() { return color; }
     public String getRgb() { return rgb; }
     public Long getDate() { return date; }
@@ -166,6 +174,7 @@ public class CommentInfo {
             .add("creatorEmail", creatorEmail)
             .add("flags", flags)
             .add("tags", tags)
+            .add("tagNames", tagNames)
             .add("color", color)
             .add("rgb", rgb)
             .add("date", date)

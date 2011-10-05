@@ -46,8 +46,12 @@ public class ConversationSummary {
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
+    @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
+
+    @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
+    private String tagNames;
 
     @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
     private Long date;
@@ -86,7 +90,9 @@ public class ConversationSummary {
     public void setNum(Integer num) { this.num = num; }
     public void setTotalSize(Integer totalSize) { this.totalSize = totalSize; }
     public void setFlags(String flags) { this.flags = flags; }
+    @Deprecated
     public void setTags(String tags) { this.tags = tags; }
+    public void setTagNames(String tagNames) { this.tagNames = tagNames; }
     public void setDate(Long date) { this.date = date; }
     public void setElided(Boolean elided) { this.elided = elided; }
     public void setChangeDate(Long changeDate) { this.changeDate = changeDate; }
@@ -122,6 +128,7 @@ public class ConversationSummary {
     public Integer getTotalSize() { return totalSize; }
     public String getFlags() { return flags; }
     public String getTags() { return tags; }
+    public String getTagNames() { return tagNames; }
     public Long getDate() { return date; }
     public Boolean getElided() { return elided; }
     public Long getChangeDate() { return changeDate; }
@@ -143,6 +150,7 @@ public class ConversationSummary {
             .add("totalSize", totalSize)
             .add("flags", flags)
             .add("tags", tags)
+            .add("tagNames", tagNames)
             .add("date", date)
             .add("elided", elided)
             .add("changeDate", changeDate)

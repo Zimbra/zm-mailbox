@@ -40,8 +40,12 @@ public class SetAppointmentRequest {
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
+    @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
+
+    @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
+    private String tagNames;
 
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folderId;
@@ -69,7 +73,9 @@ public class SetAppointmentRequest {
     }
 
     public void setFlags(String flags) { this.flags = flags; }
+    @Deprecated
     public void setTags(String tags) { this.tags = tags; }
+    public void setTagNames(String tagNames) { this.tagNames = tagNames; }
     public void setFolderId(String folderId) { this.folderId = folderId; }
     public void setNoNextAlarm(Boolean noNextAlarm) {
         this.noNextAlarm = noNextAlarm;
@@ -112,7 +118,9 @@ public class SetAppointmentRequest {
     }
 
     public String getFlags() { return flags; }
+    @Deprecated
     public String getTags() { return tags; }
+    public String getTagNames() { return tagNames; }
     public String getFolderId() { return folderId; }
     public Boolean getNoNextAlarm() { return noNextAlarm; }
     public Long getNextAlarm() { return nextAlarm; }
@@ -132,6 +140,7 @@ public class SetAppointmentRequest {
         return helper
             .add("flags", flags)
             .add("tags", tags)
+            .add("tagNames", tagNames)
             .add("folderId", folderId)
             .add("noNextAlarm", noNextAlarm)
             .add("nextAlarm", nextAlarm)

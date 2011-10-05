@@ -52,8 +52,12 @@ implements MessageCommonInterface {
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
+    @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
+
+    @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
+    private String tagNames;
 
     @XmlAttribute(name=MailConstants.A_REVISION /* rev */, required=false)
     private Integer revision;
@@ -84,6 +88,8 @@ implements MessageCommonInterface {
     public void setFlags(String flags) { this.flags = flags; }
     @Override
     public void setTags(String tags) { this.tags = tags; }
+    @Override
+    public void setTagNames(String tagNames) { this.tagNames = tagNames; }
     @Override
     public void setRevision(Integer revision) { this.revision = revision; }
     @Override
@@ -116,6 +122,8 @@ implements MessageCommonInterface {
     @Override
     public String getTags() { return tags; }
     @Override
+    public String getTagNames() { return tagNames; }
+    @Override
     public Integer getRevision() { return revision; }
     @Override
     public Long getChangeDate() { return changeDate; }
@@ -134,6 +142,7 @@ implements MessageCommonInterface {
             .add("conversationId", conversationId)
             .add("flags", flags)
             .add("tags", tags)
+            .add("tagNames", tagNames)
             .add("revision", revision)
             .add("changeDate", changeDate)
             .add("modifiedSequence", modifiedSequence)

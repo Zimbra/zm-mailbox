@@ -57,8 +57,12 @@ implements ContactInterface {
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
+    @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
+
+    @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
+    private String tagNames;
 
     @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=false)
     private Long changeDate;
@@ -133,6 +137,8 @@ implements ContactInterface {
     @Override
     public void setTags(String tags) { this.tags = tags; }
     @Override
+    public void setTagNames(String tagNames) { this.tagNames = tagNames; }
+    @Override
     public void setChangeDate(Long changeDate) { this.changeDate = changeDate; }
     @Override
     public void setModifiedSequenceId(Integer modifiedSequenceId) {
@@ -194,6 +200,8 @@ implements ContactInterface {
     public String getFlags() { return flags; }
     @Override
     public String getTags() { return tags; }
+    @Override
+    public String getTagNames() { return tagNames; }
     @Override
     public Long getChangeDate() { return changeDate; }
     @Override
@@ -271,6 +279,7 @@ implements ContactInterface {
             .add("folder", folder)
             .add("flags", flags)
             .add("tags", tags)
+            .add("tagNames", tagNames)
             .add("changeDate", changeDate)
             .add("modifiedSequenceId", modifiedSequenceId)
             .add("date", date)
