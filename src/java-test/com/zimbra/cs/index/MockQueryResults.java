@@ -21,7 +21,6 @@ import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * Mock implementation of {@link ZimbraQueryResults} for testing.
@@ -35,7 +34,7 @@ public final class MockQueryResults extends ZimbraQueryResultsImpl {
     private final List<QueryInfo> queryInfo = new ArrayList<QueryInfo>();
 
     public MockQueryResults(Set<MailItem.Type> types, SortBy sort) {
-        super(types, sort, Mailbox.SearchResultMode.NORMAL);
+        super(types, sort, SearchParams.Fetch.NORMAL);
     }
 
     public void add(ZimbraHit hit) {

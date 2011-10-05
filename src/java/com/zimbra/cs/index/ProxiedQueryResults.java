@@ -28,7 +28,6 @@ import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.httpclient.URLUtil;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ProxyTarget;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -82,17 +81,12 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
      * The query string for this search is the string passed in the queryString
      * parameter, *not* the query string in the params.
      *
-     * @param respProto
-     * @param authToken
-     * @param targetAccountId
      * @param server hostname of server
-     * @param params
      * @param queryString queryString to use for this search
-     * @param mode
      */
     public ProxiedQueryResults(SoapProtocol respProto, AuthToken authToken, String targetAccountId, String server,
-            SearchParams params, String queryString, Mailbox.SearchResultMode mode) {
-        super(params.getTypes(), params.getSortBy(), mode);
+            SearchParams params, String queryString, SearchParams.Fetch fetch) {
+        super(params.getTypes(), params.getSortBy(), fetch);
         setSearchParams(params, queryString);
         this.authToken = authToken;
         this.server = server;
@@ -101,15 +95,14 @@ public final class ProxiedQueryResults extends ZimbraQueryResultsImpl {
     }
 
     /**
-     * A search request in the current mailbox on a different server
+     * A search request in the current mailbox on a different server.
      *
      * @param encodedAuthToken (call ZimbraContext.getAuthToken().getEncoded() if necessary)
      * @param server hostname of server
-     * @param params
      */
     public ProxiedQueryResults(SoapProtocol respProto, AuthToken authToken, String server, SearchParams params,
-            Mailbox.SearchResultMode mode) {
-        super(params.getTypes(), params.getSortBy(), mode);
+            SearchParams.Fetch fetch) {
+        super(params.getTypes(), params.getSortBy(), fetch);
         setSearchParams(params);
         searchParams.setOffset(0);
         this.authToken = authToken;

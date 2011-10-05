@@ -24,7 +24,6 @@ import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.util.ItemId;
 
 /**
@@ -55,7 +54,7 @@ public final class MsgQueryResultsTest {
         phit.setParsedItemId(new ItemId("B", 1000));
         top.add(phit);
 
-        MsgQueryResults result = new MsgQueryResults(top, null, SortBy.NONE, Mailbox.SearchResultMode.NORMAL);
+        MsgQueryResults result = new MsgQueryResults(top, null, SortBy.NONE, SearchParams.Fetch.NORMAL);
 
         ZimbraHit hit = result.getNext();
         Assert.assertEquals(hit.getClass(), MessageHit.class);
@@ -93,7 +92,7 @@ public final class MsgQueryResultsTest {
         el.addAttribute(MailConstants.A_ID, 1000);
         top.add(new ProxiedHit(top, el, 0));
 
-        MsgQueryResults result = new MsgQueryResults(top, null, SortBy.NONE, Mailbox.SearchResultMode.NORMAL);
+        MsgQueryResults result = new MsgQueryResults(top, null, SortBy.NONE, SearchParams.Fetch.NORMAL);
 
         ZimbraHit hit = result.getNext();
         Assert.assertEquals(hit.getClass(), MessageHit.class);

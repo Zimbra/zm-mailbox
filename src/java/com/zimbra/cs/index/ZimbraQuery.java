@@ -40,7 +40,6 @@ import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
@@ -693,7 +692,7 @@ public final class ZimbraQuery {
         ZimbraQueryResults results = null;
         try {
             results = operation.run(mailbox, params, chunkSize);
-            if ((!params.getIncludeTagDeleted() && params.getMode() != SearchResultMode.IDS)
+            if ((!params.getIncludeTagDeleted() && params.getFetchMode() != SearchParams.Fetch.ID)
                     || params.getAllowableTaskStatuses() != null) {
                 // we have to do some filtering of the result set
                 FilteredQueryResults filtered = new FilteredQueryResults(results);

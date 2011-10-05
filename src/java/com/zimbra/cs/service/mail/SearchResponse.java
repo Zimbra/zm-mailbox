@@ -43,7 +43,6 @@ import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.WikiItem;
-import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
 import com.zimbra.cs.service.mail.GetCalendarItemSummaries.EncodeCalendarItemResult;
 import com.zimbra.cs.service.mail.ToXML.EmailType;
 import com.zimbra.cs.service.util.ItemId;
@@ -132,7 +131,7 @@ final class SearchResponse {
      */
     void add(ZimbraHit hit) throws ServiceException {
         Element el = null;
-        if (params.getMode() == SearchResultMode.IDS) {
+        if (params.getFetchMode() == SearchParams.Fetch.ID) {
             if (hit instanceof ConversationHit) {
                 // need to expand the contained messages
                 el = element.addElement("hit");
@@ -176,7 +175,7 @@ final class SearchResponse {
     }
 
     private Element add(ConversationHit hit) throws ServiceException {
-        if (params.getMode() == SearchResultMode.IDS) {
+        if (params.getFetchMode() == SearchParams.Fetch.ID) {
             Element el = element.addElement(MailConstants.E_CONV);
             for (MessageHit mhit : hit.getMessageHits()) {
                 el.addElement(MailConstants.E_MSG).addAttribute(

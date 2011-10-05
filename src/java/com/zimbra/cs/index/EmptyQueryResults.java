@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Set;
 
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * @since Oct 22, 2004
@@ -27,8 +26,8 @@ import com.zimbra.cs.mailbox.Mailbox;
  */
 final class EmptyQueryResults extends ZimbraQueryResultsImpl {
 
-    EmptyQueryResults(Set<MailItem.Type> types, SortBy searchOrder, Mailbox.SearchResultMode mode) {
-        super(types, searchOrder, mode);
+    EmptyQueryResults(Set<MailItem.Type> types, SortBy searchOrder, SearchParams.Fetch fetch) {
+        super(types, searchOrder, fetch);
     }
 
     @Override

@@ -22,7 +22,6 @@ import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * A set of {@link UngroupedQueryResults} which groups by Message.
@@ -42,8 +41,8 @@ final class MsgQueryResults extends ZimbraQueryResultsImpl {
     private final Set<Integer> mSeenMsgs = new HashSet<Integer>();
 
     MsgQueryResults(ZimbraQueryResults topLevelQueryOperation, Set<MailItem.Type> types,
-            SortBy searchOrder, Mailbox.SearchResultMode mode) {
-        super(types, searchOrder, mode);
+            SortBy sort, SearchParams.Fetch fetch) {
+        super(types, sort, fetch);
         results = topLevelQueryOperation;
     }
 

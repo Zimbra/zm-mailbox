@@ -34,7 +34,6 @@ import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 
@@ -126,10 +125,9 @@ public class SearchWrapper extends PhantomResource {
             params.setQueryString(mQuery.toString());
             params.setTypes(SEARCH_TYPES);
             params.setSortBy(SortBy.NAME_ASC);
-            params.setMode(SearchResultMode.NORMAL);
+            params.setFetchMode(SearchParams.Fetch.NORMAL);
             params.setPrefetch(true);
             params.setChunkSize(SEARCH_LIMIT);
-            params.setLimit(SEARCH_LIMIT);
             zqr = mbox.index.search(SoapProtocol.Soap12, ctxt.getOperationContext(), params);
             while (zqr.hasNext()) {
                 ZimbraHit hit = zqr.getNext();

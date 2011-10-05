@@ -49,7 +49,6 @@ import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxIndex;
 import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
 import com.zimbra.cs.server.ProtocolHandler;
 import com.zimbra.cs.server.TcpServer;
 import com.zimbra.common.io.TcpServerInputStream;
@@ -60,7 +59,7 @@ import com.zimbra.common.util.*;
 /**
  * @since Jul 20, 2004
  */
-public class IndexEditor {
+public final class IndexEditor {
 
     static final int SEARCH_RETURN_CONVERSATIONS = 1;
     static final int SEARCH_RETURN_MESSAGES = 2;
@@ -133,9 +132,9 @@ public class IndexEditor {
             params.setOffset(0);
             params.setLimit(100);
             params.setPrefetch(true);
-            params.setMode(SearchResultMode.NORMAL);
+            params.setFetchMode(SearchParams.Fetch.NORMAL);
             ZimbraQuery zq = new ZimbraQuery(null, SoapProtocol.Soap12, mbox, params);
-            return zq.execute(/*null, SoapProtocol.Soap12*/);
+            return zq.execute();
         }
     }
 

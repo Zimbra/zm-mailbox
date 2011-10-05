@@ -70,12 +70,12 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
 
     private final Set<MailItem.Type> types;
     private final SortBy sortBy;
-    private final Mailbox.SearchResultMode mode;
+    private final SearchParams.Fetch fetch;
 
-    ZimbraQueryResultsImpl(Set<MailItem.Type> types, SortBy sort, Mailbox.SearchResultMode mode) {
+    ZimbraQueryResultsImpl(Set<MailItem.Type> types, SortBy sort, SearchParams.Fetch fetch) {
         this.types = types;
-        this.mode = mode;
-        sortBy = sort;
+        this.fetch = fetch;
+        this.sortBy = sort;
 
         conversationHits = new LRUHashMap<Integer, ConversationHit>(MAX_LRU_ENTRIES, INITIAL_TABLE_SIZE);
         messageHits = new LRUHashMap<Integer, MessageHit>(MAX_LRU_ENTRIES, INITIAL_TABLE_SIZE);
@@ -102,8 +102,8 @@ abstract class ZimbraQueryResultsImpl implements ZimbraQueryResults {
         return types;
     }
 
-    public Mailbox.SearchResultMode getSearchMode() {
-        return mode;
+    public SearchParams.Fetch getFetchMode() {
+        return fetch;
     }
 
     protected ConversationHit getConversationHit(Mailbox mbx, int id, Object sortValue) {

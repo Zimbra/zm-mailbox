@@ -77,9 +77,7 @@ final class RemoteQueryOperation extends FilterQueryOperation {
         return "REMOTE[" + queryTarget + "]:" + operation;
     }
 
-    protected void setup(SoapProtocol proto, AuthToken authToken, SearchParams params)
-        throws ServiceException {
-
+    protected void setup(SoapProtocol proto, AuthToken authToken, SearchParams params) throws ServiceException {
         Provisioning prov  = Provisioning.getInstance();
         Account acct = prov.get(AccountBy.id, queryTarget.toString(), authToken);
         if (acct == null) {
@@ -95,7 +93,7 @@ final class RemoteQueryOperation extends FilterQueryOperation {
 
         String queryString = operation.toQueryString();
         results = new ProxiedQueryResults(proto, authToken, queryTarget.toString(),
-                remoteServer.getName(), params, queryString, params.getMode());
+                remoteServer.getName(), params, queryString, params.getFetchMode());
     }
 
     @Override

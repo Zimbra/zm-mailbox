@@ -21,7 +21,6 @@ import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.Mailbox;
 
 /**
  * UngroupedQueryResults which do NOT group (ie return parts or messages in whatever mix)
@@ -31,9 +30,8 @@ import com.zimbra.cs.mailbox.Mailbox;
 final class UngroupedQueryResults extends ZimbraQueryResultsImpl {
     private final ZimbraQueryResults results;
 
-    UngroupedQueryResults(ZimbraQueryResults results, Set<MailItem.Type> types,
-            SortBy sort, Mailbox.SearchResultMode mode) {
-        super(types, sort, mode);
+    UngroupedQueryResults(ZimbraQueryResults results, Set<MailItem.Type> types, SortBy sort, SearchParams.Fetch fetch) {
+        super(types, sort, fetch);
         this.results = results;
     }
 

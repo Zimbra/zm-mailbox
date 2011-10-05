@@ -3797,27 +3797,6 @@ public class Mailbox {
     }
 
     /**
-     * Specifies the type of result we want from the call to search()
-     */
-    public static enum SearchResultMode {
-        NORMAL,        // everything
-        IMAP,          // only IMAP data
-        MODSEQ,        // only the metadata modification sequence number
-        PARENT,        // only the ID of the item's parent (-1 if no parent)
-        IDS;           // only IDs
-
-        public static SearchResultMode get(String value) throws ServiceException {
-            if (value == null)
-                return NORMAL;
-            try {
-                return valueOf(value.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("Unknown resultMode value: "  +value, null);
-            }
-        }
-    }
-
-    /**
      * @param octxt
      * @param params
      * @return A "mailbox neutral" representation of the query string: ie one that is re-written so that all Folder names (and other by-name

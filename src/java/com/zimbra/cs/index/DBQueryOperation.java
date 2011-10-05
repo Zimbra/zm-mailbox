@@ -457,14 +457,14 @@ public class DBQueryOperation extends QueryOperation {
                 // Check to see if we need to refil mDBHits
                 if ((dbHitsIter == null || !dbHitsIter.hasNext()) && !endOfHits) {
                     if (fetch == null) {
-                        switch (context.getResults().getSearchMode()) {
+                        switch (context.getResults().getFetchMode()) {
                             case NORMAL:
                                 fetch = isTopLevelQueryOp() ? DbSearch.FetchMode.MAIL_ITEM : DbSearch.FetchMode.ID;
                                 break;
                             case IMAP:
                                 fetch = DbSearch.FetchMode.IMAP_MSG;
                                 break;
-                            case IDS:
+                            case ID:
                                 fetch = DbSearch.FetchMode.ID;
                                 break;
                             case MODSEQ:
@@ -474,7 +474,7 @@ public class DBQueryOperation extends QueryOperation {
                                 fetch = DbSearch.FetchMode.PARENT;
                                 break;
                             default:
-                                assert false : context.getResults().getSearchMode();
+                                assert false : context.getResults().getFetchMode();
                         }
                     }
 

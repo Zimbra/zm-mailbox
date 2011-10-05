@@ -116,7 +116,7 @@ public final class ZimbraQueryTest {
         params.setQueryString("contact:test");
         params.setSortBy(SortBy.NONE);
         params.setTypes(EnumSet.of(MailItem.Type.CONTACT));
-        params.setMode(Mailbox.SearchResultMode.IDS);
+        params.setFetchMode(SearchParams.Fetch.ID);
 
         ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
         ZimbraQueryResults result = query.execute();
@@ -133,7 +133,7 @@ public final class ZimbraQueryTest {
         params.setQueryString("test");
         params.setSortBy(SortBy.NONE);
         params.setTypes(EnumSet.of(MailItem.Type.APPOINTMENT));
-        params.setMode(Mailbox.SearchResultMode.IDS);
+        params.setFetchMode(SearchParams.Fetch.ID);
         params.setCalItemExpandStart(1000);
         params.setCalItemExpandEnd(2000);
 
@@ -177,7 +177,7 @@ public final class ZimbraQueryTest {
         params.setQueryString("mdate:>3000000");
         params.setSortBy(SortBy.DATE_ASC);
         params.setTypes(EnumSet.of(MailItem.Type.MESSAGE));
-        params.setMode(Mailbox.SearchResultMode.IDS);
+        params.setFetchMode(SearchParams.Fetch.ID);
 
         ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
         Assert.assertEquals("ZQ: Q(DATE:MDATE,197001010050-196912312359)", query.toString());

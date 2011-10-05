@@ -37,7 +37,6 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.service.mail.CalendarUtils;
 import com.zimbra.cs.service.mail.ToXML.OutputParticipants;
 import com.zimbra.cs.service.util.ItemId;
@@ -93,7 +92,7 @@ public final class SearchParams implements Cloneable {
     private Set<MailItem.Type> types = EnumSet.noneOf(MailItem.Type.class); // types to seach for
     private Cursor cursor;
     private boolean prefetch = true;
-    private Mailbox.SearchResultMode mode = Mailbox.SearchResultMode.NORMAL;
+    private Fetch fetch = Fetch.NORMAL;
     private boolean quick = false; // whether or not to skip the catch-up index prior to search
 
     public boolean isQuick() {
@@ -172,8 +171,8 @@ public final class SearchParams implements Cloneable {
         return prefetch;
     }
 
-    public Mailbox.SearchResultMode getMode() {
-        return mode;
+    public Fetch getFetchMode() {
+        return fetch;
     }
 
     public String getDefaultField() {
@@ -368,8 +367,8 @@ public final class SearchParams implements Cloneable {
         prefetch = value;
     }
 
-    public void setMode(Mailbox.SearchResultMode value) {
-        mode = value;
+    public void setFetchMode(Fetch value) {
+        fetch = value;
     }
 
     /**
@@ -411,7 +410,7 @@ public final class SearchParams implements Cloneable {
             el.addElement(MailConstants.E_LOCALE).setText(getLocale().toString());
         }
         el.addAttribute(MailConstants.A_PREFETCH, getPrefetch());
-        el.addAttribute(MailConstants.A_RESULT_MODE, getMode().name());
+        el.addAttribute(MailConstants.A_RESULT_MODE, getFetchMode().name());
         el.addAttribute(MailConstants.A_FIELD, getDefaultField());
 
         el.addAttribute(MailConstants.A_QUERY_LIMIT, limit);
@@ -492,7 +491,14 @@ public final class SearchParams implements Cloneable {
         }
 
         params.setPrefetch(request.getAttributeBool(MailConstants.A_PREFETCH, true));
-        params.setMode(Mailbox.SearchResultMode.get(request.getAttribute(MailConstants.A_RESULT_MODE, null)));
+        String fetch = request.getAttribute(MailConstants.A_RESULT_MODE, null);
+        if (!Strings.isNullOrEmpty(fetch)) {
+            try {
+                params.setFetchMode(Fetch.valueOf(fetch.toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("Invalid " + MailConstants.A_RESULT_MODE, e);
+            }
+        }
 
         String field = request.getAttribute(MailConstants.A_FIELD, null);
         if (field != null) {
@@ -613,7 +619,7 @@ public final class SearchParams implements Cloneable {
         result.sortBy = sortBy;
         result.types = types;
         result.prefetch = prefetch;
-        result.mode = mode;
+        result.fetch = fetch;
         if (allowableTaskStatuses != null) {
             result.allowableTaskStatuses = new HashSet<TaskHit.Status>(allowableTaskStatuses);
         }
@@ -749,4 +755,18 @@ public final class SearchParams implements Cloneable {
             return includeOffset;
         }
     }
+
+    public enum Fetch {
+        /* Everything. */
+        NORMAL,
+        /* Only IMAP data. */
+        IMAP,
+        /* Only the metadata modification sequence number. */
+        MODSEQ,
+        /* Only the ID of the item's parent (-1 if no parent). */
+        PARENT,
+        /* Only ID. */
+        ID;
+    }
+
 }

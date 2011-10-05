@@ -20,7 +20,6 @@ import java.util.Set;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
 
 /**
  * A {@link QueryOperation} is a part of a Search request -- there are
@@ -79,8 +78,7 @@ public abstract class QueryOperation implements Cloneable, ZimbraQueryResults {
      * @return search results
      * @throws ServiceException if an error occurred
      */
-    final ZimbraQueryResults run(Mailbox mbox, SearchParams params,
-            int chunkSize) throws ServiceException {
+    final ZimbraQueryResults run(Mailbox mbox, SearchParams params, int chunkSize) throws ServiceException {
         mIsToplevelQueryOp = true;
 
         chunkSize++; // one extra for checking the "more" flag at the end of the results
@@ -107,48 +105,42 @@ public abstract class QueryOperation implements Cloneable, ZimbraQueryResults {
         boolean usePreloadingGrouper = true;
 
         // don't preload if all we want is IDs!
-        if (params.getMode() == SearchResultMode.IDS) {
+        if (params.getFetchMode() == SearchParams.Fetch.ID) {
             usePreloadingGrouper = false;
         }
 
         ZimbraQueryResultsImpl results = null;
         switch (retType) {
-            case CONVERSATION: // MailboxIndex.SEARCH_RETURN_CONVERSATIONS:
+            case CONVERSATION:
                 if (params.getPrefetch() && usePreloadingGrouper) {
                     chunkSize+= 2; // one for the ConvQueryResults, one for the Grouper
-                    results = new ConvQueryResults(
-                            new ItemPreloadingGrouper(this, chunkSize, mbox, params.inDumpster()),
-                            types, params.getSortBy(), params.getMode());
+                    results = new ConvQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox,
+                            params.inDumpster()), types, params.getSortBy(), params.getFetchMode());
                     chunkSize *= MESSAGES_PER_CONV_ESTIMATE; // guess 2 msgs per conv
                 } else {
                     chunkSize++; // one for the ConvQueryResults
-                    results = new ConvQueryResults(this, types,
-                            params.getSortBy(), params.getMode());
+                    results = new ConvQueryResults(this, types, params.getSortBy(), params.getFetchMode());
                     chunkSize *= MESSAGES_PER_CONV_ESTIMATE;
                 }
                 preloadOuterResults = true;
                 break;
-            case MESSAGE: //MailboxIndex.SEARCH_RETURN_MESSAGES:
+            case MESSAGE:
                 if (params.getPrefetch()  && usePreloadingGrouper) {
                     chunkSize += 2; // one for the MsgQueryResults, one for the Grouper
-                    results = new MsgQueryResults(
-                            new ItemPreloadingGrouper(this, chunkSize, mbox, params.inDumpster()),
-                            types, params.getSortBy(), params.getMode());
+                    results = new MsgQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox, params.inDumpster()),
+                            types, params.getSortBy(), params.getFetchMode());
                 } else {
                     chunkSize++; // one for the MsgQueryResults
-                    results = new MsgQueryResults(this, types,
-                            params.getSortBy(), params.getMode());
+                    results = new MsgQueryResults(this, types, params.getSortBy(), params.getFetchMode());
                 }
                 break;
-            case ITEM: //MailboxIndex.SEARCH_RETURN_DOCUMENTS:
+            case ITEM:
                 if (params.getPrefetch() && usePreloadingGrouper) {
                     chunkSize++; // one for the grouper
-                    results = new UngroupedQueryResults(
-                            new ItemPreloadingGrouper(this, chunkSize, mbox, params.inDumpster()),
-                            types, params.getSortBy(), params.getMode());
+                    results = new UngroupedQueryResults(new ItemPreloadingGrouper(this, chunkSize, mbox,
+                            params.inDumpster()), types, params.getSortBy(), params.getFetchMode());
                 } else {
-                    results = new UngroupedQueryResults(this, types,
-                            params.getSortBy(), params.getMode());
+                    results = new UngroupedQueryResults(this, types, params.getSortBy(), params.getFetchMode());
                 }
                 break;
             default:

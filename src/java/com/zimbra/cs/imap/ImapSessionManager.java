@@ -311,7 +311,7 @@ final class ImapSessionManager {
         params.setTypes(types);
         params.setSortBy(SortBy.DATE_ASC);
         params.setChunkSize(1000);
-        params.setMode(Mailbox.SearchResultMode.IMAP);
+        params.setFetchMode(SearchParams.Fetch.IMAP);
 
         Mailbox mbox = search.getMailbox();
         try {

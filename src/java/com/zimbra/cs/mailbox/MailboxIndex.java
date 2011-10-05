@@ -84,7 +84,6 @@ import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
-import com.zimbra.cs.mailbox.Mailbox.SearchResultMode;
 import com.zimbra.cs.util.Zimbra;
 
 /**
@@ -209,7 +208,7 @@ public final class MailboxIndex {
         params.setSortBy(sortBy);
         params.setChunkSize(chunkSize);
         params.setPrefetch(true);
-        params.setMode(SearchResultMode.NORMAL);
+        params.setFetchMode(SearchParams.Fetch.NORMAL);
         params.setInDumpster(inDumpster);
         return search(SoapProtocol.Soap12, octxt, params);
     }
@@ -335,7 +334,7 @@ public final class MailboxIndex {
         params.setSortBy(SortBy.NONE);
         params.setLimit(1);
         params.setPrefetch(false);
-        params.setMode(SearchResultMode.IDS);
+        params.setFetchMode(SearchParams.Fetch.ID);
         ZimbraQueryResults result = search(SoapProtocol.Soap12, new OperationContext(mailbox), params);
         try {
             return result.hasNext();
