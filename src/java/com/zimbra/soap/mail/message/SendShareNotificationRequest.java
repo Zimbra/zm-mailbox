@@ -15,45 +15,61 @@
 
 package com.zimbra.soap.mail.message;
 
+import java.util.Collections;
+import java.util.List;
+
 import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.SendShareNotificationSpec;
+import com.zimbra.soap.mail.type.EmailAddrInfo;
+import com.zimbra.soap.type.Id;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_SEND_SHARE_NOTIFICATION_REQUEST)
 public class SendShareNotificationRequest {
 
-    @XmlElement(name=MailConstants.E_SHARE /* share */, required=true)
-    private final SendShareNotificationSpec share;
-
+    @XmlElement(name=MailConstants.E_ITEM /* item */, required=false)
+    private Id item;
+    
+    @XmlElement(name=MailConstants.E_EMAIL /* e */, required=false)
+    private List<EmailAddrInfo> emailAddresses = Lists.newArrayList();
+    
     @XmlElement(name=MailConstants.E_NOTES /* notes */, required=false)
     private String notes;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private SendShareNotificationRequest() {
-        this((SendShareNotificationSpec) null);
+    public SendShareNotificationRequest() {
     }
 
-    public SendShareNotificationRequest(SendShareNotificationSpec share) {
-        this.share = share;
+    public void setItem(Id item) { this.item = item; }
+    public void setEmailAddresses(Iterable <EmailAddrInfo> emailAddresses) {
+        this.emailAddresses.clear();
+        if (emailAddresses != null) {
+            Iterables.addAll(this.emailAddresses,emailAddresses);
+        }
     }
-
+    public void addEmailAddresse(EmailAddrInfo emailAddresse) {
+        this.emailAddresses.add(emailAddresse);
+    }
     public void setNotes(String notes) { this.notes = notes; }
-    public SendShareNotificationSpec getShare() { return share; }
+    
+    public Id getItem() { return item; }
+    public List<EmailAddrInfo> getEmailAddresses() {
+        return Collections.unmodifiableList(emailAddresses);
+    }
     public String getNotes() { return notes; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("share", share)
+            .add("item", item)
+            .add("email", emailAddresses)
             .add("notes", notes);
     }
 

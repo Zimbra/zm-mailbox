@@ -28,8 +28,8 @@ public class EmailAddrInfo {
     @XmlAttribute(name=MailConstants.A_ADDRESS, required=true)
     private final String address;
 
-    @XmlAttribute(name=MailConstants.A_ADDRESS_TYPE, required=true)
-    private final String addressType;
+    @XmlAttribute(name=MailConstants.A_ADDRESS_TYPE, required=false)
+    private String addressType;
 
     @XmlAttribute(name=MailConstants.A_PERSONAL, required=false)
     private String personal;
@@ -39,14 +39,14 @@ public class EmailAddrInfo {
      */
     @SuppressWarnings("unused")
     private EmailAddrInfo() {
-        this((String) null, (String) null);
+        this((String) null);
     }
 
-    public EmailAddrInfo(String address, String addressType) {
+    public EmailAddrInfo(String address) {
         this.address = address;
-        this.addressType = addressType;
     }
 
+    public void setAddressType(String addressType) { this.addressType = addressType; }
     public void setPersonal(String personal) { this.personal = personal; }
     public String getAddress() { return address; }
     public String getAddressType() { return addressType; }
