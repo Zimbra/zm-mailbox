@@ -16,16 +16,17 @@ package com.zimbra.cs.service.mail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
 
 import javax.mail.MessagingException;
-import javax.mail.Transport;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -46,6 +47,7 @@ import com.zimbra.cs.account.ShareInfo;
 import com.zimbra.cs.account.ShareInfoData;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -55,7 +57,10 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.mail.message.SendShareNotificationRequest;
+import com.zimbra.soap.mail.type.EmailAddrInfo;
 
 public class SendShareNotification extends MailDocumentHandler {
 
@@ -65,29 +70,77 @@ public class SendShareNotification extends MailDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         OperationContext octxt = getOperationContext(zsc, context);
-        Account authAccount = getAuthenticatedAccount(zsc);
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(authAccount, false);
+        Account account = getRequestedAccount(zsc);
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account, false);
 
-        // validate the share shecpfied in the request and build a share info if all is valid
-        ShareInfoData sid = validateRequest(zsc, context, octxt, authAccount, mbox, request);
+        // validate the share specified in the request and build a share info if all is valid
+        Collection<ShareInfoData> shareInfos = validateRequest(zsc, context, octxt, mbox, request);
 
         // grab notes if there is one
         Element eNotes = request.getOptionalElement(MailConstants.E_NOTES);
         String notes = (eNotes==null)?null:eNotes.getText();
 
-        // send the message
-        sendShareNotif(octxt, authAccount, mbox, sid, notes);
+        // send the messages
+        for (ShareInfoData sid : shareInfos) {
+            sendShareNotif(octxt, account, mbox, sid, notes);
+        }
 
         Element response = zsc.createElement(MailConstants.SEND_SHARE_NOTIFICATION_RESPONSE);
         return response;
     }
 
-    private ShareInfoData validateRequest(ZimbraSoapContext zsc, Map<String, Object> context, OperationContext octxt,
-            Account authAccount, Mailbox mbox, Element req) throws ServiceException {
+    private Collection<ShareInfoData> validateRequest(ZimbraSoapContext zsc, Map<String, Object> context, OperationContext octxt,
+            Mailbox mbox, Element request) throws ServiceException {
+
+
+        Element eShare = request.getOptionalElement(MailConstants.E_SHARE);
+        if (eShare != null) {
+            return Arrays.asList(validateShareRecipient(zsc, context, octxt, mbox, eShare));
+        }
+
+        ArrayList<ShareInfoData> shareInfos = new ArrayList<ShareInfoData>();
+        SendShareNotificationRequest req = JaxbUtil.elementToJaxb(request);
+        int id = Integer.parseInt(req.getItem().getId());
+        MailItem item = mbox.getItemById(octxt, id, MailItem.Type.UNKNOWN);
+        Provisioning prov = Provisioning.getInstance();
+        Account account = getRequestedAccount(zsc);
+        if (item instanceof Mountpoint) {
+            Mountpoint mp = (Mountpoint)item;
+            account = prov.get(AccountBy.id, mp.getOwnerId());
+            id = mp.getRemoteId();
+        }
+        for (EmailAddrInfo email : req.getEmailAddresses()) {
+            // treat the non-existing accounts as guest for now
+            Pair<NamedEntry, String> grantee;
+            byte granteeType = ACL.GRANTEE_USER;
+            String granteeId = null;
+            String granteeEmail = email.getAddress();
+            String granteeDisplayName = null;
+            try {
+                grantee = getGrantee(zsc, granteeType, granteeId, granteeEmail);
+                if (grantee.getFirst() instanceof com.zimbra.cs.account.Group) {
+                    granteeType = ACL.GRANTEE_GROUP;
+                }
+                granteeId = grantee.getFirst().getId();
+                granteeDisplayName = grantee.getSecond();
+            } catch (ServiceException e) {
+                if (!e.getCode().equals(MailServiceException.NO_SUCH_GRANTEE)) {
+                    throw e;
+                }
+                granteeType = ACL.GRANTEE_GUEST;
+                // if guest, granteeId is the same as granteeEmail
+                granteeId = granteeEmail;
+            }
+            shareInfos.add(getShareInfoData(zsc, context, account, octxt, granteeType, granteeEmail, granteeId, granteeDisplayName, item));
+        }
+        
+        return shareInfos;
+    }
+
+    @Deprecated
+    private ShareInfoData validateShareRecipient(ZimbraSoapContext zsc, Map<String,Object> context, OperationContext octxt, Mailbox mbox, Element eShare) throws ServiceException {
 
         Provisioning prov = Provisioning.getInstance();
-
-        Element eShare = req.getElement(MailConstants.E_SHARE);
 
         //
         // grantee
@@ -104,11 +157,20 @@ public class SendShareNotification extends MailDocumentHandler {
             if (granteeName == null)
                 throw ServiceException.INVALID_REQUEST("must specify grantee name for guest grantee type", null);
 
+            // if guest, matchingId is the same as granteeEmail
             matchingId = granteeName;
             granteeEmail = granteeName;
             granteeDisplayName = granteeEmail;
         } else {
-            Pair<NamedEntry, String> grantee = getGrantee(zsc, granteeType, granteeId, granteeName);
+            Pair<NamedEntry, String> grantee;
+            try {
+                grantee = getGrantee(zsc, granteeType, granteeId, granteeName);
+            } catch (ServiceException e) {
+                if (e.getCode().equals(MailServiceException.NO_SUCH_GRANTEE)) {
+                    throw ServiceException.INVALID_REQUEST("no such grantee", e);
+                }
+                throw e;
+            }
 
             NamedEntry granteeEntry = grantee.getFirst();
             matchingId = granteeEntry.getId();
@@ -119,25 +181,40 @@ public class SendShareNotification extends MailDocumentHandler {
         //
         // folder
         //
-        Folder folder = getFolder(octxt, authAccount, mbox, eShare);
+        Account account = getRequestedAccount(zsc);
+        Folder folder = getFolder(octxt, account, mbox, eShare);
 
-        Account ownerAcct = authAccount;
-        int ownerFolderId = folder.getId();
+        Account ownerAcct = account;
 
         // if the folder is a mountpoint, set correct ownerAcct and the folder id in the owner's mailbox
         if (folder instanceof Mountpoint) {
             Mountpoint mp = (Mountpoint)folder;
             ownerAcct = prov.get(AccountBy.id, mp.getOwnerId());
-            ownerFolderId = mp.getRemoteId();
+            folder = mp;
         }
 
+        return getShareInfoData(zsc, context, ownerAcct, octxt, granteeType, granteeEmail, matchingId, granteeDisplayName, folder);
+    }
+
+    private ShareInfoData getShareInfoData(
+            ZimbraSoapContext zsc,
+            Map<String,Object> context,
+            Account ownerAcct,
+            OperationContext octxt,
+            byte granteeType,
+            String granteeEmail,
+            String granteeId,
+            String granteeDisplayName,
+            MailItem item) throws ServiceException {
+        
+        Provisioning prov = Provisioning.getInstance();
         MatchingGrant matchingGrant;
 
         // see if the share specified in the request is real
         if (Provisioning.onLocalServer(ownerAcct))
-            matchingGrant = getMatchingGrant(octxt, prov, folder, granteeType, matchingId, ownerAcct);
+            matchingGrant = getMatchingGrant(octxt, prov, item, granteeType, granteeId, ownerAcct);
         else
-            matchingGrant = getMatchingGrantRemote(zsc, context, granteeType, matchingId, ownerAcct, ownerFolderId);
+            matchingGrant = getMatchingGrantRemote(zsc, context, granteeType, granteeId, ownerAcct, item.getId());
 
         if (matchingGrant == null)
             throw ServiceException.INVALID_REQUEST("no matching grant", null);
@@ -152,7 +229,7 @@ public class SendShareNotification extends MailDocumentHandler {
         sid.setOwnerAcctDisplayName(ownerAcct.getDisplayName());
 
         // folder id used for mounting
-        sid.setItemId(ownerFolderId);
+        sid.setItemId(item.getId());
 
         //
         // just a display name for the shared folder for the grantee to see.
@@ -161,21 +238,22 @@ public class SendShareNotification extends MailDocumentHandler {
         // if user2 is sharing with user3 a mountpoint that belongs to user1,
         // we should show user3 the folder(mountpoint) name in user2's mailbox,
         // not the folder name in user1's mailbox.
-        sid.setPath(folder.getPath());
-        sid.setFolderDefaultView(folder.getDefaultView());
+        String path = (item instanceof Folder) ? ((Folder)item).getPath() : item.getName();
+        sid.setPath(path);
+        sid.setFolderDefaultView((item instanceof Folder) ? ((Folder)item).getDefaultView() : item.getType());
 
         // rights
         sid.setRights(matchingGrant.getGrantedRights());
 
         // grantee
         sid.setGranteeType(granteeType);
-        sid.setGranteeId(matchingId);    // if guest, matchingId is the same as granteeEmail
+        sid.setGranteeId(granteeId);
         sid.setGranteeName(granteeEmail);
         sid.setGranteeDisplayName(granteeDisplayName);
 
         // if the grantee is a guest, set URL and password
         if (granteeType == ACL.GRANTEE_GUEST) {
-            String url = UserServlet.getRestUrl(ownerAcct) + folder.getPath();
+            String url = UserServlet.getRestUrl(ownerAcct) + path;
             sid.setUrl(url);  // hmm, for mountpoint this should be the path in the owner's mailbox  TODO
             sid.setGuestPassword(matchingGrant.getPassword());
         }
@@ -221,18 +299,9 @@ public class SendShareNotification extends MailDocumentHandler {
         String getPassword() { return mGrant==null ? mSecret : mGrant.getPassword(); }
     }
 
-    private MatchingGrant getMatchingGrant(OperationContext octxt, Provisioning prov, Folder folder,
+    private MatchingGrant getMatchingGrant(OperationContext octxt, Provisioning prov, MailItem item,
             byte granteeType, String granteeId, Account ownerAcct) throws ServiceException {
-
-        Folder ownerFolder = folder;
-
-        if (folder instanceof Mountpoint) {
-            Mountpoint mp = (Mountpoint) folder;
-            Mailbox ownerMbox = MailboxManager.getInstance().getMailboxByAccountId(mp.getOwnerId(), false);
-            ownerFolder = ownerMbox.getFolderById(octxt, mp.getRemoteId());
-        }
-
-        ACL acl = ownerFolder.getEffectiveACL();
+        ACL acl = item.getEffectiveACL();
         if (acl == null)
             throw ServiceException.INVALID_REQUEST("no grant on folder", null);
 
@@ -324,17 +393,17 @@ public class SendShareNotification extends MailDocumentHandler {
         if (granteeId != null) {
             entryById = FolderAction.lookupGranteeByZimbraId(granteeId, granteeType);
             if (entryById == null)
-                throw ServiceException.INVALID_REQUEST("no such grantee " + granteeId, null);
+                throw MailServiceException.NO_SUCH_GRANTEE(granteeId, null);
         }
 
         if (granteeName != null) {
             entryByName = FolderAction.lookupGranteeByName(granteeName, granteeType, zsc);
             if (entryByName == null)
-                throw ServiceException.INVALID_REQUEST("no such grantee " + granteeName, null);
+                throw MailServiceException.NO_SUCH_GRANTEE(granteeName, null);
         }
 
         if (entryById == null && entryByName == null)
-            throw ServiceException.INVALID_REQUEST("no such grantee", null);
+            throw MailServiceException.NO_SUCH_GRANTEE("", null);
 
         if (entryById != null && entryByName != null &&
                 !entryById.getId().equals(entryByName.getId()))

@@ -45,6 +45,7 @@ public class MailServiceException extends ServiceException {
     public static final String NO_SUCH_WAITSET = "mail.NO_SUCH_WAITSET";
     public static final String NO_SUCH_BLOB    = "mail.NO_SUCH_BLOB";
     public static final String NO_SUCH_CHAT    = "mail.NO_SUCH_CHAT";
+    public static final String NO_SUCH_GRANTEE = "mail.NO_SUCH_GRANTEE";
 
     public static final String ALREADY_EXISTS  = "mail.ALREADY_EXISTS";
 
@@ -522,5 +523,9 @@ public class MailServiceException extends ServiceException {
 
     public static ServiceException TOMBSTONES_EXPIRED() {
         return new MailServiceException("sync token too old; tombstones have already been expired", MUST_RESYNC, SENDERS_FAULT);
+    }
+    
+    public static ServiceException NO_SUCH_GRANTEE(String message, Throwable cause) {
+        return new MailServiceException("no such grantee "+message, NO_SUCH_GRANTEE, SENDERS_FAULT, cause);
     }
 }

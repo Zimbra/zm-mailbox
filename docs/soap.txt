@@ -3592,17 +3592,13 @@ mid="{mountpoint-id}" : returned if the share is already mounted.
 ----------------------------
 
 <SendShareNotificationRequest>
-    <share [l="{folder-id}"] [path="{fully-qualified-path}"]
-           gt="{grantee-type}" [zid="{grantee-id}"] [d="{grantee-display-name}"]/>
+    <item id="{item-id}"/>
+    [<e a="{email-addr}"/>]+
     [<notes>{notes}</notes>]
 </SendShareNotificationRequest>
 
-granteeType = usr | grp | guest
-
-- either a l or a path must be specified
-
-- if gt is usr or grp, either a zid or d must be specified.
-  if gt is guest, d must be specified, zid is ignored.
+The client can list the recipient email addresses for the share, along
+with the itemId of the item being shared.
 
 <SendShareNotificationResponse/>
 
