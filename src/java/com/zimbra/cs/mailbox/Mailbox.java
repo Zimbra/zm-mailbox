@@ -8300,10 +8300,15 @@ public class Mailbox {
 
     public Collection<Comment> getComments(OperationContext octxt, int parentId, int offset, int length)
             throws ServiceException {
+        return getComments(octxt, parentId, offset, length, false);
+    }
+
+    Collection<Comment> getComments(OperationContext octxt, int parentId, int offset, int length, boolean fromDumpster)
+            throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getComments", octxt, null);
-            MailItem parent = getItemById(octxt, parentId, Type.UNKNOWN);
+            MailItem parent = getItemById(parentId, Type.UNKNOWN, fromDumpster);
             return parent.getComments(SortBy.DATE_DESC, offset, length);
         } finally {
             endTransaction(success);

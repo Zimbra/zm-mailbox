@@ -385,7 +385,7 @@ public class Document extends MailItem {
     @Override
     PendingDelete getDeletionInfo() throws ServiceException {
         PendingDelete info = super.getDeletionInfo();
-        for (Comment comment : mMailbox.getComments(null, mId, 0, -1)) {
+        for (Comment comment : mMailbox.getComments(null, mId, 0, -1, inDumpster())) {
             info.add(comment.getDeletionInfo());
         }
         return info;
