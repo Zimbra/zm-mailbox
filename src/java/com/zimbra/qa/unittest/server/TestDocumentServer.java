@@ -27,10 +27,11 @@ import com.zimbra.cs.mailbox.WikiItem;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.store.file.Volume;
+import com.zimbra.cs.volume.Volume;
+import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.qa.unittest.TestUtil;
 
-public class TestDocumentServer extends TestCase {
+public final class TestDocumentServer extends TestCase {
 
     private static final String NAME_PREFIX = TestDocumentServer.class.getSimpleName();
     private static final String USER_NAME = "user1";
@@ -38,12 +39,12 @@ public class TestDocumentServer extends TestCase {
     private long mOriginalCompressionThreshold;
     private boolean mOriginalCompressBlobs;
 
-    @Override public void setUp()
-    throws Exception {
+    @Override
+    public void setUp() throws Exception {
         cleanUp();
 
-        Volume vol = Volume.getCurrentMessageVolume();
-        mOriginalCompressBlobs = vol.getCompressBlobs();
+        Volume vol = VolumeManager.getInstance().getCurrentMessageVolume();
+        mOriginalCompressBlobs = vol.isCompressBlobs();
         mOriginalCompressionThreshold = vol.getCompressionThreshold();
     }
 
@@ -106,10 +107,9 @@ public class TestDocumentServer extends TestCase {
      * Confirms that saving a document to a compressed volume works correctly (bug 48363).
      */
     public void testCompressedVolume() throws Exception {
-        Volume vol = Volume.getCurrentMessageVolume();
-        Volume.update(vol.getId(), vol.getType(), vol.getName(), vol.getRootPath(),
-            vol.getMboxGroupBits(), vol.getMboxBits(), vol.getFileGroupBits(), vol.getFileBits(),
-            true, 1);
+        VolumeManager mgr = VolumeManager.getInstance();
+        Volume current = mgr.getCurrentMessageVolume();
+        mgr.update(Volume.builder(current).setCompressBlobs(true).setCompressionThreshold(1).build());
         String content = "<wiklet class='TOC' format=\"template\" bodyTemplate=\"_TocBodyTemplate\" itemTemplate=\"_TocItemTemplate\">abc</wiklet>";
         Mailbox mbox = TestUtil.getMailbox(USER_NAME);
         WikiItem wiki = mbox.createWiki(null, Mailbox.ID_FOLDER_BRIEFCASE, NAME_PREFIX + "-testCompressedVolume",
@@ -117,13 +117,12 @@ public class TestDocumentServer extends TestCase {
         assertEquals("abc", wiki.getFragment());
     }
 
-    @Override public void tearDown()
-    throws Exception {
+    @Override
+    public void tearDown() throws Exception {
         cleanUp();
     }
 
-    private void cleanUp()
-    throws Exception {
+    private void cleanUp() throws Exception {
         TestUtil.deleteTestData(USER_NAME, NAME_PREFIX);
 
         // Delete documents.
@@ -135,9 +134,11 @@ public class TestDocumentServer extends TestCase {
         }
 
         // Restore volume compression settings.
-        Volume vol = Volume.getCurrentMessageVolume();
-        Volume.update(vol.getId(), vol.getType(), vol.getName(), vol.getRootPath(),
-            vol.getMboxGroupBits(), vol.getMboxBits(), vol.getFileGroupBits(), vol.getFileBits(),
-            mOriginalCompressBlobs, mOriginalCompressionThreshold);
+        VolumeManager mgr = VolumeManager.getInstance();
+        Volume current = mgr.getCurrentMessageVolume();
+        Volume vol = Volume.builder(current)
+                .setCompressBlobs(mOriginalCompressBlobs).setCompressionThreshold(mOriginalCompressionThreshold)
+                .build();
+        mgr.update(vol);
     }
 }

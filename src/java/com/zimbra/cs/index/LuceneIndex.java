@@ -55,7 +55,8 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailboxIndex;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.store.file.Volume;
+import com.zimbra.cs.volume.Volume;
+import com.zimbra.cs.volume.VolumeManager;
 
 /**
  * {@link IndexStore} implementation using Apache Lucene.
@@ -92,7 +93,7 @@ public final class LuceneIndex implements IndexStore {
 
     private LuceneIndex(Mailbox mbox) throws ServiceException {
         mailbox = mbox;
-        Volume vol = Volume.getById(mbox.getIndexVolume());
+        Volume vol = VolumeManager.getInstance().getVolume(mbox.getIndexVolume());
         String dir = vol.getMailboxDir(mailbox.getId(), Volume.TYPE_INDEX);
 
         // this must be different from the root dir (see the IMPORTANT comment below)

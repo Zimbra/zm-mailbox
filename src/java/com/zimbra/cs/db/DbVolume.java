@@ -23,9 +23,8 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.db.DbPool.DbConnection;
-import com.zimbra.cs.mailbox.MailboxManager;
-import com.zimbra.cs.store.file.Volume;
-import com.zimbra.cs.store.file.VolumeServiceException;
+import com.zimbra.cs.volume.Volume;
+import com.zimbra.cs.volume.VolumeServiceException;
 
 /**
  * volume table and current_volumes table.
@@ -33,7 +32,7 @@ import com.zimbra.cs.store.file.VolumeServiceException;
  * @since 2005. 6. 9.
  * @author jhahm
  */
-public class DbVolume {
+public final class DbVolume {
 
     private static final String CN_ID = "id";
     private static final String CN_TYPE = "type";
@@ -46,86 +45,71 @@ public class DbVolume {
     private static final String CN_COMPRESS_BLOBS = "compress_blobs";
     private static final String CN_COMPRESSION_THRESHOLD = "compression_threshold";
 
-    public static synchronized Volume create(DbConnection conn, short id,
-                                             short type, String name, String path,
-                                             short mboxGroupBits, short mboxBits,
-                                             short fileGroupBits, short fileBits,
-                                             boolean compressBlobs, long compressionThreshold)
-    throws ServiceException {
-        short nextId = id;
-        if (nextId == Volume.ID_AUTO_INCREMENT)
+    public static synchronized Volume create(DbConnection conn, Volume volume) throws ServiceException {
+        short nextId = volume.getId();
+        if (nextId == Volume.ID_AUTO_INCREMENT) {
             nextId = getNextVolumeID(conn);
-        if (nextId <= 0 || nextId > Volume.ID_MAX)
+        }
+        if (nextId <= 0 || nextId > Volume.ID_MAX) {
             throw VolumeServiceException.ID_OUT_OF_RANGE(nextId);
-
+        }
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement(
-                    "INSERT INTO volume " +
-                    "(id, type, name, path, " +
-                    "mailbox_group_bits, mailbox_bits, " +
-                    "file_group_bits, file_bits, " +
-                    "compress_blobs, compression_threshold) " +
+            stmt = conn.prepareStatement("INSERT INTO volume (id, type, name, path, mailbox_group_bits, " +
+                    "mailbox_bits, file_group_bits, file_bits, compress_blobs, compression_threshold) " +
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             int pos = 1;
             stmt.setShort(pos++, nextId);
-            stmt.setShort(pos++, type);
-            stmt.setString(pos++, name);
-            stmt.setString(pos++, path);
-            stmt.setShort(pos++, mboxGroupBits);
-            stmt.setShort(pos++, mboxBits);
-            stmt.setShort(pos++, fileGroupBits);
-            stmt.setShort(pos++, fileBits);
-            stmt.setBoolean(pos++, compressBlobs);
-            stmt.setLong(pos++, compressionThreshold);
+            stmt.setShort(pos++, volume.getType());
+            stmt.setString(pos++, volume.getName());
+            stmt.setString(pos++, volume.getRootPath());
+            stmt.setShort(pos++, volume.getMboxGroupBits());
+            stmt.setShort(pos++, volume.getMboxBits());
+            stmt.setShort(pos++, volume.getFileGroupBits());
+            stmt.setShort(pos++, volume.getFileBits());
+            stmt.setBoolean(pos++, volume.isCompressBlobs());
+            stmt.setLong(pos++, volume.getCompressionThreshold());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
-                throw VolumeServiceException.ALREADY_EXISTS(nextId, name, path, e);
-            else
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
+                throw VolumeServiceException.ALREADY_EXISTS(nextId, volume.getName(), volume.getRootPath(), e);
+            } else {
                 throw ServiceException.FAILURE("inserting new volume " + nextId, e);
+            }
         } finally {
             DbPool.closeStatement(stmt);
         }
         return get(conn, nextId);
     }
 
-    public static Volume update(DbConnection conn, short id,
-                                short type, String name, String path,
-                                short mboxGroupBits, short mboxBits,
-                                short fileGroupBits, short fileBits,
-                                boolean compressBlobs, long compressionThreshold)
-    throws ServiceException {
+    public static Volume update(DbConnection conn, Volume volume) throws ServiceException {
         PreparedStatement stmt = null;
         try {
-            stmt = conn.prepareStatement(
-                    "UPDATE volume SET " +
-                    "type=?, name=?, path=?, " +
-                    "mailbox_group_bits=?, mailbox_bits=?, " +
-                    "file_group_bits=?, file_bits=?, " +
-                    "compress_blobs=?, compression_threshold=? " +
-                    "WHERE id=?");
+            stmt = conn.prepareStatement("UPDATE volume SET type = ?, name = ?, path = ?, " +
+                    "mailbox_group_bits = ?, mailbox_bits = ?, file_group_bits = ?, file_bits = ?, " +
+                    "compress_blobs = ?, compression_threshold = ? WHERE id = ?");
             int pos = 1;
-            stmt.setShort(pos++, type);
-            stmt.setString(pos++, name);
-            stmt.setString(pos++, path);
-            stmt.setShort(pos++, mboxGroupBits);
-            stmt.setShort(pos++, mboxBits);
-            stmt.setShort(pos++, fileGroupBits);
-            stmt.setShort(pos++, fileBits);
-            stmt.setBoolean(pos++, compressBlobs);
-            stmt.setLong(pos++, compressionThreshold);
-            stmt.setShort(pos++, id);
+            stmt.setShort(pos++, volume.getType());
+            stmt.setString(pos++, volume.getName());
+            stmt.setString(pos++, volume.getRootPath());
+            stmt.setShort(pos++, volume.getMboxGroupBits());
+            stmt.setShort(pos++, volume.getMboxBits());
+            stmt.setShort(pos++, volume.getFileGroupBits());
+            stmt.setShort(pos++, volume.getFileBits());
+            stmt.setBoolean(pos++, volume.isCompressBlobs());
+            stmt.setLong(pos++, volume.getCompressionThreshold());
+            stmt.setShort(pos++, volume.getId());
             stmt.executeUpdate();
         } catch (SQLException e) {
-            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW))
-                throw VolumeServiceException.ALREADY_EXISTS(id, name, path, e);
-            else
-                throw ServiceException.FAILURE("updating volume " + id, e);
+            if (Db.errorMatches(e, Db.Error.DUPLICATE_ROW)) {
+                throw VolumeServiceException.ALREADY_EXISTS(volume.getId(), volume.getName(), volume.getRootPath(), e);
+            } else {
+                throw ServiceException.FAILURE("updating volume " + volume.getId(), e);
+            }
         } finally {
             DbPool.closeStatement(stmt);
         }
-        return get(conn, id);
+        return get(conn, volume.getId());
     }
 
     /**
@@ -172,23 +156,20 @@ public class DbVolume {
     }
 
     /**
-     * get the specified volume entry
-     * @param conn
-     * @param id
-     * @return
-     * @throws SQLException
+     * Get the specified volume entry.
      */
     public static Volume get(DbConnection conn, short id) throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT * FROM volume WHERE id=?");
+            stmt = conn.prepareStatement("SELECT * FROM volume WHERE id = ?");
             stmt.setShort(1, id);
             rs = stmt.executeQuery();
-            if (rs.next())
+            if (rs.next()) {
                 return constructVolume(rs);
-            else
+            } else {
                 throw VolumeServiceException.NO_SUCH_VOLUME(id);
+            }
         } catch (SQLException e) {
             throw ServiceException.FAILURE("getting volume entry: " + id, e);
         } finally {
@@ -198,11 +179,7 @@ public class DbVolume {
     }
 
     /**
-     * Return all volume entries in a map, where id is the key and a
-     * Volume object is the value.
-     * @param conn
-     * @return Map containing volume entries
-     * @throws SQLException
+     * Return all {@link Volume} entries in a map, where ID is the key and a {@link Volume} object is the value.
      */
     public static Map<Short, Volume> getAll(DbConnection conn) throws ServiceException {
         PreparedStatement stmt = null;
@@ -256,23 +233,29 @@ public class DbVolume {
             return null;
     }
 
-    public static void updateCurrentVolume(DbConnection conn, short volType, short volumeId)
-    throws ServiceException {
-        String colName;
-        if (volType == Volume.TYPE_MESSAGE)
-            colName = "message_volume_id";
-        else if (volType == Volume.TYPE_MESSAGE_SECONDARY)
-            colName = "secondary_message_volume_id";
-        else
-            colName = "index_volume_id";
+    public static void updateCurrentVolume(DbConnection conn, short type, short id) throws ServiceException {
+        String col;
+        switch (type) {
+            case Volume.TYPE_MESSAGE:
+                col = "message_volume_id";
+                break;
+            case Volume.TYPE_MESSAGE_SECONDARY:
+                col = "secondary_message_volume_id";
+                break;
+            case Volume.TYPE_INDEX:
+                col = "index_volume_id";
+                break;
+            default:
+                throw new IllegalArgumentException("invalid volume type: " + type);
+        }
         PreparedStatement stmt = null;
         try {
-            String sql = "UPDATE current_volumes SET " + colName + " = ?";
-            stmt = conn.prepareStatement(sql);
-            if (volumeId >= 0)
-                stmt.setShort(1, volumeId);
-            else
+            stmt = conn.prepareStatement("UPDATE current_volumes SET " + col + " = ?");
+            if (id >= 0) {
+                stmt.setShort(1, id);
+            } else {
                 stmt.setNull(1, Types.TINYINT);
+            }
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("updating current volume", e);
@@ -281,23 +264,12 @@ public class DbVolume {
         }
     }
 
-    /**
-     * @param rs
-     * @return
-     */
-    private static Volume constructVolume(ResultSet rs) throws SQLException {
-        short id = rs.getShort(CN_ID);
-        short type = rs.getShort(CN_TYPE);
-        String name = rs.getString(CN_NAME);
-        String path = Volume.getAbsolutePath(rs.getString(CN_PATH));
-        short mboxGroupBits = rs.getShort(CN_MAILBOX_GROUP_BITS);
-        short mboxBits = rs.getShort(CN_MAILBOX_BITS);
-        short fileGroupBits = rs.getShort(CN_FILE_GROUP_BITS);
-        short fileBits = rs.getShort(CN_FILE_BITS);
-        boolean compressBlobs = rs.getBoolean(CN_COMPRESS_BLOBS);
-        long compressionThreshold = rs.getLong(CN_COMPRESSION_THRESHOLD);
-        Volume v = new Volume(id, type, name, path, mboxGroupBits, mboxBits,
-            fileGroupBits, fileBits, compressBlobs, compressionThreshold);
-        return v;
+    private static Volume constructVolume(ResultSet rs) throws SQLException, VolumeServiceException {
+        return Volume.builder().setId(rs.getShort(CN_ID)).setType(rs.getShort(CN_TYPE)).setName(rs.getString(CN_NAME))
+                .setPath(Volume.getAbsolutePath(rs.getString(CN_PATH)), false)
+                .setMboxGroupBits(rs.getShort(CN_MAILBOX_GROUP_BITS)).setMboxBit(rs.getShort(CN_MAILBOX_BITS))
+                .setFileGroupBits(rs.getShort(CN_FILE_GROUP_BITS)).setFileBits(rs.getShort(CN_FILE_BITS))
+                .setCompressBlobs(rs.getBoolean(CN_COMPRESS_BLOBS))
+                .setCompressionThreshold(rs.getLong(CN_COMPRESSION_THRESHOLD)).build();
     }
 }

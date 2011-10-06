@@ -1,18 +1,18 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.store.file;
+package com.zimbra.cs.volume;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -36,7 +36,7 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
 
-public class VolumeUtil extends SoapCLI {
+public final class VolumeCLI extends SoapCLI {
 
     protected static final String O_A = "a";
     protected static final String O_D = "d";
@@ -51,8 +51,8 @@ public class VolumeUtil extends SoapCLI {
     protected static final String O_P = "p";
     protected static final String O_C = "c";
     protected static final String O_CT = "ct";
-    
-    protected VolumeUtil() throws ServiceException {
+
+    protected VolumeCLI() throws ServiceException {
         super();
         setupCommandLineOptions();
     }
@@ -63,27 +63,27 @@ public class VolumeUtil extends SoapCLI {
     public static void main(String[] args) {
         CliUtil.toolSetup();
         SoapTransport.setDefaultUserAgent("zmvolume", BuildInfo.VERSION);
-        VolumeUtil util = null;
+        VolumeCLI util = null;
         try {
-	        util = new VolumeUtil();
+            util = new VolumeCLI();
         } catch (ServiceException e) {
-        	System.err.println(e.getMessage());
-        	System.exit(1);
+            System.err.println(e.getMessage());
+            System.exit(1);
         }
         try {
             CommandLine cl = util.getCommandLine(args);
             if (cl == null)
                 return;
-            
+
             ZAuthToken zat = getZAuthToken(cl);
-            
+
             String id = cl.getOptionValue(O_ID);
             String type = cl.getOptionValue(O_T);
             String name = cl.getOptionValue(O_N);
             String path = cl.getOptionValue(O_P);
             String compress = cl.getOptionValue(O_C);
             String compressThreshold = cl.getOptionValue(O_CT);
-            
+
             if (cl.hasOption(O_A)) {
                 if (id != null)
                     throw new ParseException("id cannot be specified when adding a volume");
@@ -108,7 +108,7 @@ public class VolumeUtil extends SoapCLI {
                     throw new ParseException("id cannot be less than 0");
                 util.setCurrentVolume(zat, shortId);
             } else if (cl.hasOption(O_TS)) {
-            	util.unsetCurrentSecondaryMessageVolume(zat);
+                util.unsetCurrentSecondaryMessageVolume(zat);
             } else {
                 throw new ParseException("No action (-a,-d,-l,-e,-dc,-sc,-ts) is specified");
             }
@@ -122,21 +122,21 @@ public class VolumeUtil extends SoapCLI {
     }
 
     private void setCurrentVolume(ZAuthToken zat, short id) throws SoapFaultException, IOException, ServiceException {
-    	Integer idInt = new Integer(id);
-    	Map<Integer, Map<String, Object>> vols = getVolumes(zat, idInt.toString(), true);
-    	Map<String, Object> vol = vols.get(idInt);
-    	if (vol == null) {
-    		System.err.println("Volume " + id + " does not exist");
-    		System.exit(1);
-    	}
-    	short type = (short) ((Integer) vol.get(AdminConstants.A_VOLUME_TYPE)).intValue();
-    	Element req = new Element.XMLElement(AdminConstants.SET_CURRENT_VOLUME_REQUEST);
+        Integer idInt = new Integer(id);
+        Map<Integer, Map<String, Object>> vols = getVolumes(zat, idInt.toString(), true);
+        Map<String, Object> vol = vols.get(idInt);
+        if (vol == null) {
+            System.err.println("Volume " + id + " does not exist");
+            System.exit(1);
+        }
+        short type = (short) ((Integer) vol.get(AdminConstants.A_VOLUME_TYPE)).intValue();
+        Element req = new Element.XMLElement(AdminConstants.SET_CURRENT_VOLUME_REQUEST);
         req.addAttribute(AdminConstants.A_VOLUME_TYPE, type);
         req.addAttribute(AdminConstants.A_ID, id);
         auth(zat);
         getTransport().invokeWithoutSession(req);
         System.out.println("Volume " + id + " is now the current " +
-        		           VolumeUtil.getTypeName(type) + " volume.");
+                           VolumeCLI.getTypeName(type) + " volume.");
     }
 
     private void unsetCurrentSecondaryMessageVolume(ZAuthToken zat)
@@ -151,7 +151,7 @@ public class VolumeUtil extends SoapCLI {
 
     private void displayCurrentVolumes(ZAuthToken zat)
     throws SoapFaultException, IOException, ServiceException {
-    	Map<Integer, Map<String, Object>> vols = getVolumes(zat, null, true);
+        Map<Integer, Map<String, Object>> vols = getVolumes(zat, null, true);
         Element req = new Element.XMLElement(AdminConstants.GET_CURRENT_VOLUMES_REQUEST);
         Element resp = getTransport().invokeWithoutSession(req);
         for (Iterator<Element> it = resp.elementIterator(AdminConstants.E_VOLUME); it.hasNext(); ) {
@@ -165,7 +165,7 @@ public class VolumeUtil extends SoapCLI {
     private Map<Integer, Map<String, Object>> getVolumes(ZAuthToken zat, String id, boolean auth)
     throws SoapFaultException, IOException, ServiceException {
         // Use a TreeMap, so results are ordered by id.
-    	Map<Integer, Map<String, Object>> vols = new TreeMap<Integer, Map<String, Object>>();
+        Map<Integer, Map<String, Object>> vols = new TreeMap<Integer, Map<String, Object>>();
         if (auth)
             auth(zat);
         Element req = null;
@@ -202,14 +202,14 @@ public class VolumeUtil extends SoapCLI {
     }
 
     private void listVolume(Map<String, Object> vol) {
-		short vid = (short) ((Integer) vol.get(AdminConstants.A_ID)).intValue();
+        short vid = (short) ((Integer) vol.get(AdminConstants.A_ID)).intValue();
         short type = (short) ((Integer) vol.get(AdminConstants.A_VOLUME_TYPE)).intValue();
         boolean compressed = ((Boolean) vol.get(AdminConstants.A_VOLUME_COMPRESS_BLOBS)).booleanValue();
         int threshold = ((Integer) vol.get(AdminConstants.A_VOLUME_COMPRESSION_THRESHOLD)).intValue();
 
         System.out.println("   Volume id: " + vid);
         System.out.println("        name: " + vol.get(AdminConstants.A_VOLUME_NAME));
-        System.out.println("        type: " + VolumeUtil.getTypeName(type));
+        System.out.println("        type: " + VolumeCLI.getTypeName(type));
         System.out.println("        path: " + vol.get(AdminConstants.A_VOLUME_ROOTPATH));
         System.out.print("  compressed: " + compressed);
         if (compressed)
@@ -222,12 +222,12 @@ public class VolumeUtil extends SoapCLI {
 
     private void listVolumes(ZAuthToken zat, String id, boolean auth)
     throws SoapFaultException, IOException, ServiceException {
-    	Map<Integer, Map<String, Object>> vols = getVolumes(zat, id, auth);
-    	for (Iterator<Integer> iter = vols.keySet().iterator(); iter.hasNext(); ) {
-    		Integer key = iter.next();
-    		Map<String, Object> vol = vols.get(key);
-    		listVolume(vol);
-    	}
+        Map<Integer, Map<String, Object>> vols = getVolumes(zat, id, auth);
+        for (Iterator<Integer> iter = vols.keySet().iterator(); iter.hasNext(); ) {
+            Integer key = iter.next();
+            Map<String, Object> vol = vols.get(key);
+            listVolume(vol);
+        }
     }
 
     private void deleteVolume(ZAuthToken zat, String id) throws SoapFaultException, IOException, ServiceException {
@@ -280,16 +280,16 @@ public class VolumeUtil extends SoapCLI {
             String mailboxBits, String mailboxGroupBits, String compress,
             String compressThreshold)
     throws ParseException {
-        
+
         // validate compress parameter
         if (compress != null) {
             if (!"true".equals(compress) && !"false".equals(compress))
                 throw new ParseException("expecting true or false for compress option");
         }
-        
+
         // the parameters may be null in the case of modifications
         if (type != null) {
-            short t = VolumeUtil.getTypeId(type);
+            short t = VolumeCLI.getTypeId(type);
             if (t < 0)
                 throw new ParseException("invalid volume type: " + type);
             vol.addAttribute(AdminConstants.A_VOLUME_TYPE, t);
@@ -332,7 +332,7 @@ public class VolumeUtil extends SoapCLI {
         options.addOption(SoapCLI.OPT_AUTHTOKEN);
         options.addOption(SoapCLI.OPT_AUTHTOKENFILE);
     }
-    
+
     protected void usage(ParseException e) {
         if (e != null) {
             System.err.println("Error parsing command line arguments: " + e.getMessage());
@@ -363,14 +363,14 @@ public class VolumeUtil extends SoapCLI {
     }
 
     private static final String PADDING = "                                                  ";
-    
+
     private void printOpt(String optStr, int leftPad) {
         Options options = getOptions();
         Option opt = options.getOption(optStr);
         StringBuffer buf = new StringBuffer();
         buf.append(PADDING.substring(0, leftPad));
         buf.append("-" + opt.getOpt() + ",--" + opt.getLongOpt() + (opt.hasArg() ? " <arg>" : ""));
-        
+
         buf.append(PADDING.substring(0, 35-buf.length()));
         buf.append(opt.getDescription());
         System.err.println(buf.toString());

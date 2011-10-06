@@ -40,8 +40,10 @@ import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.volume.Volume;
+import com.zimbra.cs.volume.VolumeManager;
 
-public class BlobConsistencyChecker {
+public final class BlobConsistencyChecker {
 
     public static class BlobInfo {
         public int itemId;
@@ -191,7 +193,7 @@ public class BlobConsistencyChecker {
             conn = DbPool.getConnection();
 
             for (short volumeId : volumeIds) {
-                Volume vol = Volume.getById(volumeId);
+                Volume vol = VolumeManager.getInstance().getVolume(volumeId);
                 if (vol.getType() == Volume.TYPE_INDEX) {
                     sLog.warn("Skipping index volume %d.  Only message volumes are supported.", vol.getId());
                     continue;

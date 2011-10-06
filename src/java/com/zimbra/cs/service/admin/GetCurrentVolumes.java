@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -19,47 +19,51 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.store.file.Volume;
+import com.zimbra.cs.volume.Volume;
+import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.admin.message.GetCurrentVolumesRequest;
+import com.zimbra.soap.admin.message.GetCurrentVolumesResponse;
 
-public class GetCurrentVolumes extends AdminDocumentHandler {
+public final class GetCurrentVolumes extends AdminDocumentHandler {
 
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-
-        Server localServer = Provisioning.getInstance().getLocalServer();
-        checkRight(lc, context, localServer, Admin.R_manageVolume);
-        
-        Element response = lc.createElement(AdminConstants.GET_CURRENT_VOLUMES_RESPONSE);
-
-        Volume msgVol = Volume.getCurrentMessageVolume();
-        response.addElement(AdminConstants.E_VOLUME)
-                .addAttribute(AdminConstants.A_VOLUME_TYPE, Volume.TYPE_MESSAGE)
-                .addAttribute(AdminConstants.A_ID, msgVol.getId());
-
-        Volume secondaryMsgVol = Volume.getCurrentSecondaryMessageVolume();
-        if (secondaryMsgVol != null)
-            response.addElement(AdminConstants.E_VOLUME)
-                    .addAttribute(AdminConstants.A_VOLUME_TYPE, Volume.TYPE_MESSAGE_SECONDARY)
-                    .addAttribute(AdminConstants.A_ID, secondaryMsgVol.getId());
-
-        Volume indexVol = Volume.getCurrentIndexVolume();
-        response.addElement(AdminConstants.E_VOLUME)
-                .addAttribute(AdminConstants.A_VOLUME_TYPE, Volume.TYPE_INDEX)
-                .addAttribute(AdminConstants.A_ID, indexVol.getId());
-
-        return response;
+    @Override
+    public Element handle(Element req, Map<String, Object> ctx) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(ctx);
+        return zsc.jaxbToElement(handle((GetCurrentVolumesRequest) JaxbUtil.elementToJaxb(req), ctx));
     }
-    
+
+    private GetCurrentVolumesResponse handle(@SuppressWarnings("unused") GetCurrentVolumesRequest req,
+            Map<String, Object> ctx) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(ctx);
+        checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
+
+        GetCurrentVolumesResponse resp = new GetCurrentVolumesResponse();
+        VolumeManager mgr = VolumeManager.getInstance();
+        Volume msgVol = mgr.getCurrentMessageVolume();
+        if (msgVol != null) {
+            resp.addVolume(new GetCurrentVolumesResponse.CurrentVolumeInfo(msgVol.getId(), msgVol.getType()));
+        }
+        Volume secondaryMsgVol = mgr.getCurrentSecondaryMessageVolume();
+        if (secondaryMsgVol != null) {
+            resp.addVolume(new GetCurrentVolumesResponse.CurrentVolumeInfo(
+                    secondaryMsgVol.getId(), secondaryMsgVol.getType()));
+        }
+        Volume indexVol = mgr.getCurrentIndexVolume();
+        if (indexVol != null) {
+            resp.addVolume(new GetCurrentVolumesResponse.CurrentVolumeInfo(indexVol.getId(), indexVol.getType()));
+        }
+        return resp;
+    }
+
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_manageVolume);
     }
-    
+
 }

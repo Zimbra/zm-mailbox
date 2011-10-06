@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -17,106 +17,113 @@ package com.zimbra.cs.redolog.op;
 
 import java.io.IOException;
 
+import com.google.common.base.Objects;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.redolog.RedoLogInput;
 import com.zimbra.cs.redolog.RedoLogOutput;
-import com.zimbra.cs.store.file.Volume;
-import com.zimbra.cs.store.file.VolumeServiceException;
+import com.zimbra.cs.volume.Volume;
+import com.zimbra.cs.volume.VolumeManager;
+import com.zimbra.cs.volume.VolumeServiceException;
 
-public class CreateVolume extends RedoableOp {
+public final class CreateVolume extends RedoableOp {
 
-    private short mId = Volume.ID_NONE;
-    private short mType;
-    private String mName;
-    private String mRootPath;
+    private short id = Volume.ID_NONE;
+    private short type;
+    private String name;
+    private String rootPath;
 
-    private short mMboxGroupBits;
-    private short mMboxBits;
-    private short mFileGroupBits;
-    private short mFileBits;
-    
-    private boolean mCompressBlobs;
-    private long mCompressionThreshold;
+    private short mboxGroupBits;
+    private short mboxBits;
+    private short fileGroupBits;
+    private short fileBits;
+
+    private boolean compressBlobs;
+    private long compressionThreshold;
 
     public CreateVolume() {
         super(MailboxOperation.CreateVolume);
     }
 
-    public CreateVolume(short type, String name, String rootPath,
-                        short mboxGroupBits, short mboxBits,
-                        short fileGroupBits, short fileBits,
-                        boolean compressBlobs, long compressionThreshold) {
+    public CreateVolume(Volume volume) {
         this();
-        mType = type;
-        mName = name;
-        mRootPath = rootPath;
-        
-        mMboxGroupBits = mboxGroupBits;
-        mMboxBits = mboxBits;
-        mFileGroupBits = fileGroupBits;
-        mFileBits = fileBits;
-        mCompressBlobs = compressBlobs;
-        mCompressionThreshold = compressionThreshold;
+        type = volume.getType();
+        name = volume.getName();
+        rootPath = volume.getRootPath();
+        mboxGroupBits = volume.getMboxGroupBits();
+        mboxBits = volume.getMboxBits();
+        fileGroupBits = volume.getFileGroupBits();
+        fileBits = volume.getFileBits();
+        compressBlobs = volume.isCompressBlobs();
+        compressionThreshold = volume.getCompressionThreshold();
     }
 
     public void setId(short id) {
-        mId = id;
+        this.id = id;
     }
 
+    @Override
     protected String getPrintableData() {
-        Volume v = new Volume(mId, mType, mName, mRootPath,
-                              mMboxGroupBits, mMboxBits,
-                              mFileGroupBits, mFileBits,
-                              mCompressBlobs, mCompressionThreshold);
-        return v.toString();
+        return Objects.toStringHelper(this)
+                .add("id", id).add("type", type).add("name", name).add("path", rootPath)
+                .add("mboxGroupBits", mboxGroupBits).add("mboxBit", mboxBits)
+                .add("fileGroupBits", fileGroupBits).add("fileBits", fileBits)
+                .add("compressBlobs", compressBlobs).add("compressionThreshold", compressionThreshold)
+                .toString();
     }
 
+    @Override
     protected void serializeData(RedoLogOutput out) throws IOException {
-        out.writeShort(mId);
-        out.writeShort(mType);
-        out.writeUTF(mName);
-        out.writeUTF(mRootPath);
-        out.writeShort(mMboxGroupBits);
-        out.writeShort(mMboxBits);
-        out.writeShort(mFileGroupBits);
-        out.writeShort(mFileBits);
-        out.writeBoolean(mCompressBlobs);
+        out.writeShort(id);
+        out.writeShort(type);
+        out.writeUTF(name);
+        out.writeUTF(rootPath);
+        out.writeShort(mboxGroupBits);
+        out.writeShort(mboxBits);
+        out.writeShort(fileGroupBits);
+        out.writeShort(fileBits);
+        out.writeBoolean(compressBlobs);
     }
 
+    @Override
     protected void deserializeData(RedoLogInput in) throws IOException {
-        mId = in.readShort();
-        mType = in.readShort();
-        mName = in.readUTF();
-        mRootPath = in.readUTF();
-        mMboxGroupBits = in.readShort();
-        mMboxBits = in.readShort();
-        mFileGroupBits = in.readShort();
-        mFileBits = in.readShort();
-        mCompressBlobs = in.readBoolean();
+        id = in.readShort();
+        type = in.readShort();
+        name = in.readUTF();
+        rootPath = in.readUTF();
+        mboxGroupBits = in.readShort();
+        mboxBits = in.readShort();
+        fileGroupBits = in.readShort();
+        fileBits = in.readShort();
+        compressBlobs = in.readBoolean();
     }
 
+    @Override
     public void redo() throws Exception {
+        VolumeManager mgr = VolumeManager.getInstance();
         try {
-            Volume vol = Volume.getById(mId);
+            Volume vol = mgr.getVolume(id);
             if (vol != null) {
-                mLog.info("Volume " + mId + " already exists");
+                mLog.info("Volume already exists id=%d", id);
                 return;
             }
         } catch (VolumeServiceException e) {
-            if (e.getCode() != VolumeServiceException.NO_SUCH_VOLUME)
+            if (e.getCode() != VolumeServiceException.NO_SUCH_VOLUME) {
                 throw e;
+            }
         }
         try {
-            Volume.create(mId, mType, mName, mRootPath,
-                          mMboxGroupBits, mMboxBits,
-                          mFileGroupBits, mFileBits,
-                          mCompressBlobs, mCompressionThreshold,
-                          getUnloggedReplay());
+            Volume volume = Volume.builder().setId(id).setType(type).setName(name).setPath(rootPath, false)
+                    .setMboxGroupBits(mboxGroupBits).setMboxBit(mboxBits)
+                    .setFileGroupBits(fileGroupBits).setFileBits(fileBits)
+                    .setCompressBlobs(compressBlobs).setCompressionThreshold(compressionThreshold).build();
+            mgr.create(volume, getUnloggedReplay());
         } catch (VolumeServiceException e) {
-            if (e.getCode() == VolumeServiceException.ALREADY_EXISTS)
-                mLog.info("Volume " + mId + " already exists");
-            else
+            if (e.getCode() == VolumeServiceException.ALREADY_EXISTS) {
+                mLog.info("Volume already exists id=%d", id);
+            } else {
                 throw e;
+            }
         }
     }
+
 }

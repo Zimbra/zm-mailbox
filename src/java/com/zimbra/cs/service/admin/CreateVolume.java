@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -19,47 +19,41 @@ import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.store.file.Volume;
+import com.zimbra.cs.volume.Volume;
+import com.zimbra.cs.volume.VolumeManager;
+import com.zimbra.cs.volume.VolumeServiceException;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.admin.message.CreateVolumeRequest;
+import com.zimbra.soap.admin.message.CreateVolumeResponse;
+import com.zimbra.soap.admin.type.VolumeInfo;
 
-public class CreateVolume extends AdminDocumentHandler {
+public final class CreateVolume extends AdminDocumentHandler {
 
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
-        ZimbraSoapContext lc = getZimbraSoapContext(context);
-
-        Server localServer = Provisioning.getInstance().getLocalServer();
-        checkRight(lc, context, localServer, Admin.R_manageVolume);
-        
-        Element eVol = request.getElement(AdminConstants.E_VOLUME);
-        String name  = eVol.getAttribute(AdminConstants.A_VOLUME_NAME);
-        String path  = eVol.getAttribute(AdminConstants.A_VOLUME_ROOTPATH);
-        short type   = (short) eVol.getAttributeLong(AdminConstants.A_VOLUME_TYPE);
-
-        // TODO: These "bits" parameters are ignored inside Volume.create() for now.
-//        short mgbits = (short) eVol.getAttributeLong(AdminService.A_VOLUME_MGBITS);
-//        short mbits  = (short) eVol.getAttributeLong(AdminService.A_VOLUME_MBITS);
-//        short fgbits = (short) eVol.getAttributeLong(AdminService.A_VOLUME_FGBITS);
-//        short fbits  = (short) eVol.getAttributeLong(AdminService.A_VOLUME_FBITS);
-
-        boolean compressBlobs = eVol.getAttributeBool(AdminConstants.A_VOLUME_COMPRESS_BLOBS);
-        long compressionThreshold = eVol.getAttributeLong(AdminConstants.A_VOLUME_COMPRESSION_THRESHOLD);
-//        Volume vol = Volume.create(Volume.ID_AUTO_INCREMENT, type, name, path,
-//                                   mgbits, mbits, fgbits, fbits, compressBlobs, compressionThreshold);
-        Volume vol = Volume.create(Volume.ID_AUTO_INCREMENT, type, name, path,
-                                   (short) 0, (short) 0, (short) 0, (short) 0,
-                                   compressBlobs, compressionThreshold);
-
-        Element response = lc.createElement(AdminConstants.CREATE_VOLUME_RESPONSE);
-        GetVolume.addVolumeElement(response, vol);
-        return response;
+    @Override
+    public Element handle(Element req, Map<String, Object> ctx) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(ctx);
+        return zsc.jaxbToElement(handle((CreateVolumeRequest) JaxbUtil.elementToJaxb(req), ctx));
     }
-    
+
+    private CreateVolumeResponse handle(CreateVolumeRequest req, Map<String, Object> ctx) throws ServiceException {
+        ZimbraSoapContext zsc = getZimbraSoapContext(ctx);
+        checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
+
+        Volume vol = VolumeManager.getInstance().create(toVolume(req.getVolume()));
+        return new CreateVolumeResponse(vol.toJAXB());
+    }
+
+    private Volume toVolume(VolumeInfo vol) throws VolumeServiceException {
+        return Volume.builder().setType(vol.getType()).setName(vol.getName()).setPath(vol.getRootPath(), true)
+                .setCompressBlobs(vol.isCompressBlobs()).setCompressionThreshold(vol.getCompressionThreshold())
+                .build();
+    }
+
     @Override
     public void docRights(List<AdminRight> relatedRights, List<String> notes) {
         relatedRights.add(Admin.R_manageVolume);

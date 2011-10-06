@@ -43,9 +43,10 @@ import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Metadata;
-import com.zimbra.cs.store.file.Volume;
+import com.zimbra.cs.volume.Volume;
+import com.zimbra.cs.volume.VolumeManager;
 
-public class MetadataDump {
+public final class MetadataDump {
 
     private static final String OPT_MAILBOX_ID = "mailboxId";
     private static final String OPT_ITEM_ID = "itemId";
@@ -120,7 +121,7 @@ public class MetadataDump {
             ps.println();
             if (mMap.get("blob_digest") != null) {
                 short volId = Short.parseShort(mMap.get("volume_id"));
-                Volume vol = Volume.getById(volId);
+                Volume vol = VolumeManager.getInstance().getVolume(volId);
                 if (vol != null) {
                     int mboxId = Integer.parseInt(mMap.get("mailbox_id"));
                     String itemIdStr = mMap.get("id");
