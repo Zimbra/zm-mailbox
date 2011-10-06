@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111005-1200 */
+    /* build: 8.0.0_BETA1_1111 jhahm 20111005-2014 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3430,6 +3430,26 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1128)
     public static final String A_zimbraDumpsterEnabled = "zimbraDumpsterEnabled";
+
+    /**
+     * disables purging from dumpster when set to FALSE
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1315)
+    public static final String A_zimbraDumpsterPurgeEnabled = "zimbraDumpsterPurgeEnabled";
+
+    /**
+     * limits how much of a dumpster data is viewable by the end user, based
+     * on the age since being put in dumpster. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1314)
+    public static final String A_zimbraDumpsterUserVisibleAge = "zimbraDumpsterUserVisibleAge";
 
     /**
      * URL for posting error report popped up in WEB client
@@ -10194,22 +10214,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
