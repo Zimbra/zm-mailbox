@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,24 +22,27 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_DELETE_VOLUME_REQUEST)
-public class DeleteVolumeRequest {
+public final class DeleteVolumeRequest {
 
     @XmlAttribute(name=AdminConstants.A_ID, required=true)
-    private final long id;
+    private final short id;
 
     /**
      * no-argument constructor wanted by JAXB
      */
      @SuppressWarnings("unused")
     private DeleteVolumeRequest() {
-        this(-1);
+         this((short) -1);
     }
 
-    public DeleteVolumeRequest(long id) {
-        this.id = id;
+    public DeleteVolumeRequest(short value) {
+        id = value;
     }
 
-    public long getId() { return id; }
+    public short getId() {
+        return id;
+    }
+
 }
