@@ -334,7 +334,7 @@ public final class MailboxIndex {
         params.setSortBy(SortBy.NONE);
         params.setLimit(1);
         params.setPrefetch(false);
-        params.setFetchMode(SearchParams.Fetch.ID);
+        params.setFetchMode(SearchParams.Fetch.IDS);
         ZimbraQueryResults result = search(SoapProtocol.Soap12, new OperationContext(mailbox), params);
         try {
             return result.hasNext();
