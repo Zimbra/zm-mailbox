@@ -37,10 +37,10 @@ public class SendShareNotificationRequest {
 
     @XmlElement(name=MailConstants.E_ITEM /* item */, required=false)
     private Id item;
-    
+
     @XmlElement(name=MailConstants.E_EMAIL /* e */, required=false)
     private List<EmailAddrInfo> emailAddresses = Lists.newArrayList();
-    
+
     @XmlElement(name=MailConstants.E_NOTES /* notes */, required=false)
     private String notes;
 
@@ -54,11 +54,11 @@ public class SendShareNotificationRequest {
             Iterables.addAll(this.emailAddresses,emailAddresses);
         }
     }
-    public void addEmailAddresse(EmailAddrInfo emailAddresse) {
-        this.emailAddresses.add(emailAddresse);
+    public void addEmailAddress(EmailAddrInfo emailAddress) {
+        this.emailAddresses.add(emailAddress);
     }
     public void setNotes(String notes) { this.notes = notes; }
-    
+
     public Id getItem() { return item; }
     public List<EmailAddrInfo> getEmailAddresses() {
         return Collections.unmodifiableList(emailAddresses);
