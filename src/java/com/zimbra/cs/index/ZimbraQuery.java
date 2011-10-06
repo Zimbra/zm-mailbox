@@ -692,7 +692,7 @@ public final class ZimbraQuery {
         ZimbraQueryResults results = null;
         try {
             results = operation.run(mailbox, params, chunkSize);
-            if ((!params.getIncludeTagDeleted() && params.getFetchMode() != SearchParams.Fetch.ID)
+            if ((!params.getIncludeTagDeleted() && params.getFetchMode() != SearchParams.Fetch.IDS)
                     || params.getAllowableTaskStatuses() != null) {
                 // we have to do some filtering of the result set
                 FilteredQueryResults filtered = new FilteredQueryResults(results);

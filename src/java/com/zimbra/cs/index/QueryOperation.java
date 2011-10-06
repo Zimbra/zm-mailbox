@@ -105,7 +105,7 @@ public abstract class QueryOperation implements Cloneable, ZimbraQueryResults {
         boolean usePreloadingGrouper = true;
 
         // don't preload if all we want is IDs!
-        if (params.getFetchMode() == SearchParams.Fetch.ID) {
+        if (params.getFetchMode() == SearchParams.Fetch.IDS) {
             usePreloadingGrouper = false;
         }
 

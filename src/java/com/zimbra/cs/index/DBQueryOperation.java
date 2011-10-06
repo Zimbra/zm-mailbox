@@ -464,7 +464,7 @@ public class DBQueryOperation extends QueryOperation {
                             case IMAP:
                                 fetch = DbSearch.FetchMode.IMAP_MSG;
                                 break;
-                            case ID:
+                            case IDS:
                                 fetch = DbSearch.FetchMode.ID;
                                 break;
                             case MODSEQ:

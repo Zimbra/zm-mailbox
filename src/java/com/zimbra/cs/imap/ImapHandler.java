@@ -3199,7 +3199,7 @@ abstract class ImapHandler {
                 }
             } else {
                 ZimbraQueryResults zqr = runSearch(i4search, i4folder, sort,
-                        requiresMODSEQ ? SearchParams.Fetch.MODSEQ : SearchParams.Fetch.ID);
+                        requiresMODSEQ ? SearchParams.Fetch.MODSEQ : SearchParams.Fetch.IDS);
                 hits = unsorted ? new ImapMessageSet() : new ArrayList<ImapMessage>();
                 try {
                     for (ZimbraHit hit = zqr.getNext(); hit != null; hit = zqr.getNext()) {

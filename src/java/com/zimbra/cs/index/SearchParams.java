@@ -766,7 +766,7 @@ public final class SearchParams implements Cloneable {
         /* Only the ID of the item's parent (-1 if no parent). */
         PARENT,
         /* Only ID. */
-        ID;
+        IDS;
     }
 
 }

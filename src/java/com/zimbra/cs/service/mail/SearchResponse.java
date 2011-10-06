@@ -131,7 +131,7 @@ final class SearchResponse {
      */
     void add(ZimbraHit hit) throws ServiceException {
         Element el = null;
-        if (params.getFetchMode() == SearchParams.Fetch.ID) {
+        if (params.getFetchMode() == SearchParams.Fetch.IDS) {
             if (hit instanceof ConversationHit) {
                 // need to expand the contained messages
                 el = element.addElement("hit");
@@ -175,7 +175,7 @@ final class SearchResponse {
     }
 
     private Element add(ConversationHit hit) throws ServiceException {
-        if (params.getFetchMode() == SearchParams.Fetch.ID) {
+        if (params.getFetchMode() == SearchParams.Fetch.IDS) {
             Element el = element.addElement(MailConstants.E_CONV);
             for (MessageHit mhit : hit.getMessageHits()) {
                 el.addElement(MailConstants.E_MSG).addAttribute(
