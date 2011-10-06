@@ -60,6 +60,7 @@ import com.zimbra.client.ZMailbox.ZOutgoingMessage.MessagePart;
 import com.zimbra.client.ZMessage.ZMimePart;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.lmtp.LmtpClient;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.shim.JavaMailMimeMessage;
@@ -466,7 +467,7 @@ extends Assert {
      */
     public static void deleteTestData(String userName, String subjectSubstring)
     throws ServiceException {
-        ZMailbox mbox = TestUtil.getZMailbox(userName);
+        ZMailbox mbox = getZMailbox(userName);
 
         deleteMessages(mbox, "is:anywhere " + subjectSubstring);
 
@@ -520,7 +521,8 @@ extends Assert {
             mbox.deleteItem(StringUtil.join(",", ids), null);
         }
 
-        mbox.emptyDumpster();
+        ZMailbox adminMbox = getZMailboxAsAdmin(userName);
+        adminMbox.emptyDumpster();
     }
 
     private static void deleteMessages(ZMailbox mbox, String query)
@@ -576,6 +578,15 @@ extends Assert {
         options.setAccountBy(AccountBy.name);
         options.setPassword(DEFAULT_PASSWORD);
         options.setUri(getSoapUrl());
+        return ZMailbox.getMailbox(options);
+    }
+
+    public static ZMailbox getZMailboxAsAdmin(String username)
+    throws ServiceException {
+        ZAuthToken adminAuthToken = newSoapProvisioning().getAuthToken();
+        ZMailbox.Options options = new ZMailbox.Options(adminAuthToken, getSoapUrl());
+        options.setTargetAccount(getAddress(username));
+        options.setTargetAccountBy(AccountBy.name);
         return ZMailbox.getMailbox(options);
     }
 

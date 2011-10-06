@@ -937,6 +937,14 @@ public class Mailbox {
         return AccessManager.getInstance().canAccessAccount(authuser, getAccount(), octxt.isUsingAdminPrivileges());
     }
 
+    /** Returns true if the authenticated user has admin privileges over this
+     * <tt>Mailbox</tt>.  Such users include:<ul>
+     *   <li>all global admin accounts (if using admin privileges)</li>
+     *   <li>appropriate domain admins (if using admin privileges)</li></ul> */
+    public boolean hasFullAdminAccess(OperationContext octxt) throws ServiceException {
+        return octxt == null || (octxt.isUsingAdminPrivileges() && hasFullAccess(octxt));
+    }
+
     /** Returns the total (uncompressed) size of the mailbox's contents. */
     public long getSize() {
         return currentChange.size == MailboxChange.NO_CHANGE ? mData.size : currentChange.size;
@@ -2191,8 +2199,32 @@ public class Mailbox {
     }
 
     MailItem getItemById(int id, MailItem.Type type, boolean fromDumpster) throws ServiceException {
-        if (fromDumpster)
-            return MailItem.getById(this, id, type, true);
+        if (fromDumpster) {
+            boolean noSuchItem = false;
+            MailItem item = null;
+            try {
+                item = MailItem.getById(this, id, type, true);
+            } catch (NoSuchItemException e) {
+                noSuchItem = true;
+            }
+            if (item != null) {
+                // Pretend the item doesn't exist in the dumpster if user is non-admin and item is too old or is a spam.
+                OperationContext octxt = getOperationContext();
+                if (!hasFullAdminAccess(octxt)) {
+                    long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
+                    long threshold = now - getAccount().getDumpsterUserVisibleAge();
+                    if (item.getChangeDate() < threshold || item.inSpam()) {
+                        noSuchItem = true;
+                    }
+                }
+            }
+            // Both truly non-existent case and filter case throw noSuchItem exception here.  This way the client
+            // can't distinguish the two cases from the stack trace in the soap fault.
+            if (noSuchItem) {
+                throw MailItem.noSuchItem(id,  type);
+            }
+            return item;
+        }
 
         // try the cache first
         MailItem item = getCachedItem(new Integer(id), type);
@@ -5570,7 +5602,17 @@ public class Mailbox {
      */
     public List<MailItem> recover(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId)
             throws ServiceException {
-        return copyInternal(octxt, itemIds, type, folderId, true);
+        RecoverItem redoRecorder = new RecoverItem(mId, type, folderId);
+        boolean success = false;
+        try {
+            beginTransaction("recover[]", octxt, redoRecorder);
+            List<MailItem> result = copyInternal(octxt, itemIds, type, folderId, true);
+            deleteFromDumpster(itemIds);
+            success = true;
+            return result;
+        } finally {
+            endTransaction(success);
+        }
     }
 
     public MailItem copy(OperationContext octxt, int itemId, MailItem.Type type, int folderId)
@@ -5580,16 +5622,23 @@ public class Mailbox {
 
     public List<MailItem> copy(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId)
     throws ServiceException {
-        return copyInternal(octxt, itemIds, type, folderId, false);
+        CopyItem redoRecorder = new CopyItem(mId, type, folderId);
+        boolean success = false;
+        try {
+            beginTransaction("copy[]", octxt, redoRecorder);
+            List<MailItem> result = copyInternal(octxt, itemIds, type, folderId, false);
+            success = true;
+            return result;
+        } finally {
+            endTransaction(success);
+        }
     }
 
     private List<MailItem> copyInternal(OperationContext octxt, int[] itemIds, MailItem.Type type, int folderId,
             boolean fromDumpster)
     throws ServiceException {
-        CopyItem redoRecorder = fromDumpster ? new RecoverItem(mId, type, folderId) : new CopyItem(mId, type, folderId);
-        boolean success = false;
+        CopyItem redoRecorder = (CopyItem) currentChange.getRedoRecorder();
         try {
-            beginTransaction("copy", octxt, redoRecorder);
             if (fromDumpster) {
                 Folder trash = getFolderById(ID_FOLDER_TRASH);
                 if (!trash.canAccess(ACL.RIGHT_READ)) {
@@ -5658,13 +5707,9 @@ public class Mailbox {
 
                 result.add(copy);
             }
-
-            success = true;
             return result;
         } catch (IOException e) {
             throw ServiceException.FAILURE("IOException while copying items", e);
-        } finally {
-            endTransaction(success);
         }
     }
 
@@ -6100,7 +6145,7 @@ public class Mailbox {
             try {
                 item = getItemById(id, MailItem.Type.UNKNOWN, true);
             } catch (MailServiceException.NoSuchItemException e) {
-                ZimbraLog.mailbox.info("ignoring NO_SUCH_ITEM exception during dumpster delete; item id=" + id, e);
+                ZimbraLog.mailbox.info("ignoring NO_SUCH_ITEM exception during dumpster delete; item id=" + id);
                 continue;
             }
             item.delete();
@@ -6110,6 +6155,10 @@ public class Mailbox {
     }
 
     public int deleteFromDumpster(OperationContext octxt, int[] itemIds) throws ServiceException {
+        boolean isRedo = octxt != null && octxt.isRedo();
+        if (!isRedo && !hasFullAdminAccess(octxt)) {
+            throw ServiceException.PERM_DENIED("only admins can delete from dumpster");
+        }
         DeleteItemFromDumpster redoRecorder = new DeleteItemFromDumpster(mId, itemIds);
         boolean success = false;
         try {
@@ -6123,6 +6172,10 @@ public class Mailbox {
     }
 
     public int emptyDumpster(OperationContext octxt) throws ServiceException {
+        if (!hasFullAdminAccess(octxt)) {
+            throw ServiceException.PERM_DENIED("only admins can delete from dumpster");
+        }
+
         int numDeleted = 0;
         int batchSize = Provisioning.getInstance().getLocalServer().getMailEmptyFolderBatchSize();
         ZimbraLog.mailbox.info("Emptying dumpster with batchSize=" + batchSize);
@@ -7106,7 +7159,8 @@ public class Mailbox {
         long globalTimeout = acct.getMailMessageLifetime();
         long systemTrashTimeout = acct.getMailTrashLifetime();
         long systemJunkTimeout = acct.getMailSpamLifetime();
-        long systemDumpsterTimeoutMillis = acct.getMailDumpsterLifetime();
+        boolean dumpsterPurgeEnabled = acct.isDumpsterPurgeEnabled();
+        long systemDumpsterTimeoutMillis = dumpsterPurgeEnabled ? acct.getMailDumpsterLifetime() : 0;
 
         long userInboxReadTimeout = acct.getPrefInboxReadLifetime();
         long userInboxUnreadTimeout = acct.getPrefInboxUnreadLifetime();
@@ -8297,7 +8351,7 @@ public class Mailbox {
         return enabled;
     }
 
-    public boolean useDumpsterForSpam() { return false; }
+    public boolean useDumpsterForSpam() { return true; }
 
     /**
      * Return true if the folder is a internally managed system folder which should not normally be modified

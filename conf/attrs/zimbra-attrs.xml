@@ -6509,6 +6509,14 @@ TODO: delete them permanently from here
   <desc>template for constructing the body of a file deletion warning message</desc>
 </attr>
 
+<attr id="1314" name="zimbraDumpsterUserVisibleAge" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0.0">
+  <defaultCOSValue>30d</defaultCOSValue>
+  <desc>limits how much of a dumpster data is viewable by the end user, based on the age since being put in dumpster</desc>
+</attr>
 
+<attr id="1315" name="zimbraDumpsterPurgeEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0.0">
+  <defaultCOSValue>TRUE</defaultCOSValue>
+  <desc>disables purging from dumpster when set to FALSE</desc>
+</attr>
 
 </attrs>

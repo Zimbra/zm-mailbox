@@ -30,6 +30,7 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
@@ -81,6 +82,20 @@ public class Search extends MailDocumentHandler  {
         if (params.inDumpster()) {
             if (params.getTypes().contains(MailItem.Type.CONVERSATION)) {
                 throw ServiceException.INVALID_REQUEST("cannot search for conversations in dumpster", null);
+            }
+            // If requester is not an admin user, limit to recent date range and exclude spam.
+            if (!mbox.hasFullAdminAccess(octxt)) {
+                long visibleAgeMin = account.getDumpsterUserVisibleAge() / 1000 / 60;
+                String restriction = String.format("mdate:>%dmi -inid:%d", -1 * visibleAgeMin, Mailbox.ID_FOLDER_SPAM);
+                String query = params.getQueryString();
+                String newQuery;
+                if (StringUtil.isNullOrEmpty(query)) {
+                    newQuery = restriction;
+                } else {
+                    newQuery = String.format("(%s) %s", query, restriction);
+                }
+                ZimbraLog.search.debug("augmenting dumpster search by non-admin user; new query = " + newQuery);
+                params.setQueryString(newQuery);
             }
         }
 
