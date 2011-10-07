@@ -76,15 +76,13 @@ public final class VolumeServiceException extends ServiceException {
     }
 
     public static VolumeServiceException WRONG_TYPE_CURRVOL(int id, short currVolType) {
-        return new VolumeServiceException("volume " + id + " cannot be used as current volume of type " + currVolType +
-                " (" + VolumeCLI.getTypeName(currVolType) + ")", WRONG_TYPE_CURRVOL, SENDERS_FAULT, null);
+        return new VolumeServiceException("volume " + id + " cannot be used as current volume of type " + currVolType,
+                WRONG_TYPE_CURRVOL, SENDERS_FAULT, null);
     }
 
     public static VolumeServiceException CANNOT_CHANGE_TYPE_OF_CURRVOL(Volume vol, short newType) {
-        String newVolTypeName = VolumeCLI.getTypeName(newType);
-        String currVolTypeName = VolumeCLI.getTypeName(vol.getType());
         return new VolumeServiceException("cannot change type of volume \"" + vol.getName() + "\" (id=" + vol.getId() +
-                ") to " + newVolTypeName + " because it is the current " + currVolTypeName + " volume",
+                ") to " + newType + " because it is the current " + vol.getType() + " volume",
                 CANNOT_CHANGE_TYPE_OF_CURRVOL, SENDERS_FAULT, null);
     }
 
