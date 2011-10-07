@@ -60,7 +60,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private static final String LO_HELP = "help";
     private static final String LO_MAILBOX = "mailbox";
     private static final String LO_AUTH = "auth";
-    private static final String LO_NODELAUTH = "nodelauth";
+    private static final String LO_ADMIN_PRIV = "admin-priv";
     private static final String LO_ADMIN = "admin";
     private static final String LO_PASSWORD = "password";
     private static final String LO_PASSFILE = "passfile";
@@ -127,7 +127,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         opt.setArgName("account-name");
         mOptions.addOption(opt);
 
-        mOptions.addOption(new Option(null, LO_NODELAUTH, false, "Don't do delegated auth; use admin auth in the requests instead."));
+        mOptions.addOption(new Option("A", LO_ADMIN_PRIV, false, "Execute requests with admin privileges."));
 
         opt = new Option("a", LO_ADMIN, true, "Admin account name to authenticate as.");
         opt.setArgName("account-name");
@@ -230,11 +230,11 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         }
 
         mTargetAccountName = CliUtil.getOptionValue(cl, LO_MAILBOX);
-        if (CliUtil.hasOption(cl, LO_NODELAUTH) && CliUtil.hasOption(cl, LO_AUTH)) {
-            usage("Cannot combine --auth and --nodelauth.");
+        if (CliUtil.hasOption(cl, LO_ADMIN_PRIV) && CliUtil.hasOption(cl, LO_AUTH)) {
+            usage("Cannot combine --auth and -A.");
         }
         mAuthAccountName = CliUtil.getOptionValue(cl, LO_AUTH);
-        if (StringUtil.isNullOrEmpty(mAuthAccountName) && !CliUtil.hasOption(cl, LO_NODELAUTH)) {
+        if (StringUtil.isNullOrEmpty(mAuthAccountName) && !CliUtil.hasOption(cl, LO_ADMIN_PRIV)) {
             mAuthAccountName = mTargetAccountName;
         }
         if (StringUtil.isNullOrEmpty(mAuthAccountName) && StringUtil.isNullOrEmpty(mAdminAccountName)) {
