@@ -58,38 +58,35 @@ public final class VolumeManager {
     private void load() throws ServiceException {
         DbConnection conn = DbPool.getConnection();
         try {
-            Map<Short, Volume> volumes = DbVolume.getAll(conn);
+            id2volume.putAll(DbVolume.getAll(conn));
+            updateSweptDirectories();
+
             DbVolume.CurrentVolumes current = DbVolume.getCurrentVolumes(conn);
             if (current == null) {
-                throw VolumeServiceException.BAD_CURRVOL_CONFIG("Missing current volumes info from configuration");
+                ZimbraLog.store.warn("Missing current volumes info from configuration");
+                return;
             }
 
-            Volume msgVol = volumes.get(current.msgVolId);
-            if (msgVol == null) {
-                throw VolumeServiceException.BAD_CURRVOL_CONFIG("Unknown current message volume " + current.msgVolId);
-            }
-
-            Volume secondaryMsgVol = null;
-            if (current.secondaryMsgVolId != Volume.ID_NONE) {
-                secondaryMsgVol = volumes.get(current.secondaryMsgVolId);
-                if (secondaryMsgVol == null) {
-                    throw VolumeServiceException.BAD_CURRVOL_CONFIG("Unknown current secondary message volume " +
-                            current.secondaryMsgVolId);
+            if (current.msgVolId != Volume.ID_NONE) {
+                currentMessageVolume = id2volume.get(current.msgVolId);
+                if (currentMessageVolume == null) {
+                    ZimbraLog.store.warn("Unknown current message volume id=%d", current.msgVolId);
                 }
             }
 
-            Volume indexVol = volumes.get(current.indexVolId);
-            if (indexVol == null) {
-                throw VolumeServiceException.BAD_CURRVOL_CONFIG("Unknown current index volume " + current.indexVolId);
+            if (current.secondaryMsgVolId != Volume.ID_NONE) {
+                currentSecondaryMessageVolume = id2volume.get(current.secondaryMsgVolId);
+                if (currentSecondaryMessageVolume == null) {
+                    ZimbraLog.store.warn("Unknown current secondary message volume id=%d", current.secondaryMsgVolId);
+                }
             }
 
-            // All looks good.  Update current values.
-            id2volume.clear();
-            id2volume.putAll(volumes);
-            currentMessageVolume = msgVol;
-            currentSecondaryMessageVolume = secondaryMsgVol;
-            currentIndexVolume = indexVol;
-            updateSweptDirectories();
+            if (current.indexVolId != Volume.ID_NONE) {
+                currentIndexVolume = id2volume.get(current.indexVolId);
+                if (currentIndexVolume == null) {
+                    ZimbraLog.store.warn("Unknown current index volume id=%d", current.indexVolId);
+                }
+            }
         } finally {
             conn.closeQuietly();
         }
@@ -196,13 +193,13 @@ public final class VolumeManager {
 
         // Don't allow deleting the current message/index volume.
         synchronized (this) {
-            if (id == currentMessageVolume.getId()) {
+            if (currentMessageVolume != null && id == currentMessageVolume.getId()) {
                 throw VolumeServiceException.CANNOT_DELETE_CURRVOL(id, "message");
             }
             if (currentSecondaryMessageVolume != null && id == currentSecondaryMessageVolume.getId()) {
                 throw VolumeServiceException.CANNOT_DELETE_CURRVOL(id, "secondary message");
             }
-            if (id == currentIndexVolume.getId()) {
+            if (currentIndexVolume != null && id == currentIndexVolume.getId()) {
                 throw VolumeServiceException.CANNOT_DELETE_CURRVOL(id, "index");
             }
         }
@@ -263,6 +260,8 @@ public final class VolumeManager {
     }
 
     /**
+     * Returns the current message volume, or {@code null} if not configured.
+     *
      * Don't cache the returned {@link Volume} object. Updates to volume information by admin will create a different
      * {@link Volume} object for the same volume ID.
      */
@@ -271,6 +270,8 @@ public final class VolumeManager {
     }
 
     /**
+     * Returns the current secondary message volume, or {@code null} if not configured.
+     *
      * Don't cache the returned {@link Volume} object. Updates to volume information by admin will create a different
      * {@link Volume} object for the same volume ID.
      */
@@ -279,6 +280,8 @@ public final class VolumeManager {
     }
 
     /**
+     * Returns the current index volume, or {@code null} if not configured.
+     *
      * Don't cache the returned {@link Volume} object. Updates to volume information by admin will create a different
      * {@link Volume} object for the same volume ID.
      */
