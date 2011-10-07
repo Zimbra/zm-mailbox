@@ -18,6 +18,7 @@ package com.zimbra.common.util;
 import java.util.*;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
@@ -349,6 +350,14 @@ public class ListUtil {
      */
     public static <F, T> List<T> newArrayList(Iterable<F> fromIterable, Function<? super F, ? extends T> function) {
         return Lists.newArrayList(Iterables.transform(fromIterable, function));
+    }
+    
+    /**
+     * Filters the given {@code Iterable} and returns a new {@code List} whose
+     * elements match the {@code Predicate}.
+     */
+    public static <T> List<T> newArrayList(Iterable<T> unfiltered, Predicate<T> predicate) {
+        return Lists.newArrayList(Iterables.filter(unfiltered, predicate));
     }
     
     public static void main(String[] args) {
