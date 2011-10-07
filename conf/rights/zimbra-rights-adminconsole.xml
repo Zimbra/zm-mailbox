@@ -60,7 +60,7 @@
 </right>
 
 <right type="combo" name="adminConsoleAccountsInfoTabRights">
-  <desc> Admin Console rights for Accounts Info Tab </desc>
+  <desc> Admin Console rights for AccountsInfoTab </desc>
   <rights>
     <r n="setAdminConsoleAccountsInfoTab"/>
     <r n="viewAdminConsoleAccountsInfoTab"/>
@@ -106,7 +106,7 @@
 </right>
 
 <right name="adminConsoleAccountsContactTabRights" type="combo">
-  <desc> Admin Console rights for Accounts Contact Tab </desc>
+  <desc> Admin Console rights for AccountsContactTab </desc>
   <rights>
     <r n="setAdminConsoleAccountsContactTab"/>
     <r n="viewAdminConsoleAccountsContactTab"/>
@@ -727,6 +727,8 @@
   <rights>
     <r n="setAdminConsoleDLSharesTab"/>
     <r n="viewAdminConsoleDLSharesTab"/>
+    <r n="getDistributionListShareInfo"/>
+    <r n="publishDistributionListShareInfo"/>
   </rights>
 </right>
 <!-- Admin Console DL ACL Tab -->
@@ -836,6 +838,8 @@
     <r n="renameCalendarResource"/>
     <r n="deleteCalendarResource"/>
     <r n="setCalendarResourcePassword"/>
+    <r n="publishCalendarResourceShareInfo"/>
+    <r n="getCalendarResourceShareInfo"/>
   </rights>
 </right>
 <!-- Admin Console Resources Location/Contact Tab -->
@@ -1480,7 +1484,6 @@
     <desc> Admin Console view attr rights for Domain Info Tab </desc>
     <attrs>
       <a n="zimbraDomainName"/>
-      <a n="zimbraDomainType"/>  
       <a n="description"/>
       <a n="zimbraDomainStatus"/>
       <a n="zimbraPrefTimeZoneId"/>
@@ -1520,6 +1523,7 @@
       <r n="setAdminConsoleDomainGALTab"/>
       <r n="viewAdminConsoleDomainGALTab"/>
       <r n="configureExternalGAL"/>
+      <r n="checkExternalGALConfig"/>
     </rights>
   </right>
 
@@ -1541,6 +1545,7 @@
     <rights>
       <r n="setAdminConsoleDomainAuthenticationTab"/>
       <r n="viewAdminConsoleDomainAuthenticationTab"/>
+      <r n="checkExternalAuthConfig"/>
       <r n="configureExternalAuth"/>
     </rights>
   </right>
@@ -1749,7 +1754,7 @@
     </attrs>
   </right>
   <right name="adminConsoleServerInfoTabRights" type="combo">
-    <desc> Admin Console rights for Server Info Tab </desc>
+    <desc> Admin Console rights for Server ACL Tab </desc>
     <rights>
       <r n="setAdminConsoleServerInfoTab"/>
       <r n="viewAdminConsoleServerInfoTab"/>
@@ -1771,7 +1776,7 @@
     </attrs>
   </right>
   <right name="adminConsoleServerServicesTabRights" type="combo">
-    <desc> Admin Console rights for Server Services Tab </desc>
+    <desc> Admin Console rights for Server ACL Tab </desc>
     <rights>
       <r n="setAdminConsoleServerServicesTab"/>
       <r n="viewAdminConsoleServerServicesTab"/>
@@ -1806,7 +1811,7 @@
     </attrs>
   </right>
   <right name="adminConsoleServerMTATabRights" type="combo">
-    <desc> Admin Console rights for Server MTA Tab </desc>
+    <desc> Admin Console rights for Server ACL Tab </desc>
     <rights>
       <r n="setAdminConsoleServerMTATab"/>
       <r n="viewAdminConsoleServerMTATab"/>
@@ -1841,7 +1846,7 @@
     </attrs>
   </right>
   <right name="adminConsoleServerIMAPTabRights" type="combo">
-    <desc> Admin Console rights for Server IMAP Tab </desc>
+    <desc> Admin Console rights for Server ACL Tab </desc>
     <rights>
       <r n="setAdminConsoleServerIMAPTab"/>
       <r n="viewAdminConsoleServerIMAPTab"/>
@@ -1880,7 +1885,7 @@
     </attrs>
   </right>
   <right name="adminConsoleServerPOPTabRights" type="combo">
-    <desc> Admin Console rights for Server POP Tab </desc>
+    <desc> Admin Console rights for Server ACL Tab </desc>
     <rights>
       <r n="setAdminConsoleServerPOPTab"/>
       <r n="viewAdminConsoleServerPOPTab"/>
@@ -1903,13 +1908,12 @@
     </attrs>
   </right>
   <right name="adminConsoleServerVolumesTabRights" type="combo">
-    <desc> Admin Console rights for Server Volumes Tab </desc>
+    <desc> Admin Console rights for Server ACL Tab </desc>
     <rights>
       <r n="setAdminConsoleServerVolumesTab"/>
       <r n="viewAdminConsoleServerVolumesTab"/>
       <r n="manageVolume"/>
       <r n="flushCache"/>
-      <r n="applianceAll"/>
     </rights>
   </right>
 
@@ -1933,7 +1937,7 @@
     </attrs>
   </right>
   <right name="adminConsoleServerBackupRestoreTabRights" type="combo">
-    <desc> Admin Console rights for Server BackupRestore Tab </desc>
+    <desc> Admin Console rights for Server ACL Tab </desc>
     <rights>
       <r n="setAdminConsoleServerBackupRestoreTab"/>
       <r n="viewAdminConsoleServerBackupRestoreTab"/>
@@ -2422,86 +2426,11 @@
     <r n="listAlias"/>
     <r n="listDomain"/>
     <r n="deleteDomain"/>
+    <r n="createSubDomain"/>
     <r n="countAccount"/>
     <r n="checkDomainMXRecord"/>
   </rights>
 </right>
-
-<right type="combo" name="adminConsoleSavedSearchRights">
-  <desc>Admin Console Extension Rights</desc>
-  <rights>
-    <r n="setAdminSavedSearch"/>
-    <r n="viewAdminSavedSearch"/>
-  </rights>
-</right>
-<right name="adminConsoleCreateGALRights" type="setAttrs" targetType="account">
-  <desc> Admin Console set attr rights for create GAL sync account </desc>
-  <attrs>
-    <a n="zimbraIsSystemResource"/>
-    <a n="zimbraContactMaxNumEntries"/>
-  </attrs>
-</right>
-
-<right name="adminConsoleConfigGALRights" type="setAttrs" targetType="domain">
-  <desc> Admin Console set attr rights for configure GAL </desc>
-  <attrs>
-    <a n="zimbraGalAccountId"/>
-    <a n="zimbraGalMode"/>
-    <a n="zimbraGalLdapURL"/>
-    <a n="zimbraGalLdapSearchBase"/>
-    <a n="zimbraGalLdapBindDn"/>
-    <a n="zimbraGalLdapBindPassword"/>
-    <a n="zimbraGalLdapFilter"/>
-    <a n="zimbraGalAutoCompleteLdapFilter"/>
-    <a n="zimbraGalSyncLdapURL"/>
-    <a n="zimbraGalSyncLdapBindPassword"/>
-    <a n="zimbraGalSyncLdapBindDn"/>
-    <a n="zimbraGalSyncLdapFilter"/>
-    <a n="zimbraGalSyncLdapSearchBase"/>
-  </attrs>
-</right>
-
-<right type="combo" name="adminConsoleCreateTopDomainRights">
-  <!-- set on the global target -->
-  <desc>Admin Console Create Top Domain Rights</desc>
-  <rights>
-      <r n="createSubDomain"/>
-      <r n="createTopDomain"/>
-      <r n="adminConsoleCreateGALRights"/>
-      <r n="adminConsoleAccountRights"></r>
-      <r n="adminConsoleDLRights"></r>
-      <r n="adminConsoleResourceRights"></r>
-      <r n="adminConsoleAliasRights"></r>
-      <r n="adminConsoleSavedSearchRights"></r>
-      <r n="adminConsoleDomainRights"></r>
-  </rights>
-</right>
-
-
-<right type="combo" name="adminConsoleCreateSubDomainModifierRights">
-   <!-- set on the domain target with subDomain modifier * to allow da
-   have the same right on the subdomain -->
-  <desc>Admin Console Create Sub Domain Rights</desc>
-  <rights>
-       <r n="adminConsoleDomainRights"/>
-  </rights>
-</right>
-
-<right type="combo" name="adminConsoleCreateSubDomainRights">
-  <desc>Admin Console Create Sub Domain Account Rights</desc>
-  <rights>
-    <!-- View Accounts Button ?-->
-    <r n="adminConsoleAccountRights"></r>
-    <r n="adminConsoleDLRights"></r>
-    <r n="adminConsoleResourceRights"></r>
-    <r n="adminConsoleAliasRights"></r>
-    <r n="adminConsoleSavedSearchRights"></r>
-    <r n="adminConsoleDomainRights"></r>
-    <r n="adminConsoleCreateGALRights"></r>
-    <r n="createSubDomain"/>
-  </rights>
-</right>
-
 
 <right type="combo" name="adminConsoleServerRights">
   <desc>Admin Console Server Rights</desc>
@@ -2544,6 +2473,13 @@
   </rights>
 </right>
 
+<right type="combo" name="adminConsoleSavedSearchRights">
+  <desc>Admin Console Extension Rights</desc>
+  <rights>
+    <r n="setAdminSavedSearch"/>
+    <r n="viewAdminSavedSearch"/>
+  </rights>
+</right>
 
 <right type="combo" name="adminConsoleGlobalRights">
   <desc>Admin Console Global Rights</desc>
@@ -2666,17 +2602,8 @@
   </attrs>
 </right>
 
-<right type="combo" name="adminConsoleMigrationRights">
-  <desc>Rights for running migration tasks on a server through Admin Console</desc>
-  <rights>
-   <r n="listServer" />
-   <r n="getServer" />
-   <r n="createMigrationTask"/>   
-  </rights>
-</right>
-
 <right type="combo" name="adminConsoleSoftwareUpdatesRights">
-  <desc>Rights for configuring software updates component a server through Admin Console</desc>
+  <desc>Rights for configuring SSL certificate on a server through Admin Console</desc>
   <rights>
    <r n="listServer" />
    <r n="listAccount" />
@@ -2708,7 +2635,6 @@
     <r n="adminConsoleCrossMailboxSearchRights"/>
     <r n="adminConsoleSavedSearchRights"/>
     <r n="adminConsoleSoftwareUpdatesRights"/>
-    <r n="adminConsoleMigrationRights"/>
   </rights>
 </right>
 
