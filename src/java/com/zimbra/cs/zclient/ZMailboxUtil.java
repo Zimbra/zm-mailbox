@@ -194,9 +194,9 @@ public class ZMailboxUtil implements DebugListener {
         stdout.println("  -y/--authtoken {authtoken}               " + SoapCLI.OPT_AUTHTOKEN.getDescription());
         stdout.println("  -Y/--authtokenfile {authtoken file}      " + SoapCLI.OPT_AUTHTOKENFILE.getDescription());
         stdout.println("  -m/--mailbox  {name}                     mailbox to open");
-        stdout.println("     --auth     {name}                     account name to auth as; defaults to -m unless --nodelauth is used");
-        stdout.println("     --nodelauth                           don't do delegated auth; use admin auth in the requests instead");
-        stdout.println("                                           cannot be combined with --auth and requires admin auth");
+        stdout.println("     --auth     {name}                     account name to auth as; defaults to -m unless -A is used");
+        stdout.println("  -A/--admin-priv                          execute requests with admin privileges");
+        stdout.println("                                           requires -z or -a, and -m");
         stdout.println("  -p/--password {pass}                     auth password");
         stdout.println("  -P/--passfile {file}                     read password from file");
         stdout.println("  -t/--timeout                             timeout (in seconds)");
@@ -314,7 +314,7 @@ public class ZMailboxUtil implements DebugListener {
     }
 
     static Option O_AUTH = new Option(null, "auth", true, "account to auth as");
-    static Option O_NODELAUTH = new Option(null, "nodelauth", false, "don't do delegated auth; use admin auth in the requests instead");
+    static Option O_AS_ADMIN = new Option("A", "admin-priv", false, "execute requests with admin privileges");
     static Option O_AFTER = new Option("a", "after", true, "add after filter-name");
     static Option O_BEFORE = new Option("b", "before", true, "add before filter-name");
     static Option O_COLOR = new Option("c", "color", true, "color");
@@ -436,7 +436,7 @@ public class ZMailboxUtil implements DebugListener {
         REVOKE_PERMISSION("revokePermission", "rvp", "{account {name}|group {name}|domain {name}||all|public|guest {email} [{password}]|key {email} [{accesskey}] {[-]right}}", "revoke a right previously granted to a grantee or a group of grantees. to revoke a denied right, put a '-' in front of the right", Category.PERMISSION, 2, 4),
         SEARCH("search", "s", "{query}", "perform search", Category.SEARCH, 0, 1, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS, O_DUMPSTER),
         SEARCH_CONVERSATION("searchConv", "sc", "{conv-id} {query}", "perform search on conversation", Category.SEARCH, 0, 2, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),
-        SELECT_MAILBOX("selectMailbox", "sm", "{name}", "select a different mailbox. can only be used by an admin", Category.ADMIN, 1, 1, O_AUTH, O_NODELAUTH),
+        SELECT_MAILBOX("selectMailbox", "sm", "{name}", "select a different mailbox. can only be used by an admin", Category.ADMIN, 1, 1, O_AUTH, O_AS_ADMIN),
         SYNC_FOLDER("syncFolder", "sf", "{folder-path}", "synchronize folder's contents to the remote feed specified by folder's {url}", Category.FOLDER, 1, 1),
         TAG_CONTACT("tagContact", "tct", "{contact-ids} {tag-name} [0|1*]", "tag/untag contact(s)", Category.CONTACT, 2, 3),
         TAG_CONVERSATION("tagConversation", "tc", "{conv-ids} {tag-name} [0|1*]", "tag/untag conversation(s)", Category.CONVERSATION, 2, 3),
@@ -1862,7 +1862,7 @@ public class ZMailboxUtil implements DebugListener {
     private void doSelectMailbox(String[] args) throws ServiceException {
         String targetAccount = args[0];
         String authAccount;
-        if (mCommandLine.hasOption(O_NODELAUTH.getLongOpt())) {
+        if (mCommandLine.hasOption(O_AS_ADMIN.getLongOpt())) {
             authAccount = null;
         } else {
             authAccount = mCommandLine.getOptionValue(O_AUTH.getLongOpt());
@@ -2759,9 +2759,8 @@ public class ZMailboxUtil implements DebugListener {
         options.addOption("u", "url", true, "http[s]://host[:port] of server to connect to");
         options.addOption("r", "protocol", true, "protocol to use for request/response [soap11, soap12, json]");
         options.addOption("m", "mailbox", true, "mailbox to open");
-        options.addOption(null, "auth", true, "account name to auth as; defaults to -m unless --nodelauth is used");
-        options.addOption(null, "nodelauth", false, "don't do delegated auth; use admin auth in the requests instead");
-        options.addOption(null, "target", true, "target account name to which requests will be sent");
+        options.addOption(null, "auth", true, "account name to auth as; defaults to -m unless -A is used");
+        options.addOption("A", "admin-priv", false, "execute requests with admin privileges");
         options.addOption("p", "password", true, "auth password");
         options.addOption("P", "passfile", true, "filename with password in it");
         options.addOption("t", "timeout", true, "timeout (in seconds)");
@@ -2819,15 +2818,15 @@ public class ZMailboxUtil implements DebugListener {
             } else {
                 targetAccount = null;
             }
-            if ((cl.hasOption("nodelauth") || cl.hasOption("auth")) && !cl.hasOption('m')) {
-                throw ZClientException.CLIENT_ERROR("--nodelauth/--auth requires -m", null);
+            if ((cl.hasOption("A") || cl.hasOption("auth")) && !cl.hasOption('m')) {
+                throw ZClientException.CLIENT_ERROR("-A/--auth requires -m", null);
             }
-            if (cl.hasOption("nodelauth")) {
+            if (cl.hasOption("A")) {
                 if (!isAdmin) {
-                    throw ZClientException.CLIENT_ERROR("--nodelauth requires admin auth", null);
+                    throw ZClientException.CLIENT_ERROR("-A requires admin auth", null);
                 }
                 if (cl.hasOption("auth")) {
-                    throw ZClientException.CLIENT_ERROR("--nodelauth cannot be combined with --auth", null);
+                    throw ZClientException.CLIENT_ERROR("-A cannot be combined with --auth", null);
                 }
                 authAccount = null;
             } else if (cl.hasOption("auth")) {
