@@ -1040,7 +1040,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether IMAP is enabled for an account</desc>
 </attr>
 
-<attr id="175" name="zimbraPop3Enabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
+<attr id="175" name="zimbraPop3Enabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <defaultExternalCOSValue>FALSE</defaultExternalCOSValue>
   <desc>whether POP3 is enabled for an account</desc>
