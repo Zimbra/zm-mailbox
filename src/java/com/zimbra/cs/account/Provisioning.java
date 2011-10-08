@@ -44,7 +44,7 @@ import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.gal.GalSearchParams;
-import com.zimbra.cs.ldap.LdapTODO.ACLTODO;
+import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.admin.type.CmdRightsInfo;
@@ -920,17 +920,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return sb.toString();
     }
 
-    /**
-     * @param query LDAP search query
-     * @param returnAttrs list of attributes to return. uid is always included. null will return all attrs.
-     * @param sortAttr attr to sort on. if null, sorting will be by account name.
-     * @param sortAscending sort ascending (true) or descending (false).
-     * @param flags - whether to addtionally return distribution lists and/or aliases
-     * @return a list of all the accounts that matched.
-     * @throws ServiceException
-     */
-    public abstract List<NamedEntry> searchAccounts(String query, String returnAttrs[], 
-            String sortAttr, boolean sortAscending, int flags) throws ServiceException;
 
     public abstract List<Account> getAllAdminAccounts()  throws ServiceException;
 
@@ -1506,6 +1495,19 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract List getAllDistributionLists(Domain d) throws ServiceException;
 
 
+
+    /**
+     * @param query LDAP search query
+     * @param returnAttrs list of attributes to return. uid is always included. null will return all attrs.
+     * @param sortAttr attr to sort on. if null, sorting will be by account name.
+     * @param sortAscending sort ascending (true) or descending (false).
+     * @param flags - whether to addtionally return distribution lists and/or aliases
+     * @return a list of all the accounts that matched.
+     * @throws ServiceException
+     */
+    public abstract List<NamedEntry> searchAccounts(String query, String returnAttrs[], 
+            String sortAttr, boolean sortAscending, int flags) throws ServiceException;
+    
     /**
      * @param query LDAP search query
      * @param returnAttrs list of attributes to return. uid is always included.
@@ -1518,18 +1520,120 @@ public abstract class Provisioning extends ZAttrProvisioning {
             String sortAttr, boolean sortAscending, int flags) throws ServiceException;
 
     /**
-     * Search for all accunts on the server
+     * Search for all accunts on the server.  
+     * 
+     * Note: Sorting is not supported on APIs with a visitor.
      *
      * @param server
-     * @param opts  note: query in opts is ignored
+     * @param opts
      * @param visitor
      * @throws ServiceException
      */
-    public void searchAccountsOnServer(Server server, SearchOptions opts, NamedEntry.Visitor visitor) 
+    public void searchAccountsOnServer(Server server, SearchAccountsOptions opts, NamedEntry.Visitor visitor) 
+    throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+    
+    /**
+     * Search for all accunts on the server.
+     *
+     * @param server
+     * @param opts
+     * @param visitor
+     * @throws ServiceException
+     */
+    public List<NamedEntry> searchAccountsOnServer(Server server, SearchAccountsOptions opts) 
     throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
 
+    public static class SearchObjectsOptions {
+        public static final int ALL_RESULTS = 0;
+        public static final String[] ALL_ATTRS = null;
+        public static final String DEFAULT_SORT_ATTR = null;
+        
+        public static enum MakeObjectOpt {
+            ALL_DEFAULTS,
+            NO_DEFAULTS,
+            NO_SECONDARY_DEFAULTS
+        };
+        
+        public static enum SortOpt {
+            NO_SORT,
+            SORT_ASCENDING,
+            SORT_DESCENDING
+        };
+        
+        private boolean onMaster = false;
+        private final boolean useConnPool = true; // TODO: retire this
+        private int maxResults = ALL_RESULTS;
+        private String[] returnAttrs = ALL_ATTRS;
+        private MakeObjectOpt makeObjOpt = MakeObjectOpt.ALL_DEFAULTS;
+        private SortOpt sortOpt = SortOpt.NO_SORT;
+        private String mSortAttr = DEFAULT_SORT_ATTR;
+        
+        public SearchObjectsOptions() {
+        }
+        
+        public SearchObjectsOptions(String[] returnAttrs, MakeObjectOpt makeObjOpt) {
+            this.returnAttrs = returnAttrs;
+            this.makeObjOpt = makeObjOpt;
+        }
+        
+        public boolean getOnMaster() {
+            return onMaster;
+        }
+        
+        public boolean getUseConnPool() {
+            return useConnPool;
+        }
+        
+        public int getMaxResults() {
+            return maxResults;
+        }
+        
+        public String[] getReturnAttrs() {
+            return returnAttrs;
+        }
+        
+        public MakeObjectOpt getMakeObjectOpt() {
+            return makeObjOpt;
+        }
+        
+        public SortOpt getSortOpt() {
+            return sortOpt;
+        }
+        
+        public String getSortAttr() {
+            return mSortAttr;
+        }
+        
+    };
+    
+    public static class SearchAccountsOptions extends SearchObjectsOptions {
+        
+        // if set, search base is under the doamin tree
+        private Domain domain = null;
+        private boolean includeCalendarResources = true;
+        
+        public SearchAccountsOptions(String[] returnAttrs, MakeObjectOpt makeObjOpt) {
+            super(returnAttrs, makeObjOpt);
+        }
+        
+        public Domain getDomain() {
+            return getDomain();
+        }
+        
+        public void setIncludeCalendarResources(boolean includeCalendarResources) {
+            this.includeCalendarResources = includeCalendarResources;
+        }
+        
+        public boolean getIncludeCalendarResources() {
+            return includeCalendarResources;
+        }
+    }
+    
+    // TODO: RETIRE THIS, AND USE ONLY SearchObjectsOptions
     public static class SearchOptions {
         // pseudo attr name for target name
         // honored only for Alias entries

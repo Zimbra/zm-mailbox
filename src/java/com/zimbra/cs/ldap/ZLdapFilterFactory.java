@@ -36,6 +36,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         ACCOUNT_BY_MEMBEROF(SINGLETON.accountByMemberOf("{DYNAMIC-GROUP-ID}")),
         ACCOUNT_BY_NAME(SINGLETON.accountByName("{ACCOUNT-NAME}")),
         ACCOUNTS_HOMED_ON_SERVER(SINGLETON.accountsHomedOnServer("{SERVER-SERVICE-HOSTNAME}")),
+        ACCOUNTS_HOMED_ON_SERVER_ACCOUNTS_ONLY(SINGLETON.accountsHomedOnServerAccountsOnly("{SERVER-SERVICE-HOSTNAME}")),
         ACCOUNT_ON_SERVER_AND_COS_HAS_SUBORDINATES(SINGLETON.accountsOnServerAndCosHasSubordinates("{SERVER-SERVICE-HOSTNAME}", "{COS-ID}")),
         ADDRS_EXIST(SINGLETON.addrsExist(new String[]{"{ADDR-1}", "ADDR-2", "..."})),
         ADMIN_ACCOUNT_BY_ADMIN_FLAG(SINGLETON.adminAccountByAdminFlag()),
@@ -162,6 +163,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter adminAccountByRDN(String namingRdnAttr, String name);
     
     public abstract ZLdapFilter accountsHomedOnServer(String serverServiceHostname); 
+    public abstract ZLdapFilter accountsHomedOnServerAccountsOnly(String serverServiceHostname); // no calendar resources
     public abstract ZLdapFilter homedOnServer(String serverServiceHostname);
     public abstract ZLdapFilter accountsOnServerAndCosHasSubordinates(
             String serverServiceHostname, String cosId);

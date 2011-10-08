@@ -377,6 +377,7 @@ public class TestLdap {
         
         List<Class> classes = Lists.newArrayList();
         
+        /*
         classes.add(TestLdapHelper.class);
         classes.add(TestLdapProvAccount.class);
         classes.add(TestLdapProvAlias.class);
@@ -409,10 +410,11 @@ public class TestLdap {
         
         // Tests need server running
         classes.add(TestProvDelegatedDL.class);
+        */
         
         // old tests, TODO: convert them 
         classes.add(TestAccountLockout.class);
-        classes.add(TestACPermissionCache.class);
+        // classes.add(TestACPermissionCache.class);
         classes.add(TestACUserRights.class);
         classes.add(TestBuildInfo.class);
         classes.add(TestLdapBinary.class);

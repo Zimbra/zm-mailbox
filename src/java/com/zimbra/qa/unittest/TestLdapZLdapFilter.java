@@ -195,6 +195,17 @@ public class TestLdapZLdapFilter extends TestLdap {
     }
     
     @Test
+    public void accountsHomedOnServerAccountOnly() throws Exception {
+        Server SERVER = prov.getLocalServer();
+        
+        String filter = LegacyLdapFilter.accountsHomedOnServerAccountsOnly(SERVER.getServiceHostname());
+        ZLdapFilter zLdapFilter = filterDactory.accountsHomedOnServerAccountsOnly(SERVER.getServiceHostname());
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        verifyStatString(FilterId.ACCOUNTS_HOMED_ON_SERVER_ACCOUNTS_ONLY, zLdapFilter);
+    }
+    
+    @Test
     public void homedOnServer() throws Exception {
         Server SERVER = prov.getLocalServer();
         

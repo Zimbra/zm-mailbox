@@ -2,6 +2,7 @@ package com.zimbra.cs.account.ldap.upgrade;
 
 import java.util.Arrays;
 
+import com.zimbra.cs.account.FileGenUtil;
 import com.zimbra.cs.account.Entry.EntryType;
 
 
@@ -40,7 +41,9 @@ public class Description {
         printer.format("To value: %s\n", newValue == null ? "" : newValue);
         
         if (notes != null) {
-            printer.format("Notes: %s\n", notes);
+            // printer.format("Notes: %s\n", notes);
+            String formattedNotes = FileGenUtil.wrapComments((notes==null?"":notes), 70, "    ");
+            printer.format("Notes:\n%s\n", formattedNotes);
         }
         
         printer.println();

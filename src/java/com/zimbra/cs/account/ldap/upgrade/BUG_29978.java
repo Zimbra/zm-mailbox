@@ -21,14 +21,19 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Entry.EntryType;
 import com.zimbra.cs.account.Provisioning.MailMode;
+import com.zimbra.cs.account.ldap.entry.LdapDomain;
+import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapUsage;
+import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
+import com.zimbra.cs.ldap.ZSearchScope;
 
 public class BUG_29978 extends UpgradeOp {
 
@@ -55,8 +60,8 @@ public class BUG_29978 extends UpgradeOp {
         // zimbraPublicServiceHostname is not indexed, put objectClass=zimbraDomain in the front, objectClass is indexed.
         return "(&(objectClass=zimbraDomain)" + query + ")";
     }
-    
-    private static class DomainPuclicServiceProtocolAndPortVisitor implements NamedEntry.Visitor {
+        
+    private static class Bug29978Visitor extends SearchLdapOptions.SearchLdapVisitor {
         
         class ServerInfo {
             String mServerName;
@@ -75,8 +80,8 @@ public class BUG_29978 extends UpgradeOp {
         private Map<String, ServerInfo> serverMap; // map keyed by server.zimbraServiceHostname
         private int domainsVisited;
         
-        DomainPuclicServiceProtocolAndPortVisitor(UpgradeOp upgradeOp, ZLdapContext modZlc, 
-                List<Server> servers) {
+        Bug29978Visitor(UpgradeOp upgradeOp, ZLdapContext modZlc, List<Server> servers) {
+            super(false);
             this.upgradeOp = upgradeOp;
             this.modZlc = modZlc;
             
@@ -134,16 +139,23 @@ public class BUG_29978 extends UpgradeOp {
             }
         }
         
-        public void visit(NamedEntry entry) {
-            if (!(entry instanceof Domain)) {
-                // should not happen
-                upgradeOp.printer.println("Encountered non domain object: " + entry.getName() + ", skipping");
-                return;
+        @Override
+        public void visit(String dn, IAttributes ldapAttrs) {
+            Domain domain;
+            try {
+                domain = new LdapDomain(dn, (ZAttributes)ldapAttrs, 
+                        upgradeOp.prov.getConfig().getDomainDefaults(), upgradeOp.prov);
+                visit(domain);
+            } catch (ServiceException e) {
+                upgradeOp.printer.println("entry skipped, encountered error while processing entry at:" + dn);
+                upgradeOp.printer.printStackTrace(e);
             }
             
-            domainsVisited++;
+        }
+        
+        private void visit(Domain domain) {
             
-            Domain domain = (Domain)entry;
+            domainsVisited++;
             
             String domainPublicHostname = domain.getAttr(Provisioning.A_zimbraPublicServiceHostname);
             String domainPublicProtocol = domain.getAttr(Provisioning.A_zimbraPublicServiceProtocol);
@@ -213,13 +225,9 @@ public class BUG_29978 extends UpgradeOp {
     }
     
     /**
-     * bug 29978
-     * 
      * for each domain, if domain has zimbraPublicServiceHostname, and that zPSH has a 
      * corresponding zimbraServer, then set public service port/protocol on domain from 
      * that zimbraServer.
-     * 
-     * @throws ServiceException
      */
     @Override
     void doUpgrade() throws ServiceException {
@@ -237,11 +245,9 @@ public class BUG_29978 extends UpgradeOp {
                                        Provisioning.A_zimbraPublicServicePort};
         
         ZLdapContext zlc = null; 
-        DomainPuclicServiceProtocolAndPortVisitor visitor = null;
+        Bug29978Visitor visitor = new Bug29978Visitor(this, zlc, servers);
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.UPGRADE);
-            
-            visitor = new DomainPuclicServiceProtocolAndPortVisitor(this, zlc, servers);
             
             for (String base : bases) {
                 // should really have one base, but iterate thought the arrya anyway
@@ -250,22 +256,33 @@ public class BUG_29978 extends UpgradeOp {
                     printer.println("LDAP search query: " + query);
                     printer.println();
                 }
+
+                SearchLdapOptions searchOpts = new SearchLdapOptions(base, getFilter(query), 
+                        attrs, SearchLdapOptions.SIZE_UNLIMITED, null, 
+                        ZSearchScope.SEARCH_SCOPE_SUBTREE, visitor);
                 
-                prov.searchObjects(query, attrs, base,
-                                    Provisioning.SO_NO_FIXUP_OBJECTCLASS | Provisioning.SO_NO_FIXUP_RETURNATTRS, // turn off fixup for objectclass and return attrs
-                                    visitor, 
-                                    0,      // return all entries that satisfy filter.
-                                    false,  // do not use connection pool, for the OpenLdap bug (see bug 24168) might still be there
-                                    true);  // use LDAP master
-             
+                zlc.searchPaged(searchOpts);
             }
         } finally {
             LdapClient.closeContext(zlc);
-            if (visitor != null)
-                visitor.reportStat();
+            visitor.reportStat();
         }
     }
     
+    @Override
+    Description getDescription() {
+        return new Description(
+                this, 
+                new String[] {Provisioning.A_zimbraPublicServiceProtocol, Provisioning.A_zimbraPublicServicePort}, 
+                new EntryType[] {EntryType.DOMAIN},
+                null, 
+                String.format("value of %s and %s on the matching server",
+                        Provisioning.A_zimbraPublicServiceProtocol, 
+                        Provisioning.A_zimbraPublicServicePort),  
+                "For each domain, if domain has zimbraPublicServiceHostname, " +
+                "and that zPSH has a corresponding zimbraServer, then set " + 
+                "public service port/protocol on domain from that zimbraServer.");
+    }
     
     /* =============
      *   testers
@@ -320,7 +337,7 @@ public class BUG_29978 extends UpgradeOp {
         return prov.createDomain(domainName, attrs);
     }
     
-    private static final int NUM_DOMAIN_SETS = 1;
+    private static final int NUM_DOMAIN_SETS = 10;
     
     private void populateTestData() throws ServiceException {
         
@@ -381,6 +398,15 @@ public class BUG_29978 extends UpgradeOp {
         }
         
         printer.println("\ndone");
+    }
+    
+    public static void main(String[] args) throws Exception {
+        BUG_29978 op = (BUG_29978)LdapUpgrade.getUpgradeOpUnitTest("29978");
+         
+        // op.describe();
+        // op.populateTestData();
+        
+        op.doUpgrade();
     }
 
 }

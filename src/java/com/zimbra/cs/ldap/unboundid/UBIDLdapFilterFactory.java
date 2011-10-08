@@ -293,6 +293,15 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         FILTER_ALL_ACCOUNTS,
                         ((UBIDLdapFilter) homedOnServer(serverServiceHostname)).getNative()));
     }
+    
+    @Override
+    public ZLdapFilter accountsHomedOnServerAccountsOnly(String serverServiceHostname) {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_HOMED_ON_SERVER_ACCOUNTS_ONLY,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        ((UBIDLdapFilter) homedOnServer(serverServiceHostname)).getNative()));
+    }
 
     @Override
     public ZLdapFilter homedOnServer(String serverServiceHostname) {

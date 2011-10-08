@@ -21,35 +21,48 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Entry.EntryType;
+import com.zimbra.cs.account.ldap.entry.LdapDomain;
+import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapUsage;
+import com.zimbra.cs.ldap.SearchLdapOptions;
+import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
+import com.zimbra.cs.ldap.ZSearchScope;
 
 public class BUG_32557 extends UpgradeOp {
     
-    private static class AddDomainObjectClassAmavisAccountVisitor implements NamedEntry.Visitor {
+    private static class Bug32557Visitor extends SearchLdapOptions.SearchLdapVisitor {
         
         private UpgradeOp upgradeOp;
         private ZLdapContext modZlc;
         
         private int mDomainsVisited;
     
-        AddDomainObjectClassAmavisAccountVisitor(UpgradeOp upgradeOp, ZLdapContext modZlc) {
+        Bug32557Visitor(UpgradeOp upgradeOp, ZLdapContext modZlc) {
+            super(false);
             this.upgradeOp = upgradeOp;
             this.modZlc = modZlc;
         }
         
-        public void visit(NamedEntry entry) {
-            if (!(entry instanceof Domain)) {
-                // should not happen
-                upgradeOp.printer.println("Encountered non domain object: " + entry.getName() + ", skipping");
-                return;
+        @Override
+        public void visit(String dn, IAttributes ldapAttrs) {
+            Domain domain;
+            try {
+                domain = new LdapDomain(dn, (ZAttributes)ldapAttrs, 
+                        upgradeOp.prov.getConfig().getDomainDefaults(), upgradeOp.prov);
+                visit(domain);
+            } catch (ServiceException e) {
+                upgradeOp.printer.println("entry skipped, encountered error while processing entry at:" + dn);
+                upgradeOp.printer.printStackTrace(e);
             }
             
+        }
+        
+        private void visit(Domain domain) {
             mDomainsVisited++;
-            
-            Domain domain = (Domain)entry;
             
             Map<String, Object> attrs = new HashMap<String, Object>(); 
             attrs.put("+" + Provisioning.A_objectClass, "amavisAccount");
@@ -73,11 +86,8 @@ public class BUG_32557 extends UpgradeOp {
     }
     
     /**
-     * bug 32557
-     * 
      * Add objectClass=amavisAccount to all existing domains
      * 
-     * @throws ServiceException
      */
     @Override
     void doUpgrade() throws ServiceException {
@@ -89,12 +99,10 @@ public class BUG_32557 extends UpgradeOp {
                                        Provisioning.A_zimbraDomainName};
                 
         ZLdapContext zlc = null; 
-        AddDomainObjectClassAmavisAccountVisitor visitor = null;
+        Bug32557Visitor visitor = new Bug32557Visitor(this, zlc);
         
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.UPGRADE);
-            
-            visitor = new AddDomainObjectClassAmavisAccountVisitor(this, zlc);
             
             for (String base : bases) {
                 // should really have one base, but iterate thought the array anyway
@@ -104,12 +112,11 @@ public class BUG_32557 extends UpgradeOp {
                     printer.println();
                 }
                 
-                prov.searchObjects(query, attrs, base,
-                                    Provisioning.SO_NO_FIXUP_OBJECTCLASS | Provisioning.SO_NO_FIXUP_RETURNATTRS, // turn off fixup for objectclass and return attrs
-                                    visitor, 
-                                    0,      // return all entries that satisfy filter.
-                                    false,  // do not use connection pool, for the OpenLdap bug (see bug 24168) might still be there
-                                    true);  // use LDAP master
+                SearchLdapOptions searchOpts = new SearchLdapOptions(base, getFilter(query), 
+                        attrs, SearchLdapOptions.SIZE_UNLIMITED, null, 
+                        ZSearchScope.SEARCH_SCOPE_SUBTREE, visitor);
+                
+                zlc.searchPaged(searchOpts);
              
             }
         } finally {
@@ -117,6 +124,17 @@ public class BUG_32557 extends UpgradeOp {
             if (visitor != null)
                 visitor.reportStat();
         }
+    }
+    
+    @Override
+    Description getDescription() {
+        return new Description(
+                this, 
+                new String[] {Provisioning.A_objectClass}, 
+                new EntryType[] {EntryType.DOMAIN},
+                null, 
+                "amavisAccount",  
+                "Add objectClass=amavisAccount to all existing domains.");
     }
 
 }

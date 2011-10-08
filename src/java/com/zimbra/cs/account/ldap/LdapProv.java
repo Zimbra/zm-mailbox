@@ -136,13 +136,5 @@ public abstract class LdapProv extends Provisioning {
     public abstract void searchLdapOnReplica(String base, ZLdapFilter filter, 
             String[] returnAttrs, SearchLdapOptions.SearchLdapVisitor visitor) 
     throws ServiceException;
-    
-    
-    /*
-     * Only used in upgrade.  DO NOT use it.
-     * TODO: retire it!
-     */
-    public abstract void searchObjects(String query, String returnAttrs[], String base, int flags,
-            NamedEntry.Visitor visitor, int maxResults, boolean useConnPool, boolean useMaster) 
-    throws ServiceException;
+
 }

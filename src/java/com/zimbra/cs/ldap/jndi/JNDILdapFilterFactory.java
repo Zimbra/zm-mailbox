@@ -112,6 +112,11 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter accountsHomedOnServer(String serverServiceHostname) {
         return new JNDILdapFilter(LegacyLdapFilter.accountsHomedOnServer(serverServiceHostname));
     }
+    
+    @Override
+    public ZLdapFilter accountsHomedOnServerAccountsOnly(String serverServiceHostname) {
+        return new JNDILdapFilter(LegacyLdapFilter.accountsHomedOnServerAccountsOnly(serverServiceHostname));
+    }
 
     @Override
     public ZLdapFilter homedOnServer(String serverName) {

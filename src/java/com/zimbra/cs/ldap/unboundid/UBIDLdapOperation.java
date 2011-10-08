@@ -260,11 +260,7 @@ abstract class UBIDLdapOperation {
             long startTime = System.currentTimeMillis();
             try {
                 result = ctx.getConn().search(searchRequest);
-                if (zFilter == null) {
-                    stat(startTime);
-                } else {
-                    searchStat(startTime, zFilter.getStatString());
-                }
+                searchStat(startTime, zFilter.getStatString());
                 return result;
             } finally {
                 if (debugEnabled()) {

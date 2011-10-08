@@ -120,11 +120,6 @@ public class SearchLdapOptions {
     public SearchLdapOptions(String searchbase, ZLdapFilter filter, 
             String[] returnAttrs, int maxResults, Set<String> binaryAttrs, 
             ZSearchScope searchScope, SearchLdapOptions.SearchLdapVisitor visitor) {
-        /*
-        this(searchbase, filter.toFilterString(), // TODO: store ZLdapFilter instead of converting to String
-             returnAttrs, maxResults, binaryAttrs, searchScope, visitor);
-         */
-        
         setSearchBase(searchbase);
         setFilter(filter);
         setReturnAttrs(returnAttrs);

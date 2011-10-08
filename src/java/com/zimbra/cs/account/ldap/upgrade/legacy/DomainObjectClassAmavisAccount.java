@@ -106,7 +106,7 @@ public class DomainObjectClassAmavisAccount extends LegacyLdapUpgrade {
                     System.out.println();
                 }
                 
-                mProv.searchObjects(query, attrs, base,
+                ((LegacyLdapProvisioning) mProv).searchObjects(query, attrs, base,
                                     Provisioning.SO_NO_FIXUP_OBJECTCLASS | Provisioning.SO_NO_FIXUP_RETURNATTRS, // turn off fixup for objectclass and return attrs
                                     visitor, 
                                     0,      // return all entries that satisfy filter.

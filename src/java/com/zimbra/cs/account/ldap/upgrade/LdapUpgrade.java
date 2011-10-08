@@ -78,6 +78,10 @@ public class LdapUpgrade {
         }
     }
     
+    static UpgradeOp getUpgradeOpUnitTest(String bug) throws ServiceException {
+        return getUpgradeOp(bug,  printer);
+    }
+    
     private static UpgradeOp getUpgradeOp(String bug, LdapUpgradePrinter printer) 
     throws ServiceException {
         UpgradeTask upgradeTask = UpgradeTask.getTaskByBug(bug);

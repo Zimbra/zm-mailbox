@@ -1267,19 +1267,6 @@ public class LegacyLdapProvisioning extends LdapProv {
         return (List<NamedEntry>) searchAccountsInternal(query, returnAttrs, sortAttr, sortAscending, flags);
     }
 
-    @Override
-    public void searchAccountsOnServer(Server server, SearchOptions opts, NamedEntry.Visitor visitor) throws ServiceException {
-        String base = getDIT().mailBranchBaseDN();
-
-        // searchObjects put the caller's query before objectClass.
-        // objectClass is indexed but zimbraMailHost is not.
-        // put together the query here
-        String query = "(&(objectclass=zimbraAccount)(" + Provisioning.A_zimbraMailHost + "=" + server.getName() + "))";
-
-        int flags = opts.getFlags() | Provisioning.SO_NO_FIXUP_OBJECTCLASS;
-        searchObjects(query, opts.getReturnAttrs(), base, flags, visitor, opts.getMaxResults(), true, opts.getOnMaster());
-    }
-
     private List<?> searchAccountsInternal(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, int flags)
         throws ServiceException
     {
@@ -1419,7 +1406,6 @@ public class LegacyLdapProvisioning extends LdapProv {
         searchObjects(query, returnAttrs, base, flags, visitor, maxResults, true, false);
     }
 
-    @Override  // from LdapProv
     public void searchObjects(String query, String returnAttrs[], String base, int flags,
             NamedEntry.Visitor visitor, int maxResults,
             boolean useConnPool, boolean useMaster) throws ServiceException {
@@ -5127,13 +5113,13 @@ public class LegacyLdapProvisioning extends LdapProv {
 
     @Override
     public List<?> getAllAccounts(Domain d) throws ServiceException {
-        return searchAccounts(d, mDIT.filterAccountsByDomain(d, false), null, null, true, Provisioning.SD_ACCOUNT_FLAG);
+        return searchAccounts(d, mDIT.filterAccountsByDomain(d), null, null, true, Provisioning.SD_ACCOUNT_FLAG);
     }
 
     @Override
     public void getAllAccounts(Domain d, NamedEntry.Visitor visitor) throws ServiceException {
         LdapDomain ld = (LdapDomain) d;
-        searchObjects(mDIT.filterAccountsByDomain(d, false), null, mDIT.domainDNToAccountSearchDN(ld.getDN()), Provisioning.SD_ACCOUNT_FLAG, visitor, 0);
+        searchObjects(mDIT.filterAccountsByDomain(d), null, mDIT.domainDNToAccountSearchDN(ld.getDN()), Provisioning.SD_ACCOUNT_FLAG, visitor, 0);
     }
 
     @Override
@@ -5148,7 +5134,7 @@ public class LegacyLdapProvisioning extends LdapProv {
 
     private void getAllAccountsInternal(Domain d, Server s, NamedEntry.Visitor visitor, boolean noDefaults) throws ServiceException {
         LdapDomain ld = (LdapDomain) d;
-        String filter = mDIT.filterAccountsByDomain(d, false);
+        String filter = mDIT.filterAccountsByDomain(d);
         if (s != null) {
             String serverFilter = LegacyLdapFilter.homedOnServer(s.getServiceHostname());
             if (StringUtil.isNullOrEmpty(filter))
@@ -7109,8 +7095,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     @Override
     public CountAccountResult countAccount(Domain domain) throws ServiceException {
         CountAccountVisitor visitor = new CountAccountVisitor(this);
-        // getAllAccounts(domain, visitor);
-        searchObjects(mDIT.filterAccountsByDomain(domain, false),
+        searchObjects(mDIT.filterAccountsByDomain(domain),
                       new String[]{Provisioning.A_zimbraCOSId, Provisioning.A_zimbraIsSystemResource},
                       mDIT.domainDNToAccountSearchDN(((LdapDomain)domain).getDN()),
                       Provisioning.SD_ACCOUNT_FLAG,

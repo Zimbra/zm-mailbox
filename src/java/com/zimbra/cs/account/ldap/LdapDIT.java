@@ -311,22 +311,11 @@ public class LdapDIT {
     /*
      * returns the search filter for getting all accounts on a domain
      * 
-     * if includeObjectClass is true, the filter will include objectclass,
-     * if includeObjectClass is false, the filter will not include objectclass
-     * 
-     * false should be passed for searches that already specifies a flag, so 
-     * the objectclass will be automatically computed by getObjectClassQuery 
-     * in searchObjects, otherwise it will result in an extra & with the object 
-     * class (see LdapProvisioning.searchObjects), which will degrade perf. 
-     * 
      * domain parameter is not used in default DIT because the search base is 
      * restricted to the domain dn. 
      */
-    public String filterAccountsByDomain(Domain domain, boolean includeObjectClass) {
-        if (includeObjectClass)
-            return "(objectclass=zimbraAccount)";
-        else
-            return "";
+    public String filterAccountsByDomain(Domain domain) {
+        return "";
     }
     
    

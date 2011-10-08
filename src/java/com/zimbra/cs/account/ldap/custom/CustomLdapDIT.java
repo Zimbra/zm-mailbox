@@ -226,13 +226,8 @@ public class CustomLdapDIT extends LdapDIT {
     }
     
     @Override
-    public String filterAccountsByDomain(Domain domain, boolean includeObjectClass) {
-        String filter = "(zimbraMailDeliveryAddress=*@" + domain.getName() + ")";
-        
-        if (includeObjectClass)
-            return "(&(objectclass=zimbraAccount)" + filter + ")";
-        else
-            return filter;
+    public String filterAccountsByDomain(Domain domain) {
+        return "(zimbraMailDeliveryAddress=*@" + domain.getName() + ")";
     }
 
     

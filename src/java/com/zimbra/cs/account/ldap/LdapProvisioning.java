@@ -54,6 +54,9 @@ import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.DomainCache.GetFromDomainCacheOption;
 import com.zimbra.cs.account.NamedEntry.Visitor;
+import com.zimbra.cs.account.Provisioning.SearchAccountsOptions;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.MakeObjectOpt;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.PermissionCache;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -1205,19 +1208,48 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    public void searchAccountsOnServer(Server server, SearchOptions opts, NamedEntry.Visitor visitor)
+    public List<NamedEntry> searchAccounts(Domain d, String query, String returnAttrs[], String sortAttr,
+            boolean sortAscending, int flags) throws ServiceException {
+        return searchDomainedObjects(d, query, returnAttrs, sortAttr, sortAscending, flags);
+    }
+    
+    @Override
+    public void searchAccountsOnServer(Server server, SearchAccountsOptions opts, 
+            NamedEntry.Visitor visitor)
     throws ServiceException {
-        String base = getDIT().mailBranchBaseDN();
-
-        // searchObjects put the caller's query before objectClass.
-        // objectClass is indexed but zimbraMailHost is not.
-        // put together the query here
-        String query = "(&(objectclass=zimbraAccount)(" + Provisioning.A_zimbraMailHost + "=" + server.getName() + "))";
-
-        int flags = opts.getFlags() | Provisioning.SO_NO_FIXUP_OBJECTCLASS;
-        searchObjects(query, opts.getReturnAttrs(), base, flags, visitor, opts.getMaxResults(), true, opts.getOnMaster());
+        searchAccountsOnServerInternal(server, opts, visitor);
+    }
+    
+    @Override
+    public List<NamedEntry> searchAccountsOnServer(Server server, SearchAccountsOptions opts) 
+    throws ServiceException {
+        return searchAccountsOnServerInternal(server, opts, null);
     }
 
+    private List<NamedEntry> searchAccountsOnServerInternal(Server server, 
+            SearchAccountsOptions opts, NamedEntry.Visitor visitor) 
+    throws ServiceException {
+        Domain domain = opts.getDomain();
+        
+        String base;
+        if (domain != null) {
+            base = mDIT.domainDNToAccountSearchDN(((LdapDomain) domain).getDN());
+        } else {
+            base = mDIT.mailBranchBaseDN();
+        }
+        
+        ZLdapFilter filter = opts.getIncludeCalendarResources() ? 
+                filterFactory.accountsHomedOnServer(server.getServiceHostname()) :
+                filterFactory.accountsHomedOnServerAccountsOnly(server.getServiceHostname());
+                
+        String[] returnAttrs = opts.getIncludeCalendarResources() ? 
+                fixReturnAttrs(opts.getReturnAttrs(), Provisioning.SD_ACCOUNT_FLAG | Provisioning.SD_CALENDAR_RESOURCE_FLAG) :
+                fixReturnAttrs(opts.getReturnAttrs(), Provisioning.SD_ACCOUNT_FLAG);
+
+        return searchObjects(base, filter, returnAttrs, opts, visitor);        
+    }
+    
+    
     private List<?> searchAccountsInternal(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, int flags)
         throws ServiceException
     {
@@ -1285,7 +1317,7 @@ public class LdapProvisioning extends LdapProv {
         return oc.toString();
     }
 
-    List<NamedEntry> searchObjects(String query, String returnAttrs[],
+    private List<NamedEntry> searchObjects(String query, String returnAttrs[],
             final String sortAttr, final boolean sortAscending, String base,
             int flags, int maxResults) throws ServiceException {
         return searchObjects(query, returnAttrs, sortAttr, sortAscending,
@@ -1338,7 +1370,7 @@ public class LdapProvisioning extends LdapProv {
         }
     };
 
-    List<NamedEntry> searchObjects(String query, String returnAttrs[],
+    private List<NamedEntry> searchObjects(String query, String returnAttrs[],
             final String sortAttr, final boolean sortAscending, String[] bases,
             int flags, int maxResults, boolean useConnPool, boolean useMaster)
     throws ServiceException {
@@ -1354,17 +1386,20 @@ public class LdapProvisioning extends LdapProv {
         if (bases == null || bases.length == 0)
             searchObjects(query, returnAttrs, "", flags, visitor, maxResults, useConnPool, useMaster);
         else {
-            for (String base : bases)
+            for (String base : bases) {
                 searchObjects(query, returnAttrs, base, flags, visitor, maxResults, useConnPool, useMaster);
+            }
         }
 
-        NamedEntryComparator comparator = new NamedEntryComparator(Provisioning.getInstance(), sortAttr, sortAscending);
+        NamedEntryComparator comparator = 
+            new NamedEntryComparator(Provisioning.getInstance(), sortAttr, sortAscending);
         Collections.sort(result, comparator);
         return result;
     }
 
-    void searchObjects(String query, String returnAttrs[], String base, int flags, NamedEntry.Visitor visitor, int maxResults)
-        throws ServiceException {
+    private void searchObjects(String query, String returnAttrs[], String base, int flags, 
+            NamedEntry.Visitor visitor, int maxResults)
+    throws ServiceException {
         searchObjects(query, returnAttrs, base, flags, visitor, maxResults, true, false);
     }
 
@@ -1375,18 +1410,19 @@ public class LdapProvisioning extends LdapProv {
         private String configBranchBaseDn;
         private NamedEntry.Visitor visitor;
         private int maxResults;
-        private int flags;
+        private MakeObjectOpt makeObjOpt;
 
         private int total = 0;
 
-        private SearchObjectsVisitor(LdapProvisioning prov, NamedEntry.Visitor visitor, int maxResults, int flags) {
+        private SearchObjectsVisitor(LdapProvisioning prov, NamedEntry.Visitor visitor, 
+                int maxResults, MakeObjectOpt makeObjOpt) {
             super(false);
 
             this.prov = prov;
             configBranchBaseDn = prov.getDIT().configBranchBaseDN();
             this.visitor = visitor;
             this.maxResults = maxResults;
-            this.flags = flags;
+            this.makeObjOpt = makeObjOpt;
         }
 
         @Override
@@ -1420,7 +1456,7 @@ public class LdapProvisioning extends LdapProv {
             ZAttributes attrs = (ZAttributes)ldapAttrs;
 
             if (objectclass == null || objectclass.contains(AttributeClass.OC_zimbraAccount))
-                visitor.visit(prov.makeAccount(dn, attrs, flags));
+                visitor.visit(prov.makeAccount(dn, attrs, makeObjOpt));
             else if (objectclass.contains(AttributeClass.OC_zimbraAlias))
                 visitor.visit(prov.makeAlias(dn, attrs));
             else if (objectclass.contains(AttributeClass.OC_zimbraDistributionList))
@@ -1435,8 +1471,7 @@ public class LdapProvisioning extends LdapProv {
 
     }
 
-    @Override // from LdapProv
-    public void searchObjects(String query, String returnAttrs[], String base, int flags,
+    private void searchObjects(String query, String returnAttrs[], String base, int flags,
             NamedEntry.Visitor visitor, int maxResults, boolean useConnPool, boolean useMaster)
     throws ServiceException {
 
@@ -1458,8 +1493,18 @@ public class LdapProvisioning extends LdapProv {
             returnAttrs = fixReturnAttrs(returnAttrs, flags);
         }
 
+        /*
+         * convert the legacy flags to MakeObjectOpt, eventualy retire this API
+         */
+        MakeObjectOpt makeObjOpt = null;
+        if ((flags & Provisioning.SO_NO_ACCOUNT_DEFAULTS) != 0) {
+            makeObjOpt = MakeObjectOpt.NO_DEFAULTS;
+        } else if ((flags & Provisioning.SO_NO_ACCOUNT_SECONDARY_DEFAULTS) != 0) {
+            makeObjOpt = MakeObjectOpt.NO_SECONDARY_DEFAULTS;
+        }
+        
         SearchObjectsVisitor searchObjectsVisitor =
-            new SearchObjectsVisitor(this, visitor, maxResults, flags);
+            new SearchObjectsVisitor(this, visitor, maxResults, makeObjOpt);
 
         SearchLdapOptions searchObjectsOptions = new SearchLdapOptions(base, query,
                 returnAttrs, maxResults, null, ZSearchScope.SEARCH_SCOPE_SUBTREE,
@@ -1468,7 +1513,6 @@ public class LdapProvisioning extends LdapProv {
         ZLdapContext zlc = null;
         try {
             zlc = LdapClient.getContext(LdapServerType.get(useMaster), useConnPool, LdapUsage.SEARCH);
-
             zlc.searchPaged(searchObjectsOptions);
         } catch (LdapSizeLimitExceededException e) {
             throw AccountServiceException.TOO_MANY_SEARCH_RESULTS("too many search results returned", e);
@@ -1480,9 +1524,78 @@ public class LdapProvisioning extends LdapProv {
     }
 
     /**
-     * add "uid" to list of return attrs if not specified, since we need it to construct an Account
+     * 
+     * @param base
+     * @param filter
      * @param returnAttrs
-     * @return
+     * @param opts
+     * @param visitor
+     * @return null if visitor is not null, List<NamedEntry> if visitor is null
+     * @throws ServiceException
+     */
+    private List<NamedEntry> searchObjects(String base, ZLdapFilter filter, String returnAttrs[], 
+            SearchObjectsOptions opts, NamedEntry.Visitor visitor)
+    throws ServiceException {
+        
+        if (visitor != null) {
+            if (opts.getSortOpt() != SortOpt.NO_SORT) {
+                throw ServiceException.INVALID_REQUEST("Sorting is not supported with visitor interface", null);
+            }
+            searchLdapObjects(base, filter, returnAttrs, opts, visitor);
+            return null;
+        } else {
+            final List<NamedEntry> result = new ArrayList<NamedEntry>();
+            
+            NamedEntry.Visitor listBackedVisitor = new NamedEntry.Visitor() {
+                @Override
+                public void visit(NamedEntry entry) {
+                    result.add(entry);
+                }
+            };
+            
+            searchLdapObjects(base, filter, returnAttrs, opts, listBackedVisitor);
+            
+            if (opts.getSortOpt() == SortOpt.NO_SORT) {
+                return result;
+            } else {
+                NamedEntryComparator comparator = 
+                    new NamedEntryComparator(this, 
+                            opts.getSortAttr(), opts.getSortOpt()==SortOpt.SORT_ASCENDING);
+                Collections.sort(result, comparator);
+                return result;
+            }
+        }   
+    }
+    
+    private void searchLdapObjects(String base, ZLdapFilter filter, String returnAttrs[], 
+            SearchObjectsOptions opts, NamedEntry.Visitor visitor)
+    throws ServiceException {
+
+        SearchObjectsVisitor searchObjectsVisitor =
+            new SearchObjectsVisitor(this, visitor, opts.getMaxResults(), opts.getMakeObjectOpt());
+
+        SearchLdapOptions searchObjectsOptions = new SearchLdapOptions(base, filter,
+                returnAttrs, opts.getMaxResults(), null, ZSearchScope.SEARCH_SCOPE_SUBTREE,
+                searchObjectsVisitor) ;
+
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.get(opts.getOnMaster()), opts.getUseConnPool(), LdapUsage.SEARCH);
+            zlc.searchPaged(searchObjectsOptions);
+        } catch (LdapSizeLimitExceededException e) {
+            throw AccountServiceException.TOO_MANY_SEARCH_RESULTS("too many search results returned", e);
+        } catch (ServiceException e) {
+            throw ServiceException.FAILURE("unable to list all objects", e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+    }
+
+    /*
+     * add required attrs to list of return attrs if not specified, 
+     * since we need them to construct an Entry
+     * 
+     * TODO: return flags and use a cleaner API
      */
     private String[] fixReturnAttrs(String[] returnAttrs, int flags) {
         if (returnAttrs == null || returnAttrs.length == 0)
@@ -4682,14 +4795,14 @@ public class LdapProvisioning extends LdapProv {
     }
 
     private Account makeAccount(String dn, ZAttributes attrs) throws ServiceException {
-        return makeAccount(dn, attrs, 0);
+        return makeAccount(dn, attrs, null);
     }
 
     private Account makeAccountNoDefaults(String dn, ZAttributes attrs) throws ServiceException {
-        return makeAccount(dn, attrs, Provisioning.SO_NO_ACCOUNT_DEFAULTS | Provisioning.SO_NO_ACCOUNT_SECONDARY_DEFAULTS);
+        return makeAccount(dn, attrs, MakeObjectOpt.NO_DEFAULTS);
     }
 
-    private Account makeAccount(String dn, ZAttributes attrs, int flags) throws ServiceException {
+    private Account makeAccount(String dn, ZAttributes attrs, MakeObjectOpt makeObjOpt) throws ServiceException {
         String userType = attrs.getAttrString(Provisioning.A_zimbraAccountCalendarUserType);
         boolean isAccount = (userType == null) || userType.equals(AccountCalendarUserType.USER.toString());
 
@@ -4700,21 +4813,19 @@ public class LdapProvisioning extends LdapProv {
         Account acct = (isAccount) ? new LdapAccount(dn, emailAddress, attrs, null, this) :
             new LdapCalendarResource(dn, emailAddress, attrs, null, this);
 
-        setAccountDefaults(acct, flags);
+        setAccountDefaults(acct, makeObjOpt);
 
         return acct;
     }
 
-    private void setAccountDefaults(Account acct, int flags) throws ServiceException {
-        boolean setDefaults = (flags & Provisioning.SO_NO_ACCOUNT_DEFAULTS) == 0;
-
-        if (!setDefaults) {
-            return;
+    private void setAccountDefaults(Account acct, MakeObjectOpt makeObjOpt) throws ServiceException {
+        if (makeObjOpt == MakeObjectOpt.NO_DEFAULTS) {
+            // don't set any default
+        } else if (makeObjOpt == MakeObjectOpt.NO_SECONDARY_DEFAULTS) {
+            acct.setAccountDefaults(false);
+        } else {
+            acct.setAccountDefaults(true);
         }
-
-        boolean setSecondaryDefaults = (flags & Provisioning.SO_NO_ACCOUNT_SECONDARY_DEFAULTS) == 0;
-
-        acct.setAccountDefaults(setSecondaryDefaults);
     }
 
     private Alias makeAlias(String dn, ZAttributes attrs) throws ServiceException {
@@ -5045,13 +5156,13 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public List<?> getAllAccounts(Domain d) throws ServiceException {
-        return searchAccounts(d, mDIT.filterAccountsByDomain(d, false), null, null, true, Provisioning.SD_ACCOUNT_FLAG);
+        return searchAccounts(d, mDIT.filterAccountsByDomain(d), null, null, true, Provisioning.SD_ACCOUNT_FLAG);
     }
 
     @Override
     public void getAllAccounts(Domain d, NamedEntry.Visitor visitor) throws ServiceException {
         LdapDomain ld = (LdapDomain) d;
-        searchObjects(mDIT.filterAccountsByDomain(d, false), null, mDIT.domainDNToAccountSearchDN(ld.getDN()), Provisioning.SD_ACCOUNT_FLAG, visitor, 0);
+        searchObjects(mDIT.filterAccountsByDomain(d), null, mDIT.domainDNToAccountSearchDN(ld.getDN()), Provisioning.SD_ACCOUNT_FLAG, visitor, 0);
     }
 
     @Override
@@ -5066,7 +5177,7 @@ public class LdapProvisioning extends LdapProv {
 
     private void getAllAccountsInternal(Domain d, Server s, NamedEntry.Visitor visitor, boolean noDefaults) throws ServiceException {
         LdapDomain ld = (LdapDomain) d;
-        String filter = mDIT.filterAccountsByDomain(d, false);
+        String filter = mDIT.filterAccountsByDomain(d);
         if (s != null) {
             String serverFilter = filterFactory.homedOnServer(s.getServiceHostname()).toFilterString();
             if (StringUtil.isNullOrEmpty(filter))
@@ -5117,12 +5228,6 @@ public class LdapProvisioning extends LdapProv {
     public List<?> getAllDistributionLists(Domain d) throws ServiceException {
         return searchDomainedObjects(d, mDIT.filterDistributionListsByDomain(d, false),
                 null, null, true, Provisioning.SD_DISTRIBUTION_LIST_FLAG);
-    }
-
-    @Override
-    public List<NamedEntry> searchAccounts(Domain d, String query, String returnAttrs[], String sortAttr,
-            boolean sortAscending, int flags) throws ServiceException {
-        return searchDomainedObjects(d, query, returnAttrs, sortAttr, sortAscending, flags);
     }
 
     private List<NamedEntry> searchDomainedObjects(Domain d, String query, String returnAttrs[], String sortAttr,
@@ -7020,7 +7125,7 @@ public class LdapProvisioning extends LdapProv {
     public CountAccountResult countAccount(Domain domain) throws ServiceException {
         CountAccountVisitor visitor = new CountAccountVisitor(this);
         // getAllAccounts(domain, visitor);
-        searchObjects(mDIT.filterAccountsByDomain(domain, false),
+        searchObjects(mDIT.filterAccountsByDomain(domain),
                       new String[]{Provisioning.A_zimbraCOSId, Provisioning.A_zimbraIsSystemResource},
                       mDIT.domainDNToAccountSearchDN(((LdapDomain)domain).getDN()),
                       Provisioning.SD_ACCOUNT_FLAG,
