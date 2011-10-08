@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.index.query;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 
 import org.junit.Assert;
@@ -23,12 +24,13 @@ import org.junit.Test;
 
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.index.AllQueryOperation;
-import com.zimbra.cs.index.LuceneFields;
-import com.zimbra.cs.index.NoResultsQueryOperation;
+import com.zimbra.cs.index.SortBy;
+import com.zimbra.cs.index.ZimbraQueryResults;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
+import com.zimbra.cs.mailbox.OperationContext;
 
 /**
  * Unit test for {@link TextQuery}.
@@ -52,9 +54,18 @@ public final class TextQueryTest {
     @Test
     public void wildcardExpandedToNone() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        TextQuery query = new TextQuery(mbox.index.getAnalyzer(), LuceneFields.L_H_FROM, "from*");
-        Assert.assertSame(NoResultsQueryOperation.class, query.compile(mbox, true).getClass());
-        Assert.assertSame(AllQueryOperation.class, query.compile(mbox, false).getClass());
+
+        ZimbraQueryResults results = mbox.index.search(new OperationContext(mbox), "none*",
+                EnumSet.of(MailItem.Type.MESSAGE), SortBy.NONE, 100);
+        Assert.assertFalse(results.hasNext());
+
+        results = mbox.index.search(new OperationContext(mbox), "from:none* AND subject:none*",
+                EnumSet.of(MailItem.Type.MESSAGE), SortBy.NONE, 100);
+        Assert.assertFalse(results.hasNext());
+
+        results = mbox.index.search(new OperationContext(mbox), "from:none* OR subject:none*",
+                EnumSet.of(MailItem.Type.MESSAGE), SortBy.NONE, 100);
+        Assert.assertFalse(results.hasNext());
     }
 
 }

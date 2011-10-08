@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Closeables;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -222,10 +223,8 @@ public class DBQueryOperation extends QueryOperation {
     }
 
     @Override
-    QueryTargetSet getQueryTargets() {
-        QueryTargetSet toRet = new QueryTargetSet(1);
-        toRet.add(queryTarget);
-        return toRet;
+    Set<QueryTarget> getQueryTargets() {
+        return ImmutableSet.of(queryTarget);
     }
 
     List<QueryInfo> getQueryInfo() {
@@ -360,11 +359,11 @@ public class DBQueryOperation extends QueryOperation {
             throw new IllegalArgumentException(
                     "Cannot addIsRemoteFolderClause b/c DBQueryOperation already has a local target");
         }
-        if (!(queryTarget == QueryTarget.IS_REMOTE || queryTarget == QueryTarget.UNSPECIFIED)) {
+        if (!(queryTarget == QueryTarget.REMOTE || queryTarget == QueryTarget.UNSPECIFIED)) {
             throw new IllegalArgumentException(
                     "Cannot addIsRemoteFolderClause b/c DBQueryOperation already has a remote target: " + queryTarget);
         }
-        queryTarget = QueryTarget.IS_REMOTE;
+        queryTarget = QueryTarget.REMOTE;
         allResultsQuery = false;
         includeIsRemoteFolders = true;
     }

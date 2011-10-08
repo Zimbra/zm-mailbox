@@ -18,10 +18,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.ImmutableSet;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.SetUtil;
 
 import com.zimbra.common.util.ZimbraLog;
 
@@ -41,12 +42,12 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
     }
 
     @Override
-    QueryTargetSet getQueryTargets() {
-        QueryTargetSet result = new QueryTargetSet();
+    Set<QueryTarget> getQueryTargets() {
+        ImmutableSet.Builder<QueryTarget> builder = ImmutableSet.builder();
         for (QueryOperation op : operations) {
-            result = (QueryTargetSet)SetUtil.union(result, op.getQueryTargets());
+            builder.addAll(op.getQueryTargets());
         }
-        return result;
+        return builder.build();
     }
 
     @Override
@@ -188,7 +189,7 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
         operations.add(op);
     }
 
-    void pruneIncompatibleTargets(QueryTargetSet targets) {
+    void pruneIncompatibleTargets(Set<QueryTarget> targets) {
         // go from end--front so we don't get confused when entries are removed
         for (int i = operations.size() - 1; i >= 0; i--) {
             QueryOperation op = operations.get(i);
@@ -198,9 +199,9 @@ public final class UnionQueryOperation extends CombiningQueryOperation {
             } else if (op instanceof IntersectionQueryOperation) {
                 ((IntersectionQueryOperation) op).pruneIncompatibleTargets(targets);
             } else {
-                QueryTargetSet qts = op.getQueryTargets();
-                assert(qts.size() <= 1);
-                if ((qts.size() == 0) || (!qts.isSubset(targets) && !qts.contains(QueryTarget.UNSPECIFIED))) {
+                Set<QueryTarget> set = op.getQueryTargets();
+                assert(set.size() <= 1);
+                if (set.isEmpty() || (!targets.containsAll(set) && !set.contains(QueryTarget.UNSPECIFIED))) {
                     operations.remove(i);
                 }
             }

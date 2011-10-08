@@ -16,6 +16,7 @@ package com.zimbra.cs.index;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -60,7 +61,7 @@ abstract class FilterQueryOperation extends QueryOperation {
     }
 
     @Override
-    QueryTargetSet getQueryTargets() {
+    Set<QueryTarget> getQueryTargets() {
         return operation.getQueryTargets();
     }
 

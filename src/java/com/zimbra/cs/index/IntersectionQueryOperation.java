@@ -18,11 +18,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.SetUtil;
 
 import com.zimbra.common.util.ZimbraLog;
 
@@ -373,15 +374,16 @@ public final class IntersectionQueryOperation extends CombiningQueryOperation {
     }
 
     @Override
-    QueryTargetSet getQueryTargets() {
-        QueryTargetSet result = new QueryTargetSet();
+    Set<QueryTarget> getQueryTargets() {
+        Set<QueryTarget> result = Sets.newHashSet();
 
-        for (Iterator<QueryOperation> itr = operations.iterator(); itr.hasNext();) {
-            result = itr.next().getQueryTargets();
+        Iterator<QueryOperation> itr = operations.iterator();
+        if (itr.hasNext()) {
+            result.addAll(itr.next().getQueryTargets());
 
             // loop through rest of ops add to toRet if it is in every other set
             while (itr.hasNext()) {
-                QueryTargetSet curSet = itr.next().getQueryTargets();
+                Set<QueryTarget> set = itr.next().getQueryTargets();
 
                 // so this gets wacky:
                 //  -- If both sides have an UNSPECIFIED, then the result is
@@ -390,15 +392,14 @@ public final class IntersectionQueryOperation extends CombiningQueryOperation {
                 //     If RHS then the result is LHS
 
                 if (result.contains(QueryTarget.UNSPECIFIED)) {
-                    if (curSet.contains(QueryTarget.UNSPECIFIED)) {
-                        result = (QueryTargetSet)SetUtil.union(result, curSet);
+                    if (set.contains(QueryTarget.UNSPECIFIED)) {
+                        result.addAll(set);
                     } else {
-                        result = curSet;
+                        result.clear();
+                        result.addAll(set);
                     }
-                } else if (curSet.contains(QueryTarget.UNSPECIFIED)) {
-                    // toRet stays as it is...
-                } else {
-                    result = (QueryTargetSet)SetUtil.intersect(new QueryTargetSet(), result, curSet);
+                } else if (!set.contains(QueryTarget.UNSPECIFIED)) {
+                    result.retainAll(set);
                 }
             }
         }
@@ -449,22 +450,21 @@ public final class IntersectionQueryOperation extends CombiningQueryOperation {
         operations.addAll(ops);
     }
 
-    void pruneIncompatibleTargets(QueryTargetSet targets) {
+    void pruneIncompatibleTargets(Set<QueryTarget> targets) {
         for (QueryOperation op : operations) {
             if (op instanceof UnionQueryOperation) {
-                ((UnionQueryOperation)op).pruneIncompatibleTargets(targets);
+                ((UnionQueryOperation) op).pruneIncompatibleTargets(targets);
             } else if (op instanceof IntersectionQueryOperation) {
                 assert(false); // shouldn't be here, should have optimized already
-                ((IntersectionQueryOperation)op).pruneIncompatibleTargets(targets);
+                ((IntersectionQueryOperation) op).pruneIncompatibleTargets(targets);
             } else {
                 // do nothing, must be part of the right set
-                QueryTargetSet qts = op.getQueryTargets();
-                assert(qts.size() == 1);
-                assert(qts.contains(QueryTarget.UNSPECIFIED) || qts.isSubset(targets));
+                Set<QueryTarget> set = op.getQueryTargets();
+                assert(set.size() == 1);
+                assert(set.contains(QueryTarget.UNSPECIFIED) || set.containsAll(targets));
             }
         }
     }
-
 
     /**
      * We always transform the query into DNF:
@@ -551,7 +551,7 @@ public final class IntersectionQueryOperation extends CombiningQueryOperation {
 
         // Step 2.5: now we want to eliminate any subtrees that have query targets which aren't compatible,
         // i.e. (A or B or C) and (B or C) means we eliminate A
-        QueryTargetSet targets = getQueryTargets();
+        Set<QueryTarget> targets = getQueryTargets();
         if (targets.isEmpty()) {
             ZimbraLog.search.debug("ELIMINATING %s b/c of incompatible QueryTargets", this);
             return new NoResultsQueryOperation();
@@ -599,7 +599,7 @@ public final class IntersectionQueryOperation extends CombiningQueryOperation {
         }
 
         // at this point, we know that the entire query has one and only one QueryTarget.
-        assert(getQueryTargets().countExplicitTargets() <= 1);
+        assert(QueryTarget.getExplicitTargetCount(getQueryTargets()) <= 1);
 
         //
         // Step 3: hacky special case for Lucene Ops and DB Ops: Lucene and DB don't

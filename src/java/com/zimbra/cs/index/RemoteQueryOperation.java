@@ -17,6 +17,7 @@ package com.zimbra.cs.index;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import com.google.common.io.Closeables;
 import com.zimbra.cs.account.Account;
@@ -48,9 +49,9 @@ final class RemoteQueryOperation extends FilterQueryOperation {
      * @return FALSE
      */
     boolean tryAddOredOperation(QueryOperation op) {
-        QueryTargetSet targets = op.getQueryTargets();
-        assert(targets.countExplicitTargets() == 1);
-        assert(targets.hasExternalTargets());
+        Set<QueryTarget> targets = op.getQueryTargets();
+        assert(QueryTarget.getExplicitTargetCount(targets) == 1);
+        assert(QueryTarget.hasExternalTarget(targets));
 
         for (QueryTarget target : targets) {
             assert(target != QueryTarget.LOCAL);

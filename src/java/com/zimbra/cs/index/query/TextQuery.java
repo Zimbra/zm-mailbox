@@ -16,32 +16,24 @@ package com.zimbra.cs.index.query;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.analysis.tokenattributes.OffsetAttribute;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.MultiPhraseQuery;
 import org.apache.lucene.search.PhraseQuery;
 import org.apache.lucene.search.TermQuery;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
-import com.google.common.io.Closeables;
+import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.index.AllQueryOperation;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.LuceneQueryOperation;
-import com.zimbra.cs.index.NoResultsQueryOperation;
 import com.zimbra.cs.index.NoTermQueryOperation;
 import com.zimbra.cs.index.QueryOperation;
-import com.zimbra.cs.index.SuggestQueryInfo;
-import com.zimbra.cs.index.WildcardExpansionQueryInfo;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -51,7 +43,7 @@ import com.zimbra.cs.mailbox.Mailbox;
  * @author ysasaki
  */
 public class TextQuery extends Query {
-    private final List<Token> tokens = new ArrayList<Token>();
+    private final List<String> tokens = Lists.newArrayList();
     private final String field;
     private final String text;
     private boolean quick = false;
@@ -70,10 +62,9 @@ public class TextQuery extends Query {
 
         try {
             CharTermAttribute termAttr = stream.addAttribute(CharTermAttribute.class);
-            OffsetAttribute offsetAttr = stream.addAttribute(OffsetAttribute.class);
             stream.reset();
             while (stream.incrementToken()) {
-                tokens.add(new Token(termAttr.toString(), offsetAttr.startOffset()));
+                tokens.add(termAttr.toString());
             }
             stream.end();
             stream.close();
@@ -114,67 +105,29 @@ public class TextQuery extends Query {
     public QueryOperation compile(Mailbox mbox, boolean bool) throws ServiceException {
         if (quick || text.endsWith("*")) { // wildcard, must look at original text here b/c analyzer strips *'s
             // only the last token is allowed to have a wildcard in it
-            Token last = tokens.isEmpty() ? new Token(text, 0) : tokens.remove(tokens.size() - 1);
-            String prefix = last.term.replace("*", "");
-
-            int max = mbox.index.getMaxWildcardTerms();
-            List<Term> terms = new ArrayList<Term>();
-            boolean overflow = false;
-            IndexSearcher searcher = null;
-            TopTerm top = new TopTerm();
-            try {
-                searcher = mbox.index.getIndexStore().openSearcher();
-                TermEnum tenum = searcher.getIndexReader().terms(new Term(field, prefix));
-                do {
-                    Term term = tenum.term();
-                    if (term != null && term.field().equals(field) && term.text().startsWith(prefix)) {
-                        if (terms.size() >= max) {
-                            overflow = true;
-                            break;
-                        }
-                        terms.add(term);
-                        top.update(tenum);
-                    } else {
-                        break;
-                    }
-                } while (tenum.next());
-                tenum.close();
-            } catch (IOException e) {
-                throw ServiceException.FAILURE("Failed to expand wildcard", e);
-            } finally {
-                Closeables.closeQuietly(searcher);
+            String last = tokens.isEmpty() ? text : tokens.remove(tokens.size() - 1);
+            LuceneQueryOperation.LazyMultiPhraseQuery query = new LuceneQueryOperation.LazyMultiPhraseQuery();
+            for (String token : tokens) {
+                query.add(new Term(field, token));
             }
+            query.expand(new Term(field, CharMatcher.is('*').trimTrailingFrom(last))); // expand later
 
-            if (terms.isEmpty()) {
-                return bool ? new NoResultsQueryOperation() : new AllQueryOperation();
-            } else {
-                MultiPhraseQuery query = new MultiPhraseQuery();
-                for (Token token : tokens) {
-                    query.add(new Term(field, token.term));
-                }
-                query.add(terms.toArray(new Term[terms.size()]));
-                LuceneQueryOperation op = new LuceneQueryOperation();
-                op.addQueryInfo(new WildcardExpansionQueryInfo(prefix + '*', terms.size(), !overflow));
-                if (quick) {
-                    op.addQueryInfo(new SuggestQueryInfo(text.substring(0, last.start) + top.getTerm().text()));
-                }
-                op.addClause(toQueryString(field, text), query, evalBool(bool));
-                return op;
-            }
+            LuceneQueryOperation op = new LuceneQueryOperation();
+            op.addClause(toQueryString(field, text), query, evalBool(bool));
+            return op;
         } else if (tokens.isEmpty()) {
             // if we have no tokens, that is usually because the analyzer removed them. The user probably queried for
             // a stop word like "a" or "an" or "the".
             return new NoTermQueryOperation();
         } else if (tokens.size() == 1) {
             LuceneQueryOperation op = new LuceneQueryOperation();
-            op.addClause(toQueryString(field, text),
-                    new TermQuery(new Term(field, tokens.get(0).term)), evalBool(bool));
+            op.addClause(toQueryString(field, text), new TermQuery(new Term(field, tokens.get(0))), evalBool(bool));
             return op;
         } else {
             assert tokens.size() > 1 : tokens.size();
             PhraseQuery query = new PhraseQuery();
-            for (Token token : tokens) {
-                query.add(new Term(field, token.term));
+            for (String token : tokens) {
+                query.add(new Term(field, token));
             }
             LuceneQueryOperation op = new LuceneQueryOperation();
             op.addClause(toQueryString(field, text), query, evalBool(bool));
@@ -192,34 +145,4 @@ public class TextQuery extends Query {
         }
     }
 
-    private static final class Token {
-        final String term;
-        final int start;
-
-        Token(String term, int start) {
-            this.term = term;
-            this.start = start;
-        }
-
-        @Override
-        public String toString() {
-            return term;
-        }
-    }
-
-    private static final class TopTerm {
-        private Term term;
-        private int freq = 0;
-
-        void update(TermEnum tenum) {
-            if (freq < tenum.docFreq()) {
-                freq = tenum.docFreq();
-                term = tenum.term();
-            }
-        }
-
-        Term getTerm() {
-            return term;
-        }
-    }
 }

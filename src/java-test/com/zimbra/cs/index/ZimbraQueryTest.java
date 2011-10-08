@@ -230,7 +230,6 @@ public final class ZimbraQueryTest {
         ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
         ZimbraQueryResults result = query.execute();
         Assert.assertEquals(msg.getId(), result.getNext().getItemId());
-        Assert.assertEquals("[WILDCARD(me*,1,ALL), all hands meeting]", result.getResultInfo().toString());
         Closeables.closeQuietly(result);
     }
 

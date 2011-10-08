@@ -450,8 +450,8 @@ public final class ZimbraQuery {
         }
 
         // Use the OperationContext to update the set of visible referenced folders, local AND remote.
-        QueryTargetSet queryTargets = operation.getQueryTargets();
-        assert(operation instanceof UnionQueryOperation || queryTargets.countExplicitTargets() <= 1);
+        Set<QueryTarget> targets = operation.getQueryTargets();
+        assert(operation instanceof UnionQueryOperation || QueryTarget.getExplicitTargetCount(targets) <= 1);
 
         // easiest to treat the query two unions: one the LOCAL and one REMOTE parts
         UnionQueryOperation remoteOps = new UnionQueryOperation();
@@ -461,16 +461,16 @@ public final class ZimbraQuery {
             UnionQueryOperation union = (UnionQueryOperation) operation;
             // separate out the LOCAL vs REMOTE parts...
             for (QueryOperation op : union.operations) {
-                QueryTargetSet targets = op.getQueryTargets();
+                Set<QueryTarget> set = op.getQueryTargets();
 
                 // this assertion OK because we have already distributed multi-target query ops
                 // during the optimize() step
-                assert(targets.countExplicitTargets() <= 1);
+                assert(QueryTarget.getExplicitTargetCount(set) <= 1);
 
                 // the assertion above is critical: the code below all assumes
                 // that we only have ONE target (ie we've already distributed if necessary)
 
-                if (targets.hasExternalTargets()) {
+                if (QueryTarget.hasExternalTarget(set)) {
                     remoteOps.add(op);
                 } else {
                     localOps.add(op);
@@ -478,13 +478,12 @@ public final class ZimbraQuery {
             }
         } else {
             // single target: might be local, might be remote
-
-            QueryTargetSet targets = operation.getQueryTargets();
+            Set<QueryTarget> set = operation.getQueryTargets();
             // this assertion OK because we have already distributed multi-target query ops
             // during the optimize() step
-            assert(targets.countExplicitTargets() <= 1);
+            assert(QueryTarget.getExplicitTargetCount(set) <= 1);
 
-            if (targets.hasExternalTargets()) {
+            if (QueryTarget.hasExternalTarget(set)) {
                 remoteOps.add(operation);
             } else {
                 localOps.add(operation);
@@ -500,17 +499,16 @@ public final class ZimbraQuery {
             // iterate backwards so we can remove/add w/o screwing iteration
             for (int i = remoteOps.operations.size() - 1; i >= 0; i--) {
                 QueryOperation op = remoteOps.operations.get(i);
-
-                QueryTargetSet targets = op.getQueryTargets();
+                Set<QueryTarget> set = op.getQueryTargets();
 
                 // this assertion OK because we have already distributed multi-target query ops
                 // during the optimize() step
-                assert(targets.countExplicitTargets() <= 1);
+                assert(QueryTarget.getExplicitTargetCount(set) <= 1);
 
                 // the assertion above is critical: the code below all assumes
                 // that we only have ONE target (ie we've already distributed if necessary)
 
-                if (targets.hasExternalTargets()) {
+                if (QueryTarget.hasExternalTarget(set)) {
                     remoteOps.operations.remove(i);
                     boolean foundOne = false;
                     // find a remoteOp to add this one to
@@ -682,9 +680,9 @@ public final class ZimbraQuery {
     public ZimbraQueryResults execute() throws ServiceException {
         compile();
 
-        QueryTargetSet targets = operation.getQueryTargets();
-        assert(operation instanceof UnionQueryOperation || targets.countExplicitTargets() <= 1);
-        assert(targets.size() >1 || !targets.hasExternalTargets() || operation instanceof RemoteQueryOperation);
+        Set<QueryTarget> targets = operation.getQueryTargets();
+        assert(operation instanceof UnionQueryOperation || QueryTarget.getExplicitTargetCount(targets) <= 1);
+        assert(targets.size() >1 || !QueryTarget.hasExternalTarget(targets) || operation instanceof RemoteQueryOperation);
 
         ZimbraLog.search.debug("OPERATION: %s", operation);
 
@@ -740,17 +738,15 @@ public final class ZimbraQuery {
         // iterate backwards so we can remove/add w/o screwing iteration
         for (int i = union.operations.size() - 1; i >= 0; i--) {
             QueryOperation op = union.operations.get(i);
-            QueryTargetSet targets = op.getQueryTargets();
+            Set<QueryTarget> targets = op.getQueryTargets();
 
             // this assertion is OK because we have already distributed multi-target query ops
             // during the optimize() step
-            assert(targets.countExplicitTargets() <= 1);
+            assert(QueryTarget.getExplicitTargetCount(targets) <= 1);
             // the assertion above is critical: the code below all assumes
             // that we only have ONE target (ie we've already distributed if necessary)
 
-            assert(!targets.hasExternalTargets());
-
-            if (!targets.hasExternalTargets()) {
+            if (!QueryTarget.hasExternalTarget(targets)) {
                 // local target
                 if (!allowPrivateAccess)
                     op.depthFirstRecurse(new excludePrivateCalendarItems());

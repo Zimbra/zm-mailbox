@@ -69,7 +69,10 @@ public final class IntersectionQueryOperationTest {
         // this wildcard expansion results in no hits
         Assert.assertEquals("ZQ: Q(IN:Inbox) && Q(from:none*[*])", query.toString());
         // then intersection of something and no hits is always no hits
-        Assert.assertEquals("", query.toQueryString());
+        Assert.assertEquals("((from:none*) AND IN:/Inbox )", query.toQueryString());
+        ZimbraQueryResults results = query.execute();
+        Assert.assertFalse(results.hasNext());
+        results.close();
 
         params = new SearchParams();
         params.setQueryString("in:inbox content:the"); // stop-word

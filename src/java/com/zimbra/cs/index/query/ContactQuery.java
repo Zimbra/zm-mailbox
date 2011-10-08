@@ -22,14 +22,10 @@ import java.util.List;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.index.TermEnum;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.MultiPhraseQuery;
 import org.apache.lucene.search.PrefixQuery;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
-import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.LuceneFields;
@@ -70,48 +66,25 @@ public final class ContactQuery extends Query {
 
     @Override
     public QueryOperation compile(Mailbox mbox, boolean bool) throws ServiceException {
-        if (tokens.isEmpty()) {
-            return new NoTermQueryOperation();
-        }
-        LuceneQueryOperation op = new LuceneQueryOperation();
-        if (tokens.size() == 1) {
-            PrefixQuery query = new PrefixQuery(new Term(LuceneFields.L_CONTACT_DATA, tokens.get(0)));
-            op.addClause("contact:" +  tokens.get(0), query, evalBool(bool));
-        } else {
-            MultiPhraseQuery query = new MultiPhraseQuery();
-            int max = mbox.index.getMaxWildcardTerms();
-            IndexSearcher searcher = null;
-            try {
-                searcher = mbox.index.getIndexStore().openSearcher();
+        switch (tokens.size()) {
+            case 0:
+                return new NoTermQueryOperation();
+            case 1: {
+                LuceneQueryOperation op = new LuceneQueryOperation();
+                PrefixQuery query = new PrefixQuery(new Term(LuceneFields.L_CONTACT_DATA, tokens.get(0)));
+                op.addClause("contact:" +  tokens.get(0), query, evalBool(bool));
+                return op;
+            }
+            default: {
+                LuceneQueryOperation op = new LuceneQueryOperation();
+                LuceneQueryOperation.LazyMultiPhraseQuery query = new LuceneQueryOperation.LazyMultiPhraseQuery();
                 for (String token : tokens) {
-                    TermEnum itr = searcher.getIndexReader().terms(new Term(LuceneFields.L_CONTACT_DATA, token));
-                    List<Term> terms = new ArrayList<Term>();
-                    do {
-                        Term term = itr.term();
-                        if (term != null && term.field().equals(LuceneFields.L_CONTACT_DATA) &&
-                                term.text().startsWith(token)) {
-                            terms.add(term);
-                            if (terms.size() >= max) { // too many terms expanded
-                                break;
-                            }
-                        } else {
-                            break;
-                        }
-                    } while (itr.next());
-                    itr.close();
-                    if (terms.isEmpty()) {
-                        return new NoTermQueryOperation();
-                    }
-                    query.add(terms.toArray(new Term[terms.size()]));
+                    query.expand(new Term(LuceneFields.L_CONTACT_DATA, token)); // expand later
                 }
                 op.addClause("contact:\"" + Joiner.on(' ').join(tokens) + "\"", query, evalBool(bool));
-            } catch (IOException e) {
-                throw ServiceException.FAILURE("Failed to expand wildcard", e);
-            } finally {
-                Closeables.closeQuietly(searcher);
+                return op;
             }
         }
-        return op;
     }
 
     @Override

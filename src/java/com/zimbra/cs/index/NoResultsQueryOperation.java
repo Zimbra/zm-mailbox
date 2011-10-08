@@ -16,7 +16,9 @@
 package com.zimbra.cs.index;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -64,8 +66,8 @@ public final class NoResultsQueryOperation extends QueryOperation {
     }
 
     @Override
-    QueryTargetSet getQueryTargets() {
-        return new QueryTargetSet();
+    Set<QueryTarget> getQueryTargets() {
+        return Collections.emptySet();
     }
 
     @Override

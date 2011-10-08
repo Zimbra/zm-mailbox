@@ -186,7 +186,7 @@ public abstract class QueryOperation implements Cloneable, ZimbraQueryResults {
         return getNext();
     }
 
-    abstract QueryTargetSet getQueryTargets();
+    abstract Set<QueryTarget> getQueryTargets();
 
     @Override
     public Object clone() {

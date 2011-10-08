@@ -359,10 +359,6 @@ public final class MailboxIndex {
         return 0; // disable batch indexing for non Lucene index stores
     }
 
-    public int getMaxWildcardTerms() {
-        return LC.zimbra_index_wildcard_max_terms_expanded.intValue();
-    }
-
     void evict() {
         indexStore.evict();
     }

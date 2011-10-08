@@ -17,7 +17,9 @@ package com.zimbra.cs.index;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.collect.ImmutableSet;
 import com.zimbra.cs.mailbox.Mailbox;
 
 /**
@@ -89,10 +91,8 @@ public final class NoTermQueryOperation extends QueryOperation {
     }
 
     @Override
-    QueryTargetSet getQueryTargets() {
-        QueryTargetSet toRet = new QueryTargetSet(1);
-        toRet.add(QueryTarget.UNSPECIFIED);
-        return toRet;
+    Set<QueryTarget> getQueryTargets() {
+        return ImmutableSet.of(QueryTarget.UNSPECIFIED);
     }
 
     @Override

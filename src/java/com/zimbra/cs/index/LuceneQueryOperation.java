@@ -19,22 +19,28 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Set;
 
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.MultiPhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -360,6 +366,11 @@ public final class LuceneQueryOperation extends QueryOperation {
             if (luceneQuery instanceof BooleanQuery) {
                 fixMustNotOnly((BooleanQuery) luceneQuery);
             }
+            luceneQuery = expandLazyMultiPhraseQuery(luceneQuery);
+            if (luceneQuery == null) { // optimized away
+                hits = null;
+                return;
+            }
             TermsFilter filter = null;
             if (filterTerms != null) {
                 filter = new TermsFilter();
@@ -380,6 +391,63 @@ public final class LuceneQueryOperation extends QueryOperation {
             Closeables.closeQuietly(searcher);
             searcher = null;
             hits = null;
+        }
+    }
+
+    private Query expandLazyMultiPhraseQuery(Query query) throws IOException {
+        if (query instanceof LazyMultiPhraseQuery) {
+            LazyMultiPhraseQuery lazy = (LazyMultiPhraseQuery) query;
+            int max = LC.zimbra_index_wildcard_max_terms_expanded.intValue();
+            MultiPhraseQuery mquery = new MultiPhraseQuery();
+            for (Term[] terms : lazy.getTermArrays()) {
+                if (terms.length != 1) {
+                    mquery.add(terms);
+                    continue;
+                }
+                Term base = terms[0];
+                if (!lazy.expand.contains(base)) {
+                    mquery.add(terms);
+                    continue;
+                }
+                TermEnum itr = searcher.getIndexReader().terms(base);
+                List<Term> expanded = Lists.newArrayList();
+                do {
+                    Term term = itr.term();
+                    if (term != null && base.field().equals(term.field()) && term.text().startsWith(base.text())) {
+                        if (expanded.size() >= max) { // too many terms expanded
+                            break;
+                        }
+                        expanded.add(term);
+                    } else {
+                        break;
+                    }
+                } while (itr.next());
+                itr.close();
+                if (expanded.isEmpty()) {
+                    return null;
+                } else {
+                    mquery.add(expanded.toArray(new Term[expanded.size()]));
+                }
+            }
+            return mquery;
+        } else if (query instanceof BooleanQuery) {
+            ListIterator<BooleanClause> itr = ((BooleanQuery) query).clauses().listIterator();
+            while (itr.hasNext()) {
+                BooleanClause clause = itr.next();
+                Query result = expandLazyMultiPhraseQuery(clause.getQuery());
+                if (result == null) {
+                    if (clause.isRequired()) {
+                        return null;
+                    } else {
+                        itr.remove();
+                    }
+                } else if (result != clause.getQuery()) {
+                    clause.setQuery(result);
+                }
+            }
+            return ((BooleanQuery) query).clauses().isEmpty() ? null : query;
+        } else {
+            return query;
         }
     }
 
@@ -573,10 +641,8 @@ public final class LuceneQueryOperation extends QueryOperation {
     }
 
     @Override
-    QueryTargetSet getQueryTargets() {
-        QueryTargetSet toRet = new QueryTargetSet(1);
-        toRet.add(QueryTarget.UNSPECIFIED);
-        return toRet;
+    Set<QueryTarget> getQueryTargets() {
+        return ImmutableSet.of(QueryTarget.UNSPECIFIED);
     }
 
     void setDBOperation(DBQueryOperation op) {
@@ -723,6 +789,23 @@ public final class LuceneQueryOperation extends QueryOperation {
 
         Collection<Document> getHit(int indexId) {
             return hits.get(indexId);
+        }
+    }
+
+    /**
+     * Extended {@link MultiPhraseQuery} that defers wildcard expansion until actual Lucene search execution, rather
+     * than doing so when creating a {@link MultiPhraseQuery}.
+     *
+     * @see LuceneQueryOperation#expandLazyMultiPhraseQuery(Query)
+     */
+    public static final class LazyMultiPhraseQuery extends MultiPhraseQuery {
+        private static final long serialVersionUID = -6754267749628771968L;
+
+        private final Set<Term> expand = Sets.newIdentityHashSet();
+
+        public void expand(Term term) {
+            add(term);
+            expand.add(term);
         }
     }
 
