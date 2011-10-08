@@ -1522,7 +1522,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     /**
      * Search for all accunts on the server.  
      * 
-     * Note: Sorting is not supported on APIs with a visitor.
+     * Note: Sorting is not supported on search APIs with a visitor.
      *
      * @param server
      * @param opts
@@ -1621,7 +1621,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         }
         
         public Domain getDomain() {
-            return getDomain();
+            return domain;
         }
         
         public void setIncludeCalendarResources(boolean includeCalendarResources) {
