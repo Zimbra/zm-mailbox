@@ -58,8 +58,34 @@ public class Auth extends AccountDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
+        // Look up the specified account.  It is optional in the <authToken> case.
+        String acctValuePassedIn = null, acctValue = null, acctByStr = null;
+        AccountBy acctBy = null;
+        Account acct = null;
+        Element acctEl = request.getOptionalElement(AccountConstants.E_ACCOUNT);
+        if (acctEl != null) {
+            acctValuePassedIn = acctEl.getText();
+            acctValue = acctValuePassedIn;
+            acctByStr = acctEl.getAttribute(AccountConstants.A_BY, AccountBy.name.name());
+            acctBy = AccountBy.fromString(acctByStr);
+            if (acctBy == AccountBy.name) {
+                Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
+                String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
+                if (virtualHost != null && acctValue.indexOf('@') == -1) {
+                    Domain d = prov.get(Key.DomainBy.virtualHostname, virtualHost);
+                    if (d != null)
+                        acctValue = acctValue + "@" + d.getName();
+                }
+            }
+            acct = prov.get(acctBy, acctValue);
+        }
+
         Element authTokenEl = request.getOptionalElement(AccountConstants.E_AUTH_TOKEN);
         if (authTokenEl != null) {
+            boolean verifyAccount = authTokenEl.getAttributeBool(AccountConstants.A_VERIFY_ACCOUNT, false);
+            if (verifyAccount && acctEl == null) {
+                throw ServiceException.INVALID_REQUEST("missing required element: " + AccountConstants.E_ACCOUNT, null);
+            }
             try {
                 String token = authTokenEl.getText();
                 AuthToken at = AuthProvider.getAuthToken(token);
@@ -72,9 +98,17 @@ public class Auth extends AccountDocumentHandler {
                 if (!checkPasswordSecurity(context))
                     throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
                 
-                Account acct = AuthProvider.validateAuthToken(prov, at, false);
-                
-                return doResponse(request, at, zsc, context, acct);
+                Account authTokenAcct = AuthProvider.validateAuthToken(prov, at, false);
+                if (verifyAccount) {
+                    // Verify the named account matches the account in the auth token.  Client can easily decode
+                    // the auth token and do this check, but doing it on the server is nice because then the client
+                    // can treat the auth token as an opaque string.
+                    if (acct == null || !acct.getId().equalsIgnoreCase(authTokenAcct.getId())) {
+                        throw new AuthTokenException("auth token doesn't match the named account");
+                    }
+                }
+
+                return doResponse(request, at, zsc, context, authTokenAcct);
             } catch (AuthTokenException e) {
                 throw ServiceException.AUTH_REQUIRED();
             }
@@ -82,33 +116,15 @@ public class Auth extends AccountDocumentHandler {
             if (!checkPasswordSecurity(context)) {
                 throw ServiceException.INVALID_REQUEST("clear text password is not allowed", null);
             }
-            
-            Element acctEl = request.getElement(AccountConstants.E_ACCOUNT);
-            String valuePassedIn = acctEl.getText();
-            String value = valuePassedIn;
-            String byStr = acctEl.getAttribute(AccountConstants.A_BY, AccountBy.name.name());
+
             Element preAuthEl = request.getOptionalElement(AccountConstants.E_PREAUTH);
             String password = request.getAttribute(AccountConstants.E_PASSWORD, null);
-            Element virtualHostEl = request.getOptionalElement(AccountConstants.E_VIRTUAL_HOST);
-            String virtualHost = virtualHostEl == null ? null : virtualHostEl.getText().toLowerCase();
 
-            AccountBy by = AccountBy.fromString(byStr);
-
-            if (by == AccountBy.name) {
-                if (virtualHost != null && value.indexOf('@') == -1) {
-                    Domain d = prov.get(Key.DomainBy.virtualHostname, virtualHost);
-                    if (d != null)
-                        value = value + "@" + d.getName();
-                }
-            }
-
-            Account acct = prov.get(by, value);
-            
             long expires = 0;
             
             Map<String, Object> authCtxt = new HashMap<String, Object>();
             authCtxt.put(AuthContext.AC_ORIGINATING_CLIENT_IP, context.get(SoapEngine.ORIG_REQUEST_IP));
-            authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, valuePassedIn);
+            authCtxt.put(AuthContext.AC_ACCOUNT_NAME_PASSEDIN, acctValuePassedIn);
             authCtxt.put(AuthContext.AC_USER_AGENT, zsc.getUserAgent());
             
             boolean acctAutoProvisioned = false;
@@ -116,27 +132,27 @@ public class Auth extends AccountDocumentHandler {
                 //
                 // try auto provision the account
                 //
-                if (by == AccountBy.name || by == AccountBy.krb5Principal) {
+                if (acctBy == AccountBy.name || acctBy == AccountBy.krb5Principal) {
                     try {
-                        if (by == AccountBy.name) {
-                            EmailAddress email = new EmailAddress(value, false);
+                        if (acctBy == AccountBy.name) {
+                            EmailAddress email = new EmailAddress(acctValue, false);
                             String domainName = email.getDomain();
                             Domain domain = domainName == null ? null : prov.get(Key.DomainBy.name, domainName);
                             if (password != null) {
-                                acct = prov.autoProvAccountLazy(domain, valuePassedIn, password, null);
+                                acct = prov.autoProvAccountLazy(domain, acctValuePassedIn, password, null);
                             } else if (preAuthEl != null) {
                                 long timestamp = preAuthEl.getAttributeLong(AccountConstants.A_TIMESTAMP);
                                 expires = preAuthEl.getAttributeLong(AccountConstants.A_EXPIRES, 0);
                                 String preAuth = preAuthEl.getTextTrim();
-                                prov.preAuthAccount(domain, value, byStr, timestamp, expires, preAuth, authCtxt);
+                                prov.preAuthAccount(domain, acctValue, acctByStr, timestamp, expires, preAuth, authCtxt);
                                 
-                                acct = prov.autoProvAccountLazy(domain, valuePassedIn, null, AutoProvAuthMech.PREAUTH);
+                                acct = prov.autoProvAccountLazy(domain, acctValuePassedIn, null, AutoProvAuthMech.PREAUTH);
                             }
-                        } else if (by == AccountBy.krb5Principal) {
+                        } else if (acctBy == AccountBy.krb5Principal) {
                             if (password != null) {
-                                Domain domain = Krb5Principal.getDomainByKrb5Principal(valuePassedIn);
+                                Domain domain = Krb5Principal.getDomainByKrb5Principal(acctValuePassedIn);
                                 if (domain != null) {
-                                    acct = prov.autoProvAccountLazy(domain, valuePassedIn, password, null);
+                                    acct = prov.autoProvAccountLazy(domain, acctValuePassedIn, password, null);
                                 }
                             }
                         }
@@ -145,15 +161,15 @@ public class Auth extends AccountDocumentHandler {
                             acctAutoProvisioned = true;
                         }
                     } catch (AuthFailedServiceException e) {
-                        ZimbraLog.account.debug("auth failed, unable to auto provisioing acct " + value, e);
+                        ZimbraLog.account.debug("auth failed, unable to auto provisioing acct " + acctValue, e);
                     } catch (ServiceException e) {
-                        ZimbraLog.account.info("unable to auto provisioing acct " + value, e);
+                        ZimbraLog.account.info("unable to auto provisioing acct " + acctValue, e);
                     }
                 }
             }
             
             if (acct == null) {
-                throw AuthFailedServiceException.AUTH_FAILED(value, valuePassedIn, "account not found");
+                throw AuthFailedServiceException.AUTH_FAILED(acctValue, acctValuePassedIn, "account not found");
             }
             
             AccountUtil.addAccountToLogContext(prov, acct.getId(), ZimbraLog.C_NAME, ZimbraLog.C_ID, null);
@@ -166,7 +182,7 @@ public class Auth extends AccountDocumentHandler {
                     long timestamp = preAuthEl.getAttributeLong(AccountConstants.A_TIMESTAMP);
                     expires = preAuthEl.getAttributeLong(AccountConstants.A_EXPIRES, 0);
                     String preAuth = preAuthEl.getTextTrim();
-                    prov.preAuthAccount(acct, value, byStr, timestamp, expires, preAuth, authCtxt);
+                    prov.preAuthAccount(acct, acctValue, acctByStr, timestamp, expires, preAuth, authCtxt);
                 } else {
                     throw ServiceException.INVALID_REQUEST("must specify "+AccountConstants.E_PASSWORD, null);
                 }

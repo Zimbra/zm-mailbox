@@ -405,7 +405,7 @@ global soap/system errors used with zimbra:Error/Code:
    [<account by="name|id|foreignPrincipal">...</account>]
    [<password>...</password>]
    [<preauth timestamp="{timestamp}" expires="{expires}">{computed-preauth-value}</preauth>]
-   [<authToken>...</authToken>]
+   [<authToken [verifyAccount="1"]>...</authToken>]
    [<virtualHost>{virtual-host}</virtualHost>]
    [<prefs>[<pref name="..."/>...]</prefs>]
    [<attrs>[<attr name="..."/>...]</attrs>]
@@ -426,7 +426,11 @@ Note:
 
 when specifiying an account, one of <password> or <preauth> must be specified. see preauth.txt for a discussion of preauth.
 
-an authToken can be passed instead of account/password/preauth to validate an existing auth token.
+An authToken can be passed instead of account/password/preauth to validate an existing auth token.
+If verifyAccount="1", <account> is required and the account in the auth token is compared to the named account.
+Mismatch results in auth failure.  An external app that relies on ZCS for user identification can use this to
+test if the auth token provided by the user belongs to that user.
+If verifyAccount="0" (default), only the auth token is verified and any <account> element specified is ignored.
 
   {mail-host} = host additional SOAP requests should be directed to. Always returned, might be same as original host request was sent to.
 
