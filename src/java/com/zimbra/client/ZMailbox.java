@@ -102,6 +102,7 @@ import com.zimbra.soap.account.message.GetInfoResponse;
 import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
 import com.zimbra.soap.account.type.Account;
+import com.zimbra.soap.account.type.AuthToken;
 import com.zimbra.soap.account.type.InfoSection;
 import com.zimbra.soap.admin.message.PurgeMessagesRequest;
 import com.zimbra.soap.mail.message.CheckSpellingRequest;
@@ -500,7 +501,7 @@ public class ZMailbox implements ToZJSONObject {
 
         AuthRequest req = new AuthRequest();
         ZAuthToken zat = options.getAuthToken(); // cannot be null here
-        req.setAuthToken(zat.getValue());
+        req.setAuthToken(new AuthToken(zat.getValue(), false));
         req.setRequestedSkin(options.getRequestedSkin());
         addAttrsAndPrefs(req, options);
 
