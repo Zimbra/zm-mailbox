@@ -320,6 +320,7 @@ public class AccountConstants {
     public static final String A_SMIME_STORE_LOOKUP_OPT = "storeLookupOpt";
     public static final String A_SMIME_SOURCE_LOOKUP_OPT = "sourceLookupOpt";
     public static final String A_VIA = "via";
+    public static final String A_VERIFY_ACCOUNT = "verifyAccount";
     
     // gal
     public static final String A_IS_GROUP = "isGroup";
