@@ -573,7 +573,7 @@ public final class ContactAutoComplete {
     private Pattern toPattern(List<String> tokens) {
         StringBuilder regex = new StringBuilder();
         for (String token : tokens) {
-            regex.append("\\b").append(Pattern.quote(token)).append(".*");
+            regex.append(regex.length() == 0 ? "(^|\\s)" : "\\s").append(Pattern.quote(token)).append(".*");
         }
         return Pattern.compile(regex.toString(), Pattern.CASE_INSENSITIVE);
     }

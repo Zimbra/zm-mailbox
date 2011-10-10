@@ -96,14 +96,38 @@ public final class ContactAutoCompleteTest {
                 ContactConstants.A_email, "first.last@zimbra.com");
         comp.addMatchedContacts("first f", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
         Assert.assertEquals(0, result.entries.size());
+        result.clear();
+
+
         comp.addMatchedContacts("first mid", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
         Assert.assertEquals(1, result.entries.size());
         result.clear();
+
         comp.addMatchedContacts("first la", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
         Assert.assertEquals(1, result.entries.size());
         result.clear();
+
         comp.addMatchedContacts("first mid la", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
         Assert.assertEquals(1, result.entries.size());
+        result.clear();
+
+        attrs = ImmutableMap.<String, Object>of(
+                ContactConstants.A_firstName, "Conf - hillview",
+                ContactConstants.A_lastName, "test.server-vmware - dash",
+                ContactConstants.A_email, "conf-hillview@zimbra.com");
+
+        comp.addMatchedContacts("test.server-vmware -", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        Assert.assertEquals(1, result.entries.size());
+        result.clear();
+
+        comp.addMatchedContacts("test.server-vmware - d", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        Assert.assertEquals(1, result.entries.size());
+        result.clear();
+
+
+        comp.addMatchedContacts("conf - h", attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        Assert.assertEquals(1, result.entries.size());
+        result.clear();
     }
 
 }
