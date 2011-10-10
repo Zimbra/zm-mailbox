@@ -29,8 +29,10 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.util.BooleanAdapter;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"tests", "actions"})
@@ -40,7 +42,8 @@ public final class FilterRule {
     private final String name;
 
     @XmlAttribute(name=MailConstants.A_ACTIVE, required=true)
-    private final boolean active;
+    @XmlJavaTypeAdapter(BooleanAdapter.class)
+    private final Boolean active;
 
     @XmlElement(name=MailConstants.E_FILTER_TESTS, required=true)
     private FilterTests tests;

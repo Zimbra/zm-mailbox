@@ -28,9 +28,11 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlEnum;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.util.BooleanAdapter;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class FilterTest {
@@ -79,6 +81,7 @@ public class FilterTest {
         private String comparison;
 
         @XmlAttribute(name = MailConstants.A_CASE_SENSITIVE, required = false)
+        @XmlJavaTypeAdapter(BooleanAdapter.class)
         private Boolean caseSensitive;
 
         @XmlAttribute(name = MailConstants.A_VALUE, required = true)
@@ -177,6 +180,7 @@ public class FilterTest {
         private String value;
 
         @XmlAttribute(name=MailConstants.A_CASE_SENSITIVE, required=false)
+        @XmlJavaTypeAdapter(BooleanAdapter.class)
         private Boolean caseSensitive;
 
         public Boolean getCaseSensitive() {
@@ -407,6 +411,7 @@ public class FilterTest {
         private String value;
 
         @XmlAttribute(name=MailConstants.A_CASE_SENSITIVE, required=false)
+        @XmlJavaTypeAdapter(BooleanAdapter.class)
         private Boolean caseSensitive;
 
         public String getHeaders() {
@@ -579,6 +584,7 @@ public class FilterTest {
         private String value;
 
         @XmlAttribute(name=MailConstants.A_CASE_SENSITIVE, required=false)
+        @XmlJavaTypeAdapter(BooleanAdapter.class)
         private Boolean caseSensitive;
 
         public String getHeaders() {
