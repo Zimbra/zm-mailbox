@@ -88,8 +88,7 @@ public class CalSummaryCache {
     //     CalendarItemData, ...
     //   ]
 
-    private static CalendarItemData reloadCalendarItemOverRange(
-            Mailbox mbox, CalendarItem calItem, long rangeStart, long rangeEnd)
+    public static CalendarItemData reloadCalendarItemOverRange(CalendarItem calItem, long rangeStart, long rangeEnd)
     throws ServiceException {
         CalendarItemData calItemData = null;
         try {
@@ -297,7 +296,7 @@ public class CalSummaryCache {
         CalendarItemData calItemData = null;
         // If folder is different, this item must have been moved out of our folder.  Ignore it.
         if (calItem != null && calItem.getFolderId() == folderId)
-            calItemData = reloadCalendarItemOverRange(mbox, calItem, rangeStart, rangeEnd);
+            calItemData = reloadCalendarItemOverRange(calItem, rangeStart, rangeEnd);
         return calItemData;
     }
 
@@ -331,7 +330,7 @@ public class CalSummaryCache {
                 }
             }
             // We couldn't reuse the existing data.  Get it the hard way.
-            CalendarItemData calItemData = reloadCalendarItemOverRange(mbox, calItem, rangeStart, rangeEnd);
+            CalendarItemData calItemData = reloadCalendarItemOverRange(calItem, rangeStart, rangeEnd);
             if (calItemData != null)
                 calData.addCalendarItem(calItemData);
         }

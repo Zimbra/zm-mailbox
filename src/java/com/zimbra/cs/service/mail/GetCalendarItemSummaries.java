@@ -46,6 +46,7 @@ import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.cache.CacheToXML;
+import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache;
 import com.zimbra.cs.mailbox.calendar.cache.CalendarItemData;
 import com.zimbra.cs.mailbox.calendar.cache.CalSummaryCache.CalendarDataResult;
 import com.zimbra.cs.service.util.ItemId;
@@ -124,7 +125,20 @@ public class GetCalendarItemSummaries extends CalendarRequest {
             }
             
             boolean isAppointment = calItem instanceof Appointment;
-            
+
+            // Use the marshalling code in calendar summary cache for uniform output, when we can.
+            if (isAppointment && expandRanges) {
+                CalendarItemData calItemData = CalSummaryCache.reloadCalendarItemOverRange(calItem, rangeStart, rangeEnd);
+                int numInstances = calItemData.getNumInstances();
+                if (numInstances > 0) {
+                    Element calItemElem = CacheToXML.encodeCalendarItemData(lc, ifmt, calItemData, !hidePrivate, !newFormat);
+                    toRet.element = calItemElem;
+                    toRet.numInstancesExpanded = numInstances;
+                }
+                return toRet;
+            }
+            // But there are other cases (e.g. tasks, no time range) that require the legacy code below.
+
             Element calItemElem = null; // don't initialize until we find at least one valid instance
             
             Invite defaultInvite = calItem.getDefaultInviteOrNull();
