@@ -103,9 +103,16 @@ public class L10nUtil {
         carddavAddressbookDescription,
 
         // share notification
-        shareNotifSubject,
+        mail,
+        calendar,
+        task,
+        addressBook,
+        briefcase,
 
-        shareNotifBodyIntro,
+        shareNotifSubject,
+        sharedBySubject,
+        shareNotifBodyText,
+        shareNotifBodyHtml,
 
         shareNotifBodyAddedToGroup1,
         shareNotifBodyAddedToGroup2,
@@ -114,13 +121,11 @@ public class L10nUtil {
         shareNotifBodyGranteeRoleManager,
         shareNotifBodyGranteeRoleAdmin,
 
-        shareNotifBodySharedItem,
         shareNotifBodyFolderDesc,
-        shareNotifBodyOwner,
-        shareNotifBodyGrantee,
-        shareNotifBodyRole,
-        shareNotifBodyAllowedActions,
-        shareNotifBodyNotes,
+        shareNotifBodyExternalShareText,
+        shareNotifBodyExternalShareHtml,
+        shareNotifBodyNotesText,
+        shareNotifBodyNotesHtml,
 
         shareNotifBodyActionRead,
         shareNotifBodyActionWrite,
