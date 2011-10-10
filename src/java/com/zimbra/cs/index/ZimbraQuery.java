@@ -27,7 +27,6 @@ import org.apache.lucene.search.TermQuery;
 import com.google.common.base.Joiner;
 import com.google.common.io.Closeables;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.index.query.ConjQuery;
 import com.zimbra.cs.index.query.Query;
@@ -544,15 +543,28 @@ public final class ZimbraQuery {
             ZimbraLog.search.debug("LOCAL_IN=%s", localOps);
 
             Account authAcct = octxt != null ? octxt.getAuthenticatedUser() : mailbox.getAccount();
+
             // Now, for all the LOCAL PARTS of the query, add the trash/spam exclusion part
             boolean includeTrash = false;
             boolean includeSpam = false;
             if (params.inDumpster()) {
-                // Dumpster search should never exclude trash/spam because most dumpster data comes from trash folder.
-                includeTrash = includeSpam = true;
-            } else if (authAcct != null) {
-                includeTrash = authAcct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeTrashInSearch, false);
-                includeSpam = authAcct.getBooleanAttr(Provisioning.A_zimbraPrefIncludeSpamInSearch, false);
+                includeTrash = true; // Should never exclude trash because most dumpster data comes from trash folder.
+                if (mailbox.hasFullAdminAccess(octxt)) { // If the requester is an admin, include spam.
+                    includeSpam = true;
+                } else { // If not, limit to recent date range.
+                    long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
+                    long mdate = now - authAcct.getDumpsterUserVisibleAge();
+                    IntersectionQueryOperation and = new IntersectionQueryOperation();
+                    DBQueryOperation db = new DBQueryOperation();
+                    db.addMDateRange(mdate, false, -1L, false, true);
+                    and.addQueryOp((QueryOperation) localOps.clone());
+                    and.addQueryOp(db);
+                    localOps.operations.clear();
+                    localOps.operations.add(and);
+                }
+            } else {
+                includeTrash = authAcct.isPrefIncludeTrashInSearch();;
+                includeSpam = authAcct.isPrefIncludeSpamInSearch();
             }
             if (!includeTrash || !includeSpam) {
                 List<QueryOperation> toAdd = new ArrayList<QueryOperation>();
@@ -567,9 +579,8 @@ public final class ZimbraQuery {
                     }
                 }
                 localOps.operations.addAll(toAdd);
+                ZimbraLog.search.debug("LOCAL_AFTER_TRASH/SPAM/DUMPSTER=%s", localOps);
             }
-
-            ZimbraLog.search.debug("LOCAL_AFTERTS=%s", localOps);
 
             // Check to see if we need to filter out private appointment data
             boolean allowPrivateAccess = true;
@@ -656,6 +667,7 @@ public final class ZimbraQuery {
                 //          )
                 //
             }
+
 
         }
 

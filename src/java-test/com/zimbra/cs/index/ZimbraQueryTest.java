@@ -233,4 +233,19 @@ public final class ZimbraQueryTest {
         Closeables.closeQuietly(result);
     }
 
+    @Test
+    public void dumpster() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        SearchParams params = new SearchParams();
+        params.setQueryString("test");
+        params.setSortBy(SortBy.NONE);
+        params.setTypes(EnumSet.of(MailItem.Type.MESSAGE));
+        params.setInDumpster(true);
+
+        ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
+        Assert.assertTrue(query.toQueryString(),
+                query.toQueryString().matches("\\(\\(content:test\\) AND -ID:/Junk MDATE:\\(>\\d+\\) \\)"));
+    }
+
 }
