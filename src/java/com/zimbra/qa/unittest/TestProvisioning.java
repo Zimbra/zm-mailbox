@@ -1466,32 +1466,6 @@ public class TestProvisioning extends TestCase {
         String query = "(" + Provisioning.A_zimbraMailDeliveryAddress + "=" + ACCT_EMAIL + ")";
         List list = null;
 
-        if (!Flag.needLdapPaging("searchAccounts")) {
-            list = mProv.searchAccounts(query,
-                                            new String[]{Provisioning.A_zimbraMailDeliveryAddress},
-                                            Provisioning.A_zimbraMailDeliveryAddress,
-                                            true,
-                                            Provisioning.SD_ACCOUNT_FLAG);
-            TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{acct}, true);
-
-            // testing get all accounts on local server, used by BackupManager
-            String serverName = mProv.getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
-            list = mProv.searchAccounts(
-                        "(zimbraMailHost=" + serverName + ")",
-                        new String[] { Provisioning.A_zimbraId }, null, false,
-                        Provisioning.SD_ACCOUNT_FLAG | Provisioning.SD_CALENDAR_RESOURCE_FLAG);
-
-        }
-
-        if (!Flag.needLdapPaging("searchAccounts_domain")) {
-            list = mProv.searchAccounts(domain, query,
-                                       new String[]{Provisioning.A_zimbraMailDeliveryAddress},
-                                       Provisioning.A_zimbraMailDeliveryAddress,
-                                       true,
-                                       Provisioning.SD_ACCOUNT_FLAG);
-            TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{acct}, true);
-        }
-
         EntrySearchFilter.Term term = new EntrySearchFilter.Single(false,
                                                                    Provisioning.A_zimbraMailDeliveryAddress,
                                                                    EntrySearchFilter.Operator.eq,

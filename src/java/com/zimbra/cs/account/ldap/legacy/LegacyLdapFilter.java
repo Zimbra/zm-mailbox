@@ -14,6 +14,8 @@
  */
 package com.zimbra.cs.account.ldap.legacy;
 
+import java.util.List;
+
 import com.zimbra.cs.account.Provisioning;
 
 public class LegacyLdapFilter {
@@ -65,6 +67,10 @@ public class LegacyLdapFilter {
         return FILTER_ACCOUNT_OBJECTCLASS;
     }
     
+    public static String allAccountsOnly() {
+        return FILTER_ACCOUNT_ONLY_OBJECTCLASS;
+    }
+    
     public static String allNonSystemAccounts() {
         StringBuilder buf = new StringBuilder();
         buf.append("(&");
@@ -105,6 +111,54 @@ public class LegacyLdapFilter {
     
     public static String accountsHomedOnServerAccountsOnly(String serverServiceHostname) {
         return "(&" + FILTER_ACCOUNT_ONLY_OBJECTCLASS + homedOnServer(serverServiceHostname) + ")";
+    }
+    
+    public static String accountsByExternalGrant(String granteeEmail) {
+        return String.format("(&%s(zimbraSharedItem=granteeId:%s*))", FILTER_ACCOUNT_OBJECTCLASS, granteeEmail);
+    }
+    
+    public static String accountsByGrants(List<String> granteeIds, 
+            boolean includePublicShares, boolean includeAllAuthedShares) {
+        StringBuilder searchQuery = new StringBuilder().append("(&" + FILTER_ACCOUNT_OBJECTCLASS + "(|");
+        for (String id : granteeIds) {
+            searchQuery.append(String.format("(zimbraSharedItem=granteeId:%s*)", id));
+        }
+        if (includePublicShares) {
+            searchQuery.append("(zimbraSharedItem=*granteeType:pub*)");
+        }
+        if (includeAllAuthedShares) {
+            searchQuery.append("(zimbraSharedItem=*granteeType:all*)");
+        }
+        searchQuery.append("))");
+
+        return searchQuery.toString();
+    }
+    
+    public static String CMBSearchAccountsOnly() {
+        return "(&" + FILTER_ACCOUNT_ONLY_OBJECTCLASS +
+                      "(|(!(" + Provisioning.A_zimbraExcludeFromCMBSearch + "=*))(" +
+                                Provisioning.A_zimbraExcludeFromCMBSearch + "=FALSE))" +
+               ")";
+    }
+    
+    public static String CMBSearchAccountsOnlyWithArchive() {
+        return "(&" + FILTER_ACCOUNT_ONLY_OBJECTCLASS +
+                      "(&" +
+                      "(" + Provisioning.A_zimbraArchiveAccount + "=*)" +
+                      "(|(!(" + Provisioning.A_zimbraExcludeFromCMBSearch + "=*))(" +
+                      Provisioning.A_zimbraExcludeFromCMBSearch + "=FALSE))" +
+                      ")" + 
+               ")";
+    }
+    
+    public static String CMBSearchNonSystemResourceAccountsOnly() {
+        return "(&" + FILTER_ACCOUNT_ONLY_OBJECTCLASS +
+                     "(&" +
+                     "(!(" + Provisioning.A_zimbraIsSystemResource + "=*))" +
+                     "(|(!(" + Provisioning.A_zimbraExcludeFromCMBSearch + "=*))(" +
+                     Provisioning.A_zimbraExcludeFromCMBSearch + "=FALSE))" +
+                     ")" + 
+               ")";
     }
     
     public static String homedOnServer(String serverServiceHostname) {

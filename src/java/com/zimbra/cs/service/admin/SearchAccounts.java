@@ -18,6 +18,7 @@
  */
 package com.zimbra.cs.service.admin;
 
+import com.google.common.base.Splitter;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
@@ -27,8 +28,16 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.SearchAccountsOptions;
+import com.zimbra.cs.account.Provisioning.SearchDirectoryObjectType;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
+import com.zimbra.cs.account.Provisioning.SearchAccountsOptions.IncludeType;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.ldap.ZLdapFilter;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -65,17 +74,12 @@ public class SearchAccounts extends AdminDocumentHandler {
         String types = request.getAttribute(AdminConstants.A_TYPES, "accounts");
         boolean sortAscending = request.getAttributeBool(AdminConstants.A_SORT_ASCENDING, true);
 
-        int flags = Provisioning.searchDirectoryStringToMask(types);
-
         String[] attrs = attrsStr == null ? null : attrsStr.split(",");
 
         // if we are a domain admin only, restrict to domain
         //
         // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager 
         if (isDomainAdminOnly(zsc)) {
-            if ((flags & Provisioning.SD_DOMAIN_FLAG) == Provisioning.SD_DOMAIN_FLAG)
-                throw ServiceException.PERM_DENIED("can not search for domains");
-
             if (domain == null) {
                 domain = getAuthTokenAccountDomain(zsc).getName();
             } else {
@@ -97,13 +101,17 @@ public class SearchAccounts extends AdminDocumentHandler {
         List accounts;
         AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
         if (session != null) {
+            int flags = Provisioning.searchDirectoryStringToMask(types);
             accounts = session.searchAccounts(d, query, attrs, sortBy, sortAscending, flags, offset, 0, rightChecker);
         } else {
-            if (d != null) {
-                accounts = prov.searchAccounts(d, query, attrs, sortBy, sortAscending, flags);
-            } else {
-                accounts = prov.searchAccounts(query, attrs, sortBy, sortAscending, flags);
-            }
+            SearchObjectsOptions searchOpts = new SearchObjectsOptions(d, attrs);
+            searchOpts.setTypes(types);
+            searchOpts.setSortOpt(sortAscending ? SortOpt.SORT_ASCENDING : SortOpt.SORT_DESCENDING);
+            searchOpts.setSortAttr(sortBy);
+            
+            searchOpts.setFilterString(FilterId.ADMIN_SEARCH, query);
+            accounts = prov.searchDirectory(searchOpts);
+                
             accounts = rightChecker.getAllowed(accounts);
         }
 

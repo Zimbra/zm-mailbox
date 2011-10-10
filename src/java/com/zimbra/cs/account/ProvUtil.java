@@ -81,8 +81,11 @@ import com.zimbra.cs.account.Provisioning.CountAccountResult;
 import com.zimbra.cs.account.Provisioning.MailMode;
 import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
 import com.zimbra.cs.account.Provisioning.RightsDoc;
+import com.zimbra.cs.account.Provisioning.SearchDirectoryObjectType;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
 import com.zimbra.cs.account.Provisioning.SetPasswordResult;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.AttrRight;
@@ -106,6 +109,7 @@ import com.zimbra.cs.extension.ExtensionDispatcherServlet;
 import com.zimbra.cs.fb.FbCli;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.ldap.LdapClient;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.cs.wiki.WikiUtil;
@@ -1832,24 +1836,32 @@ public class ProvUtil implements HttpDebugListener {
         String[] attrsToGet = null;
 
         String typesStr = (String) attrs.get("types");
-        int flags = 
-                Provisioning.SD_ACCOUNT_FLAG |
-                Provisioning.SD_ALIAS_FLAG |
-                Provisioning.SD_DISTRIBUTION_LIST_FLAG |
-                Provisioning.SD_CALENDAR_RESOURCE_FLAG;
-
-        if (typesStr != null) {
-            flags = Provisioning.searchDirectoryStringToMask(typesStr);
+        if (typesStr == null) {
+            typesStr = SearchDirectoryObjectType.accounts.name() + "," +
+                    SearchDirectoryObjectType.aliases.name() + "," +
+                    SearchDirectoryObjectType.distributionlists.name() + "," +
+                    SearchDirectoryObjectType.dynamicgroups.name() + "," +
+                    SearchDirectoryObjectType.resources.name();
         }
+
         String domainStr = (String)attrs.get("domain");
-        List<NamedEntry> accounts;
-        Provisioning prov = Provisioning.getInstance();
+        
+        SearchObjectsOptions searchOpts = new SearchObjectsOptions(attrsToGet);
         if (domainStr != null) {
             Domain d = lookupDomain(domainStr, prov);
-            accounts = prov.searchAccounts(d, query, attrsToGet, sortBy, isSortAscending, flags);
-        } else {
-            accounts = prov.searchAccounts(query, attrsToGet, sortBy, isSortAscending, flags);
+            searchOpts.setDomain(d);
         }
+        searchOpts.setTypes(typesStr);
+        searchOpts.setSortOpt(isSortAscending ? SortOpt.SORT_ASCENDING : SortOpt.SORT_DESCENDING);
+        searchOpts.setSortAttr(sortBy);
+        
+        FilterId filterId = null;
+        if (prov instanceof LdapProv) {
+            filterId = FilterId.ADMIN_SEARCH;
+        }
+        searchOpts.setFilterString(filterId, query);
+        
+        List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
 
         for (int j=offset; j < offset+limit && j < accounts.size(); j++) {
             NamedEntry account = accounts.get(j);

@@ -29,6 +29,10 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
+import com.zimbra.cs.account.Provisioning.SearchAccountsOptions;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
+import com.zimbra.cs.ldap.ZLdapFilter;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -482,28 +486,16 @@ public class ShareInfo {
             if (granteeIds.isEmpty() && !includePublicShares && !includeAllAuthedShares) {
                 return;
             }
-
-            // construct search query
-            StringBuilder searchQuery = new StringBuilder().append("(&(objectclass=zimbraAccount)(|");
-            for (String id : granteeIds) {
-                searchQuery.append(String.format("(zimbraSharedItem=granteeId:%s*)", id));
-            }
-            if (includePublicShares) {
-                searchQuery.append("(zimbraSharedItem=*granteeType:pub*)");
-            }
-            if (includeAllAuthedShares) {
-                searchQuery.append("(zimbraSharedItem=*granteeType:all*)");
-            }
-            searchQuery.append("))");
-
-            List<NamedEntry> accounts =
-                    prov.searchAccounts(searchQuery.toString(),
-                                        new String[] {
-                                                Provisioning.A_zimbraId,
-                                                Provisioning.A_zimbraSharedItem,
-                                                Provisioning.A_displayName },
-                                        null, false, Provisioning.SD_ACCOUNT_FLAG);
-
+            
+            SearchAccountsOptions searchOpts = new SearchAccountsOptions(
+                    new String[] {
+                           Provisioning.A_zimbraId,
+                           Provisioning.A_displayName,
+                           Provisioning.A_zimbraSharedItem });
+           searchOpts.setFilter(ZLdapFilterFactory.getInstance().accountsByGrants(
+                   granteeIds, includePublicShares, includeAllAuthedShares));
+           List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
+            
             //TODO - check for dups
             for (NamedEntry ne : accounts) {
                 Account account = (Account) ne;

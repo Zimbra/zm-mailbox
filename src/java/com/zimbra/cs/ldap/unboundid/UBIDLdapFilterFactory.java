@@ -58,6 +58,11 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static Filter FILTER_DOMAIN_LABEL;
     private static Filter FILTER_HAS_SUBORDINATES;
     private static Filter FILTER_IS_SYSTEM_RESOURCE;
+    private static Filter FILTER_NOT_SYSTEM_RESOURCE;
+    private static Filter FILTER_PUBLIC_SHARE;
+    private static Filter FILTER_ALLAUTHED_SHARE;
+    private static Filter FILTER_NOT_EXCLUDED_FROM_CMB_SEARCH;
+    private static Filter FILTER_WITH_ARCHIVE;
     
     private static boolean initialized = false;
     
@@ -138,6 +143,24 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         FILTER_IS_SYSTEM_RESOURCE = 
                 Filter.createEqualityFilter("zimbraIsSystemResource", "TRUE");
         
+        FILTER_NOT_SYSTEM_RESOURCE = 
+            Filter.createNOTFilter(FILTER_IS_SYSTEM_RESOURCE);
+        
+        FILTER_PUBLIC_SHARE = 
+            Filter.createSubstringFilter(Provisioning.A_zimbraSharedItem, null, new String[]{"granteeType:pub"}, null);
+        
+        FILTER_ALLAUTHED_SHARE = 
+            Filter.createSubstringFilter(Provisioning.A_zimbraSharedItem, null, new String[]{"granteeType:all"}, null);
+        
+        FILTER_NOT_EXCLUDED_FROM_CMB_SEARCH = 
+            Filter.createORFilter(
+                    Filter.createNOTFilter(Filter.createPresenceFilter(Provisioning.A_zimbraExcludeFromCMBSearch)),
+                    Filter.createEqualityFilter(Provisioning.A_zimbraExcludeFromCMBSearch, "FALSE"));
+        
+        FILTER_WITH_ARCHIVE =
+            Filter.createPresenceFilter(Provisioning.A_zimbraArchiveAccount); 
+
+        
         /*
          * filters built on top of other filters
          */
@@ -191,11 +214,26 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         try {
             return new UBIDLdapFilter(
                     filterId,
-                    Filter.create(filterString));
+                    Filter.create(encloseFilterIfNot(filterString)));
         } catch (LDAPException e) {
             throw UBIDLdapException.mapToLdapException(e);
         }
     }
+    
+    @Override
+    public ZLdapFilter adminSearch(ZLdapFilter ocFilter, String filterString) 
+    throws LdapException {
+        try {
+            return new UBIDLdapFilter(
+                    FilterId.ADMIN_SEARCH,
+                    Filter.createANDFilter(
+                            ((UBIDLdapFilter) ocFilter).getNative(),
+                            Filter.create(encloseFilterIfNot(filterString))));
+        } catch (LDAPException e) {
+            throw UBIDLdapException.mapToLdapException(e);
+        }
+    }
+    
     
     /*
      * Mail target (accounts and groups)
@@ -222,6 +260,13 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         return new UBIDLdapFilter(
                 FilterId.ALL_ACCOUNTS,
                 FILTER_ALL_ACCOUNTS);
+    }
+    
+    @Override
+    public ZLdapFilter allAccountsOnly() {
+        return new UBIDLdapFilter(
+                FilterId.ALL_ACCOUNTS_ONLY,
+                FILTER_ALL_ACCOUNTS_ONLY);
     }
     
     @Override
@@ -313,7 +358,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     @Override
     public ZLdapFilter accountsOnServerAndCosHasSubordinates(String serverServiceHostname, String cosId) {
         return new UBIDLdapFilter(
-                FilterId.ACCOUNT_ON_SERVER_AND_COS_HAS_SUBORDINATES,
+                FilterId.ACCOUNTS_ON_SERVER_AND_COS_HAS_SUBORDINATES,
                 Filter.createANDFilter(
                         FILTER_ALL_ACCOUNTS,
                         ((UBIDLdapFilter) homedOnServer(serverServiceHostname)).getNative(),
@@ -322,7 +367,70 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                                 Filter.createNOTFilter(Filter.createPresenceFilter(Provisioning.A_zimbraCOSId)),
                                 Filter.createEqualityFilter(Provisioning.A_zimbraCOSId, cosId))));
     }
+    
+    @Override
+    public ZLdapFilter accountsByExternalGrant(String granteeEmail) {
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_BY_EXTERNAL_GRANT,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS,
+                        Filter.createSubstringFilter(Provisioning.A_zimbraSharedItem,
+                                "granteeId:" + granteeEmail, null, null)));
+    }
+    
+    @Override
+    public ZLdapFilter accountsByGrants(List<String> granteeIds,
+            boolean includePublicShares, boolean includeAllAuthedShares) {
+        
+        List<Filter> filters = Lists.newArrayList();
+        for (String granteeId : granteeIds) {
+            filters.add(Filter.createSubstringFilter(Provisioning.A_zimbraSharedItem, "granteeId:" + granteeId, null, null));
+        }
+        
+        if (includePublicShares) {
+            filters.add(FILTER_PUBLIC_SHARE);
+        }
+        
+        if (includeAllAuthedShares) {
+            filters.add(FILTER_ALLAUTHED_SHARE);
+        }
+        
+        return new UBIDLdapFilter(
+                FilterId.ACCOUNTS_BY_GRANTS,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS,
+                        Filter.createORFilter(filters)));
+    }
 
+    @Override
+    public ZLdapFilter CMBSearchAccountsOnly() {
+        return new UBIDLdapFilter(
+                FilterId.CMB_SEARCH_ACCOUNTS_ONLY,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_EXCLUDED_FROM_CMB_SEARCH));
+    }
+    
+    @Override
+    public ZLdapFilter CMBSearchAccountsOnlyWithArchive() {
+        return new UBIDLdapFilter(
+                FilterId.CMB_SEARCH_ACCOUNTS_ONLY_WITH_ARCHIVE,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_WITH_ARCHIVE,
+                        FILTER_NOT_EXCLUDED_FROM_CMB_SEARCH));
+    }
+    
+    @Override
+    public ZLdapFilter CMBSearchNonSystemResourceAccountsOnly() {
+        return new UBIDLdapFilter(
+                FilterId.CMB_SEARCH_NON_SYSTEM_RESOURCE_ACCOUNTS_ONLY,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        FILTER_NOT_SYSTEM_RESOURCE,
+                        FILTER_NOT_EXCLUDED_FROM_CMB_SEARCH));
+    }
+    
     
     /*
      * calendar resource

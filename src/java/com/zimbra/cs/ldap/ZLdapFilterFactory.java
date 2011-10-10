@@ -14,6 +14,9 @@
  */
 package com.zimbra.cs.ldap;
 
+import java.util.List;
+
+import com.google.common.collect.Lists;
 import com.zimbra.cs.account.Provisioning;
 
 public abstract class ZLdapFilterFactory extends ZLdapElement {
@@ -35,13 +38,17 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         ACCOUNT_BY_FOREIGN_PRINCIPAL(SINGLETON.accountByForeignPrincipal("{FOREIGN-PRINCIPAL}")),
         ACCOUNT_BY_MEMBEROF(SINGLETON.accountByMemberOf("{DYNAMIC-GROUP-ID}")),
         ACCOUNT_BY_NAME(SINGLETON.accountByName("{ACCOUNT-NAME}")),
+        ACCOUNTS_BY_EXTERNAL_GRANT(SINGLETON.accountsByExternalGrant("{GRANTEE-EMAIL}")),
+        ACCOUNTS_BY_GRANTS(SINGLETON.accountsByGrants(Lists.newArrayList("GRANTEE-ID-1", "GRANTEE-ID-2", "..."), true, true)),
         ACCOUNTS_HOMED_ON_SERVER(SINGLETON.accountsHomedOnServer("{SERVER-SERVICE-HOSTNAME}")),
         ACCOUNTS_HOMED_ON_SERVER_ACCOUNTS_ONLY(SINGLETON.accountsHomedOnServerAccountsOnly("{SERVER-SERVICE-HOSTNAME}")),
-        ACCOUNT_ON_SERVER_AND_COS_HAS_SUBORDINATES(SINGLETON.accountsOnServerAndCosHasSubordinates("{SERVER-SERVICE-HOSTNAME}", "{COS-ID}")),
+        ACCOUNTS_ON_SERVER_AND_COS_HAS_SUBORDINATES(SINGLETON.accountsOnServerAndCosHasSubordinates("{SERVER-SERVICE-HOSTNAME}", "{COS-ID}")),
+        
         ADDRS_EXIST(SINGLETON.addrsExist(new String[]{"{ADDR-1}", "ADDR-2", "..."})),
         ADMIN_ACCOUNT_BY_ADMIN_FLAG(SINGLETON.adminAccountByAdminFlag()),
         ADMIN_ACCOUNT_BY_RDN(SINGLETON.adminAccountByRDN("{NAMING-RDN-ATTR}", "{NAME}")),
         ALL_ACCOUNTS(SINGLETON.allAccounts()),
+        ALL_ACCOUNTS_ONLY(SINGLETON.allAccountsOnly()),
         ALL_CALENDAR_RESOURCES(SINGLETON.allCalendarResources()),
         ALL_COSES(SINGLETON.allCoses()),
         ALL_DATA_SOURCES(SINGLETON.allDataSources()),
@@ -59,6 +66,11 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         CALENDAR_RESOURCE_BY_FOREIGN_PRINCIPAL(SINGLETON.calendarResourceByForeignPrincipal("{FOREIGN-PRINCIPAL}")),
         CALENDAR_RESOURCE_BY_ID(SINGLETON.calendarResourceById("{CALENDAR-RESOURCE-ID}")),
         CALENDAR_RESOURCE_BY_NAME(SINGLETON.calendarResourceByName("{CALENDAR-RESOURCE-NAME}")),
+        
+        CMB_SEARCH_ACCOUNTS_ONLY(SINGLETON.CMBSearchAccountsOnly()),
+        CMB_SEARCH_ACCOUNTS_ONLY_WITH_ARCHIVE(SINGLETON.CMBSearchAccountsOnlyWithArchive()),
+        CMB_SEARCH_NON_SYSTEM_RESOURCE_ACCOUNTS_ONLY(SINGLETON.CMBSearchNonSystemResourceAccountsOnly()),
+        
         COS_BY_ID(SINGLETON.cosById("{COS-ID}")),
         COSES_BY_MAILHOST_POOL(SINGLETON.cosesByMailHostPool("{SERVER-ID}")),
         CREATED_LATEROREQUAL(SINGLETON.createdLaterOrEqual("{GENERALIZED_TIME}")),
@@ -83,6 +95,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         IDENTITY_BY_NAME(SINGLETON.identityByName("{IDENTITY-NAME}")),
         MEMBER_OF(SINGLETON.memberOf("{DN-OF-GROUP}")),
         MIME_ENTRY_BY_MIME_TYPE(SINGLETON.mimeEntryByMimeType("{MIME-TYPE}")),
+        
         SERVER_BY_ID(SINGLETON.serverById("{SERVER-ID}")),
         SERVER_BY_SERVICE(SINGLETON.serverByService("{SERVICE}")),
         SIGNATURE_BY_ID(SINGLETON.signatureById("{SIGNATURE-ID}")),
@@ -91,6 +104,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         
         
         // ids for fromFilterString() calls
+        ADMIN_SEARCH("Admin search"),
         AUTO_PROVISION_ADMIN_SEARCH("Admin entered filter"),
         AUTO_PROVISION_SEARCH("Filter in " + Provisioning.A_zimbraAutoProvLdapSearchFilter),
         AUTO_PROVISION_SEARCH_CREATED_LATERTHAN("Filter in " + Provisioning.A_zimbraAutoProvLdapSearchFilter + "AND" + SINGLETON.createdLaterOrEqual("{GENERALIZED_TIME}")),
@@ -133,6 +147,14 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     }
     
     
+    protected String encloseFilterIfNot(String filterString) {
+        if (filterString.startsWith("(") && filterString.endsWith(")")) {
+            return filterString;
+        } else {
+            return "(" + filterString + ")";
+        }
+    }
+    
     /*
      * operational
      */
@@ -144,6 +166,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
      */
     public abstract ZLdapFilter anyEntry();
     public abstract ZLdapFilter fromFilterString(FilterId filterId, String filterString) throws LdapException;
+    public abstract ZLdapFilter adminSearch(ZLdapFilter ocFilter, String filterString) throws LdapException;
     
     /*
      * Mail target (accounts and groups)
@@ -154,6 +177,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
      * account
      */
     public abstract ZLdapFilter allAccounts();
+    public abstract ZLdapFilter allAccountsOnly();
     public abstract ZLdapFilter allNonSystemAccounts();
     public abstract ZLdapFilter accountByForeignPrincipal(String foreignPrincipal);
     public abstract ZLdapFilter accountById(String id);
@@ -167,6 +191,13 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter homedOnServer(String serverServiceHostname);
     public abstract ZLdapFilter accountsOnServerAndCosHasSubordinates(
             String serverServiceHostname, String cosId);
+    public abstract ZLdapFilter accountsByExternalGrant(String granteeEmail);
+    public abstract ZLdapFilter accountsByGrants(List<String> granteeIds,
+            boolean includePublicShares, boolean includeAllAuthedShares);
+    public abstract ZLdapFilter CMBSearchAccountsOnly();
+    public abstract ZLdapFilter CMBSearchAccountsOnlyWithArchive();
+    public abstract ZLdapFilter CMBSearchNonSystemResourceAccountsOnly();
+    
     
     /*
      * calendar resource

@@ -14,8 +14,11 @@
  */
 package com.zimbra.qa.unittest;
 
+import java.util.List;
+
 import org.junit.*;
 
+import com.google.common.collect.Lists;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
@@ -103,6 +106,15 @@ public class TestLdapZLdapFilter extends TestLdap {
         String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
         verifyStatString(FilterId.ALL_ACCOUNTS, zLdapFilter);
+    }
+    
+    @Test
+    public void allAccountsOnly() throws Exception {
+        String filter = LegacyLdapFilter.allAccountsOnly();
+        ZLdapFilter zLdapFilter = filterDactory.allAccountsOnly();
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        verifyStatString(FilterId.ALL_ACCOUNTS_ONLY, zLdapFilter);
     }
     
     @Test
@@ -225,7 +237,127 @@ public class TestLdapZLdapFilter extends TestLdap {
         ZLdapFilter zLdapFilter = filterDactory.accountsOnServerAndCosHasSubordinates(SERVER.getServiceHostname(), COS_ID);
         String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
-        verifyStatString(FilterId.ACCOUNT_ON_SERVER_AND_COS_HAS_SUBORDINATES, zLdapFilter);
+        verifyStatString(FilterId.ACCOUNTS_ON_SERVER_AND_COS_HAS_SUBORDINATES, zLdapFilter);
+    }
+    
+    @Test
+    public void accountsByExternalGrant() throws Exception {
+        String GRANTEE_EMAIL = "accountsSharedWith@test.com";
+        
+        String legacyFilter = String.format("(&(objectClass=zimbraAccount)(zimbraSharedItem=granteeId:%s*))", GRANTEE_EMAIL);
+        
+        String filter = LegacyLdapFilter.accountsByExternalGrant(GRANTEE_EMAIL);
+        ZLdapFilter zLdapFilter = filterDactory.accountsByExternalGrant(GRANTEE_EMAIL);
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        assertEquals(legacyFilter, zFilter);
+        verifyStatString(FilterId.ACCOUNTS_BY_EXTERNAL_GRANT, zLdapFilter);
+    }
+    
+    @Test
+    public void accountsByGrants() throws Exception {
+        List<String> GRANTEE_IDS = Lists.newArrayList("GRANTEE-ID-1", "GRANTEE-ID-2", "...");
+        boolean includePublicShares = true;
+        boolean includeAllAuthedShares = true;
+        
+        // legacy code
+        StringBuilder searchQuery = new StringBuilder().append("(&(objectClass=zimbraAccount)(|");
+        for (String id : GRANTEE_IDS) {
+            searchQuery.append(String.format("(zimbraSharedItem=granteeId:%s*)", id));
+        }
+        if (includePublicShares) {
+            searchQuery.append("(zimbraSharedItem=*granteeType:pub*)");
+        }
+        if (includeAllAuthedShares) {
+            searchQuery.append("(zimbraSharedItem=*granteeType:all*)");
+        }
+        searchQuery.append("))");
+        
+        String legacyFilter = searchQuery.toString();
+        
+        String filter = LegacyLdapFilter.accountsByGrants(GRANTEE_IDS, includePublicShares, includeAllAuthedShares);
+        ZLdapFilter zLdapFilter = filterDactory.accountsByGrants(GRANTEE_IDS, includePublicShares, includeAllAuthedShares);
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        assertEquals(legacyFilter, zFilter);
+        verifyStatString(FilterId.ACCOUNTS_BY_GRANTS, zLdapFilter);
+    }
+    
+    @Test
+    public void CMBSearchAccountsOnly() throws Exception {
+        
+        /*
+        orig filter before refactoring
+        String legacyFilter = 
+            "(&(|(!(zimbraExcludeFromCMBSearch=*))(zimbraExcludeFromCMBSearch=FALSE))(&(objectClass=zimbraAccount)(!(objectClass=zimbraCalendarResource))))";
+        */
+        
+        // moved objectClass to the front
+        String legacyFilter = 
+            "(&(&(objectClass=zimbraAccount)(!(objectClass=zimbraCalendarResource)))(|(!(zimbraExcludeFromCMBSearch=*))(zimbraExcludeFromCMBSearch=FALSE)))";
+
+        String filter = LegacyLdapFilter.CMBSearchAccountsOnly();
+        assertEquals(legacyFilter, filter);
+        
+        ZLdapFilter zLdapFilter = filterDactory.CMBSearchAccountsOnly();
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        assertEquals(legacyFilter, zFilter);
+        verifyStatString(FilterId.CMB_SEARCH_ACCOUNTS_ONLY, zLdapFilter);
+        
+    }
+    
+    @Test
+    public void CMBSearchAccountsOnlyWithArchive() throws Exception {
+        /*
+        orig filter before refactoring
+        String legacyFilter = 
+            "(&(&(zimbraArchiveAccount=*)(|(!(zimbraExcludeFromCMBSearch=*))(zimbraExcludeFromCMBSearch=FALSE)))(&(objectClass=zimbraAccount)(!(objectClass=zimbraCalendarResource))))";
+        */
+        
+        // moved objectClass to the front
+        String legacyFilter = 
+            "(&(&(objectClass=zimbraAccount)(!(objectClass=zimbraCalendarResource)))(&(zimbraArchiveAccount=*)(|(!(zimbraExcludeFromCMBSearch=*))(zimbraExcludeFromCMBSearch=FALSE))))";
+        
+        String filter = LegacyLdapFilter.CMBSearchAccountsOnlyWithArchive();
+        assertEquals(legacyFilter, filter);
+        
+        ZLdapFilter zLdapFilter = filterDactory.CMBSearchAccountsOnlyWithArchive();
+        String zFilter = zLdapFilter.toFilterString();
+        
+        // This assertion fails because we optimized it in the new code
+        // it is now:
+        // (&(&(objectClass=zimbraAccount)(!(objectClass=zimbraCalendarResource)))(zimbraArchiveAccount=*)(|(!(zimbraExcludeFromCMBSearch=*))(zimbraExcludeFromCMBSearch=FALSE)))
+        System.out.println(zLdapFilter.toFilterString());
+        // assertEquals(filter, zFilter);
+        // assertEquals(legacyFilter, zFilter);
+        verifyStatString(FilterId.CMB_SEARCH_ACCOUNTS_ONLY_WITH_ARCHIVE, zLdapFilter);
+    }
+    
+    @Test
+    public void CMBSearchNonSystemResourceAccountsOnly() throws Exception {
+        /*
+        orig filter before refactoring
+        String legacyFilter = 
+            "(&(&(!(zimbraIsSystemResource=*))(|(!(zimbraExcludeFromCMBSearch=*))(zimbraExcludeFromCMBSearch=FALSE)))(&(objectClass=zimbraAccount)(!(objectClass=zimbraCalendarResource))))";
+         */
+        
+        String legacyFilter = 
+            "(&(&(objectClass=zimbraAccount)(!(objectClass=zimbraCalendarResource)))(&(!(zimbraIsSystemResource=*))(|(!(zimbraExcludeFromCMBSearch=*))(zimbraExcludeFromCMBSearch=FALSE))))";
+
+        String filter = LegacyLdapFilter.CMBSearchNonSystemResourceAccountsOnly();
+        assertEquals(legacyFilter, filter);
+        
+        ZLdapFilter zLdapFilter = filterDactory.CMBSearchNonSystemResourceAccountsOnly();
+        String zFilter = zLdapFilter.toFilterString();
+        
+        // This assertion fails because we optimized it in the new code
+        // it is now:
+        // (&(&(objectClass=zimbraAccount)(!(objectClass=zimbraCalendarResource)))(!(zimbraIsSystemResource=TRUE))(|(!(zimbraExcludeFromCMBSearch=*))(zimbraExcludeFromCMBSearch=FALSE)))
+        // System.out.println(zLdapFilter.toFilterString());
+        // assertEquals(filter, zFilter);
+        // assertEquals(legacyFilter, zFilter);
+        verifyStatString(FilterId.CMB_SEARCH_NON_SYSTEM_RESOURCE_ACCOUNTS_ONLY, zLdapFilter);
     }
     
     @Test

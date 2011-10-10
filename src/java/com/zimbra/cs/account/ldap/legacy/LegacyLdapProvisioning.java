@@ -1262,8 +1262,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     }
 
     @SuppressWarnings("unchecked")
-    @Override
-    public List<NamedEntry> searchAccounts(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, int flags) throws ServiceException {
+    private List<NamedEntry> searchAccounts(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, int flags) throws ServiceException {
         return (List<NamedEntry>) searchAccountsInternal(query, returnAttrs, sortAttr, sortAscending, flags);
     }
 
@@ -5192,9 +5191,9 @@ public class LegacyLdapProvisioning extends LdapProv {
                               null, null, true, Provisioning.SD_DISTRIBUTION_LIST_FLAG);
     }
 
-    @Override
-    public List searchAccounts(Domain d, String query, String returnAttrs[], String sortAttr, boolean sortAscending, int flags) throws ServiceException
-    {
+    private List searchAccounts(Domain d, String query, String returnAttrs[], 
+            String sortAttr, boolean sortAscending, int flags) 
+    throws ServiceException {
         LdapDomain ld = (LdapDomain) d;
         return searchObjects(query, returnAttrs, sortAttr, sortAscending,
                              mDIT.domainDNToAccountSearchDN(ld.getDN()), flags, 0);

@@ -34,6 +34,9 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ShareInfoData;
 import com.zimbra.cs.account.ZimbraAuthToken;
+import com.zimbra.cs.account.Provisioning.SearchAccountsOptions;
+import com.zimbra.cs.ldap.ZLdapFilter;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
@@ -242,15 +245,14 @@ public class ExternalUserProvServlet extends ZimbraServlet {
             }
 
             // search all shares accessible to the external user
-            String searchQuery =
-                    String.format("(&(objectclass=zimbraAccount)(zimbraSharedItem=granteeId:%s*))", extUserEmail);
-            List<NamedEntry> accounts =
-                    prov.searchAccounts(domain, searchQuery,
-                                        new String[] {
-                                                Provisioning.A_zimbraId,
-                                                Provisioning.A_displayName,
-                                                Provisioning.A_zimbraSharedItem },
-                                        null, false, Provisioning.SD_ACCOUNT_FLAG);
+            SearchAccountsOptions searchOpts = new SearchAccountsOptions(
+                    domain, new String[] {
+                            Provisioning.A_zimbraId,
+                            Provisioning.A_displayName,
+                            Provisioning.A_zimbraSharedItem });
+            searchOpts.setFilter(ZLdapFilterFactory.getInstance().accountsByExternalGrant(extUserEmail));
+            List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
+            
             if (accounts.isEmpty()) {
                 throw new ServletException("no shares discovered");
             }

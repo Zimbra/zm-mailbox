@@ -44,6 +44,7 @@ import com.zimbra.common.account.Key.SignatureBy;
 import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.account.Key.XMPPComponentBy;
 import com.zimbra.common.auth.ZAuthToken;
+import com.zimbra.soap.admin.type.AdminObjectInfo;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.admin.type.DistributionListInfo;
 import com.zimbra.common.localconfig.LC;
@@ -65,6 +66,8 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.NamedEntry.Visitor;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
@@ -1337,13 +1340,6 @@ public class SoapProvisioning extends Provisioning {
         invokeJaxb(new RenameDistributionListRequest(zimbraId, newName));
     }
 
-    @Override
-    public List<NamedEntry> searchAccounts(String query, String[] returnAttrs,
-            String sortAttr, boolean sortAscending, int flags)
-            throws ServiceException {
-        return searchAccounts((Domain) null, query, returnAttrs, sortAttr, sortAscending, flags);
-    }
-
     @SuppressWarnings("unchecked")
     @Override
     public List<NamedEntry> searchCalendarResources(EntrySearchFilter filter,
@@ -1631,40 +1627,6 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public List<NamedEntry> searchAccounts(Domain d, String query, String[] returnAttrs, 
-            String sortAttr, boolean sortAscending, int flags) 
-    throws ServiceException {
-        List<NamedEntry> result = new ArrayList<NamedEntry>();
-        XMLElement req = new XMLElement(AdminConstants.SEARCH_ACCOUNTS_REQUEST);
-        req.addElement(AdminConstants.E_QUERY).setText(query);
-        if (d != null) {
-            req.addAttribute(AdminConstants.A_DOMAIN, d.getName());
-        }
-        if (sortAttr != null) {
-            req.addAttribute(AdminConstants.A_SORT_BY, sortAttr);
-        }
-        if (flags != 0) {
-            req.addAttribute(AdminConstants.A_TYPES, Provisioning.searchDirectoryMaskToString(flags));
-        }
-        req.addAttribute(AdminConstants.A_SORT_ASCENDING, sortAscending ? "1" : "0");
-        if (returnAttrs != null) {
-            req.addAttribute(AdminConstants.A_ATTRS, StringUtil.join(",", returnAttrs));
-        }
-        // TODO: handle ApplyCos, limit, offset?
-        Element resp = invoke(req);
-        for (Element e: resp.listElements(AdminConstants.E_DL))
-            result.add(new SoapDistributionList(e, this));
-
-        for (Element e: resp.listElements(AdminConstants.E_ALIAS))
-            result.add(new SoapAlias(e, this));
-
-        for (Element e: resp.listElements(AdminConstants.E_ACCOUNT))
-            result.add(new SoapAccount(e, this));
-
-        return result;
-    }
-
-    @Override
     public List<NamedEntry> searchDirectory(SearchOptions options) throws ServiceException {
         List<NamedEntry> result = new ArrayList<NamedEntry>();
         SearchDirectoryRequest req = new SearchDirectoryRequest();
@@ -1691,6 +1653,42 @@ public class SoapProvisioning extends Provisioning {
             result.add(new SoapAccount(acct, this));
         for (DomainInfo dom : resp.getDomains())
             result.add(new SoapDomain(dom, this));
+        return result;
+    }
+    
+    @Override
+    public List<NamedEntry> searchDirectory(SearchObjectsOptions options) throws ServiceException {
+        List<NamedEntry> result = new ArrayList<NamedEntry>();
+        SearchDirectoryRequest req = new SearchDirectoryRequest();
+        req.setQuery(options.getFilterString());
+        if (options.getMaxResults() != 0)
+            req.setMaxResults(options.getMaxResults());
+        if (options.getDomain() != null)
+            req.setDomain(options.getDomain().getName());
+        if (options.getSortAttr() != null)
+            req.setSortBy(options.getSortAttr());
+        if (options.getTypesAsFlags() != 0 &&  options.getTypesAsFlags() != SearchDirectoryObjectType.getAllTypesFlags())
+            req.setTypes(Provisioning.searchDirectoryMaskToString(options.getTypesAsFlags()));
+        req.setSortAscending(options.getSortOpt() != SortOpt.SORT_DESCENDING);
+        if (options.getReturnAttrs() != null)
+            req.addAttrs(options.getReturnAttrs());
+        // TODO: handle ApplyCos, limit, offset?
+        SearchDirectoryResponse resp = invokeJaxb(req);
+
+        List<AdminObjectInfo> entries = resp.getEntries();
+        for (AdminObjectInfo entry : entries) {
+            if (entry instanceof AccountInfo) {
+                result.add(new SoapAccount((AccountInfo) entry, this));
+            } else if (entry instanceof CalendarResourceInfo) {
+                result.add(new SoapCalendarResource((CalendarResourceInfo) entry, this));
+            } else if (entry instanceof AliasInfo) {
+                result.add(new SoapAlias((AliasInfo) entry, this));
+            } else if (entry instanceof DistributionListInfo) {
+                result.add(new SoapDistributionList((DistributionListInfo) entry, this));
+            } else if (entry instanceof DomainInfo) {
+                result.add(new SoapDomain((DomainInfo) entry, this));
+            }
+        }
         return result;
     }
 

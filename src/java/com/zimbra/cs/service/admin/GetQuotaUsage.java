@@ -31,6 +31,10 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.cs.account.Provisioning.SearchAccountsOptions;
+import com.zimbra.cs.account.Provisioning.SearchAccountsOptions.IncludeType;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.MakeObjectOpt;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -176,17 +180,18 @@ public class GetQuotaUsage extends AdminDocumentHandler {
 
             ArrayList<AccountQuota> result = new ArrayList<AccountQuota>();
             
-            String query = String.format("(zimbraMailHost=%s)", getLocalHost());
-            
             Provisioning prov = Provisioning.getInstance();
-            int flags = Provisioning.SD_ACCOUNT_FLAG | Provisioning.SO_NO_ACCOUNT_SECONDARY_DEFAULTS;
-            List<NamedEntry> accounts;
+            
+            SearchAccountsOptions searchOpts = new SearchAccountsOptions();
+            searchOpts.setIncludeType(IncludeType.ACCOUNTS_ONLY);
+            searchOpts.setMakeObjectOpt(MakeObjectOpt.NO_SECONDARY_DEFAULTS);
+            searchOpts.setSortOpt(SortOpt.SORT_ASCENDING);
+            
             Domain d = mDomainId.equals("") ? null : prov.get(Key.DomainBy.id, mDomainId);
             if (d != null) {
-                accounts = prov.searchAccounts(d, query, null, null, true, flags);
-            } else {
-                accounts = prov.searchAccounts(query, null, null, true, flags);
+                searchOpts.setDomain(d);
             }
+            List<NamedEntry> accounts = prov.searchAccountsOnServer(Provisioning.getInstance().getLocalServer(), searchOpts);
             
             Map<String, Long> quotaUsed = MailboxManager.getInstance().getMailboxSizes(accounts);
 

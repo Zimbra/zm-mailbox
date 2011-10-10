@@ -14,6 +14,8 @@
  */
 package com.zimbra.cs.ldap.jndi;
 
+import java.util.List;
+
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZLdapFilter;
@@ -52,9 +54,15 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     @Override
     public ZLdapFilter fromFilterString(FilterId filterId, String filterString) 
     throws LdapException {
-        return new JNDILdapFilter(filterString);
+        return new JNDILdapFilter(encloseFilterIfNot(filterString));
     }
     
+    @Override
+    public ZLdapFilter adminSearch(ZLdapFilter ocFilter, String filterString) 
+    throws LdapException {
+        return new JNDILdapFilter(String.format("(&%s%s)", 
+                ocFilter.toFilterString(), encloseFilterIfNot(filterString)));
+    }
     
     /*
      * Mail target (accounts and groups)
@@ -71,6 +79,11 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     @Override
     public ZLdapFilter allAccounts() {
         return new JNDILdapFilter(LegacyLdapFilter.allAccounts());
+    }
+    
+    @Override
+    public ZLdapFilter allAccountsOnly() {
+        return new JNDILdapFilter(LegacyLdapFilter.allAccountsOnly());
     }
     
     @Override
@@ -128,6 +141,32 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
         return new JNDILdapFilter(LegacyLdapFilter.accountsOnServerOnCosHasSubordinates(serverServiceHostname, cosId));
     }
 
+    @Override
+    public ZLdapFilter accountsByExternalGrant(String granteeEmail) {
+        return new JNDILdapFilter(LegacyLdapFilter.accountsByExternalGrant(granteeEmail));
+    }
+    
+    @Override
+    public ZLdapFilter accountsByGrants(List<String> granteeIds,
+            boolean includePublicShares, boolean includeAllAuthedShares) {
+        return new JNDILdapFilter(LegacyLdapFilter.accountsByGrants(
+                granteeIds, includePublicShares, includeAllAuthedShares));
+    }
+    
+    @Override
+    public ZLdapFilter CMBSearchAccountsOnly() {
+        return new JNDILdapFilter(LegacyLdapFilter.CMBSearchAccountsOnly());
+    }
+    
+    @Override
+    public ZLdapFilter CMBSearchAccountsOnlyWithArchive() {
+        return new JNDILdapFilter(LegacyLdapFilter.CMBSearchAccountsOnlyWithArchive());
+    }
+    
+    @Override
+    public ZLdapFilter CMBSearchNonSystemResourceAccountsOnly() {
+        return new JNDILdapFilter(LegacyLdapFilter.CMBSearchNonSystemResourceAccountsOnly());
+    }
     
     /*
      * calendar resource

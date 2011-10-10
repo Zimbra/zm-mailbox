@@ -26,7 +26,10 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.cs.account.Provisioning.SearchAccountsOptions;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -89,11 +92,15 @@ public class FixCalendarTZ extends AdminDocumentHandler {
 
     private static List<NamedEntry> getAccountsOnServer() throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
-        String serverName = prov.getLocalServer().getAttr(Provisioning.A_zimbraServiceHostname);
-        List<NamedEntry> accts = prov.searchAccounts(
-                "(zimbraMailHost=" + serverName + ")",
-                new String[] { Provisioning.A_zimbraId }, null, false,
-                Provisioning.SD_ACCOUNT_FLAG | Provisioning.SD_CALENDAR_RESOURCE_FLAG);
+        Server server = prov.getLocalServer();
+        String serverName = server.getAttr(Provisioning.A_zimbraServiceHostname);
+        
+        SearchAccountsOptions searchOpts = 
+            new SearchAccountsOptions(new String[] { Provisioning.A_zimbraId });
+        searchOpts.setSortOpt(SortOpt.SORT_DESCENDING);
+        
+        List<NamedEntry> accts = prov.searchAccountsOnServer(server, searchOpts);
+
         ZimbraLog.calendar.info("Found " + accts.size() + " accounts on server " + serverName);
         return accts;
     }

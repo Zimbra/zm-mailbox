@@ -81,7 +81,6 @@ public class TestLdapProvSignature extends TestLdap {
     
     private Signature createSignatureRaw(Account acct, String signatureName) throws Exception {
         Map<String, Object> attrs = new HashMap<String, Object>();
-        
         return prov.createSignature(acct, signatureName, attrs);
     }
     

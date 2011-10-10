@@ -55,6 +55,8 @@ import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.DomainCache.GetFromDomainCacheOption;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.Provisioning.SearchAccountsOptions;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
+import com.zimbra.cs.account.Provisioning.SearchAccountsOptions.IncludeType;
 import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.MakeObjectOpt;
 import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
@@ -1199,19 +1201,6 @@ public class LdapProvisioning extends LdapProv {
         return (List<Account>) searchAccountsInternal(filterFactory.adminAccountByAdminFlag().toFilterString(),
                 null, null, true, Provisioning.SD_ACCOUNT_FLAG);
     }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public List<NamedEntry> searchAccounts(String query, String returnAttrs[], final String sortAttr,
-            final boolean sortAscending, int flags) throws ServiceException {
-        return (List<NamedEntry>) searchAccountsInternal(query, returnAttrs, sortAttr, sortAscending, flags);
-    }
-
-    @Override
-    public List<NamedEntry> searchAccounts(Domain d, String query, String returnAttrs[], String sortAttr,
-            boolean sortAscending, int flags) throws ServiceException {
-        return searchDomainedObjects(d, query, returnAttrs, sortAttr, sortAscending, flags);
-    }
     
     @Override
     public void searchAccountsOnServer(Server server, SearchAccountsOptions opts, 
@@ -1227,26 +1216,27 @@ public class LdapProvisioning extends LdapProv {
     }
 
     private List<NamedEntry> searchAccountsOnServerInternal(Server server, 
-            SearchAccountsOptions opts, NamedEntry.Visitor visitor) 
+            SearchAccountsOptions options, NamedEntry.Visitor visitor) 
     throws ServiceException {
-        Domain domain = opts.getDomain();
-        
-        String base;
-        if (domain != null) {
-            base = mDIT.domainDNToAccountSearchDN(((LdapDomain) domain).getDN());
-        } else {
-            base = mDIT.mailBranchBaseDN();
+        // filter cannot be set
+        if (options.getFilter() != null || options.getFilterString() != null) {
+            throw ServiceException.FAILURE("internal error, cannot set filter for searchAccountsOnServer", null);
         }
         
-        ZLdapFilter filter = opts.getIncludeCalendarResources() ? 
-                filterFactory.accountsHomedOnServer(server.getServiceHostname()) :
-                filterFactory.accountsHomedOnServerAccountsOnly(server.getServiceHostname());
-                
-        String[] returnAttrs = opts.getIncludeCalendarResources() ? 
-                fixReturnAttrs(opts.getReturnAttrs(), Provisioning.SD_ACCOUNT_FLAG | Provisioning.SD_CALENDAR_RESOURCE_FLAG) :
-                fixReturnAttrs(opts.getReturnAttrs(), Provisioning.SD_ACCOUNT_FLAG);
-
-        return searchObjects(base, filter, returnAttrs, opts, visitor);        
+        IncludeType includeType = options.getIncludeType();
+        
+        // do not support calendar resource only yet
+        ZLdapFilter filter;
+        if (includeType == IncludeType.ACCOUNTS_AND_CALENDAR_RESOURCES) {
+            filter = filterFactory.accountsHomedOnServer(server.getServiceHostname());
+        } else if (includeType == IncludeType.ACCOUNTS_ONLY) {   
+            filter = filterFactory.accountsHomedOnServerAccountsOnly(server.getServiceHostname());
+        } else {
+            throw ServiceException.FAILURE("resource only is not yet supported for searchAccountsOnServer", null);
+        }
+        
+        options.setFilter(filter);
+        return searchDirectoryInternal(options, visitor);
     }
     
     
@@ -1256,6 +1246,77 @@ public class LdapProvisioning extends LdapProv {
         //flags &= ~Provisioning.SA_DOMAIN_FLAG; // leaving on for now
         return searchObjects(query, returnAttrs, sortAttr, sortAscending, mDIT.mailBranchBaseDN(), flags, 0);
     }
+    
+    @Override
+    public List<NamedEntry> searchDirectory(SearchObjectsOptions options) 
+    throws ServiceException {
+        return searchDirectoryInternal(options, null);
+    }
+    
+    @Override
+    public void searchDirectory(SearchObjectsOptions options, NamedEntry.Visitor visitor) 
+    throws ServiceException {
+        searchDirectoryInternal(options, visitor);
+    }
+    
+    private List<NamedEntry> searchDirectoryInternal(SearchObjectsOptions options,
+            NamedEntry.Visitor visitor) 
+    throws ServiceException {
+        int flags = options.getTypesAsFlags();
+        
+        /*
+         * base
+         */
+        String base = null;
+
+        LdapDomain ld = (LdapDomain) options.getDomain();
+        if (ld != null) {
+            base = mDIT.domainDNToAccountSearchDN(ld.getDN());
+        }
+
+        String bases[];
+        if (base == null) {
+            bases = mDIT.getSearchBases(flags);
+        } else {
+            bases = new String[] {base};
+        }
+        
+        /*
+         * filter
+         */
+        ZLdapFilter filter = options.getFilter();
+        String filterStr = options.getFilterString();
+        
+        // exact one of filter or filterString has to be set
+        if (filter != null && filterStr != null) {
+            throw ServiceException.INVALID_REQUEST("only one of filter or filterString can be set", null);
+        }
+        
+        if (filter == null) {
+            // prepend objectClass filters
+            String objectClass = getObjectClassQuery(flags);
+
+            if (filterStr == null || filterStr.equals("")) {
+                filterStr = objectClass;
+            } else {
+                if (filterStr.startsWith("(") && filterStr.endsWith(")")) {
+                    filterStr = "(&" + objectClass + filterStr + ")";
+                } else {
+                    filterStr = "(&" + objectClass + "(" + filterStr + ")" + ")";
+                }
+            }
+            
+            filter = filterFactory.fromFilterString(options.getFilterId(), filterStr);
+        }
+        
+        /*
+         * return attrs
+         */
+        String[] returnAttrs = fixReturnAttrs(options.getReturnAttrs(), flags);
+        
+        return searchObjects(bases, filter, returnAttrs, options, visitor);
+    }
+    
 
     private static String getObjectClassQuery(int flags) {
         boolean accounts = (flags & Provisioning.SD_ACCOUNT_FLAG) != 0;
@@ -1334,7 +1395,7 @@ public class LdapProvisioning extends LdapProv {
             mProv = prov;
             mSortAttr = sortAttr;
             mSortAscending = sortAscending;
-            mByName = sortAttr == null || sortAttr.equals("name");
+            mByName = sortAttr == null || sortAttr.length() == 0 || sortAttr.equals("name");
         }
 
         @Override
@@ -1533,7 +1594,7 @@ public class LdapProvisioning extends LdapProv {
      * @return null if visitor is not null, List<NamedEntry> if visitor is null
      * @throws ServiceException
      */
-    private List<NamedEntry> searchObjects(String base, ZLdapFilter filter, String returnAttrs[], 
+    private List<NamedEntry> searchObjects(String[] bases, ZLdapFilter filter, String returnAttrs[], 
             SearchObjectsOptions opts, NamedEntry.Visitor visitor)
     throws ServiceException {
         
@@ -1541,7 +1602,9 @@ public class LdapProvisioning extends LdapProv {
             if (opts.getSortOpt() != SortOpt.NO_SORT) {
                 throw ServiceException.INVALID_REQUEST("Sorting is not supported with visitor interface", null);
             }
-            searchLdapObjects(base, filter, returnAttrs, opts, visitor);
+            for (String base : bases) {
+                searchLdapObjects(base, filter, returnAttrs, opts, visitor);
+            }
             return null;
         } else {
             final List<NamedEntry> result = new ArrayList<NamedEntry>();
@@ -1553,7 +1616,9 @@ public class LdapProvisioning extends LdapProv {
                 }
             };
             
-            searchLdapObjects(base, filter, returnAttrs, opts, listBackedVisitor);
+            for (String base : bases) {
+                searchLdapObjects(base, filter, returnAttrs, opts, listBackedVisitor);
+            }
             
             if (opts.getSortOpt() == SortOpt.NO_SORT) {
                 return result;
@@ -5155,8 +5220,12 @@ public class LdapProvisioning extends LdapProv {
 
 
     @Override
-    public List<?> getAllAccounts(Domain d) throws ServiceException {
-        return searchAccounts(d, mDIT.filterAccountsByDomain(d), null, null, true, Provisioning.SD_ACCOUNT_FLAG);
+    public List<?> getAllAccounts(Domain domain) throws ServiceException {
+        SearchAccountsOptions opts = new SearchAccountsOptions(domain);
+        opts.setFilter(filterFactory.allAccountsOnly());
+        opts.setIncludeType(IncludeType.ACCOUNTS_ONLY);
+        opts.setSortOpt(SortOpt.SORT_ASCENDING);
+        return searchDirectoryInternal(opts, null);
     }
 
     @Override
@@ -8151,5 +8220,5 @@ public class LdapProvisioning extends LdapProv {
         List<String> members = getDynamicGroupMembersList(dygGroup);
         return Sets.newHashSet(members);
     }
-    
+
 }

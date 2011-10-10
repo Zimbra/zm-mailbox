@@ -24,6 +24,7 @@ import java.util.Set;
 import javax.mail.internet.InternetAddress;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
@@ -45,6 +46,7 @@ import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.ldap.ZLdapFilter;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.admin.type.CmdRightsInfo;
@@ -886,6 +888,49 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static final int SO_NO_ACCOUNT_DEFAULTS = 0x200;            // do not set defaults and secondary defaults in makeAccount
     public static final int SO_NO_ACCOUNT_SECONDARY_DEFAULTS = 0x400;  // do not set secondary defaults in makeAccount
 
+    public static enum SearchDirectoryObjectType {
+        accounts(Provisioning.SD_ACCOUNT_FLAG),
+        aliases(Provisioning.SD_ALIAS_FLAG),
+        distributionlists(Provisioning.SD_DISTRIBUTION_LIST_FLAG),
+        dynamicgroups(Provisioning.SD_DYNAMIC_GROUP_FLAG),
+        resources(Provisioning.SD_CALENDAR_RESOURCE_FLAG),
+        domains(Provisioning.SD_DOMAIN_FLAG),
+        coses(Provisioning.SD_COS_FLAG);
+        
+        private int flag;
+        private SearchDirectoryObjectType(int flag) {
+            this.flag = flag;
+        }
+        
+        public int getFlag() {
+            return flag;
+        }
+        
+        public static int getAllTypesFlags() {
+            int flags = 0;
+            for (SearchDirectoryObjectType type : SearchDirectoryObjectType.values()) {
+                flags |= type.getFlag();
+            }
+            return flags;
+        }
+        
+        public static int getFlags(List<SearchDirectoryObjectType> types) {
+            int flags = 0;
+            for (SearchDirectoryObjectType type : types) {
+                flags |= type.getFlag();
+            }
+            return flags;
+        }
+        
+        public static SearchDirectoryObjectType fromString(String str) throws ServiceException {
+            try {
+                return SearchDirectoryObjectType.valueOf(str);
+            } catch (IllegalArgumentException e) {
+                throw ServiceException.INVALID_REQUEST("unknown type: " + str, e);
+            }
+        }
+    };
+    
     /**
      * Takes a string representation the objects to search for and returns a bit mask of SA_* flags 
      * for the given string.
@@ -897,13 +942,13 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static int searchDirectoryStringToMask(String types) {
         int flags = 0;
 
-        if (types.indexOf("accounts") != -1) flags |= Provisioning.SD_ACCOUNT_FLAG;
-        if (types.indexOf("aliases") != -1) flags |= Provisioning.SD_ALIAS_FLAG;
-        if (types.indexOf("distributionlists") != -1) flags |= Provisioning.SD_DISTRIBUTION_LIST_FLAG;
-        if (types.indexOf("dynamicgroups") != -1) flags |= Provisioning.SD_DYNAMIC_GROUP_FLAG;
-        if (types.indexOf("resources") != -1) flags |= Provisioning.SD_CALENDAR_RESOURCE_FLAG;
-        if (types.indexOf("domains") != -1) flags |= Provisioning.SD_DOMAIN_FLAG;
-        if (types.indexOf("coses") != -1) flags |= Provisioning.SD_COS_FLAG;
+        if (types.indexOf(SearchDirectoryObjectType.accounts.name()) != -1) flags |= Provisioning.SD_ACCOUNT_FLAG;
+        if (types.indexOf(SearchDirectoryObjectType.aliases.name()) != -1) flags |= Provisioning.SD_ALIAS_FLAG;
+        if (types.indexOf(SearchDirectoryObjectType.distributionlists.name()) != -1) flags |= Provisioning.SD_DISTRIBUTION_LIST_FLAG;
+        if (types.indexOf(SearchDirectoryObjectType.dynamicgroups.name()) != -1) flags |= Provisioning.SD_DYNAMIC_GROUP_FLAG;
+        if (types.indexOf(SearchDirectoryObjectType.resources.name()) != -1) flags |= Provisioning.SD_CALENDAR_RESOURCE_FLAG;
+        if (types.indexOf(SearchDirectoryObjectType.domains.name()) != -1) flags |= Provisioning.SD_DOMAIN_FLAG;
+        if (types.indexOf(SearchDirectoryObjectType.coses.name()) != -1) flags |= Provisioning.SD_COS_FLAG;
         
         return flags;
     }
@@ -1494,31 +1539,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract List getAllDistributionLists(Domain d) throws ServiceException;
 
-
-
-    /**
-     * @param query LDAP search query
-     * @param returnAttrs list of attributes to return. uid is always included. null will return all attrs.
-     * @param sortAttr attr to sort on. if null, sorting will be by account name.
-     * @param sortAscending sort ascending (true) or descending (false).
-     * @param flags - whether to addtionally return distribution lists and/or aliases
-     * @return a list of all the accounts that matched.
-     * @throws ServiceException
-     */
-    public abstract List<NamedEntry> searchAccounts(String query, String returnAttrs[], 
-            String sortAttr, boolean sortAscending, int flags) throws ServiceException;
-    
-    /**
-     * @param query LDAP search query
-     * @param returnAttrs list of attributes to return. uid is always included.
-     * @param sortAttr attr to sort on. if not specified, sorting will be by account name.
-     * @param sortAscending sort ascending (true) or descending (false).
-     * @return a list of all the accounts that matched.
-     * @throws ServiceException
-     */
-    public abstract List<NamedEntry> searchAccounts(Domain d, String query, String returnAttrs[], 
-            String sortAttr, boolean sortAscending, int flags) throws ServiceException;
-
     /**
      * Search for all accunts on the server.  
      * 
@@ -1550,7 +1570,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static class SearchObjectsOptions {
         public static final int ALL_RESULTS = 0;
         public static final String[] ALL_ATTRS = null;
+        public static final SortOpt DEFAULT_SORT_OPT = SortOpt.NO_SORT;
         public static final String DEFAULT_SORT_ATTR = null;
+        
+        private static final int ALL_TYPES_FLAGS = SearchDirectoryObjectType.getAllTypesFlags();
         
         public static enum MakeObjectOpt {
             ALL_DEFAULTS,
@@ -1567,17 +1590,61 @@ public abstract class Provisioning extends ZAttrProvisioning {
         private boolean onMaster = false;
         private final boolean useConnPool = true; // TODO: retire this
         private int maxResults = ALL_RESULTS;
+        
+        /*
+         * search base
+         * 
+         * if domain is set, search base is under the domain tree
+         * Note: this does NOT affect the search filter not the return attrs
+         */
+        private Domain domain = null;
+        
+        /*
+         * search filter
+         * 
+         * Either one of filter or filterId+filterStr is set.
+         * 
+         * If filter is set, the filter will used as is, no objectClass will
+         * be added to the search filter
+         * 
+         * If filterId+filterStr is set, objectClass filters computed from types 
+         * will be prepended to the filterStr.
+         * 
+         */
+        private ZLdapFilter filter;
+        private FilterId filterId;
+        private String filterStr;
+        
+        /*
+         * List of wanted object types. If null, it means all types.
+         * 
+         * types is for:
+         * - computing enough set of attributes to retrieve in order 
+         *   construct an object. 
+         * and
+         * - computing objectClass filters to be prepended to filterStr
+         *   
+         */
+        private List<SearchDirectoryObjectType> types;
+        
         private String[] returnAttrs = ALL_ATTRS;
+     
         private MakeObjectOpt makeObjOpt = MakeObjectOpt.ALL_DEFAULTS;
-        private SortOpt sortOpt = SortOpt.NO_SORT;
-        private String mSortAttr = DEFAULT_SORT_ATTR;
+        private SortOpt sortOpt = DEFAULT_SORT_OPT;
+        private String sortAttr = DEFAULT_SORT_ATTR;
+        
+        
         
         public SearchObjectsOptions() {
         }
         
-        public SearchObjectsOptions(String[] returnAttrs, MakeObjectOpt makeObjOpt) {
-            this.returnAttrs = returnAttrs;
-            this.makeObjOpt = makeObjOpt;
+        public SearchObjectsOptions(String[] returnAttrs) {
+            setReturnAttrs(returnAttrs);
+        }
+        
+        public SearchObjectsOptions(Domain domain, String[] returnAttrs) {
+            setDomain(domain);
+            setReturnAttrs(returnAttrs);
         }
         
         public boolean getOnMaster() {
@@ -1588,48 +1655,172 @@ public abstract class Provisioning extends ZAttrProvisioning {
             return useConnPool;
         }
         
+        public void setMaxResults(int maxResults) {
+            this.maxResults = maxResults;
+        }
+        
         public int getMaxResults() {
             return maxResults;
         }
         
-        public String[] getReturnAttrs() {
-            return returnAttrs;
-        }
-        
-        public MakeObjectOpt getMakeObjectOpt() {
-            return makeObjOpt;
-        }
-        
-        public SortOpt getSortOpt() {
-            return sortOpt;
-        }
-        
-        public String getSortAttr() {
-            return mSortAttr;
-        }
-        
-    };
-    
-    public static class SearchAccountsOptions extends SearchObjectsOptions {
-        
-        // if set, search base is under the doamin tree
-        private Domain domain = null;
-        private boolean includeCalendarResources = true;
-        
-        public SearchAccountsOptions(String[] returnAttrs, MakeObjectOpt makeObjOpt) {
-            super(returnAttrs, makeObjOpt);
+        public void setDomain(Domain domain) {
+            this.domain = domain;
         }
         
         public Domain getDomain() {
             return domain;
         }
         
-        public void setIncludeCalendarResources(boolean includeCalendarResources) {
-            this.includeCalendarResources = includeCalendarResources;
+        public void setFilter(ZLdapFilter filter) {
+            this.filter = filter;
         }
         
-        public boolean getIncludeCalendarResources() {
-            return includeCalendarResources;
+        public ZLdapFilter getFilter() {
+            return filter;
+        }
+        
+        public void setFilterString(FilterId filterId, String filterStr) {
+            this.filterId = filterId;
+            this.filterStr = filterStr;
+        }
+        
+        public FilterId getFilterId() {
+            return filterId;
+        }
+        
+        public String getFilterString() {
+            return filterStr;
+        }
+        
+        public void setReturnAttrs(String[] returnAttrs) {
+            this.returnAttrs = returnAttrs;
+        }
+        
+        // from soap
+        public void setTypes(String typesStr) throws ServiceException {
+            types = Lists.newArrayList();
+            for (String type : Splitter.on(',').trimResults().split(typesStr)) {
+                types.add(SearchDirectoryObjectType.fromString(type));
+            }
+        }
+        
+        public void setTypes(SearchDirectoryObjectType... objTypes) {
+            types = Lists.newArrayList();
+            for (SearchDirectoryObjectType type : objTypes) {
+                types.add(type);
+            }
+        }
+        
+        public int getTypesAsFlags() {
+            if (types == null) {
+                return ALL_TYPES_FLAGS;
+            } else {
+                return SearchDirectoryObjectType.getFlags(types);
+            }
+        }
+        
+        public String[] getReturnAttrs() {
+            return returnAttrs;
+        }
+        
+        public void setMakeObjectOpt(MakeObjectOpt makeObjOpt) {
+            this.makeObjOpt = makeObjOpt;
+        }
+        
+        public MakeObjectOpt getMakeObjectOpt() {
+            return makeObjOpt;
+        }
+        
+        public void setSortOpt(SortOpt sortOpt) {
+            if (sortOpt == null) {
+                sortOpt = DEFAULT_SORT_OPT;
+            }
+            this.sortOpt = sortOpt;
+        }
+        
+        public SortOpt getSortOpt() {
+            return sortOpt;
+        }
+        
+        public void setSortAttr(String sortAttr) {
+            this.sortAttr = sortAttr;
+        }
+        
+        public String getSortAttr() {
+            return sortAttr;
+        }
+        
+    };
+    
+    /**
+     * Search options for account search.
+     * 
+     * Provides a convinient way for setting object types.
+     * 
+     * Callsites can use SearchAccountsOptions.setIncludeType() instead of 
+     * SearchObjectsOptions.setTypes().  Default types for SearchAccountsOptions
+     * is acounts and calendar resources,
+     */
+    public static class SearchAccountsOptions extends SearchObjectsOptions {
+        private static final IncludeType DEFAULT_INCLUDE_TYPE = 
+            IncludeType.ACCOUNTS_AND_CALENDAR_RESOURCES;
+        
+        public static enum IncludeType {
+            ACCOUNTS_AND_CALENDAR_RESOURCES,
+            ACCOUNTS_ONLY,
+            CALENDAR_RESOURCES_ONLY;
+        };
+        
+        private IncludeType includeType;
+                
+        public SearchAccountsOptions() {
+            initIncludeType();
+        }
+        
+        public SearchAccountsOptions(Domain domain) {
+            initIncludeType();
+            setDomain(domain);
+        }
+        
+        public SearchAccountsOptions(String[] returnAttrs) {
+            initIncludeType();
+            setReturnAttrs(returnAttrs);
+        }
+
+        public SearchAccountsOptions(Domain domain, String[] returnAttrs) {
+            initIncludeType();
+            setDomain(domain);
+            setReturnAttrs(returnAttrs);
+        }        
+        
+        private void initIncludeType() {
+            setIncludeType(DEFAULT_INCLUDE_TYPE);
+        }
+        
+        public void setIncludeType(IncludeType includeType) {
+            assert(includeType != null);
+            
+            this.includeType = includeType;
+            switch (this.includeType) {
+                case ACCOUNTS_AND_CALENDAR_RESOURCES:
+                    setTypes(SearchDirectoryObjectType.accounts, SearchDirectoryObjectType.resources);
+                    break;
+                case ACCOUNTS_ONLY:
+                    setTypes(SearchDirectoryObjectType.accounts);
+                    break;
+                case CALENDAR_RESOURCES_ONLY:
+                    setTypes(SearchDirectoryObjectType.resources);
+                    break;
+            }
+        }
+        
+        public IncludeType getIncludeType() {
+            return includeType;
+        }
+        
+        @Override
+        public void setTypes(String typesStr) throws ServiceException {
+            throw ServiceException.FAILURE("internal error, use setIncludeType instead", null);
         }
     }
     
@@ -1732,7 +1923,16 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public abstract List<NamedEntry> searchDirectory(SearchOptions options) throws ServiceException;
-
+    
+    public List<NamedEntry> searchDirectory(SearchObjectsOptions options) throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+    
+    public void searchDirectory(SearchObjectsOptions options, NamedEntry.Visitor visitor) 
+    throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+    
     public enum GalMode {
         zimbra, // only use internal
         ldap,   // only use exteranl gal

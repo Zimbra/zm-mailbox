@@ -31,11 +31,15 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.cs.account.Provisioning.SearchAccountsOptions;
+import com.zimbra.cs.account.Provisioning.SearchDirectoryObjectType;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.util.Zimbra;
 
@@ -218,11 +222,10 @@ public class DataSourceCallback extends AttributeCallback {
     private List<Account> lookupAccountsFromLDAP(Provisioning prov, String cosId)
     throws ServiceException{
 
-        String filter = ZLdapFilterFactory.getInstance().accountsOnServerAndCosHasSubordinates(
-                prov.getLocalServer().getServiceHostname(), cosId).toFilterString();
-
-        List accts = prov.searchAccounts(filter, null, null, false,
-                Provisioning.SD_ACCOUNT_FLAG | Provisioning.SD_CALENDAR_RESOURCE_FLAG | Provisioning.SO_NO_FIXUP_OBJECTCLASS);
+        SearchAccountsOptions searchOpts = new SearchAccountsOptions();
+        searchOpts.setFilter(ZLdapFilterFactory.getInstance().accountsOnServerAndCosHasSubordinates(
+                prov.getLocalServer().getServiceHostname(), cosId));
+        List accts = prov.searchDirectory(searchOpts);
 
         return accts;
     }
