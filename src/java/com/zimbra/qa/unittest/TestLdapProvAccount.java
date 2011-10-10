@@ -28,6 +28,7 @@ import com.google.common.collect.Maps;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.CalendarResource;
@@ -46,6 +47,7 @@ import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Provisioning.SearchAccountsOptions;
 import com.zimbra.cs.account.Provisioning.SearchDirectoryObjectType;
 import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
+import com.zimbra.cs.account.Provisioning.SearchOptions;
 import com.zimbra.cs.account.Provisioning.SearchAccountsOptions.IncludeType;
 import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.MakeObjectOpt;
 import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
@@ -55,6 +57,7 @@ import com.zimbra.cs.ldap.LdapUtilCommon;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
+import com.zimbra.cs.mailbox.ACL;
 
 public class TestLdapProvAccount extends TestLdap {
     
@@ -738,7 +741,128 @@ public class TestLdapProvAccount extends TestLdap {
         Oct  9 16:18:04 pshao-macbookpro-2 slapd[73952]: conn=1381 op=127 SRCH base="ou=people,dc=com,dc=zimbra,dc=qa,dc=unittest,dc=testldapprovaccount" scope=2 deref=0 filter="(&(&(objectClass=zimbraAccount)(!(objectClass=zimbraCalendarResource)))(!(zimbraIsSystemResource=TRUE))(|(!(zimbraExcludeFromCMBSearch=*))(zimbraExcludeFromCMBSearch=FALSE)))"
         Oct  9 16:18:04 pshao-macbookpro-2 slapd[73952]: conn=1381 op=127 SRCH attr=zimbraCOSId objectClass zimbraDomainName zimbraACE displayName zimbraId uid zimbraArchiveAccount zimbraMailHost
         */                
+    }
+    
+    @Test
+    public void searchDirectory_sslClientCertPrincipalMap() throws Exception {
+        Account acct1 = createAccount("searchDirectory_sslClientCertPrincipalMap-1");
         
+        String filterStr = "(uid=searchDirectory_sslClientCertPrincipalMap*)";
+        
+        SearchAccountsOptions searchOpts = new SearchAccountsOptions();
+        searchOpts.setMaxResults(1);
+        searchOpts.setFilterString(FilterId.ACCOUNT_BY_SSL_CLENT_CERT_PRINCIPAL_MAP, filterStr);
+        List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
+        
+        assertEquals(1, accounts.size());
+        assertEquals(acct1.getName(), accounts.get(0).getName());
+        
+        // create another account with same uid prefix
+        Account acct2 = createAccount("searchDirectory_sslClientCertPrincipalMap-2");
+        
+        searchOpts = new SearchAccountsOptions();
+        searchOpts.setMaxResults(1);
+        searchOpts.setFilterString(FilterId.ACCOUNT_BY_SSL_CLENT_CERT_PRINCIPAL_MAP, filterStr);
+        
+        boolean caughtTooManySearchResultsException = false;
+        try {
+            accounts = prov.searchDirectory(searchOpts);
+        } catch (ServiceException e) {
+            if (AccountServiceException.TOO_MANY_SEARCH_RESULTS.equals(e.getCode())) {
+                caughtTooManySearchResultsException = true;
+            }
+        }
+        assertTrue(caughtTooManySearchResultsException);
+        
+        deleteAccount(acct1);
+        deleteAccount(acct2);
+        
+        /*
+        // legacy code and LDAP trace before refactoring
+         * 
+        
+        String filterStr = "(uid=searchDirectory_sslClientCertPrincipalMap)";
+        filter = "(&" + ZLdapFilterFactory.getInstance().allAccounts().toFilterString() + filterStr + ")";
+                
+        SearchOptions options = new SearchOptions();
+        options.setMaxResults(1);
+        options.setFlags(Provisioning.SO_NO_FIXUP_OBJECTCLASS);
+        options.setQuery(filter);
+        
+        // should return at most one entry.  If more than one entries were matched,
+        // TOO_MANY_SEARCH_RESULTS will be thrown
+        List<NamedEntry> entries = prov.searchDirectory(options);
+        
+        Oct  9 19:28:20 pshao-macbookpro-2 slapd[73952]: conn=1417 op=165 SRCH base="" scope=2 deref=0 filter="(&(objectClass=zimbraAccount)(uid=searchdirectory_sslclientcertprincipalmap))"
+        Oct  9 19:28:20 pshao-macbookpro-2 slapd[73952]: conn=1417 op=165 SEARCH RESULT tag=101 err=0 nentries=0 text=
+        */
+        
+        /*
+         // LDAP trace after refactoring
+         Oct  9 19:58:39 pshao-macbookpro-2 slapd[73952]: conn=1438 op=220 SRCH base="" scope=2 deref=0 filter="(&(|(objectClass=zimbraAccount)(objectClass=zimbraCalendarResource))(uid=searchdirectory_sslclientcertprincipalmap))"
+
+         */
+    }
+    
+    @Test
+    public void searchDirectory() throws Exception {
+        String granteeId = LdapUtilCommon.generateUUID();
+        byte gtype = ACL.GRANTEE_USER;
+        
+        SearchObjectsOptions opts = new SearchObjectsOptions();
+        if (gtype == ACL.GRANTEE_USER) {
+            opts.addType(SearchDirectoryObjectType.accounts);
+            opts.addType(SearchDirectoryObjectType.resources);
+        } else if (gtype == ACL.GRANTEE_GROUP) {
+            opts.addType(SearchDirectoryObjectType.distributionlists);
+        } else if (gtype == ACL.GRANTEE_COS) {
+            opts.addType(SearchDirectoryObjectType.coses);
+        } else if (gtype == ACL.GRANTEE_DOMAIN) {
+            opts.addType(SearchDirectoryObjectType.domains);
+        } else {
+            throw ServiceException.INVALID_REQUEST("invalid grantee type for revokeOrphanGrants", null);
+        }
+        
+        String query = "(" + Provisioning.A_zimbraId + "=" + granteeId + ")";
+        opts.setFilterString(FilterId.SEARCH_GRANTEE, query);
+        opts.setOnMaster(true);  // search the grantee on LDAP master
+
+        Provisioning prov = Provisioning.getInstance();
+        List<NamedEntry> entries = prov.searchDirectory(opts);
+        
+        
+        /*
+        // logacy code and LDAP trace
+        int flags = 0;
+        if (gtype == ACL.GRANTEE_USER)
+            flags |= (Provisioning.SD_ACCOUNT_FLAG | Provisioning.SD_CALENDAR_RESOURCE_FLAG) ;
+        else if (gtype == ACL.GRANTEE_GROUP)
+            flags |= Provisioning.SD_DISTRIBUTION_LIST_FLAG;
+        else if (gtype == ACL.GRANTEE_COS)
+            flags |= Provisioning.SD_COS_FLAG;
+        else if (gtype == ACL.GRANTEE_DOMAIN)
+            flags |= Provisioning.SD_DOMAIN_FLAG;
+        else
+            throw ServiceException.INVALID_REQUEST("invalid grantee type for revokeOrphanGrants", null);
+
+        String query = "(" + Provisioning.A_zimbraId + "=" + granteeId + ")";
+
+        Provisioning.SearchOptions opts = new SearchOptions();
+        opts.setFlags(flags);
+        opts.setQuery(query);
+        opts.setOnMaster(true);  // search the grantee on LDAP master
+
+        Provisioning prov = Provisioning.getInstance();
+        List<NamedEntry> entries = prov.searchDirectory(opts);
+        
+        Oct  9 23:09:26 pshao-macbookpro-2 slapd[73952]: conn=1531 op=209 SRCH base="" scope=2 deref=0 filter="(&(zimbraId=8b435b63-40c3-4de7-b105-869cbafea29b)(|(objectClass=zimbraAccount)(objectClass=zimbraCalendarResource)))"
+        */
+        
+        /*
+         // LDAP trace after refactoring
+        Oct  9 23:26:59 pshao-macbookpro-2 slapd[73952]: conn=1535 op=209 SRCH base="" scope=2 deref=0 filter="(&(|(objectClass=zimbraAccount)(objectClass=zimbraCalendarResource))(zimbraId=561fcc6d-6a09-432e-8346-3f1752eea3f9))"
+
+         */
     }
 
 }

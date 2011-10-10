@@ -428,6 +428,7 @@ public class TestLdap {
         classes.add(TestProvValidator.class);
         classes.add(TestProvZimbraId.class);
         classes.add(TestSearchCalendarResources.class);
+        classes.add(TestProvSearchDirectory.class);
         classes.add(TestSearchGal.class);
         
         

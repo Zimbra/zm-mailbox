@@ -57,13 +57,6 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
         return new JNDILdapFilter(encloseFilterIfNot(filterString));
     }
     
-    @Override
-    public ZLdapFilter adminSearch(ZLdapFilter ocFilter, String filterString) 
-    throws LdapException {
-        return new JNDILdapFilter(String.format("(&%s%s)", 
-                ocFilter.toFilterString(), encloseFilterIfNot(filterString)));
-    }
-    
     /*
      * Mail target (accounts and groups)
      */

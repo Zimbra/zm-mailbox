@@ -23,7 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import junit.framework.TestCase;
+import org.junit.*;
+import static org.junit.Assert.*;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.CliUtil;
@@ -36,19 +37,19 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DomainBy;
-import com.zimbra.common.account.Key.GranteeBy;
-import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.account.ProvisioningConstants;
-import com.zimbra.cs.account.Provisioning.SearchOptions;
+import com.zimbra.cs.account.Provisioning.SearchDirectoryObjectType;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 
-public class TestSearchDirectory extends TestCase {
+public class TestProvSearchDirectory {
     
     private static String TEST_NAME = "test-sd";
     private static String DOMAIN_NAME = TestProvisioningUtil.baseDomainName(TEST_NAME, null);
@@ -88,7 +89,7 @@ public class TestSearchDirectory extends TestCase {
     }
     
     
-    private static void assertEquals(Set<String> expected, List<NamedEntry> actual) {
+    private static void verifyEquals(Set<String> expected, List<NamedEntry> actual) {
         assertEquals(expected.size(), actual.size());
         
         for (NamedEntry entry : actual) {
@@ -103,22 +104,23 @@ public class TestSearchDirectory extends TestCase {
     }
     
     private List searchDirectory(String filter, String key, boolean expectTooMany) throws Exception {
+        /*
         int flags = 0;
         flags |= Provisioning.SD_ACCOUNT_FLAG;
         flags |= Provisioning.SD_ALIAS_FLAG;
         flags |= Provisioning.SD_DISTRIBUTION_LIST_FLAG;
         flags |= Provisioning.SD_CALENDAR_RESOURCE_FLAG;
         flags |= Provisioning.SD_DOMAIN_FLAG;
+        */
         
         String query = expandFilter(filter, key);
         
-        SearchOptions options = new SearchOptions();
+        SearchObjectsOptions options = new SearchObjectsOptions();
         options.setDomain(null);
-        options.setFlags(flags);
         options.setMaxResults(5000);
-        options.setQuery(query);
+        options.setFilterString(FilterId.UNITTEST, query);
         options.setReturnAttrs(ATTRS);
-        options.setSortAscending(true);
+        options.setSortOpt(SortOpt.SORT_ASCENDING);
         options.setSortAttr("name");
         options.setConvertIDNToAscii(true);
         
@@ -138,7 +140,8 @@ public class TestSearchDirectory extends TestCase {
         return results;
     }
     
-    public void disable_testSearchDirectory() throws Exception {
+    @Test
+    public void testSearchDirectory() throws Exception {
         List results;
         
         /*
@@ -336,15 +339,14 @@ public class TestSearchDirectory extends TestCase {
              * mSortAttr          "name"
              */
             
-            SearchOptions options = new SearchOptions();
-            options.setBase(null);
+            SearchObjectsOptions options = new SearchObjectsOptions();
             options.setConvertIDNToAscii(true);
             options.setDomain(null);
-            options.setFlags(Provisioning.SD_ACCOUNT_FLAG | Provisioning.SD_ALIAS_FLAG);
+            options.setTypes(SearchDirectoryObjectType.accounts, SearchDirectoryObjectType.aliases);
             options.setMaxResults(5000);
-            options.setQuery("");
+            options.setFilterString(FilterId.UNITTEST, null);
             options.setReturnAttrs(attrs);
-            options.setSortAscending(true);
+            options.setSortOpt(SortOpt.SORT_ASCENDING);
             options.setSortAttr("name");
             
             List<NamedEntry> results = null;
@@ -379,7 +381,8 @@ public class TestSearchDirectory extends TestCase {
         }
     }
     
-    public void disable_testBug39514() throws Exception {
+    @Test
+    public void testBug39514() throws Exception {
        
         List<Bug39514.TestData> tests = Bug39514.setup();
         
@@ -465,15 +468,14 @@ public class TestSearchDirectory extends TestCase {
                                           "zimbraDomainname"
                                          };
             
-            SearchOptions options = new SearchOptions();
-            options.setBase(null);
+            SearchObjectsOptions options = new SearchObjectsOptions();
             options.setConvertIDNToAscii(true);
             options.setDomain(null);
-            options.setFlags(Provisioning.SD_DOMAIN_FLAG);
+            options.setTypes(SearchDirectoryObjectType.domains);
             options.setMaxResults(5000);
-            options.setQuery("");
+            options.setFilterString(FilterId.UNITTEST, null);
             options.setReturnAttrs(attrs);
-            options.setSortAscending(true);
+            options.setSortOpt(SortOpt.SORT_ASCENDING);
             options.setSortAttr("name");
             
             List<NamedEntry> results = null;
@@ -498,13 +500,13 @@ public class TestSearchDirectory extends TestCase {
                     }
                 }
                 
-                assertEquals(testData.mExpected, results);
+                verifyEquals(testData.mExpected, results);
             }
         }
 
     }
     
-    
+    @Test
     public void testBug40499() throws Exception {
         List<Bug40499.TestData> tests = Bug40499.setup();
         
@@ -515,13 +517,6 @@ public class TestSearchDirectory extends TestCase {
          // teardown does nothign for now, just go to ldap and delete the two domains
         Bug39514.teardown();
     }
-    
-    public static void main(String[] args) throws Exception {
-        // TestUtil.cliSetup();  // to use SoapProvisioning
-        // CliUtil.toolSetup("DEBUG");
-        CliUtil.toolSetup();
 
-        TestUtil.runTest(TestSearchDirectory.class);
-    }
 }
 

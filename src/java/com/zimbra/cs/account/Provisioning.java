@@ -1047,18 +1047,14 @@ public abstract class Provisioning extends ZAttrProvisioning {
      */
     public NamedEntry searchAliasTarget(Alias alias, boolean mustFind) throws ServiceException {
         String targetId = alias.getAttr(Provisioning.A_zimbraAliasTargetId);
-        SearchOptions options = new SearchOptions();
-
-        int flags = 0;
-
-        flags |= Provisioning.SD_ACCOUNT_FLAG;
-        flags |= Provisioning.SD_CALENDAR_RESOURCE_FLAG;
-        flags |= Provisioning.SD_DISTRIBUTION_LIST_FLAG;
 
         String query = "(" + Provisioning.A_zimbraId + "=" + targetId + ")";
-
-        options.setFlags(flags);
-        options.setQuery(query);
+        
+        SearchObjectsOptions options = new SearchObjectsOptions();
+        options.setTypes(SearchDirectoryObjectType.accounts,
+                SearchDirectoryObjectType.resources,
+                SearchDirectoryObjectType.distributionlists);
+        options.setFilterString(FilterId.SEARCH_ALIAS_TARGET, query);
 
         List<NamedEntry> entries = searchDirectory(options);
 
@@ -1647,6 +1643,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
             setReturnAttrs(returnAttrs);
         }
         
+        public void setOnMaster(boolean onMaster) {
+            this.onMaster = onMaster;
+        }
+        
         public boolean getOnMaster() {
             return onMaster;
         }
@@ -1711,6 +1711,13 @@ public abstract class Provisioning extends ZAttrProvisioning {
             }
         }
         
+        public void addType(SearchDirectoryObjectType objType) {
+            if (types == null) {
+                types = Lists.newArrayList();
+            }
+            types.add(objType);
+        }
+        
         public int getTypesAsFlags() {
             if (types == null) {
                 return ALL_TYPES_FLAGS;
@@ -1748,6 +1755,10 @@ public abstract class Provisioning extends ZAttrProvisioning {
         
         public String getSortAttr() {
             return sortAttr;
+        }
+        
+        public void setConvertIDNToAscii(boolean convertIDNToAscii) {
+            assert(false); // not yet supported
         }
         
     };

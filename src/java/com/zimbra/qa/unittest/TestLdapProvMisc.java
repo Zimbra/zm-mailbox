@@ -28,10 +28,14 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.SearchDirectoryObjectType;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
 import com.zimbra.cs.account.ldap.LdapObjectClassHierarchy;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 
 public class TestLdapProvMisc extends TestLdap {
 
@@ -126,7 +130,6 @@ public class TestLdapProvMisc extends TestLdap {
     }
     
     @Test
-    @Ignore
     public void searchDirectory() throws Exception {
         int NUM_ACCTS = 10;
         
@@ -152,13 +155,13 @@ public class TestLdapProvMisc extends TestLdap {
                 Provisioning.A_zimbraMailStatus
         };
         
-        SearchOptions searchOpts = new SearchOptions();
+        SearchObjectsOptions searchOpts = new SearchObjectsOptions();
         searchOpts.setDomain(domain);
-        searchOpts.setFlags(Provisioning.SD_ACCOUNT_FLAG);
+        searchOpts.setTypes(SearchDirectoryObjectType.accounts);
         searchOpts.setMaxResults(0);  // unlimited
-        searchOpts.setQuery(filter);
+        searchOpts.setFilterString(FilterId.UNITTEST, filter);
         searchOpts.setReturnAttrs(returnAttrs);
-        searchOpts.setSortAscending(sortAscending);
+        searchOpts.setSortOpt(sortAscending ? SortOpt.SORT_ASCENDING : SortOpt.SORT_DESCENDING);
         searchOpts.setSortAttr(sortAttr);
         
         List<NamedEntry> result = prov.searchDirectory(searchOpts);

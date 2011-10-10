@@ -1306,6 +1306,10 @@ public class LdapProvisioning extends LdapProv {
                 }
             }
             
+            FilterId filterId = options.getFilterId();
+            if (filterId == null) {
+                throw ServiceException.INVALID_REQUEST("missing filter id", null);
+            }
             filter = filterFactory.fromFilterString(options.getFilterId(), filterStr);
         }
         

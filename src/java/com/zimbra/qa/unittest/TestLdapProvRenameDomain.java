@@ -47,9 +47,12 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.XMPPComponent;
+import com.zimbra.cs.account.Provisioning.SearchDirectoryObjectType;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.qa.unittest.TestProvisioningUtil.IDNName;
 
 public class TestLdapProvRenameDomain extends TestLdap {
@@ -728,10 +731,10 @@ public class TestLdapProvRenameDomain extends TestLdap {
     private void verifyEntries(int domainIdx, Domain domain) throws Exception {
      
         // get all the entries reside in the domain
-        Provisioning.SearchOptions options = new Provisioning.SearchOptions();
-        int flags = Provisioning.SD_ACCOUNT_FLAG | Provisioning.SD_DISTRIBUTION_LIST_FLAG;
-        options.setFlags(flags);
+        SearchObjectsOptions options = new SearchObjectsOptions();
+        options.setTypes(SearchDirectoryObjectType.accounts, SearchDirectoryObjectType.distributionlists);
         options.setDomain(domain);
+        options.setFilterString(FilterId.UNITTEST, null);
         List<NamedEntry> list = mProv.searchDirectory(options);
         
         // come up with all expected entries
@@ -773,10 +776,10 @@ public class TestLdapProvRenameDomain extends TestLdap {
     private void verifyDomainAliases(int domainIdx, Domain domain) throws Exception {
         
         // get all the aliases reside in the domain
-        Provisioning.SearchOptions options = new Provisioning.SearchOptions();
-        int flags = Provisioning.SD_ALIAS_FLAG;
-        options.setFlags(flags);
+        SearchObjectsOptions options = new SearchObjectsOptions();
+        options.setTypes(SearchDirectoryObjectType.aliases);
         options.setDomain(domain);
+        options.setFilterString(FilterId.UNITTEST, null);
         List<NamedEntry> list = mProv.searchDirectory(options);
         
         // come up with all expected aliases

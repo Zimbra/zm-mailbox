@@ -220,21 +220,6 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         }
     }
     
-    @Override
-    public ZLdapFilter adminSearch(ZLdapFilter ocFilter, String filterString) 
-    throws LdapException {
-        try {
-            return new UBIDLdapFilter(
-                    FilterId.ADMIN_SEARCH,
-                    Filter.createANDFilter(
-                            ((UBIDLdapFilter) ocFilter).getNative(),
-                            Filter.create(encloseFilterIfNot(filterString))));
-        } catch (LDAPException e) {
-            throw UBIDLdapException.mapToLdapException(e);
-        }
-    }
-    
-    
     /*
      * Mail target (accounts and groups)
      */

@@ -38,11 +38,14 @@ import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
+import com.zimbra.cs.account.Provisioning.SearchDirectoryObjectType;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 
 
 public class TestProvAlias extends TestLdap {
@@ -126,12 +129,10 @@ public class TestProvAlias extends TestLdap {
     }
     
     private List<NamedEntry> searchAliasesInDomain(Domain domain) throws ServiceException {
-        Provisioning.SearchOptions options = new Provisioning.SearchOptions();
-        
-        int flags = 0;
-        flags = Provisioning.SD_ALIAS_FLAG;
-        options.setFlags(flags);
+        SearchObjectsOptions options = new SearchObjectsOptions();
+        options.setTypes(SearchDirectoryObjectType.aliases);
         options.setDomain(domain);
+        options.setFilterString(FilterId.UNITTEST, null);
         return mProv.searchDirectory(options);
     }
     

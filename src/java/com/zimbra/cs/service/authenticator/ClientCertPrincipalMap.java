@@ -17,8 +17,10 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.SearchAccountsOptions;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.service.authenticator.SSOAuthenticator.ZimbraPrincipal;
 
 public class ClientCertPrincipalMap {
@@ -164,19 +166,17 @@ public class ClientCertPrincipalMap {
         @Override
         ZimbraPrincipal apply(X509Certificate cert) throws ServiceException {
             String filter = expandFilter(cert);
-            filter = "(&" + ZLdapFilterFactory.getInstance().allAccounts().toFilterString() + filter + ")";
-            ZimbraLog.account.debug(LOG_PREFIX + "search account by expanded filter: " + filter);
+            ZimbraLog.account.debug(LOG_PREFIX + 
+                    "search account by expanded filter(prepended with account objectClass filter): " + filter);
             
-            SearchOptions options = new SearchOptions();
-           
-            options.setMaxResults(1);
-            // options.setFlags(Provisioning.SA_ACCOUNT_FLAG | Provisioning.SA_CALENDAR_RESOURCE_FLAG);
-            options.setFlags(Provisioning.SO_NO_FIXUP_OBJECTCLASS);
-            options.setQuery(filter);
+            SearchAccountsOptions searchOpts = new SearchAccountsOptions();
+            searchOpts.setMaxResults(1);
+            searchOpts.setFilterString(FilterId.ACCOUNT_BY_SSL_CLENT_CERT_PRINCIPAL_MAP, filter);
             
             // should return at most one entry.  If more than one entries were matched,
             // TOO_MANY_SEARCH_RESULTS will be thrown
-            List<NamedEntry> entries = Provisioning.getInstance().searchDirectory(options);
+            List<NamedEntry> entries = Provisioning.getInstance().searchDirectory(searchOpts);
+            
             if (entries.size() == 1) {
                 Account acct = (Account) entries.get(0);
                 return new ZimbraPrincipal(filter, acct);

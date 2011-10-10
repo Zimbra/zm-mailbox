@@ -107,15 +107,20 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         ADMIN_SEARCH("Admin search"),
         AUTO_PROVISION_ADMIN_SEARCH("Admin entered filter"),
         AUTO_PROVISION_SEARCH("Filter in " + Provisioning.A_zimbraAutoProvLdapSearchFilter),
-        AUTO_PROVISION_SEARCH_CREATED_LATERTHAN("Filter in " + Provisioning.A_zimbraAutoProvLdapSearchFilter + "AND" + SINGLETON.createdLaterOrEqual("{GENERALIZED_TIME}")),
+        AUTO_PROVISION_SEARCH_CREATED_LATERTHAN("Filter in " + 
+                Provisioning.A_zimbraAutoProvLdapSearchFilter + " AND " + 
+                SINGLETON.createdLaterOrEqual("{GENERALIZED_TIME}")),
         EXTERNAL_GROUP("Filter in " + Provisioning.A_zimbraExternalGroupLdapSearchFilter),
         GAL_SEARCH("GAL search"),
         LDAP_AUTHENTICATE("Filter in " + Provisioning.A_zimbraAuthLdapSearchFilter),
         NGINX_GET_DOMAIN_BY_SERVER_IP("Filter in "),
         NGINX_GET_PORT_BY_MAILHOST("Filter in "),
         NGINX_GET_MAILHOST("Filter in " + Provisioning.A_zimbraReverseProxyMailHostQuery),
+        SEARCH_ALIAS_TARGET("Search alias target entry"),
+        SEARCH_GRANTEE("Search grantee for revoking orphan grants"),
         SMIME_LOOKUP("Filter in " + Provisioning.A_zimbraSMIMELdapFilter),
-        
+        ACCOUNT_BY_SSL_CLENT_CERT_PRINCIPAL_MAP(SINGLETON.allAccounts() + " AND " + 
+                "filter in " + Provisioning.A_zimbraMailSSLClientCertPrincipalMap),
         
         UNITTEST("UNITTEST"),
         LDAP_UPGRADE("LDAP_UPGRADE"),
@@ -166,7 +171,6 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
      */
     public abstract ZLdapFilter anyEntry();
     public abstract ZLdapFilter fromFilterString(FilterId filterId, String filterString) throws LdapException;
-    public abstract ZLdapFilter adminSearch(ZLdapFilter ocFilter, String filterString) throws LdapException;
     
     /*
      * Mail target (accounts and groups)

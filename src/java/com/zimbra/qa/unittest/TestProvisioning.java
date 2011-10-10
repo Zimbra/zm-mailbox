@@ -39,6 +39,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
+import com.zimbra.cs.account.Provisioning.SearchDirectoryObjectType;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.ZimbraCustomAuth;
 import com.zimbra.cs.account.ldap.LdapProv;
@@ -46,6 +48,7 @@ import com.zimbra.cs.account.ldap.custom.CustomLdapProvisioning;
 import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.soap.type.GalSearchType;
 
@@ -258,6 +261,7 @@ public class TestProvisioning extends TestCase {
         public void cleanup() throws Exception {
             System.out.println("Cleanup...");
 
+            /*
             Provisioning.SearchOptions options = new Provisioning.SearchOptions();
             int flags = 0;
             flags = (Provisioning.SD_ACCOUNT_FLAG |
@@ -268,7 +272,14 @@ public class TestProvisioning extends TestCase {
             if (isCustom())
                 options.setBase(ACCT_BASE_DN);
             List<NamedEntry> list = mProv.searchDirectory(options);
-
+            */
+            SearchObjectsOptions options = new SearchObjectsOptions();
+            options.setTypes(
+                    SearchDirectoryObjectType.accounts,
+                    SearchDirectoryObjectType.resources,
+                    SearchDirectoryObjectType.distributionlists);
+            List<NamedEntry> list = mProv.searchDirectory(options);
+            
             for (NamedEntry entry : list) {
                 if (entry instanceof CalendarResource)
                     mProv.deleteCalendarResource(entry.getId());
@@ -283,8 +294,13 @@ public class TestProvisioning extends TestCase {
             }
 
             // search again, this time we search for everything and it should not contain any entry
-            flags = 0xFF;
-            options.setFlags(flags);
+            options = new SearchObjectsOptions();
+            options.setTypes(
+                    SearchDirectoryObjectType.accounts,
+                    SearchDirectoryObjectType.aliases,
+                    SearchDirectoryObjectType.resources,
+                    SearchDirectoryObjectType.distributionlists);
+            
             list = mProv.searchDirectory(options);
             assertEquals(0, list.size());
 
@@ -349,22 +365,20 @@ public class TestProvisioning extends TestCase {
      * util functions
      */
     private List<NamedEntry> searchAccountsInDomain(Domain domain) throws ServiceException {
-        Provisioning.SearchOptions options = new Provisioning.SearchOptions();
+        SearchObjectsOptions options = new SearchObjectsOptions();
 
-        int flags = 0;
-        flags = Provisioning.SD_ACCOUNT_FLAG;
-        options.setFlags(flags);
+        options.setTypes(SearchDirectoryObjectType.accounts);
         options.setDomain(domain);
+        options.setFilterString(FilterId.UNITTEST, null);
         return mProv.searchDirectory(options);
     }
 
     private List<NamedEntry> searchAliasesInDomain(Domain domain) throws ServiceException {
-        Provisioning.SearchOptions options = new Provisioning.SearchOptions();
+        SearchObjectsOptions options = new SearchObjectsOptions();
 
-        int flags = 0;
-        flags = Provisioning.SD_ALIAS_FLAG;
-        options.setFlags(flags);
+        options.setTypes(SearchDirectoryObjectType.aliases);
         options.setDomain(domain);
+        options.setFilterString(FilterId.UNITTEST, null);
         return mProv.searchDirectory(options);
     }
 
@@ -1489,9 +1503,9 @@ public class TestProvisioning extends TestCase {
         }
 
         if (!Flag.needLdapPaging("searchDirectory")) {
-            Provisioning.SearchOptions options = new Provisioning.SearchOptions();
+            SearchObjectsOptions options = new SearchObjectsOptions();
             options.setDomain(domain);
-            options.setQuery(query);
+            options.setFilterString(FilterId.UNITTEST, query);
             list = mProv.searchDirectory(options);
             TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{acct}, true);
         }

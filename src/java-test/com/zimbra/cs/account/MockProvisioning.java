@@ -203,12 +203,6 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public List<NamedEntry> searchAccounts(String query, String[] returnAttrs,
-            String sortAttr, boolean sortAscending, int flags) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public List<Account> getAllAdminAccounts() {
         throw new UnsupportedOperationException();
     }
@@ -452,12 +446,6 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public List<?> getAllDistributionLists(Domain d) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<NamedEntry> searchAccounts(Domain d, String query, String[] returnAttrs, String sortAttr,
-            boolean sortAscending, int flags) {
         throw new UnsupportedOperationException();
     }
 
