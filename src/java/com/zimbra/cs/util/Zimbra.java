@@ -49,6 +49,7 @@ import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.WaitSetMgr;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.store.file.Volume;
 import com.zimbra.znative.Util;
 
 /**
@@ -191,6 +192,10 @@ public class Zimbra {
         ZimbraHttpConnectionManager.startReaperThread();
 
         try {
+            if (forMailboxd) {
+                // band-aid for bug 65232
+                Volume.reloadVolumes();
+            }
             StoreManager.getInstance().startup();
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to initialize StoreManager.", e);
