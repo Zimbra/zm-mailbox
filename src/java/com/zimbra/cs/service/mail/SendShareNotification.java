@@ -459,11 +459,12 @@ public class SendShareNotification extends MailDocumentHandler {
         Locale locale = authAccount.getLocale();
         String charset = authAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
 
-        MimeMessage mm = null;
+        MimeMessage mm;
         try {
             mm = new Mime.FixedMimeMessage(JMSession.getSession());
 
             String subject = L10nUtil.getMessage(MsgKey.shareNotifSubject, locale);
+            subject += L10nUtil.getMessage(MsgKey.sharedBySubject, locale, sid.getName(), sid.getOwnerNotifName());
             mm.setSubject(subject, CharsetUtil.checkCharset(subject, charset));
             mm.setSentDate(new Date());
 
@@ -475,7 +476,7 @@ public class SendShareNotification extends MailDocumentHandler {
             mm.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(recipient));
 
             MimeMultipart mmp = ShareInfo.NotificationSender.genNotifBody(
-                    sid, MsgKey.shareNotifBodyIntro, notes, locale);
+                    sid, notes, locale);
             mm.setContent(mmp);
             mm.saveChanges();
         } catch (MessagingException e) {
