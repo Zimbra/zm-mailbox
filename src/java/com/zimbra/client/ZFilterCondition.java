@@ -1104,6 +1104,14 @@ public abstract class ZFilterCondition implements ToZJSONObject {
             this.value = value;
         }
 
+        public ZAddressCondition(String headerName, Sieve.AddressPart part, HeaderOp op, String value) {
+            this.headerName = headerName;
+            this.part = part;
+            this.op = op;
+            this.caseSensitive = false;
+            this.value = value;
+        }
+
         ZAddressCondition(FilterTest.AddressTest test) throws ServiceException{
             this.headerName = test.getHeader();
             this.part = Sieve.AddressPart.fromString(test.getPart());
@@ -1122,6 +1130,18 @@ public abstract class ZFilterCondition implements ToZJSONObject {
         @Override
         public String getName() {
             return C_ADDRESS;
+        }
+                
+        public HeaderOp getHeaderOp() {
+            return op;
+        }
+
+        public String getHeaderName() {
+            return headerName;
+        }
+
+        public String getHeaderValue() {
+            return value;
         }
 
         @Override
