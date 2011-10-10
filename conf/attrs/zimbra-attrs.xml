@@ -6519,4 +6519,9 @@ TODO: delete them permanently from here
   <desc>disables purging from dumpster when set to FALSE</desc>
 </attr>
 
+<attr id="1316" name="zimbraHsmBatchSize" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.0">
+  <globalConfigValue>10000</globalConfigValue>
+  <desc>Maximum number of items to move during a single HSM operation.  If the limit is exceeded, the HSM operation is repeated until all qualifying items are moved.</desc>
+</attr>
+
 </attrs>
