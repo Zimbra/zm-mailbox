@@ -27,20 +27,20 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.google.common.collect.Lists;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.admin.type.MailboxWithAccountId;
+import com.zimbra.soap.admin.type.MailboxWithMailboxId;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_PURGE_MESSAGES_RESPONSE)
 public class PurgeMessagesResponse {
 
     @XmlElement(name=AdminConstants.E_MAILBOX, required=false)
-    private List <MailboxWithAccountId> mailboxes = Lists.newArrayList();
+    private List <MailboxWithMailboxId> mailboxes = Lists.newArrayList();
 
     public PurgeMessagesResponse() {
     }
 
     public PurgeMessagesResponse setMailboxes(
-            Collection<MailboxWithAccountId> mailboxes) {
+            Collection<MailboxWithMailboxId> mailboxes) {
         this.mailboxes.clear();
         if (mailboxes != null) {
             this.mailboxes.addAll(mailboxes);
@@ -48,12 +48,12 @@ public class PurgeMessagesResponse {
         return this;
     }
 
-    public PurgeMessagesResponse addMailbox(MailboxWithAccountId attr) {
+    public PurgeMessagesResponse addMailbox(MailboxWithMailboxId attr) {
         mailboxes.add(attr);
         return this;
     }
 
-    public List<MailboxWithAccountId> getMailboxes() {
+    public List<MailboxWithMailboxId> getMailboxes() {
         return Collections.unmodifiableList(mailboxes);
     }
 }

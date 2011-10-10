@@ -29,6 +29,8 @@ public class MailboxWithMailboxId {
 
     @XmlAttribute(name=AdminConstants.A_MAILBOXID, required=true)
     private final int mbxid;
+    @XmlAttribute(name=AdminConstants.A_ACCOUNTID, required=false)
+    private String accountId;
     // DeleteMailbox doesn't set this
     @XmlAttribute(name=AdminConstants.A_SIZE, required=false)
     private final Long size;
@@ -38,14 +40,20 @@ public class MailboxWithMailboxId {
      */
     @SuppressWarnings("unused")
     private MailboxWithMailboxId() {
-        this(0, null);
+        this(0, null, null);
     }
 
-    public MailboxWithMailboxId(int mbxid, Long size) {
+    public MailboxWithMailboxId(int mbxid, String accountId, Long size) {
         this.mbxid = mbxid;
         this.size = size;
+        this.accountId = accountId;
+    }
+    
+    public void setAccountId(String accountId) {
+        this.accountId = accountId;
     }
 
     public int getMbxid() { return mbxid; }
     public Long getSize() { return size; }
+    public String getAccountId() { return accountId; }
 }
