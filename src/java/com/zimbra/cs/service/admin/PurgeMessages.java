@@ -34,12 +34,18 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.common.soap.Element;
+import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.admin.message.PurgeMessagesRequest;
+import com.zimbra.soap.admin.message.PurgeMessagesResponse;
+import com.zimbra.soap.admin.type.MailboxWithMailboxId;
 
 /**
  * @author dkarp
@@ -70,34 +76,31 @@ public class PurgeMessages extends AdminDocumentHandler {
             accounts = MailboxManager.getInstance().getAccountIds();
         }
         
-        Element response = zsc.createElement(AdminConstants.PURGE_MESSAGES_RESPONSE);
+        PurgeMessagesResponse purgeResponse = new PurgeMessagesResponse();
         for (int i = 0; i < accounts.length; i++) {
             Account account = Provisioning.getInstance().getAccountById(accounts[i]);
             if (account == null)
                 continue;
-            
+            MailboxWithMailboxId mboxResp;
             if (Provisioning.onLocalServer(account)) { // local
                 Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(account, false);
                 if (mbox == null)
                     continue;
                 mbox.purgeMessages(null);
-                Element mresp = response.addElement(AdminConstants.E_MAILBOX);
-                mresp.addAttribute(AdminConstants.A_ACCOUNTID, account.getId());
-                mresp.addAttribute(AdminConstants.A_SIZE, mbox.getSize());
+                mboxResp = new MailboxWithMailboxId(mbox.getId(), account.getId(), Long.valueOf(mbox.getSize()));                
             } else { // remote
-                AuthToken authToken = zsc.getAuthToken();
-                ZMailbox.Options zoptions = new ZMailbox.Options(authToken.toZAuthToken(), AccountUtil.getAdminSoapUri(account));
-                zoptions.setNoSession(true);
-                zoptions.setTargetAccount(account.getId());
-                zoptions.setTargetAccountBy(Key.AccountBy.id);    
-                ZMailbox zmbx = ZMailbox.getMailbox(zoptions);
-                zmbx.purgeMessages();
-                Element mresp = response.addElement(AdminConstants.E_MAILBOX);
-                mresp.addAttribute(AdminConstants.A_ACCOUNTID, account.getId());
-                mresp.addAttribute(AdminConstants.A_SIZE, zmbx.getSize());
+                Server server = account.getServer();
+                if (server == null)
+                    continue;
+                SoapProvisioning soapProvisioning = SoapProvisioning.getAdminInstance();
+                mboxResp = soapProvisioning.purgeMessages(account);
+                if (mboxResp == null)
+                    continue;
+                mboxResp.setAccountId(account.getId());
             }
+            purgeResponse.addMailbox(mboxResp);
         }
-        return response;
+        return JaxbUtil.jaxbToElement(purgeResponse);
 	}
     
     @Override

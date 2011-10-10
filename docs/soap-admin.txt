@@ -889,7 +889,7 @@ purges aged messages out of trash, spam, and entire mailbox
   (if <mbox> element is omitted, purges all mailboxes on server)
   
 <PurgeMessagesResponse>
-    <mbox id="{account-id}" s="{size}"/>
+    <mbox id="{account-id}" mbxid="{mailbox-id}" s="{size}"/>
 </PurgeMessagesResponse>  
 
 -----------------------------

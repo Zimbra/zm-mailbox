@@ -2074,6 +2074,16 @@ public class SoapProvisioning extends Provisioning {
     public void deleteMailbox(String accountId) throws ServiceException {
         invokeJaxb(new DeleteMailboxRequest(accountId));
     }
+    
+    public MailboxWithMailboxId purgeMessages(Account account) throws ServiceException {
+        Server server = account.getServer();
+        String serviceHost = server.getAttr(A_zimbraServiceHostname);
+        PurgeMessagesResponse resp = invokeJaxb(new PurgeMessagesRequest(account.getId()), serviceHost);
+        if (resp.getMailboxes().isEmpty())
+            return null;
+        else
+            return resp.getMailboxes().get(0);
+    }
 
 
     //

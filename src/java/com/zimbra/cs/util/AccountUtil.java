@@ -41,7 +41,6 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.httpclient.URLUtil;
 
 public class AccountUtil {
 
@@ -326,13 +325,6 @@ public class AccountUtil {
     }
 
     public static String getBaseUri(Account account) {
-        Server server = getServer(account);
-        if (server == null)
-            return null;
-        return getBaseUri(server);
-    }
-    
-    public static Server getServer(Account account) {
         if (account == null)
             return null;
 
@@ -342,9 +334,9 @@ public class AccountUtil {
                 ZimbraLog.account.warn("no server associated with acccount " + account.getName());
                 return null;
             }
-            return server;
+            return getBaseUri(server);
         } catch (ServiceException e) {
-            ZimbraLog.account.warn("error fetching server info for account " + account.getName(), e);
+            ZimbraLog.account.warn("error fetching SOAP URI for account " + account.getName(), e);
             return null;
         }
     }
@@ -365,13 +357,6 @@ public class AccountUtil {
         }
         ZimbraLog.account.warn("no service port available on host " + host);
         return null;
-    }
-    
-    public static String getAdminSoapUri(Account account) {
-        Server server = getServer(account);
-        if (server == null)
-            return null;
-        return URLUtil.getAdminURL(server);
     }
 
 //    /**
