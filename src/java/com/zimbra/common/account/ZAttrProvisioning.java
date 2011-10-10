@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 jhahm 20111005-2014 */
+    /* build: 8.0.0_BETA1_1111 pburgu 20111007-1015 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -4811,6 +4811,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=8)
     public static final String A_zimbraHsmAge = "zimbraHsmAge";
+
+    /**
+     * Maximum number of items to move during a single HSM operation. If the
+     * limit is exceeded, the HSM operation is repeated until all qualifying
+     * items are moved.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1316)
+    public static final String A_zimbraHsmBatchSize = "zimbraHsmBatchSize";
 
     /**
      * The policy that determines which mail items get moved to secondary
