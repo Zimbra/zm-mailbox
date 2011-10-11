@@ -136,7 +136,8 @@ public class TestProvisioning extends TestCase {
         PRE_AUTH_KEY = PreAuthKey.generateRandomPreAuthKey();
         PASSWORD = "test123";
 
-        SPECIAL_CHARS_ALLOWED_IN_DOMAIN = "/";
+        // SPECIAL_CHARS_ALLOWED_IN_DOMAIN = "/";
+        SPECIAL_CHARS_ALLOWED_IN_DOMAIN = "";  // TODO
         SPECIAL_CHARS_ALLOWED_IN_USER_PART = "/";
 
         COS_NAME = "cos-" + TEST_ID;
