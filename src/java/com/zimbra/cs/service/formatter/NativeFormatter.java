@@ -266,18 +266,17 @@ public final class NativeFormatter extends Formatter {
     private static void sendbackOriginalDoc(InputStream is, String contentType, String defaultCharset, String filename,
             String desc, long size, HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String disp = req.getParameter(UserServlet.QP_DISP);
-
         disp = (disp == null || disp.toLowerCase().startsWith("i") ) ? Part.INLINE : Part.ATTACHMENT;
-        if (desc != null)
+        if (desc != null) {
             resp.addHeader("Content-Description", desc);
-
+        }
         // defang when the html and svg attachment was requested with disposition inline
         if (disp.equals(Part.INLINE) && isScriptableContent(contentType)) {
             BrowserDefang defanger = DefangFactory.getDefanger(contentType);
             String content = defanger.defang(Mime.getTextReader(is, contentType, defaultCharset), false);
+            resp.setContentType(contentType);
             String charset = Mime.getCharset(contentType);
             resp.setCharacterEncoding(Strings.isNullOrEmpty(charset) ? Charsets.UTF_8.name() : charset);
-            resp.setContentType(contentType);
             if (!content.isEmpty()) {
                 resp.setContentLength(content.length());
             }
