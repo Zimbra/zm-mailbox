@@ -293,7 +293,7 @@ public final class LC {
     public static final KnownKey stats_img_folder = KnownKey.newKey("${zimbra_home}/logger/db/work");
 
     @Reloadable
-    public static final KnownKey soap_fault_include_stack_trace = KnownKey.newKey(true);
+    public static final KnownKey soap_fault_include_stack_trace = KnownKey.newKey(false);
 
     @Supported
     public static final KnownKey soap_response_buffer_size = KnownKey.newKey("");
