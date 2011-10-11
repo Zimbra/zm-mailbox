@@ -2963,12 +2963,10 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
 
         // actually delete the items from the DB
-        if (info.incomplete || item == null) {
-            DbMailItem.delete(mbox, info.itemIds.getAll(), fromDumpster);
-        } else if (scope == DeleteScope.CONTENTS_ONLY) {
+        if (scope == DeleteScope.CONTENTS_ONLY) {
             DbMailItem.deleteContents(item, fromDumpster);
         } else {
-            DbMailItem.delete(item, fromDumpster);
+            DbMailItem.delete(item, info, fromDumpster);
         }
 
         // remove the deleted item(s) from the mailbox's cache

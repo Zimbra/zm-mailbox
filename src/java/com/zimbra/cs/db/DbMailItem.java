@@ -1499,14 +1499,29 @@ public class DbMailItem {
     /**
      * Deletes the specified <code>MailItem</code> from the <code>mail_item</code>
      * table.  If the object is a <code>Folder</code> or <code>Conversation</code>,
-     * deletes any corresponding messages.  Does not delete subfolders.
+     * deletes any corresponding messages.  Also deletes all the children
+     * items associated to the deleted item, and their children.
      */
-    public static void delete(MailItem item, boolean fromDumpster) throws ServiceException {
+    public static void delete(MailItem item, PendingDelete info, boolean fromDumpster) throws ServiceException {
         if (item instanceof Tag)
             return;
-        deleteContents(item, fromDumpster);
+        List<Integer> allIds = info.itemIds.getAll();
+        allIds.remove(Integer.valueOf(item.getId()));
+        // first delete the Comments
+        List<Integer> allComments = info.itemIds.getIds(MailItem.Type.COMMENT);
+        if (allComments.size() != 0) {
+            delete(item.getMailbox(), allComments, fromDumpster);
+            allIds.removeAll(allComments);
+        }
+        // delete all non-folder items
+        List<Integer> allFolders = info.itemIds.getIds(MailItem.Type.FOLDER);
+        allIds.removeAll(allFolders);
+        delete(item.getMailbox(), allIds, fromDumpster);
+        // then delete the folders
+        delete(item.getMailbox(), allFolders, fromDumpster);
         if (item instanceof VirtualConversation)
             return;
+        // delete the item itself
         delete(item.getMailbox(), Collections.singletonList(item.getId()), fromDumpster);
     }
 
@@ -2660,6 +2675,7 @@ public class DbMailItem {
             stmt = null;
 
             accumulateLeafRevisions(info, mbox, versionedIds);
+            accumulateComments(info, mbox);
 
             return info;
         } catch (SQLException e) {
@@ -2860,6 +2876,36 @@ public class DbMailItem {
         }
     }
 
+    static void accumulateComments(PendingDelete info, Mailbox mbox) throws ServiceException {
+        List<Integer> documents = info.itemIds.getIds(MailItem.Type.DOCUMENT);
+        if (documents == null || documents.size() == 0) {
+            return;
+        }
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT type, id " +
+                    " FROM " + getMailItemTableName(mbox) +
+                    " WHERE " + DbUtil.whereIn("parent_id", documents.size()) +
+                    (DebugConfig.disableMailboxGroups ? "" : " AND mailbox_id = ?"));
+            int pos = 1;
+            for (int id : documents)
+                stmt.setInt(pos++, id);
+            pos = setMailboxId(stmt, mbox, pos);
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                info.itemIds.add(MailItem.Type.of(rs.getByte(1)), rs.getInt(2));
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("getting Comment deletion info for items: " + documents, e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
+    }
+    
     /**
      * Returns the blob digest for the item with the given id, or <tt>null</tt>
      * if either the id doesn't exist in the table or there is no associated blob.

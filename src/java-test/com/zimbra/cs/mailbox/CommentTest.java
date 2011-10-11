@@ -27,6 +27,7 @@ import org.junit.Test;
 
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mime.ParsedDocument;
 
 public class CommentTest {
@@ -46,7 +47,8 @@ public class CommentTest {
     @Test
     public void createDeleteComments() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        MailItem doc = createDocument(mbox, "doc.txt", "This is a document", false);
+        Folder folder = mbox.createFolder(null, "/Briefcase/f", (byte)0, Type.DOCUMENT);
+        MailItem doc = createDocument(mbox, "doc.txt", "This is a document", folder);
         mbox.createComment(null, doc.mId, "first comment", "test user 2");
         mbox.createComment(null, doc.mId, "comment #2", "the other guy");
         mbox.createComment(null, doc.mId, "numero tres", "some dude");
@@ -55,7 +57,7 @@ public class CommentTest {
 
         // hard delete
         mbox.delete(null, doc.mId, MailItem.Type.DOCUMENT);
-        List<MailItem> recovered = mbox.recover(null, new int[] { doc.mId }, MailItem.Type.DOCUMENT, Mailbox.ID_FOLDER_BRIEFCASE);
+        List<MailItem> recovered = mbox.recover(null, new int[] { doc.mId }, MailItem.Type.DOCUMENT, folder.getId());
         Assert.assertEquals(recovered.size(), 1);
         doc = recovered.iterator().next();
         
@@ -65,6 +67,15 @@ public class CommentTest {
         // trash, empty trash
         mbox.move(null, doc.mId, MailItem.Type.DOCUMENT, Mailbox.ID_FOLDER_TRASH);
         mbox.emptyFolder(null, Mailbox.ID_FOLDER_TRASH, true);
+        recovered = mbox.recover(null, new int[] { doc.mId }, MailItem.Type.DOCUMENT, folder.getId());
+        Assert.assertEquals(recovered.size(), 1);
+        doc = recovered.iterator().next();
+        
+        comments = mbox.getComments(null, doc.mId, 0, 10);
+        Assert.assertEquals(comments.size(), 3);
+        
+        // hard delete the parent folder
+        mbox.delete(null, folder.mId, MailItem.Type.FOLDER);
         recovered = mbox.recover(null, new int[] { doc.mId }, MailItem.Type.DOCUMENT, Mailbox.ID_FOLDER_BRIEFCASE);
         Assert.assertEquals(recovered.size(), 1);
         doc = recovered.iterator().next();
@@ -73,10 +84,9 @@ public class CommentTest {
         Assert.assertEquals(comments.size(), 3);
     }
     
-    private Document createDocument(Mailbox mbox, String name, String content, boolean isNote) throws Exception {
+    private Document createDocument(Mailbox mbox, String name, String content, Folder parent) throws Exception {
         InputStream in = new ByteArrayInputStream(content.getBytes());
         ParsedDocument pd = new ParsedDocument(in, name, "text/plain", System.currentTimeMillis(), null, null);
-        int flags = (isNote ? Flag.BITMASK_NOTE : 0);
-        return mbox.createDocument(null, Mailbox.ID_FOLDER_BRIEFCASE, pd, MailItem.Type.DOCUMENT, flags);
+        return mbox.createDocument(null, parent.getId(), pd, MailItem.Type.DOCUMENT, 0);
     }
 }
