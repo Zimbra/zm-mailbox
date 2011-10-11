@@ -1258,7 +1258,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     @SuppressWarnings("unchecked")
     @Override
     public List<Account> getAllAdminAccounts() throws ServiceException {
-        return (List<Account>) searchAccountsInternal(LegacyLdapFilter.adminAccountByAdminFlag(), null, null, true, Provisioning.SD_ACCOUNT_FLAG);
+        return (List<Account>) searchAccountsInternal(LegacyLdapFilter.allAdminAccounts(), null, null, true, Provisioning.SD_ACCOUNT_FLAG);
     }
 
     @SuppressWarnings("unchecked")

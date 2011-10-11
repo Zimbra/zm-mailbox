@@ -18,12 +18,24 @@ public class SearchDirectoryOptions {
     public static final SearchDirectoryOptions.SortOpt DEFAULT_SORT_OPT = SortOpt.NO_SORT;
     public static final String DEFAULT_SORT_ATTR = null;
 
-    // pseudo attr name for target name
-    // honored only for Alias entries
+    /*
+     * pseudo attr name for target name
+     * honored only for Alias entries
+     */
     public static final String SORT_BY_TARGET_NAME = "targetName";
     
-    private static final int ALL_TYPES_FLAGS = SearchDirectoryOptions.ObjectType.getAllTypesFlags();
-    
+    /* 
+     * Option to not set account defaults or secondard defaults.
+     * bug 36017, 41533
+     * 
+     * when large number of accounts are returned from Provisioning.searchDirectory,
+     * in the extreme case where the accounts span many different domains and the 
+     * domains are not loaded yet, loading all domains will cause slow response. 
+     *
+     *  Domain is needed for:
+     *    - determine the cos if cos is not set on the account
+     *    - account secondary default
+     */
     public static enum MakeObjectOpt {
         ALL_DEFAULTS,
         NO_DEFAULTS,
@@ -145,11 +157,9 @@ public class SearchDirectoryOptions {
     private Set<SearchDirectoryOptions.ObjectType> types;
     
     private String[] returnAttrs = ALL_ATTRS;
-
     private SearchDirectoryOptions.MakeObjectOpt makeObjOpt = MakeObjectOpt.ALL_DEFAULTS;
     private SearchDirectoryOptions.SortOpt sortOpt = DEFAULT_SORT_OPT;
     private String sortAttr = DEFAULT_SORT_ATTR;
-    
     private boolean convertIDNToAscii;
     
     public SearchDirectoryOptions() {

@@ -89,12 +89,6 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
          */
         FILTER_ALL_ACCOUNTS = Filter.createEqualityFilter(LdapConstants.ATTR_OBJECTCLASS, "zimbraAccount");
 
-        FILTER_ALL_ADMIN_ACCOUNTS = 
-                Filter.createORFilter(
-                        Filter.createEqualityFilter("zimbraIsAdminAccount", LdapConstants.LDAP_TRUE),
-                        Filter.createEqualityFilter("zimbraIsDelegatedAdminAccount", LdapConstants.LDAP_TRUE),
-                        Filter.createEqualityFilter("zimbraIsDomainAdminAccount", LdapConstants.LDAP_TRUE));
-
         FILTER_ALL_CALENDAR_RESOURCES = 
                 Filter.createEqualityFilter(LdapConstants.ATTR_OBJECTCLASS, "zimbraCalendarResource");
         
@@ -169,6 +163,14 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         FILTER_ALL_ACCOUNTS,
                         Filter.createNOTFilter(FILTER_ALL_CALENDAR_RESOURCES));
 
+       FILTER_ALL_ADMIN_ACCOUNTS = 
+               Filter.createANDFilter(
+                       FILTER_ALL_ACCOUNTS,
+                       Filter.createORFilter(
+                            Filter.createEqualityFilter("zimbraIsAdminAccount", LdapConstants.LDAP_TRUE),
+                            Filter.createEqualityFilter("zimbraIsDelegatedAdminAccount", LdapConstants.LDAP_TRUE),
+                            Filter.createEqualityFilter("zimbraIsDomainAdminAccount", LdapConstants.LDAP_TRUE)));
+        
         FILTER_ALL_NON_SYSTEM_ACCOUNTS = 
                 Filter.createANDFilter(
                         FILTER_ALL_ACCOUNTS_ONLY,
@@ -255,6 +257,13 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     }
     
     @Override
+    public ZLdapFilter allAdminAccounts() {
+        return new UBIDLdapFilter(
+                FilterId.ALL_ADMIN_ACCOUNTS,
+                FILTER_ALL_ADMIN_ACCOUNTS);
+    }
+    
+    @Override
     public ZLdapFilter allNonSystemAccounts() {
         return new UBIDLdapFilter(
                 FilterId.ALL_NON_SYSTEM_ACCOUNTS,
@@ -306,13 +315,6 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Filter.createANDFilter(
                         Filter.createEqualityFilter(namingRdnAttr, name),
                         FILTER_ALL_ACCOUNTS));
-    }
-
-    @Override
-    public ZLdapFilter adminAccountByAdminFlag() {
-        return new UBIDLdapFilter(
-                FilterId.ADMIN_ACCOUNT_BY_ADMIN_FLAG,
-                FILTER_ALL_ADMIN_ACCOUNTS);
     }
 
     @Override
@@ -541,6 +543,20 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 Filter.createANDFilter(
                         Filter.createEqualityFilter(Provisioning.A_zimbraMailAlias, name),
                         FILTER_ALL_DISTRIBUTION_LISTS));
+    }
+    
+    @Override
+    public ZLdapFilter distributionListsByMemberAddrs(String[] memberAddrs) {
+        List<Filter> filters = Lists.newArrayList();
+        for (int i=0; i < memberAddrs.length; i++) {
+            filters.add(Filter.createEqualityFilter(Provisioning.A_zimbraMailForwardingAddress, memberAddrs[i]));
+        }
+        
+        return new UBIDLdapFilter(
+                FilterId.DISTRIBUTION_LISTS_BY_MEMBER_ADDRS,
+                Filter.createANDFilter(
+                        FILTER_ALL_DISTRIBUTION_LISTS,
+                        Filter.createORFilter(filters)));
     }
     
 

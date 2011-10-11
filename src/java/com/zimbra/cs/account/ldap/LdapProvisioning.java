@@ -57,6 +57,7 @@ import com.zimbra.cs.account.DomainCache.GetFromDomainCacheOption;
 import com.zimbra.cs.account.NamedEntry.Visitor;
 import com.zimbra.cs.account.SearchAccountsOptions.IncludeType;
 import com.zimbra.cs.account.SearchDirectoryOptions.MakeObjectOpt;
+import com.zimbra.cs.account.SearchDirectoryOptions.ObjectType;
 import com.zimbra.cs.account.SearchDirectoryOptions.SortOpt;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.PermissionCache;
@@ -1197,8 +1198,11 @@ public class LdapProvisioning extends LdapProv {
     @SuppressWarnings("unchecked")
     @Override
     public List<Account> getAllAdminAccounts() throws ServiceException {
-        return (List<Account>) searchAccountsInternal(filterFactory.adminAccountByAdminFlag().toFilterString(),
-                null, null, true, Provisioning.SD_ACCOUNT_FLAG);
+        SearchAccountsOptions opts = new SearchAccountsOptions();
+        opts.setFilter(filterFactory.allAdminAccounts());
+        opts.setIncludeType(IncludeType.ACCOUNTS_ONLY);
+        opts.setSortOpt(SortOpt.SORT_ASCENDING);
+        return (List<Account>) searchDirectoryInternal(opts);
     }
     
     @Override
@@ -1238,14 +1242,6 @@ public class LdapProvisioning extends LdapProv {
         return searchDirectoryInternal(options, visitor);
     }
     
-    
-    private List<?> searchAccountsInternal(String query, String returnAttrs[], final String sortAttr, final boolean sortAscending, int flags)
-        throws ServiceException
-    {
-        //flags &= ~Provisioning.SA_DOMAIN_FLAG; // leaving on for now
-        return searchObjects(query, returnAttrs, sortAttr, sortAscending, mDIT.mailBranchBaseDN(), flags, 0);
-    }
-    
     @Override
     public List<NamedEntry> searchDirectory(SearchDirectoryOptions options) 
     throws ServiceException {
@@ -1256,6 +1252,11 @@ public class LdapProvisioning extends LdapProv {
     public void searchDirectory(SearchDirectoryOptions options, NamedEntry.Visitor visitor) 
     throws ServiceException {
         searchDirectoryInternal(options, visitor);
+    }
+    
+    private List<?> searchDirectoryInternal(SearchDirectoryOptions options) 
+    throws ServiceException{
+        return searchDirectoryInternal(options, null);
     }
     
     private List<NamedEntry> searchDirectoryInternal(SearchDirectoryOptions options,
@@ -2326,27 +2327,10 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public void getAllDomains(NamedEntry.Visitor visitor, String[] retAttrs) throws ServiceException {
-
-        int flags = Provisioning.SD_DOMAIN_FLAG;
-
-        // if asking for specific attrs only, make sure we have the minimum attrs required
-        // for the search and to construct a LdapDomain object
-        if (retAttrs != null) {
-            Set<String> attrs = new HashSet<String>(Arrays.asList(retAttrs));
-            attrs.add(Provisioning.A_objectClass);
-            attrs.add(Provisioning.A_zimbraId);
-            attrs.add(Provisioning.A_zimbraDomainName);
-            retAttrs = attrs.toArray(new String[attrs.size()]);
-
-            flags |= Provisioning.SO_NO_FIXUP_RETURNATTRS;
-        }
-
-        searchObjects(null,
-                      retAttrs,
-                      mDIT.domainBaseDN(),
-                      flags,
-                      visitor,
-                      0);
+        SearchDirectoryOptions opts = new SearchDirectoryOptions(retAttrs);
+        opts.setFilter(filterFactory.allDomains());
+        opts.setTypes(ObjectType.domains);
+        searchDirectoryInternal(opts, visitor);
     }
 
     private boolean domainDnExists(ZLdapContext zlc, String dn) throws ServiceException {
@@ -5010,22 +4994,20 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    private List<DistributionList> getAllDistributionListsForAddresses(String addrs[], boolean minimalData) throws ServiceException {
+    @SuppressWarnings("unchecked")
+    private List<DistributionList> getAllDistributionListsForAddresses(String addrs[], 
+            boolean minimalData) 
+    throws ServiceException {
         if (addrs == null || addrs.length == 0)
             return new ArrayList<DistributionList>();
-        StringBuilder sb = new StringBuilder();
-        if (addrs.length > 1)
-            sb.append("(|");
-        for (int i=0; i < addrs.length; i++) {
-            sb.append(String.format("(%s=%s)", Provisioning.A_zimbraMailForwardingAddress, addrs[i]));
-        }
-        if (addrs.length > 1)
-            sb.append(")");
         String [] attrs = minimalData ? BASIC_DL_ATTRS : null;
-
-        return (List<DistributionList>) searchAccountsInternal(sb.toString(), attrs, null,
-                true, Provisioning.SD_DISTRIBUTION_LIST_FLAG);
-
+        
+        SearchDirectoryOptions searchOpts = new SearchDirectoryOptions(attrs);
+        searchOpts.setFilter(filterFactory.distributionListsByMemberAddrs(addrs));
+        searchOpts.setTypes(ObjectType.distributionlists);
+        searchOpts.setSortOpt(SortOpt.SORT_ASCENDING);
+        
+        return (List<DistributionList>) searchDirectoryInternal(searchOpts);
     }
 
     private List<DistributionList> getAllDirectDLs(LdapProvisioning prov, Entry entry) throws ServiceException {
@@ -5233,7 +5215,7 @@ public class LdapProvisioning extends LdapProv {
         opts.setFilter(filterFactory.allAccountsOnly());
         opts.setIncludeType(IncludeType.ACCOUNTS_ONLY);
         opts.setSortOpt(SortOpt.SORT_ASCENDING);
-        return searchDirectoryInternal(opts, null);
+        return searchDirectory(opts);
     }
 
     @Override

@@ -45,10 +45,10 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         ACCOUNTS_ON_SERVER_AND_COS_HAS_SUBORDINATES(SINGLETON.accountsOnServerAndCosHasSubordinates("{SERVER-SERVICE-HOSTNAME}", "{COS-ID}")),
         
         ADDRS_EXIST(SINGLETON.addrsExist(new String[]{"{ADDR-1}", "ADDR-2", "..."})),
-        ADMIN_ACCOUNT_BY_ADMIN_FLAG(SINGLETON.adminAccountByAdminFlag()),
         ADMIN_ACCOUNT_BY_RDN(SINGLETON.adminAccountByRDN("{NAMING-RDN-ATTR}", "{NAME}")),
         ALL_ACCOUNTS(SINGLETON.allAccounts()),
         ALL_ACCOUNTS_ONLY(SINGLETON.allAccountsOnly()),
+        ALL_ADMIN_ACCOUNTS(SINGLETON.allAdminAccounts()),
         ALL_CALENDAR_RESOURCES(SINGLETON.allCalendarResources()),
         ALL_COSES(SINGLETON.allCoses()),
         ALL_DATA_SOURCES(SINGLETON.allDataSources()),
@@ -78,6 +78,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         DATA_SOURCE_BY_NAME(SINGLETON.dataSourceByName("{DATA-SOURCE-NAME}")),
         DISTRIBUTION_LIST_BY_ID(SINGLETON.distributionListById("{DISTRIBUTION-LIST-ID}")),
         DISTRIBUTION_LIST_BY_NAME(SINGLETON.distributionListByName("{DISTRIBUTION-LIST-NAME}")),
+        DISTRIBUTION_LISTS_BY_MEMBER_ADDRS(SINGLETON.distributionListsByMemberAddrs(new String[]{"{ADDR-1}", "ADDR-2", "..."})),
         DOMAIN_BY_ID(SINGLETON.domainById("{DOMAIN-ID}")),
         DOMAIN_BY_NAME(SINGLETON.domainByName("{DOMAIN-NAME}")),
         DOMAIN_BY_KRB5_REALM(SINGLETON.domainByKrb5Realm("{DOMAIN-KRB5-REALM}")),
@@ -182,12 +183,12 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
      */
     public abstract ZLdapFilter allAccounts();
     public abstract ZLdapFilter allAccountsOnly();
+    public abstract ZLdapFilter allAdminAccounts();
     public abstract ZLdapFilter allNonSystemAccounts();
     public abstract ZLdapFilter accountByForeignPrincipal(String foreignPrincipal);
     public abstract ZLdapFilter accountById(String id);
     public abstract ZLdapFilter accountByMemberOf(String dynGroupId);
     public abstract ZLdapFilter accountByName(String name);
-    public abstract ZLdapFilter adminAccountByAdminFlag();
     public abstract ZLdapFilter adminAccountByRDN(String namingRdnAttr, String name);
     
     public abstract ZLdapFilter accountsHomedOnServer(String serverServiceHostname); 
@@ -231,6 +232,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter allDistributionLists();
     public abstract ZLdapFilter distributionListById(String id);
     public abstract ZLdapFilter distributionListByName(String name);
+    public abstract ZLdapFilter distributionListsByMemberAddrs(String memberAddrs[]);
     
         
     /*

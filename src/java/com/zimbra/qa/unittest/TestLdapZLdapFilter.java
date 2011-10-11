@@ -118,6 +118,15 @@ public class TestLdapZLdapFilter extends TestLdap {
     }
     
     @Test
+    public void allAdminAccounts() throws Exception {
+        String filter = LegacyLdapFilter.allAdminAccounts();
+        ZLdapFilter zLdapFilter = filterDactory.allAdminAccounts();
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        verifyStatString(FilterId.ALL_ADMIN_ACCOUNTS, zLdapFilter);
+    }
+    
+    @Test
     public void allNonSystemAccounts() throws Exception {
         String filter = LegacyLdapFilter.allNonSystemAccounts();
         // (&(objectclass=zimbraAccount)(!(objectclass=zimbraCalendarResource))(!(zimbraIsSystemResource=TRUE)))
@@ -184,15 +193,6 @@ public class TestLdapZLdapFilter extends TestLdap {
         String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
         verifyStatString(FilterId.ADMIN_ACCOUNT_BY_RDN, zLdapFilter);
-    }
-    
-    @Test
-    public void adminAccountByAdminFlag() throws Exception {
-        String filter = LegacyLdapFilter.adminAccountByAdminFlag();
-        ZLdapFilter zLdapFilter = filterDactory.adminAccountByAdminFlag();
-        String zFilter = zLdapFilter.toFilterString();
-        assertEquals(filter, zFilter);
-        verifyStatString(FilterId.ADMIN_ACCOUNT_BY_ADMIN_FLAG, zLdapFilter);
     }
     
     @Test
@@ -493,6 +493,17 @@ public class TestLdapZLdapFilter extends TestLdap {
         String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
         verifyStatString(FilterId.DISTRIBUTION_LIST_BY_NAME, zLdapFilter);
+    }
+    
+    @Test
+    public void distributionListsByMemberAddrs() throws Exception {
+        String[] MEMBER_ADDRS = new String[]{"addr1@test.com", "addr2@test.com", "addr3@test.com"};
+        
+        String filter = LegacyLdapFilter.distributionListsByMemberAddrs(MEMBER_ADDRS);
+        ZLdapFilter zLdapFilter = filterDactory.distributionListsByMemberAddrs(MEMBER_ADDRS);
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        verifyStatString(FilterId.DISTRIBUTION_LISTS_BY_MEMBER_ADDRS, zLdapFilter);
     }
     
     @Test

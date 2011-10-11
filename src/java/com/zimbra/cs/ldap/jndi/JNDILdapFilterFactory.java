@@ -16,6 +16,7 @@ package com.zimbra.cs.ldap.jndi;
 
 import java.util.List;
 
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZLdapFilter;
@@ -80,6 +81,11 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     }
     
     @Override
+    public ZLdapFilter allAdminAccounts() {
+        return new JNDILdapFilter(LegacyLdapFilter.allAdminAccounts());
+    }
+    
+    @Override
     public ZLdapFilter allNonSystemAccounts() {
         return new JNDILdapFilter(LegacyLdapFilter.allNonSystemAccounts());
     }
@@ -102,11 +108,6 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     @Override
     public ZLdapFilter accountByName(String name) {
         return new JNDILdapFilter(LegacyLdapFilter.accountByName(name));
-    }
-
-    @Override
-    public ZLdapFilter adminAccountByAdminFlag() {
-        return new JNDILdapFilter(LegacyLdapFilter.adminAccountByAdminFlag());
     }
     
     @Override
@@ -239,6 +240,11 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     @Override
     public ZLdapFilter distributionListByName(String name) {
         return new JNDILdapFilter(LegacyLdapFilter.distributionListByName(name));
+    }
+    
+    @Override
+    public ZLdapFilter distributionListsByMemberAddrs(String[] memberAddrs) {
+        return new JNDILdapFilter(LegacyLdapFilter.distributionListsByMemberAddrs(memberAddrs));
     }
 
     

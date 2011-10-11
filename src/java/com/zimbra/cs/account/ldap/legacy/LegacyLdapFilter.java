@@ -17,6 +17,7 @@ package com.zimbra.cs.account.ldap.legacy;
 import java.util.List;
 
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.ldap.ZLdapFilter;
 
 public class LegacyLdapFilter {
 
@@ -71,6 +72,12 @@ public class LegacyLdapFilter {
         return FILTER_ACCOUNT_ONLY_OBJECTCLASS;
     }
     
+    public static String allAdminAccounts() {
+        return "(&" + FILTER_ACCOUNT_OBJECTCLASS + 
+                      "(|(zimbraIsAdminAccount=TRUE)(zimbraIsDelegatedAdminAccount=TRUE)(zimbraIsDomainAdminAccount=TRUE))" + 
+               ")";
+    }
+    
     public static String allNonSystemAccounts() {
         StringBuilder buf = new StringBuilder();
         buf.append("(&");
@@ -99,10 +106,6 @@ public class LegacyLdapFilter {
     
     public static String adminAccountByRDN(String namingRdnAttr, String name) {
         return "(&(" + namingRdnAttr + "=" + name + ")" + FILTER_ACCOUNT_OBJECTCLASS + ")";
-    }
-    
-    public static String adminAccountByAdminFlag() {
-        return "(|(zimbraIsAdminAccount=TRUE)(zimbraIsDelegatedAdminAccount=TRUE)(zimbraIsDomainAdminAccount=TRUE))";
     }
     
     public static String accountsHomedOnServer(String serverServiceHostname) {
@@ -236,6 +239,20 @@ public class LegacyLdapFilter {
         return "(&(zimbraMailAlias=" + name + ")" + FILTER_DISTRIBUTION_LIST_OBJECTCLASS + ")";
     }
     
+    public static String distributionListsByMemberAddrs(String[] memberAddrs) {
+        StringBuilder sb = new StringBuilder();
+        if (memberAddrs.length > 1) {
+            sb.append("(|");
+        }
+        for (int i=0; i < memberAddrs.length; i++) {
+            sb.append(String.format("(%s=%s)", Provisioning.A_zimbraMailForwardingAddress, memberAddrs[i]));
+        }
+        if (memberAddrs.length > 1) {
+            sb.append(")");
+        }
+        
+        return "(&" + FILTER_DISTRIBUTION_LIST_OBJECTCLASS + sb.toString() + ")";
+    }
     
     /*
      * dynamic group
