@@ -38,7 +38,7 @@ public class DisplayName extends AttributeCallback {
         
         String displayName;
         
-        // update cn only if we are not unsetting display name(cn is required for organizationalPerson)
+        // update cn only if we are not unsetting display name(cn is required for ZIMBRA_DEFAULT_PERSON_OC)
         SingleValueMod mod = singleValueMod(attrName, value);
         if (mod.unsetting())
             return;

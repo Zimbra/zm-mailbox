@@ -99,10 +99,6 @@ public class TestLdapProvMisc extends TestLdap {
         
         assertEquals("inetOrgPerson" , 
                 LdapObjectClassHierarchy.getMostSpecificOC(ldapProv, 
-                        new String[]{"aaa"}, "inetOrgPerson"));
-        
-        assertEquals("inetOrgPerson" , 
-                LdapObjectClassHierarchy.getMostSpecificOC(ldapProv, 
                         new String[]{"person", "inetOrgPerson"}, "organizationalPerson"));
  
     }

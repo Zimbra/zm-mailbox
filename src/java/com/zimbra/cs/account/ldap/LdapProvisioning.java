@@ -915,8 +915,8 @@ public class LdapProvisioning extends LdapProv {
             /* bug 48226
              *
              * Check if any of the OCs in the backup is a structural OC that subclasses
-             * our default OC: organizationalPerson.  If so, add that OC now while creating
-             * the account, because it cannot be modified later.
+             * our default OC (defined in ZIMBRA_DEFAULT_PERSON_OC).  
+             * If so, add that OC now while creating the account, because it cannot be modified later.
              */
             if (restoring && origAttrs != null) {
                 Object ocsInBackupObj = origAttrs.get(A_objectClass);
@@ -930,10 +930,12 @@ public class LdapProvisioning extends LdapProv {
                     throw ServiceException.FAILURE("internal error", null);
                 }
 
-                String mostSpecificOC = LdapObjectClassHierarchy.getMostSpecificOC(this, ocsInBackup, LdapObjectClass.ZIMBRA_DEFAULT_PERSON_OC);
+                String mostSpecificOC = LdapObjectClassHierarchy.getMostSpecificOC(
+                        this, ocsInBackup, LdapObjectClass.ZIMBRA_DEFAULT_PERSON_OC);
 
-                if (!LdapObjectClass.ZIMBRA_DEFAULT_PERSON_OC.equalsIgnoreCase(mostSpecificOC))
+                if (!LdapObjectClass.ZIMBRA_DEFAULT_PERSON_OC.equalsIgnoreCase(mostSpecificOC)) {
                     ocs.add(mostSpecificOC);
+                }
             }
 
             entry.addAttr(A_objectClass, ocs);
@@ -1010,7 +1012,7 @@ public class LdapProvisioning extends LdapProv {
             // amivisAccount requires the mail attr, so we always add it
             entry.setAttr(A_mail, emailAddress);
 
-            // required for organizationalPerson class
+            // required for ZIMBRA_DEFAULT_PERSON_OC class
             if (!entry.hasAttribute(Provisioning.A_cn)) {
                 String displayName = entry.getAttrString(Provisioning.A_displayName);
                 if (displayName != null) {
@@ -1020,7 +1022,7 @@ public class LdapProvisioning extends LdapProv {
                 }
             }
 
-            // required for organizationalPerson class
+            // required for ZIMBRA_DEFAULT_PERSON_OC class
             if (!entry.hasAttribute(Provisioning.A_sn))
                 entry.setAttr(A_sn, localPart);
 

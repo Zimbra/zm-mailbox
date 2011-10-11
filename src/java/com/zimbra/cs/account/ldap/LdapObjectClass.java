@@ -25,7 +25,11 @@ import com.zimbra.common.service.ServiceException;
 
 public class LdapObjectClass {
     
-    public static String ZIMBRA_DEFAULT_PERSON_OC = "organizationalPerson";
+    /*
+     * as of bug 60444, our default person OC for accounts is changed 
+     * from organizationalPerson to inetOrgPerson
+     */
+    public static String ZIMBRA_DEFAULT_PERSON_OC = "inetOrgPerson";
     
     private static void addExtraObjectClasses(Set<String> ocs, Provisioning prov, String extraOCAttr) throws ServiceException {
         String[] extraObjectClasses = prov.getConfig().getMultiAttr(extraOCAttr);
