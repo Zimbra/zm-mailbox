@@ -245,7 +245,7 @@ public final class ZimbraQueryTest {
 
         ZimbraQuery query = new ZimbraQuery(new OperationContext(mbox), SoapProtocol.Soap12, mbox, params);
         Assert.assertTrue(query.toQueryString(),
-                query.toQueryString().matches("\\(\\(content:test\\) AND -ID:/Junk MDATE:\\(>\\d+\\) \\)"));
+                query.toQueryString().matches("\\(\\(content:test\\) AND MDATE:\\(>\\d+\\) \\)"));
     }
 
 }

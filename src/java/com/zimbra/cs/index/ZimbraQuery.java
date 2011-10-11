@@ -548,10 +548,10 @@ public final class ZimbraQuery {
             boolean includeTrash = false;
             boolean includeSpam = false;
             if (params.inDumpster()) {
-                includeTrash = true; // Should never exclude trash because most dumpster data comes from trash folder.
-                if (mailbox.hasFullAdminAccess(octxt)) { // If the requester is an admin, include spam.
-                    includeSpam = true;
-                } else { // If not, limit to recent date range.
+                // Always include trash and spam for dumpster searches.  Excluding spam is a client side choice.
+                includeTrash = true;
+                includeSpam = true;
+                if (!mailbox.hasFullAdminAccess(octxt)) { // If the requester is not an admin, limit to recent date range.
                     long now = octxt != null ? octxt.getTimestamp() : System.currentTimeMillis();
                     long mdate = now - authAcct.getDumpsterUserVisibleAge();
                     IntersectionQueryOperation and = new IntersectionQueryOperation();
