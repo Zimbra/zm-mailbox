@@ -15,7 +15,9 @@
 package com.zimbra.cs.account;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -26,6 +28,7 @@ import javax.mail.internet.InternetAddress;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ProvisioningConstants;
@@ -914,12 +917,36 @@ public abstract class Provisioning extends ZAttrProvisioning {
             return flags;
         }
         
-        public static int getFlags(List<SearchDirectoryObjectType> types) {
+        public static int getFlags(Set<SearchDirectoryObjectType> types) {
             int flags = 0;
             for (SearchDirectoryObjectType type : types) {
                 flags |= type.getFlag();
             }
             return flags;
+        }
+
+        public static Set<SearchDirectoryObjectType> fromCSVString(String str) 
+        throws ServiceException {
+            Set<SearchDirectoryObjectType> types = Sets.newHashSet();
+            for (String type : Splitter.on(',').trimResults().split(str)) {
+                types.add(SearchDirectoryObjectType.fromString(type));
+            }
+            return types;
+        }
+        
+        public static String toCSVString(Set<SearchDirectoryObjectType> types) {
+            StringBuilder sb = new StringBuilder();
+            
+            boolean first = true;
+            for (SearchDirectoryObjectType type : types) {
+                if (!first) {
+                    sb.append(",");
+                } else {
+                    first = false;
+                }
+                sb.append(type.name());
+            }
+            return sb.toString();
         }
         
         public static SearchDirectoryObjectType fromString(String str) throws ServiceException {
@@ -939,6 +966,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @param types
      * @return
      */
+    // TODO: return this
     public static int searchDirectoryStringToMask(String types) {
         int flags = 0;
 
@@ -1612,7 +1640,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
         private String filterStr;
         
         /*
-         * List of wanted object types. If null, it means all types.
+         * List of wanted object types. If null, it means no type, which is 
+         * an error.
          * 
          * types is for:
          * - computing enough set of attributes to retrieve in order 
@@ -1621,7 +1650,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
          * - computing objectClass filters to be prepended to filterStr
          *   
          */
-        private List<SearchDirectoryObjectType> types;
+        private Set<SearchDirectoryObjectType> types;
         
         private String[] returnAttrs = ALL_ATTRS;
      
@@ -1629,7 +1658,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
         private SortOpt sortOpt = DEFAULT_SORT_OPT;
         private String sortAttr = DEFAULT_SORT_ATTR;
         
-        
+        private boolean convertIDNToAscii;
         
         public SearchObjectsOptions() {
         }
@@ -1641,6 +1670,128 @@ public abstract class Provisioning extends ZAttrProvisioning {
         public SearchObjectsOptions(Domain domain, String[] returnAttrs) {
             setDomain(domain);
             setReturnAttrs(returnAttrs);
+        }
+        
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof SearchObjectsOptions)) {
+                return false;
+            }
+            if (o == this) {
+                return true;
+            }
+            
+            SearchObjectsOptions other = (SearchObjectsOptions) o; 
+            
+            if (onMaster != other.getOnMaster()) {
+                return false;
+            }
+            
+            if (useConnPool != other.getUseConnPool()) {
+                return false;
+            }
+            
+            if (maxResults != other.getMaxResults()) {
+                return false;
+            }
+            
+            if (domain != null) {
+                Domain otherDomain = other.getDomain();
+                if (otherDomain == null) {
+                    return false;
+                }
+                if (!domain.getId().equals(otherDomain.getId())) {
+                    return false;
+                }
+            } else {
+                if (other.getDomain() != null) {
+                    return false;
+                }
+            }
+            
+            if (filter != null) {
+                ZLdapFilter otherFilter = other.getFilter();
+                if (otherFilter == null) {
+                    return false;
+                } else {
+                    if (!filter.toFilterString().equals(otherFilter.toFilterString())) {
+                        return false;
+                    }
+                }
+            } else {
+                if (other.getFilter() != null) {
+                    return false;
+                }
+            }
+            
+            if (filterId != other.getFilterId()) {
+                return false;
+            }
+            
+            if (filterStr != null) {
+                String otherFilterStr = other.getFilterString();
+                if (otherFilterStr == null) {
+                    return false;
+                } else {
+                    if (!filterStr.equals(otherFilterStr)) {
+                        return false;
+                    }
+                }
+            } else {
+                if (other.getFilterString() != null) {
+                    return false;
+                }
+            }
+            
+            if (getTypesAsFlags() != other.getTypesAsFlags()) {
+                return false;
+            }
+            
+            if (returnAttrs != null) {
+                String[] otherReturnAttrs = other.getReturnAttrs();
+                if (otherReturnAttrs == null) {
+                    return false;
+                } else {
+                    Set<String> attrsSet = Sets.newHashSet(Arrays.asList(returnAttrs));
+                    Set<String> otherAttrsSet = Sets.newHashSet(Arrays.asList(otherReturnAttrs));
+                    if (!attrsSet.equals(otherAttrsSet)) {
+                        return false;
+                    }
+                }
+            } else {
+                if (other.getReturnAttrs() != null) {
+                    return false;
+                }
+            }
+            
+            if (makeObjOpt != other.getMakeObjectOpt()) {
+                return false;
+            }
+            
+            if (sortOpt != other.getSortOpt()) {
+                return false;
+            }
+            
+            if (sortAttr != null) {
+                String otherSortAttr = other.getSortAttr();
+                if (otherSortAttr == null) {
+                    return false;
+                } else {
+                    if (!sortAttr.equals(otherSortAttr)) {
+                        return false;
+                    }
+                }
+            } else {
+                if (other.getSortAttr() != null) {
+                    return false;
+                }
+            }
+            
+            if (convertIDNToAscii != other.getConvertIDNToAscii()) {
+                return false;
+            }
+            
+            return true;
         }
         
         public void setOnMaster(boolean onMaster) {
@@ -1698,14 +1849,15 @@ public abstract class Provisioning extends ZAttrProvisioning {
         
         // from soap
         public void setTypes(String typesStr) throws ServiceException {
-            types = Lists.newArrayList();
-            for (String type : Splitter.on(',').trimResults().split(typesStr)) {
-                types.add(SearchDirectoryObjectType.fromString(type));
-            }
+            types = SearchDirectoryObjectType.fromCSVString(typesStr);
         }
         
-        public void setTypes(SearchDirectoryObjectType... objTypes) {
-            types = Lists.newArrayList();
+        public void setTypes(SearchDirectoryObjectType... objTypes) throws ServiceException {
+            setTypesInternal(objTypes);
+        }
+        
+        protected void setTypesInternal(SearchDirectoryObjectType... objTypes) {
+            types = Sets.newHashSet();
             for (SearchDirectoryObjectType type : objTypes) {
                 types.add(type);
             }
@@ -1713,14 +1865,18 @@ public abstract class Provisioning extends ZAttrProvisioning {
         
         public void addType(SearchDirectoryObjectType objType) {
             if (types == null) {
-                types = Lists.newArrayList();
+                types = Sets.newHashSet();
             }
             types.add(objType);
         }
         
+        public Set<SearchDirectoryObjectType> getTypes() {
+            return types;
+        }
+        
         public int getTypesAsFlags() {
             if (types == null) {
-                return ALL_TYPES_FLAGS;
+                return 0;
             } else {
                 return SearchDirectoryObjectType.getFlags(types);
             }
@@ -1758,9 +1914,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
         }
         
         public void setConvertIDNToAscii(boolean convertIDNToAscii) {
-            assert(false); // not yet supported
+            this.convertIDNToAscii = convertIDNToAscii;
         }
         
+        public boolean getConvertIDNToAscii() {
+            return convertIDNToAscii;
+        }
     };
     
     /**
@@ -1814,13 +1973,13 @@ public abstract class Provisioning extends ZAttrProvisioning {
             this.includeType = includeType;
             switch (this.includeType) {
                 case ACCOUNTS_AND_CALENDAR_RESOURCES:
-                    setTypes(SearchDirectoryObjectType.accounts, SearchDirectoryObjectType.resources);
+                    setTypesInternal(SearchDirectoryObjectType.accounts, SearchDirectoryObjectType.resources);
                     break;
                 case ACCOUNTS_ONLY:
-                    setTypes(SearchDirectoryObjectType.accounts);
+                    setTypesInternal(SearchDirectoryObjectType.accounts);
                     break;
                 case CALENDAR_RESOURCES_ONLY:
-                    setTypes(SearchDirectoryObjectType.resources);
+                    setTypesInternal(SearchDirectoryObjectType.resources);
                     break;
             }
         }
@@ -1833,6 +1992,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
         public void setTypes(String typesStr) throws ServiceException {
             throw ServiceException.FAILURE("internal error, use setIncludeType instead", null);
         }
+        
+        @Override
+        public void setTypes(SearchDirectoryObjectType... objTypes) throws ServiceException {
+            throw ServiceException.FAILURE("internal error, use setIncludeType instead", null);
+        }
+        
     }
     
     // TODO: RETIRE THIS, AND USE ONLY SearchObjectsOptions

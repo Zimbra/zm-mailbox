@@ -1659,19 +1659,33 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public List<NamedEntry> searchDirectory(SearchObjectsOptions options) throws ServiceException {
         List<NamedEntry> result = new ArrayList<NamedEntry>();
+        
         SearchDirectoryRequest req = new SearchDirectoryRequest();
         req.setQuery(options.getFilterString());
-        if (options.getMaxResults() != 0)
+        
+        if (options.getMaxResults() != 0) {
             req.setMaxResults(options.getMaxResults());
-        if (options.getDomain() != null)
+        }
+        
+        if (options.getDomain() != null) {
             req.setDomain(options.getDomain().getName());
-        if (options.getSortAttr() != null)
+        }
+        
+        if (options.getSortAttr() != null) {
             req.setSortBy(options.getSortAttr());
-        if (options.getTypesAsFlags() != 0 &&  options.getTypesAsFlags() != SearchDirectoryObjectType.getAllTypesFlags())
-            req.setTypes(Provisioning.searchDirectoryMaskToString(options.getTypesAsFlags()));
+        }
+
+        Set<SearchDirectoryObjectType> types = options.getTypes();
+        if (types != null) {
+            req.setTypes(SearchDirectoryObjectType.toCSVString(types));
+        }
+        
         req.setSortAscending(options.getSortOpt() != SortOpt.SORT_DESCENDING);
-        if (options.getReturnAttrs() != null)
+        
+        if (options.getReturnAttrs() != null) {
             req.addAttrs(options.getReturnAttrs());
+        }
+        
         // TODO: handle ApplyCos, limit, offset?
         SearchDirectoryResponse resp = invokeJaxb(req);
 

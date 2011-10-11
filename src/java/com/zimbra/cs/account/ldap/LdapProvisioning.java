@@ -34,6 +34,7 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
@@ -1293,6 +1294,10 @@ public class LdapProvisioning extends LdapProv {
         }
         
         if (filter == null) {
+            if (options.getConvertIDNToAscii() && !Strings.isNullOrEmpty(filterStr)) {
+                filterStr = LdapEntrySearchFilter.toLdapIDNFilter(filterStr);
+            }
+            
             // prepend objectClass filters
             String objectClass = getObjectClassQuery(flags);
 

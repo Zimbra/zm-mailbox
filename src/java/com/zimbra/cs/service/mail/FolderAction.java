@@ -32,8 +32,11 @@ import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.MailTarget;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.SearchDirectoryObjectType;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
 import com.zimbra.cs.fb.FreeBusyProvider;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
@@ -355,31 +358,29 @@ public class FolderAction extends ItemAction {
     private void revokeOrphanGrants(OperationContext octxt, Mailbox mbox, ItemId iid, String granteeId, byte gtype)
     throws ServiceException {
         // check if the grantee still exists
-        int flags = 0;
-        if (gtype == ACL.GRANTEE_USER)
-            flags |= (Provisioning.SD_ACCOUNT_FLAG | Provisioning.SD_CALENDAR_RESOURCE_FLAG) ;
-        else if (gtype == ACL.GRANTEE_GROUP)
-            flags |= Provisioning.SD_DISTRIBUTION_LIST_FLAG;
-        else if (gtype == ACL.GRANTEE_COS)
-            flags |= Provisioning.SD_COS_FLAG;
-        else if (gtype == ACL.GRANTEE_DOMAIN)
-            flags |= Provisioning.SD_DOMAIN_FLAG;
-        else
+        SearchObjectsOptions opts = new SearchObjectsOptions();
+        if (gtype == ACL.GRANTEE_USER) {
+            opts.addType(SearchDirectoryObjectType.accounts);
+            opts.addType(SearchDirectoryObjectType.resources);
+        } else if (gtype == ACL.GRANTEE_GROUP) {
+            opts.addType(SearchDirectoryObjectType.distributionlists);
+        } else if (gtype == ACL.GRANTEE_COS) {
+            opts.addType(SearchDirectoryObjectType.coses);
+        } else if (gtype == ACL.GRANTEE_DOMAIN) {
+            opts.addType(SearchDirectoryObjectType.domains);
+        } else {
             throw ServiceException.INVALID_REQUEST("invalid grantee type for revokeOrphanGrants", null);
-
+        }
+        
         String query = "(" + Provisioning.A_zimbraId + "=" + granteeId + ")";
-
-        Provisioning.SearchOptions opts = new SearchOptions();
-        opts.setFlags(flags);
-        opts.setQuery(query);
+        opts.setFilterString(FilterId.SEARCH_GRANTEE, query);
         opts.setOnMaster(true);  // search the grantee on LDAP master
+        List<NamedEntry> entries = Provisioning.getInstance().searchDirectory(opts);
 
-        Provisioning prov = Provisioning.getInstance();
-        List<NamedEntry> entries = prov.searchDirectory(opts);
-
-        if (entries.size() != 0)
+        if (entries.size() != 0) {
             throw ServiceException.INVALID_REQUEST("grantee " + granteeId + " exists", null);
-
+        }
+        
         // the grantee indeed does not exist, revoke all grants granted to the grantee
         // in this folder and all subfolders
         FolderNode rootNode = mbox.getFolderTree(octxt, iid, true);

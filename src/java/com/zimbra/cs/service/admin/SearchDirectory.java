@@ -33,10 +33,15 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.SearchDirectoryObjectType;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.MakeObjectOpt;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.common.soap.Element;
@@ -75,8 +80,9 @@ public class SearchDirectory extends AdminDocumentHandler {
 
         int maxResults = (int) request.getAttributeLong(AdminConstants.A_MAX_RESULTS, MAX_SEARCH_RESULTS);
         int limit = (int) request.getAttributeLong(AdminConstants.A_LIMIT, Integer.MAX_VALUE);
-        if (limit == 0)
+        if (limit == 0) {
             limit = Integer.MAX_VALUE;
+        }
         int offset = (int) request.getAttributeLong(AdminConstants.A_OFFSET, 0);
         String domain = request.getAttribute(AdminConstants.A_DOMAIN, null);
         boolean applyCos = request.getAttributeBool(AdminConstants.A_APPLY_COS, true);
@@ -86,10 +92,13 @@ public class SearchDirectory extends AdminDocumentHandler {
         String types = request.getAttribute(AdminConstants.A_TYPES, "accounts");
         boolean sortAscending = request.getAttributeBool(AdminConstants.A_SORT_ASCENDING, true);
 
+        // TODO: retire flags
         int flags = Provisioning.searchDirectoryStringToMask(types);
         
+        Set<SearchDirectoryObjectType> objTypes = SearchDirectoryObjectType.fromCSVString(types);
+        
         // cannot specify a domain with the "coses" flag 
-        if (((flags & Provisioning.SD_COS_FLAG) == Provisioning.SD_COS_FLAG) &&
+        if (objTypes.contains(SearchDirectoryObjectType.coses) &&
             (domain != null)) {
             throw ServiceException.INVALID_REQUEST("cannot specify domain with coses flag", null);
         }
@@ -97,8 +106,8 @@ public class SearchDirectory extends AdminDocumentHandler {
         // add zimbraMailTransport if account is requested
         // it is needed for figuring out if the account is an "external"(not yet migrated) account.
         String attrsStr = origAttrsStr;
-        if ((flags & Provisioning.SD_ACCOUNT_FLAG) == Provisioning.SD_ACCOUNT_FLAG &&
-                attrsStr != null && !attrsStr.contains(Provisioning.A_zimbraMailTransport)) {
+        if (objTypes.contains(SearchDirectoryObjectType.accounts) &&
+            attrsStr != null && !attrsStr.contains(Provisioning.A_zimbraMailTransport)) {
             attrsStr = attrsStr + "," + Provisioning.A_zimbraMailTransport;
         }
         
@@ -111,7 +120,7 @@ public class SearchDirectory extends AdminDocumentHandler {
         //
         // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager 
         if (isDomainAdminOnly(zsc)) {
-            if ((flags & Provisioning.SD_DOMAIN_FLAG) == Provisioning.SD_DOMAIN_FLAG) {
+            if (objTypes.contains(SearchDirectoryObjectType.domains)) {
                 if(query != null && query.length()>0) {
                     throw ServiceException.PERM_DENIED("cannot search for domains");
                 } else {
@@ -129,7 +138,7 @@ public class SearchDirectory extends AdminDocumentHandler {
                 }
 
             }
-            if ((flags & Provisioning.SD_COS_FLAG) == Provisioning.SD_COS_FLAG)
+            if (objTypes.contains(SearchDirectoryObjectType.coses))
                 throw ServiceException.PERM_DENIED("cannot search for coses");
 
             if (domain == null) {
@@ -150,32 +159,27 @@ public class SearchDirectory extends AdminDocumentHandler {
         AdminAccessControl.SearchDirectoryRightChecker rightChecker = 
             new AdminAccessControl.SearchDirectoryRightChecker(aac, prov, reqAttrs);
         
-        List accounts;
+        List<NamedEntry> accounts;
         AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
         
-        // bug 36017.  
-        // See comment for Provisioning.SO_NO_ACCOUNT_DEFAULTS
-        // 
-        // We set defaults when accounts are paged back to the SOAP client.
-        //
-        // Account object returned from Provisioning.searchDirectory are not cached anywhere,
-        // they are just referenced here.
-        //
-        flags |= Provisioning.SO_NO_ACCOUNT_DEFAULTS;
-        
+        SearchObjectsOptions options = new SearchObjectsOptions();
+        options.setDomain(d);
+        options.setTypes(types);
+        options.setMaxResults(maxResults);
+        options.setFilterString(FilterId.ADMIN_SEARCH, query);
+        options.setReturnAttrs(attrs);
+        options.setSortOpt(sortAscending ? SortOpt.SORT_ASCENDING : SortOpt.SORT_DESCENDING);
+        options.setSortAttr(sortBy);
+        options.setConvertIDNToAscii(true);
+            
+        // bug 36017. 
+        // defaults, if requested, are set when accounts are paged back to the SOAP client.
+        // objects returned from searchDirectory are not cached anywhere.
+        options.setMakeObjectOpt(MakeObjectOpt.NO_DEFAULTS);  
+            
         if (session != null) {
-            accounts = session.searchAccounts(d, query, attrs, sortBy, sortAscending, 
-                    flags, offset, maxResults, rightChecker);
+            accounts = session.searchDirectory(options, offset, rightChecker);
         } else {
-            SearchOptions options = new SearchOptions();
-            options.setDomain(d);
-            options.setFlags(flags);
-            options.setMaxResults(maxResults);
-            options.setQuery(query);
-            options.setReturnAttrs(attrs);
-            options.setSortAscending(sortAscending);
-            options.setSortAttr(sortBy);
-            options.setConvertIDNToAscii(true);
             accounts = prov.searchDirectory(options);
             accounts = rightChecker.getAllowed(accounts);
         }

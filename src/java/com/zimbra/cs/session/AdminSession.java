@@ -22,8 +22,11 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.NamedEntry;
-import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Provisioning.SearchDirectoryObjectType;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
+import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
 import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 
 import java.util.HashMap;
 import java.util.List;
@@ -63,10 +66,12 @@ public class AdminSession extends Session {
 
     @Override protected void cleanup() { }
 
-    public List searchAccounts(Domain d, String query, String[] attrs, String sortBy,
-            boolean sortAscending, int flags, int offset, int maxResults,
-            NamedEntry.CheckRight rightChecker) throws ServiceException {
-        AccountSearchParams params = new AccountSearchParams(d, query, attrs, sortBy, sortAscending, flags, maxResults, rightChecker);
+    public List<NamedEntry> searchDirectory(SearchObjectsOptions searchOpts,
+            int offset, NamedEntry.CheckRight rightChecker) 
+    throws ServiceException {
+        
+        AccountSearchParams params = new AccountSearchParams(searchOpts, rightChecker);
+        
         boolean needToSearch =  (offset == 0) || (mSearchParams == null) || !mSearchParams.equals(params);
         //ZimbraLog.account.info("this="+this+" mSearchParams="+mSearchParams+" equal="+!params.equals(mSearchParams));
         if (needToSearch) {
@@ -76,14 +81,24 @@ public class AdminSession extends Session {
         } else {
             //ZimbraLog.account.info("cached search: "+query+ " offset="+offset);
         }
-        return mSearchParams.mResult;
+        return mSearchParams.getResult();
     }
 
     public List searchCalendarResources(Domain d, EntrySearchFilter filter, String[] attrs, 
             String sortBy, boolean sortAscending, int offset, NamedEntry.CheckRight rightChecker)
     throws ServiceException {
         String query = LdapEntrySearchFilter.toLdapCalendarResourcesFilter(filter);
-        return searchAccounts(d, query, attrs, sortBy, sortAscending,
-                Provisioning.SD_CALENDAR_RESOURCE_FLAG, offset, 0, rightChecker);
+        
+        SearchObjectsOptions options = new SearchObjectsOptions();
+        options.setDomain(d);
+        options.setTypes(SearchDirectoryObjectType.resources);
+        options.setFilterString(FilterId.ADMIN_SEARCH, query);
+        options.setReturnAttrs(attrs);
+        options.setSortOpt(sortAscending ? SortOpt.SORT_ASCENDING : SortOpt.SORT_DESCENDING);
+        options.setSortAttr(sortBy);
+        options.setConvertIDNToAscii(true);
+        
+        return searchDirectory(options, offset, rightChecker);
     }
+
 }

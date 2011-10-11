@@ -98,20 +98,19 @@ public class SearchAccounts extends AdminDocumentHandler {
         AdminAccessControl.SearchDirectoryRightChecker rightChecker = 
             new AdminAccessControl.SearchDirectoryRightChecker(aac, prov, null);
         
+        
+        SearchObjectsOptions searchOpts = new SearchObjectsOptions(d, attrs);
+        searchOpts.setTypes(types);
+        searchOpts.setSortOpt(sortAscending ? SortOpt.SORT_ASCENDING : SortOpt.SORT_DESCENDING);
+        searchOpts.setSortAttr(sortBy);
+        searchOpts.setFilterString(FilterId.ADMIN_SEARCH, query);
+            
         List accounts;
         AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
         if (session != null) {
-            int flags = Provisioning.searchDirectoryStringToMask(types);
-            accounts = session.searchAccounts(d, query, attrs, sortBy, sortAscending, flags, offset, 0, rightChecker);
+            accounts = session.searchDirectory(searchOpts, offset, rightChecker);
         } else {
-            SearchObjectsOptions searchOpts = new SearchObjectsOptions(d, attrs);
-            searchOpts.setTypes(types);
-            searchOpts.setSortOpt(sortAscending ? SortOpt.SORT_ASCENDING : SortOpt.SORT_DESCENDING);
-            searchOpts.setSortAttr(sortBy);
-            
-            searchOpts.setFilterString(FilterId.ADMIN_SEARCH, query);
             accounts = prov.searchDirectory(searchOpts);
-                
             accounts = rightChecker.getAllowed(accounts);
         }
 
