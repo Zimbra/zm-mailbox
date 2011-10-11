@@ -363,9 +363,9 @@ public final class NativeFormatter extends Formatter {
         if (disp.equals(Part.INLINE) && isScriptableContent(contentType)) {
             BrowserDefang defanger = DefangFactory.getDefanger(contentType);
             String content = defanger.defang(Mime.getTextReader(is, contentType, defaultCharset), false);
+            resp.setContentType(contentType);
             String charset = Mime.getCharset(contentType);
             resp.setCharacterEncoding(Strings.isNullOrEmpty(charset) ? Charsets.UTF_8.name() : charset);
-            resp.setContentType(contentType);
             if (!content.isEmpty()) {
                 resp.setContentLength(content.length());
             }
