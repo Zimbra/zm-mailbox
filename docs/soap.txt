@@ -2554,7 +2554,7 @@ For example:
         <a n="lastName">user1</a>
         <a n="email">user1@phoebe.mbp</a>
         <a n="zimbraId">b4bf7953-c10f-449e-b7fe-3df48eea36f8</a>
-        <a n="objectClass">organizationalPerson</a>
+        <a n="objectClass">inetOrgPerson</a>
         <a n="objectClass">zimbraAccount</a>
         <a n="objectClass">amavisAccount</a>
         <a n="fullName">Demo User One</a>
