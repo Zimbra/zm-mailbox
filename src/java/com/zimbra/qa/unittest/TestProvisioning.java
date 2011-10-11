@@ -39,8 +39,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
-import com.zimbra.cs.account.Provisioning.SearchDirectoryObjectType;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.ZimbraCustomAuth;
 import com.zimbra.cs.account.ldap.LdapProv;
@@ -273,11 +271,11 @@ public class TestProvisioning extends TestCase {
                 options.setBase(ACCT_BASE_DN);
             List<NamedEntry> list = mProv.searchDirectory(options);
             */
-            SearchObjectsOptions options = new SearchObjectsOptions();
+            SearchDirectoryOptions options = new SearchDirectoryOptions();
             options.setTypes(
-                    SearchDirectoryObjectType.accounts,
-                    SearchDirectoryObjectType.resources,
-                    SearchDirectoryObjectType.distributionlists);
+                    SearchDirectoryOptions.ObjectType.accounts,
+                    SearchDirectoryOptions.ObjectType.resources,
+                    SearchDirectoryOptions.ObjectType.distributionlists);
             List<NamedEntry> list = mProv.searchDirectory(options);
             
             for (NamedEntry entry : list) {
@@ -294,12 +292,12 @@ public class TestProvisioning extends TestCase {
             }
 
             // search again, this time we search for everything and it should not contain any entry
-            options = new SearchObjectsOptions();
+            options = new SearchDirectoryOptions();
             options.setTypes(
-                    SearchDirectoryObjectType.accounts,
-                    SearchDirectoryObjectType.aliases,
-                    SearchDirectoryObjectType.resources,
-                    SearchDirectoryObjectType.distributionlists);
+                    SearchDirectoryOptions.ObjectType.accounts,
+                    SearchDirectoryOptions.ObjectType.aliases,
+                    SearchDirectoryOptions.ObjectType.resources,
+                    SearchDirectoryOptions.ObjectType.distributionlists);
             
             list = mProv.searchDirectory(options);
             assertEquals(0, list.size());
@@ -365,18 +363,18 @@ public class TestProvisioning extends TestCase {
      * util functions
      */
     private List<NamedEntry> searchAccountsInDomain(Domain domain) throws ServiceException {
-        SearchObjectsOptions options = new SearchObjectsOptions();
+        SearchDirectoryOptions options = new SearchDirectoryOptions();
 
-        options.setTypes(SearchDirectoryObjectType.accounts);
+        options.setTypes(SearchDirectoryOptions.ObjectType.accounts);
         options.setDomain(domain);
         options.setFilterString(FilterId.UNITTEST, null);
         return mProv.searchDirectory(options);
     }
 
     private List<NamedEntry> searchAliasesInDomain(Domain domain) throws ServiceException {
-        SearchObjectsOptions options = new SearchObjectsOptions();
+        SearchDirectoryOptions options = new SearchDirectoryOptions();
 
-        options.setTypes(SearchDirectoryObjectType.aliases);
+        options.setTypes(SearchDirectoryOptions.ObjectType.aliases);
         options.setDomain(domain);
         options.setFilterString(FilterId.UNITTEST, null);
         return mProv.searchDirectory(options);
@@ -1503,7 +1501,7 @@ public class TestProvisioning extends TestCase {
         }
 
         if (!Flag.needLdapPaging("searchDirectory")) {
-            SearchObjectsOptions options = new SearchObjectsOptions();
+            SearchDirectoryOptions options = new SearchDirectoryOptions();
             options.setDomain(domain);
             options.setFilterString(FilterId.UNITTEST, query);
             list = mProv.searchDirectory(options);

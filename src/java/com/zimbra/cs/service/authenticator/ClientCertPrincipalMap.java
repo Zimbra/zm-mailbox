@@ -17,9 +17,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.SearchAccountsOptions;
-import com.zimbra.cs.account.Provisioning.SearchOptions;
-import com.zimbra.cs.ldap.ZLdapFilterFactory;
+import com.zimbra.cs.account.SearchAccountsOptions;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.service.authenticator.SSOAuthenticator.ZimbraPrincipal;
 

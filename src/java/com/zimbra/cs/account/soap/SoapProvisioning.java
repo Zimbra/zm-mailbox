@@ -66,8 +66,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.NamedEntry.Visitor;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
+import com.zimbra.cs.account.SearchDirectoryOptions.SortOpt;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
@@ -1627,37 +1626,7 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public List<NamedEntry> searchDirectory(SearchOptions options) throws ServiceException {
-        List<NamedEntry> result = new ArrayList<NamedEntry>();
-        SearchDirectoryRequest req = new SearchDirectoryRequest();
-        req.setQuery(options.getQuery());
-        if (options.getMaxResults() != 0)
-            req.setMaxResults(options.getMaxResults());
-        if (options.getDomain() != null)
-            req.setDomain(options.getDomain().getName());
-        if (options.getSortAttr() != null)
-            req.setSortBy(options.getSortAttr());
-        if (options.getFlags() != 0)
-            req.setTypes(Provisioning.searchDirectoryMaskToString(options.getFlags()));
-        req.setSortAscending(options.isSortAscending());
-        if (options.getReturnAttrs() != null)
-            req.addAttrs(options.getReturnAttrs());
-        // TODO: handle ApplyCos, limit, offset?
-        SearchDirectoryResponse resp = invokeJaxb(req);
-
-        for (DistributionListInfo dl : resp.getDistributionLists())
-            result.add(new SoapDistributionList(dl, this));
-        for (AliasInfo alias : resp.getAliases())
-            result.add(new SoapAlias(alias, this));
-        for (AccountInfo acct : resp.getAccounts())
-            result.add(new SoapAccount(acct, this));
-        for (DomainInfo dom : resp.getDomains())
-            result.add(new SoapDomain(dom, this));
-        return result;
-    }
-    
-    @Override
-    public List<NamedEntry> searchDirectory(SearchObjectsOptions options) throws ServiceException {
+    public List<NamedEntry> searchDirectory(SearchDirectoryOptions options) throws ServiceException {
         List<NamedEntry> result = new ArrayList<NamedEntry>();
         
         SearchDirectoryRequest req = new SearchDirectoryRequest();
@@ -1675,9 +1644,9 @@ public class SoapProvisioning extends Provisioning {
             req.setSortBy(options.getSortAttr());
         }
 
-        Set<SearchDirectoryObjectType> types = options.getTypes();
+        Set<SearchDirectoryOptions.ObjectType> types = options.getTypes();
         if (types != null) {
-            req.setTypes(SearchDirectoryObjectType.toCSVString(types));
+            req.setTypes(SearchDirectoryOptions.ObjectType.toCSVString(types));
         }
         
         req.setSortAscending(options.getSortOpt() != SortOpt.SORT_DESCENDING);

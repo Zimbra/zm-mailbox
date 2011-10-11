@@ -26,15 +26,14 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.SearchAccountsOptions;
 import com.zimbra.cs.account.Server;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.cs.account.Provisioning.SearchAccountsOptions;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
+import com.zimbra.cs.account.SearchDirectoryOptions.SortOpt;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.calendar.tzfixup.TimeZoneFixupRules;
-import com.zimbra.cs.mailbox.calendar.tzfixup.XmlFixupRules;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class FixCalendarTZ extends AdminDocumentHandler {

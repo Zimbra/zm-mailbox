@@ -19,7 +19,6 @@
 package com.zimbra.cs.service.admin;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -33,11 +32,9 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.SearchDirectoryObjectType;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
-import com.zimbra.cs.account.Provisioning.SearchOptions;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.MakeObjectOpt;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
+import com.zimbra.cs.account.SearchDirectoryOptions;
+import com.zimbra.cs.account.SearchDirectoryOptions.MakeObjectOpt;
+import com.zimbra.cs.account.SearchDirectoryOptions.SortOpt;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.TargetType;
@@ -92,13 +89,10 @@ public class SearchDirectory extends AdminDocumentHandler {
         String types = request.getAttribute(AdminConstants.A_TYPES, "accounts");
         boolean sortAscending = request.getAttributeBool(AdminConstants.A_SORT_ASCENDING, true);
 
-        // TODO: retire flags
-        int flags = Provisioning.searchDirectoryStringToMask(types);
-        
-        Set<SearchDirectoryObjectType> objTypes = SearchDirectoryObjectType.fromCSVString(types);
+        Set<SearchDirectoryOptions.ObjectType> objTypes = SearchDirectoryOptions.ObjectType.fromCSVString(types);
         
         // cannot specify a domain with the "coses" flag 
-        if (objTypes.contains(SearchDirectoryObjectType.coses) &&
+        if (objTypes.contains(SearchDirectoryOptions.ObjectType.coses) &&
             (domain != null)) {
             throw ServiceException.INVALID_REQUEST("cannot specify domain with coses flag", null);
         }
@@ -106,7 +100,7 @@ public class SearchDirectory extends AdminDocumentHandler {
         // add zimbraMailTransport if account is requested
         // it is needed for figuring out if the account is an "external"(not yet migrated) account.
         String attrsStr = origAttrsStr;
-        if (objTypes.contains(SearchDirectoryObjectType.accounts) &&
+        if (objTypes.contains(SearchDirectoryOptions.ObjectType.accounts) &&
             attrsStr != null && !attrsStr.contains(Provisioning.A_zimbraMailTransport)) {
             attrsStr = attrsStr + "," + Provisioning.A_zimbraMailTransport;
         }
@@ -120,7 +114,7 @@ public class SearchDirectory extends AdminDocumentHandler {
         //
         // Note: isDomainAdminOnly *always* returns false for pure ACL based AccessManager 
         if (isDomainAdminOnly(zsc)) {
-            if (objTypes.contains(SearchDirectoryObjectType.domains)) {
+            if (objTypes.contains(SearchDirectoryOptions.ObjectType.domains)) {
                 if(query != null && query.length()>0) {
                     throw ServiceException.PERM_DENIED("cannot search for domains");
                 } else {
@@ -138,7 +132,7 @@ public class SearchDirectory extends AdminDocumentHandler {
                 }
 
             }
-            if (objTypes.contains(SearchDirectoryObjectType.coses))
+            if (objTypes.contains(SearchDirectoryOptions.ObjectType.coses))
                 throw ServiceException.PERM_DENIED("cannot search for coses");
 
             if (domain == null) {
@@ -162,7 +156,7 @@ public class SearchDirectory extends AdminDocumentHandler {
         List<NamedEntry> accounts;
         AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
         
-        SearchObjectsOptions options = new SearchObjectsOptions();
+        SearchDirectoryOptions options = new SearchDirectoryOptions();
         options.setDomain(d);
         options.setTypes(types);
         options.setMaxResults(maxResults);

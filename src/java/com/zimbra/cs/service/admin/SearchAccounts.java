@@ -18,9 +18,7 @@
  */
 package com.zimbra.cs.service.admin;
 
-import com.google.common.base.Splitter;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -28,15 +26,10 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.SearchAccountsOptions;
-import com.zimbra.cs.account.Provisioning.SearchDirectoryObjectType;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
-import com.zimbra.cs.account.Provisioning.SearchAccountsOptions.IncludeType;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
+import com.zimbra.cs.account.SearchDirectoryOptions;
+import com.zimbra.cs.account.SearchDirectoryOptions.SortOpt;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.ldap.ZLdapFilter;
-import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
@@ -99,7 +92,7 @@ public class SearchAccounts extends AdminDocumentHandler {
             new AdminAccessControl.SearchDirectoryRightChecker(aac, prov, null);
         
         
-        SearchObjectsOptions searchOpts = new SearchObjectsOptions(d, attrs);
+        SearchDirectoryOptions searchOpts = new SearchDirectoryOptions(d, attrs);
         searchOpts.setTypes(types);
         searchOpts.setSortOpt(sortAscending ? SortOpt.SORT_ASCENDING : SortOpt.SORT_DESCENDING);
         searchOpts.setSortAttr(sortBy);

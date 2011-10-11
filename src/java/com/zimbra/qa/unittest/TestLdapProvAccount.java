@@ -28,7 +28,6 @@ import com.google.common.collect.Maps;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.CalendarResource;
@@ -36,6 +35,8 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.SearchAccountsOptions;
+import com.zimbra.cs.account.SearchDirectoryOptions;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.common.account.Key;
@@ -44,13 +45,9 @@ import com.zimbra.common.account.Key.CalendarResourceBy;
 import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
-import com.zimbra.cs.account.Provisioning.SearchAccountsOptions;
-import com.zimbra.cs.account.Provisioning.SearchDirectoryObjectType;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
-import com.zimbra.cs.account.Provisioning.SearchOptions;
-import com.zimbra.cs.account.Provisioning.SearchAccountsOptions.IncludeType;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.MakeObjectOpt;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
+import com.zimbra.cs.account.SearchAccountsOptions.IncludeType;
+import com.zimbra.cs.account.SearchDirectoryOptions.MakeObjectOpt;
+import com.zimbra.cs.account.SearchDirectoryOptions.SortOpt;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapUtilCommon;
@@ -809,16 +806,16 @@ public class TestLdapProvAccount extends TestLdap {
         String granteeId = LdapUtilCommon.generateUUID();
         byte gtype = ACL.GRANTEE_USER;
         
-        SearchObjectsOptions opts = new SearchObjectsOptions();
+        SearchDirectoryOptions opts = new SearchDirectoryOptions();
         if (gtype == ACL.GRANTEE_USER) {
-            opts.addType(SearchDirectoryObjectType.accounts);
-            opts.addType(SearchDirectoryObjectType.resources);
+            opts.addType(SearchDirectoryOptions.ObjectType.accounts);
+            opts.addType(SearchDirectoryOptions.ObjectType.resources);
         } else if (gtype == ACL.GRANTEE_GROUP) {
-            opts.addType(SearchDirectoryObjectType.distributionlists);
+            opts.addType(SearchDirectoryOptions.ObjectType.distributionlists);
         } else if (gtype == ACL.GRANTEE_COS) {
-            opts.addType(SearchDirectoryObjectType.coses);
+            opts.addType(SearchDirectoryOptions.ObjectType.coses);
         } else if (gtype == ACL.GRANTEE_DOMAIN) {
-            opts.addType(SearchDirectoryObjectType.domains);
+            opts.addType(SearchDirectoryOptions.ObjectType.domains);
         } else {
             throw ServiceException.INVALID_REQUEST("invalid grantee type for revokeOrphanGrants", null);
         }

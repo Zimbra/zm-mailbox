@@ -27,7 +27,6 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
@@ -35,12 +34,11 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.SearchDirectoryOptions;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ProvisioningConstants;
-import com.zimbra.cs.account.Provisioning.SearchDirectoryObjectType;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
+import com.zimbra.cs.account.SearchDirectoryOptions.SortOpt;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
@@ -115,7 +113,7 @@ public class TestProvSearchDirectory {
         
         String query = expandFilter(filter, key);
         
-        SearchObjectsOptions options = new SearchObjectsOptions();
+        SearchDirectoryOptions options = new SearchDirectoryOptions();
         options.setDomain(null);
         options.setMaxResults(5000);
         options.setFilterString(FilterId.UNITTEST, query);
@@ -339,10 +337,10 @@ public class TestProvSearchDirectory {
              * mSortAttr          "name"
              */
             
-            SearchObjectsOptions options = new SearchObjectsOptions();
+            SearchDirectoryOptions options = new SearchDirectoryOptions();
             options.setConvertIDNToAscii(true);
             options.setDomain(null);
-            options.setTypes(SearchDirectoryObjectType.accounts, SearchDirectoryObjectType.aliases);
+            options.setTypes(SearchDirectoryOptions.ObjectType.accounts, SearchDirectoryOptions.ObjectType.aliases);
             options.setMaxResults(5000);
             options.setFilterString(FilterId.UNITTEST, null);
             options.setReturnAttrs(attrs);
@@ -468,10 +466,10 @@ public class TestProvSearchDirectory {
                                           "zimbraDomainname"
                                          };
             
-            SearchObjectsOptions options = new SearchObjectsOptions();
+            SearchDirectoryOptions options = new SearchDirectoryOptions();
             options.setConvertIDNToAscii(true);
             options.setDomain(null);
-            options.setTypes(SearchDirectoryObjectType.domains);
+            options.setTypes(SearchDirectoryOptions.ObjectType.domains);
             options.setMaxResults(5000);
             options.setFilterString(FilterId.UNITTEST, null);
             options.setReturnAttrs(attrs);

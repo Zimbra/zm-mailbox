@@ -30,8 +30,6 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
-import com.zimbra.cs.account.Provisioning.SearchAccountsOptions;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.mailbox.ACL;

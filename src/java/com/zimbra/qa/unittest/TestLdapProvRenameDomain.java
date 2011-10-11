@@ -44,11 +44,10 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.SearchDirectoryOptions;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.XMPPComponent;
-import com.zimbra.cs.account.Provisioning.SearchDirectoryObjectType;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.ldap.LdapUtilCommon;
@@ -731,8 +730,8 @@ public class TestLdapProvRenameDomain extends TestLdap {
     private void verifyEntries(int domainIdx, Domain domain) throws Exception {
      
         // get all the entries reside in the domain
-        SearchObjectsOptions options = new SearchObjectsOptions();
-        options.setTypes(SearchDirectoryObjectType.accounts, SearchDirectoryObjectType.distributionlists);
+        SearchDirectoryOptions options = new SearchDirectoryOptions();
+        options.setTypes(SearchDirectoryOptions.ObjectType.accounts, SearchDirectoryOptions.ObjectType.distributionlists);
         options.setDomain(domain);
         options.setFilterString(FilterId.UNITTEST, null);
         List<NamedEntry> list = mProv.searchDirectory(options);
@@ -776,8 +775,8 @@ public class TestLdapProvRenameDomain extends TestLdap {
     private void verifyDomainAliases(int domainIdx, Domain domain) throws Exception {
         
         // get all the aliases reside in the domain
-        SearchObjectsOptions options = new SearchObjectsOptions();
-        options.setTypes(SearchDirectoryObjectType.aliases);
+        SearchDirectoryOptions options = new SearchDirectoryOptions();
+        options.setTypes(SearchDirectoryOptions.ObjectType.aliases);
         options.setDomain(domain);
         options.setFilterString(FilterId.UNITTEST, null);
         List<NamedEntry> list = mProv.searchDirectory(options);

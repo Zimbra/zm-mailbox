@@ -32,9 +32,7 @@ import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.MailTarget;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.SearchDirectoryObjectType;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
-import com.zimbra.cs.account.Provisioning.SearchOptions;
+import com.zimbra.cs.account.SearchDirectoryOptions;
 import com.zimbra.cs.fb.FreeBusyProvider;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.mailbox.ACL;
@@ -358,16 +356,16 @@ public class FolderAction extends ItemAction {
     private void revokeOrphanGrants(OperationContext octxt, Mailbox mbox, ItemId iid, String granteeId, byte gtype)
     throws ServiceException {
         // check if the grantee still exists
-        SearchObjectsOptions opts = new SearchObjectsOptions();
+        SearchDirectoryOptions opts = new SearchDirectoryOptions();
         if (gtype == ACL.GRANTEE_USER) {
-            opts.addType(SearchDirectoryObjectType.accounts);
-            opts.addType(SearchDirectoryObjectType.resources);
+            opts.addType(SearchDirectoryOptions.ObjectType.accounts);
+            opts.addType(SearchDirectoryOptions.ObjectType.resources);
         } else if (gtype == ACL.GRANTEE_GROUP) {
-            opts.addType(SearchDirectoryObjectType.distributionlists);
+            opts.addType(SearchDirectoryOptions.ObjectType.distributionlists);
         } else if (gtype == ACL.GRANTEE_COS) {
-            opts.addType(SearchDirectoryObjectType.coses);
+            opts.addType(SearchDirectoryOptions.ObjectType.coses);
         } else if (gtype == ACL.GRANTEE_DOMAIN) {
-            opts.addType(SearchDirectoryObjectType.domains);
+            opts.addType(SearchDirectoryOptions.ObjectType.domains);
         } else {
             throw ServiceException.INVALID_REQUEST("invalid grantee type for revokeOrphanGrants", null);
         }

@@ -23,19 +23,15 @@ import java.util.List;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
+import com.zimbra.cs.account.SearchDirectoryOptions;
 
-/**
- * this class needs to be replaced with new SearchOptions, not enough time right now,
- * so we'll just create one inside...
- */
-class AccountSearchParams {
+class DirectorySearchParams {
 
-    private SearchObjectsOptions mSearchOpts;
+    private SearchDirectoryOptions mSearchOpts;
     private List<NamedEntry> mResult;
     private NamedEntry.CheckRight mRightChecker;
     
-    AccountSearchParams(SearchObjectsOptions searchOpts, NamedEntry.CheckRight rightChecker) {
+    DirectorySearchParams(SearchDirectoryOptions searchOpts, NamedEntry.CheckRight rightChecker) {
         mSearchOpts = searchOpts;
         mRightChecker = rightChecker;
     }
@@ -46,7 +42,7 @@ class AccountSearchParams {
     
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof AccountSearchParams)) {
+        if (!(o instanceof DirectorySearchParams)) {
             return false;
         }
         
@@ -54,7 +50,7 @@ class AccountSearchParams {
             return true;
         }
         
-        AccountSearchParams other = (AccountSearchParams) o;
+        DirectorySearchParams other = (DirectorySearchParams) o;
         return mSearchOpts.equals(other.mSearchOpts);
     }
     

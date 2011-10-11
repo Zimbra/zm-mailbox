@@ -55,11 +55,9 @@ import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.DomainCache.GetFromDomainCacheOption;
 import com.zimbra.cs.account.NamedEntry.Visitor;
-import com.zimbra.cs.account.Provisioning.SearchAccountsOptions;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
-import com.zimbra.cs.account.Provisioning.SearchAccountsOptions.IncludeType;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.MakeObjectOpt;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
+import com.zimbra.cs.account.SearchAccountsOptions.IncludeType;
+import com.zimbra.cs.account.SearchDirectoryOptions.MakeObjectOpt;
+import com.zimbra.cs.account.SearchDirectoryOptions.SortOpt;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.PermissionCache;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -1249,18 +1247,18 @@ public class LdapProvisioning extends LdapProv {
     }
     
     @Override
-    public List<NamedEntry> searchDirectory(SearchObjectsOptions options) 
+    public List<NamedEntry> searchDirectory(SearchDirectoryOptions options) 
     throws ServiceException {
         return searchDirectoryInternal(options, null);
     }
     
     @Override
-    public void searchDirectory(SearchObjectsOptions options, NamedEntry.Visitor visitor) 
+    public void searchDirectory(SearchDirectoryOptions options, NamedEntry.Visitor visitor) 
     throws ServiceException {
         searchDirectoryInternal(options, visitor);
     }
     
-    private List<NamedEntry> searchDirectoryInternal(SearchObjectsOptions options,
+    private List<NamedEntry> searchDirectoryInternal(SearchDirectoryOptions options,
             NamedEntry.Visitor visitor) 
     throws ServiceException {
         int flags = options.getTypesAsFlags();
@@ -1416,7 +1414,8 @@ public class LdapProvisioning extends LdapProv {
             else {
                 String sa = null;
                 String sb = null;
-                if (SearchOptions.SORT_BY_TARGET_NAME.equals(mSortAttr) && (a instanceof Alias) && (b instanceof Alias)) {
+                if (SearchDirectoryOptions.SORT_BY_TARGET_NAME.equals(mSortAttr) && 
+                        (a instanceof Alias) && (b instanceof Alias)) {
                     try {
                         sa = ((Alias)a).getTargetUnicodeName(mProv);
                     } catch (ServiceException e) {
@@ -1604,7 +1603,7 @@ public class LdapProvisioning extends LdapProv {
      * @throws ServiceException
      */
     private List<NamedEntry> searchObjects(String[] bases, ZLdapFilter filter, String returnAttrs[], 
-            SearchObjectsOptions opts, NamedEntry.Visitor visitor)
+            SearchDirectoryOptions opts, NamedEntry.Visitor visitor)
     throws ServiceException {
         
         if (visitor != null) {
@@ -1642,7 +1641,7 @@ public class LdapProvisioning extends LdapProv {
     }
     
     private void searchLdapObjects(String base, ZLdapFilter filter, String returnAttrs[], 
-            SearchObjectsOptions opts, NamedEntry.Visitor visitor)
+            SearchDirectoryOptions opts, NamedEntry.Visitor visitor)
     throws ServiceException {
 
         SearchObjectsVisitor searchObjectsVisitor =
@@ -5315,44 +5314,6 @@ public class LdapProvisioning extends LdapProv {
                 mDIT.domainDNToAccountSearchDN(ld.getDN()), flags, 0);
     }
 
-    @Override
-    public List<NamedEntry> searchDirectory(SearchOptions options) throws ServiceException {
-        return searchDirectory(options, true);
-    }
-
-    private List<NamedEntry> searchDirectory(SearchOptions options, boolean useConnPool) throws ServiceException {
-        String base = null;
-
-        LdapDomain ld = (LdapDomain) options.getDomain();
-        if (ld != null)
-            base = mDIT.domainDNToAccountSearchDN(ld.getDN());
-        else {
-            String bs = options.getBase();
-            if (bs != null)
-                base = bs;
-        }
-
-        String bases[];
-        if (base == null)
-            bases = mDIT.getSearchBases(options.getFlags());
-        else
-            bases = new String[] {base};
-
-        String query = options.getQuery();
-
-        if (options.getConvertIDNToAscii() && query != null && query.length()>0)
-            query = LdapEntrySearchFilter.toLdapIDNFilter(query);
-
-        return searchObjects(query,
-                             options.getReturnAttrs(),
-                             options.getSortAttr(),
-                             options.isSortAscending(),
-                             bases,
-                             options.getFlags(),
-                             options.getMaxResults(),
-                             useConnPool,
-                             options.getOnMaster());
-    }
 
     @Override
     public List<NamedEntry> searchCalendarResources(

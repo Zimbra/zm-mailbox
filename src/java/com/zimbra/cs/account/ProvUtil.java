@@ -81,11 +81,9 @@ import com.zimbra.cs.account.Provisioning.CountAccountResult;
 import com.zimbra.cs.account.Provisioning.MailMode;
 import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
 import com.zimbra.cs.account.Provisioning.RightsDoc;
-import com.zimbra.cs.account.Provisioning.SearchDirectoryObjectType;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
 import com.zimbra.cs.account.Provisioning.SetPasswordResult;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
+import com.zimbra.cs.account.SearchDirectoryOptions.SortOpt;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.AttrRight;
@@ -1837,16 +1835,16 @@ public class ProvUtil implements HttpDebugListener {
 
         String typesStr = (String) attrs.get("types");
         if (typesStr == null) {
-            typesStr = SearchDirectoryObjectType.accounts.name() + "," +
-                    SearchDirectoryObjectType.aliases.name() + "," +
-                    SearchDirectoryObjectType.distributionlists.name() + "," +
-                    SearchDirectoryObjectType.dynamicgroups.name() + "," +
-                    SearchDirectoryObjectType.resources.name();
+            typesStr = SearchDirectoryOptions.ObjectType.accounts.name() + "," +
+                    SearchDirectoryOptions.ObjectType.aliases.name() + "," +
+                    SearchDirectoryOptions.ObjectType.distributionlists.name() + "," +
+                    SearchDirectoryOptions.ObjectType.dynamicgroups.name() + "," +
+                    SearchDirectoryOptions.ObjectType.resources.name();
         }
 
         String domainStr = (String)attrs.get("domain");
         
-        SearchObjectsOptions searchOpts = new SearchObjectsOptions(attrsToGet);
+        SearchDirectoryOptions searchOpts = new SearchDirectoryOptions(attrsToGet);
         if (domainStr != null) {
             Domain d = lookupDomain(domainStr, prov);
             searchOpts.setDomain(d);

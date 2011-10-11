@@ -22,9 +22,8 @@ import com.zimbra.common.util.Constants;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.NamedEntry;
-import com.zimbra.cs.account.Provisioning.SearchDirectoryObjectType;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions;
-import com.zimbra.cs.account.Provisioning.SearchObjectsOptions.SortOpt;
+import com.zimbra.cs.account.SearchDirectoryOptions;
+import com.zimbra.cs.account.SearchDirectoryOptions.SortOpt;
 import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 
@@ -36,7 +35,7 @@ public class AdminSession extends Session {
 
     private static final long ADMIN_SESSION_TIMEOUT_MSEC = 10 * Constants.MILLIS_PER_MINUTE;
   
-    private AccountSearchParams mSearchParams;
+    private DirectorySearchParams mSearchParams;
     private HashMap<String,Object> mData = new HashMap<String,Object>();
 
     public AdminSession(String accountId) {
@@ -66,11 +65,11 @@ public class AdminSession extends Session {
 
     @Override protected void cleanup() { }
 
-    public List<NamedEntry> searchDirectory(SearchObjectsOptions searchOpts,
+    public List<NamedEntry> searchDirectory(SearchDirectoryOptions searchOpts,
             int offset, NamedEntry.CheckRight rightChecker) 
     throws ServiceException {
         
-        AccountSearchParams params = new AccountSearchParams(searchOpts, rightChecker);
+        DirectorySearchParams params = new DirectorySearchParams(searchOpts, rightChecker);
         
         boolean needToSearch =  (offset == 0) || (mSearchParams == null) || !mSearchParams.equals(params);
         //ZimbraLog.account.info("this="+this+" mSearchParams="+mSearchParams+" equal="+!params.equals(mSearchParams));
@@ -89,9 +88,9 @@ public class AdminSession extends Session {
     throws ServiceException {
         String query = LdapEntrySearchFilter.toLdapCalendarResourcesFilter(filter);
         
-        SearchObjectsOptions options = new SearchObjectsOptions();
+        SearchDirectoryOptions options = new SearchDirectoryOptions();
         options.setDomain(d);
-        options.setTypes(SearchDirectoryObjectType.resources);
+        options.setTypes(SearchDirectoryOptions.ObjectType.resources);
         options.setFilterString(FilterId.ADMIN_SEARCH, query);
         options.setReturnAttrs(attrs);
         options.setSortOpt(sortAscending ? SortOpt.SORT_ASCENDING : SortOpt.SORT_DESCENDING);
