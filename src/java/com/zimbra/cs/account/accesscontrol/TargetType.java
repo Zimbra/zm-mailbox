@@ -103,8 +103,17 @@ public enum TargetType {
     }
 
     /* return equivalent JAXB enum */
-    public com.zimbra.soap.type.TargetType toJaxb() throws ServiceException {
+    public com.zimbra.soap.type.TargetType toJaxb() {
         return jaxbTargetType;
+    }
+
+    public static TargetType fromJaxb(com.zimbra.soap.type.TargetType jaxbTT) {
+        for (TargetType tt :TargetType.values()) {
+            if (tt.toJaxb() == jaxbTT) {
+                return tt;
+            }
+        }
+        throw new IllegalArgumentException("Unrecognised TargetType" + jaxbTT);
     }
 
     private void setInheritedByTargetTypes(TargetType[] targetTypes) {
