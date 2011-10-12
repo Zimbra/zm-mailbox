@@ -234,10 +234,21 @@ public class GetShareInfo  extends AccountDocumentHandler {
         private static class ShareInfoComparator implements Comparator<ShareInfoData> {
             public int compare(ShareInfoData a, ShareInfoData b) {
                 int r = a.getPath().compareToIgnoreCase(b.getPath());
-                if (r == 0)
+                if (r == 0) {
                     r = a.getOwnerAcctEmail().compareToIgnoreCase(b.getOwnerAcctEmail());
-                if (r == 0)
-                    r = a.getGranteeName().compareToIgnoreCase(b.getGranteeName());
+                }
+                if (r == 0) {
+                    if (a.getGranteeName() != null && b.getGranteeName() != null) {
+                        r = a.getGranteeName().compareToIgnoreCase(b.getGranteeName());
+                    } else if (a.getGranteeName() == null) {
+                        r = b.getGranteeName() == null ? 0 : -1;
+                    } else {
+                        r = 1;
+                    }
+                }
+                if (r == 0) {
+                    r = a.getGranteeType().compareTo(b.getGranteeType());
+                }
                 return r;
             }
         }
