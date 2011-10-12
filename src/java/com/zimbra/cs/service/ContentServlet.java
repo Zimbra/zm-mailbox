@@ -81,6 +81,7 @@ public class ContentServlet extends ZimbraServlet {
     protected static final String PARAM_UPLOAD_ID = "aid";
     protected static final String PARAM_PART = "part";
     protected static final String PARAM_FORMAT = "fmt";
+    protected static final String PARAM_DUMPSTER = "dumpster";
     protected static final String PARAM_SYNC = "sync";
     protected static final String PARAM_EXPUNGE = "expunge";
     protected static final String PARAM_LOCALE_ID = L10nUtil.P_LOCALE_ID;
@@ -111,6 +112,8 @@ public class ContentServlet extends ZimbraServlet {
 
         String part = req.getParameter(PARAM_PART);
         String fmt = req.getParameter(PARAM_FORMAT);
+        String dumpsterParam = req.getParameter(PARAM_DUMPSTER);
+        boolean fromDumpster = dumpsterParam != null && !dumpsterParam.equals("0") && !dumpsterParam.equalsIgnoreCase("false");
 
         try {
             // need to proxy the fetch if the mailbox lives on another server
@@ -133,7 +136,7 @@ public class ContentServlet extends ZimbraServlet {
             }
             ZimbraLog.addMboxToContext(mbox.getId());
 
-            MailItem item = mbox.getItemById(new OperationContext(token), iid.getId(), MailItem.Type.UNKNOWN);
+            MailItem item = mbox.getItemById(new OperationContext(token), iid.getId(), MailItem.Type.UNKNOWN, fromDumpster);
             if (item == null) {
                 resp.sendError(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errMessageNotFound, req));
                 return;

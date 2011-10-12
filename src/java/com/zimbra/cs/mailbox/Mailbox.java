@@ -2182,11 +2182,16 @@ public class Mailbox {
      * @throws NoSuchItemException if the item does not exist
      */
     public MailItem getItemById(OperationContext octxt, int id, MailItem.Type type) throws ServiceException {
+        return getItemById(octxt, id, type, false);
+    }
+
+    public MailItem getItemById(OperationContext octxt, int id, MailItem.Type type, boolean fromDumpster)
+            throws ServiceException {
         boolean success = false;
         try {
             // tag/folder caches are populated in beginTransaction...
             beginTransaction("getItemById", octxt);
-            MailItem item = checkAccess(getItemById(id, type));
+            MailItem item = checkAccess(getItemById(id, type, fromDumpster));
             success = true;
             return item;
         } finally {
