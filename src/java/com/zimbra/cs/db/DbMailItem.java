@@ -1502,27 +1502,34 @@ public class DbMailItem {
      * deletes any corresponding messages.  Also deletes all the children
      * items associated to the deleted item, and their children.
      */
-    public static void delete(MailItem item, PendingDelete info, boolean fromDumpster) throws ServiceException {
+    public static void delete(Mailbox mbox, MailItem item, PendingDelete info, boolean fromDumpster)
+            throws ServiceException {
         if (item instanceof Tag)
             return;
         List<Integer> allIds = info.itemIds.getAll();
-        allIds.remove(Integer.valueOf(item.getId()));
+        if (item != null) {
+            allIds.remove(Integer.valueOf(item.getId()));
+        }
         // first delete the Comments
         List<Integer> allComments = info.itemIds.getIds(MailItem.Type.COMMENT);
-        if (allComments.size() != 0) {
-            delete(item.getMailbox(), allComments, fromDumpster);
+        if (allComments != null && allComments.size() != 0) {
+            delete(mbox, allComments, fromDumpster);
             allIds.removeAll(allComments);
         }
         // delete all non-folder items
         List<Integer> allFolders = info.itemIds.getIds(MailItem.Type.FOLDER);
-        allIds.removeAll(allFolders);
-        delete(item.getMailbox(), allIds, fromDumpster);
+        if (allFolders != null) {
+            allIds.removeAll(allFolders);
+        }
+        delete(mbox, allIds, fromDumpster);
         // then delete the folders
-        delete(item.getMailbox(), allFolders, fromDumpster);
+        delete(mbox, allFolders, fromDumpster);
         if (item instanceof VirtualConversation)
             return;
         // delete the item itself
-        delete(item.getMailbox(), Collections.singletonList(item.getId()), fromDumpster);
+        if (item != null) {
+            delete(mbox, Collections.singletonList(item.getId()), fromDumpster);
+        }
     }
 
     /**
