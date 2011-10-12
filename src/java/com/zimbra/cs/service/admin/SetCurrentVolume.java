@@ -22,6 +22,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.JaxbUtil;
@@ -42,7 +43,8 @@ public final class SetCurrentVolume extends AdminDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(ctx);
         checkRight(zsc, ctx, Provisioning.getInstance().getLocalServer(), Admin.R_manageVolume);
 
-        VolumeManager.getInstance().setCurrentVolume(req.getType(), req.getId());
+        short volId = req.getId() > 0 ? req.getId() : Volume.ID_NONE;
+        VolumeManager.getInstance().setCurrentVolume(req.getType(), volId);
         return new SetCurrentVolumeResponse();
     }
 
