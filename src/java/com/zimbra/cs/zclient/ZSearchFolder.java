@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.zclient;
 
+import com.google.common.base.Joiner;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -26,13 +27,12 @@ import com.zimbra.soap.mail.type.SearchFolder;
 
 import org.json.JSONException;
 
-public class ZSearchFolder extends ZFolder {
-
+public final class ZSearchFolder extends ZFolder {
 
     private String mQuery;
     private String mTypes;
     private SearchSortBy mSortBy;
-    
+
     public ZSearchFolder(Element e, ZFolder parent, ZMailbox mailbox) throws ServiceException {
         super(e, parent, mailbox);
         mQuery = e.getAttribute(MailConstants.A_QUERY);
@@ -47,7 +47,7 @@ public class ZSearchFolder extends ZFolder {
     public ZSearchFolder(SearchFolder f, ZFolder parent, ZMailbox mailbox) throws ServiceException {
         super(f, parent, mailbox);
         mQuery = f.getQuery();
-        mTypes = f.getTypes();
+        mTypes = Joiner.on(',').join(f.getTypes());
         try {
             mSortBy = SearchSortBy.fromString(
                 SystemUtil.coalesce(f.getSortBy(), SearchFolder.SortBy.dateDesc).toString());
@@ -55,7 +55,7 @@ public class ZSearchFolder extends ZFolder {
             mSortBy = SearchSortBy.dateDesc;
         }
     }
-    
+
     public void modifyNotification(ZModifyEvent e) throws ServiceException {
         if (e instanceof ZModifySearchFolderEvent) {
             ZModifySearchFolderEvent sfe = (ZModifySearchFolderEvent) e;
@@ -98,5 +98,5 @@ public class ZSearchFolder extends ZFolder {
         params.setSortBy(mSortBy);
         return new ZSearchContext(params,getMailbox());
     }
-    
+
 }
