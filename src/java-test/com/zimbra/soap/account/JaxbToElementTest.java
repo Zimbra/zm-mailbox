@@ -400,39 +400,6 @@ public class JaxbToElementTest {
         Assert.assertEquals("Sync", true, req.getSync().booleanValue());
         Assert.assertEquals("FolderID", "folderId", req.getFolderId());
         Assert.assertEquals("SortBy", "sortBy", req.getSortBy());
-        List<AttributeName> attrs = req.getAttributes();
-        Assert.assertEquals("Number of attrs", 2, attrs.size());
-        List<Id> contacts = req.getContacts();
-        Assert.assertEquals("Number of contacts", 2, contacts.size());
-        boolean haveC1 = false;
-        boolean haveC2 = false;
-        boolean haveA1 = false;
-        boolean haveA2 = false;
-        for (AttributeName attr : attrs) {
-            String aNam = attr.getName();
-            if (aNam.equals("aName1")) {
-                haveA1 = true;
-            } else if (aNam.equals("aName2")) {
-                haveA2 = true;
-            } else {
-                Assert.fail("Unexpected attribute with name " + aNam);
-            }
-        }
-        for (Id contact : contacts) {
-            String aNam = contact.getId();
-            if (aNam.equals("ctctId1")) {
-                haveC1 = true;
-            } else if (aNam.equals("ctctId2")) {
-                haveC2 = true;
-            } else {
-                Assert.fail("Unexpected contact id " + aNam);
-            }
-        }
-        Assert.assertTrue("All elements should be present", 
-                haveC1 && haveC2 && haveA1 && haveA2);
-        List<AttributeName> memberAttrs = req.getMemberAttributes();
-        Assert.assertEquals("Number of member attrs", 1, memberAttrs.size());
-        Assert.assertEquals("Name of member attr", "grpAttrName1", memberAttrs.get(0).getName());
     }
 
     /**

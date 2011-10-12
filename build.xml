@@ -112,6 +112,7 @@
       <schema namespace="urn:zimbraSync" file="zimbraSync.xsd" />
       <schema namespace="urn:zimbraRepl" file="zimbraRepl.xsd" />
       <schema namespace="urn:zimbraAppblast" file="zimbraAppblast.xsd" />
+      <schema namespace="" file="extras.xsd" />
     </schemagen>
   </target>
 

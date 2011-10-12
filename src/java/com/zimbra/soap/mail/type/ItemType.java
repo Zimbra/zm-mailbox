@@ -20,6 +20,7 @@ import java.util.Set;
 
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlEnumValue;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 
 import com.google.common.base.Joiner;
@@ -49,6 +50,7 @@ public enum ItemType {
         return name().toLowerCase();
     }
 
+    @XmlTransient
     static final class CSVAdapter extends XmlAdapter<String, Set<ItemType>> {
         @Override
         public String marshal(Set<ItemType> set) throws Exception {
