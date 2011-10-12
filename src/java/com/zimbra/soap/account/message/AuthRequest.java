@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -27,10 +27,8 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.soap.account.type.Account;
 import com.zimbra.soap.account.type.Attr;
-import com.zimbra.soap.account.type.AuthToken;
 import com.zimbra.soap.account.type.PreAuth;
 import com.zimbra.soap.account.type.Pref;
-import com.zimbra.common.soap.AccountConstants;
 
 
 /*
@@ -45,25 +43,25 @@ import com.zimbra.common.soap.AccountConstants;
    [<requestedSkin>{skin}</requestedSkin>]
  </AuthRequest>
  */
-@XmlRootElement(name=AccountConstants.E_AUTH_REQUEST)
+@XmlRootElement(name="AuthRequest")
 @XmlType(propOrder = {})
 public class AuthRequest {
 
-    @XmlElement(name=AccountConstants.E_ACCOUNT) private Account account;
-    @XmlElement(name=AccountConstants.E_PASSWORD) private String password;
-    @XmlElement(name=AccountConstants.E_PREAUTH) private PreAuth preauth;
-    @XmlElement(name=AccountConstants.E_AUTH_TOKEN) private AuthToken authToken;
-    @XmlElement(name=AccountConstants.E_VIRTUAL_HOST) private String virtualHost;
+    @XmlElement private Account account;
+    @XmlElement private String password;
+    @XmlElement private PreAuth preauth;
+    @XmlElement private String authToken;
+    @XmlElement private String virtualHost;
     
-    @XmlElementWrapper(name=AccountConstants.E_PREFS)
-    @XmlElement(name=AccountConstants.E_PREF)
+    @XmlElementWrapper(name="prefs")
+    @XmlElement(name="pref")
     private List<Pref> prefs = new ArrayList<Pref>();
     
-    @XmlElementWrapper(name=AccountConstants.E_ATTRS)
-    @XmlElement(name=AccountConstants.E_ATTR)
+    @XmlElementWrapper(name="attrs")
+    @XmlElement(name="attr")
     private List<Attr> attrs = new ArrayList<Attr>();
     
-    @XmlElement(name=AccountConstants.E_REQUESTED_SKIN) private String requestedSkin;
+    @XmlElement private String requestedSkin;
     
     public AuthRequest() {
     }
@@ -86,8 +84,8 @@ public class AuthRequest {
     public PreAuth getPreauth() { return preauth; }
     public AuthRequest setPreauth(PreAuth preauth) { this.preauth = preauth; return this; }
     
-    public AuthToken getAuthToken() { return authToken; }
-    public AuthRequest setAuthToken(AuthToken authToken) { this.authToken = authToken; return this; }
+    public String getAuthToken() { return authToken; }
+    public AuthRequest setAuthToken(String authToken) { this.authToken = authToken; return this; }
     
     public String getVirtualHost() { return virtualHost; }
     public AuthRequest setVirtualHost(String host) { this.virtualHost = host; return this; }

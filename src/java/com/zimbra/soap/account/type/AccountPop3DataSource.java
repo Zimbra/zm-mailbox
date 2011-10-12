@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -28,18 +28,20 @@ implements Pop3DataSource {
 
     @XmlAttribute(name=MailConstants.A_DS_LEAVE_ON_SERVER)
     private Boolean leaveOnServer;
-
+    
     public AccountPop3DataSource() {
     }
-
+    
     public AccountPop3DataSource(Pop3DataSource data) {
         super(data);
         leaveOnServer = data.isLeaveOnServer();
     }
-
+    
     @Override
-    public Boolean isLeaveOnServer() { return leaveOnServer; }
-
+    public Boolean isLeaveOnServer() {
+        return leaveOnServer;
+    }
+    
     @Override
     public void setLeaveOnServer(Boolean leaveOnServer) {
         this.leaveOnServer = leaveOnServer;

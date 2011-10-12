@@ -1,7 +1,0 @@
-<MailQueueActionRequest xmlns="urn:zimbraAdmin">
-    <server name="fun.example.test">
-        <queue name="queueName">
-            <action op="requeue" by="id">id1,id2,id3</action>
-        </queue>
-    </server>
-</MailQueueActionRequest>

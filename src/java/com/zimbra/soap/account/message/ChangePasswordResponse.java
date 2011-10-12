@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -19,7 +19,6 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import com.zimbra.common.soap.AccountConstants;
 
 /*
 <ChangePasswordResponse>
@@ -27,14 +26,12 @@ import com.zimbra.common.soap.AccountConstants;
    <lifetime>...</lifetime>
 <ChangePasswordResponse/>
 */
-@XmlRootElement(name=AccountConstants.E_CHANGE_PASSWORD_RESPONSE)
+@XmlRootElement(name="ChangePasswordResponse")
 @XmlType(propOrder = {})
 public class ChangePasswordResponse {
 
-    @XmlElement(name=AccountConstants.E_AUTH_TOKEN, required=true)
-    private String authToken;
-    @XmlElement(name=AccountConstants.E_LIFETIME, required=true)
-    private long lifetime;
+    @XmlElement(required = true) String authToken;
+    @XmlElement(required = true) long lifetime;
     
     public ChangePasswordResponse() {
     }

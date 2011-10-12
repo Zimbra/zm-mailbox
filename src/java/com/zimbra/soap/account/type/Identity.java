@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011 Zimbra, Inc.
- *
+ * Copyright (C) 2010, 2011 VMware, Inc.
+ * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,14 +15,18 @@
 
 package com.zimbra.soap.account.type;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
-import com.zimbra.common.soap.AccountConstants;
+import com.google.common.base.Objects;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
 
 /*
      <identity name={identity-name} id="...">
@@ -32,61 +36,58 @@ import com.zimbra.common.soap.AccountConstants;
      </identity>*
 
  */
-@XmlAccessorType(XmlAccessType.NONE)
-public class Identity extends AttrsImpl {
+@XmlType(propOrder = {})
+public class Identity {
 
-    // TODO:Want constructor for old style Identity
+    @XmlAttribute private String name;
+    @XmlAttribute private String id;
+    @XmlElement(name="a") private List<Attr> attrs = new ArrayList<Attr>();
 
-    @XmlAttribute(name=AccountConstants.A_NAME, required=false)
-    private final String name;
 
-    @XmlAttribute(name=AccountConstants.A_ID, required=false)
-    private String id;
-
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    private Identity() {
-        this((String) null, (String) null);
+    public Identity() {
     }
 
-    public Identity(String name, String id) {
-        this.name = name;
-        this.id = id;
-    }
-
-    public static Identity fromName(String name) {
-        return new Identity(name, null);
-    }
-
-    public static Identity fromNameAndId(String name, String id) {
-        return new Identity(name, id);
-    }
     public Identity(Identity i) {
         name = i.getName();
         id = i.getId();
-        super.setAttrs(Lists.transform(i.getAttrs(), Attr.COPY));
+        attrs.addAll(Lists.transform(i.getAttrs(), Attr.COPY));
     }
 
-    public void setId(String id) { this.id = id; }
+    public String getName() {
+        return name;
+    }
 
-    public String getName() { return name; }
-    public String getId() { return id; }
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    @Override
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
-        helper = super.addToStringInfo(helper);
-        return helper
-            .add("name", name)
-            .add("id", id);
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public List<Attr> getAttrs() {
+        return Collections.unmodifiableList(attrs);
+    }
+
+    public void setAttrs(Iterable<Attr> attrs) {
+        Iterables.addAll(this.attrs, attrs);
+    }
+
+    public Multimap<String, String> getAttrsMultimap() {
+        return Attr.toMultimap(attrs);
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return Objects.toStringHelper(this)
+            .add("name", name)
+            .add("id", id)
+            .add("attrs", attrs)
+            .toString();
     }
 
 }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -16,8 +16,7 @@
 package com.zimbra.soap.mail.message;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import com.zimbra.common.soap.MailConstants;
 
-@XmlRootElement(name=MailConstants.E_GET_DATA_SOURCES_REQUEST)
+@XmlRootElement(name="GetDataSourcesRequest")
 public class GetDataSourcesRequest {
 }

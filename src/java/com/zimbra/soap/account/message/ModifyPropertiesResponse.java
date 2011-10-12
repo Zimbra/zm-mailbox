@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -16,13 +16,14 @@
 package com.zimbra.soap.account.message;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
-import com.zimbra.common.soap.AccountConstants;
 
 /**
 <ModifyPropertiesResponse>
 </ModifyPropertiesResponse>
  */
-@XmlRootElement(name=AccountConstants.E_MODIFY_PROPERTIES_RESPONSE)
+@XmlRootElement(name="ModifyPropertiesResponse")
+@XmlType(propOrder = {})
 public class ModifyPropertiesResponse {
 }

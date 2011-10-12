@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -26,8 +26,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.google.common.collect.Multimap;
-import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.soap.account.type.Attr;
 import com.zimbra.soap.account.type.Pref;
 import com.zimbra.soap.account.type.Session;
@@ -44,27 +42,22 @@ import com.zimbra.soap.account.type.Session;
    [<skin>{skin-name}</skin>]
  </AuthResponse>
  */
-@XmlRootElement(name=AccountConstants.E_AUTH_RESPONSE)
+@XmlRootElement(name="AuthResponse")
 @XmlType(propOrder = {})
 public class AuthResponse {
 
-    @XmlElement(name=AccountConstants.E_AUTH_TOKEN, required=true)
-    private String authToken;
-    @XmlElement(name=AccountConstants.E_LIFETIME, required=true)
-    private long lifetime;
-    @XmlElement(name=HeaderConstants.E_SESSION)
-    private Session session;
-    @XmlElement(name=AccountConstants.E_REFERRAL)
-    private String refer;
-    @XmlElement(name=AccountConstants.E_SKIN)
-    private String skin;
+    @XmlElement(required=true) private String authToken;
+    @XmlElement(required=true) private long lifetime;
+    @XmlElement                private Session session;
+    @XmlElement                private String refer;
+    @XmlElement                private String skin;
     
-    @XmlElementWrapper(name=AccountConstants.E_PREFS)
-    @XmlElement(name=AccountConstants.E_PREF)
+    @XmlElementWrapper(name="prefs")
+    @XmlElement(name="pref")
     private List<Pref> prefs = new ArrayList<Pref>();
     
-    @XmlElementWrapper(name=AccountConstants.E_ATTRS)
-    @XmlElement(name=AccountConstants.E_ATTR)
+    @XmlElementWrapper(name="attrs")
+    @XmlElement(name="attr")
     private List<Attr> attrs = new ArrayList<Attr>();
     
     public AuthResponse() {

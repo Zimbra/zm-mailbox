@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -19,7 +19,6 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.Account;
 
 /*
@@ -30,16 +29,13 @@ import com.zimbra.soap.account.type.Account;
    [<virtualHost>{virtual-host}</virtualHost>]
  </ChangePasswordRequest>
 */
-@XmlRootElement(name=AccountConstants.E_CHANGE_PASSWORD_REQUEST)
+@XmlRootElement(name="ChangePasswordRequest")
 @XmlType(propOrder = {})
 public class ChangePasswordRequest {
-    @XmlElement(name=AccountConstants.E_ACCOUNT, required=true)
-    private Account account;
-    @XmlElement(name=AccountConstants.E_OLD_PASSWORD, required=true)
-    private String oldPassword;
-    @XmlElement(name=AccountConstants.E_PASSWORD, required=true)
-    private String password;
-    @XmlElement(name=AccountConstants.E_VIRTUAL_HOST) private String virtualHost;
+    @XmlElement(required = true) private Account account;
+    @XmlElement(required = true) private String oldPassword;
+    @XmlElement(required = true) private String password;
+    @XmlElement private String virtualHost;
     
     public ChangePasswordRequest() {
     }

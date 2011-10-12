@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -23,13 +23,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.base.Joiner;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.InfoSection;
 
 /**
  * <GetInfoRequest [sections="mbox,prefs,attrs,zimlets,props,idents,sigs,dsrcs,children"]/>
  */
-@XmlRootElement(name=AccountConstants.E_GET_INFO_REQUEST)
+@XmlRootElement(name="GetInfoRequest")
 public class GetInfoRequest {
     private static Joiner COMMA_JOINER = Joiner.on(",");
     
@@ -42,7 +41,7 @@ public class GetInfoRequest {
         addSections(sections);
     }
     
-    @XmlAttribute(name=AccountConstants.A_SECTIONS) public String getSections() {
+    @XmlAttribute public String getSections() {
         return COMMA_JOINER.join(sections);
     }
     

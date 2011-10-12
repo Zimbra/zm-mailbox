@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -19,7 +19,6 @@ import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.Folder;
 
 /*
@@ -35,11 +34,11 @@ import com.zimbra.soap.mail.type.Folder;
   </folder>
 </GetFolderResponse>
  */
-@XmlRootElement(name=MailConstants.E_GET_FOLDER_RESPONSE)
-@XmlType(propOrder = {MailConstants.E_FOLDER})
+@XmlRootElement(name="GetFolderResponse")
+@XmlType(propOrder = {})
 public class GetFolderResponse {
 
-    @XmlElementRef(name=MailConstants.E_FOLDER) private Folder folder;
+    @XmlElementRef private Folder folder;
     
     public GetFolderResponse() {
     }

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -19,90 +19,86 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.google.common.collect.Iterables;
 import com.zimbra.common.soap.AccountConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AccountConstants.E_SIGNATURE)
-@XmlType(propOrder = {"contentList", AccountConstants.E_CONTACT_ID})
+/*
+     <signature name={signature-name} id="...">
+       <a name="{name}">{value}</a>
+       ...
+       <a name="{name}">{value}</a>
+     </signature>*
+
+ */
+@XmlType(propOrder = {})
 public class Signature {
 
-    @XmlAttribute(name=AccountConstants.A_ID)
-    private String id;
-    @XmlAttribute(name=AccountConstants.A_NAME)
-    private String name;
-    @XmlElement(name=AccountConstants.E_CONTENT)
-    private List<SignatureContent> contentList = new ArrayList<SignatureContent>();
-
-    @XmlElement(name=AccountConstants.E_CONTACT_ID)
-    private String cid;
-
-    private Signature() {
+    @XmlAttribute private String id;
+    @XmlAttribute private String name;
+    @XmlElement(name=AccountConstants.E_A) private List<Attr> attrs = new ArrayList<Attr>();
+    @XmlElement(name=AccountConstants.E_CONTENT) private List<SignatureContent> contentList =
+        new ArrayList<SignatureContent>();
+    
+    public Signature() {
     }
-
+    
     public Signature(Signature sig) {
-        this.id = sig.getId();
-        this.name = sig.getName();
-        this.contentList.addAll(sig.getContent());
-        this.cid = sig.getCid();
+        id = sig.getId();
+        name = sig.getName();
+        contentList.addAll(sig.getContent());
     }
-
-    public Signature(String id, String name, List<SignatureContent> contentList, String cid) {
+    
+    public Signature(String id, String name, String content, String contentType) {
         this.id = id;
         this.name = name;
-        this.contentList = contentList;
-        this.contentList.addAll(contentList);
-        this.cid = cid;
-    }
-
-    public Signature(String id, String name, String content, String contentType, String cid) {
-        this.id = id;
-        this.name = name;
-        this.cid = cid;
         if (content != null) {
-            contentList.add(new SignatureContent(content, contentType));
+            this.contentList.add(new SignatureContent(content, contentType));
         }
     }
-
-    public Signature(String id, String name, String content, String contentType) {
-        this(id, name, content, contentType, null);
+    
+    public String getName() {
+        return name;
     }
-
-    public String getName() { return name; }
-    public String getId() { return id; }
-    public String getCid() { return cid; }
-
-    public List<SignatureContent> getContent() {
-        return Collections.unmodifiableList(contentList);
-    }
-
+    
     public void setName(String name) {
         this.name = name;
     }
-
-    public void setId(String id) {
-        this.id = id;
+    
+    public List<Attr> getAttrs() {
+        return Collections.unmodifiableList(attrs);
     }
-
+    
+    public void setAttrs(Iterable<Attr> attrs) {
+        this.attrs.clear();
+        if (attrs != null) {
+            Iterables.addAll(this.attrs, attrs);
+        }
+    }
+    
+    public List<SignatureContent> getContent() {
+        return Collections.unmodifiableList(contentList);
+    }
+    
     public void addContent(SignatureContent content) {
         this.contentList.add(content);
     }
-
+    
     public void setContent(Iterable<SignatureContent> content) {
         this.contentList.clear();
         if (content != null) {
             Iterables.addAll(this.contentList, content);
         }
     }
-
-    public void setCid(String cid) {
-        this.cid = cid;
+    
+    public String getId() {
+        return id;
+    }
+    
+    public void setId(String id) {
+        this.id = id;
     }
 }

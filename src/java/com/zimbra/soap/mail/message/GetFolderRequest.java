@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -20,7 +20,6 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.Folder;
 
 /*
@@ -29,16 +28,13 @@ import com.zimbra.soap.mail.type.Folder;
 </GetFolderRequest>
 
  */
-@XmlRootElement(name=MailConstants.E_GET_FOLDER_REQUEST)
+@XmlRootElement(name="GetFolderRequest")
 @XmlType(propOrder = {})
 public class GetFolderRequest {
 
-    @XmlAttribute(name=MailConstants.A_VISIBLE)
-    private Boolean isVisible;
-    @XmlAttribute(name=MailConstants.A_NEED_GRANTEE_NAME)
-    private boolean needGranteeName;
-    @XmlElement(name=MailConstants.E_FOLDER)
-    private Folder folder;
+    @XmlAttribute(name="visible") private Boolean isVisible;
+    @XmlAttribute private boolean needGranteeName;
+    @XmlElement private Folder folder;
     
     public GetFolderRequest() {
     }

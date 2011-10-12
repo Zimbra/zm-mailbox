@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema elementFormDefault="qualified" version="1.0" targetNamespace="urn:zimbraAccount" xmlns:tns="urn:zimbraAccount" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:account="urn:zimbraAccount">
+
+  <xs:element name="AuthRequest" type="tns:authRequest"/>
+
+  <xs:element name="AuthResponse" type="tns:authResponse"/>
+
+  <xs:element name="ChangePasswordRequest" type="tns:changePasswordRequest"/>
+
+  <xs:element name="ChangePasswordResponse" type="tns:changePasswordResponse"/>
+
+  <xs:element name="GetIdentitiesRequest" type="tns:getIdentitiesRequest"/>
+
+  <xs:element name="GetIdentitiesResponse" type="tns:getIdentitiesResponse"/>
+
+  <xs:element name="GetInfoRequest" type="tns:getInfoRequest"/>
+
+  <xs:element name="GetInfoResponse" type="tns:getInfoResponse"/>
+
+  <xs:element name="GetSignaturesRequest" type="tns:getSignaturesRequest"/>
+
+  <xs:element name="GetSignaturesResponse" type="tns:getSignaturesResponse"/>
+
+  <xs:element name="accountDataSource" type="tns:accountDataSource"/>
+
+  <xs:element name="contacts" type="tns:accountContactsDataSource"/>
+
+  <xs:complexType name="getSignaturesRequest">
+    <xs:sequence/>
+  </xs:complexType>
+
+  <xs:complexType name="authResponse">
+    <xs:all>
+      <xs:element name="authToken" type="xs:string"/>
+      <xs:element name="lifetime" type="xs:long"/>
+      <xs:element name="session" type="tns:session" minOccurs="0"/>
+      <xs:element name="refer" type="xs:string" minOccurs="0"/>
+      <xs:element name="skin" type="xs:string" minOccurs="0"/>
+      <xs:element name="prefs" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="pref" type="tns:pref" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="attrs" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="attr" type="tns:attr" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="session">
+    <xs:all>
+      <xs:element name="id" type="xs:string" form="unqualified" minOccurs="0"/>
+      <xs:element name="seq" type="xs:long" form="unqualified" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="pref">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="name" type="xs:string"/>
+        <xs:attribute name="modified" type="xs:long"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="attr">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="name" type="xs:string"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="getInfoRequest">
+    <xs:sequence/>
+    <xs:attribute name="sections" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:complexType name="getIdentitiesRequest">
+    <xs:sequence/>
+  </xs:complexType>
+
+  <xs:complexType name="changePasswordResponse">
+    <xs:all>
+      <xs:element name="authToken" type="xs:string"/>
+      <xs:element name="lifetime" type="xs:long"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="changePasswordRequest">
+    <xs:all>
+      <xs:element name="account" type="tns:account"/>
+      <xs:element name="oldPassword" type="xs:string"/>
+      <xs:element name="password" type="xs:string"/>
+      <xs:element name="virtualHost" type="xs:string" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="account">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="by" type="tns:by"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="getInfoResponse">
+    <xs:all>
+      <xs:element name="version" type="xs:string"/>
+      <xs:element name="id" type="xs:string"/>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="crumb" type="xs:string" minOccurs="0"/>
+      <xs:element name="lifetime" type="xs:long"/>
+      <xs:element name="rest" type="xs:string" minOccurs="0"/>
+      <xs:element name="used" type="xs:long" minOccurs="0"/>
+      <xs:element name="prevSession" type="xs:long" minOccurs="0"/>
+      <xs:element name="accessed" type="xs:long" minOccurs="0"/>
+      <xs:element name="recent" type="xs:int" minOccurs="0"/>
+      <xs:element name="cos" type="tns:cos" minOccurs="0"/>
+      <xs:element name="prefs" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="pref" type="tns:pref" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="attrs" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="attr" type="tns:attr" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="soapURL" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="publicURL" type="xs:string" minOccurs="0"/>
+      <xs:element name="identities" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="identity" type="tns:identity" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="signatures" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="signature" type="tns:signature" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="dataSources" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+              <xs:element name="pop3" type="tns:accountPop3DataSource"/>
+              <xs:element name="imap" type="tns:accountImapDataSource"/>
+              <xs:element name="rss" type="tns:accountRssDataSource"/>
+              <xs:element name="cal" type="tns:accountCalDataSource"/>
+            </xs:choice>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="changePasswordURL" type="xs:string" minOccurs="0"/>
+    </xs:all>
+    <xs:attribute name="attSizeLimit" type="xs:long"/>
+    <xs:attribute name="docSizeLimit" type="xs:long"/>
+  </xs:complexType>
+
+  <xs:complexType name="cos">
+    <xs:all/>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="id" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:complexType name="identity">
+    <xs:sequence>
+      <xs:element name="a" type="tns:attr" form="unqualified" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="id" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:complexType name="signature">
+    <xs:all>
+      <xs:element name="a" type="tns:attr" form="unqualified" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:element name="content" type="tns:signatureContent" form="unqualified" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:all>
+    <xs:attribute name="id" type="xs:string"/>
+    <xs:attribute name="name" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:complexType name="signatureContent">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="type" type="xs:string"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="accountPop3DataSource">
+    <xs:complexContent>
+      <xs:extension base="tns:accountDataSource">
+        <xs:all/>
+        <xs:attribute name="leaveOnServer" type="xs:boolean"/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="accountDataSource">
+    <xs:sequence>
+      <xs:element name="lastError" type="xs:string" form="unqualified" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string"/>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="folderId" type="xs:string"/>
+    <xs:attribute name="enabled" type="xs:boolean"/>
+    <xs:attribute name="importOnly" type="xs:boolean"/>
+    <xs:attribute name="host" type="xs:string"/>
+    <xs:attribute name="port" type="xs:int"/>
+    <xs:attribute name="connectionType" type="tns:adsConnectionType"/>
+    <xs:attribute name="username" type="xs:string"/>
+    <xs:attribute name="password" type="xs:string"/>
+    <xs:attribute name="pollingInterval" type="xs:string"/>
+    <xs:attribute name="emailAddress" type="xs:string"/>
+    <xs:attribute name="useAddressForForwardReply" type="xs:boolean"/>
+    <xs:attribute name="defaultSignature" type="xs:string"/>
+    <xs:attribute name="fromDisplay" type="xs:string"/>
+    <xs:attribute name="fromAddress" type="xs:string"/>
+    <xs:attribute name="replyToAddress" type="xs:string"/>
+    <xs:attribute name="replyToDisplay" type="xs:string"/>
+    <xs:attribute name="failingSince" type="xs:long"/>
+  </xs:complexType>
+
+  <xs:complexType name="accountImapDataSource">
+    <xs:complexContent>
+      <xs:extension base="tns:accountDataSource">
+        <xs:all/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="accountRssDataSource">
+    <xs:complexContent>
+      <xs:extension base="tns:accountDataSource">
+        <xs:all/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="accountCalDataSource">
+    <xs:complexContent>
+      <xs:extension base="tns:accountDataSource">
+        <xs:all/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="authRequest">
+    <xs:all>
+      <xs:element name="account" type="tns:account" minOccurs="0"/>
+      <xs:element name="password" type="xs:string" minOccurs="0"/>
+      <xs:element name="preauth" type="tns:preAuth" minOccurs="0"/>
+      <xs:element name="authToken" type="xs:string" minOccurs="0"/>
+      <xs:element name="virtualHost" type="xs:string" minOccurs="0"/>
+      <xs:element name="prefs" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="pref" type="tns:pref" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="attrs" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="attr" type="tns:attr" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="requestedSkin" type="xs:string" minOccurs="0"/>
+    </xs:all>
+  </xs:complexType>
+
+  <xs:complexType name="preAuth">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="timestamp" type="xs:long" use="required"/>
+        <xs:attribute name="expiresTimestamp" type="xs:long"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="getSignaturesResponse">
+    <xs:sequence>
+      <xs:element name="signature" type="tns:signature" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="getIdentitiesResponse">
+    <xs:sequence>
+      <xs:element name="identity" type="tns:identity" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="accountContactsDataSource">
+    <xs:complexContent>
+      <xs:extension base="tns:accountDataSource">
+        <xs:all/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="childAccount">
+    <xs:sequence>
+      <xs:element name="attrs" form="unqualified" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="attr" type="tns:attr" form="unqualified" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string"/>
+    <xs:attribute name="visible" type="xs:boolean" use="required"/>
+    <xs:attribute name="id" type="xs:string"/>
+  </xs:complexType>
+
+  <xs:simpleType name="by">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="name"/>
+      <xs:enumeration value="id"/>
+      <xs:enumeration value="foreignPrincipal"/>
+      <xs:enumeration value="adminName"/>
+      <xs:enumeration value="appAdminName"/>
+      <xs:enumeration value="krb5Principal"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="adsConnectionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="cleartext"/>
+      <xs:enumeration value="ssl"/>
+      <xs:enumeration value="tls"/>
+      <xs:enumeration value="tls_is_available"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="infoSection">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="mbox"/>
+      <xs:enumeration value="prefs"/>
+      <xs:enumeration value="attrs"/>
+      <xs:enumeration value="zimlets"/>
+      <xs:enumeration value="props"/>
+      <xs:enumeration value="idents"/>
+      <xs:enumeration value="sigs"/>
+      <xs:enumeration value="dsrcs"/>
+      <xs:enumeration value="children"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>
+
