@@ -166,8 +166,7 @@ public class UserServletUtil {
                 }
             }
 
-            // don't think this code can ever get called because <tt>context.target</tt> can't be null at this point
-            if (context.target == null && context.getQueryString() == null)
+            if (context.target == null)
                 throw failure;
         }
 
