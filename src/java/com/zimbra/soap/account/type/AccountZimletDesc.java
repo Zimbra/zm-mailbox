@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.account.type;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -35,7 +35,7 @@ import com.zimbra.soap.base.ZimletDesc;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
-public class AdminZimletDesc implements ZimletDesc {
+public class AccountZimletDesc implements ZimletDesc {
 
     // Turning schema validation on for WSDL clients using WSDL derived
     // from this class appears to hit problems.  Believe that @XmlAnyElement
@@ -67,14 +67,14 @@ public class AdminZimletDesc implements ZimletDesc {
     @XmlElementRefs({
         @XmlElementRef(name=ZimletConstants.ZIMLET_TAG_SERVER_EXTENSION /* serverExtension */,
                 type=ZimletServerExtension.class),
-        @XmlElementRef(name=ZimletConstants.ZIMLET_TAG_SCRIPT /* include */, type=AdminZimletInclude.class),
-        @XmlElementRef(name=ZimletConstants.ZIMLET_TAG_CSS /* includeCSS */, type=AdminZimletIncludeCSS.class),
-        @XmlElementRef(name=ZimletConstants.ZIMLET_TAG_TARGET /* target */, type=AdminZimletTarget.class)
+        @XmlElementRef(name=ZimletConstants.ZIMLET_TAG_SCRIPT /* include */, type=AccountZimletInclude.class),
+        @XmlElementRef(name=ZimletConstants.ZIMLET_TAG_CSS /* includeCSS */, type=AccountZimletIncludeCSS.class),
+        @XmlElementRef(name=ZimletConstants.ZIMLET_TAG_TARGET /* target */, type=AccountZimletTarget.class)
     })
     @XmlAnyElement
     private List<Object> elements = Lists.newArrayList();
 
-    public AdminZimletDesc() {
+    public AccountZimletDesc() {
     }
 
     @Override

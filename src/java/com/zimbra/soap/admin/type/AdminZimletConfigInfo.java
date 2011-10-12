@@ -23,10 +23,14 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.ZimletConstants;
+import com.zimbra.soap.base.ZimletConfigInfo;
+import com.zimbra.soap.base.ZimletGlobalConfigInfo;
+import com.zimbra.soap.base.ZimletHostConfigInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
-public class AdminZimletConfigInfo {
+public class AdminZimletConfigInfo
+implements ZimletConfigInfo {
 
     @XmlAttribute(name=ZimletConstants.ZIMLET_ATTR_NAME /* name */, required=false)
     private String name;
@@ -55,21 +59,35 @@ public class AdminZimletConfigInfo {
     public AdminZimletConfigInfo() {
     }
 
+    @Override
     public void setName(String name) { this.name = name; }
+    @Override
     public void setVersion(String version) { this.version = version; }
+    @Override
     public void setDescription(String description) { this.description = description; }
+    @Override
     public void setExtension(String extension) { this.extension = extension; }
+    @Override
     public void setTarget(String target) { this.target = target; }
+    @Override
     public void setLabel(String label) { this.label = label; }
     public void setGlobal(AdminZimletGlobalConfigInfo global) { this.global = global; }
     public void setHost(AdminZimletHostConfigInfo host) { this.host = host; }
+    @Override
     public String getName() { return name; }
+    @Override
     public String getVersion() { return version; }
+    @Override
     public String getDescription() { return description; }
+    @Override
     public String getExtension() { return extension; }
+    @Override
     public String getTarget() { return target; }
+    @Override
     public String getLabel() { return label; }
+    @Override
     public AdminZimletGlobalConfigInfo getGlobal() { return global; }
+    @Override
     public AdminZimletHostConfigInfo getHost() { return host; }
 
     public Objects.ToStringHelper addToStringInfo(
@@ -89,5 +107,15 @@ public class AdminZimletConfigInfo {
     public String toString() {
         return addToStringInfo(Objects.toStringHelper(this))
                 .toString();
+    }
+
+    @Override
+    public void setGlobal(ZimletGlobalConfigInfo global) {
+        setGlobal((AdminZimletGlobalConfigInfo) global);
+    }
+
+    @Override
+    public void setHost(ZimletHostConfigInfo host) {
+        setHost((AdminZimletHostConfigInfo) host);
     }
 }

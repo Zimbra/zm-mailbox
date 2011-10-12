@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.account.type;
 
 import java.util.List;
 
@@ -30,7 +30,7 @@ import com.zimbra.common.soap.ZimletConstants;
 import com.zimbra.soap.base.ZimletProperty;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class AdminZimletProperty
+public class AccountZimletProperty
 implements ZimletProperty {
 
     @XmlAttribute(name=ZimletConstants.ZIMLET_ATTR_NAME /* name */, required=false)
@@ -39,16 +39,16 @@ implements ZimletProperty {
     @XmlValue
     private String value;
 
-    private AdminZimletProperty() {
+    private AccountZimletProperty() {
     }
 
-    private AdminZimletProperty(String name, String value) {
+    private AccountZimletProperty(String name, String value) {
         setName(name);
         setValue(value);
     }
 
-    public static AdminZimletProperty createForNameAndValue(String name, String value) {
-        return new AdminZimletProperty(name, value);
+    public static AccountZimletProperty createForNameAndValue(String name, String value) {
+        return new AccountZimletProperty(name, value);
     }
 
     @Override
@@ -67,17 +67,17 @@ implements ZimletProperty {
             .add("value", value);
     }
 
-    public static Iterable <AdminZimletProperty> fromInterfaces(Iterable <ZimletProperty> ifs) {
+    public static Iterable <AccountZimletProperty> fromInterfaces(Iterable <ZimletProperty> ifs) {
         if (ifs == null)
             return null;
-        List <AdminZimletProperty> newList = Lists.newArrayList();
+        List <AccountZimletProperty> newList = Lists.newArrayList();
         for (ZimletProperty listEnt : ifs) {
-            newList.add((AdminZimletProperty) listEnt);
+            newList.add((AccountZimletProperty) listEnt);
         }
         return newList;
     }
 
-    public static List <ZimletProperty> toInterfaces(Iterable <AdminZimletProperty> params) {
+    public static List <ZimletProperty> toInterfaces(Iterable <AccountZimletProperty> params) {
         if (params == null)
             return null;
         List <ZimletProperty> newList = Lists.newArrayList();

@@ -13,45 +13,40 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.account.type;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
-import com.zimbra.common.soap.ZimletConstants;
-import com.zimbra.soap.base.ZimletInclude;
+import com.zimbra.common.soap.AccountConstants;
 
-/**
- * Implemented as an object rather than using String with @XmlElement because when constructing a JAXB
- * object containing this and other "Strings" there needs to be a way of differentiating them when
- * marshaling to XML.
- *
- */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=ZimletConstants.ZIMLET_TAG_SCRIPT)
-public class AdminZimletInclude
-implements ZimletInclude {
+public class LicenseAttr {
 
+    // value always "SMIME"
+    @XmlAttribute(name=AccountConstants.A_NAME /* name */, required=true)
+    private String name;
+
+    // value is "TRUE" or "FALSE"
     @XmlValue
-    private String value;
+    private String content;
 
-    @SuppressWarnings("unused")
-    public AdminZimletInclude() { }
+    public LicenseAttr() {
+    }
 
-    public AdminZimletInclude(String value) { setValue(value); }
-
-    @Override
-    public void setValue(String value) { this.value = value; }
-    @Override
-    public String getValue() { return value; }
+    public void setName(String name) { this.name = name; }
+    public void setContent(String content) { this.content = content; }
+    public String getName() { return name; }
+    public String getContent() { return content; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("value", value);
+            .add("name", name)
+            .add("content", content);
     }
 
     @Override

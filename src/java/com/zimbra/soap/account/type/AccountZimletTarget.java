@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.account.type;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -22,7 +22,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.ZimletConstants;
-import com.zimbra.soap.base.ZimletInclude;
+import com.zimbra.soap.base.ZimletTarget;
 
 /**
  * Implemented as an object rather than using String with @XmlElement because when constructing a JAXB
@@ -30,18 +30,19 @@ import com.zimbra.soap.base.ZimletInclude;
  * marshaling to XML.
  *
  */
+
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=ZimletConstants.ZIMLET_TAG_SCRIPT)
-public class AdminZimletInclude
-implements ZimletInclude {
+@XmlRootElement(name=ZimletConstants.ZIMLET_TAG_TARGET)
+public class AccountZimletTarget
+implements ZimletTarget {
 
     @XmlValue
     private String value;
 
     @SuppressWarnings("unused")
-    public AdminZimletInclude() { }
+    private AccountZimletTarget() { }
 
-    public AdminZimletInclude(String value) { setValue(value); }
+    public AccountZimletTarget(String value) { setValue(value); }
 
     @Override
     public void setValue(String value) { this.value = value; }

@@ -33,7 +33,7 @@ public class CreateArchiveRequest {
     @XmlElement(name=AdminConstants.E_ACCOUNT /* account */, required=true)
     private final AccountSelector account;
 
-    @XmlElement(name=ArchiveConstants.E_ARCHIVE /* archive */, required=true)
+    @XmlElement(name=ArchiveConstants.E_ARCHIVE /* archive */, required=false)
     private ArchiveSpec archive;
 
     /**

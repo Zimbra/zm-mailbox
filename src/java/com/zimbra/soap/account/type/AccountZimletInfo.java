@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.account.type;
 
 import org.w3c.dom.Element;
 
@@ -22,7 +22,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
@@ -34,49 +33,49 @@ import com.zimbra.soap.base.ZimletInterface;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"zimletContext", "zimlet", "zimletConfig", "zimletHandlerConfig"})
-public class AdminZimletInfo
+public class AccountZimletInfo
 implements ZimletInterface {
 
     @XmlElement(name=AccountConstants.E_ZIMLET_CONTEXT /* zimletContext */, required=false)
-    private AdminZimletContext zimletContext;
+    private AccountZimletContext zimletContext;
 
     @XmlElement(name=ZimletConstants.ZIMLET_TAG_ZIMLET /* zimlet */, required=false)
-    private AdminZimletDesc zimlet;
+    private AccountZimletDesc zimlet;
 
     @XmlElement(name=ZimletConstants.ZIMLET_TAG_CONFIG /* zimletConfig */, required=false)
-    private AdminZimletConfigInfo zimletConfig;
+    private AccountZimletConfigInfo zimletConfig;
 
     @XmlAnyElement
     private Element zimletHandlerConfig;
 
-    public AdminZimletInfo() {
+    public AccountZimletInfo() {
     }
 
-    public void setZimletContext(AdminZimletContext zimletContext) { this.zimletContext = zimletContext; }
-    public void setZimlet(AdminZimletDesc zimlet) { this.zimlet = zimlet; }
-    public void setZimletConfig(AdminZimletConfigInfo zimletConfig) { this.zimletConfig = zimletConfig; }
+    public void setZimletContext(AccountZimletContext zimletContext) { this.zimletContext = zimletContext; }
+    public void setZimlet(AccountZimletDesc zimlet) { this.zimlet = zimlet; }
+    public void setZimletConfig(AccountZimletConfigInfo zimletConfig) { this.zimletConfig = zimletConfig; }
     @Override
     public void setZimletHandlerConfig(Element zimletHandlerConfig) { this.zimletHandlerConfig = zimletHandlerConfig; }
 
     @Override
-    public AdminZimletContext getZimletContext() { return zimletContext; }
+    public AccountZimletContext getZimletContext() { return zimletContext; }
     @Override
-    public AdminZimletDesc getZimlet() { return zimlet; }
+    public AccountZimletDesc getZimlet() { return zimlet; }
     @Override
-    public AdminZimletConfigInfo getZimletConfig() { return zimletConfig; }
+    public AccountZimletConfigInfo getZimletConfig() { return zimletConfig; }
     @Override
     public Element getZimletHandlerConfig() { return zimletHandlerConfig; }
 
     @Override
     public void setZimletContext(ZimletContextInterface zimletContext) {
-        setZimletContext((AdminZimletContext) zimletContext);
+        setZimletContext((AccountZimletContext) zimletContext);
     }
 
     @Override
-    public void setZimlet(ZimletDesc zimlet) { setZimlet((AdminZimletDesc) zimlet); }
+    public void setZimlet(ZimletDesc zimlet) { setZimlet((AccountZimletDesc) zimlet); }
     @Override
     public void setZimletConfig(ZimletConfigInfo zimletConfig) {
-        setZimletConfig((AdminZimletConfigInfo) zimletConfig);
+        setZimletConfig((AccountZimletConfigInfo) zimletConfig);
     }
 
     public Objects.ToStringHelper addToStringInfo(

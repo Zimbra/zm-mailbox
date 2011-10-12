@@ -22,18 +22,30 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.ZimletConstants;
+import com.zimbra.soap.base.ZimletIncludeCSS;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * Implemented as an object rather than using String with @XmlElement because when constructing a JAXB
+ * object containing this and other "Strings" there needs to be a way of differentiating them when
+ * marshaling to XML.
+ *
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=ZimletConstants.ZIMLET_TAG_CSS)
-public class AdminZimletIncludeCSS {
+public class AdminZimletIncludeCSS
+implements ZimletIncludeCSS {
 
     @XmlValue
     private String value;
 
-    public AdminZimletIncludeCSS() {
-    }
+    @SuppressWarnings("unused")
+    private AdminZimletIncludeCSS() { }
 
+    public AdminZimletIncludeCSS(String value) { setValue(value); }
+
+    @Override
     public void setValue(String value) { this.value = value; }
+    @Override
     public String getValue() { return value; }
 
     public Objects.ToStringHelper addToStringInfo(

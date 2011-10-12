@@ -42,6 +42,18 @@ Sometimes an @XmlRootElement is required...
 Tend to prefer XmlAccessType.NONE and explicitly label everything that needs
 to be annotated rather than letting JAXB do some defaults.
 
+enums
+-----
+For the values of some fields in JAXB objects, Enums are needed under ZimbraSoap.
+For preference, non-ZimbraSoap code should use the ZimbraSoap enums to avoid having
+to keep 2 sets of enums in lock step.
+
+If that isn't possible, either because an enum is already widely used or because
+it references objects not visible in ZimbraSoap, then using the ZimbraSoap enum
+in the constructor of the other enum should help avoid the enums getting out of step.
+For example, see JAXB enum com.zimbra.soap.type.TargetType and ZimbraServer enum
+com.zimbra.cs.account.accesscontrol.TargetType.  The latter enum includes the
+"toJaxb()" method and the static method "fromJaxb(com.zimbra.soap.type.TargetType)".
 
 Gotchas
 -------

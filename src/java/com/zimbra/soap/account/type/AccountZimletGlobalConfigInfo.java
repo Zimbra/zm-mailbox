@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.account.type;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -24,74 +24,55 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.ZimletConstants;
-import com.zimbra.soap.base.ZimletHostConfigInfo;
+import com.zimbra.soap.base.ZimletGlobalConfigInfo;
 import com.zimbra.soap.base.ZimletProperty;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(propOrder = {})
-public class AdminZimletHostConfigInfo
-implements ZimletHostConfigInfo {
-
-    @XmlAttribute(name=ZimletConstants.ZIMLET_ATTR_NAME /* name */, required=false)
-    private String name;
+public class AccountZimletGlobalConfigInfo
+implements ZimletGlobalConfigInfo {
 
     @XmlElement(name=ZimletConstants.ZIMLET_TAG_PROPERTY /* property */, required=false)
-    private List<AdminZimletProperty> properties = Lists.newArrayList();
+    private List<AccountZimletProperty> properties = Lists.newArrayList();
 
-    public AdminZimletHostConfigInfo() {
+    public AccountZimletGlobalConfigInfo() {
     }
 
-    private AdminZimletHostConfigInfo(String name) {
-        setName(name);
-    }
-
-    public static AdminZimletHostConfigInfo createForName(String name) {
-        return new AdminZimletHostConfigInfo(name);
-    }
-
-    @Override
-    public void setName(String name) { this.name = name; }
-    public void setProperties(Iterable <AdminZimletProperty> properties) {
+    public void setProperties(Iterable <AccountZimletProperty> properties) {
         this.properties.clear();
         if (properties != null) {
             Iterables.addAll(this.properties,properties);
         }
     }
 
-    public void addProperty(AdminZimletProperty property) {
+    public void addProperty(AccountZimletProperty property) {
         this.properties.add(property);
     }
 
-    @Override
-    public String getName() { return name; }
-    public List<AdminZimletProperty> getProperties() {
+    public List<AccountZimletProperty> getProperties() {
         return Collections.unmodifiableList(properties);
     }
 
     @Override
     public void setZimletProperties(Iterable<ZimletProperty> properties) {
-        setProperties(AdminZimletProperty.fromInterfaces(properties));
+        setProperties(AccountZimletProperty.fromInterfaces(properties));
     }
 
     @Override
     public void addZimletProperty(ZimletProperty property) {
-        addProperty((AdminZimletProperty) property);
+        addProperty((AccountZimletProperty) property);
     }
 
     @Override
     public List<ZimletProperty> getZimletProperties() {
-        return AdminZimletProperty.toInterfaces(properties);
+        return AccountZimletProperty.toInterfaces(properties);
     }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("name", name)
             .add("properties", properties);
     }
 

@@ -13,45 +13,43 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.mail.message;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlValue;
 
-import com.zimbra.common.soap.ZimletConstants;
-import com.zimbra.soap.base.ZimletInclude;
+import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.OctopusXmlConstants;
+import com.zimbra.soap.mail.type.DocumentActionSelector;
 
-/**
- * Implemented as an object rather than using String with @XmlElement because when constructing a JAXB
- * object containing this and other "Strings" there needs to be a way of differentiating them when
- * marshaling to XML.
- *
- */
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlRootElement(name=ZimletConstants.ZIMLET_TAG_SCRIPT)
-public class AdminZimletInclude
-implements ZimletInclude {
+@XmlRootElement(name=OctopusXmlConstants.E_DOCUMENT_ACTION_REQUEST)
+public class DocumentActionRequest {
 
-    @XmlValue
-    private String value;
+    @XmlElement(name=MailConstants.E_ACTION /* action */, required=true)
+    private DocumentActionSelector action;
 
-    @SuppressWarnings("unused")
-    public AdminZimletInclude() { }
+    private DocumentActionRequest() {
+    }
 
-    public AdminZimletInclude(String value) { setValue(value); }
+    private DocumentActionRequest(DocumentActionSelector action) {
+        setAction(action);
+    }
 
-    @Override
-    public void setValue(String value) { this.value = value; }
-    @Override
-    public String getValue() { return value; }
+    public static DocumentActionRequest create(DocumentActionSelector action) {
+        return new DocumentActionRequest(action);
+    }
+
+    public void setAction(DocumentActionSelector action) { this.action = action; }
+    public DocumentActionSelector getAction() { return action; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("value", value);
+            .add("action", action);
     }
 
     @Override

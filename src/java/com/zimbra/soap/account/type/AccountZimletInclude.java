@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.account.type;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -32,16 +32,16 @@ import com.zimbra.soap.base.ZimletInclude;
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=ZimletConstants.ZIMLET_TAG_SCRIPT)
-public class AdminZimletInclude
+public class AccountZimletInclude
 implements ZimletInclude {
 
     @XmlValue
     private String value;
 
     @SuppressWarnings("unused")
-    public AdminZimletInclude() { }
+    private AccountZimletInclude() { }
 
-    public AdminZimletInclude(String value) { setValue(value); }
+    public AccountZimletInclude(String value) { setValue(value); }
 
     @Override
     public void setValue(String value) { this.value = value; }

@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.account.type;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -34,58 +34,58 @@ import com.zimbra.soap.base.ZimletProperty;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
-public class AdminZimletHostConfigInfo
+public class AccountZimletHostConfigInfo
 implements ZimletHostConfigInfo {
 
     @XmlAttribute(name=ZimletConstants.ZIMLET_ATTR_NAME /* name */, required=false)
     private String name;
 
     @XmlElement(name=ZimletConstants.ZIMLET_TAG_PROPERTY /* property */, required=false)
-    private List<AdminZimletProperty> properties = Lists.newArrayList();
+    private List<AccountZimletProperty> properties = Lists.newArrayList();
 
-    public AdminZimletHostConfigInfo() {
+    public AccountZimletHostConfigInfo() {
     }
 
-    private AdminZimletHostConfigInfo(String name) {
+    private AccountZimletHostConfigInfo(String name) {
         setName(name);
     }
 
-    public static AdminZimletHostConfigInfo createForName(String name) {
-        return new AdminZimletHostConfigInfo(name);
+    public static AccountZimletHostConfigInfo createForName(String name) {
+        return new AccountZimletHostConfigInfo(name);
     }
 
     @Override
     public void setName(String name) { this.name = name; }
-    public void setProperties(Iterable <AdminZimletProperty> properties) {
+    public void setProperties(Iterable <AccountZimletProperty> properties) {
         this.properties.clear();
         if (properties != null) {
             Iterables.addAll(this.properties,properties);
         }
     }
 
-    public void addProperty(AdminZimletProperty property) {
+    public void addProperty(AccountZimletProperty property) {
         this.properties.add(property);
     }
 
     @Override
     public String getName() { return name; }
-    public List<AdminZimletProperty> getProperties() {
+    public List<AccountZimletProperty> getProperties() {
         return Collections.unmodifiableList(properties);
     }
 
     @Override
     public void setZimletProperties(Iterable<ZimletProperty> properties) {
-        setProperties(AdminZimletProperty.fromInterfaces(properties));
+        setProperties(AccountZimletProperty.fromInterfaces(properties));
     }
 
     @Override
     public void addZimletProperty(ZimletProperty property) {
-        addProperty((AdminZimletProperty) property);
+        addProperty((AccountZimletProperty) property);
     }
 
     @Override
     public List<ZimletProperty> getZimletProperties() {
-        return AdminZimletProperty.toInterfaces(properties);
+        return AccountZimletProperty.toInterfaces(properties);
     }
 
     public Objects.ToStringHelper addToStringInfo(

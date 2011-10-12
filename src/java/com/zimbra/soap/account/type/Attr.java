@@ -30,12 +30,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.soap.base.KeyAndValue;
 
 /**
  * e.g. For element named "attr":
- *          <attr name="{name}">{value}</attr>
+ *          <attr name="{name}" [pd="true"]>{value}</attr>
  *
  * Note:  where the attribute name is "n" rather than "name" use {@link KeyValuePair}
  */
@@ -48,8 +49,15 @@ public class Attr implements KeyAndValue {
         }
     };
 
-    @XmlAttribute private String name;
-    @XmlValue private String value;
+    @XmlAttribute(name=AccountConstants.A_NAME /* name */, required=true)
+    private String name;
+
+    // If true, flags that the real value of this attribute has not been provided - i.e. value is set to ""
+    @XmlAttribute(name=AccountConstants.A_PERM_DENIED /* pd */, required=false)
+    private Boolean permDenied;
+
+    @XmlValue
+    private String value;
 
     public Attr() {
     }
@@ -57,6 +65,7 @@ public class Attr implements KeyAndValue {
     public Attr(Attr attr) {
         name = attr.getName();
         value = attr.getValue();
+        permDenied = attr.getPermDenied();
     }
 
     public Attr(String name) {
@@ -68,8 +77,25 @@ public class Attr implements KeyAndValue {
         setValue(value);
     }
 
+    public static Attr forName(String name) {
+        return new Attr(name);
+    }
+
+    public static Attr forNameAndValue(String name, String value) {
+        return new Attr(name, value);
+    }
+
+    public static Attr forNameWithPermDenied(String name) {
+        Attr attr = new Attr(name, "");
+        attr.setPermDenied(true);
+        return attr;
+    }
+
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    public Boolean getPermDenied() { return permDenied; }
+    public void setPermDenied(Boolean permDenied) { this.permDenied = permDenied; }
 
     @Override
     public String getValue() { return value; }
@@ -140,4 +166,5 @@ public class Attr implements KeyAndValue {
 
     @Override
     public String getKey() { return getName(); }
+
 }

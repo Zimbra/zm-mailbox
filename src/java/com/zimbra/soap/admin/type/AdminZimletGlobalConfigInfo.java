@@ -25,13 +25,14 @@ import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.ZimletConstants;
+import com.zimbra.soap.base.ZimletGlobalConfigInfo;
+import com.zimbra.soap.base.ZimletProperty;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {})
-public class AdminZimletGlobalConfigInfo {
+@XmlAccessorType(XmlAccessType.NONE)
+public class AdminZimletGlobalConfigInfo
+implements ZimletGlobalConfigInfo {
 
     @XmlElement(name=ZimletConstants.ZIMLET_TAG_PROPERTY /* property */, required=false)
     private List<AdminZimletProperty> properties = Lists.newArrayList();
@@ -52,6 +53,21 @@ public class AdminZimletGlobalConfigInfo {
 
     public List<AdminZimletProperty> getProperties() {
         return Collections.unmodifiableList(properties);
+    }
+
+    @Override
+    public void setZimletProperties(Iterable<ZimletProperty> properties) {
+        setProperties(AdminZimletProperty.fromInterfaces(properties));
+    }
+
+    @Override
+    public void addZimletProperty(ZimletProperty property) {
+        addProperty((AdminZimletProperty) property);
+    }
+
+    @Override
+    public List<ZimletProperty> getZimletProperties() {
+        return AdminZimletProperty.toInterfaces(properties);
     }
 
     public Objects.ToStringHelper addToStringInfo(

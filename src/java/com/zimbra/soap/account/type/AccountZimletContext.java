@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.account.type;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -24,7 +24,7 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.base.ZimletContextInterface;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class AdminZimletContext
+public class AccountZimletContext
 implements ZimletContextInterface {
 
     @XmlAttribute(name=AccountConstants.A_ZIMLET_BASE_URL /* baseUrl */, required=true)
@@ -40,20 +40,20 @@ implements ZimletContextInterface {
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private AdminZimletContext() {
+    private AccountZimletContext() {
         this((String) null, (Integer) null, (String) null);
     }
 
-    public AdminZimletContext(String zimletBaseUrl, Integer zimletPriority,
+    public AccountZimletContext(String zimletBaseUrl, Integer zimletPriority,
                             String zimletPresence) {
         this.setZimletBaseUrl(zimletBaseUrl);
         this.setZimletPriority(zimletPriority);
         this.setZimletPresence(zimletPresence);
     }
 
-    public static AdminZimletContext createForBaseUrlPriorityAndPresence(
+    public static AccountZimletContext createForBaseUrlPriorityAndPresence(
             String zimletBaseUrl, Integer zimletPriority, String zimletPresence) {
-        return new AdminZimletContext(zimletBaseUrl, zimletPriority, zimletPresence);
+        return new AccountZimletContext(zimletBaseUrl, zimletPriority, zimletPresence);
     }
 
     @Override

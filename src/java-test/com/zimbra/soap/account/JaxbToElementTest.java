@@ -392,45 +392,47 @@ public class JaxbToElementTest {
         contact2.addAttribute(MailConstants.A_ID, "ctctId2");
         Element attrName2 = rootElem.addElement(MailConstants.E_ATTRIBUTE);
         attrName2.addElement(MailConstants.A_ATTRIBUTE_NAME).addText("aName2");
+        Element memAttr1 = rootElem.addElement(MailConstants.E_CONTACT_GROUP_MEMBER_ATTRIBUTE);
+        memAttr1.addElement(MailConstants.A_ATTRIBUTE_NAME).addText("grpAttrName1");
 
         GetContactsRequest req = JaxbUtil.elementToJaxb(rootElem);
 
         Assert.assertEquals("Sync", true, req.getSync().booleanValue());
         Assert.assertEquals("FolderID", "folderId", req.getFolderId());
         Assert.assertEquals("SortBy", "sortBy", req.getSortBy());
-        List<Object> objs = req.getElements();
-        Assert.assertEquals("Number of elements", 4, objs.size());
+        List<AttributeName> attrs = req.getAttributes();
+        Assert.assertEquals("Number of attrs", 2, attrs.size());
+        List<Id> contacts = req.getContacts();
+        Assert.assertEquals("Number of contacts", 2, contacts.size());
         boolean haveC1 = false;
         boolean haveC2 = false;
         boolean haveA1 = false;
         boolean haveA2 = false;
-        for (Object obj : objs) {
-            if (obj instanceof AttributeName) {
-                AttributeName an = (AttributeName) obj;
-                String aNam = an.getName();
-                if (aNam.equals("aName1")) {
-                    haveA1 = true;
-                } else if (aNam.equals("aName2")) {
-                    haveA2 = true;
-                } else {
-                    Assert.fail("Unexpected attribute with name " + aNam);
-                }
-            } else if (obj instanceof Id) {
-                Id an = (Id) obj;
-                String aNam = an.getId();
-                if (aNam.equals("ctctId1")) {
-                    haveC1 = true;
-                } else if (aNam.equals("ctctId2")) {
-                    haveC2 = true;
-                } else {
-                    Assert.fail("Unexpected contact id " + aNam);
-                }
+        for (AttributeName attr : attrs) {
+            String aNam = attr.getName();
+            if (aNam.equals("aName1")) {
+                haveA1 = true;
+            } else if (aNam.equals("aName2")) {
+                haveA2 = true;
             } else {
-                Assert.fail("Unexpected class for element");
+                Assert.fail("Unexpected attribute with name " + aNam);
+            }
+        }
+        for (Id contact : contacts) {
+            String aNam = contact.getId();
+            if (aNam.equals("ctctId1")) {
+                haveC1 = true;
+            } else if (aNam.equals("ctctId2")) {
+                haveC2 = true;
+            } else {
+                Assert.fail("Unexpected contact id " + aNam);
             }
         }
         Assert.assertTrue("All elements should be present", 
                 haveC1 && haveC2 && haveA1 && haveA2);
+        List<AttributeName> memberAttrs = req.getMemberAttributes();
+        Assert.assertEquals("Number of member attrs", 1, memberAttrs.size());
+        Assert.assertEquals("Name of member attr", "grpAttrName1", memberAttrs.get(0).getName());
     }
 
     /**
@@ -615,7 +617,11 @@ public class JaxbToElementTest {
         Assert.assertEquals("entry - Number of keys", 2, keys.size());
     }
 
-    // TODO - enable when bug fixed
+    // TODO - enable when/if bug fixed.  Note that handler currently uses "Element".  This issue is with
+    //        zmsoap producing non-KeyValuePairs compatible JSON.  Although JAXB object originated JSON
+    //        currently exhibits similar issues.  Would prefer to fix JAXB to JSON, use the JAXB object in zmsoap
+    //        and send the resulting JSON to the server rather than fix the Element code to understand Xml-like
+    //        JSON KeyValuePairs - added flexibility means more complexity...
     // @Test
     public void bug62571_zmsoapRequestPrefsSupport() throws Exception {
         HashMap<String, Object> prefs;
@@ -644,5 +650,40 @@ public class JaxbToElementTest {
             StringUtil.addToMultiMap(prefs, name, value);
         }
         Assert.assertEquals("zmsoap request - number of prefs found", 2, prefs.size());
+    }
+
+    // Simplified version of what appears in mail.ToXML
+    public static void encodeAttr(Element parent, String key, String value, String eltname, String attrname, 
+            boolean allowed) {
+        
+        Element.KeyValuePair kvPair;
+        if (allowed) {
+            kvPair = parent.addKeyValuePair(key, value, eltname, attrname);
+        } else {
+            kvPair = parent.addKeyValuePair(key, "", eltname, attrname);
+            kvPair.addAttribute(AccountConstants.A_PERM_DENIED, true);
+        }
+    }
+    
+    // GetInfo encoding of identities calls similar code
+    @Test
+    public void encodeAttrsWithDenied() throws Exception {
+        Element identExml = Element.XMLElement.mFactory.createElement(AccountConstants.E_IDENTITY);
+        encodeAttr(identExml, "keyAllowed", "valueAllowed", AccountConstants.E_A, AccountConstants.A_NAME, true);
+        encodeAttr(identExml, "keyDenied", "valueDenied", AccountConstants.E_A, AccountConstants.A_NAME, false);
+        Element identEjson = Element.JSONElement.mFactory.createElement(AccountConstants.E_IDENTITY);
+        encodeAttr(identEjson, "keyAllowed", "valueAllowed", AccountConstants.E_A, AccountConstants.A_NAME, true);
+        encodeAttr(identEjson, "keyDenied", "valueDenied", AccountConstants.E_A, AccountConstants.A_NAME, false);
+        // <identity><a name="keyAllowed">valueAllowed</a><a pd="1" name="keyDenied"/></identity>
+        LOG.info("encodeAttrsWithDenied xml\n" + identExml.toString());
+        // {"_attrs":{"keyAllowed":"valueAllowed","keyDenied":{"_content":"","pd":true}}}
+        LOG.info("encodeAttrsWithDenied json\n" + identEjson.toString());
+        com.zimbra.soap.account.type.Attr deniedAttr = com.zimbra.soap.account.type.Attr.forNameWithPermDenied("keyDenied");
+        Element elem2 = JaxbUtil.jaxbToNamedElement(AccountConstants.E_A, AccountConstants.NAMESPACE_STR,
+                deniedAttr, XMLElement.mFactory);
+        String eXml2 = elem2.toString();
+        LOG.info("XML from JAXB denied attr\n" + eXml2);
+        Assert.assertEquals("XML from JAXB denied attr\n",
+                "<a pd=\"true\" name=\"keyDenied\" xmlns=\"urn:zimbraAccount\"/>", eXml2);
     }
 }

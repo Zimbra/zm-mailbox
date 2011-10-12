@@ -19,39 +19,45 @@ import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class IdAndOperation {
+public class DocumentActionSelector
+extends ActionSelector {
 
-    @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
-    private final String id;
+    // Used for "!grant" operation
+    @XmlAttribute(name=MailConstants.A_ZIMBRA_ID /* zid */, required=false)
+    private String zimbraId;
 
-    @XmlAttribute(name=MailConstants.A_OPERATION /* op */, required=true)
-    private final String operation;
+    // Used for "grant" operation
+    @XmlElement(name=MailConstants.E_GRANT /* grant */, required=false)
+    private DocumentActionGrant grant;
 
-    /**
-     * no-argument constructor wanted by JAXB
-     */
-    @SuppressWarnings("unused")
-    protected IdAndOperation() {
-        this((String) null, (String) null);
+    public DocumentActionSelector() {
+        super();
     }
 
-    public IdAndOperation(String id, String operation) {
-        this.id = id;
-        this.operation = operation;
+    public DocumentActionSelector(String ids, String operation) {
+        super(ids, operation);
     }
 
-    public String getId() { return id; }
-    public String getOperation() { return operation; }
+    public static DocumentActionSelector createForIdsAndOperation(String ids, String operation) {
+        return new DocumentActionSelector(ids, operation);
+    }
+
+    public void setZimbraId(String zimbraId) { this.zimbraId = zimbraId; }
+    public void setGrant(DocumentActionGrant grant) { this.grant = grant; }
+    public String getZimbraId() { return zimbraId; }
+    public DocumentActionGrant getGrant() { return grant; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
+        helper = super.addToStringInfo(helper);
         return helper
-            .add("id", id)
-            .add("operation", operation);
+            .add("zimbraId", zimbraId)
+            .add("grant", grant);
     }
 
     @Override

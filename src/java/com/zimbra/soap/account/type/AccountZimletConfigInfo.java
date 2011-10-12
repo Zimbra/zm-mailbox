@@ -13,33 +13,28 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.type;
+package com.zimbra.soap.account.type;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
-import java.util.Collections;
-import java.util.List;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElementRef;
-import javax.xml.bind.annotation.XmlElementRefs;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.ZimletConstants;
-import com.zimbra.soap.base.ZimletDesc;
+import com.zimbra.soap.base.ZimletConfigInfo;
+import com.zimbra.soap.base.ZimletGlobalConfigInfo;
+import com.zimbra.soap.base.ZimletHostConfigInfo;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
-public class AdminZimletDesc implements ZimletDesc {
+public class AccountZimletConfigInfo
+implements ZimletConfigInfo {
 
-    // Turning schema validation on for WSDL clients using WSDL derived
-    // from this class appears to hit problems.  Believe that @XmlAnyElement
-    // and @XmlMixed are fundamentally incompatible with schema validation
+    // ZimletMeta validate() checks:
+    //     ZIMLET_ATTR_NAME, ZIMLET_ATTR_VERSION, ZIMLET_ATTR_DESCRIPTION, ZIMLET_ATTR_EXTENSION
+    // ZimletConfig validateElement() checks: ZIMLET_TAG_GLOBAL, ZIMLET_TAG_HOST
     @XmlAttribute(name=ZimletConstants.ZIMLET_ATTR_NAME /* name */, required=false)
     private String name;
 
@@ -58,23 +53,13 @@ public class AdminZimletDesc implements ZimletDesc {
     @XmlAttribute(name=ZimletConstants.ZIMLET_TAG_LABEL /* label */, required=false)
     private String label;
 
-    // See wiki.zimbra.com/wiki/Basic_Zimlet_Definition_Tags
+    @XmlElement(name=ZimletConstants.ZIMLET_TAG_GLOBAL /* global */, required=false)
+    private AccountZimletGlobalConfigInfo global;
 
-    // ZimletConstants.ZIMLET_TAG_CONTENT_OBJECT will map to org.w3c.dom.Element
-    // ZimletConstants.ZIMLET_TAG_PANEL_ITEM will map to org.w3c.dom.Element
-    // ZimletConstants.ZIMLET_DISABLE_UI_UNDEPLOY will map to org.w3c.dom.Element
+    @XmlElement(name=ZimletConstants.ZIMLET_TAG_HOST /* host */, required=false)
+    private AccountZimletHostConfigInfo host;
 
-    @XmlElementRefs({
-        @XmlElementRef(name=ZimletConstants.ZIMLET_TAG_SERVER_EXTENSION /* serverExtension */,
-                type=ZimletServerExtension.class),
-        @XmlElementRef(name=ZimletConstants.ZIMLET_TAG_SCRIPT /* include */, type=AdminZimletInclude.class),
-        @XmlElementRef(name=ZimletConstants.ZIMLET_TAG_CSS /* includeCSS */, type=AdminZimletIncludeCSS.class),
-        @XmlElementRef(name=ZimletConstants.ZIMLET_TAG_TARGET /* target */, type=AdminZimletTarget.class)
-    })
-    @XmlAnyElement
-    private List<Object> elements = Lists.newArrayList();
-
-    public AdminZimletDesc() {
+    public AccountZimletConfigInfo() {
     }
 
     @Override
@@ -89,25 +74,8 @@ public class AdminZimletDesc implements ZimletDesc {
     public void setTarget(String target) { this.target = target; }
     @Override
     public void setLabel(String label) { this.label = label; }
-    @Override
-    public void setElements(Iterable <Object> elements) {
-        if (this.elements == null) {
-            this.elements = Lists.newArrayList();
-        }
-        this.elements.clear();
-        if (elements != null) {
-            Iterables.addAll(this.elements,elements);
-        }
-    }
-
-    @Override
-    public void addElement(Object element) {
-        if (this.elements == null) {
-            this.elements = Lists.newArrayList();
-        }
-        this.elements.add(element);
-    }
-
+    public void setGlobal(AccountZimletGlobalConfigInfo global) { this.global = global; }
+    public void setHost(AccountZimletHostConfigInfo host) { this.host = host; }
     @Override
     public String getName() { return name; }
     @Override
@@ -121,9 +89,9 @@ public class AdminZimletDesc implements ZimletDesc {
     @Override
     public String getLabel() { return label; }
     @Override
-    public List<Object> getElements() {
-        return Collections.unmodifiableList(elements);
-    }
+    public AccountZimletGlobalConfigInfo getGlobal() { return global; }
+    @Override
+    public AccountZimletHostConfigInfo getHost() { return host; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
@@ -134,12 +102,23 @@ public class AdminZimletDesc implements ZimletDesc {
             .add("extension", extension)
             .add("target", target)
             .add("label", label)
-            .add("elements", elements);
+            .add("global", global)
+            .add("host", host);
     }
 
     @Override
     public String toString() {
         return addToStringInfo(Objects.toStringHelper(this))
                 .toString();
+    }
+
+    @Override
+    public void setGlobal(ZimletGlobalConfigInfo global) {
+        setGlobal((AccountZimletGlobalConfigInfo) global);
+    }
+
+    @Override
+    public void setHost(ZimletHostConfigInfo host) {
+        setHost((AccountZimletHostConfigInfo) host);
     }
 }

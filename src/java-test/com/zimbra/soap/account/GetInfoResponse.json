@@ -1002,19 +1002,56 @@
               "baseUrl": "/service/zimlet/com_zimbra_phone/"
             }],
           "zimlet": [{
+              "label": "Phone",
+              "target": "main view-window",
               "description": "Highlights phone numbers to enable Skype call numbers and add to Address Book.",
               "version": "2.0.1_6.0.0.20101007.032107",
               "name": "com_zimbra_phone",
-              "include": [{
+              "include": [
+                {
+                  "_content": "phone.js"
+                },
+                {
                   "_content": "templates/Phone.template.js"
                 }],
               "handlerObject": [{
                   "_content": "Com_Zimbra_Phone"
+                }],
+              "serverExtension": [{
+                  "extensionClass": "com.zimbra.cs.zimlet.handler.NANPHandler",
+                  "hasKeyword": "phone"
+                }],
+              "contentObject": [{
+                  "type": "phone",
+                  "contextMenu": [{
+                      "menuItem": [
+                        {
+                          "icon": "Search",
+                          "id": "SEARCH",
+                          "label": "${msg.search}"
+                        },
+                        {
+                          "icon": "NewContact",
+                          "id": "ADDCONTACT",
+                          "label": "${msg.addToContacts}"
+                        },
+                        {
+                          "icon": "Telephone",
+                          "id": "CALL",
+                          "label": "${msg.skypeCall}"
+                        }]
+                    }]
                 }]
             }],
           "zimletConfig": [{
               "version": "1.0",
-              "name": "com_zimbra_phone"
+              "name": "com_zimbra_phone",
+              "global": [{
+                  "property": [{
+                      "name": "defaultContactField",
+                      "_content": "companyPhone"
+                    }]
+                }]
             }]
         },
         {
@@ -1024,19 +1061,60 @@
               "baseUrl": "/service/zimlet/com_zimbra_url/"
             }],
           "zimlet": [{
+              "label": "URL",
+              "target": "main view-window",
               "description": "Highlights and links URLs.",
               "version": "2.0.1_6.0.0.20101007.032107",
               "name": "com_zimbra_url",
               "include": [{
                   "_content": "url.js"
                 }],
+              "resource": [{
+                  "_content": "blank_pixel.gif"
+                }],
               "handlerObject": [{
                   "_content": "Com_Zimbra_Url"
+                }],
+              "serverExtension": [{
+                  "extensionClass": "com.zimbra.cs.zimlet.handler.RegexHandler",
+                  "hasKeyword": "url"
+                }],
+              "contentObject": [{
+                  "type": "url",
+                  "matchOn": [{
+                      "regex": [{
+                          "attrs": "ig",
+                          "_content": "((telnet:)|((https?|ftp|gopher|news|file):\\/\\/)|(www\\.[\\w\\.\\_\\-]+))[^\\s\\xA0\\(\\)\\\u003C\\\u003E\\[\\]\\{\\}\\'\\\"]*"
+                        }]
+                    }]
                 }]
             }],
           "zimletConfig": [{
               "version": "1.0",
-              "name": "com_zimbra_url"
+              "name": "com_zimbra_url",
+              "global": [{
+                  "property": [
+                    {
+                      "name": "ZIMLET_CONFIG_REGEX_VALUE",
+                      "_content": "((telnet:)|((https?|ftp|gopher|news|file):\\/\\/)|(www\\.[\\w\\.\\_\\-]+))[^\\s\\\u003C\\\u003E\\[\\]\\{\\}\\'\\\"]*"
+                    },
+                    {
+                      "name": "ZIMLET_UNC_REGEX_VALUE",
+                      "_content": "\\s*\\\\\\\\[a-zA-Z0-9.-_]+.*\\s*"
+                    },
+                    {
+                      "name": "stripUrls",
+                      "_content": "true"
+                    },
+                    {
+                      "name": "disablePreview",
+                      "_content": "true"
+                    },
+                    {
+                      "name": "supportUNC",
+                      "_content": "true"
+                    }]
+                }]
             }]
         },
         {
@@ -1046,10 +1124,31 @@
               "baseUrl": "/service/zimlet/com_zimbra_email/"
             }],
           "zimlet": [{
+              "label": "Email",
+              "target": "main view-window",
               "description": "Highlights and previews associated contact for an email address.",
               "version": "11.0.1_6.0.0.20101007.032107",
               "name": "com_zimbra_email",
-              "include": [{
+              "include": [
+                {
+                  "_content": "templates/Email.template.js"
+                },
+                {
+                  "_content": "email.js"
+                },
+                {
+                  "_content": "EmailToolTipSlideShow.js"
+                },
+                {
+                  "_content": "EmailToolTipslide.js"
+                },
+                {
+                  "_content": "EmailToolTipPrefDialog.js"
+                },
+                {
+                  "_content": "SeriesAnimation.js"
+                },
+                {
                   "_content": "UnknownPersonSlide.js"
                 }],
               "includeCSS": [{
@@ -1057,6 +1156,60 @@
                 }],
               "handlerObject": [{
                   "_content": "com_zimbra_email_handlerObject"
+                }],
+              "contentObject": [{
+                  "type": "email",
+                  "matchOn": [{
+                      "regex": [{
+                          "attrs": "ig",
+                          "_content": "\\b(mailto:[ ]*)?([0-9a-zA-Z]+[.&#!$%'*+-/=?^_`{}|~])*[0-9a-zA-Z]+@([-0-9a-zA-Z]+[.])+[a-zA-Z]{2,6}([\\w/_\\.]*(\\?\\S+)?)\\b"
+                        }]
+                    }],
+                  "contextMenu": [{
+                      "menuItem": [
+                        {
+                          "icon": "Search",
+                          "id": "SEARCH",
+                          "label": "${msg.search}"
+                        },
+                        {
+                          "icon": "SearchBuilder",
+                          "id": "SEARCHBUILDER",
+                          "label": "${msg.advancedSearch}"
+                        },
+                        {
+                          "icon": "NewMessage",
+                          "id": "NEWEMAIL",
+                          "label": "${msg.newEmail}"
+                        },
+                        {
+                          "icon": "ImAvailable",
+                          "id": "NEWIM",
+                          "label": "${msg.newIM}"
+                        },
+                        {
+                          "icon": "Edit",
+                          "id": "NEWCONTACT",
+                          "label": "${msg.newContact}"
+                        },
+                        {
+                          "icon": "AddFilter",
+                          "id": "ADDTOFILTER",
+                          "label": "${msg.addToFilter}"
+                        },
+                        {
+                          "icon": "URL",
+                          "id": "GOTOURL",
+                          "label": "${msg.goToUrl}"
+                        }]
+                    }]
+                }],
+              "zimletPanelItem": [{
+                  "icon": "MsgStatusUnread",
+                  "label": "${msg.label}",
+                  "toolTipText": [{
+                      "_content": "${msg.tooltip}"
+                    }]
                 }]
             }]
         },
@@ -1067,14 +1220,42 @@
               "baseUrl": "/service/zimlet/com_zimbra_date/"
             }],
           "zimlet": [{
+              "label": "Date",
+              "target": "main view-window",
               "description": "Highlights dates, previews associated appointments and creates a link to the calendar.",
               "version": "2.0.1_6.0.0.20101007.032107",
               "name": "com_zimbra_date",
-              "include": [{
+              "include": [
+                {
+                  "_content": "date.js"
+                },
+                {
                   "_content": "formats.js"
                 }],
               "handlerObject": [{
                   "_content": "Com_Zimbra_Date"
+                }],
+              "contentObject": [{
+                  "type": "date",
+                  "contextMenu": [{
+                      "menuItem": [
+                        {
+                          "icon": "DayView",
+                          "id": "DAYVIEW",
+                          "label": "${msg.viewDay}"
+                        },
+                        {
+                          "icon": "NewAppointment",
+                          "id": "NEWAPPT",
+                          "label": "${msg.appointmentNewTitle}"
+                        },
+                        {},
+                        {
+                          "icon": "SearchMail",
+                          "id": "SEARCHMAIL",
+                          "label": "${msg.searchForMessages}"
+                        }]
+                    }]
                 }]
             }]
         },
@@ -1085,10 +1266,19 @@
               "baseUrl": "/service/zimlet/com_zimbra_ymemoticons/"
             }],
           "zimlet": [{
+              "label": "Yahoo! Emoticons",
+              "target": "main compose-window view-window",
               "description": "Displays Yahoo! Emoticons in email messages.",
               "version": "2.7.1_6.0.0.20101007.032107",
               "name": "com_zimbra_ymemoticons",
-              "include": [{
+              "include": [
+                {
+                  "_content": "ymemoticons.js"
+                },
+                {
+                  "_content": "smileys.js"
+                },
+                {
                   "_content": "ymemoticonspicker.js"
                 }],
               "includeCSS": [{
@@ -1096,6 +1286,31 @@
                 }],
               "handlerObject": [{
                   "_content": "Com_Zimbra_YMEmoticons"
+                }],
+              "zimletPanelItem": [{
+                  "icon": "yemoticons-panelIcon",
+                  "label": "Emoticons",
+                  "toolTipText": [{
+                      "_content": "${msg.yahooEmoticons}"
+                    }],
+                  "contextMenu": [{
+                      "menuItem": [
+                        {
+                          "id": "YE_TEMP_DISABLE",
+                          "label": "${msg.temporarilyDisableInMail}"
+                        },
+                        {
+                          "id": "YE_PREFERENCES",
+                          "label": "${msg.preferences}"
+                        }]
+                    }]
+                }],
+              "userProperties": [{
+                  "property": [{
+                      "name": "yemoticons_enableInMail",
+                      "type": "string",
+                      "value": "true"
+                    }]
                 }]
             }]
         },
@@ -1106,6 +1321,8 @@
               "baseUrl": "/service/zimlet/com_zimbra_dnd/"
             }],
           "zimlet": [{
+              "label": "Drag-n-Drop Attachments",
+              "target": "main compose-window view-window",
               "description": "Illustrates drag-and-drop functionality.",
               "version": "1.0.1_6.0.0.20101007.032107",
               "name": "com_zimbra_dnd",
@@ -1118,7 +1335,13 @@
             }],
           "zimletConfig": [{
               "version": "1.0.1",
-              "name": "com_zimbra_dnd"
+              "name": "com_zimbra_dnd",
+              "global": [{
+                  "property": [{
+                      "name": "dnd-uploadform",
+                      "_content": "\n      \u003Cform name='zdnd_form' id='zdnd_form' enctype='multipart/form-data' accept-charset='utf-8' method='POST' \u003E\n            \u003Cinput type=\"hidden\" name=\"_charset_\"/\u003E\n            \u003Cinput type=\"button\" name=\"zDnDBut\" id=\"zDnDBut\" onclick=\"Com_Zimbra_DnD.uploadDnDFiles();\"/\u003E\n            \u003Cul id='zdnd_ul'\u003E\n                \u003Cli\u003E\n                    \u003Cinput type='file' size='50' name='_attFile_'\u003E\n                \u003C/li\u003E\n            \u003C/ul\u003E\n         \u003C/form\u003E\n\n    "
+                    }]
+                }]
             }]
         },
         {
@@ -1128,10 +1351,16 @@
               "baseUrl": "/service/zimlet/com_zimbra_attachmail/"
             }],
           "zimlet": [{
+              "label": "Email Attacher",
+              "target": "main compose-window",
               "description": "Attach email messages when composing a new message.",
               "version": "0.7_6.0.0.20101007.032107",
               "name": "com_zimbra_attachmail",
-              "include": [{
+              "include": [
+                {
+                  "_content": "attachmail.js"
+                },
+                {
                   "_content": "AMZimletNavToolBar.js"
                 }],
               "includeCSS": [{
@@ -1149,10 +1378,19 @@
               "baseUrl": "/service/zimlet/com_zimbra_attachcontacts/"
             }],
           "zimlet": [{
+              "label": "Attach Contacts",
+              "target": "main compose-window",
               "description": "Allows Attaching contacts when composing a new message.",
               "version": "0.5_6.0.0.20101007.032107",
               "name": "com_zimbra_attachcontacts",
-              "include": [{
+              "include": [
+                {
+                  "_content": "attachcontacts.js"
+                },
+                {
+                  "_content": "ACZimletNavToolBar.js"
+                },
+                {
                   "_content": "AttachContactsTabView.js"
                 }],
               "includeCSS": [{
@@ -1170,6 +1408,7 @@
               "baseUrl": "/service/zimlet/com_zimbra_srchhighlighter/"
             }],
           "zimlet": [{
+              "label": "Search Highlighter",
               "description": "After a mail search, this Zimlet highlights Search terms with yellow color",
               "version": "0.6_6.0.0.20101007.032107",
               "name": "com_zimbra_srchhighlighter",
@@ -1178,6 +1417,11 @@
                 }],
               "handlerObject": [{
                   "_content": "com_zimbra_srchhltr_HandlerObject"
+                }],
+              "contentObject": [{
+                  "matchOn": [{
+                      "regex": [{}]
+                    }]
                 }]
             }]
         },
@@ -1188,6 +1432,7 @@
               "baseUrl": "/service/zimlet/com_zimbra_webex/"
             }],
           "zimlet": [{
+              "label": "WebEx",
               "description": "Easily schedule, start or join WebEx meetings.",
               "version": "2.1.1_6.0.0.20101007.032107",
               "name": "com_zimbra_webex",
@@ -1199,11 +1444,61 @@
                 }],
               "handlerObject": [{
                   "_content": "com_zimbra_webex_HandlerObject"
+                }],
+              "zimletPanelItem": [{
+                  "icon": "WEBEX-panelIcon",
+                  "label": "${msg.WebExZimlet_label}",
+                  "toolTipText": [{
+                      "_content": "${msg.WebExZimlet_toolTip}"
+                    }],
+                  "dragSource": [
+                    {
+                      "type": "ZmContact"
+                    },
+                    {
+                      "type": "ZmConv"
+                    },
+                    {
+                      "type": "ZmMailMsg"
+                    },
+                    {
+                      "type": "ZmAppt"
+                    }],
+                  "contextMenu": [{
+                      "menuItem": [
+                        {
+                          "icon": "WEBEX-panelIcon",
+                          "id": "START_QUICK_MEETING",
+                          "label": "${msg.WebExZimlet_quickMeeting}"
+                        },
+                        {
+                          "icon": "WEBEX-panelIcon",
+                          "id": "START_JOIN_MEETING",
+                          "label": "${msg.WebExZimlet_startJoinExistingMeeting}"
+                        },
+                        {},
+                        {
+                          "icon": "Group",
+                          "id": "ACCOUNT_PREFERENCES",
+                          "label": "${msg.WebExZimlet_manageAccounts}"
+                        },
+                        {
+                          "icon": "Preferences",
+                          "id": "GENERAL_PREFERENCES",
+                          "label": "${msg.WebExZimlet_generalPreferences}"
+                        }]
+                    }]
                 }]
             }],
           "zimletConfig": [{
               "version": "2.1.1",
-              "name": "com_zimbra_webex"
+              "name": "com_zimbra_webex",
+              "global": [{
+                  "property": [{
+                      "name": "allowedDomains",
+                      "_content": "*.webex.com"
+                    }]
+                }]
             }]
         },
         {
@@ -1213,22 +1508,124 @@
               "baseUrl": "/service/zimlet/com_zimbra_social/"
             }],
           "zimlet": [{
+              "label": "Zimbra Social",
               "description": "Social Zimlet: Access social services like Twitter, Facebook, Digg and TweetMeme from Zimbra.",
               "version": "2.1.7.8_6.0.0.20101007.032107",
               "name": "com_zimbra_social",
-              "include": [{
+              "include": [
+                {
+                  "_content": "socialTwitter.js"
+                },
+                {
+                  "_content": "socialFacebook.js"
+                },
+                {
+                  "_content": "socialTweetMeme.js"
+                },
+                {
+                  "_content": "socialPreferences.js"
+                },
+                {
+                  "_content": "socialDigg.js"
+                },
+                {
+                  "_content": "socialMiniDlg.js"
+                },
+                {
+                  "_content": "oauth.js"
+                },
+                {
+                  "_content": "social.js"
+                },
+                {
                   "_content": "templates/Social.template.js"
                 }],
               "includeCSS": [{
                   "_content": "social.css"
                 }],
+              "resource": [{
+                  "_content": "social-icon.gif"
+                }],
               "handlerObject": [{
                   "_content": "com_zimbra_social_handlerObject"
+                }],
+              "userProperties": [{
+                  "property": [
+                    {
+                      "name": "social_pref_tweetmemePopularIsOn",
+                      "type": "string",
+                      "value": "true"
+                    },
+                    {
+                      "name": "social_pref_trendsPopularIsOn",
+                      "type": "string",
+                      "value": "true"
+                    },
+                    {
+                      "name": "social_pref_diggPopularIsOn",
+                      "type": "string",
+                      "value": "true"
+                    },
+                    {
+                      "name": "social_pref_SocialMailUpdateOn",
+                      "type": "string",
+                      "value": "true"
+                    },
+                    {
+                      "name": "social_pref_dontShowWelcomeScreenOn",
+                      "type": "string",
+                      "value": "false"
+                    },
+                    {
+                      "name": "social_pref_showTweetAlertsOn",
+                      "type": "string",
+                      "value": "true"
+                    },
+                    {
+                      "name": "social_pref_cardWidthList",
+                      "type": "string",
+                      "value": "400px"
+                    },
+                    {
+                      "name": "social_pref_autoShortenURLOn",
+                      "type": "string",
+                      "value": "true"
+                    },
+                    {
+                      "name": "social_pref_toolbarButtonOn",
+                      "type": "string",
+                      "value": "true"
+                    },
+                    {
+                      "name": "social_pref_numberofTweetsToReturn",
+                      "type": "string",
+                      "value": "50"
+                    },
+                    {
+                      "name": "social_pref_numberofTweetsSearchesToReturn",
+                      "type": "string",
+                      "value": "50"
+                    }]
                 }]
             }],
           "zimletConfig": [{
               "version": "2.1.7.8",
-              "name": "com_zimbra_social"
+              "name": "com_zimbra_social",
+              "global": [{
+                  "property": [
+                    {
+                      "name": "allowedDomains",
+                      "_content": "twitter.com,*.twitter.com,*.facebook.com,*.tweetmeme.com,api.tr.im,*.digg.com,api.bit.ly"
+                    },
+                    {
+                      "name": "social_facebook_api_key",
+                      "_content": "7af6d68c9d453e392c1ed68b27f95506"
+                    },
+                    {
+                      "name": "social_facebook_api_key_zd",
+                      "_content": "f7377c6deafb69c43fd4c691208b0c6a"
+                    }]
+                }]
             }]
         }]
     }],

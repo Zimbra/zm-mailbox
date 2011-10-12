@@ -200,6 +200,8 @@
       <batchtest todir="${wsdl.test.dir}/output">
         <fileset dir="${wsdl.test.src.dir}">
           <include name="**/*Test.java"/>
+          <!-- Some JAXB source filenames end in Test.java and need to be excluded -->
+          <exclude name="zimbra/generated/**/*Test.java"/>
         </fileset>
       </batchtest>
     </junit>

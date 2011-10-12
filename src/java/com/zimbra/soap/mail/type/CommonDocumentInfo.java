@@ -26,12 +26,13 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(propOrder = { "metadatas", "fragment" })
+@XmlType(propOrder = { "metadatas", "fragment", "grants" })
 public class CommonDocumentInfo {
 
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
@@ -49,8 +50,7 @@ public class CommonDocumentInfo {
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folderId;
 
-    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */,
-                                    required=false)
+    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */, required=false)
     private Integer modifiedSequence;
 
     @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=false)
@@ -75,8 +75,7 @@ public class CommonDocumentInfo {
     @XmlAttribute(name=MailConstants.A_CONTENT_TYPE /* ct */, required=false)
     private String contentType;
 
-    @XmlAttribute(name=MailConstants.A_DESC_ENABLED /* descEnabled */,
-                                    required=false)
+    @XmlAttribute(name=MailConstants.A_DESC_ENABLED /* descEnabled */, required=false)
     private Boolean descEnabled;
 
     @XmlAttribute(name=MailConstants.A_VERSION /* ver */, required=false)
@@ -96,6 +95,10 @@ public class CommonDocumentInfo {
 
     @XmlElement(name=MailConstants.E_FRAG /* fr */, required=false)
     private String fragment;
+
+    @XmlElementWrapper(name=MailConstants.E_ACL /* acl */, required=false)
+    @XmlElement(name=MailConstants.E_GRANT /* grant */, required=false)
+    private List<Grant> grants = Lists.newArrayList();
 
     public CommonDocumentInfo() {
         this((String) null);
@@ -148,6 +151,17 @@ public class CommonDocumentInfo {
     }
 
     public void setFragment(String fragment) { this.fragment = fragment; }
+    public void setGrants(Iterable <Grant> grants) {
+        this.grants.clear();
+        if (grants != null) {
+            Iterables.addAll(this.grants,grants);
+        }
+    }
+
+    public void addGrant(Grant grant) {
+        this.grants.add(grant);
+    }
+
     public String getId() { return id; }
     public String getName() { return name; }
     public Long getSize() { return size; }
@@ -171,6 +185,9 @@ public class CommonDocumentInfo {
         return Collections.unmodifiableList(metadatas);
     }
     public String getFragment() { return fragment; }
+    public List<Grant> getGrants() {
+        return Collections.unmodifiableList(grants);
+    }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
@@ -194,7 +211,8 @@ public class CommonDocumentInfo {
             .add("creator", creator)
             .add("createdDate", createdDate)
             .add("metadatas", metadatas)
-            .add("fragment", fragment);
+            .add("fragment", fragment)
+            .add("grants", grants);
     }
 
     @Override
