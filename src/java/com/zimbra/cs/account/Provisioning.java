@@ -965,7 +965,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @return
      * @throws ServiceException
      */
-    public NamedEntry searchAliasTarget(Alias alias, boolean mustFind) throws ServiceException {
+    public NamedEntry searchAliasTarget(Alias alias, boolean mustFind) 
+    throws ServiceException {
         String targetId = alias.getAttr(Provisioning.A_zimbraAliasTargetId);
 
         String query = "(" + Provisioning.A_zimbraId + "=" + targetId + ")";
@@ -973,7 +974,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
         SearchDirectoryOptions options = new SearchDirectoryOptions();
         options.setTypes(SearchDirectoryOptions.ObjectType.accounts,
                 SearchDirectoryOptions.ObjectType.resources,
-                SearchDirectoryOptions.ObjectType.distributionlists);
+                SearchDirectoryOptions.ObjectType.distributionlists,
+                SearchDirectoryOptions.ObjectType.dynamicgroups);
         options.setFilterString(FilterId.SEARCH_ALIAS_TARGET, query);
 
         List<NamedEntry> entries = searchDirectory(options);

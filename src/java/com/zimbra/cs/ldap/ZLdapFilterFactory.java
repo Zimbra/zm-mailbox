@@ -113,6 +113,9 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         VELODROME_ALL_CALENDAR_RESOURCES_BY_DOMAIN_AND_SERVER(SINGLETON.velodromeAllCalendarResourcesByDomainAndServer("{DOMAIN-NAME}", "{SERVER-SERVICE-HOSTNAME}")),
         
         // ids for fromFilterString() calls
+        
+        ACCOUNT_BY_SSL_CLENT_CERT_PRINCIPAL_MAP(SINGLETON.allAccounts() + " AND " + 
+                "filter in " + Provisioning.A_zimbraMailSSLClientCertPrincipalMap),
         ADMIN_SEARCH("Admin search"),
         AUTO_PROVISION_ADMIN_SEARCH("Admin entered filter"),
         AUTO_PROVISION_SEARCH("Filter in " + Provisioning.A_zimbraAutoProvLdapSearchFilter),
@@ -125,11 +128,11 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         NGINX_GET_DOMAIN_BY_SERVER_IP("Filter in "),
         NGINX_GET_PORT_BY_MAILHOST("Filter in "),
         NGINX_GET_MAILHOST("Filter in " + Provisioning.A_zimbraReverseProxyMailHostQuery),
+        RENAME_DOMAIN("Search entries during RenameDomain"),
         SEARCH_ALIAS_TARGET("Search alias target entry"),
         SEARCH_GRANTEE("Search grantee for revoking orphan grants"),
         SMIME_LOOKUP("Filter in " + Provisioning.A_zimbraSMIMELdapFilter),
-        ACCOUNT_BY_SSL_CLENT_CERT_PRINCIPAL_MAP(SINGLETON.allAccounts() + " AND " + 
-                "filter in " + Provisioning.A_zimbraMailSSLClientCertPrincipalMap),
+        
         
         UNITTEST("UNITTEST"),
         LDAP_UPGRADE("LDAP_UPGRADE"),

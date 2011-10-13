@@ -30,6 +30,7 @@ import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
@@ -43,8 +44,17 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.SearchAccountsOptions.IncludeType;
 import com.zimbra.cs.account.SearchDirectoryOptions.MakeObjectOpt;
+import com.zimbra.cs.account.SearchDirectoryOptions.ObjectType;
 import com.zimbra.cs.account.SearchDirectoryOptions.SortOpt;
+import com.zimbra.cs.account.ldap.LdapProv;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
+import com.zimbra.cs.account.ldap.RenameDomain;
+import com.zimbra.cs.account.ldap.entry.LdapDomain;
+import com.zimbra.cs.ldap.LdapClient;
+import com.zimbra.cs.ldap.LdapServerType;
+import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
@@ -114,10 +124,6 @@ public class TestLdapProvSearchDirectory extends TestLdap {
         return createDistributionList(localPart, domain, null);
     }
     
-    private void deleteDistributionList(DistributionList dl) throws Exception {
-        TestLdapProvDistributionList.deleteDistributionList(prov, dl);
-    }
-    
     private DynamicGroup createDynamicGroup(String localPart, Domain domain) throws Exception {
         return TestLdapProvDynamicGroup.createDynamicGroup(
                 prov, localPart, domain, null);
@@ -125,6 +131,10 @@ public class TestLdapProvSearchDirectory extends TestLdap {
     
     private DynamicGroup createDynamicGroup(String localPart) throws Exception {
         return createDynamicGroup(localPart, domain);
+    }
+    
+    private void deleteGroup(Group group) throws Exception {
+        TestLdapProvDistributionList.deleteGroup(prov, group);
     }
     
     private Server createServer(String serverName, Map<String, Object> attrs) 
@@ -699,7 +709,7 @@ public class TestLdapProvSearchDirectory extends TestLdap {
         assertEquals(1, dls.size());
         assertEquals(dl.getName(), dls.get(0).getName());
         
-        deleteDistributionList(dl);
+        deleteGroup(dl);
     }
     
     @Test
@@ -722,6 +732,90 @@ public class TestLdapProvSearchDirectory extends TestLdap {
         // should be sorted asc
         assertEquals(dg.getName(), groups.get(0).getName());
         assertEquals(dl.getName(), groups.get(1).getName());
+        
+        deleteGroup(dl);
+        deleteGroup(dg);
+    }
+    
+    @Test
+    public void renameDomainSearchAcctCrDl() throws Exception {
+        Account acct = createAccount("renameDomainSearchAcctCrDl-acct");
+        CalendarResource cr = createCalendarResource("renameDomainSearchAcctCrDl-cr");
+        DistributionList dl = createDistributionList("renameDomainSearchAcctCrDl-dl");
+        
+        
+        String domainDN = ((LdapDomain) domain).getDN();
+        String searchBase = ((LdapProv) prov).getDIT().domainDNToAccountSearchDN(domainDN);
+        
+        final List<NamedEntry> entries = Lists.newArrayList();
+        NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
+            @Override
+            public void visit(NamedEntry entry) throws ServiceException {
+                // System.out.println(entry.getName());
+                entries.add(entry);
+            }
+        };
+        
+        SearchDirectoryOptions options = new SearchDirectoryOptions();
+        options.setDomain(domain);
+        options.setOnMaster(true);
+        options.setFilterString(FilterId.RENAME_DOMAIN, null);
+        options.setTypes(ObjectType.accounts, ObjectType.resources, ObjectType.distributionlists);
+        prov.searchDirectory(options, visitor);
+        assertEquals(3, entries.size());
+        
+        /*
+         // legacy code and ldap trace
+        int flags = Provisioning.SD_ACCOUNT_FLAG + Provisioning.SD_CALENDAR_RESOURCE_FLAG + Provisioning.SD_DISTRIBUTION_LIST_FLAG;
+        ((LdapProvisioning) prov).searchObjects(null, null, searchBase, flags, visitor, 0);
+         * 
+         Oct 12 22:10:43 pshao-macbookpro-2 slapd[3065]: conn=1081 op=434 SRCH base="ou=people,dc=com,dc=zimbra,dc=qa,dc=unittest,dc=testldapprovsearchdirectory" scope=2 deref=0 filter="(|(objectClass=zimbraAccount)(objectClass=zimbraDistributionList)(objectClass=zimbraCalendarResource))"
+         Oct 12 22:10:43 pshao-macbookpro-2 slapd[3065]: conn=1081 op=434 SEARCH RESULT tag=101 err=0 nentries=3 text=
+ 
+         */
     }
 
+    @Test
+    public void searchAliasTarget() throws Exception {
+        Account acct = createAccount("renameDomainSearchAcctCrDl-acct");
+        CalendarResource cr = createCalendarResource("renameDomainSearchAcctCrDl-cr");
+        DistributionList dl = createDistributionList("3enameDomainSearchAcctCrDl-dl");
+        DynamicGroup dg = createDynamicGroup("renameDomainSearchAcctCrDl-dg");
+        
+        // prepend a digit so the order returned from SearchDirectory is predictable
+        prov.addAlias(acct, TestUtil.getAddress("1-acct-alias", domain.getName()));
+        prov.addAlias(cr, TestUtil.getAddress("2-cr-alias", domain.getName()));
+        prov.addGroupAlias(dl, TestUtil.getAddress("3-dl-alias", domain.getName()));
+        prov.addGroupAlias(dg, TestUtil.getAddress("4-dg-alias", domain.getName()));
+        
+        SearchDirectoryOptions options = new SearchDirectoryOptions(domain);
+        options.setTypes(ObjectType.aliases);
+        options.setSortOpt(SortOpt.SORT_ASCENDING);
+        options.setFilterString(FilterId.UNITTEST, null);
+        List<NamedEntry> aliases = prov.searchDirectory(options);
+        
+        assertEquals(4, aliases.size());
+        Alias acctAlias = (Alias) aliases.get(0);
+        Alias crAlias = (Alias) aliases.get(1);
+        Alias dlAlias = (Alias) aliases.get(2);
+        Alias dgAlias = (Alias) aliases.get(3);
+        
+        NamedEntry acctAliasTarget = prov.searchAliasTarget(acctAlias, true);
+        assertEquals(acct.getId(), acctAliasTarget.getId());
+        
+        NamedEntry crAliasTarget = prov.searchAliasTarget(crAlias, true);
+        assertEquals(cr.getId(), crAliasTarget.getId());
+        
+        NamedEntry dlAliasTarget = prov.searchAliasTarget(dlAlias, true);
+        assertEquals(dl.getId(), dlAliasTarget.getId());
+        
+        NamedEntry dgAliasTarget = prov.searchAliasTarget(dgAlias, true);
+        assertEquals(dg.getId(), dgAliasTarget.getId());
+        
+        deleteAccount(acct);
+        deleteAccount(cr);
+        deleteGroup(dl);
+        deleteGroup(dg);
+    }
+    
 }

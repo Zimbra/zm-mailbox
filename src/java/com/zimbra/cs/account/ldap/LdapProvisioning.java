@@ -1472,12 +1472,6 @@ public class LdapProvisioning extends LdapProv {
         }
     };
 
-    private void searchObjects(String query, String returnAttrs[], String base, int flags, 
-            NamedEntry.Visitor visitor, int maxResults)
-    throws ServiceException {
-        searchObjectsJunk(query, returnAttrs, base, flags, visitor, maxResults, true, false);
-    }
-
     @TODO
     private static class SearchObjectsVisitor extends SearchLdapVisitor {
 
@@ -1544,58 +1538,6 @@ public class LdapProvisioning extends LdapProv {
                 visitor.visit(new LdapCos(dn, attrs, prov));
         }
 
-    }
-
-    private void searchObjectsJunk(String query, String returnAttrs[], String base, int flags,
-            NamedEntry.Visitor visitor, int maxResults, boolean useConnPool, boolean useMaster)
-    throws ServiceException {
-
-        if ((flags & Provisioning.SO_NO_FIXUP_OBJECTCLASS) == 0) {
-            String objectClass = getObjectClassQuery(flags);
-
-            if (query == null || query.equals("")) {
-                query = objectClass;
-            } else {
-                if (query.startsWith("(") && query.endsWith(")")) {
-                    query = "(&"+query+objectClass+")";
-                } else {
-                    query = "(&("+query+")"+objectClass+")";
-                }
-            }
-        }
-
-        if ((flags & Provisioning.SO_NO_FIXUP_RETURNATTRS) == 0) {
-            returnAttrs = fixReturnAttrs(returnAttrs, flags);
-        }
-
-        /*
-         * convert the legacy flags to MakeObjectOpt, eventualy retire this API
-         */
-        MakeObjectOpt makeObjOpt = null;
-        if ((flags & Provisioning.SO_NO_ACCOUNT_DEFAULTS) != 0) {
-            makeObjOpt = MakeObjectOpt.NO_DEFAULTS;
-        } else if ((flags & Provisioning.SO_NO_ACCOUNT_SECONDARY_DEFAULTS) != 0) {
-            makeObjOpt = MakeObjectOpt.NO_SECONDARY_DEFAULTS;
-        }
-        
-        SearchObjectsVisitor searchObjectsVisitor =
-            new SearchObjectsVisitor(this, visitor, maxResults, makeObjOpt);
-
-        SearchLdapOptions searchObjectsOptions = new SearchLdapOptions(base, query,
-                returnAttrs, maxResults, null, ZSearchScope.SEARCH_SCOPE_SUBTREE,
-                searchObjectsVisitor) ;
-
-        ZLdapContext zlc = null;
-        try {
-            zlc = LdapClient.getContext(LdapServerType.get(useMaster), useConnPool, LdapUsage.SEARCH);
-            zlc.searchPaged(searchObjectsOptions);
-        } catch (LdapSizeLimitExceededException e) {
-            throw AccountServiceException.TOO_MANY_SEARCH_RESULTS("too many search results returned", e);
-        } catch (ServiceException e) {
-            throw ServiceException.FAILURE("unable to list all objects", e);
-        } finally {
-            LdapClient.closeContext(zlc);
-        }
     }
 
     /**
@@ -2878,13 +2820,11 @@ public class LdapProvisioning extends LdapProv {
                     ZLdapContext ldapContext = toZLdapContext();
                     ldapContext.renameEntry(oldDn, newDn);
                 }
-
+                
                 @Override
-                public void searchObjects(String query, String[] returnAttrs,
-                        String base, int flags, Visitor visitor, int maxResults)
-                throws ServiceException {
-                    ((LdapProvisioning) mProv).searchObjects(query, returnAttrs,
-                            base, flags, visitor, maxResults);
+                public void searchDirectory(SearchDirectoryOptions options,
+                        NamedEntry.Visitor visitor) throws ServiceException {
+                    ((LdapProvisioning) mProv).searchDirectory(options, visitor);
                 }
 
                 @Override
@@ -2905,6 +2845,8 @@ public class LdapProvisioning extends LdapProv {
                 throws ServiceException {
                     ((LdapProvisioning) mProv).renameXMPPComponent(zimbraId, newName);
                 }
+
+
             };
 
             Domain oldDomain = getDomainById(zimbraId, zlc);

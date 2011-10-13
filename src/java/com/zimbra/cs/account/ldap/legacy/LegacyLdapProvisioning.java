@@ -110,6 +110,7 @@ import com.zimbra.cs.account.ldap.LdapMimeTypeCache;
 import com.zimbra.cs.account.ldap.LdapObjectClass;
 import com.zimbra.cs.account.ldap.LdapObjectClassHierarchy;
 import com.zimbra.cs.account.ldap.LdapProv;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.ldap.LdapSMIMEConfig;
 import com.zimbra.cs.account.ldap.RenameDomain;
 import com.zimbra.cs.account.ldap.SpecialAttrs;
@@ -2708,13 +2709,11 @@ public class LegacyLdapProvisioning extends LdapProv {
                 }
 
                 @Override
-                public void searchObjects(String query, String[] returnAttrs,
-                        String base, int flags, Visitor visitor, int maxResults) 
-                throws ServiceException {
-                    ((LegacyLdapProvisioning) mProv).searchObjects(query, returnAttrs,
-                            base, flags, visitor, maxResults);
+                public void searchDirectory(SearchDirectoryOptions options,
+                        NamedEntry.Visitor visitor) throws ServiceException {
+                    ((LdapProvisioning) mProv).searchDirectory(options, visitor);
                 }
-
+                
                 @Override
                 public void modifyAttrsInternal(Entry entry, Map<String, ? extends Object> attrs)
                 throws ServiceException {

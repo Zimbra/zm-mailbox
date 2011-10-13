@@ -34,13 +34,13 @@ import com.zimbra.common.account.Key;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Alias;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
@@ -66,6 +66,7 @@ public class TestLdapProvRenameDomain extends TestLdap {
     private static int NUM_CAS         = 3;  // calendar resources, TODO
     private static int NUM_DLS_NESTED  = 2;
     private static int NUM_DLS_TOP     = 2;
+    private static int NUM_DYNAMIC_GROUPS = 2;
     private static int NUM_DOMAINS     = 3;
     private static int NUM_SUB_DOMAINS = 2;  // number of sub domains under the old domain(domain to be renamed)
     private static int NUM_XMPPCOMPONENTS = 3; 
@@ -93,6 +94,7 @@ public class TestLdapProvRenameDomain extends TestLdap {
     private static String NAMEPREFIX_DATASOURCE  = "datasource-";
     private static String NAMEPREFIX_DL_NESTED   = "nesteddl-";
     private static String NAMEPREFIX_DL_TOP      = "topdl-";
+    private static String NAMEPREFIX_DYNAMIC_GROUP      = "dynamicgroup-";
     private static String NAMEPREFIX_IDENTITY    = "identity-";
     private static String NAMEPREFIX_OTHERDOMAIN = "otherdomain-";
     private static String NAMEPREFIX_SIGNATURE   = "signature-";
@@ -105,6 +107,7 @@ public class TestLdapProvRenameDomain extends TestLdap {
     private static final int OBJ_ACCT = 0x1;
     private static final int OBJ_DL_NESTED = 0x2;
     private static final int OBJ_DL_TOP = 0x4;
+    private static final int OBJ_DYNAMIC_GROUP = 0x8;
 
     private static final Set<String> sAttrsToVerify;
     
@@ -120,35 +123,42 @@ public class TestLdapProvRenameDomain extends TestLdap {
     
     int NUM_OBJS(int objType) throws Exception {
         switch (objType) {
-        case OBJ_ACCT:
-            return TestLdapProvRenameDomain.NUM_ACCOUNTS;
-        case OBJ_DL_NESTED:
-            return TestLdapProvRenameDomain.NUM_DLS_NESTED;
-        case OBJ_DL_TOP:
-            return TestLdapProvRenameDomain.NUM_DLS_TOP;         }
+            case OBJ_ACCT:
+                return TestLdapProvRenameDomain.NUM_ACCOUNTS;
+            case OBJ_DL_NESTED:
+                return TestLdapProvRenameDomain.NUM_DLS_NESTED;
+            case OBJ_DL_TOP:
+                return TestLdapProvRenameDomain.NUM_DLS_TOP;
+            case OBJ_DYNAMIC_GROUP:
+                return TestLdapProvRenameDomain.NUM_DYNAMIC_GROUPS;
+        }
         throw new Exception();
     }
         
     String OBJ_NAME(int objType, int index, int domainIdx) throws Exception {
         switch (objType) {
-        case OBJ_ACCT:
-            return ACCOUNT_NAME(index, domainIdx);
-        case OBJ_DL_NESTED:
-            return NESTED_DL_NAME(index, domainIdx);
-        case OBJ_DL_TOP:
-            return TOP_DL_NAME(index, domainIdx);
+            case OBJ_ACCT:
+                return ACCOUNT_NAME(index, domainIdx);
+            case OBJ_DL_NESTED:
+                return NESTED_DL_NAME(index, domainIdx);
+            case OBJ_DL_TOP:
+                return TOP_DL_NAME(index, domainIdx);
+            case OBJ_DYNAMIC_GROUP:
+                return DYNAMIC_GROUP_NAME(index, domainIdx);
         }
         throw new Exception();
     }
     
     String GET_ALIAS_NAME(int objType, int targetIdx, int targetDomainIdx, int aliasDomainIdx) throws Exception {
         switch (objType) {
-        case OBJ_ACCT:
-            return ACCOUNT_ALIAS_NAME(targetIdx, targetDomainIdx, aliasDomainIdx);
-        case OBJ_DL_NESTED:
-            return NESTED_DL_ALIAS_NAME(targetIdx, targetDomainIdx, aliasDomainIdx);
-        case OBJ_DL_TOP:
-            return TOP_DL_ALIAS_NAME(targetIdx, targetDomainIdx, aliasDomainIdx);
+            case OBJ_ACCT:
+                return ACCOUNT_ALIAS_NAME(targetIdx, targetDomainIdx, aliasDomainIdx);
+            case OBJ_DL_NESTED:
+                return NESTED_DL_ALIAS_NAME(targetIdx, targetDomainIdx, aliasDomainIdx);
+            case OBJ_DL_TOP:
+                return TOP_DL_ALIAS_NAME(targetIdx, targetDomainIdx, aliasDomainIdx);
+            case OBJ_DYNAMIC_GROUP:
+                return DYNAMIC_GROUP_ALIAS_NAME(targetIdx, targetDomainIdx, aliasDomainIdx);
         }
         throw new Exception();
     }
@@ -195,6 +205,7 @@ public class TestLdapProvRenameDomain extends TestLdap {
          *           - has NUM_ACCOUNTS accounts
          *           - has NUM_DLS_TOP top level dls (dl that is not a nested DL)
          *           - has NUM_DLS_NESTED nested dls (dl under another DL)
+         *           - has NUM_DYNAMIC_GROUPS dynamic groups
          * 
          *     - Each account:
          *           - has NUM_DOMAINS aliases, one in each domain
@@ -209,6 +220,9 @@ public class TestLdapProvRenameDomain extends TestLdap {
          *     - Each nested dl:
          *           - has NUM_DOMAINS aliases, one in each domain
          *           - is a member of all top DLs in all domains
+         *           
+         *     - Each dynamic group:
+         *           - has NUM_DOMAINS aliases, one in each domain
          */
         
         // create domains
@@ -306,8 +320,17 @@ public class TestLdapProvRenameDomain extends TestLdap {
         return NAMEPREFIX_DL_TOP + String.valueOf(index+1);
     }
     
+    private String DYNAMIC_GROUP_LOCAL(int index) {
+        // we want our names to be 1 relative, easier to spot in ldap brawser
+        return NAMEPREFIX_DYNAMIC_GROUP + String.valueOf(index+1);
+    }
+    
     private String TOP_DL_NAME(int index, int domainIdx) {
         return TOP_DL_LOCAL(index) + "@" + DOMAIN_NAME(domainIdx);
+    }
+    
+    private String DYNAMIC_GROUP_NAME(int index, int domainIdx) {
+        return DYNAMIC_GROUP_LOCAL(index) + "@" + DOMAIN_NAME(domainIdx);
     }
     
     /*
@@ -327,6 +350,10 @@ public class TestLdapProvRenameDomain extends TestLdap {
     
     private String TOP_DL_ALIAS_NAME(int targetIdx, int targetDomainIdx, int aliasDomainIdx) {
         return NAMEPREFIX_ALIAS + TOP_DL_LOCAL(targetIdx) + "-" + LEAF_DOMAIN_NAME(targetDomainIdx) + "@" + DOMAIN_NAME(aliasDomainIdx);
+    }
+    
+    private String DYNAMIC_GROUP_ALIAS_NAME(int targetIdx, int targetDomainIdx, int aliasDomainIdx) {
+        return NAMEPREFIX_ALIAS + DYNAMIC_GROUP_LOCAL(targetIdx) + "-" + LEAF_DOMAIN_NAME(targetDomainIdx) + "@" + DOMAIN_NAME(aliasDomainIdx);
     }
     
     private String NESTED_DL_LOCAL(int index) {
@@ -488,8 +515,9 @@ public class TestLdapProvRenameDomain extends TestLdap {
             Map<String, Object> dlAttrs = new HashMap<String, Object>();
             DistributionList dl = mProv.createDistributionList(NESTED_DL_NAME(nd, domainIdx), dlAttrs);
             
-            for (int d = 0; d < NUM_DOMAINS; d++)
+            for (int d = 0; d < NUM_DOMAINS; d++) {
                 mProv.addAlias(dl, NESTED_DL_ALIAS_NAME(nd, domainIdx, d));
+            }
         }
         
         // create top dls and their aliases
@@ -497,8 +525,19 @@ public class TestLdapProvRenameDomain extends TestLdap {
             Map<String, Object> dlAttrs = new HashMap<String, Object>();
             DistributionList dl = mProv.createDistributionList(TOP_DL_NAME(td, domainIdx), dlAttrs);
             
-            for (int d = 0; d < NUM_DOMAINS; d++)
+            for (int d = 0; d < NUM_DOMAINS; d++) {
                 mProv.addAlias(dl, TOP_DL_ALIAS_NAME(td, domainIdx, d));
+            }
+        }
+        
+        // create dynamic groups and their aliases
+        for (int dg = 0; dg < NUM_DYNAMIC_GROUPS; dg++) {
+            Map<String, Object> dlAttrs = new HashMap<String, Object>();
+            DynamicGroup dynGroup = mProv.createDynamicGroup(DYNAMIC_GROUP_NAME(dg, domainIdx), dlAttrs);
+            
+            for (int d = 0; d < NUM_DOMAINS; d++) {
+                mProv.addGroupAlias(dynGroup, DYNAMIC_GROUP_ALIAS_NAME(dg, domainIdx, d));
+            }
         }
     }
     
@@ -636,6 +675,7 @@ public class TestLdapProvRenameDomain extends TestLdap {
             return mProv.get(Key.AccountBy.name, name);
         case OBJ_DL_NESTED:
         case OBJ_DL_TOP:
+        case OBJ_DYNAMIC_GROUP:
             return mProv.get(Key.DistributionListBy.name, name);
         }
         throw new Exception();
@@ -731,7 +771,9 @@ public class TestLdapProvRenameDomain extends TestLdap {
      
         // get all the entries reside in the domain
         SearchDirectoryOptions options = new SearchDirectoryOptions();
-        options.setTypes(SearchDirectoryOptions.ObjectType.accounts, SearchDirectoryOptions.ObjectType.distributionlists);
+        options.setTypes(SearchDirectoryOptions.ObjectType.accounts, 
+                SearchDirectoryOptions.ObjectType.distributionlists,
+                SearchDirectoryOptions.ObjectType.dynamicgroups);
         options.setDomain(domain);
         options.setFilterString(FilterId.UNITTEST, null);
         List<NamedEntry> list = mProv.searchDirectory(options);
@@ -752,9 +794,16 @@ public class TestLdapProvRenameDomain extends TestLdap {
             expectedEntries.add(name.uName());
         }
             
-        for (int td = 0; td < NUM_DLS_NESTED; td++){
+        for (int td = 0; td < NUM_DLS_TOP; td++){
             IDNName name = new IDNName(TOP_DL_NAME(td, domainIdx));
             DistributionList entry = mProv.get(Key.DistributionListBy.name, name.uName());
+            assertNotNull(entry);
+            expectedEntries.add(name.uName());
+        }
+        
+        for (int td = 0; td < NUM_DYNAMIC_GROUPS; td++){
+            IDNName name = new IDNName(DYNAMIC_GROUP_NAME(td, domainIdx));
+            DynamicGroup entry = (DynamicGroup) mProv.getGroup(Key.DistributionListBy.name, name.uName());
             assertNotNull(entry);
             expectedEntries.add(name.uName());
         }
@@ -790,8 +839,11 @@ public class TestLdapProvRenameDomain extends TestLdap {
             for (int nd = 0; nd < NUM_DLS_NESTED; nd++)
                 expectedAliases.add(new IDNName(NESTED_DL_ALIAS_NAME(nd, d, domainIdx)).uName());
             
-            for (int td = 0; td < NUM_DLS_NESTED; td++)
+            for (int td = 0; td < NUM_DLS_TOP; td++)
                 expectedAliases.add(new IDNName(TOP_DL_ALIAS_NAME(td, d, domainIdx)).uName());
+            
+            for (int dg = 0; dg < NUM_DYNAMIC_GROUPS; dg++)
+                expectedAliases.add(new IDNName(DYNAMIC_GROUP_ALIAS_NAME(dg, d, domainIdx)).uName());
         }
         
         
@@ -840,6 +892,7 @@ public class TestLdapProvRenameDomain extends TestLdap {
         verifyAliasesOfEntriesInDomain(OBJ_ACCT, domain);
         verifyAliasesOfEntriesInDomain(OBJ_DL_NESTED, domain);
         verifyAliasesOfEntriesInDomain(OBJ_DL_TOP, domain);
+        verifyAliasesOfEntriesInDomain(OBJ_DYNAMIC_GROUP, domain);
     }
 
     private void verifyMemberOf(int memberType, int dlTypes, int domainIdx) throws Exception {
@@ -861,6 +914,8 @@ public class TestLdapProvRenameDomain extends TestLdap {
                     for (int dlIdx = 0; dlIdx < NUM_DLS_TOP; dlIdx++)
                         expectedNames.add(new IDNName(TOP_DL_NAME(dlIdx, dIdx)).aName());
                 } 
+                
+                // todo: DYNAMIC GROUP
             }
             
             HashMap<String,String> via = new HashMap<String, String>();
@@ -912,6 +967,8 @@ public class TestLdapProvRenameDomain extends TestLdap {
                             expectedNames.add(new IDNName(n).uName());
                     }
                 } 
+                
+                // TODO: DYNAMIC GROUP
             }
             
             String[] members = dl.getAllMembers();
@@ -933,6 +990,9 @@ public class TestLdapProvRenameDomain extends TestLdap {
         
         // top DLs
         verifyHasMembers(OBJ_DL_TOP, OBJ_ACCT | OBJ_DL_NESTED, domainIdx);
+        
+        // dynamic groups
+        // TODO
        
     }
     

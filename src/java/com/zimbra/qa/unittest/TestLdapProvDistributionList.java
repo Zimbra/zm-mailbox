@@ -74,6 +74,15 @@ public class TestLdapProvDistributionList extends TestLdap {
         return group;
     }
     
+    static void deleteGroup(Provisioning prov, Group group) 
+    throws Exception {
+        String groupId = group.getId();
+        prov.deleteGroup(groupId);
+        prov.flushCache(CacheEntryType.group, null);
+        group = prov.get(Key.DistributionListBy.id, groupId);
+        assertNull(group);
+    }
+    
     static DistributionList createDistributionList(Provisioning prov, String localPart, 
             Domain domain, Map<String, Object> attrs) throws Exception {
         return (DistributionList) createGroup(prov, localPart, domain, attrs, false);
