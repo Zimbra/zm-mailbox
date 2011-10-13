@@ -83,6 +83,9 @@ import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
 import com.zimbra.cs.account.Provisioning.RightsDoc;
 import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.Provisioning.SetPasswordResult;
+import com.zimbra.cs.account.SearchAccountsOptions.IncludeType;
+import com.zimbra.cs.account.SearchDirectoryOptions.MakeObjectOpt;
+import com.zimbra.cs.account.SearchDirectoryOptions.ObjectType;
 import com.zimbra.cs.account.SearchDirectoryOptions.SortOpt;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
@@ -107,6 +110,7 @@ import com.zimbra.cs.extension.ExtensionDispatcherServlet;
 import com.zimbra.cs.fb.FbCli;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.ldap.LdapClient;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
@@ -1716,7 +1720,8 @@ public class ProvUtil implements HttpDebugListener {
      * prov is always LdapProv here
      */
     private void doGetAllAccounts(LdapProv ldapProv, Domain domain, Server server,
-            final boolean verbose, final boolean applyDefault, final Set<String> attrNames) throws ServiceException {
+            final boolean verbose, final boolean applyDefault, final Set<String> attrNames) 
+    throws ServiceException {
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             @Override
             public void visit(com.zimbra.cs.account.NamedEntry entry) throws ServiceException {
@@ -1728,10 +1733,20 @@ public class ProvUtil implements HttpDebugListener {
             }
         };
 
+        SearchAccountsOptions options = new SearchAccountsOptions(domain);
+        options.setIncludeType(IncludeType.ACCOUNTS_ONLY);
         if (verbose && applyDefault) {
-            ldapProv.getAllAccounts(domain, server, visitor);
+            // ldapProv.getAllAccounts(domain, server, visitor);
         } else {
-            ldapProv.getAllAccountsNoDefaults(domain, server, visitor);
+            // ldapProv.getAllAccountsNoDefaults(domain, server, visitor);
+            options.setMakeObjectOpt(MakeObjectOpt.NO_DEFAULTS);
+        }
+        
+        if (server == null) {
+            options.setFilter(ZLdapFilterFactory.getInstance().allAccountsOnly());
+            ldapProv.searchDirectory(options, visitor);
+        } else {
+            ldapProv.searchAccountsOnServer(server, options, visitor);
         }
     }
 
@@ -1852,12 +1867,7 @@ public class ProvUtil implements HttpDebugListener {
         searchOpts.setTypes(typesStr);
         searchOpts.setSortOpt(isSortAscending ? SortOpt.SORT_ASCENDING : SortOpt.SORT_DESCENDING);
         searchOpts.setSortAttr(sortBy);
-        
-        FilterId filterId = null;
-        if (prov instanceof LdapProv) {
-            filterId = FilterId.ADMIN_SEARCH;
-        }
-        searchOpts.setFilterString(filterId, query);
+        searchOpts.setFilterString(FilterId.ADMIN_SEARCH, query);
         
         List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
 
@@ -2648,8 +2658,17 @@ public class ProvUtil implements HttpDebugListener {
             }
         }
         EntrySearchFilter filter = new EntrySearchFilter(multi);
-
-        List<NamedEntry> resources = prov.searchCalendarResources(d, filter, null, null, true);
+        String filterStr = LdapEntrySearchFilter.toLdapCalendarResourcesFilter(filter);
+        
+        SearchDirectoryOptions searchOpts = new SearchDirectoryOptions();
+        searchOpts.setDomain(d);
+        searchOpts.setTypes(ObjectType.resources);
+        searchOpts.setSortOpt(SortOpt.SORT_ASCENDING);
+        searchOpts.setFilterString(FilterId.ADMIN_SEARCH, filterStr);
+        
+        List<NamedEntry> resources = prov.searchDirectory(searchOpts);
+        
+        // List<NamedEntry> resources = prov.searchCalendarResources(d, filter, null, null, true);
         for (NamedEntry entry : resources) {
             CalendarResource resource = (CalendarResource) entry;
             if (verbose) {

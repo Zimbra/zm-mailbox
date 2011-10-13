@@ -66,6 +66,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         CALENDAR_RESOURCE_BY_FOREIGN_PRINCIPAL(SINGLETON.calendarResourceByForeignPrincipal("{FOREIGN-PRINCIPAL}")),
         CALENDAR_RESOURCE_BY_ID(SINGLETON.calendarResourceById("{CALENDAR-RESOURCE-ID}")),
         CALENDAR_RESOURCE_BY_NAME(SINGLETON.calendarResourceByName("{CALENDAR-RESOURCE-NAME}")),
+        CALENDAR_RESOURCES_HOMED_ON_SERVER(SINGLETON.calendarResourcesHomedOnServer("{SERVER-SERVICE-HOSTNAME}")),
         
         CMB_SEARCH_ACCOUNTS_ONLY(SINGLETON.CMBSearchAccountsOnly()),
         CMB_SEARCH_ACCOUNTS_ONLY_WITH_ARCHIVE(SINGLETON.CMBSearchAccountsOnlyWithArchive()),
@@ -103,6 +104,13 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         XMPP_COMPONENT_BY_ID(SINGLETON.xmppComponentById("{XMPP-COMPOMENT-ID}")),
         XMPP_COMPONENT_BY_ZIMBRA_XMPP_COMPONENT_ID(SINGLETON.imComponentById("{ZIMBRA-XMPP-COMPOMENT-ID}")),
         
+        // filters only used in the Velodrome DIT
+        VELODROME_ALL_ACCOUNTS_BY_DOMAIN(SINGLETON.velodromeAllAccountsByDomain("{DOMAIN-NAME}")),
+        VELODROME_ALL_ACCOUNTS_ONLY_BY_DOMAIN(SINGLETON.velodromeAllAccountsOnlyByDomain("{DOMAIN-NAME}")),
+        VELODROME_ALL_CALENDAR_RESOURCES_BY_DOMAIN(SINGLETON.velodromeAllCalendarResourcesByDomain("{DOMAIN-NAME}")),
+        VELODROME_ALL_ACCOUNTS_BY_DOMAIN_AND_SERVER(SINGLETON.velodromeAllAccountsByDomainAndServer("{DOMAIN-NAME}", "{SERVER-SERVICE-HOSTNAME}")),
+        VELODROME_ALL_ACCOUNTS_ONLY_BY_DOMAIN_AND_SERVER(SINGLETON.velodromeAllAccountsOnlyByDomainAndServer("{DOMAIN-NAME}", "{SERVER-SERVICE-HOSTNAME}")),
+        VELODROME_ALL_CALENDAR_RESOURCES_BY_DOMAIN_AND_SERVER(SINGLETON.velodromeAllCalendarResourcesByDomainAndServer("{DOMAIN-NAME}", "{SERVER-SERVICE-HOSTNAME}")),
         
         // ids for fromFilterString() calls
         ADMIN_SEARCH("Admin search"),
@@ -211,6 +219,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter calendarResourceByForeignPrincipal(String foreignPrincipal);
     public abstract ZLdapFilter calendarResourceById(String id);
     public abstract ZLdapFilter calendarResourceByName(String name);
+    public abstract ZLdapFilter calendarResourcesHomedOnServer(String serverServiceHostname); 
     
     /*
      * cos
@@ -310,5 +319,18 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
      * AD
      */
     public abstract ZLdapFilter memberOf(String dnOfGroup);
+    
+    /*
+     * Velodrome
+     */
+    public abstract ZLdapFilter velodromeAllAccountsByDomain(String domainName);
+    public abstract ZLdapFilter velodromeAllAccountsOnlyByDomain(String domainName);
+    public abstract ZLdapFilter velodromeAllCalendarResourcesByDomain(String domainName);
+    public abstract ZLdapFilter velodromeAllAccountsByDomainAndServer(
+            String domainName, String serverServiceHostname);
+    public abstract ZLdapFilter velodromeAllAccountsOnlyByDomainAndServer(
+            String domainName, String serverServiceHostname);
+    public abstract ZLdapFilter velodromeAllCalendarResourcesByDomainAndServer(
+            String domainName, String serverServiceHostname);
 
 }

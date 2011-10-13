@@ -63,6 +63,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static Filter FILTER_ALLAUTHED_SHARE;
     private static Filter FILTER_NOT_EXCLUDED_FROM_CMB_SEARCH;
     private static Filter FILTER_WITH_ARCHIVE;
+
     
     private static boolean initialized = false;
     
@@ -183,6 +184,9 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     }
 
 
+    private Filter homedOnServerFilter(String serverServiceHostname) {
+        return Filter.createEqualityFilter(Provisioning.A_zimbraMailHost, serverServiceHostname);
+    }
     
     /*
      * operational
@@ -323,7 +327,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 FilterId.ACCOUNTS_HOMED_ON_SERVER,
                 Filter.createANDFilter(
                         FILTER_ALL_ACCOUNTS,
-                        ((UBIDLdapFilter) homedOnServer(serverServiceHostname)).getNative()));
+                        homedOnServerFilter(serverServiceHostname)));
     }
     
     @Override
@@ -332,14 +336,14 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 FilterId.ACCOUNTS_HOMED_ON_SERVER_ACCOUNTS_ONLY,
                 Filter.createANDFilter(
                         FILTER_ALL_ACCOUNTS_ONLY,
-                        ((UBIDLdapFilter) homedOnServer(serverServiceHostname)).getNative()));
+                        homedOnServerFilter(serverServiceHostname)));
     }
 
     @Override
     public ZLdapFilter homedOnServer(String serverServiceHostname) {
         return new UBIDLdapFilter(
                 FilterId.HOMED_ON_SERVER,
-                Filter.createEqualityFilter(Provisioning.A_zimbraMailHost, serverServiceHostname));
+                homedOnServerFilter(serverServiceHostname));
     }
 
     @Override
@@ -348,7 +352,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 FilterId.ACCOUNTS_ON_SERVER_AND_COS_HAS_SUBORDINATES,
                 Filter.createANDFilter(
                         FILTER_ALL_ACCOUNTS,
-                        ((UBIDLdapFilter) homedOnServer(serverServiceHostname)).getNative(),
+                        homedOnServerFilter(serverServiceHostname),
                         FILTER_HAS_SUBORDINATES,
                         Filter.createORFilter(
                                 Filter.createNOTFilter(Filter.createPresenceFilter(Provisioning.A_zimbraCOSId)),
@@ -458,6 +462,15 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         FILTER_ALL_CALENDAR_RESOURCES));        
     }
 
+    @Override
+    public ZLdapFilter calendarResourcesHomedOnServer(String serverServiceHostname) {
+        return new UBIDLdapFilter(
+                FilterId.CALENDAR_RESOURCES_HOMED_ON_SERVER,
+                Filter.createANDFilter(
+                        FILTER_ALL_CALENDAR_RESOURCES,
+                        homedOnServerFilter(serverServiceHostname)));
+    }
+    
     
     /*
      * cos
@@ -828,4 +841,75 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 FilterId.MEMBER_OF,
                 Filter.createEqualityFilter(LdapConstants.ATTR_MEMBER_OF, dnOfGroup));
     }
+    
+    /*
+     * Velodrome
+     */
+    private Filter velodromePrimaryEmailOnDomainFilter(String domainName) {
+        return Filter.createSubstringFilter(
+                Provisioning.A_zimbraMailDeliveryAddress, null, null, "@" + domainName);
+    }
+    
+    @Override
+    public ZLdapFilter velodromeAllAccountsByDomain(String domainName) {
+        return new UBIDLdapFilter(
+                FilterId.VELODROME_ALL_ACCOUNTS_BY_DOMAIN,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS,
+                        velodromePrimaryEmailOnDomainFilter(domainName)));
+    }
+    
+    @Override
+    public ZLdapFilter velodromeAllAccountsOnlyByDomain(String domainName) {
+        return new UBIDLdapFilter(
+                FilterId.VELODROME_ALL_ACCOUNTS_ONLY_BY_DOMAIN,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        velodromePrimaryEmailOnDomainFilter(domainName)));
+    }
+    
+    @Override
+    public ZLdapFilter velodromeAllCalendarResourcesByDomain(String domainName) {
+        return new UBIDLdapFilter(
+                FilterId.VELODROME_ALL_CALENDAR_RESOURCES_BY_DOMAIN,
+                Filter.createANDFilter(
+                        FILTER_ALL_CALENDAR_RESOURCES,
+                        velodromePrimaryEmailOnDomainFilter(domainName)));
+    }
+    
+    @Override
+    public ZLdapFilter velodromeAllAccountsByDomainAndServer(
+            String domainName, String serverServiceHostname) {
+        return new UBIDLdapFilter(
+                FilterId.VELODROME_ALL_ACCOUNTS_BY_DOMAIN_AND_SERVER,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS,
+                        homedOnServerFilter(serverServiceHostname),
+                        velodromePrimaryEmailOnDomainFilter(domainName)));
+    }
+    
+    @Override
+    public  ZLdapFilter velodromeAllAccountsOnlyByDomainAndServer(
+            String domainName, String serverServiceHostname) {
+        return new UBIDLdapFilter(
+                FilterId.VELODROME_ALL_ACCOUNTS_ONLY_BY_DOMAIN_AND_SERVER,
+                Filter.createANDFilter(
+                        FILTER_ALL_ACCOUNTS_ONLY,
+                        homedOnServerFilter(serverServiceHostname),
+                        velodromePrimaryEmailOnDomainFilter(domainName)));
+    }
+    
+    @Override
+    public  ZLdapFilter velodromeAllCalendarResourcesByDomainAndServer(
+            String domainName, String serverServiceHostname) {
+        return new UBIDLdapFilter(
+                FilterId.VELODROME_ALL_CALENDAR_RESOURCES_BY_DOMAIN_AND_SERVER,
+                Filter.createANDFilter(
+                        FILTER_ALL_CALENDAR_RESOURCES,
+                        homedOnServerFilter(serverServiceHostname),
+                        velodromePrimaryEmailOnDomainFilter(domainName)));
+
+    }
+    
+    
 }

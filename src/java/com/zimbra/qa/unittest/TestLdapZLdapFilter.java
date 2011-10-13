@@ -403,6 +403,18 @@ public class TestLdapZLdapFilter extends TestLdap {
     }
     
     @Test
+    public void calendarResourcesHomedOnServer() throws Exception {
+        Server SERVER = prov.getLocalServer();
+        
+        String filter = LegacyLdapFilter.calendarResourcesHomedOnServer(SERVER.getServiceHostname());
+        ZLdapFilter zLdapFilter = filterDactory.calendarResourcesHomedOnServer(SERVER.getServiceHostname());
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        verifyStatString(FilterId.CALENDAR_RESOURCES_HOMED_ON_SERVER, zLdapFilter);
+    }
+
+    
+    @Test
     public void allCoses() throws Exception {
         String filter = LegacyLdapFilter.allCoses();
         ZLdapFilter zLdapFilter = filterDactory.allCoses();
@@ -839,4 +851,74 @@ zmprov mcf +zimbraGalLdapFilterDef 'ad:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(
         assertEquals(filter, zFilter);
         verifyStatString(FilterId.MEMBER_OF, zLdapFilter);
     }
+    
+    @Test
+    public void velodromeAllAccountsByDomain() throws Exception {
+        String DOMAIN_NAME = "test.com";
+        
+        String filter = LegacyLdapFilter.velodromeAllAccountsByDomain(DOMAIN_NAME);
+        ZLdapFilter zLdapFilter = filterDactory.velodromeAllAccountsByDomain(DOMAIN_NAME);
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        verifyStatString(FilterId.VELODROME_ALL_ACCOUNTS_BY_DOMAIN, zLdapFilter);
+    }
+    
+    @Test
+    public void velodromeAllAccountsOnlyByDomain() throws Exception {
+        String DOMAIN_NAME = "test.com";
+        
+        String filter = LegacyLdapFilter.velodromeAllAccountsOnlyByDomain(DOMAIN_NAME);
+        ZLdapFilter zLdapFilter = filterDactory.velodromeAllAccountsOnlyByDomain(DOMAIN_NAME);
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        verifyStatString(FilterId.VELODROME_ALL_ACCOUNTS_ONLY_BY_DOMAIN, zLdapFilter);
+    }
+    
+    @Test
+    public void velodromeAllCalendarResourcesByDomain() throws Exception {
+        String DOMAIN_NAME = "test.com";
+        
+        String filter = LegacyLdapFilter.velodromeAllCalendarResourcesByDomain(DOMAIN_NAME);
+        ZLdapFilter zLdapFilter = filterDactory.velodromeAllCalendarResourcesByDomain(DOMAIN_NAME);
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        verifyStatString(FilterId.VELODROME_ALL_CALENDAR_RESOURCES_BY_DOMAIN, zLdapFilter);
+    }
+
+    @Test
+    public void velodromeAllAccountsByDomainAndServer() throws Exception {
+        String DOMAIN_NAME = "test.com";
+        String SERVER_SERVICE_HOSTNAME = "server.com";
+        
+        String filter = LegacyLdapFilter.velodromeAllAccountsByDomainAndServer(DOMAIN_NAME, SERVER_SERVICE_HOSTNAME);
+        ZLdapFilter zLdapFilter = filterDactory.velodromeAllAccountsByDomainAndServer(DOMAIN_NAME, SERVER_SERVICE_HOSTNAME);
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        verifyStatString(FilterId.VELODROME_ALL_ACCOUNTS_BY_DOMAIN_AND_SERVER, zLdapFilter);
+    }
+    
+    @Test
+    public void velodromeAllAccountsOnlyByDomainAndServer() throws Exception {
+        String DOMAIN_NAME = "test.com";
+        String SERVER_SERVICE_HOSTNAME = "server.com";
+        
+        String filter = LegacyLdapFilter.velodromeAllAccountsOnlyByDomainAndServer(DOMAIN_NAME, SERVER_SERVICE_HOSTNAME);
+        ZLdapFilter zLdapFilter = filterDactory.velodromeAllAccountsOnlyByDomainAndServer(DOMAIN_NAME, SERVER_SERVICE_HOSTNAME);
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        verifyStatString(FilterId.VELODROME_ALL_ACCOUNTS_ONLY_BY_DOMAIN_AND_SERVER, zLdapFilter);
+    }
+    
+    @Test
+    public void velodromeAllCalendarResourcesByDomainAndServer() throws Exception {
+        String DOMAIN_NAME = "test.com";
+        String SERVER_SERVICE_HOSTNAME = "server.com";
+        
+        String filter = LegacyLdapFilter.velodromeAllCalendarResourcesByDomainAndServer(DOMAIN_NAME, SERVER_SERVICE_HOSTNAME);
+        ZLdapFilter zLdapFilter = filterDactory.velodromeAllCalendarResourcesByDomainAndServer(DOMAIN_NAME, SERVER_SERVICE_HOSTNAME);
+        String zFilter = zLdapFilter.toFilterString();
+        assertEquals(filter, zFilter);
+        verifyStatString(FilterId.VELODROME_ALL_CALENDAR_RESOURCES_BY_DOMAIN_AND_SERVER, zLdapFilter);
+    }
+
 }

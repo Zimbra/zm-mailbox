@@ -92,10 +92,6 @@ public class Domain extends ZAttrDomain {
         return getProvisioning().getAllDistributionLists(this);
     }
 
-    public List searchCalendarResources(EntrySearchFilter filter, String returnAttrs[], String sortAttr, boolean sortAscending) throws ServiceException {
-        return getProvisioning().searchCalendarResources(this, filter, returnAttrs, sortAttr, sortAscending);
-    }
-
     public SearchGalResult searchGal(String query, GalSearchType type, String token) throws ServiceException {
         return getProvisioning().searchGal(this, query, type, token);
     }

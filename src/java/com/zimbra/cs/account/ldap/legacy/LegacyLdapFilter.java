@@ -194,6 +194,10 @@ public class LegacyLdapFilter {
         return "(&(|(zimbraMailDeliveryAddress=" + name + ")(zimbraMailAlias=" + name + "))" + FILTER_CALENDAR_RESOURCE_OBJECTCLASS + ")";
     }
     
+    public static String calendarResourcesHomedOnServer(String serverServiceHostname) {
+        return "(&" + FILTER_CALENDAR_RESOURCE_OBJECTCLASS + homedOnServer(serverServiceHostname) + ")";
+    }
+    
     /*
      * cos
      */
@@ -406,6 +410,43 @@ public class LegacyLdapFilter {
         return "(memberOf=" + dnOfGroup + ")";
     }
     
+    
+    /*
+     * Velodrome
+     */
+    private static String velodromePrimaryEmailOnDomainFilter(String domainName) {
+        return "(zimbraMailDeliveryAddress=*@" + domainName + ")";
+    }
+    
+    public static String velodromeAllAccountsByDomain(String domainName) {
+        return "(&" + FILTER_ACCOUNT_OBJECTCLASS + velodromePrimaryEmailOnDomainFilter(domainName) + ")";
+    }
+    
+    public static String velodromeAllAccountsOnlyByDomain(String domainName) {
+        return "(&" + FILTER_ACCOUNT_ONLY_OBJECTCLASS + velodromePrimaryEmailOnDomainFilter(domainName) + ")";
+    }
+    
+    public static String velodromeAllCalendarResourcesByDomain(String domainName) {
+        return "(&" + FILTER_CALENDAR_RESOURCE_OBJECTCLASS + velodromePrimaryEmailOnDomainFilter(domainName) + ")";
+    }
+    
+    public static String velodromeAllAccountsByDomainAndServer(String domainName, String serverServiceHostname) {
+        return "(&" + FILTER_ACCOUNT_OBJECTCLASS + 
+                      homedOnServer(serverServiceHostname) + 
+                      velodromePrimaryEmailOnDomainFilter(domainName) + ")";
+    }
+    
+    public static String velodromeAllAccountsOnlyByDomainAndServer(String domainName, String serverServiceHostname) {
+        return "(&" + FILTER_ACCOUNT_ONLY_OBJECTCLASS + 
+                      homedOnServer(serverServiceHostname) + 
+                      velodromePrimaryEmailOnDomainFilter(domainName) + ")";
+    }
+    
+    public static String velodromeAllCalendarResourcesByDomainAndServer(String domainName, String serverServiceHostname) {
+        return "(&" + FILTER_CALENDAR_RESOURCE_OBJECTCLASS + 
+                      homedOnServer(serverServiceHostname) + 
+                      velodromePrimaryEmailOnDomainFilter(domainName) + ")";
+    }
     
     private static void printFilter(String doc, String usage, String base, String filter) {
         System.out.println();

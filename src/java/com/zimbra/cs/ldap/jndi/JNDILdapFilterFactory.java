@@ -184,6 +184,11 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter calendarResourceByName(String name) {
         return new JNDILdapFilter(LegacyLdapFilter.calendarResourceByName(name));       
     }
+    
+    @Override
+    public ZLdapFilter calendarResourcesHomedOnServer(String serverServiceHostname) {
+        return new JNDILdapFilter(LegacyLdapFilter.calendarResourcesHomedOnServer(serverServiceHostname));  
+    }
 
     
     /*
@@ -424,4 +429,38 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter memberOf(String dnOfGroup) {
         return new JNDILdapFilter(LegacyLdapFilter.memberOf(dnOfGroup));
     }
+    
+    /*
+     * Velodrome
+     */
+    @Override
+    public ZLdapFilter velodromeAllAccountsByDomain(String domainName) {
+        return new JNDILdapFilter(LegacyLdapFilter.velodromeAllAccountsByDomain(domainName));
+    }
+    
+    @Override
+    public ZLdapFilter velodromeAllAccountsOnlyByDomain(String domainName) {
+        return new JNDILdapFilter(LegacyLdapFilter.velodromeAllAccountsOnlyByDomain(domainName));
+    }
+    
+    @Override
+    public ZLdapFilter velodromeAllCalendarResourcesByDomain(String domainName) {
+        return new JNDILdapFilter(LegacyLdapFilter.velodromeAllCalendarResourcesByDomain(domainName));
+    }
+    
+    @Override
+    public ZLdapFilter velodromeAllAccountsByDomainAndServer(String domainName, String serverServiceHostname) {
+        return new JNDILdapFilter(LegacyLdapFilter.velodromeAllAccountsByDomainAndServer(domainName, serverServiceHostname));
+    }
+    
+    @Override
+    public ZLdapFilter velodromeAllAccountsOnlyByDomainAndServer(String domainName, String serverServiceHostname) {
+        return new JNDILdapFilter(LegacyLdapFilter.velodromeAllAccountsOnlyByDomainAndServer(domainName, serverServiceHostname));
+    }
+    
+    @Override
+    public ZLdapFilter velodromeAllCalendarResourcesByDomainAndServer(String domainName, String serverServiceHostname) {
+        return new JNDILdapFilter(LegacyLdapFilter.velodromeAllCalendarResourcesByDomainAndServer(domainName, serverServiceHostname));
+    }
+    
 }

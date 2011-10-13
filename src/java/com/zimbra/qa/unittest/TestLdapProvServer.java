@@ -38,11 +38,9 @@ public class TestLdapProvServer extends TestLdap {
         prov = Provisioning.getInstance();
     }
     
-    private Server createServer(String serverName) throws Exception {
-        return createServer(serverName, null);
-    }
-    
-    private Server createServer(String serverName, Map<String, Object> attrs) throws Exception {
+    static Server createServer(Provisioning prov, String serverName, 
+            Map<String, Object> attrs) 
+    throws Exception {
         if (attrs == null) {
             attrs = new HashMap<String, Object>();
         }
@@ -59,11 +57,23 @@ public class TestLdapProvServer extends TestLdap {
         return server;
     }
     
-    private void deleteServer(Server server) throws Exception {
+    static void deleteServer(Provisioning prov, Server server) throws Exception {
         String serverId = server.getId();
         prov.deleteServer(serverId);
         server = prov.get(Key.ServerBy.id, serverId);
         assertNull(server);
+    }
+    
+    private Server createServer(String serverName) throws Exception {
+        return createServer(prov, serverName, null);
+    }
+    
+    private Server createServer(String serverName, Map<String, Object> attrs) throws Exception {
+        return createServer(prov, serverName, attrs);
+    }
+    
+    private void deleteServer(Server server) throws Exception {
+        deleteServer(prov, server);
     }
     
     @Test

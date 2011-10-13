@@ -165,6 +165,10 @@ public class SearchDirectoryOptions {
     public SearchDirectoryOptions() {
     }
     
+    public SearchDirectoryOptions(Domain domain) {
+        setDomain(domain);
+    }
+    
     public SearchDirectoryOptions(String[] returnAttrs) {
         setReturnAttrs(returnAttrs);
     }

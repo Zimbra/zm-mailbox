@@ -377,7 +377,6 @@ public class TestLdap {
         
         List<Class> classes = Lists.newArrayList();
         
-        /*
         classes.add(TestLdapHelper.class);
         classes.add(TestLdapProvAccount.class);
         classes.add(TestLdapProvAlias.class);
@@ -387,6 +386,7 @@ public class TestLdap {
         classes.add(TestLdapProvDistributionList.class);
         classes.add(TestLdapProvDIT.class);
         classes.add(TestLdapProvDomain.class);
+        classes.add(TestLdapProvDynamicGroup.class);
         classes.add(TestLdapProvEntry.class);
         classes.add(TestLdapProvExternalLdapAuth.class);
         classes.add(TestLdapProvGal.class);
@@ -399,6 +399,7 @@ public class TestLdap {
         classes.add(TestLdapProvRenameDomain.class);
         classes.add(TestLdapProvServer.class);
         classes.add(TestLdapProvSignature.class);
+        classes.add(TestLdapProvSearchDirectory.class);
         classes.add(TestLdapProvXMPPComponent.class);
         classes.add(TestLdapProvZimlet.class);
         classes.add(TestLdapUtil.class);
@@ -410,7 +411,6 @@ public class TestLdap {
         
         // Tests need server running
         classes.add(TestProvDelegatedDL.class);
-        */
         
         // old tests, TODO: convert them 
         classes.add(TestAccountLockout.class);

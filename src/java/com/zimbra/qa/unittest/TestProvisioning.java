@@ -39,6 +39,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
+import com.zimbra.cs.account.SearchDirectoryOptions.ObjectType;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.ZimbraCustomAuth;
 import com.zimbra.cs.account.ldap.LdapProv;
@@ -1473,37 +1474,15 @@ public class TestProvisioning extends TestCase {
         System.out.println("Testing search");
 
         Account acct = mProv.get(Key.AccountBy.name, ACCT_EMAIL);
-        Account cr = mProv.get(Key.AccountBy.name, CR_EMAIL);
 
         String query = "(" + Provisioning.A_zimbraMailDeliveryAddress + "=" + ACCT_EMAIL + ")";
         List list = null;
-
-        EntrySearchFilter.Term term = new EntrySearchFilter.Single(false,
-                                                                   Provisioning.A_zimbraMailDeliveryAddress,
-                                                                   EntrySearchFilter.Operator.eq,
-                                                                   CR_EMAIL);
-        EntrySearchFilter filter = new EntrySearchFilter(term);
-        if (!Flag.needLdapPaging("searchCalendarResources")) {
-            list = mProv.searchCalendarResources(filter,
-                                                new String[]{Provisioning.A_zimbraMailDeliveryAddress},
-                                                Provisioning.A_zimbraMailDeliveryAddress,
-                                                true);
-            TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{cr}, true);
-        }
-
-        if (!Flag.needLdapPaging("searchCalendarResources_domain")) {
-            list = mProv.searchCalendarResources(domain,
-                                                filter,
-                                                new String[]{Provisioning.A_zimbraMailDeliveryAddress},
-                                                Provisioning.A_zimbraMailDeliveryAddress,
-                                                true);
-            TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{cr}, true);
-        }
 
         if (!Flag.needLdapPaging("searchDirectory")) {
             SearchDirectoryOptions options = new SearchDirectoryOptions();
             options.setDomain(domain);
             options.setFilterString(FilterId.UNITTEST, query);
+            options.setTypes(ObjectType.accounts);
             list = mProv.searchDirectory(options);
             TestProvisioningUtil.verifyEntries(list, new NamedEntry[]{acct}, true);
         }

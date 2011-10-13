@@ -16,7 +16,6 @@ package com.zimbra.cs.account;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -1355,16 +1354,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return get(keyType, key);
     }
 
-    /**
-     * @param filter search filter
-     * @param returnAttrs list of attributes to return. uid is always included. null will return all attrs.
-     * @param sortAttr attr to sort on. if null, sorting will be by account name.
-     * @param sortAscending sort ascending (true) or descending (false).
-     * @return a List of all the calendar resources that matched.
-     * @throws ServiceException
-     */
-    public abstract List<NamedEntry> searchCalendarResources(EntrySearchFilter filter, String returnAttrs[], String sortAttr, boolean sortAscending) throws ServiceException;
-
     private static Locale getEntryLocale(Entry entry, String attr) {
         Locale lc = null;
         if (entry != null) {
@@ -1443,10 +1432,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public abstract void getAllAccounts(Domain d, NamedEntry.Visitor visitor) throws ServiceException;
 
     public abstract void getAllAccounts(Domain d, Server s, NamedEntry.Visitor visitor) throws ServiceException;
-    
-    public void getAllAccountsNoDefaults(Domain d, Server s, NamedEntry.Visitor visitor) throws ServiceException {
-        throw ServiceException.UNSUPPORTED();
-    }
 
     public abstract List getAllCalendarResources(Domain d) throws ServiceException;
 
@@ -1650,22 +1635,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @throws ServiceException
      */
     public abstract SearchGalResult autoCompleteGal(Domain d, String query, GalSearchType type, int limit) throws ServiceException;
-
-    /**
-     * @param filter search filter
-     * @param returnAttrs list of attributes to return. uid is always included
-     * @param sortAttr attr to sort on. if not specified, sorting will be by account name
-     * @param sortAscending sort ascending (true) or descending (false)
-     * @return a list of all calendar resources that matched
-     * @throws ServiceException
-     */
-    public abstract List<NamedEntry> searchCalendarResources(
-        Domain d,
-        EntrySearchFilter filter,
-        String returnAttrs[],
-        String sortAttr,
-        boolean sortAscending)
-    throws ServiceException;
 
     public Identity getDefaultIdentity(Account account) throws ServiceException {
         Map<String, Object> attrs = new HashMap<String, Object>();

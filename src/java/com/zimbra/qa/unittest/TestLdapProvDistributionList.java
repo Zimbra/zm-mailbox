@@ -23,12 +23,12 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 
@@ -52,28 +52,35 @@ public class TestLdapProvDistributionList extends TestLdap {
         return TestLdapProvDistributionList.class.getName().toLowerCase();
     }
     
-    static DistributionList createDistributionList(Provisioning prov, String localPart, 
-            Domain domain, Map<String, Object> attrs) throws Exception {
-        String dlName = TestUtil.getAddress(localPart, domain.getName());
-        DistributionList dl = prov.get(Key.DistributionListBy.name, dlName);
-        assertNull(dl);
+    static Group createGroup(Provisioning prov, String localPart, 
+            Domain domain, Map<String, Object> attrs, boolean dynamic) 
+    throws Exception {
+        String groupName = TestUtil.getAddress(localPart, domain.getName());
+        Group group = prov.getGroup(Key.DistributionListBy.name, groupName);
+        assertNull(group);
         
         if (attrs == null) {
             attrs = new HashMap<String, Object>();
         }
                 
-        dl = prov.createDistributionList(dlName, attrs);
-        assertNotNull(dl);
+        group = prov.createGroup(groupName, attrs, dynamic);
+        assertNotNull(group);
         
         prov.flushCache(CacheEntryType.group, null);
-        dl = prov.get(Key.DistributionListBy.name, dlName);
-        assertNotNull(dl);
-        assertEquals(dlName.toLowerCase(), dl.getName().toLowerCase());
+        group = prov.getGroup(Key.DistributionListBy.name, groupName);
+        assertNotNull(group);
+        assertEquals(groupName.toLowerCase(), group.getName().toLowerCase());
         
-        return dl;
+        return group;
     }
     
-    static void deleteDistributionList(Provisioning prov, DistributionList dl) throws Exception {
+    static DistributionList createDistributionList(Provisioning prov, String localPart, 
+            Domain domain, Map<String, Object> attrs) throws Exception {
+        return (DistributionList) createGroup(prov, localPart, domain, attrs, false);
+    }
+    
+    static void deleteDistributionList(Provisioning prov, DistributionList dl) 
+    throws Exception {
         String dlId = dl.getId();
         prov.deleteDistributionList(dl.getId());
         prov.flushCache(CacheEntryType.group, null);

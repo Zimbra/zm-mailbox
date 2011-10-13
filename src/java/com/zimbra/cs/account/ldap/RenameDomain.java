@@ -116,7 +116,8 @@ public class RenameDomain {
         String searchBase = mProv.getDIT().domainDNToAccountSearchDN(oldDmainDN);
         int flags = 0;
             
-        // first phase, go thru DLs and accounts and their aliases that are in the old domain into the new domain
+        // first phase, go thru DLs and accounts and their aliases that are in the 
+        // old domain into the new domain
         phase = RenamePhase.RENAME_ENTRIES;
         if (phase.ordinal() >= startingPhase.ordinal()) {
             debug("Entering phase " + phase.toString());
@@ -126,7 +127,8 @@ public class RenameDomain {
             mLdapHelper.searchObjects(null, null, searchBase, flags, visitor, 0);
         }
             
-        // second phase, go thru aliases that have not been moved yet, by now aliases left in the domain should be aliases with target in other domains
+        // second phase, go thru aliases that have not been moved yet, by now aliases 
+        // left in the domain should be aliases with target in other domains
         phase = RenamePhase.FIX_FOREIGN_ALIASES;
         if (phase.ordinal() >= startingPhase.ordinal()) {
             debug("Entering phase " + phase.toString());
@@ -137,10 +139,13 @@ public class RenameDomain {
             mLdapHelper.searchObjects(null, null, searchBase, flags, visitor, 0);
         }
             
-        // third phase, go thru DLs and accounts in the *new* domain, rename the addresses in all DLs
-        //     - the addresses to be renamed are: the DL/account's main address and all the aliases that were moved to the new domain
-        //     - by now the DLs to modify should be those in other domains, because members of DLs in the old domain (now new domain) 
-        //       have been updated in first pass.
+        // third phase, go thru DLs and accounts in the *new* domain, rename the 
+        // addresses in all DLs
+        //     - the addresses to be renamed are: the DL/account's main address and 
+        //       all the aliases that were moved to the new domain
+        //     - by now the DLs to modify should be those in other domains, because 
+        //       members of DLs in the old domain (now new domain) have been updated 
+        //       in the first pass.
         phase = RenamePhase.FIX_FOREIGN_DL_MEMBERS;
         if (phase.ordinal() >= startingPhase.ordinal()) {
             debug("Entering phase " + phase.toString());

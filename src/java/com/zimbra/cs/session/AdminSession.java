@@ -83,21 +83,4 @@ public class AdminSession extends Session {
         return mSearchParams.getResult();
     }
 
-    public List searchCalendarResources(Domain d, EntrySearchFilter filter, String[] attrs, 
-            String sortBy, boolean sortAscending, int offset, NamedEntry.CheckRight rightChecker)
-    throws ServiceException {
-        String query = LdapEntrySearchFilter.toLdapCalendarResourcesFilter(filter);
-        
-        SearchDirectoryOptions options = new SearchDirectoryOptions();
-        options.setDomain(d);
-        options.setTypes(SearchDirectoryOptions.ObjectType.resources);
-        options.setFilterString(FilterId.ADMIN_SEARCH, query);
-        options.setReturnAttrs(attrs);
-        options.setSortOpt(sortAscending ? SortOpt.SORT_ASCENDING : SortOpt.SORT_DESCENDING);
-        options.setSortAttr(sortBy);
-        options.setConvertIDNToAscii(true);
-        
-        return searchDirectory(options, offset, rightChecker);
-    }
-
 }

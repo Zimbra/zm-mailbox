@@ -29,9 +29,13 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.SearchDirectoryOptions;
+import com.zimbra.cs.account.SearchDirectoryOptions.SortOpt;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.gal.GalExtraSearchFilter;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -91,16 +95,23 @@ public class SearchCalendarResources extends AdminDocumentHandler {
         AdminAccessControl.SearchDirectoryRightChecker rightChecker = 
             new AdminAccessControl.SearchDirectoryRightChecker(aac, prov, null);
         
+        String query = LdapEntrySearchFilter.toLdapCalendarResourcesFilter(filter);
+        
+        SearchDirectoryOptions options = new SearchDirectoryOptions();
+        options.setDomain(d);
+        options.setTypes(SearchDirectoryOptions.ObjectType.resources);
+        options.setFilterString(FilterId.ADMIN_SEARCH, query);
+        options.setReturnAttrs(attrs);
+        options.setSortOpt(sortAscending ? SortOpt.SORT_ASCENDING : SortOpt.SORT_DESCENDING);
+        options.setSortAttr(sortBy);
+        options.setConvertIDNToAscii(true);
+        
         List resources;
         AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
         if (session != null) {
-            resources = session.searchCalendarResources(d, filter, attrs, sortBy, sortAscending, offset, rightChecker);
+            resources = session.searchDirectory(options, offset, rightChecker);
         } else {
-            if (d != null) {
-                resources = prov.searchCalendarResources(d, filter, attrs, sortBy, sortAscending);
-            } else {
-                resources = prov.searchCalendarResources(filter, attrs, sortBy, sortAscending);
-            }
+            resources = prov.searchDirectory(options);
             resources = rightChecker.getAllowed(resources);
         }
 

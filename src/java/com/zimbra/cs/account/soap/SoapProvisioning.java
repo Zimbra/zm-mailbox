@@ -1339,14 +1339,6 @@ public class SoapProvisioning extends Provisioning {
         invokeJaxb(new RenameDistributionListRequest(zimbraId, newName));
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public List<NamedEntry> searchCalendarResources(EntrySearchFilter filter,
-            String[] returnAttrs, String sortAttr, boolean sortAscending)
-            throws ServiceException {
-        return searchCalendarResources((Domain)null, filter, returnAttrs, sortAttr, sortAscending);
-    }
-
     @Override
     public void setCOS(Account acct, Cos cos) throws ServiceException {
         HashMap<String, String> attrs = new HashMap<String, String>();
@@ -1673,30 +1665,6 @@ public class SoapProvisioning extends Provisioning {
             }
         }
         return result;
-    }
-
-    @Override
-    public List searchCalendarResources(Domain d, EntrySearchFilter filter, String[] returnAttrs, String sortAttr, boolean sortAscending) throws ServiceException {
-        // TODO
-        throw new UnsupportedOperationException();
-/*
-        List<NamedEntry> result = new ArrayList<NamedEntry>();
-        XMLElement req = new XMLElement(AdminService.SEARCH_CALENDAR_RESOURCES_REQUEST);
-        req.addElement(MailSer).setText(query);
-        if (d != null) req.addAttribute(AdminService.A_DOMAIN, d.getName());
-        if (sortAttr != null) req.addAttribute(AdminService.A_SORT_BY, sortAttr);
-        if (flags != 0) req.addAttribute(AdminService.A_TYPES, Provisioning.searchAccountMaskToString(flags));
-        req.addAttribute(AdminService.A_SORT_ASCENDING, sortAscending ? "1" : "0");
-        if (returnAttrs != null) {
-            req.addAttribute(AdminService.A_ATTRS, StringUtil.join(",", returnAttrs));
-        }
-        // TODO: handle ApplyCos, limit, offset?
-        Element resp = invoke(req);
-        for (Element e: resp.listElements(AdminService.E_CALENDAR_RESOURCE))
-            result.add(new SoapCalendarResource(e));
-
-        return result;
-*/
     }
 
     @Override

@@ -4688,22 +4688,6 @@ public class LegacyLdapProvisioning extends LdapProv {
         return resource;
     }
 
-    @Override
-    public List<NamedEntry> searchCalendarResources(EntrySearchFilter filter,
-            String returnAttrs[], String sortAttr, boolean sortAscending)
-            throws ServiceException {
-        return searchCalendarResources(filter, returnAttrs, sortAttr,
-                sortAscending, mDIT.mailBranchBaseDN());
-    }
-
-    List<NamedEntry> searchCalendarResources(EntrySearchFilter filter,
-            String returnAttrs[], String sortAttr, boolean sortAscending,
-            String base) throws ServiceException {
-        String query = LdapEntrySearchFilter.toLdapCalendarResourcesFilter(filter);
-        return searchObjects(query, returnAttrs, sortAttr, sortAscending, base,
-                Provisioning.SD_CALENDAR_RESOURCE_FLAG, 0);
-    }
-
     private Account makeAccount(String dn, Attributes attrs) throws NamingException, ServiceException {
         return makeAccount(dn, attrs, 0);
     }
@@ -5112,13 +5096,15 @@ public class LegacyLdapProvisioning extends LdapProv {
 
     @Override
     public List<?> getAllAccounts(Domain d) throws ServiceException {
-        return searchAccounts(d, mDIT.filterAccountsByDomain(d), null, null, true, Provisioning.SD_ACCOUNT_FLAG);
+        return searchAccounts(d, mDIT.filterAccountsOnlyByDomain(d).toFilterString(), 
+                null, null, true, Provisioning.SD_ACCOUNT_FLAG);
     }
 
     @Override
     public void getAllAccounts(Domain d, NamedEntry.Visitor visitor) throws ServiceException {
         LdapDomain ld = (LdapDomain) d;
-        searchObjects(mDIT.filterAccountsByDomain(d), null, mDIT.domainDNToAccountSearchDN(ld.getDN()), Provisioning.SD_ACCOUNT_FLAG, visitor, 0);
+        searchObjects(mDIT.filterAccountsOnlyByDomain(d).toFilterString(), null, 
+                mDIT.domainDNToAccountSearchDN(ld.getDN()), Provisioning.SD_ACCOUNT_FLAG, visitor, 0);
     }
 
     @Override
@@ -5126,14 +5112,11 @@ public class LegacyLdapProvisioning extends LdapProv {
         getAllAccountsInternal(d, s, visitor, false);
     }
 
-    @Override
-    public void getAllAccountsNoDefaults(Domain d, Server s, NamedEntry.Visitor visitor) throws ServiceException {
-        getAllAccountsInternal(d, s, visitor, true);
-    }
-
-    private void getAllAccountsInternal(Domain d, Server s, NamedEntry.Visitor visitor, boolean noDefaults) throws ServiceException {
+    private void getAllAccountsInternal(Domain d, Server s, NamedEntry.Visitor visitor, 
+            boolean noDefaults) 
+    throws ServiceException {
         LdapDomain ld = (LdapDomain) d;
-        String filter = mDIT.filterAccountsByDomain(d);
+        String filter = mDIT.filterAccountsOnlyByDomain(d).toFilterString();
         if (s != null) {
             String serverFilter = LegacyLdapFilter.homedOnServer(s.getServiceHostname());
             if (StringUtil.isNullOrEmpty(filter))
@@ -5150,7 +5133,7 @@ public class LegacyLdapProvisioning extends LdapProv {
 
     @Override
     public List<?> getAllCalendarResources(Domain d) throws ServiceException {
-        return searchAccounts(d, mDIT.filterCalendarResourcesByDomain(d, false),
+        return searchAccounts(d, mDIT.filterCalendarResourcesByDomain(d).toFilterString(),
                               null, null, true, Provisioning.SD_CALENDAR_RESOURCE_FLAG);
         /*
         return searchCalendarResources(d,
@@ -5163,7 +5146,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     public void getAllCalendarResources(Domain d, NamedEntry.Visitor visitor)
     throws ServiceException {
         LdapDomain ld = (LdapDomain) d;
-        searchObjects(mDIT.filterCalendarResourcesByDomain(d, false),
+        searchObjects(mDIT.filterCalendarResourcesByDomain(d).toFilterString(),
                       null, mDIT.domainDNToAccountSearchDN(ld.getDN()),
                       Provisioning.SD_CALENDAR_RESOURCE_FLAG,
                       visitor, 0);
@@ -5173,7 +5156,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     public void getAllCalendarResources(Domain d, Server s, NamedEntry.Visitor visitor)
     throws ServiceException {
         LdapDomain ld = (LdapDomain) d;
-        String filter = mDIT.filterCalendarResourcesByDomain(d, false);
+        String filter = mDIT.filterCalendarResourcesByDomain(d).toFilterString();
         if (s != null) {
             String serverFilter = "(" + Provisioning.A_zimbraMailHost + "=" + s.getAttr(Provisioning.A_zimbraServiceHostname) + ")";
             if (StringUtil.isNullOrEmpty(filter))
@@ -5187,7 +5170,7 @@ public class LegacyLdapProvisioning extends LdapProv {
 
     @Override
     public List<?> getAllDistributionLists(Domain d) throws ServiceException {
-        return searchAccounts(d, mDIT.filterDistributionListsByDomain(d, false),
+        return searchAccounts(d, mDIT.filterDistributionListsByDomain(d).toFilterString(),
                               null, null, true, Provisioning.SD_DISTRIBUTION_LIST_FLAG);
     }
 
@@ -5197,19 +5180,6 @@ public class LegacyLdapProvisioning extends LdapProv {
         LdapDomain ld = (LdapDomain) d;
         return searchObjects(query, returnAttrs, sortAttr, sortAscending,
                              mDIT.domainDNToAccountSearchDN(ld.getDN()), flags, 0);
-    }
-
-    @Override
-    public List<NamedEntry> searchCalendarResources(
-        Domain d,
-        EntrySearchFilter filter,
-        String returnAttrs[],
-        String sortAttr,
-        boolean sortAscending)
-    throws ServiceException {
-        return searchCalendarResources(filter, returnAttrs,
-                                       sortAttr, sortAscending,
-                                       GalSearchConfig.getZimbraSearchBase(d, GalOp.search));
     }
 
     @Override
@@ -7055,7 +7025,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     @Override
     public CountAccountResult countAccount(Domain domain) throws ServiceException {
         CountAccountVisitor visitor = new CountAccountVisitor(this);
-        searchObjects(mDIT.filterAccountsByDomain(domain),
+        searchObjects(mDIT.filterAccountsOnlyByDomain(domain).toFilterString(),
                       new String[]{Provisioning.A_zimbraCOSId, Provisioning.A_zimbraIsSystemResource},
                       mDIT.domainDNToAccountSearchDN(((LdapDomain)domain).getDN()),
                       Provisioning.SD_ACCOUNT_FLAG,

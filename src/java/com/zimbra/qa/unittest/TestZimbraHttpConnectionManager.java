@@ -143,10 +143,14 @@ public class TestZimbraHttpConnectionManager {
         
         // create an array of URIs to perform GETs on
         String[] urisToGet = {
+            "http://localhost:7070/zimbra/public/empty.html",
+            "http://localhost:7071/service/admin/soap",
+            /*
             "http://hc.apache.org:80/",
             "http://hc.apache.org:80/httpclient-3.x/status.html",
             "http://hc.apache.org:80/httpclient-3.x/methods/",
             "http://svn.apache.org/viewvc/httpcomponents/oac.hc3x/"
+            */
         };
         
         ZimbraHttpConnectionManager connMgr = ZimbraHttpConnectionManager.getExternalHttpConnMgr();
@@ -575,7 +579,7 @@ public class TestZimbraHttpConnectionManager {
      * 
      * zmlocalconfig -e httpclient_connmgr_so_timeout_external=3000  (3 seconds)
      */
-    @Test
+    // @Test
     public void testSoTimeoutViaConnMgrParam() throws Exception {
         
         int serverPort = 7778;
@@ -809,6 +813,30 @@ public class TestZimbraHttpConnectionManager {
             runTest(ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient(), "EXT"+i, false);
             runTest(ZimbraHttpConnectionManager.getInternalHttpConnMgr().getDefaultHttpClient(), "INT"+i, false);
         }
+    }
+
+    @Test
+    public void junk() throws Exception {
+        
+        String uri = "http://phoebe.mbp:7070/service/soap/AuthRequest";
+        
+        HttpClient httpClient = ZimbraHttpConnectionManager.getInternalHttpConnMgr().newHttpClient();
+        
+        GetMethod method = new GetMethod(uri);
+        
+        try {
+            // int respCode = HttpClientUtil.executeMethod(httpClient, method);
+            int respCode = httpClient.executeMethod(method);
+            
+            dumpResponse(respCode, method, "");
+            Assert.fail(); // nope, it should have timed out
+        } catch (Exception e) {
+            e.printStackTrace();
+            Assert.fail();
+        } finally {
+            method.releaseConnection();
+        }
+
     }
 
 }

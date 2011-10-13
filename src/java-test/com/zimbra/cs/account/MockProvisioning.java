@@ -409,12 +409,6 @@ public final class MockProvisioning extends Provisioning {
     }
 
     @Override
-    public List<NamedEntry> searchCalendarResources(EntrySearchFilter filter,
-            String[] returnAttrs, String sortAttr, boolean sortAscending) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public List<?> getAllAccounts(Domain d) {
         throw new UnsupportedOperationException();
     }
@@ -456,12 +450,6 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public SearchGalResult autoCompleteGal(Domain d, String query, GalSearchType type, int limit) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public List<NamedEntry> searchCalendarResources(Domain d, EntrySearchFilter filter, String[] returnAttrs,
-            String sortAttr, boolean sortAscending) {
         throw new UnsupportedOperationException();
     }
 

@@ -36,6 +36,8 @@ import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.ZLdapFilter;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.util.Zimbra;
 
 public class LdapDIT {
@@ -308,16 +310,6 @@ public class LdapDIT {
         return new StringBuffer(namingAttrValue).append('@').append(domain).toString();
     }
     
-    /*
-     * returns the search filter for getting all accounts on a domain
-     * 
-     * domain parameter is not used in default DIT because the search base is 
-     * restricted to the domain dn. 
-     */
-    public String filterAccountsByDomain(Domain domain) {
-        return "";
-    }
-    
    
     /*
      * =================
@@ -355,12 +347,7 @@ public class LdapDIT {
      * calendar resource
      * =================
      */
-    public String filterCalendarResourcesByDomain(Domain domain, boolean includeObjectClass) {
-        if (includeObjectClass)
-            return "(objectclass=zimbraCalendarResource)";
-        else
-            return "";
-    }
+
     
     /*
      * =======
@@ -391,14 +378,6 @@ public class LdapDIT {
     public String distributionListDNRename(String oldDn, String newLocalPart, String newDomain) throws ServiceException {
         return emailToDN(newLocalPart, newDomain);
     }
-
-    public String filterDistributionListsByDomain(Domain domain, boolean includeObjectClass) {
-        if (includeObjectClass)
-            return "(objectclass=zimbraDistributionList)";
-        else
-            return "";
-    }
-    
 
 
     /*
@@ -509,12 +488,14 @@ public class LdapDIT {
         return domainDN;
     }
     
+    /*
     public String filterGroupsByDomain(Domain domain, boolean includeObjectClass) {
         if (includeObjectClass)
             return "(|(objectclass=zimbraGroup)(objectclass=zimbraDistributionList))";
         else
             return "";
     }
+    */
     
     
     /*
@@ -592,6 +573,51 @@ public class LdapDIT {
     public String zimletNameToDN(String name) {
         return NAMING_RDN_ATTR_ZIMLET + "=" + LdapUtilCommon.escapeRDNValue(name) + "," + BASE_DN_ZIMLET;
     }
+    
+    
+    /*
+     * ==========
+     *   filters
+     * ==========
+     */  
+    /*
+     * returns the search filter for getting all accounts/calendar resources 
+     * on the specified domain and server. 
+     * 
+     * domain parameter is not used in default DIT because the search base is 
+     * restricted to the domain dn. 
+     * 
+     * In the custom DIT, extra filters can be generated based on the domain,
+     * because the custom DIT is not organized by domain.
+     */
+    public ZLdapFilter filterAccountsByDomainAndServer(Domain domain, Server server) {
+        return ZLdapFilterFactory.getInstance().accountsHomedOnServer(server.getServiceHostname());
+    }
+    
+    public ZLdapFilter filterAccountsOnlyByDomainAndServer(Domain domain, Server server) {
+        return ZLdapFilterFactory.getInstance().accountsHomedOnServerAccountsOnly(server.getServiceHostname());
+    }
+    
+    public ZLdapFilter filterCalendarResourceByDomainAndServer(Domain domain, Server server) {
+        return ZLdapFilterFactory.getInstance().calendarResourcesHomedOnServer(server.getServiceHostname());
+    }
+    
+    public ZLdapFilter filterAccountsOnlyByDomain(Domain domain) {
+        return ZLdapFilterFactory.getInstance().allAccountsOnly();
+    }
+    
+    public ZLdapFilter filterCalendarResourcesByDomain(Domain domain) {
+        return ZLdapFilterFactory.getInstance().allCalendarResources();
+    }
+    
+    public ZLdapFilter filterDistributionListsByDomain(Domain domain) {
+        return ZLdapFilterFactory.getInstance().allDistributionLists();
+    }
+    
+    public ZLdapFilter filterGroupsByDomain(Domain domain) {
+        return ZLdapFilterFactory.getInstance().allGroups();
+    }
+    
     
     
     /*

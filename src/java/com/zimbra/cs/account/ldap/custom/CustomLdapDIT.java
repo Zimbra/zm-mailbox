@@ -23,11 +23,14 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.SpecialAttrs;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.ZLdapFilter;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 
 /*
  * This class and CustomerLdapProvisioning should really go under the 
@@ -225,12 +228,6 @@ public class CustomLdapDIT extends LdapDIT {
             throw ServiceException.FAILURE("unable to map dn [" + dn + "] to email", null);
     }
     
-    @Override
-    public String filterAccountsByDomain(Domain domain) {
-        return "(zimbraMailDeliveryAddress=*@" + domain.getName() + ")";
-    }
-
-    
     /*
      * ==========
      *   alias
@@ -288,15 +285,7 @@ public class CustomLdapDIT extends LdapDIT {
      * calendar resource
      * =================
      */
-    @Override
-    public String filterCalendarResourcesByDomain(Domain domain, boolean includeObjectClass) {
-        String filter = "(zimbraMailDeliveryAddress=*@" + domain.getName() + ")";
-        
-        if (includeObjectClass)
-            return "(&(objectclass=zimbraCalendarResource)" + filter + ")";
-        else
-            return filter;
-    }
+
     
     /*
      * =====================
@@ -322,26 +311,7 @@ public class CustomLdapDIT extends LdapDIT {
     public String distributionListDNRename(String oldDn, String newLocalPart, String newDomain) throws ServiceException {
         return oldDn;
     }
-    
-    /* too bad we can't do anything about DL, we can't tell by mail or zimbraNailAlias
-     * which one is an alias and which one is the main email of DL
-     * 
-     * The one in default DIT is used for DL, that means for custom DIT the getAllDistrubutionLists 
-     * function will return DLs in all domains if there are any (although the broken logic 
-     * that DL can only belong to the single default domain kind of restricted, but it will 
-     * break once the default domain changed)!
-     * 
-     * mayby we should throw an UNSUPPORTED here.
-    public String filterDistributionListsByDomain(Domain domain, boolean includeObjectClass) {
-        String filter = "(zimbraMailDeliveryAddress=*@" + domain.getName() + ")";
-        
-        if (includeObjectClass)
-            return "(&(objectclass=zimbraDistributionList)" + filter + ")";
-        else
-            return filter;
-    }
-    */
-    
+
     
     /*
      * ==========
@@ -375,6 +345,65 @@ public class CustomLdapDIT extends LdapDIT {
     public String domainDNToAccountSearchDN(String domainDN) throws ServiceException {
         return BASE_DN_MAIL_BRANCH;
     }
+    
+    
+    /*
+     * ==========
+     *   filters
+     * ==========
+     */ 
+    @Override
+    public ZLdapFilter filterAccountsByDomainAndServer(Domain domain, Server server) {
+        return ZLdapFilterFactory.getInstance().velodromeAllAccountsByDomainAndServer(
+                domain.getName(), server.getServiceHostname());
+    }
+    
+    @Override
+    public ZLdapFilter filterAccountsOnlyByDomainAndServer(Domain domain, Server server) {
+        return ZLdapFilterFactory.getInstance().velodromeAllAccountsOnlyByDomainAndServer(
+                domain.getName(), server.getServiceHostname());
+    }
+    
+    @Override
+    public ZLdapFilter filterCalendarResourceByDomainAndServer(Domain domain, Server server) {
+        return ZLdapFilterFactory.getInstance().velodromeAllCalendarResourcesByDomainAndServer(
+                domain.getName(), server.getServiceHostname());
+    }
+    
+    
+    @Override
+    public ZLdapFilter filterAccountsOnlyByDomain(Domain domain) {
+        return ZLdapFilterFactory.getInstance().velodromeAllAccountsOnlyByDomain(domain.getName());
+    }
+
+    
+    @Override
+    public ZLdapFilter filterCalendarResourcesByDomain(Domain domain) {
+        return ZLdapFilterFactory.getInstance().velodromeAllCalendarResourcesByDomain(domain.getName());
+    }
+    
+    
+    /* 
+     * Too bad we can't do anything about DL and dynamic groups, because we can't tell 
+     * by mail or zimbraNailAlias which one is an alias and which one is the main email.
+     * 
+     * The one in default DIT is used for DL, that means for custom DIT the getAllDistrubutionLists 
+     * function will return DLs in all domains if there are any (although the broken logic 
+     * that DL can only belong to the single default domain kind of restricted, but it will 
+     * break once the default domain changed)!
+     * 
+     * Just throw UNSUPPORTED for groups.
+     */
+    @Override
+    public ZLdapFilter filterDistributionListsByDomain(Domain domain) {
+        throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public ZLdapFilter filterGroupsByDomain(Domain domain) {
+        throw new UnsupportedOperationException();
+    }
+    
 
     
     /*

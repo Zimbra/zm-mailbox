@@ -1225,19 +1225,33 @@ public class LdapProvisioning extends LdapProv {
     throws ServiceException {
         // filter cannot be set
         if (options.getFilter() != null || options.getFilterString() != null) {
-            throw ServiceException.FAILURE("internal error, cannot set filter for searchAccountsOnServer", null);
+            throw ServiceException.INVALID_REQUEST(
+                    "cannot set filter for searchAccountsOnServer", null);
+        }
+        
+        if (server == null) {
+            throw ServiceException.INVALID_REQUEST(
+                    "missing server", null);
         }
         
         IncludeType includeType = options.getIncludeType();
         
-        // do not support calendar resource only yet
+        /*
+         * This is the ONLY place where search filter can be affected by domain, because  
+         * we have to support custom DIT where account/cr entries are NOT populated under 
+         * the domain tree.  In our default LdapDIT implementation, domain is always 
+         * ignored in the filterXXX(domain, server) calls.
+         * 
+         * Would be great if we don't have to support custom DIT someday.
+         */
+        Domain domain = options.getDomain();
         ZLdapFilter filter;
         if (includeType == IncludeType.ACCOUNTS_AND_CALENDAR_RESOURCES) {
-            filter = filterFactory.accountsHomedOnServer(server.getServiceHostname());
+            filter = mDIT.filterAccountsByDomainAndServer(domain, server);
         } else if (includeType == IncludeType.ACCOUNTS_ONLY) {   
-            filter = filterFactory.accountsHomedOnServerAccountsOnly(server.getServiceHostname());
+            filter = mDIT.filterAccountsOnlyByDomainAndServer(domain, server);
         } else {
-            throw ServiceException.FAILURE("resource only is not yet supported for searchAccountsOnServer", null);
+            filter = mDIT.filterCalendarResourceByDomainAndServer(domain, server);
         }
         
         options.setFilter(filter);
@@ -1264,24 +1278,47 @@ public class LdapProvisioning extends LdapProv {
     private List<NamedEntry> searchDirectoryInternal(SearchDirectoryOptions options,
             NamedEntry.Visitor visitor) 
     throws ServiceException {
+        Set<ObjectType> types = options.getTypes();
+        
+        if (types == null) {
+            throw ServiceException.INVALID_REQUEST("missing types", null);
+        }
+        
         int flags = options.getTypesAsFlags();
         
         /*
          * base
          */
-        String base = null;
+        String[] bases;
 
-        LdapDomain ld = (LdapDomain) options.getDomain();
-        if (ld != null) {
-            base = mDIT.domainDNToAccountSearchDN(ld.getDN());
-        }
-
-        String bases[];
-        if (base == null) {
-            bases = mDIT.getSearchBases(flags);
+        Domain domain = options.getDomain();
+        if (domain != null) {
+            List<String> baseList = Lists.newArrayList();
+             
+            String domainDN = ((LdapDomain) domain).getDN();
+            if (types.contains(ObjectType.dynamicgroups)) {
+                baseList.add(mDIT.domainDNToDynamicGroupsBaseDN(domainDN));
+            }
+            
+            if (types.contains(ObjectType.accounts) ||
+                types.contains(ObjectType.aliases) ||
+                types.contains(ObjectType.distributionlists) ||
+                types.contains(ObjectType.resources)) {
+                baseList.add(mDIT.domainDNToAccountSearchDN(domainDN));
+            }
+            
+            // error if a domain is specified by non of domain-ed object types
+            // is specified.
+            if (baseList.isEmpty()) {
+                throw ServiceException.INVALID_REQUEST(
+                        "domain is specified but non of domain-ed types is specified", null);
+            }
+            
+            bases = baseList.toArray(new String[baseList.size()]);
         } else {
-            bases = new String[] {base};
+            bases = mDIT.getSearchBases(flags);
         }
+
         
         /*
          * filter
@@ -1388,13 +1425,6 @@ public class LdapProvisioning extends LdapProv {
         return oc.toString();
     }
 
-    private List<NamedEntry> searchObjects(String query, String returnAttrs[],
-            final String sortAttr, final boolean sortAscending, String base,
-            int flags, int maxResults) throws ServiceException {
-        return searchObjects(query, returnAttrs, sortAttr, sortAscending,
-                new String[] {base}, flags, maxResults, true, false);
-    }
-
     private static class NamedEntryComparator implements Comparator<NamedEntry> {
         final Provisioning mProv;
         final String mSortAttr;
@@ -1442,37 +1472,10 @@ public class LdapProvisioning extends LdapProv {
         }
     };
 
-    private List<NamedEntry> searchObjects(String query, String returnAttrs[],
-            final String sortAttr, final boolean sortAscending, String[] bases,
-            int flags, int maxResults, boolean useConnPool, boolean useMaster)
-    throws ServiceException {
-        final List<NamedEntry> result = new ArrayList<NamedEntry>();
-
-        NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
-            @Override
-            public void visit(NamedEntry entry) {
-                result.add(entry);
-            }
-        };
-
-        if (bases == null || bases.length == 0)
-            searchObjects(query, returnAttrs, "", flags, visitor, maxResults, useConnPool, useMaster);
-        else {
-            for (String base : bases) {
-                searchObjects(query, returnAttrs, base, flags, visitor, maxResults, useConnPool, useMaster);
-            }
-        }
-
-        NamedEntryComparator comparator = 
-            new NamedEntryComparator(Provisioning.getInstance(), sortAttr, sortAscending);
-        Collections.sort(result, comparator);
-        return result;
-    }
-
     private void searchObjects(String query, String returnAttrs[], String base, int flags, 
             NamedEntry.Visitor visitor, int maxResults)
     throws ServiceException {
-        searchObjects(query, returnAttrs, base, flags, visitor, maxResults, true, false);
+        searchObjectsJunk(query, returnAttrs, base, flags, visitor, maxResults, true, false);
     }
 
     @TODO
@@ -1543,7 +1546,7 @@ public class LdapProvisioning extends LdapProv {
 
     }
 
-    private void searchObjects(String query, String returnAttrs[], String base, int flags,
+    private void searchObjectsJunk(String query, String returnAttrs[], String base, int flags,
             NamedEntry.Visitor visitor, int maxResults, boolean useConnPool, boolean useMaster)
     throws ServiceException {
 
@@ -4837,22 +4840,6 @@ public class LdapProvisioning extends LdapProv {
         return resource;
     }
 
-    @Override
-    public List<NamedEntry> searchCalendarResources(EntrySearchFilter filter,
-            String returnAttrs[], String sortAttr, boolean sortAscending)
-            throws ServiceException {
-        return searchCalendarResources(filter, returnAttrs, sortAttr,
-                sortAscending, mDIT.mailBranchBaseDN());
-    }
-
-    List<NamedEntry> searchCalendarResources(EntrySearchFilter filter,
-            String returnAttrs[], String sortAttr, boolean sortAscending,
-            String base) throws ServiceException {
-        String query = LdapEntrySearchFilter.toLdapCalendarResourcesFilter(filter);
-        return searchObjects(query, returnAttrs, sortAttr, sortAscending, base,
-                Provisioning.SD_CALENDAR_RESOURCE_FLAG, 0);
-    }
-
     private Account makeAccount(String dn, ZAttributes attrs) throws ServiceException {
         return makeAccount(dn, attrs, null);
     }
@@ -5221,95 +5208,54 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    public void getAllAccounts(Domain d, NamedEntry.Visitor visitor) throws ServiceException {
-        LdapDomain ld = (LdapDomain) d;
-        searchObjects(mDIT.filterAccountsByDomain(d), null, mDIT.domainDNToAccountSearchDN(ld.getDN()), Provisioning.SD_ACCOUNT_FLAG, visitor, 0);
+    public void getAllAccounts(Domain domain, NamedEntry.Visitor visitor) throws ServiceException {
+        SearchAccountsOptions opts = new SearchAccountsOptions(domain);
+        opts.setFilter(filterFactory.allAccountsOnly());
+        opts.setIncludeType(IncludeType.ACCOUNTS_ONLY);
+        searchDirectory(opts, visitor);
     }
 
     @Override
-    public void getAllAccounts(Domain d, Server s, NamedEntry.Visitor visitor) throws ServiceException {
-        getAllAccountsInternal(d, s, visitor, false);
-    }
-
-    @Override
-    public void getAllAccountsNoDefaults(Domain d, Server s, NamedEntry.Visitor visitor) throws ServiceException {
-        getAllAccountsInternal(d, s, visitor, true);
-    }
-
-    private void getAllAccountsInternal(Domain d, Server s, NamedEntry.Visitor visitor, boolean noDefaults) throws ServiceException {
-        LdapDomain ld = (LdapDomain) d;
-        String filter = mDIT.filterAccountsByDomain(d);
-        if (s != null) {
-            String serverFilter = filterFactory.homedOnServer(s.getServiceHostname()).toFilterString();
-            if (StringUtil.isNullOrEmpty(filter))
-                filter = serverFilter;
-            else
-                filter = "(&" + serverFilter + filter + ")";
-        }
-
-        int flags = Provisioning.SD_ACCOUNT_FLAG;
-        if (noDefaults)
-            flags |= SO_NO_ACCOUNT_DEFAULTS;
-        searchObjects(filter, null, mDIT.domainDNToAccountSearchDN(ld.getDN()), flags, visitor, 0);
-    }
-
-    @Override
-    public List<?> getAllCalendarResources(Domain d) throws ServiceException {
-        return searchDomainedObjects(d, mDIT.filterCalendarResourcesByDomain(d, false),
-                null, null, true, Provisioning.SD_CALENDAR_RESOURCE_FLAG);
-    }
-
-    @Override
-    public void getAllCalendarResources(Domain d, NamedEntry.Visitor visitor)
+    public void getAllAccounts(Domain domain, Server server, NamedEntry.Visitor visitor) 
     throws ServiceException {
-        LdapDomain ld = (LdapDomain) d;
-        searchObjects(mDIT.filterCalendarResourcesByDomain(d, false),
-                      null, mDIT.domainDNToAccountSearchDN(ld.getDN()),
-                      Provisioning.SD_CALENDAR_RESOURCE_FLAG,
-                      visitor, 0);
+        SearchAccountsOptions searchOpts = new SearchAccountsOptions(domain);
+        searchOpts.setIncludeType(IncludeType.ACCOUNTS_ONLY);
+        searchAccountsOnServerInternal(server, searchOpts, visitor);
+    }
+
+    @Override
+    public List<?> getAllCalendarResources(Domain domain) throws ServiceException {
+        SearchDirectoryOptions searchOpts = new SearchDirectoryOptions(domain);
+        searchOpts.setFilter(mDIT.filterCalendarResourcesByDomain(domain));
+        searchOpts.setTypes(ObjectType.resources);
+        searchOpts.setSortOpt(SortOpt.SORT_ASCENDING);
+        return searchDirectoryInternal(searchOpts);
+    }
+
+    @Override
+    public void getAllCalendarResources(Domain domain, NamedEntry.Visitor visitor)
+    throws ServiceException {
+        SearchDirectoryOptions searchOpts = new SearchDirectoryOptions(domain);
+        searchOpts.setFilter(mDIT.filterCalendarResourcesByDomain(domain));
+        searchOpts.setTypes(ObjectType.resources);
+        searchDirectoryInternal(searchOpts, visitor);
     }
 
     @Override
     public void getAllCalendarResources(Domain d, Server s, NamedEntry.Visitor visitor)
     throws ServiceException {
-        LdapDomain ld = (LdapDomain) d;
-        String filter = mDIT.filterCalendarResourcesByDomain(d, false);
-        if (s != null) {
-            String serverFilter = "(" + Provisioning.A_zimbraMailHost + "=" + s.getAttr(Provisioning.A_zimbraServiceHostname) + ")";
-            if (StringUtil.isNullOrEmpty(filter))
-                filter = serverFilter;
-            else
-                filter = "(&" + serverFilter + filter + ")";
-        }
-        searchObjects(filter, null, mDIT.domainDNToAccountSearchDN(ld.getDN()),
-                      Provisioning.SD_CALENDAR_RESOURCE_FLAG, visitor, 0);
+        SearchAccountsOptions searchOpts = new SearchAccountsOptions(d);
+        searchOpts.setIncludeType(IncludeType.CALENDAR_RESOURCES_ONLY);
+        searchAccountsOnServerInternal(s, searchOpts, visitor);
     }
 
     @Override
-    public List<?> getAllDistributionLists(Domain d) throws ServiceException {
-        return searchDomainedObjects(d, mDIT.filterDistributionListsByDomain(d, false),
-                null, null, true, Provisioning.SD_DISTRIBUTION_LIST_FLAG);
-    }
-
-    private List<NamedEntry> searchDomainedObjects(Domain d, String query, String returnAttrs[], String sortAttr,
-            boolean sortAscending, int flags) throws ServiceException {
-        LdapDomain ld = (LdapDomain) d;
-        return searchObjects(query, returnAttrs, sortAttr, sortAscending,
-                mDIT.domainDNToAccountSearchDN(ld.getDN()), flags, 0);
-    }
-
-
-    @Override
-    public List<NamedEntry> searchCalendarResources(
-        Domain d,
-        EntrySearchFilter filter,
-        String returnAttrs[],
-        String sortAttr,
-        boolean sortAscending)
-    throws ServiceException {
-        return searchCalendarResources(filter, returnAttrs,
-                                       sortAttr, sortAscending,
-                                       GalSearchConfig.getZimbraSearchBase(d, GalOp.search));
+    public List<?> getAllDistributionLists(Domain domain) throws ServiceException {
+        SearchDirectoryOptions searchOpts = new SearchDirectoryOptions(domain);
+        searchOpts.setFilter(mDIT.filterDistributionListsByDomain(domain));
+        searchOpts.setTypes(ObjectType.distributionlists);
+        searchOpts.setSortOpt(SortOpt.SORT_ASCENDING);
+        return searchDirectoryInternal(searchOpts);
     }
 
     @Override
@@ -7147,18 +7093,16 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public CountAccountResult countAccount(Domain domain) throws ServiceException {
         CountAccountVisitor visitor = new CountAccountVisitor(this);
-        // getAllAccounts(domain, visitor);
-        searchObjects(mDIT.filterAccountsByDomain(domain),
-                      new String[]{Provisioning.A_zimbraCOSId, Provisioning.A_zimbraIsSystemResource},
-                      mDIT.domainDNToAccountSearchDN(((LdapDomain)domain).getDN()),
-                      Provisioning.SD_ACCOUNT_FLAG,
-                      visitor,
-                      0);
+        
+        SearchAccountsOptions option = new SearchAccountsOptions(domain,
+                new String[]{Provisioning.A_zimbraCOSId, 
+                Provisioning.A_zimbraIsSystemResource});
+        option.setIncludeType(IncludeType.ACCOUNTS_ONLY);
+        option.setFilter(mDIT.filterAccountsOnlyByDomain(domain));
+        searchDirectoryInternal(option, visitor);
 
         return visitor.getResult();
     }
-
-
 
     @Override
     public long countObjects(CountObjectsType type, Domain domain) throws ServiceException {
@@ -7528,21 +7472,18 @@ public class LdapProvisioning extends LdapProv {
         return group;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public List getAllGroups(Domain domain) throws ServiceException {
-        LdapDomain ld = (LdapDomain) domain;
-        List<NamedEntry> groups = searchObjects(mDIT.filterGroupsByDomain(domain, false), null, null, true,
-                mDIT.domainDNToGroupsBaseDN(ld.getDN()),
-                Provisioning.SD_DYNAMIC_GROUP_FLAG | Provisioning.SD_DISTRIBUTION_LIST_FLAG, 0);
-
-        // yuck, need to remove groups in sub domains
-        String domainName = domain.getName();
-        for (Iterator<NamedEntry> iter = groups.iterator(); iter.hasNext();) {
-            Group group = (Group) iter.next();
-            if (!domainName.equals(group.getDomainName())) {
-                iter.remove();
-            }
-        }
+        SearchDirectoryOptions searchOpts = new SearchDirectoryOptions(domain);
+        searchOpts.setFilter(mDIT.filterGroupsByDomain(domain));
+        
+        // this will cause searchDirectoryInternal to do 2 searches,
+        // once under groups, once under people
+        // not optimized, but this is only called from admin console and zmprov gadl
+        searchOpts.setTypes(ObjectType.distributionlists, ObjectType.dynamicgroups);
+        searchOpts.setSortOpt(SortOpt.SORT_ASCENDING);
+        List<NamedEntry> groups = (List<NamedEntry>) searchDirectoryInternal(searchOpts);
 
         return groups;
     }

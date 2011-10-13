@@ -175,10 +175,12 @@ public class LdapEntrySearchFilter {
 
     public static String toLdapCalendarResourcesFilter(EntrySearchFilter filter)
     throws ServiceException {
+        /* objectClass=calendarResource will be prepended in SearchDirectory
         filter.andWith(sCalendarResourcesFilter);
         if (!filter.usesIndex())
             throw ServiceException.INVALID_REQUEST(
                     "Search referring to no indexed attribute is not allowed: " + filter.toString(), null);
+        */
         LdapQueryVisitor visitor = new LdapQueryVisitor();
         filter.traverse(visitor);
         return visitor.getFilter();
