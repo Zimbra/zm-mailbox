@@ -16,21 +16,35 @@ package com.zimbra.soap.util;
 
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 
+import com.google.common.base.Strings;
+
 /**
- * {@link XmlAdapter} that maps boolean (JAXB) to 0|1 (XML).
+ * {@link XmlAdapter} that maps:
+ * <ul>
+ *  <li>boolean (JAXB) to 0|1 (XML)
+ *  <li>0|1|true|false (XML) to boolean (JAXB)
+ * </ul>
  *
  * @author ysasaki
  */
-public final class BooleanAdapter extends XmlAdapter<Integer, Boolean> {
+public final class BooleanAdapter extends XmlAdapter<String, Boolean> {
 
     @Override
-    public Integer marshal(Boolean value) {
-        return value == null ? null : value ? 1 : 0;
+    public String marshal(Boolean value) {
+        return value == null ? null : value ? "1" : "0";
     }
 
     @Override
-    public Boolean unmarshal(Integer value) {
-        return value == null ? null : value == 1;
+    public Boolean unmarshal(String value) {
+        if (Strings.isNullOrEmpty(value)) {
+            return null;
+        }
+        if ("1".equals(value) || "true".equalsIgnoreCase(value)) {
+            return Boolean.TRUE;
+        } else if ("0".equals(0) || "false".equalsIgnoreCase(value)){
+            return Boolean.FALSE;
+        }
+        throw new IllegalArgumentException(value + " is not a boolean (0|1|true|false)");
     }
 
 }
