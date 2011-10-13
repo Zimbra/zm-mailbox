@@ -50,6 +50,9 @@ public interface ContactInterface {
     // com.zimbra.cs.service.mail.ToXML.encodeContactAttachment decorates KeyValuePairs with additional attributes
     public void setAttrs(Iterable <ContactAttr> attrs);
     public void addAttr(ContactAttr attr);
+    public void setContactGroupMemberInterfaces(Iterable <ContactGroupMemberInterface> contactGroupMembers);
+    public void addContactGroupMember(ContactGroupMemberInterface contactGroupMember);
+
 
     public String getId();
     public String getSortField();
@@ -72,4 +75,5 @@ public interface ContactInterface {
     public String getReference();
     public List<CustomMetadataInterface> getMetadataInterfaces();
     public List<ContactAttr> getAttrs();
+    public List<ContactGroupMemberInterface> getContactGroupMemberInterfaces();
 }

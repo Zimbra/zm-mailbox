@@ -57,7 +57,7 @@ public class SearchGalResponse {
     @XmlAttribute(name=AccountConstants.A_TOKENIZE_KEY /* tokenizeKey */, required=false)
     private Boolean tokenizeKey;
 
-    @XmlElement(name=MailConstants.E_CONTACT, required=false)
+    @XmlElement(name=MailConstants.E_CONTACT /* cn */, required=false)
     private List<ContactInfo> contacts = Lists.newArrayList();
 
     public SearchGalResponse() {

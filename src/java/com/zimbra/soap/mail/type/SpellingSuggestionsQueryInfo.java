@@ -16,65 +16,38 @@
 package com.zimbra.soap.mail.type;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-
-import java.util.Collections;
-import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.soap.type.BaseQueryInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {})
+@XmlAccessorType(XmlAccessType.NONE)
 public class SpellingSuggestionsQueryInfo implements BaseQueryInfo {
 
-    @XmlAttribute(name="word", required=true)
-    private final String word;
-
-    @XmlElement(name="sug", required=false)
-    private List<SpellingSuggestion> suggestions = Lists.newArrayList();
+    @XmlValue
+    private String suggestedQueryString;
 
     /**
      * no-argument constructor wanted by JAXB
      */
-    @SuppressWarnings("unused")
     private SpellingSuggestionsQueryInfo() {
         this((String) null);
     }
 
-    public SpellingSuggestionsQueryInfo(String word) {
-        this.word = word;
+    private SpellingSuggestionsQueryInfo(String suggestedQueryString) {
+        this.suggestedQueryString = suggestedQueryString;
     }
 
-    public void setSuggestions(Iterable <SpellingSuggestion> suggestions) {
-        this.suggestions.clear();
-        if (suggestions != null) {
-            Iterables.addAll(this.suggestions,suggestions);
-        }
-    }
-
-    public SpellingSuggestionsQueryInfo addSuggestion(
-                            SpellingSuggestion suggestion) {
-        this.suggestions.add(suggestion);
-        return this;
-    }
-
-    public String getWord() { return word; }
-    public List<SpellingSuggestion> getSuggestions() {
-        return Collections.unmodifiableList(suggestions);
+    public static SpellingSuggestionsQueryInfo createForSuggestedQueryString(String suggestedQueryString) {
+        return new SpellingSuggestionsQueryInfo(suggestedQueryString);
     }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("word", word)
-            .add("suggestions", suggestions);
+            .add("suggestedQueryString", suggestedQueryString);
     }
 
     @Override

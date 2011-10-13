@@ -22,18 +22,20 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-public class CursorInfo {
+@XmlAccessorType(XmlAccessType.NONE)
+public final class CursorInfo {
 
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
-    private final String id;
+    private String id;
 
     @XmlAttribute(name=MailConstants.A_SORTVAL /* sortVal */, required=false)
-    private final String sortVal;
+    private String sortVal;
 
-    @XmlAttribute(name=MailConstants.A_ENDSORTVAL /* endSortVal */,
-            required=false)
-    private final String endSortVal;
+    @XmlAttribute(name=MailConstants.A_ENDSORTVAL /* endSortVal */, required=false)
+    private String endSortVal;
+
+    @XmlAttribute(name=MailConstants.A_INCLUDE_OFFSET /* includeOffset */, required=false)
+    private Boolean includeOffset;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -49,16 +51,24 @@ public class CursorInfo {
         this.endSortVal = endSortVal;
     }
 
+    public static CursorInfo createForIdSortValAndEndSortVal(String id, String sortVal, String endSortVal) {
+        return new CursorInfo(id, sortVal, endSortVal);
+    }
+
+    public void setIncludeOffset(Boolean includeOffset) { this.includeOffset = includeOffset; }
+
     public String getId() { return id; }
     public String getSortVal() { return sortVal; }
     public String getEndSortVal() { return endSortVal; }
+    public Boolean getIncludeOffset() { return includeOffset; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
             .add("sortVal", sortVal)
-            .add("endSortVal", endSortVal);
+            .add("endSortVal", endSortVal)
+            .add("includeOffset", getIncludeOffset());
     }
 
     @Override

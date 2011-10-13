@@ -22,16 +22,16 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class EmailAddrInfo {
 
-    @XmlAttribute(name=MailConstants.A_ADDRESS, required=true)
+    @XmlAttribute(name=MailConstants.A_ADDRESS /* a */, required=true)
     private final String address;
 
-    @XmlAttribute(name=MailConstants.A_ADDRESS_TYPE, required=false)
+    @XmlAttribute(name=MailConstants.A_ADDRESS_TYPE /* t */, required=false)
     private String addressType;
 
-    @XmlAttribute(name=MailConstants.A_PERSONAL, required=false)
+    @XmlAttribute(name=MailConstants.A_PERSONAL /* p */, required=false)
     private String personal;
 
     /**

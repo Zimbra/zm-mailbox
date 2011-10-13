@@ -22,22 +22,25 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.AttributeName;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-public class NewContactAttr {
+@XmlAccessorType(XmlAccessType.NONE)
+public final class NewContactAttr {
 
-    @XmlAttribute(name=MailConstants.A_ATTRIBUTE_NAME, required=true)
+    @XmlAttribute(name=MailConstants.A_ATTRIBUTE_NAME /* n */, required=true)
     private final String name;
 
-    @XmlAttribute(name=MailConstants.A_ATTACHMENT_ID, required=false)
+    @XmlAttribute(name=MailConstants.A_ATTACHMENT_ID /* aid */, required=false)
     private String attachId;
 
-    @XmlAttribute(name=MailConstants.A_ID, required=false)
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private Integer id;
 
-    @XmlAttribute(name=MailConstants.A_PART, required=false)
+    @XmlAttribute(name=MailConstants.A_PART /* part */, required=false)
     private String part;
+
+    // See ParsedContact.FieldDelta.Op - values "+" or "-"
+    @XmlAttribute(name=MailConstants.A_OPERATION /* op */, required=false)
+    private String operation;
 
     @XmlValue
     private String value;
@@ -46,7 +49,7 @@ public class NewContactAttr {
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    protected NewContactAttr() {
+    private NewContactAttr() {
          this((String) null);
     }
 
@@ -57,11 +60,13 @@ public class NewContactAttr {
     public void setAttachId(String attachId) { this.attachId = attachId; }
     public void setId(Integer id) { this.id = id; }
     public void setPart(String part) { this.part = part; }
+    public void setOperation(String operation) { this.operation = operation; }
     public void setValue(String value) { this.value = value; }
     public String getName() { return name; }
     public String getAttachId() { return attachId; }
     public Integer getId() { return id; }
     public String getPart() { return part; }
+    public String getOperation() { return operation; }
     public String getValue() { return value; }
 
     @Override
@@ -71,6 +76,7 @@ public class NewContactAttr {
             .add("attachId", attachId)
             .add("id", id)
             .add("part", part)
+            .add("operation", operation)
             .add("value", value)
             .toString();
     }

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -30,34 +30,38 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class FolderActionSelector extends ActionSelector {
 
-    @XmlAttribute(name=MailConstants.A_RECURSIVE, required=false)
-    protected Boolean recursive;
+    @XmlAttribute(name=MailConstants.A_RECURSIVE /* recursive */, required=false)
+    private Boolean recursive;
 
-    @XmlAttribute(name=MailConstants.A_URL, required=false)
-    protected String url;
+    @XmlAttribute(name=MailConstants.A_URL /* url */, required=false)
+    private String url;
 
-    @XmlAttribute(name=MailConstants.A_EXCLUDE_FREEBUSY, required=false)
-    protected Boolean excludeFreebusy;
+    @XmlAttribute(name=MailConstants.A_EXCLUDE_FREEBUSY /* excludeFreeBusy */, required=false)
+    private Boolean excludeFreebusy;
 
-    @XmlAttribute(name=MailConstants.A_ZIMBRA_ID, required=false)
-    protected String zimbraId;
+    @XmlAttribute(name=MailConstants.A_ZIMBRA_ID /* zid */, required=false)
+    private String zimbraId;
 
-    @XmlAttribute(name=MailConstants.A_GRANT_TYPE, required=false)
-    protected String grantType;
+    @XmlAttribute(name=MailConstants.A_GRANT_TYPE /* gt */, required=false)
+    private String grantType;
 
-    @XmlElement(name=MailConstants.E_GRANT, required=false)
-    protected ActionGrantSelector grant;
+    // Use to change folder's default view (useful for migration)
+    @XmlAttribute(name=MailConstants.A_DEFAULT_VIEW /* view */, required=false)
+    private String view;
 
-    @XmlElementWrapper(name=MailConstants.E_ACL, required=false)
-    @XmlElement(name=MailConstants.E_GRANT, required=false)
-    protected List<ActionGrantSelector> grants = Lists.newArrayList();
+    @XmlElement(name=MailConstants.E_GRANT /* grant */, required=false)
+    private ActionGrantSelector grant;
 
-    @XmlElement(name=MailConstants.E_RETENTION_POLICY, required=false)
-    protected RetentionPolicy retentionPolicy;
-    
+    @XmlElementWrapper(name=MailConstants.E_ACL /* acl */, required=false)
+    @XmlElement(name=MailConstants.E_GRANT /* grant */, required=false)
+    private List<ActionGrantSelector> grants = Lists.newArrayList();
+
+    @XmlElement(name=MailConstants.E_RETENTION_POLICY /* retentionPolicy */, required=false)
+    private RetentionPolicy retentionPolicy;
+
     public FolderActionSelector() {
         this((String) null, (String) null);
     }
@@ -81,37 +85,44 @@ public class FolderActionSelector extends ActionSelector {
             Iterables.addAll(this.grants,grants);
         }
     }
-    public void setRetentionPolicy(RetentionPolicy rp) { this.retentionPolicy = rp; }
 
-    public FolderActionSelector addGrant(ActionGrantSelector grant) {
+    public void addGrant(ActionGrantSelector grant) {
         if (grants == null)
             this.grants = Lists.newArrayList();
         this.grants.add(grant);
-        return this;
     }
 
+    public void setRetentionPolicy(RetentionPolicy retentionPolicy) { this.retentionPolicy = retentionPolicy; }
     public Boolean getRecursive() { return recursive; }
     public String getUrl() { return url; }
     public Boolean getExcludeFreebusy() { return excludeFreebusy; }
     public String getZimbraId() { return zimbraId; }
     public String getGrantType() { return grantType; }
+    public String getView() { return view; }
     public ActionGrantSelector getGrant() { return grant; }
     public List<ActionGrantSelector> getGrants() {
         return Collections.unmodifiableList(grants);
     }
     public RetentionPolicy getRetentionPolicy() { return retentionPolicy; }
 
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)
+    public Objects.ToStringHelper addToStringInfo(
+                Objects.ToStringHelper helper) {
+        helper = super.addToStringInfo(helper);
+        return helper
             .add("recursive", recursive)
             .add("url", url)
             .add("excludeFreebusy", excludeFreebusy)
             .add("zimbraId", zimbraId)
             .add("grantType", grantType)
+            .add("view", view)
             .add("grant", grant)
             .add("grants", grants)
-            .add("retentionPolicy", retentionPolicy)
-            .toString();
+            .add("retentionPolicy", retentionPolicy);
+    }
+
+    @Override
+    public String toString() {
+        return addToStringInfo(Objects.toStringHelper(this))
+                .toString();
     }
 }

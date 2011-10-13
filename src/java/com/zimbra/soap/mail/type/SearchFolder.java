@@ -25,7 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.type.SrchSortBy;
+import com.zimbra.soap.type.SearchSortBy;
 
 /*
   <search id="..." name="..." query="..." [types="..."] [sortBy="..."] l="{folder}"/>+
@@ -41,7 +41,7 @@ public final class SearchFolder extends Folder {
     private String query;
 
     @XmlAttribute(name=MailConstants.A_SORTBY, required=false)
-    private SrchSortBy sortBy;
+    private SearchSortBy sortBy;
 
     @XmlAttribute(name=MailConstants.A_SEARCH_TYPES, required=false)
     @XmlJavaTypeAdapter(ItemType.CSVAdapter.class)
@@ -55,11 +55,11 @@ public final class SearchFolder extends Folder {
         this.query = query;
     }
 
-    public SrchSortBy getSortBy() {
+    public SearchSortBy getSortBy() {
         return sortBy;
     }
 
-    public void setSortBy(SrchSortBy sortBy) {
+    public void setSortBy(SearchSortBy sortBy) {
         this.sortBy = sortBy;
     }
 

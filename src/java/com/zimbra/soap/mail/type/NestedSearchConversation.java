@@ -58,16 +58,14 @@ public class NestedSearchConversation {
     @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
     private String tagNames;
 
-    // TODO:Made an assumption that the only type of hit is a Message hit
+    // Assumed that the only type of hit is a Message hit
     @XmlElement(name=MailConstants.E_MSG /* m */, required=false)
     private List<MessageHitInfo> messages = Lists.newArrayList();
 
     @XmlElementWrapper(name=MailConstants.E_INFO /* info */, required=false)
     @XmlElements({
-        @XmlElement(name="spell",
-            type=SpellingSuggestionsQueryInfo.class),
-        @XmlElement(name="wildcard",
-            type=WildcardExpansionQueryInfo.class)
+        @XmlElement(name=MailConstants.E_SUGEST, type=SpellingSuggestionsQueryInfo.class),
+        @XmlElement(name="wildcard", type=WildcardExpansionQueryInfo.class)
     })
     private List<BaseQueryInfo> queryInfos = Lists.newArrayList();
 

@@ -26,7 +26,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class Policy {
 
     @XmlEnum
@@ -56,16 +56,16 @@ public class Policy {
         }
     };
     
-    @XmlAttribute(name=MailConstants.A_RETENTION_POLICY_TYPE, required=false)
+    @XmlAttribute(name=MailConstants.A_RETENTION_POLICY_TYPE /* type */, required=false)
     private Type type;
     
-    @XmlAttribute(name=MailConstants.A_ID, required=false)
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
     
-    @XmlAttribute(name=MailConstants.A_NAME, required=false)
+    @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
     private String name;
     
-    @XmlAttribute(name=MailConstants.A_LIFETIME, required=false)
+    @XmlAttribute(name=MailConstants.A_LIFETIME /* lifetime */, required=false)
     private String lifetime;
     
     /**

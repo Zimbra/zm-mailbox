@@ -38,7 +38,7 @@ import com.zimbra.soap.mail.type.SpellingSuggestionsQueryInfo;
 import com.zimbra.soap.type.BaseQueryInfo;
 import com.zimbra.soap.type.WildcardExpansionQueryInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_SEARCH_CONV_RESPONSE)
 @XmlType(propOrder = {"conversation", "messages", "queryInfos"})
 public class SearchConvResponse {
@@ -55,16 +55,14 @@ public class SearchConvResponse {
     @XmlElement(name=MailConstants.E_CONV /* c */, required=false)
     private NestedSearchConversation conversation;
 
-    // TODO:Made an assumption that the only type of hit is a Message hit
+    // Assumed that the only type of hit is a Message hit
     @XmlElement(name=MailConstants.E_MSG /* m */, required=false)
     private List<MessageHitInfo> messages = Lists.newArrayList();
 
     @XmlElementWrapper(name=MailConstants.E_INFO /* info */, required=false)
     @XmlElements({
-        @XmlElement(name="spell",
-            type=SpellingSuggestionsQueryInfo.class),
-        @XmlElement(name="wildcard",
-            type=WildcardExpansionQueryInfo.class)
+        @XmlElement(name=MailConstants.E_SUGEST, type=SpellingSuggestionsQueryInfo.class),
+        @XmlElement(name="wildcard", type=WildcardExpansionQueryInfo.class)
     })
     private List<BaseQueryInfo> queryInfos = Lists.newArrayList();
 
@@ -79,7 +77,6 @@ public class SearchConvResponse {
     public void setConversation(NestedSearchConversation conversation) {
         this.conversation = conversation;
     }
-
 
     public void setMessages(Iterable <MessageHitInfo> messages) {
         this.messages.clear();

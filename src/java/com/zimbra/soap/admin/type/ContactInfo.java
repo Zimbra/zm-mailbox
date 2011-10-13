@@ -19,22 +19,22 @@ import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.base.ContactGroupMemberInterface;
 import com.zimbra.soap.base.ContactInterface;
 import com.zimbra.soap.base.CustomMetadataInterface;
 import com.zimbra.soap.type.ContactAttr;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(propOrder = {"metadatas", "attrs"})
 public class ContactInfo
 implements ContactInterface {
 
@@ -95,7 +95,7 @@ implements ContactInterface {
     private String dlist;
 
     // See GalSearchResultCallback.handleContact(Contact c)
-    @XmlAttribute(name=AccountConstants.A_REF, required=false)
+    @XmlAttribute(name=AccountConstants.A_REF /* ref */, required=false)
     private String reference;
 
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
@@ -104,6 +104,9 @@ implements ContactInterface {
     @XmlElement(name=MailConstants.E_A /* a */, required=false)
     private List<ContactAttr> attrs = Lists.newArrayList();
 
+    @XmlElement(name=MailConstants.E_CONTACT_GROUP_MEMBER /* m */, required=false)
+    private List<ContactGroupMember> contactGroupMembers = Lists.newArrayList();
+
     public ContactInfo() {
     }
 
@@ -111,7 +114,7 @@ implements ContactInterface {
         this.id = id;
     }
 
-    public ContactInfo(String sortField, String id) {
+    private ContactInfo(String sortField, String id) {
         this.sortField = sortField;
         this.id = id;
     }
@@ -188,6 +191,17 @@ implements ContactInterface {
         this.attrs.add(attr);
     }
 
+    public void setContactGroupMembers(Iterable <ContactGroupMember> contactGroupMembers) {
+        this.contactGroupMembers.clear();
+        if (contactGroupMembers != null) {
+            Iterables.addAll(this.contactGroupMembers,contactGroupMembers);
+        }
+    }
+
+    public void addContactGroupMember(ContactGroupMember contactGroupMember) {
+        this.contactGroupMembers.add(contactGroupMember);
+    }
+
     @Override
     public String getSortField() { return sortField; }
     @Override
@@ -231,6 +245,10 @@ implements ContactInterface {
     @Override
     public List<ContactAttr> getAttrs() {
         return attrs;
+    }
+
+    public List<ContactGroupMember> getContactGroupMembers() {
+        return Collections.unmodifiableList(contactGroupMembers);
     }
 
     // non-JAXB method
@@ -292,12 +310,28 @@ implements ContactInterface {
             .add("dlist", dlist)
             .add("reference", reference)
             .add("metadatas", metadatas)
-            .add("attrs", attrs);
+            .add("attrs", attrs)
+            .add("contactGroupMembers", contactGroupMembers);
     }
 
     @Override
     public String toString() {
         return addToStringInfo(Objects.toStringHelper(this))
                 .toString();
+    }
+
+    @Override
+    public void setContactGroupMemberInterfaces(Iterable<ContactGroupMemberInterface> contactGroupMembers) {
+        this.setContactGroupMembers(ContactGroupMember.fromInterfaces(contactGroupMembers));
+    }
+
+    @Override
+    public void addContactGroupMember(ContactGroupMemberInterface contactGroupMember) {
+        this.addContactGroupMember((ContactGroupMember) contactGroupMember);
+    }
+
+    @Override
+    public List<ContactGroupMemberInterface> getContactGroupMemberInterfaces() {
+        return ContactGroupMember.toInterfaces(contactGroupMembers);
     }
 }

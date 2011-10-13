@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -26,12 +26,10 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {"vcard", "attrs"})
+@XmlAccessorType(XmlAccessType.NONE)
 public class ContactSpec {
 
     // Used when modifying a contact
@@ -49,11 +47,14 @@ public class ContactSpec {
     private String tagNames;
 
     // Either a vcard or attributes can be specified but not both.
-    @XmlElement(name=MailConstants.E_VCARD, required=false)
+    @XmlElement(name=MailConstants.E_VCARD /* vcard */, required=false)
     private VCardInfo vcard;
 
-    @XmlElement(name=MailConstants.E_ATTRIBUTE, required=false)
+    @XmlElement(name=MailConstants.E_ATTRIBUTE /* a */, required=false)
     private List<NewContactAttr> attrs = Lists.newArrayList();
+
+    @XmlElement(name=MailConstants.E_CONTACT_GROUP_MEMBER /* m */, required=false)
+    private List<ContactGroupMember> contactGroupMembers = Lists.newArrayList();
 
     public ContactSpec() {
     }
@@ -76,6 +77,17 @@ public class ContactSpec {
         return this;
     }
 
+    public void setContactGroupMembers(Iterable <ContactGroupMember> contactGroupMembers) {
+        this.contactGroupMembers.clear();
+        if (contactGroupMembers != null) {
+            Iterables.addAll(this.contactGroupMembers,contactGroupMembers);
+        }
+    }
+
+    public void addContactGroupMember(ContactGroupMember contactGroupMember) {
+        this.contactGroupMembers.add(contactGroupMember);
+    }
+
     public Integer getId() { return id; }
     public String getFolder() { return folder; }
     @Deprecated
@@ -84,6 +96,10 @@ public class ContactSpec {
     public VCardInfo getVcard() { return vcard; }
     public List<NewContactAttr> getAttrs() {
         return Collections.unmodifiableList(attrs);
+    }
+
+    public List<ContactGroupMember> getContactGroupMembers() {
+        return contactGroupMembers;
     }
 
     @Override

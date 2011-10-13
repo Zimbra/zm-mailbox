@@ -26,18 +26,20 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.CommentInfo;
+import com.zimbra.soap.mail.type.IdEmailName;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_COMMENTS_RESPONSE)
-@XmlType(propOrder = {})
 public class GetCommentsResponse {
 
     @XmlElement(name=MailConstants.E_COMMENT /* comment */, required=false)
     private List<CommentInfo> comments = Lists.newArrayList();
+
+    @XmlElement(name=MailConstants.A_USER /* user */, required=false)
+    private List<IdEmailName> users = Lists.newArrayList();
 
     public GetCommentsResponse() {
     }
@@ -49,19 +51,33 @@ public class GetCommentsResponse {
         }
     }
 
-    public GetCommentsResponse addComment(CommentInfo comment) {
+    public void addComment(CommentInfo comment) {
         this.comments.add(comment);
-        return this;
+    }
+
+    public void setUsers(Iterable <IdEmailName> users) {
+        this.users.clear();
+        if (users != null) {
+            Iterables.addAll(this.users,users);
+        }
+    }
+
+    public void addUser(IdEmailName user) {
+        this.users.add(user);
     }
 
     public List<CommentInfo> getComments() {
-        return Collections.unmodifiableList(comments);
+        return comments;
+    }
+    public List<IdEmailName> getUsers() {
+        return users;
     }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("comments", comments);
+            .add("comments", comments)
+            .add("users", users);
     }
 
     @Override

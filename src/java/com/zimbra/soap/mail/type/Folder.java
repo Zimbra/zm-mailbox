@@ -92,89 +92,74 @@ public class Folder {
         }
     };
 
-    @XmlAttribute(name=MailConstants.A_ID, required=true)
+    @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private String id;
 
-    @XmlAttribute(name=MailConstants.A_NAME, required=false)
+    @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
     private String name;
 
-    // MailConstants.A_FOLDER == "l"
-    @XmlAttribute(name=MailConstants.A_FOLDER, required=false)
+    @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String parentId;
 
-    // MailConstants.A_FLAGS == "f"
-    @XmlAttribute(name=MailConstants.A_FLAGS, required=false)
+    @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
-    @XmlAttribute(name=MailConstants.A_COLOR, required=false)
+    @XmlAttribute(name=MailConstants.A_COLOR /* color */, required=false)
     private Integer color;
 
-    @XmlAttribute(name=MailConstants.A_RGB, required=false)
+    @XmlAttribute(name=MailConstants.A_RGB /* rgb */, required=false)
     private String rgb;
 
-    // MailConstants.A_UNREAD == "u"
-    @XmlAttribute(name=MailConstants.A_UNREAD, required=false)
+    @XmlAttribute(name=MailConstants.A_UNREAD /* u */, required=false)
     private Integer unreadCount;
 
-    // MailConstants.A_IMAP_UNREAD == "i4u"
-    @XmlAttribute(name=MailConstants.A_IMAP_UNREAD, required=false)
+    @XmlAttribute(name=MailConstants.A_IMAP_UNREAD /* i4u */, required=false)
     private Integer imapUnreadCount;
 
-    // MailConstants.A_DEFAULT_VIEW == "view"
-    @XmlAttribute(name=MailConstants.A_DEFAULT_VIEW, required=false)
+    @XmlAttribute(name=MailConstants.A_DEFAULT_VIEW /* view */, required=false)
     private View view = View.UNKNOWN;
 
-    // MailConstants.A_REVISION == "rev"
-    @XmlAttribute(name=MailConstants.A_REVISION, required=false)
+    @XmlAttribute(name=MailConstants.A_REVISION /* rev */, required=false)
     private Integer revision;
 
-    // MailConstants.A_MODIFIED_SEQUENCE == "ms"
-    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE, required=false)
+    @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */, required=false)
     private Integer modifiedSequence;
 
-    // MailConstants.A_CHANGE_DATE == "md"
-    @XmlAttribute(name=MailConstants.A_CHANGE_DATE, required=false)
+    @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=false)
     private Long changeDate;
 
-    // MailConstants.A_NUM == "n"
-    @XmlAttribute(name=MailConstants.A_NUM, required=false)
+    @XmlAttribute(name=MailConstants.A_NUM /* n */, required=false)
     private Integer itemCount;
 
-    // MailConstants.A_IMAP_NUM == "i4n"
-    @XmlAttribute(name=MailConstants.A_IMAP_NUM, required=false)
+    @XmlAttribute(name=MailConstants.A_IMAP_NUM /* i4n */, required=false)
     private Integer imapItemCount;
 
-    // MailConstants.A_SIZE == "s"
-    @XmlAttribute(name=MailConstants.A_SIZE, required=false)
+    @XmlAttribute(name=MailConstants.A_SIZE /* s */, required=false)
     private Long totalSize;
 
-    // MailConstants.A_IMAP_MODSEQ == "i4ms"
-    @XmlAttribute(name=MailConstants.A_IMAP_MODSEQ, required=false)
+    @XmlAttribute(name=MailConstants.A_IMAP_MODSEQ /* i4ms */, required=false)
     private Integer imapModifiedSequence;
 
-    // MailConstants.A_IMAP_UIDNEXT == "i4next"
-    @XmlAttribute(name=MailConstants.A_IMAP_UIDNEXT, required=false)
+    @XmlAttribute(name=MailConstants.A_IMAP_UIDNEXT /* i4next */, required=false)
     private Integer imapUidNext;
 
-    // MailConstants.A_URL == "url"
-    @XmlAttribute(name=MailConstants.A_URL, required=false)
+    @XmlAttribute(name=MailConstants.A_URL /* url */, required=false)
     private String url;
 
-    // MailConstants.A_RIGHTS == "perm"
-    @XmlAttribute(name=MailConstants.A_RIGHTS, required=false)
+    @XmlAttribute(name=MailConstants.A_RIGHTS /* perm */, required=false)
     private String perm;
 
-    // MailConstants.A_REST_URL == "rest"
-    @XmlAttribute(name=MailConstants.A_REST_URL, required=false)
+    @XmlAttribute(name=MailConstants.A_RECURSIVE /* recursive */, required=false)
+    private Boolean recursive;
+
+    @XmlAttribute(name=MailConstants.A_REST_URL /* rest */, required=false)
     private String restUrl;
 
-    @XmlElement(name=MailConstants.E_METADATA, required=false)
+    @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private List<MailCustomMetadata> metadatas = Lists.newArrayList();
 
-    // MailConstants.E_ACL == "acl"
-    @XmlElementWrapper(name=MailConstants.E_ACL, required=false)
-    // MailConstants.E_GRANT == "grant"
-    @XmlElement(name=MailConstants.E_GRANT, required=false)
+    @XmlElementWrapper(name=MailConstants.E_ACL /* acl */, required=false)
+    @XmlElement(name=MailConstants.E_GRANT /* grant */, required=false)
     private List<Grant> grants = new ArrayList<Grant>();
 
     @XmlElements({
@@ -184,53 +169,24 @@ public class Folder {
     })
     private List<Folder> subfolders = new ArrayList<Folder>();
     
-    @XmlElement(name=MailConstants.E_RETENTION_POLICY, required=false)
+    @XmlElement(name=MailConstants.E_RETENTION_POLICY /* retentionPolicy */, required=false)
     private RetentionPolicy retentionPolicy;
 
     public Folder() {
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getParentId() {
-        return parentId;
-    }
-
-    public String getFlags() {
-        return flags;
-    }
-
-    public Integer getColor() {
-        return color;
-    }
-
+    public String getId() { return id; }
+    public String getName() { return name; }
+    public String getParentId() { return parentId; }
+    public String getFlags() { return flags; }
+    public Integer getColor() { return color; }
     public String getRgb() { return rgb; }
-
-    public Integer getUnreadCount() {
-        return unreadCount;
-    }
-
-    public Integer getImapUnreadCount() {
-        return imapUnreadCount;
-    }
-
-    public Integer getItemCount() {
-        return itemCount;
-    }
-
-    public Integer getImapItemCount() {
-        return imapItemCount;
-    }
-
-    public Long getTotalSize() {
-        return totalSize;
-    }
+    public Integer getUnreadCount() { return unreadCount; }
+    public Integer getImapUnreadCount() { return imapUnreadCount; }
+    public Integer getItemCount() { return itemCount; }
+    public Long getChangeDate() { return changeDate; }
+    public Integer getImapItemCount() { return imapItemCount; }
+    public Long getTotalSize() { return totalSize; }
 
     /**
      * Returns the {@code View}, or {@link View#UNKNOWN} if not specified.
@@ -239,21 +195,13 @@ public class Folder {
         return (view == null ? View.UNKNOWN : view);
     }
 
-    public String getUrl() {
-        return url;
-    }
-
-    public String getPerm() {
-        return perm;
-    }
-
+    public String getUrl() { return url; }
+    public String getPerm() { return perm; }
     public List<Folder> getSubfolders() {
         return Collections.unmodifiableList(subfolders);
     }
 
-    public String getRestUrl() {
-        return restUrl;
-    }
+    public String getRestUrl() { return restUrl; }
 
     public List<MailCustomMetadata> getMetadatas() {
         return Collections.unmodifiableList(metadatas);
@@ -263,87 +211,31 @@ public class Folder {
         return Collections.unmodifiableList(grants);
     }
 
-    public Integer getModifiedSequence() {
-        return modifiedSequence;
-    }
-
-    public Integer getRevision() {
-        return revision;
-    }
-
-    public Integer getImapUidNext() {
-        return imapUidNext;
-    }
-
-    public Integer getImapModifiedSequence() {
-        return imapModifiedSequence;
-    }
+    public Integer getModifiedSequence() { return modifiedSequence; }
+    public Integer getRevision() { return revision; }
+    public Integer getImapUidNext() { return imapUidNext; }
+    public Integer getImapModifiedSequence() { return imapModifiedSequence; }
+    public RetentionPolicy getRetentionPolicy() { return retentionPolicy; }
+    public Boolean getRecursive() { return recursive; }
     
-    public RetentionPolicy getRetentionPolicy() {
-        return retentionPolicy;
-    }
+    public void setId(String id) { this.id = id; }
+    public void setId(int id) { this.id = Integer.toString(id); }
+    public void setName(String name) { this.name = name; }
+    public void setParentId(String parentId) { this.parentId = parentId; }
+    public void setFlags(String flags) { this.flags = flags; }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public void setId(int id) {
-        this.id = Integer.toString(id);
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setParentId(String parentId) {
-        this.parentId = parentId;
-    }
-
-    public void setFlags(String flags) {
-        this.flags = flags;
-    }
-
-    public void setColor(Integer color) {
-        this.color = color;
-    }
-
+    public void setColor(Integer color) { this.color = color; }
     public void setRgb(String rgb) { this.rgb = rgb; }
-
-    public void setUnreadCount(Integer unreadCount) {
-        this.unreadCount = unreadCount;
-    }
-
-    public void setImapUnreadCount(Integer imapUnreadCount) {
-        this.imapUnreadCount = imapUnreadCount;
-    }
-
-    public void setItemCount(Integer itemCount) {
-        this.itemCount = itemCount;
-    }
-
-    public void setImapItemCount(Integer imapItemCount) {
-        this.imapItemCount = imapItemCount;
-    }
-
-    public void setTotalSize(Long totalSize) {
-        this.totalSize = totalSize;
-    }
-
-    public void setView(View view) {
-        this.view = view;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    public void setPerm(String perm) {
-        this.perm = perm;
-    }
-
-    public void setRestUrl(String restUrl) {
-        this.restUrl = restUrl;
-    }
+    public void setUnreadCount(Integer unreadCount) { this.unreadCount = unreadCount; }
+    public void setImapUnreadCount(Integer imapUnreadCount) { this.imapUnreadCount = imapUnreadCount; }
+    public void setItemCount(Integer itemCount) { this.itemCount = itemCount; }
+    public void setChangeDate(Long changeDate) { this.changeDate = changeDate; }
+    public void setImapItemCount(Integer imapItemCount) { this.imapItemCount = imapItemCount; }
+    public void setTotalSize(Long totalSize) { this.totalSize = totalSize; }
+    public void setView(View view) { this.view = view; }
+    public void setUrl(String url) { this.url = url; }
+    public void setPerm(String perm) { this.perm = perm; }
+    public void setRestUrl(String restUrl) { this.restUrl = restUrl; }
 
     public void setSubfolders(Collection<Folder> folders) {
         subfolders.clear();
@@ -386,4 +278,6 @@ public class Folder {
     public void setImapModifiedSequence(Integer imapModifiedSequence) {
         this.imapModifiedSequence = imapModifiedSequence;
     }
+
+    public void setRecursive(Boolean recursive) { this.recursive = recursive; }
 }

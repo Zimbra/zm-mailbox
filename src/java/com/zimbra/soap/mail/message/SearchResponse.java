@@ -56,8 +56,7 @@ public class SearchResponse {
     @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
     private String sortBy;
 
-    @XmlAttribute(name=MailConstants.A_QUERY_OFFSET /* offset */,
-                                        required=false)
+    @XmlAttribute(name=MailConstants.A_QUERY_OFFSET /* offset */, required=false)
     private Integer queryOffset;
 
     @XmlAttribute(name=MailConstants.A_QUERY_MORE /* more */, required=false)
@@ -67,37 +66,24 @@ public class SearchResponse {
     private Long totalSize;
 
     @XmlElements({
-        @XmlElement(name="hit",
-            type=SimpleSearchHit.class),
-        @XmlElement(name=MailConstants.E_CONV /* c */,
-            type=ConversationHitInfo.class),
-        @XmlElement(name=MailConstants.E_MSG /* m */,
-            type=MessageHitInfo.class),
-        @XmlElement(name=MailConstants.E_CHAT /* chat */,
-            type=ChatHitInfo.class),
-        @XmlElement(name=MailConstants.E_MIMEPART /* mp */,
-            type=MessagePartHitInfo.class),
-        @XmlElement(name=MailConstants.E_CONTACT /* cn */,
-            type=ContactInfo.class),
-        @XmlElement(name=MailConstants.E_NOTE /* note */,
-            type=NoteHitInfo.class),
-        @XmlElement(name=MailConstants.E_DOC /* doc */,
-            type=DocumentHitInfo.class),
-        @XmlElement(name=MailConstants.E_WIKIWORD /* w */,
-            type=WikiHitInfo.class),
-        @XmlElement(name=MailConstants.E_APPOINTMENT /* appt */,
-            type=AppointmentHitInfo.class),
-        @XmlElement(name=MailConstants.E_TASK /* task */,
-            type=TaskHitInfo.class)
+        @XmlElement(name="hit", type=SimpleSearchHit.class),
+        @XmlElement(name=MailConstants.E_CONV /* c */, type=ConversationHitInfo.class),
+        @XmlElement(name=MailConstants.E_MSG /* m */, type=MessageHitInfo.class),
+        @XmlElement(name=MailConstants.E_CHAT /* chat */, type=ChatHitInfo.class),
+        @XmlElement(name=MailConstants.E_MIMEPART /* mp */, type=MessagePartHitInfo.class),
+        @XmlElement(name=MailConstants.E_CONTACT /* cn */, type=ContactInfo.class),
+        @XmlElement(name=MailConstants.E_NOTE /* note */, type=NoteHitInfo.class),
+        @XmlElement(name=MailConstants.E_DOC /* doc */, type=DocumentHitInfo.class),
+        @XmlElement(name=MailConstants.E_WIKIWORD /* w */, type=WikiHitInfo.class),
+        @XmlElement(name=MailConstants.E_APPOINTMENT /* appt */, type=AppointmentHitInfo.class),
+        @XmlElement(name=MailConstants.E_TASK /* task */, type=TaskHitInfo.class)
     })
     private List<SearchHit> searchHits = Lists.newArrayList();
 
     @XmlElementWrapper(name=MailConstants.E_INFO /* info */, required=false)
     @XmlElements({
-        @XmlElement(name="spell",
-            type=SpellingSuggestionsQueryInfo.class),
-        @XmlElement(name="wildcard",
-            type=WildcardExpansionQueryInfo.class)
+        @XmlElement(name=MailConstants.E_SUGEST, type=SpellingSuggestionsQueryInfo.class),
+        @XmlElement(name="wildcard", type=WildcardExpansionQueryInfo.class)
     })
     private List<BaseQueryInfo> queryInfos = Lists.newArrayList();
 

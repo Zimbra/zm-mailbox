@@ -26,14 +26,13 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.AttributeName;
 import com.zimbra.soap.type.Id;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_CONTACTS_REQUEST)
 public class GetContactsRequest {
 
@@ -43,27 +42,24 @@ public class GetContactsRequest {
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folderId;
 
-    // Valid values are case insensitive "names" from enum:
-    //     com.zimbra.cs.index.SortBy
+    // Valid values are case insensitive "names" from enum com.zimbra.cs.index.SortBy
     @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
     private String sortBy;
-    
+
     @XmlAttribute(name=MailConstants.A_DEREF_CONTACT_GROUP_MEMBER /* derefGroupMember */, required=false)
     private Boolean derefGroupMember;
-    
+
     @XmlAttribute(name=MailConstants.A_RETURN_HIDDEN_ATTRS /* returnHiddenAttrs */, required=false)
     private Boolean returnHiddenAttrs;
 
-    // TODO:need methods to get/set lists of attribs and contacts
-    // The Server side handler copes with mixed order of attibutes and contacts
+    @XmlElement(name=MailConstants.E_ATTRIBUTE /* a */, required=false)
+    private List<AttributeName> attributes = Lists.newArrayList();
 
-    @XmlElements({
-        @XmlElement(name=MailConstants.E_ATTRIBUTE /* a */,
-            type=AttributeName.class),
-        @XmlElement(name=MailConstants.E_CONTACT /* cn */,
-            type=Id.class)
-    })
-    private List<Object> elements = Lists.newArrayList();
+    @XmlElement(name=MailConstants.E_CONTACT_GROUP_MEMBER_ATTRIBUTE /* ma */, required=false)
+    private List<AttributeName> memberAttributes = Lists.newArrayList();
+
+    @XmlElement(name=MailConstants.E_CONTACT /* cn */, required=false)
+    private List<Id> contacts = Lists.newArrayList();
 
     public GetContactsRequest() {
     }
@@ -73,16 +69,37 @@ public class GetContactsRequest {
     public void setSortBy(String sortBy) { this.sortBy = sortBy; }
     public void setDerefGroupMember(Boolean derefGroupMember) { this.derefGroupMember = derefGroupMember; }
     public void setReturnHiddenAttrs(Boolean returnHiddenAttrs) { this.returnHiddenAttrs = returnHiddenAttrs; }
-    public void setElements(Iterable <Object> elements) {
-        this.elements.clear();
-        if (elements != null) {
-            Iterables.addAll(this.elements,elements);
+    public void setAttributes(Iterable <AttributeName> attributes) {
+        this.attributes.clear();
+        if (attributes != null) {
+            Iterables.addAll(this.attributes,attributes);
         }
     }
 
-    public GetContactsRequest addElement(Object element) {
-        this.elements.add(element);
-        return this;
+    public void addAttribute(AttributeName attribute) {
+        this.attributes.add(attribute);
+    }
+
+    public void setMemberAttributes(Iterable <AttributeName> memberAttributes) {
+        this.memberAttributes.clear();
+        if (memberAttributes != null) {
+            Iterables.addAll(this.memberAttributes,memberAttributes);
+        }
+    }
+
+    public void addMemberAttribute(AttributeName memberAttribute) {
+        this.memberAttributes.add(memberAttribute);
+    }
+
+    public void setContacts(Iterable <Id> contacts) {
+        this.contacts.clear();
+        if (contacts != null) {
+            Iterables.addAll(this.contacts,contacts);
+        }
+    }
+
+    public void addContact(Id contact) {
+        this.contacts.add(contact);
     }
 
     public Boolean getSync() { return sync; }
@@ -90,8 +107,14 @@ public class GetContactsRequest {
     public String getSortBy() { return sortBy; }
     public Boolean getDerefGroupMember() { return derefGroupMember; }
     public Boolean getReturnHiddenAttrs() { return returnHiddenAttrs; }
-    public List<Object> getElements() {
-        return Collections.unmodifiableList(elements);
+    public List<AttributeName> getAttributes() {
+        return Collections.unmodifiableList(attributes);
+    }
+    public List<AttributeName> getMemberAttributes() {
+        return Collections.unmodifiableList(memberAttributes);
+    }
+    public List<Id> getContacts() {
+        return Collections.unmodifiableList(contacts);
     }
 
     public Objects.ToStringHelper addToStringInfo(
@@ -100,7 +123,9 @@ public class GetContactsRequest {
             .add("sync", sync)
             .add("folderId", folderId)
             .add("sortBy", sortBy)
-            .add("elements", elements);
+            .add("attributes", getAttributes())
+            .add("memberAttributes", getMemberAttributes())
+            .add("contacts", getContacts());
     }
 
     @Override

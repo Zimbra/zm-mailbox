@@ -17,6 +17,7 @@ package com.zimbra.soap.mail.message;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
@@ -24,5 +25,10 @@ import com.zimbra.soap.mail.type.MailSearchParams;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_SEARCH_REQUEST)
-public class SearchRequest extends MailSearchParams {
+public final class SearchRequest extends MailSearchParams {
+    @XmlAttribute(name=MailConstants.A_WARMUP /* warmup */, required=false)
+    private Boolean warmup;
+
+    public void setWarmup(Boolean warmup) { this.warmup = warmup; }
+    public Boolean getWarmup() { return warmup; }
 }

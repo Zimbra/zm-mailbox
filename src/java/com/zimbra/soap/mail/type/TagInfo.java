@@ -26,12 +26,10 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 
 @XmlAccessorType(XmlAccessType.NONE)
-@XmlType(propOrder = {})
 public class TagInfo {
 
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
@@ -67,6 +65,9 @@ public class TagInfo {
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private List<MailCustomMetadata> metadatas = Lists.newArrayList();
 
+    @XmlElement(name=MailConstants.E_RETENTION_POLICY /* retentionPolicy */, required=false)
+    private RetentionPolicy retentionPolicy;
+
     /**
      * no-argument constructor wanted by JAXB
      */
@@ -99,6 +100,7 @@ public class TagInfo {
         this.metadatas.add(metadata);
     }
 
+    public void setRetentionPolicy(RetentionPolicy retentionPolicy) { this.retentionPolicy = retentionPolicy; }
     public String getId() { return id; }
     public String getName() { return name; }
     public Byte getColor() { return color; }
@@ -112,6 +114,7 @@ public class TagInfo {
     public List<MailCustomMetadata> getMetadatas() {
         return Collections.unmodifiableList(metadatas);
     }
+    public RetentionPolicy getRetentionPolicy() { return retentionPolicy; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
@@ -126,7 +129,8 @@ public class TagInfo {
             .add("revision", revision)
             .add("changeDate", changeDate)
             .add("modifiedSequence", modifiedSequence)
-            .add("metadatas", metadatas);
+            .add("metadatas", metadatas)
+            .add("retentionPolicy", retentionPolicy);
     }
 
     @Override
