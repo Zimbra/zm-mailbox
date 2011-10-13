@@ -62,6 +62,7 @@ import com.zimbra.cs.service.mail.ItemActionHelper;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.tcpserver.ProtocolHandler;
 import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.cs.util.Config;
 import com.zimbra.cs.zclient.ZFolder;
 import com.zimbra.cs.zclient.ZGrant;
 import com.zimbra.cs.zclient.ZMailbox;
@@ -252,6 +253,10 @@ abstract class ImapHandler extends ProtocolHandler {
     }
 
     boolean checkAccountStatus() {
+        if (!Config.userServicesEnabled()) {
+            ZimbraLog.imap.warn("user services are disabled; dropping connection");
+            return false;
+        }
         // check authenticated user's account status before executing command
         if (mCredentials == null)
             return CONTINUE_PROCESSING;
