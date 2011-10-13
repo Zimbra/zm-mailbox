@@ -20,11 +20,10 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.SystemUtil;
-import com.zimbra.client.ZMailbox.SearchSortBy;
 import com.zimbra.client.event.ZModifyEvent;
 import com.zimbra.client.event.ZModifySearchFolderEvent;
 import com.zimbra.soap.mail.type.SearchFolder;
-import com.zimbra.soap.type.SrchSortBy;
+import com.zimbra.soap.type.SearchSortBy;
 
 import org.json.JSONException;
 
@@ -50,7 +49,7 @@ public final class ZSearchFolder extends ZFolder {
         query = f.getQuery();
         types = Joiner.on(',').join(f.getTypes());
         try {
-            sortBy = SearchSortBy.fromString(SystemUtil.coalesce(f.getSortBy(), SrchSortBy.dateDesc).toString());
+            sortBy = SearchSortBy.fromString(SystemUtil.coalesce(f.getSortBy(), SearchSortBy.dateDesc).toString());
         } catch (ServiceException se) {
             sortBy = SearchSortBy.dateDesc;
         }

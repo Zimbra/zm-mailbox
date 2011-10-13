@@ -126,6 +126,7 @@ import com.zimbra.soap.type.DataSource;
 import com.zimbra.soap.type.ImapDataSource;
 import com.zimbra.soap.type.Pop3DataSource;
 import com.zimbra.soap.type.RssDataSource;
+import com.zimbra.soap.type.SearchSortBy;
 
 public class ZMailbox implements ToZJSONObject {
     public final static int MAX_NUM_CACHED_SEARCH_PAGERS = 5;
@@ -141,19 +142,6 @@ public class ZMailbox implements ToZJSONObject {
 
     static {
         SocketFactories.registerProtocols();
-    }
-
-    public enum SearchSortBy {
-        dateDesc, dateAsc, subjDesc, subjAsc, nameDesc, nameAsc, durDesc, durAsc, none,
-        taskDueAsc, taskDueDesc, taskStatusAsc, taskStatusDesc, taskPercCompletedAsc, taskPercCompletedDesc;
-
-        public static SearchSortBy fromString(String s) throws ServiceException {
-            try {
-                return SearchSortBy.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ZClientException.CLIENT_ERROR("invalid sortBy: "+s+", valid values: "+Arrays.asList(SearchSortBy.values()), e);
-            }
-        }
     }
 
     public enum Fetch {

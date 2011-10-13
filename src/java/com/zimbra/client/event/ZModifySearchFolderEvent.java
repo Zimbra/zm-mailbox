@@ -20,7 +20,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.client.ToZJSONObject;
 import com.zimbra.client.ZJSONObject;
-import com.zimbra.client.ZMailbox.SearchSortBy;
+import com.zimbra.soap.type.SearchSortBy;
 import org.json.JSONException;
 
 public class ZModifySearchFolderEvent extends ZModifyFolderEvent implements ToZJSONObject {
@@ -59,6 +59,7 @@ public class ZModifySearchFolderEvent extends ZModifyFolderEvent implements ToZJ
         }
     }
     
+    @Override
     public ZJSONObject toZJSONObject() throws JSONException {
         ZJSONObject zjo = super.toZJSONObject();
         if (getQuery(null) != null) zjo.put("query", getQuery(null));
