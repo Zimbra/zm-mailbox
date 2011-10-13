@@ -284,6 +284,10 @@ abstract class ImapHandler {
     }
 
     boolean checkAccountStatus() {
+        if (!config.isServiceEnabled()) {
+            ZimbraLog.imap.warn("user services are disabled; dropping connection");
+            return false;
+        }
         // check authenticated user's account status before executing command
         if (credentials == null) {
             return true;
