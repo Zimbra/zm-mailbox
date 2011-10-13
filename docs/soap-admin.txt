@@ -2400,7 +2400,6 @@ Access: domain admin sufficient
 </AddGalSyncDataSourceRequest>
 
 <AddGalSyncDataSourceResponse>
-  <name>...</name>
   <account name="{name}" id="{id}"/>
 </AddGalSyncDataSourceResponse>
 
@@ -2503,7 +2502,7 @@ If neither is specified, all attributes will be returned.
 
 
 <GetAttributeInfoResponse>
-    <a name="..." desc="..."/>+
+    <a n="..." desc="..."/>+
 </GetAttributeInfoResponse>
 
 ----------------------------

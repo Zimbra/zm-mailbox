@@ -830,9 +830,9 @@ public class SoapProvisioning extends Provisioning {
         if (server == null) {
             server = getServer(account).getName();
         }
-        LoggerInfo logger = new LoggerInfo(category, level);
+        LoggerInfo logger = LoggerInfo.createForCategoryAndLevel(category, level);
         AddAccountLoggerResponse resp =
-                invokeJaxb(new AddAccountLoggerRequest(
+                invokeJaxb(AddAccountLoggerRequest.createForAccountAndLogger(
                         getSelector(account), logger), server);
         return accountLoggersFromLoggerInfos(resp.getLoggers(),
                 account.getName());
@@ -907,7 +907,7 @@ public class SoapProvisioning extends Provisioning {
         }
         LoggerInfo logger = null;
         if (category != null)
-            logger = new LoggerInfo(category, null);
+            logger = LoggerInfo.createForCategoryAndLevel(category, null);
         invokeJaxb(new RemoveAccountLoggerRequest(
                 getSelector(account), logger), server);
     }

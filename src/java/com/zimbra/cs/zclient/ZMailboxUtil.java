@@ -63,7 +63,6 @@ import com.zimbra.client.ZGrant.GranteeType;
 import com.zimbra.client.ZMailbox.Fetch;
 import com.zimbra.client.ZMailbox.GalEntryType;
 import com.zimbra.client.ZMailbox.OwnerBy;
-import com.zimbra.client.ZMailbox.SearchSortBy;
 import com.zimbra.client.ZMailbox.SharedItemBy;
 import com.zimbra.client.ZMailbox.ZApptSummaryResult;
 import com.zimbra.client.ZMailbox.ZSearchGalResult;
@@ -101,6 +100,7 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning.DelegateAuthResponse;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
+import com.zimbra.soap.type.SearchSortBy;
 
 /**
  * @author schemers
