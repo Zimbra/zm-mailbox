@@ -23,6 +23,8 @@ import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
 import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
@@ -30,7 +32,6 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
-import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
@@ -48,6 +49,7 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringEscapeUtils;
+import org.dom4j.QName;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
@@ -648,6 +650,17 @@ public class ShareInfo {
             final String URI = "urn:zimbraShare";
             final String VERSION = "0.1";
 
+            Element share = null;
+            try {
+                share = Element.create(SoapProtocol.Soap12, QName.get("share", URI)).addAttribute("version", VERSION).addAttribute("action", "new");
+                share.addElement("grantee").addAttribute("id", sid.getGranteeId()).addAttribute("email", sid.getGranteeName()).addAttribute("name", sid.getGranteeNotifName());
+                share.addElement("grantor").addAttribute("id", sid.getOwnerAcctId()).addAttribute("email", sid.getOwnerAcctEmail()).addAttribute("name", sid.getOwnerNotifName());
+                share.addElement("link").addAttribute("id", sid.getItemId()).addAttribute("name", sid.getName()).addAttribute("view", sid.getFolderDefaultView()).addAttribute("perm", ACL.rightsToString(sid.getRightsCode()));
+                return share.prettyPrint();
+            } catch (ServiceException se) {
+                // fall back to hand built xml part
+            }
+            
             // make xml friendly
             String notes = StringEscapeUtils.escapeXml(senderNotes);
             

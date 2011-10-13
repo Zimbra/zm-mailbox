@@ -21,6 +21,7 @@ package com.zimbra.cs.service.mail;
 import com.google.common.collect.ImmutableSet;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -293,6 +294,10 @@ public class FolderAction extends ItemAction {
     }
 
     public static NamedEntry lookupEmailAddress(String name) throws ServiceException {
+        if (name.indexOf('<') > 0) {
+            InternetAddress addr = new InternetAddress(name);
+            name = addr.getAddress();
+        }
         Provisioning prov = Provisioning.getInstance();
         NamedEntry nentry = prov.get(AccountBy.name, name);
         if (nentry == null) {
