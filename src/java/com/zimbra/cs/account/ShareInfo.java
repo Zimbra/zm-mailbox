@@ -24,6 +24,7 @@ import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
 import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.MailConstants.ShareConstants;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.BlobMetaData;
 import com.zimbra.common.util.L10nUtil;
@@ -48,8 +49,6 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.lang.StringEscapeUtils;
-import org.dom4j.QName;
 
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
@@ -635,41 +634,14 @@ public class ShareInfo {
                     toString();
         }
 
-        private static String genXmlPart(ShareInfoData sid, String senderNotes, StringBuilder sb) {
+        private static String genXmlPart(ShareInfoData sid, String senderNotes, StringBuilder sb) throws ServiceException {
             if (sb == null)
                 sb = new StringBuilder();
-            /*
-             * from ZimbraWebClient/WebRoot/js/zimbraMail/share/model/ZmShare.js
-
-               ZmShare.URI = "urn:zimbraShare";
-               ZmShare.VERSION = "0.1";
-               ZmShare.NEW     = "new";
-            */
-            final String URI = "urn:zimbraShare";
-            final String VERSION = "0.1";
-
-            Element share = null;
-            try {
-                share = Element.create(SoapProtocol.Soap12, QName.get("share", URI)).addAttribute("version", VERSION).addAttribute("action", "new");
-                share.addElement("grantee").addAttribute("id", sid.getGranteeId()).addAttribute("email", sid.getGranteeName()).addAttribute("name", sid.getGranteeNotifName());
-                share.addElement("grantor").addAttribute("id", sid.getOwnerAcctId()).addAttribute("email", sid.getOwnerAcctEmail()).addAttribute("name", sid.getOwnerNotifName());
-                share.addElement("link").addAttribute("id", sid.getItemId()).addAttribute("name", sid.getName()).addAttribute("view", sid.getFolderDefaultView()).addAttribute("perm", ACL.rightsToString(sid.getRightsCode()));
-                return share.prettyPrint();
-            } catch (ServiceException se) {
-                // fall back to hand built xml part
-            }
-            
-            // make xml friendly
-            String notes = StringEscapeUtils.escapeXml(senderNotes);
-            
-            sb.append("<share xmlns=\"" + URI + "\" version=\"" + VERSION + "\" action=\"new\">\n");
-            sb.append("  <grantee id=\"" + sid.getGranteeId() + "\" email=\"" + sid.getGranteeName() + "\" name=\"" + sid.getGranteeNotifName() +"\"/>\n");
-            sb.append("  <grantor id=\"" + sid.getOwnerAcctId() + "\" email=\"" + sid.getOwnerAcctEmail() + "\" name=\"" + sid.getOwnerNotifName() +"\"/>\n");
-            sb.append("  <link id=\"" + sid.getItemId() + "\" name=\"" + sid.getName() + "\" view=\"" + sid.getFolderDefaultView() + "\" perm=\"" + ACL.rightsToString(sid.getRightsCode()) + "\"/>\n");
-            sb.append("  <notes>" + (notes==null?"":notes) + "</notes>\n");
-            sb.append("</share>\n");
-
-            return sb.toString();
+            Element share = Element.create(SoapProtocol.Soap12, ShareConstants.SHARE).addAttribute(ShareConstants.A_VERSION, ShareConstants.VERSION).addAttribute(ShareConstants.A_ACTION, ShareConstants.ACTION_NEW);
+            share.addElement(ShareConstants.E_GRANTEE).addAttribute(ShareConstants.A_ID, sid.getGranteeId()).addAttribute(ShareConstants.A_EMAIL, sid.getGranteeName()).addAttribute(ShareConstants.A_NAME, sid.getGranteeNotifName());
+            share.addElement(ShareConstants.E_GRANTOR).addAttribute(ShareConstants.A_ID, sid.getOwnerAcctId()).addAttribute(ShareConstants.A_EMAIL, sid.getOwnerAcctEmail()).addAttribute(ShareConstants.A_NAME, sid.getOwnerNotifName());
+            share.addElement(ShareConstants.E_LINK).addAttribute(ShareConstants.A_ID, sid.getItemId()).addAttribute(ShareConstants.A_NAME, sid.getName()).addAttribute(ShareConstants.A_VIEW, sid.getFolderDefaultView()).addAttribute(ShareConstants.A_PERM, ACL.rightsToString(sid.getRightsCode()));
+            return share.prettyPrint();
         }
 
         private static void appendCommaSeparated(StringBuffer sb, String s) {
@@ -785,7 +757,7 @@ public class ShareInfo {
                 return sb.toString();
             }
 
-            private String genXml(Integer idx) {
+            private String genXml(Integer idx) throws ServiceException {
                 StringBuilder sb = new StringBuilder();
 
                  if (idx == null) {
@@ -828,12 +800,15 @@ public class ShareInfo {
             if (visitor.getNumShareInfo() == 0)
                 return;
 
-            try {
-                // send a separate mail to each member being added instead of sending one mail to all members being added
-                for (String member : members)
+            for (String member : members) {
+                try {
+                    // send a separate mail to each member being added instead of sending one mail to all members being added
                     sendMessage(prov, authedAcct, dl, member, visitor);
-            } catch (ServiceException e) {
-                ZimbraLog.account.warn("failed to send share info message", e);
+                } catch (MessagingException e) {
+                    ZimbraLog.account.warn("failed to send share info message", e);
+                } catch (ServiceException e) {
+                    ZimbraLog.account.warn("failed to send share info message", e);
+                }
             }
         }
 
@@ -897,7 +872,7 @@ public class ShareInfo {
         }
 
         private static MimeMultipart buildMailContent(DistributionList dl, MailSenderVisitor visitor, Locale locale, Integer idx)
-            throws MessagingException {
+            throws MessagingException, ServiceException {
 
             String shareInfoText = visitor.genText(dl.getName(), locale, idx);
             String shareInfoHtml = visitor.genHtml(dl.getName(), locale, idx);
@@ -929,7 +904,7 @@ public class ShareInfo {
         }
 
         private static void buildContentAndSend(SMTPMessage out, DistributionList dl, MailSenderVisitor visitor, Locale locale, Integer idx)
-            throws MessagingException {
+            throws MessagingException, ServiceException {
 
             MimeMultipart mmp = buildMailContent(dl, visitor, locale, idx);
             out.setContent(mmp);
@@ -945,46 +920,41 @@ public class ShareInfo {
 
         private static void sendMessage(Provisioning prov,
                                         Account fromAcct, DistributionList dl, String toAddr,
-                                        MailSenderVisitor visitor) throws ServiceException {
-            try {
-                SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
+                                        MailSenderVisitor visitor) throws MessagingException, ServiceException {
+            SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
 
-                Pair<Address, Address> senderAddrs = getFromAndReplyToAddr(fromAcct, dl);
-                Address fromAddr = senderAddrs.getFirst();
-                Address replyToAddr = senderAddrs.getSecond();
+            Pair<Address, Address> senderAddrs = getFromAndReplyToAddr(fromAcct, dl);
+            Address fromAddr = senderAddrs.getFirst();
+            Address replyToAddr = senderAddrs.getSecond();
 
-                // From
-                out.setFrom(fromAddr);
+            // From
+            out.setFrom(fromAddr);
 
-                // Reply-To
-                out.setReplyTo(new Address[]{replyToAddr});
+            // Reply-To
+            out.setReplyTo(new Address[]{replyToAddr});
 
-                // To
-                out.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(toAddr));
+            // To
+            out.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(toAddr));
 
-                // Date
-                out.setSentDate(new Date());
+            // Date
+            out.setSentDate(new Date());
 
-                // Subject
-                Locale locale = getLocale(prov, fromAcct, toAddr);
-                String subject = L10nUtil.getMessage(MsgKey.shareNotifSubject, locale);
-                out.setSubject(subject);
+            // Subject
+            Locale locale = getLocale(prov, fromAcct, toAddr);
+            String subject = L10nUtil.getMessage(MsgKey.shareNotifSubject, locale);
+            out.setSubject(subject);
 
-                if (sendOneMailPerShare()) {
-                    // send a separate message per share
-                    // each message will have text/html/xml parts
-                    int numShareInfo = visitor.getNumShareInfo();
-                    for (int idx = 0; idx < numShareInfo; idx++) {
-                        buildContentAndSend(out, dl, visitor, locale, idx);
-                    }
-                } else {
-                    // send only one message that includes all shares
-                    // the message will have only text/html parts, no xml part
-                    buildContentAndSend(out, dl, visitor, locale, null);
+            if (sendOneMailPerShare()) {
+                // send a separate message per share
+                // each message will have text/html/xml parts
+                int numShareInfo = visitor.getNumShareInfo();
+                for (int idx = 0; idx < numShareInfo; idx++) {
+                    buildContentAndSend(out, dl, visitor, locale, idx);
                 }
-
-            } catch (MessagingException e) {
-                ZimbraLog.account.warn("send share info notification failed rcpt='" + toAddr +"'", e);
+            } else {
+                // send only one message that includes all shares
+                // the message will have only text/html parts, no xml part
+                buildContentAndSend(out, dl, visitor, locale, null);
             }
         }
 
