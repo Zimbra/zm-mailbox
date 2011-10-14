@@ -103,7 +103,7 @@ public class ContactAutoComplete {
         int mRanking;
         long mLastAccessed;
 
-        private String getKey() {
+        protected String getKey() {
             return (mDlist != null ? mDlist : mEmail).toLowerCase();
         }
 
@@ -470,7 +470,15 @@ public class ContactAutoComplete {
         }
         return null;
     }
-    
+
+    /**
+     *  Add contact entry to result
+     *  @see com.zimbra.cs.mailbox.OfflineGalContactAutoComplete
+     */
+    protected void addEntry(ContactEntry entry, AutoCompleteResult result) {
+        result.addEntry(entry);
+    }
+
     public void addMatchedContacts(String query, Map<String,? extends Object> attrs, int folderId, ItemId id, AutoCompleteResult result) {
         if (!result.canBeCached) {
             return;
@@ -524,7 +532,7 @@ public class ContactAutoComplete {
                         // bug 55673, check if the addr is a group
                         resolveGroupInfo(entry, email);
                     }
-                    result.addEntry(entry);
+                    addEntry(entry, result);
                     ZimbraLog.gal.debug("adding " + entry.getEmail());
                     if (folderId == FOLDER_ID_GAL) {
                         // we've matched the first email address for this
