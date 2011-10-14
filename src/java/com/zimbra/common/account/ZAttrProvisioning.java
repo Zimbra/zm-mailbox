@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20111007-1015 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111014-0926 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -986,6 +986,22 @@ public class ZAttrProvisioning {
         }
         public boolean isOutlook() { return this == outlook;}
         public boolean isInternet() { return this == internet;}
+    }
+
+    public static enum PrefOutOfOfficeExternalSenders {
+        ab("ab"),
+        all("all");
+        private String mValue;
+        private PrefOutOfOfficeExternalSenders(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefOutOfOfficeExternalSenders fromString(String s) throws ServiceException {
+            for (PrefOutOfOfficeExternalSenders value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isAb() { return this == ab;}
+        public boolean isAll() { return this == all;}
     }
 
     public static enum PrefPop3DeleteOption {
@@ -6952,6 +6968,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraOpenidConsumerStatelessModeEnabled = "zimbraOpenidConsumerStatelessModeEnabled";
 
     /**
+     * additional domains considered as internal for out of office reply
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public static final String A_zimbraOutOfOfficeInternalSendersDomain = "zimbraOutOfOfficeInternalSendersDomain";
+
+    /**
      * regex of alllowed characters in password
      *
      * @since ZCS 7.1.0
@@ -8403,6 +8427,31 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=387)
     public static final String A_zimbraPrefOutOfOfficeDirectAddress = "zimbraPrefOutOfOfficeDirectAddress";
+
+    /**
+     * out of office message to external senders
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1317)
+    public static final String A_zimbraPrefOutOfOfficeExternalReply = "zimbraPrefOutOfOfficeExternalReply";
+
+    /**
+     * whether or not out of office reply to external senders is enabled
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1318)
+    public static final String A_zimbraPrefOutOfOfficeExternalReplyEnabled = "zimbraPrefOutOfOfficeExternalReplyEnabled";
+
+    /**
+     * defining external senders for out of office reply all - all external
+     * senders ab - external senders in Address Book
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1320)
+    public static final String A_zimbraPrefOutOfOfficeExternalSenders = "zimbraPrefOutOfOfficeExternalSenders";
 
     /**
      * out of office notifications (if enabled) are sent only if current date
