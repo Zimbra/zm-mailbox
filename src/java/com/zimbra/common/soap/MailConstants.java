@@ -19,6 +19,29 @@ import org.dom4j.QName;
 
 public final class MailConstants {
 
+    public static final class ShareConstants {
+        public static final String NAMESPACE_STR = "urn:zimbraShare";
+        public static final String VERSION = "0.1";
+
+        public static final String E_SHARE = "share";
+        public static final String E_GRANTEE = "grantee";
+        public static final String E_GRANTOR = "grantor";
+        public static final String E_LINK = "link";
+
+        public static final String A_VERSION = "version";
+        public static final String A_ACTION = "action";
+        public static final String A_ID = "id";
+        public static final String A_EMAIL = "email";
+        public static final String A_NAME = "name";
+        public static final String A_VIEW = "view";
+        public static final String A_PERM = "perm";
+
+        public static final String ACTION_NEW = "new";
+
+        public static final Namespace NAMESPACE = Namespace.get(NAMESPACE_STR);
+        public static final QName SHARE = QName.get(E_SHARE, NAMESPACE);
+    }
+
     private MailConstants() {
     }
 
