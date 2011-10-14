@@ -1420,7 +1420,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="258" name="zimbraPrefHtmlEditorDefaultFontFamily" type="astring" max="64" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
-  <defaultCOSValue>Times New Roman</defaultCOSValue>
+  <defaultCOSValue>times new roman, new york, times, serif</defaultCOSValue>
   <desc>default font family</desc>
 </attr>
 

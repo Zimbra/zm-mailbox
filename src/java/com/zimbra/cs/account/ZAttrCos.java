@@ -42,7 +42,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111014-0926 */
+    /* build: 8.0.0_BETA1_1111 pshao 20111014-1053 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -26469,11 +26469,11 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * default font family
      *
-     * @return zimbraPrefHtmlEditorDefaultFontFamily, or "Times New Roman" if unset
+     * @return zimbraPrefHtmlEditorDefaultFontFamily, or "times new roman, new york, times, serif" if unset
      */
     @ZAttr(id=258)
     public String getPrefHtmlEditorDefaultFontFamily() {
-        return getAttr(Provisioning.A_zimbraPrefHtmlEditorDefaultFontFamily, "Times New Roman");
+        return getAttr(Provisioning.A_zimbraPrefHtmlEditorDefaultFontFamily, "times new roman, new york, times, serif");
     }
 
     /**
