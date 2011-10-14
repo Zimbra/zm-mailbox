@@ -397,9 +397,11 @@ public class SendShareNotification extends MailDocumentHandler {
         }
 
         if (granteeName != null) {
-            entryByName = FolderAction.lookupGranteeByName(granteeName, granteeType, zsc);
-            if (entryByName == null)
+            try {
+                entryByName = FolderAction.lookupGranteeByName(granteeName, granteeType, zsc);
+            } catch (ServiceException se) {
                 throw MailServiceException.NO_SUCH_GRANTEE(granteeName, null);
+            }
         }
 
         if (entryById == null && entryByName == null)
