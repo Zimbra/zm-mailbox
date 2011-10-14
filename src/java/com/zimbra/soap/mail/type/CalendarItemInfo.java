@@ -72,6 +72,9 @@ public class CalendarItemInfo {
     @XmlAttribute(name=MailConstants.A_CAL_NEXT_ALARM /* nextAlarm */, required=false)
     private Long nextAlarm;
 
+    @XmlAttribute(name=MailConstants.A_CAL_ORPHAN /* orphan */, required=false)
+    private Boolean orphan;
+
     @XmlElement(name=MailConstants.E_INVITE /* inv */, required=false)
     private List<Invitation> invites = Lists.newArrayList();
 
@@ -100,6 +103,7 @@ public class CalendarItemInfo {
         this.modifiedSequence = modifiedSequence;
     }
     public void setNextAlarm(Long nextAlarm) { this.nextAlarm = nextAlarm; }
+    public void setOrphan(Boolean orphan) { this.orphan = orphan; }
     public void setInvites(Iterable <Invitation> invites) {
         this.invites.clear();
         if (invites != null) {
@@ -146,6 +150,7 @@ public class CalendarItemInfo {
     public Long getChangeDate() { return changeDate; }
     public Integer getModifiedSequence() { return modifiedSequence; }
     public Long getNextAlarm() { return nextAlarm; }
+    public Boolean getOrphan() { return orphan; }
     public List<Invitation> getInvites() {
         return Collections.unmodifiableList(invites);
     }
@@ -171,6 +176,7 @@ public class CalendarItemInfo {
             .add("changeDate", changeDate)
             .add("modifiedSequence", modifiedSequence)
             .add("nextAlarm", nextAlarm)
+            .add("orphan", orphan)
             .add("invites", invites)
             .add("calendarReplies", calendarReplies)
             .add("metadatas", metadatas);

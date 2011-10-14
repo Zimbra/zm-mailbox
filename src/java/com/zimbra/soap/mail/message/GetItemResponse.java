@@ -16,8 +16,6 @@
 package com.zimbra.soap.mail.message;
 
 import com.google.common.base.Objects;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -36,35 +34,22 @@ import com.zimbra.soap.mail.type.NoteInfo;
 import com.zimbra.soap.mail.type.TagInfo;
 import com.zimbra.soap.mail.type.TaskItemInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_GET_ITEM_RESPONSE)
 @XmlType(propOrder = {})
 public class GetItemResponse {
 
     @XmlElements({
-        @XmlElement(name=MailConstants.E_FOLDER /* folder */,
-            type=Folder.class),
-        @XmlElement(name=MailConstants.E_TAG /* tag */,
-            type=TagInfo.class),
-        @XmlElement(name=MailConstants.E_NOTE /* note */,
-            type=NoteInfo.class),
-        @XmlElement(name=MailConstants.E_CONTACT /* cn */,
-            type=ContactInfo.class),
-        @XmlElement(name=MailConstants.E_APPOINTMENT /* appt */,
-            type=CalendarItemInfo.class),
-        @XmlElement(name=MailConstants.E_TASK /* task */,
-            type=TaskItemInfo.class),
-        @XmlElement(name=MailConstants.E_CONV /* c */,
-            type=ConversationSummary.class),
-        @XmlElement(name=MailConstants.E_WIKIWORD /* w */,
-            type=CommonDocumentInfo.class),
-        @XmlElement(name=MailConstants.E_DOC /* doc */,
-            type=DocumentInfo.class),
-        @XmlElement(name=MailConstants.E_MSG /* m */,
-            type=MessageSummary.class),
-        @XmlElement(name=MailConstants.E_CHAT /* chat */,
-            type=ChatSummary.class)
-    // TODO:Create an interface instead of using Objects?
+        @XmlElement(name=MailConstants.E_FOLDER /* folder */, type=Folder.class),
+        @XmlElement(name=MailConstants.E_TAG /* tag */, type=TagInfo.class),
+        @XmlElement(name=MailConstants.E_NOTE /* note */, type=NoteInfo.class),
+        @XmlElement(name=MailConstants.E_CONTACT /* cn */, type=ContactInfo.class),
+        @XmlElement(name=MailConstants.E_APPOINTMENT /* appt */, type=CalendarItemInfo.class),
+        @XmlElement(name=MailConstants.E_TASK /* task */, type=TaskItemInfo.class),
+        @XmlElement(name=MailConstants.E_CONV /* c */, type=ConversationSummary.class),
+        @XmlElement(name=MailConstants.E_WIKIWORD /* w */, type=CommonDocumentInfo.class),
+        @XmlElement(name=MailConstants.E_DOC /* doc */, type=DocumentInfo.class),
+        @XmlElement(name=MailConstants.E_MSG /* m */, type=MessageSummary.class),
+        @XmlElement(name=MailConstants.E_CHAT /* chat */, type=ChatSummary.class)
     })
     private Object item;
 

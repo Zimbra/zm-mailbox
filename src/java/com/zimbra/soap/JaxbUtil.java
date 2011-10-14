@@ -1126,9 +1126,6 @@ public final class JaxbUtil {
                     fixupStructureForJaxb(child,
                             jaxbInfo.getClassForElement(childName));
                 } else if (jaxbInfo.hasAttribute(childName)) {
-                    // TODO: remove logging
-                    LOG.debug("Promoting element '" + childName +
-                            "' to attribute for JAXB class " + klass.getName());
                     elem.setAttribute(childName, child.getTextContent());
                     // Don't remove pre-existing child until later pass
                     // to avoid changing the list of child elements

@@ -34,19 +34,19 @@ extends RecurIdInfo
 implements CalendarReplyInterface {
 
     // zdsync
-    @XmlAttribute(name=MailConstants.A_SEQ, required=true)
+    @XmlAttribute(name=MailConstants.A_SEQ /* seq */, required=true)
     private final String seq;
 
-    @XmlAttribute(name=MailConstants.A_DATE, required=true)
+    @XmlAttribute(name=MailConstants.A_DATE /* d */, required=true)
     private final String date;
 
-    @XmlAttribute(name=MailConstants.A_CAL_ATTENDEE, required=true)
+    @XmlAttribute(name=MailConstants.A_CAL_ATTENDEE /* at */, required=true)
     private final String attendee;
 
-    @XmlAttribute(name=MailConstants.A_CAL_SENTBY, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_SENTBY /* sentBy */, required=false)
     private String sentBy;
 
-    @XmlAttribute(name=MailConstants.A_CAL_PARTSTAT, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_PARTSTAT /* ptst */, required=false)
     private String partStat;
 
     /**

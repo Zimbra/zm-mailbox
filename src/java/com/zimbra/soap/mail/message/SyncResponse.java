@@ -44,13 +44,13 @@ import com.zimbra.soap.mail.type.SyncDeletedInfo;
 import com.zimbra.soap.mail.type.TagInfo;
 import com.zimbra.soap.mail.type.TaskItemInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_SYNC_RESPONSE)
 @XmlType(propOrder = {"deleted", "items"})
 public class SyncResponse {
 
     @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=true)
-    private final long changeDate;
+    private long changeDate;
 
     @XmlAttribute(name=MailConstants.A_TOKEN /* token */, required=false)
     private String token;
@@ -65,29 +65,17 @@ public class SyncResponse {
     private SyncDeletedInfo deleted;
 
     @XmlElements({
-        @XmlElement(name=MailConstants.E_FOLDER /* folder */,
-            type=Folder.class),
-        @XmlElement(name=MailConstants.E_TAG /* tag */,
-            type=TagInfo.class),
-        @XmlElement(name=MailConstants.E_NOTE /* note */,
-            type=NoteInfo.class),
-        @XmlElement(name=MailConstants.E_CONTACT /* cn */,
-            type=ContactInfo.class),
-        @XmlElement(name=MailConstants.E_APPOINTMENT /* appt */,
-            type=CalendarItemInfo.class),
-        @XmlElement(name=MailConstants.E_TASK /* task */,
-            type=TaskItemInfo.class),
-        @XmlElement(name=MailConstants.E_CONV /* c */,
-            type=ConversationSummary.class),
-        @XmlElement(name=MailConstants.E_WIKIWORD /* w */,
-            type=CommonDocumentInfo.class),
-        @XmlElement(name=MailConstants.E_DOC /* doc */,
-            type=DocumentInfo.class),
-        @XmlElement(name=MailConstants.E_MSG /* m */,
-            type=MessageSummary.class),
-        @XmlElement(name=MailConstants.E_CHAT /* chat */,
-            type=ChatSummary.class)
-    // TODO:Create an interface instead of using Objects?
+        @XmlElement(name=MailConstants.E_FOLDER /* folder */, type=Folder.class),
+        @XmlElement(name=MailConstants.E_TAG /* tag */, type=TagInfo.class),
+        @XmlElement(name=MailConstants.E_NOTE /* note */, type=NoteInfo.class),
+        @XmlElement(name=MailConstants.E_CONTACT /* cn */, type=ContactInfo.class),
+        @XmlElement(name=MailConstants.E_APPOINTMENT /* appt */, type=CalendarItemInfo.class),
+        @XmlElement(name=MailConstants.E_TASK /* task */, type=TaskItemInfo.class),
+        @XmlElement(name=MailConstants.E_CONV /* c */, type=ConversationSummary.class),
+        @XmlElement(name=MailConstants.E_WIKIWORD /* w */, type=CommonDocumentInfo.class),
+        @XmlElement(name=MailConstants.E_DOC /* doc */, type=DocumentInfo.class),
+        @XmlElement(name=MailConstants.E_MSG /* m */, type=MessageSummary.class),
+        @XmlElement(name=MailConstants.E_CHAT /* chat */, type=ChatSummary.class)
     })
     private List<Object> items = Lists.newArrayList();
 
@@ -96,7 +84,6 @@ public class SyncResponse {
      */
     @SuppressWarnings("unused")
     private SyncResponse() {
-        this(-1L);
     }
 
     public SyncResponse(long changeDate) {

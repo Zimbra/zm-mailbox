@@ -27,20 +27,35 @@ import com.zimbra.soap.type.SMIMEStoreType;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class SMIMEPublicCertInfo {
 
-    @XmlAttribute(name=AccountConstants.A_STORE /* store */, required=false)
+    @XmlAttribute(name=AccountConstants.A_STORE /* store */, required=true)
     private SMIMEStoreType storeType;
+
+    @XmlAttribute(name=AccountConstants.A_FIELD /* field */, required=true)
+    private String field;
 
     @XmlValue
     private String value;
 
-    public SMIMEPublicCertInfo() {
+    private SMIMEPublicCertInfo() {
     }
 
-    public void setStoreType(SMIMEStoreType storeType) {
-        this.storeType = storeType;
+    private SMIMEPublicCertInfo(SMIMEStoreType storeType, String field, String value) {
+        setStoreType(storeType);
+        setField(field);
+        setValue(value);
     }
+
+    public static SMIMEPublicCertInfo createForStoreTypeFieldAndValue(
+                SMIMEStoreType storeType, String field, String value) {
+        return new SMIMEPublicCertInfo(storeType, field, value);
+    }
+
+    public void setStoreType(SMIMEStoreType storeType) { this.storeType = storeType; }
+    public void setField(String field) { this.field = field; }
     public void setValue(String value) { this.value = value; }
+
     public SMIMEStoreType getStoreType() { return storeType; }
+    public String getField() { return field; }
     public String getValue() { return value; }
 
     public Objects.ToStringHelper addToStringInfo(

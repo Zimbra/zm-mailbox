@@ -26,16 +26,16 @@ import com.zimbra.soap.base.RecurIdInfoInterface;
 @XmlAccessorType(XmlAccessType.NONE)
 public class RecurIdInfo implements RecurIdInfoInterface {
 
-    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_RANGE_TYPE, required=true)
+    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_RANGE_TYPE /* rangeType */, required=true)
     private int recurrenceRangeType;
 
-    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID, required=true)
+    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID /* recurId */, required=true)
     private String recurrenceId;
 
-    @XmlAttribute(name=MailConstants.A_CAL_TIMEZONE, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_TIMEZONE /* tz */, required=false)
     private String timezone;
 
-    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID_Z, required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID_Z /* ridZ */, required=false)
     private String recurIdZ;
 
     public RecurIdInfo() {

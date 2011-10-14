@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,15 +22,14 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class SnoozeAlarm {
 
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final String id;
 
-    @XmlAttribute(name=MailConstants.A_CAL_ALARM_SNOOZE_UNTIL /* until */,
-                            required=true)
-    private final long dismissedAt;
+    @XmlAttribute(name=MailConstants.A_CAL_ALARM_SNOOZE_UNTIL /* until */, required=true)
+    private final long snoozeUntil;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -40,19 +39,19 @@ public class SnoozeAlarm {
         this((String) null, -1L);
     }
 
-    public SnoozeAlarm(String id, long dismissedAt) {
+    public SnoozeAlarm(String id, long snoozeUntil) {
         this.id = id;
-        this.dismissedAt = dismissedAt;
+        this.snoozeUntil = snoozeUntil;
     }
 
     public String getId() { return id; }
-    public long getDismissedAt() { return dismissedAt; }
+    public long getSnoozeUntil() { return snoozeUntil; }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
             .add("id", id)
-            .add("dismissedAt", dismissedAt);
+            .add("snoozeUntil", snoozeUntil);
     }
 
     @Override
