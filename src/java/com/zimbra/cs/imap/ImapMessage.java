@@ -170,11 +170,22 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
     }
 
 
-    @Override public int compareTo(ImapMessage i4msg) {
+    @Override
+    public int compareTo(ImapMessage i4msg) {
         if (imapUid == i4msg.imapUid) {
             return 0;
         }
         return imapUid < i4msg.imapUid ? -1 : 1;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof ImapMessage && msgId == ((ImapMessage) o).msgId;
+    }
+
+    @Override
+    public int hashCode() {
+        return msgId;
     }
 
     static class SequenceComparator implements Comparator<ImapMessage> {

@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.TimerTask;
 
 import com.google.common.base.Function;
+import com.google.common.collect.Sets;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
@@ -399,27 +400,34 @@ final class ImapSessionManager {
 
         String fid = mbox.getAccountId() + ":" + folder.getId();
         try {
-            List<ImapMessage> actualContents = mbox.openImapFolder(octxt, folder.getId());
-            Collections.sort(actualContents);
+            List<ImapMessage> actual = mbox.openImapFolder(octxt, folder.getId());
+            Collections.sort(actual);
 
-            if (i4list.size() != actualContents.size()) {
-                ZimbraLog.imap.error("IMAP session cache consistency check failed (%s): inconsistent list lengths", fid);
+            if (i4list.size() != actual.size()) {
+                ZimbraLog.imap.error("IMAP session cache consistency check failed: inconsistent list lengths " +
+                        "folder=%s,cache=%d,db=%d,diff={cache:%s,db:%s}", fid, i4list.size(), actual.size(),
+                        diff(i4list, actual), diff(actual, i4list));
                 clearCache(folder);
-                return actualContents;
+                return actual;
             }
 
-            for (Iterator<ImapMessage> it1 = i4list.iterator(), it2 = actualContents.iterator(); it1.hasNext() || it2.hasNext(); ) {
+            for (Iterator<ImapMessage> it1 = i4list.iterator(), it2 = actual.iterator(); it1.hasNext() || it2.hasNext(); ) {
                 ImapMessage msg1 = it1.next(), msg2 = it2.next();
                 if (msg1.msgId != msg2.msgId || msg1.imapUid != msg2.imapUid) {
-                    ZimbraLog.imap.error("IMAP session cache consistency check failed (%s): id mismatch (%d/%d vs %d/%d)",
-                            fid, msg1.msgId, msg1.imapUid, msg2.msgId, msg2.imapUid);
+                    ZimbraLog.imap.error("IMAP session cache consistency check failed: id mismatch " +
+                            "folder=%s,cache=%d/%d,db=%d/%d,diff={cache:%s,db:%s}",
+                            fid, msg1.msgId, msg1.imapUid, msg2.msgId, msg2.imapUid,
+                            diff(i4list, actual), diff(actual, i4list));
                     clearCache(folder);
-                    return actualContents;
+                    return actual;
                 } else if (msg1.flags != msg2.flags || msg1.sflags != msg2.sflags || !TagUtil.tagsMatch(msg1.tags, msg2.tags)) {
-                    ZimbraLog.imap.error("IMAP session cache consistency check failed (%s): flag/tag/sflag mismatch (%X/[%s]/%X vs %X/[%s]/%X)",
-                            fid, msg1.flags, TagUtil.encodeTags(msg1.tags), msg1.sflags, msg2.flags, TagUtil.encodeTags(msg2.tags), msg2.sflags);
+                    ZimbraLog.imap.error("IMAP session cache consistency check failed: flag/tag/sflag mismatch " +
+                            "folder=%s,cache=%X/[%s]/%X,db=%X/[%s]/%X,diff={cache:%s,db:%s}", fid,
+                            msg1.flags, TagUtil.encodeTags(msg1.tags), msg1.sflags,
+                            msg2.flags, TagUtil.encodeTags(msg2.tags), msg2.sflags,
+                            diff(i4list, actual), diff(actual, i4list));
                     clearCache(folder);
-                    return actualContents;
+                    return actual;
                 }
             }
             return i4list;
@@ -428,6 +436,12 @@ final class ImapSessionManager {
             clearCache(folder);
             return null;
         }
+    }
+
+    private Set<ImapMessage> diff(List<ImapMessage> list1, List<ImapMessage> list2) {
+        Set<ImapMessage> diff = Sets.newHashSet(list1);
+        diff.removeAll(list2);
+        return diff;
     }
 
     private static void renumberMessages(OperationContext octxt, Mailbox mbox, List<ImapMessage> i4sorted)
