@@ -2833,10 +2833,11 @@ abstract class ImapHandler extends ProtocolHandler {
         return CONTINUE_PROCESSING;
     }
 
-    boolean expungeMessages(String tag, ImapFolder i4folder, String sequenceSet) throws ServiceException, IOException, ImapParseException {
+    private boolean expungeMessages(String tag, ImapFolder i4folder, String sequenceSet)
+            throws ServiceException, IOException, ImapParseException {
         Set<ImapMessage> i4set;
         synchronized (i4folder.getMailbox()) {
-            i4set = (sequenceSet == null ? null : i4folder.getSubsequence(tag, sequenceSet, true));
+            i4set = sequenceSet == null ? null : i4folder.getSubsequence(tag, sequenceSet, true);
         }
         List<Integer> ids = new ArrayList<Integer>(SUGGESTED_DELETE_BATCH_SIZE);
 
@@ -2846,20 +2847,21 @@ abstract class ImapHandler extends ProtocolHandler {
             ImapMessage i4msg = i4folder.getBySequence(i);
             if (i4msg != null && !i4msg.isExpunged() && (i4msg.flags & Flag.BITMASK_DELETED) > 0) {
                 if (i4set == null || i4set.contains(i4msg)) {
-                    ids.add(i4msg.msgId);  changed = true;
+                    ids.add(i4msg.msgId);
+                    changed = true;
                 }
             }
 
             if (ids.size() >= (i == max ? 1 : SUGGESTED_DELETE_BATCH_SIZE)) {
                 try {
-                    ZimbraLog.imap.debug("  ** deleting: " + ids);
+                    ZimbraLog.imap.debug("  ** deleting: %s", ids);
                     mSelectedFolder.getMailbox().delete(getContext(), ArrayUtil.toIntArray(ids), MailItem.TYPE_UNKNOWN, null);
                 } catch (MailServiceException.NoSuchItemException e) {
                     // FIXME: strongly suspect this is dead code (see Mailbox.delete() implementation)
                     // something went wrong, so delete *this* batch one at a time
                     for (int id : ids) {
                         try {
-                            ZimbraLog.imap.debug("  ** fallback deleting: " + id);
+                            ZimbraLog.imap.debug("  ** fallback deleting: %d", id);
                             i4folder.getMailbox().delete(getContext(), new int[] {id}, MailItem.TYPE_UNKNOWN, null);
                         } catch (MailServiceException.NoSuchItemException nsie) {
                             i4msg = i4folder.getById(id);
@@ -2873,11 +2875,14 @@ abstract class ImapHandler extends ProtocolHandler {
                 // send a gratuitous untagged response to keep pissy clients from closing the socket from inactivity
                 long now = System.currentTimeMillis();
                 if (now - checkpoint > MAXIMUM_IDLE_PROCESSING_MILLIS) {
-                    sendIdleUntagged();  checkpoint = now;
+                    sendIdleUntagged();
+                    checkpoint = now;
                 }
             }
         }
-
+        if (changed) {
+            mSelectedFolder.getMailbox().resetRecentMessageCount(getContext());
+        }
         return changed;
     }
 
