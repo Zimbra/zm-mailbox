@@ -1247,7 +1247,7 @@ creation, an INVITE_OUT_OF_DATE exception will be thrown.
 </DismissCalendarItemAlarmRequest>
 
 <DismissCalendarItemAlarmResponse>
-  <appt|task id="cal item id">
+  <appt|task calItemId="cal item id">
     <alarmData ...>  // so the client knows when to trigger the next alarm
                      // See <alarmData> definition under SearchResponse, in soap.txt
   </appt|task>+  // one for each <appt|task> in the request
@@ -1260,7 +1260,7 @@ creation, an INVITE_OUT_OF_DATE exception will be thrown.
 </SnoozeCalendarItemAlarmRequest>
 
 <SnoozeCalendarItemAlarmResponse>
-  <appt|task id="cal item id">
+  <appt|task calItemId="cal item id">
     <alarmData ...>  // so the client knows when to trigger the next alarm
                      // See <alarmData> definition under SearchResponse, in soap.txt
   </appt|task>+  // one for each <appt|task> in the request
