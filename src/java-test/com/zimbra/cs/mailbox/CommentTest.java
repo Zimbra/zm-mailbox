@@ -32,6 +32,10 @@ import com.zimbra.cs.mime.ParsedDocument;
 
 public class CommentTest {
 
+    private Mailbox mbox;
+    private Folder folder;
+    private MailItem doc;
+    
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
@@ -42,51 +46,69 @@ public class CommentTest {
     @Before
     public void setUp() throws Exception {
         MailboxTestUtil.clearData();
+        mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        folder = mbox.createFolder(null, "/Briefcase/f", (byte)0, Type.DOCUMENT);
+        createDocument("doc.txt", "This is a document");
     }
-    
-    @Test
-    public void createDeleteComments() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        Folder folder = mbox.createFolder(null, "/Briefcase/f", (byte)0, Type.DOCUMENT);
-        MailItem doc = createDocument(mbox, "doc.txt", "This is a document", folder);
-        mbox.createComment(null, doc.mId, "first comment", "test user 2");
-        mbox.createComment(null, doc.mId, "comment #2", "the other guy");
-        mbox.createComment(null, doc.mId, "numero tres", "some dude");
-        Collection<Comment> comments = mbox.getComments(null, doc.mId, 0, 10);
-        Assert.assertEquals(comments.size(), 3);
 
+    @Test
+    public void deleteRecoverDocumentWithoutComments() throws Exception {
         // hard delete
         mbox.delete(null, doc.mId, MailItem.Type.DOCUMENT);
         List<MailItem> recovered = mbox.recover(null, new int[] { doc.mId }, MailItem.Type.DOCUMENT, folder.getId());
         Assert.assertEquals(recovered.size(), 1);
         doc = recovered.iterator().next();
-        
-        comments = mbox.getComments(null, doc.mId, 0, 10);
-        Assert.assertEquals(comments.size(), 3);
-        
-        // trash, empty trash
-        mbox.move(null, doc.mId, MailItem.Type.DOCUMENT, Mailbox.ID_FOLDER_TRASH);
-        mbox.emptyFolder(null, Mailbox.ID_FOLDER_TRASH, true);
-        recovered = mbox.recover(null, new int[] { doc.mId }, MailItem.Type.DOCUMENT, folder.getId());
+    }
+
+    @Test
+    public void deleteRecoverDocumentWithComments() throws Exception {
+        // hard delete
+        createComments();
+        mbox.delete(null, doc.mId, MailItem.Type.DOCUMENT);
+        List<MailItem> recovered = mbox.recover(null, new int[] { doc.mId }, MailItem.Type.DOCUMENT, folder.getId());
         Assert.assertEquals(recovered.size(), 1);
         doc = recovered.iterator().next();
         
-        comments = mbox.getComments(null, doc.mId, 0, 10);
-        Assert.assertEquals(comments.size(), 3);
-        
-        // hard delete the parent folder
-        mbox.delete(null, folder.mId, MailItem.Type.FOLDER);
-        recovered = mbox.recover(null, new int[] { doc.mId }, MailItem.Type.DOCUMENT, Mailbox.ID_FOLDER_BRIEFCASE);
-        Assert.assertEquals(recovered.size(), 1);
-        doc = recovered.iterator().next();
-        
-        comments = mbox.getComments(null, doc.mId, 0, 10);
+        Collection<Comment> comments = mbox.getComments(null, doc.mId, 0, 10);
         Assert.assertEquals(comments.size(), 3);
     }
     
-    private Document createDocument(Mailbox mbox, String name, String content, Folder parent) throws Exception {
+    @Test
+    public void emptyFolderRecoverDocumentsWithComments() throws Exception {
+        // trash, empty trash
+        createComments();
+        mbox.move(null, doc.mId, MailItem.Type.DOCUMENT, Mailbox.ID_FOLDER_TRASH);
+        mbox.emptyFolder(null, Mailbox.ID_FOLDER_TRASH, true);
+        List<MailItem> recovered = mbox.recover(null, new int[] { doc.mId }, MailItem.Type.DOCUMENT, folder.getId());
+        Assert.assertEquals(recovered.size(), 1);
+        doc = recovered.iterator().next();
+        
+        Collection<Comment> comments = mbox.getComments(null, doc.mId, 0, 10);
+        Assert.assertEquals(comments.size(), 3);
+    }
+    
+    @Test
+    public void deleteFolderRecoverDocumentsWithComments() throws Exception {
+        // hard delete the parent folder
+        createComments();
+        mbox.delete(null, folder.mId, MailItem.Type.FOLDER);
+        List<MailItem> recovered = mbox.recover(null, new int[] { doc.mId }, MailItem.Type.DOCUMENT, Mailbox.ID_FOLDER_BRIEFCASE);
+        Assert.assertEquals(recovered.size(), 1);
+        doc = recovered.iterator().next();
+        
+        Collection<Comment> comments = mbox.getComments(null, doc.mId, 0, 10);
+        Assert.assertEquals(comments.size(), 3);
+    }
+    
+    private void createDocument(String name, String content) throws Exception {
         InputStream in = new ByteArrayInputStream(content.getBytes());
         ParsedDocument pd = new ParsedDocument(in, name, "text/plain", System.currentTimeMillis(), null, null);
-        return mbox.createDocument(null, parent.getId(), pd, MailItem.Type.DOCUMENT, 0);
+        doc = mbox.createDocument(null, folder.getId(), pd, MailItem.Type.DOCUMENT, 0);
+    }
+    
+    private void createComments() throws Exception {
+        mbox.createComment(null, doc.mId, "first comment", "test user 2");
+        mbox.createComment(null, doc.mId, "comment #2", "the other guy");
+        mbox.createComment(null, doc.mId, "numero tres", "some dude");
     }
 }
