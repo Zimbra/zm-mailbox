@@ -2689,13 +2689,6 @@ public class LegacyLdapProvisioning extends LdapProv {
                         throw ServiceException.FAILURE("", e);
                     }
                 }
-
-                @Override
-                public void moveChildren(String oldDn, String newDn) throws ServiceException {
-                    LegacyZimbraLdapContext ldapContext = toLegacyZimbraLdapContext();
-                    ldapContext.moveChildren(oldDn, newDn);
-                    
-                }
                 
                 @Override
                 public void renameEntry(String oldDn, String newDn)
@@ -2713,14 +2706,6 @@ public class LegacyLdapProvisioning extends LdapProv {
                         NamedEntry.Visitor visitor) throws ServiceException {
                     ((LdapProvisioning) mProv).searchDirectory(options, visitor);
                 }
-                
-                @Override
-                public void modifyAttrsInternal(Entry entry, Map<String, ? extends Object> attrs)
-                throws ServiceException {
-                    LegacyZimbraLdapContext ldapContext = toLegacyZimbraLdapContext();
-                    ((LegacyLdapProvisioning) mProv).modifyAttrsInternal(entry,
-                            ldapContext, attrs);
-                }
 
                 @Override
                 public void renameAddressesInAllDistributionLists(Map<String, String> changedPairs) {
@@ -2731,6 +2716,35 @@ public class LegacyLdapProvisioning extends LdapProv {
                 public void renameXMPPComponent(String zimbraId, String newName)
                 throws ServiceException {
                     ((LegacyLdapProvisioning) mProv).renameXMPPComponent(zimbraId, newName);
+                }
+
+                @Override
+                public Account getAccountById(String id)
+                        throws ServiceException {
+                    // TODO Auto-generated method stub
+                    return null;
+                }
+
+                @Override
+                public DistributionList getDistributionListById(String id)
+                        throws ServiceException {
+                    // TODO Auto-generated method stub
+                    return null;
+                }
+
+                @Override
+                public DynamicGroup getDynamicGroupById(String id)
+                        throws ServiceException {
+                    // TODO Auto-generated method stub
+                    return null;
+                }
+
+                @Override
+                public void modifyLdapAttrs(Entry entry,
+                        Map<String, ? extends Object> attrs)
+                        throws ServiceException {
+                    // TODO Auto-generated method stub
+                    
                 }
                 
             };

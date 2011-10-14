@@ -304,8 +304,9 @@ public class LdapProvisioning extends LdapProv {
      * </ul>
      */
     @Override
-    public void modifyAttrs(Entry e, Map<String, ? extends Object> attrs, boolean checkImmutable, boolean allowCallback)
-            throws ServiceException {
+    public void modifyAttrs(Entry e, Map<String, ? extends Object> attrs, 
+            boolean checkImmutable, boolean allowCallback)
+    throws ServiceException {
         Map<Object, Object> context = new HashMap<Object, Object>();
         AttributeManager.getInstance().preModify(attrs, e, context, false, checkImmutable, allowCallback);
         modifyAttrsInternal(e, null, attrs);
@@ -2540,6 +2541,10 @@ public class LdapProvisioning extends LdapProv {
 
         ZLdapContext zlc = null;
         Account acct = getAccountById(zimbraId, zlc, true);
+        
+        // prune cache
+        sAccountCache.remove(acct);
+        
         LdapEntry entry = (LdapEntry) acct;
         if (acct == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(zimbraId);
@@ -2614,36 +2619,36 @@ public class LdapProvisioning extends LdapProv {
                 }
             }
 
+            /*
             ZMutableEntry mutableEntry = LdapClient.createMutableEntry();
             mutableEntry.mapToAttrs(newAttrs);
             mutableEntry.setDN(newDn);
-
+            */
+            
             if (dnChanged) {
-                zlc.createEntry(mutableEntry);
-            }
-
-            try {
-                if (dnChanged) {
-                    zlc.moveChildren(oldDn, newDn);
+                zlc.renameEntry(oldDn, newDn);
+                
+                // re-get the acct object, make sure we don't get it from cache
+                // Note: this account object contains the old address, it should never
+                // be cached
+                ZLdapFilter filter = filterFactory.accountById(zimbraId);
+                acct = getAccountByQuery(mDIT.mailBranchBaseDN(), filter, zlc, true);
+                if (acct == null) {
+                    throw ServiceException.FAILURE("cannot find account by id after modrdn", null);
                 }
-
-                // rename the account and all it's renamed aliases to the new name in all
-                // distribution lists.  Doesn't throw exceptions, just logs
-                renameAddressesInAllDistributionLists(oldEmail, newName, replacedAliases);
-
-                // MOVE OVER ALL aliases
-                // doesn't throw exceptions, just logs
-                if (domainChanged)
-                    moveAliases(zlc, replacedAliases, newDomain, null, oldDn, newDn, oldDomain, newDomain);
-
-                if (!dnChanged)
-                    modifyAttrs(acct, newAttrs, false, false);
-            } catch (ServiceException e) {
-                throw e;
-            } finally {
-                if (dnChanged)
-                    zlc.deleteEntry(oldDn);  // unbind old dn
             }
+
+            // rename the account and all it's renamed aliases to the new name in all
+            // distribution lists.  Doesn't throw exceptions, just logs
+            renameAddressesInAllDistributionLists(oldEmail, newName, replacedAliases);
+
+            // MOVE OVER ALL aliases
+            // doesn't throw exceptions, just logs
+            if (domainChanged) {
+                moveAliases(zlc, replacedAliases, newDomain, null, oldDn, newDn, oldDomain, newDomain);
+            }
+                
+            modifyLdapAttrs(acct, zlc, newAttrs);
 
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.ACCOUNT_EXISTS(newName);
@@ -2654,16 +2659,15 @@ public class LdapProvisioning extends LdapProv {
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to rename account: "+newName, e);
         } finally {
-            // prune cache
-            sAccountCache.remove(acct);
             LdapClient.closeContext(zlc);
         }
 
         // reload it to cache using the master, bug 45736
         Account renamedAcct = getAccountById(zimbraId, null, true);
 
-        if (domainChanged)
+        if (domainChanged) {
             PermissionCache.invalidateCache(renamedAcct);
+        }
     }
 
     @Override
@@ -2808,13 +2812,6 @@ public class LdapProvisioning extends LdapProv {
                 }
 
                 @Override
-                public void moveChildren(String oldDn, String newDn)
-                throws ServiceException {
-                    ZLdapContext ldapContext = toZLdapContext();
-                    ldapContext.moveChildren(oldDn, newDn);
-                }
-
-                @Override
                 public void renameEntry(String oldDn, String newDn)
                 throws ServiceException {
                     ZLdapContext ldapContext = toZLdapContext();
@@ -2828,14 +2825,6 @@ public class LdapProvisioning extends LdapProv {
                 }
 
                 @Override
-                public void modifyAttrsInternal(Entry entry, Map<String, ? extends Object> attrs)
-                throws ServiceException {
-                    ZLdapContext ldapContext = toZLdapContext();
-                    ((LdapProvisioning) mProv).modifyAttrsInternal(entry,
-                            ldapContext, attrs);
-                }
-
-                @Override
                 public void renameAddressesInAllDistributionLists(Map<String, String> changedPairs) {
                     ((LdapProvisioning) mProv).renameAddressesInAllDistributionLists(changedPairs);
                 }
@@ -2846,6 +2835,37 @@ public class LdapProvisioning extends LdapProv {
                     ((LdapProvisioning) mProv).renameXMPPComponent(zimbraId, newName);
                 }
 
+                @Override
+                public Account getAccountById(String id) throws ServiceException {
+                    // note: we do NOT want to get a cahed entry
+                    return ((LdapProvisioning) mProv).getAccountByQuery(
+                        mProv.getDIT().mailBranchBaseDN(), 
+                        ZLdapFilterFactory.getInstance().accountById(id), toZLdapContext(), true);
+                }
+
+                @Override
+                public DistributionList getDistributionListById(String id) throws ServiceException {
+                    // note: we do NOT want to get a cahed entry
+                    return ((LdapProvisioning) mProv).getDistributionListByQuery(
+                            mDIT.mailBranchBaseDN(),
+                            filterFactory.distributionListById(id),
+                            toZLdapContext(), null);
+                }
+
+                @Override
+                public DynamicGroup getDynamicGroupById(String id) throws ServiceException {
+                    // note: we do NOT want to get a cahed entry
+                    return ((LdapProvisioning) mProv).getDynamicGroupByQuery(
+                            filterFactory.dynamicGroupById(id),
+                            toZLdapContext(), false);
+                }
+
+                @Override
+                public void modifyLdapAttrs(Entry entry,
+                        Map<String, ? extends Object> attrs)
+                        throws ServiceException {
+                    ((LdapProvisioning) mProv).modifyLdapAttrs(entry, toZLdapContext(), attrs);
+                }
 
             };
 
@@ -6320,9 +6340,11 @@ public class LdapProvisioning extends LdapProv {
     // There could be a race condition that the alias might get taken
     // in the new domain post the check.  Anyone who calls this API must
     // pay attention to the warning message
-    private void moveAliases(ZLdapContext zlc, ReplaceAddressResult addrs, String newDomain, String primaryUid,
-                             String targetOldDn, String targetNewDn,
-                             String targetOldDomain, String targetNewDomain)  throws ServiceException {
+    private void moveAliases(ZLdapContext zlc, ReplaceAddressResult addrs, 
+            String newDomain, String primaryUid,
+            String targetOldDn, String targetNewDn,
+            String targetOldDomain, String targetNewDomain)
+    throws ServiceException {
 
         for (int i=0; i < addrs.newAddrs().length; i++) {
             String oldAddr = addrs.oldAddrs()[i];

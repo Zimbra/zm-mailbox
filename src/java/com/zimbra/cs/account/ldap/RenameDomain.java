@@ -46,6 +46,9 @@ import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.ldap.ILdapContext;
+import com.zimbra.cs.ldap.ZLdapContext;
+import com.zimbra.cs.ldap.ZLdapFilter;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 
 
@@ -59,16 +62,19 @@ public class RenameDomain {
             mProv = prov;
             mZlc = zlc;
         }
-        
+
+        public abstract Account getAccountById(String id) throws ServiceException;
+        public abstract DistributionList getDistributionListById(String id) throws ServiceException;
+        public abstract DynamicGroup getDynamicGroupById(String id) throws ServiceException;
+
         public abstract void createEntry(String dn, Map<String, Object> attrs) throws ServiceException;
         public abstract void deleteEntry(String dn) throws ServiceException;
-        public abstract void moveChildren(String oldDn, String newDn) throws ServiceException;
         public abstract void renameEntry(String oldDn, String newDn) throws ServiceException;
         
         public abstract void searchDirectory(SearchDirectoryOptions options, NamedEntry.Visitor visitor) 
         throws ServiceException;
         
-        public abstract void modifyAttrsInternal(Entry entry, Map<String, ? extends Object> attrs)
+        public abstract void modifyLdapAttrs(Entry entry, Map<String, ? extends Object> attrs)
         throws ServiceException;
         
         public abstract void renameAddressesInAllDistributionLists(Map<String, String> changedPairs);
@@ -444,13 +450,12 @@ public class RenameDomain {
         attrs.put(Provisioning.A_zimbraDomainRenameInfo, "");
         attrs.put(Provisioning.A_zimbraDomainStatus, Provisioning.DOMAIN_STATUS_ACTIVE);
         attrs.put(Provisioning.A_zimbraMailStatus, Provisioning.MAIL_STATUS_ENABLED);
-        mLdapHelper.modifyAttrsInternal(domain, attrs);  // skip callback
+        mLdapHelper.modifyLdapAttrs(domain, attrs);  // skip callback
         
         flushCacheOnAllServers(CacheEntryType.domain);
     }
     
     static class RenameDomainVisitor implements NamedEntry.Visitor {
-    
         private LdapProv mProv;
         private RenameDomainLdapHelper mLdapHelper;
         private String mOldDomainName;
@@ -555,17 +560,7 @@ public class RenameDomain {
          
             // Step 2. move the entry to the new domain and fixup all the addr attrs that contain the old domain
             String oldDn = ((LdapEntry)entry).getDN();
-            
-            if (Entry.EntryType.ACCOUNT == entryType) {
-                handleAccount(entry, oldDn, newDn);
-            } else if (Entry.EntryType.DISTRIBUTIONLIST == entryType) {
-                handleGroup(entry, oldDn, newDn);
-            } else if (Entry.EntryType.DYNAMICGROUP == entryType) {
-                handleGroup(entry, oldDn, newDn);
-            } else {
-                warn((Throwable) null, "handleEntry", "encountered invalid entry type", "entry=[%s]", entry.getName());
-                return;
-            }
+            moveEntry(entry, oldDn, newDn);
         }
         
         /*
@@ -610,17 +605,19 @@ public class RenameDomain {
                 }
             }
         }
-    
-        private void handleGroup(NamedEntry entry, String oldDn, String newDn) {
         
-            NamedEntry refreshedEntry = entry;
-        
+        private void moveEntry(NamedEntry entry, String oldDn, String newDn) {
+            Entry.EntryType entryType = entry.getEntryType();
+            String entryId = entry.getId();
+            
+            NamedEntry refreshedEntry = null;
+
             if (!oldDn.equals(newDn)) {
                 // move the entry
                 try {
                     mLdapHelper.renameEntry(oldDn, newDn);
                 } catch (ServiceException e) {
-                    warn(e, "moveDistributionList", "renameEntry", "entry=[%s], oldDn=[%s], newDn=[%s]", entry.getName(), oldDn, newDn);
+                    warn(e, "moveEntry", "renameEntry failed", "entry=[%s], oldDn=[%s], newDn=[%s]", entry.getName(), oldDn, newDn);
                 }
             
                 // refresh for the new DN 
@@ -629,17 +626,25 @@ public class RenameDomain {
                 // do not catch here, if we can't refresh - we can't modify, 
                 // just let it throw and proceed to the next entry
                 try {
-                    refreshedEntry = mProv.getGroup(Key.DistributionListBy.id, entry.getId());
-                    if (refreshedEntry == null) {
-                        warn((Throwable) null, "moveGroup", "getGroupById, entry not found after rename - not modified", 
-                                "entry=[%s], oldDn=[%s], newDn=[%s]", entry.getName(), oldDn, newDn);
+                    if (Entry.EntryType.ACCOUNT == entryType) {
+                        refreshedEntry = mLdapHelper.getAccountById(entryId);
+                    } else if (Entry.EntryType.DISTRIBUTIONLIST == entryType) {
+                        refreshedEntry = mLdapHelper.getDistributionListById(entryId);
+                    } else if (Entry.EntryType.DYNAMICGROUP == entryType) {
+                        refreshedEntry = mLdapHelper.getDynamicGroupById(entryId);
                     }
                 } catch (ServiceException e) {
-                    warn(e, "moveGroup", "getGroupById, entry not modified", 
+                    warn(e, "moveEntry", "failed to get entry by id after move, entry not modified", 
                             "entry=[%s], oldDn=[%s], newDn=[%s]", entry.getName(), oldDn, newDn);
                     // if we can't refresh - we can't modify, just return and proceed to the next entry
                     return;
                 }
+            }
+        
+            if (refreshedEntry == null) {
+                warn((Throwable) null, "moveEntry", "entry not found after rename, entry not modified", 
+                        "entry=[%s], oldDn=[%s], newDn=[%s]", entry.getName(), oldDn, newDn);
+                return;
             }
         
             // modify the entry in the new domain
@@ -647,50 +652,9 @@ public class RenameDomain {
         
             // modify the entry
             try {
-                mLdapHelper.modifyAttrsInternal(refreshedEntry, fixedAttrs);
+                mLdapHelper.modifyLdapAttrs(refreshedEntry, fixedAttrs);
             } catch (ServiceException e) {
-                warn(e, "moveDistributionList", "modifyAttrsInternal", "entry=[%s], oldDn=[%s], newDn=[%s]", entry.getName(), oldDn, newDn);
-            }
-        }
-    
-        private void handleAccount(NamedEntry entry, String oldDn, String newDn) {
-        
-            NamedEntry refreshedEntry = entry;
-            Map<String, Object> fixedAttrs = fixupAddrs(entry, sAcctAttrsNeedRename);
-        
-            if (!oldDn.equals(newDn)) {
-                // move the entry
-            
-                /*
-                 * for accounts, we need to first create the entry in the new domain, because it may have sub entries
-                 * (identities/datasources/signatures).  We create the account entry in the new domain using the fixed addr attrs.
-                 */
-                try {
-                    mLdapHelper.createEntry(newDn, fixedAttrs);
-                } catch (ServiceException e) {
-                    warn(e, "moveAccount", "createEntry", "entry=[%s], oldDn=[%s], newDn=[%s]", entry.getName(), oldDn, newDn);
-                }
-                    
-                try {
-                    // move over all identities/sources/signatures etc. doesn't throw an exception, just logs
-                    mLdapHelper.moveChildren(oldDn, newDn);
-                } catch (ServiceException e) {
-                    warn(e, "moveAccount", "moveChildren", "entry=[%s], oldDn=[%s], newDn=[%s]", entry.getName(), oldDn, newDn);
-                }
-                
-                try {
-                    mLdapHelper.deleteEntry(oldDn);
-                } catch (ServiceException e) {
-                    warn(e, "moveAccount", "unbindEntry", "entry=[%s], oldDn=[%s], newDn=[%s]", entry.getName(), oldDn, newDn);
-                }
-            } else {
-                // didn't need to move the account entry, still need to fixup the addr attrs
-         
-                try {
-                    mLdapHelper.modifyAttrsInternal(refreshedEntry, fixedAttrs);
-                } catch (ServiceException e) {
-                    warn(e, "moveAccount", "modifyAttrsInternal", "entry=[%s], oldDn=[%s], newDn=[%s]", entry.getName(), oldDn, newDn);
-                }
+                warn(e, "moveEntry", "modifyAttrsInternal", "entry=[%s], oldDn=[%s], newDn=[%s]", entry.getName(), oldDn, newDn);
             }
         }
     
