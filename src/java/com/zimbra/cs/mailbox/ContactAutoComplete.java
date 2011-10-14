@@ -56,7 +56,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public final class ContactAutoComplete {
+public class ContactAutoComplete {
     public static final class AutoCompleteResult {
         public ContactRankings rankings;
         public final Collection<ContactEntry> entries;
@@ -118,7 +118,7 @@ public final class ContactAutoComplete {
         int mRanking;
         long mLastAccessed;
 
-        private String getKey() {
+        protected String getKey() {
             return (mIsContactGroup ? mDisplayName : mEmail).toLowerCase();
         }
 
@@ -477,6 +477,14 @@ public final class ContactAutoComplete {
         return null;
     }
 
+    /**
+     *  Add contact entry to result
+     *  @see com.zimbra.cs.mailbox.OfflineGalContactAutoComplete
+     */
+    protected void addEntry(ContactEntry entry, AutoCompleteResult result) {
+        result.addEntry(entry);
+    }
+
     private boolean matchesEmail(List<String> tokens, String email) {
         if (!Strings.isNullOrEmpty(email) && tokens.size() == 1) {
             String token = tokens.get(0);
@@ -625,7 +633,7 @@ public final class ContactAutoComplete {
                         // bug 55673, check if the addr is a group
                         resolveGroupInfo(entry, email);
                     }
-                    result.addEntry(entry);
+                    addEntry(entry, result);
                     ZimbraLog.gal.debug("adding %s", entry.getEmail());
                     if (folderId == FOLDER_ID_GAL) {
                         // we've matched the first email address for this
