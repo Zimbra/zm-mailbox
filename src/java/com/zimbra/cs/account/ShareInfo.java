@@ -471,10 +471,8 @@ public class ShareInfo {
             throws ServiceException {
 
             List<String> granteeIds = new LinkedList<String>();
-            if (directOnly) {
-                // get shares published on the dl
-                granteeIds.add(dl.getId());
-            } else {
+            granteeIds.add(dl.getId());
+            if (!directOnly) {
                 granteeIds.addAll(prov.getGroupMembership(dl, false).groupIds());
             }
             getSharesPublished(prov, visitor, owner, granteeIds, false, false);
