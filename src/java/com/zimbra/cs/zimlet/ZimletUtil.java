@@ -1720,7 +1720,7 @@ public class ZimletUtil {
 	}
 	
 	private static void usage() {
-		System.out.println("zmzimletctl: [-l] [-a <admin url> -u <upload url>] [command] [ zimlet.zip | config.xml | zimlet ]");
+		System.out.println("Usage: zmzimletctl [-l] [-a <admin url> -u <upload url>] [command] [ zimlet.zip | config.xml | zimlet ]");
 		System.out.println("\tdeploy {zimlet.zip} - install, ldapDeploy, grant ACL on default COS, then enable Zimlet");
 		System.out.println("\tundeploy {zimlet} - remove the Zimlet from the system");
 		System.out.println("\tinstall {zimlet.zip} - installs the Zimlet files on this host");
