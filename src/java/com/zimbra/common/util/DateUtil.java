@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -20,18 +20,21 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.service.ServiceException;
 
-public class DateUtil {
-    
+public final class DateUtil {
+
     public static final String ZIMBRA_LDAP_GENERALIZED_TIME_FORMAT = "yyyyMMddHHmmss'Z'";
+
+    private DateUtil() {
+    }
 
     /**
      * to LDAP generalized time string
@@ -44,7 +47,7 @@ public class DateUtil {
             gmtDate = new Date(date.getTime() - (tz.getRawOffset() + tz.getDSTSavings()));
         else
             gmtDate = new Date(date.getTime() - tz.getRawOffset());
-        return fmt.format(gmtDate);        
+        return fmt.format(gmtDate);
     }
 
     public static Date parseGeneralizedTime(String time) {
@@ -82,7 +85,7 @@ public class DateUtil {
     public static String toISO8601(Date date) {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
         String result = format.format(date);
-        // convert YYYYMMDDTHH:mm:ss+HH00 into YYYYMMDDTHH:mm:ss+HH:00 
+        // convert YYYYMMDDTHH:mm:ss+HH00 into YYYYMMDDTHH:mm:ss+HH:00
         //  - note the added colon for the time zone
         result = result.substring(0, result.length()-2) + ":" + result.substring(result.length()-2);
         return result;
@@ -170,31 +173,61 @@ public class DateUtil {
         return cal == null ? fallback : cal.getTime();
     }
 
-    public static Calendar parseRFC2822DateAsCalendar(String encoded) {
-        if (encoded == null)
-            return null;
+    private static final Pattern RFC2822_DIGIT_OR_MONTH = Pattern.compile(
+            "(\\d|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)", Pattern.CASE_INSENSITIVE);
 
+    public static Calendar parseRFC2822DateAsCalendar(String encoded) {
+        if (encoded == null) {
+            return null;
+        }
         Calendar cal = new GregorianCalendar();
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
 
+        Matcher matcher = RFC2822_DIGIT_OR_MONTH.matcher(encoded);
+        if (!matcher.find()) {
+            return null;
+        }
+        int pos = matcher.start();
         try {
-            int pos = skipCFWS(encoded, 0);
-            while (encoded.charAt(pos) < '0' || encoded.charAt(pos) > '9')
-                pos = skipCFWS(encoded, skipText(encoded, pos, false));
+            if (Character.isDigit(encoded.charAt(pos))) { // DD MMM
+                pos = readCalendarField(encoded, pos, cal, Calendar.DAY_OF_MONTH);
+                pos = readCalendarMonth(encoded, skipCFWS(encoded, pos), cal);
+            } else { // MMM DD
+                pos = readCalendarMonth(encoded, pos, cal);
+                pos = readCalendarField(encoded, skipCFWS(encoded, pos), cal, Calendar.DAY_OF_MONTH);
+            }
 
-            pos = readCalendarField(encoded, pos, cal, Calendar.DAY_OF_MONTH);
-            pos = readCalendarMonth(encoded, skipCFWS(encoded, pos), cal);
-            pos = readCalendarField(encoded, skipCFWS(encoded, pos), cal, Calendar.YEAR);
-
-            pos = readCalendarField(encoded, skipCFWS(encoded, pos), cal, Calendar.HOUR_OF_DAY);
-            pos = skipChar(encoded, skipCFWS(encoded, pos), ':');
-            pos = readCalendarField(encoded, skipCFWS(encoded, pos), cal, Calendar.MINUTE);
             pos = skipCFWS(encoded, pos);
-            if (encoded.charAt(pos) == ':')
-                pos = readCalendarField(encoded, skipCFWS(encoded, pos + 1), cal, Calendar.SECOND);
-            readCalendarTimeZone(encoded, skipCFWS(encoded, pos), cal);
-
+            int peek = readCalendarField(encoded, pos, cal, Calendar.YEAR); // YYYY or HH:MM:SS
+            if (encoded.charAt(peek) != ':') { // standard - YYYY HH:MM:SS Z
+                pos = readCalendarField(encoded, skipCFWS(encoded, peek), cal, Calendar.HOUR_OF_DAY);
+                pos = skipChar(encoded, skipCFWS(encoded, pos), ':');
+                pos = readCalendarField(encoded, skipCFWS(encoded, pos), cal, Calendar.MINUTE);
+                pos = skipCFWS(encoded, pos);
+                if (encoded.charAt(pos) == ':') {
+                    pos = readCalendarField(encoded, skipCFWS(encoded, pos + 1), cal, Calendar.SECOND);
+                }
+                try {
+                    readCalendarTimeZone(encoded, skipCFWS(encoded, pos), cal);
+                } catch (ParseException e) { // no timezone
+                    cal.setTimeZone(TimeZone.getDefault());
+                }
+            } else { // deviation - HH:MM:SS Z YYYY
+                pos = readCalendarField(encoded, pos, cal, Calendar.HOUR_OF_DAY);
+                pos = skipChar(encoded, skipCFWS(encoded, pos), ':');
+                pos = readCalendarField(encoded, skipCFWS(encoded, pos), cal, Calendar.MINUTE);
+                pos = skipCFWS(encoded, pos);
+                if (encoded.charAt(pos) == ':') {
+                    pos = readCalendarField(encoded, skipCFWS(encoded, pos + 1), cal, Calendar.SECOND);
+                    pos = skipCFWS(encoded, pos);
+                }
+                if (!Character.isDigit(encoded.charAt(pos))) {
+                    pos = readCalendarTimeZone(encoded, pos, cal);
+                    pos = skipCFWS(encoded, pos);
+                }
+                readCalendarField(encoded, pos, cal, Calendar.YEAR);
+            }
             return cal;
         } catch (ParseException e) {
             return null;
@@ -256,11 +289,14 @@ public class DateUtil {
         return i;
     }
 
-    private static final Map<String, Integer> MONTH_NUMBER = new HashMap<String, Integer>(16);
-        static {
-            for (int i = 0; i < MONTH_NAME.length; i++)
-                MONTH_NUMBER.put(MONTH_NAME[i].toUpperCase(), i);
+    private static final Map<String, Integer> MONTH_NUMBER;
+    static {
+        ImmutableMap.Builder<String, Integer> builder = ImmutableMap.builder();
+        for (int i = 0; i < MONTH_NAME.length; i++) {
+            builder.put(MONTH_NAME[i].toUpperCase(), i);
         }
+        MONTH_NUMBER = builder.build();
+    }
 
     private static int readCalendarMonth(String encoded, int start, Calendar cal) throws ParseException {
         int i = skipText(encoded, start, true);
@@ -279,27 +315,14 @@ public class DateUtil {
         return i;
     }
 
-    private static final Map<String, String> KNOWN_ZONES = new HashMap<String,String>(30);
-        static {
-            KNOWN_ZONES.put("UT",  "+0000");  KNOWN_ZONES.put("GMT", "+0000");
-            KNOWN_ZONES.put("EDT", "-0400");  KNOWN_ZONES.put("EST", "-0500");
-            KNOWN_ZONES.put("CDT", "-0500");  KNOWN_ZONES.put("CST", "-0600");
-            KNOWN_ZONES.put("MDT", "-0600");  KNOWN_ZONES.put("MST", "-0700");
-            KNOWN_ZONES.put("PDT", "-0700");  KNOWN_ZONES.put("PST", "-0800");
-            KNOWN_ZONES.put("A",   "+0100");  KNOWN_ZONES.put("B",   "+0200");
-            KNOWN_ZONES.put("C",   "+0300");  KNOWN_ZONES.put("D",   "+0400");
-            KNOWN_ZONES.put("E",   "+0500");  KNOWN_ZONES.put("F",   "+0600");
-            KNOWN_ZONES.put("G",   "+0700");  KNOWN_ZONES.put("H",   "+0800");
-            KNOWN_ZONES.put("I",   "+0900");  KNOWN_ZONES.put("K",   "+1000");
-            KNOWN_ZONES.put("L",   "+1100");  KNOWN_ZONES.put("M",   "+1200");
-            KNOWN_ZONES.put("N",   "-0100");  KNOWN_ZONES.put("O",   "-0200");
-            KNOWN_ZONES.put("P",   "-0300");  KNOWN_ZONES.put("Q",   "-0400");
-            KNOWN_ZONES.put("R",   "-0500");  KNOWN_ZONES.put("S",   "-0600");
-            KNOWN_ZONES.put("T",   "-0700");  KNOWN_ZONES.put("U",   "-0800");
-            KNOWN_ZONES.put("V",   "-0900");  KNOWN_ZONES.put("W",   "-1000");
-            KNOWN_ZONES.put("X",   "-1100");  KNOWN_ZONES.put("Y",   "-1200");
-            KNOWN_ZONES.put("Z",   "+0000");
-        }
+    private static final Map<String, String> KNOWN_ZONES = ImmutableMap.<String, String>builder()
+            .put("UT",  "+0000").put("GMT", "+0000").put("EDT", "-0400").put("EST", "-0500").put("CDT", "-0500")
+            .put("CST", "-0600").put("MDT", "-0600").put("MST", "-0700").put("PDT", "-0700").put("PST", "-0800")
+            .put("A", "+0100").put("B", "+0200").put("C", "+0300").put("D", "+0400").put("E", "+0500").put("F", "+0600")
+            .put("G", "+0700").put("H", "+0800").put("I", "+0900").put("K", "+1000").put("L", "+1100").put("M", "+1200")
+            .put("N", "-0100").put("O", "-0200").put("P", "-0300").put("Q", "-0400").put("R", "-0500").put("S", "-0600")
+            .put("T", "-0700").put("U", "-0800").put("V", "-0900").put("W", "-1000").put("X", "-1100").put("Y", "-1200")
+            .put("Z", "+0000").build();
 
     private static int readCalendarTimeZone(String encoded, int start, Calendar cal) throws ParseException {
         int i = skipText(encoded, start, true);
@@ -325,7 +348,7 @@ public class DateUtil {
     public static Date parseISO8601Date(String encoded, Date fallback) {
         if (encoded == null)
             return fallback;
-    
+
         // normalize format to "2005-10-19T16:25:38-0800"
         encoded = encoded.toUpperCase();
         int length = encoded.length();
@@ -345,7 +368,7 @@ public class DateUtil {
                 pos++;
             encoded = encoded.substring(0, 19) + encoded.substring(pos);
         }
-    
+
         // timezone cleanup: this format understands '-0800', not '-08:00'
         int colon = encoded.lastIndexOf(':');
         if (colon > 19)
@@ -355,45 +378,45 @@ public class DateUtil {
             encoded += "-0000";
         else if (encoded.endsWith("Z"))
             encoded = encoded.substring(0, encoded.length() - 1) + "-0000";
-    
+
         try {
             return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").parse(encoded);
         } catch (ParseException e) {
             return fallback;
         }
     }
- 
+
     private static final String ABSDATE_YFIRST_PATTERN = "(\\d{4})[/-](\\d{1,2})[/-](\\d{1,2})";
 
     private static final String ABSDATE_YLAST_PATTERN  = "(\\d{1,2})[/-](\\d{1,2})[/-](\\d{4})";
-    
+
     private static final String RELDATE_PATTERN        = "([mp+-]?)([0-9]+)([mhdwy][a-z]*)?";
 
     private static final String ABS_MILLISECS_PATTERN = "\\d+";
-    
+
     private static final Pattern sAbsYFirstPattern = Pattern.compile(ABSDATE_YFIRST_PATTERN);
     private static final Pattern sAbsYLastPattern = Pattern.compile(ABSDATE_YLAST_PATTERN);
     private static final Pattern sRelDatePattern = Pattern.compile(RELDATE_PATTERN);
     private static final Pattern sAbsMillisecsDatePattern = Pattern.compile(ABS_MILLISECS_PATTERN);
-    
+
     /**
      * parse a date specifier string. Examples are:
-     * <pre> 
+     * <pre>
      * absolute dates:
-     * 
+     *
      *  mm/dd/yyyy (i.e., 12/25/1998)
      *  yyyy/dd/mm (i.e., 1989/12/25)
      *  \\d+       (num milliseconds, i.e., 1132276598000)
-     *  
+     *
      *  relative dates:
      *
      *  [mp+-]?([0-9]+)([mhdwy][a-z]*)?g
-     * 
+     *
      *   p/+/{not-specified}   current time plus an offset (p and '' are supported for use in query params)
      *   m/-                   current time minus an offset
-     *   
+     *
      *   (0-9)+    value
-     *   
+     *
      *   ([mhdwy][a-z]*)  units, everything after the first character is ignored (except for "mi" case):
      *   m(onths)
      *   mi(nutes)
@@ -401,18 +424,18 @@ public class DateUtil {
      *   w(eeks)
      *   h(ours)
      *   y(ears)
-     *   
+     *
      *  examples:
      *     1day     1 day from now
-     *    +1day     1 day from now 
+     *    +1day     1 day from now
      *    p1day     1 day from now
      *    +60mi     60 minutes from now
      *    +1week    1 week from now
-     *    +6mon     6 months from now 
+     *    +6mon     6 months from now
      *    1year     1 year from now
      *
      * </pre>
-     * 
+     *
      * @param dateStr
      * @param defaultValue
      * @return
@@ -433,14 +456,14 @@ public class DateUtil {
             m = sAbsYFirstPattern.matcher(dateStr);
             if (m.matches()) {
                 yearStr = m.group(1);
-                monthStr = m.group(2);                
-                dayStr = m.group(3);                
+                monthStr = m.group(2);
+                dayStr = m.group(3);
                 return new SimpleDateFormat("MM/dd/yyyy").parse(monthStr+"/"+dayStr+"/"+yearStr);
             }
             m = sAbsYLastPattern.matcher(dateStr);
             if (m.matches()) {
                 monthStr = m.group(1);
-                dayStr = m.group(2);                
+                dayStr = m.group(2);
                 yearStr = m.group(3);
                 return new SimpleDateFormat("MM/dd/yyyy").parse(monthStr+"/"+dayStr+"/"+yearStr);
             }
@@ -448,7 +471,7 @@ public class DateUtil {
             if (m.matches()) {
                 String ss = m.group(1);
                 int sign = (ss == null || ss.equals("") || ss.equals("+") || ss.equals("p")) ? 1 : -1;
-                int value = Integer.parseInt(m.group(2)) * sign;                
+                int value = Integer.parseInt(m.group(2)) * sign;
                 String unitsStr = m.group(3);
                 int field = Calendar.DATE;
                 if (unitsStr != null && unitsStr.length() > 0) {
@@ -467,7 +490,7 @@ public class DateUtil {
                         break;
                     case 'y':
                         field = Calendar.YEAR;
-                        break;                        
+                        break;
                     }
                 }
                 Calendar cal = new GregorianCalendar();
@@ -480,7 +503,7 @@ public class DateUtil {
         }
         return null;
     }
-    
+
     /**
      * Returns the number of milliseconds specified by the time interval value.
      * The format of the time interval value is one of the following, where <tt>NN</tt>
@@ -503,7 +526,7 @@ public class DateUtil {
             return defaultValue;
         }
     }
-    
+
     public static long getTimeInterval(String value) throws ServiceException {
         if (value == null || value.length() == 0)
             throw ServiceException.FAILURE("no value", null);
@@ -526,7 +549,7 @@ public class DateUtil {
             return n * Constants.MILLIS_PER_SECOND;
         }
     }
-    
+
     /**
      * Returns the number of seconds specified by the time interval value.
      * The format of the time interval value is one of the following, where <tt>NN</tt>
@@ -539,9 +562,9 @@ public class DateUtil {
      *   <li>NNms - milli seconds</li>
      *   <li>NN - seconds</li>
      * </ul>
-     * 
+     *
      * If the value is in ms (milli seconds), round to the nearest second.
-     * 
+     *
      * @param value the time interval value
      * @param defaultValue returned if the time interval is null or cannot be parsed
      */
@@ -554,56 +577,4 @@ public class DateUtil {
         }
     }
 
-    public static void main(String args[]) {
-        System.out.println("date = " + new Date(parseDateSpecifier("12/25/1998", 0)));
-        System.out.println("date = " + new Date(parseDateSpecifier("1989/12/25", 0)));
-        System.out.println("date = " + new Date(parseDateSpecifier("1day", 0)));        
-        System.out.println("date = " + new Date(parseDateSpecifier("+1day", 0)));
-        System.out.println("date = " + new Date(parseDateSpecifier("+10day", 0)));
-        System.out.println("date = " + new Date(parseDateSpecifier("+60minute", 0)));                
-        System.out.println("date = " + new Date(parseDateSpecifier("+1week", 0)));        
-        System.out.println("date = " + new Date(parseDateSpecifier("+1month", 0)));                
-        System.out.println("date = " + new Date(parseDateSpecifier("+1year", 0)));                        
-        System.out.println("date = " + new Date(parseDateSpecifier("-1day", 0)));
-        System.out.println("date = " + new Date(parseDateSpecifier("1132276598000", 0)));
-        System.out.println("date = " + new Date(parseDateSpecifier("p10day", 0)));
-
-        System.out.println("iso = " + parseISO8601Date("2009-11-20", new Date()));
-        System.out.println("iso = " + parseISO8601Date("2009-11-20T13:55:49Z", new Date()));
-        System.out.println("iso = " + parseISO8601Date("2009-11-20T13:55:49.823", new Date()));
-        System.out.println("iso = " + parseISO8601Date("2009-11-20t13:55:49.724z", new Date()));
-
-        System.out.println(parseRFC2822Date("01 May 2007 09:27 -0600", new Date()));
-        System.out.println(parseRFC2822Date("01 Apr 2005 18:20:24 -0800", new Date()));
-        System.out.println(parseRFC2822Date("Fri, 10 Oct 2003 12:52:52 -0700", new Date()));
-        System.out.println(parseRFC2822Date("Wed, 27 Apr 2005 11:14:18 -0700 (PDT)", new Date()));
-        System.out.println(parseRFC2822Date("Fri, 8 Feb 2008 00:56:02 -0500 (EST)", new Date()));
-        System.out.println(parseRFC2822Date("Wed, 27 Apr 2005 15:37:37 PDT", new Date()));
-        System.out.println(parseRFC2822Date("21 Nov 97 09:55:06 GMT", new Date()));
-        System.out.println(parseRFC2822Date("Tue,  1 May 2007 09:41(() )():(() )()26 -0700", new Date()));
-
-        System.out.println(parseRFC2822Date("21 Nov 97 09::06 GMT", new Date()));
-        System.out.println(parseRFC2822Date("21 nOV 97 09:55:06 R", new Date()));
-        System.out.println(parseRFC2822Date("21 11 06 09:55:06 GMT", new Date()));
-
-        System.out.println(toImapDateTime(new Date()));
-
-        /*
-        System.out.println("20070318050124Z" + "-default = " +  parseGeneralizedTime("20070318050124Z"));
-        System.out.println("20070318050124Z" + "-true = " +  parseGeneralizedTime("20070318050124Z", true));
-        System.out.println("20070318050124Z" + "-false = " +  parseGeneralizedTime("20070318050124Z", false));
-
-        System.out.println("20070318050124.0Z" + "-default = " +  parseGeneralizedTime("20070318050124.0Z"));
-        System.out.println("20070318050124.0Z" + "-true = " +  parseGeneralizedTime("20070318050124.0Z", true));
-        System.out.println("20070318050124.0Z" + "-false = " +  parseGeneralizedTime("20070318050124.0Z", false));
-        */
-
-        java.util.Calendar cal = DateUtil.parseRFC2822DateAsCalendar("21 Nov 97 09:55:06 GMT");
-        if (cal != null) {
-            java.text.DateFormat format = java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.SHORT, java.text.DateFormat.SHORT, java.util.Locale.UK);
-            System.out.println(format.format(cal.getTime()));
-            format.setTimeZone(TimeZone.getTimeZone("GMT" + DateUtil.getTimezoneString(cal)));
-            System.out.println(format.format(cal.getTime()));
-        }
-    }
 }
