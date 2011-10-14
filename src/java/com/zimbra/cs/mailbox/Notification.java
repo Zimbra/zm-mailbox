@@ -15,7 +15,9 @@
 
 package com.zimbra.cs.mailbox;
 
+import com.google.common.collect.Sets;
 import com.sun.mail.smtp.SMTPMessage;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
@@ -29,7 +31,6 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
@@ -257,6 +258,15 @@ public class Notification implements LmtpCallback {
             DbPool.quietClose(conn);
         }
 
+        // check if the sender is "external"
+        boolean isInternalSender = isInternalSender(destination, account);
+        if (!isInternalSender &&
+                (!account.isPrefOutOfOfficeExternalReplyEnabled() ||
+                        !isReplyableExternalSender(destination, account, mbox))) {
+            ofailed("external sender", destination, rcpt, msg);
+            return;
+        }
+
         // Send the message
         try {
             SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
@@ -292,7 +302,8 @@ public class Notification implements LmtpCallback {
             out.setHeader("Precedence", "bulk");
 
             // Body
-            String body = account.getAttr(Provisioning.A_zimbraPrefOutOfOfficeReply, "");
+            String body = account.getAttr(isInternalSender ?
+                    Provisioning.A_zimbraPrefOutOfOfficeReply : Provisioning.A_zimbraPrefOutOfOfficeExternalReply, "");
             charset = getCharset(account, body);
             out.setText(body, charset);
 
@@ -319,6 +330,39 @@ public class Notification implements LmtpCallback {
             ofailed("send failed", destination, rcpt, msg, me);
             return;
         }
+    }
+
+    private static boolean isInternalSender(String senderAddr, Account account) {
+        String[] senderAddrParts = EmailUtil.getLocalPartAndDomain(senderAddr);
+        String senderDomain = senderAddrParts[1];
+        if (account.getDomainName().equalsIgnoreCase(senderDomain)) {
+            // same domain
+            return true;
+        }
+        String[] internalDomains = account.getOutOfOfficeInternalSendersDomain();
+        if (internalDomains != null) {
+            for (String intDom : internalDomains) {
+                if (intDom.equalsIgnoreCase(senderDomain)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean isReplyableExternalSender(String senderAddr, Account account, Mailbox mbox)
+            throws ServiceException {
+        ZAttrProvisioning.PrefOutOfOfficeExternalSenders externalSenders = account.getPrefOutOfOfficeExternalSenders();
+        if (externalSenders != null) {
+            switch (externalSenders) {
+                case ab:
+                    return mbox.index.existsInContacts(Sets.newHashSet(
+                            new com.zimbra.common.mime.InternetAddress(senderAddr)));
+                case all:
+                    return true;
+            }
+        }
+        return true;
     }
 
     private String getCharset(Account account, String data) {

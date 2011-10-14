@@ -43,7 +43,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20111007-1015 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111014-0926 */
 
     /**
      * RFC2256: descriptive information
@@ -12407,6 +12407,140 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetOpenidConsumerAllowedOPEndpointURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOpenidConsumerAllowedOPEndpointURL, "");
+        return attrs;
+    }
+
+    /**
+     * additional domains considered as internal for out of office reply
+     *
+     * @return zimbraOutOfOfficeInternalSendersDomain, or empty array if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public String[] getOutOfOfficeInternalSendersDomain() {
+        return getMultiAttr(Provisioning.A_zimbraOutOfOfficeInternalSendersDomain);
+    }
+
+    /**
+     * additional domains considered as internal for out of office reply
+     *
+     * @param zimbraOutOfOfficeInternalSendersDomain new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public void setOutOfOfficeInternalSendersDomain(String[] zimbraOutOfOfficeInternalSendersDomain) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, zimbraOutOfOfficeInternalSendersDomain);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * additional domains considered as internal for out of office reply
+     *
+     * @param zimbraOutOfOfficeInternalSendersDomain new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public Map<String,Object> setOutOfOfficeInternalSendersDomain(String[] zimbraOutOfOfficeInternalSendersDomain, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, zimbraOutOfOfficeInternalSendersDomain);
+        return attrs;
+    }
+
+    /**
+     * additional domains considered as internal for out of office reply
+     *
+     * @param zimbraOutOfOfficeInternalSendersDomain new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public void addOutOfOfficeInternalSendersDomain(String zimbraOutOfOfficeInternalSendersDomain) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, zimbraOutOfOfficeInternalSendersDomain);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * additional domains considered as internal for out of office reply
+     *
+     * @param zimbraOutOfOfficeInternalSendersDomain new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public Map<String,Object> addOutOfOfficeInternalSendersDomain(String zimbraOutOfOfficeInternalSendersDomain, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, zimbraOutOfOfficeInternalSendersDomain);
+        return attrs;
+    }
+
+    /**
+     * additional domains considered as internal for out of office reply
+     *
+     * @param zimbraOutOfOfficeInternalSendersDomain existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public void removeOutOfOfficeInternalSendersDomain(String zimbraOutOfOfficeInternalSendersDomain) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, zimbraOutOfOfficeInternalSendersDomain);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * additional domains considered as internal for out of office reply
+     *
+     * @param zimbraOutOfOfficeInternalSendersDomain existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public Map<String,Object> removeOutOfOfficeInternalSendersDomain(String zimbraOutOfOfficeInternalSendersDomain, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, zimbraOutOfOfficeInternalSendersDomain);
+        return attrs;
+    }
+
+    /**
+     * additional domains considered as internal for out of office reply
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public void unsetOutOfOfficeInternalSendersDomain() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * additional domains considered as internal for out of office reply
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public Map<String,Object> unsetOutOfOfficeInternalSendersDomain(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, "");
         return attrs;
     }
 

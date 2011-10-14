@@ -18,6 +18,9 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.zimbra.common.account.ZAttrProvisioning;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.Db;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbMailbox;
@@ -38,6 +41,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -235,6 +239,21 @@ public final class MailboxUpgrade {
             throw e;
         } finally {
             conn.closeQuietly();
+        }
+    }
+
+    public static void upgradeTo2_2(Mailbox mbox) throws ServiceException {
+        // Update out of office prefs (bug 57336)
+        Account account = mbox.getAccount();
+        if (account.isPrefOutOfOfficeReplyEnabled()) {
+            // first check whether the ooo reply is active
+            Date now = new Date();
+            Date untilDate = account.getGeneralizedTimeAttr(Provisioning.A_zimbraPrefOutOfOfficeUntilDate, null);
+            if (untilDate != null && now.before(untilDate)) {
+                account.setPrefOutOfOfficeExternalReplyEnabled(true);
+                account.setPrefOutOfOfficeExternalReply(account.getPrefOutOfOfficeReply());
+                account.setPrefOutOfOfficeExternalSenders(ZAttrProvisioning.PrefOutOfOfficeExternalSenders.all);
+            }
         }
     }
 

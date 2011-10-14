@@ -6524,4 +6524,24 @@ TODO: delete them permanently from here
   <desc>Maximum number of items to move during a single HSM operation.  If the limit is exceeded, the HSM operation is repeated until all qualifying items are moved.</desc>
 </attr>
 
+<attr id="1317" name="zimbraPrefOutOfOfficeExternalReply" type="string" max="8192" cardinality="single" optionalIn="account" since="8.0.0">
+  <desc>out of office message to external senders</desc>
+</attr>
+
+<attr id="1318" name="zimbraPrefOutOfOfficeExternalReplyEnabled" type="boolean" cardinality="single" optionalIn="account" since="8.0.0">
+  <desc>whether or not out of office reply to external senders is enabled</desc>
+</attr>
+
+<attr id="1319" name="zimbraOutOfOfficeInternalSendersDomain" type="string" cardinality="multi" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.0.0">
+  <desc>additional domains considered as internal for out of office reply</desc>
+</attr>
+
+<attr id="1320" name="zimbraPrefOutOfOfficeExternalSenders" type="enum" value="all,ab" cardinality="single" optionalIn="account" since="8.0.0">
+  <desc>
+    defining external senders for out of office reply
+    all - all external senders
+    ab  - external senders in Address Book
+  </desc>
+</attr>
+
 </attrs>

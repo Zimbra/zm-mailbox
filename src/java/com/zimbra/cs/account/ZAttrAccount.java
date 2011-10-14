@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20111007-1015 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111014-0926 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -25537,6 +25537,140 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * additional domains considered as internal for out of office reply
+     *
+     * @return zimbraOutOfOfficeInternalSendersDomain, or empty array if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public String[] getOutOfOfficeInternalSendersDomain() {
+        return getMultiAttr(Provisioning.A_zimbraOutOfOfficeInternalSendersDomain);
+    }
+
+    /**
+     * additional domains considered as internal for out of office reply
+     *
+     * @param zimbraOutOfOfficeInternalSendersDomain new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public void setOutOfOfficeInternalSendersDomain(String[] zimbraOutOfOfficeInternalSendersDomain) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, zimbraOutOfOfficeInternalSendersDomain);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * additional domains considered as internal for out of office reply
+     *
+     * @param zimbraOutOfOfficeInternalSendersDomain new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public Map<String,Object> setOutOfOfficeInternalSendersDomain(String[] zimbraOutOfOfficeInternalSendersDomain, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, zimbraOutOfOfficeInternalSendersDomain);
+        return attrs;
+    }
+
+    /**
+     * additional domains considered as internal for out of office reply
+     *
+     * @param zimbraOutOfOfficeInternalSendersDomain new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public void addOutOfOfficeInternalSendersDomain(String zimbraOutOfOfficeInternalSendersDomain) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, zimbraOutOfOfficeInternalSendersDomain);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * additional domains considered as internal for out of office reply
+     *
+     * @param zimbraOutOfOfficeInternalSendersDomain new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public Map<String,Object> addOutOfOfficeInternalSendersDomain(String zimbraOutOfOfficeInternalSendersDomain, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, zimbraOutOfOfficeInternalSendersDomain);
+        return attrs;
+    }
+
+    /**
+     * additional domains considered as internal for out of office reply
+     *
+     * @param zimbraOutOfOfficeInternalSendersDomain existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public void removeOutOfOfficeInternalSendersDomain(String zimbraOutOfOfficeInternalSendersDomain) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, zimbraOutOfOfficeInternalSendersDomain);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * additional domains considered as internal for out of office reply
+     *
+     * @param zimbraOutOfOfficeInternalSendersDomain existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public Map<String,Object> removeOutOfOfficeInternalSendersDomain(String zimbraOutOfOfficeInternalSendersDomain, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, zimbraOutOfOfficeInternalSendersDomain);
+        return attrs;
+    }
+
+    /**
+     * additional domains considered as internal for out of office reply
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public void unsetOutOfOfficeInternalSendersDomain() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * additional domains considered as internal for out of office reply
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public Map<String,Object> unsetOutOfOfficeInternalSendersDomain(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, "");
+        return attrs;
+    }
+
+    /**
      * regex of alllowed characters in password
      *
      * @return zimbraPasswordAllowedChars, or null if unset
@@ -39479,6 +39613,289 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefOutOfOfficeDirectAddress(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefOutOfOfficeDirectAddress, "");
+        return attrs;
+    }
+
+    /**
+     * out of office message to external senders
+     *
+     * @return zimbraPrefOutOfOfficeExternalReply, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1317)
+    public String getPrefOutOfOfficeExternalReply() {
+        return getAttr(Provisioning.A_zimbraPrefOutOfOfficeExternalReply, null);
+    }
+
+    /**
+     * out of office message to external senders
+     *
+     * @param zimbraPrefOutOfOfficeExternalReply new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1317)
+    public void setPrefOutOfOfficeExternalReply(String zimbraPrefOutOfOfficeExternalReply) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeExternalReply, zimbraPrefOutOfOfficeExternalReply);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * out of office message to external senders
+     *
+     * @param zimbraPrefOutOfOfficeExternalReply new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1317)
+    public Map<String,Object> setPrefOutOfOfficeExternalReply(String zimbraPrefOutOfOfficeExternalReply, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeExternalReply, zimbraPrefOutOfOfficeExternalReply);
+        return attrs;
+    }
+
+    /**
+     * out of office message to external senders
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1317)
+    public void unsetPrefOutOfOfficeExternalReply() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeExternalReply, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * out of office message to external senders
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1317)
+    public Map<String,Object> unsetPrefOutOfOfficeExternalReply(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeExternalReply, "");
+        return attrs;
+    }
+
+    /**
+     * whether or not out of office reply to external senders is enabled
+     *
+     * @return zimbraPrefOutOfOfficeExternalReplyEnabled, or false if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1318)
+    public boolean isPrefOutOfOfficeExternalReplyEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefOutOfOfficeExternalReplyEnabled, false);
+    }
+
+    /**
+     * whether or not out of office reply to external senders is enabled
+     *
+     * @param zimbraPrefOutOfOfficeExternalReplyEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1318)
+    public void setPrefOutOfOfficeExternalReplyEnabled(boolean zimbraPrefOutOfOfficeExternalReplyEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeExternalReplyEnabled, zimbraPrefOutOfOfficeExternalReplyEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not out of office reply to external senders is enabled
+     *
+     * @param zimbraPrefOutOfOfficeExternalReplyEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1318)
+    public Map<String,Object> setPrefOutOfOfficeExternalReplyEnabled(boolean zimbraPrefOutOfOfficeExternalReplyEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeExternalReplyEnabled, zimbraPrefOutOfOfficeExternalReplyEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether or not out of office reply to external senders is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1318)
+    public void unsetPrefOutOfOfficeExternalReplyEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeExternalReplyEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether or not out of office reply to external senders is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1318)
+    public Map<String,Object> unsetPrefOutOfOfficeExternalReplyEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeExternalReplyEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * defining external senders for out of office reply all - all external
+     * senders ab - external senders in Address Book
+     *
+     * <p>Valid values: [all, ab]
+     *
+     * @return zimbraPrefOutOfOfficeExternalSenders, or null if unset and/or has invalid value
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1320)
+    public ZAttrProvisioning.PrefOutOfOfficeExternalSenders getPrefOutOfOfficeExternalSenders() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefOutOfOfficeExternalSenders); return v == null ? null : ZAttrProvisioning.PrefOutOfOfficeExternalSenders.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * defining external senders for out of office reply all - all external
+     * senders ab - external senders in Address Book
+     *
+     * <p>Valid values: [all, ab]
+     *
+     * @return zimbraPrefOutOfOfficeExternalSenders, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1320)
+    public String getPrefOutOfOfficeExternalSendersAsString() {
+        return getAttr(Provisioning.A_zimbraPrefOutOfOfficeExternalSenders, null);
+    }
+
+    /**
+     * defining external senders for out of office reply all - all external
+     * senders ab - external senders in Address Book
+     *
+     * <p>Valid values: [all, ab]
+     *
+     * @param zimbraPrefOutOfOfficeExternalSenders new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1320)
+    public void setPrefOutOfOfficeExternalSenders(ZAttrProvisioning.PrefOutOfOfficeExternalSenders zimbraPrefOutOfOfficeExternalSenders) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeExternalSenders, zimbraPrefOutOfOfficeExternalSenders.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * defining external senders for out of office reply all - all external
+     * senders ab - external senders in Address Book
+     *
+     * <p>Valid values: [all, ab]
+     *
+     * @param zimbraPrefOutOfOfficeExternalSenders new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1320)
+    public Map<String,Object> setPrefOutOfOfficeExternalSenders(ZAttrProvisioning.PrefOutOfOfficeExternalSenders zimbraPrefOutOfOfficeExternalSenders, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeExternalSenders, zimbraPrefOutOfOfficeExternalSenders.toString());
+        return attrs;
+    }
+
+    /**
+     * defining external senders for out of office reply all - all external
+     * senders ab - external senders in Address Book
+     *
+     * <p>Valid values: [all, ab]
+     *
+     * @param zimbraPrefOutOfOfficeExternalSenders new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1320)
+    public void setPrefOutOfOfficeExternalSendersAsString(String zimbraPrefOutOfOfficeExternalSenders) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeExternalSenders, zimbraPrefOutOfOfficeExternalSenders);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * defining external senders for out of office reply all - all external
+     * senders ab - external senders in Address Book
+     *
+     * <p>Valid values: [all, ab]
+     *
+     * @param zimbraPrefOutOfOfficeExternalSenders new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1320)
+    public Map<String,Object> setPrefOutOfOfficeExternalSendersAsString(String zimbraPrefOutOfOfficeExternalSenders, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeExternalSenders, zimbraPrefOutOfOfficeExternalSenders);
+        return attrs;
+    }
+
+    /**
+     * defining external senders for out of office reply all - all external
+     * senders ab - external senders in Address Book
+     *
+     * <p>Valid values: [all, ab]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1320)
+    public void unsetPrefOutOfOfficeExternalSenders() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeExternalSenders, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * defining external senders for out of office reply all - all external
+     * senders ab - external senders in Address Book
+     *
+     * <p>Valid values: [all, ab]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1320)
+    public Map<String,Object> unsetPrefOutOfOfficeExternalSenders(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeExternalSenders, "");
         return attrs;
     }
 

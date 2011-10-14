@@ -523,10 +523,9 @@ public class Mailbox {
                     updateVersion(new MailboxVersion((short) 2, (short) 1));
                 }
 
-                // mailbox version in ZIMBRA.MAILBOX table
                 if (!mData.version.atLeast(2, 2)) {
                     ZimbraLog.mailbox.info("Upgrade mailbox from %s to 2.2", getVersion());
-                    // writing the new version itself performs the upgrade!
+                    MailboxUpgrade.upgradeTo2_2(this);
                     updateVersion(new MailboxVersion((short) 2, (short) 2));
                 }
             }
