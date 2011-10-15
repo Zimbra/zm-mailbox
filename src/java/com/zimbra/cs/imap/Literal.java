@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,11 +31,11 @@ abstract class Literal {
     public static Literal newInstance(int size) throws IOException {
         return newInstance(size, false);
     }
-    
+
     public static Literal newInstance(int size, boolean useBlob) throws IOException {
-        return useBlob ? new BlobLiteral(size) : new ByteBufferLiteral(size);
+        return (useBlob && size > 0) ? new BlobLiteral(size) : new ByteBufferLiteral(size);
     }
-    
+
     public abstract int size();
     public abstract int remaining();
     public abstract int copy(InputStream is) throws IOException;
@@ -57,7 +57,7 @@ abstract class Literal {
             throw new IllegalStateException("Incomplete literal");
         }
     }
-    
+
     private static class ByteBufferLiteral extends Literal {
         private ByteBuffer buf;
         private Blob blob;
@@ -73,17 +73,17 @@ abstract class Literal {
         @Override public int remaining() {
             return buf.capacity() - buf.position();
         }
-        
+
         @Override public byte[] getBytes() {
             checkComplete();
             return buf.array();
         }
-        
+
         @Override public InputStream getInputStream() {
             checkComplete();
             return new ByteArrayInputStream(buf.array());
         }
-        
+
         @Override public int copy(InputStream is) throws IOException {
             int count = is.read(buf.array(), buf.position(), remaining());
             if (count > 0) {
@@ -99,7 +99,7 @@ abstract class Literal {
             buf.put(b, off, len);
             return len;
         }
-        
+
         @Override public Blob getBlob() throws IOException, ServiceException {
             return StoreManager.getInstance().storeIncoming(getInputStream(), null);
         }
@@ -134,7 +134,7 @@ abstract class Literal {
         @Override public int remaining() {
             return size() - (int) builder.getTotalBytes();
         }
-        
+
         @Override public byte[] getBytes() throws IOException {
             DataInputStream is = new DataInputStream(getInputStream());
             try {

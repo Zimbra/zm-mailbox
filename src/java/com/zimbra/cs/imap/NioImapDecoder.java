@@ -133,7 +133,7 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
                         } catch (IllegalArgumentException e) {
                             throw new InvalidLiteralFormatException();
                         }
-                        if (li != null) {
+                        if (li != null && li.count > 0) { // ignore empty literal
                             if (maxLiteralSize >= 0 && li.count > maxLiteralSize) {
                                 if (li.isBlocking()) { // return a negative continuation response
                                     throw new TooBigLiteralException(line);
@@ -168,6 +168,8 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
     }
 
     static final class TooLongLineException extends RecoverableProtocolDecoderException {
+        private static final long serialVersionUID = -7284634822713651847L;
+
         @Override
         public String getMessage() {
             return "maximum line length exceeded";
@@ -175,6 +177,8 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
     }
 
     static final class TooBigLiteralException extends RecoverableProtocolDecoderException {
+        private static final long serialVersionUID = 4272855594291614583L;
+
         private String request;
 
         private TooBigLiteralException(String req) {
@@ -192,6 +196,8 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
     }
 
     static final class InvalidLiteralFormatException extends ProtocolDecoderException {
+        private static final long serialVersionUID = 7224987995979809371L;
+
         @Override
         public String getMessage() {
             return "invalid literal format";

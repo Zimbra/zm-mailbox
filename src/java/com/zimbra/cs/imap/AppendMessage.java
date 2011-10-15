@@ -66,8 +66,8 @@ final class AppendMessage {
     private Set<String> tags = Sets.newHashSetWithExpectedSize(3);
     private short sflags;
 
-    public static AppendMessage parse(ImapHandler handler, String tag, ImapRequest req)
-    throws ImapParseException, IOException {
+    static AppendMessage parse(ImapHandler handler, String tag, ImapRequest req)
+            throws ImapParseException, IOException {
         AppendMessage append = new AppendMessage(handler, tag);
         append.parse(req);
         return append;
@@ -113,11 +113,11 @@ final class AppendMessage {
         }
     }
 
-    public void checkFlags(Mailbox mbox, ImapFlagCache flagSet, ImapFlagCache tagSet, List<Tag> newTags)
-    throws ServiceException {
-        if (flagNames == null)
+    void checkFlags(Mailbox mbox, ImapFlagCache flagSet, ImapFlagCache tagSet, List<Tag> newTags)
+            throws ServiceException {
+        if (flagNames == null) {
             return;
-
+        }
         for (String name : flagNames) {
             ImapFlagCache.ImapFlag i4flag = flagSet.getByImapName(name);
             if (i4flag != null && !i4flag.mListed) {
@@ -145,7 +145,7 @@ final class AppendMessage {
         flagNames = null;
     }
 
-    public int storeContent(Object mboxObj, Object folderObj)
+    int storeContent(Object mboxObj, Object folderObj)
             throws ImapSessionClosedException, IOException, ServiceException {
         try {
             checkDate(content);
@@ -194,15 +194,18 @@ final class AppendMessage {
         return new ItemId(id, getCredentials().getAccountId()).getId();
     }
 
-    public void checkContent() throws IOException, ImapException, ServiceException {
+    void checkContent() throws IOException, ImapException, ServiceException {
         content = catenate ? doCatenate() : parts.get(0).literal.getBlob();
-        if (content.getRawSize() > handler.getConfig().getMaxMessageSize()) {
+        long size = content.getRawSize();
+        if (size > handler.getConfig().getMaxMessageSize()) {
             cleanup();
             if (catenate) {
                 throw new ImapParseException(tag, "TOOBIG", "maximum message size exceeded", false);
             } else {
                 throw new ImapParseException(tag, "maximum message size exceeded", true);
             }
+        } else if (size <= 0) {
+            throw new ImapParseException(tag, "zero-length message", false);
         }
     }
 
@@ -223,7 +226,7 @@ final class AppendMessage {
         }
     }
 
-    public void cleanup() {
+    void cleanup() {
         if (content != null) {
             StoreManager.getInstance().quietDelete(content);
             content = null;
@@ -264,7 +267,7 @@ final class AppendMessage {
         }
     }
 
-    public static Date getSentDate(InternetHeaders ih) {
+    static Date getSentDate(InternetHeaders ih) {
         String s = ih.getHeader("Date", null);
         if (s != null) {
             try {
@@ -281,7 +284,7 @@ final class AppendMessage {
     }
 
     /** APPEND message part, either literal data or IMAP URL. */
-    private class Part {
+    private final class Part {
         Literal literal;
         ImapURL url;
 

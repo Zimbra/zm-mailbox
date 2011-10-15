@@ -51,7 +51,10 @@ final class NioImapRequest extends ImapRequest {
         if (li != null) {
             literalCount = li.getCount();
             literal = Literal.newInstance(literalCount, isAppend());
-            if (li.isBlocking()) {
+            if (li.count <= 0) { // empty literal
+                addPart(literal);
+                complete = true;
+            } else if (li.isBlocking()) {
                 mHandler.sendContinuation("send literal data");
             }
         } else {

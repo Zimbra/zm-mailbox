@@ -162,4 +162,12 @@ public final class NioImapDecoderTest {
         Assert.assertEquals("recover", session.getDecoderOutputQueue().poll());
     }
 
+    @Test
+    public void emptyLiteral() throws Exception {
+        IN.clear().putString("A003 APPEND Drafts {0}\r\n", CHARSET).flip();
+        decoder.decode(session, IN, session.getDecoderOutput());
+        Assert.assertEquals("A003 APPEND Drafts {0}", session.getDecoderOutputQueue().poll());
+        Assert.assertEquals(0, session.getDecoderOutputQueue().size());
+    }
+
 }
