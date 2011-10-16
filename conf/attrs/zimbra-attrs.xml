@@ -6544,4 +6544,14 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
+<attr id="1321" name="zimbraReverseProxyAdminEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.0">
+	<globalConfigValue>FALSE</globalConfigValue>
+	<desc>indicate whether to turn on admin console proxy</desc>
+</attr>
+
+<attr id="1322" name="zimbraAdminProxyPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" since="8.0.0">
+  <globalConfigValue>1443</globalConfigValue>
+  <desc>SSL proxy port for admin console UI</desc>
+</attr>
+
 </attrs>

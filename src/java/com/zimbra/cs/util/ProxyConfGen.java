@@ -682,6 +682,59 @@ class WebUpstreamServersVar extends ProxyConfVar {
     }
 }
 
+class WebAdminUpstreamServersVar extends ProxyConfVar {
+    
+    public WebAdminUpstreamServersVar() {
+        super("web.admin.upstream.:servers", null, null, ProxyConfValueType.CUSTOM,
+                ProxyConfOverride.CUSTOM, 
+                "List of upstream admin console servers used by Web Proxy (i.e. servers " +
+                "for which zimbraReverseProxyLookupTarget is true");
+    }
+    
+    @Override
+    public void update() throws ServiceException {
+        ArrayList<String> servers = new ArrayList<String>();
+        /* $(zmprov garpb) */
+        List<Server> us = mProv.getAllServers();
+
+        for (Server u : us) {
+            boolean isTarget = u.getBooleanAttr(
+                    Provisioning.A_zimbraReverseProxyLookupTarget, false);
+            if (isTarget) {
+                String serverName = u.getAttr(
+                        Provisioning.A_zimbraServiceHostname, "");
+                int serverPort = u.getIntAttr(
+                        Provisioning.A_zimbraAdminPort, 0);
+                int timeout = u.getIntAttr(
+                        Provisioning.A_zimbraMailProxyReconnectTimeout, 60);
+                Formatter f = new Formatter();
+                f.format("%s:%d fail_timeout=%ds", serverName, serverPort,
+                        timeout);
+                servers.add(f.toString());
+                mLog.info("Added server to HTTP upstream: " + serverName);
+            }
+        }
+
+        mValue = servers;      
+    }
+    
+    @Override
+    public String format(Object o) {
+        @SuppressWarnings("unchecked")
+        ArrayList<String> servers = (ArrayList<String>) o;
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < servers.size(); i++) {
+            String s = servers.get(i);
+            if (i == 0) {
+                sb.append(String.format("server    %s;\n", s));
+            } else {
+                sb.append(String.format("        server    %s;\n", s));
+            }
+        }
+        return sb.toString();
+    }
+}
+
 class ImapCapaVar extends ProxyConfVar {
     
     public ImapCapaVar() {
@@ -1543,6 +1596,11 @@ public class ProxyConfGen
         mConfVars.put("web.sso.certauth.default.enabled", new ZMSSOCertAuthDefaultEnablerVar());
         mConfVars.put("web.sso.enabled", new ZMSSOEnablerVar());
         mConfVars.put("web.sso.default.enabled", new ZMSSODefaultEnablerVar());
+        mConfVars.put("web.admin.default.enabled", new ProxyConfVar("web.amdin.default.enabled", "zimbraReverseProxyAdminEnabled", new Boolean(false), ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER, "Inidicate whether admin console proxy is enabled"));
+        mConfVars.put("web.admin.port", new ProxyConfVar("web.admin.port", "zimbraAdminProxyPort", new Integer(1443), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Admin console proxy port"));
+        mConfVars.put("web.admin.uport", new ProxyConfVar("web.admin.uport", "zimbraAdminPort", new Integer(7071), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Admin console upstream port"));
+        mConfVars.put("web.admin.upstream.name", new ProxyConfVar("web.admin.upstream.name", null, "zimbra_admin", ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for admin console upstream cluster"));
+        mConfVars.put("web.admin.upstream.:servers", new WebAdminUpstreamServersVar());
     }
 
     /* update the default variable map from the active configuration */
@@ -1761,6 +1819,8 @@ public class ProxyConfGen
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.https.default")), new File(mConfIncludesDir, getConfFileName("web.https.default")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.sso")), new File(mConfIncludesDir, getConfFileName("web.sso")));
             expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.sso.default")), new File(mConfIncludesDir, getConfFileName("web.sso.default")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.admin")), new File(mConfIncludesDir, getConfFileName("web.admin")));
+            expandTemplate(new File(mTemplateDir, getConfTemplateFileName("web.admin.default")), new File(mConfIncludesDir, getConfFileName("web.admin.default")));
             expandTemplate(new File(mTemplateDir, getWebHttpModeConfTemplate("http")), new File(mConfIncludesDir, getWebHttpModeConf("http")));
             expandTemplate(new File(mTemplateDir, getWebHttpModeConfTemplate("https")), new File(mConfIncludesDir, getWebHttpModeConf("https")));
             expandTemplate(new File(mTemplateDir, getWebHttpModeConfTemplate("both")), new File(mConfIncludesDir, getWebHttpModeConf("both")));
