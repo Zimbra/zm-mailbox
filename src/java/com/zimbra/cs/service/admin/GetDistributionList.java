@@ -109,7 +109,13 @@ public class GetDistributionList extends AdminDocumentHandler {
     
     private void encodeMembers(Element response, Element dlElement, Group group, 
             int offset, int limit, boolean sortAscending) throws ServiceException {
-        String[] members = group.getAllMembers();
+        String[] members;
+        if (group instanceof DynamicGroup) {
+            members = ((DynamicGroup)group).getAllMembers(true);
+        } else {
+            members = group.getAllMembers();
+        }
+        
         if (offset > 0 && offset >= members.length) {
             throw ServiceException.INVALID_REQUEST("offset " + offset + 
                     " greater than size " + members.length, null);

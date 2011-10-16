@@ -47,7 +47,7 @@ public class DynamicGroup extends ZAttrDynamicGroup {
         return getProvisioning().getDomain(this);
     }
     
-    @Override  // overriden on LdapDynamicGroup
+    @Override  // Override in LdapDynamicGroup and SoapDynamicGroup
     public String[] getAllMembers() throws ServiceException {
         return getMultiAttr(Provisioning.A_member);
     }
@@ -62,5 +62,18 @@ public class DynamicGroup extends ZAttrDynamicGroup {
         return getMailAlias();
     }
 
-
+    /*
+     * Override in LdapDynamicGroup
+     *  
+     * Default implementation is calling getAllMembers() regardless 
+     * of supportNonDefaultMemberURL.
+     * 
+     * Should only be called from the edge: ProvUtil or adminNamespace
+     * GetDistributuionList.  If supportNonDefaultMemberURL is true,
+     * this call can be very expensive.
+     */
+    public String[] getAllMembers(boolean supportNonDefaultMemberURL) 
+    throws ServiceException {
+        return getAllMembers();
+    }
 }

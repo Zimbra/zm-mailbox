@@ -375,11 +375,16 @@ public class TestLdap {
             // junit.run(TestLdapSDK.class);
         }
         
+        // List<Class<? extends TestLdap>> classes = Lists.newArrayList();
         List<Class> classes = Lists.newArrayList();
         
+        /*
+         * Tests not running inside the server
+         */
         classes.add(TestLdapHelper.class);
         classes.add(TestLdapProvAccount.class);
         classes.add(TestLdapProvAlias.class);
+        classes.add(TestLdapProvAttrCallback.class);
         classes.add(TestLdapProvAutoProvision.class);
         classes.add(TestLdapProvCos.class);
         classes.add(TestLdapProvDataSource.class);
@@ -407,7 +412,7 @@ public class TestLdap {
         classes.add(TestLdapZLdapContext.class);
         classes.add(TestLdapZLdapFilter.class);
         classes.add(TestLdapZMutableEntry.class);
-        classes.add(TestProvAttrCallback.class);
+        
         
         // Tests need server running
         classes.add(TestProvDelegatedDL.class);

@@ -50,4 +50,20 @@ public class LdapDynamicGroup extends DynamicGroup implements LdapEntry {
         return ((LdapProvisioning) getProvisioning()).getDynamicGroupMembersSet(this);
     }
 
+    @Override
+    public String[] getAllMembers(boolean supportNonDefaultMemberURL) 
+    throws ServiceException {
+        if (isIsACLGroup()) {
+            // is a dynamic group with default memberURL
+            // expand it by search memberOf
+            return getAllMembers();
+        } else {
+            if (supportNonDefaultMemberURL) {
+                return ((LdapProvisioning) getProvisioning()).getNonDefaultDynamicGroupMembersList(this);
+            } else {
+                return new String[0];
+            }
+        }
+        
+    }
 }

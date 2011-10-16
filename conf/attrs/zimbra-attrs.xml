@@ -237,7 +237,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>RFC1274: RFC822 Mailbox</desc>
 </attr>
 
-<attr name="memberURL" type="string" requiredIn="group" callback="MemberURL">
+<attr name="memberURL" type="string" requiredIn="group" callback="IsACLGroup">
     <desc>Identifies an URL associated with each member of a group</desc>
 </attr>
 
@@ -6069,7 +6069,7 @@ TODO: delete them permanently from here
   <desc>System purge policy, encoded as metadata.  Users can apply these policy elements to their folders and tags.  If the system policy changes, user settings are automatically updated with the change.</desc>
 </attr>
 
-<attr id="1242" name="zimbraIsACLGroup" type="boolean" cardinality="single" optionalIn="group" callback="IsACLGroup" since="8.0.0">
+<attr id="1242" name="zimbraIsACLGroup" type="boolean" cardinality="single" requiredIn="group" callback="IsACLGroup" since="8.0.0">
   <desc>if the dynamic group can be a legitimate grantee for folder grantees; and a legitimate grantee or target for delegated admin grants</desc>
 </attr>
 

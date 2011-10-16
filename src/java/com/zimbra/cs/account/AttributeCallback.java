@@ -124,9 +124,10 @@ public abstract class AttributeCallback {
     }
     
     // TODO, remove the above singleValueMod in main and change all callsites to 
-    // use this one.  The above does not handle the case if someone does a -attrName value 
-    // for a single-valued attribute, a quite corner case.
-    protected SingleValueMod singleValueMod(Map attrsToModify, String attrName)  throws ServiceException {
+    // use this one.  The above does not handle the case if someone does 
+    // a -attrName value for a single-valued attribute, a quite corner case.
+    protected SingleValueMod singleValueMod(Map attrsToModify, String attrName)  
+    throws ServiceException {
        
         SingleValueMod svm = new SingleValueMod();
         

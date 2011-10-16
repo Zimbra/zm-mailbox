@@ -7732,7 +7732,8 @@ public class LdapProvisioning extends LdapProv {
         PermissionCache.invalidateCache();
     }
 
-    private void searchMembers(ZLdapContext zlc, String dynGroupId, SearchLdapVisitor visitor)
+    private void searchDynamicGroupMembers(ZLdapContext zlc, String dynGroupId, 
+            SearchLdapVisitor visitor)
     throws ServiceException {
         String base = mDIT.mailBranchBaseDN();
         ZLdapFilter filter = filterFactory.accountByMemberOf(dynGroupId);
@@ -7760,7 +7761,7 @@ public class LdapProvisioning extends LdapProv {
                 }
             }
         };
-        searchMembers(zlc, dynGroupId, visitor);
+        searchDynamicGroupMembers(zlc, dynGroupId, visitor);
 
         // go through each DN and remove the zimbraMemberOf={dynGroupId} on the entry
         // do in background?
@@ -8060,7 +8061,7 @@ public class LdapProvisioning extends LdapProv {
         ZLdapContext zlc = null;
         try {
             zlc = LdapClient.getContext(LdapServerType.REPLICA, LdapUsage.GET_GROUP_MEMBER);
-            searchMembers(zlc, dygGroup.getId(), visitor);
+            searchDynamicGroupMembers(zlc, dygGroup.getId(), visitor);
         } catch (ServiceException e) {
             ZimbraLog.account.warn("unable to get dynamic group members", e);
         } finally {
@@ -8068,6 +8069,39 @@ public class LdapProvisioning extends LdapProv {
         }
 
         return members;
+    }
+    
+    public String[] getNonDefaultDynamicGroupMembersList(DynamicGroup dygGroup) {
+        final List<String> members = Lists.newArrayList();
+
+        ZLdapContext zlc = null;
+        try {
+            zlc = LdapClient.getContext(LdapServerType.REPLICA, LdapUsage.GET_GROUP_MEMBER);
+
+            /*
+            // this dygGroup object must not be a basic group with minimum attrs
+            ZAttributes attrs = zlc.getAttributes(
+                    ((LdapDynamicGroup) dygGroup).getDN(), new String[]{Provisioning.A_member});
+            String[] memberDNs = attrs.getMultiAttrString(Provisioning.A_member);
+            */
+            String[] memberDNs = dygGroup.getMultiAttr(Provisioning.A_member);
+            
+            final String[] addrToGet = new String[]{Provisioning.A_zimbraMailDeliveryAddress};
+            for (String memberDN : memberDNs) {
+                ZAttributes memberAddrs = zlc.getAttributes(memberDN, addrToGet);
+                String memberAddr = memberAddrs.getAttrString(Provisioning.A_zimbraMailDeliveryAddress);
+                if (memberAddr != null) {
+                    members.add(memberAddr);
+                }
+            }
+            
+        } catch (ServiceException e) {
+            ZimbraLog.account.warn("unable to get dynamic group members", e);
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
+
+        return members.toArray(new String[members.size()]);
     }
 
     public String[] getDynamicGroupMembers(DynamicGroup dygGroup) {

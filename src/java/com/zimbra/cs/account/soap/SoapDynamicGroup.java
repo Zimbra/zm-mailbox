@@ -32,6 +32,8 @@ import com.zimbra.soap.admin.type.DistributionListInfo;
 import com.zimbra.soap.admin.type.DistributionListMembershipInfo;
 
 public class SoapDynamicGroup extends DynamicGroup implements SoapEntry {
+    
+    List<String> membersList;
 
     SoapDynamicGroup(String name, String id, Map<String, Object> attrs, Provisioning prov) {
         super(name, id, attrs, prov);
@@ -72,11 +74,27 @@ public class SoapDynamicGroup extends DynamicGroup implements SoapEntry {
         addDlm(e, getRawAttrs());
     }
 
+    @Override
+    public String[] getAllMembers() throws ServiceException {
+        if (membersList == null) {
+            return new String[0];
+        } else {
+            return membersList.toArray(new String[membersList.size()]);
+        }
+    }
+    
     private void addDlm(List <String> members, Map<String, Object> attrs) {
+        /*
         attrs.put(Provisioning.A_member,
                 members.toArray(new String[members.size()]));
+        */
+        setMembers(members);
     }
-
+    
+    private void setMembers(List <String> members) {
+        membersList = members;
+    }
+    
     private void addDlm(Element e, Map<String, Object> attrs) {
         ArrayList<String> list = new ArrayList<String>();
         for (Element dlm : e.listElements(AdminConstants.E_DLM)) {

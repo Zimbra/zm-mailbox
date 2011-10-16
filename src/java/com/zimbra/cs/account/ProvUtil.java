@@ -2101,7 +2101,14 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void dumpGroup(Group group, Set<String> attrNames) throws ServiceException {
-        String[] members = group.getAllMembers();
+        
+        String[] members;
+        if (group instanceof DynamicGroup) {
+            members = ((DynamicGroup)group).getAllMembers(true);
+        } else {
+            members = group.getAllMembers();
+        }
+        
         int count = members == null ? 0 : members.length;
         console.println("# distributionList " + group.getName() + " memberCount=" + count);
         Map<String, Object> attrs = group.getAttrs();

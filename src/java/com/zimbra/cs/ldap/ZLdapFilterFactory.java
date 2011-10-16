@@ -112,8 +112,12 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         VELODROME_ALL_ACCOUNTS_ONLY_BY_DOMAIN_AND_SERVER(SINGLETON.velodromeAllAccountsOnlyByDomainAndServer("{DOMAIN-NAME}", "{SERVER-SERVICE-HOSTNAME}")),
         VELODROME_ALL_CALENDAR_RESOURCES_BY_DOMAIN_AND_SERVER(SINGLETON.velodromeAllCalendarResourcesByDomainAndServer("{DOMAIN-NAME}", "{SERVER-SERVICE-HOSTNAME}")),
         
-        // ids for fromFilterString() calls
         
+        //
+        // =====================================
+        // FilterId for fromFilterString() calls
+        // =====================================
+        //
         ACCOUNT_BY_SSL_CLENT_CERT_PRINCIPAL_MAP(SINGLETON.allAccounts() + " AND " + 
                 "filter in " + Provisioning.A_zimbraMailSSLClientCertPrincipalMap),
         ADMIN_SEARCH("Admin search"),

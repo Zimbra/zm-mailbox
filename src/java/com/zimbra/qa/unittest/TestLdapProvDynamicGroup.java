@@ -53,5 +53,9 @@ public class TestLdapProvDynamicGroup extends TestLdap {
     static DynamicGroup createDynamicGroup(String localPart) throws Exception {
         return createDynamicGroup(prov, localPart, domain, null);
     }
+    
+    static void deleteDynamicGroup(Provisioning prov, DynamicGroup group) throws Exception {
+        TestLdapProvDistributionList.deleteGroup(prov, group);
+    }
 
 }
