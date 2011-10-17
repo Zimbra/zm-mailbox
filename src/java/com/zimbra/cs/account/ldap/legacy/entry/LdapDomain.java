@@ -28,8 +28,10 @@ import javax.naming.directory.Attributes;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
+import com.zimbra.cs.ldap.LdapConstants;
 
 /**
  * @author schemers
@@ -50,13 +52,15 @@ public class LdapDomain extends Domain implements LdapEntry {
     }
     
     public String getGalSearchBase(String searchBaseSpec) throws ServiceException {
-        if (searchBaseSpec.equalsIgnoreCase("DOMAIN"))
+        LdapProv ldapProv = (LdapProv)getProvisioning();
+        
+        if (searchBaseSpec.equalsIgnoreCase("DOMAIN")) {
+            return ldapProv.getDIT().domainDNToAccountSearchDN(getDN());
+        } else if (searchBaseSpec.equalsIgnoreCase("SUBDOMAINS")) {
             return getDN();
-            //mSearchBase = mDIT.domainDNToAccountSearchDN(ld.getDN());
-        else if (searchBaseSpec.equalsIgnoreCase("SUBDOMAINS"))
-            return getDN();
-        else if (searchBaseSpec.equalsIgnoreCase("ROOT"))
-            return "";
-        return "";
+        } else if (searchBaseSpec.equalsIgnoreCase("ROOT")) {
+            return LdapConstants.DN_ROOT_DSE;
+        }
+        return LdapConstants.DN_ROOT_DSE;
     }
 }
