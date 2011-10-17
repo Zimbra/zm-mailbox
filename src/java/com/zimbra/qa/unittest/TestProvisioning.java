@@ -826,9 +826,6 @@ public class TestProvisioning extends TestCase {
         entryGot = mProv.get(Key.AccountBy.krb5Principal, "user1@JUNKREALM.COM");
         TestProvisioningUtil.verifySameEntry(krb5TestAcct, entryGot);
 
-
-
-
         List list = null;
 
         // get all accounts in a domain
@@ -1429,9 +1426,11 @@ public class TestProvisioning extends TestCase {
         }
 
         mProv.modifyAttrs(domain, attrs, true);
-        Provisioning.SearchGalResult galResult = mProv.searchGal(domain,
+        Provisioning.SearchGalResult galResult = mProv.searchGal(
+                domain,
                 ACCT_EMAIL,
                 GalSearchType.all,
+                0,
                 null);
         List<GalContact> matches = galResult.getMatches();
         assertEquals(1, galResult.getNumMatches());
@@ -1448,7 +1447,8 @@ public class TestProvisioning extends TestCase {
         Provisioning.SearchGalResult galResult = mProv.autoCompleteGal(domain,
                                                                        query,
                                                                        GalSearchType.all,
-                                                                       100);
+                                                                       100,
+                                                                       null);
 
         List<GalContact> matches = galResult.getMatches();
         assertEquals(1, galResult.getNumMatches());
@@ -1458,6 +1458,7 @@ public class TestProvisioning extends TestCase {
         galResult = mProv.searchGal(domain,
                                     query,
                                     GalSearchType.all,
+                                    0,
                                     null);
         matches = galResult.getMatches();
         assertEquals(1, galResult.getNumMatches());

@@ -24,6 +24,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.account.ldap.LdapGalMapRules;
+import com.zimbra.cs.gal.GalFilter.NamedFilter;
 import com.zimbra.soap.type.GalSearchType;
 
 public class GalSearchConfig {
@@ -41,7 +42,8 @@ public class GalSearchConfig {
 	    }
 	}
     
-	public static GalSearchConfig create(Domain domain, GalOp op, GalType type, GalSearchType stype) throws ServiceException {
+	public static GalSearchConfig create(Domain domain, GalOp op, GalType type, GalSearchType stype) 
+	throws ServiceException {
 		switch (type) {
 		case zimbra:
 			return new ZimbraConfig(domain, op, stype);
@@ -80,9 +82,9 @@ public class GalSearchConfig {
 			Domain domain = Provisioning.getInstance().getDomain(ds.getAccount());
 			if (mGalType == GalType.zimbra) {
 				loadZimbraConfig(domain, GalOp.sync, null);
-				mFilter = GalSearchConfig.getFilterDef("zimbraSync");
+				mFilter = GalSearchConfig.getFilterDef(NamedFilter.zimbraSync);
 				if (mFilter == null)
-				    mFilter = DEFAULT_FILTER;
+				    mFilter = GalFilter.DEFAULT_SYNC_FILTER;
 			} else {
 				loadConfig(domain, GalOp.sync);
 				if (mUrl.length == 0 || mFilter == null)
@@ -119,34 +121,33 @@ public class GalSearchConfig {
 			
 			mFilter = GalUtil.expandFilter(null, mFilter, "", null);
 		}
-		private static final String DEFAULT_FILTER = "(&(|(displayName=*)(cn=*)(sn=*)(gn=*)(mail=*)(zimbraMailDeliveryAddress=*)(zimbraMailAlias=*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))(!(zimbraHideInGal=TRUE))(!(zimbraIsSystemResource=TRUE)))";
 	}
 	
 	protected void loadZimbraConfig(Domain domain, GalOp op, GalSearchType stype) throws ServiceException {
 		
         mRules = new LdapGalMapRules(domain, true);
         mOp = op;
-        String filterName = null;
+        NamedFilter filterName = null;
         
 		switch (op) {
 		case sync:
 			filterName = 
-                (stype == GalSearchType.all) ? "zimbraSync" :
-			    (stype == GalSearchType.resource) ? "zimbraResourceSync" : 
-			    (stype == GalSearchType.group) ? "zimbraGroupSync" : "zimbraAccountSync";
+                (stype == GalSearchType.all) ? NamedFilter.zimbraSync :
+			    (stype == GalSearchType.resource) ? NamedFilter.zimbraResourceSync : 
+			    (stype == GalSearchType.group) ? NamedFilter.zimbraGroupSync : NamedFilter.zimbraAccountSync;
 			break;
 		case search:
 			filterName = 
-                (stype == GalSearchType.all) ? "zimbraSearch" :
-			    (stype == GalSearchType.resource) ? "zimbraResources" : 
-			    (stype == GalSearchType.group) ? "zimbraGroups" : "zimbraAccounts";
+                (stype == GalSearchType.all) ? NamedFilter.zimbraSearch :
+			    (stype == GalSearchType.resource) ? NamedFilter.zimbraResources : 
+			    (stype == GalSearchType.group) ? NamedFilter.zimbraGroups : NamedFilter.zimbraAccounts;
 			mTokenizeKey = domain.getAttr(Provisioning.A_zimbraGalTokenizeSearchKey, null);
 			break;
 		case autocomplete:
 			filterName = 
-                (stype == GalSearchType.all) ? "zimbraAutoComplete" :
-			    (stype == GalSearchType.resource) ? "zimbraResourceAutoComplete" : 
-			    (stype == GalSearchType.group) ? "zimbraGroupAutoComplete" : "zimbraAccountAutoComplete";
+                (stype == GalSearchType.all) ? NamedFilter.zimbraAutoComplete :
+			    (stype == GalSearchType.resource) ? NamedFilter.zimbraResourceAutoComplete : 
+			    (stype == GalSearchType.group) ? NamedFilter.zimbraGroupAutoComplete : NamedFilter.zimbraAccountAutoComplete;
 			mTokenizeKey = domain.getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, null);
 			break;
 		}
@@ -326,6 +327,10 @@ public class GalSearchConfig {
 		mTokenizeKey = tokenizeKey;
 	}
 
+	public static String getFilterDef(NamedFilter filter) throws ServiceException {
+	    return getFilterDef(filter.name());
+	}
+	
     public static String getFilterDef(String name) throws ServiceException {
         String queryExprs[] = Provisioning.getInstance().getConfig().getMultiAttr(Provisioning.A_zimbraGalLdapFilterDef);
         String fname = name+":";

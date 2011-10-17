@@ -327,7 +327,8 @@ public class TestGal extends TestCase {
         SearchGalResult galResult = mProv.autoCompleteGal(domain, 
                                                           QUERY,
                                                           GalSearchType.account, // Provisioning.GAL_SEARCH_TYPE.ALL, 
-                                                          maxWanted);
+                                                          maxWanted,
+                                                          null);
         if (numResultsExpected != galResult.getNumMatches())
             dumpResult(galResult);
         
@@ -341,6 +342,7 @@ public class TestGal extends TestCase {
         SearchGalResult galResult = mProv.searchGal(domain, 
                                                     QUERY,
                                                     GalSearchType.all, 
+                                                    0,
                                                     null);
         assertEquals(numResultsExpected, galResult.getNumMatches());
         boolean expectedHasMore = numResultsExpected < NUM_ACCOUNTS;
@@ -355,10 +357,7 @@ public class TestGal extends TestCase {
         */
         
         Domain domain = mProv.get(Key.DomainBy.name, DOMAIN_NAME);
-        SearchGalResult galResult = mProv.searchGal(domain, 
-                                                    QUERY,
-                                                    GalSearchType.all, 
-                                                    token);
+        SearchGalResult galResult = mProv.syncGal(domain, token, null);
         assertEquals(numResultsExpected, galResult.getNumMatches());
         boolean expectedHasMore = numResultsExpected < numTotal;
         
@@ -542,11 +541,13 @@ public class TestGal extends TestCase {
             galResult = mProv.autoCompleteGal(domain, 
                                               key,
                                               GalSearchType.account, // Provisioning.GAL_SEARCH_TYPE.ALL, 
-                                              10);
+                                              10,
+                                              null);
         else if (galOp == GalOp.GOP_SEARCH)
             galResult = mProv.searchGal(domain, 
                                         key,
                                         GalSearchType.account, 
+                                        0,
                                         null);
         else
             fail();

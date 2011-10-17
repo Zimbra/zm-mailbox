@@ -331,6 +331,10 @@ public class GalSearchParams {
     }
 
     public String getUserInfo() {
-        return mAccount.getName() + " (" + ((mUserAgent == null) ? "" : mUserAgent) + ")";
+        if (mAccount != null) {
+            return mAccount.getName() + " (" + ((mUserAgent == null) ? "" : mUserAgent) + ")";
+        } else {
+            return " (" + ((mUserAgent == null) ? "" : mUserAgent) + ")";
+        }
     }
 }

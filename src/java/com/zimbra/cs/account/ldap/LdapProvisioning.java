@@ -43,6 +43,7 @@ import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.EmailUtil;
@@ -55,6 +56,7 @@ import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.DomainCache.GetFromDomainCacheOption;
 import com.zimbra.cs.account.NamedEntry.Visitor;
+import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.SearchAccountsOptions.IncludeType;
 import com.zimbra.cs.account.SearchDirectoryOptions.MakeObjectOpt;
 import com.zimbra.cs.account.SearchDirectoryOptions.ObjectType;
@@ -94,7 +96,10 @@ import com.zimbra.cs.account.ldap.entry.LdapZimlet;
 import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.account.names.NameUtil.EmailAddress;
 import com.zimbra.cs.gal.GalSearchConfig;
+import com.zimbra.cs.gal.GalSearchControl;
 import com.zimbra.cs.gal.GalSearchParams;
+import com.zimbra.cs.gal.GalSearchResultCallback;
+import com.zimbra.cs.gal.GalSyncToken;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.ldap.*;
 import com.zimbra.cs.ldap.IAttributes.CheckBinary;
@@ -2540,6 +2545,7 @@ public class LdapProvisioning extends LdapProv {
         validEmailAddress(newName);
 
         ZLdapContext zlc = null;
+     
         Account acct = getAccountById(zimbraId, zlc, true);
         
         // prune cache
@@ -2660,6 +2666,8 @@ public class LdapProvisioning extends LdapProv {
             throw ServiceException.FAILURE("unable to rename account: "+newName, e);
         } finally {
             LdapClient.closeContext(zlc);
+            // prune cache
+            sAccountCache.remove(acct);
         }
 
         // reload it to cache using the master, bug 45736
@@ -5219,16 +5227,145 @@ public class LdapProvisioning extends LdapProv {
         searchOpts.setSortOpt(SortOpt.SORT_ASCENDING);
         return searchDirectoryInternal(searchOpts);
     }
-
+    
     @Override
-    public SearchGalResult searchGal(Domain d,
-                                     String n,
-                                     GalSearchType type,
-                                     String token)
+    public SearchGalResult autoCompleteGal(Domain domain, String query, 
+            GalSearchType type, int limit, GalContact.Visitor visitor) 
     throws ServiceException {
-        return searchGal(d, n, type, null, token, null);
+        SearchGalResult searchResult = SearchGalResult.newSearchGalResult(visitor);
+        
+        GalSearchParams params = new GalSearchParams(domain, null);
+        params.setQuery(query);
+        params.setType(type);
+        params.setOp(GalOp.autocomplete);
+        params.setLimit(limit);
+        params.setGalResult(searchResult);
+        
+        LdapOnlyGalSearchResultCallback callback = 
+            new LdapOnlyGalSearchResultCallback(params, visitor);
+        params.setResultCallback(callback);
+        
+        GalSearchControl gal = new GalSearchControl(params);
+        gal.ldapSearch();
+        // Collections.sort(searchResult.getMatches());  sort?
+        return searchResult;
+    }
+    
+    @Override
+    public SearchGalResult searchGal(Domain domain, String query, GalSearchType type, 
+            int limit, GalContact.Visitor visitor) 
+    throws ServiceException {
+        SearchGalResult searchResult = SearchGalResult.newSearchGalResult(visitor);
+        
+        GalSearchParams params = new GalSearchParams(domain, null);
+        params.setQuery(query);
+        params.setType(type);
+        params.setOp(GalOp.search);
+        params.setLimit(limit);
+        params.setGalResult(searchResult);
+        
+        LdapOnlyGalSearchResultCallback callback = 
+            new LdapOnlyGalSearchResultCallback(params, visitor);
+        params.setResultCallback(callback);
+        
+        GalSearchControl gal = new GalSearchControl(params);
+        gal.ldapSearch();
+        return searchResult;
+    }
+    
+    @Override
+    public SearchGalResult syncGal(Domain domain, String token, GalContact.Visitor visitor)
+    throws ServiceException {
+        SearchGalResult searchResult = SearchGalResult.newSearchGalResult(visitor);
+        
+        GalSearchParams params = new GalSearchParams(domain, null);
+        params.setQuery("");
+        params.setToken(token);
+        params.setType(GalSearchType.all);
+        params.setOp(GalOp.sync);
+        params.setFetchGroupMembers(true);
+        params.setNeedSMIMECerts(true);
+        params.setGalResult(searchResult);
+        
+        LdapOnlyGalSearchResultCallback callback = 
+            new LdapOnlyGalSearchResultCallback(params, visitor);
+        params.setResultCallback(callback);
+        
+        GalSearchControl gal = new GalSearchControl(params);
+        gal.ldapSearch();
+        return searchResult;
     }
 
+    private static class LdapOnlyGalSearchResultCallback extends GalSearchResultCallback {
+        GalContact.Visitor visitor;
+        String newToken;
+        boolean hasMore;
+        
+        LdapOnlyGalSearchResultCallback(GalSearchParams params, GalContact.Visitor visitor) {
+            super(params);
+            this.visitor = visitor;
+        }
+        
+        private String getNewToken() {
+            return newToken;
+        }
+        
+        @Override
+        public void reset(GalSearchParams params) {
+            // do nothing
+        }
+        
+        public void visit(GalContact c) throws ServiceException {
+            visitor.visit(c);
+        }
+        
+        @Override
+        public void setNewToken(String newToken) {
+            this.newToken = newToken;
+        }
+        
+        @Override
+        public void setHasMoreResult(boolean more) {
+            this.hasMore = hasMore;
+        }
+        
+        @Override
+        public Element getResponse() {
+            throw new UnsupportedOperationException();
+        }
+        
+        @Override
+        public boolean passThruProxiedGalAcctResponse() {
+            throw new UnsupportedOperationException();
+        }
+        
+        @Override
+        public void handleProxiedResponse(Element resp) {
+            throw new UnsupportedOperationException();
+        }
+        
+        @Override
+        public void setNewToken(GalSyncToken newToken) {
+            throw new UnsupportedOperationException();
+        }
+        
+        @Override
+        public void setSortBy(String sortBy) {
+            throw new UnsupportedOperationException();
+        }
+        
+        @Override
+        public void setQueryOffset(int offset) {
+            throw new UnsupportedOperationException();
+        }
+
+    }
+
+    @Override
+    public void searchGal(GalSearchParams params) throws ServiceException {
+        LdapGalSearch.galSearch(params);
+    }
+    
     @Override
     public SearchGalResult searchGal(Domain d,
                                      String n,
@@ -5238,10 +5375,6 @@ public class LdapProvisioning extends LdapProv {
         return searchGal(d, n, type, galMode, token, null);
     }
 
-    @Override
-    public void searchGal(GalSearchParams params) throws ServiceException {
-        LdapGalSearch.galSearch(params);
-    }
 
     private SearchGalResult searchGal(Domain d,
                                       String n,
@@ -5293,57 +5426,6 @@ public class LdapProvisioning extends LdapProv {
             }
         }
 
-        return results;
-    }
-
-    @Override
-    public SearchGalResult autoCompleteGal(Domain d, String n, GalSearchType type, int max) throws ServiceException
-    {
-        GalOp galOp = GalOp.autocomplete;
-        // escape user-supplied string
-        n = LdapUtilCommon.escapeSearchFilterArg(n);
-
-        int maxResults = Math.min(max, d.getIntAttr(Provisioning.A_zimbraGalMaxResults, DEFAULT_GAL_MAX_RESULTS));
-        if (type == GalSearchType.resource)
-            return searchResourcesGal(d, n, maxResults, null, galOp, null);
-        else if (type == GalSearchType.group)
-            return searchGroupsGal(d, n, maxResults, null, galOp, null);
-
-        GalMode mode = GalMode.fromString(d.getAttr(Provisioning.A_zimbraGalMode));
-        SearchGalResult results = null;
-        if (mode == null || mode == GalMode.zimbra) {
-            results = searchZimbraGal(d, n, maxResults, null, galOp, null);
-        } else if (mode == GalMode.ldap) {
-            results = searchLdapGal(d, n, maxResults, null, galOp, null);
-        } else if (mode == GalMode.both) {
-            results = searchZimbraGal(d, n, maxResults/2, null, galOp, null);
-            SearchGalResult ldapResults = searchLdapGal(d, n, maxResults/2, null, galOp, null);
-            if (ldapResults != null) {
-                results.addMatches(ldapResults);
-                results.setToken(LdapUtilCommon.getLaterTimestamp(results.getToken(), ldapResults.getToken()));
-                results.setHadMore(results.getHadMore() || ldapResults.getHadMore());
-            }
-        } else {
-            results = searchZimbraGal(d, n, maxResults, null, galOp, null);
-        }
-        if (results == null) results = SearchGalResult.newSearchGalResult(null);  // should really not be null by now
-
-        if (type == GalSearchType.all) {
-            SearchGalResult resourceResults = null;
-            if (maxResults == 0)
-                resourceResults = searchResourcesGal(d, n, 0, null, galOp, null);
-            else {
-                int room = maxResults - results.getNumMatches();
-                if (room > 0)
-                    resourceResults = searchResourcesGal(d, n, room, null, galOp, null);
-            }
-            if (resourceResults != null) {
-                results.addMatches(resourceResults);
-                results.setToken(LdapUtilCommon.getLaterTimestamp(results.getToken(), resourceResults.getToken()));
-                results.setHadMore(results.getHadMore() || resourceResults.getHadMore());
-            }
-        }
-        Collections.sort(results.getMatches());
         return results;
     }
 

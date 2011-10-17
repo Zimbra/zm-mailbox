@@ -91,14 +91,6 @@ public class Domain extends ZAttrDomain {
     public List getAllDistributionLists() throws ServiceException {
         return getProvisioning().getAllDistributionLists(this);
     }
-
-    public SearchGalResult searchGal(String query, GalSearchType type, String token) throws ServiceException {
-        return getProvisioning().searchGal(this, query, type, token);
-    }
-
-    public SearchGalResult searchGal(String query, GalSearchType type, GalMode mode, String token) throws ServiceException {
-        return getProvisioning().searchGal(this, query, type, mode, token);
-    }
     
     public String getGalSearchBase(String searchBaseSpec) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);

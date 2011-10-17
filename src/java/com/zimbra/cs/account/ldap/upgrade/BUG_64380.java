@@ -15,11 +15,11 @@
 package com.zimbra.cs.account.ldap.upgrade;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.Cos;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Entry.EntryType;
@@ -28,33 +28,33 @@ import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.ZLdapContext;
 
-public class BUG_65070 extends UpgradeOp {
+public class BUG_64380 extends UpgradeOp {
     
-    private static final String ATTR_NAME = Provisioning.A_zimbraPrefHtmlEditorDefaultFontFamily;
-    private static final String OLD_VALUE = "Times New Roman";
-    private static final String NEW_VALUE = "times new roman, new york, times, serif";
+    private static final String ATTR_NAME = Provisioning.A_zimbraGalLdapFilterDef;
+    private static final String OLD_VALUE = "zimbraSync:(&(|(displayName=*)(cn=*)(sn=*)(gn=*)(mail=*)(zimbraMailDeliveryAddress=*)(zimbraMailAlias=*))(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))(!(zimbraHideInGal=TRUE))(!(zimbraIsSystemResource=TRUE)))";
+    private static final String NEW_VALUE = "zimbraSync:(&(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))(!(zimbraHideInGal=TRUE))(!(zimbraIsSystemResource=TRUE)))";
 
     @Override
     void doUpgrade() throws ServiceException {
         ZLdapContext zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.UPGRADE);
         try {
-            doAllCos(zlc);
+            doGlobalConfig(zlc);
         } finally {
             LdapClient.closeContext(zlc);
         }
     }
-
+    
     @Override
     Description getDescription() {
         return new Description(this, 
                 new String[] {ATTR_NAME}, 
-                new EntryType[] {EntryType.COS},
+                new EntryType[] {EntryType.GLOBALCONFIG},
                 OLD_VALUE, 
                 NEW_VALUE, 
-                String.format("Upgrade attribute %s on all cos from \"%s\" to \"%s\"", 
+                String.format("Upgrade zimbraSync GAL filter in %s on global config from \"%s\" to \"%s\"", 
                         ATTR_NAME, OLD_VALUE, NEW_VALUE));
     }
-    
+
     private void doEntry(ZLdapContext zlc, Entry entry) throws ServiceException {
         String entryName = entry.getLabel();
         
@@ -62,32 +62,18 @@ public class BUG_65070 extends UpgradeOp {
         printer.println("------------------------------");
         printer.println("Checking " + ATTR_NAME + " on " + entryName);
         
-        String curValue = entry.getAttr(ATTR_NAME, false);
-        if (OLD_VALUE.equals(curValue)) {
-            printer.println(String.format(
-                    "    Changing %s on cos %s from \"%s\" to \"%s\"", 
-                    ATTR_NAME, entryName, curValue, NEW_VALUE));
-
-            Map<String, Object> attr = new HashMap<String, Object>();
-            attr.put(ATTR_NAME, NEW_VALUE);
-            try {
-                modifyAttrs(zlc, entry, attr);
-            } catch (ServiceException e) {
-                // log the exception and continue
-                printer.println("Caught ServiceException while modifying " + entryName + " attribute " + attr);
-                printer.printStackTrace(e);
-            }
-        } else {
-            printer.println(
-                    String.format("    Current value of %s on cos %s is \"%s\" - not changed",
-                    ATTR_NAME, entryName, curValue));
+        Set<String> curValues = entry.getMultiAttrSet(ATTR_NAME);
+        
+        if (curValues.contains(OLD_VALUE)) {
+            Map<String, Object> attrs = new HashMap<String, Object>();
+            StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraGalLdapFilterDef, OLD_VALUE);
+            StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraGalLdapFilterDef, NEW_VALUE);
+            modifyAttrs(entry, attrs);
         }
     }
     
-    private void doAllCos(ZLdapContext zlc) throws ServiceException {
-        List<Cos> coses = prov.getAllCos();
-        for (Cos cos : coses) {
-            doEntry(zlc, cos);
-        }
+    private void doGlobalConfig(ZLdapContext zlc) throws ServiceException {
+        doEntry(zlc, prov.getConfig());
     }
+    
 }

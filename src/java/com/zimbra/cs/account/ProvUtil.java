@@ -1889,6 +1889,33 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
 
+    private void doSyncGal(String[] args) throws ServiceException {
+        String domain = args[1];
+        String token = args.length  == 3 ? args[2] : "";
+
+        Domain d = lookupDomain(domain);
+        
+        SearchGalResult result = null;
+        if (prov instanceof LdapProv) {
+            GalContact.Visitor visitor = new GalContact.Visitor() {
+                @Override
+                public void visit(GalContact gc) throws ServiceException {
+                    dumpContact(gc);
+                }
+            };
+            result = prov.syncGal(d, token, visitor);
+        } else {
+            result = ((SoapProvisioning) prov).searchGal(d, "", GalSearchType.all, token, 0, 0, null);
+            for (GalContact contact : result.getMatches()) {
+                dumpContact(contact);
+            }
+        }
+
+        if (result.getToken() != null) {
+            console.println("\n# token = " + result.getToken() + "\n");
+        }
+    }
+    
     private void doSearchGal(String[] args) throws ServiceException, ArgException {
         if (args.length < 3) {
             usage();
@@ -1898,28 +1925,53 @@ public class ProvUtil implements HttpDebugListener {
         String query = args[2];
         Map<String, Object> attrs = getMap(args, 3);
         String limitStr = (String) attrs.get("limit");
-        int limit = limitStr == null ? Integer.MAX_VALUE : Integer.parseInt(limitStr);
+        int limit = limitStr == null ? 0 : Integer.parseInt(limitStr);
         String offsetStr = (String) attrs.get("offset");
         int offset = offsetStr == null ? 0 : Integer.parseInt(offsetStr);
         String sortBy = (String)attrs.get("sortBy");
         Domain d = lookupDomain(domain);
 
-        SearchGalResult result = (prov instanceof SoapProvisioning) ?
-                ((SoapProvisioning) prov).searchGal(d, query, GalSearchType.all, null, limit, offset, sortBy) :
-                prov.searchGal(d, query, GalSearchType.all, null);
-        for (GalContact contact : result.getMatches()) {
-            dumpContact(contact);
+        SearchGalResult result;
+        
+        if (prov instanceof LdapProv) {
+            if (offsetStr != null) {
+                throw ServiceException.INVALID_REQUEST("offset is not supported with -l", null);
+            }
+            
+            if (sortBy != null) {
+                throw ServiceException.INVALID_REQUEST("sortBy is not supported with -l", null);
+            }
+            
+            GalContact.Visitor visitor = new GalContact.Visitor() {
+                @Override
+                public void visit(GalContact gc) throws ServiceException {
+                    dumpContact(gc);
+                }
+            };
+            result = prov.searchGal(d, query, GalSearchType.all, limit, visitor);
+            
+        } else {
+            result = ((SoapProvisioning) prov).searchGal(d, query, GalSearchType.all, null, limit, offset, sortBy);
+            for (GalContact contact : result.getMatches()) {
+                dumpContact(contact);
+            }
         }
     }
 
     private void doAutoCompleteGal(String[] args) throws ServiceException {
         String domain = args[1];
         String query = args[2];
+        int limit = 100;
+        
         Domain d = lookupDomain(domain);
-        SearchGalResult result = prov.autoCompleteGal(d, query, GalSearchType.all, 100);
-        for (GalContact contact : result.getMatches()) {
-            dumpContact(contact);
-        }
+        
+        GalContact.Visitor visitor = new GalContact.Visitor() {
+            @Override
+            public void visit(GalContact gc) throws ServiceException {
+                dumpContact(gc);
+            }
+        };
+        SearchGalResult result = prov.autoCompleteGal(d, query, GalSearchType.all, limit, visitor);
     }
 
     private void doCountAccount(String[] args) throws ServiceException {
@@ -1971,21 +2023,6 @@ public class ProvUtil implements HttpDebugListener {
         }
         long result = prov.countObjects(type, domain);
         console.println(result);
-    }
-
-    private void doSyncGal(String[] args) throws ServiceException {
-        String domain = args[1];
-        String token = args.length  == 3 ? args[2] : "";
-
-        Domain d = lookupDomain(domain);
-
-        SearchGalResult result = prov.searchGal(d, "", GalSearchType.all, token);
-        if (result.getToken() != null) {
-            console.println("# token = " + result.getToken() + "\n");
-        }
-        for (GalContact contact : result.getMatches()) {
-            dumpContact(contact);
-        }
     }
 
     private void doGetAllAdminAccounts(String[] args) throws ServiceException {

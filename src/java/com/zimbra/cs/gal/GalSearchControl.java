@@ -626,7 +626,7 @@ public class GalSearchControl {
         return true;
     }
 
-    private void ldapSearch() throws ServiceException {
+    public void ldapSearch() throws ServiceException {
         Domain domain = mParams.getDomain();
         GalMode galMode = domain.getGalMode();
         GalSearchType stype = mParams.getType();

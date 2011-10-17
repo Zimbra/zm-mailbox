@@ -42,7 +42,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111014-1053 */
+    /* build: 8.0.0_BETA1_1111 pshao 20111016-1558 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -528,6 +528,125 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetAdminPort(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAdminPort, "");
+        return attrs;
+    }
+
+    /**
+     * SSL proxy port for admin console UI
+     *
+     * <p>Use getAdminProxyPortAsString to access value as a string.
+     *
+     * @see #getAdminProxyPortAsString()
+     *
+     * @return zimbraAdminProxyPort, or 1443 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1322)
+    public int getAdminProxyPort() {
+        return getIntAttr(Provisioning.A_zimbraAdminProxyPort, 1443);
+    }
+
+    /**
+     * SSL proxy port for admin console UI
+     *
+     * @return zimbraAdminProxyPort, or "1443" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1322)
+    public String getAdminProxyPortAsString() {
+        return getAttr(Provisioning.A_zimbraAdminProxyPort, "1443");
+    }
+
+    /**
+     * SSL proxy port for admin console UI
+     *
+     * @param zimbraAdminProxyPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1322)
+    public void setAdminProxyPort(int zimbraAdminProxyPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminProxyPort, Integer.toString(zimbraAdminProxyPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL proxy port for admin console UI
+     *
+     * @param zimbraAdminProxyPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1322)
+    public Map<String,Object> setAdminProxyPort(int zimbraAdminProxyPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminProxyPort, Integer.toString(zimbraAdminProxyPort));
+        return attrs;
+    }
+
+    /**
+     * SSL proxy port for admin console UI
+     *
+     * @param zimbraAdminProxyPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1322)
+    public void setAdminProxyPortAsString(String zimbraAdminProxyPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminProxyPort, zimbraAdminProxyPort);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL proxy port for admin console UI
+     *
+     * @param zimbraAdminProxyPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1322)
+    public Map<String,Object> setAdminProxyPortAsString(String zimbraAdminProxyPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminProxyPort, zimbraAdminProxyPort);
+        return attrs;
+    }
+
+    /**
+     * SSL proxy port for admin console UI
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1322)
+    public void unsetAdminProxyPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminProxyPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SSL proxy port for admin console UI
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1322)
+    public Map<String,Object> unsetAdminProxyPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAdminProxyPort, "");
         return attrs;
     }
 
@@ -16119,6 +16238,78 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetRemoteManagementUser(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraRemoteManagementUser, "");
+        return attrs;
+    }
+
+    /**
+     * indicate whether to turn on admin console proxy
+     *
+     * @return zimbraReverseProxyAdminEnabled, or false if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1321)
+    public boolean isReverseProxyAdminEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraReverseProxyAdminEnabled, false);
+    }
+
+    /**
+     * indicate whether to turn on admin console proxy
+     *
+     * @param zimbraReverseProxyAdminEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1321)
+    public void setReverseProxyAdminEnabled(boolean zimbraReverseProxyAdminEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyAdminEnabled, zimbraReverseProxyAdminEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * indicate whether to turn on admin console proxy
+     *
+     * @param zimbraReverseProxyAdminEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1321)
+    public Map<String,Object> setReverseProxyAdminEnabled(boolean zimbraReverseProxyAdminEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyAdminEnabled, zimbraReverseProxyAdminEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * indicate whether to turn on admin console proxy
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1321)
+    public void unsetReverseProxyAdminEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyAdminEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * indicate whether to turn on admin console proxy
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1321)
+    public Map<String,Object> unsetReverseProxyAdminEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyAdminEnabled, "");
         return attrs;
     }
 

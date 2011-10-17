@@ -119,7 +119,7 @@ public class TestLdapProvGal extends TestLdap {
         assertEquals(SIZE_LIMIT, result.getMatches().size());
         assertTrue(result.getHadMore());
         
-        result = prov.searchGal(domain, query, type, null);
+        result = prov.searchGal(domain, query, type, 0, null);
         assertEquals(NUM_ACCTS, result.getMatches().size());
         assertTrue(!result.getHadMore());
     }

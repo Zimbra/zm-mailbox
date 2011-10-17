@@ -5199,15 +5199,6 @@ public class LegacyLdapProvisioning extends LdapProv {
     public SearchGalResult searchGal(Domain d,
                                      String n,
                                      GalSearchType type,
-                                     String token)
-    throws ServiceException {
-        return searchGal(d, n, type, null, token, null);
-    }
-
-    @Override
-    public SearchGalResult searchGal(Domain d,
-                                     String n,
-                                     GalSearchType type,
                                      GalMode galMode,
                                      String token) throws ServiceException {
         return searchGal(d, n, type, galMode, token, null);
@@ -5274,57 +5265,6 @@ public class LegacyLdapProvisioning extends LdapProv {
             }
         }
 
-        return results;
-    }
-
-    @Override
-    public SearchGalResult autoCompleteGal(Domain d, String n, GalSearchType type, int max) throws ServiceException
-    {
-        GalOp galOp = GalOp.autocomplete;
-        // escape user-supplied string
-        n = LdapUtilCommon.escapeSearchFilterArg(n);
-
-        int maxResults = Math.min(max, d.getIntAttr(Provisioning.A_zimbraGalMaxResults, DEFAULT_GAL_MAX_RESULTS));
-        if (type == GalSearchType.resource)
-            return searchResourcesGal(d, n, maxResults, null, galOp, null);
-        else if (type == GalSearchType.group)
-            return searchGroupsGal(d, n, maxResults, null, galOp, null);
-            
-        GalMode mode = GalMode.fromString(d.getAttr(Provisioning.A_zimbraGalMode));
-        SearchGalResult results = null;
-        if (mode == null || mode == GalMode.zimbra) {
-            results = searchZimbraGal(d, n, maxResults, null, galOp, null);
-        } else if (mode == GalMode.ldap) {
-            results = searchLdapGal(d, n, maxResults, null, galOp, null);
-        } else if (mode == GalMode.both) {
-            results = searchZimbraGal(d, n, maxResults/2, null, galOp, null);
-            SearchGalResult ldapResults = searchLdapGal(d, n, maxResults/2, null, galOp, null);
-            if (ldapResults != null) {
-                results.addMatches(ldapResults);
-                results.setToken(LdapUtilCommon.getLaterTimestamp(results.getToken(), ldapResults.getToken()));
-                results.setHadMore(results.getHadMore() || ldapResults.getHadMore());
-            }
-        } else {
-            results = searchZimbraGal(d, n, maxResults, null, galOp, null);
-        }
-        if (results == null) results = SearchGalResult.newSearchGalResult(null);  // should really not be null by now
-
-        if (type == GalSearchType.all) {
-            SearchGalResult resourceResults = null;
-            if (maxResults == 0)
-                resourceResults = searchResourcesGal(d, n, 0, null, galOp, null);
-            else {
-                int room = maxResults - results.getNumMatches();
-                if (room > 0)
-                    resourceResults = searchResourcesGal(d, n, room, null, galOp, null);
-            }
-            if (resourceResults != null) {
-                results.addMatches(resourceResults);
-                results.setToken(LdapUtilCommon.getLaterTimestamp(results.getToken(), resourceResults.getToken()));
-                results.setHadMore(results.getHadMore() || resourceResults.getHadMore());
-            }
-        }
-        Collections.sort(results.getMatches());
         return results;
     }
 

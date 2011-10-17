@@ -1597,7 +1597,9 @@ public class SoapProvisioning extends Provisioning {
     }
 
     @Override
-    public SearchGalResult autoCompleteGal(Domain d, String query, GalSearchType type, int limit) throws ServiceException {
+    public SearchGalResult autoCompleteGal(Domain d, String query, GalSearchType type, 
+            int limit, GalContact.Visitor visitor) 
+    throws ServiceException {
         String typeStr = type == null ? GalSearchType.all.name() : type.name();
 
         XMLElement req = new XMLElement(AdminConstants.AUTO_COMPLETE_GAL_REQUEST);
@@ -1608,11 +1610,11 @@ public class SoapProvisioning extends Provisioning {
 
         Element resp = invoke(req);
 
-        SearchGalResult result = SearchGalResult.newSearchGalResult(null);
+        SearchGalResult result = SearchGalResult.newSearchGalResult(visitor);
         result.setHadMore(resp.getAttributeBool(AdminConstants.A_MORE, false));
         result.setTokenizeKey(resp.getAttribute(AccountConstants.A_TOKENIZE_KEY, null));
         for (Element e: resp.listElements(AdminConstants.E_CN)) {
-            result.addMatch(new GalContact(AdminConstants.A_ID, getAttrs(e)));
+            result.addMatch(new GalContact(e.getAttribute(AdminConstants.A_ID), getAttrs(e)));
         }
         return result;
     }
@@ -1667,12 +1669,9 @@ public class SoapProvisioning extends Provisioning {
         return result;
     }
 
-    @Override
-    public SearchGalResult searchGal(Domain d, String query, GalSearchType type, String token) throws ServiceException {
-        return searchGal(d, query, type, token, 0, 0, null);
-    }
-
-    public SearchGalResult searchGal(Domain d, String query, GalSearchType type, String token, int limit, int offset, String sortBy) throws ServiceException {
+    public SearchGalResult searchGal(Domain d, String query, GalSearchType type, 
+            String token, int limit, int offset, String sortBy) 
+    throws ServiceException {
         String typeStr = type == null ? GalSearchType.all.name() : type.name();
 
         XMLElement req = new XMLElement(AdminConstants.SEARCH_GAL_REQUEST);
@@ -1695,7 +1694,7 @@ public class SoapProvisioning extends Provisioning {
         result.setHadMore(resp.getAttributeBool(AdminConstants.A_MORE, false));
         result.setTokenizeKey(resp.getAttribute(AccountConstants.A_TOKENIZE_KEY, null));
         for (Element e: resp.listElements(AdminConstants.E_CN)) {
-            result.addMatch(new GalContact(AdminConstants.A_ID, getAttrs(e)));
+            result.addMatch(new GalContact(e.getAttribute(AdminConstants.A_ID), getAttrs(e)));
         }
         return result;
     }

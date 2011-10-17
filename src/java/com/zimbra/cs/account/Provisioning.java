@@ -1597,19 +1597,27 @@ public abstract class Provisioning extends ZAttrProvisioning {
         }
 
     }
+    
+    public SearchGalResult autoCompleteGal(Domain domain, String query, GalSearchType type, int limit,
+            GalContact.Visitor visitor) 
+    throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+    
+    public SearchGalResult searchGal(Domain domain, String query, GalSearchType type, int limit,
+            GalContact.Visitor visitor) 
+    throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+    
+    public SearchGalResult syncGal(Domain domain, String token, GalContact.Visitor visitor)
+    throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
 
     /**
-     * @param d domain
-     * @param query LDAP search query
-     * @param type address type to search
-     * @param token return entries created/modified after timestamp
-     * @return List of GalContact objects
-     * @throws ServiceException
-     */
-    public abstract SearchGalResult searchGal(Domain d, String query, GalSearchType type, String token) throws ServiceException;
-
-    /**
-     * Interface for CalDAV.  it needs to always search in Zimbra only, regardless of zimbraGalMode configured on the domain.
+     * Interface for CalDAV.  It needs to always search in Zimbra only, 
+     * regardless of zimbraGalMode configured on the domain.
      *
      * @param d domain
      * @param query LDAP search query
@@ -1619,24 +1627,15 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @return List of GalContact objects
      * @throws ServiceException
      */
-    public SearchGalResult searchGal(Domain d, String query, GalSearchType type, GalMode mode, String token) throws ServiceException {
+    public SearchGalResult searchGal(Domain d, String query, GalSearchType type, 
+            GalMode mode, String token) 
+    throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
     
     public void searchGal(GalSearchParams params) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
-
-
-    /**
-     *
-     * @param query LDAP search query
-     * @param type address type to auto complete
-     * @param limit max number to return
-     * @return List of GalContact objects
-     * @throws ServiceException
-     */
-    public abstract SearchGalResult autoCompleteGal(Domain d, String query, GalSearchType type, int limit) throws ServiceException;
 
     public Identity getDefaultIdentity(Account account) throws ServiceException {
         Map<String, Object> attrs = new HashMap<String, Object>();
