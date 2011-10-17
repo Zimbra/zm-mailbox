@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111014-1053 */
+    /* build: 8.0.0_BETA1_1111 pshao 20111016-1558 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1735,6 +1735,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=155)
     public static final String A_zimbraAdminPort = "zimbraAdminPort";
+
+    /**
+     * SSL proxy port for admin console UI
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1322)
+    public static final String A_zimbraAdminProxyPort = "zimbraAdminProxyPort";
 
     /**
      * admin saved searches
@@ -9006,6 +9014,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1074)
     public static final String A_zimbraResponseHeader = "zimbraResponseHeader";
+
+    /**
+     * indicate whether to turn on admin console proxy
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1321)
+    public static final String A_zimbraReverseProxyAdminEnabled = "zimbraReverseProxyAdminEnabled";
 
     /**
      * Allowed reverse proxy IP addresses. Lookup servlet will only generate
