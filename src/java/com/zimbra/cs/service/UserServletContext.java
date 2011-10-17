@@ -33,6 +33,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Objects;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
@@ -41,14 +42,13 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.fb.FreeBusyQuery;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -205,7 +205,7 @@ public final class UserServletContext {
             }
             targetAccount = prov.get(AccountBy.name, accountPath, authToken);
         }
-        
+
         String listParam = this.params.get(UserServlet.QP_LIST);
         if (listParam != null && listParam.length() > 0) {
             String[] ids = listParam.split(",");
@@ -430,11 +430,11 @@ public final class UserServletContext {
     public boolean isAnonymousRequest() {
         return authAccount.equals(GuestAccount.ANONYMOUS_ACCT);
     }
-    
+
     public boolean hasMaxWidth() {
         return getMaxWidth() != null;
     }
-    
+
     /**
      * Returns the maximum width of the image returned by this request, or
      * {@code null} if the max with is not specified or invalid.
@@ -499,7 +499,13 @@ public final class UserServletContext {
 
         @Override public boolean markSupported() { return is.markSupported(); }
 
-        @Override public int read() throws IOException { return (int)check(is.read()); }
+        @Override public int read() throws IOException
+        {
+            int value = is.read();
+            if (value != -1)
+                check(1);
+            return value;
+        }
 
         @Override public int read(byte b[]) throws IOException { return (int)check(is.read(b)); }
 
@@ -592,11 +598,11 @@ public final class UserServletContext {
     public void logError(Throwable e) {
         error = e;
     }
-    
+
     public Throwable getLoggedError() {
         return error;
     }
-    
+
     @Override
     public String toString() {
         return Objects.toStringHelper(this)

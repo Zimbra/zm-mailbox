@@ -60,9 +60,9 @@ import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedDocument;
@@ -407,10 +407,11 @@ public final class NativeFormatter extends Formatter {
         ParsedDocument pd = null;
 
         try {
-            if (contentType == null)
+            if (contentType == null) {
                 contentType = MimeDetect.getMimeDetect().detect(filename);
-            if (contentType == null)
-                contentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
+                if (contentType == null)
+                    contentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
+            }
             pd = new ParsedDocument(is, filename, contentType, System.currentTimeMillis(), creator, context.req.getHeader("X-Zimbra-Description"));
             item = mbox.getItemByPath(context.opContext, filename, folder.getId());
             // XXX: should we just overwrite here instead?
@@ -426,7 +427,7 @@ public final class NativeFormatter extends Formatter {
         sendZimbraHeaders(context.resp, item);
     }
 
-    private void sendZimbraHeaders(HttpServletResponse resp, MailItem item) {
+    public static void sendZimbraHeaders(HttpServletResponse resp, MailItem item) {
         if (resp == null || item == null)
             return;
         resp.addHeader("X-Zimbra-ItemId", item.getId() + "");
