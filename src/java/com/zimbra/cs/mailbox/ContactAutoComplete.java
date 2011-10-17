@@ -38,6 +38,7 @@ import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.GalContact;
@@ -49,6 +50,7 @@ import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchResultCallback;
 import com.zimbra.cs.index.ContactHit;
 import com.zimbra.cs.index.ProxiedHit;
+import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraHit;
 import com.zimbra.cs.index.ZimbraQueryResults;
@@ -690,9 +692,16 @@ public class ContactAutoComplete {
                     }
                 }
             }
-            String query = generateQuery(str, folders);
-            ZimbraLog.gal.debug("querying contact folders: %s", query);
-            qres = mbox.index.search(octxt, query, CONTACT_TYPES, SortBy.NONE, limit + 1);
+            SearchParams params = new SearchParams();
+            params.setQueryString(generateQuery(str, folders));
+            params.setDefaultField("contact:");
+            params.setTypes(CONTACT_TYPES);
+            params.setSortBy(SortBy.NONE);
+            params.setLimit(limit + 1);
+            params.setPrefetch(true);
+            params.setFetchMode(SearchParams.Fetch.NORMAL);
+            ZimbraLog.gal.debug("querying contact folders: %s", params.getQueryString());
+            qres = mbox.index.search(SoapProtocol.Soap12, octxt, params);
             while (qres.hasNext()) {
                 ZimbraHit hit = qres.getNext();
                 Map<String,String> fields = null;
@@ -755,10 +764,7 @@ public class ContactAutoComplete {
             buf.append(folder instanceof Mountpoint ? "underid:" : "inid:");
             buf.append(fid);
         }
-
-        buf.append(") AND contact:\"");
-        buf.append(query.replace("\"", "\\\"")); // escape quotes
-        buf.append("\"");
+        buf.append(") ").append(query.replace("\"", "\\\"")); // escape quotes
         return buf.toString();
     }
 }

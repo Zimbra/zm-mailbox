@@ -28,6 +28,7 @@ import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mime.ParsedContact;
 
 /**
  * Unit test for {@link ContactAutoComplete}.
@@ -64,6 +65,20 @@ public final class ContactAutoCompleteTest {
         contact.mEmail = "c2@zimbra.com";
         result.addEntry(contact);
         Assert.assertEquals(result.entries.size(), 2);
+    }
+
+    @Test
+    public void lastNameFirstName() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Map<String, Object> fields = new HashMap<String, Object>();
+        fields.put(ContactConstants.A_firstName, "First");
+        fields.put(ContactConstants.A_lastName, "Last");
+        fields.put(ContactConstants.A_email, "test@zimbra.com");
+        mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        ContactAutoComplete autocomplete = new ContactAutoComplete(mbox.getAccount(), new OperationContext(mbox));
+        Assert.assertEquals(1, autocomplete.query("first last", null, 100).entries.size());
+        Assert.assertEquals(1, autocomplete.query("last first", null, 100).entries.size());
     }
 
     @Test
