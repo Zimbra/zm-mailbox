@@ -1830,12 +1830,6 @@ public class Mailbox {
                     } catch (IOException iox) {
                         ZimbraLog.store.warn("Unable to delete message data.", iox);
                     }
-
-                    // twiddle the mailbox lock [must be the last command of this function!]
-                    //   (so even *we* can't access this Mailbox going forward)
-                    if (maintenance != null) {
-                        maintenance.markUnavailable();
-                    }
                 }
             } finally {
                 if (needRedo) {
@@ -1843,6 +1837,17 @@ public class Mailbox {
                         redoRecorder.commit();
                     } else {
                         redoRecorder.abort();
+                    }
+                }
+                
+                if (maintenance != null) {
+                    if (success) {
+                        // twiddle the mailbox lock [must be the last command of this function!]
+                        //   (so even *we* can't access this Mailbox going forward)
+                        maintenance.markUnavailable();
+                    } else {
+                        // end the maintenance if the delete is not successful.
+                        MailboxManager.getInstance().endMaintenance(maintenance, success, true);                        
                     }
                 }
             }
