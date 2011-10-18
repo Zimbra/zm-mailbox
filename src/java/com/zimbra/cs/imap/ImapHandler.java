@@ -3003,6 +3003,9 @@ abstract class ImapHandler {
         }
 
         ImapFolder i4folder = getSelectedFolder();
+        if (i4folder == null) {
+            throw new ImapSessionClosedException();
+        }
         boolean expunged = false;
         try {
             // 6.4.2: "The CLOSE command permanently removes all messages that have the \Deleted
@@ -3056,6 +3059,9 @@ abstract class ImapHandler {
         }
 
         ImapFolder i4folder = getSelectedFolder();
+        if (i4folder == null) {
+            throw new ImapSessionClosedException();
+        }
         if (!i4folder.isWritable()) {
             sendNO(tag, "mailbox selected READ-ONLY");
             return true;
@@ -3167,7 +3173,9 @@ abstract class ImapHandler {
             return true;
         }
         ImapFolder i4folder = getSelectedFolder();
-
+        if (i4folder == null) {
+            throw new ImapSessionClosedException();
+        }
         boolean requiresMODSEQ = i4search.requiresMODSEQ();
         if (requiresMODSEQ) {
             activateExtension(ImapExtension.CONDSTORE);
@@ -3346,7 +3354,9 @@ abstract class ImapHandler {
             return true;
         }
         ImapFolder i4folder = getSelectedFolder();
-
+        if (i4folder == null) {
+            throw new ImapSessionClosedException();
+        }
         boolean requiresMODSEQ = i4search.requiresMODSEQ();
         if (requiresMODSEQ) {
             activateExtension(ImapExtension.CONDSTORE);
@@ -3454,7 +3464,9 @@ abstract class ImapHandler {
             return true;
         }
         ImapFolder i4folder = getSelectedFolder();
-
+        if (i4folder == null) {
+            throw new ImapSessionClosedException();
+        }
         // 6.4.8: "However, server implementations MUST implicitly include the UID message
         //         data item as part of any FETCH response caused by a UID command, regardless
         //         of whether a UID was specified as a message data item to the FETCH."
@@ -3776,6 +3788,9 @@ abstract class ImapHandler {
         }
 
         ImapFolder i4folder = getSelectedFolder();
+        if (i4folder == null) {
+            throw new ImapSessionClosedException();
+        }
         if (!i4folder.isWritable()) {
             sendNO(tag, "mailbox selected READ-ONLY");
             return true;
@@ -3991,6 +4006,9 @@ abstract class ImapHandler {
         List<MailItem> copies = new ArrayList<MailItem>();
 
         ImapFolder i4folder = getSelectedFolder();
+        if (i4folder == null) {
+            throw new ImapSessionClosedException();
+        }
         Mailbox mbox = i4folder.getMailbox();
 
         Set<ImapMessage> i4set;
