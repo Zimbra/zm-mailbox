@@ -709,7 +709,10 @@ public final class MailConstants {
     public static final String A_TOTAL_SIZE = "total";
     public static final String A_OPERATION = "op";
     public static final String A_RECURSIVE = "recursive";
+    public static final String A_FOLDER_DEPTH = "depth";
     public static final String A_DEFAULT_VIEW = "view";
+    public static final String A_TRAVERSE = "tr";
+    public static final String A_BROKEN = "broken";
     public static final String A_UNREAD = "u";
     public static final String A_IMAP_UNREAD = "i4u";
     public static final String A_COLOR = "color";
@@ -1103,7 +1106,6 @@ public final class MailConstants {
     public static final String A_SUBJECT = "su";
     public static final String A_LAST_EDITED_BY = "leb";
     public static final String A_COUNT = "count";
-    public static final String A_TRAVERSE = "tr";
     public static final String A_ARGS = "args";
     public static final String A_REST_URL = "rest";
     public static final String A_V1 = "v1";
