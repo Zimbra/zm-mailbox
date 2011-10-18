@@ -134,20 +134,23 @@ public class GalSearchConfig {
 			filterName = 
                 (stype == GalSearchType.all) ? NamedFilter.zimbraSync :
 			    (stype == GalSearchType.resource) ? NamedFilter.zimbraResourceSync : 
-			    (stype == GalSearchType.group) ? NamedFilter.zimbraGroupSync : NamedFilter.zimbraAccountSync;
+			    (stype == GalSearchType.group) ? NamedFilter.zimbraGroupSync : 
+			        NamedFilter.zimbraAccountSync;
 			break;
 		case search:
 			filterName = 
                 (stype == GalSearchType.all) ? NamedFilter.zimbraSearch :
 			    (stype == GalSearchType.resource) ? NamedFilter.zimbraResources : 
-			    (stype == GalSearchType.group) ? NamedFilter.zimbraGroups : NamedFilter.zimbraAccounts;
+			    (stype == GalSearchType.group) ? NamedFilter.zimbraGroups : 
+			        NamedFilter.zimbraAccounts;
 			mTokenizeKey = domain.getAttr(Provisioning.A_zimbraGalTokenizeSearchKey, null);
 			break;
 		case autocomplete:
 			filterName = 
                 (stype == GalSearchType.all) ? NamedFilter.zimbraAutoComplete :
 			    (stype == GalSearchType.resource) ? NamedFilter.zimbraResourceAutoComplete : 
-			    (stype == GalSearchType.group) ? NamedFilter.zimbraGroupAutoComplete : NamedFilter.zimbraAccountAutoComplete;
+			    (stype == GalSearchType.group) ? NamedFilter.zimbraGroupAutoComplete : 
+			        NamedFilter.zimbraAccountAutoComplete;
 			mTokenizeKey = domain.getAttr(Provisioning.A_zimbraGalTokenizeAutoCompleteKey, null);
 			break;
 		}

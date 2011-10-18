@@ -139,6 +139,10 @@ public abstract class UpgradeOp {
     
     protected void modifyAttrs(ZLdapContext initZlc, Entry entry, Map<String, Object> attrs) 
     throws ServiceException {
+        if (attrs.isEmpty()) {
+            return;
+        }
+        
         printModAttrs(entry, attrs);
         
         ZLdapContext zlc = initZlc;
@@ -156,6 +160,10 @@ public abstract class UpgradeOp {
     
     protected void modifyAttrs(Entry entry, Map<String, Object> attrs) 
     throws ServiceException {
+        if (attrs.isEmpty()) {
+            return;
+        }
+        
         printModAttrs(entry, attrs);
         prov.modifyAttrs(entry, attrs);
     }
