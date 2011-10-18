@@ -715,7 +715,7 @@ class WebAdminUpstreamServersVar extends ProxyConfVar {
             }
         }
 
-        mValue = servers;      
+        mValue = servers;
     }
     
     @Override
