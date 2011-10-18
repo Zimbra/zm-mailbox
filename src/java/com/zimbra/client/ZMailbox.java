@@ -3080,7 +3080,7 @@ public class ZMailbox implements ToZJSONObject {
                 return;
         }
 
-        GetFolderRequest req = new GetFolderRequest(new Folder(), true);
+        GetFolderRequest req = new GetFolderRequest(null, true);
         GetFolderResponse res = invokeJaxb(req);
         Folder root = res.getFolder();
         ZFolder userRoot = (root != null ? new ZFolder(root, null, this) : null);
