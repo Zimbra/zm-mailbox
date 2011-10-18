@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111016-1558 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111018-0944 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1074,6 +1074,30 @@ public class ZAttrProvisioning {
         public boolean isIncludeSmartAndHeaders() { return this == includeSmartAndHeaders;}
         public boolean isIncludeNone() { return this == includeNone;}
         public boolean isIncludeBodyAndHeadersWithPrefix() { return this == includeBodyAndHeadersWithPrefix;}
+    }
+
+    public static enum PrefTasksFilterBy {
+        waiting("waiting"),
+        todolist("todolist"),
+        deferred("deferred"),
+        notstarted("notstarted"),
+        inprogress("inprogress"),
+        completed("completed");
+        private String mValue;
+        private PrefTasksFilterBy(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefTasksFilterBy fromString(String s) throws ServiceException {
+            for (PrefTasksFilterBy value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isWaiting() { return this == waiting;}
+        public boolean isTodolist() { return this == todolist;}
+        public boolean isDeferred() { return this == deferred;}
+        public boolean isNotstarted() { return this == notstarted;}
+        public boolean isInprogress() { return this == inprogress;}
+        public boolean isCompleted() { return this == completed;}
     }
 
     public static enum PrefTasksReadingPaneLocation {
@@ -8735,6 +8759,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefTagTreeOpen = "zimbraPrefTagTreeOpen";
 
     /**
+     * preferred task filtering option in UI
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1323)
+    public static final String A_zimbraPrefTasksFilterBy = "zimbraPrefTasksFilterBy";
+
+    /**
      * where the reading pane is displayed for tasks
      *
      * @since ZCS 7.0.0
@@ -10289,22 +10321,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
