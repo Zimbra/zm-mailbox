@@ -42,7 +42,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111016-1558 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111018-0944 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -32442,6 +32442,137 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPrefTagTreeOpen(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefTagTreeOpen, "");
+        return attrs;
+    }
+
+    /**
+     * preferred task filtering option in UI
+     *
+     * <p>Valid values: [deferred, notstarted, inprogress, waiting, todolist, completed]
+     *
+     * @return zimbraPrefTasksFilterBy, or null if unset and/or has invalid value
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1323)
+    public ZAttrProvisioning.PrefTasksFilterBy getPrefTasksFilterBy() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefTasksFilterBy); return v == null ? null : ZAttrProvisioning.PrefTasksFilterBy.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
+    }
+
+    /**
+     * preferred task filtering option in UI
+     *
+     * <p>Valid values: [deferred, notstarted, inprogress, waiting, todolist, completed]
+     *
+     * @return zimbraPrefTasksFilterBy, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1323)
+    public String getPrefTasksFilterByAsString() {
+        return getAttr(Provisioning.A_zimbraPrefTasksFilterBy, null);
+    }
+
+    /**
+     * preferred task filtering option in UI
+     *
+     * <p>Valid values: [deferred, notstarted, inprogress, waiting, todolist, completed]
+     *
+     * @param zimbraPrefTasksFilterBy new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1323)
+    public void setPrefTasksFilterBy(ZAttrProvisioning.PrefTasksFilterBy zimbraPrefTasksFilterBy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefTasksFilterBy, zimbraPrefTasksFilterBy.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * preferred task filtering option in UI
+     *
+     * <p>Valid values: [deferred, notstarted, inprogress, waiting, todolist, completed]
+     *
+     * @param zimbraPrefTasksFilterBy new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1323)
+    public Map<String,Object> setPrefTasksFilterBy(ZAttrProvisioning.PrefTasksFilterBy zimbraPrefTasksFilterBy, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefTasksFilterBy, zimbraPrefTasksFilterBy.toString());
+        return attrs;
+    }
+
+    /**
+     * preferred task filtering option in UI
+     *
+     * <p>Valid values: [deferred, notstarted, inprogress, waiting, todolist, completed]
+     *
+     * @param zimbraPrefTasksFilterBy new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1323)
+    public void setPrefTasksFilterByAsString(String zimbraPrefTasksFilterBy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefTasksFilterBy, zimbraPrefTasksFilterBy);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * preferred task filtering option in UI
+     *
+     * <p>Valid values: [deferred, notstarted, inprogress, waiting, todolist, completed]
+     *
+     * @param zimbraPrefTasksFilterBy new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1323)
+    public Map<String,Object> setPrefTasksFilterByAsString(String zimbraPrefTasksFilterBy, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefTasksFilterBy, zimbraPrefTasksFilterBy);
+        return attrs;
+    }
+
+    /**
+     * preferred task filtering option in UI
+     *
+     * <p>Valid values: [deferred, notstarted, inprogress, waiting, todolist, completed]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1323)
+    public void unsetPrefTasksFilterBy() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefTasksFilterBy, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * preferred task filtering option in UI
+     *
+     * <p>Valid values: [deferred, notstarted, inprogress, waiting, todolist, completed]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1323)
+    public Map<String,Object> unsetPrefTasksFilterBy(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefTasksFilterBy, "");
         return attrs;
     }
 
