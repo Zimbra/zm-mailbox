@@ -49,6 +49,8 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.URI;
+import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.methods.PostMethod;
 
 import com.google.common.base.Charsets;
@@ -4801,6 +4803,17 @@ public class ProvUtil implements HttpDebugListener {
         console.println("========== SOAP SEND ==========");
 
         if (debugLevel == SoapDebugLevel.high) {
+            try {
+                URI uri = postMethod.getURI();
+                console.println(uri.toString());
+            } catch (URIException e) {
+                if (verboseMode) {
+                    e.printStackTrace(errConsole);
+                } else {
+                    console.println("Unable to get request URL, error=" + e.getMessage());
+                }
+            }
+            
             Header[] headers = postMethod.getRequestHeaders();
             for (Header header : headers) {
                 console.println(header.toString().trim()); // trim the ending crlf
