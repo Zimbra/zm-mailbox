@@ -31,7 +31,8 @@ public class AccountCache {
     
     private Map<String, CacheEntry> mNameCache;
     private Map<String, CacheEntry> mIdCache;
-    private Map mForeignPrincipalCache;
+    private Map<String, CacheEntry> mAliasCache;
+    private Map<String, CacheEntry> mForeignPrincipalCache;
     private Counter mHitRate = new Counter();
     
     private long mRefreshTTL;
@@ -56,13 +57,16 @@ public class AccountCache {
     public AccountCache(int maxItems, long refreshTTL) {
         mNameCache = MapUtil.newLruMap(maxItems);
         mIdCache = MapUtil.newLruMap(maxItems);
+        mAliasCache = MapUtil.newLruMap(maxItems); 
         mForeignPrincipalCache = MapUtil.newLruMap(maxItems);  
+        
         mRefreshTTL = refreshTTL;
     }
 
     public synchronized void clear() {
         mNameCache.clear();
         mIdCache.clear();
+        mAliasCache.clear();
         mForeignPrincipalCache.clear();
     }
 
@@ -70,9 +74,16 @@ public class AccountCache {
         if (entry != null) {
             mNameCache.remove(entry.getName());
             mIdCache.remove(entry.getId());
+            
+            String aliases[] = entry.getMultiAttr(Provisioning.A_zimbraMailAlias);            
+            for (String alias : aliases) {
+                mAliasCache.remove(alias);
+            }
+            
             String fps[] = entry.getMultiAttr(Provisioning.A_zimbraForeignPrincipal);            
-            for (String fp : fps)
+            for (String fp : fps) {
                 mForeignPrincipalCache.remove(fp);
+            }
         }
     }
     
@@ -81,9 +92,16 @@ public class AccountCache {
             CacheEntry cacheEntry = new CacheEntry(entry, mRefreshTTL);
             mNameCache.put(entry.getName(), cacheEntry);
             mIdCache.put(entry.getId(), cacheEntry);
+            
+            String aliases[] = entry.getMultiAttr(Provisioning.A_zimbraMailAlias);            
+            for (String alias : aliases) {
+                mAliasCache.put(alias, cacheEntry); 
+            }
+            
             String fps[] = entry.getMultiAttr(Provisioning.A_zimbraForeignPrincipal);            
-            for (String fp : fps)
-                mForeignPrincipalCache.put(fp, cacheEntry);            
+            for (String fp : fps) {
+                mForeignPrincipalCache.put(fp, cacheEntry); 
+            }
         }
     }
     
@@ -114,7 +132,12 @@ public class AccountCache {
     }
     
     public synchronized Account getByName(String key) {
-        return get(key.toLowerCase(), mNameCache);
+        Account acct = get(key.toLowerCase(), mNameCache);
+        if (acct != null) {
+            return acct;
+        } else {
+            return get(key.toLowerCase(), mAliasCache);
+        }
     }
     
     public synchronized Account getByForeignPrincipal(String key) {

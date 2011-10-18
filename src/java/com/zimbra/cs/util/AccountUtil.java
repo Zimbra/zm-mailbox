@@ -279,7 +279,6 @@ public class AccountUtil {
                                     } else {
                                         allowFromAccount = Provisioning.getInstance().get(AccountBy.name, addr);
                                     }
-                                    allowFromAccount = Provisioning.getInstance().get(AccountBy.name, addr);
                                     if (allowFromAccount != null && !account.getId().equalsIgnoreCase(allowFromAccount.getId())) {
                                         // The allow-from address refers to another account, and therefore it is not a match
                                         // for this account.
