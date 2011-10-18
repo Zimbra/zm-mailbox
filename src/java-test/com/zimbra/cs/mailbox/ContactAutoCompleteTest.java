@@ -82,6 +82,19 @@ public final class ContactAutoCompleteTest {
     }
 
     @Test
+    public void spaceInFirstName() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Map<String, Object> fields = new HashMap<String, Object>();
+        fields.put(ContactConstants.A_firstName, "First Second Third Forth");
+        fields.put(ContactConstants.A_lastName, "Last");
+        fields.put(ContactConstants.A_email, "test@zimbra.com");
+        mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        ContactAutoComplete autocomplete = new ContactAutoComplete(mbox.getAccount(), new OperationContext(mbox));
+        Assert.assertEquals(1, autocomplete.query("first second third forth", null, 100).entries.size());
+    }
+
+    @Test
     public void hitGroup() throws Exception {
         ContactAutoComplete.AutoCompleteResult result = new ContactAutoComplete.AutoCompleteResult(10);
         result.rankings = new ContactRankings(MockProvisioning.DEFAULT_ACCOUNT_ID);
@@ -145,4 +158,19 @@ public final class ContactAutoCompleteTest {
         result.clear();
     }
 
+    @Test
+    public void addMatchedContactsWithUnicodeCase() throws Exception {
+        Account account = Provisioning.getInstance().getAccount(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        ContactAutoComplete comp = new ContactAutoComplete(account, null);
+        ContactAutoComplete.AutoCompleteResult result = new ContactAutoComplete.AutoCompleteResult(10);
+        result.rankings = new ContactRankings(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Map<String, Object> attrs = ImmutableMap.<String, Object>of(
+                ContactConstants.A_firstName, "\u0421\u0440\u043f\u0441\u043a\u0438 \u0411\u043e\u0441\u043d\u0430 \u0438 \u0425\u0435\u0440\u0446\u0435\u0433\u043e\u0432\u0438\u043d\u0430",
+                ContactConstants.A_lastName, "\u0441\u043a\u0438 \u0411\u043e\u0441\u043d\u0430 \u0438 \u0425\u0435\u0440\u0446\u0435\u0433\u043e\u0432\u0438\u043d\u0430",
+                ContactConstants.A_email, "sr_BA@i18n.com");
+        comp.addMatchedContacts("\u0421\u0440\u043f\u0441\u043a\u0438 \u0411\u043e\u0441\u043d\u0430 \u0438 \u0425\u0435\u0440\u0446\u0435\u0433\u043e\u0432\u0438\u043d\u0430",
+                attrs, Mailbox.ID_FOLDER_CONTACTS, null, result);
+        Assert.assertEquals(1, result.entries.size());
+        result.clear();
+    }
 }

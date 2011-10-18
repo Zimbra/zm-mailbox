@@ -585,7 +585,7 @@ public class ContactAutoComplete {
         for (String token : tokens) {
             regex.append(regex.length() == 0 ? "(^|\\s)" : "\\s").append(Pattern.quote(token)).append(".*");
         }
-        return Pattern.compile(regex.toString(), Pattern.CASE_INSENSITIVE);
+        return Pattern.compile(regex.toString(), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     }
 
     public void addMatchedContacts(String query, Map<String, ? extends Object> attrs, int folderId, ItemId id,
