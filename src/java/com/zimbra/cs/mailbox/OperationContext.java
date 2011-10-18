@@ -47,33 +47,40 @@ public class OperationContext {
     public OperationContext(RedoableOp redoPlayer) {
         player = redoPlayer;
     }
+
     public OperationContext(Account acct) {
         this(acct, false);
     }
+
     public OperationContext(Mailbox mbox) throws ServiceException {
         this(mbox.getAccount());
     }
+
     public OperationContext(Account acct, boolean admin) {
         authuser = acct;  isAdmin = admin;
     }
+
     public OperationContext(String accountId) throws ServiceException {
         authuser = Provisioning.getInstance().get(AccountBy.id, accountId);
         if (authuser == null)
             throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
     }
+
     public OperationContext(AuthToken auth) throws ServiceException {
         authToken = auth;
         String accountId = auth.getAccountId();
         isAdmin = AuthToken.isAnyAdmin(auth);
         authuser = Provisioning.getInstance().get(AccountBy.id, accountId, authToken);
         if (authuser == null || !auth.isZimbraUser()) {
-            if (auth.getDigest() != null || auth.getAccessKey() != null)
+            if (auth.getDigest() != null || auth.getAccessKey() != null) {
                 authuser = new GuestAccount(auth);
-            else
+            } else {
                 authuser = GuestAccount.ANONYMOUS_ACCT;
+            }
         }
-        if (authuser == null)
+        if (authuser == null) {
             throw AccountServiceException.NO_SUCH_ACCOUNT(accountId);
+        }
     }
     public OperationContext(OperationContext octxt) {
         player     = octxt.player;      session = octxt.session;
@@ -85,6 +92,7 @@ public class OperationContext {
     public OperationContext setChangeConstraint(boolean checkModified, int changeId) {
         changetype = checkModified;  change = changeId;  return this;
     }
+
     public OperationContext unsetChangeConstraint() {
         changetype = CHECK_CREATED;  change = -1;  return this;
     }
@@ -92,6 +100,7 @@ public class OperationContext {
     public OperationContext setSession(Session s) {
         session = s;  return this;
     }
+
     Session getSession() {
         return session;
     }
@@ -99,15 +108,19 @@ public class OperationContext {
     public RedoableOp getPlayer() {
         return player;
     }
+
     public long getTimestamp() {
         return (player == null ? System.currentTimeMillis() : player.getTimestamp());
     }
+
     int getChangeId() {
         return (player == null ? -1 : player.getChangeId());
     }
+
     public boolean isRedo() {
         return player != null;
     }
+
     public boolean needRedo() {
         return player == null || !player.getUnloggedReplay();
     }
@@ -121,11 +134,12 @@ public class OperationContext {
     }
     
     public AuthToken getAuthToken(boolean constructIfNotPresent) throws ServiceException {
-        if (authToken != null)
+        if (authToken != null) {
             return authToken;
-        else if (constructIfNotPresent) {
-            if (getAuthenticatedUser() != null)
+        } else if (constructIfNotPresent) {
+            if (getAuthenticatedUser() != null) {
                 return AuthProvider.getAuthToken(getAuthenticatedUser(), isUsingAdminPrivileges());
+            }
         }
         return null;
     }
@@ -142,8 +156,9 @@ public class OperationContext {
      * @see com.zimbra.cs.service.mail.CalendarRequest#isOnBehalfOfRequest(com.zimbra.soap.ZimbraSoapContext)
      */
     public boolean isOnBehalfOfRequest(Mailbox mbox) {
-        if (!isDelegatedRequest(mbox))
+        if (!isDelegatedRequest(mbox)) {
             return false;
+        }
         return authuser != null && !AccountUtil.isZDesktopLocalAccount(authuser.getId());
     }
     
@@ -163,16 +178,18 @@ public class OperationContext {
         return userAgent;
     }
     
-    void SetCtxtData(String key, OperationContextData data) {
-        if (contextData == null)
+    void setCtxtData(String key, OperationContextData data) {
+        if (contextData == null) {
             contextData = new HashMap<String, OperationContextData>();
+        }
         contextData.put(key, data);
     }
     
     OperationContextData getCtxtData(String key) {
-        if (contextData == null)
+        if (contextData == null) {
             return null;
-        else
+        } else {
             return contextData.get(key);
+        }
     }
 }

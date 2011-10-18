@@ -3233,6 +3233,11 @@ public class Mailbox {
         public String mName;
         public Folder mFolder;
         public List<FolderNode> mSubfolders = new ArrayList<FolderNode>();
+
+        @Override
+        public String toString() {
+            return "" + mName + " [" + mId + "]" + (mFolder == null ? " (hidden)" : "");
+        }
     }
 
     public FolderNode getFolderTree(OperationContext octxt, ItemId iid, boolean returnAllVisibleFolders)

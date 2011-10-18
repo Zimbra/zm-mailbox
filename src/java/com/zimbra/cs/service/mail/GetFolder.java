@@ -18,8 +18,11 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -35,37 +38,41 @@ import com.zimbra.cs.mailbox.OperationContextData;
 import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.cs.session.SoapSession;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetFolder extends MailDocumentHandler {
 
     private static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.E_FOLDER, MailConstants.A_FOLDER };
     private static final String[] RESPONSE_ITEM_PATH = new String[] { MailConstants.E_FOLDER };
-    @Override protected String[] getProxiedIdPath(Element request)     { return TARGET_FOLDER_PATH; }
-    @Override protected boolean checkMountpointProxy(Element request)  { return false; }
-    @Override protected String[] getResponseItemPath()  { return RESPONSE_ITEM_PATH; }
 
-    static final String DEFAULT_FOLDER_ID = "" + Mailbox.ID_FOLDER_USER_ROOT;
+    @Override
+    protected String[] getProxiedIdPath(Element request) {
+        return TARGET_FOLDER_PATH;
+    }
 
-    @Override public Element handle(Element request, Map<String, Object> context)
-    throws ServiceException, SoapFaultException {
+    @Override
+    protected boolean checkMountpointProxy(Element request) {
+        return false;
+    }
+
+    @Override
+    protected String[] getResponseItemPath() {
+        return RESPONSE_ITEM_PATH;
+    }
+
+    static final String DEFAULT_FOLDER_ID = Integer.toString(Mailbox.ID_FOLDER_USER_ROOT);
+
+    @Override
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
-        MailItem.Type view = null;
-        boolean recursive = true;
 
         ItemId iid;
         Element eFolder = request.getOptionalElement(MailConstants.E_FOLDER);
         if (eFolder != null) {
             iid = new ItemId(eFolder.getAttribute(MailConstants.A_FOLDER, DEFAULT_FOLDER_ID), zsc);
-            String v = eFolder.getAttribute(MailConstants.A_DEFAULT_VIEW, null);
-            if (v != null) {
-                view = MailItem.Type.of(v);
-            }
-            recursive = eFolder.getAttributeBool(MailConstants.A_RECURSIVE, true);
 
             String path = eFolder.getAttribute(MailConstants.A_PATH, null);
             if (path != null) {
@@ -88,39 +95,54 @@ public class GetFolder extends MailDocumentHandler {
             iid = new ItemId(DEFAULT_FOLDER_ID, zsc);
         }
 
+        int depth = (int) request.getAttributeLong(MailConstants.A_FOLDER_DEPTH, -1);
+        boolean traverse = request.getAttributeBool(MailConstants.A_TRAVERSE, false);
         boolean visible = request.getAttributeBool(MailConstants.A_VISIBLE, false);
         boolean needGranteeName = request.getAttributeBool(MailConstants.A_NEED_GRANTEE_NAME, true);
 
-        FolderNode rootnode = mbox.getFolderTree(octxt, iid, visible);
+        String v = request.getAttribute(MailConstants.A_DEFAULT_VIEW, null);
+        MailItem.Type view = v == null ? null : MailItem.Type.of(v);
+
+        FolderNode rootnode = filterByView(mbox.getFolderTree(octxt, iid, visible), view);
 
         Element response = zsc.createElement(MailConstants.GET_FOLDER_RESPONSE);
         if (rootnode != null) {
-            if (needGranteeName)
+            if (needGranteeName) {
                 OperationContextData.addGranteeNames(octxt, rootnode);
-            else
+            } else {
                 OperationContextData.setNeedGranteeName(octxt, false);
-            Element folderRoot = encodeFolderNode(ifmt, octxt, response, rootnode, true, recursive ? -1 : 1, view);
-            if (rootnode.mFolder != null && rootnode.mFolder instanceof Mountpoint)
-                handleMountpoint(request, context, iid, (Mountpoint) rootnode.mFolder, folderRoot);			
+            }
+
+            List<ExpandableMountpoint> mounts = Lists.newArrayList();
+            Element folderRoot = encodeFolderNode(rootnode, response, ifmt, octxt, true, depth, view, traverse, mounts);
+
+            if (rootnode.mFolder != null && rootnode.mFolder instanceof Mountpoint) {
+                mounts.add(new ExpandableMountpoint(folderRoot, (Mountpoint) rootnode.mFolder, depth));
+            }
+            for (ExpandableMountpoint empt : mounts) {
+                expandMountpoint(empt, request, context);
+            }
         }
 
         return response;
     }
 
-    public static Element encodeFolderNode(ItemIdFormatter ifmt, OperationContext octxt, Element parent, FolderNode node)
+    public static Element encodeFolderNode(FolderNode node, Element parent, ItemIdFormatter ifmt, OperationContext octxt)
     throws ServiceException {
-        return encodeFolderNode(ifmt, octxt, parent, node, false, -1, null);
+        return encodeFolderNode(node, parent, ifmt, octxt, false, -1, null, false, null);
     }
 
-    private static Element encodeFolderNode(ItemIdFormatter ifmt, OperationContext octxt, Element parent,
-                                            FolderNode node, boolean exposeAclAccessKey, int depth, MailItem.Type view)
+    private static Element encodeFolderNode(FolderNode node, Element parent, ItemIdFormatter ifmt, OperationContext octxt,
+            boolean exposeAclAccessKey, int depth, MailItem.Type view, boolean traverse, List<ExpandableMountpoint> mounts)
     throws ServiceException {
         Element eFolder;
-        if (node.mFolder != null) {
-            if (node.mFolder.getId() != Mailbox.ID_FOLDER_USER_ROOT && node.mFolder.getId() != Mailbox.ID_FOLDER_TRASH && view != null && view != MailItem.Type.UNKNOWN && !node.mFolder.getDefaultView().equals(view)) {
-                return null;
+        Folder folder = node.mFolder;
+        if (folder != null) {
+            eFolder = ToXML.encodeFolder(parent, ifmt, octxt, folder, ToXML.NOTIFY_FIELDS, exposeAclAccessKey);
+            // if requested, fetch contents of mountpoints
+            if (traverse && mounts != null && folder instanceof Mountpoint && folder.getMailbox().hasFullAccess(octxt)) {
+                mounts.add(new ExpandableMountpoint(eFolder, (Mountpoint) folder, depth));
             }
-            eFolder = ToXML.encodeFolder(parent, ifmt, octxt, node.mFolder, ToXML.NOTIFY_FIELDS, exposeAclAccessKey);
         } else {
             eFolder = parent.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_ID, ifmt.formatItemId(node.mId)).addAttribute(MailConstants.A_NAME, node.mName);
         }
@@ -128,29 +150,81 @@ public class GetFolder extends MailDocumentHandler {
         if (depth == 0) {
             return eFolder;
         }
-        if (depth > 0) {
-            depth--;
+
+        int remainingDepth = depth > 0 ? depth - 1 : depth;
+        for (FolderNode subNode : node.mSubfolders) {
+            encodeFolderNode(subNode, eFolder, ifmt, octxt, exposeAclAccessKey, remainingDepth, view, traverse, mounts);
         }
-        
-        for (FolderNode subNode : node.mSubfolders)
-            encodeFolderNode(ifmt, octxt, eFolder, subNode, exposeAclAccessKey, depth, view);
 
         return eFolder;
     }
 
+    private static class ExpandableMountpoint {
+        final Element elt;
+        final Mountpoint mpt;
+        final int depth;
 
-    private void handleMountpoint(Element request, Map<String, Object> context, ItemId iidLocal, Mountpoint mpt, Element eRoot)
+        ExpandableMountpoint(Element elt, Mountpoint mpt, int depth) {
+            this.elt = elt;  this.mpt = mpt;  this.depth = depth;
+        }
+
+        @Override
+        public String toString() {
+            return mpt.getName() + " -> " + mpt.getTarget() + (depth >= 0 ? " [depth " + depth + "] ": "");
+        }
+    }
+
+    private void expandMountpoint(ExpandableMountpoint empt, Element origRequest, Map<String, Object> context)
     throws ServiceException {
+        // kinda hacky -- we're reusing the original request for its protocol, toplevel attrs, etc.
+        Element request = origRequest.clone();
+
+        if (empt.depth >= 0) {
+            request.addAttribute(MailConstants.A_FOLDER_DEPTH, empt.depth);
+        }
+        // expand only one level of mountpoints!
+        request.addAttribute(MailConstants.A_TRAVERSE, false);
+
         // gotta nuke the old <folder> element, lest it interfere with our proxying...
-        ItemId iidRemote = mpt.getTarget();
-        request.getElement(MailConstants.E_FOLDER).detach();
+        Element eFolder = request.getOptionalElement(MailConstants.E_FOLDER);
+        if (eFolder != null) {
+            eFolder.detach();
+        }
+        ItemId iidRemote = empt.mpt.getTarget();
         request.addElement(MailConstants.E_FOLDER).addAttribute(MailConstants.A_FOLDER, iidRemote.toString());
 
-        Element proxied = proxyRequest(request, context, iidLocal, iidRemote);
-        // return the children of the remote folder as children of the mountpoint
-        proxied = proxied.getOptionalElement(MailConstants.E_FOLDER);
-        if (proxied != null) {
-            SoapSession.transferMountpointContents(eRoot, proxied); //args: to,from
+        try {
+            Element proxied = proxyRequest(request, context, new ItemId(empt.mpt), iidRemote);
+            // return the children of the remote folder as children of the mountpoint
+            proxied = proxied.getOptionalElement(MailConstants.E_FOLDER);
+            if (proxied != null) {
+                ToXML.transferMountpointContents(empt.elt, proxied); //args: to,from
+            }
+        } catch (SoapFaultException sfe) {
+            empt.elt.addAttribute(MailConstants.A_BROKEN, true);
         }
+    }
+
+    private FolderNode filterByView(FolderNode node, MailItem.Type viewFilter) {
+        if (viewFilter == null || viewFilter == MailItem.Type.UNKNOWN) {
+            return node;
+        }
+
+        // remove subfolders if there's no view match there
+        if (!node.mSubfolders.isEmpty()) {
+            for (Iterator<FolderNode> it = node.mSubfolders.iterator(); it.hasNext(); ) {
+                if (filterByView(it.next(), viewFilter) == null) {
+                    it.remove();
+                }
+            }
+        }
+
+        // mark folder invisible if it doesn't match the requested view
+        if (node.mFolder != null && node.mId != Mailbox.ID_FOLDER_TRASH && node.mFolder.getDefaultView() != viewFilter) {
+            node.mFolder = null;
+        }
+
+        // if neither this folder nor any of its subfolders match, it's out
+        return node.mFolder == null && node.mSubfolders.isEmpty() ? null : node;
     }
 }

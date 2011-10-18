@@ -15,6 +15,7 @@
 package com.zimbra.cs.account;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -34,7 +35,6 @@ import com.zimbra.cs.mime.MockMimeTypeInfo;
 import com.zimbra.cs.mime.handler.UnknownTypeHandler;
 import com.zimbra.cs.redolog.MockRedoLogProvider;
 import com.zimbra.soap.admin.type.DataSourceType;
-import com.zimbra.soap.type.GalSearchType;
 
 /**
  * Mock implementation of {@link Provisioning} for testing.
@@ -55,6 +55,8 @@ public final class MockProvisioning extends Provisioning {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraServiceHostname, "localhost");
         attrs.put(Provisioning.A_zimbraRedoLogProvider, MockRedoLogProvider.class.getName());
+        attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        attrs.put(Provisioning.A_zimbraMailMode, Provisioning.MailMode.http.toString());
         localhost = new Server("localhost", "localhost", attrs, Collections.<String, Object>emptyMap(), this);
     }
 
@@ -66,6 +68,9 @@ public final class MockProvisioning extends Provisioning {
         }
         if (!attrs.containsKey(Provisioning.A_zimbraMailHost)) {
             attrs.put(Provisioning.A_zimbraMailHost, "localhost");
+        }
+        if (!attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
+            attrs.put(Provisioning.A_zimbraAccountStatus, Provisioning.ACCOUNT_STATUS_ACTIVE);
         }
         attrs.put(Provisioning.A_zimbraBatchedIndexingSize, Integer.MAX_VALUE); // suppress indexing
         Account account = new Account(email, email, attrs, null, this);
@@ -320,12 +325,19 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public Server get(Key.ServerBy keyName, String key) {
-        throw new UnsupportedOperationException();
+        switch (keyName) {
+            case id:
+                return localhost.getId().equals(key) ? localhost : null;
+            case name:
+                return localhost.getName().equals(key) ? localhost : null;
+            default:
+                throw new UnsupportedOperationException();
+        }
     }
 
     @Override
     public List<Server> getAllServers() {
-        throw new UnsupportedOperationException();
+        return Arrays.asList(localhost);
     }
 
     @Override

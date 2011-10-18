@@ -14,9 +14,7 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,7 +22,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 
 public abstract class OperationContextData {
@@ -71,12 +68,14 @@ public abstract class OperationContextData {
     }
     
     public static boolean getNeedGranteeName(OperationContext octxt) {
-        if (octxt == null)
+        if (octxt == null) {
             return true;
+        }
         
         GranteeNames data = getGranteeNames(octxt);
-        if (data == null)
+        if (data == null) {
             return true;
+        }
         
         return data.needGranteeName();
     }
@@ -85,7 +84,7 @@ public abstract class OperationContextData {
         GranteeNames data = getGranteeNames(octxt);
         if (data == null) {
             data = new GranteeNames(octxt);
-            octxt.SetCtxtData(GranteeNames.KEY, data);
+            octxt.setCtxtData(GranteeNames.KEY, data);
         } 
         return data;
     }
@@ -113,19 +112,19 @@ public abstract class OperationContextData {
         // id-to-name map
         private Map<String, String>[] mIdsToNamesMap = new Map[NUM_GRANTEE_TYPES];
        
-        private GranteeNames(OperationContext octxt) {
+        GranteeNames(OperationContext octxt) {
             super(octxt);
         }
         
-        private void setNeedGranteeName(boolean needGranteeName) {
+        void setNeedGranteeName(boolean needGranteeName) {
             mNeedGranteeName = needGranteeName;
         }
         
-        private boolean needGranteeName() {
+        boolean needGranteeName() {
             return mNeedGranteeName;
         }
         
-        private void addRootNode(Mailbox.FolderNode node) {
+        void addRootNode(Mailbox.FolderNode node) {
             if (mUnresolvedRootNodes == null)
                 mUnresolvedRootNodes = new HashSet<Mailbox.FolderNode>();
             
@@ -155,8 +154,9 @@ public abstract class OperationContextData {
             }
             
             // add it to the unresolved set if it had not been added before
-            if (!alreadyResolved && !alreadyAdded)
+            if (!alreadyResolved && !alreadyAdded) {
                 mUnresolvedRootNodes.add(node);
+            }
         }
         
         private void resolveIfNecessary() {
@@ -178,8 +178,9 @@ public abstract class OperationContextData {
             }
             
             // move nodes to resolved set
-            if (mResolvedRootNodes == null)
+            if (mResolvedRootNodes == null) {
                 mResolvedRootNodes = new HashSet<Mailbox.FolderNode>();
+            }
             mResolvedRootNodes.addAll(mUnresolvedRootNodes);
             mUnresolvedRootNodes.clear();
         }
@@ -249,8 +250,9 @@ public abstract class OperationContextData {
                 for (ACL.Grant grant : acl.getGrants()) {
                     int idx = getGranteeBucket(grant.getGranteeType());
                     if (idx != -1) {
-                        if (idHolders[idx] == null)
+                        if (idHolders[idx] == null) {
                             idHolders[idx] = new HashSet<String>();
+                        }
                         idHolders[idx].add(grant.getGranteeId());    
                     }
                 }
@@ -269,9 +271,9 @@ public abstract class OperationContextData {
                 // mIdsToNamesMap[idx] should not be null, but if for whatever reason 
                 // (some callsite missed calling us to populate?),
                 // return null and let caller to look it up.
-                if (mIdsToNamesMap[idx] == null)
+                if (mIdsToNamesMap[idx] == null) {
                     return null;
-                else {
+                } else {
                     String name = mIdsToNamesMap[idx].get(id);
                     // We've searched but didn't find the id, the grantee might have been deleted,
                     // return empty string so caller won't try to search for it again (bug 39804).
@@ -284,10 +286,11 @@ public abstract class OperationContextData {
                         //   throwing a NamingException, which is caught and returned from our LDAP code 
                         //   as a ServiceException.  
                         // See http://bugzilla.zimbra.com/show_bug.cgi?id=39806#c4 
-                        if (mEncounteredLDAPFailure)
+                        if (mEncounteredLDAPFailure) {
                             return EMPTY_NAME;
-                        else
+                        } else {
                             return INVALID_GRANT;
+                        }
                     } else
                         return name;
                 }

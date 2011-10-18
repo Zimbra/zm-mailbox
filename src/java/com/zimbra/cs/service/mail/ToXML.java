@@ -498,6 +498,41 @@ public final class ToXML {
         return el;
     }
 
+    public static void transferMountpointContents(Element elem, Element mptTarget) {
+        // transfer folder counts to the serialized mountpoint from the serialized target folder
+        transferLongAttribute(elem, mptTarget, MailConstants.A_UNREAD);
+        transferLongAttribute(elem, mptTarget, MailConstants.A_NUM);
+        transferLongAttribute(elem, mptTarget, MailConstants.A_SIZE);
+        elem.addAttribute(MailConstants.A_OWNER_FOLDER_NAME, mptTarget.getAttribute(MailConstants.A_NAME, null));
+        elem.addAttribute(MailConstants.A_URL, mptTarget.getAttribute(MailConstants.A_URL, null));
+        elem.addAttribute(MailConstants.A_RIGHTS, mptTarget.getAttribute(MailConstants.A_RIGHTS, null));
+        if (mptTarget.getAttribute(MailConstants.A_FLAGS, "").indexOf("u") != -1) {
+            elem.addAttribute(MailConstants.A_FLAGS, "u" + elem.getAttribute(MailConstants.A_FLAGS, "").replace("u", ""));
+        }
+        // transfer ACL and child folders to the serialized mountpoint from the serialized remote folder
+        for (Element child : mptTarget.listElements()) {
+            String name = child.getName();
+            if (name.equals(MailConstants.E_FOLDER) || name.equals(MailConstants.E_SEARCH) || name.equals(MailConstants.E_MOUNT)) {
+                elem.addElement(child.clone());
+            } else {
+                elem.addUniqueElement(child.clone());
+            }
+        }
+    }
+
+    private static void transferLongAttribute(Element to, Element from, String attrName) {
+        try {
+            long remote = from.getAttributeLong(attrName, -1L);
+            if (remote >= 0) {
+                to.addAttribute(attrName, remote);
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.session.warn("exception reading long attr from remote folder: %s", attrName, e);
+        } catch (Element.ContainerException e) {
+            ZimbraLog.session.warn("exception adding remote folder attr to serialized mountpoint: %s", attrName, e);
+        }
+    }
+
     public static Element encodeRestUrl(Element el, MailItem item) {
         try {
             return el.addAttribute(MailConstants.A_REST_URL, UserServlet.getRestUrl(item));

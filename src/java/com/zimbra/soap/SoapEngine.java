@@ -58,7 +58,7 @@ import java.util.Map;
 /**
  * The soap engine.
  */
-public final class SoapEngine {
+public class SoapEngine {
     private static final Log LOG = LogFactory.getLog(SoapEngine.class);
 
     // attribute used to correlate requests and responses

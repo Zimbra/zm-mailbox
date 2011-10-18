@@ -35,7 +35,6 @@ import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.cs.session.SoapSession;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class CreateMountpoint extends MailDocumentHandler {
@@ -116,7 +115,7 @@ public class CreateMountpoint extends MailDocumentHandler {
         if (mpt != null) {
             Element eMount = ToXML.encodeMountpoint(response, ifmt, octxt, mpt);
             // transfer folder counts and subfolders to the serialized mountpoint from the serialized target folder
-            SoapSession.transferMountpointContents(eMount, remote);
+            ToXML.transferMountpointContents(eMount, remote);
         }
         return response;
     }

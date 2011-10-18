@@ -1724,8 +1724,8 @@ msg ID, two additional flags will be included in <e> elements for the message:
 
 ----------
 
-<GetFolderRequest [visible="0|1"] [needGranteeName="0|1"]>
-  [<folder [l="{base-folder-id}"] [path="{fully-qualified-path}"] [view="{default-view}"] [recursive="true|false"]/>]
+<GetFolderRequest [visible="0|1"] [needGranteeName="0|1"] [view="{folder-view-constraint}"] [depth="{subfolder-levels}"] [tr="{traverse-mountpoints}"]>
+  [<folder [l="{base-folder-id}"] [path="{fully-qualified-path}"]/>]
 </GetFolderRequest>
 
   - either a {base-folder-id} or a {fully-qualified-path} can optionally be specified;
@@ -1740,12 +1740,18 @@ msg ID, two additional flags will be included in <e> elements for the message:
 
   - if *no* folders are visible and visible=1, the response looks like <GetFolderResponse/>
 
-  - if "needGranteeName" is 0, grantee names in in forlder grants (the d attribute in <grant>) are omitted.
+  - if "needGranteeName" is 0, grantee names in in folder grants (the d attribute in <grant>) are omitted.
     default for needGranteeName is 1.
 
   - if "view" is set then only the folders with matching view will be returned.  otherwise folders with any default views will be returned.
 
-  - if "recursive" is set to "no" then only the requested folder and its immediate subfolders will be returned.  default value is "yes".
+  - if "depth" is set to a non-negative number, we include that many levels of subfolders in the response
+      (so if depth="1", we'll include only the folder and its direct subfolders)
+      if depth is missing or negative, the entire folder hierarchy is returned
+
+  - if "tr" is true, one level of mountpoints are traversed and the target folder's counts are applied to the local mountpoint
+      if the root folder as referenced by {base-folder-id} and/or {fully-qualified-path} is a mountpoint, "tr" is automatically true
+      mountpoints under mountpoints are not themselves expanded
 
 <GetFolderResponse>
   <folder ...>
