@@ -1,6 +1,3 @@
-<?xml version="1.0"?>
-<!DOCTYPE Configure PUBLIC "-//Mort Bay Consulting//DTD Configure//EN" "http://jetty.mortbay.org/configure.dtd">
-
 <!-- =============================================================== -->
 <!-- Configure the Jetty Server                                      -->
 <!--                                                                 -->
@@ -10,17 +7,16 @@
 <!-- =============================================================== -->
 
 
-<Configure id="Server" class="org.mortbay.jetty.Server">
+<Configure id="Server" class="org.eclipse.jetty.server.Server">
 
     <!-- =========================================================== -->
     <!-- Server Thread Pool                                          -->
     <!-- =========================================================== -->
 
     <Set name="ThreadPool">
-      <!-- Default bounded blocking threadpool -->
-      <New id="pool" class="org.mortbay.thread.BoundedThreadPool">
+      <!-- Default queued blocking threadpool -->
+      <New id="pool" class="org.eclipse.jetty.util.thread.QueuedThreadPool">
         <Set name="minThreads">10</Set>
-        <Set name="lowThreads">50</Set>
         <Set name="maxThreads">%%zimbraHttpNumThreads%%</Set>
       </New>
     </Set>
@@ -37,7 +33,7 @@
     <!-- HTTPBEGIN %%comment VAR:zimbraMailMode,-->,http,redirect,mixed,both%%
     <Call name="addConnector">
       <Arg>
-        <New id="http" class="org.mortbay.jetty.nio.SelectChannelConnector">
+        <New id="http" class="org.eclipse.jetty.server.nio.SelectChannelConnector">
           <Set name="port"><SystemProperty name="jetty.port" default="%%zimbraMailPort%%"/></Set>
           <Set name="maxIdleTime">30000</Set>
           <Set name="lowResourcesMaxIdleTime">10000</Set>
@@ -54,7 +50,7 @@
     <!-- HTTPSBEGIN %%comment VAR:zimbraMailMode,-->,https,redirect,mixed,both%%
     <Call name="addConnector">
       <Arg>
-        <New id="ssl" class="org.mortbay.jetty.security.SslSelectChannelConnector">
+        <New id="ssl" class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
           <Set name="Port">%%zimbraMailSSLPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">30000</Set> 
@@ -78,7 +74,7 @@
     <!-- HTTPSCLIENTCERTBEGIN %%uncomment VAR:zimbraMailSSLClientCertPort,-->,0%%
     <Call name="addConnector">
       <Arg>
-        <New id="ssl-clientcert" class="org.mortbay.jetty.security.SslSelectChannelConnector">
+        <New id="ssl-clientcert" class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
           <Set name="Port">%%zimbraMailSSLClientCertPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">30000</Set> 
@@ -105,7 +101,7 @@
     <!-- =============================================================== -->
     <Call name="addConnector">
       <Arg>
-        <New id="admin" class="org.mortbay.jetty.security.SslSelectChannelConnector">
+        <New id="admin" class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
           <Set name="Port">%%zimbraAdminPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">0</Set>
@@ -129,7 +125,7 @@
     <!-- =============================================================== -->
     <Call name="addConnector">
       <Arg>
-        <New id="ext" class="org.mortbay.jetty.nio.SelectChannelConnector">
+        <New id="ext" class="org.eclipse.jetty.server.nio.SelectChannelConnector">
           <Set name="Port">7072</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">30000</Set>
@@ -144,33 +140,108 @@
     <!-- Set handler Collection Structure                            --> 
     <!-- =========================================================== -->
     <Set name="handler">
-      <New id="Handlers" class="org.mortbay.jetty.handler.rewrite.RewriteHandler">
+      <New id="Handlers" class="org.eclipse.jetty.rewrite.handler.RewriteHandler">
         <Set name="rewriteRequestURI">true</Set>
         <Set name="rewritePathInfo">false</Set>
         <Set name="originalPathAttribute">requestedPath</Set>
-	<Call name="addRule"><Arg><New class="org.mortbay.jetty.handler.rewrite.MsieSslRule"/></Arg></Call>
+	<Call name="addRule"><Arg><New class="org.eclipse.jetty.rewrite.handler.MsieSslRule"/></Arg></Call>
         <!-- map convenience URLs to the webapp that handles them -->
-        <Call name="addRewriteRule"><Arg>/Microsoft-Server-ActiveSync/*</Arg><Arg>/service/extension/zimbrasync</Arg></Call>
-        <Call name="addRewriteRule"><Arg>/principals/*</Arg><Arg>/service/dav/principals</Arg></Call>
-        <Call name="addRewriteRule"><Arg>/dav/*</Arg><Arg>/service/dav/home</Arg></Call>
-        <Call name="addRewriteRule"><Arg>/.well-known/*</Arg><Arg>/service/.well-known</Arg></Call>
-        <Call name="addRewriteRule"><Arg>/home/*</Arg><Arg>/service/home/</Arg></Call>
-        <Call name="addRewriteRule"><Arg>/user/*</Arg><Arg>/service/user/</Arg></Call>
-        <Call name="addRewriteRule"><Arg>/certauth/*</Arg><Arg>/service/certauth</Arg></Call> 
-        <Call name="addRewriteRule"><Arg>/spnegoauth/*</Arg><Arg>/service/spnego</Arg></Call> 
-        <Call name="addRewriteRule"><Arg>%%zimbraMailURL%%/home/*</Arg><Arg>/service/home</Arg></Call>
-        <Call name="addRewriteRule"><Arg>%%zimbraMailURL%%/user/*</Arg><Arg>/service/user</Arg></Call>
-        <Call name="addRewriteRule"><Arg>/profile/*</Arg><Arg>/service/profile</Arg></Call>
-        <Call name="addRewriteRule"><Arg>/autodiscover/*</Arg><Arg>/service/autodiscover</Arg></Call>
-        <!-- stop if we've hit the proper webapps -->
-        <Call name="addRewriteRule"><Arg>/service/*</Arg><Arg></Arg></Call>
-        <Call name="addRewriteRule"><Arg>/spnego/*</Arg><Arg></Arg></Call>
-        <Call name="addRewriteRule"><Arg>/zimlet/*</Arg><Arg></Arg></Call>
-        <Call name="addRewriteRule"><Arg>%%zimbraAdminURL%%/*</Arg><Arg></Arg></Call>
-        <Call name="addRewriteRule"><Arg>%%zimbraMailURL%%/*</Arg><Arg></Arg></Call>
-        <!-- assume all other requests handled by zimbra webapp -->
-        <Call name="addRewriteRule"><Arg>/*</Arg><Arg>%%zimbraMailURL%%</Arg></Call>
-        
+        <Call name="addRule">
+	    <Arg>
+		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+		    <Set name="pattern">/Microsoft-Server-ActiveSync/*</Set>
+		    <Set name="replacement">/service/extension/zimbrasync</Set>
+		</New>
+	    </Arg>
+        </Call>
+        <Call name="addRule">
+	    <Arg>
+		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+		    <Set name="pattern">/principals/*</Set>
+		    <Set name="replacement">/service/dav/principals</Set>
+		</New>
+	    </Arg>
+        </Call>
+        <Call name="addRule">
+	    <Arg>
+		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+		    <Set name="pattern">/dav/*</Set>
+		    <Set name="replacement">/service/dav/home</Set>
+		</New>
+	    </Arg>
+        </Call>
+        <Call name="addRule">
+	    <Arg>
+		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+		    <Set name="pattern">/.well-known/*</Set>
+		    <Set name="replacement">/service/.well-known</Set>
+		</New>
+	    </Arg>
+        </Call>
+        <Call name="addRule">
+	    <Arg>
+		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+		    <Set name="pattern">/home/*</Set>
+		    <Set name="replacement">/service/home/</Set>
+		</New>
+	    </Arg>
+        </Call>
+        <Call name="addRule">
+	    <Arg>
+		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+		    <Set name="pattern">/user/*</Set>
+		    <Set name="replacement">/service/user/</Set>
+		</New>
+	    </Arg>
+        </Call>
+        <Call name="addRule">
+	    <Arg>
+		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+		    <Set name="pattern">/certauth/*</Set>
+		    <Set name="replacement">/service/certauth</Set>
+		</New>
+	    </Arg>
+        </Call>
+        <Call name="addRule">
+	    <Arg>
+		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+		    <Set name="pattern">/spnegoauth/*</Set>
+		    <Set name="replacement">/service/spnego</Set>
+		</New>
+	    </Arg>
+        </Call>
+        <Call name="addRule">
+	    <Arg>
+		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+		    <Set name="pattern">%%zimbraMailURL%%/home/*</Set>
+		    <Set name="replacement">/service/home</Set>
+		</New>
+	    </Arg>
+        </Call>
+        <Call name="addRule">
+	    <Arg>        
+		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+		    <Set name="pattern">%%zimbraMailURL%%/user/*</Set>
+		    <Set name="replacement">/service/user</Set>
+		</New>
+	    </Arg>
+        </Call>  
+        <Call name="addRule">
+	    <Arg>        
+		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+		    <Set name="pattern">/profile/*</Set>
+		    <Set name="replacement">/service/profile</Set>
+		</New>
+	    </Arg>
+        </Call>
+        <Call name="addRule">
+	    <Arg>        
+		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+		    <Set name="pattern">/autodiscover/*</Set>
+		    <Set name="replacement">/service/autodiscover</Set>
+		</New>
+	    </Arg>
+        </Call>
         <!-- 
           Allow only certauth URL on the SSL client cert port.
           If the URl does not match the regex, return http 403.
@@ -187,21 +258,75 @@
               <Set name="HttpErrorReasonRegexNotMatched">errResourceNotAllowedOnPort</Set>
             </New>
           </Arg>
-        </Call> 
-        %%uncomment VAR:zimbraMailSSLClientCertPort,<!--,0%% HTTPSCLIENTCERTEND -->
-        
+        </Call>
+        %%uncomment VAR:zimbraMailSSLClientCertPort,<!--,0%% HTTPSCLIENTCERTEND -->               
+        <!-- stop if we've hit the proper webapps -->
+        <Call name="addRule">
+	    <Arg>        
+		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+		    <Set name="pattern">/service/*</Set>
+		    <Set name="replacement">/service</Set>
+		    <Set name="terminating">true</Set>
+		</New>
+	    </Arg>
+        </Call>
+        <Call name="addRule">
+	    <Arg>        
+		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+		    <Set name="pattern">/spnego/*</Set>
+		    <Set name="replacement">/spnego</Set>
+		    <Set name="terminating">true</Set>
+		</New>
+	    </Arg>
+        </Call>
+        <Call name="addRule">
+	    <Arg>        
+		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+		    <Set name="pattern">/zimlet/*</Set>
+		    <Set name="replacement">/zimlet</Set>
+		    <Set name="terminating">true</Set>
+		</New>
+	    </Arg>
+        </Call>
+        <Call name="addRule">
+	    <Arg>        
+		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+		    <Set name="pattern">%%zimbraAdminURL%%/*</Set>
+		    <Set name="replacement">%%zimbraAdminURL%%</Set>
+		    <Set name="terminating">true</Set>
+		</New>
+	    </Arg>
+        </Call>
+        <Call name="addRule">
+	    <Arg>        
+		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+		    <Set name="pattern">%%zimbraMailURL%%/*</Set>
+		    <Set name="replacement">%%zimbraMailURL%%</Set>
+		    <Set name="terminating">true</Set>
+		</New>
+	    </Arg>
+        </Call>                               
+        <!-- assume all other requests handled by zimbra webapp -->
+        <Call name="addRule">
+	    <Arg>        
+		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
+		    <Set name="pattern">/*</Set>
+		    <Set name="replacement">/zimbra</Set>
+		</New>
+	    </Arg>
+        </Call>       
         <Set name="handler">
-          <New id="Handlers" class="org.mortbay.jetty.handler.HandlerCollection">
+          <New id="Handlers" class="org.eclipse.jetty.server.handler.HandlerCollection">
             <Set name="handlers">
-             <Array type="org.mortbay.jetty.Handler">
+             <Array type="org.eclipse.jetty.server.Handler">
                <Item>
-                 <New id="Contexts" class="org.mortbay.jetty.handler.ContextHandlerCollection"/>
+                 <New id="Contexts" class="org.eclipse.jetty.server.handler.ContextHandlerCollection"/>
                </Item>
                <Item>
-                 <New id="DefaultHandler" class="org.mortbay.jetty.handler.DefaultHandler"/>
+                 <New id="DefaultHandler" class="org.eclipse.jetty.server.handler.DefaultHandler"/>
                </Item>
                <Item>
-                 <New id="RequestLog" class="org.mortbay.jetty.handler.RequestLogHandler"/>
+                 <New id="RequestLog" class="org.eclipse.jetty.server.handler.RequestLogHandler"/>
                </Item>
              </Array>
             </Set>
@@ -211,14 +336,16 @@
     </Set>
 
     <Array id="plusConfig" type="java.lang.String">
-      <Item>org.mortbay.jetty.webapp.WebInfConfiguration</Item>
-      <Item>org.mortbay.jetty.plus.webapp.EnvConfiguration</Item>
-      <Item>org.mortbay.jetty.plus.webapp.Configuration</Item>
-      <Item>org.mortbay.jetty.webapp.JettyWebXmlConfiguration</Item>
-      <Item>org.mortbay.jetty.webapp.TagLibConfiguration</Item>
+    	<Item>org.eclipse.jetty.webapp.WebInfConfiguration</Item>
+		<Item>org.eclipse.jetty.webapp.WebXmlConfiguration</Item>
+		<Item>org.eclipse.jetty.webapp.MetaInfConfiguration</Item>
+    	<Item>org.eclipse.jetty.plus.webapp.EnvConfiguration</Item>
+    	<Item>org.eclipse.jetty.plus.webapp.PlusConfiguration</Item>
+    	<Item>org.eclipse.jetty.webapp.JettyWebXmlConfiguration</Item>
+    	<Item>org.eclipse.jetty.webapp.TagLibConfiguration</Item>      
     </Array>
 
-    <New id="service" class="org.mortbay.jetty.webapp.WebAppContext">
+    <New id="service" class="org.eclipse.jetty.webapp.WebAppContext">
       <Arg><Ref id="Contexts"/></Arg>
       <Arg><SystemProperty name="jetty.home" default="."/>/webapps/service</Arg>
       <Arg>/service</Arg>
@@ -230,8 +357,12 @@
           <Arg type="boolean">false</Arg>
         </Call>
       </Get>
+      <Call name="setAttribute">
+        <Arg>org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern</Arg>
+		<Arg>.*/.*jsp-api-[^/]*\.jar$|.*/.*jsp-[^/]*\.jar$|.*/.*taglibs[^/]*\.jar$</Arg>
+      </Call> 
     </New>
-    <New id="zimbra" class="org.mortbay.jetty.webapp.WebAppContext">
+    <New id="zimbra" class="org.eclipse.jetty.webapp.WebAppContext">
       <Arg><Ref id="Contexts"/></Arg>
       <Arg><SystemProperty name="jetty.home" default="."/>/webapps/zimbra</Arg>
       <Arg>%%zimbraMailURL%%</Arg>
@@ -244,11 +375,14 @@
           <Arg type="int">599</Arg>
           <Arg type="String">/public/error.jsp</Arg>
         </Call>
-      </Get>  
+      </Get>
+      <Call name="setAttribute">
+        <Arg>org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern</Arg>
+		<Arg>.*/.*jsp-api-[^/]*\.jar$|.*/.*jsp-[^/]*\.jar$|.*/.*taglibs[^/]*\.jar$</Arg>
+      </Call>  
     </New>
 
-
-    <New id="zimbraAdmin" class="org.mortbay.jetty.webapp.WebAppContext">
+    <New id="zimbraAdmin" class="org.eclipse.jetty.webapp.WebAppContext">
       <Arg><Ref id="Contexts"/></Arg>
       <Arg><SystemProperty name="jetty.home" default="."/>/webapps/zimbraAdmin</Arg>
       <Arg>%%zimbraAdminURL%%</Arg>
@@ -262,9 +396,13 @@
           <Arg type="String">/public/5xx.html</Arg>
         </Call>
       </Get>
+      <Call name="setAttribute">
+        <Arg>org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern</Arg>
+		<Arg>.*/.*jsp-api-[^/]*\.jar$|.*/.*jsp-[^/]*\.jar$|.*/.*taglibs[^/]*\.jar$</Arg>
+      </Call>
     </New>
-
-    <New id="zimlet" class="org.mortbay.jetty.webapp.WebAppContext">
+    
+    <New id="zimlet" class="org.eclipse.jetty.webapp.WebAppContext">
       <Arg><Ref id="Contexts"/></Arg>
       <Arg><SystemProperty name="jetty.home" default="."/>/webapps/zimlet</Arg>
       <Arg>/zimlet</Arg>
@@ -272,64 +410,65 @@
       <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
       <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/zimlet</Set>
       <Set name="baseResource">
-        <New class="org.mortbay.resource.ResourceCollection">
-          <Set name="resources">
+        <New class="org.eclipse.jetty.util.resource.ResourceCollection">
+          <Arg>
             <Array type="String">
               <Item><SystemProperty name="jetty.home" default="."/>/webapps/zimlet</Item>
               <Item><SystemProperty name="jetty.home" default="."/>/../zimlets-deployed</Item>
             </Array>
-          </Set>
+          </Arg>
         </New>
       </Set>
+      <Call name="setAttribute">
+        <Arg>org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern</Arg>
+		<Arg>.*/.*jsp-api-[^/]*\.jar$|.*/.*jsp-[^/]*\.jar$|.*/.*taglibs[^/]*\.jar$</Arg>
+      </Call>
     </New>
-     
-    <!-- =========================================================== -->
-    <!-- Configure the context deployer                              -->
-    <!-- A context deployer will deploy contexts described in        -->
-    <!-- configuration files discovered in a directory.              -->
-    <!-- The configuration directory can be scanned for hot          -->
-    <!-- deployments at the configured scanInterval.                 -->
-    <!--                                                             -->
-    <!-- This deployer is configured to deploy contexts configured   -->
-    <!-- in the $JETTY_HOME/contexts directory                       -->
-    <!--                                                             -->
-    <!-- =========================================================== -->
-    <Call name="addLifeCycle">
-      <Arg>
-        <New class="org.mortbay.jetty.deployer.ContextDeployer">
-          <Set name="contexts"><Ref id="Contexts"/></Set>
-          <Set name="configurationDir"><SystemProperty name="jetty.home" default="."/>/contexts</Set>
-          <Set name="scanInterval">1</Set>
-        </New>
-      </Arg>
+
+    <!-- Configure System and Server classes  -->
+    <!-- By default, Jetty7 does not expose all the libraries to WebApps, so customize server/system classes -->
+    <!-- Refer http://wiki.eclipse.org/Jetty/Reference/Jetty_Classloading -->
+
+    <Call name="setAttribute">
+        <Arg>org.eclipse.jetty.webapp.systemClasses</Arg>
+        <Arg>
+           <Array type="java.lang.String">
+              <Item>java.</Item>
+              <Item>javax.</Item>
+              <Item>org.xml.</Item>
+              <Item>org.w3c.</Item>
+              <Item>org.apache.commons.logging.</Item>
+              <Item>org.eclipse.jetty.continuation.</Item>
+              <Item>org.eclipse.jetty.jndi.</Item>
+              <Item>org.eclipse.jetty.plus.jaas.</Item>
+              <Item>org.eclipse.jetty.websocket.</Item>
+              <Item>org.eclipse.jetty.servlet.</Item>
+              <Item>org.eclipse.jetty.server.</Item>
+              <Item>org.eclipse.jetty.io.</Item>
+              <Item>org.eclipse.jetty.http.</Item>
+              <Item>org.eclipse.jetty.security.</Item>
+              <Item>org.eclipse.jetty.util.</Item>
+           </Array>
+        </Arg>
     </Call>
 
-
-
-    <!-- =========================================================== -->
-    <!-- Configure the webapp deployer.                              -->
-    <!-- A webapp  deployer will deploy standard webapps discovered  -->
-    <!-- in a directory at startup, without the need for additional  -->
-    <!-- configuration files.    It does not support hot deploy or   -->
-    <!-- non standard contexts (see ContextDeployer above).          -->
-    <!--                                                             -->
-    <!-- This deployer is configured to deploy webapps from the      -->
-    <!-- $JETTY_HOME/webapps directory                               -->
-    <!--                                                             -->
-    <!-- Normally only one type of deployer need be used.            -->
-    <!--                                                             -->
-    <!-- =========================================================== -->
-    <Call name="addLifeCycle">
-      <Arg>
-        <New class="org.mortbay.jetty.deployer.WebAppDeployer">
-          <Set name="contexts"><Ref id="Contexts"/></Set>
-          <Set name="webAppDir"><SystemProperty name="jetty.home" default="."/>/webapps</Set>
-	  <Set name="parentLoaderPriority">false</Set>
-	  <Set name="extract">true</Set>
-	  <Set name="allowDuplicates">false</Set>
-          <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
-        </New>
-      </Arg>
+    <Call name="setAttribute">
+        <Arg>org.eclipse.jetty.webapp.serverClasses</Arg>
+        <Arg>
+           <Array type="java.lang.String">
+              <Item>-org.eclipse.jetty.continuation.</Item>
+              <Item>-org.eclipse.jetty.jndi.</Item>
+              <Item>-org.eclipse.jetty.plus.jass.</Item>
+              <Item>-org.eclipse.jetty.websocket.</Item>
+              <Item>-org.eclipse.jetty.servlet.</Item>
+              <Item>-org.eclipse.jetty.server.</Item>
+              <Item>-org.eclipse.jetty.io.</Item>
+              <Item>-org.eclipse.jetty.http.</Item>
+              <Item>-org.eclipse.jetty.security.</Item>
+              <Item>-org.eclipse.jetty.util.</Item>
+              <Item>org.eclipse.jetty.</Item>
+           </Array>    
+        </Arg>
     </Call>
 
     <!-- =========================================================== -->
@@ -339,18 +478,18 @@
     <!-- configuration (see $(jetty.home)/contexts/test.xml for an   -->
     <!-- example).                                                   -->
     <!-- =========================================================== -->
-    <Set name="UserRealms">
-      <Array type="org.mortbay.jetty.security.UserRealm">
-		<!-- uncomment if global config attr zimbraSpnegoAuthEnabled is TRUE  %%comment VAR:zimbraSpnegoAuthEnabled,-->%%
-        <Item>
-          <New class="org.mortbay.jetty.security.SpnegoUserRealm">
+
+    <!-- uncomment if global config attr zimbraSpnegoAuthEnabled is TRUE  %%comment VAR:zimbraSpnegoAuthEnabled,-->%%        
+    <Call name="addBean">
+       <Arg> 
+          <New class="org.eclipse.jetty.security.SpnegoLoginService">
             <Set name="name">Spnego Authentication Realm</Set>
             <Set name="config"><SystemProperty name="jetty.home" default="."/>/etc/spnego.properties</Set>
           </New>
-        </Item>
-		%%comment VAR:zimbraSpnegoAuthEnabled,<!--%% -->
-      </Array>
-    </Set>
+        </Arg>
+    </Call>    
+	%%comment VAR:zimbraSpnegoAuthEnabled,<!--%% -->
+
 
     <!-- =========================================================== -->
     <!-- Configure Request Log                                       -->
@@ -361,7 +500,7 @@
     <!-- =========================================================== -->
     <Ref id="RequestLog">
       <Set name="requestLog">
-        <New id="RequestLogImpl" class="org.mortbay.jetty.NCSARequestLog">
+        <New id="RequestLogImpl" class="org.eclipse.jetty.server.NCSARequestLog">
           <Arg><SystemProperty name="jetty.home" default="."/>/../log/access_log.yyyy_mm_dd</Arg>
           <Set name="logDateFormat">dd/MMM/yyyy:HH:mm:ss Z</Set>
           <Set name="retainDays">30</Set>
@@ -376,10 +515,10 @@
     <!-- DEBUGBEGIN %%comment VAR:zimbraHttpDebugHandlerEnabled,-->%%
     <Get id="oldhandler" name="handler"/>
     <Set name="handler">
-      <New id="DebugHandler" class="org.mortbay.jetty.handler.DebugHandler">
+      <New id="DebugHandler" class="org.eclipse.jetty.server.handler.DebugHandler">
         <Set name="handler"><Ref id="oldhandler"/></Set>
         <Set name="outputStream">
-          <New class="org.mortbay.util.RolloverFileOutputStream">
+          <New class="org.eclipse.jetty.util.RolloverFileOutputStream">
             <Arg type="String"><SystemProperty name="jetty.home" default="."/>/../log/yyyy_mm_dd.trace.log</Arg>
             <Arg type="boolean">true</Arg>
             <Arg type="int">10</Arg>
