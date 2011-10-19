@@ -18,12 +18,13 @@
  */
 package com.zimbra.cs.service.account;
 
+import java.io.IOException;
 import java.util.Map;
 
-import org.mortbay.io.EndPoint;
-import org.mortbay.io.nio.SelectChannelEndPoint;
-import org.mortbay.jetty.HttpConnection;
-import org.mortbay.thread.Timeout;
+import org.eclipse.jetty.io.EndPoint;
+import org.eclipse.jetty.io.nio.SelectChannelEndPoint;
+import org.eclipse.jetty.server.HttpConnection;
+import org.eclipse.jetty.util.thread.Timeout;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
@@ -171,7 +172,11 @@ public class SyncGal extends GalDocumentHandler {
             EndPoint endPoint = HttpConnection.getCurrentConnection().getEndPoint();
             if (endPoint instanceof SelectChannelEndPoint) {
                 SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
-                scEndPoint.setIdleExpireEnabled(false);
+                try {
+                    scEndPoint.setMaxIdleTime(0);
+                } catch (IOException e) {
+                    // ignore
+                }
             }
         }
     }

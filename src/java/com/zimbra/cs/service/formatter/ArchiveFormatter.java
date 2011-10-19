@@ -45,10 +45,10 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.servlet.http.HttpServletResponse;
 
-import org.mortbay.io.EndPoint;
-import org.mortbay.io.nio.SelectChannelEndPoint;
-import org.mortbay.jetty.HttpConnection;
-import org.mortbay.thread.Timeout;
+import org.eclipse.jetty.io.EndPoint;
+import org.eclipse.jetty.io.nio.SelectChannelEndPoint;
+import org.eclipse.jetty.server.HttpConnection;
+import org.eclipse.jetty.util.thread.Timeout;
 
 import com.google.common.base.Strings;
 import com.google.common.io.Closeables;
@@ -354,13 +354,14 @@ public abstract class ArchiveFormatter extends Formatter {
      * down to the browser for archive responses, we have to close the socket to tell the browser its done. Since we have to do that.. 
      * leaving this endpoint without a timeout is safe. If the connection was being reused (ie keep-alive) this could have issues, but its not 
      * in this case.
+     * @throws IOException 
      */
-    private void disableJettyTimeout() {
+    private void disableJettyTimeout() throws IOException {
         if (LC.zimbra_archive_formatter_disable_timeout.booleanValue()) {
             EndPoint endPoint = HttpConnection.getCurrentConnection().getEndPoint();
             if (endPoint instanceof SelectChannelEndPoint) {
                 SelectChannelEndPoint scEndPoint = (SelectChannelEndPoint) endPoint;
-                scEndPoint.setIdleExpireEnabled(false);
+                scEndPoint.setMaxIdleTime(0);
             }
         }
     }

@@ -62,9 +62,9 @@
     <property name="lib.dir" location="lib"/>
     <property name="config.dir" location="conf"/>
   <property name="war.web.xml" location="${config.dir}/web.xml${production.suffix}"/>
-    <property name="jetty.xml.file" location='${config.dir}/jetty-6.1/jetty.xml' />
+    <property name="jetty.xml.file" location='${config.dir}/jetty-7/jetty.xml' />
 
-    <property name="spnego.dir" location="${config.dir}/jetty-6.1/spnego"/>
+    <property name="spnego.dir" location="${config.dir}/jetty-7/spnego"/>
 
     <property name="deploy.war" value="${warfile}"/>
     <property name="deploy.host" value="127.0.0.1"/>
@@ -91,7 +91,7 @@
     <property name="jetty.home.dir" location="${zimbra.home.dir}/jetty"/>
     <property name="jetty.conf.dir" value="${jetty.home.dir}/etc"/>
     <property name="jetty.src.dir" location="../ThirdParty/jetty"/>
-    <property name="jetty.version" value="6.1.22.z6"/>
+    <property name="jetty.version" value="7.5.2-SNAPSHOT"/>
     <available property="jetty.start.jar.exists" file="${jetty.home.dir}/start.jar"/>
 
     <property name="ical4j.jar" value="ical4j-0.9.16-patched.jar"/>
@@ -478,6 +478,8 @@
           <include name="unboundid*.jar"/>
           <include name="testng*.jar"/>
           <include name="jython*.jar"/>
+          <include name="log4j-*.jar"/>
+          <include name="apache-log4j-extras-*.jar"/> 	
         </fileset>
       </delete>
     </target>
@@ -962,11 +964,11 @@
 
   <target name="dev-dist-jetty">
     <copy todir="${dist.jetty.dir}/webapps" file="${warfile}" overwrite="true"/>
-    <copy tofile="${dist.jetty.dir}/etc/jettyrc" file="${config.dir}/jetty-6.1/jettyrc" overwrite="true"/>
+    <copy tofile="${dist.jetty.dir}/etc/jettyrc" file="${config.dir}/jetty-7/jettyrc" overwrite="true"/>
     <copy tofile="${dist.jetty.dir}/etc/jetty.xml" file="${jetty.xml.file}" overwrite="true"/>
-    <copy tofile="${dist.jetty.dir}/etc/start.config" file="${config.dir}/jetty-6.1/start.config" overwrite="true"/>
+    <copy tofile="${dist.jetty.dir}/etc/start.config" file="${config.dir}/jetty-7/start.config" overwrite="true"/>
     <copy tofile="${dist.jetty.dir}/etc/webdefault.xml"
-          file="${config.dir}/jetty-6.1/webdefault.xml${production.suffix}" overwrite="true"/>
+          file="${config.dir}/jetty-7/webdefault.xml${production.suffix}" overwrite="true"/>
     <if>
       <isset property="is-windows"/>
       <then>
@@ -974,7 +976,7 @@
       </then>
     </if>
     <copy tofile="${dist.jetty.dir}/resources/log4j.properties"
-          file="${config.dir}/jetty-6.1/log4j.properties${production.suffix}" overwrite="true"/>
+          file="${config.dir}/jetty-7/log4j.properties${production.suffix}" overwrite="true"/>
     <copy todir="${dist.jetty.dir}/common/lib" overwrite="true">
       <fileset dir="${common.jars.dir}">
         <include name="${ical4j.jar}"/>
@@ -1011,15 +1013,14 @@
         <include name="unboundid*.jar"/>
         <include name="testng*.jar"/>
         <include name="guava*.jar"/>
+        <include name="log4j-*.jar"/>
+        <include name="apache-log4j-extras-*.jar"/>      	
       </fileset>
     </copy>
     <copy todir="${dist.jetty.dir}/common/endorsed" overwrite="true">
       <fileset dir="${common.jars.dir}" includes="zimbra-charset.jar"/>
     </copy>
     <copy todir="${dist.jetty.dir}/common/lib" file="${common.jarfile}" overwrite="true"/>
-    <copy todir="${dist.jetty.dir}/lib" overwrite="true">
-      <fileset dir="${common.jars.dir}" includes="log4j*.jar,apache-log4j-extras-1.0.jar"/>
-    </copy>
   </target>
 
     <target name="init-jetty" depends="build-init" description="Initializes the jetty directory structure">

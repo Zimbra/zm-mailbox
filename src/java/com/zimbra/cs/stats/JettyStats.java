@@ -17,7 +17,7 @@ package com.zimbra.cs.stats;
 
 import java.util.Map;
 
-import org.mortbay.thread.ThreadPool;
+import org.eclipse.jetty.util.thread.ThreadPool;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.jetty.JettyMonitor;

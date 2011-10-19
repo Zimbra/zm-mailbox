@@ -23,8 +23,8 @@ import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.mortbay.util.ajax.Continuation;
-import org.mortbay.util.ajax.ContinuationSupport;
+import org.eclipse.jetty.continuation.Continuation;
+import org.eclipse.jetty.continuation.ContinuationSupport;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -160,10 +160,10 @@ public class WaitSetRequest extends MailDocumentHandler {
         if (context.containsKey(SoapServlet.IS_RESUMED_REQUEST)) {
             cb  = (Callback)servletRequest.getAttribute(VARS_ATTR_NAME);
             // load variables here
-            continuation = ContinuationSupport.getContinuation(servletRequest, cb);
+            continuation = ContinuationSupport.getContinuation(servletRequest);
         } else {
             cb = new Callback();
-            continuation = ContinuationSupport.getContinuation(servletRequest, cb);
+            continuation = ContinuationSupport.getContinuation(servletRequest);
             cb.continuation = continuation;
             servletRequest.setAttribute(VARS_ATTR_NAME, cb);
 
@@ -241,7 +241,8 @@ public class WaitSetRequest extends MailDocumentHandler {
                         long timeout = getTimeoutMillis(request, adminAllowed);
                         if (ZimbraLog.soap.isTraceEnabled())
                             ZimbraLog.soap.trace("Suspending <WaitSetRequest> for %dms", timeout);
-                        continuation.suspend(timeout);
+                        continuation.setTimeout(timeout);
+                        continuation.suspend();
                     }
                 }
             }

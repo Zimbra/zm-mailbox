@@ -29,9 +29,9 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.mortbay.jetty.Server;
-import org.mortbay.jetty.security.SpnegoUserRealm;
-import org.mortbay.jetty.security.UserRealm;
+import org.eclipse.jetty.security.SpnegoLoginService;
+import org.eclipse.jetty.security.LoginService;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -44,7 +44,7 @@ public class SpnegoFilter implements Filter {
     private static final String PARAM_PASS_THRU_ON_FAILURE_URI = "passThruOnFailureUri";
     
     private URI passThruOnFailureUri = null;
-    private SpnegoUserRealm spnegoUserRealm = null;
+    private SpnegoLoginService spnegoUserRealm = null;
     
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
@@ -123,25 +123,17 @@ public class SpnegoFilter implements Filter {
         authenticator.authenticate();
     }
     
-    private SpnegoUserRealm getSpnegoUserRealm(FilterConfig filterConfig) {
+    private SpnegoLoginService getSpnegoUserRealm(FilterConfig filterConfig) {
         // ServletContext servletContext = getServletContext(); 
         ServletContext servletContext = filterConfig.getServletContext();
-        if (servletContext instanceof org.mortbay.jetty.handler.ContextHandler.SContext) {
-            org.mortbay.jetty.handler.ContextHandler.SContext sContext = (org.mortbay.jetty.handler.ContextHandler.SContext)servletContext;
-            
+        if (servletContext instanceof ServletContextHandler.Context) {
+        	ServletContextHandler.Context sContext = (ServletContextHandler.Context)servletContext;
             // get the WebAppContext
-            org.mortbay.jetty.handler.ContextHandler contextHandler = sContext.getContextHandler();
-            
-            Server server = contextHandler.getServer();
-            UserRealm[] userRealms = server.getUserRealms();
-            if (userRealms != null) {
-                for (UserRealm realm : userRealms) {
-                    String realmName = realm.getName();
-                    if (realm instanceof SpnegoUserRealm) {
-                        ZimbraLog.account.debug("Found spnego user realm: [" + realmName + "]");
-                        return (SpnegoUserRealm)realm;
-                    }
-                }
+            ServletContextHandler contextHandler = (ServletContextHandler) sContext.getContextHandler();
+            LoginService realm = contextHandler.getSecurityHandler().getLoginService();
+            if (realm != null && realm instanceof SpnegoLoginService) {
+                ZimbraLog.account.debug("Found spnego user realm: [" + realm.getName() + "]");
+                return (SpnegoLoginService)realm;
             }
         }
         

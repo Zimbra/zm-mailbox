@@ -19,7 +19,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 
 import org.dom4j.QName;
-import org.mortbay.util.ajax.Continuation;
+import org.eclipse.jetty.continuation.Continuation;
 
 import com.google.common.base.Strings;
 import com.zimbra.common.auth.ZAuthToken;

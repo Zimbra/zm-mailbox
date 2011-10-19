@@ -23,9 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.mortbay.util.ajax.Continuation;
-import org.mortbay.util.ajax.ContinuationSupport;
-import org.mortbay.util.ajax.WaitingContinuation;
+import org.eclipse.jetty.continuation.Continuation;
+import org.eclipse.jetty.continuation.ContinuationSupport;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -87,7 +86,7 @@ public class NoOp extends MailDocumentHandler  {
                                                        "  Set the <session> flag in the <context> of your request", null);
             }
             if (!context.containsKey(SoapServlet.IS_RESUMED_REQUEST)) {
-                Continuation continuation = ContinuationSupport.getContinuation(servletRequest, zsc);
+                Continuation continuation = ContinuationSupport.getContinuation(servletRequest);
                 
                 servletRequest.setAttribute("nop_origcontext", zsc);
                 
@@ -102,11 +101,12 @@ public class NoOp extends MailDocumentHandler  {
                     
                     synchronized (zsc) {
                         if (zsc.waitingForNotifications()) {
-                            assert (!(continuation instanceof WaitingContinuation) || ((WaitingContinuation) continuation).getMutex() == zsc); 
+                            //assert (!(continuation instanceof WaitingContinuation) || ((WaitingContinuation) continuation).getMutex() == zsc); 
                             long timeout = parseTimeout(request);
                             if (ZimbraLog.soap.isTraceEnabled())
                                 ZimbraLog.soap.trace("Suspending <NoOpRequest> for %dms", timeout);
-                            continuation.suspend(timeout);
+                            continuation.setTimeout(timeout);
+                            continuation.suspend();
                         }
                         // bug 63230: Commenting out the below assertion.  continuation can be a RetryContinuation object, apparently.
                         //assert(continuation instanceof WaitingContinuation); // this part of code only reached if we're using WaitingContinuations

@@ -513,6 +513,10 @@ public class ZimletResources extends DiskCacheServlet {
         public void write(int i) throws IOException {
             out.write(i);
         }
+        
+        public void write(byte[] b, int off, int len) throws IOException {
+            out.print(new String(b, off, len, "UTF-8"));
+        }
 
         public void print(boolean b) throws IOException {
             out.print(b);

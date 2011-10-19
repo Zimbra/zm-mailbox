@@ -438,7 +438,7 @@ public class SoapEngine {
             // XXX: if the session was new, do we want to delete it?
         } catch (Throwable e) {
             // don't interfere with Jetty Continuations -- pass the exception on up
-            if (e.getClass().getName().equals("org.mortbay.jetty.RetryRequest")) {
+            if (e.getClass().getName().equals("org.eclipse.jetty.server.RetryRequest")) {
                 throw (RuntimeException) e;
             }
             // TODO: better exception stack traces during develope?
