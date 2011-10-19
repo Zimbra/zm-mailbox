@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -22,6 +22,8 @@ import java.io.OutputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
@@ -33,6 +35,7 @@ import org.dom4j.io.XMLWriter;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.AdminExtConstants;
@@ -52,8 +55,30 @@ import com.zimbra.soap.JaxbUtil;
  */
 public class WsdlGenerator {
 
-    private    static final String ARG_OUTPUT_DIR = "-output.dir";
-    private    static String outputDir = null;
+    private static final String ARG_OUTPUT_DIR = "-output.dir";
+    private static String outputDir = null;
+
+    private static final String svcPrefix = "svc"; // Namespace prefix used for references to targetNamespace
+    private static final Namespace nsSoap = new Namespace("soap", "http://schemas.xmlsoap.org/wsdl/soap/");
+    private static final Namespace nsXsd = new Namespace( "xsd", "http://www.w3.org/2001/XMLSchema");
+    private static final Namespace nsWsdl = new Namespace("wsdl", "http://schemas.xmlsoap.org/wsdl/");
+    private static final Namespace nsZimbra = new Namespace("zimbra", ZimbraNamespace.ZIMBRA_STR);
+    private static final QName xsdSchema = QName.get("schema", nsXsd);
+    private static final QName xsdImport = QName.get("import", nsXsd);
+    private static final QName soapBinding = QName.get("binding", nsSoap);
+    private static final QName wsdlMessage = QName.get("message", nsWsdl);
+    private static final QName wsdlBinding = QName.get("binding", nsWsdl);
+    private static final QName wsdlOperation = QName.get("operation", nsWsdl);
+    private static final QName soapOperation = QName.get("operation", nsSoap);
+    private static final QName portType = QName.get("portType", nsWsdl);
+    private static final QName part = QName.get("part", nsWsdl);
+    private static final QName input = QName.get("input", nsWsdl);
+    private static final QName output = QName.get("output", nsWsdl);
+    private static final QName body = QName.get("body", nsSoap);
+    private static final QName header = QName.get("header", nsSoap);
+    private static final QName service = QName.get("service", nsWsdl);
+    private static final QName port = QName.get("port", nsWsdl);
+    private static final QName address = QName.get("address", nsSoap);
 
     /**
      * Reads the command line arguments.
@@ -69,48 +94,87 @@ public class WsdlGenerator {
         }
     }
 
-    public static Document makeWsdlDocument(String svcNsString, String xsdNsString,
-            String serviceName, String soapAddress, Iterable<String> requests) {
-        String xsdPrefix = xsdNsString.replaceFirst("urn:", "");
-        final String svcPrefix = "svc";
-        Namespace nsTns = new Namespace(xsdPrefix, xsdNsString);
-        Namespace nsSvc = new Namespace(svcPrefix, svcNsString);
-        Namespace nsZimbra = new Namespace("zimbra", ZimbraNamespace.ZIMBRA_STR);
-        Namespace nsSoap = new Namespace("soap",
-                "http://schemas.xmlsoap.org/wsdl/soap/");
-        Namespace nsXsd = new Namespace(
-                "xsd", "http://www.w3.org/2001/XMLSchema");
-        Namespace nsWsdl = new Namespace("wsdl",
-                "http://schemas.xmlsoap.org/wsdl/");
+    public static Document makeWsdlDoc(List<WsdlInfoForNamespace> nsInfos, String serviceName, String targetNamespace) {
+        Namespace nsSvc = new Namespace(svcPrefix, targetNamespace);
+
         final QName svcTypes = QName.get("types", nsSvc);
-        final QName xsdSchema = QName.get("schema", nsXsd);
-        final QName xsdImport = QName.get("import", nsXsd);
-        final QName soapBinding = QName.get("binding", nsSoap);
-        final QName wsdlMessage = QName.get("message", nsWsdl);
-        final QName wsdlBinding = QName.get("binding", nsWsdl);
-        final QName wsdlOperation = QName.get("operation", nsWsdl);
-        final QName soapOperation = QName.get("operation", nsSoap);
-        final QName portType = QName.get("portType", nsWsdl);
-        final QName part = QName.get("part", nsWsdl);
-        final QName input = QName.get("input", nsWsdl);
-        final QName output = QName.get("output", nsWsdl);
-        final QName body = QName.get("body", nsSoap);
-        final QName header = QName.get("header", nsSoap);
-        final QName service = QName.get("service", nsWsdl);
-        final QName port = QName.get("port", nsWsdl);
-        final QName address = QName.get("address", nsSoap);
-        String xsdName = xsdNsString.substring(4) + ".xsd";
 
         Document document = DocumentHelper.createDocument();
+        Map<WsdlServiceInfo, Element> bindElems = Maps.newHashMap();
+        Map<WsdlServiceInfo, Element> portTypeElems = Maps.newHashMap();
         Element root = document.addElement(QName.get("definitions", nsWsdl));
         root.add(nsSvc);
-        root.add(nsTns);
+        for (WsdlInfoForNamespace wsdlNsInfo : nsInfos) {
+            root.add(wsdlNsInfo.getXsdNamespace());
+        }
         root.add(nsZimbra);
         root.add(nsSoap);
         root.add(nsXsd);
         root.add(nsWsdl);
-        root.addAttribute("targetNamespace", svcNsString);
+        root.addAttribute("targetNamespace", targetNamespace);
         root.addAttribute("name", serviceName);
+        addWsdlTypesElement(root, svcTypes, nsInfos);
+
+        for (WsdlInfoForNamespace wsdlNsInfo : nsInfos) {
+            WsdlServiceInfo svcInfo = wsdlNsInfo.getSvcInfo();
+            if (!portTypeElems.containsKey(svcInfo)) {
+                // wsdl:definitions/wsdl:portType
+                Element portTypeElem = DocumentHelper.createElement(portType);
+                portTypeElem.addAttribute("name", svcInfo.getPortTypeName());
+                portTypeElems.put(svcInfo, portTypeElem);
+            }
+            if (!bindElems.containsKey(svcInfo)) {
+                // wsdl:definitions/wsdl:binding
+                Element bindingElem = DocumentHelper.createElement(wsdlBinding);
+                bindingElem.addAttribute("name", svcInfo.getBindingName());
+                bindingElem.addAttribute("type", svcPrefix + ":" + svcInfo.getPortTypeName());
+                // wsdl:definitions/wsdl:binding/soap:binding
+                Element soapBindElem = bindingElem.addElement(soapBinding);
+                soapBindElem.addAttribute("transport", "http://schemas.xmlsoap.org/soap/http");
+                soapBindElem.addAttribute("style", "document");
+
+                bindElems.put(svcInfo, bindingElem);
+            }
+        }
+
+        for (WsdlInfoForNamespace wsdlNsInfo : nsInfos) {
+            WsdlServiceInfo svcInfo = wsdlNsInfo.getSvcInfo();
+            for (String requestName : wsdlNsInfo.getRequests() ) {
+                String rootName = requestName.substring(0, requestName.length() -7);
+                String responseName = rootName + "Response";
+                String reqOpName = requestName.substring(0, 1).toLowerCase() + requestName.substring(1);
+                String reqMsgName = wsdlNsInfo.getTag() + requestName + "Message";
+                String respMsgName = wsdlNsInfo.getTag() + responseName + "Message";
+
+                addWsdlRequestAndResponseMessageElements(root, wsdlNsInfo,
+                        reqMsgName, respMsgName, requestName, responseName);
+
+                addWsdlPortTypeOperationElements(portTypeElems.get(svcInfo), wsdlNsInfo, reqMsgName, respMsgName, reqOpName);
+
+                addWsdlBindingOperationElements(bindElems.get(svcInfo), wsdlNsInfo, reqOpName, rootName);
+            }
+        }
+        addWsdlSoapHdrContextMessageElement(root);
+
+        for (Entry<WsdlServiceInfo, Element> entry : portTypeElems.entrySet()) {
+            root.add(entry.getValue());
+        }
+
+        for (Entry<WsdlServiceInfo, Element> entry : bindElems.entrySet()) {
+            root.add(entry.getValue());
+        }
+
+        Set<WsdlServiceInfo> svcSet = Sets.newHashSet();
+        for (WsdlInfoForNamespace wsdlNsInfo : nsInfos) {
+            svcSet.add(wsdlNsInfo.getSvcInfo());
+        }
+        for (WsdlServiceInfo svcInfo : svcSet) {
+            addWsdlServiceElement(root, svcInfo);
+        }
+        return document;
+    }
+
+    private static void addWsdlTypesElement(Element root, QName svcTypes, List<WsdlInfoForNamespace> nsInfos) {
         // wsdl:definitions/svc:types
         Element typesElem = root.addElement(svcTypes);
         // wsdl:definitions/svc:types/xsd:schema
@@ -120,35 +184,17 @@ public class WsdlGenerator {
         importZimbraElem.addAttribute("namespace", ZimbraNamespace.ZIMBRA_STR);
         importZimbraElem.addAttribute("schemaLocation", "zimbra.xsd");
 
-        Element importTnsElem = schemaElem.addElement(xsdImport);
-        importTnsElem.addAttribute("namespace", xsdNsString);
-        importTnsElem.addAttribute("schemaLocation", xsdName);
+        for (WsdlInfoForNamespace nsInfo : nsInfos) {
+            Element importTnsElem = schemaElem.addElement(xsdImport);
+            importTnsElem.addAttribute("namespace", nsInfo.getXsdNamespaceString());
+            importTnsElem.addAttribute("schemaLocation", nsInfo.getXsdFilename());
+        }
+    }
 
-        // wsdl:definitions/wsdl:portType
-        Element portTypeElem = DocumentHelper.createElement(portType);
-        portTypeElem.addAttribute("name", serviceName);
-
-        // wsdl:definitions/wsdl:binding
-        Element bindingElem = DocumentHelper.createElement(wsdlBinding);
-        bindingElem.addAttribute("name", serviceName + "PortBinding");
-        bindingElem.addAttribute("type", svcPrefix + ":" + serviceName);
-        // wsdl:definitions/wsdl:binding/soap:binding
-        Element soapBindElem = bindingElem.addElement(soapBinding);
-        soapBindElem.addAttribute("transport",
-                "http://schemas.xmlsoap.org/soap/http");
-        soapBindElem.addAttribute("style", "document");
-
-        for (String requestName : requests ) {
-            String rootName = requestName.substring(0, requestName.length() -7);
-            String responseName = rootName + "Response";
-            String reqOpName = requestName.substring(0, 1).toLowerCase() +
-                                requestName.substring(1);
-            String respOpName = responseName.substring(0, 1).toLowerCase() +
-                                responseName.substring(1);
-            String reqMsgName = reqOpName + "Message";
-            String respMsgName = respOpName + "Message";
-
+    private static void addWsdlRequestAndResponseMessageElements(Element root, WsdlInfoForNamespace nsInfo,
+            String reqMsgName, String respMsgName, String requestName, String responseName) {
             // wsdl:definitions/wsdl:message - for request
+            String xsdPrefix = nsInfo.getXsdPrefix();
             Element msgElem = root.addElement(wsdlMessage);
             msgElem.addAttribute("name", reqMsgName);
             // wsdl:definitions/wsdl:message/wsdl:part
@@ -162,7 +208,10 @@ public class WsdlGenerator {
             partElem = msgElem.addElement(part);
             partElem.addAttribute("name", "parameters");
             partElem.addAttribute("element", xsdPrefix + ":" + responseName);
+    }
 
+    private static void addWsdlPortTypeOperationElements(Element portTypeElem, WsdlInfoForNamespace nsInfo,
+            String reqMsgName, String respMsgName, String reqOpName) {
             // wsdl:definitions/wsdl:portType/wsdl:operation
             Element opElem = portTypeElem.addElement(wsdlOperation);
             opElem.addAttribute("name", reqOpName);
@@ -172,13 +221,16 @@ public class WsdlGenerator {
             // wsdl:definitions/wsdl:portType/wsdl:operation/wsdl:output
             Element outElem = opElem.addElement(output);
             outElem.addAttribute("message", svcPrefix + ":" + respMsgName);
+    }
 
+    private static void addWsdlBindingOperationElements(Element bindingElem, WsdlInfoForNamespace nsInfo,
+            String reqOpName, String rootName) {
             // wsdl:definitions/wsdl:binding/wsdl:operation
             Element boElem = bindingElem.addElement(wsdlOperation);
             boElem.addAttribute("name", reqOpName);
             // wsdl:definitions/wsdl:binding/wsdl:operation/soap:operation
             Element soapOpElem = boElem.addElement(soapOperation);
-            soapOpElem.addAttribute("soapAction", xsdNsString + "/" + rootName);
+            soapOpElem.addAttribute("soapAction", nsInfo.getXsdNamespaceString() + "/" + rootName);
             soapOpElem.addAttribute("style", "document");
             // wsdl:definitions/wsdl:binding/wsdl:operation/wsdl:input
             Element boInElem = boElem.addElement(input);
@@ -195,7 +247,9 @@ public class WsdlGenerator {
             // wsdl:definitions/wsdl:binding/wsdl:operation/wsdl:output/soap:body
             Element outSoapBodyElem = boOutElem.addElement(body);
             outSoapBodyElem.addAttribute("use", "literal");
-        }
+    }
+
+    private static void addWsdlSoapHdrContextMessageElement(Element root) {
         // For Header Context
         // wsdl:definitions/wsdl:message
         Element hdrCntxtMsgElem = root.addElement(wsdlMessage);
@@ -204,29 +258,25 @@ public class WsdlGenerator {
         Element partElem = hdrCntxtMsgElem.addElement(part);
         partElem.addAttribute("name", "context");
         partElem.addAttribute("element", "zimbra:context");
-
-        root.add(portTypeElem);
-        root.add(bindingElem);
-
-        // wsdl:definitions/wsdl:service
-        Element svcElem = root.addElement(service);
-        svcElem.addAttribute("name", serviceName);
-        // wsdl:definitions/wsdl:service/wsdl:port
-        Element svcPortElem = svcElem.addElement(port);
-        svcPortElem.addAttribute("name", serviceName + "Port");
-        svcPortElem.addAttribute("binding", svcPrefix + ":" + serviceName + "PortBinding");
-        // wsdl:definitions/wsdl:service/wsdl:port/soap:address
-        Element svcPortAddrElem = svcPortElem.addElement(address);
-        svcPortAddrElem.addAttribute("location", soapAddress);
-        return document;
     }
 
-    public static void createWsdlFile(File wsdlFile, String xsdNs,
-            String serviceName, String soapAddress, Iterable<String> requests)
+    private static void addWsdlServiceElement(Element root, WsdlServiceInfo svcInfo) {
+        // wsdl:definitions/wsdl:service
+        Element svcElem = root.addElement(service);
+        svcElem.addAttribute("name", svcInfo.getServiceName());
+        // wsdl:definitions/wsdl:service/wsdl:port
+        Element svcPortElem = svcElem.addElement(port);
+        svcPortElem.addAttribute("name", svcInfo.getServiceName() + "Port");
+        svcPortElem.addAttribute("binding", svcPrefix + ":" + svcInfo.getBindingName());
+        // wsdl:definitions/wsdl:service/wsdl:port/soap:address
+        Element svcPortAddrElem = svcPortElem.addElement(address);
+        svcPortAddrElem.addAttribute("location", svcInfo.getSoapAddressURL());
+    }
+
+    public static void createWsdlFile(File wsdlFile, String serviceName, List<WsdlInfoForNamespace> nsInfos)
     throws IOException {
-        String wsdlNs = "http://www.zimbra.com/wsdl/" + wsdlFile.getName();
-        Document wsdlDoc = makeWsdlDocument(
-                wsdlNs, xsdNs, serviceName, soapAddress, requests);
+        String targetNamespace = "http://www.zimbra.com/wsdl/" + wsdlFile.getName();
+        Document wsdlDoc = makeWsdlDoc(nsInfos, serviceName, targetNamespace);
 
         if (wsdlFile.exists())
             wsdlFile.delete();
@@ -237,70 +287,68 @@ public class WsdlGenerator {
         writer.close();
     }
 
-    public static void createWsdl(String wsdlFileName, String xsdNs,
-            String serviceName, String soapAddress, Iterable<String> requests)
+    public static void createWsdl(String wsdlFileName, String serviceName, List<WsdlInfoForNamespace> nsInfos)
     throws IOException {
         File wsdlFile = new File(outputDir, wsdlFileName);
-        createWsdlFile(wsdlFile, xsdNs, serviceName, soapAddress, requests);
+        createWsdlFile(wsdlFile, serviceName, nsInfos);
     }
 
-    private static Map<String,List<String>> getRequestLists() {
-        Map<String,List<String>> requestLists = Maps.newHashMap();
+    public static void createWsdl(String wsdlFileName, String serviceName, WsdlInfoForNamespace nsInfo)
+    throws IOException {
+        File wsdlFile = new File(outputDir, wsdlFileName);
+        List<WsdlInfoForNamespace> nsInfoList = Lists.newArrayList();
+        nsInfoList.add(nsInfo);
+        createWsdlFile(wsdlFile, serviceName, nsInfoList);
+    }
+
+    /**
+     * Create a map whose key is a package name.  The value is the list of requests in that package.
+     */
+    private static Map<String,List<String>> getPackageToRequestListMap() {
+        Map<String,List<String>> packageToRequestListsMap = Maps.newHashMap();
         for (Class<?> currClass : JaxbUtil.getJaxbRequestAndResponseClasses()) {
             String requestName = currClass.getSimpleName();
             if (!requestName.endsWith("Request"))
                 continue;
             String pkgName = currClass.getPackage().getName();
             List<String> reqList;
-            if (requestLists.containsKey(pkgName)) {
-                reqList = requestLists.get(pkgName);
+            if (packageToRequestListsMap.containsKey(pkgName)) {
+                reqList = packageToRequestListsMap.get(pkgName);
             } else {
                 reqList = Lists.newArrayList();
-                requestLists.put(pkgName, reqList);
+                packageToRequestListsMap.put(pkgName, reqList);
             }
             reqList.add(requestName);
         }
-        for (String key :requestLists.keySet()) {
-            Collections.sort(requestLists.get(key));
+        for (String key :packageToRequestListsMap.keySet()) {
+            Collections.sort(packageToRequestListsMap.get(key));
         }
-        return requestLists;
+        return packageToRequestListsMap;
     }
 
     /**
      * Main
-     * 
+     *
      * @param args the utility arguments
      */
     public static void main(String[] args) throws Exception {
+        List<WsdlInfoForNamespace> nsInfoList = Lists.newArrayList();
         readArguments(args);
-        Map<String,List<String>> requestLists = getRequestLists();
-        createWsdl("AccountService.wsdl",
-                AccountConstants.NAMESPACE_STR, "AccountService",
-                "http://localhost:7070/service/soap",
-                requestLists.get("com.zimbra.soap.account.message"));
-        createWsdl("AdminService.wsdl",
-                AdminConstants.NAMESPACE_STR, "AdminService",
-                "https://localhost:7071/service/admin/soap",
-                requestLists.get("com.zimbra.soap.admin.message"));
-        createWsdl("AdminExtService.wsdl",
-                AdminExtConstants.NAMESPACE_STR, "AdminExtService",
-                "https://localhost:7071/service/admin/soap",
-                requestLists.get("com.zimbra.soap.adminext.message"));
-        createWsdl("MailService.wsdl",
-                MailConstants.NAMESPACE_STR, "MailService",
-                "http://localhost:7070/service/soap",
-                requestLists.get("com.zimbra.soap.mail.message"));
-        createWsdl("ReplicationService.wsdl",
-                ReplicationConstants.NAMESPACE_STR, "ReplicationService",
-                "http://localhost:7070/service/soap",
-                requestLists.get("com.zimbra.soap.replication.message"));
-        createWsdl("SyncService.wsdl",
-                SyncConstants.NAMESPACE_STR, "SyncService",
-                "http://localhost:7070/service/soap",
-                requestLists.get("com.zimbra.soap.sync.message"));
-        createWsdl("AppblastService.wsdl",
-                AppBlastConstants.NAMESPACE_STR, "AppblastService",
-                "http://localhost:7070/service/soap",
-                requestLists.get("com.zimbra.soap.appblast.message"));
+        Map<String,List<String>> packageToRequestListMap = getPackageToRequestListMap();
+        nsInfoList.add(WsdlInfoForNamespace.create(AccountConstants.NAMESPACE_STR, WsdlServiceInfo.zcsService,
+                packageToRequestListMap.get("com.zimbra.soap.account.message")));
+        nsInfoList.add(WsdlInfoForNamespace.create(MailConstants.NAMESPACE_STR, WsdlServiceInfo.zcsService,
+                packageToRequestListMap.get("com.zimbra.soap.mail.message")));
+        nsInfoList.add(WsdlInfoForNamespace.create(ReplicationConstants.NAMESPACE_STR, WsdlServiceInfo.zcsService,
+                packageToRequestListMap.get("com.zimbra.soap.replication.message")));
+        nsInfoList.add(WsdlInfoForNamespace.create(SyncConstants.NAMESPACE_STR, WsdlServiceInfo.zcsService,
+                packageToRequestListMap.get("com.zimbra.soap.sync.message")));
+        nsInfoList.add(WsdlInfoForNamespace.create(AppBlastConstants.NAMESPACE_STR, WsdlServiceInfo.zcsService,
+                packageToRequestListMap.get("com.zimbra.soap.appblast.message")));
+        nsInfoList.add(WsdlInfoForNamespace.create(AdminConstants.NAMESPACE_STR, WsdlServiceInfo.zcsAdminService,
+                packageToRequestListMap.get("com.zimbra.soap.admin.message")));
+        nsInfoList.add(WsdlInfoForNamespace.create(AdminExtConstants.NAMESPACE_STR, WsdlServiceInfo.zcsAdminService,
+                packageToRequestListMap.get("com.zimbra.soap.adminext.message")));
+        createWsdl("ZimbraService.wsdl", "ZimbraService", nsInfoList);
     }
 } // end WsdlGenerator class
