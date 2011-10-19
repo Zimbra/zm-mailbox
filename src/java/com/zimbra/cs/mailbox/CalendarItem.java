@@ -3822,7 +3822,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     }
 
     @Override
-    void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
+    void delete(boolean writeTombstones) throws ServiceException {
         Invite defInv = getDefaultInviteOrNull();
         String sbj;
         if (defInv != null)
@@ -3835,7 +3835,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         if (!isPublic() && !canAccess(ACL.RIGHT_PRIVATE))
             throw ServiceException.PERM_DENIED(
                     "you do not have permission to delete private calendar item from the current folder");
-        super.delete(scope, writeTombstones);
+        super.delete(writeTombstones);
     }
 
     @Override

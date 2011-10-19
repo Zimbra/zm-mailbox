@@ -1103,11 +1103,7 @@ public class Folder extends MailItem {
     }
 
     /** Deletes this folder and all its subfolders. */
-    @Override void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
-        if (scope == DeleteScope.CONTENTS_ONLY) {
-            throw ServiceException.INVALID_REQUEST("Use empty folder instead", null);
-        }
-
+    @Override void delete(boolean writeTombstones) throws ServiceException {
         if (hasSubfolders()) {
             List<Folder> subfolders = getSubfolderHierarchy();
             // walking the list in the reverse order
@@ -1116,11 +1112,11 @@ public class Folder extends MailItem {
             // item which is the current folder.
             for (int i = subfolders.size() - 1; i > 0; i--) {
                 Folder subfolder = subfolders.get(i);
-                subfolder.delete(DeleteScope.ENTIRE_ITEM, writeTombstones);
+                subfolder.delete(writeTombstones);
             }
         }
         ZimbraLog.mailbox.info("deleting folder id=%d,path=%s", getId(), getPath());
-        super.delete(scope, writeTombstones);
+        super.delete(writeTombstones);
 
         if (rights != null) {
             queueForAclPush();
@@ -1200,7 +1196,7 @@ public class Folder extends MailItem {
             }
         }
         PendingDelete info = DbMailItem.getLeafNodes(mbox, folders, (int) (beforeDate / 1000), allFolders, unread, useChangeDate, maxItems);
-        delete(mbox, info, null, DeleteScope.ENTIRE_ITEM, false);
+        delete(mbox, info, null, false);
 
         if (deleteEmptySubfolders) {
             // Iterate folder list in order of decreasing depth.
@@ -1208,7 +1204,7 @@ public class Folder extends MailItem {
                 Folder f = folders.get(i);
                 long date = useChangeDate ? f.getChangeDate() : f.getDate();
                 if (f.getItemCount() <= 0 && date < beforeDate) {
-                    f.delete(DeleteScope.ENTIRE_ITEM, false);
+                    f.delete(false);
                 }
             }
         }

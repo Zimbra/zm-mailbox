@@ -1339,12 +1339,12 @@ public class Message extends MailItem {
     }
 
     @Override
-    void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
+    void delete(boolean writeTombstones) throws ServiceException {
         MailItem parent = getParent();
         if (parent instanceof Conversation && ((Conversation) parent).getMessageCount() == 1)
-            parent.delete(DeleteScope.ENTIRE_ITEM, writeTombstones);
+            parent.delete(writeTombstones);
         else
-            super.delete(scope, writeTombstones);
+            super.delete(writeTombstones);
     }
 
     @Override

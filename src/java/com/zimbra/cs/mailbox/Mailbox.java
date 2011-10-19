@@ -6129,7 +6129,7 @@ public class Mailbox {
                 }
 
                 // delete the item, but don't write the tombstone until we're finished...
-                item.delete(MailItem.DeleteScope.ENTIRE_ITEM, false);
+                item.delete(false);
             }
 
             // deletes have already been collected, so fetch the tombstones and write once
@@ -7294,7 +7294,7 @@ public class Mailbox {
 
                     long tagTimeout = getOperationTimestampMillis() - tagLifetime;
                     PendingDelete info = DbTag.getLeafNodes(this, tag, (int) (tagTimeout / 1000), maxItemsPerFolder);
-                    MailItem.delete(this, info, null, MailItem.DeleteScope.ENTIRE_ITEM, false);
+                    MailItem.delete(this, info, null, false);
                     List<Integer> ids = info.itemIds.getIds(Type.MESSAGE);
                     int numPurged = (ids == null ? 0 : ids.size());
                     purgedAll = updatePurgedAll(purgedAll, numPurged, maxItemsPerFolder);
@@ -7363,7 +7363,7 @@ public class Mailbox {
 
             if (!skipDB) {
                 PendingDelete info = DbTag.getImapDeleted(this, purgeable);
-                MailItem.delete(this, info, null, MailItem.DeleteScope.ENTIRE_ITEM, true);
+                MailItem.delete(this, info, null, true);
             }
             success = true;
         } finally {

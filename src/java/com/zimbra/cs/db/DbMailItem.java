@@ -1571,65 +1571,6 @@ public class DbMailItem {
         }
     }
 
-    public static void deleteContents(MailItem item, boolean fromDumpster) throws ServiceException {
-        Mailbox mbox = item.getMailbox();
-
-        String target;
-        if (item instanceof VirtualConversation)  target = "id = ?";
-        else if (item instanceof Conversation)    target = "parent_id = ?";
-        else if (item instanceof Document)        target = "parent_id = ?";
-        else if (item instanceof SearchFolder)    return;
-        else if (item instanceof Folder)          target = "folder_id = ?";
-        else                                      return;
-
-        DbConnection conn = mbox.getOperationConnection();
-        PreparedStatement stmt = null;
-        String miTableName = getMailItemTableName(item, fromDumpster);
-        try {
-            if (!fromDumpster && mbox.dumpsterEnabled()) {
-                // Get the list of item ids to be deleted.
-                List<Integer> ids = new ArrayList<Integer>();
-                PreparedStatement listStmt = null;
-                ResultSet rs = null;
-                try {
-                    listStmt = conn.prepareStatement("SELECT id FROM " + miTableName +
-                            " WHERE " + IN_THIS_MAILBOX_AND + target +
-//                            " AND type NOT IN " + FOLDER_TYPES +  // DUMPSTER_TYPES implies !FOLDER_TYPES
-                            " AND type IN " + DUMPSTER_TYPES);
-                    int pos = 1;
-                    pos = setMailboxId(listStmt, mbox, pos);
-                    listStmt.setInt(pos++, item instanceof VirtualConversation ? ((VirtualConversation) item).getMessageId() : item.getId());
-                    rs = listStmt.executeQuery();
-                    while (rs.next()) {
-                        int id = rs.getInt(1);
-                        if (id > 0)
-                            ids.add(id);
-                    }
-                } finally {
-                    DbPool.closeResults(rs);
-                    DbPool.closeStatement(listStmt);
-                }
-                if (!ids.isEmpty()) {
-                    for (int offset = 0; offset < ids.size(); offset += Db.getINClauseBatchSize()) {
-                        int count = Math.min(Db.getINClauseBatchSize(), ids.size() - offset);
-                        copyToDumpster(conn, mbox, ids, offset, count);
-                    }
-                }
-            }
-
-            stmt = conn.prepareStatement("DELETE FROM " + miTableName +
-                        " WHERE " + IN_THIS_MAILBOX_AND + target + " AND type NOT IN " + FOLDER_TYPES);
-            int pos = 1;
-            pos = setMailboxId(stmt, mbox, pos);
-            stmt.setInt(pos++, item instanceof VirtualConversation ? ((VirtualConversation) item).getMessageId() : item.getId());
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("deleting contents for " + item.getType() + " " + item.getId(), e);
-        } finally {
-            DbPool.closeStatement(stmt);
-        }
-    }
-
     // parent_id = null, change_date = ? (to be set to deletion time)
     private static String MAIL_ITEM_DUMPSTER_COPY_SRC_FIELDS =
         (DebugConfig.disableMailboxGroups ? "" : "mailbox_id, ") +

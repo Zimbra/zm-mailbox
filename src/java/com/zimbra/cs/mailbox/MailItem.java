@@ -2859,33 +2859,31 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
     }
 
-    enum DeleteScope { ENTIRE_ITEM, CONTENTS_ONLY };
-
     void delete() throws ServiceException {
-        delete(DeleteScope.ENTIRE_ITEM, true);
+        delete(true);
     }
 
-    void delete(DeleteScope scope, boolean writeTombstones) throws ServiceException {
-        if (scope == DeleteScope.ENTIRE_ITEM && !isDeletable()) {
+    void delete(boolean writeTombstones) throws ServiceException {
+        if (!isDeletable()) {
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
         }
 
         // get the full list of things that are being removed
         PendingDelete info = getDeletionInfo();
         assert(info != null && info.itemIds != null);
-        if (scope == DeleteScope.CONTENTS_ONLY || info.incomplete) {
+        if (info.incomplete) {
             // make sure to take the container's ID out of the list of deleted items
             info.itemIds.remove(getType(), mId);
         }
 
-        delete(mMailbox, info, this, scope, writeTombstones, inDumpster());
+        delete(mMailbox, info, this, writeTombstones, inDumpster());
     }
 
-    static void delete(Mailbox mbox, PendingDelete info, MailItem item, DeleteScope scope, boolean writeTombstones) throws ServiceException {
-        delete(mbox, info, item, scope, writeTombstones, false);
+    static void delete(Mailbox mbox, PendingDelete info, MailItem item, boolean writeTombstones) throws ServiceException {
+        delete(mbox, info, item, writeTombstones, false);
     }
 
-    static void delete(Mailbox mbox, PendingDelete info, MailItem item, DeleteScope scope, boolean writeTombstones, boolean fromDumpster)
+    static void delete(Mailbox mbox, PendingDelete info, MailItem item, boolean writeTombstones, boolean fromDumpster)
     throws ServiceException {
         // short-circuit now if nothing's actually being deleted
         if (info.itemIds.isEmpty())
@@ -2895,7 +2893,7 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         MailItem parent = null;
         // when applicable, record the deleted MailItem (rather than just its id)
-        if (item != null && scope == DeleteScope.ENTIRE_ITEM && !info.incomplete) {
+        if (item != null && !info.incomplete) {
             item.markItemDeleted();
             parent = item.getParent();
         }
@@ -2935,7 +2933,7 @@ public abstract class MailItem implements Comparable<MailItem> {
                 if (item instanceof VirtualConversation) {
                     ZimbraLog.mailop.info("Deleting Message (id=%d).", ((VirtualConversation) item).getMessageId());
                 } else {
-                    ZimbraLog.mailop.info("Deleting %s%s.", scope == DeleteScope.CONTENTS_ONLY ? "contents of " : "", getMailopContext(item));
+                    ZimbraLog.mailop.info("Deleting %s.", getMailopContext(item));
                 }
             }
 
@@ -2960,15 +2958,11 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
 
         // actually delete the items from the DB
-        if (scope == DeleteScope.CONTENTS_ONLY) {
-            DbMailItem.deleteContents(item, fromDumpster);
-        } else {
-            DbMailItem.delete(mbox, item, info, fromDumpster);
-        }
+        DbMailItem.delete(mbox, item, info, fromDumpster);
 
         // remove the deleted item(s) from the mailbox's cache
         if (item != null) {
-            item.purgeCache(info, !info.incomplete && scope == DeleteScope.ENTIRE_ITEM);
+            item.purgeCache(info, !info.incomplete);
             if (parent != null) {
                 parent.removeChild(item);
             }
