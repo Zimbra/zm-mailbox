@@ -28,6 +28,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
+import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.account.krb5.Krb5Login;
 
 class AutoProvisionLazy extends AutoProvision {
@@ -85,10 +86,17 @@ class AutoProvisionLazy extends AutoProvision {
     }
     
     private AutoProvAuthMech auth() {
-        String authMech = domain.getAttr(Provisioning.A_zimbraAuthMech);
+        String authMechStr = domain.getAttr(Provisioning.A_zimbraAuthMech);
+        AuthMech authMech = null;
+        
+        try {
+            authMech = AuthMech.fromString(authMechStr);
+        } catch (ServiceException e) {
+            ZimbraLog.autoprov.debug("invalid auth mech " + authMechStr, e);
+        }
         
         // only support external LDAP auth for now
-        if (Provisioning.AM_LDAP.equals(authMech)  || Provisioning.AM_AD.equals(authMech)) {
+        if (AuthMech.ldap == authMech  || AuthMech.ad == authMech) {
             Map<String, Object> authCtxt = new HashMap<String, Object>();
             try {
                 prov.externalLdapAuth(domain, authMech, loginName, loginPassword, authCtxt);
@@ -96,7 +104,7 @@ class AutoProvisionLazy extends AutoProvision {
             } catch (ServiceException e) {
                 ZimbraLog.autoprov.info("unable to authenticate " + loginName + " for auto provisioning", e);
             }
-        } else if (Provisioning.AM_KERBEROS5.equals(authMech)) {
+        } else if (AuthMech.kerberos5 == authMech) {
             try {
                 Krb5Login.verifyPassword(loginName, loginPassword);
                 return AutoProvAuthMech.KRB5;

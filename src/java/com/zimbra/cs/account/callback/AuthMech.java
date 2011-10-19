@@ -3,9 +3,11 @@ package com.zimbra.cs.account.callback;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.auth.AuthMechanism;
 
 public class AuthMech extends AttributeCallback {
 
@@ -22,14 +24,22 @@ public class AuthMech extends AttributeCallback {
         if (mod.setting()) {
             authMech = mod.value();
             
-            boolean valid = authMech.equals(Provisioning.AM_ZIMBRA) ||
-                authMech.equals(Provisioning.AM_LDAP) ||
-                authMech.equals(Provisioning.AM_AD) || 
-                authMech.equals(Provisioning.AM_KERBEROS5) ||
-                authMech.startsWith(Provisioning.AM_CUSTOM);
+            boolean valid = false;
             
-            if (!valid)
+            if (authMech.startsWith(AuthMechanism.AuthMech.custom.name())) {
+                valid = true;
+            } else {
+                try {
+                    AuthMechanism.AuthMech mech = AuthMechanism.AuthMech.fromString(authMech);
+                    valid = true;
+                } catch (ServiceException e) {
+                    ZimbraLog.account.error("invalud auth mech", e);
+                }
+            }
+           
+            if (!valid) {
                 throw ServiceException.INVALID_REQUEST("invalud value: " + authMech, null);
+            }
         }
 
     }

@@ -25,6 +25,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.EntryCacheDataKey;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.ExternalGroup;
+import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.account.ldap.LdapHelper;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.ldap.IAttributes;
@@ -128,8 +129,8 @@ public class ADGroupHandler extends GroupHandler {
     }
     
     private static boolean domainAdminAuthMechIsAD(Domain domain, boolean asAdmin) {
-        return asAdmin ? Provisioning.AM_AD.equals(domain.getAuthMechAdmin()) :
-                         Provisioning.AM_AD.equals(domain.getAuthMech());
+        return asAdmin ? AuthMech.ad.name().equals(domain.getAuthMechAdmin()) :
+                         AuthMech.ad.name().equals(domain.getAuthMech());
     }
     
     /*

@@ -13,6 +13,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.account.ldap.Check;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.ldap.LdapConnType;
@@ -87,7 +88,7 @@ public class TestLdapProvExternalLdapAuth extends TestLdap {
         String PASSWORD = "test123";
         
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
+        attrs.put(Provisioning.A_zimbraAuthMech, AuthMech.ldap.name());
         attrs.put(Provisioning.A_zimbraAuthLdapURL, getLdapURL());
         attrs.put(Provisioning.A_zimbraAuthLdapSearchBindPassword, LC.zimbra_ldap_password.value());
         attrs.put(Provisioning.A_zimbraAuthLdapSearchBindDn, LC.zimbra_ldap_userdn.value());
@@ -138,7 +139,7 @@ public class TestLdapProvExternalLdapAuth extends TestLdap {
         String PASSWORD = "test123";
         
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
+        attrs.put(Provisioning.A_zimbraAuthMech, AuthMech.ldap.name());
         attrs.put(Provisioning.A_zimbraAuthLdapURL, getLdapURL());
         attrs.put(Provisioning.A_zimbraAuthLdapSearchBindPassword, LC.zimbra_ldap_password.value());
         attrs.put(Provisioning.A_zimbraAuthLdapSearchBindDn, LC.zimbra_ldap_userdn.value());
@@ -165,7 +166,7 @@ public class TestLdapProvExternalLdapAuth extends TestLdap {
         Provisioning.Result result;
         
         Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
+        attrs.put(Provisioning.A_zimbraAuthMech, AuthMech.ldap.name());
         attrs.put(Provisioning.A_zimbraAuthLdapURL, "ldap://" + "bogus" + ":389");
         attrs.put(Provisioning.A_zimbraAuthLdapSearchBindPassword, LC.zimbra_ldap_password.value());
         attrs.put(Provisioning.A_zimbraAuthLdapSearchBindDn, LC.zimbra_ldap_userdn.value());
@@ -174,7 +175,7 @@ public class TestLdapProvExternalLdapAuth extends TestLdap {
         assertEquals(Check.STATUS_UNKNOWN_HOST, result.getCode());
         
         attrs.clear();
-        attrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
+        attrs.put(Provisioning.A_zimbraAuthMech, AuthMech.ldap.name());
         attrs.put(Provisioning.A_zimbraAuthLdapURL, "ldap://" + LC.zimbra_server_hostname.value() + ":38900");
         attrs.put(Provisioning.A_zimbraAuthLdapSearchBindPassword, LC.zimbra_ldap_password.value());
         attrs.put(Provisioning.A_zimbraAuthLdapSearchBindDn, LC.zimbra_ldap_userdn.value());
@@ -183,7 +184,7 @@ public class TestLdapProvExternalLdapAuth extends TestLdap {
         assertEquals(Check.STATUS_CONNECTION_REFUSED, result.getCode());
         
         attrs.clear();
-        attrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
+        attrs.put(Provisioning.A_zimbraAuthMech, AuthMech.ldap.name());
         attrs.put(Provisioning.A_zimbraAuthLdapURL, getLdapURL());
         attrs.put(Provisioning.A_zimbraAuthLdapStartTlsEnabled, LdapConstants.LDAP_TRUE);
         attrs.put(Provisioning.A_zimbraAuthLdapSearchBindPassword, LC.zimbra_ldap_password.value());
@@ -194,7 +195,7 @@ public class TestLdapProvExternalLdapAuth extends TestLdap {
         assertEquals(Check.STATUS_COMMUNICATION_FAILURE, result.getCode());     // if TLS is not enabled in sladp.conf
         
         attrs.clear();
-        attrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
+        attrs.put(Provisioning.A_zimbraAuthMech, AuthMech.ldap.name());
         attrs.put(Provisioning.A_zimbraAuthLdapURL, getLdapURL());
         attrs.put(Provisioning.A_zimbraAuthLdapSearchBindPassword, "bogus");
         attrs.put(Provisioning.A_zimbraAuthLdapSearchBindDn, LC.zimbra_ldap_userdn.value());
@@ -203,7 +204,7 @@ public class TestLdapProvExternalLdapAuth extends TestLdap {
         assertEquals(Check.STATUS_AUTH_FAILED, result.getCode());
         
         attrs.clear();
-        attrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
+        attrs.put(Provisioning.A_zimbraAuthMech, AuthMech.ldap.name());
         attrs.put(Provisioning.A_zimbraAuthLdapURL, getLdapURL());
         attrs.put(Provisioning.A_zimbraAuthLdapSearchBindPassword, LC.zimbra_ldap_password.value());
         attrs.put(Provisioning.A_zimbraAuthLdapSearchBindDn, LC.zimbra_ldap_userdn.value());
@@ -215,7 +216,7 @@ public class TestLdapProvExternalLdapAuth extends TestLdap {
         // STATUS_AUTH_NOT_SUPPORTED
         
         attrs.clear();
-        attrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
+        attrs.put(Provisioning.A_zimbraAuthMech, AuthMech.ldap.name());
         attrs.put(Provisioning.A_zimbraAuthLdapURL, getLdapURL());
         attrs.put(Provisioning.A_zimbraAuthLdapSearchBindPassword, LC.zimbra_ldap_password.value());
         attrs.put(Provisioning.A_zimbraAuthLdapSearchBindDn, LC.zimbra_ldap_userdn.value());
@@ -225,7 +226,7 @@ public class TestLdapProvExternalLdapAuth extends TestLdap {
         assertEquals(Check.STATUS_NAME_NOT_FOUND, result.getCode());
         
         attrs.clear();
-        attrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
+        attrs.put(Provisioning.A_zimbraAuthMech, AuthMech.ldap.name());
         attrs.put(Provisioning.A_zimbraAuthLdapURL, getLdapURL());
         attrs.put(Provisioning.A_zimbraAuthLdapSearchBindPassword, LC.zimbra_ldap_password.value());
         attrs.put(Provisioning.A_zimbraAuthLdapSearchBindDn, LC.zimbra_ldap_userdn.value());
@@ -243,10 +244,9 @@ public class TestLdapProvExternalLdapAuth extends TestLdap {
         String DOMAIN_NAME = TestLdap.makeDomainName(
                 "externalLdapAuthByDNOnAccount.".toLowerCase() + baseDomainName());
         
-        String authMech = Provisioning.AM_LDAP;
+        String authMech = AuthMech.ldap.name();
         Map<String, Object> domainAttrs = new HashMap<String, Object>();
         domainAttrs.put(Provisioning.A_zimbraAuthMech, authMech);
-        domainAttrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
         domainAttrs.put(Provisioning.A_zimbraAuthLdapURL, getLdapURL());
         domainAttrs.put(Provisioning.A_zimbraAuthLdapStartTlsEnabled, getWantStartTLS());
         
@@ -273,10 +273,9 @@ public class TestLdapProvExternalLdapAuth extends TestLdap {
         String DOMAIN_NAME = TestLdap.makeDomainName(
                 "externalLdapAuthBySearch.".toLowerCase() + baseDomainName());
         
-        String authMech = Provisioning.AM_LDAP;
+        String authMech = AuthMech.ldap.name();
         Map<String, Object> domainAttrs = new HashMap<String, Object>();
         domainAttrs.put(Provisioning.A_zimbraAuthMech, authMech);
-        domainAttrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
         domainAttrs.put(Provisioning.A_zimbraAuthLdapURL, getLdapURL());
         domainAttrs.put(Provisioning.A_zimbraAuthLdapStartTlsEnabled, getWantStartTLS());
         domainAttrs.put(Provisioning.A_zimbraAuthLdapSearchBindPassword, LC.zimbra_ldap_password.value());
@@ -300,10 +299,9 @@ public class TestLdapProvExternalLdapAuth extends TestLdap {
         String DOMAIN_NAME = TestLdap.makeDomainName(
                 "externalLdapAuthByBindDNtemplate.".toLowerCase() + baseDomainName());
         
-        String authMech = Provisioning.AM_LDAP;
+        String authMech = AuthMech.ldap.name();
         Map<String, Object> domainAttrs = new HashMap<String, Object>();
         domainAttrs.put(Provisioning.A_zimbraAuthMech, authMech);
-        domainAttrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
         domainAttrs.put(Provisioning.A_zimbraAuthLdapURL, getLdapURL());
         domainAttrs.put(Provisioning.A_zimbraAuthLdapStartTlsEnabled, getWantStartTLS());
         domainAttrs.put(Provisioning.A_zimbraAuthLdapSearchBindPassword, LC.zimbra_ldap_password.value());

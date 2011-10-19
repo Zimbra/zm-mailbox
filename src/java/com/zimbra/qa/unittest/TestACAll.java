@@ -45,7 +45,6 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.NamedEntry;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.AttrRight;
@@ -65,6 +64,7 @@ import com.zimbra.cs.account.accesscontrol.RightCommand.RightsByTargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.UserRight;
+import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.account.ldap.entry.LdapDomain;
 
 public class TestACAll extends TestAC {
@@ -361,9 +361,9 @@ public class TestACAll extends TestAC {
                     Map<String, Object> domainAttrs = Maps.newHashMap();
                     
                     if (isUserRight) {
-                        domain.setAuthMech(Provisioning.AM_AD, domainAttrs);
+                        domain.setAuthMech(AuthMech.ad.name(), domainAttrs);
                     } else {
-                        domain.setAuthMechAdmin(Provisioning.AM_AD, domainAttrs);
+                        domain.setAuthMechAdmin(AuthMech.ad.name(), domainAttrs);
                     }
                     
                     /*  ==== mock test ====

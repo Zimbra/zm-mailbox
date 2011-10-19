@@ -92,6 +92,7 @@ import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthMechanism;
 import com.zimbra.cs.account.auth.PasswordUtil;
+import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.account.callback.MailSignature;
 import com.zimbra.cs.account.gal.GalNamedFilter;
 import com.zimbra.cs.account.gal.GalOp;
@@ -3922,11 +3923,14 @@ public class LegacyLdapProvisioning extends LdapProv {
     }
     
     @Override
-    public Provisioning.Result checkAuthConfig(Map attrs, String name, String password) throws ServiceException {
-        String mech = Check.getRequiredAttr(attrs, Provisioning.A_zimbraAuthMech);
-        if (!(mech.equals(Provisioning.AM_LDAP) || mech.equals(Provisioning.AM_AD)))
-            throw ServiceException.INVALID_REQUEST("auth mech must be: "+Provisioning.AM_LDAP+" or "+Provisioning.AM_AD, null);
-
+    public Provisioning.Result checkAuthConfig(Map attrs, String name, String password) 
+    throws ServiceException {
+        AuthMech mech = AuthMech.fromString(Check.getRequiredAttr(attrs, Provisioning.A_zimbraAuthMech));
+        if (!(mech == AuthMech.ldap) || mech == AuthMech.ad) {
+            throw ServiceException.INVALID_REQUEST("auth mech must be: "+
+                    AuthMech.ldap.name() + " or " + AuthMech.ad.name(), null);
+        }
+        
         String url[] = Check.getRequiredMultiAttr(attrs, Provisioning.A_zimbraAuthLdapURL);
         
         // TODO, need admin UI work for zimbraAuthLdapStartTlsEnabled
@@ -3995,18 +3999,18 @@ public class LegacyLdapProvisioning extends LdapProv {
     }
     
     @Override
-    public void externalLdapAuth(Domain d, String authMech, Account acct, String password, 
+    public void externalLdapAuth(Domain d, AuthMech authMech, Account acct, String password, 
             Map<String, Object> authCtxt) throws ServiceException {
         externalLdapAuth(d, authMech, acct, null, password, authCtxt);
     }
     
     @Override
-    public void externalLdapAuth(Domain d, String authMech, String principal, String password, 
+    public void externalLdapAuth(Domain d, AuthMech authMech, String principal, String password, 
             Map<String, Object> authCtxt) throws ServiceException {
         externalLdapAuth(d, authMech, null, principal, password, authCtxt);
     }
     
-    void externalLdapAuth(Domain d, String authMech, Account acct, String principal, 
+    void externalLdapAuth(Domain d, AuthMech authMech, Account acct, String principal, 
             String password, Map<String, Object> authCtxt) throws ServiceException {
         // exactly one of acct or principal is not null
         // when acct is null, we are from the auto provisioning path
@@ -4039,7 +4043,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             // principal must not be null by now
             
             String searchFilter = d.getAttr(Provisioning.A_zimbraAuthLdapSearchFilter);
-            if (searchFilter != null && !AM_AD.equals(authMech)) {
+            if (searchFilter != null && AuthMech.ad != authMech) {
                 String searchPassword = d.getAttr(Provisioning.A_zimbraAuthLdapSearchBindPassword);
                 String searchDn = d.getAttr(Provisioning.A_zimbraAuthLdapSearchBindDn);
                 String searchBase = d.getAttr(Provisioning.A_zimbraAuthLdapSearchBase);

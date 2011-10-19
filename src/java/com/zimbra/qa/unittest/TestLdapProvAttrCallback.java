@@ -23,7 +23,6 @@ import org.junit.*;
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ProvisioningConstants;
-import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
@@ -96,6 +95,10 @@ public class TestLdapProvAttrCallback extends TestLdap {
         group = (DynamicGroup) prov.getGroup(Key.DistributionListBy.id, group.getId());
         assertNotNull(group);
         return group;
+    }
+    
+    private Domain createDomain(String subDomainSegment, Map<String, Object> attrs) throws Exception {
+        return TestLdapProvDomain.createDomain(prov, subDomainSegment + "." + baseDomainName(), attrs);
     }
     
     @Test
@@ -358,6 +361,27 @@ public class TestLdapProvAttrCallback extends TestLdap {
         prov.modifyAttrs(group, attrs);
         verifyIsNotACLGroup(group, SOME_URL_2);
         deleteDynamicGroup(group);
+    }
+    
+    @Test
+    public void authMech() throws Exception {
+        // good mech
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraAuthMech, "custom");
+        Domain testDomain = createDomain("authMech", attrs);
+        
+        // bad mech
+        attrs.clear();
+        attrs.put(Provisioning.A_zimbraAuthMech, "bad");
+        boolean caughtException = false;
+        try {
+            prov.modifyAttrs(testDomain, attrs);
+        } catch (ServiceException e) {
+            if (ServiceException.INVALID_REQUEST.equals(e.getCode())) {
+                caughtException = true;
+            }
+        }
+        assertTrue(caughtException);
     }
     
 }

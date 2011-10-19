@@ -46,6 +46,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.DirectoryEntryVisitor;
 import com.zimbra.cs.account.Provisioning.EagerAutoProvisionScheduler;
+import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.account.ldap.AutoProvisionEager;
 import com.zimbra.cs.account.ldap.AutoProvisionListener;
 import com.zimbra.cs.account.ldap.LdapProv;
@@ -293,7 +294,7 @@ public class TestLdapProvAutoProvision extends TestLdap {
         zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, extDomainDn);
         zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, "(uid=%u)");
         // setup external LDAP auth
-        zimbraDomainAttrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAuthMech, AuthMech.ldap.name());
         zimbraDomainAttrs.put(Provisioning.A_zimbraAuthLdapURL, "ldap://localhost:389");
         zimbraDomainAttrs.put(Provisioning.A_zimbraAuthLdapBindDn, "uid=%u,ou=people," + extDomainDn);
         Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
@@ -535,7 +536,7 @@ public class TestLdapProvAutoProvision extends TestLdap {
         zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, extDomainDn);
         zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, "(uid=%u)");
         // setup external LDAP auth
-        zimbraDomainAttrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAuthMech, AuthMech.ldap.name());
         zimbraDomainAttrs.put(Provisioning.A_zimbraAuthLdapURL, "ldap://localhost:389");
         zimbraDomainAttrs.put(Provisioning.A_zimbraAuthLdapBindDn, "uid=%u,ou=people," + extDomainDn);
         Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
@@ -579,7 +580,7 @@ public class TestLdapProvAutoProvision extends TestLdap {
         zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, extDomainDn);
         zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, "(uid=%u)");
         // setup external LDAP auth
-        zimbraDomainAttrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAuthMech, AuthMech.ldap.name());
         zimbraDomainAttrs.put(Provisioning.A_zimbraAuthLdapURL, "ldap://localhost:389");
         zimbraDomainAttrs.put(Provisioning.A_zimbraAuthLdapBindDn, "uid=%u,ou=people," + extDomainDn);
         // setup preauth
@@ -644,7 +645,7 @@ public class TestLdapProvAutoProvision extends TestLdap {
         zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, extDomainDn);
         zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, "(uid=%u)");
         // setup auth mech and krb5 realm on domain
-        zimbraDomainAttrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_KERBEROS5);
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAuthMech, AuthMech.kerberos5.name());
         zimbraDomainAttrs.put(Provisioning.A_zimbraAuthKerberos5Realm, krb5Realm);
         zimbraDomainAttrs.put(Provisioning.A_zimbraAuthKerberos5Realm, krb5Realm);
         Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
@@ -687,7 +688,7 @@ public class TestLdapProvAutoProvision extends TestLdap {
         zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, extDomainDn);
         zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, "(uid=%u)");
         // setup external LDAP auth
-        zimbraDomainAttrs.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAuthMech, AuthMech.ldap.name());
         zimbraDomainAttrs.put(Provisioning.A_zimbraAuthLdapURL, "ldap://localhost:389");
         zimbraDomainAttrs.put(Provisioning.A_zimbraAuthLdapBindDn, "uid=%u,ou=people," + extDomainDn);
         // setup preauth

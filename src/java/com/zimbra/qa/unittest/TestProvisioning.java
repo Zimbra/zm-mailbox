@@ -42,6 +42,7 @@ import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.SearchDirectoryOptions.ObjectType;
 import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.ZimbraCustomAuth;
+import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.custom.CustomLdapProvisioning;
 import com.zimbra.cs.account.ldap.entry.LdapEntry;
@@ -574,7 +575,7 @@ public class TestProvisioning extends TestCase {
     private void externalAuthTest(Account account, boolean startTLS) throws Exception {
         Domain domain = mProv.getDomain(account);
         Map attrsToMod = new HashMap<String, Object>();
-        attrsToMod.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_LDAP);
+        attrsToMod.put(Provisioning.A_zimbraAuthMech, AuthMech.ldap.name());
         attrsToMod.put(Provisioning.A_zimbraAuthLdapURL, "ldap://" + LC.zimbra_server_hostname.value() + ":389");
         attrsToMod.put(Provisioning.A_zimbraAuthLdapSearchFilter, "(zimbraMailDeliveryAddress=%n)");
         attrsToMod.put(Provisioning.A_zimbraAuthLdapSearchBindPassword, LC.zimbra_ldap_password.value());
@@ -607,7 +608,7 @@ public class TestProvisioning extends TestCase {
 
         // kerberos5 auth
         attrsToMod.clear();
-        attrsToMod.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_KERBEROS5);
+        attrsToMod.put(Provisioning.A_zimbraAuthMech, AuthMech.kerberos5.name());
         attrsToMod.put(Provisioning.A_zimbraAuthKerberos5Realm, "PHOEBE.LOCAL");
         mProv.modifyAttrs(domain, attrsToMod, true);
         // by domain realm mapping    acct-1@PHOEBE.LOCAL has to be created (sudo /usr/local/sbin/kadmin.local addprinc command)
@@ -637,7 +638,7 @@ public class TestProvisioning extends TestCase {
         attrsToMod.clear();
         String customAuthHandlerName = "test";
         String args = "http://blah.com:123    green \" ocean blue   \"  \"\" yelllow \"\"";
-        attrsToMod.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_CUSTOM + customAuthHandlerName + " " + args);
+        attrsToMod.put(Provisioning.A_zimbraAuthMech, AuthMech.custom.name() + ":" + customAuthHandlerName + " " + args);
         mProv.modifyAttrs(domain, attrsToMod, true);
         ZimbraCustomAuth.register(customAuthHandlerName, new TestCustomAuth(account, PASSWORD));
         mProv.authAccount(account, PASSWORD, AuthContext.Protocol.test);
@@ -651,7 +652,7 @@ public class TestProvisioning extends TestCase {
         }
 
         // done testing auth mech, set auth meth back
-        attrsToMod.put(Provisioning.A_zimbraAuthMech, Provisioning.AM_ZIMBRA);
+        attrsToMod.put(Provisioning.A_zimbraAuthMech, AuthMech.zimbra.name());
         mProv.modifyAttrs(domain, attrsToMod, true);
 
         // preauth
@@ -1409,7 +1410,7 @@ public class TestProvisioning extends TestCase {
 
     private void externalGalTest(Domain domain, boolean startTLS) throws Exception {
         Map<String, String> attrs = new HashMap<String, String>();
-        attrs.put(Provisioning.A_zimbraGalMode, Provisioning.AM_LDAP);
+        attrs.put(Provisioning.A_zimbraGalMode, AuthMech.ldap.name());
         attrs.put(Provisioning.A_zimbraGalLdapURL, "ldap://" + LC.zimbra_server_hostname.value() + ":389"); // cannot be localhost for startTLS
 
         attrs.put(Provisioning.A_zimbraGalLdapBindDn, LC.zimbra_ldap_userdn.value());

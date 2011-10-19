@@ -25,6 +25,7 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.account.ldap.LdapHelper;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.SearchLdapOptions;
@@ -100,12 +101,12 @@ public abstract class LdapProv extends Provisioning {
     public abstract List<MimeTypeInfo> getMimeTypesByQuery(String mimeType) 
     throws ServiceException;
     
-    public abstract void externalLdapAuth(Domain d, String authMech, Account acct, 
+    public abstract void externalLdapAuth(Domain domain, AuthMech authMech, Account acct, 
             String password, Map<String, Object> authCtxt) 
     throws ServiceException;
     
     
-    public abstract void externalLdapAuth(Domain d, String authMech, String principal, 
+    public abstract void externalLdapAuth(Domain domain, AuthMech authMech, String principal, 
             String password, Map<String, Object> authCtxt) 
     throws ServiceException;
     

@@ -85,40 +85,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
     public static final String CAL_MODE_STANDARD = "standard";
 
     /**
-     * zimbraAuthMech type of "zimbra" means our own (use userPassword)
-     */
-    public static final String AM_ZIMBRA = "zimbra";
-
-    /**
-     * zimbraAuthMech type of "ldap" means use configured LDAP attrs
-     * (zimbraAuthLdapURL, zimbraAuthLdapBindDn)
-     */
-    public static final String AM_LDAP = "ldap";
-
-    /**
-     * zimbraAuthMech type of "ad" means use configured LDAP attrs
-     * (zimbraAuthLdapURL, zimbraAuthLdapBindDn) for use with ActiveDirectory
-     */
-    public static final String AM_AD = "ad";
-
-    /**
-     * zimbraAuthMech type of "kerberos5" means use kerberos5 authentication.
-     * The principal can be obtained by, either:
-     * (1) {email-local-part}@{domain-attr-zimbraAuthKerberos5Realm}
-     * or
-     * (2) {principal-name} if account zimbraForeignPrincipal is in the format of
-     *     kerberos5:{principal-name}
-     */
-    public static final String AM_KERBEROS5 = "kerberos5";
-
-    /**
-     * zimbraAuthMech type of "custom:{handler}" means use registered extension
-     * of ZimbraCustomAuth.authenticate() method
-     * see customauth.txt
-     */
-    public static final String AM_CUSTOM = "custom:";
-
-    /**
      * For kerberos5 auth, we allow specifying a principal on a per-account basis.
      * If zimbraForeignPrincipal is in the format of kerberos5:{principal-name}, we
      * use the {principal-name} instead of {user-part}@{kerberos5-realm-of-the-domain}
