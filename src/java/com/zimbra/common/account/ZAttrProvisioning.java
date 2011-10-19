@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111018-1645 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111019-1443 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -826,6 +826,22 @@ public class ZAttrProvisioning {
         public boolean isDedupeAll() { return this == dedupeAll;}
     }
 
+    public static enum PrefExternalSendersType {
+        ALLNOTINAB("ALLNOTINAB"),
+        ALL("ALL");
+        private String mValue;
+        private PrefExternalSendersType(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefExternalSendersType fromString(String s) throws ServiceException {
+            for (PrefExternalSendersType value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isALLNOTINAB() { return this == ALLNOTINAB;}
+        public boolean isALL() { return this == ALL;}
+    }
+
     public static enum PrefFileSharingApplication {
         briefcase("briefcase"),
         octopus("octopus");
@@ -986,22 +1002,6 @@ public class ZAttrProvisioning {
         }
         public boolean isOutlook() { return this == outlook;}
         public boolean isInternet() { return this == internet;}
-    }
-
-    public static enum PrefOutOfOfficeExternalSenders {
-        ab("ab"),
-        all("all");
-        private String mValue;
-        private PrefOutOfOfficeExternalSenders(String value) { mValue = value; }
-        public String toString() { return mValue; }
-        public static PrefOutOfOfficeExternalSenders fromString(String s) throws ServiceException {
-            for (PrefOutOfOfficeExternalSenders value : values()) {
-                if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
-        }
-        public boolean isAb() { return this == ab;}
-        public boolean isAll() { return this == all;}
     }
 
     public static enum PrefPop3DeleteOption {
@@ -5144,6 +5144,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraInterceptSubject = "zimbraInterceptSubject";
 
     /**
+     * additional domains considered as internal w.r.t. recipient
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public static final String A_zimbraInternalSendersDomain = "zimbraInternalSendersDomain";
+
+    /**
      * supported IP mode
      *
      * @since ZCS 7.1.0
@@ -7000,14 +7008,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraOpenidConsumerStatelessModeEnabled = "zimbraOpenidConsumerStatelessModeEnabled";
 
     /**
-     * additional domains considered as internal for out of office reply
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1319)
-    public static final String A_zimbraOutOfOfficeInternalSendersDomain = "zimbraOutOfOfficeInternalSendersDomain";
-
-    /**
      * regex of alllowed characters in password
      *
      * @since ZCS 7.1.0
@@ -7862,6 +7862,18 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefDisplayExternalImages = "zimbraPrefDisplayExternalImages";
 
     /**
+     * Specifies the meaning of an external sender. &quot;ALL&quot; means
+     * users whose domain doesn&#039;t match the recipient&#039;s or
+     * zimbraInternalSendersDomain. &quot;ALLNOTINAB&quot; means
+     * &quot;ALL&quot; minus users who are in the recipient&#039;s address
+     * book.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1320)
+    public static final String A_zimbraPrefExternalSendersType = "zimbraPrefExternalSendersType";
+
+    /**
      * indicates which application to use for file sharing
      *
      * @since ZCS 8.0.0
@@ -8469,21 +8481,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefOutOfOfficeExternalReply = "zimbraPrefOutOfOfficeExternalReply";
 
     /**
-     * whether or not out of office reply to external senders is enabled
+     * If TRUE, send zimbraPrefOutOfOfficeExternalReply to external senders.
+     * External senders are specified by zimbraInternalSendersDomain and
+     * zimbraPrefExternalSendersType.
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1318)
     public static final String A_zimbraPrefOutOfOfficeExternalReplyEnabled = "zimbraPrefOutOfOfficeExternalReplyEnabled";
-
-    /**
-     * defining external senders for out of office reply all - all external
-     * senders ab - external senders in Address Book
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1320)
-    public static final String A_zimbraPrefOutOfOfficeExternalSenders = "zimbraPrefOutOfOfficeExternalSenders";
 
     /**
      * out of office notifications (if enabled) are sent only if current date
@@ -10321,22 +10326,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
