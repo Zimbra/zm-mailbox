@@ -42,7 +42,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111019-1443 */
+    /* build: 8.0.0_BETA1_1111 ysasaki 20111017-1356 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -24098,7 +24098,10 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Disables autocomplete matching against the members email address.
+     * Deprecated since: 8.0.0. Since 8.0.0, the contact group can contain
+     * member references, but member references are not searchable.. Orig
+     * desc: Disables autocomplete matching against the members email
+     * address.
      *
      * @return zimbraPrefContactsDisableAutocompleteOnContactGroupMembers, or false if unset
      *
@@ -24110,7 +24113,10 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Disables autocomplete matching against the members email address.
+     * Deprecated since: 8.0.0. Since 8.0.0, the contact group can contain
+     * member references, but member references are not searchable.. Orig
+     * desc: Disables autocomplete matching against the members email
+     * address.
      *
      * @param zimbraPrefContactsDisableAutocompleteOnContactGroupMembers new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -24125,7 +24131,10 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Disables autocomplete matching against the members email address.
+     * Deprecated since: 8.0.0. Since 8.0.0, the contact group can contain
+     * member references, but member references are not searchable.. Orig
+     * desc: Disables autocomplete matching against the members email
+     * address.
      *
      * @param zimbraPrefContactsDisableAutocompleteOnContactGroupMembers new value
      * @param attrs existing map to populate, or null to create a new map
@@ -24141,7 +24150,10 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Disables autocomplete matching against the members email address.
+     * Deprecated since: 8.0.0. Since 8.0.0, the contact group can contain
+     * member references, but member references are not searchable.. Orig
+     * desc: Disables autocomplete matching against the members email
+     * address.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -24155,7 +24167,10 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * Disables autocomplete matching against the members email address.
+     * Deprecated since: 8.0.0. Since 8.0.0, the contact group can contain
+     * member references, but member references are not searchable.. Orig
+     * desc: Disables autocomplete matching against the members email
+     * address.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

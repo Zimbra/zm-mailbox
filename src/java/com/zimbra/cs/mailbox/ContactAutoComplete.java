@@ -647,18 +647,15 @@ public class ContactAutoComplete {
             }
         } else { // IS a local contact group
             String nickname = getFieldAsString(attrs, ContactConstants.A_nickname);
-            if (mRequestedAcct.isPrefContactsDisableAutocompleteOnContactGroupMembers() &&
-                    !matchesName(tokens, nickname)) {
-                return;
+            if (matchesName(tokens, nickname)) {
+                ContactEntry entry = new ContactEntry();
+                entry.mDisplayName = nickname;
+                entry.mId = id;
+                entry.mFolderId = folderId;
+                entry.setIsContactGroup();
+                result.addEntry(entry);
+                ZimbraLog.gal.debug("adding %s", entry.getKey());
             }
-            // distribution list
-            ContactEntry entry = new ContactEntry();
-            entry.mDisplayName = nickname;
-            entry.mId = id;
-            entry.mFolderId = folderId;
-            entry.setIsContactGroup();
-            result.addEntry(entry);
-            ZimbraLog.gal.debug("adding %s", entry.getKey());
         }
     }
 

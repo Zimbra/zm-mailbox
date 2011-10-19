@@ -60,7 +60,7 @@ import com.zimbra.cs.mailbox.Contact.DerefGroupMembersOption;
 import com.zimbra.cs.object.ObjectHandlerException;
 import com.zimbra.cs.util.JMSession;
 
-public class ParsedContact {
+public final class ParsedContact {
 
     private Map<String, String> contactFields;
     private List<Attachment> contactAttachments;
@@ -69,7 +69,7 @@ public class ParsedContact {
     private String digest;
     private long size;
 
-    private List<IndexDocument> mZDocuments;
+    private List<IndexDocument> indexDocs;
 
     /**
      * @param fields maps field names to either a <tt>String</tt> or <tt>String[]</tt> value.
@@ -160,7 +160,7 @@ public class ParsedContact {
             } else if (entry.getValue() instanceof ContactGroup) {
                 value = ((ContactGroup) entry.getValue()).encode();
             }
-            
+
             if (key != null && !key.trim().isEmpty() && !Strings.isNullOrEmpty(value)) {
                 if (key.length() > ContactConstants.MAX_FIELD_NAME_LENGTH) {
                     throw ServiceException.INVALID_REQUEST("too big filed name", null);
@@ -284,16 +284,16 @@ public class ParsedContact {
 
     public static abstract class FieldDelta {
         private Op op;
-        
+
         public static enum Op {
             ADD,
             REMOVE;
-            
+
             public static Op fromString(String opStr) throws ServiceException {
                 if (opStr == null) {
                     return null;
                 }
-                
+
                 if ("+".equals(opStr)) {
                     return ADD;
                 } else if ("-".equals(opStr)) {
@@ -302,80 +302,73 @@ public class ParsedContact {
                 throw ServiceException.INVALID_REQUEST("unknown op: " + opStr, null);
             }
         }
-        
+
         private FieldDelta(Op op) {
             this.op = op;
         }
-        
+
         Op getOp() {
             return op;
         }
     }
-    
+
     private static class AttrDelta extends FieldDelta {
         private String name;
         private String value;
-        
+
         private AttrDelta(String name, String value, Op op) {
             super(op);
             this.name = name;
             this.value = value;
         }
-        
+
         private String getName() {
             return name;
         }
-        
+
         private String getValue() {
             return value;
         }
     }
-    
+
     private static class GroupMemberDelta extends FieldDelta {
         private ContactGroup.Member.Type memberType;
         private String value;
-        
-        private GroupMemberDelta(ContactGroup.Member.Type memberType, String value, Op op) 
-        throws ServiceException {
+
+        private GroupMemberDelta(ContactGroup.Member.Type memberType, String value, Op op) {
             super(op);
             this.memberType = memberType;
             this.value = value;
         }
-        
+
         private ContactGroup.Member.Type getMemberType() {
             return memberType;
         }
-        
+
         private String getValue() {
             return value;
         }
     }
-    
+
     public static class FieldDeltaList {
-        private List<FieldDelta> deltaList;
-        
-        public FieldDeltaList() {
-            deltaList = new ArrayList<FieldDelta>();
-        }
-        
-        public void addAttrDelta(String name, String value, FieldDelta.Op op) throws ServiceException {
+        private final List<FieldDelta> deltaList = new ArrayList<FieldDelta>();
+
+        public void addAttrDelta(String name, String value, FieldDelta.Op op) {
             // name cannot be null or empty
             if (name == null || name.trim().equals("")) {
                 return;
             }
-            
             deltaList.add(new AttrDelta(name, value, op));
         }
-        
-        public void addGroupMemberDelta(ContactGroup.Member.Type memberType, 
-                String value, FieldDelta.Op op) throws ServiceException {
+
+        public void addGroupMemberDelta(ContactGroup.Member.Type memberType, String value, FieldDelta.Op op) {
             deltaList.add(new GroupMemberDelta(memberType, value, op));
         }
-        
+
         private List<FieldDelta> getDeltaList() {
             return deltaList;
         }
-        
+
         private void removeAllAttrDeltaByName(String name) {
             for (Iterator<FieldDelta> iter = deltaList.iterator(); iter.hasNext();) {
                 FieldDelta delta = iter.next();
@@ -388,7 +381,7 @@ public class ParsedContact {
             }
         }
     }
-    
+
     public ParsedContact modifyField(String name, String newValue) {
         if (Strings.isNullOrEmpty(newValue))
             contactFields.remove(name);
@@ -396,20 +389,20 @@ public class ParsedContact {
             contactFields.put(name, newValue);
         return this;
     }
-    
+
     // convert legacy API to the new API
-    public ParsedContact modify(Map<String, String> fieldDelta, List<Attachment> attachDelta) 
+    public ParsedContact modify(Map<String, String> fieldDelta, List<Attachment> attachDelta)
     throws ServiceException {
         FieldDeltaList fieldDeltaList = new FieldDeltaList();
-        
+
         for (Map.Entry<String, String> entry : fieldDelta.entrySet()) {
             fieldDeltaList.addAttrDelta(entry.getKey(), entry.getValue(), null);
         }
-        
+
         return modify(fieldDeltaList, attachDelta);
     }
-    
-    public ParsedContact modify(FieldDeltaList fieldDeltaList, List<Attachment> attachDelta) 
+
+    public ParsedContact modify(FieldDeltaList fieldDeltaList, List<Attachment> attachDelta)
     throws ServiceException {
         if (attachDelta != null && !attachDelta.isEmpty()) {
             for (Attachment attach : attachDelta) {
@@ -426,12 +419,12 @@ public class ParsedContact {
         } else {
             contactAttachments = null;
         }
-        
+
         ContactGroup contactGroup = null;
         String encodedContactGroup = contactFields.get(ContactConstants.A_groupMember);
-        contactGroup = encodedContactGroup == null? 
+        contactGroup = encodedContactGroup == null?
                 ContactGroup.init() : ContactGroup.init(encodedContactGroup);
-        
+
         boolean contactGroupMemberChanged = false;
         for (FieldDelta delta : fieldDeltaList.getDeltaList()) {
             if (delta instanceof AttrDelta) {
@@ -444,13 +437,13 @@ public class ParsedContact {
 
         if (contactFields.isEmpty())
             throw ServiceException.INVALID_REQUEST("contact must have fields", null);
-        
+
         if (contactGroupMemberChanged) {
             contactFields.put(ContactConstants.A_groupMember, contactGroup.encode());
         }
 
         digest = null;
-        mZDocuments = null;
+        indexDocs = null;
 
         if (contactAttachments != null) {
             try {
@@ -477,9 +470,9 @@ public class ParsedContact {
 
         return this;
     }
-    
+
     private void processAttrDelta(AttrDelta delta) throws ServiceException {
-        
+
         String name  = StringUtil.stripControlCharacters(delta.getName());
         if (name == null || name.trim().equals("")) {
             return;
@@ -489,31 +482,31 @@ public class ParsedContact {
 
         String newValue = StringUtil.stripControlCharacters(delta.getValue());
         FieldDelta.Op op = delta.getOp();
-        
+
         if (op == null) {
             // legacy behavior before bug 59738
             if (newValue == null || newValue.equals(""))
                 contactFields.remove(name);
             else
                 contactFields.put(name, newValue);
-            
+
             return;
         }
-        
+
         // do not allow adding or removing an empty string
         if (newValue == null || newValue.equals("")) {
             throw ServiceException.INVALID_REQUEST("adding or removing empty value is not allowed", null);
         }
-        
+
         String curValue = contactFields.get(name);
-        
+
         if (curValue == null) {
             if (op == FieldDelta.Op.REMOVE) {
                 // do nothing
             } else {
                 contactFields.put(name, newValue);
             }
-            
+
         } else {
             List<String> curValuesList = null;
             try {
@@ -525,7 +518,7 @@ public class ParsedContact {
                         ".  delta entry ignored", e);
                 return;
             }
-            
+
             if (op == FieldDelta.Op.REMOVE) {
                 // remove all occurrences of the value
                 for (Iterator<String> iter = curValuesList.iterator(); iter.hasNext();) {
@@ -541,7 +534,7 @@ public class ParsedContact {
                     curValuesList.add(newValue);
                 }
             }
-            
+
             if (curValuesList.size() > 0) {
                 // convert updated list to a new json array value
                 String[] newValues = curValuesList.toArray(new String[curValuesList.size()]);
@@ -555,7 +548,7 @@ public class ParsedContact {
                             ".  delta entry ignored", e);
                     return;
                 }
-                
+
                 // finally, put the new value back
                 contactFields.put(name, newMultiValues);
             } else {
@@ -563,14 +556,14 @@ public class ParsedContact {
             }
         }
     }
-    
-    private void processGroupMemberDelta(GroupMemberDelta delta, ContactGroup contactGroup) 
+
+    private void processGroupMemberDelta(GroupMemberDelta delta, ContactGroup contactGroup)
     throws ServiceException {
-        
+
         FieldDelta.Op op = delta.getOp();
         ContactGroup.Member.Type memberType =  delta.getMemberType();
         String value = delta.getValue();
-            
+
         if (op == FieldDelta.Op.ADD) {
             contactGroup.addMember(memberType, value);
         } else if (op == FieldDelta.Op.REMOVE){
@@ -608,20 +601,18 @@ public class ParsedContact {
     public boolean hasTemporaryAnalysisFailure() { return mHasTemporaryAnalysisFailure; }
 
     private void analyzeContact(Account acct, boolean indexAttachments) throws ServiceException {
-        if (mZDocuments != null)
+        if (indexDocs != null) {
             return;
-
-        mZDocuments = new ArrayList<IndexDocument>();
+        }
+        indexDocs = new ArrayList<IndexDocument>();
         StringBuilder attachContent = new StringBuilder();
 
-        int numParseErrors = 0;
         ServiceException conversionError = null;
         if (contactAttachments != null) {
             for (Attachment attach: contactAttachments) {
                 try {
                     analyzeAttachment(attach, attachContent, indexAttachments);
                 } catch (MimeHandlerException e) {
-                    numParseErrors++;
                     String part = attach.getPartName();
                     String ctype = attach.getContentType();
                     ZimbraLog.index.warn("Parse error on attachment " + part + " (" + ctype + ")", e);
@@ -630,7 +621,6 @@ public class ParsedContact {
                         mHasTemporaryAnalysisFailure = true;
                     }
                 } catch (ObjectHandlerException e) {
-                    numParseErrors++;
                     String part = attach.getPartName();
                     String ctype = attach.getContentType();
                     ZimbraLog.index.warn("Parse error on attachment " + part + " (" + ctype + ")", e);
@@ -638,12 +628,12 @@ public class ParsedContact {
             }
         }
 
-        mZDocuments.add(getPrimaryDocument(acct, attachContent.toString()));
+        indexDocs.add(getPrimaryDocument(acct, attachContent.toString()));
     }
 
     public List<IndexDocument> getLuceneDocuments(Mailbox mbox) throws ServiceException {
         analyze(mbox);
-        return mZDocuments;
+        return indexDocs;
     }
 
     private void analyzeAttachment(Attachment attach, StringBuilder contentText, boolean indexAttachments)
@@ -677,7 +667,7 @@ public class ParsedContact {
                 if (doc != null) {
                     IndexDocument idoc = new IndexDocument(doc);
                     idoc.addSortSize(attach.getSize());
-                    mZDocuments.add(idoc);
+                    indexDocs.add(idoc);
                 }
             }
         }
@@ -699,9 +689,9 @@ public class ParsedContact {
         FieldTokenStream fields = new FieldTokenStream();
         for (Map.Entry<String, String> entry : getFields().entrySet()) {
             String fieldName = entry.getKey();
-            
+
             // Ignore these fields as they can either be too big or containing encoded data.
-            if (Contact.isSMIMECertField(fieldName) || 
+            if (Contact.isSMIMECertField(fieldName) ||
                     ContactConstants.A_member.equals(fieldName) ||
                     ContactConstants.A_groupMember.equals(fieldName)) {
                 continue;
@@ -715,8 +705,9 @@ public class ParsedContact {
         }
 
         // fetch all the 'email' addresses for this contact into a single concatenated string
+        // We don't index members in a contact group because it's only confusing when searching.
         StringBuilder emails  = new StringBuilder();
-        for (String email : Contact.getEmailAddresses(emailFields, getFields(), DerefGroupMembersOption.INLINE_ONLY)) {
+        for (String email : Contact.getEmailAddresses(emailFields, getFields(), DerefGroupMembersOption.NONE)) {
             emails.append(email).append(',');
         }
 

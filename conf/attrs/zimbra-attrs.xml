@@ -4986,9 +4986,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   </desc>
 </attr>
 
-<attr id="1090" name="zimbraPrefContactsDisableAutocompleteOnContactGroupMembers" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.7">
+<attr id="1090" name="zimbraPrefContactsDisableAutocompleteOnContactGroupMembers" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.7" deprecatedSince="8.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Disables autocomplete matching against the members email address.</desc>
+  <deprecateDesc>Since 8.0.0, the contact group can contain member references, but member references are not searchable.</deprecateDesc>
 </attr>
 
 <attr id="1091" name="zimbraPrefAutoCompleteQuickCompletionOnComma" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.7">
