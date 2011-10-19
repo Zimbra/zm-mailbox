@@ -973,7 +973,7 @@ public class DbMailItem {
             stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(item) +
                         " SET date = ?, size = ?, flags = ?, name = ?, subject = ?," +
                         "  folder_id = ?," + (isFolder ? " parent_id = ?," : "") +
-                        "  metadata = ?, mod_metadata = ?, change_date = ?, mod_content = ?" +
+                        "  metadata = ?, mod_metadata = ?, change_date = ?" +
                         " WHERE " + IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             stmt.setInt(pos++, (int) (item.getDate() / 1000));
@@ -988,7 +988,6 @@ public class DbMailItem {
             stmt.setString(pos++, metadata.toString());
             stmt.setInt(pos++, mbox.getOperationChangeID());
             stmt.setInt(pos++, mbox.getOperationTimestamp());
-            stmt.setInt(pos++, mbox.getOperationChangeID());
             pos = setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, item.getId());
             stmt.executeUpdate();
