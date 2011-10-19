@@ -48,9 +48,10 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.io.EndPoint;
 import org.eclipse.jetty.io.nio.SelectChannelEndPoint;
 import org.eclipse.jetty.server.HttpConnection;
-import org.eclipse.jetty.util.thread.Timeout;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.common.calendar.ZCalendar.ZICalendarParseHandler;
@@ -63,7 +64,6 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.HttpUtil.Browser;
-import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQueryResults;
 import com.zimbra.cs.mailbox.ACL;
@@ -880,7 +880,8 @@ public abstract class ArchiveFormatter extends Formatter {
 
     private static final String[] NO_TAGS = new String[0];
 
-    private String[] getTagNames(OperationContext octxt, Mailbox mbox, ItemData id)
+    @VisibleForTesting
+    static String[] getTagNames(OperationContext octxt, Mailbox mbox, ItemData id)
     throws IOException {
         if (Strings.isNullOrEmpty(id.tags)) {
             return NO_TAGS;
@@ -892,14 +893,9 @@ public abstract class ArchiveFormatter extends Formatter {
             // pre 6.0.6 versions had numeric tags strings, not names
             if (Character.isDigit(serialized.charAt(0)) && serialized.indexOf(':') == -1) {
                 return TagUtil.tagIdStringToNames(mbox, octxt, serialized);
+            } else {
+                return ItemData.getTagNames(serialized);
             }
-
-            // pre-8.0 versions had colon-delimited values
-            if (serialized.charAt(0) != '\0') {
-                serialized = '\0' + serialized.replace(':', '\0') + '\0';
-            }
-
-            return DbTag.deserializeTags(serialized);
         } catch (Exception e) {
             throw new IOException("tag error: " + e);
         }
@@ -919,8 +915,9 @@ public abstract class ArchiveFormatter extends Formatter {
             data = ByteUtil.getContent(ais.getInputStream(), -1, false);
         } else {
             data = new byte[dsz];
-            if (ais.read(data, 0, dsz) != dsz)
+            if (ais.read(data, 0, dsz) != dsz) {
                 throw new IOException("archive read err");
+            }
         }
         return data;
     }

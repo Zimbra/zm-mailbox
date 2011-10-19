@@ -15,12 +15,14 @@
 package com.zimbra.cs.service.util;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.google.common.base.Strings;
-import com.zimbra.cs.db.DbTag;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Metadata;
@@ -49,7 +51,7 @@ public class ItemData {
             flags = mi.getFlagString();
             path = mi.getPath();
             tagsOldFmt = TagUtil.getTagIdString(mi);
-            tags = getTagString(mi);
+            tags = getTagString(mi.getTags());
             ud = mi.getUnderlyingData();
         } catch (Exception e) {
             throw new IOException("data error: " + e);
@@ -61,8 +63,9 @@ public class ItemData {
             JSONObject json = new JSONObject(encoded);
             int version = (byte)json.getInt(Keys.Ver.toString());
 
-            if (version > Metadata.CURRENT_METADATA_VERSION)
+            if (version > Metadata.CURRENT_METADATA_VERSION) {
                 throw new IOException("unsupported data version");
+            }
             ud = new MailItem.UnderlyingData();
             ud.id = json.getInt(Keys.id.toString());
             ud.type = (byte) json.getInt(Keys.type.toString());
@@ -150,8 +153,49 @@ public class ItemData {
         }
     }
 
-    private String getTagString(MailItem mi) {
-        return Strings.nullToEmpty(DbTag.serializeTags(mi.getTags()));
+    @VisibleForTesting
+    public static String getTagString(String[] tags) {
+        if (tags == null || tags.length == 0) {
+            return "";
+        }
+
+        // we use colon-delimited strings for legacy reasons
+        StringBuilder serialized = new StringBuilder();
+        for (int i = 0; i < tags.length; i++) {
+            if (i > 0) {
+                serialized.append(':');
+            }
+            serialized.append(tags[i].replace("\\", "\\\\").replace(":", "\\:"));
+        }
+        return serialized.toString();
+    }
+
+    public static String[] getTagNames(String serialized) {
+        // we use colon-delimited strings for legacy reasons
+        if (serialized.indexOf(':') == -1) {
+            return new String[] { serialized };
+        }
+
+        StringBuilder tag = new StringBuilder();
+        List<String> tags = Lists.newArrayList();
+        boolean escaped = false;
+        for (int i = 0, len = serialized.length(); i <= len; i++) {
+            char c = i == len ? ':' : serialized.charAt(i);
+            if (escaped) {
+                tag.append(c);
+                escaped = false;
+            } else if (c == '\\') {
+                escaped = true;
+            } else if (c == ':') {
+                if (tag.length() > 0) {
+                    tags.add(tag.toString());
+                    tag.setLength(0);
+                }
+            } else {
+                tag.append(c);
+            }
+        }
+        return tags.toArray(new String[tags.size()]);
     }
 
     private boolean isOldTags() {
@@ -169,6 +213,7 @@ public class ItemData {
     }
 
     public boolean tagsEqual(MailItem mi) {
-        return isOldTags() ? tags.equals(mi.getTags()) : tags.equals(getTagString(mi));
+        // FIXME: may not work with misordered tags
+        return isOldTags() ? tags.equals(Joiner.on(',').join(mi.getTagIds())) : tags.equals(getTagString(mi.getTags()));
     }
 }
