@@ -6529,19 +6529,16 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1318" name="zimbraPrefOutOfOfficeExternalReplyEnabled" type="boolean" cardinality="single" optionalIn="account" since="8.0.0">
-  <desc>whether or not out of office reply to external senders is enabled</desc>
+  <desc>If TRUE, send zimbraPrefOutOfOfficeExternalReply to external senders.  External senders are specified by zimbraInternalSendersDomain and zimbraPrefExternalSendersType.</desc>
 </attr>
 
-<attr id="1319" name="zimbraOutOfOfficeInternalSendersDomain" type="string" cardinality="multi" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.0.0">
-  <desc>additional domains considered as internal for out of office reply</desc>
+<attr id="1319" name="zimbraInternalSendersDomain" type="string" cardinality="multi" optionalIn="account,cos,domain" flags="accountCosDomainInherited" since="8.0.0">
+  <desc>additional domains considered as internal w.r.t. recipient</desc>
 </attr>
 
-<attr id="1320" name="zimbraPrefOutOfOfficeExternalSenders" type="enum" value="all,ab" cardinality="single" optionalIn="account" since="8.0.0">
-  <desc>
-    defining external senders for out of office reply
-    all - all external senders
-    ab  - external senders in Address Book
-  </desc>
+<attr id="1320" name="zimbraPrefExternalSendersType" type="enum" value="ALL,ALLNOTINAB" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+  <defaultCOSValue>ALL</defaultCOSValue>
+  <desc>Specifies the meaning of an external sender.  "ALL" means users whose domain doesn't match the recipient's or zimbraInternalSendersDomain.  "ALLNOTINAB" means "ALL" minus users who are in the recipient's address book.</desc>
 </attr>
 
 <attr id="1321" name="zimbraReverseProxyAdminEnabled" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.0">

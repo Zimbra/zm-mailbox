@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111018-1645 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111019-1443 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -17208,6 +17208,140 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * additional domains considered as internal w.r.t. recipient
+     *
+     * @return zimbraInternalSendersDomain, or empty array if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public String[] getInternalSendersDomain() {
+        return getMultiAttr(Provisioning.A_zimbraInternalSendersDomain);
+    }
+
+    /**
+     * additional domains considered as internal w.r.t. recipient
+     *
+     * @param zimbraInternalSendersDomain new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public void setInternalSendersDomain(String[] zimbraInternalSendersDomain) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInternalSendersDomain, zimbraInternalSendersDomain);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * additional domains considered as internal w.r.t. recipient
+     *
+     * @param zimbraInternalSendersDomain new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public Map<String,Object> setInternalSendersDomain(String[] zimbraInternalSendersDomain, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInternalSendersDomain, zimbraInternalSendersDomain);
+        return attrs;
+    }
+
+    /**
+     * additional domains considered as internal w.r.t. recipient
+     *
+     * @param zimbraInternalSendersDomain new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public void addInternalSendersDomain(String zimbraInternalSendersDomain) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraInternalSendersDomain, zimbraInternalSendersDomain);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * additional domains considered as internal w.r.t. recipient
+     *
+     * @param zimbraInternalSendersDomain new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public Map<String,Object> addInternalSendersDomain(String zimbraInternalSendersDomain, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraInternalSendersDomain, zimbraInternalSendersDomain);
+        return attrs;
+    }
+
+    /**
+     * additional domains considered as internal w.r.t. recipient
+     *
+     * @param zimbraInternalSendersDomain existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public void removeInternalSendersDomain(String zimbraInternalSendersDomain) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraInternalSendersDomain, zimbraInternalSendersDomain);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * additional domains considered as internal w.r.t. recipient
+     *
+     * @param zimbraInternalSendersDomain existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public Map<String,Object> removeInternalSendersDomain(String zimbraInternalSendersDomain, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraInternalSendersDomain, zimbraInternalSendersDomain);
+        return attrs;
+    }
+
+    /**
+     * additional domains considered as internal w.r.t. recipient
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public void unsetInternalSendersDomain() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInternalSendersDomain, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * additional domains considered as internal w.r.t. recipient
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1319)
+    public Map<String,Object> unsetInternalSendersDomain(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraInternalSendersDomain, "");
+        return attrs;
+    }
+
+    /**
      * set to true for admin accounts
      *
      * @return zimbraIsAdminAccount, or false if unset
@@ -25537,140 +25671,6 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * additional domains considered as internal for out of office reply
-     *
-     * @return zimbraOutOfOfficeInternalSendersDomain, or empty array if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1319)
-    public String[] getOutOfOfficeInternalSendersDomain() {
-        return getMultiAttr(Provisioning.A_zimbraOutOfOfficeInternalSendersDomain);
-    }
-
-    /**
-     * additional domains considered as internal for out of office reply
-     *
-     * @param zimbraOutOfOfficeInternalSendersDomain new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1319)
-    public void setOutOfOfficeInternalSendersDomain(String[] zimbraOutOfOfficeInternalSendersDomain) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, zimbraOutOfOfficeInternalSendersDomain);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * additional domains considered as internal for out of office reply
-     *
-     * @param zimbraOutOfOfficeInternalSendersDomain new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1319)
-    public Map<String,Object> setOutOfOfficeInternalSendersDomain(String[] zimbraOutOfOfficeInternalSendersDomain, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, zimbraOutOfOfficeInternalSendersDomain);
-        return attrs;
-    }
-
-    /**
-     * additional domains considered as internal for out of office reply
-     *
-     * @param zimbraOutOfOfficeInternalSendersDomain new to add to existing values
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1319)
-    public void addOutOfOfficeInternalSendersDomain(String zimbraOutOfOfficeInternalSendersDomain) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, zimbraOutOfOfficeInternalSendersDomain);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * additional domains considered as internal for out of office reply
-     *
-     * @param zimbraOutOfOfficeInternalSendersDomain new to add to existing values
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1319)
-    public Map<String,Object> addOutOfOfficeInternalSendersDomain(String zimbraOutOfOfficeInternalSendersDomain, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, zimbraOutOfOfficeInternalSendersDomain);
-        return attrs;
-    }
-
-    /**
-     * additional domains considered as internal for out of office reply
-     *
-     * @param zimbraOutOfOfficeInternalSendersDomain existing value to remove
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1319)
-    public void removeOutOfOfficeInternalSendersDomain(String zimbraOutOfOfficeInternalSendersDomain) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, zimbraOutOfOfficeInternalSendersDomain);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * additional domains considered as internal for out of office reply
-     *
-     * @param zimbraOutOfOfficeInternalSendersDomain existing value to remove
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1319)
-    public Map<String,Object> removeOutOfOfficeInternalSendersDomain(String zimbraOutOfOfficeInternalSendersDomain, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, zimbraOutOfOfficeInternalSendersDomain);
-        return attrs;
-    }
-
-    /**
-     * additional domains considered as internal for out of office reply
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1319)
-    public void unsetOutOfOfficeInternalSendersDomain() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * additional domains considered as internal for out of office reply
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1319)
-    public Map<String,Object> unsetOutOfOfficeInternalSendersDomain(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraOutOfOfficeInternalSendersDomain, "");
-        return attrs;
-    }
-
-    /**
      * regex of alllowed characters in password
      *
      * @return zimbraPasswordAllowedChars, or null if unset
@@ -33364,6 +33364,169 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
+     * Specifies the meaning of an external sender. &quot;ALL&quot; means
+     * users whose domain doesn&#039;t match the recipient&#039;s or
+     * zimbraInternalSendersDomain. &quot;ALLNOTINAB&quot; means
+     * &quot;ALL&quot; minus users who are in the recipient&#039;s address
+     * book.
+     *
+     * <p>Valid values: [ALL, ALLNOTINAB]
+     *
+     * @return zimbraPrefExternalSendersType, or ZAttrProvisioning.PrefExternalSendersType.ALL if unset and/or has invalid value
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1320)
+    public ZAttrProvisioning.PrefExternalSendersType getPrefExternalSendersType() {
+        try { String v = getAttr(Provisioning.A_zimbraPrefExternalSendersType); return v == null ? ZAttrProvisioning.PrefExternalSendersType.ALL : ZAttrProvisioning.PrefExternalSendersType.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefExternalSendersType.ALL; }
+    }
+
+    /**
+     * Specifies the meaning of an external sender. &quot;ALL&quot; means
+     * users whose domain doesn&#039;t match the recipient&#039;s or
+     * zimbraInternalSendersDomain. &quot;ALLNOTINAB&quot; means
+     * &quot;ALL&quot; minus users who are in the recipient&#039;s address
+     * book.
+     *
+     * <p>Valid values: [ALL, ALLNOTINAB]
+     *
+     * @return zimbraPrefExternalSendersType, or "ALL" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1320)
+    public String getPrefExternalSendersTypeAsString() {
+        return getAttr(Provisioning.A_zimbraPrefExternalSendersType, "ALL");
+    }
+
+    /**
+     * Specifies the meaning of an external sender. &quot;ALL&quot; means
+     * users whose domain doesn&#039;t match the recipient&#039;s or
+     * zimbraInternalSendersDomain. &quot;ALLNOTINAB&quot; means
+     * &quot;ALL&quot; minus users who are in the recipient&#039;s address
+     * book.
+     *
+     * <p>Valid values: [ALL, ALLNOTINAB]
+     *
+     * @param zimbraPrefExternalSendersType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1320)
+    public void setPrefExternalSendersType(ZAttrProvisioning.PrefExternalSendersType zimbraPrefExternalSendersType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefExternalSendersType, zimbraPrefExternalSendersType.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specifies the meaning of an external sender. &quot;ALL&quot; means
+     * users whose domain doesn&#039;t match the recipient&#039;s or
+     * zimbraInternalSendersDomain. &quot;ALLNOTINAB&quot; means
+     * &quot;ALL&quot; minus users who are in the recipient&#039;s address
+     * book.
+     *
+     * <p>Valid values: [ALL, ALLNOTINAB]
+     *
+     * @param zimbraPrefExternalSendersType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1320)
+    public Map<String,Object> setPrefExternalSendersType(ZAttrProvisioning.PrefExternalSendersType zimbraPrefExternalSendersType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefExternalSendersType, zimbraPrefExternalSendersType.toString());
+        return attrs;
+    }
+
+    /**
+     * Specifies the meaning of an external sender. &quot;ALL&quot; means
+     * users whose domain doesn&#039;t match the recipient&#039;s or
+     * zimbraInternalSendersDomain. &quot;ALLNOTINAB&quot; means
+     * &quot;ALL&quot; minus users who are in the recipient&#039;s address
+     * book.
+     *
+     * <p>Valid values: [ALL, ALLNOTINAB]
+     *
+     * @param zimbraPrefExternalSendersType new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1320)
+    public void setPrefExternalSendersTypeAsString(String zimbraPrefExternalSendersType) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefExternalSendersType, zimbraPrefExternalSendersType);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specifies the meaning of an external sender. &quot;ALL&quot; means
+     * users whose domain doesn&#039;t match the recipient&#039;s or
+     * zimbraInternalSendersDomain. &quot;ALLNOTINAB&quot; means
+     * &quot;ALL&quot; minus users who are in the recipient&#039;s address
+     * book.
+     *
+     * <p>Valid values: [ALL, ALLNOTINAB]
+     *
+     * @param zimbraPrefExternalSendersType new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1320)
+    public Map<String,Object> setPrefExternalSendersTypeAsString(String zimbraPrefExternalSendersType, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefExternalSendersType, zimbraPrefExternalSendersType);
+        return attrs;
+    }
+
+    /**
+     * Specifies the meaning of an external sender. &quot;ALL&quot; means
+     * users whose domain doesn&#039;t match the recipient&#039;s or
+     * zimbraInternalSendersDomain. &quot;ALLNOTINAB&quot; means
+     * &quot;ALL&quot; minus users who are in the recipient&#039;s address
+     * book.
+     *
+     * <p>Valid values: [ALL, ALLNOTINAB]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1320)
+    public void unsetPrefExternalSendersType() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefExternalSendersType, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Specifies the meaning of an external sender. &quot;ALL&quot; means
+     * users whose domain doesn&#039;t match the recipient&#039;s or
+     * zimbraInternalSendersDomain. &quot;ALLNOTINAB&quot; means
+     * &quot;ALL&quot; minus users who are in the recipient&#039;s address
+     * book.
+     *
+     * <p>Valid values: [ALL, ALLNOTINAB]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1320)
+    public Map<String,Object> unsetPrefExternalSendersType(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefExternalSendersType, "");
+        return attrs;
+    }
+
+    /**
      * indicates which application to use for file sharing
      *
      * <p>Valid values: [octopus, briefcase]
@@ -39689,7 +39852,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether or not out of office reply to external senders is enabled
+     * If TRUE, send zimbraPrefOutOfOfficeExternalReply to external senders.
+     * External senders are specified by zimbraInternalSendersDomain and
+     * zimbraPrefExternalSendersType.
      *
      * @return zimbraPrefOutOfOfficeExternalReplyEnabled, or false if unset
      *
@@ -39701,7 +39866,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether or not out of office reply to external senders is enabled
+     * If TRUE, send zimbraPrefOutOfOfficeExternalReply to external senders.
+     * External senders are specified by zimbraInternalSendersDomain and
+     * zimbraPrefExternalSendersType.
      *
      * @param zimbraPrefOutOfOfficeExternalReplyEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -39716,7 +39883,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether or not out of office reply to external senders is enabled
+     * If TRUE, send zimbraPrefOutOfOfficeExternalReply to external senders.
+     * External senders are specified by zimbraInternalSendersDomain and
+     * zimbraPrefExternalSendersType.
      *
      * @param zimbraPrefOutOfOfficeExternalReplyEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -39732,7 +39901,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether or not out of office reply to external senders is enabled
+     * If TRUE, send zimbraPrefOutOfOfficeExternalReply to external senders.
+     * External senders are specified by zimbraInternalSendersDomain and
+     * zimbraPrefExternalSendersType.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -39746,7 +39917,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * whether or not out of office reply to external senders is enabled
+     * If TRUE, send zimbraPrefOutOfOfficeExternalReply to external senders.
+     * External senders are specified by zimbraInternalSendersDomain and
+     * zimbraPrefExternalSendersType.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -39757,145 +39930,6 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetPrefOutOfOfficeExternalReplyEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefOutOfOfficeExternalReplyEnabled, "");
-        return attrs;
-    }
-
-    /**
-     * defining external senders for out of office reply all - all external
-     * senders ab - external senders in Address Book
-     *
-     * <p>Valid values: [all, ab]
-     *
-     * @return zimbraPrefOutOfOfficeExternalSenders, or null if unset and/or has invalid value
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1320)
-    public ZAttrProvisioning.PrefOutOfOfficeExternalSenders getPrefOutOfOfficeExternalSenders() {
-        try { String v = getAttr(Provisioning.A_zimbraPrefOutOfOfficeExternalSenders); return v == null ? null : ZAttrProvisioning.PrefOutOfOfficeExternalSenders.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
-    }
-
-    /**
-     * defining external senders for out of office reply all - all external
-     * senders ab - external senders in Address Book
-     *
-     * <p>Valid values: [all, ab]
-     *
-     * @return zimbraPrefOutOfOfficeExternalSenders, or null if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1320)
-    public String getPrefOutOfOfficeExternalSendersAsString() {
-        return getAttr(Provisioning.A_zimbraPrefOutOfOfficeExternalSenders, null);
-    }
-
-    /**
-     * defining external senders for out of office reply all - all external
-     * senders ab - external senders in Address Book
-     *
-     * <p>Valid values: [all, ab]
-     *
-     * @param zimbraPrefOutOfOfficeExternalSenders new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1320)
-    public void setPrefOutOfOfficeExternalSenders(ZAttrProvisioning.PrefOutOfOfficeExternalSenders zimbraPrefOutOfOfficeExternalSenders) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeExternalSenders, zimbraPrefOutOfOfficeExternalSenders.toString());
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * defining external senders for out of office reply all - all external
-     * senders ab - external senders in Address Book
-     *
-     * <p>Valid values: [all, ab]
-     *
-     * @param zimbraPrefOutOfOfficeExternalSenders new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1320)
-    public Map<String,Object> setPrefOutOfOfficeExternalSenders(ZAttrProvisioning.PrefOutOfOfficeExternalSenders zimbraPrefOutOfOfficeExternalSenders, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeExternalSenders, zimbraPrefOutOfOfficeExternalSenders.toString());
-        return attrs;
-    }
-
-    /**
-     * defining external senders for out of office reply all - all external
-     * senders ab - external senders in Address Book
-     *
-     * <p>Valid values: [all, ab]
-     *
-     * @param zimbraPrefOutOfOfficeExternalSenders new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1320)
-    public void setPrefOutOfOfficeExternalSendersAsString(String zimbraPrefOutOfOfficeExternalSenders) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeExternalSenders, zimbraPrefOutOfOfficeExternalSenders);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * defining external senders for out of office reply all - all external
-     * senders ab - external senders in Address Book
-     *
-     * <p>Valid values: [all, ab]
-     *
-     * @param zimbraPrefOutOfOfficeExternalSenders new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1320)
-    public Map<String,Object> setPrefOutOfOfficeExternalSendersAsString(String zimbraPrefOutOfOfficeExternalSenders, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeExternalSenders, zimbraPrefOutOfOfficeExternalSenders);
-        return attrs;
-    }
-
-    /**
-     * defining external senders for out of office reply all - all external
-     * senders ab - external senders in Address Book
-     *
-     * <p>Valid values: [all, ab]
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1320)
-    public void unsetPrefOutOfOfficeExternalSenders() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeExternalSenders, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * defining external senders for out of office reply all - all external
-     * senders ab - external senders in Address Book
-     *
-     * <p>Valid values: [all, ab]
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1320)
-    public Map<String,Object> unsetPrefOutOfOfficeExternalSenders(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeExternalSenders, "");
         return attrs;
     }
 
@@ -46026,174 +46060,6 @@ public abstract class ZAttrAccount  extends MailTarget {
     public Map<String,Object> unsetTextAnalyzer(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraTextAnalyzer, "");
-        return attrs;
-    }
-
-    /**
-     * binary data
-     *
-     * @return zimbraUnittestBinary, or null if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public byte[] getUnittestBinary() {
-        return getBinaryAttr(Provisioning.A_zimbraUnittestBinary);
-    }
-
-    /**
-     * binary data
-     *
-     * @return zimbraUnittestBinary, or null if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public String getUnittestBinaryAsString() {
-        return getAttr(Provisioning.A_zimbraUnittestBinary, null);
-    }
-
-    /**
-     * binary data
-     *
-     * @param zimbraUnittestBinary new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public void setUnittestBinary(byte[] zimbraUnittestBinary) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestBinary, zimbraUnittestBinary==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestBinary));
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * binary data
-     *
-     * @param zimbraUnittestBinary new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public Map<String,Object> setUnittestBinary(byte[] zimbraUnittestBinary, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestBinary, zimbraUnittestBinary==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestBinary));
-        return attrs;
-    }
-
-    /**
-     * binary data
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public void unsetUnittestBinary() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestBinary, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * binary data
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public Map<String,Object> unsetUnittestBinary(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestBinary, "");
-        return attrs;
-    }
-
-    /**
-     * binary data
-     *
-     * @return zimbraUnittestCertificate, or null if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public byte[] getUnittestCertificate() {
-        return getBinaryAttr(Provisioning.A_zimbraUnittestCertificate);
-    }
-
-    /**
-     * binary data
-     *
-     * @return zimbraUnittestCertificate, or null if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public String getUnittestCertificateAsString() {
-        return getAttr(Provisioning.A_zimbraUnittestCertificate, null);
-    }
-
-    /**
-     * binary data
-     *
-     * @param zimbraUnittestCertificate new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public void setUnittestCertificate(byte[] zimbraUnittestCertificate) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestCertificate, zimbraUnittestCertificate==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestCertificate));
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * binary data
-     *
-     * @param zimbraUnittestCertificate new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public Map<String,Object> setUnittestCertificate(byte[] zimbraUnittestCertificate, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestCertificate, zimbraUnittestCertificate==null ? "" : ByteUtil.encodeLDAPBase64(zimbraUnittestCertificate));
-        return attrs;
-    }
-
-    /**
-     * binary data
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public void unsetUnittestCertificate() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestCertificate, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * binary data
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public Map<String,Object> unsetUnittestCertificate(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraUnittestCertificate, "");
         return attrs;
     }
 
