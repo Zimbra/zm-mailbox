@@ -1,0 +1,11 @@
+# This file is used for jetty logging before service webapp is loaded when
+# log4j switches to the log4j.properties file in /opt/zimbra/conf.
+
+log4j.threshhold=OFF
+
+log4j.rootLogger=INFO,CONSOLE
+
+# CONSOLE is set to be a ConsoleAppender which outputs to System.out.
+log4j.appender.CONSOLE=org.apache.log4j.ConsoleAppender
+log4j.appender.CONSOLE.layout=org.apache.log4j.PatternLayout
+log4j.appender.CONSOLE.layout.ConversionPattern=%-4r %-5p [%t] %c{1} - %m%n
