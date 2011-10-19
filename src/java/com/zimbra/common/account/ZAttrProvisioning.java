@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111019-1443 */
+    /* build: 8.0.0_BETA1_1111 ysasaki 20111017-1356 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -7766,7 +7766,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefComposeInNewWindow = "zimbraPrefComposeInNewWindow";
 
     /**
-     * Disables autocomplete matching against the members email address.
+     * Deprecated since: 8.0.0. Since 8.0.0, the contact group can contain
+     * member references, but member references are not searchable.. Orig
+     * desc: Disables autocomplete matching against the members email
+     * address.
      *
      * @since ZCS 6.0.7
      */
