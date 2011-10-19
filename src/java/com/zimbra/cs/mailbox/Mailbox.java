@@ -7009,12 +7009,25 @@ public class Mailbox {
         }
         int lastChangeID = octxt != null && octxt.change != -1 ? octxt.change : getLastChangeID();
 
+        // Delete the items in batches.  (1000 items by default)
         QueryParams params = new QueryParams();
         params.setFolderIds(folderIds).setModifiedSequenceBefore(lastChangeID + 1).setRowLimit(batchSize);
         params.setExcludedTypes(EnumSet.of(MailItem.Type.FOLDER, MailItem.Type.MOUNTPOINT, MailItem.Type.SEARCHFOLDER));
         boolean firstTime = true;
-
         while (true) {
+            // Give other threads a chance to use the mailbox between deletion batches.
+            if (firstTime) {
+                firstTime = false;
+            } else {
+                long sleepMillis = LC.empty_folder_batch_sleep_ms.longValue();
+                try {
+                    ZimbraLog.mailbox.debug("emptyLargeFolder() sleeping for %dms", sleepMillis);
+                    Thread.sleep(sleepMillis);
+                } catch (InterruptedException e) {
+                    ZimbraLog.mailbox.warn("Sleep was interrupted", e);
+                }
+            }
+
             // Lock this mailbox to make sure that no one modifies the items we're about to delete.
             lock.lock();
             try {
@@ -7030,17 +7043,6 @@ public class Mailbox {
                     break;
                 }
 
-                if (firstTime) {
-                    firstTime = false;
-                } else {
-                    long sleepMillis = LC.empty_folder_batch_sleep_ms.longValue();
-                    try {
-                        ZimbraLog.mailbox.debug("emptyLargeFolder() sleeping for %dms", sleepMillis);
-                        Thread.sleep(sleepMillis);
-                    } catch (InterruptedException e) {
-                        ZimbraLog.mailbox.warn("Sleep was interrupted", e);
-                    }
-                }
                 delete(octxt, ArrayUtil.toIntArray(itemIds), MailItem.Type.UNKNOWN, null);
             } finally {
                 lock.release();
