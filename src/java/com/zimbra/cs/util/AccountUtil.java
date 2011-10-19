@@ -261,6 +261,11 @@ public class AccountUtil {
                     if (StringUtil.isNullOrEmpty(addr)) {
                         continue;
                     }
+                    
+                    if (addresses.contains(addr.toLowerCase())) {
+                        continue;
+                    }
+                    
                     if (!matchSendAs) {
                         // Find addresses that point to a different account.  We want to distinguish between sending
                         // as another user and sending as an external address controlled/owned by this user.
