@@ -16,7 +16,7 @@ package com.zimbra.cs.gal;
 
 public class GalFilter {
     static final String DEFAULT_SYNC_FILTER = 
-        "(&(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))(!(zimbraHideInGal=TRUE))(!(zimbraIsSystemResource=TRUE)))";
+        "(&(|(objectclass=zimbraAccount)(objectclass=zimbraDistributionList))(!(&(objectclass=zimbraCalendarResource)(!(zimbraAccountStatus=active))))(!(zimbraHideInGal=TRUE))(!(zimbraIsSystemResource=TRUE)))";
 
     static enum NamedFilter {
         zimbraAccounts,
