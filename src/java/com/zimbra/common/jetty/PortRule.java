@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.mortbay.jetty.handler.rewrite.Rule;
+import org.eclipse.jetty.rewrite.handler.Rule;
 
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -128,7 +128,7 @@ public class PortRule extends Rule {
      */
     public String toString()
     {
-        return super.toString()+"["+_port+"]"+"["+_regex.toString()+"]"+"["+_httpErrorStatusRegexNotmatched+"]";                
+        return super.toString()+"["+_port+"]"+"["+ ((_regex != null) ? _regex.toString() : "") +"]"+"["+_httpErrorStatusRegexNotmatched+"]";                
     }
 
 }

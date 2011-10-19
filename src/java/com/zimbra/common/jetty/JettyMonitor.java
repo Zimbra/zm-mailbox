@@ -15,7 +15,7 @@
 
 package com.zimbra.common.jetty;
 
-import org.mortbay.thread.ThreadPool;
+import org.eclipse.jetty.util.thread.ThreadPool;
 
 /**
  * Holds on to a reference to the Jetty thread pool.  Called
