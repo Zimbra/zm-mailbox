@@ -95,6 +95,39 @@ public final class ContactAutoCompleteTest {
     }
 
     @Test
+    public void reservedQueryTerm() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Map<String, Object> fields = new HashMap<String, Object>();
+        fields.put(ContactConstants.A_firstName, "not and or");
+        fields.put(ContactConstants.A_lastName, "subject: from:");
+        fields.put(ContactConstants.A_email, "test@zimbra.com");
+        mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        ContactAutoComplete autocomplete = new ContactAutoComplete(mbox.getAccount(), new OperationContext(mbox));
+        Assert.assertEquals(1, autocomplete.query("not", null, 100).entries.size());
+        Assert.assertEquals(1, autocomplete.query("not and", null, 100).entries.size());
+        Assert.assertEquals(1, autocomplete.query("not and or", null, 100).entries.size());
+        Assert.assertEquals(1, autocomplete.query("subject:", null, 100).entries.size());
+        Assert.assertEquals(1, autocomplete.query("subject: from:", null, 100).entries.size());
+    }
+
+    @Test
+    public void dash() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Map<String, Object> fields = new HashMap<String, Object>();
+        fields.put(ContactConstants.A_firstName, "Conf - Hillview");
+        fields.put(ContactConstants.A_lastName, "test.server-vmware - dash");
+        fields.put(ContactConstants.A_email, "test@zimbra.com");
+        mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        ContactAutoComplete autocomplete = new ContactAutoComplete(mbox.getAccount(), new OperationContext(mbox));
+        Assert.assertEquals(1, autocomplete.query("conf -", null, 100).entries.size());
+        Assert.assertEquals(1, autocomplete.query("conf - h", null, 100).entries.size());
+        Assert.assertEquals(1, autocomplete.query("test.server-vmware -", null, 100).entries.size());
+        Assert.assertEquals(1, autocomplete.query("test.server-vmware - d", null, 100).entries.size());
+    }
+
+    @Test
     public void hitGroup() throws Exception {
         ContactAutoComplete.AutoCompleteResult result = new ContactAutoComplete.AutoCompleteResult(10);
         result.rankings = new ContactRankings(MockProvisioning.DEFAULT_ACCOUNT_ID);

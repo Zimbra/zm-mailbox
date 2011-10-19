@@ -251,6 +251,7 @@ public class ContactAutoComplete {
         }
     }
 
+    private static final Splitter TOKEN_SPLITTER = Splitter.on(CharMatcher.WHITESPACE).omitEmptyStrings().trimResults();
     public static final int FOLDER_ID_GAL = 0;
     public static final int FOLDER_ID_UNKNOWN = -1;
 
@@ -764,7 +765,10 @@ public class ContactAutoComplete {
             buf.append(folder instanceof Mountpoint ? "underid:" : "inid:");
             buf.append(fid);
         }
-        buf.append(") ").append(query.replace("\"", "\\\"")); // escape quotes
+        buf.append(')');
+        for (String token : TOKEN_SPLITTER.split(query)) {
+            buf.append(" \"").append(token.replace("\"", "\\\"")).append('"');
+        }
         return buf.toString();
     }
 }
