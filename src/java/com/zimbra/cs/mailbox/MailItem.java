@@ -1658,12 +1658,8 @@ public abstract class MailItem implements Comparable<MailItem> {
      *
      * @param reason  The bitmask of changes made to the item.
      * @see PendingModifications.Change */
-    void markItemModified(int reason) {
-        try {
-            mMailbox.markItemModified(this, reason, snapshotItem());
-        } catch (ServiceException e) {
-            ZimbraLog.mailbox.warn("error cloning item with id %s", mId, e);
-        }
+    void markItemModified(int reason) throws ServiceException {
+        mMailbox.markItemModified(this, reason, snapshotItem());
     }
 
     /** Adds this item to the {@link Mailbox}'s list of blobs to be removed
@@ -2364,6 +2360,7 @@ public abstract class MailItem implements Comparable<MailItem> {
         if (!shareIndex) {
             data.unsetFlag(Flag.FlagInfo.COPIED);
         }
+        data.unsetFlag(Flag.FlagInfo.IN_DUMPSTER);  // The copy is never in dumpster.
         data.metadata = encodeMetadata().toString();
         data.contentChanged(mMailbox);
 

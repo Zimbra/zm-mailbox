@@ -123,7 +123,7 @@ public class Tag extends MailItem {
      *  <i>(Total size not currently tracked.)</i>
      * @param countDelta    The change in item count, negative or positive.
      * @param deletedDelta  The change in number of IMAP \Deleted items.*/
-    void updateSize(int countDelta, int deletedDelta) {
+    void updateSize(int countDelta, int deletedDelta) throws ServiceException {
         int delta = countDelta - deletedDelta;
         if (delta == 0 || !trackUnread()) {
             return;

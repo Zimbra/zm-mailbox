@@ -117,7 +117,7 @@ public class VirtualConversation extends Conversation {
     }
 
     @Override
-    protected void inheritedCustomDataChanged(Message msg, CustomMetadata custom) {
+    protected void inheritedCustomDataChanged(Message msg, CustomMetadata custom) throws ServiceException {
         markItemModified(Change.METADATA);
         mExtendedData = MetadataCallback.duringConversationAdd(null, msg);
     }

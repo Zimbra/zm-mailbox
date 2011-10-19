@@ -1119,7 +1119,10 @@ public class Mailbox {
      * @param reason  The bitmask describing the modified item properties.
      * @param preModifyItemSnapshot
      * @see com.zimbra.cs.session.PendingModifications.Change */
-    void markItemModified(MailItem item, int reason, MailItem preModifyItemSnapshot) {
+    void markItemModified(MailItem item, int reason, MailItem preModifyItemSnapshot) throws ServiceException {
+        if (item.inDumpster()) {
+            throw MailServiceException.IMMUTABLE_OBJECT(item.getId());
+        }
         currentChange.dirty.recordModified(currentChange.getOperation(), item, reason, currentChange.timestamp, preModifyItemSnapshot);
     }
 

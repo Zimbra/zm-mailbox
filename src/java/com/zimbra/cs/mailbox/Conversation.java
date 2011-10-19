@@ -129,7 +129,7 @@ public class Conversation extends MailItem {
         return true;
     }
 
-    void recalculateCounts(List<Message> msgs) {
+    void recalculateCounts(List<Message> msgs) throws ServiceException {
         markItemModified(Change.TAGS | Change.FLAGS | Change.UNREAD);
         Set<String> tags = new HashSet<String>();
         mData.unreadCount = 0;

@@ -526,7 +526,7 @@ public class Folder extends MailItem {
 
     /** Sets the folder's UIDNEXT item ID highwater mark to one more than
      *  the Mailbox's last assigned item ID. */
-    void updateUIDNEXT() {
+    void updateUIDNEXT() throws ServiceException {
         int uidnext = mMailbox.getLastItemId() + 1;
         if (trackImapStats() && imapUIDNEXT < uidnext) {
             markItemModified(Change.SIZE);
