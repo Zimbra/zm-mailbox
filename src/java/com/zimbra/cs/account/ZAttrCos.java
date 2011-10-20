@@ -42,7 +42,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111020-1057 */
+    /* build: 8.0.0_BETA1_1111 pshao 20111020-1518 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -10798,6 +10798,184 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetFileLifetime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFileLifetime, "");
+        return attrs;
+    }
+
+    /**
+     * how long a file version is kept around. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * <p>Use getFileVersionLifetimeAsString to access value as a string.
+     *
+     * @see #getFileVersionLifetimeAsString()
+     *
+     * @return zimbraFileVersionLifetime in millseconds, or -1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1325)
+    public long getFileVersionLifetime() {
+        return getTimeInterval(Provisioning.A_zimbraFileVersionLifetime, -1L);
+    }
+
+    /**
+     * how long a file version is kept around. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @return zimbraFileVersionLifetime, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1325)
+    public String getFileVersionLifetimeAsString() {
+        return getAttr(Provisioning.A_zimbraFileVersionLifetime, null);
+    }
+
+    /**
+     * how long a file version is kept around. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param zimbraFileVersionLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1325)
+    public void setFileVersionLifetime(String zimbraFileVersionLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileVersionLifetime, zimbraFileVersionLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * how long a file version is kept around. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param zimbraFileVersionLifetime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1325)
+    public Map<String,Object> setFileVersionLifetime(String zimbraFileVersionLifetime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileVersionLifetime, zimbraFileVersionLifetime);
+        return attrs;
+    }
+
+    /**
+     * how long a file version is kept around. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1325)
+    public void unsetFileVersionLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileVersionLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * how long a file version is kept around. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1325)
+    public Map<String,Object> unsetFileVersionLifetime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileVersionLifetime, "");
+        return attrs;
+    }
+
+    /**
+     * whether file versioning is enabled
+     *
+     * @return zimbraFileVersioningEnabled, or false if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1324)
+    public boolean isFileVersioningEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraFileVersioningEnabled, false);
+    }
+
+    /**
+     * whether file versioning is enabled
+     *
+     * @param zimbraFileVersioningEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1324)
+    public void setFileVersioningEnabled(boolean zimbraFileVersioningEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileVersioningEnabled, zimbraFileVersioningEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether file versioning is enabled
+     *
+     * @param zimbraFileVersioningEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1324)
+    public Map<String,Object> setFileVersioningEnabled(boolean zimbraFileVersioningEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileVersioningEnabled, zimbraFileVersioningEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * whether file versioning is enabled
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1324)
+    public void unsetFileVersioningEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileVersioningEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * whether file versioning is enabled
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1324)
+    public Map<String,Object> unsetFileVersioningEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileVersioningEnabled, "");
         return attrs;
     }
 
