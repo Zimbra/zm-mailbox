@@ -6552,7 +6552,7 @@ TODO: delete them permanently from here
   <desc>SSL proxy port for admin console UI</desc>
 </attr>
 
-<attr id="1323" name="zimbraPrefTasksFilterBy" type="enum" value="notstarted,completed,inprogress,waiting,deferred,todolist" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
+<attr id="1323" name="zimbraPrefTasksFilterBy" type="enum" value="NOTSTARTED,COMPLETED,INPROGRESS,WAITING,DEFERRED,TODO" cardinality="single" optionalIn="account,cos" flags="accountInherited" since="8.0.0">
   <desc>preferred task filtering option in UI</desc>
 </attr>
 

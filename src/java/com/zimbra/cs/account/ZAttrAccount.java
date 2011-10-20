@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 ysasaki 20111017-1356 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111020-1057 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -42911,7 +42911,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * preferred task filtering option in UI
      *
-     * <p>Valid values: [deferred, notstarted, inprogress, waiting, todolist, completed]
+     * <p>Valid values: [DEFERRED, WAITING, COMPLETED, TODO, INPROGRESS, NOTSTARTED]
      *
      * @return zimbraPrefTasksFilterBy, or null if unset and/or has invalid value
      *
@@ -42925,7 +42925,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * preferred task filtering option in UI
      *
-     * <p>Valid values: [deferred, notstarted, inprogress, waiting, todolist, completed]
+     * <p>Valid values: [DEFERRED, WAITING, COMPLETED, TODO, INPROGRESS, NOTSTARTED]
      *
      * @return zimbraPrefTasksFilterBy, or null if unset
      *
@@ -42939,7 +42939,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * preferred task filtering option in UI
      *
-     * <p>Valid values: [deferred, notstarted, inprogress, waiting, todolist, completed]
+     * <p>Valid values: [DEFERRED, WAITING, COMPLETED, TODO, INPROGRESS, NOTSTARTED]
      *
      * @param zimbraPrefTasksFilterBy new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -42956,7 +42956,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * preferred task filtering option in UI
      *
-     * <p>Valid values: [deferred, notstarted, inprogress, waiting, todolist, completed]
+     * <p>Valid values: [DEFERRED, WAITING, COMPLETED, TODO, INPROGRESS, NOTSTARTED]
      *
      * @param zimbraPrefTasksFilterBy new value
      * @param attrs existing map to populate, or null to create a new map
@@ -42974,7 +42974,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * preferred task filtering option in UI
      *
-     * <p>Valid values: [deferred, notstarted, inprogress, waiting, todolist, completed]
+     * <p>Valid values: [DEFERRED, WAITING, COMPLETED, TODO, INPROGRESS, NOTSTARTED]
      *
      * @param zimbraPrefTasksFilterBy new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -42991,7 +42991,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * preferred task filtering option in UI
      *
-     * <p>Valid values: [deferred, notstarted, inprogress, waiting, todolist, completed]
+     * <p>Valid values: [DEFERRED, WAITING, COMPLETED, TODO, INPROGRESS, NOTSTARTED]
      *
      * @param zimbraPrefTasksFilterBy new value
      * @param attrs existing map to populate, or null to create a new map
@@ -43009,7 +43009,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * preferred task filtering option in UI
      *
-     * <p>Valid values: [deferred, notstarted, inprogress, waiting, todolist, completed]
+     * <p>Valid values: [DEFERRED, WAITING, COMPLETED, TODO, INPROGRESS, NOTSTARTED]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -43025,7 +43025,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * preferred task filtering option in UI
      *
-     * <p>Valid values: [deferred, notstarted, inprogress, waiting, todolist, completed]
+     * <p>Valid values: [DEFERRED, WAITING, COMPLETED, TODO, INPROGRESS, NOTSTARTED]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
