@@ -31,7 +31,7 @@ import com.zimbra.cs.ldap.ZLdapContext;
 
 public class BUG_63722 extends UpgradeOp {
 
-    private static final String ATTR_NAME = Provisioning.A_zimbraFeatureGalAutoCompleteEnabled;
+    private static final String ATTR_NAME = Provisioning.A_zimbraPrefGalAutoCompleteEnabled;
     private static final String OLD_VALUE = ProvisioningConstants.FALSE;
     private static final String NEW_VALUE = ProvisioningConstants.TRUE;
     
