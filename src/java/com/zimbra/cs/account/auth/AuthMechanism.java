@@ -73,6 +73,10 @@ public abstract class AuthMechanism {
         custom;
         
         public static AuthMech fromString(String authMechStr) throws ServiceException {
+            if (authMechStr == null) {
+                return null;
+            }
+            
             try {
                 return AuthMech.valueOf(authMechStr);
             } catch (IllegalArgumentException e) {

@@ -26,7 +26,9 @@ public class AuthMech extends AttributeCallback {
             
             boolean valid = false;
             
-            if (authMech.startsWith(AuthMechanism.AuthMech.custom.name())) {
+            if (authMech == null) {
+                valid = true;
+            } else if (authMech.startsWith(AuthMechanism.AuthMech.custom.name())) {
                 valid = true;
             } else {
                 try {
