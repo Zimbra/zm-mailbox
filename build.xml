@@ -62,9 +62,9 @@
     <property name="lib.dir" location="lib"/>
     <property name="config.dir" location="conf"/>
   <property name="war.web.xml" location="${config.dir}/web.xml${production.suffix}"/>
-    <property name="jetty.xml.file" location='${config.dir}/jetty-7/jetty.xml' />
+    <property name="jetty.xml.file" location='${config.dir}/jetty-7.5/jetty.xml' />
 
-    <property name="spnego.dir" location="${config.dir}/jetty-7/spnego"/>
+    <property name="spnego.dir" location="${config.dir}/jetty-7.5/spnego"/>
 
     <property name="deploy.war" value="${warfile}"/>
     <property name="deploy.host" value="127.0.0.1"/>
@@ -964,11 +964,11 @@
 
   <target name="dev-dist-jetty">
     <copy todir="${dist.jetty.dir}/webapps" file="${warfile}" overwrite="true"/>
-    <copy tofile="${dist.jetty.dir}/etc/jettyrc" file="${config.dir}/jetty-7/jettyrc" overwrite="true"/>
+    <copy tofile="${dist.jetty.dir}/etc/jettyrc" file="${config.dir}/jetty-7.5/jettyrc" overwrite="true"/>
     <copy tofile="${dist.jetty.dir}/etc/jetty.xml" file="${jetty.xml.file}" overwrite="true"/>
-    <copy tofile="${dist.jetty.dir}/etc/start.config" file="${config.dir}/jetty-7/start.config" overwrite="true"/>
+    <copy tofile="${dist.jetty.dir}/etc/start.config" file="${config.dir}/jetty-7.5/start.config" overwrite="true"/>
     <copy tofile="${dist.jetty.dir}/etc/webdefault.xml"
-          file="${config.dir}/jetty-7/webdefault.xml${production.suffix}" overwrite="true"/>
+          file="${config.dir}/jetty-7.5/webdefault.xml${production.suffix}" overwrite="true"/>
     <if>
       <isset property="is-windows"/>
       <then>
@@ -976,7 +976,7 @@
       </then>
     </if>
     <copy tofile="${dist.jetty.dir}/resources/log4j.properties"
-          file="${config.dir}/jetty-7/log4j.properties${production.suffix}" overwrite="true"/>
+          file="${config.dir}/jetty-7.5/log4j.properties${production.suffix}" overwrite="true"/>
     <copy todir="${dist.jetty.dir}/common/lib" overwrite="true">
       <fileset dir="${common.jars.dir}">
         <include name="${ical4j.jar}"/>
