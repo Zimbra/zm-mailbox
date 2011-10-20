@@ -161,8 +161,8 @@ SECTION mta DEPENDS amavis
 SECTION sasl
 	VAR getAllMtaAuthURLs
 	LOCAL sasl_smtpd_mech_list
-	REWRITE cyrus-sasl-2.1.25.3z/etc/saslauthd.conf.in cyrus-sasl-2.1.25.3z/etc/saslauthd.conf
-	REWRITE cyrus-sasl-2.1.25.3z/lib/sasl2/smtpd.conf.in cyrus-sasl-2.1.25.3z/lib/sasl2/smtpd.conf
+	REWRITE conf/saslauthd.conf.in conf/saslauthd.conf
+	REWRITE conf/sasl2/smtpd.conf.in conf/sasl2/smtpd.conf
 	RESTART mta sasl
 
 SECTION webxml
