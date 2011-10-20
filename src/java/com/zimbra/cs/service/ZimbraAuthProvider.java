@@ -26,6 +26,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.ZimbraAuthToken;
+import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.SoapServlet;
 
@@ -90,7 +91,7 @@ public class ZimbraAuthProvider extends AuthProvider{
     }
     
     @Override
-    protected AuthToken authToken(Account acct, boolean isAdmin, String authMech) {
+    protected AuthToken authToken(Account acct, boolean isAdmin, AuthMech authMech) {
         return new ZimbraAuthToken(acct, isAdmin, authMech);
     }
     

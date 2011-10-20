@@ -32,6 +32,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.cs.servlet.ZimbraServlet;
@@ -183,7 +184,7 @@ public abstract class AuthProvider {
      * @return
      * @throws AuthProviderException
      */
-    protected AuthToken authToken(Account acct, boolean isAdmin, String authMech) 
+    protected AuthToken authToken(Account acct, boolean isAdmin, AuthMech authMech) 
     throws AuthProviderException {
         if (acct == null)
             throw AuthProviderException.NOT_SUPPORTED();
@@ -401,7 +402,7 @@ public abstract class AuthProvider {
         return getAuthToken(acct, isAdmin, null);
     }
     
-    public static AuthToken getAuthToken(Account acct, boolean isAdmin, String authMech) 
+    public static AuthToken getAuthToken(Account acct, boolean isAdmin, AuthMech authMech) 
     throws AuthProviderException {
         List<AuthProvider> providers = getProviders();
         for (AuthProvider ap : providers) {

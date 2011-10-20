@@ -34,6 +34,7 @@ import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.auth.AuthContext;
+import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.session.Session;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.util.AccountUtil;
@@ -146,7 +147,7 @@ public class Auth extends AdminDocumentHandler {
                 authCtxt.put(AuthContext.AC_AS_ADMIN, Boolean.TRUE);
                 prov.authAccount(acct, password, AuthContext.Protocol.soap, authCtxt);
                 checkAdmin(acct);
-                String authedByMech = (String) authCtxt.get(AuthContext.AC_AUTHED_BY_MECH);
+                AuthMech authedByMech = (AuthMech) authCtxt.get(AuthContext.AC_AUTHED_BY_MECH);
                 at = AuthProvider.getAuthToken(acct, true, authedByMech);
 
             } catch (ServiceException se) {

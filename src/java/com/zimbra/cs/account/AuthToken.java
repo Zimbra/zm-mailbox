@@ -25,6 +25,8 @@ import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
+
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpState;
@@ -90,7 +92,7 @@ public abstract class AuthToken {
         return null;
     }
     
-    public String getAuthMech() {
+    public AuthMech getAuthMech() {
         return null;
     }
 
