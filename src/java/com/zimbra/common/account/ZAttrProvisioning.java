@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 ysasaki 20111017-1356 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111020-1057 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1077,12 +1077,12 @@ public class ZAttrProvisioning {
     }
 
     public static enum PrefTasksFilterBy {
-        waiting("waiting"),
-        todolist("todolist"),
-        deferred("deferred"),
-        notstarted("notstarted"),
-        inprogress("inprogress"),
-        completed("completed");
+        DEFERRED("DEFERRED"),
+        WAITING("WAITING"),
+        TODO("TODO"),
+        INPROGRESS("INPROGRESS"),
+        COMPLETED("COMPLETED"),
+        NOTSTARTED("NOTSTARTED");
         private String mValue;
         private PrefTasksFilterBy(String value) { mValue = value; }
         public String toString() { return mValue; }
@@ -1092,12 +1092,12 @@ public class ZAttrProvisioning {
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
         }
-        public boolean isWaiting() { return this == waiting;}
-        public boolean isTodolist() { return this == todolist;}
-        public boolean isDeferred() { return this == deferred;}
-        public boolean isNotstarted() { return this == notstarted;}
-        public boolean isInprogress() { return this == inprogress;}
-        public boolean isCompleted() { return this == completed;}
+        public boolean isDEFERRED() { return this == DEFERRED;}
+        public boolean isWAITING() { return this == WAITING;}
+        public boolean isTODO() { return this == TODO;}
+        public boolean isINPROGRESS() { return this == INPROGRESS;}
+        public boolean isCOMPLETED() { return this == COMPLETED;}
+        public boolean isNOTSTARTED() { return this == NOTSTARTED;}
     }
 
     public static enum PrefTasksReadingPaneLocation {
