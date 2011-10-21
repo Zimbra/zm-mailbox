@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111020-1518 */
+    /* build: 8.0.0_BETA1_1111 jhahm 20111020-1917 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5546,9 +5546,7 @@ public class ZAttrProvisioning {
 
     /**
      * Maximum number of messages to delete during a single transaction when
-     * emptying a large folder. When a folder is emptied and it contains more
-     * than zimbraMailEmptyFolderBatchThreshold messages, the operation is
-     * performed in multiple transactions.
+     * emptying a large folder.
      *
      * @since ZCS 6.0.8
      */
@@ -5556,8 +5554,10 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailEmptyFolderBatchSize = "zimbraMailEmptyFolderBatchSize";
 
     /**
-     * Folders that contain more than this many messages will be emptied in
-     * batches of size zimbraMailEmptyFolderBatchSize.
+     * Deprecated since: 8.0.0. Empty folder operation now always deletes
+     * items in batches, hence a threshold is no longer applicable.. Orig
+     * desc: Folders that contain more than this many messages will be
+     * emptied in batches of size zimbraMailEmptyFolderBatchSize.
      *
      * @since ZCS 6.0.13
      */
@@ -10348,22 +10348,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
