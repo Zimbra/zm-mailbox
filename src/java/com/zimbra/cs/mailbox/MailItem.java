@@ -2754,9 +2754,6 @@ public abstract class MailItem implements Comparable<MailItem> {
     /** A record of all the relevant data about a set of items that we're
      *  in the process of deleting via a call to {@link MailItem#delete}. */
     public static class PendingDelete {
-        /** The id of the item that {@link MailItem#delete} was called on. */
-        public int rootId;
-
         /** a bitmask of all the types of MailItems that are being deleted.
          * see {@link MailItem#typeToBitmask} */
         public int deletedTypes;
@@ -2910,7 +2907,17 @@ public abstract class MailItem implements Comparable<MailItem> {
                 // update message counts
                 List<UnderlyingData> unreadData = DbMailItem.getById(mbox, info.unreadIds, Type.MESSAGE);
                 for (UnderlyingData data : unreadData) {
-                    MailItem unread = mbox.getItem(data.setFlag(Flag.FlagInfo.UNCACHED));
+                    // Note: Previous code was: MailItem unread = mbox.getItem(data.setFlag(Flag.FlagInfo.UNCACHED));
+                    //
+                    // We used to mark "data" as uncached, but that was only causing more SQL queries to be run
+                    // because of virtual conversation logic.  A message that doesn't belong to a conversation
+                    // doesn't have a parent, but getParent() tries to create a virtual conversation out of the
+                    // message and fetches the message.  If message isn't found in the cache it must hit the
+                    // database again.  So by adding the message object here, we prevent a redundant SQL query.
+                    // For messages belonging to a real conversation we will have unnecessarily added it to
+                    // the cache during deletion, causing cache churn.  But that's probably better than running
+                    // extra SQL queries for potentially a very large number of messages being deleted.
+                    MailItem unread = mbox.getItem(data);
                     unread.updateUnread(-data.unreadCount, unread.isTagged(Flag.FlagInfo.DELETED) ? -data.unreadCount : 0);
                 }
 
@@ -3040,7 +3047,6 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         Integer id = new Integer(mId);
         PendingDelete info = new PendingDelete();
-        info.rootId = mId;
         info.size   = getTotalSize();
         info.itemIds.add(getType(), id);
 

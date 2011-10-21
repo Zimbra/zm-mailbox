@@ -6986,7 +6986,7 @@ public class Mailbox {
     public void emptyFolder(OperationContext octxt, int folderId, boolean removeSubfolders)
     throws ServiceException {
         int batchSize = Provisioning.getInstance().getLocalServer().getMailEmptyFolderBatchSize();
-        ZimbraLog.mailbox.debug("Emptying large folder %s, removeSubfolders=%b, batchSize=%d",
+        ZimbraLog.mailbox.debug("Emptying folder %s, removeSubfolders=%b, batchSize=%d",
             folderId, removeSubfolders, batchSize);
 
         List<Integer> folderIds = new ArrayList<Integer>();
@@ -7012,7 +7012,6 @@ public class Mailbox {
         // Delete the items in batches.  (1000 items by default)
         QueryParams params = new QueryParams();
         params.setFolderIds(folderIds).setModifiedSequenceBefore(lastChangeID + 1).setRowLimit(batchSize);
-        params.setExcludedTypes(EnumSet.of(MailItem.Type.FOLDER, MailItem.Type.MOUNTPOINT, MailItem.Type.SEARCHFOLDER));
         boolean firstTime = true;
         while (true) {
             // Give other threads a chance to use the mailbox between deletion batches.
@@ -7031,19 +7030,20 @@ public class Mailbox {
             // Lock this mailbox to make sure that no one modifies the items we're about to delete.
             lock.lock();
             try {
-                Set<Integer> itemIds = null;
-                DbConnection conn = DbPool.getConnection();
+                DeleteItem redoRecorder = new DeleteItem(mId, MailItem.Type.UNKNOWN, null);
+                boolean success = false;
                 try {
-                    itemIds = DbMailItem.getIds(this, conn, params, false);
+                    beginTransaction("delete", octxt, redoRecorder);
+                    PendingDelete info = DbMailItem.getLeafNodes(this, params);
+                    if (info.itemIds.isEmpty()) {
+                        break;
+                    }
+                    redoRecorder.setIds(ArrayUtil.toIntArray(info.itemIds.getAll()));
+                    MailItem.delete(this, info, null, true);
+                    success = true;
                 } finally {
-                    conn.closeQuietly();
+                    endTransaction(success);
                 }
-
-                if (itemIds.isEmpty()) {
-                    break;
-                }
-
-                delete(octxt, ArrayUtil.toIntArray(itemIds), MailItem.Type.UNKNOWN, null);
             } finally {
                 lock.release();
             }
@@ -7052,7 +7052,12 @@ public class Mailbox {
         if (removeSubfolders && folderIds.size() > 1) {
             // delete the subfolders
             folderIds.remove(0);   // 0th position is the folder being emptied which we do not want to delete
-            delete(octxt, ArrayUtil.toIntArray(folderIds), MailItem.Type.FOLDER, null);
+            lock.lock();
+            try {
+                delete(octxt, ArrayUtil.toIntArray(folderIds), MailItem.Type.FOLDER, null);
+            } finally {
+                lock.release();
+            }
         }
     }
 

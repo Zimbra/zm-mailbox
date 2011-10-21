@@ -2515,32 +2515,42 @@ public class DbMailItem {
 
     public static PendingDelete getLeafNodes(Folder folder) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
-
         int folderId = folder.getId();
+        QueryParams params = new QueryParams();
+        params.setFolderIds(Collections.singletonList(folderId));
+        PendingDelete info = getLeafNodes(mbox, params);
+        // make sure that the folder is in the list of deleted item ids
+        info.itemIds.add(folder.getType(), folderId);
+        return info;
+    }
 
+    public static PendingDelete getLeafNodes(Mailbox mbox, QueryParams params) throws ServiceException {
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.prepareStatement("SELECT " + LEAF_NODE_FIELDS +
-                        " FROM " + getMailItemTableName(mbox) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND type NOT IN " + FOLDER_TYPES);
-            if (folder.getSize() > RESULTS_STREAMING_MIN_ROWS) {
-                Db.getInstance().enableStreaming(stmt);
+            StringBuilder buf = new StringBuilder();
+            buf.append("SELECT " + LEAF_NODE_FIELDS + " FROM " + getMailItemTableName(mbox) +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "type NOT IN " + FOLDER_TYPES);
+            String whereClause = params.getWhereClause();
+            if (!StringUtil.isNullOrEmpty(whereClause)) {
+                buf.append(" AND ").append(whereClause);
             }
+            String limitClause = params.getLimitClause();
+            if (!StringUtil.isNullOrEmpty(limitClause)) {
+                buf.append(" ").append(limitClause);
+            }
+            stmt = conn.prepareStatement(buf.toString());
+            Db.getInstance().enableStreaming(stmt);  // Assume we're dealing with a very large result set.
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
-            stmt.setInt(pos++, folderId);
 
             PendingDelete info = accumulateDeletionInfo(mbox, stmt);
             stmt = null;
-            info.rootId = folderId;
-            // make sure that the folder is in the list of deleted item ids
-            info.itemIds.add(folder.getType(), folderId);
 
             return info;
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("fetching list of items within item " + folder.getId(), e);
+            throw ServiceException.FAILURE("fetching list of items to delete", e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
@@ -2907,7 +2917,7 @@ public class DbMailItem {
             info.indexIds.addAll(info.sharedIndex);
             info.sharedIndex.clear();
         } catch (SQLException e) {
-            throw ServiceException.FAILURE("resolving shared index entries: " + info.rootId, e);
+            throw ServiceException.FAILURE("resolving shared index entries", e);
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
@@ -3421,6 +3431,7 @@ public class DbMailItem {
         private Integer changeDateBefore;
         private Integer modifiedSequenceBefore;
         private Integer rowLimit;
+        private Integer offset;
         private Set<MailItem.Type> includedTypes = EnumSet.noneOf(MailItem.Type.class);
         private Set<MailItem.Type> excludedTypes = EnumSet.noneOf(MailItem.Type.class);
 
@@ -3470,6 +3481,102 @@ public class DbMailItem {
 
         public Integer getRowLimit() { return rowLimit; }
         public QueryParams setRowLimit(Integer rowLimit) { this.rowLimit = rowLimit; return this; }
+        public Integer getOffset() { return offset; }
+        public QueryParams setOffset(Integer offset) { this.offset = offset; return this; }
+
+        public String getWhereClause() {
+            StringBuilder buf = new StringBuilder();
+            if (!includedTypes.isEmpty()) {
+                if (buf.length() > 0) {
+                    buf.append(" AND ");
+                }
+                if (includedTypes.size() == 1) {
+                    for (MailItem.Type type : includedTypes) {
+                        buf.append("type = ").append(type.toByte());
+                        break;
+                    }
+                } else {
+                    buf.append("type IN (");
+                    boolean first = true;
+                    for (MailItem.Type type : includedTypes) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            buf.append(", ");
+                        }
+                        buf.append(type.toByte());
+                    }
+                    buf.append(")");
+                }
+            }
+            if (!excludedTypes.isEmpty()) {
+                if (buf.length() > 0) {
+                    buf.append(" AND ");
+                }
+                if (excludedTypes.size() == 1) {
+                    for (MailItem.Type type : excludedTypes) {
+                        buf.append("type != ").append(type.toByte());
+                        break;
+                    }
+                } else {
+                    buf.append("type NOT IN (");
+                    boolean first = true;
+                    for (MailItem.Type type : excludedTypes) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            buf.append(", ");
+                        }
+                        buf.append(type.toByte());
+                    }
+                    buf.append(")");
+                }
+            }
+            if (!folderIds.isEmpty()) {
+                if (buf.length() > 0) {
+                    buf.append(" AND ");
+                }
+                if (folderIds.size() == 1) {
+                    buf.append("folder_id = ").append(folderIds.first());
+                } else {
+                    buf.append("folder_id IN (");
+                    boolean first = true;
+                    for (Integer fid : folderIds) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            buf.append(", ");
+                        }
+                        buf.append(fid);
+                    }
+                    buf.append(")");
+                }
+            }
+            if (changeDateBefore != null) {
+                if (buf.length() > 0) {
+                    buf.append(" AND ");
+                }
+                buf.append("change_date < ").append(changeDateBefore);
+            }
+            if (modifiedSequenceBefore != null) {
+                if (buf.length() > 0) {
+                    buf.append(" AND ");
+                }
+                buf.append("mod_metadata < ").append(modifiedSequenceBefore);
+            }
+            return buf.toString();
+        }
+
+        public String getLimitClause() {
+            if (rowLimit != null && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
+                if (offset != null) {
+                    return Db.getInstance().limit(offset, rowLimit);
+                } else {
+                    return Db.getInstance().limit(rowLimit);
+                }
+            }
+            return "";
+        }
     }
 
     /**
@@ -3485,53 +3592,22 @@ public class DbMailItem {
         try {
             // Prepare the statement based on query parameters.
             StringBuilder buf = new StringBuilder();
-            buf.append("SELECT id FROM " + getMailItemTableName(mbox, fromDumpster) + " WHERE " + IN_THIS_MAILBOX_AND + "1 = 1");
-
-            Set<MailItem.Type> includedTypes = params.getIncludedTypes();
-            Set<MailItem.Type> excludedTypes = params.getExcludedTypes();
-            Set<Integer> folderIds = params.getFolderIds();
-            Integer changeDateBefore = params.getChangeDateBefore();
-            Integer modifiedSequenceBefore = params.getModifiedSequenceBefore();
-            Integer rowLimit = params.getRowLimit();
-
-            if (!includedTypes.isEmpty()) {
-                buf.append(" AND ").append(DbUtil.whereIn("type", includedTypes.size()));
+            buf.append("SELECT id FROM " + getMailItemTableName(mbox, fromDumpster) + " WHERE " + IN_THIS_MAILBOX_AND);
+            String whereClause = params.getWhereClause();
+            if (!StringUtil.isNullOrEmpty(whereClause)) {
+                buf.append(whereClause);
+            } else {
+                buf.append("1 = 1");
             }
-            if (!excludedTypes.isEmpty()) {
-                buf.append(" AND ").append(DbUtil.whereNotIn("type", excludedTypes.size()));
-            }
-            if (!folderIds.isEmpty()) {
-                buf.append(" AND ").append(DbUtil.whereIn("folder_id", folderIds.size()));
-            }
-            if (changeDateBefore != null) {
-                buf.append(" AND ").append("change_date < ?");
-            }
-            if (modifiedSequenceBefore != null) {
-                buf.append(" AND ").append("mod_metadata < ?");
-            }
-            if (rowLimit != null && Db.supports(Db.Capability.LIMIT_CLAUSE)) {
-                buf.append(' ').append(Db.getInstance().limit(rowLimit));
+            String limitClause = params.getLimitClause();
+            if (!StringUtil.isNullOrEmpty(limitClause)) {
+                buf.append(" ").append(limitClause);
             }
             stmt = conn.prepareStatement(buf.toString());
 
             // Bind values, execute query, return results.
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
-            for (MailItem.Type type : includedTypes) {
-                stmt.setByte(pos++, type.toByte());
-            }
-            for (MailItem.Type type : excludedTypes) {
-                stmt.setByte(pos++, type.toByte());
-            }
-            for (int id : folderIds) {
-                stmt.setInt(pos++, id);
-            }
-            if (changeDateBefore != null) {
-                stmt.setInt(pos++, changeDateBefore.intValue());
-            }
-            if (modifiedSequenceBefore != null) {
-                stmt.setInt(pos++, modifiedSequenceBefore);
-            }
 
             rs = stmt.executeQuery();
 

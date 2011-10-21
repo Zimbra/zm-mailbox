@@ -50,6 +50,14 @@ public class DeleteItem extends RedoableOp {
         mConstraint = (tcon == null ? null : tcon.toString());
     }
 
+    public DeleteItem(int mailboxId, MailItem.Type type, TargetConstraint tcon) {
+        this(mailboxId, null, type, tcon);
+    }
+
+    public void setIds(int[] ids) {
+        mIds = ids;
+    }
+
     @Override
     protected String getPrintableData() {
         StringBuilder sb = new StringBuilder("ids=");

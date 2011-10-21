@@ -768,7 +768,6 @@ public class Conversation extends MailItem {
     @Override
     PendingDelete getDeletionInfo() throws ServiceException {
         PendingDelete info = new PendingDelete();
-        info.rootId = mId;
         info.itemIds.add(getType(), mId);
 
         if (mData.size == 0) {
