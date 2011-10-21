@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.server;
 
+import com.google.common.base.CharMatcher;
 import com.zimbra.common.util.Log;
 
 import org.apache.mina.core.buffer.IoBuffer;
@@ -121,7 +122,7 @@ final class NioLoggingFilter extends IoFilterAdapter {
         for (int i = bb.position(); i < limit; i++) {
             sb.append((char) (bb.get(i) & 0xff));
         }
-        return sb.toString();
+        return CharMatcher.anyOf("\r\n").trimTrailingFrom(sb);
     }
 
 }
