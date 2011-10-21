@@ -359,10 +359,10 @@ public final class LC {
     public static final KnownKey ldap_connect_pool_timeout = KnownKey.newKey(120000);
 
     @Supported
-    public static final KnownKey ldap_connect_pool_health_check_on_checkout_enabled = KnownKey.newKey(true);
+    public static final KnownKey ldap_connect_pool_health_check_on_checkout_enabled = KnownKey.newKey(false);
 
     @Supported
-    public static final KnownKey ldap_connect_pool_health_check_interval_millis = KnownKey.newKey(60000);
+    public static final KnownKey ldap_connect_pool_health_check_background_interval_millis = KnownKey.newKey(30000);
 
     @Supported
     public static final KnownKey ldap_connect_pool_health_check_max_response_time_millis = KnownKey.newKey(30000);
