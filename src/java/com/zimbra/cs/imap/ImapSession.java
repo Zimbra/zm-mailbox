@@ -472,13 +472,13 @@ public class ImapSession extends Session {
 
         @Override
         public synchronized boolean isWritable() {
-            return pagedSessionData == null ? false : pagedSessionData.mOriginalSessionData.mWritable;
+            return pagedSessionData == null ? false : pagedSessionData.mOriginalSessionData.writable;
         }
 
         @Override
         public synchronized boolean hasExpunges() {
             // hugely overbroad, but this should never be called in the first place...
-            if (pagedSessionData != null && pagedSessionData.mOriginalSessionData.mExpungedCount > 0) {
+            if (pagedSessionData != null && pagedSessionData.mOriginalSessionData.expungedCount > 0) {
                 return true;
             }
             if (queuedChanges == null || queuedChanges.isEmpty()) {
@@ -641,10 +641,10 @@ public class ImapSession extends Session {
                 }
 
                 // save the session data in a simple form
-                if (mOriginalSessionData.mSavedSearchResults != null) {
-                    mSavedSearchIds = new int[mOriginalSessionData.mSavedSearchResults.size()];
+                if (mOriginalSessionData.savedSearchResults != null) {
+                    mSavedSearchIds = new int[mOriginalSessionData.savedSearchResults.size()];
                     int pos = 0;
-                    for (ImapMessage i4msg : mOriginalSessionData.mSavedSearchResults) {
+                    for (ImapMessage i4msg : mOriginalSessionData.savedSearchResults) {
                         mSavedSearchIds[pos++] = i4msg.imapUid;
                     }
                 }
@@ -677,18 +677,18 @@ public class ImapSession extends Session {
                 }
 
                 // kill references to ImapMessage objects, since they'll change after the restore
-                mOriginalSessionData.mSavedSearchResults = null;
+                mOriginalSessionData.savedSearchResults = null;
                 mOriginalSessionData.dirtyMessages.clear();
             }
 
             ImapFolder.SessionData asFolderData(ImapFolder i4folder) {
                 if (mOriginalSessionData != null) {
                     if (mSavedSearchIds != null) {
-                        mOriginalSessionData.mSavedSearchResults = new ImapMessageSet();
+                        mOriginalSessionData.savedSearchResults = new ImapMessageSet();
                         for (int uid : mSavedSearchIds) {
-                            mOriginalSessionData.mSavedSearchResults.add(i4folder.getByImapId(uid));
+                            mOriginalSessionData.savedSearchResults.add(i4folder.getByImapId(uid));
                         }
-                        mOriginalSessionData.mSavedSearchResults.remove(null);
+                        mOriginalSessionData.savedSearchResults.remove(null);
                     }
 
                     mOriginalSessionData.dirtyMessages.clear();
@@ -710,7 +710,7 @@ public class ImapSession extends Session {
                 if (mOriginalSessionData == null) {
                     return false;
                 }
-                return mOriginalSessionData.mTagsAreDirty || mDirtyChanges != null || mOriginalSessionData.mExpungedCount > 0;
+                return mOriginalSessionData.tagsAreDirty || mDirtyChanges != null || mOriginalSessionData.expungedCount > 0;
             }
         }
     }
