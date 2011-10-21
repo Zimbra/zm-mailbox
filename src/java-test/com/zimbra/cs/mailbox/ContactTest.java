@@ -14,7 +14,6 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -25,9 +24,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.InternetAddress;
 import com.zimbra.cs.account.MockProvisioning;
@@ -91,16 +90,16 @@ public final class ContactTest {
                 ContactConstants.A_email, "test1@zimbra.com")), Mailbox.ID_FOLDER_CONTACTS, null);
         MailboxTestUtil.index(mbox);
 
-        Assert.assertTrue(mbox.index.existsInContacts(Arrays.asList(new InternetAddress("Test <test1@zimbra.com>"),
-                new InternetAddress("Test <test2@zimbra.com>"))));
-        Assert.assertFalse(mbox.index.existsInContacts(Arrays.asList(new InternetAddress("Test <test2@zimbra.com>"),
-                new InternetAddress("Test <test3@zimbra.com>"))));
+        Assert.assertTrue(mbox.index.existsInContacts(ImmutableList.of(
+                new InternetAddress("Test <test1@zimbra.com>"), new InternetAddress("Test <test2@zimbra.com>"))));
+        Assert.assertFalse(mbox.index.existsInContacts(ImmutableList.of(
+                new InternetAddress("Test <test2@zimbra.com>"), new InternetAddress("Test <test3@zimbra.com>"))));
     }
 
     @Test
     public void createAutoContact() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        List<Contact> contacts = mbox.createAutoContact(null, Sets.newHashSet(
+        List<Contact> contacts = mbox.createAutoContact(null, ImmutableList.of(
                 new InternetAddress("Test 1", "TEST1@zimbra.com"), new InternetAddress("Test 2", "TEST2@zimbra.com")));
 
         Assert.assertEquals(2, contacts.size());
@@ -109,7 +108,7 @@ public final class ContactTest {
         Assert.assertEquals("2, Test", contacts.get(1).getFileAsString());
         Assert.assertEquals("TEST2@zimbra.com", contacts.get(1).getFields().get(ContactConstants.A_email));
 
-        contacts = mbox.createAutoContact(null, Sets.newHashSet(
+        contacts = mbox.createAutoContact(null, ImmutableList.of(
                 new InternetAddress("Test 1", "test1@zimbra.com"), new InternetAddress("Test 2", "test2@zimbra.com")));
         Assert.assertEquals(0, contacts.size());
     }
@@ -125,7 +124,7 @@ public final class ContactTest {
         attrs.put(ContactConstants.A_fullName, "Volume Id");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         mbox.createContact(null, new ParsedContact(attrs), Mailbox.ID_FOLDER_CONTACTS, null);
-        
+
         // Check volume id in database.
         String sql = String.format("SELECT COUNT(*) FROM %s WHERE type = %d AND blob_digest IS NULL AND volume_id IS NOT NULL",
                 DbMailItem.getMailItemTableName(mbox), MailItem.Type.CONTACT.toByte());
@@ -145,7 +144,7 @@ public final class ContactTest {
         byte[] attachData = "attachment 1".getBytes();
         Attachment textAttachment = new Attachment(attachData, "text/plain", "customField", "text.txt");
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        
+
         mbox.createContact(null, new ParsedContact(attrs, Lists.newArrayList(textAttachment)), Mailbox.ID_FOLDER_CONTACTS, null);
 
         // Call getContent() on all attachments.

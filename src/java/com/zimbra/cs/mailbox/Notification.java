@@ -15,7 +15,6 @@
 
 package com.zimbra.cs.mailbox;
 
-import com.google.common.collect.Sets;
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
@@ -47,6 +46,9 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+
+import java.io.IOException;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -340,12 +342,16 @@ public class Notification implements LmtpCallback {
         return false;
     }
 
-    private static boolean isOfExternalSenderType(String senderAddr, Account account, Mailbox mbox)
-            throws ServiceException {
+    private static boolean isOfExternalSenderType(String senderAddr, Account account, Mailbox mbox) {
         switch (account.getPrefExternalSendersType()) {
             case ALLNOTINAB:
-                return !mbox.index.existsInContacts(Sets.newHashSet(
-                        new com.zimbra.common.mime.InternetAddress(senderAddr)));
+                try {
+                    return !mbox.index.existsInContacts(
+                            Collections.singleton(new com.zimbra.common.mime.InternetAddress(senderAddr)));
+                } catch (IOException e) {
+                    ZimbraLog.mailbox.error("Failed to lookup contacts", e);
+                    return true;
+                }
             case ALL:
             default:
                 return true;

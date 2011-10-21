@@ -601,7 +601,7 @@ public class MailSender {
                     }
                     try {
                         mbox.createAutoContact(octxt, iaddrs);
-                    } catch (ServiceException e) {
+                    } catch (IOException e) {
                         ZimbraLog.smtp.warn("Failed to auto-add contact addrs=%s", iaddrs, e);
                     }
                 }

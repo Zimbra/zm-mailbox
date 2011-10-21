@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.filter.jsieve;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -28,7 +29,6 @@ import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
 
 import com.zimbra.common.mime.InternetAddress;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.filter.ZimbraMailAdapter;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -84,7 +84,7 @@ public final class AddressBookTest extends AbstractTest {
         }
         try {
             return mbox.index.existsInContacts(addrs);
-        } catch (ServiceException e) {
+        } catch (IOException e) {
             ZimbraLog.filter.error("Failed to lookup contacts", e);
         }
         return false;

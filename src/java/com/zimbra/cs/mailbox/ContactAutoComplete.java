@@ -596,7 +596,7 @@ public class ContactAutoComplete {
         }
 
         List<String> tokens = Lists.newArrayListWithExpectedSize(1);
-        for (String token : Splitter.on(CharMatcher.WHITESPACE).omitEmptyStrings().trimResults().split(query)) {
+        for (String token : TOKEN_SPLITTER.split(query)) {
             tokens.add(token.toLowerCase());
         }
 

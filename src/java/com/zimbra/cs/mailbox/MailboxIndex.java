@@ -45,7 +45,6 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -314,32 +313,34 @@ public final class MailboxIndex {
     /**
      * Returns true if any of the specified email addresses exists in contacts, otherwise false.
      */
-    public boolean existsInContacts(Collection<InternetAddress> addrs) throws ServiceException {
-        StringBuilder query = new StringBuilder();
-        CharMatcher matcher = CharMatcher.is('"');
-        for (InternetAddress addr : addrs) {
-            if (!Strings.isNullOrEmpty(addr.getAddress())) {
-                if (query.length() > 0) {
-                    query.append(" || ");
-                }
-                query.append("to:\"").append(matcher.removeFrom(addr.getAddress())).append('"');
+    public boolean existsInContacts(Collection<InternetAddress> addrs) throws IOException {
+        Set<MailItem.Type> types = EnumSet.of(MailItem.Type.CONTACT);
+        if (getDeferredCount(types) > 0) {
+            try {
+                indexDeferredItems(types, new BatchStatus(), false);
+            } catch (ServiceException e) {
+                ZimbraLog.index.error("Failed to index deferred items", e);
             }
         }
-        if (query.length() == 0) {
-            return false;
-        }
-        SearchParams params = new SearchParams();
-        params.setQueryString(query.toString());
-        params.setTypes(Collections.singleton(MailItem.Type.CONTACT));
-        params.setSortBy(SortBy.NONE);
-        params.setLimit(1);
-        params.setPrefetch(false);
-        params.setFetchMode(SearchParams.Fetch.IDS);
-        ZimbraQueryResults result = search(SoapProtocol.Soap12, new OperationContext(mailbox), params);
+
+        IndexSearcher searcher = indexStore.openSearcher();
         try {
-            return result.hasNext();
+            for (InternetAddress addr : addrs) {
+                if (!Strings.isNullOrEmpty(addr.getAddress())) {
+                    Term term = new Term(LuceneFields.L_H_TO, addr.getAddress().toLowerCase());
+                    TermEnum terms = searcher.getIndexReader().terms(term);
+                    try {
+                        if (term.equals(terms.term())) {
+                            return true;
+                        }
+                    } finally {
+                        Closeables.closeQuietly(terms);
+                    }
+                }
+            }
+            return false;
         } finally {
-            Closeables.closeQuietly(result);
+            Closeables.closeQuietly(searcher);
         }
     }
 

@@ -1843,7 +1843,7 @@ public class Mailbox {
                         redoRecorder.abort();
                     }
                 }
-                
+
                 if (maintenance != null) {
                     if (success) {
                         // twiddle the mailbox lock [must be the last command of this function!]
@@ -1851,7 +1851,7 @@ public class Mailbox {
                         maintenance.markUnavailable();
                     } else {
                         // end the maintenance if the delete is not successful.
-                        MailboxManager.getInstance().endMaintenance(maintenance, success, true);                        
+                        MailboxManager.getInstance().endMaintenance(maintenance, success, true);
                     }
                 }
             }
@@ -6469,7 +6469,7 @@ public class Mailbox {
      * @return newly created contacts
      */
     public List<Contact> createAutoContact(OperationContext octxt, Collection<InternetAddress> addrs)
-            throws ServiceException {
+            throws IOException {
         if (addrs.isEmpty()) {
             return Collections.emptyList();
         }
