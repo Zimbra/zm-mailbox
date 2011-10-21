@@ -82,15 +82,14 @@ public class LdapConnectionPool {
         boolean onCheckoutHealthCheckEnabled = config.isConnPoolHelathCheckOnCheckoutEnabled();
         boolean backgroundHealthCheckEnabled = !onCheckoutHealthCheckEnabled;
         
-        // If OnCheckout health check is enabled, no need to do periodic health check.
-        // Set a custom health check interval only when OnCheckout health check is disabled, 
+        // Set a custom health check interval only when background health check is enabled, 
         // because otherwise it has no effect anyway.
         if (backgroundHealthCheckEnabled) {
-            connPool.setHealthCheckIntervalMillis(config.getConnPoolHelathCheckIntervalMillis());
+            connPool.setHealthCheckIntervalMillis(config.getConnPoolHelathCheckBackgroundIntervalMillis());
         }
         
         GetEntryLDAPConnectionPoolHealthCheck healthChecker = new GetEntryLDAPConnectionPoolHealthCheck(
-                "",                                                   // entryDN
+                null,                                                 // entryDN (null means root DSE)
                 config.getConnPoolHelathCheckMaxResponseTimeMillis(), // maxResponseTime 
                 false,                                                // invokeOnCreate
                 onCheckoutHealthCheckEnabled,                         // invokeOnCheckout

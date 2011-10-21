@@ -42,13 +42,37 @@ public abstract class LdapServerConfig {
     protected final int connPoolMaxSize;
     protected final int connPoolTimeoutMillis;
     
-    // whether connection pool health check will be invoked whenever a connection is to be checked out for use.
-    // if OnCheckout health check is enabled, periodic background health check will be disabled.
+    // Enable on-checkout health check.
+    //     Health check is invoked whenever a connection is checked out from the pool
+    //
+    // Note: If on-checkout health check is enabled, background health check will be
+    //       disabled.  If on-checkout health check is disabled, background health check 
+    //       will be enabled.  
+    //       Behavior difference in falling back to the next availble server in the sever set
+    //       for the pool:
+    //
+    //       on-checkout: 
+    //           No failure will be seen if one server in the server set goes down,
+    //           because the connection pool always tests health of a connection 
+    //           before handing it out to the application.
+    //       background: 
+    //           If a server goes down, LDAP op using the connection will fail, because 
+    //           no health check is invoked prior to handing out the connection.
+    //           *All* bad connections will be flushed out of the connection pool at the 
+    //           next health check interval (specified by LC.ldap_connect_pool_health_check_background_interval_millis).
+    //           Then good connections will be created (because there is no conn in the pool) 
+    //           using the next server in the server set.  All LDAP ops - if they got a 
+    //           connection pointing to the bad server - executed before the health check 
+    //           will fail.   After the health check interval, LDAP ops should all works again 
+    //           if there is a healthy server in the server set for the connection pool.
+    //         
     protected final boolean connPoolHelathCheckOnCheckoutEnabled;
     
-    // length of time in milliseconds between periodic background health checks against the available 
-    // connections in connection pool
-    protected final long connPoolHelathCheckIntervalMillis;
+    // length of time in milliseconds between periodic background health checks against 
+    // the available connections in connection pool
+    //
+    // Note: effective only when background health is enabled.
+    protected final long connPoolHelathCheckBackgroundIntervalMillis;
     
     // The maximum length of time in milliseconds that should be allowed for the health check response 
     // to come back from the LDAP server 
@@ -82,8 +106,8 @@ public abstract class LdapServerConfig {
         
         this.connPoolHelathCheckOnCheckoutEnabled = 
             LC.ldap_connect_pool_health_check_on_checkout_enabled.booleanValue();
-        this.connPoolHelathCheckIntervalMillis = 
-            LC.ldap_connect_pool_health_check_interval_millis.longValue();
+        this.connPoolHelathCheckBackgroundIntervalMillis = 
+            LC.ldap_connect_pool_health_check_background_interval_millis.longValue();
         this.connPoolHelathCheckMaxResponseTimeMillis = 
             LC.ldap_connect_pool_health_check_max_response_time_millis.longValue();
         
@@ -326,8 +350,8 @@ public abstract class LdapServerConfig {
         return connPoolHelathCheckOnCheckoutEnabled;
     }
     
-    public long getConnPoolHelathCheckIntervalMillis() {
-        return connPoolHelathCheckIntervalMillis;
+    public long getConnPoolHelathCheckBackgroundIntervalMillis() {
+        return connPoolHelathCheckBackgroundIntervalMillis;
     }
     
     public long getConnPoolHelathCheckMaxResponseTimeMillis() {

@@ -28,7 +28,6 @@ import com.unboundid.ldap.sdk.Control;
 import com.unboundid.ldap.sdk.DereferencePolicy;
 import com.unboundid.ldap.sdk.DN;
 import com.unboundid.ldap.sdk.ExtendedResult;
-import com.unboundid.ldap.sdk.Filter;
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
 import com.unboundid.ldap.sdk.LDAPException;
