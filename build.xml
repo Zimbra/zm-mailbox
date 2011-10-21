@@ -510,6 +510,7 @@
           <include name="hadoop-*.jar"/>
           <include name="hbase-*.jar"/>
           <include name="zookeeper-*.jar"/>
+          <include name="ehcache-*.jar"/>
         </lib>
         <lib dir="${im.jars.dir}" includes="*.jar"/>
         <classes dir="${config.dir}" includes="sieveConfig.xml"/>

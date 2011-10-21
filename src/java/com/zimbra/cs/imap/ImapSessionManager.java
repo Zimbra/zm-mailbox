@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.TimerTask;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
@@ -45,6 +46,7 @@ import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.session.Session;
+import com.zimbra.cs.util.EhcacheManager;
 import com.zimbra.cs.util.Zimbra;
 
 final class ImapSessionManager {
@@ -60,8 +62,8 @@ final class ImapSessionManager {
     private static final boolean SERIALIZE_ON_CLOSE = DebugConfig.imapSerializeSessionOnClose;
 
     private final LinkedHashMap<ImapSession, Object> sessions = new LinkedHashMap<ImapSession, Object>(128, 0.75F, true);
-    private final MemcachedImapCache memcache; // null if memcached is not available
-    private final DiskImapCache diskcache;
+    private final Cache activeSessionCache; // not LRU'ed
+    private final Cache inactiveSessionCache; // LRU'ed
 
     private static final ImapSessionManager SINGLETON = new ImapSessionManager();
 
@@ -71,13 +73,11 @@ final class ImapSessionManager {
             ZimbraLog.imap.debug("initializing IMAP session serializer task");
         }
 
-        diskcache = new DiskImapCache();
-        if (MemcachedConnector.isConnected()) {
-            ZimbraLog.imap.info("Using Memcached");
-            memcache = new MemcachedImapCache();
-        } else {
-            memcache = null;
-        }
+        activeSessionCache = new EhcacheImapCache(EhcacheManager.IMAP_ACTIVE_SESSION_CACHE);
+        Preconditions.checkState(activeSessionCache != null);
+        inactiveSessionCache = MemcachedConnector.isConnected() ?
+                new MemcachedImapCache() : new EhcacheImapCache(EhcacheManager.IMAP_INACTIVE_SESSION_CACHE);
+        Preconditions.checkState(inactiveSessionCache != null);
     }
 
     static ImapSessionManager getInstance() {
@@ -151,7 +151,7 @@ final class ImapSessionManager {
                 try {
                     ZimbraLog.imap.debug("Paging out session due to staleness or total memory footprint: %s (sid %s)",
                             session.getPath(), session.getSessionId());
-                    session.unload(false);
+                    session.unload(true);
                 } catch (Exception e) {
                     ZimbraLog.imap.warn("error serializing session; clearing", e);
                     // XXX: make sure this doesn't result in a loop
@@ -164,7 +164,7 @@ final class ImapSessionManager {
                     ZimbraLog.imap.debug("Loading/unloading paged session due to queued notification overflow: %s (sid %s)",
                             session.getPath(), session.getSessionId());
                     session.reload();
-                    session.unload(false);
+                    session.unload(true);
                 } catch (Exception e) {
                     ZimbraLog.imap.warn("error deserializing overflowed session; clearing", e);
                     // XXX: make sure this doesn't result in a loop
@@ -480,7 +480,7 @@ final class ImapSessionManager {
             try {
                 // could use session.serialize() if we want to leave it in memory...
                 ZimbraLog.imap.debug("Paging session during close: %s", session.getPath());
-                session.unload(true);
+                session.unload(false);
             } catch (Exception e) {
                 ZimbraLog.imap.warn("Skipping error while trying to serialize during close (%s)", session.getPath(), e);
             }
@@ -516,76 +516,69 @@ final class ImapSessionManager {
     }
 
     /**
-     * Try to retrieve from memcache if available, then fall back to disk cache.
+     * Try to retrieve from inactive session cache, then fall back to active session cache.
      */
     private ImapFolder getCache(Folder folder) {
-        if (memcache != null) {
-            ImapFolder i4folder = memcache.get(cacheKey(folder, true));
-            if (i4folder != null) {
-                return i4folder;
-            }
+        ImapFolder i4folder = inactiveSessionCache.get(cacheKey(folder, true));
+        if (i4folder != null) {
+            return i4folder;
         }
-        return diskcache.get(cacheKey(folder, false));
+        return activeSessionCache.get(cacheKey(folder, false));
     }
 
     /**
-     * Remove cached values from both memcache and disk cache.
+     * Remove cached values from both active session cache and inactive session cache.
      */
     private void clearCache(Folder folder) {
-        if (memcache != null) {
-            memcache.remove(cacheKey(folder, true));
-        }
-        diskcache.remove(cacheKey(folder, false));
+        activeSessionCache.remove(cacheKey(folder, false));
+        inactiveSessionCache.remove(cacheKey(folder, true));
     }
 
     /**
      * Generates a cache key for the {@link ImapSession}.
      *
      * @param session IMAP session
-     * @param mem true to use memcache if available, otherwise false. Note that memcache can get LRUed.
+     * @param active true to use active session cache, otherwise inactive session cache.
      * @return cache key
      */
-    String cacheKey(ImapSession session, boolean mem) throws ServiceException {
+    String cacheKey(ImapSession session, boolean active) throws ServiceException {
         Mailbox mbox = session.getMailbox();
         if (mbox == null) {
             mbox = MailboxManager.getInstance().getMailboxByAccountId(session.getTargetAccountId());
         }
 
-        String cachekey = cacheKey(mbox.getFolderById(null, session.getFolderId()), mem);
+        String cachekey = cacheKey(mbox.getFolderById(null, session.getFolderId()), active);
         // if there are unnotified expunges, *don't* use the default cache key
         //   ('+' is a good separator because it alpha-sorts before the '.' of the filename extension)
         return session.hasExpunges() ? cachekey + "+" + session.getQualifiedSessionId() : cachekey;
     }
 
-    private String cacheKey(Folder folder, boolean mem) {
+    private String cacheKey(Folder folder, boolean active) {
         Mailbox mbox = folder.getMailbox();
         int modseq = folder instanceof SearchFolder ? mbox.getLastChangeID() : folder.getImapMODSEQ();
         int uvv = folder instanceof SearchFolder ? mbox.getLastChangeID() : ImapFolder.getUIDValidity(folder);
-        if (mem && memcache != null) {
-            // use ':' as a separator; produce a shorter key
+        if (active) { // use '_' as separator
+            return String.format("%s_%d_%d_%d", mbox.getAccountId(), folder.getId(), modseq, uvv);
+        } else { // use ':' as a separator
             return String.format("%s:%d:%d:%d", mbox.getAccountId(), folder.getId(), modseq, uvv);
-        } else {
-            // 0-pad the MODSEQ and UVV so alpha ordering sorts properly; use '_' as separator
-            return String.format("%s_%d_%010d_%010d", mbox.getAccountId(), folder.getId(), modseq, uvv);
         }
     }
 
     void serialize(String key, ImapFolder folder) {
         if (key.contains(":")) {
-            memcache.put(key, folder);
+            inactiveSessionCache.put(key, folder);
         } else {
-            diskcache.put(key, folder);
+            activeSessionCache.put(key, folder);
         }
     }
 
     ImapFolder deserialize(String key) {
         if (key.contains(":")) {
-            return memcache.get(key);
+            return inactiveSessionCache.get(key);
         } else {
-            return diskcache.get(key);
+            return activeSessionCache.get(key);
         }
     }
-
 
     static interface Cache {
         /** Stores the folder into cache, or does nothing if failed to do so. */

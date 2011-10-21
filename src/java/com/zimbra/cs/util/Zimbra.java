@@ -204,6 +204,9 @@ public final class Zimbra {
         if (app.supports(MemcachedConnector.class.getName())) {
             MemcachedConnector.startup();
         }
+        if (app.supports(EhcacheManager.class.getName())) {
+            EhcacheManager.getInstance().startup();
+        }
 
         ExtensionUtil.initAll();
 
@@ -255,7 +258,7 @@ public final class Zimbra {
             if (app.supports(PurgeThread.class.getName())) {
                 PurgeThread.startup();
             }
-            
+
             if (app.supports(AutoProvisionThread.class.getName())) {
                 AutoProvisionThread.startup();
             }
@@ -337,6 +340,9 @@ public final class Zimbra {
 
         if (app.supports(MemcachedConnector.class.getName())) {
             MemcachedConnector.shutdown();
+        }
+        if (app.supports(EhcacheManager.class.getName())) {
+            EhcacheManager.getInstance().shutdown();
         }
 
         MailboxManager.getInstance().shutdown();

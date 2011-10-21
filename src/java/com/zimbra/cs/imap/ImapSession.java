@@ -239,7 +239,7 @@ public class ImapSession extends Session {
      * @param mem true to use memcached if available, otherwise false
      * @return the cachekey under which we serialized the folder, or {@code null} if the folder was already serialized
      */
-    private String serialize(boolean mem) throws ServiceException {
+    private String serialize(boolean active) throws ServiceException {
         // if the data's already paged out, we can short-circuit
         ImapFolder i4folder = mFolder instanceof ImapFolder ? (ImapFolder) mFolder : null;
         if (i4folder == null) {
@@ -255,7 +255,7 @@ public class ImapSession extends Session {
             i4folder.collapseExpunged(false);
         }
 
-        String cachekey = MANAGER.cacheKey(this, mem);
+        String cachekey = MANAGER.cacheKey(this, active);
         MANAGER.serialize(cachekey, i4folder);
         return cachekey;
     }
@@ -263,12 +263,12 @@ public class ImapSession extends Session {
     /**
      * Unload this session data into cache.
      *
-     * @param mem true to use memcached if available, otherwise false
+     * @param active true to use active session cache, otherwise use inactive session cache
      */
-    synchronized void unload(boolean mem) throws ServiceException {
+    synchronized void unload(boolean active) throws ServiceException {
         // if the data's already paged out, we can short-circuit
         if (mailbox != null && mFolder instanceof ImapFolder) {
-            mFolder = new PagedFolderData(serialize(mem), (ImapFolder) mFolder);
+            mFolder = new PagedFolderData(serialize(active), (ImapFolder) mFolder);
         }
     }
 
