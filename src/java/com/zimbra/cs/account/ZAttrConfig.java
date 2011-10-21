@@ -43,7 +43,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111020-1518 */
+    /* build: 8.0.0_BETA1_1111 jhahm 20111020-1917 */
 
     /**
      * RFC2256: descriptive information
@@ -14944,9 +14944,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Maximum number of messages to delete during a single transaction when
-     * emptying a large folder. When a folder is emptied and it contains more
-     * than zimbraMailEmptyFolderBatchThreshold messages, the operation is
-     * performed in multiple transactions.
+     * emptying a large folder.
      *
      * @return zimbraMailEmptyFolderBatchSize, or 1000 if unset
      *
@@ -14959,9 +14957,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Maximum number of messages to delete during a single transaction when
-     * emptying a large folder. When a folder is emptied and it contains more
-     * than zimbraMailEmptyFolderBatchThreshold messages, the operation is
-     * performed in multiple transactions.
+     * emptying a large folder.
      *
      * @param zimbraMailEmptyFolderBatchSize new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -14977,9 +14973,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Maximum number of messages to delete during a single transaction when
-     * emptying a large folder. When a folder is emptied and it contains more
-     * than zimbraMailEmptyFolderBatchThreshold messages, the operation is
-     * performed in multiple transactions.
+     * emptying a large folder.
      *
      * @param zimbraMailEmptyFolderBatchSize new value
      * @param attrs existing map to populate, or null to create a new map
@@ -14996,9 +14990,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Maximum number of messages to delete during a single transaction when
-     * emptying a large folder. When a folder is emptied and it contains more
-     * than zimbraMailEmptyFolderBatchThreshold messages, the operation is
-     * performed in multiple transactions.
+     * emptying a large folder.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -15013,9 +15005,7 @@ public abstract class ZAttrConfig extends Entry {
 
     /**
      * Maximum number of messages to delete during a single transaction when
-     * emptying a large folder. When a folder is emptied and it contains more
-     * than zimbraMailEmptyFolderBatchThreshold messages, the operation is
-     * performed in multiple transactions.
+     * emptying a large folder.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -15030,8 +15020,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Folders that contain more than this many messages will be emptied in
-     * batches of size zimbraMailEmptyFolderBatchSize.
+     * Deprecated since: 8.0.0. Empty folder operation now always deletes
+     * items in batches, hence a threshold is no longer applicable.. Orig
+     * desc: Folders that contain more than this many messages will be
+     * emptied in batches of size zimbraMailEmptyFolderBatchSize.
      *
      * @return zimbraMailEmptyFolderBatchThreshold, or 100000 if unset
      *
@@ -15043,8 +15035,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Folders that contain more than this many messages will be emptied in
-     * batches of size zimbraMailEmptyFolderBatchSize.
+     * Deprecated since: 8.0.0. Empty folder operation now always deletes
+     * items in batches, hence a threshold is no longer applicable.. Orig
+     * desc: Folders that contain more than this many messages will be
+     * emptied in batches of size zimbraMailEmptyFolderBatchSize.
      *
      * @param zimbraMailEmptyFolderBatchThreshold new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -15059,8 +15053,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Folders that contain more than this many messages will be emptied in
-     * batches of size zimbraMailEmptyFolderBatchSize.
+     * Deprecated since: 8.0.0. Empty folder operation now always deletes
+     * items in batches, hence a threshold is no longer applicable.. Orig
+     * desc: Folders that contain more than this many messages will be
+     * emptied in batches of size zimbraMailEmptyFolderBatchSize.
      *
      * @param zimbraMailEmptyFolderBatchThreshold new value
      * @param attrs existing map to populate, or null to create a new map
@@ -15076,8 +15072,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Folders that contain more than this many messages will be emptied in
-     * batches of size zimbraMailEmptyFolderBatchSize.
+     * Deprecated since: 8.0.0. Empty folder operation now always deletes
+     * items in batches, hence a threshold is no longer applicable.. Orig
+     * desc: Folders that contain more than this many messages will be
+     * emptied in batches of size zimbraMailEmptyFolderBatchSize.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -15091,8 +15089,10 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * Folders that contain more than this many messages will be emptied in
-     * batches of size zimbraMailEmptyFolderBatchSize.
+     * Deprecated since: 8.0.0. Empty folder operation now always deletes
+     * items in batches, hence a threshold is no longer applicable.. Orig
+     * desc: Folders that contain more than this many messages will be
+     * emptied in batches of size zimbraMailEmptyFolderBatchSize.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

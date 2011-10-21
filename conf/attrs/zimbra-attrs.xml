@@ -5032,8 +5032,6 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>1000</globalConfigValue>
   <desc>
     Maximum number of messages to delete during a single transaction when emptying a large folder. 
-    When a folder is emptied and it contains more than zimbraMailEmptyFolderBatchThreshold messages, 
-    the operation is performed in multiple transactions.
   </desc>
 </attr>
 
@@ -5683,11 +5681,12 @@ TODO: delete them permanently from here
   <desc>If TRUE, the spell checker ignores words that contain only upper-case letters.</desc>
 </attr>
 
-<attr id="1208" name="zimbraMailEmptyFolderBatchThreshold" type="integer" cardinality="single" min="0" optionalIn="globalConfig,server" flags="serverInherited,domainAdminModifiable" since="6.0.13">
+<attr id="1208" name="zimbraMailEmptyFolderBatchThreshold" type="integer" cardinality="single" min="0" optionalIn="globalConfig,server" flags="serverInherited,domainAdminModifiable" since="6.0.13" deprecatedSince="8.0.0">
   <globalConfigValue>100000</globalConfigValue>
   <desc>
     Folders that contain more than this many messages will be emptied in batches of size zimbraMailEmptyFolderBatchSize.
   </desc>
+  <deprecateDesc>Empty folder operation now always deletes items in batches, hence a threshold is no longer applicable.</deprecateDesc>
 </attr>
 
 <attr id="1209" name="zimbraSMIMELdapDiscoverSearchBaseEnabled"  type="string" max="32" cardinality="multi" optionalIn="domain,globalConfig" immutable="1" since="7.1.1">
