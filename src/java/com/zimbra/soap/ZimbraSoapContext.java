@@ -516,7 +516,9 @@ public final class ZimbraSoapContext {
     synchronized public void signalNotification(boolean canceled) {
         mWaitForNotifications = false;
         mCanceledWaitForNotifications = canceled;
-        mContinuation.resume();
+        if (mContinuation.isSuspended()) {
+            mContinuation.resume();
+        }
     }
 
     synchronized public boolean isCanceledWaitForNotifications() {

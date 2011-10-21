@@ -64,8 +64,6 @@ public class SoapServlet extends ZimbraServlet {
     public static final String SERVLET_REQUEST = "servlet.request";
     /** context name of servlet HTTP response */
     public static final String SERVLET_RESPONSE = "servlet.response";
-    /** If this is set, then this a RESUMED servlet request (Jetty Continuation) */
-    public static final String IS_RESUMED_REQUEST = "zimbra.resumedRequest";
 
     // Used by sExtraServices
     private static class ArrayListFactory implements Function<String, List<DocumentService>> {
@@ -277,8 +275,6 @@ public class SoapServlet extends ZimbraServlet {
         remoteIp.addToLoggingContext();
 
         //checkAuthToken(req.getCookies(), context);
-        if (isResumed)
-            context.put(IS_RESUMED_REQUEST, "1");
 
         Element envelope = null;
         try {
@@ -293,8 +289,8 @@ public class SoapServlet extends ZimbraServlet {
             }
 
             // don't interfere with Jetty Continuations -- pass the exception right up
-            if (e.getClass().getName().equals("org.eclipse.jetty.server.RetryRequest"))
-                throw ((RuntimeException)e);
+            if (e.getClass().getName().equals("org.eclipse.jetty.continuation.ContinuationThrowable"))
+                throw (Error) e;
 
             ZimbraLog.soap.warn("handler exception", e);
             Element fault = SoapProtocol.Soap12.soapFault(ServiceException.FAILURE(e.toString(), e));

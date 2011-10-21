@@ -50,10 +50,13 @@ import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.soap.ZimbraSoapContext.SessionInfo;
 import org.dom4j.DocumentException;
+import org.eclipse.jetty.continuation.ContinuationSupport;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * The soap engine.
@@ -122,7 +125,8 @@ public class SoapEngine {
 
     private void logRequest(Map<String, Object> context, Element envelope) {
         if (ZimbraLog.soap.isTraceEnabled() && !context.containsKey(SoapEngine.SOAP_REQUEST_LOGGED)) {
-            boolean isResumed = context.containsKey(SoapServlet.IS_RESUMED_REQUEST);
+            HttpServletRequest servletRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+            boolean isResumed = !ContinuationSupport.getContinuation(servletRequest).isInitial();
             ZimbraLog.soap.trace(!isResumed ? "C:\n%s" : "C: (resumed)\n%s", envelope.prettyPrint(true));
             context.put(SOAP_REQUEST_LOGGED, Boolean.TRUE);
         }
@@ -243,7 +247,8 @@ public class SoapEngine {
 
         Element doc = soapProto.getBodyElement(envelope);
 
-        boolean isResumed = context.containsKey(SoapServlet.IS_RESUMED_REQUEST);
+        HttpServletRequest servletRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
+        boolean isResumed = !ContinuationSupport.getContinuation(servletRequest).isInitial();
 
         Element responseBody = null;
         if (!zsc.isProxyRequest()) {
@@ -438,8 +443,8 @@ public class SoapEngine {
             // XXX: if the session was new, do we want to delete it?
         } catch (Throwable e) {
             // don't interfere with Jetty Continuations -- pass the exception on up
-            if (e.getClass().getName().equals("org.eclipse.jetty.server.RetryRequest")) {
-                throw (RuntimeException) e;
+            if (e.getClass().getName().equals("org.eclipse.jetty.continuation.ContinuationThrowable")) {
+                throw (Error) e;
             }
             // TODO: better exception stack traces during develope?
             response = soapProto.soapFault(ServiceException.FAILURE(e.toString(), e));

@@ -149,21 +149,18 @@ public class WaitSetRequest extends MailDocumentHandler {
     public static Element staticHandle(Element request, Map<String, Object> context, Element response, boolean adminAllowed) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         HttpServletRequest servletRequest = (HttpServletRequest) context.get(SoapServlet.SERVLET_REQUEST);
-        Continuation continuation;
 
         String waitSetId = request.getAttribute(MailConstants.A_WAITSET_ID);
         String lastKnownSeqNo = request.getAttribute(MailConstants.A_SEQ);
         boolean block = request.getAttributeBool(MailConstants.A_BLOCK, false);
 
         Callback cb;
-
-        if (context.containsKey(SoapServlet.IS_RESUMED_REQUEST)) {
+        Continuation continuation = ContinuationSupport.getContinuation(servletRequest);
+        if (!continuation.isInitial()) {
             cb  = (Callback)servletRequest.getAttribute(VARS_ATTR_NAME);
             // load variables here
-            continuation = ContinuationSupport.getContinuation(servletRequest);
         } else {
             cb = new Callback();
-            continuation = ContinuationSupport.getContinuation(servletRequest);
             cb.continuation = continuation;
             servletRequest.setAttribute(VARS_ATTR_NAME, cb);
 
@@ -243,6 +240,7 @@ public class WaitSetRequest extends MailDocumentHandler {
                             ZimbraLog.soap.trace("Suspending <WaitSetRequest> for %dms", timeout);
                         continuation.setTimeout(timeout);
                         continuation.suspend();
+                        continuation.undispatch();
                     }
                 }
             }
@@ -342,7 +340,9 @@ public class WaitSetRequest extends MailDocumentHandler {
                 this.completed = true;
                 if (continuation != null) {
                     if (trace) ZimbraLog.session.trace("WaitSetRequest.Callback.dataReady 1");
-                    continuation.resume();
+                    if (continuation.isSuspended()) {
+                        continuation.resume();
+                    }
                     if (trace) ZimbraLog.session.trace("WaitSetRequest.Callback.dataReady 2");
                 }
             }

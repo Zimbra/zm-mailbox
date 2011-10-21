@@ -85,9 +85,8 @@ public class NoOp extends MailDocumentHandler  {
                 throw ServiceException.INVALID_REQUEST("Cannot execute a NoOpRequest with wait=\"1\" without a session."+
                                                        "  Set the <session> flag in the <context> of your request", null);
             }
-            if (!context.containsKey(SoapServlet.IS_RESUMED_REQUEST)) {
-                Continuation continuation = ContinuationSupport.getContinuation(servletRequest);
-                
+            Continuation continuation = ContinuationSupport.getContinuation(servletRequest);
+            if (continuation.isInitial()) {
                 servletRequest.setAttribute("nop_origcontext", zsc);
                 
                 // NOT a resumed request -- block if necessary
@@ -107,6 +106,7 @@ public class NoOp extends MailDocumentHandler  {
                                 ZimbraLog.soap.trace("Suspending <NoOpRequest> for %dms", timeout);
                             continuation.setTimeout(timeout);
                             continuation.suspend();
+                            continuation.undispatch();
                         }
                         // bug 63230: Commenting out the below assertion.  continuation can be a RetryContinuation object, apparently.
                         //assert(continuation instanceof WaitingContinuation); // this part of code only reached if we're using WaitingContinuations
