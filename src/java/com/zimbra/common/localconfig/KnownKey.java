@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -19,9 +19,10 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import com.google.common.base.Strings;
 import com.zimbra.common.util.L10nUtil;
 
-public class KnownKey {
+public final class KnownKey {
 
     private static final Map<String, KnownKey> ALL = new LinkedHashMap<String, KnownKey>();
 
@@ -98,7 +99,7 @@ public class KnownKey {
         if (kk == null) {
             return null;
         }
-        return kk.mDefaultValue;
+        return kk.defaultValue;
     }
 
     static void expandAll(LocalConfig lc) throws ConfigException {
@@ -114,10 +115,10 @@ public class KnownKey {
         if (kk == null) {
             return null;
         }
-        if (kk.mValue == null) {
+        if (kk.value == null) {
             kk.expand(LocalConfig.getInstance());
         }
-        return kk.mValue;
+        return kk.value;
     }
 
     public static boolean needForceToEdit(String key) {
@@ -125,15 +126,15 @@ public class KnownKey {
         if (kk == null) {
             return false;
         }
-        return kk.mForceToEdit;
+        return kk.forceToEdit;
     }
 
-    private String mKey;
-    private String mDefaultValue;
-    private String mValue; //cached value after expansion
-    private boolean mForceToEdit;
+    private String key;
+    private String defaultValue;
+    private String value; //cached value after expansion
+    private boolean forceToEdit;
     private boolean reloadable = false;
-    /* 
+    /*
      * whether or not this is a 'supported' key (printing with zmlocalconfig -i)
      */
     private boolean supported = false;
@@ -145,24 +146,24 @@ public class KnownKey {
      * @see LC#get
      */
     public String value() {
-        assert mKey != null;
-        return LC.get(mKey);
+        assert key != null;
+        return LC.get(key);
     }
 
     public boolean booleanValue() {
-        assert mKey != null;
-        String s = LC.get(mKey);
-        if (s == null || s.length() == 0) {
-            throw new IllegalStateException("'" + mKey + "' is not defined in LocalConfig");
+        assert key != null;
+        String s = LC.get(key);
+        if (Strings.isNullOrEmpty(s)) {
+            s = defaultValue;  // fallback to the default value
         }
         return Boolean.valueOf(s).booleanValue();
     }
 
     public int intValue() {
-        assert mKey != null;
-        String s = LC.get(mKey);
-        if (s == null || s.length() == 0) {
-            throw new IllegalStateException("'" + mKey + "' is not defined in LocalConfig");
+        assert key != null;
+        String s = LC.get(key);
+        if (Strings.isNullOrEmpty(s)) {
+            s = defaultValue; // fallback to the default value
         }
         return Integer.parseInt(s);
     }
@@ -170,24 +171,23 @@ public class KnownKey {
     /**
      * Returns the value of this KnownKey as an int, but forces it to be within
      * the range of minValue <= RETURN <= maxValue
-     *
-     * @param minValue
-     * @param maxValue
      */
     public int intValueWithinRange(int minValue, int maxValue) {
-        int toRet = intValue();
-        if (toRet < minValue)
-            toRet = minValue;
-        if (toRet > maxValue)
-            toRet = maxValue;
-        return toRet;
+        int result = intValue();
+        if (result < minValue) {
+            return minValue;
+        } else if (result > maxValue) {
+            return maxValue;
+        } else {
+            return result;
+        }
     }
 
     public long longValue() {
-        assert mKey != null;
-        String s = LC.get(mKey);
-        if (s == null || s.length() == 0) {
-            throw new IllegalStateException("'" + mKey + "' is not defined in LocalConfig");
+        assert key != null;
+        String s = LC.get(key);
+        if (Strings.isNullOrEmpty(s)) {
+            s = defaultValue; // fallback to the default value
         }
         return Long.parseLong(s);
     }
@@ -195,27 +195,26 @@ public class KnownKey {
     /**
      * Returns the value of this KnownKey as a long, but forces it to be within
      * the range of minValue <= RETURN <= maxValue
-     *
-     * @param minValue
-     * @param maxValue
      */
     public long longValueWithinRange(long minValue, long maxValue) {
-        long toRet = longValue();
-        if (toRet < minValue)
-            toRet = minValue;
-        if (toRet > maxValue)
-            toRet = maxValue;
-        return toRet;
+        long result = longValue();
+        if (result < minValue) {
+            return minValue;
+        } else if (result > maxValue) {
+            return maxValue;
+        } else {
+            return result;
+        }
     }
 
     public String key() {
-        return mKey;
+        return key;
     }
 
     public void setKey(String name) {
-        assert mKey == null : name;
+        assert key == null : name;
         assert !ALL.containsKey(name) : name;
-        mKey = name;
+        key = name;
         ALL.put(name, this);
     }
 
@@ -224,7 +223,7 @@ public class KnownKey {
     }
 
     public String doc(Locale locale) {
-        return L10nUtil.getMessage(mKey, locale);
+        return L10nUtil.getMessage(key, locale);
     }
 
     /**
@@ -237,10 +236,10 @@ public class KnownKey {
         this(key, null);
     }
 
-    
+
 
     public KnownKey(String key, String defaultValue) {
-        mKey = key;
+        this.key = key;
         if (ALL.containsKey(key)) {
             assert false : "duplicate key: " + key;
         }
@@ -250,8 +249,8 @@ public class KnownKey {
 
 
     public KnownKey setDefault(String defaultValue) {
-        mDefaultValue = defaultValue;
-        mValue = null;
+        this.defaultValue = defaultValue;
+        this.value = null;
         return this;
     }
 
@@ -260,12 +259,12 @@ public class KnownKey {
     }
 
     public KnownKey setForceToEdit(boolean value) {
-        mForceToEdit = value;
+        forceToEdit = value;
         return this;
     }
 
     KnownKey protect() {
-        mForceToEdit = true;
+        forceToEdit = true;
         return this;
     }
 
@@ -287,25 +286,25 @@ public class KnownKey {
 
     /**
      * Whether or not the value of the key will be reloaded without a server restart
-     * 
+     *
      */
     boolean isReloadable() {
         return reloadable;
     }
     /**
      * Whether or not to show the key for the -i option on the command line.
-     */ 
+     */
     boolean isSupported() {
         return supported;
     }
-    
-    
+
+
     private void expand(LocalConfig lc) throws ConfigException {
         try {
-            mValue = lc.expand(mKey, mDefaultValue);
-        } catch (ConfigException x) {
-            Logging.error("Can't expand config key " + mKey + "=" + mDefaultValue, x);
-            throw x;
+            value = lc.expand(key, defaultValue);
+        } catch (ConfigException e) {
+            Logging.error("Can't expand config key " + key + "=" + defaultValue, e);
+            throw e;
         }
     }
 
