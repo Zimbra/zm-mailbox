@@ -175,6 +175,8 @@ SECTION webxml
 	REWRITE mailboxd/etc/krb5.ini.in mailboxd/etc/krb5.ini
 	REWRITE mailboxd/etc/spnego.conf.in mailboxd/etc/spnego.conf
 	REWRITE mailboxd/etc/spnego.properties.in mailboxd/etc/spnego.properties
+	REWRITE mailboxd/etc/zimbra-jetty-env.xml.in mailboxd/webapps/zimbra/WEB-INF/jetty-env.xml
+	REWRITE mailboxd/etc/zimbraAdmin-jetty-env.xml.in mailboxd/webapps/zimbraAdmin/WEB-INF/jetty-env.xml
 	RESTART mailboxd
 
 SECTION mailbox
