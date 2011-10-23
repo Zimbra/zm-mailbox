@@ -59,14 +59,20 @@ I. Conventional Debugging
    unimportant.  What's important is the Main class.  Set it to
    org.mortbay.start.Main.
 
-3. Switch to the Arguments tab and set VM arguments to
+3. Switch to the Arguments tab and set
+
+   Program arguments to 
+   --ini OPTIONS=Server,jsp,jmx,resources,websocket,ext,jta,plus,rewrite etc/jetty.xml
+   
+   and VM arguments to
    "-DSTART=/opt/zimbra/jetty/etc/start.config -DSTOP.PORT=7867
    -DSTOP.KEY=stop -Dzimbra.config=/opt/zimbra/conf/localconfig.xml
    -Djava.library.path=/opt/zimbra/lib".  Then choose "Other" under
    working directory and set it to /opt/zimbra/jetty.
 
 4. Swtich to the Classpath tab and add /opt/zimbra/jetty/start.jar to
-   User Entries.
+   User Entries. Also add all the jar files of /opt/zimbra/jetty/lib/
+   and /opt/zimbra/jetty/lib/jsp/
 
 5. Switch to the Source tab and add all the java projects in your
    workspace that you care about to debug.
