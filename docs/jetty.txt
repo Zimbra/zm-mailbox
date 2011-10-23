@@ -57,7 +57,7 @@ I. Conventional Debugging
    to "New" a configuration.  Call it anything you want, such as
    "jetty".  You can choose any project as the debug project.  That is
    unimportant.  What's important is the Main class.  Set it to
-   org.mortbay.start.Main.
+   org.eclipse.jetty.start.Main.
 
 3. Switch to the Arguments tab and set
 
