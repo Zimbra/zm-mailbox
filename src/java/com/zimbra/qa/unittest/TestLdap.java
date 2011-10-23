@@ -382,6 +382,7 @@ public class TestLdap {
          * Tests not running inside the server
          */
         classes.add(TestLdapHelper.class);
+        classes.add(TestLdapConnection.class);
         classes.add(TestLdapProvAccount.class);
         classes.add(TestLdapProvAlias.class);
         classes.add(TestLdapProvAttrCallback.class);

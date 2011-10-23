@@ -37,7 +37,7 @@ public abstract class ZAttrDynamicGroup extends Group {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 jhahm 20111020-1917 */
+    /* build: 8.0.0_BETA1_1111 pshao 20111022-1854 */
 
     /**
      * RFC2256: descriptive information
@@ -1146,6 +1146,68 @@ public abstract class ZAttrDynamicGroup extends Group {
     }
 
     /**
+     * locale of entry, e.g. en_US
+     *
+     * @return zimbraLocale, or null if unset
+     */
+    @ZAttr(id=345)
+    public String getLocaleAsString() {
+        return getAttr(Provisioning.A_zimbraLocale, null);
+    }
+
+    /**
+     * locale of entry, e.g. en_US
+     *
+     * @param zimbraLocale new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=345)
+    public void setLocale(String zimbraLocale) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLocale, zimbraLocale);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * locale of entry, e.g. en_US
+     *
+     * @param zimbraLocale new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=345)
+    public Map<String,Object> setLocale(String zimbraLocale, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLocale, zimbraLocale);
+        return attrs;
+    }
+
+    /**
+     * locale of entry, e.g. en_US
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=345)
+    public void unsetLocale() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLocale, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * locale of entry, e.g. en_US
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=345)
+    public Map<String,Object> unsetLocale(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraLocale, "");
+        return attrs;
+    }
+
+    /**
      * RFC822 email address of this recipient for accepting mail
      *
      * @return zimbraMailAlias, or empty array if unset
@@ -1262,6 +1324,68 @@ public abstract class ZAttrDynamicGroup extends Group {
     }
 
     /**
+     * the server hosting the account&#039;s mailbox
+     *
+     * @return zimbraMailHost, or null if unset
+     */
+    @ZAttr(id=4)
+    public String getMailHost() {
+        return getAttr(Provisioning.A_zimbraMailHost, null);
+    }
+
+    /**
+     * the server hosting the account&#039;s mailbox
+     *
+     * @param zimbraMailHost new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=4)
+    public void setMailHost(String zimbraMailHost) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailHost, zimbraMailHost);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the server hosting the account&#039;s mailbox
+     *
+     * @param zimbraMailHost new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=4)
+    public Map<String,Object> setMailHost(String zimbraMailHost, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailHost, zimbraMailHost);
+        return attrs;
+    }
+
+    /**
+     * the server hosting the account&#039;s mailbox
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=4)
+    public void unsetMailHost() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailHost, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the server hosting the account&#039;s mailbox
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=4)
+    public Map<String,Object> unsetMailHost(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailHost, "");
+        return attrs;
+    }
+
+    /**
      * mail delivery status (enabled/disabled)
      *
      * <p>Valid values: [enabled, disabled]
@@ -1373,6 +1497,192 @@ public abstract class ZAttrDynamicGroup extends Group {
     public Map<String,Object> unsetMailStatus(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailStatus, "");
+        return attrs;
+    }
+
+    /**
+     * address to put in reply-to header
+     *
+     * @return zimbraPrefReplyToAddress, or null if unset
+     */
+    @ZAttr(id=60)
+    public String getPrefReplyToAddress() {
+        return getAttr(Provisioning.A_zimbraPrefReplyToAddress, null);
+    }
+
+    /**
+     * address to put in reply-to header
+     *
+     * @param zimbraPrefReplyToAddress new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=60)
+    public void setPrefReplyToAddress(String zimbraPrefReplyToAddress) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReplyToAddress, zimbraPrefReplyToAddress);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * address to put in reply-to header
+     *
+     * @param zimbraPrefReplyToAddress new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=60)
+    public Map<String,Object> setPrefReplyToAddress(String zimbraPrefReplyToAddress, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReplyToAddress, zimbraPrefReplyToAddress);
+        return attrs;
+    }
+
+    /**
+     * address to put in reply-to header
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=60)
+    public void unsetPrefReplyToAddress() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReplyToAddress, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * address to put in reply-to header
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=60)
+    public Map<String,Object> unsetPrefReplyToAddress(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReplyToAddress, "");
+        return attrs;
+    }
+
+    /**
+     * personal part of email address put in reply-to header
+     *
+     * @return zimbraPrefReplyToDisplay, or null if unset
+     */
+    @ZAttr(id=404)
+    public String getPrefReplyToDisplay() {
+        return getAttr(Provisioning.A_zimbraPrefReplyToDisplay, null);
+    }
+
+    /**
+     * personal part of email address put in reply-to header
+     *
+     * @param zimbraPrefReplyToDisplay new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=404)
+    public void setPrefReplyToDisplay(String zimbraPrefReplyToDisplay) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReplyToDisplay, zimbraPrefReplyToDisplay);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * personal part of email address put in reply-to header
+     *
+     * @param zimbraPrefReplyToDisplay new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=404)
+    public Map<String,Object> setPrefReplyToDisplay(String zimbraPrefReplyToDisplay, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReplyToDisplay, zimbraPrefReplyToDisplay);
+        return attrs;
+    }
+
+    /**
+     * personal part of email address put in reply-to header
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=404)
+    public void unsetPrefReplyToDisplay() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReplyToDisplay, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * personal part of email address put in reply-to header
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=404)
+    public Map<String,Object> unsetPrefReplyToDisplay(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReplyToDisplay, "");
+        return attrs;
+    }
+
+    /**
+     * TRUE if we should set a reply-to header
+     *
+     * @return zimbraPrefReplyToEnabled, or false if unset
+     */
+    @ZAttr(id=405)
+    public boolean isPrefReplyToEnabled() {
+        return getBooleanAttr(Provisioning.A_zimbraPrefReplyToEnabled, false);
+    }
+
+    /**
+     * TRUE if we should set a reply-to header
+     *
+     * @param zimbraPrefReplyToEnabled new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=405)
+    public void setPrefReplyToEnabled(boolean zimbraPrefReplyToEnabled) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReplyToEnabled, zimbraPrefReplyToEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * TRUE if we should set a reply-to header
+     *
+     * @param zimbraPrefReplyToEnabled new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=405)
+    public Map<String,Object> setPrefReplyToEnabled(boolean zimbraPrefReplyToEnabled, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReplyToEnabled, zimbraPrefReplyToEnabled ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * TRUE if we should set a reply-to header
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     */
+    @ZAttr(id=405)
+    public void unsetPrefReplyToEnabled() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReplyToEnabled, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * TRUE if we should set a reply-to header
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     */
+    @ZAttr(id=405)
+    public Map<String,Object> unsetPrefReplyToEnabled(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefReplyToEnabled, "");
         return attrs;
     }
 

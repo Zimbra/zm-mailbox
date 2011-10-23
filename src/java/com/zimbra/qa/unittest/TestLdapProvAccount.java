@@ -23,14 +23,18 @@ import java.util.Set;
 import org.junit.*;
 import static org.junit.Assert.*;
 
+import com.google.common.collect.Maps;
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.CalendarResource;
+import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.CalendarResourceBy;
@@ -110,7 +114,6 @@ public class TestLdapProvAccount extends TestLdap {
         acct = prov.get(AccountBy.id, acctId);
         assertNull(acct);
     }
-
     
     private Account createAccount(String localPart) throws Exception {
         return createAccount(localPart, null);
@@ -130,6 +133,28 @@ public class TestLdapProvAccount extends TestLdap {
     
     private void deleteAccount(Account acct) throws Exception {
         deleteAccount(prov, acct);
+    }
+    
+    private Server createServer(String serverName, Map<String, Object> attrs) 
+    throws Exception {
+        return TestLdapProvServer.createServer(prov, serverName, attrs);
+    }
+    
+    private Server createServer(String serverName) 
+    throws Exception {
+        return createServer(serverName, null);
+    }
+    
+    private void deleteServer(Server server) throws Exception {
+        TestLdapProvServer.deleteServer(prov, server);
+    }
+    
+    private Cos createCos(String cosName, Map<String, Object> attrs) throws Exception {
+        return TestLdapProvCos.createCos(prov, cosName, attrs);
+    }
+    
+    private void deleteCos(Cos cos) throws Exception {
+        TestLdapProvCos.deleteCos(prov, cos);
     }
     
     @Test
@@ -382,5 +407,65 @@ public class TestLdapProvAccount extends TestLdap {
         deleteAccount(acctExists);
     }
 
+    @Test
+    public void mailHost() throws Exception {
+        Map<String, Object> server1Attrs = Maps.newHashMap();
+        server1Attrs.put(Provisioning.A_zimbraServiceEnabled, Provisioning.SERVICE_MAILBOX);
+        Server server1 = createServer("server1", server1Attrs);
+        
+        Map<String, Object> server2Attrs = Maps.newHashMap();
+        server2Attrs.put(Provisioning.A_zimbraServiceEnabled, Provisioning.SERVICE_MAILBOX);
+        Server server2 = createServer("server2", server2Attrs);
+        
+        Server server3 = createServer("server3");
+        
+        // specifies a mail host
+        Map<String, Object> acct1Attrs = Maps.newHashMap();
+        acct1Attrs.put(Provisioning.A_zimbraMailHost, server1.getName());
+        Account acct1 = createAccount("acct1", acct1Attrs);
+        assertEquals(server1.getId(), prov.getServer(acct1).getId());
+        
+        // specifies a mail host without mailbox server
+        Map<String, Object> acct2Attrs = Maps.newHashMap();
+        acct2Attrs.put(Provisioning.A_zimbraMailHost, server3.getName());
+        boolean caughtException = false;
+        try {
+            Account acct2 = createAccount("acct2", acct2Attrs);
+        } catch (ServiceException e) {
+            if (ServiceException.INVALID_REQUEST.equals(e.getCode())) {
+                caughtException = true;
+            }
+        }
+        assertTrue(caughtException);
+        
+        // use a server pool in cos
+        Map<String, Object> cos1Attrs = Maps.newHashMap();
+        cos1Attrs.put(Provisioning.A_zimbraMailHostPool, server2.getId());
+        Cos cos1 = createCos("cos1", cos1Attrs);
+        Map<String, Object> acct3Attrs = Maps.newHashMap();
+        acct3Attrs.put(Provisioning.A_zimbraCOSId, cos1.getId());
+        Account acct3 = createAccount("acct3", acct3Attrs);
+        assertEquals(server2.getId(), prov.getServer(acct3).getId());
+        
+        // use a server pool in cos, but the server pool does not contain a 
+        // server with mailbox server, should fallback to the local server
+        Map<String, Object> cos2Attrs = Maps.newHashMap();
+        cos2Attrs.put(Provisioning.A_zimbraMailHostPool, server3.getId());
+        Cos cos2 = createCos("cos2", cos2Attrs);
+        Map<String, Object> acct4Attrs = Maps.newHashMap();
+        acct4Attrs.put(Provisioning.A_zimbraCOSId, cos2.getId());
+        Account acct4 = createAccount("acct4", acct4Attrs);
+        assertEquals(prov.getLocalServer().getId(), prov.getServer(acct4).getId());
+        
+        
+        deleteAccount(acct1);
+        deleteAccount(acct3);
+        deleteAccount(acct4);
+        deleteServer(server1);
+        deleteServer(server2);
+        deleteServer(server3);
+        deleteCos(cos1);
+        deleteCos(cos2);
+    }
 
 }

@@ -1,3 +1,17 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2011 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.cs.service.account;
 
 import java.io.ByteArrayInputStream;
@@ -37,41 +51,36 @@ public abstract class DistributionListDocumentHandler extends AccountDocumentHan
     protected Element proxyIfNecessary(Element request, Map<String, Object> context) 
     throws ServiceException {
         try {
-            /* TODO
-            Group group = getGroup(request, Provisioning.getInstance());
+            Group group = getGroupBasic(request, Provisioning.getInstance());
             
             if (!Provisioning.onLocalServer(group)) {
-                return proxyRequest(request, context, getServer(group));
+                Server server = group.getServer();
+                if (server == null) {
+                    throw ServiceException.PROXY_ERROR(
+                            AccountServiceException.NO_SUCH_SERVER(
+                            group.getAttr(Provisioning.A_zimbraMailHost)), "");
+                }
+                return proxyRequest(request, context, server);
             }
-            */
             
             return super.proxyIfNecessary(request, context);
         } catch (ServiceException e) {
+            /*
             // if something went wrong proxying the request, just execute it locally
             if (ServiceException.PROXY_ERROR.equals(e.getCode()))
                 return null;
             // but if it's a real error, it's a real error
+             */
+            // must be able to proxy, we don't want to fallback to local
             throw e;
         }
     }
-    
-    private Server getServer(Group group) throws ServiceException {
-        String hostname = group.getAttr(Provisioning.A_zimbraMailHost);
-        if (hostname == null) {
-            throw ServiceException.PROXY_ERROR(AccountServiceException.NO_SUCH_SERVER(""), "");
-        }
-        Server server = Provisioning.getInstance().get(Key.ServerBy.name, hostname);
-        if (server == null) {
-            throw ServiceException.PROXY_ERROR(AccountServiceException.NO_SUCH_SERVER(hostname), "");
-        }
-        return server;
-    }
 
-    protected boolean isOwner(Account acct, Group group) throws ServiceException {
+    protected static boolean isOwner(Account acct, Group group) throws ServiceException {
         return AccessManager.getInstance().canAccessGroup(acct, group);
     }
     
-    static boolean isMember(Provisioning prov, Account acct, Group group) 
+    protected static boolean isMember(Provisioning prov, Account acct, Group group) 
     throws ServiceException {
         boolean isMember = false;
         List<Group> groups = prov.getGroups(acct, false, null); // all groups the account is a member of
@@ -84,9 +93,10 @@ public abstract class DistributionListDocumentHandler extends AccountDocumentHan
         return isMember;
     }
 
-    protected Group getGroup(Element request, Account acct, Provisioning prov) 
+    /*
+    protected Group getGroupFull(Element request, Account acct, Provisioning prov) 
     throws ServiceException {
-        Group group = getGroup(request, prov);
+        Group group = getGroupFull(request, prov);
         
         if (!isOwner(acct, group)) {
             throw ServiceException.PERM_DENIED(
@@ -95,15 +105,15 @@ public abstract class DistributionListDocumentHandler extends AccountDocumentHan
         
         return group;
     }
-
-    protected Group getGroup(Element request, Provisioning prov) 
+    */
+    
+    /*
+    private Group getGroupFull(Element request, Provisioning prov) 
     throws ServiceException {
-        Element d = request.getElement(AccountConstants.E_DL);
-        String key = d.getAttribute(AccountConstants.A_BY);
-        String value = d.getText();
+        Element eDL = request.getElement(AccountConstants.E_DL);
+        String key = eDL.getAttribute(AccountConstants.A_BY);
+        String value = eDL.getText();
         
-        // temporary fix for the caching bug
-        // Group group = prov.getGroupBasic(Key.DistributionListBy.fromString(key), value);
         Group group = prov.getGroup(Key.DistributionListBy.fromString(key), value);
         
         if (group == null) {
@@ -111,6 +121,38 @@ public abstract class DistributionListDocumentHandler extends AccountDocumentHan
         }
         
         return group;
+    }
+    */
+    
+    protected Group getGroupBasic(Element request, Provisioning prov) 
+    throws ServiceException {
+        Element eDL = request.getElement(AccountConstants.E_DL);
+        String key = eDL.getAttribute(AccountConstants.A_BY);
+        String value = eDL.getText();
+        
+        Group group = prov.getGroupBasic(Key.DistributionListBy.fromString(key), value);
+        
+        if (group == null) {
+            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);
+        }
+        
+        return group;
+    }
+    
+    protected abstract static class SynchronizedGroupHandler {
+        protected Group group;
+        
+        protected SynchronizedGroupHandler(Group group) {
+            this.group = group;
+        }
+        
+        protected abstract void handleRequest() throws ServiceException;
+        
+        protected void handle() throws ServiceException {
+            synchronized (group) {
+                handleRequest();
+            }
+        }
     }
     
     protected abstract static class NotificationSender {

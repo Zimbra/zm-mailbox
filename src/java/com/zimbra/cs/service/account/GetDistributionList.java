@@ -27,6 +27,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.service.account.DistributionListDocumentHandler.SynchronizedGroupHandler;
 
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -55,64 +56,86 @@ public class GetDistributionList extends DistributionListDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
         Account acct = getRequestedAccount(zsc);
         
-        Group group = getGroup(request, prov);
-
-        boolean isOwner = isOwner(acct, group);
-        
         Element response = zsc.createElement(AccountConstants.GET_DISTRIBUTION_LIST_RESPONSE);
         
-        // isMember
-        boolean isMember = isMember(prov, acct, group);
-
-        response.addAttribute(AccountConstants.A_IS_MEMBER, isMember);  
-        response.addAttribute(AccountConstants.A_IS_OWNER, isOwner);
-        
-        boolean needOwners = request.getAttributeBool(AccountConstants.A_NEED_OWNERS, false);
-        
-        Element eDL;
-        
-        // set encodeAttrs to false, we will be encoded attrs using addKeyValuePair,
-        // which is more json friendly
-        eDL = com.zimbra.cs.service.admin.GetDistributionList.encodeDistributionList(
-                    response, group, true, !needOwners, false, null, null);
-        
-        encodeAttrs(group, eDL, isOwner ? OWNER_ATTRS : NON_OWNER_ATTRS);
+        Group group = getGroupBasic(request, prov);
+        GetDistributionListHandler handler = new GetDistributionListHandler(
+                group, request, response, prov, acct);
+        handler.handle();
 
         return response;
     }
     
-    private void encodeAttrs(Group group, Element eDL, Set<String> specificPrefs) {
-        Map<String, Object> attrsMap = group.getUnicodeAttrs();
+    private static class GetDistributionListHandler extends SynchronizedGroupHandler {
+        private Element request;
+        private Element response;
+        private Provisioning prov;
+        private Account acct;
         
-        if (specificPrefs == null || !specificPrefs.isEmpty()) {
-            for (Map.Entry<String, Object> entry : attrsMap.entrySet()) {
-                String key = entry.getKey();
-    
-                if (specificPrefs != null && !specificPrefs.contains(key)) {
-                    continue;
-                }
-                
-                Object value = entry.getValue();
-                if (value instanceof String[]) {
-                    String sa[] = (String[]) value;
-                    for (int i = 0; i < sa.length; i++) {
-                        eDL.addKeyValuePair(key, sa[i], AccountConstants.E_A, AccountConstants.A_N);
-                    }
-                } else {
-                    eDL.addKeyValuePair(key, (String) value, AccountConstants.E_A, AccountConstants.A_N);
-                }
-            }
+        protected GetDistributionListHandler(Group group, 
+                Element request, Element response,
+                Provisioning prov, Account acct) {
+            super(group);
+            this.request = request;
+            this.response = response;
+            this.prov = prov;
+            this.acct = acct;
+        }
+
+        @Override
+        protected void handleRequest() throws ServiceException {
+            boolean isOwner = isOwner(acct, group);
+            
+            // isMember
+            boolean isMember = isMember(prov, acct, group);
+
+            response.addAttribute(AccountConstants.A_IS_MEMBER, isMember);  
+            response.addAttribute(AccountConstants.A_IS_OWNER, isOwner);
+            
+            boolean needOwners = request.getAttributeBool(AccountConstants.A_NEED_OWNERS, false);
+            
+            // set encodeAttrs to false, we will be encoded attrs using addKeyValuePair,
+            // which is more json friendly
+            Element eDL = com.zimbra.cs.service.admin.GetDistributionList.encodeDistributionList(
+                    response, group, true, !needOwners, false, null, null);
+            
+            encodeAttrs(group, eDL, isOwner ? OWNER_ATTRS : NON_OWNER_ATTRS);
         }
         
-        // always include subscription policies.
-        // subscription policies are encoded differently, using Group API that returns 
-        // default policy if the policy attrs are not set.
-        eDL.addKeyValuePair(Provisioning.A_zimbraDistributionListSubscriptionPolicy, 
-                group.getSubscriptionPolicy().name(), 
-                AccountConstants.E_A, AccountConstants.A_N);
-        eDL.addKeyValuePair(Provisioning.A_zimbraDistributionListUnsubscriptionPolicy,
-                group.getUnsubscriptionPolicy().name(),
-                AccountConstants.E_A, AccountConstants.A_N);
-    }   
+        private void encodeAttrs(Group group, Element eDL, Set<String> specificPrefs) {
+            Map<String, Object> attrsMap = group.getUnicodeAttrs();
+            
+            if (specificPrefs == null || !specificPrefs.isEmpty()) {
+                for (Map.Entry<String, Object> entry : attrsMap.entrySet()) {
+                    String key = entry.getKey();
+        
+                    if (specificPrefs != null && !specificPrefs.contains(key)) {
+                        continue;
+                    }
+                    
+                    Object value = entry.getValue();
+                    if (value instanceof String[]) {
+                        String sa[] = (String[]) value;
+                        for (int i = 0; i < sa.length; i++) {
+                            eDL.addKeyValuePair(key, sa[i], AccountConstants.E_A, AccountConstants.A_N);
+                        }
+                    } else {
+                        eDL.addKeyValuePair(key, (String) value, AccountConstants.E_A, AccountConstants.A_N);
+                    }
+                }
+            }
+            
+            // always include subscription policies.
+            // subscription policies are encoded differently, using Group API that returns 
+            // default policy if the policy attrs are not set.
+            eDL.addKeyValuePair(Provisioning.A_zimbraDistributionListSubscriptionPolicy, 
+                    group.getSubscriptionPolicy().name(), 
+                    AccountConstants.E_A, AccountConstants.A_N);
+            eDL.addKeyValuePair(Provisioning.A_zimbraDistributionListUnsubscriptionPolicy,
+                    group.getUnsubscriptionPolicy().name(),
+                    AccountConstants.E_A, AccountConstants.A_N);
+        } 
+    }
+  
 }
 

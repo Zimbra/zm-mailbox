@@ -65,58 +65,87 @@ public class SubscribeDistributionList extends DistributionListDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        Group group = getGroup(request, prov);
-        
-        DistributionListSubscribeOp op = DistributionListSubscribeOp.fromString(request.getAttribute(AccountConstants.A_OP));
-        
         Account acct = getRequestedAccount(zsc);
-        String[] members = new String[]{acct.getName()};
-        
-        DistributionListSubscribeStatus status = null;
-        boolean accepted = false;
-        if (op == DistributionListSubscribeOp.subscribe) {
-            DistributionListSubscriptionPolicy policy = group.getSubscriptionPolicy();
-            
-            if (policy == DistributionListSubscriptionPolicy.ACCEPT) {
-                prov.addGroupMembers(group, members);
-                accepted = true;
-                status = DistributionListSubscribeStatus.subscribed;
-            } else if (policy == DistributionListSubscriptionPolicy.REJECT) {
-                throw ServiceException.PERM_DENIED("subscription policy for group " + group.getName() + " is reject");
-            } else { // REQUEST APPROAVAL
-                ApprovalRequestSender sender = new ApprovalRequestSender(prov, group, acct, op);
-                sender.composeAndSend();
-                status = DistributionListSubscribeStatus.awaiting_approval;
-            }
-            
-        } else {
-            DistributionListUnsubscriptionPolicy policy = group.getUnsubscriptionPolicy();
-            
-            if (policy == DistributionListUnsubscriptionPolicy.ACCEPT) {
-                prov.removeGroupMembers(group, members);
-                accepted = true;
-                status = DistributionListSubscribeStatus.unsubscribed;
-            } else if (policy == DistributionListUnsubscriptionPolicy.REJECT) {
-                throw ServiceException.PERM_DENIED("un-subscription policy for group " + group.getName() + " is reject");
-            } else { // REQUEST APPROAVAL
-                ApprovalRequestSender sender = new ApprovalRequestSender(prov, group, acct, op);
-                sender.composeAndSend();
-                status = DistributionListSubscribeStatus.awaiting_approval;
-            }
-            
-        }
-        
-        if (accepted) {
-            ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                        new String[] {"cmd", "SubscribeDistributionList","name", group.getName(), 
-                        "op", op.name(),        
-                        "member", Arrays.deepToString(members)})); 
-        }
         
         Element response = zsc.createElement(AccountConstants.SUBSCRIBE_DISTRIBUTION_LIST_RESPONSE);
-        response.addAttribute(AccountConstants.A_STATUS, status.name());
+        
+        Group group = getGroupBasic(request, prov);
+        SubscribeDistributionListHandler handler = new SubscribeDistributionListHandler(
+                group, request, response, prov, acct);
+        handler.handle();
         
         return response;
+    }
+    
+    private static class SubscribeDistributionListHandler extends SynchronizedGroupHandler {
+        private Element request;
+        private Element response;
+        private Provisioning prov;
+        private Account acct;
+        
+        protected SubscribeDistributionListHandler(Group group, 
+                Element request, Element response,
+                Provisioning prov, Account acct) {
+            super(group);
+            this.request = request;
+            this.response = response;
+            this.prov = prov;
+            this.acct = acct;
+        }
+
+        @Override
+        protected void handleRequest() throws ServiceException {
+            DistributionListSubscribeOp op = 
+                DistributionListSubscribeOp.fromString(request.getAttribute(AccountConstants.A_OP));
+            
+            String[] members = new String[]{acct.getName()};
+            
+            DistributionListSubscribeStatus status = null;
+            boolean accepted = false;
+            if (op == DistributionListSubscribeOp.subscribe) {
+                DistributionListSubscriptionPolicy policy = group.getSubscriptionPolicy();
+                
+                if (policy == DistributionListSubscriptionPolicy.ACCEPT) {
+                    prov.addGroupMembers(group, members);
+                    accepted = true;
+                    status = DistributionListSubscribeStatus.subscribed;
+                } else if (policy == DistributionListSubscriptionPolicy.REJECT) {
+                    throw ServiceException.PERM_DENIED("subscription policy for group " + 
+                            group.getName() + " is reject");
+                } else { // REQUEST APPROAVAL
+                    ApprovalRequestSender sender = new ApprovalRequestSender(prov, group, acct, op);
+                    sender.composeAndSend();
+                    status = DistributionListSubscribeStatus.awaiting_approval;
+                }
+                
+            } else {
+                DistributionListUnsubscriptionPolicy policy = group.getUnsubscriptionPolicy();
+                
+                if (policy == DistributionListUnsubscriptionPolicy.ACCEPT) {
+                    prov.removeGroupMembers(group, members);
+                    accepted = true;
+                    status = DistributionListSubscribeStatus.unsubscribed;
+                } else if (policy == DistributionListUnsubscriptionPolicy.REJECT) {
+                    throw ServiceException.PERM_DENIED("un-subscription policy for group " + 
+                            group.getName() + " is reject");
+                } else { // REQUEST APPROAVAL
+                    ApprovalRequestSender sender = new ApprovalRequestSender(prov, group, acct, op);
+                    sender.composeAndSend();
+                    status = DistributionListSubscribeStatus.awaiting_approval;
+                }
+                
+            }
+            
+            if (accepted) {
+                ZimbraLog.security.info(ZimbraLog.encodeAttrs(
+                            new String[] {"cmd", "SubscribeDistributionList","name", group.getName(), 
+                            "op", op.name(),        
+                            "member", Arrays.deepToString(members)})); 
+            }
+            
+            response.addAttribute(AccountConstants.A_STATUS, status.name());
+        }
+        
     }
     
     private static class ApprovalRequestSender extends NotificationSender {

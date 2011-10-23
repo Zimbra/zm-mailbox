@@ -22,7 +22,6 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Provisioning;
@@ -37,11 +36,16 @@ public class TestLdapProvCos extends TestLdap {
         prov = Provisioning.getInstance();
     }
     
-    private Cos createCos(String cosName) throws Exception {
+    static Cos createCos(Provisioning prov, String cosName, Map<String, Object> attrs) 
+    throws Exception {
         Cos cos = prov.get(Key.CosBy.name, cosName);
         assertNull(cos);
         
-        cos = prov.createCos(cosName, new HashMap<String, Object>());
+        if (attrs == null) {
+            attrs = new HashMap<String, Object>();
+        }
+        
+        cos = prov.createCos(cosName, attrs);
         assertNotNull(cos);
         
         prov.flushCache(CacheEntryType.cos, null);
@@ -52,12 +56,20 @@ public class TestLdapProvCos extends TestLdap {
         return cos;
     }
     
-    private void deleteCos(Cos cos) throws Exception {
+    static void deleteCos(Provisioning prov, Cos cos) throws Exception {
         String codId = cos.getId();
         prov.deleteCos(codId);
         prov.flushCache(CacheEntryType.cos, null);
         cos = prov.get(Key.CosBy.id, codId);
         assertNull(cos);
+    }
+    
+    Cos createCos(String cosName) throws Exception {
+        return createCos(prov, cosName, null);
+    }
+
+    private void deleteCos(Cos cos) throws Exception {
+        deleteCos(prov, cos);
     }
     
     @Test
@@ -146,6 +158,13 @@ public class TestLdapProvCos extends TestLdap {
                         !Provisioning.A_cn.equals(attrName) &&
                         !Provisioning.A_description.equals(attrName)) {
                     assertEquals((String) valueInDefaultCos, (String) valueInCopiedCos);
+                } else {
+                    if (((String) valueInDefaultCos).equals((String) valueInCopiedCos)) {
+                        System.out.println("attr: " + attrName);
+                        System.out.println("valueInDefaultCos: " + (String) valueInDefaultCos);
+                        System.out.println("valueInCopiedCos: " + (String) valueInCopiedCos);
+                        fail();
+                    }
                 }
             } else if (valueInDefaultCos instanceof String[]) {
                 assertTrue(valueInCopiedCos instanceof String[]);
@@ -165,7 +184,7 @@ public class TestLdapProvCos extends TestLdap {
         Cos defaultCos = prov.get(Key.CosBy.name, Provisioning.DEFAULT_COS_NAME);
         
         List<Cos> allCos = prov.getAllCos();
-        assertEquals(1, allCos.size());
+        assertEquals(2, allCos.size());  // default and defaultExternal cos
         assertEquals(defaultCos.getId(), allCos.get(0).getId());
     }
     

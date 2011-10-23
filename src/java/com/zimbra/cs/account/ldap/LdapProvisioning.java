@@ -39,6 +39,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.GranteeBy;
+import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -50,13 +52,11 @@ import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.AccountServiceException.AuthFailedServiceException;
 import com.zimbra.cs.account.DomainCache.GetFromDomainCacheOption;
-import com.zimbra.cs.account.NamedEntry.Visitor;
-import com.zimbra.cs.account.Provisioning.SearchGalResult;
 import com.zimbra.cs.account.SearchAccountsOptions.IncludeType;
 import com.zimbra.cs.account.SearchDirectoryOptions.MakeObjectOpt;
 import com.zimbra.cs.account.SearchDirectoryOptions.ObjectType;
@@ -65,6 +65,7 @@ import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.PermissionCache;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
+import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.auth.AuthContext;
@@ -183,8 +184,9 @@ public class LdapProvisioning extends LdapProv {
             Provisioning.A_zimbraMailAlias,
             Provisioning.A_zimbraMailDeliveryAddress,
     };
-
-    private static final String[] BASIC_DL_ATTRS = {
+    
+    /*
+     private static final String[] BASIC_DL_ATTRS = {
             Provisioning.A_cn,
             Provisioning.A_displayName,
             Provisioning.A_mail,
@@ -201,7 +203,8 @@ public class LdapProvisioning extends LdapProv {
             Provisioning.A_zimbraPrefReplyToEnabled,
             Provisioning.A_zimbraDistributionListSubscriptionPolicy,
             Provisioning.A_zimbraDistributionListUnsubscriptionPolicy,
-    };
+     };
+     */
 
     @Override
     public int getAccountCacheSize() { return sAccountCache.getSize(); }
@@ -248,9 +251,13 @@ public class LdapProvisioning extends LdapProv {
     private static LdapConfig sConfig = null;
     private static GlobalGrant sGlobalGrant = null;
     private static final Random sPoolRandom = new Random();
-    private Groups mAllDLs; // email addresses of all distribution lists on the system
+    private Groups allDLs; // email addresses of all distribution lists on the system
     private ZLdapFilterFactory filterFactory;
 
+    private String[] BASIC_DL_ATTRS;
+    private String[] BASIC_DYNAMIC_GROUP_ATTRS;
+    private String[] BASIC_GROUP_ATTRS;
+    
     private static LdapProvisioning SINGLETON = null;
 
     private static synchronized void ensureSingleton(LdapProvisioning prov) {
@@ -267,14 +274,68 @@ public class LdapProvisioning extends LdapProv {
 
         setDIT();
         setHelper(new ZLdapHelper(this));
-        mAllDLs = new Groups(this);
+        allDLs = new Groups(this);
 
         filterFactory = ZLdapFilterFactory.getInstance();
 
+        try {
+            BASIC_DL_ATTRS = getBasicDLAttrs();
+            BASIC_DYNAMIC_GROUP_ATTRS = getBasicDynamicGroupAttrs();
+            BASIC_GROUP_ATTRS = getBasicGroupAttrs();
+        } catch (ServiceException e) {
+            Zimbra.halt("failed to initialize LdapProvisioning", e);
+        }
+        
         register(new Validators.DomainAccountValidator());
         register(new Validators.DomainMaxAccountsValidator());
     }
-
+    
+    private String[] getBasicDLAttrs() throws ServiceException {
+        AttributeManager attrMgr = AttributeManager.getInstance();
+        Set<String> attrs = attrMgr.getAllAttrsInClass(AttributeClass.distributionList);
+        
+        attrs.add(Provisioning.A_objectClass);
+        attrs.remove(Provisioning.A_zimbraMailForwardingAddress);  // the member attr
+        attrs.remove(Provisioning.A_zimbraMailTransport);          // does not apply to DL
+        
+        // remove deprecated attrs
+        for (Iterator<String> iter = attrs.iterator(); iter.hasNext();) {
+            String attr = iter.next();
+            AttributeInfo ai = attrMgr.getAttributeInfo(attr);
+            if (ai != null && ai.isDeprecated()) {
+                iter.remove();
+            }
+        }
+        
+        return Lists.newArrayList(attrs).toArray(new String[attrs.size()]);
+    }
+    
+    private String[] getBasicDynamicGroupAttrs() throws ServiceException {
+        AttributeManager attrMgr = AttributeManager.getInstance();
+        Set<String> attrs = attrMgr.getAllAttrsInClass(AttributeClass.group);
+        attrs.add(Provisioning.A_objectClass);
+        
+        // remove deprecated attrs
+        for (Iterator<String> iter = attrs.iterator(); iter.hasNext();) {
+            String attr = iter.next();
+            AttributeInfo ai = attrMgr.getAttributeInfo(attr);
+            if (ai != null && ai.isDeprecated()) {
+                iter.remove();
+            }
+        }
+        
+        return Lists.newArrayList(attrs).toArray(new String[attrs.size()]);
+    }
+    
+    private String[] getBasicGroupAttrs() throws ServiceException {
+        Set<String> attrs = Sets.newHashSet();
+        
+        Set<String> dlAttrs = Sets.newHashSet(getBasicDLAttrs());
+        Set<String> dynGroupAttrs = Sets.newHashSet(getBasicDynamicGroupAttrs());
+        SetUtil.union(attrs, dlAttrs, dynGroupAttrs);
+        return Lists.newArrayList(attrs).toArray(new String[attrs.size()]);
+    }
+    
 
     /*
      * Contains parallel arrays of old addrs and new addrs as a result of domain change
@@ -820,13 +881,11 @@ public class LdapProvisioning extends LdapProv {
         return createAccount(emailAddress, password, attrs, mDIT.handleSpecialAttrs(attrs), null, true, origAttrs);
     }
 
-    private Account createAccount(String emailAddress,
-                                  String password,
-                                  Map<String, Object> acctAttrs,
-                                  SpecialAttrs specialAttrs,
-                                  String[] additionalObjectClasses,
-                                  boolean restoring,
-                                  Map<String, Object> origAttrs) throws ServiceException {
+    private Account createAccount(String emailAddress, String password,
+            Map<String, Object> acctAttrs, SpecialAttrs specialAttrs,
+            String[] additionalObjectClasses, 
+            boolean restoring, Map<String, Object> origAttrs) 
+    throws ServiceException {
 
         String uuid = specialAttrs.getZimbraId();
         String baseDn = specialAttrs.getLdapBaseDn();
@@ -947,19 +1006,20 @@ public class LdapProvisioning extends LdapProv {
 
             entry.addAttr(A_objectClass, ocs);
 
-
             String zimbraIdStr;
-            if (uuid == null)
+            if (uuid == null) {
                 zimbraIdStr = LdapUtilCommon.generateUUID();
-            else
+            } else {
                 zimbraIdStr = uuid;
+            }
             entry.setAttr(A_zimbraId, zimbraIdStr);
             entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
 
             // default account status is active
-            if (!entry.hasAttribute(Provisioning.A_zimbraAccountStatus))
+            if (!entry.hasAttribute(Provisioning.A_zimbraAccountStatus)) {
                 entry.setAttr(A_zimbraAccountStatus, Provisioning.ACCOUNT_STATUS_ACTIVE);
-
+            }
+            
             Cos cos = null;
             String cosId = entry.getAttrString(Provisioning.A_zimbraCOSId);
 
@@ -972,50 +1032,47 @@ public class LdapProvisioning extends LdapProv {
             } else {
                 String domainCosId =
                         domain != null ?
-                                isExternalVirtualAccount(entry) ?
-                                        d.getDomainDefaultExternalUserCOSId() : d.getDomainDefaultCOSId() :
-                                null;
+                        isExternalVirtualAccount(entry) ?
+                        d.getDomainDefaultExternalUserCOSId() : 
+                        d.getDomainDefaultCOSId() :
+                        null;
+                        
                 if (domainCosId != null) {
                     cos = get(Key.CosBy.id, domainCosId);
                 }
                 if (cos == null) {
                     cos = getCosByName(isExternalVirtualAccount(entry) ?
-                                               Provisioning.DEFAULT_EXTERNAL_COS_NAME : Provisioning.DEFAULT_COS_NAME,
-                                       zlc);
+                            Provisioning.DEFAULT_EXTERNAL_COS_NAME : Provisioning.DEFAULT_COS_NAME,
+                            zlc);
                 }
             }
 
             boolean hasMailTransport = entry.hasAttribute(Provisioning.A_zimbraMailTransport);
 
-            // if zimbraMailTransport is NOT provided, pick a server and add zimbraMailHost(and zimbraMailTransport) if it is not specified
+            // if zimbraMailTransport is NOT provided, pick a server and add 
+            // zimbraMailHost(and zimbraMailTransport) if it is not specified
             if (!hasMailTransport) {
-                // if zimbraMailHost is not specified, and we have a COS, see if there is a pool to pick from.
-                if (cos != null && !entry.hasAttribute(Provisioning.A_zimbraMailHost)) {
-                    String mailHostPool[] = cos.getMultiAttr(Provisioning.A_zimbraMailHostPool);
-                    addMailHost(entry, mailHostPool, cos.getName());
-                }
-
-                // if zimbraMailHost still not specified, default to local server's zimbraServiceHostname if it has
-                // the mailbox service enabled, otherwise look through all servers and pick first with the service enabled.
-                // this means every account will always have a mailbox
-                if (!entry.hasAttribute(Provisioning.A_zimbraMailHost)) {
-                    addDefaultMailHost(entry);
-                }
+                addMailHost(entry, cos, true);
             }
 
             // set all the mail-related attrs if zimbraMailHost or zimbraMailTransport was specified
-            if (entry.hasAttribute(Provisioning.A_zimbraMailHost) || entry.hasAttribute(Provisioning.A_zimbraMailTransport)) {
+            if (entry.hasAttribute(Provisioning.A_zimbraMailHost) || 
+                entry.hasAttribute(Provisioning.A_zimbraMailTransport)) {
                 // default mail status is enabled
-                if (!entry.hasAttribute(Provisioning.A_zimbraMailStatus))
+                if (!entry.hasAttribute(Provisioning.A_zimbraMailStatus)) {
                     entry.setAttr(A_zimbraMailStatus, MAIL_STATUS_ENABLED);
-
+                }
+                
                 // default account mail delivery address is email address
                 if (!entry.hasAttribute(Provisioning.A_zimbraMailDeliveryAddress)) {
                     entry.setAttr(A_zimbraMailDeliveryAddress, emailAddress);
                 }
-            } else
-                throw ServiceException.INVALID_REQUEST("missing " + Provisioning.A_zimbraMailHost + " or " + Provisioning.A_zimbraMailTransport +  " for CreateAccount: " + emailAddress, null);
-
+            } else {
+                throw ServiceException.INVALID_REQUEST("missing " + 
+                        Provisioning.A_zimbraMailHost + " or " + Provisioning.A_zimbraMailTransport + 
+                        " for CreateAccount: " + emailAddress, null);
+            }
+            
             // amivisAccount requires the mail attr, so we always add it
             entry.setAttr(A_mail, emailAddress);
 
@@ -1030,9 +1087,10 @@ public class LdapProvisioning extends LdapProv {
             }
 
             // required for ZIMBRA_DEFAULT_PERSON_OC class
-            if (!entry.hasAttribute(Provisioning.A_sn))
+            if (!entry.hasAttribute(Provisioning.A_sn)) {
                 entry.setAttr(A_sn, localPart);
-
+            }
+            
             entry.setAttr(A_uid, localPart);
 
             setInitialPassword(cos, entry, password);
@@ -1042,8 +1100,12 @@ public class LdapProvisioning extends LdapProv {
 
             zlc.createEntry(entry);
             Account acct = getAccountById(zimbraIdStr, zlc, true);
-            if (acct == null)
-                throw ServiceException.FAILURE("unable to get account after creating LDAP account entry: "+emailAddress+", check ldap log for possible BDB deadlock", null);
+            if (acct == null) {
+                throw ServiceException.FAILURE(
+                        "unable to get account after creating LDAP account entry: " + 
+                        emailAddress + ", check ldap log for possible BDB deadlock", null);
+            }
+                
             AttributeManager.getInstance().postModify(acctAttrs, acct, attrManagerContext, true);
 
             validate(ProvisioningValidator.CREATE_ACCOUNT_SUCCEEDED,
@@ -1062,7 +1124,7 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    private static boolean isExternalVirtualAccount(ZMutableEntry entry) throws LdapException {
+    private boolean isExternalVirtualAccount(ZMutableEntry entry) throws LdapException {
         return entry.hasAttribute(Provisioning.A_zimbraIsExternalVirtualAccount) &&
                 ProvisioningConstants.TRUE.equals(entry.getAttrString(Provisioning.A_zimbraIsExternalVirtualAccount));
     }
@@ -1138,31 +1200,61 @@ public class LdapProvisioning extends LdapProv {
             LdapClient.closeContext(zlc);
         }
     }
-
-    private boolean addDefaultMailHost(ZMutableEntry entry, Server server)  throws ServiceException {
-        String localMailHost = server.getAttr(Provisioning.A_zimbraServiceHostname);
-        boolean hasMailboxService = server.getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains(Provisioning.SERVICE_MAILBOX);
-        if (hasMailboxService && localMailHost != null) {
-            entry.setAttr(Provisioning.A_zimbraMailHost, localMailHost);
-            int lmtpPort = getLocalServer().getIntAttr(Provisioning.A_zimbraLmtpBindPort, com.zimbra.cs.util.Config.D_LMTP_BIND_PORT);
-            String transport = "lmtp:" + localMailHost + ":" + lmtpPort;
+    
+    private void setMailHost(ZMutableEntry entry, Server server, boolean setMailTransport) {
+        String serviceHostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
+        entry.setAttr(Provisioning.A_zimbraMailHost, serviceHostname);
+        
+        if (setMailTransport) {
+            int lmtpPort = server.getIntAttr(Provisioning.A_zimbraLmtpBindPort, 
+                    com.zimbra.cs.util.Config.D_LMTP_BIND_PORT);
+            String transport = "lmtp:" + serviceHostname + ":" + lmtpPort;
             entry.setAttr(Provisioning.A_zimbraMailTransport, transport);
+        }
+    }
+
+    private boolean addDefaultMailHost(ZMutableEntry entry, Server server, boolean setMailTransport) 
+    throws ServiceException {
+        String serviceHostname = server.getAttr(Provisioning.A_zimbraServiceHostname);
+        if (server.hasMailboxService() && serviceHostname != null) {
+            setMailHost(entry,  server, setMailTransport);
             return true;
         }
         return false;
     }
 
-    private void addDefaultMailHost(ZMutableEntry entry)  throws ServiceException {
-        if (!addDefaultMailHost(entry, getLocalServer())) {
+    private void addDefaultMailHost(ZMutableEntry entry, boolean setMailTransport) 
+    throws ServiceException {
+        if (!addDefaultMailHost(entry, getLocalServer(), setMailTransport)) {
             for (Server server: getAllServers()) {
-                if (addDefaultMailHost(entry, server)) {
+                if (addDefaultMailHost(entry, server, setMailTransport)) {
                     return;
                 }
             }
         }
     }
 
-    private String addMailHost(ZMutableEntry entry, String[] mailHostPool, String cosName) throws ServiceException {
+    private void addMailHost(ZMutableEntry entry, Cos cos, boolean setMailTransport) 
+    throws ServiceException {
+        // if zimbraMailHost is not specified, and we have a COS, see if there is
+        // a pool to pick from.
+        if (cos != null && !entry.hasAttribute(Provisioning.A_zimbraMailHost)) {
+            String mailHostPool[] = cos.getMultiAttr(Provisioning.A_zimbraMailHostPool);
+            addMailHost(entry, mailHostPool, cos.getName(), setMailTransport);
+        }
+
+        // if zimbraMailHost still not specified, default to local server's 
+        // zimbraServiceHostname if it has the mailbox service enabled, otherwise 
+        // look through all servers and pick first with the service enabled.
+        // this means every account will always have a mailbox
+        if (!entry.hasAttribute(Provisioning.A_zimbraMailHost)) {
+            addDefaultMailHost(entry, setMailTransport);
+        }
+    }
+    
+    private String addMailHost(ZMutableEntry entry, String[] mailHostPool, String cosName, 
+            boolean setMailTransport) 
+    throws ServiceException {
         if (mailHostPool.length == 0) {
             return null;
         } else if (mailHostPool.length > 1) {
@@ -1172,7 +1264,7 @@ public class LdapProvisioning extends LdapProv {
             mailHostPool = pool;
         }
 
-        // shuffule up and deal
+        // Shuffle up and deal
         int max = mailHostPool.length;
         while (max > 0) {
             int i = sPoolRandom.nextInt(max);
@@ -1181,17 +1273,16 @@ public class LdapProvisioning extends LdapProv {
             if (s != null) {
                 String mailHost = s.getAttr(Provisioning.A_zimbraServiceHostname);
                 if (mailHost != null) {
-                    boolean hasMailboxService = s.getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains(Provisioning.SERVICE_MAILBOX);
-                    if (hasMailboxService) {
-                        entry.setAttr(Provisioning.A_zimbraMailHost, mailHost);
-                        int lmtpPort = s.getIntAttr(Provisioning.A_zimbraLmtpBindPort, com.zimbra.cs.util.Config.D_LMTP_BIND_PORT);
-                        String transport = "lmtp:" + mailHost + ":" + lmtpPort;
-                        entry.setAttr(Provisioning.A_zimbraMailTransport, transport);
+                    if (s.hasMailboxService()) {
+                        setMailHost(entry, s, setMailTransport);
                         return mailHost;
-                    } else
-                        ZimbraLog.account.warn("cos("+cosName+") mailHostPool server("+s.getName()+") is not enabled for mailbox service");
+                    } else {
+                        ZimbraLog.account.warn("cos("+cosName+") mailHostPool server(" + 
+                                s.getName()+") is not enabled for mailbox service");
+                    }
                 } else {
-                    ZimbraLog.account.warn("cos("+cosName+") mailHostPool server("+s.getName()+") has no service hostname");
+                    ZimbraLog.account.warn("cos("+cosName+") mailHostPool server(" + 
+                            s.getName()+") has no service hostname");
                 }
             } else {
                 ZimbraLog.account.warn("cos("+cosName+") has invalid server in pool: "+mailHostId);
@@ -1726,13 +1817,13 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public void addAlias(DistributionList dl, String alias) throws ServiceException {
         addAliasInternal(dl, alias);
-        mAllDLs.addGroup(dl);
+        allDLs.addGroup(dl);
     }
 
     @Override
     public void removeAlias(DistributionList dl, String alias) throws ServiceException {
         removeAliasInternal(dl, alias);
-        mAllDLs.removeGroup(alias);
+        allDLs.removeGroup(alias);
     }
 
     private boolean isEntryAlias(ZAttributes attrs) throws ServiceException {
@@ -2912,7 +3003,8 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    public Server createServer(String name, Map<String, Object> serverAttrs) throws ServiceException {
+    public Server createServer(String name, Map<String, Object> serverAttrs) 
+    throws ServiceException {
         name = name.toLowerCase().trim();
 
         Map<?, ?> attrManagerContext = new HashMap<Object, Object>();
@@ -3168,9 +3260,16 @@ public class LdapProvisioning extends LdapProv {
     /*
      *  Distribution lists.
      */
-
     @Override
-    public DistributionList createDistributionList(String listAddress, Map<String, Object> listAttrs) throws ServiceException {
+    public DistributionList createDistributionList(String listAddress, 
+            Map<String, Object> listAttrs) 
+    throws ServiceException {
+        return createDistributionList(listAddress, listAttrs, null);
+    }
+    
+    private DistributionList createDistributionList(String listAddress, 
+            Map<String, Object> listAttrs, Account creator) 
+    throws ServiceException {
 
         SpecialAttrs specialAttrs = mDIT.handleSpecialAttrs(listAttrs);
         String baseDn = specialAttrs.getLdapBaseDn();
@@ -3188,7 +3287,7 @@ public class LdapProvisioning extends LdapProv {
 
         validEmailAddress(listAddress);
 
-        Map<?, ?> attrManagerContext = new HashMap<Object, Object>();
+        Map<String, Object> attrManagerContext = new HashMap<String, Object>();
         AttributeManager.getInstance().preModify(listAttrs, null, attrManagerContext, true, true);
 
         ZLdapContext zlc = null;
@@ -3207,8 +3306,8 @@ public class LdapProvisioning extends LdapProv {
             entry.mapToAttrs(listAttrs);
 
             Set<String> ocs = new HashSet<String>();
-            ocs.add("zimbraDistributionList");
-            ocs.add("zimbraMailRecipient");
+            ocs.add(AttributeClass.OC_zimbraDistributionList);
+            ocs.add(AttributeClass.OC_zimbraMailRecipient);
             entry.addAttr(A_objectClass, ocs);
 
             String zimbraIdStr = LdapUtilCommon.generateUUID();
@@ -3233,7 +3332,13 @@ public class LdapProvisioning extends LdapProv {
             }
 
             entry.setAttr(A_uid, localPart);
-
+            
+            // set a home server for proxying purpose if we are creating a delegated group
+            if (creator != null) {
+                Cos cos = getCOS(creator);
+                addMailHost(entry, cos, false);
+            }
+            
             String dn = mDIT.distributionListDNCreate(baseDn, entry.getAttributes(), localPart, domain);
             entry.setDN(dn);
 
@@ -3243,7 +3348,7 @@ public class LdapProvisioning extends LdapProv {
 
             if (dlist != null) {
                 AttributeManager.getInstance().postModify(listAttrs, dlist, attrManagerContext, true);
-                mAllDLs.addGroup(dlist);
+                allDLs.addGroup(dlist);
             } else {
                 throw ServiceException.FAILURE("unable to get distribution list after creating LDAP entry: "+
                         listAddress, null);
@@ -3470,7 +3575,7 @@ public class LdapProvisioning extends LdapProv {
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_DISTRIBUTIONLIST);
             zlc.deleteEntry(dl.getDN());
-            mAllDLs.removeGroup(addrs);
+            allDLs.removeGroup(addrs);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to purge distribution list: "+zimbraId, e);
         } finally {
@@ -3489,7 +3594,7 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public boolean isDistributionList(String addr) {
-        return mAllDLs.isGroup(addr);
+        return allDLs.isGroup(addr);
     }
 
     private Group getGroupFromCache(Key.DistributionListBy keyType, String key) {
@@ -4712,7 +4817,8 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public CalendarResource createCalendarResource(String emailAddress,String password,
-            Map<String, Object> calResAttrs) throws ServiceException {
+            Map<String, Object> calResAttrs) 
+    throws ServiceException {
         emailAddress = emailAddress.toLowerCase().trim();
 
         calResAttrs.put(Provisioning.A_zimbraAccountCalendarUserType,
@@ -4723,7 +4829,8 @@ public class LdapProvisioning extends LdapProv {
         Map<String, Object> attrManagerContext = new HashMap<String, Object>();
 
         Set<String> ocs = LdapObjectClass.getCalendarResourceObjectClasses(this);
-        Account acct = createAccount(emailAddress, password, calResAttrs, specialAttrs, ocs.toArray(new String[0]), false, null);
+        Account acct = createAccount(emailAddress, password, calResAttrs, specialAttrs, 
+                ocs.toArray(new String[0]), false, null);
 
         LdapCalendarResource resource =
             (LdapCalendarResource) getCalendarResourceById(acct.getId(), true);
@@ -7469,6 +7576,25 @@ public class LdapProvisioning extends LdapProv {
             boolean dynamic) throws ServiceException{
         return dynamic? createDynamicGroup(name, attrs) : createDistributionList(name, attrs);
     }
+    
+    @Override
+    public Group createDelegatedGroup(String name, Map<String, Object> attrs, 
+            boolean dynamic, Account creator) 
+    throws ServiceException {
+        if (creator == null) {
+            throw ServiceException.INVALID_REQUEST("must have a creator account", null);
+        }
+        
+        Group group = dynamic? 
+                createDynamicGroup(name, attrs, creator) : 
+                createDistributionList(name, attrs, creator);
+               
+        grantRight(TargetType.dl.getCode(), TargetBy.id, group.getId(), 
+                GranteeType.GT_USER.getCode(), GranteeBy.id, creator.getId(), null, 
+                Group.GroupOwner.GROUP_OWNER_RIGHT.getName(), null);
+        
+        return group;
+    }
 
     @Override
     public void deleteGroup(String zimbraId) throws ServiceException {
@@ -7565,13 +7691,13 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public void addGroupAlias(Group group, String alias) throws ServiceException {
         addAliasInternal(group, alias);
-        mAllDLs.addGroup(group);
+        allDLs.addGroup(group);
     }
 
     @Override
     public void removeGroupAlias(Group group, String alias) throws ServiceException {
         removeAliasInternal(group, alias);
-        mAllDLs.removeGroup(alias);
+        allDLs.removeGroup(alias);
     }
     
     @Override
@@ -7637,7 +7763,7 @@ public class LdapProvisioning extends LdapProv {
     private Group getGroupByQuery(ZLdapFilter filter, ZLdapContext initZlc, boolean basicAttrsOnly)
     throws ServiceException {
         try {
-            String[] returnAttrs = basicAttrsOnly ? BASIC_DL_ATTRS : null;
+            String[] returnAttrs = basicAttrsOnly ? BASIC_GROUP_ATTRS : null;
             ZSearchResultEntry sr = helper.searchForEntry(mDIT.mailBranchBaseDN(), filter, initZlc, false, returnAttrs);
             if (sr != null) {
                 ZAttributes attrs = sr.getAttributes();
@@ -7667,6 +7793,12 @@ public class LdapProvisioning extends LdapProv {
     @Override
     public DynamicGroup createDynamicGroup(String groupAddress,
             Map<String, Object> groupAttrs) throws ServiceException {
+        return createDynamicGroup(groupAddress, groupAttrs, null);
+    }
+    
+    private DynamicGroup createDynamicGroup(String groupAddress,
+            Map<String, Object> groupAttrs, Account creator) 
+    throws ServiceException {
 
         SpecialAttrs specialAttrs = mDIT.handleSpecialAttrs(groupAttrs);
         String baseDn = specialAttrs.getLdapBaseDn();
@@ -7740,6 +7872,12 @@ public class LdapProvisioning extends LdapProv {
 
             entry.setAttr(A_cn, localPart);
             // entry.setAttr(A_uid, localPart); need to use uid if we move dynamic groups to the ou=people tree
+            
+            // set a home server for proxying purpose if we are creating a delegated group
+            if (creator != null) {
+                Cos cos = getCOS(creator);
+                addMailHost(entry, cos, false);
+            }
 
             String dn = mDIT.dynamicGroupNameLocalPartToDN(localPart, domainDN);
             entry.setDN(dn);
@@ -7750,7 +7888,7 @@ public class LdapProvisioning extends LdapProv {
 
             if (group != null) {
                 AttributeManager.getInstance().postModify(groupAttrs, group, attrManagerContext, true);
-                mAllDLs.addGroup(group);
+                allDLs.addGroup(group);
             } else {
                 throw ServiceException.FAILURE("unable to get distribution list after creating LDAP entry: "+
                         groupAddress, null);
@@ -7814,7 +7952,7 @@ public class LdapProvisioning extends LdapProv {
             // remove zimbraMemberOf if this group from all accounts
             deleteMemberOfOnAccounts(zlc, zimbraId);
 
-            mAllDLs.removeGroup(addrs);
+            allDLs.removeGroup(addrs);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to purge group: "+zimbraId, e);
         } finally {
@@ -8023,7 +8161,7 @@ public class LdapProvisioning extends LdapProv {
     private DynamicGroup getDynamicGroupByQuery(ZLdapFilter filter, ZLdapContext initZlc, boolean basicAttrsOnly)
             throws ServiceException {
         try {
-            String[] returnAttrs = basicAttrsOnly ? BASIC_DL_ATTRS : null;
+            String[] returnAttrs = basicAttrsOnly ? BASIC_DYNAMIC_GROUP_ATTRS : null;
             ZSearchResultEntry sr = helper.searchForEntry(mDIT.mailBranchBaseDN(), filter, initZlc, false, returnAttrs);
             if (sr != null) {
                 return makeDynamicGroup(sr.getDN(), sr.getAttributes());

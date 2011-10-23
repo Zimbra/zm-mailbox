@@ -50,12 +50,9 @@ public class CreateDistributionList extends AccountDocumentHandler {
         
         boolean dynamic = request.getAttributeBool(AccountConstants.A_DYNAMIC, false);
         
-        Group group = prov.createGroup(name, attrs, dynamic);
-        
-        // make creator a owner of the DL
-        Account authedAcct = getAuthenticatedAccount(zsc);
-        DistributionListAction.AddOwnerHandler.addOwner(prov, group,
-                GranteeType.GT_USER, Key.GranteeBy.id, authedAcct.getId());
+        // creator of the group will automatically become the first owner of the group
+        Account creator = getAuthenticatedAccount(zsc);
+        Group group = prov.createDelegatedGroup(name, attrs, dynamic, creator);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                  new String[] {"cmd", "CreateDistributionList", "name", name}, attrs));         

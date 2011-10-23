@@ -237,8 +237,8 @@ public class Account extends ZAttrAccount implements GroupedEntry, AliasedEntry 
     }
     
     public Server getServer() throws ServiceException {
-        String serverId = getAttr(Provisioning.A_zimbraMailHost);
-        return (serverId == null ? null : getProvisioning().get(Key.ServerBy.name, serverId));
+        String serverName = getAttr(Provisioning.A_zimbraMailHost);
+        return (serverName == null ? null : getProvisioning().get(Key.ServerBy.name, serverName));
     }
 
     

@@ -11,7 +11,6 @@ import java.util.Map;
 import javax.activation.DataHandler;
 import javax.mail.Address;
 import javax.mail.MessagingException;
-import javax.mail.Transport;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
 
@@ -27,7 +26,6 @@ import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.L10nUtil.MsgKey;
@@ -38,9 +36,6 @@ import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.UserRight;
-import com.zimbra.cs.service.account.DistributionListDocumentHandler.NotificationSender;
-import com.zimbra.cs.service.account.DistributionListDocumentHandler.NotificationSender.HtmlPartDataSource;
-import com.zimbra.cs.service.account.DistributionListDocumentHandler.NotificationSender.XmlPartDataSource;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -76,71 +71,95 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         Account acct = getRequestedAccount(zsc);
-
-        Group group = getGroup(request, acct, prov);
         
-        Element eAction = request.getElement(AccountConstants.E_ACTION);
-        Operation op = Operation.fromString(eAction.getAttribute(AccountConstants.A_OP));
-        
-        
-        DLActionHandler handler = null;
-        switch (op) {
-            case delete:
-                handler = new DeleteHandler(eAction, group, acct);
-                break;
-            case modify:
-                handler = new ModifyHandler(eAction, group, acct);
-                break;
-            case rename:
-                handler = new RenameHandler(eAction, group, acct);
-                break;
-            case addAlias:
-                handler = new AddAliasHandler(eAction, group, acct);
-                break;
-            case removeAlias:
-                handler = new RemoveAliasHandler(eAction, group, acct);
-                break;
-            case addOwner:
-                handler = new AddOwnerHandler(eAction, group, acct);
-                break;
-            case removeOwner:
-                handler = new RemoveOwnerHandler(eAction, group, acct);
-                break;
-            case addMembers:
-                handler = new AddMembersHandler(eAction, group, acct);
-                break;
-            case removeMembers:
-                handler = new RemoveMembersHandler(eAction, group, acct);
-                break;
-            case acceptSubsReq:
-                handler = new AcceptSubsReqHandler(eAction, group, acct);
-                break;
-            case rejectSubsReq:
-                handler = new RejectSubsReqHandler(eAction, group, acct);
-                break;     
-            default:
-                throw ServiceException.FAILURE("unsupported op:" + op.name(), null);
-        }
-        
+        Group group = getGroupBasic(request, prov);
+        DistributionListActionHandler handler = new DistributionListActionHandler(
+                group, request, prov, acct);
         handler.handle();
         
         Element response = zsc.createElement(AccountConstants.DISTRIBUTION_LIST_ACTION_RESPONSE);
-
         return response;
     }
     
+    private static class DistributionListActionHandler extends SynchronizedGroupHandler {
+        private Element request;
+        private Provisioning prov;
+        private Account acct;
+        
+        protected DistributionListActionHandler(Group group,
+                Element request, Provisioning prov, Account acct) {
+            super(group);
+            this.request = request;
+            this.prov = prov;
+            this.acct = acct;
+        }
+
+        @Override
+        protected void handleRequest() throws ServiceException {
+            if (!isOwner(acct, group)) {
+                throw ServiceException.PERM_DENIED(
+                        "you do not have sufficient rights to access this distribution list");
+            }
+            
+            Element eAction = request.getElement(AccountConstants.E_ACTION);
+            Operation op = Operation.fromString(eAction.getAttribute(AccountConstants.A_OP));
+            
+            DLActionHandler handler = null;
+            switch (op) {
+                case delete:
+                    handler = new DeleteHandler(eAction, group, prov, acct);
+                    break;
+                case modify:
+                    handler = new ModifyHandler(eAction, group, prov, acct);
+                    break;
+                case rename:
+                    handler = new RenameHandler(eAction, group, prov, acct);
+                    break;
+                case addAlias:
+                    handler = new AddAliasHandler(eAction, group, prov, acct);
+                    break;
+                case removeAlias:
+                    handler = new RemoveAliasHandler(eAction, group, prov, acct);
+                    break;
+                case addOwner:
+                    handler = new AddOwnerHandler(eAction, group, prov, acct);
+                    break;
+                case removeOwner:
+                    handler = new RemoveOwnerHandler(eAction, group, prov, acct);
+                    break;
+                case addMembers:
+                    handler = new AddMembersHandler(eAction, group, prov, acct);
+                    break;
+                case removeMembers:
+                    handler = new RemoveMembersHandler(eAction, group, prov, acct);
+                    break;
+                case acceptSubsReq:
+                    handler = new AcceptSubsReqHandler(eAction, group, prov, acct);
+                    break;
+                case rejectSubsReq:
+                    handler = new RejectSubsReqHandler(eAction, group, prov, acct);
+                    break;     
+                default:
+                    throw ServiceException.FAILURE("unsupported op:" + op.name(), null);
+            }
+            
+            handler.handle();
+        }
+        
+    }
     
     private static abstract class DLActionHandler {
         protected Element eAction;
         protected Group group;
-        protected Account requestedAcct;
         protected Provisioning prov;
+        protected Account requestedAcct;
         
-        protected DLActionHandler(Element request, Group group, Account requestedAcct) {
+        protected DLActionHandler(Element request, Group group, 
+                Provisioning prov, Account requestedAcct) {
             this.eAction = request;
             this.group = group;
+            this.prov = prov;
             this.requestedAcct = requestedAcct;
-            this.prov = Provisioning.getInstance();
         }
         
         abstract void handle() throws ServiceException;
@@ -149,8 +168,9 @@ public class DistributionListAction extends DistributionListDocumentHandler {
     
     private static class DeleteHandler extends DLActionHandler {
 
-        protected DeleteHandler(Element eAction, Group group, Account requestedAcct) {
-            super(eAction, group, requestedAcct);
+        protected DeleteHandler(Element eAction, Group group, 
+                Provisioning prov, Account requestedAcct) {
+            super(eAction, group, prov, requestedAcct);
         }
 
         @Override
@@ -171,8 +191,9 @@ public class DistributionListAction extends DistributionListDocumentHandler {
     
     private static class ModifyHandler extends DLActionHandler {
 
-        protected ModifyHandler(Element eAction, Group group, Account requestedAcct) {
-            super(eAction, group, requestedAcct);
+        protected ModifyHandler(Element eAction, Group group, 
+                Provisioning prov, Account requestedAcct) {
+            super(eAction, group, prov, requestedAcct);
         }
         
         @Override
@@ -194,8 +215,9 @@ public class DistributionListAction extends DistributionListDocumentHandler {
     
     private static class RenameHandler extends DLActionHandler {
 
-        protected RenameHandler(Element eAction, Group group, Account requestedAcct) {
-            super(eAction, group, requestedAcct);
+        protected RenameHandler(Element eAction, Group group, 
+                Provisioning prov, Account requestedAcct) {
+            super(eAction, group, prov, requestedAcct);
         }
         
         @Override
@@ -219,8 +241,9 @@ public class DistributionListAction extends DistributionListDocumentHandler {
     
     private static class AddAliasHandler extends DLActionHandler {
 
-        protected AddAliasHandler(Element eAction, Group group, Account requestedAcct) {
-            super(eAction, group, requestedAcct);
+        protected AddAliasHandler(Element eAction, Group group, 
+                Provisioning prov, Account requestedAcct) {
+            super(eAction, group, prov, requestedAcct);
         }
         
         @Override
@@ -241,8 +264,9 @@ public class DistributionListAction extends DistributionListDocumentHandler {
     
     private static class RemoveAliasHandler extends DLActionHandler {
 
-        protected RemoveAliasHandler(Element eAction, Group group, Account requestedAcct) {
-            super(eAction, group, requestedAcct);
+        protected RemoveAliasHandler(Element eAction, Group group, 
+                Provisioning prov, Account requestedAcct) {
+            super(eAction, group, prov, requestedAcct);
         }
         
         @Override
@@ -263,8 +287,9 @@ public class DistributionListAction extends DistributionListDocumentHandler {
     
     static class AddOwnerHandler extends DLActionHandler {
 
-        protected AddOwnerHandler(Element eAction, Group group, Account requestedAcct) {
-            super(eAction, group, requestedAcct);
+        protected AddOwnerHandler(Element eAction, Group group, 
+                Provisioning prov, Account requestedAcct) {
+            super(eAction, group, prov, requestedAcct);
         }
         
         @Override
@@ -300,8 +325,9 @@ public class DistributionListAction extends DistributionListDocumentHandler {
     
     static class RemoveOwnerHandler extends DLActionHandler {
 
-        protected RemoveOwnerHandler(Element eAction, Group group, Account requestedAcct) {
-            super(eAction, group, requestedAcct);
+        protected RemoveOwnerHandler(Element eAction, Group group, 
+                Provisioning prov, Account requestedAcct) {
+            super(eAction, group, prov, requestedAcct);
         }
         
         @Override
@@ -336,8 +362,9 @@ public class DistributionListAction extends DistributionListDocumentHandler {
     
     private static class AddMembersHandler extends DLActionHandler {
 
-        protected AddMembersHandler(Element eAction, Group group, Account requestedAcct) {
-            super(eAction, group, requestedAcct);
+        protected AddMembersHandler(Element eAction, Group group, 
+                Provisioning prov, Account requestedAcct) {
+            super(eAction, group, prov, requestedAcct);
         }
         
         @Override
@@ -363,8 +390,9 @@ public class DistributionListAction extends DistributionListDocumentHandler {
     
     private static class RemoveMembersHandler extends DLActionHandler {
 
-        protected RemoveMembersHandler(Element eAction, Group group, Account requestedAcct) {
-            super(eAction, group, requestedAcct);
+        protected RemoveMembersHandler(Element eAction, Group group, 
+                Provisioning prov, Account requestedAcct) {
+            super(eAction, group, prov, requestedAcct);
         }
         
         @Override
@@ -517,8 +545,9 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
     private static class AcceptSubsReqHandler extends DLActionHandler {
 
-        protected AcceptSubsReqHandler(Element eAction, Group group, Account requestedAcct) {
-            super(eAction, group, requestedAcct);
+        protected AcceptSubsReqHandler(Element eAction, Group group, 
+                Provisioning prov, Account requestedAcct) {
+            super(eAction, group, prov, requestedAcct);
         }
         
         @Override
@@ -582,8 +611,9 @@ public class DistributionListAction extends DistributionListDocumentHandler {
     
     private static class RejectSubsReqHandler extends DLActionHandler {
 
-        protected RejectSubsReqHandler(Element eAction, Group group, Account requestedAcct) {
-            super(eAction, group, requestedAcct);
+        protected RejectSubsReqHandler(Element eAction, Group group, 
+                Provisioning prov, Account requestedAcct) {
+            super(eAction, group, prov, requestedAcct);
         }
         
         @Override

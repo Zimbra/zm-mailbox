@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ZAttrProvisioning.DistributionListSubscriptionPolicy;
 import com.zimbra.common.account.ZAttrProvisioning.DistributionListUnsubscriptionPolicy;
 import com.zimbra.common.service.ServiceException;
@@ -55,6 +56,11 @@ public abstract class Group extends MailTarget implements AliasedEntry {
     
     abstract DistributionListSubscriptionPolicy getDistributionListSubscriptionPolicy();
     abstract DistributionListUnsubscriptionPolicy getDistributionListUnsubscriptionPolicy();
+    
+    public Server getServer() throws ServiceException {
+        String serverName = getAttr(Provisioning.A_zimbraMailHost);
+        return (serverName == null ? null : getProvisioning().get(Key.ServerBy.name, serverName));
+    }
     
     public DistributionListSubscriptionPolicy getSubscriptionPolicy() {
         DistributionListSubscriptionPolicy policy = getDistributionListSubscriptionPolicy();

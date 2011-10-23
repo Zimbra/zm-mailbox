@@ -19,6 +19,7 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.common.account.Key.TargetBy;
@@ -103,7 +104,7 @@ public class TestProvDelegatedDL {
         }
     }
 
-    private SoapTransport authUser(String acctName) throws Exception {
+    private static SoapTransport authUser(String acctName) throws Exception {
         com.zimbra.soap.account.type.Account acct = 
             new com.zimbra.soap.account.type.Account(
                     com.zimbra.soap.account.type.Account.By.NAME, acctName);
@@ -128,25 +129,64 @@ public class TestProvDelegatedDL {
         return transport;
     }
     
-    private <T> T invokeJaxb(SoapTransport transport, Object jaxbObject)
+    private static <T> T invokeJaxb(SoapTransport transport, Object jaxbObject)
     throws ServiceException, IOException {
         Element req = JaxbUtil.jaxbToElement(jaxbObject);
         Element res = transport.invoke(req);
         return (T) JaxbUtil.elementToJaxb(res);
     }
     
-    private static Group createGroupAndAddOwner(String groupName) throws ServiceException {
+    private static Group createGroupAndAddOwner(String groupName) throws Exception {
         return createGroupAndAddOwner(groupName, null);
     }
     
-    private static Group createGroupAndAddOwner(String groupName, Map<String, Object> attrs) throws ServiceException {
-        Group group = prov.createGroup(groupName, attrs, false);
+    private static Group createGroupAndAddOwner(String groupName, List<KeyValuePair> attrs) 
+    throws Exception {
+        boolean dynamic = false;
+        
+        Group group = prov.getGroup(Key.DistributionListBy.name, groupName);
+        assertNull(group);
+        
+        /*
+        Account owner = prov.get(AccountBy.name, USER_OWNER);
+        assertNotNull(owner);
+        
+        Group group = prov.createDelegatedGroup(groupName, attrs, owner);
         assertNotNull(group);
-    
-        // add a owner to the DL
-        prov.grantRight(TargetType.dl.getCode(), TargetBy.name, group.getName(), 
-                GranteeType.GT_USER.getCode(), GranteeBy.name, USER_OWNER, null, 
-                Group.GroupOwner.GROUP_OWNER_RIGHT.getName(), null);
+        */
+        
+        SoapTransport transport = authUser(USER_CREATOR);
+        
+        CreateDistributionListRequest req = new CreateDistributionListRequest(
+                groupName, attrs, dynamic);
+        CreateDistributionListResponse resp = invokeJaxb(transport, req);
+        
+        group = prov.getGroup(Key.DistributionListBy.name, groupName);
+        assertNotNull(group);
+        assertEquals(groupName, group.getName());
+        assertNotNull(group.getAttr(Provisioning.A_zimbraMailHost));
+        
+        /*
+         * USER_CREATOR is automatically an owner now.
+         */
+        
+        // add USER_OWNER as an owner
+        DistributionListAction action = new DistributionListAction(Operation.addOwner);
+        DistributionListActionRequest actionReq = new DistributionListActionRequest(
+                DistributionListSelector.fromName(groupName), action);
+        
+        action.setOwner(new DistributionListOwnerSelector(DistributionListOwnerType.usr, 
+                DistributionListOwnerBy.name, USER_OWNER));
+        DistributionListActionResponse actionResp = invokeJaxb(transport, actionReq);
+        
+        // remove USER_CREATOR from the owner list
+        action = new DistributionListAction(Operation.removeOwner);
+        actionReq = new DistributionListActionRequest(
+                DistributionListSelector.fromName(groupName), action);
+        
+        action.setOwner(new DistributionListOwnerSelector(DistributionListOwnerType.usr, 
+                DistributionListOwnerBy.name, USER_CREATOR));
+        actionResp = invokeJaxb(transport, actionReq);
         
         return group;
     }
@@ -183,9 +223,9 @@ public class TestProvDelegatedDL {
                 User.R_createDistList.getName(), null);
         
         // create a DL for get/action tests
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDistributionListSubscriptionPolicy,
-                ZAttrProvisioning.DistributionListSubscriptionPolicy.ACCEPT.name());
+        List<KeyValuePair> attrs = Lists.newArrayList(new KeyValuePair(
+                Provisioning.A_zimbraDistributionListSubscriptionPolicy, 
+                ZAttrProvisioning.DistributionListSubscriptionPolicy.ACCEPT.name()));
         Group group = createGroupAndAddOwner(DL_NAME, attrs);
     }
     

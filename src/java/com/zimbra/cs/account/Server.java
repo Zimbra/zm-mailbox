@@ -67,5 +67,9 @@ public class Server extends ZAttrServer {
         
         return false;
     }
+    
+    public boolean hasMailboxService() {
+        return getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains(Provisioning.SERVICE_MAILBOX);
+    }
 
 }

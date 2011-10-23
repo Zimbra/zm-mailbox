@@ -1187,6 +1187,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
         throw ServiceException.UNSUPPORTED();
     }
     
+    public Group createDelegatedGroup(String listAddress, Map<String, Object> listAttrs, 
+            boolean dynamic, Account creator) 
+    throws ServiceException {
+        throw ServiceException.UNSUPPORTED();
+    }
+    
     public void deleteGroup(String zimbraId) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }

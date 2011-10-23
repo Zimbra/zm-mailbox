@@ -350,7 +350,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>RFC822 email address of this recipient for accepting mail</desc>
 </attr>
 
-<attr id="4" name="zimbraMailHost" type="astring" max="256" callback="MailHost" cardinality="single" optionalIn="mailRecipient">
+<attr id="4" name="zimbraMailHost" type="astring" max="256" callback="MailHost" cardinality="single" optionalIn="mailRecipient,group">
   <desc>the server hosting the account's mailbox</desc>
 </attr>
 
@@ -587,7 +587,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether or not out of office reply is enabled</desc>
 </attr>
 
-<attr id="60" name="zimbraPrefReplyToAddress" type="string" max="256" cardinality="single" optionalIn="account,identity,dataSource,distributionList" flags="domainAdminModifiable" callback="Email">
+<attr id="60" name="zimbraPrefReplyToAddress" type="string" max="256" cardinality="single" optionalIn="account,identity,dataSource,distributionList,group" flags="domainAdminModifiable" callback="Email">
   <desc>address to put in reply-to header</desc>
 </attr>
 
@@ -1810,7 +1810,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether or not to deliver mail locally</desc>
 </attr>
 
-<attr id="345" name="zimbraLocale" type="string" max="64" cardinality="single" optionalIn="mailRecipient,account,alias,distributionList,cos,globalConfig,domain,server,calendarResource" flags="accountInfo,accountInherited,domainAdminModifiable,serverInherited">
+<attr id="345" name="zimbraLocale" type="string" max="64" cardinality="single" optionalIn="mailRecipient,account,alias,distributionList,group,cos,globalConfig,domain,server,calendarResource" flags="accountInfo,accountInherited,domainAdminModifiable,serverInherited">
   <desc>locale of entry, e.g. en_US</desc>
 </attr>
 
@@ -2074,11 +2074,11 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>email address to put in from header</desc>
 </attr>
 
-<attr id="404" name="zimbraPrefReplyToDisplay" type="string" max="256" cardinality="single" optionalIn="account,identity,dataSource,distributionList" flags="domainAdminModifiable">
+<attr id="404" name="zimbraPrefReplyToDisplay" type="string" max="256" cardinality="single" optionalIn="account,identity,dataSource,distributionList,group" flags="domainAdminModifiable">
     <desc>personal part of email address put in reply-to header</desc>
 </attr>
 
-<attr id="405" name="zimbraPrefReplyToEnabled" type="boolean" cardinality="single" optionalIn="account,identity,distributionList" flags="domainAdminModifiable">
+<attr id="405" name="zimbraPrefReplyToEnabled" type="boolean" cardinality="single" optionalIn="account,identity,distributionList,group" flags="domainAdminModifiable">
   <desc>TRUE if we should set a reply-to header</desc>
 </attr>
 
