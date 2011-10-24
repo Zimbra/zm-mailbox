@@ -260,7 +260,7 @@ public final class MailboxUpgrade {
     private static void migrateFlagColumn(DbConnection conn, Mailbox mbox) throws ServiceException {
         // for flags that we want to be searchable, put an entry in the TAG table
         for (int tagId : Mailbox.REIFIED_FLAGS) {
-            DbTag.createTag(conn, mbox, Flag.of(mbox, tagId).mData, null);
+            DbTag.createTag(conn, mbox, Flag.of(mbox, tagId).mData, null, false);
         }
 
         // get all the different FLAGS column values for the mailbox
@@ -395,7 +395,7 @@ public final class MailboxUpgrade {
                 data.modMetadata = rs.getInt(3);
                 Color color = Color.fromMetadata(new Metadata(rs.getString(4)).getLong(Metadata.FN_COLOR, MailItem.DEFAULT_COLOR));
 
-                DbTag.createTag(conn, mbox, data, color.getMappedColor() == MailItem.DEFAULT_COLOR ? null : color);
+                DbTag.createTag(conn, mbox, data, color.getMappedColor() == MailItem.DEFAULT_COLOR ? null : color, true);
 
                 tagNames.put(data.id, data.name);
             }

@@ -14,7 +14,10 @@
  */
 package com.zimbra.cs.mailbox;
 
-import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 import junit.framework.Assert;
 
@@ -22,13 +25,20 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.zimbra.common.account.Key;
 import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
+import com.zimbra.cs.mailbox.MailboxTest.MockListener;
 import com.zimbra.cs.mailbox.util.TagUtil;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.session.PendingModifications.Change;
 
 public class TagTest {
 
@@ -37,7 +47,11 @@ public class TagTest {
         MailboxTestUtil.initServer();
 
         Provisioning prov = Provisioning.getInstance();
-        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
+        prov.createAccount("test@zimbra.com", "secret", Maps.<String, Object>newHashMap());
+
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        prov.createAccount("test2@zimbra.com", "secret", attrs);
     }
 
     @Before
@@ -395,5 +409,160 @@ public class TagTest {
         mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, tag1, true, null);
         checkThreeTagCounts("add the first tag back", mbox, 1, 1, 1, 1, 0, 0);
         checkItemTags(mbox, msgId, new String[] { tag2, tag1 });
+    }
+
+    @Test
+    public void permissions() throws Exception {
+        Account acct2 = Provisioning.getInstance().get(Key.AccountBy.name, "test2@zimbra.com");
+
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        int tagId1 = mbox.createTag(null, tag1, (byte) 0).getId();
+
+        // need full perms on account to fetch a tag by ID
+        try {
+            mbox.getTagById(new OperationContext(acct2), tagId1);
+            Assert.fail("fetched tag by ID without permissions");
+        } catch (ServiceException e) {
+            Assert.assertEquals("unexpected error when fetching tag by ID", ServiceException.PERM_DENIED, e.getCode());
+        }
+
+//        // need full perms on account to fetch a tag by name
+//        try {
+//            mbox.getTagByName(new OperationContext(acct2), tagId1);
+//            Assert.fail("fetched tag by name without permissions");
+//        } catch (ServiceException e) {
+//            Assert.assertEquals("unexpected error when fetching tag by name", ServiceException.PERM_DENIED, e.getCode());
+//        }
+
+        // need full perms on account to get the tag list
+        try {
+            mbox.getTagList(new OperationContext(acct2));
+            Assert.fail("fetched tag list without permissions");
+        } catch (ServiceException e) {
+            Assert.assertEquals("unexpected error when fetching tag list", ServiceException.PERM_DENIED, e.getCode());
+        }
+
+        // need full perms on account to create a tag in the tag list
+        try {
+            mbox.createTag(new OperationContext(acct2), tag2, (byte) 0);
+            Assert.fail("created tag without permissions");
+        } catch (ServiceException e) {
+            Assert.assertEquals("unexpected error when creating tag", ServiceException.PERM_DENIED, e.getCode());
+        }
+
+        // just need insert or write to implicitly create a tag
+        mbox.grantAccess(null, Mailbox.ID_FOLDER_INBOX, acct2.getId(), ACL.GRANTEE_USER, ACL.RIGHT_INSERT, null);
+        try {
+            DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD).setTags(new String[] { tag2 });
+            mbox.addMessage(new OperationContext(acct2), ThreaderTest.getRootMessage(), dopt, null).getId();
+        } catch (ServiceException e) {
+            Assert.fail("unable to insert message with implicit tag");
+        }
+
+        // still need full perms to "create" an existing but unlisted tag
+        try {
+            mbox.createTag(new OperationContext(acct2), tag2, (byte) 0);
+            Assert.fail("switched tag from unlisted to listed without permissions");
+        } catch (ServiceException e) {
+            Assert.assertEquals("unexpected error when \"creating\" existing unlisted tag", ServiceException.PERM_DENIED, e.getCode());
+        }
+
+        // need full perms to rename a tag
+        try {
+            mbox.rename(new OperationContext(acct2), tagId1, MailItem.Type.TAG, tag4);
+            Assert.fail("renamed tag without permissions");
+        } catch (ServiceException e) {
+            Assert.assertEquals("unexpected error when renaming tag", ServiceException.PERM_DENIED, e.getCode());
+        }
+
+        // need full perms to delete a tag
+        try {
+            mbox.delete(new OperationContext(acct2), tagId1, MailItem.Type.TAG);
+            Assert.fail("deleted tag without permissions");
+        } catch (ServiceException e) {
+            Assert.assertEquals("unexpected error when deleting tag", ServiceException.PERM_DENIED, e.getCode());
+        }
+    }
+
+    @Test
+    public void listed() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        // create one tag explicitly
+        mbox.createTag(null, tag1, (byte) 5);
+
+        // create two more tags implicitly
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD).setTags(new String[] { tag2, tag3 });
+        mbox.addMessage(null, ThreaderTest.getRootMessage(), dopt, null).getId();
+
+        // make sure only the explicitly-created tag is listed
+        List<Tag> tags = mbox.getTagList(null);
+        Assert.assertEquals("only 1 tag listed", 1, tags.size());
+        Assert.assertEquals(tag1 + " is listed", tag1, tags.get(0).getName());
+
+        // purge the cache and double-check against the DB contents
+        mbox.purge(MailItem.Type.TAG);
+        mbox.getTagList(null);
+        Assert.assertEquals("only 1 tag still listed", 1, tags.size());
+        Assert.assertEquals(tag1 + " is still listed", tag1, tags.get(0).getName());
+
+        // mark one of the implicit tags as listed
+        mbox.createTag(null, tag3, (byte) 3);
+
+        tags = mbox.getTagList(null);
+        Set<String> expectedTagNames = Sets.newHashSet(tag1, tag3);
+        Assert.assertEquals("2 tags listed", 2, tags.size());
+        for (Tag tag : tags) {
+            Assert.assertNotNull(tag.getName() + " is listed", expectedTagNames.remove(tag.getName()));
+        }
+
+        // purge the cache and double-check against the DB contents
+        mbox.purge(MailItem.Type.TAG);
+        tags = mbox.getTagList(null);
+        expectedTagNames = Sets.newHashSet(tag1, tag3);
+        Assert.assertEquals("2 tags listed", 2, tags.size());
+        for (Tag tag : tags) {
+            Assert.assertNotNull(tag.getName() + " is listed", expectedTagNames.remove(tag.getName()));
+        }
+    }
+
+    @Test
+    public void notifications() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        MockListener ml = new MockListener();
+        MailboxListener.register(ml);
+
+        try {
+            // new implicit tags should not be included in notifications
+            DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD).setTags(new String[] { tag2 });
+            mbox.addMessage(null, ThreaderTest.getRootMessage(), dopt, null);
+            for (MailItem item : ml.pms.created.values()) {
+                Assert.assertFalse("implicit tags should not be notified", item instanceof Tag);
+            }
+
+            // new real tags *should* be included in notifications
+            mbox.createTag(null, tag1, (byte) 0);
+            Assert.assertFalse("explicit tag create must produce notifications", ml.pms.created.isEmpty());
+            Assert.assertTrue("explicit tags must be notified", ml.pms.created.values().iterator().next() instanceof Tag);
+
+            // changes to implicit tags should not be included in notifications
+            int msgId = mbox.addMessage(null, ThreaderTest.getRootMessage(), dopt, null).getId();
+            for (Change chg : ml.pms.modified.values()) {
+                Assert.assertFalse("implicit tag changes should not be notified", chg.what instanceof Tag);
+            }
+
+            // changes to real tags *should* be included in notifications
+            mbox.alterTag(null, msgId, MailItem.Type.MESSAGE, tag1, true, null);
+            Assert.assertFalse("explicit tag apply must produce notifications", ml.pms.modified == null || ml.pms.modified.isEmpty());
+            boolean found = false;
+            for (Change chg : ml.pms.modified.values()) {
+                found |= chg.what instanceof Tag;
+            }
+            Assert.assertTrue("explicit tag apply must be notified", found);
+        } finally {
+            MailboxListener.unregister(ml);
+        }
     }
 }

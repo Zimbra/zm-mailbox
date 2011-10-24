@@ -60,7 +60,7 @@ public class Tag extends MailItem {
 
                     if (create) {
                         try {
-                            tlist.add(mbox.createTagInternal(tag, new Color(DEFAULT_COLOR), Mailbox.ID_AUTO_INCREMENT));
+                            tlist.add(mbox.createTagInternal(Mailbox.ID_AUTO_INCREMENT, tag, new Color(DEFAULT_COLOR), false));
                             continue;
                         } catch (ServiceException e) {
                             if (!e.getCode().equals(MailServiceException.ALREADY_EXISTS)) {
@@ -96,6 +96,7 @@ public class Tag extends MailItem {
         }
     }
 
+    private boolean isListed;
     private RetentionPolicy retentionPolicy;
 
     Tag(Mailbox mbox, UnderlyingData ud) throws ServiceException {
@@ -184,7 +185,18 @@ public class Tag extends MailItem {
         saveMetadata();
     }
 
-    static Tag create(Mailbox mbox, int id, String requestedName, Color color) throws ServiceException {
+    public boolean isListed() {
+        return isListed;
+    }
+
+    void setListed() throws ServiceException {
+        if (!isListed) {
+            isListed = true;
+            saveMetadata();
+        }
+    }
+
+    static Tag create(Mailbox mbox, int id, String requestedName, Color color, boolean listed) throws ServiceException {
         String name = validateItemName(requestedName);
         try {
             // if we can successfully get a tag with that name, we've got a naming conflict
@@ -198,10 +210,10 @@ public class Tag extends MailItem {
         data.folderId = Mailbox.ID_FOLDER_TAGS;
         data.name = name;
         data.setSubject(name);
-        data.metadata = encodeMetadata(color, 1, null);
+        data.metadata = encodeMetadata(color, 1, null, listed);
         data.contentChanged(mbox);
         ZimbraLog.mailop.info("Adding Tag %s: id=%d.", name, data.id);
-        DbTag.createTag(mbox, data, color);
+        DbTag.createTag(mbox, data, color, listed);
 
         Tag tag = new Tag(mbox, data);
         tag.finishCreation(null);
@@ -324,6 +336,8 @@ public class Tag extends MailItem {
     void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
 
+        isListed = meta.getBool(Metadata.FN_LISTED, false);
+
         Metadata rp = meta.getMap(Metadata.FN_RETENTION_POLICY, true);
         if (rp != null) {
             retentionPolicy = RetentionPolicyManager.retentionPolicyFromMetadata(rp, true);
@@ -334,18 +348,21 @@ public class Tag extends MailItem {
 
     @Override
     Metadata encodeMetadata(Metadata meta) {
-        return encodeMetadata(meta, mRGBColor, mVersion, retentionPolicy);
+        return encodeMetadata(meta, mRGBColor, mVersion, retentionPolicy, isListed);
     }
 
-    public static String encodeMetadata(Color color, int version, RetentionPolicy rp) {
-        return encodeMetadata(new Metadata(), color, version, rp).toString();
+    public static String encodeMetadata(Color color, int version, RetentionPolicy rp, boolean listed) {
+        return encodeMetadata(new Metadata(), color, version, rp, listed).toString();
     }
 
-    static Metadata encodeMetadata(Metadata meta, Color color, int version, RetentionPolicy rp) {
+    static Metadata encodeMetadata(Metadata meta, Color color, int version, RetentionPolicy rp, boolean listed) {
         MailItem.encodeMetadata(meta, color, null, version, null);
+
         if (rp != null && rp.isSet()) {
             meta.put(Metadata.FN_RETENTION_POLICY, RetentionPolicyManager.toMetadata(rp, true));
         }
+        meta.put(Metadata.FN_LISTED, listed);
+
         return meta;
     }
 

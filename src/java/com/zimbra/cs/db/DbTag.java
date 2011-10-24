@@ -69,12 +69,13 @@ public final class DbTag {
         data.size = rs.getInt(4);
         data.unreadCount = rs.getInt(5);
 
+        boolean listed = rs.getBoolean(6);
         String policy = rs.getString(8);
         RetentionPolicy rp = policy == null ? null : RetentionPolicyManager.retentionPolicyFromMetadata(new Metadata(policy), true);
         long c = rs.getLong(3);
         Color color = rs.wasNull() ? null : Color.fromMetadata(c);
         // FIXME: if Tag weren't a subclass of MailItem, this step wouldn't be necessary
-        data.metadata = Tag.encodeMetadata(color, 1, rp);
+        data.metadata = Tag.encodeMetadata(color, 1, rp, listed);
 
         data.modMetadata = rs.getInt(7);
         data.modContent = data.modMetadata;
@@ -108,11 +109,11 @@ public final class DbTag {
         return '%' + delimitTagName(tagName).replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + '%';
     }
 
-    public static void createTag(Mailbox mbox, UnderlyingData data, Color color) throws ServiceException {
-        createTag(mbox.getOperationConnection(), mbox, data, color);
+    public static void createTag(Mailbox mbox, UnderlyingData data, Color color, boolean listed) throws ServiceException {
+        createTag(mbox.getOperationConnection(), mbox, data, color, listed);
     }
 
-    public static void createTag(DbConnection conn, Mailbox mbox, UnderlyingData data, Color color) throws ServiceException {
+    public static void createTag(DbConnection conn, Mailbox mbox, UnderlyingData data, Color color, boolean listed) throws ServiceException {
         PreparedStatement stmt = null;
         try {
             stmt = conn.prepareStatement("INSERT INTO " + getTagTableName(mbox) +
@@ -127,7 +128,7 @@ public final class DbTag {
             } else {
                 stmt.setNull(pos++, Types.BIGINT);
             }
-            stmt.setBoolean(pos++, data.id > 0);
+            stmt.setBoolean(pos++, listed);
             stmt.setInt(pos++, data.modMetadata);
 
             int num = stmt.executeUpdate();
@@ -539,9 +540,8 @@ public final class DbTag {
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
-            // FIXME: persist 'listed'
             stmt = conn.prepareStatement("UPDATE " + getTagTableName(mbox) +
-                    " SET color = ?, policy = ?, sequence = ? WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "id = ?");
+                    " SET color = ?, policy = ?, listed = ?, sequence = ? WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "id = ?");
             int pos = 1;
             Color color = tag.getRgbColor();
             if (color != null && color.getMappedColor() != MailItem.DEFAULT_COLOR) {
@@ -555,6 +555,7 @@ public final class DbTag {
             } else {
                 stmt.setNull(pos++, Types.VARCHAR);
             }
+            stmt.setBoolean(pos++, tag.isListed());
             stmt.setInt(pos++, tag.getModifiedSequence());
             pos = DbMailItem.setMailboxId(stmt, mbox, pos);
             stmt.setInt(pos++, tag.getId());

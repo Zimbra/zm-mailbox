@@ -69,7 +69,7 @@ public class VirtualConversation extends Conversation {
 
     static VirtualConversation create(Mailbox mbox, Message msg) throws ServiceException {
         VirtualConversation vconv = new VirtualConversation(mbox, msg);
-        mbox.markItemCreated(vconv);
+        vconv.markItemCreated();
         return vconv;
     }
 

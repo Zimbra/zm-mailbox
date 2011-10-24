@@ -76,6 +76,7 @@ public final class Metadata {
     public static final String FN_BOUNDS           = "l";
     public static final String FN_LAST_DATE        = "ld";
     public static final String FN_LOCK_OWNER       = "lo";
+    public static final String FN_LISTED           = "lst";
     public static final String FN_LOCK_TIMESTAMP   = "lt";
     public static final String FN_MODSEQ           = "mseq";
     public static final String FN_NUM_COMPONENTS   = "nc";

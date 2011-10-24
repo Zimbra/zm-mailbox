@@ -16,7 +16,6 @@ package com.zimbra.cs.service.mail;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -24,7 +23,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mailbox.ContactConstants;
@@ -74,7 +72,7 @@ public class SyncTest {
         Element response = new Sync().handle(request, context);
         String token = response.getAttribute(MailConstants.A_TOKEN);
 
-        // check that both tags are returned in the sync response
+        // check that only the explicitly-created tag is returned in the sync response
         Element tagFolder = null;
         for (Element hidden : response.getElement(MailConstants.E_FOLDER).listElements(MailConstants.E_FOLDER)) {
             if (hidden.getAttribute(MailConstants.A_NAME).equals("Tags")) {
@@ -83,15 +81,10 @@ public class SyncTest {
             }
         }
         Assert.assertNotNull("could not find Tags folder in initial sync response", tagFolder);
-
-        Set<String> expectedTags = Sets.newHashSet("bar", "foo");
-        for (Element t : tagFolder.listElements(MailConstants.E_TAG)) {
-            String name = t.getAttribute(MailConstants.A_NAME);
-            Assert.assertNotNull(name + " unexpected listed as tag name", expectedTags.remove(name));
-            int expectedColor = name.equals("foo") ? 4 : 0;
-            Assert.assertEquals("correct color for tag '" + name + "'", expectedColor, t.getAttributeLong(MailConstants.A_COLOR, MailItem.DEFAULT_COLOR));
-        }
-        Assert.assertTrue("some expected tags not found: " + expectedTags, expectedTags.isEmpty());
+        Assert.assertEquals("1 tag listed", 1, tagFolder.listElements(MailConstants.E_TAG).size());
+        Element t = tagFolder.listElements(MailConstants.E_TAG).get(0);
+        Assert.assertEquals("listed tag named 'foo'", "foo", t.getAttribute(MailConstants.A_NAME));
+        Assert.assertEquals("correct color for tag 'foo'", 4, t.getAttributeLong(MailConstants.A_COLOR, MailItem.DEFAULT_COLOR));
 
         // change tag color and re-sync
         mbox.setColor(null, tagId, MailItem.Type.TAG, (byte) 6);
@@ -103,7 +96,7 @@ public class SyncTest {
         token = response.getAttribute(MailConstants.A_TOKEN);
 
         // make sure the modified tag is returned in the sync response
-        Element t = response.getOptionalElement(MailConstants.E_TAG);
+        t = response.getOptionalElement(MailConstants.E_TAG);
         Assert.assertNotNull("modified tag missing", t);
         Assert.assertEquals("new color on serialized tag", 6, t.getAttributeLong(MailConstants.A_COLOR, MailItem.DEFAULT_COLOR));
     }

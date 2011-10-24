@@ -1625,7 +1625,7 @@ public class Mailbox {
         try {
             // for flags that we want to be searchable, put an entry in the TAG table
             for (int tagId : REIFIED_FLAGS) {
-                DbTag.createTag(this, Flag.of(this, tagId).mData, null);
+                DbTag.createTag(this, Flag.of(this, tagId).mData, null, false);
             }
         } finally {
             lock.release();
@@ -2149,10 +2149,16 @@ public class Mailbox {
                         folder = (Folder) item;
                     }
                     snapshot.recordCreated(folder);
+                } else if (item instanceof Tag) {
+                    if (((Tag) item).isListed()) {
+                        snapshot.recordCreated(snapshotItem(item));
+                    }
                 } else {
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
-                    boolean copy = item instanceof Tag || (cache != null && cache.containsKey(item.getId()));
-                    snapshot.recordCreated(copy ? snapshotItem(item) : item);
+                    if (cache != null && cache.containsKey(item.getId())) {
+                        item = snapshotItem(item);
+                    }
+                    snapshot.recordCreated(item);
                 }
             }
         }
@@ -2173,11 +2179,16 @@ public class Mailbox {
                         folder = (Folder) item;
                     }
                     snapshot.recordModified(chg.op, folder, chg.why, chg.when, (MailItem) chg.preModifyObj);
+                } else if (item instanceof Tag) {
+                    if (((Tag) item).isListed()) {
+                        snapshot.recordModified(chg.op, snapshotItem(item), chg.why, chg.when, (MailItem) chg.preModifyObj);
+                    }
                 } else {
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
-                    boolean copy = item instanceof Tag || (cache != null && cache.containsKey(item.getId()));
-                    snapshot.recordModified(
-                            chg.op, copy ? snapshotItem(item) : item, chg.why, chg.when, (MailItem) chg.preModifyObj);
+                    if (cache != null && cache.containsKey(item.getId())) {
+                        item = snapshotItem(item);
+                    }
+                    snapshot.recordModified(chg.op, item, chg.why, chg.when, (MailItem) chg.preModifyObj);
                 }
             }
         }
@@ -2625,12 +2636,12 @@ public class Mailbox {
     }
 
     public List<MailItem> getItemList(OperationContext octxt, MailItem.Type type, int folderId)
-            throws ServiceException {
+    throws ServiceException {
         return getItemList(octxt, type, folderId, SortBy.NONE);
     }
 
     public List<MailItem> getItemList(OperationContext octxt, MailItem.Type type, int folderId, SortBy sort)
-            throws ServiceException {
+    throws ServiceException {
         List<MailItem> result;
         boolean success = false;
 
@@ -2643,11 +2654,13 @@ public class Mailbox {
 
             Folder folder = folderId == -1 ? null : getFolderById(folderId);
             if (folder == null) {
-                if (!hasFullAccess())
+                if (!hasFullAccess()) {
                     throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+                }
             } else {
-                if (!folder.canAccess(ACL.RIGHT_READ, getAuthenticatedAccount(), isUsingAdminPrivileges()))
+                if (!folder.canAccess(ACL.RIGHT_READ, getAuthenticatedAccount(), isUsingAdminPrivileges())) {
                     throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+                }
             }
 
             switch (type) {
@@ -2670,8 +2683,9 @@ public class Mailbox {
                     }
                     result = new ArrayList<MailItem>(mTagCache.size() / 2);
                     for (Map.Entry<Object, Tag> entry : mTagCache.entrySet()) {
-                        if (entry.getKey() instanceof String) {
-                            result.add(entry.getValue());
+                        Tag tag = entry.getValue();
+                        if (entry.getKey() instanceof String && tag.isListed()) {
+                            result.add(tag);
                         }
                     }
                     success = true;
@@ -2918,7 +2932,7 @@ public class Mailbox {
                     for (Map.Entry<Object, Tag> entry : mTagCache.entrySet()) {
                         if (entry.getKey() instanceof String) {
                             Tag tag = entry.getValue();
-                            if (tag.getModifiedSequence() > lastSync) {
+                            if (tag.isListed() && tag.getModifiedSequence() > lastSync) {
                                 modified.add(tag);
                             }
                         }
@@ -3111,6 +3125,7 @@ public class Mailbox {
     public Folder getFolderById(OperationContext octxt, int id) throws ServiceException {
         return (Folder) getItemById(octxt, id, MailItem.Type.FOLDER);
     }
+
     /** Returns the folder with the specified id.
      * @throws NoSuchItemException if the folder does not exist */
     Folder getFolderById(int id) throws ServiceException {
@@ -6258,9 +6273,12 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("createTag", octxt, redoRecorder);
-            CreateTag redoPlayer = (CreateTag) currentChange.getRedoPlayer();
+            if (!hasFullAccess()) {
+                throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
+            }
 
-            Tag tag = createTagInternal(name, color, redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getTagId());
+            CreateTag redoPlayer = (CreateTag) currentChange.getRedoPlayer();
+            Tag tag = createTagInternal(redoPlayer == null ? ID_AUTO_INCREMENT : redoPlayer.getTagId(), name, color, true);
             redoRecorder.setTagId(tag.getId());
             success = true;
             return tag;
@@ -6269,8 +6287,24 @@ public class Mailbox {
         }
     }
 
-    Tag createTagInternal(String name, Color color, int tagId) throws ServiceException {
-        return Tag.create(this, getNextItemId(tagId), name, color);
+    Tag createTagInternal(int tagId, String name, Color color, boolean listed) throws ServiceException {
+        try {
+            Tag tag = getTagByName(name);
+            if (tag.isListed()) {
+                throw MailServiceException.ALREADY_EXISTS(name);
+            }
+
+            // promote an implicitly-created tag to a listed tag
+            markItemCreated(tag);
+            tag.setListed();
+            if (!name.equals(tag.getName())) {
+                tag.rename(name);
+            }
+            tag.setColor(color);
+            return tag;
+        } catch (NoSuchItemException nsie) {
+            return Tag.create(this, getNextItemId(tagId), name, color, listed);
+        }
     }
 
     public Note createNote(OperationContext octxt, String content, Rectangle location, byte color, int folderId)
@@ -6279,7 +6313,7 @@ public class Mailbox {
     }
 
     public Note createNote(OperationContext octxt, String content, Rectangle location, Color color, int folderId)
-            throws ServiceException {
+    throws ServiceException {
         content = StringUtil.stripControlCharacters(content);
         if (Strings.isNullOrEmpty(content)) {
             throw ServiceException.INVALID_REQUEST("note content may not be empty", null);
