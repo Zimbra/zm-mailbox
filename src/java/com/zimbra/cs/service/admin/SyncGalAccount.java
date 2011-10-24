@@ -30,10 +30,9 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.gal.GalImport;
-import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class SyncGalAccount extends AdminDocumentHandler {
+public final class SyncGalAccount extends AdminDocumentHandler {
 
     private static final String[] TARGET_ACCOUNT_PATH = new String[] { AdminConstants.E_ACCOUNT, AdminConstants.A_ID };
 
@@ -82,7 +81,6 @@ public class SyncGalAccount extends AdminDocumentHandler {
                     ((GalImport) dataImport).importGal(fid, (reset ? reset : fullSync), reset);
                 }
             }
-            MailboxManager.getInstance().getMailboxByAccount(account).index.optimize();
         }
 
         return zsc.createElement(AdminConstants.SYNC_GAL_ACCOUNT_RESPONSE);

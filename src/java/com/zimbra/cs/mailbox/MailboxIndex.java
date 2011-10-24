@@ -900,7 +900,8 @@ public final class MailboxIndex {
     /**
      * Primes the index for the fastest available search. This is a very expensive operation especially on large index.
      */
-    public void optimize() {
+    public void optimize() throws ServiceException {
+        indexDeferredItems(EnumSet.noneOf(MailItem.Type.class), new BatchStatus(), true); // index all pending items
         try {
             Indexer indexer = indexStore.openIndexer();
             try {
