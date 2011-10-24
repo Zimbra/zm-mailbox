@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.imap;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.server.NioHandler;
 import com.zimbra.cs.server.NioOutputStream;
@@ -67,7 +68,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
                     request = null;
                 }
             }
-            if (consecutiveBAD >= ImapHandler.MAXIMUM_CONSECUTIVE_BAD) {
+            if (consecutiveError >= LC.imap_max_consecutive_error.intValue()) {
                 dropConnection();
             }
         }
@@ -117,9 +118,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
                 return continueAuthentication(req);
             }
             try {
-                boolean keepGoing = executeRequest(req);
-                consecutiveBAD = 0;
-                return keepGoing;
+                return executeRequest(req);
             } catch (ImapProxyException e) {
                 ZimbraLog.imap.debug("proxy failed", e);
                 sendNO(req.getTag(), "Shared folder temporally unavailable");

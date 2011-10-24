@@ -15,6 +15,7 @@
 package com.zimbra.cs.imap;
 
 import com.google.common.base.Charsets;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.io.Closeables;
 import com.zimbra.common.calendar.WellKnownTimeZones;
@@ -100,10 +101,6 @@ abstract class ImapHandler {
 
     private static final long MAXIMUM_IDLE_PROCESSING_MILLIS = 15 * Constants.MILLIS_PER_SECOND;
 
-    /** Maximum number of consecutive user commands resulting in BAD responses
-     *  before the server disconnects the client. */
-    static final int MAXIMUM_CONSECUTIVE_BAD = 5;
-
     // ID response parameters
     private static final String ID_PARAMS = "\"NAME\" \"Zimbra\" \"VERSION\" \"" + BuildInfo.VERSION +
         "\" \"RELEASE\" \"" + BuildInfo.RELEASE + "\"";
@@ -117,7 +114,7 @@ abstract class ImapHandler {
     ImapCredentials credentials;
     boolean startedTLS;
     String lastCommand;
-    int consecutiveBAD;
+    int consecutiveError;
     private ImapProxy imapProxy;
     ImapSession selectedFolder;
     private String idleTag;
@@ -207,10 +204,9 @@ abstract class ImapHandler {
     }
 
     protected void handleParseException(ImapParseException e) throws IOException {
-        consecutiveBAD++;
         String message = (e.mCode == null ? "" : '[' + e.mCode + "] ") + e.getMessage();
         if (e.mTag == null) {
-            sendUntagged("BAD " + message, true);
+            sendBAD(message);
         } else if (e.mNO) {
             sendNO(e.mTag, message);
         } else {
@@ -4242,16 +4238,30 @@ abstract class ImapHandler {
     }
 
     void sendOK(String tag, String response) throws IOException {
-        sendResponse(tag, "OK " + (response.equals("") ? " " : response), true);
+        consecutiveError = 0;
+        sendResponse(tag, "OK " + (Strings.isNullOrEmpty(response) ? " " : response), true);
     }
 
     void sendNO(String tag, String response) throws IOException {
-        sendResponse(tag, "NO " + (response.equals("") ? " " : response), true);
+        consecutiveError++;
+        sendResponse(tag, "NO " + (Strings.isNullOrEmpty(response) ? " " : response), true);
+    }
+
+    void sendNO(String response) throws IOException {
+        consecutiveError++;
+        sendResponse("*", "NO " + (Strings.isNullOrEmpty(response) ? " " : response), true);
     }
 
     void sendBAD(String tag, String response) throws IOException {
+        consecutiveError++;
         ZimbraLog.imap.warn("BAD %s", response);
-        sendResponse(tag, "BAD " + (response.equals("") ? " " : response), true);
+        sendResponse(tag, "BAD " + (Strings.isNullOrEmpty(response) ? " " : response), true);
+    }
+
+    void sendBAD(String response) throws IOException {
+        consecutiveError++;
+        ZimbraLog.imap.warn("BAD %s", response);
+        sendResponse("*", "BAD " + (Strings.isNullOrEmpty(response) ? " " : response), true);
     }
 
     void sendUntagged(String response) throws IOException {

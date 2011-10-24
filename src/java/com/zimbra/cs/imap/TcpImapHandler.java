@@ -16,6 +16,7 @@ package com.zimbra.cs.imap;
 
 import com.google.common.io.Closeables;
 import com.zimbra.common.io.TcpServerInputStream;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.NetUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -115,8 +116,7 @@ final class TcpImapHandler extends ProtocolHandler {
             if (delegate.lastCommand != null) {
                 ZimbraPerf.IMAP_TRACKER.addStat(delegate.lastCommand.toUpperCase(), start);
             }
-            delegate.consecutiveBAD = 0;
-            return keepGoing;
+            return keepGoing && delegate.consecutiveError < LC.imap_max_consecutive_error.intValue();
         } catch (TcpImapRequest.ImapContinuationException e) {
             request.rewind();
             complete = false; // skip clearRequest()
@@ -128,7 +128,7 @@ final class TcpImapHandler extends ProtocolHandler {
             return false;
         } catch (ImapParseException e) {
             delegate.handleParseException(e);
-            return delegate.consecutiveBAD < ImapHandler.MAXIMUM_CONSECUTIVE_BAD;
+            return delegate.consecutiveError < LC.imap_max_consecutive_error.intValue();
         } catch (ImapException e) { // session closed
             ZimbraLog.imap.debug("stop processing", e);
             return false;
