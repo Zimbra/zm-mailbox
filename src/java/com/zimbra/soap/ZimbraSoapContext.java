@@ -14,6 +14,7 @@
  */
 package com.zimbra.soap;
 
+import java.io.IOException;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -43,6 +44,7 @@ import com.zimbra.cs.session.SoapSession;
 import com.zimbra.cs.session.SessionCache;
 import com.zimbra.cs.session.SoapSession.PushChannel;
 import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.soap.json.JacksonUtil;
 
 /**
  * This class models the soap context (the data from the soap envelope)
@@ -631,11 +633,30 @@ public final class ZimbraSoapContext {
     /**
      * Only use this for response objects (or requests)
      * {@link jaxbToNamedElement} should be used for all other cases.
-     * @param resp
-     * @return
-     * @throws ServiceException
+     * For JSON responses, the Element tree is constructed from the XML
+     * that would be used for XML responses.  This doesn't always work
+     * correctly, so use with care.  See also {@link jaxbToElementUsingJackson}
+     * TODO: when the Jackson based marshaler is fully functional, replace
+     *       this with the contents of {@link jaxbToElementUsingJackson}
      */
     public Element jaxbToElement(Object resp) throws ServiceException {
+        return JaxbUtil.jaxbToElement(resp, mResponseProtocol.getFactory());
+    }
+
+    /**
+     * Only use this for response objects (or requests)
+     * For JSON responses, marshaling to JSON is done using Jackson.  This
+     * technique is a bit smarter than the default mechanism which uses XML
+     * as an intermediate step but the JAXB objects often need additional
+     * annotations, hence why this has not yet completely superseded
+     * {@link jaxbToElement}
+     * TODO: when the Jackson based marshaler is fully functional, replace
+     *       {@link jaxbToElement} with the contents of this.
+     */
+    public Element jaxbToElementUsingJackson(Object resp) throws ServiceException {
+        if (mResponseProtocol.getFactory() == Element.JSONElement.mFactory) {
+            return JacksonUtil.jaxbToJSONElement(resp);
+        }
         return JaxbUtil.jaxbToElement(resp, mResponseProtocol.getFactory());
     }
 
