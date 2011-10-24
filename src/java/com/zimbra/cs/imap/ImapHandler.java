@@ -4247,11 +4247,6 @@ abstract class ImapHandler {
         sendResponse(tag, "NO " + (Strings.isNullOrEmpty(response) ? " " : response), true);
     }
 
-    void sendNO(String response) throws IOException {
-        consecutiveError++;
-        sendResponse("*", "NO " + (Strings.isNullOrEmpty(response) ? " " : response), true);
-    }
-
     void sendBAD(String tag, String response) throws IOException {
         consecutiveError++;
         ZimbraLog.imap.warn("BAD %s", response);
