@@ -88,7 +88,12 @@ I. Conventional Debugging
    that wouldn't do a proper shutdown.
 
 
-II. Ant Jetty Plugin (personal favorite)
+II. Ant Jetty Plugin
+
+NOTE: With Jetty7, this method doesn't work if there are JSP pages (e.g> WebClient).
+Webtide has suggested to use the Conventional Debugging as the Ant Jetty Plugin was
+contributed some time ago and has languished since the original committer has not
+kept it up-to-date.
 
 There's another radically different way to run and debug jetty with
 jetty-ant plugin.  Basically you run jetty as an ant task.  We use
