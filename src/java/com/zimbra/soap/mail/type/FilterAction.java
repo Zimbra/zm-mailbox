@@ -16,12 +16,17 @@
 package com.zimbra.soap.mail.type;
 
 import com.google.common.base.Objects;
+
+import org.codehaus.jackson.annotate.JsonPropertyOrder;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.json.jackson.ContentSerializer;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class FilterAction {
@@ -80,6 +85,7 @@ public class FilterAction {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @JsonPropertyOrder({ "flagName", "index" })
     public static final class FlagAction extends FilterAction {
 
         @XmlAttribute(name=MailConstants.A_FLAG_NAME, required=false)
@@ -141,6 +147,7 @@ public class FilterAction {
         @XmlAttribute(name=MailConstants.A_MAX_BODY_SIZE, required=false)
         private Integer maxBodySize;
 
+        @JsonSerialize(using=ContentSerializer.class)
         @XmlElement(name=MailConstants.E_CONTENT, required=false)
         private String content;
 
@@ -227,6 +234,7 @@ public class FilterAction {
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class ReplyAction extends FilterAction {
 
+        @JsonSerialize(using=ContentSerializer.class)
         @XmlElement(name=MailConstants.E_CONTENT, required=false)
         private final String content;
 

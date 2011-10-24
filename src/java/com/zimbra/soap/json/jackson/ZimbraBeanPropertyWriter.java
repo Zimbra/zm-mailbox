@@ -14,10 +14,13 @@
  */
 package com.zimbra.soap.json.jackson;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Map;
 
 import javax.xml.namespace.QName;
 
+import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.JsonSerializer;
 import org.codehaus.jackson.map.SerializerProvider;
@@ -27,53 +30,47 @@ import org.codehaus.jackson.map.ser.impl.PropertySerializerMap;
 import com.zimbra.soap.base.KeyAndValue;
 
 /**
- * Used by {@link ZimbraBeanSerializerModifier} to handle the Zimbra JSON way of handling
- * XmlElementWrapper.
+ * Used by {@link ZimbraBeanSerializerModifier} to handle some Zimbra JSON specific ways of processing JAXB object
+ * fields.
  *
- * Jackson with the JaxbAnnotationIntrospector does understand XmlElementWrapper BUT treats
- * it as a property name, discarding the wrapped element name.  For Zimbra JSON we retain
- * the wrapper and use the wrapped element name as the property name for the wrapped property.
+ * @XmlElementWrapper handling:
+ *     Jackson with the JaxbAnnotationIntrospector does understand @XmlElementWrapper BUT treats
+ *     it as a property name, discarding the wrapped element name.  For Zimbra JSON we retain
+ *     the wrapper and use the wrapped element name as the property name for the wrapped property.
+ *
+ * Element values wrapped in arrays
+ *     Jackson with the JaxbAnnotationIntrospector knows which fields are arrays and which are not and only
+ *     uses arrays where necessary.  Zimbra JSON was originally designed as a serialization of a pure Element
+ *     structure - and it typically isn't possible to determine the difference between a list of elements with just
+ *     one element and a singleton.  Hence, Zimbra JSON often treats fields as arrays even when they are not. 
+ *
+ * @XmlElements handling:
+ *     @XmlElements({
+ *         @XmlElement(name="alternative1", type=Alt1.class),
+ *         @XmlElement(name="alternative2", type=Alt2.class)
+ *     })
+ *     private List<Alt> alts = Lists.newArrayList();
+ *
+ *     Jackson with the JaxbAnnotationIntrospector wraps this in an array field called "alts".  Zimbra JSON
+ *     does not.
  */
 public class ZimbraBeanPropertyWriter
     extends BeanPropertyWriter
 {
-    /**
-     * Element name used as wrapper for collection.
-     */
-    protected final QName wrapperName;
+    protected final NameInfo nameInfo;
 
-    /**
-     * Element name used for items in the collection
-     */
-    protected final QName wrappedName;
-
-    // TODO: Support something similar to :
-    //     @XmlElementWrapper(name=AccountConstants.E_DATA_SOURCES)
-    //     @XmlElements({
-    //         @XmlElement(name=MailConstants.E_DS_POP3, type=AccountPop3DataSource.class),
-    //         @XmlElement(name=MailConstants.E_DS_IMAP, type=AccountImapDataSource.class),
-    //         @XmlElement(name=MailConstants.E_DS_RSS, type=AccountRssDataSource.class),
-    //         @XmlElement(name=MailConstants.E_DS_CAL, type=AccountCalDataSource.class)
-    //     })
-    //     private List<AccountDataSource> dataSources = Lists.newArrayList();
-    //
-    // Requires a map to stand in place of wrappedName to map classes to names
-
-    public ZimbraBeanPropertyWriter(BeanPropertyWriter wrapped, QName wrapperName, QName wrappedName) {
+    public ZimbraBeanPropertyWriter(BeanPropertyWriter wrapped, NameInfo nameInfo) {
         super(wrapped);
-        this.wrapperName = wrapperName;
-        this.wrappedName = wrappedName;
+        this.nameInfo = nameInfo;
         // super-class SHOULD copy this, but just in case it didn't (as was the case with 1.8.0 and 1.8.1):
         if (_includeInViews == null) {
             _includeInViews = wrapped.getViews();
         }
     }
 
-    public ZimbraBeanPropertyWriter(BeanPropertyWriter wrapped, QName wrapperName, QName wrappedName,
-            JsonSerializer<Object> serializer) {
+    public ZimbraBeanPropertyWriter(BeanPropertyWriter wrapped, NameInfo nameInfo, JsonSerializer<Object> serializer) {
         super(wrapped, serializer);
-        this.wrapperName = wrapperName;
-        this.wrappedName = wrappedName;
+        this.nameInfo = nameInfo;
         // super-class SHOULD copy this, but just in case it didn't (as was the case with 1.8.0 and 1.8.1):
         if (_includeInViews == null) {
             _includeInViews = wrapped.getViews();
@@ -86,7 +83,7 @@ public class ZimbraBeanPropertyWriter
         if (getClass() != ZimbraBeanPropertyWriter.class) {
             throw new IllegalStateException("Sub-class does not override 'withSerializer()'; needs to!");
         }
-        return new ZimbraBeanPropertyWriter(this, wrapperName, wrappedName, ser);
+        return new ZimbraBeanPropertyWriter(this, nameInfo, ser);
     }
 
     /**
@@ -97,9 +94,6 @@ public class ZimbraBeanPropertyWriter
     public void serializeAsField(Object bean, JsonGenerator jgen, SerializerProvider prov)
     throws Exception {
         Object value = get(bean);
-        /* TODO: Hmmh. Does the default null serialization work ok here? For now let's assume
-         * it does; can change later if not.
-         */
         if (value == null) {
             if (!_suppressNulls) {
                 jgen.writeFieldName(_name);
@@ -115,7 +109,6 @@ public class ZimbraBeanPropertyWriter
             return;
         }
 
-        // Ok then; addition we want to do is to add wrapper element, and that's what happens here
         JsonSerializer<Object> ser = _serializer;
         if (ser == null) {
             Class<?> cls = value.getClass();
@@ -126,6 +119,17 @@ public class ZimbraBeanPropertyWriter
             }
         }
 
+        if (_typeSerializer != null) {
+            // If we are using a specific serializer, then assume it is fully functional already
+            jgen.writeFieldName(_name);
+            ser.serializeWithType(value, jgen, prov, _typeSerializer);
+            return;
+        }
+
+        /**
+         * Zimbra uses special treatment for "Key Value pairs".  The interface KeyAndValue is used to identify
+         * a pair that should be treated in this way.
+         */
         boolean isKeyAndValue = false;
         if (value instanceof ArrayList) {
             ArrayList<?> al = (ArrayList<?>) value;
@@ -135,31 +139,68 @@ public class ZimbraBeanPropertyWriter
             }
             isKeyAndValue = false;
         }
-        if (_typeSerializer != null) {
-            // If we are using a specific serializer, then assume it is fully functional already
-            jgen.writeFieldName(_name);
-            ser.serializeWithType(value, jgen, prov, _typeSerializer);
-            return;
-        }
 
+        QName wrapperName = nameInfo.getWrapperName();
         if (isKeyAndValue) {
             jgen.writeFieldName(_name);
         } else {
             if (wrapperName != null) {
-                jgen.writeFieldName("GrenWrapper-" + wrapperName.getLocalPart());
+                jgen.writeFieldName(wrapperName.getLocalPart());
+                // Zimbra wraps the wrapper inside an array
+                jgen.writeStartArray();
                 jgen.writeStartObject();
             }
-            if ((wrappedName != null) && (!"_attrs".equals(_name))) {
-                jgen.writeFieldName("GrenWrapped-" + wrappedName.getLocalPart());
-            } else {
+            QName wrappedName = nameInfo.getWrappedName();
+            // "_attrs" is the name used for Zimbra KeyValuePairs
+            if ("_attrs".equals(_name)) {
                 jgen.writeFieldName(_name);
+            } else if (wrappedName != null) {
+                jgen.writeFieldName(wrappedName.getLocalPart());
+                // @XmlElement or @XmlElementRef
+                // Zimbra wraps values inside an array
+                if (!(value instanceof ArrayList)) {
+                    if (value.getClass().getPackage().getName().startsWith("com.zimbra.soap")) {
+                        jgen.writeStartArray();
+                        jgen.writeObject(value);
+                        jgen.writeEndArray();
+                        finishWrapping(wrapperName, jgen);
+                        return;
+                    }
+                }
+            } else {
+                Map<Class<?>, QName> nameMap = nameInfo.getWrappedNameMap();
+                if ((nameMap != null) && (value instanceof ArrayList)) {
+                    // @XmlElements or @XmlElementRefs
+                    // Different names for different objects.
+                    // For default Jackson Xml serialization, the name associated with the array is used
+                    // as a wrapper but for Zimbra serialization, we don't use this wrapper.  There MAY
+                    // be another wrapper but that will have been handled by "wrapperName" already
+                    ArrayList<?> al = (ArrayList<?>) value;
+                    for (Object obj : al) {
+                        QName qn = nameMap.get(obj.getClass());
+                        jgen.writeFieldName(qn.getLocalPart());
+                        jgen.writeStartArray();
+                        jgen.writeObject(obj);
+                        jgen.writeEndArray();
+                    }
+                    finishWrapping(wrapperName, jgen);
+                    return;
+                } else {
+                    jgen.writeFieldName(_name);
+                }
             }
         }
 
         ser.serialize(value, jgen, prov);
 
+        finishWrapping(wrapperName, jgen);
+    }
+
+    private void finishWrapping(QName wrapperName, JsonGenerator jgen)
+    throws JsonGenerationException, IOException {
         if (wrapperName != null) {
             jgen.writeEndObject();
+            jgen.writeEndArray();
         }
     }
 }

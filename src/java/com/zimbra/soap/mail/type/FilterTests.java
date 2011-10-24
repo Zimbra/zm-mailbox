@@ -76,6 +76,10 @@ public final class FilterTests {
         this.condition = condition;
     }
 
+    public static FilterTests createForCondition(String condition) {
+        return new FilterTests(condition);
+    }
+
     public void setTests(Collection<FilterTest> list) {
         tests.clear();
         if (list != null) {

@@ -27,9 +27,12 @@ import org.codehaus.jackson.map.introspect.JacksonAnnotationIntrospector;
 import org.codehaus.jackson.xc.JaxbAnnotationIntrospector;
 
 import com.google.common.base.Strings;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.SoapParseException;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.json.jackson.ZimbraJsonModule;
 import com.zimbra.soap.util.JaxbInfo;
 
@@ -37,6 +40,7 @@ public final class JacksonUtil {
     /* Prevent accidental construction */
     private JacksonUtil() { }
 
+    private static final Log LOG = ZimbraLog.soap;
     /**
      *  e.g.
      *      calData = new AppointmentData(uid, uid);
@@ -47,51 +51,49 @@ public final class JacksonUtil {
      *      ...
      */
     public static Element jaxbToJSONElement(Object obj, org.dom4j.QName qn)
-    throws IOException {
-        String json = jaxbToJsonString(JacksonUtil.getObjectMapper(), obj);
-        return jacksonJsonToElement(json, qn, obj);
+    throws ServiceException {
+        try {
+            String json = jaxbToJsonString(JacksonUtil.getObjectMapper(), obj);
+            return jacksonJsonToElement(json, qn, obj);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("IOException", e);
+        }
     }
 
     public static Element jaxbToJSONElement(Object obj)
-    throws IOException {
+    throws ServiceException {
         return jaxbToJSONElement(obj, JacksonUtil.getElementName(obj));
     }
 
     public static Element jaxbToJSONElementOld(Object obj)
-    throws IOException {
+    throws ServiceException {
         String json = jaxbToJsonString(JacksonUtil.getWrapRootObjectMapper(), obj);
         return jacksonJsonToElement(json, obj);
     }
 
-    public static JsonNode fromJaxb(Object obj)
-    throws IOException {
+    public static JsonNode fromJaxb(Object obj) {
         ObjectMapper mapper = JacksonUtil.getObjectMapper();
         return mapper.valueToTree(obj);
     }
 
     public static Element jaxbToJSONElement(ObjectMapper mapper, Object obj)
-    throws IOException {
+    throws ServiceException {
         String json = jaxbToJsonString(mapper, obj);
         return jacksonJsonToElement(json, obj);
     }
 
-    public static String jaxbToRootWrappedJsonString(Object obj)
-    throws IOException {
-        return jaxbToJsonString(JacksonUtil.getWrapRootObjectMapper());
-    }
-
-    public static String jaxbToJsonString(Object obj)
-    throws IOException {
-        return jaxbToJsonString(JacksonUtil.getObjectMapper());
-    }
-
     public static String jaxbToJsonString(ObjectMapper mapper, Object obj)
-    throws IOException {
-        StringWriter writer = new StringWriter();
-        mapper.writeValue(writer, obj);
-        writer.flush();
-        writer.close();
-        return writer.toString();
+    throws ServiceException {
+        try {
+            StringWriter writer = new StringWriter();
+            mapper.writeValue(writer, obj);
+            writer.flush();
+            writer.close();
+            String jsonStr =  writer.toString();
+            return jsonStr;
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("IOException", e);
+        }
     }
 
     public static Element jacksonJsonToElement(String json, org.dom4j.QName qn, Object obj)
@@ -139,7 +141,7 @@ public final class JacksonUtil {
     }
 
     public static Element jacksonJsonToElement(String json, Object obj)
-    throws SoapParseException {
+    throws ServiceException {
         if (obj == null)
             return null;
         org.dom4j.QName qn = null;
@@ -161,7 +163,11 @@ public final class JacksonUtil {
                 }
             }
         }
-        return jacksonJsonToElement(json, qn, obj);
+        try {
+            return jacksonJsonToElement(json, qn, obj);
+        } catch (SoapParseException e) {
+            throw ServiceException.FAILURE("SoapParseException", e);
+        }
     }
 
     public static ObjectMapper getObjectMapper() {

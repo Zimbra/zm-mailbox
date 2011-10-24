@@ -20,17 +20,32 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.json.jackson.BooleanSerializer;
+import com.zimbra.soap.util.BooleanAdapter;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_NO_OP_RESPONSE)
-public class NoOpResponse {
+public final class NoOpResponse {
 
     @XmlAttribute(name=MailConstants.A_WAIT_DISALLOWED, required=false)
+    @JsonSerialize(using=BooleanSerializer.class)
+    @XmlJavaTypeAdapter(BooleanAdapter.class)
     private Boolean waitDisallowed;
 
     public NoOpResponse() {
+    }
+
+    public NoOpResponse(Boolean waitDisallowed) {
+        setWaitDisallowed(waitDisallowed);
+    }
+
+    public static NoOpResponse create(Boolean waitDisallowed) {
+        return new NoOpResponse(waitDisallowed);
     }
 
     public void setWaitDisallowed(Boolean waitDisallowed) {

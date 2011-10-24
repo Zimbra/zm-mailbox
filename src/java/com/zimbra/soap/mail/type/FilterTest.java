@@ -30,8 +30,13 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import org.codehaus.jackson.annotate.JsonPropertyOrder;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.json.jackson.BooleanSerializer;
+import com.zimbra.soap.json.jackson.ContentListSerializer;
 import com.zimbra.soap.util.BooleanAdapter;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -41,7 +46,17 @@ public class FilterTest {
     private int index = 0;
 
     @XmlAttribute(name=MailConstants.A_NEGATIVE, required=false)
+    @XmlJavaTypeAdapter(BooleanAdapter.class)
+    @JsonSerialize(using=BooleanSerializer.class)
     private Boolean negative;
+
+    protected FilterTest() {
+    }
+
+    protected FilterTest(int index, Boolean negative) {
+        setIndex(index);
+        setNegative(negative);
+    }
 
     public int getIndex() {
         return index;
@@ -82,6 +97,7 @@ public class FilterTest {
 
         @XmlAttribute(name = MailConstants.A_CASE_SENSITIVE, required = false)
         @XmlJavaTypeAdapter(BooleanAdapter.class)
+        @JsonSerialize(using=BooleanSerializer.class)
         private Boolean caseSensitive;
 
         @XmlAttribute(name = MailConstants.A_VALUE, required = true)
@@ -398,6 +414,7 @@ public class FilterTest {
     }
 
     @XmlAccessorType(XmlAccessType.NONE)
+    @JsonPropertyOrder({ "index", "negative", "header", "caseSensitive", "stringComparison", "value" })
     public static final class HeaderTest extends FilterTest {
 
         // Comma separated list
@@ -412,7 +429,19 @@ public class FilterTest {
 
         @XmlAttribute(name=MailConstants.A_CASE_SENSITIVE, required=false)
         @XmlJavaTypeAdapter(BooleanAdapter.class)
+        @JsonSerialize(using=BooleanSerializer.class)
         private Boolean caseSensitive;
+
+        public HeaderTest() {
+        }
+
+        public HeaderTest(int index, Boolean negative) {
+            super(index, negative);
+        }
+
+        public static HeaderTest createForIndexNegative(int index, Boolean negative) {
+            return new HeaderTest(index, negative);
+        }
 
         public String getHeaders() {
             return headers;
@@ -508,6 +537,7 @@ public class FilterTest {
     @XmlAccessorType(XmlAccessType.NONE)
     public static final class InviteTest extends FilterTest {
 
+        @JsonSerialize(using=ContentListSerializer.class)
         @XmlElement(name=MailConstants.E_METHOD, required=false)
         private final List<String> methods = Lists.newArrayList();
 
@@ -585,6 +615,7 @@ public class FilterTest {
 
         @XmlAttribute(name=MailConstants.A_CASE_SENSITIVE, required=false)
         @XmlJavaTypeAdapter(BooleanAdapter.class)
+        @JsonSerialize(using=BooleanSerializer.class)
         private Boolean caseSensitive;
 
         public String getHeaders() {

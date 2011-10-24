@@ -20,7 +20,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
-import java.util.HashMap;
 import java.util.List;
 
 import junit.framework.Assert;
@@ -28,7 +27,6 @@ import junit.framework.Assert;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
-import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.dom4j.QName;
 import org.junit.BeforeClass;
@@ -36,7 +34,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 
-import com.google.common.collect.Maps;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.JaxbToElementTest;
 import com.zimbra.soap.account.message.GetInfoResponse;
@@ -45,9 +42,15 @@ import com.zimbra.soap.admin.message.VerifyIndexResponse;
 import com.zimbra.soap.account.message.GetDistributionListMembersResponse;
 import com.zimbra.soap.json.JacksonUtil;
 import com.zimbra.soap.mail.message.DiffDocumentResponse;
+import com.zimbra.soap.mail.message.GetFilterRulesResponse;
+import com.zimbra.soap.mail.message.NoOpResponse;
 import com.zimbra.soap.mail.type.AppointmentData;
 import com.zimbra.soap.mail.type.CalendaringDataInterface;
 import com.zimbra.soap.mail.type.DispositionAndText;
+import com.zimbra.soap.mail.type.FilterAction;
+import com.zimbra.soap.mail.type.FilterRule;
+import com.zimbra.soap.mail.type.FilterTest;
+import com.zimbra.soap.mail.type.FilterTests;
 import com.zimbra.soap.mail.type.InstanceDataInfo;
 import com.zimbra.soap.type.KeyValuePair;
 import com.zimbra.common.service.ServiceException;
@@ -59,7 +62,6 @@ import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapParseException;
 import com.zimbra.common.soap.XMbxSearchConstants;
-import com.zimbra.common.util.StringUtil;
 
 public class JaxbToJsonTest {
     @Rule public TestName testName = new TestName();
@@ -208,7 +210,7 @@ public class JaxbToJsonTest {
     }
 
     private void jacksonSerializeCheck(ObjectMapper mapper, String tag, Object obj)
-    throws IOException {
+    throws ServiceException {
         String json = JacksonUtil.jaxbToJsonString(mapper, obj);
         StringBuilder fullTag = new StringBuilder("JacksonPlay ")
             .append(obj.getClass().getName()).append(" ").append(tag).append(" ");
@@ -219,7 +221,7 @@ public class JaxbToJsonTest {
             logInfo(fullTag.toString() + 
                     "JAXB --> Jackson --> String ---> Element ---> prettyPrint\n" +
                     jsonElemFromJackson.prettyPrint());
-        } catch (SoapParseException e) {
+        } catch (ServiceException e) {
             logInfo(fullTag.toString() + "\nProblem with Element.parseJSON");
             e.printStackTrace();
         }
@@ -348,6 +350,114 @@ public class JaxbToJsonTest {
         Assert.assertEquals("dlMember 3", "dlmember3@no.where", dlMem3.getText());
         Assert.assertEquals("total", 23, elem.getAttributeInt(AccountConstants.A_TOTAL));
         Assert.assertEquals("more", false, elem.getAttributeBool(AccountConstants.A_MORE));
+    }
+
+    /**
+     * By default JAXB renders true and false in XML as "true" and "false"
+     * For Zimbra SOAP the XML flavor uses "1" and "0"
+     * The JSON flavor uses "true" and "false"
+     * @throws Exception
+     */
+    @Test
+    public void booleanMarshal() throws Exception {
+        Element legacyElem = JSONElement.mFactory.createElement(MailConstants.NO_OP_RESPONSE);
+        legacyElem.addAttribute(MailConstants.A_WAIT_DISALLOWED, false);
+        logInfo("JSONElement ---> prettyPrint\n%1$s", legacyElem.prettyPrint());
+        // NoOpResponse has:
+        //     @XmlAttribute(name=MailConstants.A_WAIT_DISALLOWED, required=false)
+        //     @JsonSerialize(using=BooleanSerializer.class)
+        //     @XmlJavaTypeAdapter(BooleanAdapter.class)
+        //     private Boolean waitDisallowed;
+        NoOpResponse jaxb = NoOpResponse.create(false);
+        Element xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory);
+        logInfo("XMLElement from JAXB (false)---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        Assert.assertEquals("false Value of 'waitDisallowed'",
+                "0", xmlElem.getAttribute(MailConstants.A_WAIT_DISALLOWED));
+        Element jsonElem = JacksonUtil.jaxbToJSONElement(jaxb, MailConstants.NO_OP_RESPONSE);
+        logInfo("JSONElement from JAXB (false)---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        Assert.assertEquals("false Value of 'waitDisallowed'",
+                "false", jsonElem.getAttribute(MailConstants.A_WAIT_DISALLOWED));
+
+        jaxb.setWaitDisallowed(true);
+        xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory);
+        logInfo("XMLElement from JAXB (true) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        Assert.assertEquals("true Value of 'waitDisallowed'",
+                "1", xmlElem.getAttribute(MailConstants.A_WAIT_DISALLOWED));
+        jsonElem = JacksonUtil.jaxbToJSONElement(jaxb, MailConstants.NO_OP_RESPONSE);
+        logInfo("JSONElement from JAXB (true) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        Assert.assertEquals("true Value of 'waitDisallowed'",
+                "true", jsonElem.getAttribute(MailConstants.A_WAIT_DISALLOWED));
+    }
+
+    /*
+     * 
+<GetFilterRulesResponse xmlns="urn:zimbraMail">
+  <filterRules>
+    <filterRule name="filter1.1318830338466.3" active="0">
+      <filterTests condition="anyof">
+        <headerTest index="0" value="0" stringComparison="contains"
+header="X-Spam-Score"/>
+      </filterTests>
+      <filterActions>
+        <actionFlag index="0" flagName="flagged"/>
+        <actionStop index="1"/>
+      </filterActions>
+    </filterRule>
+  </filterRules>
+</GetFilterRulesResponse>
+     */
+    private Element mkFilterRulesResponse(Element.ElementFactory factory) {
+        Element legacyElem = factory.createElement(MailConstants.GET_FILTER_RULES_RESPONSE);
+        Element filterRulesE = legacyElem.addElement(MailConstants.E_FILTER_RULES);
+        Element filterRuleE = filterRulesE.addElement(MailConstants.E_FILTER_RULE);
+        filterRuleE.addAttribute(MailConstants.A_NAME, "filter.bug65572");
+        filterRuleE.addAttribute(MailConstants.A_ACTIVE, false);
+        Element filterTestsE = filterRuleE.addElement(MailConstants.E_FILTER_TESTS);
+        filterTestsE.addAttribute(MailConstants.A_CONDITION, "anyof");
+        Element hdrTestE = filterTestsE.addElement(MailConstants.E_HEADER_TEST);
+        hdrTestE.addAttribute(MailConstants.A_INDEX, 0);
+        hdrTestE.addAttribute(MailConstants.A_HEADER, "X-Spam-Score");
+        hdrTestE.addAttribute(MailConstants.A_CASE_SENSITIVE, false);  /* not actually in above test */
+        hdrTestE.addAttribute(MailConstants.A_STRING_COMPARISON, "contains");
+        hdrTestE.addAttribute(MailConstants.A_VALUE, "0");
+        Element filterActionsE = filterRuleE.addElement(MailConstants.E_FILTER_ACTIONS);
+        Element actionFlagE = filterActionsE.addElement(MailConstants.E_ACTION_FLAG);
+        actionFlagE.addAttribute(MailConstants.A_FLAG_NAME, "flagged");
+        actionFlagE.addAttribute(MailConstants.A_INDEX, 0);
+        Element actionStopE = filterActionsE.addElement(MailConstants.E_ACTION_STOP);
+        actionStopE.addAttribute(MailConstants.A_INDEX, 1);
+        return legacyElem;
+    }
+
+    @Test
+    public void bug65572_BooleanAndXmlElements() throws Exception {
+        Element legacyXmlElem = mkFilterRulesResponse(XMLElement.mFactory);
+        Element legacyJsonElem = mkFilterRulesResponse(JSONElement.mFactory);
+
+        GetFilterRulesResponse jaxb = new GetFilterRulesResponse();
+        FilterTests tests = FilterTests.createForCondition("anyof");
+        FilterTest.HeaderTest hdrTest = FilterTest.HeaderTest.createForIndexNegative(0, null);
+        hdrTest.setHeaders("X-Spam-Score");
+        hdrTest.setCaseSensitive(false);
+        hdrTest.setStringComparison("contains");
+        hdrTest.setValue("0");
+        tests.addTest(hdrTest);
+        FilterAction.FlagAction flagAction = new FilterAction.FlagAction("flagged");
+        flagAction.setIndex(0);
+        FilterAction.StopAction stopAction = new FilterAction.StopAction();
+        stopAction.setIndex(1);
+        FilterRule rule1 = FilterRule.createForNameFilterTestsAndActiveSetting("filter.bug65572", tests, false);
+        rule1.addFilterAction(flagAction);
+        rule1.addFilterAction(stopAction);
+        jaxb.addFilterRule(rule1);
+        Element xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory);
+        logInfo("legacyXMLElement ---> prettyPrint\n%1$s", legacyXmlElem.prettyPrint());
+        logInfo("XMLElement from JAXB ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
+        Assert.assertEquals("XML", legacyXmlElem.prettyPrint(), xmlElem.prettyPrint());
+        Element jsonElem = JacksonUtil.jaxbToJSONElement(jaxb, MailConstants.GET_FILTER_RULES_RESPONSE);
+        logInfo("legacyJSONElement ---> prettyPrint\n%1$s", legacyJsonElem.prettyPrint());
+        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        Assert.assertEquals("JSON", legacyJsonElem.prettyPrint(), jsonElem.prettyPrint());
     }
 
     // Used for experiments
