@@ -20705,7 +20705,7 @@ public abstract class ZAttrConfig extends Entry {
      */
     @ZAttr(id=226)
     public String[] getMtaRestriction() {
-        String[] value = getMultiAttr(Provisioning.A_zimbraMtaRestriction); return value.length > 0 ? value : new String[] {"reject_invalid_hostname","reject_non_fqdn_sender"};
+        String[] value = getMultiAttr(Provisioning.A_zimbraMtaRestriction); return value.length > 0 ? value : new String[] {"reject_invalid_helo_hostname","reject_non_fqdn_sender"};
     }
 
     /**
