@@ -4,11 +4,11 @@ permit_sasl_authenticated
 permit_mynetworks
 reject_unauth_destination
 reject_unlisted_recipient
-%%contains VAR:zimbraMtaRestriction reject_invalid_hostname%%
-%%contains VAR:zimbraMtaRestriction reject_non_fqdn_hostname%%
+%%contains VAR:zimbraMtaRestriction reject_invalid_helo_hostname%%
+%%contains VAR:zimbraMtaRestriction reject_non_fqdn_helo_hostname%%
 %%contains VAR:zimbraMtaRestriction reject_non_fqdn_sender%%
-%%contains VAR:zimbraMtaRestriction reject_unknown_client%%
-%%contains VAR:zimbraMtaRestriction reject_unknown_hostname%%
+%%contains VAR:zimbraMtaRestriction reject_unknown_client_hostname%%
+%%contains VAR:zimbraMtaRestriction reject_unknown_helo_hostname%%
 %%contains VAR:zimbraMtaRestriction reject_unknown_sender_domain%%
 %%explode reject_rbl_client VAR:zimbraMtaRestrictionRBLs%%
 %%contains VAR:zimbraMtaRestriction check_policy_service unix:private/policy%%
