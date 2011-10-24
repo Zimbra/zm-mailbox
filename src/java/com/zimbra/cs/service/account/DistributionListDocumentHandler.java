@@ -23,6 +23,7 @@ import java.io.OutputStreamWriter;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import javax.activation.DataSource;
 import javax.mail.Address;
@@ -30,11 +31,18 @@ import javax.mail.MessagingException;
 import javax.mail.Transport;
 import javax.mail.internet.MimeMultipart;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.MapMaker;
+import com.google.common.collect.Maps;
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.CacheEntryBy;
+import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
@@ -43,6 +51,10 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Provisioning.CacheEntry;
+import com.zimbra.cs.account.Provisioning.CacheEntryType;
+import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.soap.account.type.DistributionListSubscribeOp;
 
 public abstract class DistributionListDocumentHandler extends AccountDocumentHandler {
@@ -75,6 +87,21 @@ public abstract class DistributionListDocumentHandler extends AccountDocumentHan
             throw e;
         }
     }
+    
+    protected Group getGroupBasic(Element request, Provisioning prov) 
+    throws ServiceException {
+        Element eDL = request.getElement(AccountConstants.E_DL);
+        String key = eDL.getAttribute(AccountConstants.A_BY);
+        String value = eDL.getText();
+        
+        Group group = prov.getGroupBasic(Key.DistributionListBy.fromString(key), value);
+        
+        if (group == null) {
+            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);
+        }
+        
+        return group;
+    }
 
     protected static boolean isOwner(Account acct, Group group) throws ServiceException {
         return AccessManager.getInstance().canAccessGroup(acct, group);
@@ -94,49 +121,107 @@ public abstract class DistributionListDocumentHandler extends AccountDocumentHan
     }
 
     /*
-    protected Group getGroupFull(Element request, Account acct, Provisioning prov) 
+     * Centralized callsite for adding/removing group members in DistributionListAction and 
+     * SubscribeDistributionList.  The group object passed in is a "basic" group instance, 
+     * obtained from Provisioning.getGroupBasic().  Unlink "full" group instances, basic 
+     * instances don't contain all attributes, and basic groups are cached in LdapProvisioning.
+     * For dynamic groups, there is no difference between basic and full instances of a group.  
+     * For static groups, the basic instance does not contain member attribute of the group.   
+     * We have to load a full instance, and pass it to Provisiioning.add/removeGroupMembers.
+     * 
+     * Note: loading full instance of a static group will always make a trip to LDAP,  
+     *       these instances are *not* cahed.
+     */
+    protected static void addGroupMembers(Provisioning prov, Group group, String[] members) 
     throws ServiceException {
-        Group group = getGroupFull(request, prov);
-        
-        if (!isOwner(acct, group)) {
-            throw ServiceException.PERM_DENIED(
-                    "you do not have sufficient rights to access this distribution list");
+        if (!group.isDynamic()) {
+            // load full instance of the static group.
+            // note: this always cost a LDAP search
+            group = prov.getGroup(Key.DistributionListBy.id, group.getId());
         }
+        prov.addGroupMembers(group, members);
         
-        return group;
+        // flush account from cache for internal members
+        flushAccountCache(prov, members);
     }
-    */
     
-    /*
-    private Group getGroupFull(Element request, Provisioning prov) 
+    protected static void removeGroupMembers(Provisioning prov, Group group, String[] members) 
     throws ServiceException {
-        Element eDL = request.getElement(AccountConstants.E_DL);
-        String key = eDL.getAttribute(AccountConstants.A_BY);
-        String value = eDL.getText();
-        
-        Group group = prov.getGroup(Key.DistributionListBy.fromString(key), value);
-        
-        if (group == null) {
-            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);
+        if (!group.isDynamic()) {
+            // load full instance of the static group.
+            // note: this always cost a LDAP search
+            group = prov.getGroup(Key.DistributionListBy.id, group.getId());
         }
+        prov.removeGroupMembers(group, members);
         
-        return group;
+        // flush account from cache for internal members
+        flushAccountCache(prov, members);
     }
-    */
     
-    protected Group getGroupBasic(Element request, Provisioning prov) 
-    throws ServiceException {
-        Element eDL = request.getElement(AccountConstants.E_DL);
-        String key = eDL.getAttribute(AccountConstants.A_BY);
-        String value = eDL.getText();
+    private static void flushAccountCache(Provisioning prov, String[] members) {
+        // List<CacheEntry> localAccts = Lists.newArrayList();
+        Map<String /* server name */, List<CacheEntry>> remoteAccts = Maps.newHashMap();
         
-        Group group = prov.getGroupBasic(Key.DistributionListBy.fromString(key), value);
-        
-        if (group == null) {
-            throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);
+        for (String member : members) {
+            try {
+                Account acct = prov.get(AccountBy.name, member);
+                if (acct != null) {
+                    if (prov.onLocalServer(acct)) {
+                        // localAccts.add(new CacheEntry(CacheEntryBy.id, acct.getId()));
+                    } else {
+                        Server server = acct.getServer();
+                        String serverName = server.getName();
+                        List<CacheEntry> acctsOnServer = remoteAccts.get(serverName);
+                        if (acctsOnServer == null) {
+                            acctsOnServer = Lists.newArrayList();
+                            remoteAccts.put(serverName, acctsOnServer);
+                        }
+                        acctsOnServer.add(new CacheEntry(CacheEntryBy.id, acct.getId()));
+                    }
+                }
+                
+                // else, not internal account, skip
+                
+            } catch (ServiceException e) {
+                // log and continue
+                ZimbraLog.account.warn("unable to flush account cache", e);
+            }
         }
         
-        return group;
+        /*
+         * No need to flush cache on local server, account membership for static/dynamic 
+         * groups are handled in LdapProvisioning
+         * 
+        // flush accounts from cache on local server
+        try {
+            prov.flushCache(CacheEntryType.account, localAccts.toArray(new CacheEntry[localAccts.size()]));
+        } catch (ServiceException e) {
+            // log and continue
+            ZimbraLog.account.warn("unable to flush account cache on local server", e);
+        }
+        */
+        
+        
+        // flush accounts from cache on remote servers
+        // if the remote server does not run admin server, to bad - accounts on that 
+        // server will have to wait till cache expire to ge tupdate membership
+        SoapProvisioning soapProv = new SoapProvisioning();
+        String adminUrl = null;
+        for (Map.Entry<String, List<CacheEntry>> acctsOnServer : remoteAccts.entrySet()) {
+            String serverName = acctsOnServer.getKey();
+            List<CacheEntry> accts = acctsOnServer.getValue();
+            
+            try {
+                Server server = prov.get(ServerBy.name, serverName);
+                adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI, true);
+                soapProv.soapSetURI(adminUrl);
+                soapProv.soapZimbraAdminAuthenticate();
+                soapProv.flushCache(CacheEntryType.account, accts.toArray(new CacheEntry[accts.size()]));
+                
+            } catch (ServiceException e) {
+                ZimbraLog.account.warn("unable to flush account cache on remote server: " + serverName, e);
+            }
+        }
     }
     
     protected abstract static class SynchronizedGroupHandler {

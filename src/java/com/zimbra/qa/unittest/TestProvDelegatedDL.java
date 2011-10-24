@@ -682,16 +682,14 @@ public class TestProvDelegatedDL {
     
     @Test
     public void getAccountMembership() throws Exception {
-        String NAME = getAddress("get-dl-info-test");
-        Group group = createGroupAndAddOwner(NAME);
+        String GROUP_NAME = getAddress("getAccountMembership".toLowerCase());
+        Group group = createGroupAndAddOwner(GROUP_NAME);
         
         // add a member
         prov.addGroupMembers(group, new String[]{USER_NOT_OWNER});
         
         SoapTransport transport = authUser(USER_NOT_OWNER);
-        
         GetAccountMembershipRequest req = new GetAccountMembershipRequest(Boolean.TRUE);
-        
         GetAccountMembershipResponse resp = invokeJaxb(transport, req);
         
         boolean seenGroup = false;
@@ -700,7 +698,25 @@ public class TestProvDelegatedDL {
             String id = dlInfo.getId();
             String name = dlInfo.getName();
             
-            if (group.getId().equals(id)) {
+            if (group.getId().equals(id) && name.equals(GROUP_NAME)) {
+                seenGroup = true;
+            }
+        }
+        assertTrue(seenGroup);
+        
+        // rename group
+        String GROUP_NEW_NAME = getAddress("getAccountMembership-new".toLowerCase());
+        prov.renameGroup(group.getId(), GROUP_NEW_NAME);
+        
+        // get membership again, should show the new name
+        resp = invokeJaxb(transport, req);
+        seenGroup = false;
+        groups = resp.getDlList();
+        for (DLInfo dlInfo : groups) {
+            String id = dlInfo.getId();
+            String name = dlInfo.getName();
+            
+            if (group.getId().equals(id) && name.equals(GROUP_NEW_NAME)) {
                 seenGroup = true;
             }
         }

@@ -379,8 +379,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
                 memberList.add(elem.getTextTrim());
             }
             
-            String[] members = (String[]) memberList.toArray(new String[0]); 
-            prov.addGroupMembers(group, members);
+            String[] members = (String[]) memberList.toArray(new String[memberList.size()]); 
+            addGroupMembers(prov, group, members);
             
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "DistributionListAction", "op", getAction().name(), 
@@ -407,8 +407,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
                 memberList.add(elem.getTextTrim());
             }
             
-            String[] members = (String[]) memberList.toArray(new String[0]); 
-            prov.removeGroupMembers(group, members);
+            String[] members = (String[]) memberList.toArray(new String[memberList.size()]); 
+            removeGroupMembers(prov, group, members);
             
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
                     new String[] {"cmd", "DistributionListAction", "op", getAction().name(), 
@@ -578,13 +578,13 @@ public class DistributionListAction extends DistributionListDocumentHandler {
                             " is currently a member in list " + group.getName() + 
                             ", no action taken for the subscribe request");
                 } else {
-                    prov.removeGroupMembers(group, new String[]{memberEmail});
+                    removeGroupMembers(prov, group, new String[]{memberEmail});
                     processed = true;
                 }
             } else {
                 // not currently a member
                 if (subsOp == DistributionListSubscribeOp.subscribe) {
-                    prov.addGroupMembers(group, new String[]{memberEmail});
+                    addGroupMembers(prov, group, new String[]{memberEmail});
                     processed = true;
                 } else {
                     // do nothing

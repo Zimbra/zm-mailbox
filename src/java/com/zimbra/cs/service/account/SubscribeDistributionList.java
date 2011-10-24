@@ -106,7 +106,7 @@ public class SubscribeDistributionList extends DistributionListDocumentHandler {
                 DistributionListSubscriptionPolicy policy = group.getSubscriptionPolicy();
                 
                 if (policy == DistributionListSubscriptionPolicy.ACCEPT) {
-                    prov.addGroupMembers(group, members);
+                    addGroupMembers(prov, group, members);
                     accepted = true;
                     status = DistributionListSubscribeStatus.subscribed;
                 } else if (policy == DistributionListSubscriptionPolicy.REJECT) {
@@ -122,7 +122,7 @@ public class SubscribeDistributionList extends DistributionListDocumentHandler {
                 DistributionListUnsubscriptionPolicy policy = group.getUnsubscriptionPolicy();
                 
                 if (policy == DistributionListUnsubscriptionPolicy.ACCEPT) {
-                    prov.removeGroupMembers(group, members);
+                    removeGroupMembers(prov, group, members);
                     accepted = true;
                     status = DistributionListSubscribeStatus.unsubscribed;
                 } else if (policy == DistributionListUnsubscriptionPolicy.REJECT) {

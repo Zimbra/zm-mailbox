@@ -18,8 +18,6 @@ package com.zimbra.cs.service.account;
 import java.util.Map;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.ZAttrProvisioning.DistributionListSubscriptionPolicy;
-import com.zimbra.common.account.ZAttrProvisioning.DistributionListUnsubscriptionPolicy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AccountConstants;
@@ -28,7 +26,6 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class CreateDistributionList extends AccountDocumentHandler {
