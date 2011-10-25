@@ -922,12 +922,12 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
     }
 
     void restore(ImapSession sess, SessionData sdata) throws ImapSessionClosedException, ServiceException {
+        session = sess;
         mailbox = session.getMailbox();
         if (mailbox == null) {
             throw new ImapSessionClosedException();
         }
         path = session.getPath();
-        session = sess;
         flags = ImapFlagCache.getSystemFlags(mailbox);
         // FIXME: NOT RESTORING sequence.msg.sflags PROPERLY -- need to serialize it!!!
         sessionData = sdata;
