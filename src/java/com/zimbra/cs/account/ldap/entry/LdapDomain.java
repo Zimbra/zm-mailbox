@@ -54,12 +54,12 @@ public class LdapDomain extends Domain implements LdapEntry {
             // dynamic groups are under the cn=groups tree,
             // accounts and Dls are under the people tree
             // We can no longer just search under the people tree because that 
-            // will leave dynami groups out.   We don't want to do two(once under the 
+            // will leave dynamic groups out.   We don't want to do two(once under the 
             // people tree, once under the groups tree) LDAP searches either because 
             // that will hurt perf.  
             // As of bug 66001, we now use the dnSubtreeMatch filter 
             // (extension supported by OpenLDAP) to exclude entries in sub domains.
-            // Aee getDnSubtreeMatchFilter().
+            // See getDnSubtreeMatchFilter().
             return getDN();
             // return ldapProv.getDIT().domainDNToAccountSearchDN(getDN());
         } else if (searchBaseRaw.equalsIgnoreCase(PredefinedSearchBase.SUBDOMAINS.name())) {

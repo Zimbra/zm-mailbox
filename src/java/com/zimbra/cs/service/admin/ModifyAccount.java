@@ -210,13 +210,6 @@ public class ModifyAccount extends AdminDocumentHandler {
                 
                 // in the case when zimbraMailHost is being removed, newServer will be null
                 if (newServer != null) {
-                    /*
-                    Element request = zsc.createRequestElement(AdminConstants.FLUSH_CACHE_REQUEST);
-                    Element eCache = request.addElement(AdminConstants.E_CACHE).addAttribute(AdminConstants.A_TYPE, Provisioning.CacheEntryType.account.name());
-                    eCache.addElement(AdminConstants.E_ENTRY).addAttribute(AdminConstants.A_BY, Key.CacheEntryBy.id.name()).addText(acct.getId());
-    
-                    Element response = proxyRequest(request, context, newServer);
-                    */
                     SoapProvisioning soapProv = new SoapProvisioning();
                     String adminUrl = URLUtil.getAdminURL(newServer, AdminConstants.ADMIN_SERVICE_URI, true);
                     soapProv.soapSetURI(adminUrl);
