@@ -620,13 +620,13 @@ public class ZMailboxUtil implements DebugListener {
             setTargetAccountName(targetAccount);
             ZMailbox.Options options = getMailboxOptions(prov, authAccount, targetAccount, Constants.SECONDS_PER_DAY);
             options.setTimeout(mTimeout);
-    
+
             if (prov.soapGetTransportDebugListener() != null) {
                 options.setDebugListener(prov.soapGetTransportDebugListener());
             } else {  // use the same debug listener used by zmprov
                 options.setHttpDebugListener(prov.soapGetHttpTransportDebugListener());
             }
-    
+
             mMbox = ZMailbox.getMailbox(options);
             dumpMailboxConnect();
             mPrompt = String.format("mbox %s> ", mMbox.getName());
@@ -2214,20 +2214,20 @@ public class ZMailboxUtil implements DebugListener {
             id_len = Math.max(id_len, hit.getId().length());
         }
 
-        Calendar c = Calendar.getInstance();
-        String headerFormat = String.format("%%%d.%ds  %%%d.%ds  %%4s   %%-20.20s  %%-50.50s  %%s%%n", width, width, id_len, id_len);
-        //String headerFormat = String.format("%10.10s  %-20.20s  %-50.50s  %-6.6s  %s%n");
-
-        String itemFormat = String.format(  "%%%d.%ds. %%%d.%ds  %%4s   %%-20.20s  %%-50.50s  %%tD %%<tR%%n", width, width, id_len, id_len);
-        //String itemFormat = "%10.10s  %-20.20s  %-50.50s  %-6.6s  %tD %5$tR%n";
-
+        Calendar cal = Calendar.getInstance();
+        String headerFormat = String.format("%%%d.%ds  %%%d.%ds  %%4s   %%-20.20s  %%-50.50s  %%s%%n",
+                width, width, id_len, id_len);
+        String itemFormat = String.format(  "%%%d.%ds. %%%d.%ds  %%4s   %%-20.20s  %%-50.50s  %%tD %%<tR%%n",
+                width, width, id_len, id_len);
         stdout.format(headerFormat, "", "Id", "Type", "From", "Subject", "Date");
-        stdout.format(headerFormat, "", "----------------------------------------------------------------------------------------------------", "----", "--------------------", "--------------------------------------------------", "--------------");
+        stdout.format(headerFormat, "",
+                "----------------------------------------------------------------------------------------------------",
+                "----", "--------------------", "--------------------------------------------------", "--------------");
         int i = first;
         for (ZSearchHit hit: sr.getHits()) {
             if (hit instanceof ZConversationHit) {
                 ZConversationHit ch = (ZConversationHit) hit;
-                c.setTimeInMillis(ch.getDate());
+                cal.setTimeInMillis(ch.getDate());
                 String sub = ch.getSubject();
                 String from = emailAddrs(ch.getRecipients());
                 if (ch.getMessageCount() > 1) {
@@ -2238,41 +2238,40 @@ public class ZMailboxUtil implements DebugListener {
                 //if (ch.getFragment() != null || ch.getFragment().length() > 0)
                 //    sub += " (" + ch.getFragment()+")";
                 mIndexToId.put(i, ch.getId());
-                stdout.format(itemFormat, i++, ch.getId(), "conv", from, sub, c);
+                stdout.format(itemFormat, i++, ch.getId(), "conv", from, sub, cal);
             } else if (hit instanceof ZContactHit) {
                 ZContactHit ch = (ZContactHit) hit;
-                c.setTimeInMillis(ch.getMetaDataChangedDate());
+                cal.setTimeInMillis(ch.getDate());
                 String from = getFirstEmail(ch);
                 String sub = ch.getFileAsStr();
                 mIndexToId.put(i, ch.getId());
-                stdout.format(itemFormat, i++, ch.getId(), "cont", from, sub, c);
-
+                stdout.format(itemFormat, i++, ch.getId(), "cont", from, sub, cal);
             } else if (hit instanceof ZMessageHit) {
                 ZMessageHit mh = (ZMessageHit) hit;
-                c.setTimeInMillis(mh.getDate());
+                cal.setTimeInMillis(mh.getDate());
                 String sub = mh.getSubject();
                 String from = mh.getSender() == null ? "<none>" : mh.getSender().getDisplay();
                 mIndexToId.put(i, mh.getId());
-                stdout.format(itemFormat, i++, mh.getId(), "mess", from, sub, c);
+                stdout.format(itemFormat, i++, mh.getId(), "mess", from, sub, cal);
             } else if (hit instanceof ZAppointmentHit) {
                 ZAppointmentHit ah = (ZAppointmentHit) hit;
                 if (ah.getInstanceExpanded()) {
-                    c.setTimeInMillis(ah.getStartTime());
+                    cal.setTimeInMillis(ah.getStartTime());
                 } else {
-                    c.setTimeInMillis(ah.getHitDate());
+                    cal.setTimeInMillis(ah.getHitDate());
                 }
                 String sub = ah.getName();
                 String from = "<na>";
                 mIndexToId.put(i, ah.getId());
-                stdout.format(itemFormat, i++, ah.getId(), ah.getIsTask() ? "task" : "appo", from, sub, c);
+                stdout.format(itemFormat, i++, ah.getId(), ah.getIsTask() ? "task" : "appo", from, sub, cal);
             } else if (hit instanceof ZDocumentHit) {
                 ZDocumentHit dh = (ZDocumentHit) hit;
                 ZDocument doc = dh.getDocument();
-                c.setTimeInMillis(doc.getModifiedDate());
+                cal.setTimeInMillis(doc.getModifiedDate());
                 String name = doc.getName();
                 String editor = doc.getEditor();
                 mIndexToId.put(i, dh.getId());
-                stdout.format(itemFormat, i++, dh.getId(), doc.isWiki()?"wiki":"doc", editor, name, c);
+                stdout.format(itemFormat, i++, dh.getId(), doc.isWiki()?"wiki":"doc", editor, name, cal);
             }
         }
         stdout.println();
@@ -2797,7 +2796,7 @@ public class ZMailboxUtil implements DebugListener {
                 pu.setUrl(DEFAULT_ADMIN_URL, true);
                 isAdmin = true;
             }
-    
+
             if (cl.hasOption(SoapCLI.O_AUTHTOKEN) && cl.hasOption(SoapCLI.O_AUTHTOKENFILE))
                 pu.usage();
             if (cl.hasOption(SoapCLI.O_AUTHTOKEN)) {
@@ -2811,7 +2810,7 @@ public class ZMailboxUtil implements DebugListener {
                 pu.setUrl(DEFAULT_ADMIN_URL, true);
                 isAdmin = true;
             }
-    
+
             String authAccount, targetAccount;
             if (cl.hasOption('m')) {
                 targetAccount = cl.getOptionValue('m');
@@ -2837,18 +2836,18 @@ public class ZMailboxUtil implements DebugListener {
             }
             if (!StringUtil.isNullOrEmpty(authAccount)) pu.setAuthAccountName(authAccount);
             if (!StringUtil.isNullOrEmpty(targetAccount)) pu.setTargetAccountName(targetAccount);
-    
+
             if (cl.hasOption('u')) pu.setUrl(cl.getOptionValue('u'), isAdmin);
             if (cl.hasOption('p')) pu.setPassword(cl.getOptionValue('p'));
             if (cl.hasOption('P')) {
                 pu.setPassword(StringUtil.readSingleLineFromFile(cl.getOptionValue('P')));
             }
             if (cl.hasOption('d')) pu.setDebug(true);
-    
+
             if (cl.hasOption('t')) pu.setTimeout(cl.getOptionValue('t'));
-    
+
             args = cl.getArgs();
-    
+
             pu.setInteractive(args.length < 1);
 
             pu.initMailbox();
