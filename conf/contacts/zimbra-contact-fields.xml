@@ -279,9 +279,9 @@ type attribute:
         <column name="Nachname" field="lastName"/>
         <column name="Anzeigename" field="fullName"/>
         <column name="Spitzname" field="nickname"/>
-        <column name="Primäre E-Mail" field="email"/>
-        <column name="Sekundäre E-Mail" field="email2"/>
-        <column name="Anzeigename" field="aimId"/>
+        <column name="Primäre E-Mail-Adresse" field="email"/>
+        <column name="Sekundäre E-Mail-Adresse" field="email2"/>
+        <column name="Messenger-Name" field="aimId"/>
         <column name="Tel. dienstlich" field="workPhone"/>
         <column name="Tel. privat" field="homePhone"/>
         <column name="Fax-Nummer" field="workFax"/>
@@ -300,8 +300,8 @@ type attribute:
         <column name="Arbeitstitel" field="jobTitle"/>
         <column name="Abteilung" field="department"/>
         <column name="Organisation" field="company"/>
-        <column name="Web-Seite 1" field="workURL"/>
-        <column name="Web-Seite 2" field="homeURL"/>
+        <column name="Webseite 1" field="workURL"/>
+        <column name="Webseite 2" field="homeURL"/>
         <column name="Geburtsmonat,Geburtstag,Geburtsjahr" field="birthday" type="multivalue"/>
         <column name="Benutzerdef. 1" field="custom1"/>
         <column name="Benutzerdef. 2" field="custom2"/>
