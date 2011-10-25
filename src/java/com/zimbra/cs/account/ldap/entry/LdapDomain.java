@@ -20,6 +20,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProv;
+import com.zimbra.cs.gal.ZimbraGalSearchBase.PredefinedSearchBase;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZAttributes;
@@ -45,16 +46,38 @@ public class LdapDomain extends Domain implements LdapEntry {
         return mDn;
     }
     
-    public String getGalSearchBase(String searchBaseSpec) throws ServiceException {
+    @Override
+    public String getGalSearchBase(String searchBaseRaw) throws ServiceException {
         LdapProv ldapProv = (LdapProv)getProvisioning();
         
-        if (searchBaseSpec.equalsIgnoreCase("DOMAIN")) {
-            return ldapProv.getDIT().domainDNToAccountSearchDN(getDN());
-        } else if (searchBaseSpec.equalsIgnoreCase("SUBDOMAINS")) {
+        if (searchBaseRaw.equalsIgnoreCase(PredefinedSearchBase.DOMAIN.name())) {
+            // dynamic groups are under the cn=groups tree,
+            // accounts and Dls are under the people tree
+            // We can no longer just search under the people tree because that 
+            // will leave dynami groups out.   We don't want to do two(once under the 
+            // people tree, once under the groups tree) LDAP searches either because 
+            // that will hurt perf.  
+            // As of bug 66001, we now use the dnSubtreeMatch filter 
+            // (extension supported by OpenLDAP) to exclude entries in sub domains.
+            // Aee getDnSubtreeMatchFilter().
             return getDN();
-        } else if (searchBaseSpec.equalsIgnoreCase("ROOT")) {
+            // return ldapProv.getDIT().domainDNToAccountSearchDN(getDN());
+        } else if (searchBaseRaw.equalsIgnoreCase(PredefinedSearchBase.SUBDOMAINS.name())) {
+            return getDN();
+        } else if (searchBaseRaw.equalsIgnoreCase(PredefinedSearchBase.ROOT.name())) {
             return LdapConstants.DN_ROOT_DSE;
         }
-        return LdapConstants.DN_ROOT_DSE;
+        
+        // broken by p4 changed 150971, fixed now
+        return searchBaseRaw;
+    }
+    
+    @Override
+    public String getDnSubtreeMatchFilter() throws ServiceException {
+        LdapProv ldapProv = (LdapProv)getProvisioning();
+        
+        return String.format("(|(entryDN:dnSubtreeMatch:=%s)(entryDN:dnSubtreeMatch:=%s))", 
+                ldapProv.getDIT().domainDNToAccountSearchDN(getDN()),
+                ldapProv.getDIT().domainDNToDynamicGroupsBaseDN(getDN()));
     }
 }

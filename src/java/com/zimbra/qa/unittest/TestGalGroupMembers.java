@@ -29,8 +29,6 @@ import com.zimbra.cs.ldap.LdapUtilCommon;
  *
  */
 
-// do not extend TestCase once ZimbraSuite supports JUnit 4 annotations.
-// we ahve to now because this test ahs to run in the sever.
 public class TestGalGroupMembers extends TestCase {
     
     private static final String ZIMBRA_DOMAIN = "zimbra.galgrouptest";
@@ -188,7 +186,7 @@ public class TestGalGroupMembers extends TestCase {
     private static void cleanupZimbraDomain() throws Exception {
         Provisioning prov = Provisioning.getInstance();
         
-        TestSearchGal.disableGalSyncAccount(ZIMBRA_DOMAIN);
+        TestSearchGal.disableGalSyncAccount(prov, ZIMBRA_DOMAIN);
         
         // delete the test user
         String userAddr = TestUtil.getAddress(USER, ZIMBRA_DOMAIN);
@@ -283,13 +281,13 @@ public class TestGalGroupMembers extends TestCase {
     
     @Test
     public void testLdapSearch() throws Exception {
-        TestSearchGal.disableGalSyncAccount(ZIMBRA_DOMAIN);
+        TestSearchGal.disableGalSyncAccount(Provisioning.getInstance(), ZIMBRA_DOMAIN);
         doTest();
     }
     
     @Test
     public void testGSASearch() throws Exception {
-        TestSearchGal.enableGalSyncAccount(ZIMBRA_DOMAIN, TestSearchGal.GSAType.both);
+        TestSearchGal.enableGalSyncAccount(Provisioning.getInstance(), ZIMBRA_DOMAIN, TestSearchGal.GSAType.both);
         doTest();
     }
     

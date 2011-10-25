@@ -81,10 +81,7 @@ public class GalSearchConfig {
 			mGalType = GalType.fromString(ds.getAttr(Provisioning.A_zimbraGalType));
 			Domain domain = Provisioning.getInstance().getDomain(ds.getAccount());
 			if (mGalType == GalType.zimbra) {
-				loadZimbraConfig(domain, GalOp.sync, null);
-				mFilter = GalSearchConfig.getFilterDef(NamedFilter.zimbraSync);
-				if (mFilter == null)
-				    mFilter = GalFilter.DEFAULT_SYNC_FILTER;
+				loadZimbraConfig(domain, GalOp.sync, GalSearchType.all);
 			} else {
 				loadConfig(domain, GalOp.sync);
 				if (mUrl.length == 0 || mFilter == null)
@@ -156,8 +153,14 @@ public class GalSearchConfig {
 		}
 		
 		String filter = null;
-		if (filterName != null)
+		if (filterName != null) {
 		    filter = GalSearchConfig.getFilterDef(filterName);
+		}
+		
+		if (filter == null && op == GalOp.sync) {
+		    filter = GalFilter.DEFAULT_SYNC_FILTER;
+		}
+		
 		mAuthMech = Provisioning.LDAP_AM_SIMPLE;
 		
 		if (filter == null) {
@@ -165,9 +168,19 @@ public class GalSearchConfig {
 		} else if (!filter.startsWith("(")) {
 		    filter = "(" + filter + ")";
 		}
+		
+		String dnSubtreeMatchFilter = null;
+		String searchBaseRaw = ZimbraGalSearchBase.getSearchBaseRaw(domain, op);
+		if (ZimbraGalSearchBase.PredefinedSearchBase.DOMAIN.name().equals(searchBaseRaw)) {
+		    dnSubtreeMatchFilter = domain.getDnSubtreeMatchFilter();
+		}
 		    
-		mFilter = "(&" + filter + "(!(zimbraHideInGal=TRUE))(!(zimbraIsSystemResource=TRUE)))";
-		mSearchBase = GalSearchConfig.getZimbraSearchBase(domain, op);
+		if (dnSubtreeMatchFilter == null) {
+		    dnSubtreeMatchFilter = "";
+		}
+		mFilter = "(&" + filter + "(!(zimbraHideInGal=TRUE))(!(zimbraIsSystemResource=TRUE))" + dnSubtreeMatchFilter + ")";
+
+		mSearchBase = ZimbraGalSearchBase.getSearchBase(domain, op);
 		mGalType = GalType.zimbra;
 		mTimestampFormat = GalSyncToken.LDAP_GENERALIZED_TIME_FORMAT;
 		mPageSize = 1000;
@@ -344,22 +357,10 @@ public class GalSearchConfig {
             }
         }
     
-        if (queryExpr == null)
+        if (queryExpr == null) {
             ZimbraLog.gal.warn("missing filter def " + name + " in " + Provisioning.A_zimbraGalLdapFilterDef);
-    
+        }
         return queryExpr;
     }
 
-    public static String getZimbraSearchBase(Domain domain, GalOp galOp) throws ServiceException {
-        String sb;
-        if (galOp == GalOp.sync) {
-            sb = domain.getAttr(Provisioning.A_zimbraGalSyncInternalSearchBase);
-            if (sb == null)
-                sb = domain.getAttr(Provisioning.A_zimbraGalInternalSearchBase, "DOMAIN");
-        } else {
-            sb = domain.getAttr(Provisioning.A_zimbraGalInternalSearchBase, "DOMAIN");
-        }
-        
-        return domain.getGalSearchBase(sb);
-    }
 }

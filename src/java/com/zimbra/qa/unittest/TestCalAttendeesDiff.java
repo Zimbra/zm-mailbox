@@ -132,7 +132,7 @@ public class TestCalAttendeesDiff extends TestCase {
     public static void cleanup() throws Exception {
         Provisioning prov = Provisioning.getInstance();
         
-        TestSearchGal.disableGalSyncAccount(ZIMBRA_DOMAIN);
+        TestSearchGal.disableGalSyncAccount(prov, ZIMBRA_DOMAIN);
         
         // delete the test users
         String[] users = new String[] { REQUESTER, USER_L1, USER_L2, USER_L3, USER_R1, USER_R2, USER_R3 };

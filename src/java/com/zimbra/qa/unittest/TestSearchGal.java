@@ -37,25 +37,38 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.GalContact;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.EntrySearchFilter.Operator;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DomainBy;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.gal.ZimbraGalSearchBase.PredefinedSearchBase;
 import com.zimbra.qa.unittest.TestLdapBinary.Content;
 
 public class TestSearchGal extends TestLdap {
+    private static Provisioning prov;
+    
+    private static final boolean DO_CREATE_DOMAINS = true;
+    private static final boolean DO_DELETE_DOMAINS = true;
     
     private static final String GAL_SYNC_ACCOUNT_NAME = "galsync";
     
-    private static final String BASE_DOMAIN_NAME = "searchgaltest";
-    private static final String DOMAIN_LDAP = "ldap." + BASE_DOMAIN_NAME;
-    private static final String DOMAIN_GSA = "gsa." + BASE_DOMAIN_NAME;
+    private static String DOMAIN_LDAP;
+    private static String DOMAIN_GSA;
+    private static String SUB1_DOMAIN_LDAP;
+    private static String SUB1_DOMAIN_GSA;
+    private static String SUB2_DOMAIN_LDAP;
+    private static String SUB2_DOMAIN_GSA;
+    
     private static final String AUTHED_USER = "user1";
     
     private static final String KEY_FOR_SEARCH_BY_NAME = "account";
     private static final String ACCOUNT_PREFIX = "account";
+    private static final String DISTRIBUTION_LIST_PREFIX = "dl";
+    private static final String DYNAMIC_GROUP_PREFIX = "dyngroup";
     private static final String DEPARTMENT_PREFIX = "engineering";
     
     private static final String BINARY_LDAP_ATTR = Provisioning.A_userSMIMECertificate;
@@ -66,7 +79,9 @@ public class TestSearchGal extends TestLdap {
     private static final Content BINARY_CONTENT_2 = Content.generateContent(NUM_BYTES_IN_BINARY_DATA);
     
     private static final int NUM_ACCOUNTS = 10; 
-    
+    private static final int NUM_DISTRIBUTION_LISTS = 10; 
+    private static final int NUM_DYNAMIC_GROUPS = 10; 
+    private static final int NUM_ALL_OBJECTS = NUM_ACCOUNTS + NUM_DISTRIBUTION_LISTS + NUM_DYNAMIC_GROUPS; 
     
     /*
     static void authAdmin(SoapTransport transport, String acctName) throws Exception {
@@ -92,9 +107,7 @@ public class TestSearchGal extends TestLdap {
         transport.setAuthToken(authToken);
     }
     
-    public static void disableGalSyncAccount(String domainName) throws Exception {
-        Provisioning prov = Provisioning.getInstance();
-        
+    public static void disableGalSyncAccount(Provisioning prov, String domainName) throws Exception {
         Domain domain = prov.get(Key.DomainBy.name, domainName);
         
         String[] galSyncAcctIds = domain.getGalAccountId();
@@ -111,13 +124,11 @@ public class TestSearchGal extends TestLdap {
         both
     }
   
-    public static void enableGalSyncAccount(String domainName) throws Exception {
-        enableGalSyncAccount(domainName, GSAType.zimbra);
+    public static void enableGalSyncAccount(Provisioning prov, String domainName) throws Exception {
+        enableGalSyncAccount(prov, domainName, GSAType.zimbra);
     }
     
-    static void enableGalSyncAccount(String domainName, GSAType type) throws Exception {
-        Provisioning prov = Provisioning.getInstance();
-        
+    static void enableGalSyncAccount(Provisioning prov, String domainName, GSAType type) throws Exception {
         Domain domain = prov.get(Key.DomainBy.name, domainName);
         String[] galSyncAcctIds = domain.getGalAccountId();
         if (galSyncAcctIds.length > 0) {
@@ -214,8 +225,7 @@ public class TestSearchGal extends TestLdap {
         transport.invoke(eSyncReq);
     }
     
-    // find all
-    private void searchWithDot(boolean ldap, String domainName) throws Exception {
+    private void searchWithDot(boolean ldap, String domainName, int expectedNumEntries) throws Exception {
         SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
         TestSearchGal.authUser(transport, TestUtil.getAddress(AUTHED_USER, domainName));
         
@@ -239,9 +249,8 @@ public class TestSearchGal extends TestLdap {
             Assert.assertTrue(paginationSupported);
         }
         
-        // should find all account, plus the authed user
-        Assert.assertEquals(NUM_ACCOUNTS + 1, result.size());
-        
+        // should find all objects, plus the authed user
+        Assert.assertEquals(expectedNumEntries, result.size());
     }
     
     private void searchWithOffsetLimit(boolean ldap, String domainName) throws Exception {
@@ -271,15 +280,15 @@ public class TestSearchGal extends TestLdap {
             Assert.assertFalse(paginationSupported);
             
             // limit is ignored, ldap search is limited by zimbraGalMaxResults
-            // should find all account, plus the authed user
-            Assert.assertEquals(NUM_ACCOUNTS + 1, result.size());
+            // should find all objects, plus the authed user
+            Assert.assertEquals(NUM_ALL_OBJECTS + 1, result.size());
         } else {
             // pagination is supported
             Assert.assertTrue(paginationSupported);
             
             Assert.assertEquals(limit, result.size());
             for (int i = 0; i < limit; i++) {
-                Assert.assertEquals(getEmail(offset + i, domainName), result.get(i).getSingleAttr(ContactConstants.A_email));
+                Assert.assertEquals(getAcctEmail(offset + i, domainName), result.get(i).getSingleAttr(ContactConstants.A_email));
             }
         }
         
@@ -333,7 +342,7 @@ public class TestSearchGal extends TestLdap {
         }
   
         Assert.assertEquals(1, result.size());
-        Assert.assertEquals(getEmail(acctToMatch, domainName), result.get(0).getSingleAttr(ContactConstants.A_email));
+        Assert.assertEquals(getAcctEmail(acctToMatch, domainName), result.get(0).getSingleAttr(ContactConstants.A_email));
     }
 
     private void binaryDataInEntry(boolean ldap, String domainName, boolean wantSMIMECert) throws Exception {
@@ -344,7 +353,7 @@ public class TestSearchGal extends TestLdap {
         if (wantSMIMECert) {
             request.addAttribute(AccountConstants.A_NEED_SMIME_CERTS, true);
         }
-        request.addElement(AccountConstants.E_NAME).setText(getEmail(ACCOUNT_CONTAINS_BINARY_DATA, domainName));
+        request.addElement(AccountConstants.E_NAME).setText(getAcctEmail(ACCOUNT_CONTAINS_BINARY_DATA, domainName));
         
         Element response = transport.invoke(request);
         
@@ -383,45 +392,90 @@ public class TestSearchGal extends TestLdap {
         Assert.assertTrue(foundContent2);
     }
     
-    private static String getEmail(int index, String domainName) {
+    private static String getAcctEmail(int index, String domainName) {
         return TestUtil.getAddress(ACCOUNT_PREFIX + "-" + index, domainName);
+    }
+    
+    private static String getDistributionListEmail(int index, String domainName) {
+        return TestUtil.getAddress(DISTRIBUTION_LIST_PREFIX + "-" + index, domainName);
+    }
+    
+    private static String getDynamicGroupEmail(int index, String domainName) {
+        return TestUtil.getAddress(DYNAMIC_GROUP_PREFIX + "-" + index, domainName);
     }
     
     private static String getDepartment(int index, String domainName) {
         return TestUtil.getAddress(DEPARTMENT_PREFIX + "-" + index, domainName);
     }
     
-    private static void createDomainObjects(String domainName) throws Exception {
-        Provisioning prov = Provisioning.getInstance();
+    private static void createDomainObjects(String domainName, 
+            PredefinedSearchBase searchBase) 
+    throws Exception {
+        Map<String, Object> attrs;
         
-        if (prov.get(Key.DomainBy.name, domainName) == null) {
-            ZimbraLog.test.info("Creating domain " + domainName);
-            prov.createDomain(domainName, new HashMap<String, Object>());
+        ZimbraLog.test.info("Creating domain " + domainName);
+        attrs = null;
+        if (searchBase != null) {
+            attrs = new HashMap<String, Object>();
+            attrs.put(Provisioning.A_zimbraGalInternalSearchBase, searchBase.name());
         }
+        prov.createDomain(domainName, attrs);
         
-        if (prov.get(AccountBy.name, TestUtil.getAddress(AUTHED_USER, domainName)) == null) {
-            prov.createAccount(TestUtil.getAddress(AUTHED_USER, domainName), "test123", null);
-        }
+        prov.createAccount(TestUtil.getAddress(AUTHED_USER, domainName), "test123", null);
         
+        
+        /*
+         * create accounts
+         */
         for (int i = 0; i < NUM_ACCOUNTS; i++) {
-            String acctName = getEmail(i, domainName);
-            if (prov.get(AccountBy.name, acctName) == null) {
-                Map<String, Object> attrs = new HashMap<String, Object>();
-                attrs.put(Provisioning.A_ou, getDepartment(i, domainName));
+            String acctName = getAcctEmail(i, domainName);
+            attrs = new HashMap<String, Object>();
+            attrs.put(Provisioning.A_ou, getDepartment(i, domainName));
                 
-                if (ACCOUNT_CONTAINS_BINARY_DATA == i) {
-                    StringUtil.addToMultiMap(attrs, BINARY_LDAP_ATTR, BINARY_CONTENT_1.getString());
-                    StringUtil.addToMultiMap(attrs, BINARY_LDAP_ATTR, BINARY_CONTENT_2.getString());
-                }
-                prov.createAccount(acctName, "test123", attrs);
+            if (ACCOUNT_CONTAINS_BINARY_DATA == i) {
+                StringUtil.addToMultiMap(attrs, BINARY_LDAP_ATTR, BINARY_CONTENT_1.getString());
+                StringUtil.addToMultiMap(attrs, BINARY_LDAP_ATTR, BINARY_CONTENT_2.getString());
             }
+            prov.createAccount(acctName, "test123", attrs);
         }
+        // create a hideInGal account
+        String acctName = TestUtil.getAddress(ACCOUNT_PREFIX + "-hide-in-gal", domainName);
+        attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraHideInGal, ProvisioningConstants.TRUE);
+        prov.createAccount(acctName, "test123", attrs);
+        
+        
+        /*
+         * create distribution lists
+         */
+        for (int i = 0; i < NUM_DISTRIBUTION_LISTS; i++) {
+            String dlName = getDistributionListEmail(i, domainName);
+            prov.createGroup(dlName, null, false);
+        }
+        // create a hideInGal DL
+        String dlName = TestUtil.getAddress(DISTRIBUTION_LIST_PREFIX + "-hide-in-gal", domainName);
+        attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraHideInGal, ProvisioningConstants.TRUE);
+        prov.createGroup(dlName, attrs, false);
+        
+        
+        /*
+         * create dynamic groups
+         */
+        for (int i = 0; i < NUM_DYNAMIC_GROUPS; i++) {
+            String dynGroupName = getDynamicGroupEmail(i, domainName);
+            prov.createGroup(dynGroupName, null, true);
+        }
+        // create a hideInGal dynamic group
+        String dynGroupName = TestUtil.getAddress(DYNAMIC_GROUP_PREFIX + "-hide-in-gal", domainName);
+        attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraHideInGal, ProvisioningConstants.TRUE);
+        prov.createGroup(dynGroupName, attrs, true);
+        
     }
     
     private static void deleteDomainObjects(String domainName) throws Exception {
-        Provisioning prov = Provisioning.getInstance();
-        
-        TestSearchGal.disableGalSyncAccount(domainName);
+        TestSearchGal.disableGalSyncAccount(prov, domainName);
         
         Account acct = prov.get(AccountBy.name, TestUtil.getAddress(AUTHED_USER, domainName));
         if (acct != null) {
@@ -429,12 +483,35 @@ public class TestSearchGal extends TestLdap {
         }
         
         for (int i = 0; i < NUM_ACCOUNTS; i++) {
-            String acctName = getEmail(i, domainName);
+            String acctName = getAcctEmail(i, domainName);
             acct = prov.get(AccountBy.name, acctName);
-            if (acct != null) {
-                prov.deleteAccount(acct.getId());
-            }
+            prov.deleteAccount(acct.getId());
         }
+        String acctName = TestUtil.getAddress(ACCOUNT_PREFIX + "-hide-in-gal", domainName);
+        acct = prov.get(AccountBy.name, acctName);
+        prov.deleteAccount(acct.getId());
+        
+        
+        Group dl;
+        for (int i = 0; i < NUM_DISTRIBUTION_LISTS; i++) {
+            String dlName = getDistributionListEmail(i, domainName);
+            dl = prov.getGroup(DistributionListBy.name, dlName);
+            prov.deleteGroup(dl.getId());
+        }
+        String dlName = TestUtil.getAddress(DISTRIBUTION_LIST_PREFIX + "-hide-in-gal", domainName);
+        dl = prov.getGroup(DistributionListBy.name, dlName);
+        prov.deleteGroup(dl.getId());
+        
+        
+        Group dynGroup;
+        for (int i = 0; i < NUM_DYNAMIC_GROUPS; i++) {
+            String dynGroupName = getDynamicGroupEmail(i, domainName);
+            dynGroup = prov.getGroup(DistributionListBy.name, dynGroupName);
+            prov.deleteGroup(dynGroup.getId());
+        }
+        String dynGroupName = TestUtil.getAddress(DYNAMIC_GROUP_PREFIX + "-hide-in-gal", domainName);
+        dynGroup = prov.getGroup(DistributionListBy.name, dynGroupName);
+        prov.deleteGroup(dynGroup.getId());
         
         Domain domain = prov.get(Key.DomainBy.name, domainName);
         if (domain != null) {
@@ -446,73 +523,120 @@ public class TestSearchGal extends TestLdap {
     @BeforeClass
     public static void init() throws Exception {
         TestUtil.cliSetup(); // use SoapProvisioning
+        prov = Provisioning.getInstance();
         
-        createDomainObjects(DOMAIN_LDAP);
-        createDomainObjects(DOMAIN_GSA);
+        String BASE_DOMAIN_NAME = baseDomainName();
+        
+        // domains for fallback to LDAP test
+        DOMAIN_LDAP = "ldap." + BASE_DOMAIN_NAME;
+        SUB1_DOMAIN_LDAP = "sub1." + DOMAIN_LDAP;
+        SUB2_DOMAIN_LDAP = "sub2." + SUB1_DOMAIN_LDAP;
+        
+        // domains for mailbox search test
+        DOMAIN_GSA = "gsa." + BASE_DOMAIN_NAME;
+        SUB1_DOMAIN_GSA = "sub1." + DOMAIN_GSA;
+        SUB2_DOMAIN_GSA = "sub2." + SUB1_DOMAIN_GSA;
+        
+        if (DO_CREATE_DOMAINS) {
+            createDomainObjects(DOMAIN_LDAP, null); // search base should default to DOMAIN
+            createDomainObjects(SUB1_DOMAIN_LDAP, PredefinedSearchBase.SUBDOMAINS);
+            createDomainObjects(SUB2_DOMAIN_LDAP, PredefinedSearchBase.DOMAIN);
+            
+            createDomainObjects(DOMAIN_GSA, null); // search base should default to DOMAIN
+            createDomainObjects(SUB1_DOMAIN_GSA, PredefinedSearchBase.SUBDOMAINS);
+            createDomainObjects(SUB2_DOMAIN_GSA, PredefinedSearchBase.DOMAIN);
+        }
     }
     
     @AfterClass 
     public static void cleanup() throws Exception {
-        deleteDomainObjects(DOMAIN_LDAP);
-        deleteDomainObjects(DOMAIN_GSA);
+        if (DO_DELETE_DOMAINS) {
+            deleteDomainObjects(SUB2_DOMAIN_LDAP);
+            deleteDomainObjects(SUB1_DOMAIN_LDAP);
+            deleteDomainObjects(DOMAIN_LDAP);
+            
+            deleteDomainObjects(SUB2_DOMAIN_GSA);
+            deleteDomainObjects(SUB1_DOMAIN_GSA);
+            deleteDomainObjects(DOMAIN_GSA);
+        }
         
-        // can't do this, it needs LdapProv
+        // can't do this, it needs LdapProv but we have SoapProvisioning
+        // TODO: fix
         // TestLdap.deleteEntireBranch(BASE_DOMAIN_NAME);
     }
     
+    private static String baseDomainName() {
+        return TestSearchGal.class.getName().toLowerCase();
+    }
+    
+    
     @Test
-    public void testGSASerarhWithDot() throws Exception {
-        TestSearchGal.enableGalSyncAccount(DOMAIN_GSA);
-        searchWithDot(false, DOMAIN_GSA);
+    public void GSASerarhWithDot() throws Exception {
+        TestSearchGal.enableGalSyncAccount(prov, DOMAIN_GSA);
+        // expect all accounts, dls, dynamic groups in the domain, plus the authed user
+        searchWithDot(false, DOMAIN_GSA, NUM_ALL_OBJECTS + 1);
     }
     
     @Test
-    public void testGSASerarhWithOffsetlimit() throws Exception {
-        TestSearchGal.enableGalSyncAccount(DOMAIN_GSA);
+    public void GSASerarhWithDotSubDomain() throws Exception {
+        TestSearchGal.enableGalSyncAccount(prov, SUB1_DOMAIN_GSA);
+        // expect all objects in SUB1_DOMAIN_GSA *and* SUB2_DOMAIN_GSA
+        searchWithDot(false, SUB1_DOMAIN_GSA, (NUM_ALL_OBJECTS + 1)*2);
+    }
+    
+    @Test
+    public void GSASerarhWithOffsetlimit() throws Exception {
+        TestSearchGal.enableGalSyncAccount(prov, DOMAIN_GSA);
         searchWithOffsetLimit(false, DOMAIN_GSA);
     }
     
     @Test
-    public void testGSASerarhByName() throws Exception {
-        TestSearchGal.enableGalSyncAccount(DOMAIN_GSA);
+    public void GSASerarhByName() throws Exception {
+        TestSearchGal.enableGalSyncAccount(prov, DOMAIN_GSA);
         searchByName(false, DOMAIN_GSA);
     }
     
     @Test
-    public void testGSASerarhByFilter() throws Exception {
-        TestSearchGal.enableGalSyncAccount(DOMAIN_GSA);
+    public void GSASerarhByFilter() throws Exception {
+        TestSearchGal.enableGalSyncAccount(prov, DOMAIN_GSA);
         searchByFilter(false, DOMAIN_GSA);
     }
     
     @Test
-    public void testGSASerarhEntryWithBinaryData() throws Exception {
-        TestSearchGal.enableGalSyncAccount(DOMAIN_GSA);
+    public void GSASerarhEntryWithBinaryData() throws Exception {
+        TestSearchGal.enableGalSyncAccount(prov, DOMAIN_GSA);
         binaryDataInEntry(false, DOMAIN_GSA, true);
         binaryDataInEntry(false, DOMAIN_GSA, false);
     }
 
     @Test
-    public void testLdapSerarhWithDot() throws Exception {
-        searchWithDot(true, DOMAIN_LDAP);
+    public void fallbackToLDAPSerarhWithDot() throws Exception {
+        searchWithDot(true, DOMAIN_LDAP, NUM_ALL_OBJECTS + 1);
     }
     
     @Test
-    public void testLdapSerarhWithOffsetlimit() throws Exception {
+    public void fallbackToLDAPSerarhWithDotSubDomain() throws Exception {
+        // expect all objects in SUB1_DOMAIN_LDAP *and* SUB2_DOMAIN_LDAP
+        searchWithDot(true, SUB1_DOMAIN_LDAP, (NUM_ALL_OBJECTS + 1)*2);
+    }
+    
+    @Test
+    public void fallbackToLDAPSerarhWithOffsetlimit() throws Exception {
         searchWithOffsetLimit(true, DOMAIN_LDAP);
     }
     
     @Test
-    public void testLdapSerarhByName() throws Exception {
+    public void fallbackToLDAPSerarhByName() throws Exception {
         searchByName(true, DOMAIN_LDAP);
     }
     
     @Test
-    public void testLdapSerarhByFilter() throws Exception {
+    public void fallbackToLDAPSerarhByFilter() throws Exception {
         searchByFilter(true, DOMAIN_LDAP);
     }
     
     @Test
-    public void testLdapSerarhEntryWithBinaryData() throws Exception {
+    public void fallbackToLDAPSerarhEntryWithBinaryData() throws Exception {
         binaryDataInEntry(true, DOMAIN_LDAP, true);
         binaryDataInEntry(true, DOMAIN_LDAP, false);
     }

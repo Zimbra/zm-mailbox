@@ -15,12 +15,9 @@
 
 package com.zimbra.cs.account.callback;
 
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.AttributeCallback;
@@ -36,8 +33,6 @@ public class MailHost extends AttributeCallback {
      */
     public void preModify(Map context, String attrName, Object value,
             Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
-        if (!(value instanceof String))
-            throw ServiceException.INVALID_REQUEST(Provisioning.A_zimbraMailHost+" is a single-valued attribute", null);
         
         if (StringUtil.isNullOrEmpty((String)value) || 
             attrsToModify.get("-" + Provisioning.A_zimbraMailHost) != null)
@@ -50,22 +45,31 @@ public class MailHost extends AttributeCallback {
          * never allow setting both zimbraMailHost and zimbraMailTransport in the same request
          */
         if (!StringUtil.isNullOrEmpty(mailHost) && !StringUtil.isNullOrEmpty(mailTransport))
-            throw ServiceException.INVALID_REQUEST("setting both " + Provisioning.A_zimbraMailHost + " and " +  Provisioning.A_zimbraMailTransport + " in the same request is not allowed", null);
+            throw ServiceException.INVALID_REQUEST("setting both " + 
+                    Provisioning.A_zimbraMailHost + " and " +  Provisioning.A_zimbraMailTransport + 
+                    " in the same request is not allowed", null);
         
         Provisioning prov = Provisioning.getInstance();
         
         Server server = prov.get(Key.ServerBy.serviceHostname, mailHost);
         if (server == null)
-            throw ServiceException.INVALID_REQUEST("specified "+Provisioning.A_zimbraMailHost+" does not correspond to a valid server service hostname: "+mailHost, null);
+            throw ServiceException.INVALID_REQUEST("specified " + 
+                    Provisioning.A_zimbraMailHost + 
+                    " does not correspond to a valid server service hostname: "+mailHost, null);
         else {
-            boolean hasMailboxService = server.getMultiAttrSet(Provisioning.A_zimbraServiceEnabled).contains(Provisioning.SERVICE_MAILBOX);
-            if (!hasMailboxService)
-                throw ServiceException.INVALID_REQUEST("specified "+Provisioning.A_zimbraMailHost+" does not correspond to a valid server with the mailbox service enabled: "+mailHost, null);    
+            if (!server.hasMailboxService()) {
+                throw ServiceException.INVALID_REQUEST("specified " + Provisioning.A_zimbraMailHost + 
+                        " does not correspond to a valid server with the mailbox service enabled: " 
+                        + mailHost, null);    
+            }
             
             /*
              * bug 18419
-             * If zimbraMailHost is modified, see if applying lmtp rule to old zimbraMailHost value would result in old zimbraMailTransport - 
-             * if it would, then replace both zimbraMailHost and set new zimbraMailTransport.  Otherwise error.
+             * 
+             * If zimbraMailHost is modified, see if applying lmtp rule to old 
+             * zimbraMailHost value would result in old zimbraMailTransport - 
+             * if it would, then replace both zimbraMailHost and set new zimbraMailTransport.  
+             * Otherwise error.
              */
             if (entry != null && !isCreate) {
         	
@@ -74,11 +78,14 @@ public class MailHost extends AttributeCallback {
                     Server oldServer = prov.get(Key.ServerBy.serviceHostname, oldMailHost);
                     if (oldServer != null) {
                 	    String curMailTransport = entry.getAttr(Provisioning.A_zimbraMailTransport);
-                	    if (!oldServer.mailTransportMatches(curMailTransport))
-                            throw ServiceException.INVALID_REQUEST("current value of zimbraMailHost does not match zimbraMailTransport" +
-                                    ", computed mail transport from current zimbraMailHost=" + mailTransport(oldServer) +
-                        	        ", current zimbraMailTransport=" + curMailTransport, 
+                	    if (!oldServer.mailTransportMatches(curMailTransport)) {
+                            throw ServiceException.INVALID_REQUEST(
+                                    "current value of zimbraMailHost does not match zimbraMailTransport" +
+                                    ", computed mail transport from current zimbraMailHost=" + 
+                                    mailTransport(oldServer) + ", current zimbraMailTransport=" + 
+                                    curMailTransport, 
                         	        null);
+                	    }
                     }
                 }
             } else {

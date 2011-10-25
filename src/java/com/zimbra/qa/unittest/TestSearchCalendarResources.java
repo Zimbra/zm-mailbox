@@ -249,7 +249,7 @@ public class TestSearchCalendarResources {
     private static void deleteDomainObjects(String domainName) throws Exception {
         Provisioning prov = Provisioning.getInstance();
         
-        TestSearchGal.disableGalSyncAccount(domainName);
+        TestSearchGal.disableGalSyncAccount(prov, domainName);
         
         Account acct = prov.get(AccountBy.name, TestUtil.getAddress(AUTHED_USER, domainName));
         if (acct != null) {
@@ -303,13 +303,13 @@ public class TestSearchCalendarResources {
     
     @Test
     public void testGSASerarhByName() throws Exception {
-        TestSearchGal.enableGalSyncAccount(DOMAIN_GSA);
+        TestSearchGal.enableGalSyncAccount(Provisioning.getInstance(), DOMAIN_GSA);
         searchByName(false, DOMAIN_GSA);
     }
     
     @Test
     public void testGSASerarhByFilter() throws Exception {
-        TestSearchGal.enableGalSyncAccount(DOMAIN_GSA);
+        TestSearchGal.enableGalSyncAccount(Provisioning.getInstance(), DOMAIN_GSA);
         searchByFilter(false, DOMAIN_GSA);
     }
     

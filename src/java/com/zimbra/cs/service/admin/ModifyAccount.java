@@ -28,9 +28,13 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.CosBy;
+import com.zimbra.common.account.Key.CacheEntryBy;
+import com.zimbra.cs.account.Provisioning.CacheEntry;
+import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
+import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 import com.zimbra.common.soap.Element;
@@ -183,8 +187,9 @@ public class ModifyAccount extends AdminDocumentHandler {
     }
     
     /*
-     * if the account's home server is changed as a result of this command and the new server is no longer
-     * this server, need to send a flush cache command to the new server so we don't get into the following:
+     * if the account's home server is changed as a result of this command and the 
+     * new server is no longer this server, need to send a flush cache command to the 
+     * new server so we don't get into the following:
      * 
      * account is on server A (this server)
      * 
@@ -200,13 +205,25 @@ public class ModifyAccount extends AdminDocumentHandler {
     private void checkNewServer(ZimbraSoapContext zsc, Map<String, Object> context, Account acct) {
         Server newServer = null;
         try {
-            if (!Provisioning.getInstance().onLocalServer(acct)) {
+            if (!Provisioning.onLocalServer(acct)) {
                 newServer = Provisioning.getInstance().getServer(acct);
-                Element request = zsc.createRequestElement(AdminConstants.FLUSH_CACHE_REQUEST);
-                Element eCache = request.addElement(AdminConstants.E_CACHE).addAttribute(AdminConstants.A_TYPE, Provisioning.CacheEntryType.account.name());
-                eCache.addElement(AdminConstants.E_ENTRY).addAttribute(AdminConstants.A_BY, Key.CacheEntryBy.id.name()).addText(acct.getId());
-
-                Element response = proxyRequest(request, context, newServer);
+                
+                // in the case when zimbraMailHost is being removed, newServer will be null
+                if (newServer != null) {
+                    /*
+                    Element request = zsc.createRequestElement(AdminConstants.FLUSH_CACHE_REQUEST);
+                    Element eCache = request.addElement(AdminConstants.E_CACHE).addAttribute(AdminConstants.A_TYPE, Provisioning.CacheEntryType.account.name());
+                    eCache.addElement(AdminConstants.E_ENTRY).addAttribute(AdminConstants.A_BY, Key.CacheEntryBy.id.name()).addText(acct.getId());
+    
+                    Element response = proxyRequest(request, context, newServer);
+                    */
+                    SoapProvisioning soapProv = new SoapProvisioning();
+                    String adminUrl = URLUtil.getAdminURL(newServer, AdminConstants.ADMIN_SERVICE_URI, true);
+                    soapProv.soapSetURI(adminUrl);
+                    soapProv.soapZimbraAdminAuthenticate();
+                    soapProv.flushCache(CacheEntryType.account, 
+                            new CacheEntry[]{new CacheEntry(CacheEntryBy.id, acct.getId())});
+                }
             }
         } catch (ServiceException e) {
             // ignore any error and continue
