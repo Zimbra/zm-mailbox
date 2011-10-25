@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -67,6 +68,7 @@ import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.cs.mailbox.calendar.cache.CtagInfo;
+import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
@@ -383,12 +385,29 @@ public class CalendarCollection extends Collection {
 					}
                      */
                 }
+                // Carry over the MimeMessage/ParsedMessage to preserve any attachments.
+                // CalDAV clients don't support attachments, and on edit we have to either
+                // retain existing attachments or drop them.  Retaining is better.
+                ParsedMessage oldPm = null;
+                if (calItem != null) {
+                    Invite oldInv = calItem.getInvite(i.getRecurId());
+                    if (oldInv == null && i.hasRecurId()) {
+                        // It's a new exception instance.  Inherit from series.
+                        oldInv = calItem.getInvite((RecurId) null);
+                    }
+                    if (oldInv != null) {
+                        MimeMessage mmInv = calItem.getSubpartMessage(oldInv.getMailItemId());
+                        oldPm = mmInv != null ? new ParsedMessage(mmInv, false) : null;
+                    }
+                }
                 if (first) {
                     scidDefault.mInv = i;
+                    scidDefault.mPm = oldPm;
                     first = false;
                 } else {
                     SetCalendarItemData scid = new SetCalendarItemData();
                     scid.mInv = i;
+                    scid.mPm = oldPm;
                     scidExceptions[idxExceptions++] = scid;
                 }
 
