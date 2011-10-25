@@ -65,21 +65,23 @@ final class NioImapRequest extends ImapRequest {
     @Override
     public Literal readLiteral() throws ImapParseException {
         skipChar('{');
-        if (mIndex + 1 >= mParts.size()) {
-            throw new ImapParseException(mTag, "no next literal");
+        if (index + 1 >= parts.size()) {
+            throw new ImapParseException(tag, "no next literal");
         }
-        Part part = mParts.get(mIndex + 1);
-        mIndex += 2;
-        mOffset = 0;
+        Part part = parts.get(index + 1);
+        index += 2;
+        offset = 0;
         return part.getLiteral();
     }
 
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (Part part : mParts) {
+        for (Part part : parts) {
             sb.append(part);
-            if (part.isString()) sb.append("\r\n");
+            if (part.isString()) {
+                sb.append("\r\n");
+            }
         }
         return sb.toString();
     }

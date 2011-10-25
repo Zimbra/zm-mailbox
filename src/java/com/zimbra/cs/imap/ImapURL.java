@@ -179,23 +179,25 @@ final class ImapURL {
     }
 
     private static class ParserImapRequest extends ImapRequest {
+
         public ParserImapRequest(String tag, String section) {
             super(null);
-            mTag = tag;
+            this.tag = tag;
             addPart(section);
         }
 
         private Literal getNextBuffer() throws ImapParseException {
-            if ((mIndex + 1) >= mParts.size()) {
-                throw new ImapParseException(mTag, "no next literal");
+            if ((index + 1) >= parts.size()) {
+                throw new ImapParseException(tag, "no next literal");
             }
-            Literal literal = mParts.get(mIndex + 1).getLiteral();
-            mIndex += 2;
-            mOffset = 0;
+            Literal literal = parts.get(index + 1).getLiteral();
+            index += 2;
+            offset = 0;
             return literal;
         }
 
-        @Override Literal readLiteral() throws ImapParseException {
+        @Override
+        Literal readLiteral() throws ImapParseException {
             return getNextBuffer();
         }
     }

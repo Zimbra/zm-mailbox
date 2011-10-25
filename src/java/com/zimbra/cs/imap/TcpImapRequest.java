@@ -59,7 +59,7 @@ final class TcpImapRequest extends ImapRequest {
         incrementSize(line.length());
         addPart(line);
 
-        if (mParts.size() == 1 && !maxRequestSizeExceeded) {
+        if (parts.size() == 1 && !maxRequestSizeExceeded) {
             // check for "LOGIN" command and elide if necessary
             unlogged = isLogin();
             if (unlogged) {
@@ -67,9 +67,7 @@ final class TcpImapRequest extends ImapRequest {
             }
         }
 
-        if (ZimbraLog.imap.isTraceEnabled()) {
-            ZimbraLog.imap.trace("C: %s", logline);
-        }
+        ZimbraLog.imap.trace("C: %s", logline);
 
         // if the line ends in a LITERAL+ non-blocking literal, keep reading
         if (line.endsWith("+}") && extensionEnabled("LITERAL+")) {
@@ -88,10 +86,11 @@ final class TcpImapRequest extends ImapRequest {
                     literalCounter = size;
                     continuation();
                 } else {
-                    if (mTag == null && mIndex == 0 && mOffset == 0) {
-                        mTag = readTag(); rewind();
+                    if (tag == null && index == 0 && offset == 0) {
+                        tag = readTag();
+                        rewind();
                     }
-                    throw new ImapParseException(mTag, "malformed nonblocking literal");
+                    throw new ImapParseException(tag, "malformed nonblocking literal");
                 }
             }
         }
@@ -105,7 +104,7 @@ final class TcpImapRequest extends ImapRequest {
             }
             literalCounter -= skipped;
         } else {
-            Part part = mParts.get(mParts.size() - 1);
+            Part part = parts.get(parts.size() - 1);
             Literal literal;
             if (part.isLiteral()) {
                 literal = part.getLiteral();
@@ -129,7 +128,7 @@ final class TcpImapRequest extends ImapRequest {
     }
 
     private Literal getCurrentBuffer() throws ImapParseException {
-        return mParts.get(mIndex).getLiteral();
+        return parts.get(index).getLiteral();
     }
 
     @Override
@@ -143,11 +142,11 @@ final class TcpImapRequest extends ImapRequest {
         skipChar('}');
 
         // make sure that the literal came at the very end of a line
-        if (getCurrentLine().length() != mOffset)
-            throw new ImapParseException(mTag, "extra characters after literal declaration");
-
-        boolean lastPart = (mIndex == mParts.size() - 1);
-        if (lastPart || (mIndex == mParts.size() - 2 && literalCounter != -1)) {
+        if (getCurrentLine().length() != offset) {
+            throw new ImapParseException(tag, "extra characters after literal declaration");
+        }
+        boolean lastPart = (index == parts.size() - 1);
+        if (lastPart || (index == parts.size() - 2 && literalCounter != -1)) {
             if (literalCounter == -1) {
                 if (!isAppend()) {
                     incrementSize(length);
@@ -160,10 +159,10 @@ final class TcpImapRequest extends ImapRequest {
                 throw new ImapContinuationException(blocking && lastPart);
             }
         }
-        mIndex++;
+        index++;
         Literal result = getCurrentBuffer();
-        mIndex++;
-        mOffset = 0;
+        index++;
+        offset = 0;
         return result;
     }
 
@@ -184,7 +183,7 @@ final class TcpImapRequest extends ImapRequest {
      */
     @Override
     void addPart(Part part) {
-        if (!maxRequestSizeExceeded || mParts.isEmpty()) {
+        if (!maxRequestSizeExceeded || parts.isEmpty()) {
             super.addPart(part);
         }
     }
