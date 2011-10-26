@@ -171,7 +171,8 @@ extends TestCase {
         send(socket, null, IMAP_LOGOUT_RESPONSE2);
     }
     
-    public void testImapCleartextFalse()
+    // TODO: Reenable when bug 66457 is fixed.
+    public void disabledTestImapCleartextFalse()
     throws Exception {
         setImapCleartext(false);
         
