@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 VMware, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -21,11 +21,15 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
+import javax.mail.Address;
 import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.URLName;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import com.sun.mail.smtp.SMTPTransport;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException.Argument;
 
@@ -67,4 +71,29 @@ public class MailUtil {
         failedDeliverymm.setText(text.toString());
         failedDeliverymm.saveChanges();
     }
+    
+    /* 
+     * This is a wrapper around SMTPTransport meant for validating the recipient addresses.
+     * This is helpful for capturing the addresses with 550 smtp error code.
+     * The sendMessage() and send() methods will not send the message and always throws MessagingException.
+     * The callsite can check to see if MessagingException is an instance of SendFailedException
+     * and then get the list of invalid e-mail addresses. 
+     */
+    
+    private class VerifyRcptSMTPTransport extends SMTPTransport {
+        public VerifyRcptSMTPTransport(Session session, URLName urlname) {
+            super(session, urlname);
+        }
+
+        @Override
+        protected void rcptTo() throws MessagingException {
+            super.rcptTo();
+            // always throw the exception.
+            throw new MessagingException();
+        }
+    }
+    
+    public static void validateRcptAddresses(Session session, Address[] addresses) throws MessagingException{
+        VerifyRcptSMTPTransport.send(new MimeMessage(session), addresses);     
+    }    
 }

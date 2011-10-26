@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -46,6 +46,7 @@ public class ServiceException extends Exception {
     public static final String INTERRUPTED = "service.INTERRUPTED";
     public static final String NO_SPELL_CHECK_URL = "service.NO_SPELL_CHECK_URL"; 
     public static final String SAX_READER_ERROR = "service.SAX_READER_ERROR";
+    public static final String UNSUPPORTED = "service.UNSUPPORTED";
     
     protected String mCode;
     protected Argument[] mArgs = null;
@@ -348,5 +349,9 @@ public class ServiceException extends Exception {
     
     public static ServiceException SAX_READER_ERROR(String str, Throwable cause) {
         return new ServiceException("SAX Reader Error: " + (str != null ? str : ""), SAX_READER_ERROR, SENDERS_FAULT, cause);
+    }
+    
+    public static ServiceException UNSUPPORTED() {
+        return new ServiceException("unsupported", UNSUPPORTED, RECEIVERS_FAULT);
     }
 }
