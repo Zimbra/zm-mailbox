@@ -41,7 +41,7 @@ class Soap11Protocol extends SoapProtocol {
     // but                                        <soap:faultcode>soap:Client</soap:faultcode> is not
     private static final QName FAULTCODE = new QName("faultcode");
     private static final QName FAULTSTRING = new QName("faultstring");
-    private static final QName DETAIL = new QName("detail");
+    public static final QName DETAIL = new QName("detail");
     private static final QName SENDER_CODE = new QName("Client", NS);
     private static final QName RECEIVER_CODE = new QName("Server", NS);
     
@@ -106,14 +106,12 @@ class Soap11Protocol extends SoapProtocol {
         else
             error.addUniqueElement(ZimbraNamespace.E_TRACE).setText(e.getId());
         
-        if (e.getArgs() != null) {
-            for (ServiceException.Argument arg : e.getArgs()) {
-                if (arg.externalVisible()) {
-                    Element val = error.addElement(ZimbraNamespace.E_ARGUMENT);
-                    val.addAttribute(ZimbraNamespace.A_ARG_NAME, arg.mName);
-                    val.addAttribute(ZimbraNamespace.A_ARG_TYPE, arg.mType.toString());
-                    val.setText(arg.mValue);
-                }
+        for (ServiceException.Argument arg : e.getArgs()) {
+            if (arg.externalVisible()) {
+                Element val = error.addElement(ZimbraNamespace.E_ARGUMENT);
+                val.addAttribute(ZimbraNamespace.A_ARG_NAME, arg.name);
+                val.addAttribute(ZimbraNamespace.A_ARG_TYPE, arg.type.toString());
+                val.setText(arg.value);
             }
         }
         

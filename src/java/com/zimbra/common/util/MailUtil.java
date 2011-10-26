@@ -53,11 +53,11 @@ public class MailUtil {
 
         if (addressArgs != null) {
             for (Argument arg : addressArgs) {
-                if (arg.mName != null && arg.mValue != null && arg.mValue.length() > 0) {
-                    if (arg.mName.equals("invalid"))
-                        invalidAddrs.add(arg.mValue);
-                    else if (arg.mName.equals("unsent"))
-                        unsentAddrs.add(arg.mValue);
+                if (arg.name != null && arg.value != null && arg.value.length() > 0) {
+                    if (arg.name.equals("invalid"))
+                        invalidAddrs.add(arg.value);
+                    else if (arg.name.equals("unsent"))
+                        unsentAddrs.add(arg.value);
                 }
             }
         }

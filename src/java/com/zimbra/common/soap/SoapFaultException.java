@@ -15,10 +15,11 @@
 
 package com.zimbra.common.soap;
 
+import java.util.Collections;
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.StringUtil;
 
 public class SoapFaultException extends ServiceException {
 
@@ -27,7 +28,6 @@ public class SoapFaultException extends ServiceException {
 	/** used for default value and when we get a fault without a detail code */
     public static final String UNKNOWN = "soap.UNKNOWN";
 
-    private boolean mIsReceiversFault;
     private Element mDetail;
     private Element mFault;
     private boolean mIsLocal;
@@ -43,7 +43,6 @@ public class SoapFaultException extends ServiceException {
     /** Create a new SoapFaultException. */
     public SoapFaultException(String message, Element detail, boolean isReceiversFault) {
         super(message, getCode(detail), isReceiversFault);
-        mIsReceiversFault = isReceiversFault;
         //subcode = subcode;
         mDetail = detail;
         mFault = null;
@@ -51,8 +50,7 @@ public class SoapFaultException extends ServiceException {
 
     /** Create a new SoapFaultException. Used by SoapProtocol only. */
     SoapFaultException(String message, Element detail, boolean isReceiversFault, Element fault) {
-        super(message, getCode(detail), isReceiversFault);
-        mIsReceiversFault = isReceiversFault;
+        super(message, getCode(detail), isReceiversFault, null, parseArgs(detail));
         mDetail = detail;
         mFault = fault;
         if (detail != null) {
@@ -86,46 +84,6 @@ public class SoapFaultException extends ServiceException {
         return UNKNOWN;
     }
 
-    private static final String[] FAULT_CODE_PATH = new String[] {
-        ZimbraNamespace.E_DETAIL.getName(), ZimbraNamespace.E_ERROR.getName(), ZimbraNamespace.E_CODE.getName()
-    };
-
-    /** Returns the error code. */
-    @Override public String getCode() {
-        return (mFault == null ? null : mFault.getPathAttribute(FAULT_CODE_PATH));
-    }
-
-    private static final String[] FAULT_ARGUMENT_PATH = new String[] {
-        ZimbraNamespace.E_DETAIL.getName(), ZimbraNamespace.E_ERROR.getName(), ZimbraNamespace.E_ARGUMENT.getName()
-    };
-
-    /** Returns the value for the given argument, or <tt>null</tt> if the
-     *  argument could not be found. */
-    public String getArgumentValue(String argumentName) {
-        if (mFault == null)
-            return null;
-
-        List<Element> arguments = mFault.getPathElementList(FAULT_ARGUMENT_PATH);
-        if (arguments == null)
-            return null;
-
-        for (Element argument : arguments) {
-            String name = argument.getAttribute(ZimbraNamespace.A_ARG_NAME, null);
-            if (StringUtil.equal(name, argumentName))
-                return argument.getText();
-        }
-        return null;
-    }
-    
-    private static final String[] FAULT_REASON_PATH = new String[] {
-        ZimbraNamespace.E_REASON.getName(), ZimbraNamespace.E_TEXT.getName()
-    };
-
-    /** Returns the reason for the fault. */
-    public String getReason() {
-        return (mFault == null ? null : mFault.getPathAttribute(FAULT_REASON_PATH));
-    }
-
     public Element getDetail() {
         return mDetail;
     }
@@ -136,10 +94,6 @@ public class SoapFaultException extends ServiceException {
             throw new IllegalStateException("mDetail is not null");
 
         mDetail = detail;
-    }
-
-    @Override public boolean isReceiversFault() {
-        return mIsReceiversFault;
     }
 
     /**
@@ -196,15 +150,36 @@ public class SoapFaultException extends ServiceException {
         StringBuffer sb = new StringBuffer();
         sb.append("class=").append(getClass().getName()).append("\n");
         sb.append("message=").append(getMessage()).append("\n");
-        sb.append("mIsReceiversFault=").append(mIsReceiversFault).append("\n");
+        sb.append("isReceiversFault=").append(isReceiversFault()).append("\n");
         sb.append("mIsLocal=").append(mIsLocal).append("\n");
 
         sb.append("mDetail=").append(mDetail).append("\n");
         sb.append("mFault=").append(mFault).append("\n");
         return sb.toString();
     }
+
+
+    /**
+     * Returns the arguments in the given SOAP fault, or an empty list.
+     */
+    private static List<ServiceException.Argument> parseArgs(Element detail) {
+        if (detail == null) {
+            return Collections.emptyList();
+        }
+        Element errorEl = detail.getOptionalElement(ZimbraNamespace.E_ERROR);
+        if (errorEl == null) {
+            return Collections.emptyList();
+        }
+        
+        List<ServiceException.Argument> args = Lists.newArrayList();
+        for (Element argEl : errorEl.listElements(ZimbraNamespace.E_ARGUMENT.getName())) {
+            String name = argEl.getAttribute(ZimbraNamespace.A_ARG_NAME, null);
+            String typeString = argEl.getAttribute(ZimbraNamespace.A_ARG_TYPE, null);
+            ServiceException.Argument.Type type = (typeString == null ? null : ServiceException.Argument.Type.valueOf(typeString));
+            String value = argEl.getText();
+            args.add(new ServiceException.Argument(name, value, type));
+        }
+        
+        return args;
+    }
 }
-
-
-
-
