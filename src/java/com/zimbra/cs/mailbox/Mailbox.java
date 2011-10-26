@@ -3971,8 +3971,22 @@ public class Mailbox {
                             Invite currInv = calItem.getInvite(scid.mInv.getRecurId());
                             if (currInv == null)  // Inherit from series as fallback.
                                 currInv = currSeries;
-                            if (currInv != null && currInv.hasFreeBusy())
-                                scid.mInv.setFreeBusy(currInv.getFreeBusy());
+                            if (currInv != null && currInv.hasFreeBusy()) {
+                                if (scid.mInv.isTransparent()) {
+                                    // New invite is transparent.  New intended f/b must be free.
+                                    scid.mInv.setFreeBusy(IcalXmlStrMap.FBTYPE_FREE);
+                                } else {
+                                    // New invite is opaque.
+                                    if (IcalXmlStrMap.FBTYPE_FREE.equals(currInv.getFreeBusy())) {
+                                        // An opaque invite cannot have intended f/b value of free.  Make it busy.
+                                        scid.mInv.setFreeBusy(IcalXmlStrMap.FBTYPE_BUSY);
+                                    } else {
+                                        // Current intended f/b has a non-free value, so keep it.  It's better
+                                        // to preserve tentative or OOO value than to unconditionally change to busy.
+                                        scid.mInv.setFreeBusy(currInv.getFreeBusy());
+                                    }
+                                }
+                            }
                         }
                     }
                 }

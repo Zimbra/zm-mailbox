@@ -328,7 +328,10 @@ public class ZCalendar {
                 // iCal can't handle it when the value is too long.  (Exact threshold is unknown,
                 // but we've seen the failure with a 19KB sample.)  iCal doesn't support x-props anyway,
                 // so there is no loss of functionality.
-                if (needAppleICalHacks && ICalTok.X_ALT_DESC.equals(prop.getToken()))
+                // Also, don't generate the X-MICROSOFT-CDO-INTENDEDSTATUS property as iCal can't handle this
+                // property and becomes stale when the event transparency is modified in iCal5.
+                if (needAppleICalHacks &&
+                        (ICalTok.X_ALT_DESC.equals(prop.getToken()) || ICalTok.X_MICROSOFT_CDO_INTENDEDSTATUS.equals(prop.getToken())))
                     continue;
                 prop.toICalendar(w, needAppleICalHacks, escapeHtmlTags);
             }
