@@ -77,12 +77,14 @@ public abstract class DistributionListDocumentHandler extends AccountDocumentHan
             
             return super.proxyIfNecessary(request, context);
         } catch (ServiceException e) {
-            /*
+            // temporary fix until 66412 is fixed - provide an admin command/option
+            // to create delegated groups.
             // if something went wrong proxying the request, just execute it locally
-            if (ServiceException.PROXY_ERROR.equals(e.getCode()))
+            if (ServiceException.PROXY_ERROR.equals(e.getCode())) {
                 return null;
+            }
             // but if it's a real error, it's a real error
-             */
+            
             // must be able to proxy, we don't want to fallback to local
             throw e;
         }
