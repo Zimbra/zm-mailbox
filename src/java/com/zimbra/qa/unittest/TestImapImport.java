@@ -21,17 +21,16 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
-import com.zimbra.common.account.ProvisioningConstants;
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.DataSource;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.client.ZDataSource;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZImapDataSource;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
+import com.zimbra.common.account.ProvisioningConstants;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.type.DataSource.ConnectionType;
 
@@ -107,7 +106,8 @@ extends TestCase {
         LC.javamail_imap_enable_starttls.setDefault(Boolean.toString(false));
     }
 
-    public void testImapImport() throws Exception {
+    // TODO: Reenable when bug 66459 is fixed.
+    public void disabledTestImapImport() throws Exception {
         List<ZMessage> msgs;
         ZMessage msg;
         // Remote: add 1 message
