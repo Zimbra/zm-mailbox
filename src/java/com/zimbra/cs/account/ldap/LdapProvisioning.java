@@ -354,7 +354,7 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public void modifyAttrs(Entry e, Map<String, ? extends Object> attrs, boolean checkImmutable)
-            throws ServiceException {
+    throws ServiceException {
         modifyAttrs(e, attrs, checkImmutable, true);
     }
 
@@ -387,7 +387,8 @@ public class LdapProvisioning extends LdapProv {
      * @param attrs
      * @throws ServiceException
      */
-    protected void modifyAttrsInternal(Entry entry, ZLdapContext initZlc, Map<String, ? extends Object> attrs)
+    protected void modifyAttrsInternal(Entry entry, ZLdapContext initZlc, 
+            Map<String, ? extends Object> attrs)
             throws ServiceException {
         if (entry instanceof Account && !(entry instanceof CalendarResource)) {
             Account acct = (Account) entry;
@@ -398,7 +399,8 @@ public class LdapProvisioning extends LdapProv {
         modifyLdapAttrs(entry, initZlc, attrs);
     }
 
-    private void modifyLdapAttrs(Entry entry, ZLdapContext initZlc, Map<String, ? extends Object> attrs)
+    private void modifyLdapAttrs(Entry entry, ZLdapContext initZlc, 
+            Map<String, ? extends Object> attrs)
             throws ServiceException {
         ZLdapContext zlc = initZlc;
         try {
@@ -664,7 +666,8 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    public Account get(AccountBy keyType, String key, boolean loadFromMaster) throws ServiceException {
+    public Account get(AccountBy keyType, String key, boolean loadFromMaster) 
+    throws ServiceException {
         switch(keyType) {
         case adminName:
             return getAdminAccountByName(key, loadFromMaster);
@@ -700,7 +703,8 @@ public class LdapProvisioning extends LdapProv {
         }
     }
 
-    private Account getAccountByForeignPrincipal(String foreignPrincipal, boolean loadFromMaster) throws ServiceException {
+    private Account getAccountByForeignPrincipal(String foreignPrincipal, boolean loadFromMaster) 
+    throws ServiceException {
         Account a = sAccountCache.getByForeignPrincipal(foreignPrincipal);
 
         // bug 27966, always do a search so dup entries can be thrown
@@ -719,7 +723,8 @@ public class LdapProvisioning extends LdapProv {
         return a;
     }
 
-    private Account getAdminAccountByName(String name, boolean loadFromMaster) throws ServiceException {
+    private Account getAdminAccountByName(String name, boolean loadFromMaster) 
+    throws ServiceException {
         Account a = sAccountCache.getByName(name);
         if (a == null) {
             a = getAccountByQuery(
@@ -731,7 +736,8 @@ public class LdapProvisioning extends LdapProv {
         return a;
     }
 
-    private Account getAppAdminAccountByName(String name, boolean loadFromMaster) throws ServiceException {
+    private Account getAppAdminAccountByName(String name, boolean loadFromMaster) 
+    throws ServiceException {
         Account a = sAccountCache.getByName(name);
         if (a == null) {
             a = getAccountByQuery(
@@ -759,16 +765,19 @@ public class LdapProvisioning extends LdapProv {
         return emailAddress;
     }
 
-    Account getAccountByName(String emailAddress, boolean loadFromMaster) throws ServiceException {
+    Account getAccountByName(String emailAddress, boolean loadFromMaster) 
+    throws ServiceException {
 
         return getAccountByName(emailAddress, loadFromMaster, true);
     }
 
-    Account getAccountByName(String emailAddress, boolean loadFromMaster, boolean checkAliasDomain) throws ServiceException {
+    Account getAccountByName(String emailAddress, boolean loadFromMaster, boolean checkAliasDomain) 
+    throws ServiceException {
 
         Account account = getAccountByNameInternal(emailAddress, loadFromMaster);
 
-        // if not found, see if the domain is an alias domain and if so try to get account by the alias domain target
+        // if not found, see if the domain is an alias domain and if so try to 
+        // get account by the alias domain target
         if (account == null) {
             if (checkAliasDomain) {
                 String addrByDomainAlias = getEmailAddrByDomainAlias(emailAddress);
@@ -882,7 +891,8 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public Account restoreAccount(String emailAddress, String password,
-            Map<String, Object> attrs, Map<String, Object> origAttrs) throws ServiceException {
+            Map<String, Object> attrs, Map<String, Object> origAttrs) 
+    throws ServiceException {
         return createAccount(emailAddress, password, attrs, 
                 mDIT.handleSpecialAttrs(attrs), null, true, origAttrs);
     }
@@ -4186,7 +4196,7 @@ public class LdapProvisioning extends LdapProv {
     public Provisioning.Result checkAuthConfig(Map attrs, String name, String password) 
     throws ServiceException {
         AuthMech mech = AuthMech.fromString(Check.getRequiredAttr(attrs, Provisioning.A_zimbraAuthMech));
-        if (!(mech == AuthMech.ldap) || mech == AuthMech.ad) {
+        if (!(mech == AuthMech.ldap || mech == AuthMech.ad)) {
             throw ServiceException.INVALID_REQUEST("auth mech must be: "+
                     AuthMech.ldap.name() + " or " + AuthMech.ad.name(), null);
         }
