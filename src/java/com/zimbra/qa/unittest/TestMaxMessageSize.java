@@ -148,8 +148,8 @@ extends TestCase {
     throws Exception {
         Provisioning prov = Provisioning.getInstance();
         long maxSize = prov.getConfig().getLongAttr(Provisioning.A_zimbraMtaMaxMessageSize, -1);
-        assertTrue("Unexpected error: " + e.getReason(),
-            e.getReason().matches("Message of size \\d+ exceeded allowed size"));
+        assertTrue("Unexpected error: " + e.getMessage(),
+            e.getMessage().matches("Message of size \\d+ exceeded allowed size"));
         assertEquals(MailServiceException.MESSAGE_TOO_BIG, e.getCode());
         assertEquals(Long.toString(maxSize), e.getArgumentValue("maxSize"));
     }

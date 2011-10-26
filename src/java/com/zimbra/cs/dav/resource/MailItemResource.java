@@ -284,11 +284,10 @@ public abstract class MailItemResource extends DavResource {
                             id = itemId.getId();
                         } else { // destination belongs to same mailbox.         
                             String name = null;
-                            Argument[] args = se.getArgs();
-                            for (Argument arg: args) {
-                                if (arg.mName != null && arg.mValue != null && arg.mValue.length() > 0) {
-                                    if (arg.mName.equals("name"))
-                                        name = arg.mValue;
+                            for (Argument arg: se.getArgs()) {
+                                if (arg.name != null && arg.value != null && arg.value.length() > 0) {
+                                    if (arg.name.equals("name"))
+                                        name = arg.value;
                                     /* commented out since the exception is giving wrong itemId for copy.
                                        If the the item is conflicting with an existing item we want the 
                                        id of the existing item. But, the exception has the proposed id of

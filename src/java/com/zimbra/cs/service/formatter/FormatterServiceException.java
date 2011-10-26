@@ -14,8 +14,11 @@
  */
 package com.zimbra.cs.service.formatter;
 
+import java.util.List;
+
 import com.zimbra.common.service.ServiceException;
 
+@SuppressWarnings("serial")
 public class FormatterServiceException extends ServiceException {
     // codes
     public static final String INVALID_FORMAT = "formatter.INVALID_FORMAT";
@@ -41,6 +44,11 @@ public class FormatterServiceException extends ServiceException {
 
     FormatterServiceException(String message, String code,
         boolean isReceiversFault, Throwable cause, Argument... args) {
+        super(message, code, isReceiversFault, cause, args);
+    }
+    
+    FormatterServiceException(String message, String code,
+        boolean isReceiversFault, Throwable cause, List<Argument> args) {
         super(message, code, isReceiversFault, cause, args);
     }
 
@@ -119,4 +127,3 @@ public class FormatterServiceException extends ServiceException {
         return new Argument(name, value, Argument.Type.STR);
     }
 }
-

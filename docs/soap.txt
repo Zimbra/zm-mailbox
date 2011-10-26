@@ -313,7 +313,7 @@ SOAP 1.2
     <soap:Detail>
       <Error xmlns="urn:zimbra">
         <Code>...</Code>
-        [<a n="name">VALUE</a>]* // error information (arguments, e.g. ID that was bad, or whatever)
+        [<a n="{name}" t="{type}">{value}</a>]* // error information (arguments, e.g. ID that was bad, or whatever)
       </Error>
     </soap:Detail>
   </soap:Fault>
@@ -330,7 +330,7 @@ SOAP 1.1
    <soap:detail>
      <Error xmlns="urn:zimbra">
         <Code>...</Code>
-        [<a n="name">VALUE</a>]* // error information (arguments, e.g. ID that was bad, or whatever)
+        [<a n="{name}" t="{type}">{value}</a>]* // error information (arguments, e.g. ID that was bad, or whatever)
       </Error>
     </soap:detail>
   </soap:Fault>

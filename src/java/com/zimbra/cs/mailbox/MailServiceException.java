@@ -238,7 +238,7 @@ public class MailServiceException extends ServiceException {
     }
 
     public static MailServiceException NO_SUCH_DOC(String path) {
-        return new NoSuchItemException("no such item: "+ path, NO_SUCH_ITEM, SENDERS_FAULT, new Argument(NAME, path, Argument.Type.STR));
+        return new NoSuchItemException("no such document: " + path, NO_SUCH_ITEM, SENDERS_FAULT, new Argument(NAME, path, Argument.Type.STR));
     }
 
     public static MailServiceException NO_SUCH_DOC(int id) {
@@ -266,7 +266,8 @@ public class MailServiceException extends ServiceException {
     }
 
     public static MailServiceException NO_SUCH_BLOB(int mboxId, int itemId, int revision) {
-        return new MailServiceException("No such blob: mailbox=" + mboxId + ", item=" + itemId + ", change=" + revision, NO_SUCH_BLOB, SENDERS_FAULT);
+        return new MailServiceException("No such blob: mailbox=" + mboxId + ", item=" + itemId + ", change=" + revision, NO_SUCH_BLOB, SENDERS_FAULT,
+            new Argument(ITEM_ID, itemId, Argument.Type.IID), new Argument(REVISION, revision, Argument.Type.NUM));
     }
 
     public static MailServiceException NO_SUCH_CHAT(String threadId) {
@@ -382,9 +383,20 @@ public class MailServiceException extends ServiceException {
     public static MailServiceException IMMUTABLE_OBJECT(int id) {
         return new MailServiceException("cannot modify immutable object: " + id, IMMUTABLE_OBJECT, SENDERS_FAULT, new Argument(ITEM_ID, id, Argument.Type.IID));
     }
+    
+    public static MailServiceException ALREADY_EXISTS(String name) {
+        return new MailServiceException("object with that name already exists: " + name, ALREADY_EXISTS, SENDERS_FAULT,
+            new Argument(NAME, name, Argument.Type.STR));
+    }
 
-    public static MailServiceException ALREADY_EXISTS(String name, Argument... args) {
-        return new MailServiceException("object with that name already exists: " + name, ALREADY_EXISTS, SENDERS_FAULT, args);
+    public static MailServiceException ALREADY_EXISTS(String msg, String name, int id) {
+        return new MailServiceException("document already exists: " + msg, ALREADY_EXISTS, SENDERS_FAULT,
+            new Argument(NAME, name, Argument.Type.STR), new Argument(ITEM_ID, id, Argument.Type.IID));
+    }
+
+    public static MailServiceException ALREADY_EXISTS(String msg, String name, int id, int revision) {
+        return new MailServiceException("document already exists: " + msg, ALREADY_EXISTS, SENDERS_FAULT,
+            new Argument(NAME, name, Argument.Type.STR), new Argument(ITEM_ID, id, Argument.Type.IID), new Argument(REVISION, revision, Argument.Type.NUM));
     }
 
     public static MailServiceException ALREADY_EXISTS(String name, Throwable t) {

@@ -840,10 +840,10 @@ public abstract class ArchiveFormatter extends Formatter {
             ex.toString() : ex.getLocalizedMessage());
 
         errs.add(ex);
-        if (ex.getArgs() != null) {
+        if (!ex.getArgs().isEmpty()) {
             s.append(':');
             for (ServiceException.Argument arg : ex.getArgs())
-                s.append(' ').append(arg.mName).append('=').append(arg.mValue);
+                s.append(' ').append(arg.name).append('=').append(arg.value);
         }
         ZimbraLog.misc.warn(s, ex);
     }

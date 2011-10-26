@@ -195,13 +195,10 @@ public class SaveDocument extends WikiDocumentHandler {
                 }
                 if (item != null && item instanceof Document) {
                     // name clash with another Document
-                    throw MailServiceException.ALREADY_EXISTS("name " + doc.name + " in folder " + folderId, new Argument(MailConstants.A_NAME, doc.name,
-                            Argument.Type.STR), new Argument(MailConstants.A_ID, item.getId(), Argument.Type.IID),
-                            new Argument(MailConstants.A_VERSION, ((Document) item).getVersion(), Argument.Type.NUM));
+                    throw MailServiceException.ALREADY_EXISTS("name " + doc.name + " in folder " + folderId, doc.name, item.getId(), ((Document) item).getVersion());
                 } else if (item != null) {
-                    // name class with a folder
-                    throw MailServiceException.ALREADY_EXISTS("name " + doc.name + " in folder " + folderId, new Argument(MailConstants.A_NAME, doc.name,
-                            Argument.Type.STR), new Argument(MailConstants.A_ID, item.getId(), Argument.Type.IID));
+                    // name clash with a folder
+                    throw MailServiceException.ALREADY_EXISTS("name " + doc.name + " in folder " + folderId, doc.name, item.getId());
                 }
             }
             throw e;

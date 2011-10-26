@@ -219,8 +219,8 @@ extends TestCase {
         
         boolean foundRecipient = false;
         for (Argument arg : e.getArgs()) {
-            if (arg.mName.equals("invalid")) {
-                assertEquals(invalidRecipient, arg.mValue);
+            if (arg.name.equals("invalid")) {
+                assertEquals(invalidRecipient, arg.value);
                 foundRecipient = true;
             }
         }
