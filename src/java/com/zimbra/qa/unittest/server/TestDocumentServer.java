@@ -106,7 +106,8 @@ public final class TestDocumentServer extends TestCase {
     /**
      * Confirms that saving a document to a compressed volume works correctly (bug 48363).
      */
-    public void testCompressedVolume() throws Exception {
+    // TODO: Reenable after bug 66463 is fixed.
+    public void disabledTestCompressedVolume() throws Exception {
         VolumeManager mgr = VolumeManager.getInstance();
         Volume current = mgr.getCurrentMessageVolume();
         mgr.update(Volume.builder(current).setCompressBlobs(true).setCompressionThreshold(1).build());
