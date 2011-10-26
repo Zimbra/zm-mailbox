@@ -50,14 +50,16 @@ public final class MetadataDump {
 
     private static final String OPT_MAILBOX_ID = "mailboxId";
     private static final String OPT_ITEM_ID = "itemId";
+    private static final String OPT_DUMPSTER = "dumpster";
     private static final String OPT_FILE = "file";
     private static final String OPT_HELP = "h";
 
     private static Options sOptions = new Options();
 
     static {
-        sOptions.addOption("m", OPT_MAILBOX_ID, true, "mailbox id");
+        sOptions.addOption("m", OPT_MAILBOX_ID, true, "mailbox id or email");
         sOptions.addOption("i", OPT_ITEM_ID, true, "item id (required when --" + OPT_MAILBOX_ID + " is used)");
+        sOptions.addOption(null, OPT_DUMPSTER, false, "Get data from the dumpster");
         sOptions.addOption("f", OPT_FILE, true, "Decode metadata value in a file (other options are ignored)");
         sOptions.addOption(OPT_HELP, "help", false, "Show help (this output)");
     }
@@ -66,7 +68,7 @@ public final class MetadataDump {
         if (errmsg != null) {
             System.err.println(errmsg);
         }
-        System.err.println("Usage: zmmetadump -m <mailbox id/email> -i <item id>");
+        System.err.println("Usage: zmmetadump -m <mailbox id/email> -i <item id> [--dumpster]");
         System.err.println("   or: zmmetadump -f <file containing encoded metadata>");
     }
 
@@ -181,12 +183,12 @@ public final class MetadataDump {
         }
     }
 
-    private static Row getItemRow(DbConnection conn, int groupId, int mboxId, int itemId)
+    private static Row getItemRow(DbConnection conn, int groupId, int mboxId, int itemId, boolean fromDumpster)
     throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            String sql = "SELECT * FROM " + DbMailItem.getMailItemTableName(mboxId, groupId, false) +
+            String sql = "SELECT * FROM " + DbMailItem.getMailItemTableName(mboxId, groupId, fromDumpster) +
                          " WHERE mailbox_id = " + mboxId + " AND id = " + itemId;
             stmt = conn.prepareStatement(sql);
             rs = stmt.executeQuery();
@@ -213,12 +215,12 @@ public final class MetadataDump {
         }
     }
 
-    private static List<Row> getRevisionRows(DbConnection conn, int groupId, int mboxId, int itemId)
+    private static List<Row> getRevisionRows(DbConnection conn, int groupId, int mboxId, int itemId, boolean fromDumpster)
     throws ServiceException {
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
-            String sql = "SELECT * FROM " + DbMailItem.getRevisionTableName(mboxId, groupId, false) +
+            String sql = "SELECT * FROM " + DbMailItem.getRevisionTableName(mboxId, groupId, fromDumpster) +
                          " WHERE mailbox_id = " + mboxId + " AND item_id = " + itemId +
                          " ORDER BY mailbox_id, item_id, version DESC";
             stmt = conn.prepareStatement(sql);
@@ -268,13 +270,44 @@ public final class MetadataDump {
         }
     }
 
-    private static void printBanner(PrintStream ps, String title) {
-        ps.println("********************   " + title + "   ********************");
+    private static void printBanner(PrintStream out, String title) {
+        out.println("********************   " + title + "   ********************");
     }
 
     static String getTimestampStr(long time) {
         DateFormat fmt = new SimpleDateFormat("EEE yyyy/MM/dd HH:mm:ss z");
         return fmt.format(time);
+    }
+
+    public static void doDump(DbConnection conn, int mboxId, int itemId, boolean fromDumpster, PrintStream out) throws ServiceException {
+        try {
+            int groupId = getMailboxGroup(conn, mboxId);
+    
+            boolean first = true;
+    
+            Row item = getItemRow(conn, groupId, mboxId, itemId, fromDumpster);
+            List<Row> revs = getRevisionRows(conn, groupId, mboxId, itemId, fromDumpster);
+    
+            // main item
+            if (!revs.isEmpty())
+                printBanner(out, "Current Revision");
+            item.print(out);
+            first = false;
+    
+            // revisions
+            for (Row rev : revs) {
+                String version = rev.get("version");
+                if (!first) {
+                    out.println();
+                    out.println();
+                }
+                printBanner(out, "Revision " + version);
+                rev.print(out);
+                first = false;
+            }
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("error while getting metadata for item " + itemId + " in mailbox " + mboxId, e);
+        }
     }
 
     public static void main(String[] args) {
@@ -312,6 +345,7 @@ public final class MetadataDump {
             DbConnection conn = null;
 
             try {
+                boolean fromDumpster = cl.hasOption(OPT_DUMPSTER);
                 String mboxIdStr = cl.getOptionValue(OPT_MAILBOX_ID);
                 String itemIdStr = cl.getOptionValue(OPT_ITEM_ID);
                 if (mboxIdStr == null || itemIdStr == null) {
@@ -339,30 +373,7 @@ public final class MetadataDump {
 
                 if (conn == null)
                     conn = DbPool.getConnection();
-                int groupId = getMailboxGroup(conn, mboxId);
-
-                boolean first = true;
-
-                Row item = getItemRow(conn, groupId, mboxId, itemId);
-                List<Row> revs = getRevisionRows(conn, groupId, mboxId, itemId);
-
-                // main item
-                if (!revs.isEmpty())
-                    printBanner(out, "Current Revision");
-                item.print(out);
-                first = false;
-
-                // revisions
-                for (Row rev : revs) {
-                    String version = rev.get("version");
-                    if (!first) {
-                        out.println();
-                        out.println();
-                    }
-                    printBanner(out, "Revision " + version);
-                    rev.print(out);
-                    first = false;
-                }
+                doDump(conn, mboxId, itemId, fromDumpster, out);
             } finally {
                 DbPool.quietClose(conn);
             }
