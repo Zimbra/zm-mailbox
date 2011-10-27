@@ -50,8 +50,7 @@ extends TestCase {
         TestUtil.addMessage(mbox, NAME_PREFIX);
     }
     
-    // TODO: Reenable when bug 66461 is fixed.
-    public void disabledTestTarFormatter()
+    public void testTarFormatter()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
 
@@ -94,8 +93,7 @@ extends TestCase {
         }
     }
     
-    // TODO: Reenable when bug 66461 is fixed.
-    public void disabledTestZipFormatter()
+    public void testZipFormatter()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
 
