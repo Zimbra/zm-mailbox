@@ -137,7 +137,7 @@ public class ShareInfoData {
     }
     
     public MailItem.Type getType() {
-        return type;
+        return (type == null ? MailItem.Type.UNKNOWN : type);
     }
 
     public void setRights(short rights) {
