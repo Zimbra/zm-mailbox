@@ -5426,11 +5426,15 @@ public class LdapProvisioning extends LdapProv {
     }
 
     @Override
-    public void getAllCalendarResources(Domain d, Server s, NamedEntry.Visitor visitor)
+    public void getAllCalendarResources(Domain domain, Server server, NamedEntry.Visitor visitor)
     throws ServiceException {
-        SearchAccountsOptions searchOpts = new SearchAccountsOptions(d);
-        searchOpts.setIncludeType(IncludeType.CALENDAR_RESOURCES_ONLY);
-        searchAccountsOnServerInternal(s, searchOpts, visitor);
+        if (server != null) {
+            SearchAccountsOptions searchOpts = new SearchAccountsOptions(domain);
+            searchOpts.setIncludeType(IncludeType.CALENDAR_RESOURCES_ONLY);
+            searchAccountsOnServerInternal(server, searchOpts, visitor);
+        } else {
+            getAllCalendarResources(domain, visitor);
+        }
     }
 
     @Override
