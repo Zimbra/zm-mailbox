@@ -165,6 +165,7 @@ final class ImapSessionManager {
                             session.getPath(), session.getSessionId());
                     session.reload();
                     session.unload(true);
+                } catch (ImapSessionClosedException ignore) {
                 } catch (Exception e) {
                     ZimbraLog.imap.warn("error deserializing overflowed session; clearing", e);
                     // XXX: make sure this doesn't result in a loop

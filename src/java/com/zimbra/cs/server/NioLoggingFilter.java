@@ -47,11 +47,9 @@ final class NioLoggingFilter extends IoFilterAdapter {
             // These are safe to ignore.
             log.debug(cause, cause);
         } else if (cause instanceof IOException) {
-            // If connection error, then only log full stack trace if debug enabled
-            if (log.isDebugEnabled()) {
-                log.debug(cause, cause);
-            } else {
-                log.info(cause.toString());
+            // intend to ignore "Connection reset by peer" and "Broken pipe"
+            if (session.isConnected() && !session.isClosing()) {
+                log.warn(cause, cause);
             }
         } else {
             log.error(cause, cause);
