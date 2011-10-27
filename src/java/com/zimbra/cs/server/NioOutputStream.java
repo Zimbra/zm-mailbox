@@ -25,11 +25,11 @@ import org.apache.mina.core.session.IoSession;
 
 public final class NioOutputStream extends OutputStream {
     private final IoSession session;
-    private final IoBuffer buf;
+    private IoBuffer buf;
 
     NioOutputStream(IoSession session, int chunkSize) {
         this.session = session;
-        buf = IoBuffer.allocate(chunkSize);
+        this.buf = IoBuffer.allocate(chunkSize);
     }
 
     @Override
@@ -75,8 +75,8 @@ public final class NioOutputStream extends OutputStream {
     public synchronized void flush() throws IOException {
         if (buf.position() > 0) {
             buf.flip();
-            session.write(buf.duplicate());
-            buf.clear();
+            session.write(buf);
+            buf = IoBuffer.allocate(buf.capacity());
         }
     }
 
