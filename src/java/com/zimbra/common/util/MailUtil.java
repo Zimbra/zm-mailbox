@@ -34,7 +34,7 @@ import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException.Argument;
 
 public class MailUtil {
-    public static void populateFailureDeliveryMessageFields(MimeMessage failedDeliverymm, String subject, String to, Argument[] addressArgs) throws MessagingException, UnsupportedEncodingException {		
+    public static void populateFailureDeliveryMessageFields(MimeMessage failedDeliverymm, String subject, String to, List<Argument> addressArgs) throws MessagingException, UnsupportedEncodingException {		
         failedDeliverymm.setSubject("Send Partial Failure Notice");
         failedDeliverymm.setSentDate(new Date());
         failedDeliverymm.setFrom(new InternetAddress("donotreply@host.local", "Failed Delivery Notifier"));
