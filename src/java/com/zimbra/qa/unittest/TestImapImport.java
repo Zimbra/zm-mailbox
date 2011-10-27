@@ -34,8 +34,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.soap.type.DataSource.ConnectionType;
 
-public class TestImapImport
-extends TestCase {
+public final class TestImapImport extends TestCase {
 
     private static final String REMOTE_USER_NAME = "testimapimportremote";
     private static final String LOCAL_USER_NAME = "testimapimportlocal";
@@ -97,17 +96,14 @@ extends TestCase {
 
         // Turn on cleartext login
         mOriginalCleartextValue = TestUtil.getServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled);
-        TestUtil.setServerAttr(
-            Provisioning.A_zimbraImapCleartextLoginEnabled, ProvisioningConstants.TRUE);
+        TestUtil.setServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, ProvisioningConstants.TRUE);
 
-        // Turn off STARTTLS support so that unit tests don't bomb on Linux
-        // (see bug 33683).
+        // Turn off STARTTLS support so that unit tests don't bomb on Linux (see bug 33683).
         mOriginalEnableStarttls = LC.javamail_imap_enable_starttls.booleanValue();
         LC.javamail_imap_enable_starttls.setDefault(Boolean.toString(false));
     }
 
-    // TODO: Reenable when bug 66459 is fixed.
-    public void disabledTestImapImport() throws Exception {
+    public void testImapImport() throws Exception {
         List<ZMessage> msgs;
         ZMessage msg;
         // Remote: add 1 message
@@ -275,27 +271,23 @@ extends TestCase {
         compare();
     }
 
-    private void checkMsgCount(ZMailbox mbox, String query, int expectedCount)
-    throws Exception {
+    private void checkMsgCount(ZMailbox mbox, String query, int expectedCount) throws Exception {
         List<ZMessage> msgs = TestUtil.search(mbox, query);
         assertEquals("Result size for query '" + query + "'", expectedCount, msgs.size());
     }
 
-    private void importImap()
-    throws Exception {
+    private void importImap() throws Exception {
         TestUtil.importDataSource(mDataSource, mLocalMbox, mRemoteMbox);
     }
 
-    private void compare()
-    throws Exception {
+    private void compare() throws Exception {
         // Recursively compare the folder trees
         ZFolder folder1 = mRemoteMbox.getUserRoot();
         ZFolder folder2 = mLocalMbox.getFolderByPath(DS_FOLDER_ROOT);
         compare(mRemoteMbox, folder1, mLocalMbox, folder2);
     }
 
-    private void compare(ZMailbox mbox1, ZFolder folder1, ZMailbox mbox2, ZFolder folder2)
-    throws Exception {
+    private void compare(ZMailbox mbox1, ZFolder folder1, ZMailbox mbox2, ZFolder folder2) throws Exception {
         assertNotNull(mbox1);
         assertNotNull(folder1);
         assertNotNull(mbox2);
@@ -306,14 +298,13 @@ extends TestCase {
             if (isMailFolder(child1)) {
                 ZFolder child2 = folder2.getSubFolderByPath(child1.getName());
                 String msg = String.format("Could not find folder %s/%s for %s",
-                    folder2.getPath(), child1.getName(), mbox2.getName());
+                        folder2.getPath(), child1.getName(), mbox2.getName());
                 assertNotNull(msg, child2);
                 compare(mbox1, child1, mbox2, child2);
             }
         }
-        assertEquals("Message count doesn't match (folder1 = " + folder1 +
-                     ", folder2 = " + folder2 + ")",
-                     folder1.getMessageCount(), folder2.getMessageCount());
+        assertEquals("Message count doesn't match (folder1 = " + folder1 + ", folder2 = " + folder2 + ")",
+                folder1.getMessageCount(), folder2.getMessageCount());
 
         // Compare folders as long as neither one is the user root
         if (!(folder1.getPath().equals("/") || folder2.getPath().equals("/"))) {
@@ -328,8 +319,7 @@ extends TestCase {
         return view == null || view == ZFolder.View.message || view == ZFolder.View.conversation;
     }
 
-    private void compareMessages(List<ZMessage> msgs1, List<ZMessage> msgs2)
-    throws Exception {
+    private void compareMessages(List<ZMessage> msgs1, List<ZMessage> msgs2) throws Exception {
         // Keep track of message ID's in first set
         Map<String, ZMessage> msgMap = new HashMap<String, ZMessage>();
         for (ZMessage msg : msgs1) {
@@ -360,13 +350,11 @@ extends TestCase {
     @Override
     public void tearDown() throws Exception {
         cleanUp();
-        TestUtil.setServerAttr(
-            Provisioning.A_zimbraImapCleartextLoginEnabled, mOriginalCleartextValue);
+        TestUtil.setServerAttr(Provisioning.A_zimbraImapCleartextLoginEnabled, mOriginalCleartextValue);
         LC.javamail_imap_enable_starttls.setDefault(Boolean.toString(mOriginalEnableStarttls));
     }
 
-    public void cleanUp()
-    throws Exception {
+    public void cleanUp() throws Exception {
         if (TestUtil.accountExists(REMOTE_USER_NAME)) {
             TestUtil.deleteAccount(REMOTE_USER_NAME);
         }
@@ -375,8 +363,7 @@ extends TestCase {
         }
     }
 
-    public static void main(String[] args)
-    throws Exception {
+    public static void main(String[] args) throws Exception {
         TestUtil.cliSetup();
         TestUtil.runTest(TestImapImport.class);
     }
