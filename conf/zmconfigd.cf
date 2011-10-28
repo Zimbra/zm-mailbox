@@ -211,7 +211,7 @@ SECTION mailbox
 	REWRITE conf/spnego_java_options.in conf/spnego_java_options
 	RESTART mailboxd
 
-SECTION imapproxy
+SECTION proxy
 	LOCAL ldap_url
 	VAR getAllMemcachedServers
 	VAR getAllReverseProxyBackends
@@ -256,7 +256,7 @@ SECTION imapproxy
 	VAR zimbraReverseProxyWorkerConnections
 	VAR zimbraReverseProxyWorkerProcesses
 	PROXYGEN
-	RESTART imapproxy
+	RESTART proxy
 
 SECTION ldap
 	LOCAL ldap_common_loglevel
