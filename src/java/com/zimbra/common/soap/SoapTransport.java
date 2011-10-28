@@ -14,16 +14,15 @@
  */
 package com.zimbra.common.soap;
 
+import java.io.IOException;
+import java.util.LinkedList;
+
+import org.dom4j.DocumentException;
+
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
-
-import org.dom4j.DocumentException;
-
-import java.io.IOException;
-import java.util.Deque;
-import java.util.LinkedList;
 
 /**
  * Abstract class for sending a soap message.
@@ -51,9 +50,11 @@ public abstract class SoapTransport {
     private static String sDefaultUserAgentVersion;
     private static final ViaHolder viaHolder = new ViaHolder();
 
-    private static final class ViaHolder extends ThreadLocal<Deque<String>> {
+    // This needs to be a LinkedList and not a Deque, to support older Android
+    // devices that run JDK 1.5.
+    private static final class ViaHolder extends ThreadLocal<LinkedList<String>> {
         @Override
-        protected Deque<String> initialValue() {
+        protected LinkedList<String> initialValue() {
             return new LinkedList<String>();
         }
     }
@@ -196,7 +197,7 @@ public abstract class SoapTransport {
      * @param value {@code via} header value
      */
     public static void setVia(String value) {
-        viaHolder.get().push(value);
+        viaHolder.get().addFirst(value);
     }
 
     /**
@@ -205,7 +206,7 @@ public abstract class SoapTransport {
      * @see #setVia(String)
      */
     public static void clearVia() {
-        viaHolder.get().pop();
+        viaHolder.get().removeFirst();
     }
 
     /** Sets the version of SOAP to use when generating requests. */
