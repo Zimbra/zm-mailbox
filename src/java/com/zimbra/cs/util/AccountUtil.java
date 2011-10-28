@@ -44,6 +44,30 @@ import com.zimbra.cs.account.AuthToken;
 
 public class AccountUtil {
 
+    /**
+     * Returns effective quota for an account which is calculated as the minimum of account level quota and domain
+     * max mailbox quota. Returns zero for unlimited effective quota.
+     *
+     * @param acct
+     * @return
+     * @throws ServiceException
+     */
+    public static long getEffectiveQuota(Account acct) throws ServiceException {
+        long acctQuota = acct.getLongAttr(Provisioning.A_zimbraMailQuota, 0);
+        Domain domain = Provisioning.getInstance().getDomain(acct);
+        long domainQuota = 0;
+        if (domain != null) {
+            domainQuota = domain.getLongAttr(Provisioning.A_zimbraMailDomainQuota, 0);
+        }
+        if (acctQuota == 0) {
+            return domainQuota;
+        } else if (domainQuota == 0) {
+            return acctQuota;
+        } else {
+            return Math.min(acctQuota, domainQuota);
+        }
+    }
+
     public static InternetAddress getFriendlyEmailAddress(Account acct) {
         // check "displayName" for personal part, and fall back to "cn" if not present
         String personalPart = acct.getAttr(Provisioning.A_displayName);

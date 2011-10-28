@@ -6563,6 +6563,11 @@ TODO: delete them permanently from here
   <desc>how long a file version is kept around</desc>
 </attr>
 
-
+<attr id="1326" name="zimbraMailDomainQuota" type="long" min="0" cardinality="single" optionalIn="domain" since="8.0.0">
+  <desc>
+    Maximum mailbox quota for the domain in bytes. Default is "unlimited".
+    The effective quota for a mailbox would be the minimum of this and zimbraMailQuota.
+  </desc>
+</attr>
 
 </attrs>

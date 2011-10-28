@@ -29,6 +29,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.lmtpserver.LmtpCallback;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.util.AccountUtil;
 
 /**
  * LMTP callback that sends the user a warning if he is getting
@@ -52,7 +53,7 @@ public class QuotaWarning implements LmtpCallback {
                               String recipientEmail, Message newMessage){
         try {
             int warnPercent = account.getIntAttr(Provisioning.A_zimbraQuotaWarnPercent, 90);
-            long quota = account.getLongAttr(Provisioning.A_zimbraMailQuota, 0);
+            long quota = AccountUtil.getEffectiveQuota(account);
             long warnInterval = account.getTimeInterval(Provisioning.A_zimbraQuotaWarnInterval, Constants.MILLIS_PER_DAY);
             String template = account.getAttr(Provisioning.A_zimbraQuotaWarnMessage, null);
             

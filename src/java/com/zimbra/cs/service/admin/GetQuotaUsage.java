@@ -39,6 +39,7 @@ import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.session.AdminSession;
 import com.zimbra.cs.session.Session;
 
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GetQuotaUsage extends AdminDocumentHandler {
@@ -199,7 +200,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
                 AccountQuota aq = new AccountQuota();            
                 aq.id = acct.getId();
                 aq.name = acct.getName();
-                aq.quotaLimit = acct.getLongAttr(Provisioning.A_zimbraMailQuota, 0);
+                aq.quotaLimit = AccountUtil.getEffectiveQuota(acct);
                 aq.sortQuotaLimit = aq.quotaLimit == 0 ? Long.MAX_VALUE : aq.quotaLimit;
                 Long used = quotaUsed.get(acct.getId());
                 aq.quotaUsed = used == null ? 0 : used;

@@ -37,7 +37,7 @@ public abstract class ZAttrDynamicGroup extends Group {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111024-2155 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111027-1743 */
 
     /**
      * RFC2256: descriptive information

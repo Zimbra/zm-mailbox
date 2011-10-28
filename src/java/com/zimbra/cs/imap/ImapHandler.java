@@ -63,6 +63,7 @@ import com.zimbra.cs.security.sasl.ZimbraAuthenticator;
 import com.zimbra.cs.service.mail.FolderAction;
 import com.zimbra.cs.service.mail.ItemActionHelper;
 import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZGrant;
@@ -2510,7 +2511,7 @@ abstract class ImapHandler {
                 return true;
             }
 
-            long quota = credentials.getAccount().getMailQuota();
+            long quota = AccountUtil.getEffectiveQuota(credentials.getAccount());
             if (!qroot.asImapPath().equals("") || quota <= 0) {
                 ZimbraLog.imap.info("GETQUOTA failed: unknown quota root: '" + qroot + "'");
                 sendNO(tag, "GETQUOTA failed: unknown quota root");
@@ -2548,7 +2549,7 @@ abstract class ImapHandler {
             }
 
             // see if there's any quota on the account
-            long quota = credentials.getAccount().getMailQuota();
+            long quota = AccountUtil.getEffectiveQuota(credentials.getAccount());
             sendUntagged("QUOTAROOT " + qroot.asUtf7String() + (quota > 0 ? " \"\"" : ""));
             if (quota > 0) {
                 sendUntagged("QUOTA \"\" (STORAGE " + (credentials.getMailbox().getSize() / 1024) + ' ' + (quota / 1024) + ')');

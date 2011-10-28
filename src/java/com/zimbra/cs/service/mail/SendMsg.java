@@ -96,7 +96,7 @@ public final class SendMsg extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         Account account = getRequestedAccount(zsc);
-        long quota = account.getMailQuota();
+        long quota = AccountUtil.getEffectiveQuota(account);
         if (account.isMailAllowReceiveButNotSendWhenOverQuota() && quota != 0 && mbox.getSize() > quota) {
             throw MailServiceException.QUOTA_EXCEEDED(quota);
         }

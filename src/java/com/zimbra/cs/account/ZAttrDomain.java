@@ -43,7 +43,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111024-2155 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111027-1743 */
 
     /**
      * RFC2256: descriptive information
@@ -11774,6 +11774,88 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetMailAddressValidationRegex(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum mailbox quota for the domain in bytes. Default is
+     * &quot;unlimited&quot;. The effective quota for a mailbox would be the
+     * minimum of this and zimbraMailQuota.
+     *
+     * @return zimbraMailDomainQuota, or -1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1326)
+    public long getMailDomainQuota() {
+        return getLongAttr(Provisioning.A_zimbraMailDomainQuota, -1L);
+    }
+
+    /**
+     * Maximum mailbox quota for the domain in bytes. Default is
+     * &quot;unlimited&quot;. The effective quota for a mailbox would be the
+     * minimum of this and zimbraMailQuota.
+     *
+     * @param zimbraMailDomainQuota new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1326)
+    public void setMailDomainQuota(long zimbraMailDomainQuota) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailDomainQuota, Long.toString(zimbraMailDomainQuota));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum mailbox quota for the domain in bytes. Default is
+     * &quot;unlimited&quot;. The effective quota for a mailbox would be the
+     * minimum of this and zimbraMailQuota.
+     *
+     * @param zimbraMailDomainQuota new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1326)
+    public Map<String,Object> setMailDomainQuota(long zimbraMailDomainQuota, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailDomainQuota, Long.toString(zimbraMailDomainQuota));
+        return attrs;
+    }
+
+    /**
+     * Maximum mailbox quota for the domain in bytes. Default is
+     * &quot;unlimited&quot;. The effective quota for a mailbox would be the
+     * minimum of this and zimbraMailQuota.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1326)
+    public void unsetMailDomainQuota() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailDomainQuota, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum mailbox quota for the domain in bytes. Default is
+     * &quot;unlimited&quot;. The effective quota for a mailbox would be the
+     * minimum of this and zimbraMailQuota.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1326)
+    public Map<String,Object> unsetMailDomainQuota(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailDomainQuota, "");
         return attrs;
     }
 

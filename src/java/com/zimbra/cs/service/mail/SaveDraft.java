@@ -32,6 +32,7 @@ import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.FileUploadServlet;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import javax.mail.MessagingException;
@@ -119,7 +120,7 @@ public class SaveDraft extends MailDocumentHandler {
         long autoSendTime = new Long(msgElem.getAttribute(MailConstants.A_AUTO_SEND_TIME, "0"));
 
         Account acct = mbox.getAccount();
-        long quota = acct.getMailQuota();
+        long quota = AccountUtil.getEffectiveQuota(acct);
         if (autoSendTime != 0 && acct.isMailAllowReceiveButNotSendWhenOverQuota() && quota != 0 && mbox.getSize() > quota) {
             throw MailServiceException.QUOTA_EXCEEDED(quota);
         }

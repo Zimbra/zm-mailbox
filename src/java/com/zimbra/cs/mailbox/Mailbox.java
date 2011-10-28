@@ -971,7 +971,7 @@ public class Mailbox {
     }
 
     void checkSizeChange(long newSize) throws ServiceException {
-        long quota = getAccount().getMailQuota();
+        long quota = AccountUtil.getEffectiveQuota(getAccount());
         if (quota != 0 && newSize > quota) {
             throw MailServiceException.QUOTA_EXCEEDED(quota);
         }
