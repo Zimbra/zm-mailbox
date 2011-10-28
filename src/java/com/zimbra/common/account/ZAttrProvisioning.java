@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111024-2155 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111027-1743 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5533,6 +5533,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailDiskStreamingThreshold = "zimbraMailDiskStreamingThreshold";
 
     /**
+     * Maximum mailbox quota for the domain in bytes. Default is
+     * &quot;unlimited&quot;. The effective quota for a mailbox would be the
+     * minimum of this and zimbraMailQuota.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1326)
+    public static final String A_zimbraMailDomainQuota = "zimbraMailDomainQuota";
+
+    /**
      * Retention period of messages in the dumpster. 0 means that all
      * messages will be retained. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
@@ -10348,22 +10358,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
