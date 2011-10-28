@@ -498,7 +498,7 @@ class MemcacheServersVar extends ProxyConfVar {
     public MemcacheServersVar() {
         super("memcache.:servers", null, null, ProxyConfValueType.CUSTOM,
                 ProxyConfOverride.CUSTOM, 
-                "List of known memcache servers (i.e. servers having imapproxy service enabled)");
+                "List of known memcache servers (i.e. servers having proxy service enabled)");
     }
     
    
