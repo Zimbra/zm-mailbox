@@ -81,7 +81,6 @@ import com.zimbra.cs.index.global.GlobalSearchQuery;
 import com.zimbra.cs.index.global.HBaseIndex;
 import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox.IndexItemEntry;
 import com.zimbra.cs.util.Zimbra;
 
@@ -687,11 +686,12 @@ public final class MailboxIndex {
             mailbox.beginTransaction("IndexItemList-Fetch", null);
             try {
                 item = mailbox.getItemById(id, MailItem.Type.UNKNOWN, false);
-            } catch (NoSuchItemException e) { // fallback to dumpster
+            } catch (MailServiceException.NoSuchItemException e) { // fallback to dumpster
                 try {
                     item = mailbox.getItemById(id, MailItem.Type.UNKNOWN, true);
-                } catch (NoSuchItemException again) { // The item has just been deleted.
+                } catch (MailServiceException.NoSuchItemException again) { // The item has just been deleted.
                     ZimbraLog.index.debug("deferred item no longer exist id=%d", id);
+                    removeDeferredId(id);
                     continue;
                 }
             } catch (MailServiceException e) {
