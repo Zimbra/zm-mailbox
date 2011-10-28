@@ -253,6 +253,7 @@
     <a n="zimbraPrefMailLocalDeliveryDisabled"/>
     <a n="zimbraMailForwardingAddress"/>
     <a n="zimbraPrefMailForwardingAddress"/>
+    <a n="zimbraPrefCalendarForwardInvitesTo"/>
   </attrs>
 </right>
 <right name="viewAdminConsoleAccountsForwardingTab" type="getAttrs" targetType="account">
@@ -262,6 +263,7 @@
     <a n="zimbraPrefMailLocalDeliveryDisabled"/>
     <a n="zimbraMailForwardingAddress"/>
     <a n="zimbraPrefMailForwardingAddress"/>
+    <a n="zimbraPrefCalendarForwardInvitesTo"/>
   </attrs>
 </right>
 <right name="adminConsoleAccountsForwardingTabRights" type="combo">
