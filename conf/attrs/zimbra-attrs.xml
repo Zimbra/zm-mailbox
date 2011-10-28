@@ -2595,7 +2595,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="507" name="zimbraWebClientLogoutURL" type="string" max="256" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo,domainAdminModifiable">
-  <desc>logout URL for web client to send the user to upon explicit loggin out</desc>
+  <desc>logout URL for web client to send the user to upon explicit logging out</desc>
 </attr>
 
 <attr id="508" name="zimbraClusterType" type="enum" value="none,RedHat,Veritas" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
@@ -3704,7 +3704,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="714" name="zimbraDomainCOSMaxAccounts" type="string" max="256" cardinality="multi" optionalIn="domain" callback="DomainCOSMaxAccounts" since="5.0.10">
-  <desc>maximum number of accounts allowed to be assigned to specified COSes in a domain.  Values are in the format of {zimraId-of-a-cos}:{max-accounts}</desc>
+  <desc>maximum number of accounts allowed to be assigned to specified COSes in a domain.  Values are in the format of {zimbraId-of-a-cos}:{max-accounts}</desc>
 </attr>
 
 <attr id="715" name="zimbraDomainFeatureMaxAccounts" type="string" max="256" cardinality="multi" optionalIn="domain" since="5.0.10">
@@ -4055,8 +4055,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 <attr id="779" name="zimbraReverseProxyUseExternalRoute" type="boolean" cardinality="single" optionalIn="account,domain" flags="domainAdminModifiable" since="5.0.12">
   <desc>
       There is a deployment scenario for migrations where all of the customers users are pointed at the zimbra POP IMAP reverse proxy.  
-      We then want their connections proxied back to the legacy system for for not-yet-non-migrated users.
-      If this attribute is TRUE, reverse proxy lookup sevlet should check to see if zimbraExternal* is set on the domain.  If so it is used.  
+      We then want their connections proxied back to the legacy system for not-yet-non-migrated users.
+      If this attribute is TRUE, reverse proxy lookup servlet should check to see if zimbraExternal* is set on the domain.  If so it is used.  
       If not, lookup proceeds as usual.
   </desc>
 </attr>
@@ -5387,7 +5387,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1163" name="zimbraPasswordAllowedChars" type="cstring" max="1024" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.1.0">
-  <desc>regex of alllowed characters in password</desc>
+  <desc>regex of allowed characters in password</desc>
 </attr>
 
 <attr id="1164" name="zimbraFeatureContactsDetailedSearchEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited" since="7.1.0">
@@ -5666,7 +5666,7 @@ TODO: delete them permanently from here
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>
     indicates whether the application can forward original email as RFC 822 .eml attachment.
-    Note: this setiing is applicable only to the devices using activesync smart forward for forwarding email messages.
+    Note: this setting is applicable only to the devices using activesync smart forward for forwarding email messages.
   </desc>
 </attr>
 
@@ -5983,7 +5983,7 @@ TODO: delete them permanently from here
     Class name of auto provision listener.  The class must implement the 
     com.zimbra.cs.account.Account.AutoProvisionListener interface.
     The singleton listener instance is invoked after each account is auto created in Zimbra.  
-    Listener can be plugged in as a server externsion to handle tasks like updating the account auto 
+    Listener can be plugged in as a server extension to handle tasks like updating the account auto 
     provision status in the external LDAP directory.
   </desc>
 </attr>
@@ -6005,7 +6005,7 @@ TODO: delete them permanently from here
       LAZY mode: N/A
     MANUAL mode: N/A 
     
-    Timestampt when the external domain is last polled for EAGER auto provision.  
+    Timestamp when the external domain is last polled for EAGER auto provision.  
     The poll (LDAP search) for the next iteration will fetch external entries with create timestamp 
     later than the timestamp recorded from the previous iteration.
   </desc>
