@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111027-1743 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111028-2017 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -2069,7 +2069,7 @@ public class ZAttrProvisioning {
 
     /**
      * EAGER mode: for Zimbra internal use only - do not change it. LAZY
-     * mode: N/A MANUAL mode: N/A Timestampt when the external domain is last
+     * mode: N/A MANUAL mode: N/A Timestamp when the external domain is last
      * polled for EAGER auto provision. The poll (LDAP search) for the next
      * iteration will fetch external entries with create timestamp later than
      * the timestamp recorded from the previous iteration.
@@ -2166,8 +2166,8 @@ public class ZAttrProvisioning {
      * name of auto provision listener. The class must implement the
      * com.zimbra.cs.account.Account.AutoProvisionListener interface. The
      * singleton listener instance is invoked after each account is auto
-     * created in Zimbra. Listener can be plugged in as a server externsion
-     * to handle tasks like updating the account auto provision status in the
+     * created in Zimbra. Listener can be plugged in as a server extension to
+     * handle tasks like updating the account auto provision status in the
      * external LDAP directory.
      *
      * @since ZCS 8.0.0
@@ -3332,7 +3332,7 @@ public class ZAttrProvisioning {
     /**
      * maximum number of accounts allowed to be assigned to specified COSes
      * in a domain. Values are in the format of
-     * {zimraId-of-a-cos}:{max-accounts}
+     * {zimbraId-of-a-cos}:{max-accounts}
      *
      * @since ZCS 5.0.10
      */
@@ -6677,7 +6677,7 @@ public class ZAttrProvisioning {
 
     /**
      * indicates whether the application can forward original email as RFC
-     * 822 .eml attachment. Note: this setiing is applicable only to the
+     * 822 .eml attachment. Note: this setting is applicable only to the
      * devices using activesync smart forward for forwarding email messages.
      *
      * @since ZCS 8.0.0
@@ -7037,7 +7037,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraOpenidConsumerStatelessModeEnabled = "zimbraOpenidConsumerStatelessModeEnabled";
 
     /**
-     * regex of alllowed characters in password
+     * regex of allowed characters in password
      *
      * @since ZCS 7.1.0
      */
@@ -9529,9 +9529,9 @@ public class ZAttrProvisioning {
     /**
      * There is a deployment scenario for migrations where all of the
      * customers users are pointed at the zimbra POP IMAP reverse proxy. We
-     * then want their connections proxied back to the legacy system for for
+     * then want their connections proxied back to the legacy system for
      * not-yet-non-migrated users. If this attribute is TRUE, reverse proxy
-     * lookup sevlet should check to see if zimbraExternal* is set on the
+     * lookup servlet should check to see if zimbraExternal* is set on the
      * domain. If so it is used. If not, lookup proceeds as usual.
      *
      * @since ZCS 5.0.12
@@ -10548,7 +10548,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraWebClientLoginURLAllowedUA = "zimbraWebClientLoginURLAllowedUA";
 
     /**
-     * logout URL for web client to send the user to upon explicit loggin out
+     * logout URL for web client to send the user to upon explicit logging
+     * out
      */
     @ZAttr(id=507)
     public static final String A_zimbraWebClientLogoutURL = "zimbraWebClientLogoutURL";
