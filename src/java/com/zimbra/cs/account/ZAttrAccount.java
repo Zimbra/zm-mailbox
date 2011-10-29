@@ -37,7 +37,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111027-1743 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111028-2017 */
 
     /**
      * RFC2256: ISO-3166 country 2-letter code
@@ -25371,7 +25371,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * indicates whether the application can forward original email as RFC
-     * 822 .eml attachment. Note: this setiing is applicable only to the
+     * 822 .eml attachment. Note: this setting is applicable only to the
      * devices using activesync smart forward for forwarding email messages.
      *
      * @return zimbraMobileSmartForwardRFC822Enabled, or false if unset
@@ -25385,7 +25385,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * indicates whether the application can forward original email as RFC
-     * 822 .eml attachment. Note: this setiing is applicable only to the
+     * 822 .eml attachment. Note: this setting is applicable only to the
      * devices using activesync smart forward for forwarding email messages.
      *
      * @param zimbraMobileSmartForwardRFC822Enabled new value
@@ -25402,7 +25402,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * indicates whether the application can forward original email as RFC
-     * 822 .eml attachment. Note: this setiing is applicable only to the
+     * 822 .eml attachment. Note: this setting is applicable only to the
      * devices using activesync smart forward for forwarding email messages.
      *
      * @param zimbraMobileSmartForwardRFC822Enabled new value
@@ -25420,7 +25420,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * indicates whether the application can forward original email as RFC
-     * 822 .eml attachment. Note: this setiing is applicable only to the
+     * 822 .eml attachment. Note: this setting is applicable only to the
      * devices using activesync smart forward for forwarding email messages.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -25436,7 +25436,7 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * indicates whether the application can forward original email as RFC
-     * 822 .eml attachment. Note: this setiing is applicable only to the
+     * 822 .eml attachment. Note: this setting is applicable only to the
      * devices using activesync smart forward for forwarding email messages.
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -25849,7 +25849,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * regex of alllowed characters in password
+     * regex of allowed characters in password
      *
      * @return zimbraPasswordAllowedChars, or null if unset
      *
@@ -25861,7 +25861,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * regex of alllowed characters in password
+     * regex of allowed characters in password
      *
      * @param zimbraPasswordAllowedChars new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -25876,7 +25876,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * regex of alllowed characters in password
+     * regex of allowed characters in password
      *
      * @param zimbraPasswordAllowedChars new value
      * @param attrs existing map to populate, or null to create a new map
@@ -25892,7 +25892,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * regex of alllowed characters in password
+     * regex of allowed characters in password
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -25906,7 +25906,7 @@ public abstract class ZAttrAccount  extends MailTarget {
     }
 
     /**
-     * regex of alllowed characters in password
+     * regex of allowed characters in password
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -45026,9 +45026,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * There is a deployment scenario for migrations where all of the
      * customers users are pointed at the zimbra POP IMAP reverse proxy. We
-     * then want their connections proxied back to the legacy system for for
+     * then want their connections proxied back to the legacy system for
      * not-yet-non-migrated users. If this attribute is TRUE, reverse proxy
-     * lookup sevlet should check to see if zimbraExternal* is set on the
+     * lookup servlet should check to see if zimbraExternal* is set on the
      * domain. If so it is used. If not, lookup proceeds as usual.
      *
      * @return zimbraReverseProxyUseExternalRoute, or false if unset
@@ -45043,9 +45043,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * There is a deployment scenario for migrations where all of the
      * customers users are pointed at the zimbra POP IMAP reverse proxy. We
-     * then want their connections proxied back to the legacy system for for
+     * then want their connections proxied back to the legacy system for
      * not-yet-non-migrated users. If this attribute is TRUE, reverse proxy
-     * lookup sevlet should check to see if zimbraExternal* is set on the
+     * lookup servlet should check to see if zimbraExternal* is set on the
      * domain. If so it is used. If not, lookup proceeds as usual.
      *
      * @param zimbraReverseProxyUseExternalRoute new value
@@ -45063,9 +45063,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * There is a deployment scenario for migrations where all of the
      * customers users are pointed at the zimbra POP IMAP reverse proxy. We
-     * then want their connections proxied back to the legacy system for for
+     * then want their connections proxied back to the legacy system for
      * not-yet-non-migrated users. If this attribute is TRUE, reverse proxy
-     * lookup sevlet should check to see if zimbraExternal* is set on the
+     * lookup servlet should check to see if zimbraExternal* is set on the
      * domain. If so it is used. If not, lookup proceeds as usual.
      *
      * @param zimbraReverseProxyUseExternalRoute new value
@@ -45084,9 +45084,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * There is a deployment scenario for migrations where all of the
      * customers users are pointed at the zimbra POP IMAP reverse proxy. We
-     * then want their connections proxied back to the legacy system for for
+     * then want their connections proxied back to the legacy system for
      * not-yet-non-migrated users. If this attribute is TRUE, reverse proxy
-     * lookup sevlet should check to see if zimbraExternal* is set on the
+     * lookup servlet should check to see if zimbraExternal* is set on the
      * domain. If so it is used. If not, lookup proceeds as usual.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -45103,9 +45103,9 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * There is a deployment scenario for migrations where all of the
      * customers users are pointed at the zimbra POP IMAP reverse proxy. We
-     * then want their connections proxied back to the legacy system for for
+     * then want their connections proxied back to the legacy system for
      * not-yet-non-migrated users. If this attribute is TRUE, reverse proxy
-     * lookup sevlet should check to see if zimbraExternal* is set on the
+     * lookup servlet should check to see if zimbraExternal* is set on the
      * domain. If so it is used. If not, lookup proceeds as usual.
      *
      * @param attrs existing map to populate, or null to create a new map

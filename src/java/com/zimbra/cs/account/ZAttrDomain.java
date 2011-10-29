@@ -43,7 +43,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111027-1743 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111028-2017 */
 
     /**
      * RFC2256: descriptive information
@@ -2177,7 +2177,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: for Zimbra internal use only - do not change it. LAZY
-     * mode: N/A MANUAL mode: N/A Timestampt when the external domain is last
+     * mode: N/A MANUAL mode: N/A Timestamp when the external domain is last
      * polled for EAGER auto provision. The poll (LDAP search) for the next
      * iteration will fetch external entries with create timestamp later than
      * the timestamp recorded from the previous iteration.
@@ -2197,7 +2197,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: for Zimbra internal use only - do not change it. LAZY
-     * mode: N/A MANUAL mode: N/A Timestampt when the external domain is last
+     * mode: N/A MANUAL mode: N/A Timestamp when the external domain is last
      * polled for EAGER auto provision. The poll (LDAP search) for the next
      * iteration will fetch external entries with create timestamp later than
      * the timestamp recorded from the previous iteration.
@@ -2213,7 +2213,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: for Zimbra internal use only - do not change it. LAZY
-     * mode: N/A MANUAL mode: N/A Timestampt when the external domain is last
+     * mode: N/A MANUAL mode: N/A Timestamp when the external domain is last
      * polled for EAGER auto provision. The poll (LDAP search) for the next
      * iteration will fetch external entries with create timestamp later than
      * the timestamp recorded from the previous iteration.
@@ -2232,7 +2232,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: for Zimbra internal use only - do not change it. LAZY
-     * mode: N/A MANUAL mode: N/A Timestampt when the external domain is last
+     * mode: N/A MANUAL mode: N/A Timestamp when the external domain is last
      * polled for EAGER auto provision. The poll (LDAP search) for the next
      * iteration will fetch external entries with create timestamp later than
      * the timestamp recorded from the previous iteration.
@@ -2252,7 +2252,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: for Zimbra internal use only - do not change it. LAZY
-     * mode: N/A MANUAL mode: N/A Timestampt when the external domain is last
+     * mode: N/A MANUAL mode: N/A Timestamp when the external domain is last
      * polled for EAGER auto provision. The poll (LDAP search) for the next
      * iteration will fetch external entries with create timestamp later than
      * the timestamp recorded from the previous iteration.
@@ -2271,7 +2271,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: for Zimbra internal use only - do not change it. LAZY
-     * mode: N/A MANUAL mode: N/A Timestampt when the external domain is last
+     * mode: N/A MANUAL mode: N/A Timestamp when the external domain is last
      * polled for EAGER auto provision. The poll (LDAP search) for the next
      * iteration will fetch external entries with create timestamp later than
      * the timestamp recorded from the previous iteration.
@@ -2291,7 +2291,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: for Zimbra internal use only - do not change it. LAZY
-     * mode: N/A MANUAL mode: N/A Timestampt when the external domain is last
+     * mode: N/A MANUAL mode: N/A Timestamp when the external domain is last
      * polled for EAGER auto provision. The poll (LDAP search) for the next
      * iteration will fetch external entries with create timestamp later than
      * the timestamp recorded from the previous iteration.
@@ -2309,7 +2309,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: for Zimbra internal use only - do not change it. LAZY
-     * mode: N/A MANUAL mode: N/A Timestampt when the external domain is last
+     * mode: N/A MANUAL mode: N/A Timestamp when the external domain is last
      * polled for EAGER auto provision. The poll (LDAP search) for the next
      * iteration will fetch external entries with create timestamp later than
      * the timestamp recorded from the previous iteration.
@@ -2965,8 +2965,8 @@ public abstract class ZAttrDomain extends NamedEntry {
      * name of auto provision listener. The class must implement the
      * com.zimbra.cs.account.Account.AutoProvisionListener interface. The
      * singleton listener instance is invoked after each account is auto
-     * created in Zimbra. Listener can be plugged in as a server externsion
-     * to handle tasks like updating the account auto provision status in the
+     * created in Zimbra. Listener can be plugged in as a server extension to
+     * handle tasks like updating the account auto provision status in the
      * external LDAP directory.
      *
      * @return zimbraAutoProvListenerClass, or null if unset
@@ -2983,8 +2983,8 @@ public abstract class ZAttrDomain extends NamedEntry {
      * name of auto provision listener. The class must implement the
      * com.zimbra.cs.account.Account.AutoProvisionListener interface. The
      * singleton listener instance is invoked after each account is auto
-     * created in Zimbra. Listener can be plugged in as a server externsion
-     * to handle tasks like updating the account auto provision status in the
+     * created in Zimbra. Listener can be plugged in as a server extension to
+     * handle tasks like updating the account auto provision status in the
      * external LDAP directory.
      *
      * @param zimbraAutoProvListenerClass new value
@@ -3004,8 +3004,8 @@ public abstract class ZAttrDomain extends NamedEntry {
      * name of auto provision listener. The class must implement the
      * com.zimbra.cs.account.Account.AutoProvisionListener interface. The
      * singleton listener instance is invoked after each account is auto
-     * created in Zimbra. Listener can be plugged in as a server externsion
-     * to handle tasks like updating the account auto provision status in the
+     * created in Zimbra. Listener can be plugged in as a server extension to
+     * handle tasks like updating the account auto provision status in the
      * external LDAP directory.
      *
      * @param zimbraAutoProvListenerClass new value
@@ -3026,8 +3026,8 @@ public abstract class ZAttrDomain extends NamedEntry {
      * name of auto provision listener. The class must implement the
      * com.zimbra.cs.account.Account.AutoProvisionListener interface. The
      * singleton listener instance is invoked after each account is auto
-     * created in Zimbra. Listener can be plugged in as a server externsion
-     * to handle tasks like updating the account auto provision status in the
+     * created in Zimbra. Listener can be plugged in as a server extension to
+     * handle tasks like updating the account auto provision status in the
      * external LDAP directory.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -3046,8 +3046,8 @@ public abstract class ZAttrDomain extends NamedEntry {
      * name of auto provision listener. The class must implement the
      * com.zimbra.cs.account.Account.AutoProvisionListener interface. The
      * singleton listener instance is invoked after each account is auto
-     * created in Zimbra. Listener can be plugged in as a server externsion
-     * to handle tasks like updating the account auto provision status in the
+     * created in Zimbra. Listener can be plugged in as a server extension to
+     * handle tasks like updating the account auto provision status in the
      * external LDAP directory.
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -4082,7 +4082,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * maximum number of accounts allowed to be assigned to specified COSes
      * in a domain. Values are in the format of
-     * {zimraId-of-a-cos}:{max-accounts}
+     * {zimbraId-of-a-cos}:{max-accounts}
      *
      * @return zimbraDomainCOSMaxAccounts, or empty array if unset
      *
@@ -4096,7 +4096,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * maximum number of accounts allowed to be assigned to specified COSes
      * in a domain. Values are in the format of
-     * {zimraId-of-a-cos}:{max-accounts}
+     * {zimbraId-of-a-cos}:{max-accounts}
      *
      * @param zimbraDomainCOSMaxAccounts new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4113,7 +4113,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * maximum number of accounts allowed to be assigned to specified COSes
      * in a domain. Values are in the format of
-     * {zimraId-of-a-cos}:{max-accounts}
+     * {zimbraId-of-a-cos}:{max-accounts}
      *
      * @param zimbraDomainCOSMaxAccounts new value
      * @param attrs existing map to populate, or null to create a new map
@@ -4131,7 +4131,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * maximum number of accounts allowed to be assigned to specified COSes
      * in a domain. Values are in the format of
-     * {zimraId-of-a-cos}:{max-accounts}
+     * {zimbraId-of-a-cos}:{max-accounts}
      *
      * @param zimbraDomainCOSMaxAccounts new to add to existing values
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4148,7 +4148,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * maximum number of accounts allowed to be assigned to specified COSes
      * in a domain. Values are in the format of
-     * {zimraId-of-a-cos}:{max-accounts}
+     * {zimbraId-of-a-cos}:{max-accounts}
      *
      * @param zimbraDomainCOSMaxAccounts new to add to existing values
      * @param attrs existing map to populate, or null to create a new map
@@ -4166,7 +4166,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * maximum number of accounts allowed to be assigned to specified COSes
      * in a domain. Values are in the format of
-     * {zimraId-of-a-cos}:{max-accounts}
+     * {zimbraId-of-a-cos}:{max-accounts}
      *
      * @param zimbraDomainCOSMaxAccounts existing value to remove
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4183,7 +4183,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * maximum number of accounts allowed to be assigned to specified COSes
      * in a domain. Values are in the format of
-     * {zimraId-of-a-cos}:{max-accounts}
+     * {zimbraId-of-a-cos}:{max-accounts}
      *
      * @param zimbraDomainCOSMaxAccounts existing value to remove
      * @param attrs existing map to populate, or null to create a new map
@@ -4201,7 +4201,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * maximum number of accounts allowed to be assigned to specified COSes
      * in a domain. Values are in the format of
-     * {zimraId-of-a-cos}:{max-accounts}
+     * {zimbraId-of-a-cos}:{max-accounts}
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -4217,7 +4217,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * maximum number of accounts allowed to be assigned to specified COSes
      * in a domain. Values are in the format of
-     * {zimraId-of-a-cos}:{max-accounts}
+     * {zimbraId-of-a-cos}:{max-accounts}
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -11782,13 +11782,13 @@ public abstract class ZAttrDomain extends NamedEntry {
      * &quot;unlimited&quot;. The effective quota for a mailbox would be the
      * minimum of this and zimbraMailQuota.
      *
-     * @return zimbraMailDomainQuota, or -1 if unset
+     * @return zimbraMailDomainQuota, or 0 if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1326)
     public long getMailDomainQuota() {
-        return getLongAttr(Provisioning.A_zimbraMailDomainQuota, -1L);
+        return getLongAttr(Provisioning.A_zimbraMailDomainQuota, 0L);
     }
 
     /**
@@ -13848,9 +13848,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * There is a deployment scenario for migrations where all of the
      * customers users are pointed at the zimbra POP IMAP reverse proxy. We
-     * then want their connections proxied back to the legacy system for for
+     * then want their connections proxied back to the legacy system for
      * not-yet-non-migrated users. If this attribute is TRUE, reverse proxy
-     * lookup sevlet should check to see if zimbraExternal* is set on the
+     * lookup servlet should check to see if zimbraExternal* is set on the
      * domain. If so it is used. If not, lookup proceeds as usual.
      *
      * @return zimbraReverseProxyUseExternalRoute, or false if unset
@@ -13865,9 +13865,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * There is a deployment scenario for migrations where all of the
      * customers users are pointed at the zimbra POP IMAP reverse proxy. We
-     * then want their connections proxied back to the legacy system for for
+     * then want their connections proxied back to the legacy system for
      * not-yet-non-migrated users. If this attribute is TRUE, reverse proxy
-     * lookup sevlet should check to see if zimbraExternal* is set on the
+     * lookup servlet should check to see if zimbraExternal* is set on the
      * domain. If so it is used. If not, lookup proceeds as usual.
      *
      * @param zimbraReverseProxyUseExternalRoute new value
@@ -13885,9 +13885,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * There is a deployment scenario for migrations where all of the
      * customers users are pointed at the zimbra POP IMAP reverse proxy. We
-     * then want their connections proxied back to the legacy system for for
+     * then want their connections proxied back to the legacy system for
      * not-yet-non-migrated users. If this attribute is TRUE, reverse proxy
-     * lookup sevlet should check to see if zimbraExternal* is set on the
+     * lookup servlet should check to see if zimbraExternal* is set on the
      * domain. If so it is used. If not, lookup proceeds as usual.
      *
      * @param zimbraReverseProxyUseExternalRoute new value
@@ -13906,9 +13906,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * There is a deployment scenario for migrations where all of the
      * customers users are pointed at the zimbra POP IMAP reverse proxy. We
-     * then want their connections proxied back to the legacy system for for
+     * then want their connections proxied back to the legacy system for
      * not-yet-non-migrated users. If this attribute is TRUE, reverse proxy
-     * lookup sevlet should check to see if zimbraExternal* is set on the
+     * lookup servlet should check to see if zimbraExternal* is set on the
      * domain. If so it is used. If not, lookup proceeds as usual.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -13925,9 +13925,9 @@ public abstract class ZAttrDomain extends NamedEntry {
     /**
      * There is a deployment scenario for migrations where all of the
      * customers users are pointed at the zimbra POP IMAP reverse proxy. We
-     * then want their connections proxied back to the legacy system for for
+     * then want their connections proxied back to the legacy system for
      * not-yet-non-migrated users. If this attribute is TRUE, reverse proxy
-     * lookup sevlet should check to see if zimbraExternal* is set on the
+     * lookup servlet should check to see if zimbraExternal* is set on the
      * domain. If so it is used. If not, lookup proceeds as usual.
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -17986,7 +17986,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * logout URL for web client to send the user to upon explicit loggin out
+     * logout URL for web client to send the user to upon explicit logging
+     * out
      *
      * @return zimbraWebClientLogoutURL, or null if unset
      */
@@ -17996,7 +17997,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * logout URL for web client to send the user to upon explicit loggin out
+     * logout URL for web client to send the user to upon explicit logging
+     * out
      *
      * @param zimbraWebClientLogoutURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -18009,7 +18011,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * logout URL for web client to send the user to upon explicit loggin out
+     * logout URL for web client to send the user to upon explicit logging
+     * out
      *
      * @param zimbraWebClientLogoutURL new value
      * @param attrs existing map to populate, or null to create a new map
@@ -18023,7 +18026,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * logout URL for web client to send the user to upon explicit loggin out
+     * logout URL for web client to send the user to upon explicit logging
+     * out
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -18035,7 +18039,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * logout URL for web client to send the user to upon explicit loggin out
+     * logout URL for web client to send the user to upon explicit logging
+     * out
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

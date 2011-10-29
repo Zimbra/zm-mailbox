@@ -43,7 +43,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111027-1743 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111028-2017 */
 
     /**
      * RFC2256: descriptive information
@@ -14939,6 +14939,88 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMailDiskStreamingThreshold(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailDiskStreamingThreshold, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum mailbox quota for the domain in bytes. Default is
+     * &quot;unlimited&quot;. The effective quota for a mailbox would be the
+     * minimum of this and zimbraMailQuota.
+     *
+     * @return zimbraMailDomainQuota, or 0 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1326)
+    public long getMailDomainQuota() {
+        return getLongAttr(Provisioning.A_zimbraMailDomainQuota, 0L);
+    }
+
+    /**
+     * Maximum mailbox quota for the domain in bytes. Default is
+     * &quot;unlimited&quot;. The effective quota for a mailbox would be the
+     * minimum of this and zimbraMailQuota.
+     *
+     * @param zimbraMailDomainQuota new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1326)
+    public void setMailDomainQuota(long zimbraMailDomainQuota) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailDomainQuota, Long.toString(zimbraMailDomainQuota));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum mailbox quota for the domain in bytes. Default is
+     * &quot;unlimited&quot;. The effective quota for a mailbox would be the
+     * minimum of this and zimbraMailQuota.
+     *
+     * @param zimbraMailDomainQuota new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1326)
+    public Map<String,Object> setMailDomainQuota(long zimbraMailDomainQuota, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailDomainQuota, Long.toString(zimbraMailDomainQuota));
+        return attrs;
+    }
+
+    /**
+     * Maximum mailbox quota for the domain in bytes. Default is
+     * &quot;unlimited&quot;. The effective quota for a mailbox would be the
+     * minimum of this and zimbraMailQuota.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1326)
+    public void unsetMailDomainQuota() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailDomainQuota, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum mailbox quota for the domain in bytes. Default is
+     * &quot;unlimited&quot;. The effective quota for a mailbox would be the
+     * minimum of this and zimbraMailQuota.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1326)
+    public Map<String,Object> unsetMailDomainQuota(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMailDomainQuota, "");
         return attrs;
     }
 
@@ -37951,7 +38033,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * logout URL for web client to send the user to upon explicit loggin out
+     * logout URL for web client to send the user to upon explicit logging
+     * out
      *
      * @return zimbraWebClientLogoutURL, or null if unset
      */
@@ -37961,7 +38044,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * logout URL for web client to send the user to upon explicit loggin out
+     * logout URL for web client to send the user to upon explicit logging
+     * out
      *
      * @param zimbraWebClientLogoutURL new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -37974,7 +38058,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * logout URL for web client to send the user to upon explicit loggin out
+     * logout URL for web client to send the user to upon explicit logging
+     * out
      *
      * @param zimbraWebClientLogoutURL new value
      * @param attrs existing map to populate, or null to create a new map
@@ -37988,7 +38073,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * logout URL for web client to send the user to upon explicit loggin out
+     * logout URL for web client to send the user to upon explicit logging
+     * out
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      */
@@ -38000,7 +38086,8 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * logout URL for web client to send the user to upon explicit loggin out
+     * logout URL for web client to send the user to upon explicit logging
+     * out
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
