@@ -22,7 +22,6 @@ import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.filterchain.IoFilterAdapter;
 import org.apache.mina.core.session.IoSession;
 import org.apache.mina.core.write.WriteRequest;
-import org.apache.mina.core.write.WriteToClosedSessionException;
 import org.apache.mina.filter.codec.ProtocolDecoderException;
 
 import java.io.IOException;
@@ -43,14 +42,9 @@ final class NioLoggingFilter extends IoFilterAdapter {
     @Override
     public void exceptionCaught(NextFilter next, IoSession session, Throwable cause) {
         NioHandlerDispatcher.getHandler(session).setLoggingContext();
-        if (cause instanceof ProtocolDecoderException || cause instanceof WriteToClosedSessionException) {
-            // These are safe to ignore.
-            log.debug(cause, cause);
-        } else if (cause instanceof IOException) {
+        if (cause instanceof IOException || cause instanceof ProtocolDecoderException) {
             // intend to ignore "Connection reset by peer" and "Broken pipe"
-            if (session.isConnected() && !session.isClosing()) {
-                log.warn(cause, cause);
-            }
+            log.debug(cause, cause);
         } else {
             log.error(cause, cause);
         }
