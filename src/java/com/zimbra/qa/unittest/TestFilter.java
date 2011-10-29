@@ -87,7 +87,6 @@ public final class TestFilter extends TestCase {
     private static String USER_NAME = "user1";
     private static String REMOTE_USER_NAME = "user2";
     private static String NAME_PREFIX = "TestFilter";
-    private static String TAG_TEST_BASE64_SUBJECT = NAME_PREFIX + "-testBase64Subject";
     private static String FOLDER1_NAME = NAME_PREFIX + "-folder1";
     private static String FOLDER2_NAME = NAME_PREFIX + "-folder2";
     private static String FOLDER1_PATH = "/" + FOLDER1_NAME;
@@ -243,19 +242,27 @@ public final class TestFilter extends TestCase {
      * Confirms that a message with a base64-encoded subject can be filtered correctly
      * (bug 11219).
      */
-    public void disabledTestBase64Subject()
+    public void testBase64Subject()
     throws Exception {
-        // Note: tag gets created implicitly when filter rules are saved
+        // if subject contains "Cortes de luz", tag with testBase64Subject and stop
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "Cortes de luz"));
+        actions.add(new ZTagAction(TAG1_NAME));
+        rules.add(new ZFilterRule("testBase64Subject", true, false, conditions, actions));
+        ZFilterRules zRules = new ZFilterRules(rules);
+        saveIncomingRules(mMbox, zRules);
+
         String address = TestUtil.getAddress(USER_NAME);
         TestUtil.addMessageLmtp(
             "=?UTF-8?B?W2l0dnNmLUluY2lkZW5jaWFzXVs0OTc3Ml0gW2luY2lkZW5jaWFzLXZpbGxhbnVldmFdIENvcnRlcyBkZSBsdXosIGTDrWEgMjUvMDkvMjAwNi4=?=",
             address, address);
-        // bug 36705 List<ZMessage> messages = TestUtil.search(mMbox, "villanueva");
         List<ZMessage> messages = TestUtil.search(mMbox, "Cortes de luz");
         assertEquals("Unexpected number of messages", 1, messages.size());
         List<ZTag> tags = mMbox.getTags(messages.get(0).getTagIds());
         assertEquals("Unexpected number of tags", 1, tags.size());
-        assertEquals("Tag didn't match", TAG_TEST_BASE64_SUBJECT, tags.get(0).getName());
+        assertEquals("Tag didn't match", TAG1_NAME, tags.get(0).getName());
     }
 
     /**
@@ -1519,14 +1526,8 @@ public final class TestFilter extends TestCase {
     private ZFilterRules getTestIncomingRules()
     throws Exception {
         List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
-
-        // if subject contains "Cortes de luz", tag with testBase64Subject and stop
         List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
         List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
-        // bug 36705 conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "villanueva"));
-        conditions.add(new ZHeaderCondition("subject", HeaderOp.CONTAINS, "Cortes de luz"));
-        actions.add(new ZTagAction(TAG_TEST_BASE64_SUBJECT));
-        rules.add(new ZFilterRule("testBase64Subject", true, false, conditions, actions));
 
         // if subject contains "folder1", file into folder1 and tag with tag1
         conditions = new ArrayList<ZFilterCondition>();
