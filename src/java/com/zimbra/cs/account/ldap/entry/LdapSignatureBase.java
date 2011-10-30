@@ -24,7 +24,7 @@ import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 
 /**
  * 
@@ -82,7 +82,7 @@ public abstract class LdapSignatureBase extends Signature implements LdapEntry {
         }
         String sigId = acct.getAttr(Provisioning.A_zimbraSignatureId);
         if (sigId == null) {
-            sigId = LdapUtilCommon.generateUUID();
+            sigId = LdapUtil.generateUUID();
             putbackAttrs.put(Provisioning.A_zimbraSignatureId, sigId);
         }
         if (putbackAttrs.size() > 0)

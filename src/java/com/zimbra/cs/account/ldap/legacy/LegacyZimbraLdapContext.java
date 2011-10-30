@@ -69,7 +69,7 @@ import com.zimbra.cs.account.ldap.legacy.LegacyLdapUtil;
 import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapServerConfig;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.stats.ZimbraPerf;
 import com.zimbra.cs.util.Zimbra;
 
@@ -729,7 +729,7 @@ public class LegacyZimbraLdapContext implements ILdapContext {
         } catch (NameAlreadyBoundException e) {            
             throw e;
         } catch (NameNotFoundException e){
-            throw ServiceException.INVALID_REQUEST(method+" dn not found: "+ LdapUtilCommon.dnToRdnAndBaseDn(dn)[1] +e.getMessage(), e);
+            throw ServiceException.INVALID_REQUEST(method+" dn not found: "+ LdapUtil.dnToRdnAndBaseDn(dn)[1] +e.getMessage(), e);
         } catch (InvalidAttributeIdentifierException e) {
             throw AccountServiceException.INVALID_ATTR_NAME(method+" invalid attr name: "+e.getMessage(), e);
         } catch (InvalidAttributeValueException e) {

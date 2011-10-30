@@ -28,7 +28,7 @@ import com.zimbra.cs.account.EntrySearchFilter.Operator;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Term;
 import com.zimbra.cs.account.EntrySearchFilter.Visitor;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 
 public class LdapEntrySearchFilter {
 
@@ -110,7 +110,7 @@ public class LdapEntrySearchFilter {
         }
         
         protected String getVal(Single term) {
-            return LdapUtilCommon.escapeSearchFilterArg(term.getRhs());
+            return LdapUtil.escapeSearchFilterArg(term.getRhs());
         }
     }
     

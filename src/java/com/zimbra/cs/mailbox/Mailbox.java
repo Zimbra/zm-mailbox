@@ -101,7 +101,7 @@ import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.index.ZimbraQuery;
 import com.zimbra.cs.ldap.LdapConstants;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.CalendarItem.AlarmData;
 import com.zimbra.cs.mailbox.CalendarItem.Callback;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
@@ -6917,7 +6917,7 @@ public class Mailbox {
                     Invite inv = (Invite) obj;
                     String uid = inv.getUid();
                     if (uid == null) {
-                        uid = LdapUtilCommon.generateUUID();
+                        uid = LdapUtil.generateUUID();
                         inv.setUid(uid);
                     }
                     // Create the event in accepted state.  (bug 41639)

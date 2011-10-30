@@ -53,7 +53,7 @@ import com.zimbra.cs.account.ldap.entry.LdapDomain;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapUsage;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
@@ -306,9 +306,9 @@ public class TestLdapProvSearchDirectory extends TestLdap {
     @Test
     public void accountsByGrants() throws Exception {
         
-        String GRANTEE_ID_1 = LdapUtilCommon.generateUUID();
-        String GRANTEE_ID_2 = LdapUtilCommon.generateUUID();
-        String GRANTEE_ID_3 = LdapUtilCommon.generateUUID();
+        String GRANTEE_ID_1 = LdapUtil.generateUUID();
+        String GRANTEE_ID_2 = LdapUtil.generateUUID();
+        String GRANTEE_ID_3 = LdapUtil.generateUUID();
         List<String> GRANTEE_IDS = Lists.newArrayList(GRANTEE_ID_1, GRANTEE_ID_2, GRANTEE_ID_3);
         
         Map<String, Object> attrs1 = Maps.newHashMap();
@@ -600,7 +600,7 @@ public class TestLdapProvSearchDirectory extends TestLdap {
     
     @Test
     public void searchGrantee() throws Exception {
-        String granteeId = LdapUtilCommon.generateUUID();
+        String granteeId = LdapUtil.generateUUID();
         byte gtype = ACL.GRANTEE_USER;
         
         SearchDirectoryOptions opts = new SearchDirectoryOptions();

@@ -28,7 +28,7 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.accesscontrol.PermissionCache.CachedPermission;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 
 public class PermCacheManagerTest {
     
@@ -39,7 +39,7 @@ public class PermCacheManagerTest {
     
     private class MockAccount extends Account {
         
-        private String id = LdapUtilCommon.generateUUID();
+        private String id = LdapUtil.generateUUID();
         private String name;
         
         private MockAccount(String name) {

@@ -25,7 +25,7 @@ import com.unboundid.ldap.sdk.SearchResultEntry;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.ldap.LdapException;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZAttributes;
 
 public class UBIDAttributes extends ZAttributes {
@@ -121,7 +121,7 @@ public class UBIDAttributes extends ZAttributes {
         for (Attribute attr : entry.getAttributes()) {
             String transferAttrName = attr.getName();
             
-            String attrName = LdapUtilCommon.binaryTransferAttrNameToAttrName(transferAttrName);
+            String attrName = LdapUtil.binaryTransferAttrNameToAttrName(transferAttrName);
             
             boolean containsBinaryData = 
                 (attrMgr != null && attrMgr.containsBinaryData(attrName)) ||

@@ -23,7 +23,7 @@ import javax.naming.directory.ModificationItem;
 import com.unboundid.ldap.sdk.ModificationType;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZModificationList;
 
 public class JNDIModificationList extends ZModificationList {
@@ -58,13 +58,13 @@ public class JNDIModificationList extends ZModificationList {
         
         BasicAttribute ba = null;
         for (int i=0; i < value.length; i++) {
-            if (LdapUtilCommon.contains(currentValues, value[i])) {
+            if (LdapUtil.contains(currentValues, value[i])) {
                 continue;
             }
             if (ba == null) {
                 ba = JNDIUtil.newAttribute(isBinaryTransfer, name);
             }
-            ba.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, value[i]));
+            ba.add(LdapUtil.decodeBase64IfBinary(containsBinaryData, value[i]));
         }
         if (ba != null) {
             modList.add(new ModificationItem(DirContext.ADD_ATTRIBUTE, ba));
@@ -95,7 +95,7 @@ public class JNDIModificationList extends ZModificationList {
             boolean containsBinaryData, boolean isBinaryTransfer) {
         BasicAttribute ba = JNDIUtil.newAttribute(isBinaryTransfer, name);
         for (int i=0; i < value.length; i++) {
-            ba.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, value[i]));
+            ba.add(LdapUtil.decodeBase64IfBinary(containsBinaryData, value[i]));
         }
         modList.add(new ModificationItem(DirContext.REPLACE_ATTRIBUTE, ba));
     }
@@ -110,13 +110,13 @@ public class JNDIModificationList extends ZModificationList {
         
         BasicAttribute ba = null;
         for (int i=0; i < value.length; i++) {
-            if (!LdapUtilCommon.contains(currentValues, value[i])) {
+            if (!LdapUtil.contains(currentValues, value[i])) {
                 continue;
             }
             if (ba == null) {
                 ba = JNDIUtil.newAttribute(isBinaryTransfer, name);
             }
-            ba.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, value[i]));
+            ba.add(LdapUtil.decodeBase64IfBinary(containsBinaryData, value[i]));
         }
         if (ba != null) {
             modList.add(new ModificationItem(DirContext.REMOVE_ATTRIBUTE, ba));

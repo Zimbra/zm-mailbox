@@ -18,7 +18,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 
 public class SpecialAttrs {
     
@@ -51,7 +51,7 @@ public class SpecialAttrs {
         if (zimbraId != null) {
             // present, validate if it is a valid uuid
             try {
-                if (!LdapUtilCommon.isValidUUID(zimbraId))
+                if (!LdapUtil.isValidUUID(zimbraId))
                 throw ServiceException.INVALID_REQUEST(zimbraId + " is not a valid UUID", null);
             } catch (IllegalArgumentException e) {
                 throw ServiceException.INVALID_REQUEST(zimbraId + " is not a valid UUID", e);

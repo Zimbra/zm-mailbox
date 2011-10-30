@@ -44,7 +44,7 @@ import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.soap.SoapProvisioning;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 
 public class TestProvSearchDirectory {
@@ -98,7 +98,7 @@ public class TestProvSearchDirectory {
     private String expandFilter(String filter, String key) {
         Map<String, String> vars = new HashMap<String, String>();
         vars.put("n", key); 
-        return LdapUtilCommon.expandStr(filter, vars);
+        return LdapUtil.expandStr(filter, vars);
     }
     
     private List searchDirectory(String filter, String key, boolean expectTooMany) throws Exception {

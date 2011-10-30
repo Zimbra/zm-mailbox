@@ -41,7 +41,7 @@ import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.account.names.NameUtil;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 
 public class ACLAccessManager extends AccessManager implements AdminConsoleCapable {
 
@@ -375,7 +375,7 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
             targetType == TargetType.calresource) {
             cosStr = (String)attrs.get(Provisioning.A_zimbraCOSId);
             if (cosStr != null) {
-                if (LdapUtilCommon.isValidUUID(cosStr)) {
+                if (LdapUtil.isValidUUID(cosStr)) {
                     cosBy = cosBy.id;
                 } else {
                     cosBy = cosBy.name;

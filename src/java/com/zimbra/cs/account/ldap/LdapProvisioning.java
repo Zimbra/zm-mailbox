@@ -1026,7 +1026,7 @@ public class LdapProvisioning extends LdapProv {
 
             String zimbraIdStr;
             if (uuid == null) {
-                zimbraIdStr = LdapUtilCommon.generateUUID();
+                zimbraIdStr = LdapUtil.generateUUID();
             } else {
                 zimbraIdStr = uuid;
             }
@@ -1896,7 +1896,7 @@ public class LdapProvisioning extends LdapProv {
             aliasDn = mDIT.aliasDN(((LdapEntry)entry).getDN(), targetDomainName, aliasName, aliasDomain);
             // the create and addAttr ideally would be in the same transaction
 
-            String aliasUuid = LdapUtilCommon.generateUUID();
+            String aliasUuid = LdapUtil.generateUUID();
             String targetEntryId = entry.getId();
             try {
                 zlc.createEntry(aliasDn, "zimbraAlias",
@@ -2170,7 +2170,7 @@ public class LdapProvisioning extends LdapProv {
             Set<String> ocs = LdapObjectClass.getDomainObjectClasses(this);
             entry.addAttr(A_objectClass, ocs);
 
-            String zimbraIdStr = LdapUtilCommon.generateUUID();
+            String zimbraIdStr = LdapUtil.generateUUID();
             entry.setAttr(A_zimbraId, zimbraIdStr);
             entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
             entry.setAttr(A_zimbraDomainName, name);
@@ -2487,7 +2487,7 @@ public class LdapProvisioning extends LdapProv {
             Set<String> ocs = LdapObjectClass.getCosObjectClasses(this);
             entry.addAttr(A_objectClass, ocs);
 
-            String zimbraIdStr = LdapUtilCommon.generateUUID();
+            String zimbraIdStr = LdapUtil.generateUUID();
             entry.setAttr(A_zimbraId, zimbraIdStr);
             entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
             entry.setAttr(A_cn, destCosName);
@@ -3067,7 +3067,7 @@ public class LdapProvisioning extends LdapProv {
             Set<String> ocs = LdapObjectClass.getServerObjectClasses(this);
             entry.addAttr(A_objectClass, ocs);
 
-            String zimbraIdStr = LdapUtilCommon.generateUUID();
+            String zimbraIdStr = LdapUtil.generateUUID();
             entry.setAttr(A_zimbraId, zimbraIdStr);
             entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
             entry.setAttr(A_cn, name);
@@ -3358,7 +3358,7 @@ public class LdapProvisioning extends LdapProv {
             ocs.add(AttributeClass.OC_zimbraMailRecipient);
             entry.addAttr(A_objectClass, ocs);
 
-            String zimbraIdStr = LdapUtilCommon.generateUUID();
+            String zimbraIdStr = LdapUtil.generateUUID();
             entry.setAttr(A_zimbraId, zimbraIdStr);
             entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
             entry.setAttr(A_mail, listAddress);
@@ -4214,7 +4214,7 @@ public class LdapProvisioning extends LdapProv {
                 String searchDn = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchBindDn);
                 String searchBase = (String) attrs.get(Provisioning.A_zimbraAuthLdapSearchBase);
                 if (searchBase == null) searchBase = "";
-                searchFilter = LdapUtilCommon.computeDn(name, searchFilter);
+                searchFilter = LdapUtil.computeDn(name, searchFilter);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with search filter of "+searchFilter);
                 ldapAuthenticate(url, requireStartTLS, password, searchBase, searchFilter, searchDn, searchPassword);
                 return new Provisioning.Result(Check.STATUS_OK, "", searchFilter);
@@ -4222,7 +4222,7 @@ public class LdapProvisioning extends LdapProv {
 
             String bindDn = (String) attrs.get(Provisioning.A_zimbraAuthLdapBindDn);
             if (bindDn != null) {
-                String dn = LdapUtilCommon.computeDn(name, bindDn);
+                String dn = LdapUtil.computeDn(name, bindDn);
                 if (ZimbraLog.account.isDebugEnabled()) ZimbraLog.account.debug("auth with bind dn template of "+dn);
                 ldapAuthenticate(url, requireStartTLS, dn, password);
                 return new Provisioning.Result(Check.STATUS_OK, "", dn);
@@ -4318,7 +4318,7 @@ public class LdapProvisioning extends LdapProv {
                 if (searchBase == null) {
                     searchBase = "";
                 }
-                searchFilter = LdapUtilCommon.computeDn(principal, searchFilter);
+                searchFilter = LdapUtil.computeDn(principal, searchFilter);
                 ZimbraLog.account.debug("auth with search filter of "+searchFilter);
                 ldapAuthenticate(url, requireStartTLS, password, searchBase, searchFilter, searchDn, searchPassword);
                 return;
@@ -4326,7 +4326,7 @@ public class LdapProvisioning extends LdapProv {
 
             String bindDn = d.getAttr(Provisioning.A_zimbraAuthLdapBindDn);
             if (bindDn != null) {
-                String dn = LdapUtilCommon.computeDn(principal, bindDn);
+                String dn = LdapUtil.computeDn(principal, bindDn);
                 ZimbraLog.account.debug("auth with bind dn template of "+dn);
                 ldapAuthenticate(url, requireStartTLS, dn, password);
                 return;
@@ -5603,7 +5603,7 @@ public class LdapProvisioning extends LdapProv {
     throws ServiceException {
         GalOp galOp = token != null ? GalOp.sync : GalOp.search;
         // escape user-supplied string
-        n = LdapUtilCommon.escapeSearchFilterArg(n);
+        n = LdapUtil.escapeSearchFilterArg(n);
 
         int maxResults = token != null ? 0 : d.getIntAttr(Provisioning.A_zimbraGalMaxResults, DEFAULT_GAL_MAX_RESULTS);
         if (type == GalSearchType.resource)
@@ -5622,7 +5622,7 @@ public class LdapProvisioning extends LdapProv {
             SearchGalResult ldapResults = searchLdapGal(d, n, maxResults/2, token, galOp, visitor);
             if (ldapResults != null) {
                 results.addMatches(ldapResults);
-                results.setToken(LdapUtilCommon.getLaterTimestamp(results.getToken(), ldapResults.getToken()));
+                results.setToken(LdapUtil.getLaterTimestamp(results.getToken(), ldapResults.getToken()));
             }
         } else {
             results = searchZimbraGal(d, n, maxResults, token, galOp, visitor);
@@ -5640,7 +5640,7 @@ public class LdapProvisioning extends LdapProv {
             }
             if (resourceResults != null) {
                 results.addMatches(resourceResults);
-                results.setToken(LdapUtilCommon.getLaterTimestamp(results.getToken(), resourceResults.getToken()));
+                results.setToken(LdapUtil.getLaterTimestamp(results.getToken(), resourceResults.getToken()));
             }
         }
 
@@ -6037,7 +6037,7 @@ public class LdapProvisioning extends LdapProv {
     }
 
     private String getIdentityDn(LdapEntry entry, String name) {
-        return A_zimbraPrefIdentityName + "=" + LdapUtilCommon.escapeRDNValue(name) + "," + entry.getDN();
+        return A_zimbraPrefIdentityName + "=" + LdapUtil.escapeRDNValue(name) + "," + entry.getDN();
     }
 
     private void validateIdentityAttrs(Map<String, Object> attrs) throws ServiceException {
@@ -6102,7 +6102,7 @@ public class LdapProvisioning extends LdapProv {
             entry.setAttr(A_objectClass, "zimbraIdentity");
 
             if (!entry.hasAttribute(A_zimbraPrefIdentityId)) {
-                String identityId = LdapUtilCommon.generateUUID();
+                String identityId = LdapUtil.generateUUID();
                 entry.setAttr(A_zimbraPrefIdentityId, identityId);
             }
             entry.setAttr(Provisioning.A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
@@ -6225,7 +6225,7 @@ public class LdapProvisioning extends LdapProv {
         for (Identity identity: result) {
             // gross hack for 4.5beta. should be able to remove post 4.5
             if (identity.getId() == null) {
-                String id = LdapUtilCommon.generateUUID();
+                String id = LdapUtil.generateUUID();
                 identity.setId(id);
                 Map<String, Object> newAttrs = new HashMap<String, Object>();
                 newAttrs.put(Provisioning.A_zimbraPrefIdentityId, id);
@@ -6294,7 +6294,7 @@ public class LdapProvisioning extends LdapProv {
     }
 
     private String getSignatureDn(LdapEntry entry, String name) {
-        return A_zimbraSignatureName + "=" + LdapUtilCommon.escapeRDNValue(name) + "," + entry.getDN();
+        return A_zimbraSignatureName + "=" + LdapUtil.escapeRDNValue(name) + "," + entry.getDN();
     }
 
     private void validateSignatureAttrs(Map<String, Object> attrs) throws ServiceException {
@@ -6367,7 +6367,7 @@ public class LdapProvisioning extends LdapProv {
 
         String signatureId = (String)signatureAttrs.get(Provisioning.A_zimbraSignatureId);
         if (signatureId == null) {
-            signatureId = LdapUtilCommon.generateUUID();
+            signatureId = LdapUtil.generateUUID();
             signatureAttrs.put(Provisioning.A_zimbraSignatureId, signatureId);
         }
 
@@ -6593,7 +6593,7 @@ public class LdapProvisioning extends LdapProv {
     }
 
     private String getDataSourceDn(LdapEntry entry, String name) {
-        return A_zimbraDataSourceName + "=" + LdapUtilCommon.escapeRDNValue(name) + "," + entry.getDN();
+        return A_zimbraDataSourceName + "=" + LdapUtil.escapeRDNValue(name) + "," + entry.getDN();
     }
 
     protected ReplaceAddressResult replaceMailAddresses(Entry entry, String attrName, 
@@ -6762,7 +6762,7 @@ public class LdapProvisioning extends LdapProv {
 
             String dsId = entry.getAttrString(A_zimbraDataSourceId);
             if (dsId == null) {
-                dsId = LdapUtilCommon.generateUUID();
+                dsId = LdapUtil.generateUUID();
                 entry.setAttr(A_zimbraDataSourceId, dsId);
             }
 
@@ -7013,7 +7013,7 @@ public class LdapProvisioning extends LdapProv {
 
             entry.setAttr(A_objectClass, "zimbraXMPPComponent");
 
-            String compId = LdapUtilCommon.generateUUID();
+            String compId = LdapUtil.generateUUID();
             entry.setAttr(A_zimbraId, compId);
             entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
             entry.setAttr(A_cn, name);
@@ -7988,7 +7988,7 @@ public class LdapProvisioning extends LdapProv {
             Set<String> ocs = LdapObjectClass.getGroupObjectClasses(this);
             entry.addAttr(A_objectClass, ocs);
 
-            String zimbraId = LdapUtilCommon.generateUUID();
+            String zimbraId = LdapUtil.generateUUID();
             entry.setAttr(A_zimbraId, zimbraId);
             entry.setAttr(A_zimbraCreateTimestamp, DateUtil.toGeneralizedTime(new Date()));
             entry.setAttr(A_mail, groupAddress);

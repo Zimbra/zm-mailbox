@@ -21,7 +21,7 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.GalMode;
 import com.zimbra.cs.gal.GalGroupMembers;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 
 /*
  * To run this test:
@@ -150,7 +150,7 @@ public class TestGalGroupMembers extends TestCase {
             domain.addGalLdapURL("ldap://localhost:389", attrs);
             domain.setGalLdapBindDn("cn=config", attrs);
             domain.setGalLdapBindPassword("zimbra");
-            domain.setGalLdapSearchBase(LdapUtilCommon.domainToDN(EXTERNAL_DOMAIN));
+            domain.setGalLdapSearchBase(LdapUtil.domainToDN(EXTERNAL_DOMAIN));
             domain.setGalAutoCompleteLdapFilter("zimbraAccountAutoComplete");
             domain.setGalLdapFilter("zimbraAccounts");
             

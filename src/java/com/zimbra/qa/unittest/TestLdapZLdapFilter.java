@@ -23,7 +23,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
 import com.zimbra.cs.ldap.LdapException;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
@@ -42,7 +42,7 @@ public class TestLdapZLdapFilter extends TestLdap {
     }
     
     private String genUUID() {
-        return LdapUtilCommon.generateUUID();
+        return LdapUtil.generateUUID();
     }
     
     private void verifyStatString(FilterId filterId, ZLdapFilter zLdapFilter) throws Exception {

@@ -32,7 +32,7 @@ import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.ILdapContext;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
@@ -64,7 +64,9 @@ public class ADGroupHandler extends GroupHandler {
             String entryDN, IAttributes ldapAttrs) {
         if (ZimbraLog.gal.isDebugEnabled()) {
             try {
-                ZimbraLog.gal.debug("Fetching members for group " + ldapAttrs.getAttrString(MAIL_ATTR));
+                ZimbraLog.gal.debug("Fetching members for group " + 
+                        ldapAttrs.getAttrString(MAIL_ATTR) + 
+                        " [" + entryDN + "]");
             } catch (ServiceException e) {
                 ZimbraLog.gal.debug("unable to get email address of group " + entryDN, e);
             }
@@ -202,7 +204,7 @@ public class ADGroupHandler extends GroupHandler {
             //       skip that. See LdapProvisioning.externalLdapAuth
             String dnTemplate = domain.getAuthLdapBindDn();
             if (dnTemplate != null) {
-                extDN = LdapUtilCommon.computeDn(acct.getName(), dnTemplate);
+                extDN = LdapUtil.computeDn(acct.getName(), dnTemplate);
             }
         }
         

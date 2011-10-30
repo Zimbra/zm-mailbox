@@ -41,7 +41,7 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -117,7 +117,7 @@ public class FileUploadServlet extends ZimbraServlet {
             String localServer = Provisioning.getInstance().getLocalServer().getId();
             accountId = acctId;
             time      = System.currentTimeMillis();
-            uuid      = localServer + UPLOAD_PART_DELIMITER + LdapUtilCommon.generateUUID();
+            uuid      = localServer + UPLOAD_PART_DELIMITER + LdapUtil.generateUUID();
             name      = FileUtil.trimFilename(filename);
             file      = attachment;
             if (file == null) {

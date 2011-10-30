@@ -26,7 +26,7 @@ import javax.naming.directory.Attributes;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.ldap.LdapException;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZAttributes;
 
 public class JNDIAttributes extends ZAttributes {
@@ -90,7 +90,7 @@ public class JNDIAttributes extends ZAttributes {
             Attribute attr = (Attribute) ne.next();
             String transferAttrName = attr.getID();
             
-            String attrName = LdapUtilCommon.binaryTransferAttrNameToAttrName(transferAttrName);
+            String attrName = LdapUtil.binaryTransferAttrNameToAttrName(transferAttrName);
             
             boolean containsBinaryData = 
                 (attrMgr != null && attrMgr.containsBinaryData(attrName)) ||

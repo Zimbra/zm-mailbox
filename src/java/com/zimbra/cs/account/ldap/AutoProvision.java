@@ -63,7 +63,7 @@ import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapServerConfig;
 import com.zimbra.cs.ldap.LdapUsage;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
@@ -345,7 +345,7 @@ public abstract class AutoProvision {
                 if (searchBase == null) {
                     searchBase = LdapConstants.DN_ROOT_DSE;
                 }
-                String searchFilter = LdapUtilCommon.computeDn(loginName, searchFilterTemplate);
+                String searchFilter = LdapUtil.computeDn(loginName, searchFilterTemplate);
                 ZimbraLog.autoprov.debug("AutoProvision: computed search filter" + searchFilter);
                 ZSearchResultEntry entry = prov.getHelper().searchForEntry(
                         searchBase, ZLdapFilterFactory.getInstance().fromFilterString(
@@ -357,7 +357,7 @@ public abstract class AutoProvision {
             String bindDNTemplate = domain.getAutoProvLdapBindDn();
             if (bindDNTemplate != null) {
                 // get attrs by external DN template
-                String dn = LdapUtilCommon.computeDn(loginName, bindDNTemplate);
+                String dn = LdapUtil.computeDn(loginName, bindDNTemplate);
                 ZimbraLog.autoprov.debug("AutoProvision: computed external DN" + dn);
                 return new ExternalEntry(dn, prov.getHelper().getAttributes(zlc, dn, attrs));
             }
@@ -571,7 +571,7 @@ public abstract class AutoProvision {
                     throw ServiceException.INVALID_REQUEST(
                             "search filter template is not set on domain " + domain.getName(), null);
                 }
-                searchFilter = LdapUtilCommon.computeDn(name, searchFilterTemplate);
+                searchFilter = LdapUtil.computeDn(name, searchFilterTemplate);
             } else if (filter != null) {
                 searchFilter = filter;
                 filterId = FilterId.AUTO_PROVISION_ADMIN_SEARCH;
@@ -580,7 +580,7 @@ public abstract class AutoProvision {
                     throw ServiceException.INVALID_REQUEST(
                             "search filter template is not set on domain " + domain.getName(), null);
                 }
-                searchFilter = LdapUtilCommon.computeDn("*", searchFilterTemplate);
+                searchFilter = LdapUtil.computeDn("*", searchFilterTemplate);
                 if (createTimestampLaterThan != null) {
                     // searchFilter = "(&" + searchFilter + "(createTimestamp>=" + createTimestampLaterThan + "))";
                     searchFilter = "(&" + searchFilter + 

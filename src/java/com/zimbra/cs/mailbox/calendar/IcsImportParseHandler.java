@@ -37,7 +37,7 @@ import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.Invite.InviteVisitor;
@@ -216,7 +216,7 @@ public class IcsImportParseHandler implements ZICalendarParseHandler {
             // handle missing UIDs on remote calendars by generating them as needed
             String uid = inv.getUid();
             if (uid == null) {
-                uid = LdapUtilCommon.generateUUID();
+                uid = LdapUtil.generateUUID();
                 inv.setUid(uid);
             }
             boolean addRevision;

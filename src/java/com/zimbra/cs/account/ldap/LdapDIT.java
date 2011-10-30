@@ -35,7 +35,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.ldap.IAttributes;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.util.Zimbra;
@@ -240,7 +240,7 @@ public class LdapDIT {
     }
 
     protected String emailToDN(String localPart, String domain) throws ServiceException {
-        return NAMING_RDN_ATTR_USER + "=" + LdapUtilCommon.escapeRDNValue(localPart) + "," + domainToAccountBaseDN(domain);
+        return NAMING_RDN_ATTR_USER + "=" + LdapUtil.escapeRDNValue(localPart) + "," + domainToAccountBaseDN(domain);
     }
     
     protected String emailToDN(String email) throws ServiceException {
@@ -294,11 +294,11 @@ public class LdapDIT {
             if (parts[i].startsWith("dc=")) {
                 if (domain.length() > 0)
                     domain.append(".");
-                domain.append(LdapUtilCommon.unescapeRDNValue(parts[i].substring(3)));
+                domain.append(LdapUtil.unescapeRDNValue(parts[i].substring(3)));
             } else if (i==0 && parts[i].startsWith(namingAttr)) {
-                namingAttrValue = LdapUtilCommon.unescapeRDNValue(parts[i].substring(namingAttr.length()));
+                namingAttrValue = LdapUtil.unescapeRDNValue(parts[i].substring(namingAttr.length()));
             } else if (alternateNamingAttr != null && i==0 && parts[i].startsWith(alternateNamingAttr)) {
-                namingAttrValue = LdapUtilCommon.unescapeRDNValue(parts[i].substring(alternateNamingAttr.length()));
+                namingAttrValue = LdapUtil.unescapeRDNValue(parts[i].substring(alternateNamingAttr.length()));
             }
         }
         if (namingAttrValue == null) {
@@ -359,7 +359,7 @@ public class LdapDIT {
     }
     
     public String cosNametoDN(String name) {
-        return NAMING_RDN_ATTR_COS + "=" + LdapUtilCommon.escapeRDNValue(name) + "," + BASE_DN_COS;
+        return NAMING_RDN_ATTR_COS + "=" + LdapUtil.escapeRDNValue(name) + "," + BASE_DN_COS;
     }
     
     /*
@@ -409,7 +409,7 @@ public class LdapDIT {
     protected String[] domainToDNsInternal(String[] parts, String base) {
         String dns[] = new String[parts.length];
         for (int i=parts.length-1; i >= 0; i--) {
-            dns[i] = LdapUtilCommon.domainToDN(parts, i);
+            dns[i] = LdapUtil.domainToDN(parts, i);
             if (base != null)
                 dns[i] = dns[i] + "," + base;
         }
@@ -418,7 +418,7 @@ public class LdapDIT {
     
     // account base search dn
     public String domainToAccountSearchDN(String domain) throws ServiceException {
-        return domainDNToAccountBaseDN(LdapUtilCommon.domainToDN(domain));
+        return domainDNToAccountBaseDN(LdapUtil.domainToDN(domain));
     }
     
     // account base search dn
@@ -428,7 +428,7 @@ public class LdapDIT {
     
     // only used internally 
     private String domainToAccountBaseDN(String domain) throws ServiceException {
-        return domainDNToAccountBaseDN(LdapUtilCommon.domainToDN(domain));
+        return domainDNToAccountBaseDN(LdapUtil.domainToDN(domain));
     }
     
     // account base dn for create/delete domain
@@ -462,7 +462,7 @@ public class LdapDIT {
     }
     
     public String dynamicGroupNameLocalPartToDN(String name, String domainDN) throws ServiceException {
-        return NAMING_RDN_ATTR_DYNAMICGROUP + "=" + LdapUtilCommon.escapeRDNValue(name) + "," + 
+        return NAMING_RDN_ATTR_DYNAMICGROUP + "=" + LdapUtil.escapeRDNValue(name) + "," + 
             domainDNToDynamicGroupsBaseDN(domainDN);
     }
     
@@ -543,7 +543,7 @@ public class LdapDIT {
     }
     
     public String serverNameToDN(String name) {
-        return NAMING_RDN_ATTR_SERVER + "=" + LdapUtilCommon.escapeRDNValue(name) + "," + BASE_DN_SERVER;
+        return NAMING_RDN_ATTR_SERVER + "=" + LdapUtil.escapeRDNValue(name) + "," + BASE_DN_SERVER;
     }
     
     
@@ -557,7 +557,7 @@ public class LdapDIT {
     }
     
     public String xmppcomponentNameToDN(String name) {
-        return NAMING_RDN_ATTR_XMPPCOMPONENT + "=" + LdapUtilCommon.escapeRDNValue(name) + "," + BASE_DN_XMPPCOMPONENT;
+        return NAMING_RDN_ATTR_XMPPCOMPONENT + "=" + LdapUtil.escapeRDNValue(name) + "," + BASE_DN_XMPPCOMPONENT;
     }
 
     
@@ -571,7 +571,7 @@ public class LdapDIT {
     }
     
     public String zimletNameToDN(String name) {
-        return NAMING_RDN_ATTR_ZIMLET + "=" + LdapUtilCommon.escapeRDNValue(name) + "," + BASE_DN_ZIMLET;
+        return NAMING_RDN_ATTR_ZIMLET + "=" + LdapUtil.escapeRDNValue(name) + "," + BASE_DN_ZIMLET;
     }
     
     

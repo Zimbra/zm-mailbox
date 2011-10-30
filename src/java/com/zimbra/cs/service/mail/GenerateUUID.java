@@ -20,7 +20,7 @@ import java.util.Map;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class GenerateUUID extends MailDocumentHandler {
@@ -29,7 +29,7 @@ public class GenerateUUID extends MailDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Element response = zsc.createElement(MailConstants.GENERATE_UUID_RESPONSE);
-        response.setText(LdapUtilCommon.generateUUID());
+        response.setText(LdapUtil.generateUUID());
         return response;
     }
 }

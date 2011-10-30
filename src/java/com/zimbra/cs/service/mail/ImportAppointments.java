@@ -23,7 +23,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
@@ -102,7 +102,7 @@ public class ImportAppointments extends MailDocumentHandler  {
                 // handle missing UIDs on remote calendars by generating them as needed
                 String uid = inv.getUid();
                 if (uid == null) {
-                    uid = LdapUtilCommon.generateUUID();
+                    uid = LdapUtil.generateUUID();
                     inv.setUid(uid);
                 }
                 boolean addRevision;

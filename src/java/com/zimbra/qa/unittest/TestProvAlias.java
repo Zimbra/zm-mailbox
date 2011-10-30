@@ -43,7 +43,7 @@ import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.ldap.LdapUsage;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 
 
@@ -447,7 +447,7 @@ public class TestProvAlias extends TestLdap {
         // now, hack it so the alias points to a non-existing entry
         {
             Map<String, Object> attributes = new HashMap<String, Object>();
-            attributes.put(Provisioning.A_zimbraAliasTargetId, LdapUtilCommon.generateUUID());
+            attributes.put(Provisioning.A_zimbraAliasTargetId, LdapUtil.generateUUID());
             
             List<NamedEntry> aliases = searchAliasesInDomain(domain);
             assertEquals(aliases.size(), 1);
@@ -672,7 +672,7 @@ public class TestProvAlias extends TestLdap {
         // now, hack it so the alias points to a non-existing entry
         {
             Map<String, Object> attributes = new HashMap<String, Object>();
-            attributes.put(Provisioning.A_zimbraAliasTargetId, LdapUtilCommon.generateUUID());
+            attributes.put(Provisioning.A_zimbraAliasTargetId, LdapUtil.generateUUID());
             
             List<NamedEntry> aliases = searchAliasesInDomain(domain);
             assertEquals(aliases.size(), 1);

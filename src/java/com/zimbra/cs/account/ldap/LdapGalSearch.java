@@ -31,7 +31,7 @@ import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapTODO;
 import com.zimbra.cs.ldap.LdapUsage;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
@@ -286,9 +286,9 @@ public class LdapGalSearch {
         public void visit(String dn, IAttributes ldapAttrs) {
             GalContact lgc = new GalContact(galType, dn, rules.apply(zlc, base, dn, ldapAttrs));
             String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
-            result.setToken(LdapUtilCommon.getLaterTimestamp(result.getToken(), mts));
+            result.setToken(LdapUtil.getLaterTimestamp(result.getToken(), mts));
             String cts = (String) lgc.getAttrs().get("createTimeStamp");
-            result.setToken(LdapUtilCommon.getLaterTimestamp(result.getToken(), cts));
+            result.setToken(LdapUtil.getLaterTimestamp(result.getToken(), cts));
             try {
                 result.addMatch(lgc);
             } catch (ServiceException e) {

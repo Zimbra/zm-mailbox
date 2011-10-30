@@ -34,9 +34,9 @@ import com.zimbra.cs.account.ldap.legacy.entry.LdapConfig;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.ldap.LdapConstants;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.SearchLdapOptions;
 import com.zimbra.cs.ldap.LdapTODO.*;
-import com.zimbra.cs.ldap.LdapUtilCommon;
 
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -92,7 +92,7 @@ public class LegacyLdapUtil {
         boolean containsBinaryData = attrMgr == null ? false : attrMgr.containsBinaryData(name);
         boolean isBinaryTransfer = attrMgr == null ? false : attrMgr.isBinaryTransfer(name);
         
-        String attrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, name);
+        String attrName = LdapUtil.attrNameToBinaryTransferAttrName(isBinaryTransfer, name);
         
         Attribute attr = attrs.get(attrName);
         if (attr != null) {
@@ -119,7 +119,7 @@ public class LegacyLdapUtil {
     
     public static String[] getMultiAttrString(Attributes attrs, String name, boolean containsBinaryData, boolean isBinaryTransfer) 
     throws NamingException {
-        String attrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, name);
+        String attrName = LdapUtil.attrNameToBinaryTransferAttrName(isBinaryTransfer, name);
         
         Attribute attr = attrs.get(attrName);
         if (attr != null) {
@@ -171,7 +171,7 @@ public class LegacyLdapUtil {
             Attribute attr = (Attribute) ne.next();
             String transferAttrName = attr.getID();
             
-            String attrName = LdapUtilCommon.binaryTransferAttrNameToAttrName(transferAttrName);
+            String attrName = LdapUtil.binaryTransferAttrNameToAttrName(transferAttrName);
             
             boolean containsBinaryData = 
                 (attrMgr != null && attrMgr.containsBinaryData(attrName)) ||
@@ -240,7 +240,7 @@ public class LegacyLdapUtil {
         
         BasicAttribute ba = newAttribute(isBinaryTransfer, name);
         if (mod_op == DirContext.REPLACE_ATTRIBUTE)
-            ba.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, value));
+            ba.add(LdapUtil.decodeBase64IfBinary(containsBinaryData, value));
         modList.add(new ModificationItem(mod_op, ba));
     }
     
@@ -249,7 +249,7 @@ public class LegacyLdapUtil {
             boolean containsBinaryData, boolean isBinaryTransfer) {
         BasicAttribute ba = newAttribute(isBinaryTransfer, name);
         for (int i=0; i < value.length; i++) {
-            ba.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, value[i]));
+            ba.add(LdapUtil.decodeBase64IfBinary(containsBinaryData, value[i]));
         }
         modList.add(new ModificationItem(DirContext.REPLACE_ATTRIBUTE, ba));
     }
@@ -260,10 +260,10 @@ public class LegacyLdapUtil {
     @SDKDONE
     private static void removeAttr(ArrayList<ModificationItem> modList, String name, String value, 
             com.zimbra.cs.account.Entry entry, boolean containsBinaryData, boolean isBinaryTransfer) {
-        if (!LdapUtilCommon.contains(entry.getMultiAttr(name, false), value)) return;
+        if (!LdapUtil.contains(entry.getMultiAttr(name, false), value)) return;
         
         BasicAttribute ba = newAttribute(isBinaryTransfer, name);
-        ba.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, value));
+        ba.add(LdapUtil.decodeBase64IfBinary(containsBinaryData, value));
         modList.add(new ModificationItem(DirContext.REMOVE_ATTRIBUTE, ba));
     }
     
@@ -278,9 +278,9 @@ public class LegacyLdapUtil {
         
         BasicAttribute ba = null;
         for (int i=0; i < value.length; i++) {
-            if (!LdapUtilCommon.contains(currentValues, value[i])) continue;
+            if (!LdapUtil.contains(currentValues, value[i])) continue;
             if (ba == null) ba = newAttribute(isBinaryTransfer, name);
-            ba.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, value[i]));
+            ba.add(LdapUtil.decodeBase64IfBinary(containsBinaryData, value[i]));
         }
         if (ba != null) modList.add(new ModificationItem(DirContext.REMOVE_ATTRIBUTE, ba));
 
@@ -292,10 +292,10 @@ public class LegacyLdapUtil {
     @SDKDONE
     private static void addAttr(ArrayList<ModificationItem> modList, String name, String value, 
             com.zimbra.cs.account.Entry entry, boolean containsBinaryData, boolean isBinaryTransfer) {
-        if (LdapUtilCommon.contains(entry.getMultiAttr(name, false), value)) return;     
+        if (LdapUtil.contains(entry.getMultiAttr(name, false), value)) return;     
         
         BasicAttribute ba = newAttribute(isBinaryTransfer, name);
-        ba.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, value));
+        ba.add(LdapUtil.decodeBase64IfBinary(containsBinaryData, value));
         modList.add(new ModificationItem(DirContext.ADD_ATTRIBUTE, ba));
     }
 
@@ -310,9 +310,9 @@ public class LegacyLdapUtil {
         
         BasicAttribute ba = null;
         for (int i=0; i < value.length; i++) {
-            if (LdapUtilCommon.contains(currentValues, value[i])) continue;
+            if (LdapUtil.contains(currentValues, value[i])) continue;
             if (ba == null) ba = newAttribute(isBinaryTransfer, name);
-            ba.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, value[i]));
+            ba.add(LdapUtil.decodeBase64IfBinary(containsBinaryData, value[i]));
         }
         if (ba != null) modList.add(new ModificationItem(DirContext.ADD_ATTRIBUTE, ba));
     }
@@ -426,20 +426,20 @@ public class LegacyLdapUtil {
             if (v instanceof String) {
                 // attrs.put(name, decodeBase64IfBinary(isBinary, (String)v));
                 BasicAttribute a = newAttribute(isBinaryTransfer, attrName);
-                a.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, (String)v));
+                a.add(LdapUtil.decodeBase64IfBinary(containsBinaryData, (String)v));
                 attrs.put(a);
             } else if (v instanceof String[]) {
                 String[] sa = (String[]) v;
                 BasicAttribute a = newAttribute(isBinaryTransfer, attrName);
                 for (int i=0; i < sa.length; i++) {
-                    a.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, sa[i]));
+                    a.add(LdapUtil.decodeBase64IfBinary(containsBinaryData, sa[i]));
                 }
                 attrs.put(a);
             } else if (v instanceof Collection) {
                 Collection c = (Collection) v;
                 BasicAttribute a = newAttribute(isBinaryTransfer, attrName);
                 for (Object o : c) {
-                	a.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, o.toString()));
+                	a.add(LdapUtil.decodeBase64IfBinary(containsBinaryData, o.toString()));
                 }
                 attrs.put(a);
             }
@@ -668,9 +668,9 @@ public class LegacyLdapUtil {
         
         GalContact lgc = new GalContact(galType, dn, rules.apply(zlc, base, dn, attrs));
         String mts = (String) lgc.getAttrs().get("modifyTimeStamp");
-        result.setToken(LdapUtilCommon.getLaterTimestamp(result.getToken(), mts));
+        result.setToken(LdapUtil.getLaterTimestamp(result.getToken(), mts));
         String cts = (String) lgc.getAttrs().get("createTimeStamp");
-        result.setToken(LdapUtilCommon.getLaterTimestamp(result.getToken(), cts));
+        result.setToken(LdapUtil.getLaterTimestamp(result.getToken(), cts));
         result.addMatch(lgc);
         ZimbraLog.gal.debug("dn=" + dn + ", mts=" + mts + ", cts=" + cts);
     }
@@ -946,7 +946,7 @@ public class LegacyLdapUtil {
     
     @SDKDONE
     private static BasicAttribute newAttribute(boolean isBinaryTransfer, String attrName) {
-        String transferAttrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, attrName);
+        String transferAttrName = LdapUtil.attrNameToBinaryTransferAttrName(isBinaryTransfer, attrName);
         return new BasicAttribute(transferAttrName);
     }
     

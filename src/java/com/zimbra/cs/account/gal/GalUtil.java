@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 
 public class GalUtil {
     
@@ -40,7 +40,7 @@ public class GalUtil {
         if (query.indexOf("**") > 0)
         	query = query.replaceAll("\\*\\*", "*");
         if (token != null && token.length() > 0) {
-        	String arg = LdapUtilCommon.escapeSearchFilterArg(token);
+        	String arg = LdapUtil.escapeSearchFilterArg(token);
         	query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+"))"+query+")";
         }
         
@@ -87,7 +87,7 @@ public class GalUtil {
                 for (String t : tokens) {
                     vars.clear();
                     vars.put("s", t);
-                    q = q + LdapUtilCommon.expandStr(filterTemplate, vars);
+                    q = q + LdapUtil.expandStr(filterTemplate, vars);
                 }
                 q = q + ")";
                 query = q;
@@ -96,7 +96,7 @@ public class GalUtil {
         
         if (query == null) {
             vars.put("s", key);
-            query = LdapUtilCommon.expandStr(filterTemplate, vars);
+            query = LdapUtil.expandStr(filterTemplate, vars);
         }
         
         return query;

@@ -38,7 +38,7 @@ import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapUsage;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
@@ -144,7 +144,7 @@ public class ExternalGroup extends NamedEntry {
         if (searchBase == null) {
             searchBase = LdapConstants.DN_ROOT_DSE;
         }
-        String searchFilter = LdapUtilCommon.computeDn(extGroupName, filterTemplate);
+        String searchFilter = LdapUtil.computeDn(extGroupName, filterTemplate);
         
         GroupHandler groupHandler = getGroupHandler(domain);
         

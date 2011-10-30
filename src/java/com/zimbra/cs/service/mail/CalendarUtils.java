@@ -51,7 +51,7 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.gal.GalGroup;
 import com.zimbra.cs.gal.GalGroupMembers;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.Folder;
@@ -139,7 +139,7 @@ public class CalendarUtils {
         } else {
             String uidParsed = create.getUid();
             if (uidParsed == null || uidParsed.length() == 0)
-                create.setUid(LdapUtilCommon.generateUUID());
+                create.setUid(LdapUtil.generateUUID());
         }
 
         ZVCalendar iCal = create.newToICalendar(true);

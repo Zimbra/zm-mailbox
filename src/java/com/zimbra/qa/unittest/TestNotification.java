@@ -45,7 +45,7 @@ import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.ldap.LdapConstants;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.util.JMSession;
 
@@ -274,10 +274,10 @@ extends TestCase {
 
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReplyEnabled,
-            LdapUtilCommon.getLdapBooleanString(mOriginalReplyEnabled));
+            LdapUtil.getLdapBooleanString(mOriginalReplyEnabled));
         attrs.put(Provisioning.A_zimbraPrefOutOfOfficeReply, mOriginalReply);
         attrs.put(Provisioning.A_zimbraPrefNewMailNotificationEnabled,
-            LdapUtilCommon.getLdapBooleanString(mOriginalNotificationEnabled));
+            LdapUtil.getLdapBooleanString(mOriginalNotificationEnabled));
         attrs.put(Provisioning.A_zimbraPrefNewMailNotificationAddress, mOriginalNotificationAddress);
         attrs.put(Provisioning.A_zimbraNewMailNotificationSubject, mOriginalNotificationSubject);
         attrs.put(Provisioning.A_zimbraNewMailNotificationBody, mOriginalNotificationBody);

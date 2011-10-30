@@ -28,7 +28,7 @@ import javax.naming.directory.BasicAttributes;
 
 import com.zimbra.cs.account.AttributeManager;
 import com.zimbra.cs.ldap.LdapException;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZAttributes;
 import com.zimbra.cs.ldap.ZMutableEntry;
 
@@ -118,20 +118,20 @@ public class JNDIMutableEntry extends ZMutableEntry {
             
             if (v instanceof String) {
                 BasicAttribute a = JNDIUtil.newAttribute(isBinaryTransfer, attrName);
-                a.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, (String)v));
+                a.add(LdapUtil.decodeBase64IfBinary(containsBinaryData, (String)v));
                 jndiAttrs.put(a);
             } else if (v instanceof String[]) {
                 String[] sa = (String[]) v;
                 BasicAttribute a = JNDIUtil.newAttribute(isBinaryTransfer, attrName);
                 for (int i=0; i < sa.length; i++) {
-                    a.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, sa[i]));
+                    a.add(LdapUtil.decodeBase64IfBinary(containsBinaryData, sa[i]));
                 }
                 jndiAttrs.put(a);
             } else if (v instanceof Collection) {
                 Collection c = (Collection) v;
                 BasicAttribute a = JNDIUtil.newAttribute(isBinaryTransfer, attrName);
                 for (Object o : c) {
-                    a.add(LdapUtilCommon.decodeBase64IfBinary(containsBinaryData, o.toString()));
+                    a.add(LdapUtil.decodeBase64IfBinary(containsBinaryData, o.toString()));
                 }
                 jndiAttrs.put(a);
             }

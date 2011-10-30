@@ -24,7 +24,7 @@ import com.unboundid.ldap.sdk.ModificationType;
 
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZModificationList;
 
 public class UBIDModificationList extends ZModificationList {
@@ -77,7 +77,7 @@ public class UBIDModificationList extends ZModificationList {
         
         List<ASN1OctetString> valuesToAdd = null;
         for (int i=0; i < value.length; i++) {
-            if (LdapUtilCommon.contains(currentValues, value[i])) {
+            if (LdapUtil.contains(currentValues, value[i])) {
                 continue;
             }
             if (valuesToAdd == null) {
@@ -86,7 +86,7 @@ public class UBIDModificationList extends ZModificationList {
             valuesToAdd.add(UBIDUtil.newASN1OctetString(containsBinaryData, value[i]));
         }
         if (valuesToAdd != null) {
-            String transferAttrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, name);
+            String transferAttrName = LdapUtil.attrNameToBinaryTransferAttrName(isBinaryTransfer, name);
             Modification mod = new Modification(ModificationType.ADD, transferAttrName, 
                     valuesToAdd.toArray(new ASN1OctetString[valuesToAdd.size()]));
             
@@ -122,7 +122,7 @@ public class UBIDModificationList extends ZModificationList {
             valuesToMod.add(UBIDUtil.newASN1OctetString(containsBinaryData, value[i]));
         }
         
-        String transferAttrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, name);
+        String transferAttrName = LdapUtil.attrNameToBinaryTransferAttrName(isBinaryTransfer, name);
         Modification mod = new Modification(ModificationType.REPLACE, transferAttrName, 
                 valuesToMod.toArray(new ASN1OctetString[valuesToMod.size()]));
         
@@ -132,7 +132,7 @@ public class UBIDModificationList extends ZModificationList {
 
     @Override
     public void removeAttr(String attrName, boolean isBinaryTransfer) {
-        String transferAttrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, attrName);
+        String transferAttrName = LdapUtil.attrNameToBinaryTransferAttrName(isBinaryTransfer, attrName);
         Modification mod = new Modification(ModificationType.DELETE, transferAttrName);
         modList.add(mod);
     }
@@ -147,7 +147,7 @@ public class UBIDModificationList extends ZModificationList {
         
         List<ASN1OctetString> valuesToRemove = null;
         for (int i=0; i < value.length; i++) {
-            if (!LdapUtilCommon.contains(currentValues, value[i])) {
+            if (!LdapUtil.contains(currentValues, value[i])) {
                 continue;
             }
             if (valuesToRemove == null) {
@@ -156,7 +156,7 @@ public class UBIDModificationList extends ZModificationList {
             valuesToRemove.add(UBIDUtil.newASN1OctetString(containsBinaryData, value[i]));
         }
         if (valuesToRemove != null) {
-            String transferAttrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, name);
+            String transferAttrName = LdapUtil.attrNameToBinaryTransferAttrName(isBinaryTransfer, name);
             Modification mod = new Modification(ModificationType.DELETE, transferAttrName, 
                     valuesToRemove.toArray(new ASN1OctetString[valuesToRemove.size()]));
             modList.add(mod);

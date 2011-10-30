@@ -31,7 +31,7 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -111,9 +111,9 @@ public class WaitSetMgr {
             String id;
             if (allAccts) {
 //                id = ALL_ACCOUNTS_ID_PREFIX+sWaitSetNumber;
-                id = ALL_ACCOUNTS_ID_PREFIX+LdapUtilCommon.generateUUID();
+                id = ALL_ACCOUNTS_ID_PREFIX+LdapUtil.generateUUID();
             } else {
-                id = "WaitSet-"+LdapUtilCommon.generateUUID();
+                id = "WaitSet-"+LdapUtil.generateUUID();
             }
 
             // create the proper kind of WaitSet

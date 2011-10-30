@@ -222,7 +222,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                     filterId,
                     Filter.create(encloseFilterIfNot(filterString)));
         } catch (LDAPException e) {
-            throw UBIDLdapException.mapToLdapException(e);
+            throw UBIDLdapException.mapToLdapException(filterString, e);
         }
     }
     

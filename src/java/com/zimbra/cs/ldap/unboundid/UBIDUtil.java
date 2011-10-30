@@ -19,7 +19,7 @@ import com.unboundid.ldap.sdk.Attribute;
 import com.unboundid.ldap.sdk.schema.Schema;
 
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 
 public class UBIDUtil {
     
@@ -32,12 +32,12 @@ public class UBIDUtil {
     }
     
     static Attribute newAttribute(boolean isBinaryTransfer, String attrName, ASN1OctetString value) {
-        String transferAttrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, attrName);
+        String transferAttrName = LdapUtil.attrNameToBinaryTransferAttrName(isBinaryTransfer, attrName);
         return new Attribute(transferAttrName, value);
     }
     
     static Attribute newAttribute(boolean isBinaryTransfer, String attrName, ASN1OctetString[] values) {
-        String transferAttrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, attrName);
+        String transferAttrName = LdapUtil.attrNameToBinaryTransferAttrName(isBinaryTransfer, attrName);
         return new Attribute(transferAttrName, (Schema)null, values);
     }
 }

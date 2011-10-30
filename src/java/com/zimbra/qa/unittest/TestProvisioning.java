@@ -47,7 +47,7 @@ import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.custom.CustomLdapProvisioning;
 import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.account.soap.SoapProvisioning;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.soap.type.GalSearchType;
@@ -1162,7 +1162,7 @@ public class TestProvisioning extends TestCase {
         dsAttrs.put(Provisioning.A_zimbraDataSourcePort, "9999");
         dsAttrs.put(Provisioning.A_zimbraDataSourceUsername, "mickymouse");
         dsAttrs.put(Provisioning.A_zimbraDataSourceEmailAddress, "micky@google.com");
-        dsAttrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, LdapUtilCommon.generateUUID()); // just some random id, not used anywhere
+        dsAttrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, LdapUtil.generateUUID()); // just some random id, not used anywhere
         dsAttrs.put(Provisioning.A_zimbraPrefFromDisplay, "Micky Mouse");
         dsAttrs.put(Provisioning.A_zimbraPrefReplyToAddress, "goofy@yahoo.com");
         dsAttrs.put(Provisioning.A_zimbraPrefReplyToDisplay, "Micky");
@@ -1188,7 +1188,7 @@ public class TestProvisioning extends TestCase {
         System.out.println("Testing identity");
 
         Map<String, Object> identityAttrs = new HashMap<String, Object>();
-        identityAttrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, LdapUtilCommon.generateUUID());  // just some random id, not used anywhere
+        identityAttrs.put(Provisioning.A_zimbraPrefDefaultSignatureId, LdapUtil.generateUUID());  // just some random id, not used anywhere
         identityAttrs.put(Provisioning.A_zimbraPrefFromAddress, "micky.mouse@zimbra,com");
         identityAttrs.put(Provisioning.A_zimbraPrefFromDisplay, "Micky Mouse");
         identityAttrs.put(Provisioning.A_zimbraPrefReplyToEnabled, "TRUE");

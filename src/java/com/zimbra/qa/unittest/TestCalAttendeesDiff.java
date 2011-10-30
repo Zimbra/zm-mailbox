@@ -22,7 +22,7 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.account.ZAttrProvisioning.GalMode;
-import com.zimbra.cs.ldap.LdapUtilCommon;
+import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.service.mail.CalendarUtils;
 
@@ -89,7 +89,7 @@ public class TestCalAttendeesDiff extends TestCase {
             domain.addGalLdapURL("ldap://localhost:389", attrs);
             domain.setGalLdapBindDn("cn=config", attrs);
             domain.setGalLdapBindPassword("zimbra");
-            domain.setGalLdapSearchBase(LdapUtilCommon.domainToDN(EXTERNAL_DOMAIN));
+            domain.setGalLdapSearchBase(LdapUtil.domainToDN(EXTERNAL_DOMAIN));
             domain.setGalAutoCompleteLdapFilter("zimbraAccountAutoComplete");
             domain.setGalLdapFilter("zimbraAccounts");
             

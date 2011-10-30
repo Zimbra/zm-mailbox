@@ -54,7 +54,7 @@ public abstract class ZAttributes extends ZLdapElement implements IAttributes {
             containsBinaryData = attrMgr == null ? false : attrMgr.containsBinaryData(attrName);
             boolean isBinaryTransfer = attrMgr == null ? false : attrMgr.isBinaryTransfer(attrName);
             
-            transferAttrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, attrName);
+            transferAttrName = LdapUtil.attrNameToBinaryTransferAttrName(isBinaryTransfer, attrName);
         }
         
         return getAttrString(transferAttrName, containsBinaryData);
@@ -86,7 +86,7 @@ public abstract class ZAttributes extends ZLdapElement implements IAttributes {
     @Override
     public String[] getMultiAttrString(String attrName, boolean containsBinaryData, boolean isBinaryTransfer) 
     throws LdapException {
-        String transferAttrName = LdapUtilCommon.attrNameToBinaryTransferAttrName(isBinaryTransfer, attrName);
+        String transferAttrName = LdapUtil.attrNameToBinaryTransferAttrName(isBinaryTransfer, attrName);
         return getMultiAttrString(transferAttrName, containsBinaryData);
     }
     
