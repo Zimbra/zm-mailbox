@@ -310,49 +310,6 @@ public class InMemoryLdapServer {
             }
         }
     }
-
-
-    public static void junk(String path) throws Exception {
-        
-        // dumpDirectory("/Users/pshao/temp/DIT.ldif");
-        
-        Schema schema = Schema.getSchema("/Users/pshao/temp/zimbra.ldif");
-    
-        // Create a base configuration for the server.
-        InMemoryDirectoryServerConfig config =
-             new InMemoryDirectoryServerConfig("cn=zimbra", "dc=com", "dc=mbp");
-        config.addAdditionalBindCredentials("cn=config", "zimbra");
-        
-        config.setSchema(schema);
-    
-        // Create and start the server instance and populate it with an
-        // initial set of data from the file "/tmp/test.ldif".
-        InMemoryDirectoryServer server = new InMemoryDirectoryServer(config);
-        
-        /*
-        server.importFromLDIF(false, "/Users/pshao/p4/main/ZimbraServer/build/ldap-config/zimbra.ldif");
-        server.importFromLDIF(false, "/Users/pshao/p4/main/ZimbraServer/build/ldap-config/zimbra_globalconfig.ldif");
-        server.importFromLDIF(false, "/Users/pshao/p4/main/ZimbraServer/build/ldap-config/zimbra_defaultcos.ldif");
-        server.importFromLDIF(false, "/Users/pshao/p4/main/ZimbraServer/build/ldap-config/zimbra_defaultexternalcos.ldif");
-        server.importFromLDIF(false, "/Users/pshao/p4/main/ZimbraServer/build/ldap-config/zimbra_mimehandlers.ldif");
-        */
-        server.importFromLDIF(true, "/Users/pshao/temp/DIT.ldif");
-        
-        // Start the server so it will accept client connections.
-        server.startListening();
-    
-        // Get a connection to the server.
-        LDAPConnection conn = server.getConnection();
-    
-        // Perform various operations in the server....
-    
-        // Close the connection.
-        conn.close();
-    
-        // Shut down the server so that it will no longer accept client
-        // connections, and close all existing connections.
-        server.shutDown(true);
-    }
     
     public static void main(String[] args) throws Exception {
         String path = args[0];
