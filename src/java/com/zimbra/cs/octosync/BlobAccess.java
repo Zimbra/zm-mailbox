@@ -42,4 +42,15 @@ public interface BlobAccess
     public abstract InputStream getBlobInputStream(int fileId, int version)
         throws ServiceException, InvalidPatchReferenceException;
 
+    /**
+     * For given file id/version returns the actual file id and version
+     * that will be referenced by this BlobAccess.
+     *
+     * @param fileId File id as referenced
+     * @param version The verison number
+     *
+     * @return Array with file id (0 index) and version (1 index) to reference
+     */
+    public abstract int[] getActualReference(int fileId, int version);
+
 }

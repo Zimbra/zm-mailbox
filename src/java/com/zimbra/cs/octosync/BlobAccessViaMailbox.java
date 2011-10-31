@@ -56,6 +56,25 @@ public class BlobAccessViaMailbox implements BlobAccess
         this.defaultVersion = defaultVersion;
     }
 
+    // BlobAccess API
+    @Override
+    public int[] getActualReference(int fileId, int version)
+    {
+        int[] result = new int[2];
+
+        if (fileId == 0 && version == 0) {
+            result[0] = defaultFileId;
+            result[1] = defaultVersion;
+        } else {
+            result[0] = fileId;
+            result[1] = version;
+        }
+
+        return result;
+    }
+
+    // BlobAccess API
+    @Override
     public InputStream getBlobInputStream(int fileId, int version)
         throws ServiceException, InvalidPatchReferenceException
     {

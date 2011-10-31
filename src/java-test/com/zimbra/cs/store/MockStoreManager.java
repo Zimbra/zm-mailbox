@@ -16,12 +16,18 @@ package com.zimbra.cs.store;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.channels.FileChannel;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.io.output.ByteArrayOutputStream;
+
 import com.google.common.io.ByteStreams;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 
@@ -34,6 +40,11 @@ import com.zimbra.cs.mailbox.Mailbox;
 public final class MockStoreManager extends StoreManager {
 
     private static final Map<Integer, MockMailboxBlob> BLOBS = new HashMap<Integer, MockMailboxBlob>();
+
+    public MockStoreManager()
+    {
+//        DebugConfig.disableMessageStoreFsync = true;
+    }
 
     public static void setBlob(MailItem item, byte[] data) {
         BLOBS.put(item.getId(), new MockMailboxBlob(item.getMailbox(), item.getId(), item.getVersion(), null, data));
@@ -51,7 +62,8 @@ public final class MockStoreManager extends StoreManager {
 
     @Override
     public BlobBuilder getBlobBuilder() {
-        return null;
+
+        return new MockBlobBuilder();
     }
 
     @Override
@@ -140,7 +152,16 @@ public final class MockStoreManager extends StoreManager {
     }
 
     private static final class MockBlob extends Blob {
-        private final byte[] content;
+        private byte[] content;
+
+        MockBlob() {
+            super(new File("build/test/store"));
+            content = new byte[0];
+        }
+
+        void setContent(byte[] content) {
+            this.content = content;
+        }
 
         MockBlob(byte[] data) {
             super(new File("build/test/store"));
@@ -185,5 +206,43 @@ public final class MockStoreManager extends StoreManager {
             return new MockBlob(content);
         }
     }
+
+    private static final class MockBlobBuilder extends BlobBuilder
+    {
+        private ByteArrayOutputStream out;
+
+        protected MockBlobBuilder()
+        {
+            super(new MockBlob());
+        }
+
+        @Override
+        protected OutputStream createOutputStream(File file) throws FileNotFoundException
+        {
+            assert out == null : "Output stream already created";
+            out = new ByteArrayOutputStream();
+            return out;
+        }
+
+        @Override
+        protected FileChannel getFileChannel()
+        {
+            return null;
+        }
+
+        @Override
+        public Blob finish() throws IOException, ServiceException
+        {
+            MockBlob blob = (MockBlob)super.finish();
+
+            if (out != null) {
+                blob.setContent(out.toByteArray());
+                out = null;
+            }
+
+            return blob;
+        }
+    }
+
 
 }

@@ -64,7 +64,7 @@ public final class PatchInputStreamTest
         InputStream is = new ByteArrayInputStream(patchBuilder.toByteArray());
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        PatchInputStream pis = PatchInputStream.create(is, mbox, null, 0, 0);
+        PatchInputStream pis = PatchInputStream.create(is, mbox, null, 0, 0, null, null);
 
         Document doc = createDocument(mbox, "filename", pis);
 
@@ -83,7 +83,7 @@ public final class PatchInputStreamTest
         InputStream is = new ByteArrayInputStream(patchBuilder.toByteArray());
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        PatchInputStream pis = PatchInputStream.create(is, mbox, null, 0, 0);
+        PatchInputStream pis = PatchInputStream.create(is, mbox, null, 0, 0, null, null);
 
         Document doc = createDocument(mbox, "filename", pis);
 
@@ -113,7 +113,7 @@ public final class PatchInputStreamTest
         patchBuilder.addRef(pref);
 
         InputStream is = new ByteArrayInputStream(patchBuilder.toByteArray());
-        PatchInputStream pis = PatchInputStream.create(is, mbox, null, 0, 0);
+        PatchInputStream pis = PatchInputStream.create(is, mbox, null, 0, 0, null, null);
 
         Document doc2 = createDocument(mbox, "filename2", pis);
 
@@ -144,7 +144,7 @@ public final class PatchInputStreamTest
         patchBuilder.addData(" foobar");
 
         InputStream is = new ByteArrayInputStream(patchBuilder.toByteArray());
-        PatchInputStream pis = PatchInputStream.create(is, mbox, null, 0, 0);
+        PatchInputStream pis = PatchInputStream.create(is, mbox, null, 0, 0, null, null);
 
         Document doc2 = addDocumentVersion(mbox, "filename", doc.getId(), pis);
 
@@ -168,7 +168,7 @@ public final class PatchInputStreamTest
         InputStream is = new ByteArrayInputStream(patchBuilder.toByteArray());
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        PatchInputStream pis = PatchInputStream.create(is, mbox, null, 0, 0);
+        PatchInputStream pis = PatchInputStream.create(is, mbox, null, 0, 0, null, null);
 
         createDocument(mbox, "filename", pis);
     }
@@ -182,7 +182,7 @@ public final class PatchInputStreamTest
         InputStream is = new ByteArrayInputStream(patchBuilder.toByteArray());
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        PatchInputStream pis = PatchInputStream.create(is, mbox, null, 0, 0);
+        PatchInputStream pis = PatchInputStream.create(is, mbox, null, 0, 0, null, null);
 
         createDocument(mbox, "filename", pis);
     }
@@ -203,7 +203,7 @@ public final class PatchInputStreamTest
         InputStream is = new ByteArrayInputStream(patchBuilder.toByteArray());
 
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-        PatchInputStream pis = PatchInputStream.create(is, mbox, null, 0, 0);
+        PatchInputStream pis = PatchInputStream.create(is, mbox, null, 0, 0, null, null);
 
         createDocument(mbox, "filename", pis);
     }

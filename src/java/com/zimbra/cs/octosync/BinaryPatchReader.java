@@ -51,6 +51,7 @@ public class BinaryPatchReader implements PatchReader
     /** Underlying input stream wrapped into DataInputStream for the luxury of readFully()
      */
     private DataInputStream dis;
+
     /** Final size of the file after the patch is applied */
     private long fileSize;
 
@@ -77,7 +78,7 @@ public class BinaryPatchReader implements PatchReader
      *             Signals that an I/O exception has occurred.
      * @throws BadPatchFormatException
      */
-    public static void validatePatchFormat(InputStream is) throws IOException, BadPatchFormatException
+   /*public static void validatePatchFormat(InputStream is) throws IOException, BadPatchFormatException
     {
         PatchReader patchReader = new BinaryPatchReader(is);
 
@@ -93,7 +94,7 @@ public class BinaryPatchReader implements PatchReader
                 assert false;
             }
         }
-    }
+    }*/
 
     /**
      * Instantiates a new binary patch reader.
@@ -109,7 +110,7 @@ public class BinaryPatchReader implements PatchReader
     public BinaryPatchReader(InputStream is) throws IOException,
         BadPatchFormatException
     {
-        dis = new DataInputStream(is);
+        this.dis = new DataInputStream(is);
 
         byte idBuf[] = new byte[HEADER_ID.length()];
         dis.readFully(idBuf);
@@ -128,6 +129,29 @@ public class BinaryPatchReader implements PatchReader
         }
 
         fileSize = readLong();
+    }
+
+    /**
+     * Not yet implemented! Some notes for resumable patch upload support.
+     *
+     *  The input stream must be set to the beginning of the patch. This will
+     *  require composite InputStream consisting of the data already stored
+     *  and new data incoming from the client.
+     *
+     *  After the call succeeds, call hasMoreRecordInfos() and then appropriate
+     *  getNextRecordInfo(). If the processing was interrupted in the midst of a data
+     *  record, the returned data record will point exactly to the first byte that wasn't
+     *  read yet.
+     *
+     *  The important assumption is that every bit of data read from PatchReader before premature
+     *  end of stream has been written to the destination. If e.g. reference record was
+     *  returned successfully, it will not be returned again after resume.
+     *
+     * @param is
+     */
+
+    public void resume(InputStream is)
+    {
     }
 
     // PatchReader API
@@ -245,6 +269,17 @@ public class BinaryPatchReader implements PatchReader
                 return (int)Math.min(numBytesLeftInCurrentDataRecord, dis.available());
             }
 
+            @Override
+            public long skip(long n) throws IOException
+            {
+                long toSkip = Math.min(numBytesLeftInCurrentDataRecord, n);
+                long skipped = dis.skip(toSkip);
+
+                numBytesLeftInCurrentDataRecord -= skipped;
+                pos += skipped;
+
+                return skipped;
+            }
         };
     }
 

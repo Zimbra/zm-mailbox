@@ -19,11 +19,13 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.io.input.TeeInputStream;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
@@ -55,6 +57,7 @@ public class PatchInputStream extends InputStream
 
     private PatchReader patchReader;
     private BlobAccess blobAccess;
+    private PatchManifest manifest;
     private InputStream currentIs;
 
     /**
@@ -62,38 +65,56 @@ public class PatchInputStream extends InputStream
      *
      * @param patchReader The patch reader, provides the patch contents.
      * @param blobAccess The blob index. Provides access to server blobs.
-     *
+     * @param manifest The manifest to populate, optional, can be null
      * @throws IOException Signals that an I/O exception has occurred.
      * @throws ServiceException A service exception
      */
-    public PatchInputStream(PatchReader patchReader, BlobAccess blobAccess) throws IOException, ServiceException
+    public PatchInputStream(
+            PatchReader patchReader,
+            BlobAccess blobAccess,
+            PatchManifest manifest) throws IOException, ServiceException
     {
         this.patchReader = patchReader;
         this.blobAccess = blobAccess;
+        this.manifest = manifest;
         currentIs = nextInputStream();
     }
 
     /**
      * Factory method for convenient creation of PatchInputStream using
-     * BinaryPatchReader and BlobAccessViaMailbox
+     * BinaryPatchReader and BlobAccessViaMailbox.
      *
      * @param is Input stream with the patch data
      * @param mbox Mailbox used to access blobs
      * @param opContext The operation context
      * @param defaultFileId The file id to be the default file id
      * @param defaultVersion The default version
+     * @param patchOs Output stream for the patch. If provided a byte copy
+     *      of the patch will be made and written to the output stream as the patch
+     *      is being processed. Can be null
+     *
+     * @param manifest Patch manifest to populate with references being made by
+     *      the patch. Optional, can be null
      *
      * @return New instance of PatchInputStream
-     *
      * @throws IOException Signals that an I/O exception has occurred.
      * @throws ServiceException the service exception
      */
     public static PatchInputStream create(InputStream is, Mailbox mbox, OperationContext opContext,
-            int defaultFileId, int defaultVersion) throws IOException, ServiceException
+            int defaultFileId, int defaultVersion, OutputStream patchOs, PatchManifest manifest) throws IOException, ServiceException
     {
+        InputStream input;
+
+        if (patchOs != null) {
+            input = new TeeInputStream(is, patchOs);
+        } else {
+            input = is;
+        }
+
         return new PatchInputStream(
-                new BinaryPatchReader(is),
-                new BlobAccessViaMailbox(mbox, opContext, defaultFileId, defaultVersion));
+                new BinaryPatchReader(input),
+                new BlobAccessViaMailbox(mbox, opContext, defaultFileId, defaultVersion),
+                manifest);
     }
 
     private InputStream nextInputStream() throws IOException, ServiceException
@@ -119,6 +140,11 @@ public class PatchInputStream extends InputStream
             if (patchRef.length > MAX_REF_LENGTH) {
                 throw new InvalidPatchReferenceException("referenced data too large: " +
                         patchRef.length + " > " + MAX_REF_LENGTH);
+            }
+
+            if (manifest != null) {
+                int[] actualRef = blobAccess.getActualReference(patchRef.fileId, patchRef.fileVersion);
+                manifest.addReference(actualRef[0], actualRef[1], patchRef.length);
             }
 
             try {
