@@ -182,7 +182,10 @@ public final class DebugConfig {
 
     public static boolean certAuthCaptureClientCertificate =
         value("debug_certauth_capture_client_certificate", false);
-
+    
+    public static boolean useInMemoryLdapServer = 
+        value("debug_use_in_memory_ldap_server", false);
+    
     private static boolean value(String key, boolean defaultValue) {
         String value = LC.get(key);
         return value.isEmpty() ? defaultValue : Boolean.parseBoolean(value);
