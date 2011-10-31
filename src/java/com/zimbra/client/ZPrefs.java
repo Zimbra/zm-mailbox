@@ -154,6 +154,8 @@ public class ZPrefs {
 
     public long getCalendarFirstDayOfWeek() { return getLong(ZAttrProvisioning.A_zimbraPrefCalendarFirstDayOfWeek); }
 
+    public String getCalendarWorkingHours() { return get(ZAttrProvisioning.A_zimbraPrefCalendarWorkingHours);}
+
     public String getInboxUnreadLifetime() { return get(ZAttrProvisioning.A_zimbraPrefInboxUnreadLifetime); }
 
     public String getInboxReadLifetime() { return get(ZAttrProvisioning.A_zimbraPrefInboxReadLifetime); }
