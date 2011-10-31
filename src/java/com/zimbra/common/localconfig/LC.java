@@ -1154,6 +1154,9 @@ public final class LC {
     public static final KnownKey rest_pdf_converter_url = KnownKey.newKey("http://localhost:7070/zoo/convertpdf");
     public static final KnownKey pdf2swf_path = KnownKey.newKey("/sw/bin/pdf2swf");
 
+    public static final KnownKey octopus_incoming_patch_max_age = KnownKey.newKey(120); // 120 mins = 2 hours
+    public static final KnownKey octopus_stored_patch_max_age = KnownKey.newKey(360); // 360 mins = 6 hours
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
