@@ -37,7 +37,7 @@ public final class BinaryPatchReaderTest
 
         InputStream is = new ByteArrayInputStream(patchBuilder.toByteArray());
 
-        PatchReader patchReader = new BinaryPatchReader(is, null);
+        PatchReader patchReader = new BinaryPatchReader(is);
 
         Assert.assertTrue(patchReader.hasMoreRecordInfos());
         Assert.assertEquals(patchReader.getNextRecordInfo().type, PatchReader.RecordType.DATA);
@@ -70,7 +70,7 @@ public final class BinaryPatchReaderTest
 
         InputStream is = new ByteArrayInputStream(patchBuilder.toByteArray());
 
-        PatchReader patchReader = new BinaryPatchReader(is, null);
+        PatchReader patchReader = new BinaryPatchReader(is);
 
         Assert.assertTrue(patchReader.hasMoreRecordInfos());
         Assert.assertEquals(patchReader.getNextRecordInfo().type, PatchReader.RecordType.DATA);
@@ -100,7 +100,7 @@ public final class BinaryPatchReaderTest
 
         InputStream is = new ByteArrayInputStream(patchBuilder.toByteArray());
 
-        PatchReader patchReader = new BinaryPatchReader(is, null);
+        PatchReader patchReader = new BinaryPatchReader(is);
 
         Assert.assertTrue(patchReader.hasMoreRecordInfos());
         patchReader.popData().skip(5);
