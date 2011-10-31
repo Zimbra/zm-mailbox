@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Joiner;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.mailbox.Color;
@@ -27,10 +28,12 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -74,6 +77,7 @@ public class ItemAction extends MailDocumentHandler {
     public static final String OP_UPDATE = "update";
     public static final String OP_LOCK = "lock";
     public static final String OP_UNLOCK = "unlock";
+    public static final String OP_INHERIT = "inherit";
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException, SoapFaultException {
@@ -91,8 +95,8 @@ public class ItemAction extends MailDocumentHandler {
         return response;
     }
 
-    protected String handleCommon(Map<String,Object> context, Element request, String opAttr, MailItem.Type type)
-            throws ServiceException {
+    protected String handleCommon(Map<String, Object> context, Element request, String opAttr, MailItem.Type type)
+    throws ServiceException {
         Element action = request.getElement(MailConstants.E_ACTION);
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
@@ -189,6 +193,9 @@ public class ItemAction extends MailDocumentHandler {
                 localResults = ItemActionHelper.LOCK(octxt, mbox, responseProto, local, type, tcon).getResult();
             } else if (opStr.equals(OP_UNLOCK)) {
                 localResults = ItemActionHelper.UNLOCK(octxt, mbox, responseProto, local, type, tcon).getResult();
+            } else if (opStr.equals(OP_INHERIT)) {
+                mbox.alterTag(octxt, ArrayUtil.toIntArray(local), type, Flag.FlagInfo.NO_INHERIT, false, tcon);
+                localResults = Joiner.on(",").join(local);
             } else {
                 throw ServiceException.INVALID_REQUEST("unknown operation: " + opStr, null);
             }

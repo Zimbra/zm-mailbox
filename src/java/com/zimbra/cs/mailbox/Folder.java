@@ -949,17 +949,18 @@ public class Folder extends MailItem {
         DbTag.alterTag(tag, Arrays.asList(mId), newValue);
 
         if (isNoInheritFlag) {
-            markItemModified(Change.ACL);
             if (!newValue && rights != null) {
-                // clearing the "no inherit" flag sets inherit ON and thus must clear the folder's ACL
+                // clearing the "no inherit" flag sets inherit ON and thus must clear the item's ACL
                 rights = null;
                 saveMetadata();
             } else if (newValue) {
-                // setting the "no inherit" flag turns inherit OFF and thus must make a copy of the folder's effective ACL
-                //   note: can't just call Folder.setPermissions() because at this point inherit is OFF and mRights is NULL, so delegated admin would fail
+                // setting the "no inherit" flag turns inherit OFF and thus must make a copy of the item's effective ACL
+                //   note: can't just call MailItem.setPermissions() because at this point inherit is OFF and mRights is NULL, so delegated admin would fail
                 rights = effectiveACL;
                 saveMetadata();
             }
+            // this should rightfully go *before* the MailItem.rights changes, but that would trigger a recursive blowup (*sigh*)
+            markItemModified(Change.ACL);
         }
     }
 
@@ -997,18 +998,13 @@ public class Folder extends MailItem {
         markItemModified(Change.FOLDER | Change.PARENT);
         if (mData.folderId == target.getId()) {
             return false;
-        }
-        if (!isMovable()) {
+        } else if (!isMovable()) {
             throw MailServiceException.IMMUTABLE_OBJECT(mId);
-        }
-        if (!canAccess(ACL.RIGHT_DELETE)) {
+        } else if (!canAccess(ACL.RIGHT_DELETE)) {
             throw ServiceException.PERM_DENIED("you do not have the required permissions");
-        }
-        if (target.getId() != Mailbox.ID_FOLDER_TRASH && target.getId() != Mailbox.ID_FOLDER_SPAM &&
-                !target.canAccess(ACL.RIGHT_INSERT)) {
+        } else if (target.getId() != Mailbox.ID_FOLDER_TRASH && target.getId() != Mailbox.ID_FOLDER_SPAM && !target.canAccess(ACL.RIGHT_INSERT)) {
             throw ServiceException.PERM_DENIED("you do not have the required permissions");
-        }
-        if (!target.canContain(this)) {
+        } else if (!target.canContain(this)) {
             throw MailServiceException.CANNOT_CONTAIN();
         }
 
@@ -1103,15 +1099,16 @@ public class Folder extends MailItem {
     }
 
     /** Deletes this folder and all its subfolders. */
-    @Override void delete(boolean writeTombstones) throws ServiceException {
+    @Override
+    void delete(boolean writeTombstones) throws ServiceException {
         if (hasSubfolders()) {
-            List<Folder> subfolders = getSubfolderHierarchy();
+            List<Folder> allSubfolders = getSubfolderHierarchy();
             // walking the list in the reverse order
             // so that the leaf folders are deleted first.
             // the loop stops shorts of deleting the first
             // item which is the current folder.
-            for (int i = subfolders.size() - 1; i > 0; i--) {
-                Folder subfolder = subfolders.get(i);
+            for (int i = allSubfolders.size() - 1; i > 0; i--) {
+                Folder subfolder = allSubfolders.get(i);
                 subfolder.delete(writeTombstones);
             }
         }
@@ -1139,7 +1136,8 @@ public class Folder extends MailItem {
      *    <li><tt>service.FAILURE</tt> - if there's a database failure
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have
      *        sufficient permissions</ul> */
-    @Override MailItem.PendingDelete getDeletionInfo() throws ServiceException {
+    @Override
+    MailItem.PendingDelete getDeletionInfo() throws ServiceException {
         if (!canAccess(ACL.RIGHT_DELETE))
             throw ServiceException.PERM_DENIED("you do not have the required rights on the item");
         return DbMailItem.getLeafNodes(this);
@@ -1173,19 +1171,21 @@ public class Folder extends MailItem {
     static int purgeMessages(Mailbox mbox, Folder folder, long beforeDate, Boolean unread,
                              boolean useChangeDate, boolean deleteEmptySubfolders, Integer maxItems)
     throws ServiceException {
-        if (beforeDate <= 0 || beforeDate >= mbox.getOperationTimestampMillis())
+        if (beforeDate <= 0 || beforeDate >= mbox.getOperationTimestampMillis()) {
             return 0;
+        }
 
         // get the full list of things that are being removed
-        boolean allFolders = (folder == null);
-        List<Folder> folders = (allFolders ? null : folder.getSubfolderHierarchy());
+        boolean allFolders = folder == null;
+        List<Folder> folders = allFolders ? null : folder.getSubfolderHierarchy();
         // If a folder is moved to trash the change_time does not get updated on messages
         // within the folder. So, check the folder change_time first for the sub-folders.
         if (folders != null && useChangeDate) {
             Iterator<Folder> iter = folders.iterator();
             // skip the first folder which is top-level folder (e.g> Trash)
-            if (iter.hasNext())
+            if (iter.hasNext()) {
                 iter.next();
+            }
             // do not purge the sub-folder if it has been modified after the beforeDate
             while (iter.hasNext()) {
                 Folder f = iter.next();
@@ -1300,7 +1300,7 @@ public class Folder extends MailItem {
     static Metadata encodeMetadata(Metadata meta, Color color, int version, CustomMetadataList extended,
             byte attributes, Type view, ACL rights, SyncData fsd, int uidnext, long totalSize, int modseq,
             int imapRecent, int imapRecentCutoff, int deleted, int deletedUnread, RetentionPolicy rp) {
-        if (view != Type.UNKNOWN) {
+        if (view != null && view != Type.UNKNOWN) {
             meta.put(Metadata.FN_VIEW, view.toByte());
         }
         if (attributes != 0) {

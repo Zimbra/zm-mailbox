@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 
 import javax.mail.Address;
 import javax.mail.Session;
@@ -31,6 +32,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -55,8 +57,12 @@ public class SendMsgTest {
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
         Provisioning prov = Provisioning.getInstance();
-        prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
-        prov.createAccount("test2@zimbra.com", "secret", new HashMap<String, Object>());
+
+        prov.createAccount("test@zimbra.com", "secret", Maps.<String, Object>newHashMap());
+
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
+        prov.createAccount("test2@zimbra.com", "secret", attrs);
 
         // this MailboxManager does everything except actually send mail
         MailboxManager.setInstance(new MailboxManager() {
