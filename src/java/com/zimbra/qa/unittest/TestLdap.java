@@ -64,7 +64,7 @@ public class TestLdap {
     
     // - handy to set it to "true"/"false" when invoking a single test from inside Eclipse
     // - make sure it is always set to null in p4. 
-    private static String useInMemoryLdapServerProperty = "true";
+    private static String useInMemoryLdapServerProperty = null;
     
     // ensure assertion is enabled
     static {
