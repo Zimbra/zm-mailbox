@@ -56,19 +56,18 @@ public class TestLdapHelper extends TestLdap {
     public static void init() throws Exception {
         testConfig = getCurrentTestConfig();
         
-        prov = ((LdapProv) Provisioning.getInstance());
+        prov = LdapProv.getInst();
         ldapHelper = prov.getHelper();
         domain = TestLdapProvDomain.createDomain(prov, baseDomainName(), null);
     }
     
     @AfterClass
     public static void cleanup() throws Exception {
-        String baseDomainName = baseDomainName();
-        TestLdap.deleteEntireBranch(baseDomainName);
+        TestLdap.deleteEntireBranch(baseDomainName());
     }
     
     private static String baseDomainName() {
-        return TestLdapZLdapContext.class.getName().toLowerCase();
+        return baseDomainName(TestLdapHelper.class);
     }
     
     @Test

@@ -9,13 +9,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
 import com.unboundid.ldap.sdk.LDAPConnectionPool;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.KnownKey;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -23,10 +23,11 @@ import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
+import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 import com.zimbra.cs.ldap.unboundid.LdapConnectionPool;
 import com.zimbra.cs.ldap.unboundid.UBIDLdapContext;
 
-public class TestLdapConnection {
+public class TestLdapConnection extends TestLdap {
     
     private static final boolean START_TLS_ENABLED = false;
     private static final String BIND_DN = LC.zimbra_ldap_userdn.value();
@@ -57,27 +58,36 @@ public class TestLdapConnection {
     }
     
     private void stopLdap() throws Exception {
-        List<String> STOP_LDAP_CMD = new ArrayList<String>();
-        STOP_LDAP_CMD.add("/opt/zimbra/bin/ldap");
-        STOP_LDAP_CMD.add("stop");
-        
-        // System.out.println(STOP_LDAP_CMD.toString());
-        ProcessBuilder pb = new ProcessBuilder(STOP_LDAP_CMD);
-        Process process = pb.start();
-        int exitValue = process.waitFor();
-        assertEquals(0, exitValue);
+        if (DebugConfig.useInMemoryLdapServer) {
+            InMemoryLdapServer.stop(InMemoryLdapServer.ZIMBRA_LDAP_SERVER);
+        } else {
+            List<String> STOP_LDAP_CMD = new ArrayList<String>();
+            STOP_LDAP_CMD.add("/opt/zimbra/bin/ldap");
+            STOP_LDAP_CMD.add("stop");
+            
+            // System.out.println(STOP_LDAP_CMD.toString());
+            ProcessBuilder pb = new ProcessBuilder(STOP_LDAP_CMD);
+            Process process = pb.start();
+            int exitValue = process.waitFor();
+            assertEquals(0, exitValue);
+        }
     }
     
     private void startLdap() throws Exception {
-        List<String> STOP_LDAP_CMD = new ArrayList<String>();
-        STOP_LDAP_CMD.add("/opt/zimbra/bin/ldap");
-        STOP_LDAP_CMD.add("start");
-        
-        // System.out.println(STOP_LDAP_CMD.toString());
-        ProcessBuilder pb = new ProcessBuilder(STOP_LDAP_CMD);
-        Process process = pb.start();
-        int exitValue = process.waitFor();
-        assertEquals(0, exitValue);
+        if (DebugConfig.useInMemoryLdapServer) {
+            InMemoryLdapServer.start(InMemoryLdapServer.ZIMBRA_LDAP_SERVER, 
+                    new InMemoryLdapServer.ServerConfig());
+        } else {
+            List<String> STOP_LDAP_CMD = new ArrayList<String>();
+            STOP_LDAP_CMD.add("/opt/zimbra/bin/ldap");
+            STOP_LDAP_CMD.add("start");
+            
+            // System.out.println(STOP_LDAP_CMD.toString());
+            ProcessBuilder pb = new ProcessBuilder(STOP_LDAP_CMD);
+            Process process = pb.start();
+            int exitValue = process.waitFor();
+            assertEquals(0, exitValue);
+        }
     }
     
     private LDAPConnectionPool populateConnPool(ExternalLdapConfig ldapConfig, int numConns) 

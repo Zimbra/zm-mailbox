@@ -2723,7 +2723,15 @@ public class LdapProvisioning extends LdapProv {
 
             Map<String,Object> newAttrs = acct.getAttrs(false);
 
-            newAttrs.put(Provisioning.A_uid, newLocal);
+            if (dnChanged) {
+                // uid will be changed during renameEntry, so no need to modify it
+                // OpenLDAP is OK modifying it, as long as it matches the new DN, but
+                // InMemoryDirectoryServer does not like it.
+                newAttrs.remove(Provisioning.A_uid);
+            } else {
+                newAttrs.put(Provisioning.A_uid, newLocal);
+            }
+            
             newAttrs.put(Provisioning.A_zimbraMailDeliveryAddress, newName);
             if (oldEmail.equals(newAttrs.get(
                     Provisioning.A_zimbraPrefFromAddress))) {

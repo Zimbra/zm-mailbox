@@ -22,6 +22,7 @@ public class LdapConstants {
 
     public static final String DN_ROOT_DSE = "";
     public static final String ATTR_DN = "dn";
+    public static final String ATTR_DC = "dc";
     public static final String ATTR_OBJECTCLASS = "objectClass";
     public static final String ATTR_CREATE_TIMESTAMP = "createTimestamp";
     

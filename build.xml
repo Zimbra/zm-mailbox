@@ -1171,11 +1171,16 @@
         </java>
     </target>
 
-  <target name="init-unittest">
-      <copy todir="${zimbra.home.dir}/unittest" overwrite="true">
-          <fileset dir="data/unittest" includes="**"/>
+    <target name="init-unittest">
+        <copy todir="${zimbra.home.dir}/unittest" overwrite="true">
+            <fileset dir="data/unittest" includes="**"/>
         </copy>
-  </target>
+        
+        <mkdir dir="${zimbra.home.dir}/unittest/ldap/InMemoryLdapServer"/>
+        <java classname="com.zimbra.cs.ldap.unboundid.InMemoryLdapServer" fork="true" classpathref="class.path" failonerror="true">
+            <arg line="${zimbra.home.dir}/unittest/ldap/InMemoryLdapServer"/>
+        </java>
+    </target>
 
     <!-- Insert one directory (data/testmsgs) of mail -->
     <target name="inject1" depends="compile">
@@ -2226,5 +2231,55 @@
       </then>
     </if>
   </target>
+    
+ 
+  <property name="ldaptest.dir" location="${build.dir}/ldaptest"/>  
+ 
+  <target name="ldap-test" description="Run LDAP tests" depends="compile">
+      <delete dir="${ldaptest.dir}" quiet="true"/>
+      <mkdir dir="${ldaptest.dir}/output"/>
+      <mkdir dir="${ldaptest.dir}/report"/>
+      
+      <condition property="inmem" value="false">
+          <not><isset property="inmem"/></not>
+      </condition>
+      
+      <!-- Note: Assertion statements are ignored in non-forked mode. -->
+      <junit printsummary="on" failureproperty="junit.failure" tempdir="${ldaptest.dir}" fork="yes" forkmode="perBatch">
+          <classpath refid="class.path"/>
+          <sysproperty key="use_in_memory_ldap_server" value="${inmem}"/>
+          
+          <!-- ignored unless fork="yes" in junit element-->
+          <assertions><enable/></assertions>
+          
+          <formatter type="xml"/>
+          <batchtest todir="${ldaptest.dir}/output">
+              <fileset dir="${src.java.dir}">
+                  <include name="**/TestLdap*.java"/>
+                  <exclude name="**/TestLdap.java"/>
+                  <exclude name="**/TestLdapConnection.java"/>
+              </fileset>
+          </batchtest>
+          
+          <!-- tests must run in its own JVM -->
+          <batchtest todir="${ldaptest.dir}/output">
+              <fileset dir="${src.java.dir}">
+                  <include name="**/TestLdapConnection.java"/>
+              </fileset>
+          </batchtest>
+      </junit>
+      <junitreport todir="${ldaptest.dir}/report">
+          <fileset dir="${ldaptest.dir}/output"/>
+          <report todir="${ldaptest.dir}/report"/>
+      </junitreport>
+      <echo>Test Report: ${ldaptest.dir}/report/index.html</echo>
+      <fail if="junit.failure" message="LDAP test failed"/>
+  </target> 
+    
+  <target name="ldap-test-inmem" description="Run LDAP tests with in memory LDAP server">
+      <antcall target="ldap-test">
+          <param name="inmem" value="true"/>
+      </antcall>
+  </target>  
 
 </project>

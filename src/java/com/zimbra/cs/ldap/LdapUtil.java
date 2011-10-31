@@ -122,11 +122,14 @@ public class LdapUtil {
         return (uuid != null);   
         */
         
-        if (strRep.length() > Provisioning.MAX_ZIMBRA_ID_LEN)
-            throw new IllegalArgumentException("uuid must be no longer than " + Provisioning.MAX_ZIMBRA_ID_LEN + " characters");
+        if (strRep.length() > Provisioning.MAX_ZIMBRA_ID_LEN) {
+            throw new IllegalArgumentException("uuid must be no longer than " + 
+                    Provisioning.MAX_ZIMBRA_ID_LEN + " characters");
+        }
         
-        if (strRep.contains(":"))
+        if (strRep.contains(":")) {
             throw new IllegalArgumentException("uuid must not contain ':'");
+        }
         
         return true;
     }
@@ -216,8 +219,10 @@ public class LdapUtil {
     public static String domainToDN(String parts[], int offset) {
         StringBuffer sb = new StringBuffer(128);
         for (int i=offset; i < parts.length; i++) {
-            if (i-offset > 0) sb.append(",");
-            sb.append("dc=").append(escapeRDNValue(parts[i]));
+            if (i-offset > 0) {
+                sb.append(",");
+            }
+            sb.append(LdapConstants.ATTR_DC).append("=").append(escapeRDNValue(parts[i]));
         }
         return sb.toString();
     }
@@ -229,6 +234,11 @@ public class LdapUtil {
      */
     public static String domainToDN(String domain) {
         return domainToDN(domain.split("\\."), 0);
+    }
+    
+    public static String domainToTopLevelDN(String domain) {
+        String[] segments = domain.split("\\.");
+        return domainToDN(segments, segments.length -1);
     }
 
     /**

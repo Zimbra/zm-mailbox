@@ -37,6 +37,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.common.account.Key.AccountBy;
 
 public class TestLdapBinary extends TestLdap {
@@ -59,6 +60,8 @@ public class TestLdapBinary extends TestLdap {
     </attr>
 
     */
+    
+    private static LdapProv prov;
     private static Domain domain;
     private static final String USER = "test-ldap-binary";
     
@@ -303,11 +306,10 @@ public class TestLdapBinary extends TestLdap {
 
     private Entry getEntry() throws Exception {
         String entryName = TestUtil.getAddress(USER, domain.getName());
-        return Provisioning.getInstance().get(AccountBy.name, entryName);
+        return prov.get(AccountBy.name, entryName);
     }
     
     private void delete(String attrName) throws Exception {
-        Provisioning prov = Provisioning.getInstance();
         Entry entry = getEntry();
         
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -320,7 +322,6 @@ public class TestLdapBinary extends TestLdap {
     
     // testing the code path when value is a String 
     private void modify(String attrName, String contentName) throws Exception {
-        Provisioning prov = Provisioning.getInstance();
         Entry entry = getEntry();
         
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -330,7 +331,6 @@ public class TestLdapBinary extends TestLdap {
     
     // testing the code path when value is a String[]
     private void modify(String attrName, String[] contentNames) throws Exception {
-        Provisioning prov = Provisioning.getInstance();
         Entry entry = getEntry();
         
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -473,7 +473,7 @@ public class TestLdapBinary extends TestLdap {
     
     @BeforeClass
     public static void init() throws Exception {
-        Provisioning prov = Provisioning.getInstance();
+        prov = LdapProv.getInst();
         domain = TestLdapProvDomain.createDomain(prov, baseDomainName(), null);
         
         String entryName = TestUtil.getAddress(USER, domain.getName());
@@ -486,8 +486,6 @@ public class TestLdapBinary extends TestLdap {
     
     @AfterClass
     public static void cleanup() throws Exception {
-        Provisioning prov = Provisioning.getInstance();
-        
         String entryName = TestUtil.getAddress(USER, domain.getName());
         Account acct = prov.get(AccountBy.name, entryName);
         Assert.assertNotNull(acct);
@@ -499,7 +497,7 @@ public class TestLdapBinary extends TestLdap {
     }
     
     private static String baseDomainName() {
-        return TestLdapBinary.class.getName().toLowerCase();
+        return baseDomainName(TestLdapBinary.class);
     }
     
     @Test

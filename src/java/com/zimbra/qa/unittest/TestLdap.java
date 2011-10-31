@@ -26,14 +26,13 @@ import java.io.IOException;
 import static org.junit.Assert.*;
 
 import org.junit.BeforeClass;
-import org.junit.runner.Description;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
 import org.junit.runner.notification.Failure;
-import org.junit.runner.notification.RunListener;
 
 import com.google.common.collect.Lists;
-import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.localconfig.KnownKey;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
@@ -43,6 +42,7 @@ import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.ldap.LdapClient;
+import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapServerType;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.ZLdapContext;
@@ -52,17 +52,29 @@ import com.zimbra.cs.ldap.ZSearchControls;
 import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.ZSearchScope;
-import com.zimbra.qa.unittest.LdapSuite.ConsoleListener;
+import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 
 public class TestLdap {
+    private static final String TEST_LDAP_BASE_DOMAIN = "testldap";
+    
+    // variable guarding initTest() enter only once per JVM
+    // if test is triggered from ant test-ldap(-inmem), number of JVM's
+    // to fork is controlled by forkmode attr in the <junit> ant element
+    private static boolean perJVMInited = false;
+    
+    // - handy to set it to "true"/"false" when invoking a single test from inside Eclipse
+    // - make sure it is always set to null in p4. 
+    private static String useInMemoryLdapServerProperty = "true";
     
     // ensure assertion is enabled
     static {
         boolean assertsEnabled = false;
         assert assertsEnabled = true; // Intentional side effect!!!
+
         if (!assertsEnabled) {
             throw new RuntimeException("Asserts must be enabled!!!");
         }
+
     } 
     
     static void modifyLocalConfig(String key, String value) throws Exception {
@@ -104,11 +116,15 @@ public class TestLdap {
         
         static synchronized void useConfig(TestConfig config) throws Exception {
             if (currentTestConfig != null) {
-                fail("TestConfig.useConfig cann only be called once per JVM");
+                fail("TestConfig.useConfig can only be called once per JVM");
             }
             
             currentTestConfig = config;
             
+            // support UBID only for now
+            assert(TestConfig.UBID == config);
+            
+            /*
             if (config.ldapClientClass != null) {
                 modifyLocalConfig(LC.zimbra_class_ldap_client.key(), config.ldapClientClass.getCanonicalName());
             } else {
@@ -117,6 +133,7 @@ public class TestLdap {
             }
             modifyLocalConfig(LC.zimbra_class_provisioning.key(), config.ldapProvClass.getCanonicalName());
             LC.reload();
+            */
         }
         
         static synchronized TestConfig getCurrentTestConfig() {
@@ -365,7 +382,7 @@ public class TestLdap {
     private static void runTests(JUnitCore junit, TestConfig testConfig) throws Exception {
         batchMode = true;
          
-        initTest(testConfig);
+        initPerJVM(testConfig);
         
         Date startTime = new Date();
         SimpleDateFormat dateFmt = new SimpleDateFormat("HH:mm:ss");
@@ -437,7 +454,6 @@ public class TestLdap {
         classes.add(TestProvSearchDirectory.class);
         classes.add(TestSearchGal.class);
         
-        
         /*
          * tests in extensions - don't forget to run them:
          * 
@@ -490,16 +506,49 @@ public class TestLdap {
     }
     
     // invoked once per JVM
-    private static void initTest(TestConfig testConfig) throws Exception {
+    private static void initPerJVM(TestConfig testConfig) throws Exception {
+        if (perJVMInited) {
+            return;
+        }
+        perJVMInited = true;
+        
         CliUtil.toolSetup(Log.Level.error.name());
         ZimbraLog.test.setLevel(Log.Level.info);
         // ZimbraLog.account.setLevel(Log.Level.debug);
         // ZimbraLog.ldap.setLevel(Log.Level.debug);
         // ZimbraLog.soap.setLevel(Log.Level.trace);
+
+        if (useInMemoryLdapServerProperty == null) {
+            useInMemoryLdapServerProperty = 
+                System.getProperty("use_in_memory_ldap_server", "true");
+        }
+        
+        boolean useInMemoryLdapServer = 
+            Boolean.parseBoolean(useInMemoryLdapServerProperty);
+        
+        KnownKey key = new KnownKey("debug_use_in_memory_ldap_server", 
+                useInMemoryLdapServerProperty);
+        assert(DebugConfig.useInMemoryLdapServer == useInMemoryLdapServer);
+        useInMemoryLdapServer = DebugConfig.useInMemoryLdapServer;
+        
+        ZimbraLog.test.info("useInMemoryLdapServer = " + useInMemoryLdapServer);
+        
+        if (useInMemoryLdapServer) {
+            try {
+                InMemoryLdapServer.start(InMemoryLdapServer.ZIMBRA_LDAP_SERVER, 
+                        new InMemoryLdapServer.ServerConfig(
+                        Lists.newArrayList(LdapConstants.ATTR_DC + "=" + TEST_LDAP_BASE_DOMAIN)));
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw e;
+            }
+        }
         
         RightManager.getInstance(true);
         TestConfig.useConfig(testConfig);
+        
         cleanupAll();
+
     }
     
     @BeforeClass  // invoked once per class loaded
@@ -512,7 +561,11 @@ public class TestLdap {
         // TestConfig testConfig = TestConfig.JNDI;
         // TestConfig testConfig = TestConfig.LEGACY;
         
-        initTest(testConfig);
+        initPerJVM(testConfig);
+    }
+    
+    static String baseDomainName(Class<? extends TestLdap> klass) {
+        return klass.getName().toLowerCase() + "." + TEST_LDAP_BASE_DOMAIN;
     }
     
     static TestConfig getCurrentTestConfig() {

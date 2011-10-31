@@ -32,6 +32,7 @@ import com.unboundid.ldap.sdk.ServerSet;
 import com.unboundid.ldap.sdk.SimpleBindRequest;
 import com.unboundid.ldap.sdk.StartTLSPostConnectProcessor;
 
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.ldap.LdapServerConfig;
 import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
@@ -55,25 +56,12 @@ public class LdapConnectionPool {
     static LDAPConnectionPool createConnectionPool(String connPoolName, 
             LdapServerConfig config) throws LdapException {
         
-        LdapServerPool serverPool = new LdapServerPool(config);
+        LDAPConnectionPool connPool = null;
         
-        ServerSet serverSet = serverPool.getServerSet();
-        BindRequest bindRequest = createBindRequest(config);
-    
-        PostConnectProcessor postConnectProcessor = null;
-        if (serverPool.getConnectionType() == LdapConnType.STARTTLS) {
-            SSLContext startTLSContext = 
-                LdapSSLUtil.createSSLContext(config.sslAllowUntrustedCerts());
-            postConnectProcessor = new StartTLSPostConnectProcessor(startTLSContext);
-        }
-        
-        LDAPConnectionPool connPool;
-        try {
-            connPool = new LDAPConnectionPool(serverSet, bindRequest, 
-                    config.getConnPoolInitSize(), 
-                    config.getConnPoolMaxSize(), postConnectProcessor);
-        } catch (LDAPException e) {
-            throw UBIDLdapException.mapToLdapException(e);
+        if (DebugConfig.useInMemoryLdapServer) {
+            connPool = createConnPoolToInMemoryLdapServer(config);
+        } else {
+            connPool = createConnPool(config);
         }
         
         connPool.setConnectionPoolName(connPoolName);
@@ -85,7 +73,8 @@ public class LdapConnectionPool {
         // Set a custom health check interval only when background health check is enabled, 
         // because otherwise it has no effect anyway.
         if (backgroundHealthCheckEnabled) {
-            connPool.setHealthCheckIntervalMillis(config.getConnPoolHelathCheckBackgroundIntervalMillis());
+            connPool.setHealthCheckIntervalMillis(
+                    config.getConnPoolHelathCheckBackgroundIntervalMillis());
         }
         
         GetEntryLDAPConnectionPoolHealthCheck healthChecker = new GetEntryLDAPConnectionPoolHealthCheck(
@@ -103,6 +92,37 @@ public class LdapConnectionPool {
         addToPoolMap(connPool);
        
         return connPool;
+    }
+    
+    private static LDAPConnectionPool createConnPool(LdapServerConfig config) 
+    throws LdapException {
+        LdapServerPool serverPool = new LdapServerPool(config);
+        
+        ServerSet serverSet = serverPool.getServerSet();
+        BindRequest bindRequest = createBindRequest(config);
+    
+        PostConnectProcessor postConnectProcessor = null;
+        if (serverPool.getConnectionType() == LdapConnType.STARTTLS) {
+            SSLContext startTLSContext = 
+                LdapSSLUtil.createSSLContext(config.sslAllowUntrustedCerts());
+            postConnectProcessor = new StartTLSPostConnectProcessor(startTLSContext);
+        }
+        
+        LDAPConnectionPool connPool = null;
+        try {
+            connPool = new LDAPConnectionPool(serverSet, bindRequest, 
+                    config.getConnPoolInitSize(), 
+                    config.getConnPoolMaxSize(), postConnectProcessor);
+        } catch (LDAPException e) {
+            throw UBIDLdapException.mapToLdapException(e);
+        }
+        
+        return connPool;
+    }
+    
+    private static LDAPConnectionPool createConnPoolToInMemoryLdapServer(LdapServerConfig config) 
+    throws LdapException {
+        return InMemoryLdapServer.createConnPool(InMemoryLdapServer.ZIMBRA_LDAP_SERVER, config);
     }
     
     static void closeAll() {

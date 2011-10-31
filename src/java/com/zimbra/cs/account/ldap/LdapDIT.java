@@ -35,6 +35,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.ldap.IAttributes;
+import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
@@ -72,7 +73,7 @@ public class LdapDIT {
      *          BASE_DN : An absolute DN under that a left-most RDN resides.
      */
     
-    protected static final String ROOT_DN = "";
+    protected static final String ROOT_DN = LdapConstants.DN_ROOT_DSE;
     
     
     /*
@@ -410,8 +411,9 @@ public class LdapDIT {
         String dns[] = new String[parts.length];
         for (int i=parts.length-1; i >= 0; i--) {
             dns[i] = LdapUtil.domainToDN(parts, i);
-            if (base != null)
+            if (base != null) {
                 dns[i] = dns[i] + "," + base;
+            }
         }
         return dns;
     }

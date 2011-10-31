@@ -60,7 +60,7 @@ public class TestLdapProvAccount extends TestLdap {
     }
     
     private static String baseDomainName() {
-        return TestLdapProvAccount.class.getName().toLowerCase();
+        return baseDomainName(TestLdapProvAccount.class);
     }
     
     static Account createAccount(Provisioning prov, String localPart, 
@@ -285,8 +285,10 @@ public class TestLdapProvAccount extends TestLdap {
     @Test
     public void renameAccount() throws Exception {
         String ACCT_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("renameAccount");
+        String ACCT_NEW_NAME_LOCALPART = 
+            TestLdap.makeAccountNameLocalPart("renameAccount-new").toLowerCase();
         String ACCT_NEW_NAME = TestUtil.getAddress(
-                TestLdap.makeAccountNameLocalPart("renameAccount-new"), 
+                ACCT_NEW_NAME_LOCALPART,
                 domain.getName()).toLowerCase();
         
         Account acct = createAccount(ACCT_NAME_LOCALPART);
@@ -321,6 +323,7 @@ public class TestLdapProvAccount extends TestLdap {
         
         assertEquals(acctId, renamedAcct.getId());
         assertEquals(ACCT_NEW_NAME, renamedAcct.getName());
+        assertEquals(ACCT_NEW_NAME_LOCALPART, renamedAcct.getUid());
         
         // make sure children are moved
         assertEquals(DATA_SOURCE_ID_1, prov.get(renamedAcct, Key.DataSourceBy.name, DATA_SOURCE_NAME_1).getId());
