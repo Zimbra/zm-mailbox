@@ -3428,6 +3428,19 @@ allow = 1 | 0
 
 
 ---------------------------
+<DiscoverPermissionRequest>
+    <right>...</right>+
+</DiscoverPermissionRequest>
+
+Return all grantors of the specified rights applicable to the requested account.
+
+<DiscoverPermissionResponse>
+    <targets right="...">
+        <account id="..." name="...">+   
+    </targets>+
+</DiscoverPermissionResponse>
+
+---------------------------
 
 <GetVersionInfoRequest/>
 

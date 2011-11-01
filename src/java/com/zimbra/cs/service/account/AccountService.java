@@ -53,10 +53,10 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(AccountConstants.GET_INFO_REQUEST, new GetInfo());
         dispatcher.registerHandler(AccountConstants.GET_ACCOUNT_INFO_REQUEST, new GetAccountInfo());
 
-        dispatcher.registerHandler(AccountConstants.SEARCH_GAL_REQUEST, new SearchGal());
         dispatcher.registerHandler(AccountConstants.AUTO_COMPLETE_GAL_REQUEST, new AutoCompleteGal());
-        dispatcher.registerHandler(AccountConstants.SYNC_GAL_REQUEST, new SyncGal());
         dispatcher.registerHandler(AccountConstants.SEARCH_CALENDAR_RESOURCES_REQUEST, new SearchCalendarResources());
+        dispatcher.registerHandler(AccountConstants.SEARCH_GAL_REQUEST, new SearchGal());
+        dispatcher.registerHandler(AccountConstants.SYNC_GAL_REQUEST, new SyncGal());
 
         dispatcher.registerHandler(AccountConstants.MODIFY_PROPERTIES_REQUEST, new ModifyProperties());
         dispatcher.registerHandler(AccountConstants.MODIFY_ZIMLET_PREFS_REQUEST, new ModifyZimletPrefs());
@@ -92,6 +92,9 @@ public class AccountService implements DocumentService {
         dispatcher.registerHandler(AccountConstants.GET_DISTRIBUTION_LIST_REQUEST, new GetDistributionList());
         dispatcher.registerHandler(AccountConstants.GET_DISTRIBUTION_LIST_MEMBERS_REQUEST, new GetDistributionListMembers());
         dispatcher.registerHandler(AccountConstants.SUBSCRIBE_DISTRIBUTION_LIST_REQUEST, new SubscribeDistributionList());
+        
+        // rights
+        dispatcher.registerHandler(AccountConstants.DISCOVER_RIGHTS_REQUEST, new DiscoverRights());
         
         // misc
         dispatcher.registerHandler(AccountConstants.GET_VERSION_INFO_REQUEST, new GetVersionInfo());

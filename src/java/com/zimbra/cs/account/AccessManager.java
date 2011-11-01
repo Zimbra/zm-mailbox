@@ -15,9 +15,11 @@
 
 package com.zimbra.cs.account;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -276,8 +278,10 @@ public abstract class AccessManager {
      * @return
      * @throws ServiceException
      */
-    public abstract boolean canGetAttrs(Account credentials,   Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
-    public abstract boolean canGetAttrs(AuthToken credentials, Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
+    public abstract boolean canGetAttrs(Account credentials,   
+            Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
+    public abstract boolean canGetAttrs(AuthToken credentials, 
+            Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
     
 
     public interface AttrRightChecker {
@@ -300,11 +304,13 @@ public abstract class AccessManager {
      * @return
      * @throws ServiceException
      */
-    public AttrRightChecker getGetAttrsChecker(Account credentials,   Entry target, boolean asAdmin) throws ServiceException {
+    public AttrRightChecker getGetAttrsChecker(Account credentials, 
+            Entry target, boolean asAdmin) throws ServiceException {
         throw ServiceException.FAILURE("not supported", null);
     }
     
-    public AttrRightChecker getGetAttrsChecker(AuthToken credentials, Entry target, boolean asAdmin) throws ServiceException {
+    public AttrRightChecker getGetAttrsChecker(AuthToken credentials, 
+            Entry target, boolean asAdmin) throws ServiceException {
         throw ServiceException.FAILURE("not supported", null);
     }
 
@@ -321,12 +327,16 @@ public abstract class AccessManager {
      * @return
      * @throws ServiceException
      */
-    public abstract boolean canSetAttrs(Account credentials,   Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
-    public abstract boolean canSetAttrs(AuthToken credentials, Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
+    public abstract boolean canSetAttrs(Account credentials,   
+            Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
+    public abstract boolean canSetAttrs(AuthToken credentials, 
+            Entry target, Set<String> attrs, boolean asAdmin) throws ServiceException;
     
 
     /**
-     * returns if the specified account's credentials can set the specified attrs to the specified values on target.
+     * returns if the specified account's credentials can set the specified attrs to 
+     * the specified values on target.
+     * 
      * constraints are checked.
      *
      * @param credentials The authenticated account performing the action.
@@ -336,23 +346,34 @@ public abstract class AccessManager {
      * @return
      * @throws ServiceException
      */
-    public abstract boolean canSetAttrs(Account credentials,   Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException;
-    public abstract boolean canSetAttrs(AuthToken credentials, Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException;
+    public abstract boolean canSetAttrs(Account credentials, 
+            Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException;
+    public abstract boolean canSetAttrs(AuthToken credentials, 
+            Entry target, Map<String, Object> attrs, boolean asAdmin) throws ServiceException;
     
     public boolean canSetAttrsOnCreate(Account credentials, TargetType targetType, String entryName, 
             Map<String, Object> attrs, boolean asAdmin) throws ServiceException {
         throw ServiceException.FAILURE("not supported", null);
     }
     
+    public Map<Right, Set<Entry>> discoverRights(Account credentials, Set<Right> rights) 
+    throws ServiceException {
+        return Maps.newHashMap();  // return empty result
+    }
+    
     // for access manager internal use and unittest only, do not call this API, use the canDo API instead.
-    public boolean canPerform(Account credentials, Entry target, Right rightNeeded, boolean canDelegate, 
-            Map<String, Object> attrs, boolean asAdmin, ViaGrant viaGrant) throws ServiceException {
+    public boolean canPerform(Account credentials, Entry target, 
+            Right rightNeeded, boolean canDelegate, 
+            Map<String, Object> attrs, boolean asAdmin, ViaGrant viaGrant) 
+    throws ServiceException {
         throw ServiceException.FAILURE("not supported", null);
     }
     
     // for access manager internal use and unittest only, do not call this API, use the canDo API instead.
-    public boolean canPerform(AuthToken credentials, Entry target, Right rightNeeded, boolean canDelegate, 
-            Map<String, Object> attrs, boolean asAdmin, ViaGrant viaGrant) throws ServiceException {
+    public boolean canPerform(AuthToken credentials, Entry target, 
+            Right rightNeeded, boolean canDelegate, 
+            Map<String, Object> attrs, boolean asAdmin, ViaGrant viaGrant) 
+    throws ServiceException {
         throw ServiceException.FAILURE("not supported", null);
     }
 

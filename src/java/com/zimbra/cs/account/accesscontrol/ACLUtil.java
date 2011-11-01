@@ -51,17 +51,20 @@ public final class ACLUtil {
         return acl != null ? acl.getAllACEs() : null;
     }
 
-    public static Set<ZimbraACE> getAllowedNotDelegableACEs(Entry entry) throws ServiceException {
+    public static Set<ZimbraACE> getAllowedNotDelegableACEs(Entry entry) 
+    throws ServiceException {
         ZimbraACL acl = getACL(entry);
         return acl != null ? acl.getAllowedNotDelegableACEs() : null;
     }
 
-    public static Set<ZimbraACE> getAllowedDelegableACEs(Entry entry) throws ServiceException {
+    public static Set<ZimbraACE> getAllowedDelegableACEs(Entry entry) 
+    throws ServiceException {
         ZimbraACL acl = getACL(entry);
         return acl != null ? acl.getAllowedDelegableACEs() : null;
     }
 
-    public static Set<ZimbraACE> getDeniedACEs(Entry entry) throws ServiceException {
+    public static Set<ZimbraACE> getDeniedACEs(Entry entry) throws 
+    ServiceException {
         ZimbraACL acl = getACL(entry);
         return acl != null ? acl.getDeniedACEs() : null;
     }
@@ -73,7 +76,8 @@ public final class ACLUtil {
      * @param rights rights of interest
      * @return a Set of ACEs with the specified rights granted on the entry.
      */
-    public static List<ZimbraACE> getACEs(Entry entry, Set<Right> rights) throws ServiceException {
+    public static List<ZimbraACE> getACEs(Entry entry, Set<Right> rights) 
+    throws ServiceException {
         ZimbraACL acl = getACL(entry);
         return acl != null ? acl.getACEs(rights) : null;
     }

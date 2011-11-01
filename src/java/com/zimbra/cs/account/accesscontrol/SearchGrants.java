@@ -16,6 +16,7 @@ package com.zimbra.cs.account.accesscontrol;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -26,8 +27,10 @@ import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.ldap.IAttributes;
@@ -37,14 +40,34 @@ public final class SearchGrants {
     private final Provisioning prov;
     private final Set<TargetType> targetTypes;
     private final Set<String> granteeIds;
+    
+    private final Account acct;
+    private final Set<Right> rights;
+    
     private final Set<String> fetchAttrs = Sets.newHashSet(
-            Provisioning.A_cn, Provisioning.A_zimbraId,
-            Provisioning.A_objectClass, Provisioning.A_zimbraACE);
+            Provisioning.A_cn, 
+            Provisioning.A_zimbraId,
+            Provisioning.A_objectClass, 
+            Provisioning.A_zimbraACE);
 
     SearchGrants(Provisioning prov, Set<TargetType> targetTypes, Set<String> granteeIds) {
         this.prov = prov;
         this.targetTypes = targetTypes;
         this.granteeIds = granteeIds;
+        this.acct = null;
+        this.rights = null;
+    }
+    
+    /*
+     * search for rights applied to the acct
+     */
+    SearchGrants(Provisioning prov, Set<TargetType> targetTypes, Account acct, 
+            Set<Right> rights) {
+        this.prov = prov;
+        this.targetTypes = targetTypes;
+        this.granteeIds = null;
+        this.acct = acct;
+        this.rights = rights;
     }
 
     void addFetchAttribute(String attr) {
@@ -94,7 +117,7 @@ public final class SearchGrants {
         }
 
         /**
-         * Returns a mpa of target entry and ZimbraACL object on the target.
+         * Returns a map of target entry and ZimbraACL object on the target.
          */
         Set<GrantsOnTarget> getResults() throws ServiceException {
             if (results == null) {
@@ -224,18 +247,43 @@ public final class SearchGrants {
        }
        return results;
     }
+    
+    private Set<String> getGranteeIds() throws ServiceException {
+        if (granteeIds != null) {
+            return granteeIds;
+        } else {
+            Set<String> ids = Sets.newHashSet(new RightBearer.Grantee(acct, false).getIdAndGroupIds());
+            ids.add(GuestAccount.GUID_AUTHUSER);
+            ids.add(GuestAccount.GUID_PUBLIC);
+            String domainId = acct.getDomainId();
+            if (domainId != null) {
+                ids.add(domainId);
+            }
+            
+            return ids;
+        }
+    }
 
-    private void search(String base, Set<String> ocs, SearchGrantVisitor visitor) throws ServiceException {
+    private void search(String base, Set<String> ocs, SearchGrantVisitor visitor) 
+    throws ServiceException {
         StringBuilder query = new StringBuilder("(&(|");
         for (String oc : ocs) {
             query.append('(').append(Provisioning.A_objectClass).append('=').append(oc).append(")");
         }
         query.append(")(|");
-        for (String granteeId : granteeIds) {
-            query.append('(').append(Provisioning.A_zimbraACE).append('=').append(granteeId).append("*)");
+        
+        if (rights == null) {
+            for (String granteeId : getGranteeIds()) {
+                query.append('(').append(Provisioning.A_zimbraACE).append('=').append(granteeId).append("*)");
+            }
+        } else {
+            for (String granteeId : getGranteeIds()) {
+                for (Right right : rights) {
+                    query.append('(').append(Provisioning.A_zimbraACE).append('=').append(granteeId).append("*").append(right.getName()).append(")");
+                }
+            }
         }
         query.append("))");
-
         LdapProv.getInst().searchLdapOnMaster(base, query.toString(),
                 fetchAttrs.toArray(new String[fetchAttrs.size()]), visitor);
     }

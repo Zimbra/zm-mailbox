@@ -445,32 +445,37 @@ public class RightManager {
     
     public UserRight getUserRight(String right) throws ServiceException {
         UserRight r = sUserRights.get(right);
-        if (r == null)
+        if (r == null) {
             throw ServiceException.FAILURE("invalid right " + right, null);
+        }
         return r;
     }
     
     public AdminRight getAdminRight(String right) throws ServiceException {
         AdminRight r = sAdminRights.get(right);
-        if (r == null)
+        if (r == null) {
             throw ServiceException.FAILURE("invalid right " + right, null);
+        }
         return r;
     }
     
     public Right getRight(String right) throws ServiceException {
-        if (InlineAttrRight.looksLikeOne(right))
+        if (InlineAttrRight.looksLikeOne(right)) {
             return InlineAttrRight.newInlineAttrRight(right);
-        else
+        } else {
             return getRightInternal(right, true);
+        }
     }
     
     private Right getRightInternal(String right, boolean mustFind) throws ServiceException {
         Right r = sUserRights.get(right);
-        if (r == null)
+        if (r == null) {
             r = sAdminRights.get(right);
+        }
         
-        if (mustFind && r == null)
+        if (mustFind && r == null) {
             throw AccountServiceException.NO_SUCH_RIGHT("invalid right " + right);
+        }
         
         return r;
     }
@@ -484,8 +489,9 @@ public class RightManager {
     }
     
     private String dump(StringBuilder sb) {
-        if (sb == null)
+        if (sb == null) {
             sb = new StringBuilder();
+        }
         
         sb.append("============\n");
         sb.append("user rights:\n");

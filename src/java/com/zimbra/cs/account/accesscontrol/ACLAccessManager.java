@@ -16,19 +16,17 @@ package com.zimbra.cs.account.accesscontrol;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.CalendarResourceBy;
-import com.zimbra.common.account.Key.CosBy;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
@@ -40,7 +38,6 @@ import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
 import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
-import com.zimbra.cs.account.names.NameUtil;
 import com.zimbra.cs.ldap.LdapUtil;
 
 public class ACLAccessManager extends AccessManager implements AdminConsoleCapable {
@@ -78,7 +75,8 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     }
     
     @Override
-    public boolean canAccessAccount(AuthToken at, Account target, boolean asAdmin) throws ServiceException {
+    public boolean canAccessAccount(AuthToken at, Account target, boolean asAdmin) 
+    throws ServiceException {
          
         checkDomainStatus(target);
         
@@ -87,7 +85,8 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
         }
         
         if (asAdmin) {
-            return canDo(at, actualTargetForAdminLoginAs(target), actualRightForAdminLoginAs(target), asAdmin);
+            return canDo(at, actualTargetForAdminLoginAs(target), 
+                    actualRightForAdminLoginAs(target), asAdmin);
         } else {
             return canDo(at, target, User.R_loginAs, asAdmin);
         }
@@ -99,7 +98,8 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     }
 
     @Override
-    public boolean canAccessAccount(Account credentials, Account target, boolean asAdmin) throws ServiceException {
+    public boolean canAccessAccount(Account credentials, Account target, boolean asAdmin) 
+    throws ServiceException {
         
         checkDomainStatus(target);
         
@@ -108,14 +108,16 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
         }
         
         if (asAdmin) {
-            return canDo(credentials, actualTargetForAdminLoginAs(target), actualRightForAdminLoginAs(target), asAdmin);
+            return canDo(credentials, actualTargetForAdminLoginAs(target), 
+                    actualRightForAdminLoginAs(target), asAdmin);
         } else {
             return canDo(credentials, target, User.R_loginAs, asAdmin);
         }
     }
     
     @Override
-    public boolean canAccessAccount(Account credentials, Account target) throws ServiceException {
+    public boolean canAccessAccount(Account credentials, Account target) 
+    throws ServiceException {
         return canAccessAccount(credentials, target, true);
     }
 
@@ -172,7 +174,8 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     }
 
     @Override
-    public boolean canModifyMailQuota(AuthToken at, Account targetAccount, long mailQuota) throws ServiceException {
+    public boolean canModifyMailQuota(AuthToken at, Account targetAccount, long mailQuota) 
+    throws ServiceException {
         // throw ServiceException.FAILURE("internal error", null);  // should never be called
         
         // for bug 42896, we now have to do the same check on zimbraDomainAdminMaxMailQuota  
@@ -426,8 +429,9 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     }
     
     @Override
-    public boolean canPerform(AuthToken grantee, Entry target, Right rightNeeded, boolean canDelegate, 
-            Map<String, Object> attrs, boolean asAdmin, ViaGrant viaGrant) throws ServiceException {
+    public boolean canPerform(AuthToken grantee, Entry target, Right rightNeeded, 
+            boolean canDelegate, Map<String, Object> attrs, boolean asAdmin, ViaGrant viaGrant) 
+    throws ServiceException {
         Account authedAcct = grantee.getAccount();
         return canPerform(authedAcct, target, rightNeeded, canDelegate, 
                           attrs, asAdmin, viaGrant);
@@ -580,9 +584,17 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
         return allowedAttrs.canAccessAttrs(attrsNeeded, target);
     }
 
-    // ============
-    // util methods
-    // ============
+
+    // ===========================
+    // discover
+    // ===========================
+    @Override
+    public Map<Right, Set<Entry>> discoverRights(Account credentials, Set<Right> rights) 
+    throws ServiceException {
+        DiscoverRights discoverRights = new DiscoverRights(credentials, rights);
+        return discoverRights.handle();
+    }
+    
     
     // ===========================
     // AdminConsoleCapable methods
@@ -591,13 +603,15 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     public void getAllEffectiveRights(RightBearer rightBearer, 
             boolean expandSetAttrs, boolean expandGetAttrs,
             AllEffectiveRights result) throws ServiceException {
-        CollectAllEffectiveRights.getAllEffectiveRights(rightBearer, expandSetAttrs, expandGetAttrs, result);
+        CollectAllEffectiveRights.getAllEffectiveRights(
+                rightBearer, expandSetAttrs, expandGetAttrs, result);
     }
     
     public void getEffectiveRights(RightBearer rightBearer, Entry target, 
             boolean expandSetAttrs, boolean expandGetAttrs,
             RightCommand.EffectiveRights result) throws ServiceException {
-        CollectEffectiveRights.getEffectiveRights(rightBearer, target, expandSetAttrs, expandGetAttrs, result);
+        CollectEffectiveRights.getEffectiveRights(
+                rightBearer, target, expandSetAttrs, expandGetAttrs, result);
         
     }
     
