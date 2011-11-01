@@ -292,8 +292,9 @@ public class LdapProvisioning extends LdapProv {
     
     private String[] getBasicDLAttrs() throws ServiceException {
         AttributeManager attrMgr = AttributeManager.getInstance();
-        Set<String> attrs = attrMgr.getAllAttrsInClass(AttributeClass.distributionList);
+        Set<String> dlAttrs = attrMgr.getAllAttrsInClass(AttributeClass.distributionList);
         
+        Set<String> attrs = Sets.newHashSet(dlAttrs);
         attrs.add(Provisioning.A_objectClass);
         attrs.remove(Provisioning.A_zimbraMailForwardingAddress);  // the member attr
         attrs.remove(Provisioning.A_zimbraMailTransport);          // does not apply to DL
@@ -312,7 +313,9 @@ public class LdapProvisioning extends LdapProv {
     
     private String[] getBasicDynamicGroupAttrs() throws ServiceException {
         AttributeManager attrMgr = AttributeManager.getInstance();
-        Set<String> attrs = attrMgr.getAllAttrsInClass(AttributeClass.group);
+        Set<String> dynGroupAttrs = attrMgr.getAllAttrsInClass(AttributeClass.group);
+        
+        Set<String> attrs = Sets.newHashSet(dynGroupAttrs);
         attrs.add(Provisioning.A_objectClass);
         
         // remove deprecated attrs
