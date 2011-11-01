@@ -103,8 +103,8 @@ public class TestImapOneWayImport extends TestCase {
         mOriginalEnableStarttls = LC.javamail_imap_enable_starttls.booleanValue();
         LC.javamail_imap_enable_starttls.setDefault(Boolean.toString(false));
     }
-        // TODO: Reenable when bug 66459 is fixed.
-        public void disabledTestImapOneWayImport() throws Exception {
+
+    public void testImapOneWayImport() throws Exception {
             List<ZMessage> msgs;
             ZMessage msg;
             // Remote: add 1 message
