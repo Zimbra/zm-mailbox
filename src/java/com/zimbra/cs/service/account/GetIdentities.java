@@ -22,7 +22,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.accesscontrol.ACLUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -43,9 +42,6 @@ public final class GetIdentities extends AccountDocumentHandler  {
         Element response = zsc.createElement(AccountConstants.GET_IDENTITIES_RESPONSE);
         Provisioning prov = Provisioning.getInstance();
         for (Identity ident : prov.getAllIdentities(account)) {
-            ToXML.encodeIdentity(response, ident);
-        }
-        for (Identity ident : ACLUtil.getSendOnBehalfOf(account)) {
             ToXML.encodeIdentity(response, ident);
         }
         return response;

@@ -42,7 +42,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
-import com.zimbra.cs.account.accesscontrol.ACLUtil;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ProvisioningConstants;
@@ -316,9 +315,6 @@ public class GetInfo extends AccountDocumentHandler  {
     private static void doIdentities(Element response, Account acct) {
         try {
             for (Identity i : Provisioning.getInstance().getAllIdentities(acct)) {
-                ToXML.encodeIdentity(response, i);
-            }
-            for (Identity i : ACLUtil.getSendOnBehalfOf(acct)) {
                 ToXML.encodeIdentity(response, i);
             }
         } catch (ServiceException e) {
