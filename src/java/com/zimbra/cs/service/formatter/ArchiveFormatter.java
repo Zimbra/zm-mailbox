@@ -191,6 +191,7 @@ public abstract class ArchiveFormatter extends Formatter {
         String filename = context.params.get("filename");
         String lock = context.params.get("lock");
         String query = context.getQueryString();
+        Set<String> names = new HashSet<String>(4096);
         Set<MailItem.Type> sysTypes = EnumSet.of(MailItem.Type.FOLDER, MailItem.Type.SEARCHFOLDER, MailItem.Type.TAG,
                 MailItem.Type.FLAG, MailItem.Type.MOUNTPOINT);
         Set<MailItem.Type> searchTypes = EnumSet.of(MailItem.Type.MESSAGE, MailItem.Type.CONTACT,
@@ -247,7 +248,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 try {
                     for (UserServletContext.Item item : context.requestedItems)
                         aos = saveItem(context, item.mailItem, fldrs, cnts, item.versioned,
-                                aos, encoder);
+                                aos, encoder, names);
                 } catch (Exception e) {
                     warn(e);
                 }
@@ -255,7 +256,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 Folder)) {
                 try {
                     aos = saveItem(context, context.target, fldrs, cnts,
-                            false, aos, encoder);
+                            false, aos, encoder, names);
                 } catch (Exception e) {
                     warn(e);
                 }
@@ -282,7 +283,7 @@ public abstract class ArchiveFormatter extends Formatter {
                         Collections.sort(items, sp);
                         for (MailItem item : items)
                             aos = saveItem(context, item, fldrs, cnts,
-                                    false, aos, encoder);
+                                    false, aos, encoder, names);
                     }
                     if (Strings.isNullOrEmpty(types)) {
                         conversations = true;
@@ -297,10 +298,10 @@ public abstract class ArchiveFormatter extends Formatter {
                         if (saveTargetFolder) {
                             saveTargetFolder = false;
                             aos = saveItem(context, context.target,
-                                    fldrs, cnts, false, aos, encoder);
+                                    fldrs, cnts, false, aos, encoder, names);
                         }
                         aos = saveItem(context, results.getNext().getMailItem(),
-                                fldrs, cnts, false, aos, encoder);
+                                fldrs, cnts, false, aos, encoder, names);
                     }
                     Closeables.closeQuietly(results);
                     results = null;
@@ -308,7 +309,7 @@ public abstract class ArchiveFormatter extends Formatter {
                         for (MailItem item : context.targetMailbox.getItemList(
                             context.opContext, MailItem.Type.CONVERSATION))
                             aos = saveItem(context, item, fldrs, cnts,
-                                    false, aos, encoder);
+                                    false, aos, encoder, names);
                     }
                 } catch (Exception e) {
                     warn(e);
@@ -369,7 +370,7 @@ public abstract class ArchiveFormatter extends Formatter {
     private ArchiveOutputStream saveItem(UserServletContext context, MailItem mi,
         Map<Integer, String> fldrs, Map<Integer, Integer> cnts,
         boolean version, ArchiveOutputStream aos,
-        CharsetEncoder charsetEncoder) throws ServiceException {
+        CharsetEncoder charsetEncoder, Set<String> names) throws ServiceException {
 
         String ext = null, name = null;
         String extra = null;
@@ -384,7 +385,7 @@ public abstract class ArchiveFormatter extends Formatter {
                 context.opContext, mi.getId(), mi.getType())) {
                 if (mi.getVersion() != rev.getVersion())
                     aos = saveItem(context, rev, fldrs, cnts, true,
-                            aos, charsetEncoder);
+                            aos, charsetEncoder, names);
             }
         }
         switch (mi.getType()) {
@@ -484,7 +485,9 @@ public abstract class ArchiveFormatter extends Formatter {
         try {
             ArchiveOutputEntry aoe;
             byte data[] = null;
-            String path = getEntryName(mi, fldr, name, ext, charsetEncoder);
+            String path = mi instanceof Contact ? getEntryName(mi, fldr, name, ext, 
+                charsetEncoder, names) : getEntryName(mi, fldr, name, ext,
+                charsetEncoder, !(mi instanceof Document));
             long miSize = mi.getSize();
 
             if (miSize == 0 && mi.getDigest() != null) {
@@ -538,7 +541,7 @@ public abstract class ArchiveFormatter extends Formatter {
             } else if (mi instanceof Message) {
                 if (context.hasPart()) {
                     MimeMessage mm = ((Message)mi).getMimeMessage();
-
+                    Set<String> attachmentNames = new HashSet<String>();
                     for (String part : context.getPart().split(",")) {
                         BufferStream bs;
                         MimePart mp = Mime.getMimePart(mm, part);
@@ -563,7 +566,8 @@ public abstract class ArchiveFormatter extends Formatter {
                         }
                         bs = new BufferStream(sz, 1024 * 1024);
                         bs.readFrom(mp.getInputStream());
-                        aoe = aos.newOutputEntry(getEntryName(mi, "", name, ext, charsetEncoder),
+                        aoe = aos.newOutputEntry(
+                                getEntryName(mi, "", name, ext, charsetEncoder, attachmentNames),
                                 mi.getType().toString(), mi.getType().toByte(), mi.getDate());
                         sz = bs.getSize();
                         aoe.setSize(sz);
@@ -628,8 +632,32 @@ public abstract class ArchiveFormatter extends Formatter {
         return aos;
     }
 
+    /**
+     * Get entry name using set of previously created names to guarantee uniqueness 
+     */
     private String getEntryName(MailItem mi, String fldr, String name,
-            String ext, CharsetEncoder encoder) {
+        String ext, CharsetEncoder encoder, Set<String> names) {
+        String path = getEntryName(mi, fldr, name, ext, encoder, false);
+        int counter = 0;
+        String lpath;
+        do {
+            path = fldr.equals("") ? name : fldr + '/' + name;
+            if (counter > 0)
+                path += String.format("-%02d", counter);
+            if (ext != null)
+                path += '.' + ext;
+            counter++;
+            lpath = path.toLowerCase();
+        } while (names.contains(lpath));
+        names.add(lpath);
+        return path;
+    }
+
+    /**
+     * Get entry name. If prefix is true guarantee uniqueness by prepending itemId. If prefix is false caller must guarantee uniqueness   
+     */
+    private String getEntryName(MailItem mi, String fldr, String name,
+            String ext, CharsetEncoder encoder, boolean prefix) {
         String path;
 
         if (Strings.isNullOrEmpty(name)) {
@@ -638,7 +666,7 @@ public abstract class ArchiveFormatter extends Formatter {
         if (Strings.isNullOrEmpty(name)) {
             name = mi.getSubject();
         }
-        if (!Strings.isNullOrEmpty(name)) {
+        if (prefix && !Strings.isNullOrEmpty(name)) {
             name = Strings.padStart(mi.getId()+"", 10, '0') + "-" +
                 sanitize(name, encoder);
         }
