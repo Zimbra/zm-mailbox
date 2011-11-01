@@ -59,10 +59,44 @@ public class TagTest {
         MailboxTestUtil.clearData();
     }
 
-    private static final String tag1 = "foo", tag2 = "bar", tag3 = "baz", tag4 = "qux";
+    private static void checkName(String description, String input, String expectedOutput) {
+        try {
+            String sanitized = Tag.validateItemName(input);
+            if (expectedOutput == null) {
+                Assert.fail(description);
+            } else {
+                Assert.assertEquals(description, expectedOutput, sanitized);
+            }
+        } catch (ServiceException e) {
+            if (expectedOutput == null) {
+                Assert.assertEquals(description, MailServiceException.INVALID_NAME, e.getCode());
+            } else {
+                Assert.fail(description);
+            }
+        }
+    }
 
     @Test
     public void name() throws Exception {
+        checkName("null tag name", null, null);
+        checkName("empty tag name", "", null);
+        checkName("whitespace tag name", "   \t  \r\n", null);
+        checkName("valid tag name", "xyz", "xyz");
+        checkName("valid tag name with symbols", "\"xyz\" -- foo!", "\"xyz\" -- foo!");
+        checkName("valid tag name: only symbols", "!@#$%^&*()`~-_=+[{]}|;\"',<.>/?", "!@#$%^&*()`~-_=+[{]}|;\"',<.>/?");
+        checkName("trim leading whitespace", "   foo", "foo");
+        checkName("trim trailing whitespace", "foo   ", "foo");
+        checkName("trim leading/trailing whitespace", "   foo   ", "foo");
+        checkName("convert whitespace", "foo\tbar\nbaz", "foo bar baz");
+        checkName("invalid tag name (':')", "foo:bar", null);
+        checkName("invalid tag name ('\\')", "foo\\bar", null);
+        checkName("invalid tag name (control)", "foo\u0004bar", null);
+    }
+
+    private static final String tag1 = "foo", tag2 = "bar", tag3 = "baz", tag4 = "qux";
+
+    @Test
+    public void rename() throws Exception {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
         mbox.createTag(null, tag1, MailItem.DEFAULT_COLOR);

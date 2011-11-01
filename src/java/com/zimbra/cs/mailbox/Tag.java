@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Objects;
 import com.google.common.collect.Sets;
 import com.zimbra.common.mailbox.Color;
@@ -253,9 +254,11 @@ public class Tag extends MailItem {
 
     static final String FLAG_NAME_PREFIX = "\\";
 
+    private static final CharMatcher INVALID_TAG_CHARS = CharMatcher.anyOf(":\\");
+
     static String validateItemName(String name) throws ServiceException {
         // reject invalid characters in the name
-        if (name == null || name != StringUtil.stripControlCharacters(name)) {
+        if (name == null || name != StringUtil.stripControlCharacters(name) || INVALID_TAG_CHARS.matchesAnyOf(name)) {
             throw MailServiceException.INVALID_NAME(name);
         }
         // strip trailing whitespace and validate length of resulting name
