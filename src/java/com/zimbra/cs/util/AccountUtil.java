@@ -24,6 +24,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.util.EmailUtil;
@@ -66,6 +67,21 @@ public class AccountUtil {
         } else {
             return Math.min(acctQuota, domainQuota);
         }
+    }
+
+    public static boolean isOverAggregateQuota(Domain domain) {
+        long quota = domain.getDomainAggregateQuota();
+        return quota != 0 && domain.getLongAttr(Provisioning.A_zimbraAggregateQuotaLastUsage, 0) > quota;
+    }
+
+    public static boolean isSendAllowedOverAggregateQuota(Domain domain) {
+        return domain.getDomainAboveAggregateQuotaHandling() ==
+                ZAttrProvisioning.DomainAboveAggregateQuotaHandling.ALLOWSENDRECEIVE;
+    }
+
+    public static boolean isReceiveAllowedOverAggregateQuota(Domain domain) {
+        return domain.getDomainAboveAggregateQuotaHandling() !=
+                ZAttrProvisioning.DomainAboveAggregateQuotaHandling.BLOCKSENDRECEIVE;
     }
 
     public static InternetAddress getFriendlyEmailAddress(Account acct) {

@@ -6571,4 +6571,18 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
+<attr id="1327" name="zimbraDomainAggregateQuota" type="long" min="0" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited" since="8.0.0">
+  <globalConfigValue>0</globalConfigValue>
+  <desc>maximum aggregate quota for the domain in bytes</desc>
+</attr>
+
+<attr id="1328" name="zimbraAggregateQuotaLastUsage" type="long" min="0" cardinality="single" optionalIn="domain" since="8.0.0">
+  <desc>last calculated aggregate quota usage for the domain in bytes</desc>
+</attr>
+
+<attr id="1329" name="zimbraDomainAboveAggregateQuotaHandling" type="enum" value="ALLOWSENDRECEIVE,BLOCKSEND,BLOCKSENDRECEIVE" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited" since="8.0.0">
+  <globalConfigValue>ALLOWSENDRECEIVE</globalConfigValue>
+  <desc>how to handle a domain whose quota usage is above the maximum aggregate quota</desc>
+</attr>
+
 </attrs>

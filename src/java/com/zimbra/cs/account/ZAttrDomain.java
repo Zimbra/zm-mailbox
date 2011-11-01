@@ -43,7 +43,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111028-2017 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111031-0952 */
 
     /**
      * RFC2256: descriptive information
@@ -868,6 +868,78 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetAdminConsoleSkinEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAdminConsoleSkinEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * last calculated aggregate quota usage for the domain in bytes
+     *
+     * @return zimbraAggregateQuotaLastUsage, or -1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1328)
+    public long getAggregateQuotaLastUsage() {
+        return getLongAttr(Provisioning.A_zimbraAggregateQuotaLastUsage, -1L);
+    }
+
+    /**
+     * last calculated aggregate quota usage for the domain in bytes
+     *
+     * @param zimbraAggregateQuotaLastUsage new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1328)
+    public void setAggregateQuotaLastUsage(long zimbraAggregateQuotaLastUsage) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAggregateQuotaLastUsage, Long.toString(zimbraAggregateQuotaLastUsage));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * last calculated aggregate quota usage for the domain in bytes
+     *
+     * @param zimbraAggregateQuotaLastUsage new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1328)
+    public Map<String,Object> setAggregateQuotaLastUsage(long zimbraAggregateQuotaLastUsage, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAggregateQuotaLastUsage, Long.toString(zimbraAggregateQuotaLastUsage));
+        return attrs;
+    }
+
+    /**
+     * last calculated aggregate quota usage for the domain in bytes
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1328)
+    public void unsetAggregateQuotaLastUsage() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAggregateQuotaLastUsage, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * last calculated aggregate quota usage for the domain in bytes
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1328)
+    public Map<String,Object> unsetAggregateQuotaLastUsage(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAggregateQuotaLastUsage, "");
         return attrs;
     }
 
@@ -4004,6 +4076,209 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetDNSCheckHostname(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDNSCheckHostname, "");
+        return attrs;
+    }
+
+    /**
+     * how to handle a domain which is over the aggregate quota
+     *
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
+     *
+     * @return zimbraDomainAboveAggregateQuotaHandling, or ZAttrProvisioning.DomainAboveAggregateQuotaHandling.ALLOWSENDRECEIVE if unset and/or has invalid value
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1329)
+    public ZAttrProvisioning.DomainAboveAggregateQuotaHandling getDomainAboveAggregateQuotaHandling() {
+        try { String v = getAttr(Provisioning.A_zimbraDomainAboveAggregateQuotaHandling); return v == null ? ZAttrProvisioning.DomainAboveAggregateQuotaHandling.ALLOWSENDRECEIVE : ZAttrProvisioning.DomainAboveAggregateQuotaHandling.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.DomainAboveAggregateQuotaHandling.ALLOWSENDRECEIVE; }
+    }
+
+    /**
+     * how to handle a domain which is over the aggregate quota
+     *
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
+     *
+     * @return zimbraDomainAboveAggregateQuotaHandling, or "ALLOWSENDRECEIVE" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1329)
+    public String getDomainAboveAggregateQuotaHandlingAsString() {
+        return getAttr(Provisioning.A_zimbraDomainAboveAggregateQuotaHandling, "ALLOWSENDRECEIVE");
+    }
+
+    /**
+     * how to handle a domain which is over the aggregate quota
+     *
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
+     *
+     * @param zimbraDomainAboveAggregateQuotaHandling new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1329)
+    public void setDomainAboveAggregateQuotaHandling(ZAttrProvisioning.DomainAboveAggregateQuotaHandling zimbraDomainAboveAggregateQuotaHandling) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAboveAggregateQuotaHandling, zimbraDomainAboveAggregateQuotaHandling.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * how to handle a domain which is over the aggregate quota
+     *
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
+     *
+     * @param zimbraDomainAboveAggregateQuotaHandling new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1329)
+    public Map<String,Object> setDomainAboveAggregateQuotaHandling(ZAttrProvisioning.DomainAboveAggregateQuotaHandling zimbraDomainAboveAggregateQuotaHandling, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAboveAggregateQuotaHandling, zimbraDomainAboveAggregateQuotaHandling.toString());
+        return attrs;
+    }
+
+    /**
+     * how to handle a domain which is over the aggregate quota
+     *
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
+     *
+     * @param zimbraDomainAboveAggregateQuotaHandling new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1329)
+    public void setDomainAboveAggregateQuotaHandlingAsString(String zimbraDomainAboveAggregateQuotaHandling) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAboveAggregateQuotaHandling, zimbraDomainAboveAggregateQuotaHandling);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * how to handle a domain which is over the aggregate quota
+     *
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
+     *
+     * @param zimbraDomainAboveAggregateQuotaHandling new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1329)
+    public Map<String,Object> setDomainAboveAggregateQuotaHandlingAsString(String zimbraDomainAboveAggregateQuotaHandling, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAboveAggregateQuotaHandling, zimbraDomainAboveAggregateQuotaHandling);
+        return attrs;
+    }
+
+    /**
+     * how to handle a domain which is over the aggregate quota
+     *
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1329)
+    public void unsetDomainAboveAggregateQuotaHandling() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAboveAggregateQuotaHandling, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * how to handle a domain which is over the aggregate quota
+     *
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1329)
+    public Map<String,Object> unsetDomainAboveAggregateQuotaHandling(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAboveAggregateQuotaHandling, "");
+        return attrs;
+    }
+
+    /**
+     * maximum aggregate quota for the domain in bytes
+     *
+     * @return zimbraDomainAggregateQuota, or 0 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1327)
+    public long getDomainAggregateQuota() {
+        return getLongAttr(Provisioning.A_zimbraDomainAggregateQuota, 0L);
+    }
+
+    /**
+     * maximum aggregate quota for the domain in bytes
+     *
+     * @param zimbraDomainAggregateQuota new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1327)
+    public void setDomainAggregateQuota(long zimbraDomainAggregateQuota) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAggregateQuota, Long.toString(zimbraDomainAggregateQuota));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * maximum aggregate quota for the domain in bytes
+     *
+     * @param zimbraDomainAggregateQuota new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1327)
+    public Map<String,Object> setDomainAggregateQuota(long zimbraDomainAggregateQuota, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAggregateQuota, Long.toString(zimbraDomainAggregateQuota));
+        return attrs;
+    }
+
+    /**
+     * maximum aggregate quota for the domain in bytes
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1327)
+    public void unsetDomainAggregateQuota() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAggregateQuota, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * maximum aggregate quota for the domain in bytes
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1327)
+    public Map<String,Object> unsetDomainAggregateQuota(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAggregateQuota, "");
         return attrs;
     }
 
@@ -11778,9 +12053,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Maximum mailbox quota for the domain in bytes. Default is
-     * &quot;unlimited&quot;. The effective quota for a mailbox would be the
-     * minimum of this and zimbraMailQuota.
+     * Maximum mailbox quota for the domain in bytes. The effective quota for
+     * a mailbox would be the minimum of this and zimbraMailQuota.
      *
      * @return zimbraMailDomainQuota, or 0 if unset
      *
@@ -11792,9 +12066,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Maximum mailbox quota for the domain in bytes. Default is
-     * &quot;unlimited&quot;. The effective quota for a mailbox would be the
-     * minimum of this and zimbraMailQuota.
+     * Maximum mailbox quota for the domain in bytes. The effective quota for
+     * a mailbox would be the minimum of this and zimbraMailQuota.
      *
      * @param zimbraMailDomainQuota new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -11809,9 +12082,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Maximum mailbox quota for the domain in bytes. Default is
-     * &quot;unlimited&quot;. The effective quota for a mailbox would be the
-     * minimum of this and zimbraMailQuota.
+     * Maximum mailbox quota for the domain in bytes. The effective quota for
+     * a mailbox would be the minimum of this and zimbraMailQuota.
      *
      * @param zimbraMailDomainQuota new value
      * @param attrs existing map to populate, or null to create a new map
@@ -11827,9 +12099,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Maximum mailbox quota for the domain in bytes. Default is
-     * &quot;unlimited&quot;. The effective quota for a mailbox would be the
-     * minimum of this and zimbraMailQuota.
+     * Maximum mailbox quota for the domain in bytes. The effective quota for
+     * a mailbox would be the minimum of this and zimbraMailQuota.
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -11843,9 +12114,8 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * Maximum mailbox quota for the domain in bytes. Default is
-     * &quot;unlimited&quot;. The effective quota for a mailbox would be the
-     * minimum of this and zimbraMailQuota.
+     * Maximum mailbox quota for the domain in bytes. The effective quota for
+     * a mailbox would be the minimum of this and zimbraMailQuota.
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

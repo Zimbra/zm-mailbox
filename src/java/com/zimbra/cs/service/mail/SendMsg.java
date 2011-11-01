@@ -52,6 +52,7 @@ import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailItem;
@@ -96,9 +97,14 @@ public final class SendMsg extends MailDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Mailbox mbox = getRequestedMailbox(zsc);
         Account account = getRequestedAccount(zsc);
-        long quota = AccountUtil.getEffectiveQuota(account);
-        if (account.isMailAllowReceiveButNotSendWhenOverQuota() && quota != 0 && mbox.getSize() > quota) {
-            throw MailServiceException.QUOTA_EXCEEDED(quota);
+        long acctQuota = AccountUtil.getEffectiveQuota(account);
+        if (account.isMailAllowReceiveButNotSendWhenOverQuota() && acctQuota != 0 && mbox.getSize() > acctQuota) {
+            throw MailServiceException.QUOTA_EXCEEDED(acctQuota);
+        }
+        Domain domain = Provisioning.getInstance().getDomain(account);
+        if (domain != null &&
+                AccountUtil.isOverAggregateQuota(domain) && !AccountUtil.isSendAllowedOverAggregateQuota(domain)) {
+            throw MailServiceException.DOMAIN_QUOTA_EXCEEDED(domain.getDomainAggregateQuota());
         }
         OperationContext octxt = getOperationContext(zsc, context);
         ItemIdFormatter ifmt = new ItemIdFormatter(zsc);

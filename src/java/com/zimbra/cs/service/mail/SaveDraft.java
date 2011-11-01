@@ -21,6 +21,8 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.AutoSendDraftTask;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -120,9 +122,14 @@ public class SaveDraft extends MailDocumentHandler {
         long autoSendTime = new Long(msgElem.getAttribute(MailConstants.A_AUTO_SEND_TIME, "0"));
 
         Account acct = mbox.getAccount();
-        long quota = AccountUtil.getEffectiveQuota(acct);
-        if (autoSendTime != 0 && acct.isMailAllowReceiveButNotSendWhenOverQuota() && quota != 0 && mbox.getSize() > quota) {
-            throw MailServiceException.QUOTA_EXCEEDED(quota);
+        long acctQuota = AccountUtil.getEffectiveQuota(acct);
+        if (autoSendTime != 0 && acct.isMailAllowReceiveButNotSendWhenOverQuota() && acctQuota != 0 && mbox.getSize() > acctQuota) {
+            throw MailServiceException.QUOTA_EXCEEDED(acctQuota);
+        }
+        Domain domain = Provisioning.getInstance().getDomain(acct);
+        if (domain != null &&
+                AccountUtil.isOverAggregateQuota(domain) && !AccountUtil.isSendAllowedOverAggregateQuota(domain)) {
+            throw MailServiceException.DOMAIN_QUOTA_EXCEEDED(domain.getDomainAggregateQuota());
         }
 
         Message msg;

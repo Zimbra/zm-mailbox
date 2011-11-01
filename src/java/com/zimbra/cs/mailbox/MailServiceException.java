@@ -80,6 +80,7 @@ public class MailServiceException extends ServiceException {
     public static final String UNABLE_TO_EXPORT_CONTACTS = "mail.UNABLE_TO_EXPORT_CONTACTS";
     public static final String UNABLE_TO_IMPORT_APPOINTMENTS = "mail.UNABLE_TO_IMPORT_APPOINTMENTS";
     public static final String QUOTA_EXCEEDED  = "mail.QUOTA_EXCEEDED";
+    public static final String DOMAIN_QUOTA_EXCEEDED  = "mail.DOMAIN_QUOTA_EXCEEDED";
     public static final String QUERY_PARSE_ERROR = "mail.QUERY_PARSE_ERROR";
     public static final String MESSAGE_PARSE_ERROR = "mail.MESSAGE_PARSE_ERROR";
     public static final String ADDRESS_PARSE_ERROR = "mail.ADDRESS_PARSE_ERROR";
@@ -313,6 +314,10 @@ public class MailServiceException extends ServiceException {
 
     public static MailServiceException QUOTA_EXCEEDED(long limit) {
         return new MailServiceException("mailbox exceeded quota of " + limit + " bytes", QUOTA_EXCEEDED, SENDERS_FAULT, new Argument(LIMIT, limit, Argument.Type.NUM));
+    }
+
+    public static MailServiceException DOMAIN_QUOTA_EXCEEDED(long limit) {
+        return new MailServiceException("domain exceeded aggregate quota of " + limit + " bytes", DOMAIN_QUOTA_EXCEEDED, SENDERS_FAULT, new Argument(LIMIT, limit, Argument.Type.NUM));
     }
 
     public static MailServiceException INVALID_ID(int id) {

@@ -42,7 +42,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111028-2017 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111031-0952 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -538,25 +538,25 @@ public abstract class ZAttrServer extends NamedEntry {
      *
      * @see #getAdminProxyPortAsString()
      *
-     * @return zimbraAdminProxyPort, or 1443 if unset
+     * @return zimbraAdminProxyPort, or 9071 if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1322)
     public int getAdminProxyPort() {
-        return getIntAttr(Provisioning.A_zimbraAdminProxyPort, 1443);
+        return getIntAttr(Provisioning.A_zimbraAdminProxyPort, 9071);
     }
 
     /**
      * SSL proxy port for admin console UI
      *
-     * @return zimbraAdminProxyPort, or "1443" if unset
+     * @return zimbraAdminProxyPort, or "9071" if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1322)
     public String getAdminProxyPortAsString() {
-        return getAttr(Provisioning.A_zimbraAdminProxyPort, "1443");
+        return getAttr(Provisioning.A_zimbraAdminProxyPort, "9071");
     }
 
     /**

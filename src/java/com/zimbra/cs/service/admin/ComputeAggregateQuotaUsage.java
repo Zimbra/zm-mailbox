@@ -1,0 +1,122 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
+package com.zimbra.cs.service.admin;
+
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.accesscontrol.AccessControlUtil;
+import com.zimbra.cs.httpclient.URLUtil;
+import com.zimbra.soap.ZimbraSoapContext;
+
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
+public class ComputeAggregateQuotaUsage extends AdminDocumentHandler {
+
+    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+        final ZimbraSoapContext zsc = getZimbraSoapContext(context);
+        if (!AccessControlUtil.isGlobalAdmin(getAuthenticatedAccount(zsc))) {
+            throw ServiceException.PERM_DENIED("only global admin is allowed");
+        }
+
+        Map<String, Long> domainAggrQuotaUsed = new HashMap<String, Long>();
+
+        Provisioning prov = Provisioning.getInstance();
+        List<Server> servers = prov.getAllServers(Provisioning.SERVICE_MAILBOX);
+        // make number of threads in pool configurable?
+        ExecutorService executor = Executors.newFixedThreadPool(10);
+        List<Future<Map<String, Long>>> futures = new LinkedList<Future<Map<String, Long>>>();
+        for (final Server server : servers) {
+            futures.add(executor.submit(new Callable<Map<String, Long>>() {
+
+                @Override
+                public Map<String, Long> call() throws Exception {
+                    ZimbraLog.misc.debug("Invoking %s on server %s",
+                            AdminConstants.E_GET_AGGR_QUOTA_USAGE_ON_SERVER_REQUEST, server.getName());
+
+                    Element req = new Element.XMLElement(AdminConstants.GET_AGGR_QUOTA_USAGE_ON_SERVER_REQUEST);
+                    String adminUrl = URLUtil.getAdminURL(server, AdminConstants.ADMIN_SERVICE_URI);
+                    SoapHttpTransport mTransport = new SoapHttpTransport(adminUrl);
+                    mTransport.setAuthToken(zsc.getRawAuthToken());
+                    Element resp = mTransport.invoke(req);
+                    List<Element> domainElts = resp.getPathElementList(new String[] { AdminConstants.E_DOMAIN });
+                    Map<String, Long> retMap = new HashMap<String, Long>();
+                    for (Element domainElt : domainElts) {
+                        retMap.put(domainElt.getAttribute(AdminConstants.A_ID),
+                                domainElt.getAttributeLong(AdminConstants.A_QUOTA_USED));
+                    }
+                    return retMap;
+                }
+            }));
+        }
+        shutdownAndAwaitTermination(executor);
+
+        // Aggregate all results
+        for (Future<Map<String, Long>> future : futures) {
+            Map<String, Long> result;
+            try {
+                result = future.get();
+            } catch (Exception e) {
+                throw ServiceException.FAILURE("Error is getting task execution result", e);
+            }
+            for (String domainId : result.keySet()) {
+                Long delta = result.get(domainId);
+                Long aggr = domainAggrQuotaUsed.get(domainId);
+                domainAggrQuotaUsed.put(domainId, aggr == null ? delta : aggr + delta);
+            }
+        }
+
+        Element response = zsc.createElement(AdminConstants.COMPUTE_AGGR_QUOTA_USAGE_RESPONSE);
+        for (String domainId : domainAggrQuotaUsed.keySet()) {
+            Domain domain = prov.getDomainById(domainId);
+            Long used = domainAggrQuotaUsed.get(domainId);
+            domain.setAggregateQuotaLastUsage(used);
+            Element domainElt = response.addElement(AdminConstants.E_DOMAIN);
+            domainElt.addAttribute(AdminConstants.A_NAME, domain.getName());
+            domainElt.addAttribute(AdminConstants.A_ID, domainId);
+            domainElt.addAttribute(AdminConstants.A_QUOTA_USED, used);
+        }
+        return response;
+    }
+
+    private static void shutdownAndAwaitTermination(ExecutorService executor) throws ServiceException {
+        executor.shutdown(); // Disable new tasks from being submitted
+        try {
+            // Wait for existing tasks to terminate
+            // make wait timeout configurable?
+            if (!executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)) {
+                throw ServiceException.FAILURE("time out waiting for " +
+                        AdminConstants.E_GET_AGGR_QUOTA_USAGE_ON_SERVER_REQUEST + " result", null);
+            }
+        } catch (InterruptedException ie) {
+            executor.shutdownNow();
+            // Preserve interrupt status
+            Thread.currentThread().interrupt();
+        }
+    }
+}

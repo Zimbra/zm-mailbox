@@ -971,9 +971,15 @@ public class Mailbox {
     }
 
     void checkSizeChange(long newSize) throws ServiceException {
-        long quota = AccountUtil.getEffectiveQuota(getAccount());
-        if (quota != 0 && newSize > quota) {
-            throw MailServiceException.QUOTA_EXCEEDED(quota);
+        Account acct = getAccount();
+        long acctQuota = AccountUtil.getEffectiveQuota(acct);
+        if (acctQuota != 0 && newSize > acctQuota) {
+            throw MailServiceException.QUOTA_EXCEEDED(acctQuota);
+        }
+        Domain domain = Provisioning.getInstance().getDomain(acct);
+        if (domain != null &&
+                AccountUtil.isOverAggregateQuota(domain) && !AccountUtil.isReceiveAllowedOverAggregateQuota(domain)) {
+            throw MailServiceException.DOMAIN_QUOTA_EXCEEDED(domain.getDomainAggregateQuota());
         }
     }
 
