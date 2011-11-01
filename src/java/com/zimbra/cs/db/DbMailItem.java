@@ -1525,6 +1525,8 @@ public class DbMailItem {
         delete(mbox, allFolders, fromDumpster);
         if (item instanceof VirtualConversation)
             return;
+        if (item instanceof Conversation && info.incomplete)
+            return;
         // delete the item itself
         if (item != null) {
             delete(mbox, Collections.singletonList(item.getId()), fromDumpster);

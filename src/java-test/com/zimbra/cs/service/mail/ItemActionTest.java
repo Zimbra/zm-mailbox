@@ -14,6 +14,8 @@
  */
 package com.zimbra.cs.service.mail;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
@@ -24,16 +26,25 @@ import org.junit.Test;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.ZAttrProvisioning.MailThreadingAlgorithm;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
+import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailSender;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.util.ItemId;
 
 public class ItemActionTest {
     @BeforeClass
@@ -70,5 +81,110 @@ public class ItemActionTest {
         Folder inbox = mbox.getFolderById(null, Mailbox.ID_FOLDER_INBOX);
         Assert.assertFalse("inbox doesn't have \\NoInherit", inbox.isTagged(Flag.FlagInfo.NO_INHERIT));
         Assert.assertNull("no ACL on inbox", inbox.getEffectiveACL());
+    }
+
+    @Test
+    public void deleteIncompleteConversation() throws Exception {
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+        acct.setMailThreadingAlgorithm(MailThreadingAlgorithm.subject);
+
+        // setup: add the root message
+        ParsedMessage pm = MailboxTestUtil.generateMessage("test subject");
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        int rootId = mbox.addMessage(null, pm, dopt, null).getId();
+
+        // add additional messages
+        pm = MailboxTestUtil.generateMessage("Re: test subject");
+        Message draft = mbox.saveDraft(null, pm, Mailbox.ID_AUTO_INCREMENT, rootId + "", MailSender.MSGTYPE_REPLY, null, null, 0);
+        Message parent = mbox.getMessageById(null, rootId);
+        Assert.assertEquals(parent.getConversationId(), draft.getConversationId());
+
+        pm = MailboxTestUtil.generateMessage("Re: test subject");
+        Message draft2 = mbox.saveDraft(null, pm, Mailbox.ID_AUTO_INCREMENT);
+        parent = mbox.getMessageById(null, rootId);
+        Assert.assertEquals(parent.getConversationId(), draft2.getConversationId());
+
+        MailItem.TargetConstraint tcon = new MailItem.TargetConstraint(mbox, MailItem.TargetConstraint.INCLUDE_TRASH);
+        ItemId iid = new ItemId(mbox, Mailbox.ID_FOLDER_TRASH);
+
+        // trash one message in conversation
+        ItemActionHelper.MOVE(null, mbox, SoapProtocol.Soap12, Collections.singletonList(draft.getId()), MailItem.Type.MESSAGE, tcon, iid);
+        Assert.assertEquals(draft.getFolderId(), Mailbox.ID_FOLDER_TRASH);
+
+        ItemActionHelper.HARD_DELETE(null, mbox, SoapProtocol.Soap12, Collections.singletonList(draft.getConversationId()), MailItem.Type.CONVERSATION, tcon);
+
+        // the messages not in the trash should still exist and attached to the same conversation
+        parent = mbox.getMessageById(null, rootId);
+        Message m = mbox.getMessageById(null, draft2.getId());
+        Assert.assertEquals(parent.getConversationId(), m.getConversationId());
+    }
+
+    @Test
+    public void deleteConversation() throws Exception {
+        Account acct = Provisioning.getInstance().get(Key.AccountBy.name, "test@zimbra.com");
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+        acct.setMailThreadingAlgorithm(MailThreadingAlgorithm.subject);
+
+        // setup: add the root message
+        ParsedMessage pm = MailboxTestUtil.generateMessage("test subject");
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        int rootId = mbox.addMessage(null, pm, dopt, null).getId();
+
+        // add additional messages
+        pm = MailboxTestUtil.generateMessage("Re: test subject");
+        Message draft = mbox.saveDraft(null, pm, Mailbox.ID_AUTO_INCREMENT, rootId + "", MailSender.MSGTYPE_REPLY, null, null, 0);
+        Message parent = mbox.getMessageById(null, rootId);
+        Assert.assertEquals(parent.getConversationId(), draft.getConversationId());
+
+        pm = MailboxTestUtil.generateMessage("Re: test subject");
+        Message draft2 = mbox.saveDraft(null, pm, Mailbox.ID_AUTO_INCREMENT);
+        parent = mbox.getMessageById(null, rootId);
+        Assert.assertEquals(parent.getConversationId(), draft2.getConversationId());
+
+        MailItem.TargetConstraint tcon = new MailItem.TargetConstraint(mbox, MailItem.TargetConstraint.INCLUDE_TRASH);
+        ItemId iid = new ItemId(mbox, Mailbox.ID_FOLDER_TRASH);
+
+        // trash the conversation
+        ItemActionHelper.MOVE(null, mbox, SoapProtocol.Soap12, Arrays.asList(parent.getId(), draft.getId(), draft2.getId()), MailItem.Type.MESSAGE, tcon, iid);
+        Assert.assertEquals(parent.getFolderId(), Mailbox.ID_FOLDER_TRASH);
+        Assert.assertEquals(draft.getFolderId(), Mailbox.ID_FOLDER_TRASH);
+        Assert.assertEquals(draft2.getFolderId(), Mailbox.ID_FOLDER_TRASH);
+
+        ItemActionHelper.HARD_DELETE(null, mbox, SoapProtocol.Soap12, Collections.singletonList(parent.getConversationId()), MailItem.Type.CONVERSATION, tcon);
+        Exception ex = null;
+        try {
+            mbox.getMessageById(null, parent.getId());
+        } catch (Exception e) {
+            ex = e;
+            Assert.assertTrue(e instanceof NoSuchItemException);
+        }
+        Assert.assertNotNull(ex);
+        ex = null;
+        try {
+            mbox.getMessageById(null, draft.getId());
+        } catch (Exception e) {
+            ex = e;
+            Assert.assertTrue(e instanceof NoSuchItemException);
+        }
+        Assert.assertNotNull(ex);
+        ex = null;
+        try {
+            mbox.getMessageById(null, draft2.getId());
+        } catch (Exception e) {
+            ex = e;
+            Assert.assertTrue(e instanceof NoSuchItemException);
+        }
+        Assert.assertNotNull(ex);
+        ex = null;
+        try {
+            mbox.getConversationById(null, draft2.getConversationId());
+        } catch (Exception e) {
+            ex = e;
+            Assert.assertTrue(e instanceof NoSuchItemException);
+        }
+        Assert.assertNotNull(ex);
     }
 }

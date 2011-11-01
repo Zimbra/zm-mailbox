@@ -18,6 +18,8 @@ package com.zimbra.cs.mailbox;
 import java.io.File;
 import java.util.Map;
 
+import javax.mail.internet.MimeMessage;
+
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import com.zimbra.common.localconfig.LC;
@@ -27,12 +29,16 @@ import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.HSQLDB;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.mime.MockMimeTypeInfo;
+import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.handler.MessageRFC822Handler;
 import com.zimbra.cs.mime.handler.TextHtmlHandler;
 import com.zimbra.cs.mime.handler.TextPlainHandler;
 import com.zimbra.cs.store.MockStoreManager;
 import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.util.JMSession;
 
 public final class MailboxTestUtil {
 
@@ -123,5 +129,14 @@ public final class MailboxTestUtil {
 
     public static void index(Mailbox mbox) throws ServiceException {
         mbox.index.indexDeferredItems();
+    }
+
+    public static ParsedMessage generateMessage(String subject) throws Exception {
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
+        mm.setHeader("From", "Bob Evans <bob@example.com>");
+        mm.setHeader("To", "Jimmy Dean <jdean@example.com>");
+        mm.setHeader("Subject", subject);
+        mm.setText("nothing to see here");
+        return new ParsedMessage(mm, false);
     }
 }

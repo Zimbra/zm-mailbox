@@ -17,7 +17,6 @@ package com.zimbra.cs.mailbox;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.mail.internet.MimeMessage;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -30,11 +29,9 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.index.BrowseTerm;
-import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
-import com.zimbra.cs.util.JMSession;
 
 /**
  * Unit test for {@link Mailbox}.
@@ -86,15 +83,6 @@ public final class MailboxTest {
         Assert.assertEquals(2, terms.get(3).getFreq());
     }
 
-    private ParsedMessage generateMessage(String subject) throws Exception {
-        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
-        mm.setHeader("From", "Bob Evans <bob@example.com>");
-        mm.setHeader("To", "Jimmy Dean <jdean@example.com>");
-        mm.setHeader("Subject", subject);
-        mm.setText("nothing to see here");
-        return new ParsedMessage(mm, false);
-    }
-
     @Test
     public void threadDraft() throws Exception {
         Account acct = Provisioning.getInstance().getAccount("test@zimbra.com");
@@ -103,43 +91,43 @@ public final class MailboxTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
         // setup: add the root message
-        ParsedMessage pm = generateMessage("test subject");
+        ParsedMessage pm = MailboxTestUtil.generateMessage("test subject");
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
         int rootId = mbox.addMessage(null, pm, dopt, null).getId();
 
         // first draft explicitly references the parent by item ID (how ZWC does it)
-        pm = generateMessage("Re: test subject");
+        pm = MailboxTestUtil.generateMessage("Re: test subject");
         Message draft = mbox.saveDraft(null, pm, Mailbox.ID_AUTO_INCREMENT, rootId + "", MailSender.MSGTYPE_REPLY, null, null, 0);
         Message parent = mbox.getMessageById(null, rootId);
         Assert.assertEquals("threaded explicitly", parent.getConversationId(), draft.getConversationId());
 
         // second draft implicitly references the parent by default threading rules
-        pm = generateMessage("Re: test subject");
+        pm = MailboxTestUtil.generateMessage("Re: test subject");
         draft = mbox.saveDraft(null, pm, Mailbox.ID_AUTO_INCREMENT);
         parent = mbox.getMessageById(null, rootId);
         Assert.assertEquals("threaded implicitly [saveDraft]", parent.getConversationId(), draft.getConversationId());
 
         // threading is set up at first save time, so modifying the second draft should *not* affect threading
-        pm = generateMessage("Re: changed the subject");
+        pm = MailboxTestUtil.generateMessage("Re: changed the subject");
         draft = mbox.saveDraft(null, pm, draft.getId());
         parent = mbox.getMessageById(null, rootId);
         Assert.assertEquals("threaded implicitly [resaved]", parent.getConversationId(), draft.getConversationId());
 
         // third draft is like second draft, but goes via Mailbox.addMessage (how IMAP does it)
-        pm = generateMessage("Re: test subject");
+        pm = MailboxTestUtil.generateMessage("Re: test subject");
         dopt = new DeliveryOptions().setFlags(Flag.BITMASK_DRAFT).setFolderId(Mailbox.ID_FOLDER_DRAFTS);
         draft = mbox.addMessage(null, pm, dopt, null);
         parent = mbox.getMessageById(null, rootId);
         Assert.assertEquals("threaded implicitly [addMessage]", parent.getConversationId(), draft.getConversationId());
 
         // fourth draft explicitly references the parent by item ID, even though it wouldn't get threaded using the default threader
-        pm = generateMessage("changed the subject");
+        pm = MailboxTestUtil.generateMessage("changed the subject");
         draft = mbox.saveDraft(null, pm, Mailbox.ID_AUTO_INCREMENT, rootId + "", MailSender.MSGTYPE_REPLY, null, null, 0);
         parent = mbox.getMessageById(null, rootId);
         Assert.assertEquals("threaded explicitly (changed subject)", parent.getConversationId(), draft.getConversationId());
 
         // fifth draft is not related to the parent and should not be threaded
-        pm = generateMessage("Re: unrelated subject");
+        pm = MailboxTestUtil.generateMessage("Re: unrelated subject");
         draft = mbox.saveDraft(null, pm, Mailbox.ID_AUTO_INCREMENT);
         Assert.assertEquals("unrelated", -draft.getId(), draft.getConversationId());
     }
@@ -152,7 +140,7 @@ public final class MailboxTest {
         // add a message
         int changeId1 = mbox.getLastChangeID();
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
-        int msgId = mbox.addMessage(null, generateMessage("foo"), dopt, null).getId();
+        int msgId = mbox.addMessage(null, MailboxTestUtil.generateMessage("foo"), dopt, null).getId();
 
         // turn on sync tracking -- tombstone table should be empty
         mbox.beginTrackingSync();
@@ -230,7 +218,7 @@ public final class MailboxTest {
                                 fParent.getId(), ((Folder) pModification.preModifyObj).getId());
 
             DeliveryOptions dopt = new DeliveryOptions().setFolderId(f.getId());
-            Message m = mbox.addMessage(null, generateMessage("test subject"), dopt, null);
+            Message m = mbox.addMessage(null, MailboxTestUtil.generateMessage("test subject"), dopt, null);
             ModificationKey mkey = new ModificationKey(m);
 
             mbox.delete(null, f.getId(), MailItem.Type.FOLDER);
@@ -270,7 +258,7 @@ public final class MailboxTest {
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
 
         DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
-        int msgId = mbox.addMessage(null, generateMessage("test"), dopt, null).getId();
+        int msgId = mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), dopt, null).getId();
 
         mbox.index.indexDeferredItems();
 
