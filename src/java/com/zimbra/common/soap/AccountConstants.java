@@ -32,27 +32,13 @@ public class AccountConstants {
     public static final String E_CHANGE_PASSWORD_RESPONSE = "ChangePasswordResponse";
     public static final String E_END_SESSION_REQUEST = "EndSessionRequest";
     public static final String E_END_SESSION_RESPONSE = "EndSessionResponse";
-    // prefs
+    
     public static final String E_GET_PREFS_REQUEST = "GetPrefsRequest";
     public static final String E_GET_PREFS_RESPONSE = "GetPrefsResponse";
-    public static final String E_MODIFY_PREFS_REQUEST = "ModifyPrefsRequest";
-    public static final String E_MODIFY_PREFS_RESPONSE = "ModifyPrefsResponse";
     public static final String E_GET_INFO_REQUEST = "GetInfoRequest";
     public static final String E_GET_INFO_RESPONSE = "GetInfoResponse";
     public static final String E_GET_ACCOUNT_INFO_REQUEST = "GetAccountInfoRequest";
     public static final String E_GET_ACCOUNT_INFO_RESPONSE = "GetAccountInfoResponse";
-    public static final String E_SEARCH_GAL_REQUEST = "SearchGalRequest";
-    public static final String E_SEARCH_GAL_RESPONSE = "SearchGalResponse";
-    public static final String E_AUTO_COMPLETE_GAL_REQUEST = "AutoCompleteGalRequest";
-    public static final String E_AUTO_COMPLETE_GAL_RESPONSE = "AutoCompleteGalResponse";
-    public static final String E_SYNC_GAL_REQUEST = "SyncGalRequest";
-    public static final String E_SYNC_GAL_RESPONSE = "SyncGalResponse";
-    public static final String E_SEARCH_CALENDAR_RESOURCES_REQUEST = "SearchCalendarResourcesRequest";
-    public static final String E_SEARCH_CALENDAR_RESOURCES_RESPONSE = "SearchCalendarResourcesResponse";
-    public static final String E_MODIFY_PROPERTIES_REQUEST = "ModifyPropertiesRequest";
-    public static final String E_MODIFY_PROPERTIES_RESPONSE = "ModifyPropertiesResponse";
-    public static final String E_MODIFY_ZIMLET_PREFS_REQUEST = "ModifyZimletPrefsRequest";
-    public static final String E_MODIFY_ZIMLET_PREFS_RESPONSE = "ModifyZimletPrefsResponse";
     public static final String E_GET_ALL_LOCALES_REQUEST = "GetAllLocalesRequest";
     public static final String E_GET_ALL_LOCALES_RESPONSE = "GetAllLocalesResponse";
     public static final String E_GET_AVAILABLE_LOCALES_REQUEST = "GetAvailableLocalesRequest";
@@ -65,17 +51,35 @@ public class AccountConstants {
     public static final String E_GET_SHARE_INFO_RESPONSE = "GetShareInfoResponse";
     public static final String E_GET_WHITE_BLACK_LIST_REQUEST = "GetWhiteBlackListRequest";
     public static final String E_GET_WHITE_BLACK_LIST_RESPONSE = "GetWhiteBlackListResponse";
+    public static final String E_MODIFY_PREFS_REQUEST = "ModifyPrefsRequest";
+    public static final String E_MODIFY_PREFS_RESPONSE = "ModifyPrefsResponse";
+    public static final String E_MODIFY_PROPERTIES_REQUEST = "ModifyPropertiesRequest";
+    public static final String E_MODIFY_PROPERTIES_RESPONSE = "ModifyPropertiesResponse";
     public static final String E_MODIFY_WHITE_BLACK_LIST_REQUEST = "ModifyWhiteBlackListRequest";
     public static final String E_MODIFY_WHITE_BLACK_LIST_RESPONSE = "ModifyWhiteBlackListResponse";
+    public static final String E_MODIFY_ZIMLET_PREFS_REQUEST = "ModifyZimletPrefsRequest";
+    public static final String E_MODIFY_ZIMLET_PREFS_RESPONSE = "ModifyZimletPrefsResponse";
+
+    // GAL    
+    public static final String E_AUTO_COMPLETE_GAL_REQUEST = "AutoCompleteGalRequest";
+    public static final String E_AUTO_COMPLETE_GAL_RESPONSE = "AutoCompleteGalResponse";
+    public static final String E_SEARCH_CALENDAR_RESOURCES_REQUEST = "SearchCalendarResourcesRequest";
+    public static final String E_SEARCH_CALENDAR_RESOURCES_RESPONSE = "SearchCalendarResourcesResponse";
+    public static final String E_SEARCH_GAL_REQUEST = "SearchGalRequest";
+    public static final String E_SEARCH_GAL_RESPONSE = "SearchGalResponse";
+    public static final String E_SYNC_GAL_REQUEST = "SyncGalRequest";
+    public static final String E_SYNC_GAL_RESPONSE = "SyncGalResponse";
+    
+    // identities
     public static final String E_CREATE_IDENTITY_REQUEST = "CreateIdentityRequest";
     public static final String E_CREATE_IDENTITY_RESPONSE = "CreateIdentityResponse";
-    // identities
     public static final String E_GET_IDENTITIES_REQUEST = "GetIdentitiesRequest";
     public static final String E_GET_IDENTITIES_RESPONSE = "GetIdentitiesResponse";
     public static final String E_MODIFY_IDENTITY_REQUEST = "ModifyIdentityRequest";
     public static final String E_MODIFY_IDENTITY_RESPONSE = "ModifyIdentityResponse";
     public static final String E_DELETE_IDENTITY_REQUEST = "DeleteIdentityRequest";
     public static final String E_DELETE_IDENTITY_RESPONSE = "DeleteIdentityResponse";
+
     // signatures
     public static final String E_CREATE_SIGNATURE_REQUEST = "CreateSignatureRequest";
     public static final String E_CREATE_SIGNATURE_RESPONSE = "CreateSignatureResponse";
@@ -100,12 +104,19 @@ public class AccountConstants {
     public static final String E_SUBSCRIBE_DISTRIBUTION_LIST_REQUEST = "SubscribeDistributionListRequest";
     public static final String E_SUBSCRIBE_DISTRIBUTION_LIST_RESPONSE = "SubscribeDistributionListResponse";
     
+    // rights
+    public static final String E_DISCOVER_RIGHTS_REQUEST = "DiscoverRightsRequest";
+    public static final String E_DISCOVER_RIGHTS_RESPONSE = "DiscoverRightsResponse";
+    
+    // system
     public static final String E_GET_VERSION_INFO_REQUEST = "GetVersionInfoRequest";
     public static final String E_GET_VERSION_INFO_RESPONSE = "GetVersionInfoResponse";
-
+    
+    // SMIME
     public static final String E_GET_SMIME_PUBLIC_CERTS_REQUEST = "GetSMIMEPublicCertsRequest";
     public static final String E_GET_SMIME_PUBLIC_CERTS_RESPONSE = "GetSMIMEPublicCertsResponse";
 
+    // profile
     public static final String E_UPDATE_PROFILE_REQUEST = "UpdateProfileRequest";
     public static final String E_UPDATE_PROFILE_RESPONSE = "UpdateProfileResponse";
     
@@ -120,27 +131,14 @@ public class AccountConstants {
     public static final QName CHANGE_PASSWORD_RESPONSE = QName.get(E_CHANGE_PASSWORD_RESPONSE, NAMESPACE);
     public static final QName END_SESSION_REQUEST = QName.get(E_END_SESSION_REQUEST, NAMESPACE);
     public static final QName END_SESSION_RESPONSE = QName.get(E_END_SESSION_RESPONSE, NAMESPACE);
+    
     // prefs
     public static final QName GET_PREFS_REQUEST = QName.get(E_GET_PREFS_REQUEST, NAMESPACE);
     public static final QName GET_PREFS_RESPONSE = QName.get(E_GET_PREFS_RESPONSE, NAMESPACE);
-    public static final QName MODIFY_PREFS_REQUEST = QName.get(E_MODIFY_PREFS_REQUEST, NAMESPACE);
-    public static final QName MODIFY_PREFS_RESPONSE = QName.get(E_MODIFY_PREFS_RESPONSE, NAMESPACE);
     public static final QName GET_INFO_REQUEST = QName.get(E_GET_INFO_REQUEST, NAMESPACE);
     public static final QName GET_INFO_RESPONSE = QName.get(E_GET_INFO_RESPONSE, NAMESPACE);
     public static final QName GET_ACCOUNT_INFO_REQUEST = QName.get(E_GET_ACCOUNT_INFO_REQUEST, NAMESPACE);
     public static final QName GET_ACCOUNT_INFO_RESPONSE = QName.get(E_GET_ACCOUNT_INFO_RESPONSE, NAMESPACE);
-    public static final QName SEARCH_GAL_REQUEST = QName.get(E_SEARCH_GAL_REQUEST, NAMESPACE);
-    public static final QName SEARCH_GAL_RESPONSE = QName.get(E_SEARCH_GAL_RESPONSE, NAMESPACE);
-    public static final QName AUTO_COMPLETE_GAL_REQUEST = QName.get(E_AUTO_COMPLETE_GAL_REQUEST, NAMESPACE);
-    public static final QName AUTO_COMPLETE_GAL_RESPONSE = QName.get(E_AUTO_COMPLETE_GAL_RESPONSE, NAMESPACE);
-    public static final QName SYNC_GAL_REQUEST = QName.get(E_SYNC_GAL_REQUEST, NAMESPACE);
-    public static final QName SYNC_GAL_RESPONSE = QName.get(E_SYNC_GAL_RESPONSE, NAMESPACE);
-    public static final QName SEARCH_CALENDAR_RESOURCES_REQUEST = QName.get(E_SEARCH_CALENDAR_RESOURCES_REQUEST, NAMESPACE);
-    public static final QName SEARCH_CALENDAR_RESOURCES_RESPONSE = QName.get(E_SEARCH_CALENDAR_RESOURCES_RESPONSE, NAMESPACE);
-    public static final QName MODIFY_PROPERTIES_REQUEST = QName.get(E_MODIFY_PROPERTIES_REQUEST, NAMESPACE);
-    public static final QName MODIFY_PROPERTIES_RESPONSE = QName.get(E_MODIFY_PROPERTIES_RESPONSE, NAMESPACE);
-    public static final QName MODIFY_ZIMLET_PREFS_REQUEST = QName.get(E_MODIFY_ZIMLET_PREFS_REQUEST, NAMESPACE);
-    public static final QName MODIFY_ZIMLET_PREFS_RESPONSE = QName.get(E_MODIFY_ZIMLET_PREFS_RESPONSE, NAMESPACE);
     public static final QName GET_ALL_LOCALES_REQUEST = QName.get(E_GET_ALL_LOCALES_REQUEST, NAMESPACE);
     public static final QName GET_ALL_LOCALES_RESPONSE = QName.get(E_GET_ALL_LOCALES_RESPONSE, NAMESPACE);
     public static final QName GET_AVAILABLE_LOCALES_REQUEST = QName.get(E_GET_AVAILABLE_LOCALES_REQUEST, NAMESPACE);
@@ -153,9 +151,25 @@ public class AccountConstants {
     public static final QName GET_SHARE_INFO_RESPONSE = QName.get(E_GET_SHARE_INFO_RESPONSE, NAMESPACE);
     public static final QName GET_WHITE_BLACK_LIST_REQUEST = QName.get(E_GET_WHITE_BLACK_LIST_REQUEST, NAMESPACE);
     public static final QName GET_WHITE_BLACK_LIST_RESPONSE = QName.get(E_GET_WHITE_BLACK_LIST_RESPONSE, NAMESPACE);
+    public static final QName MODIFY_PREFS_REQUEST = QName.get(E_MODIFY_PREFS_REQUEST, NAMESPACE);
+    public static final QName MODIFY_PREFS_RESPONSE = QName.get(E_MODIFY_PREFS_RESPONSE, NAMESPACE);
+    public static final QName MODIFY_PROPERTIES_REQUEST = QName.get(E_MODIFY_PROPERTIES_REQUEST, NAMESPACE);
+    public static final QName MODIFY_PROPERTIES_RESPONSE = QName.get(E_MODIFY_PROPERTIES_RESPONSE, NAMESPACE);
     public static final QName MODIFY_WHITE_BLACK_LIST_REQUEST = QName.get(E_MODIFY_WHITE_BLACK_LIST_REQUEST, NAMESPACE);
     public static final QName MODIFY_WHITE_BLACK_LIST_RESPONSE = QName.get(E_MODIFY_WHITE_BLACK_LIST_RESPONSE, NAMESPACE);
+    public static final QName MODIFY_ZIMLET_PREFS_REQUEST = QName.get(E_MODIFY_ZIMLET_PREFS_REQUEST, NAMESPACE);
+    public static final QName MODIFY_ZIMLET_PREFS_RESPONSE = QName.get(E_MODIFY_ZIMLET_PREFS_RESPONSE, NAMESPACE);
 
+    // GAL    
+    public static final QName AUTO_COMPLETE_GAL_REQUEST = QName.get(E_AUTO_COMPLETE_GAL_REQUEST, NAMESPACE);
+    public static final QName AUTO_COMPLETE_GAL_RESPONSE = QName.get(E_AUTO_COMPLETE_GAL_RESPONSE, NAMESPACE);
+    public static final QName SEARCH_CALENDAR_RESOURCES_REQUEST = QName.get(E_SEARCH_CALENDAR_RESOURCES_REQUEST, NAMESPACE);
+    public static final QName SEARCH_CALENDAR_RESOURCES_RESPONSE = QName.get(E_SEARCH_CALENDAR_RESOURCES_RESPONSE, NAMESPACE);
+    public static final QName SEARCH_GAL_REQUEST = QName.get(E_SEARCH_GAL_REQUEST, NAMESPACE);
+    public static final QName SEARCH_GAL_RESPONSE = QName.get(E_SEARCH_GAL_RESPONSE, NAMESPACE);
+    public static final QName SYNC_GAL_REQUEST = QName.get(E_SYNC_GAL_REQUEST, NAMESPACE);
+    public static final QName SYNC_GAL_RESPONSE = QName.get(E_SYNC_GAL_RESPONSE, NAMESPACE);
+    
     // identities
     public static final QName CREATE_IDENTITY_REQUEST = QName.get(E_CREATE_IDENTITY_REQUEST, NAMESPACE);
     public static final QName CREATE_IDENTITY_RESPONSE = QName.get(E_CREATE_IDENTITY_RESPONSE, NAMESPACE);
@@ -189,8 +203,12 @@ public class AccountConstants {
     public static final QName GET_DISTRIBUTION_LIST_MEMBERS_RESPONSE = QName.get(E_GET_DISTRIBUTION_LIST_MEMBERS_RESPONSE, NAMESPACE);
     public static final QName SUBSCRIBE_DISTRIBUTION_LIST_REQUEST = QName.get(E_SUBSCRIBE_DISTRIBUTION_LIST_REQUEST, NAMESPACE);
     public static final QName SUBSCRIBE_DISTRIBUTION_LIST_RESPONSE = QName.get(E_SUBSCRIBE_DISTRIBUTION_LIST_RESPONSE, NAMESPACE);
-
     
+    // rights
+    public static final QName DISCOVER_RIGHTS_REQUEST = QName.get(E_DISCOVER_RIGHTS_REQUEST, NAMESPACE);
+    public static final QName DISCOVER_RIGHTS_RESPONSE = QName.get(E_DISCOVER_RIGHTS_RESPONSE, NAMESPACE);
+    
+    // system
     public static final QName GET_VERSION_INFO_REQUEST = QName.get(E_GET_VERSION_INFO_REQUEST, NAMESPACE);
     public static final QName GET_VERSION_INFO_RESPONSE = QName.get(E_GET_VERSION_INFO_RESPONSE, NAMESPACE);
     
@@ -321,6 +339,9 @@ public class AccountConstants {
     public static final String A_SMIME_SOURCE_LOOKUP_OPT = "sourceLookupOpt";
     public static final String A_VIA = "via";
     public static final String A_VERIFY_ACCOUNT = "verifyAccount";
+    
+    // account ACLs
+    public static final String E_TARGETS = "targets";
     
     // gal
     public static final String A_IS_GROUP = "isGroup";
