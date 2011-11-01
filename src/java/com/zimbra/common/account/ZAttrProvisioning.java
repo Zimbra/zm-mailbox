@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111028-2017 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111031-0952 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -262,6 +262,24 @@ public class ZAttrProvisioning {
         public boolean isAPPROVAL() { return this == APPROVAL;}
         public boolean isACCEPT() { return this == ACCEPT;}
         public boolean isREJECT() { return this == REJECT;}
+    }
+
+    public static enum DomainAboveAggregateQuotaHandling {
+        BLOCKSEND("BLOCKSEND"),
+        BLOCKSENDRECEIVE("BLOCKSENDRECEIVE"),
+        ALLOWSENDRECEIVE("ALLOWSENDRECEIVE");
+        private String mValue;
+        private DomainAboveAggregateQuotaHandling(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static DomainAboveAggregateQuotaHandling fromString(String s) throws ServiceException {
+            for (DomainAboveAggregateQuotaHandling value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isBLOCKSEND() { return this == BLOCKSEND;}
+        public boolean isBLOCKSENDRECEIVE() { return this == BLOCKSENDRECEIVE;}
+        public boolean isALLOWSENDRECEIVE() { return this == ALLOWSENDRECEIVE;}
     }
 
     public static enum DomainStatus {
@@ -1779,6 +1797,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=497)
     public static final String A_zimbraAdminURL = "zimbraAdminURL";
+
+    /**
+     * last calculated aggregate quota usage for the domain in bytes
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1328)
+    public static final String A_zimbraAggregateQuotaLastUsage = "zimbraAggregateQuotaLastUsage";
 
     /**
      * zimbraId of alias target
@@ -3308,6 +3334,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDNSCheckHostname = "zimbraDNSCheckHostname";
 
     /**
+     * how to handle a domain which is over the aggregate quota
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1329)
+    public static final String A_zimbraDomainAboveAggregateQuotaHandling = "zimbraDomainAboveAggregateQuotaHandling";
+
+    /**
      * maximum amount of mail quota a domain admin can set on a user
      */
     @ZAttr(id=398)
@@ -3320,6 +3354,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=300)
     public static final String A_zimbraDomainAdminModifiableAttr = "zimbraDomainAdminModifiableAttr";
+
+    /**
+     * maximum aggregate quota for the domain in bytes
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1327)
+    public static final String A_zimbraDomainAggregateQuota = "zimbraDomainAggregateQuota";
 
     /**
      * zimbraId of domain alias target
@@ -5533,9 +5575,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailDiskStreamingThreshold = "zimbraMailDiskStreamingThreshold";
 
     /**
-     * Maximum mailbox quota for the domain in bytes. Default is
-     * &quot;unlimited&quot;. The effective quota for a mailbox would be the
-     * minimum of this and zimbraMailQuota.
+     * Maximum mailbox quota for the domain in bytes. The effective quota for
+     * a mailbox would be the minimum of this and zimbraMailQuota.
      *
      * @since ZCS 8.0.0
      */

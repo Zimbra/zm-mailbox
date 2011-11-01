@@ -254,6 +254,10 @@ public final class AdminConstants {
 
     public static final String E_GET_QUOTA_USAGE_REQUEST = "GetQuotaUsageRequest";
     public static final String E_GET_QUOTA_USAGE_RESPONSE = "GetQuotaUsageResponse";
+    public static final String E_COMPUTE_AGGR_QUOTA_USAGE_REQUEST = "ComputeAggregateQuotaUsageRequest";
+    public static final String E_COMPUTE_AGGR_QUOTA_USAGE_RESPONSE = "ComputeAggregateQuotaUsageResponse";
+    public static final String E_GET_AGGR_QUOTA_USAGE_ON_SERVER_REQUEST = "GetAggregateQuotaUsageOnServerRequest";
+    public static final String E_GET_AGGR_QUOTA_USAGE_ON_SERVER_RESPONSE = "GetAggregateQuotaUsageOnServerResponse";
     public static final String E_GET_ALL_MAILBOXES_REQUEST = "GetAllMailboxesRequest";
     public static final String E_GET_ALL_MAILBOXES_RESPONSE = "GetAllMailboxesResponse";
     public static final String E_GET_MAILBOX_STATS_REQUEST = "GetMailboxStatsRequest";
@@ -686,6 +690,12 @@ public final class AdminConstants {
 
     public static final QName GET_QUOTA_USAGE_REQUEST = QName.get(E_GET_QUOTA_USAGE_REQUEST, NAMESPACE);
     public static final QName GET_QUOTA_USAGE_RESPONSE = QName.get(E_GET_QUOTA_USAGE_RESPONSE, NAMESPACE);
+    public static final QName COMPUTE_AGGR_QUOTA_USAGE_REQUEST = QName.get(E_COMPUTE_AGGR_QUOTA_USAGE_REQUEST, NAMESPACE);
+    public static final QName COMPUTE_AGGR_QUOTA_USAGE_RESPONSE = QName.get(E_COMPUTE_AGGR_QUOTA_USAGE_RESPONSE, NAMESPACE);
+    public static final QName GET_AGGR_QUOTA_USAGE_ON_SERVER_REQUEST =
+            QName.get(E_GET_AGGR_QUOTA_USAGE_ON_SERVER_REQUEST, NAMESPACE);
+    public static final QName GET_AGGR_QUOTA_USAGE_ON_SERVER_RESPONSE =
+            QName.get(E_GET_AGGR_QUOTA_USAGE_ON_SERVER_RESPONSE, NAMESPACE);
     public static final QName GET_ALL_MAILBOXES_REQUEST = QName.get(E_GET_ALL_MAILBOXES_REQUEST, NAMESPACE);
     public static final QName GET_ALL_MAILBOXES_RESPONSE = QName.get(E_GET_ALL_MAILBOXES_RESPONSE, NAMESPACE);
     public static final QName GET_MAILBOX_STATS_REQUEST = QName.get(E_GET_MAILBOX_STATS_REQUEST, NAMESPACE);
