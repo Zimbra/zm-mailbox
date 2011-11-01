@@ -146,7 +146,8 @@ extends Thread {
                         Mailbox mbox = mm.getMailboxById(mailboxId);
                         Account account = mbox.getAccount();
                         Provisioning prov = Provisioning.getInstance();
-                        if (!Provisioning.ACCOUNT_STATUS_MAINTENANCE.equals(account.getAccountStatus(prov))) { 
+                        if (!Provisioning.ACCOUNT_STATUS_MAINTENANCE.equals(account.getAccountStatus(prov)) &&
+                                !account.isIsExternalVirtualAccount()) { 
                             ZimbraLog.addAccountNameToContext(account.getName());
                             boolean purgedAll = mbox.purgeMessages(null);
                             if (!purgedAll) {
@@ -155,7 +156,7 @@ extends Thread {
                             }
                             Config.setInt(Config.KEY_PURGE_LAST_MAILBOX_ID, mbox.getId());
                         } else {
-                            ZimbraLog.purge.debug("Skipping mailbox %d because the account is in maintenance status.", mailboxId);
+                            ZimbraLog.purge.debug("Skipping mailbox %d because the account is in maintenance status or is an external virtual account.", mailboxId);
                         }
                     } else {
                         ZimbraLog.purge.debug("Skipping mailbox %d because it is not loaded into memory.", mailboxId);
