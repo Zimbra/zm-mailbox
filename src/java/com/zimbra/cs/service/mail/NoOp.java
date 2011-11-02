@@ -115,21 +115,20 @@ public class NoOp extends MailDocumentHandler  {
                             blockingUnsupported = true;
                     }
                 }
+                if (enforceLimit) {
+                    // remove this soap context from the blocked-conext hash, but only
+                    // if it hasn't already been removed by someone else...
+                    sBlockedNops.remove(zsc.getAuthtokenAccountId(), zsc);
+                }
             } else {
                 ZimbraSoapContext origContext = (ZimbraSoapContext)(servletRequest.getAttribute("nop_origcontext"));
                 if (origContext.isCanceledWaitForNotifications())
                     blockingUnsupported = true;
-            }
-            //
-            // at this point, we know we're done waiting -- we either blocked on a BlockingContinuation, or
-            // we've resumed a RetryContinuation...either way our wait is up, time to execute.
-            //
-//            blockingUnsupported = zsc.isCanceledWaitForNotifications();
-
-            if (enforceLimit) {
-                // remove this soap context from the blocked-conext hash, but only
-                // if it hasn't already been removed by someone else...
-                sBlockedNops.remove(zsc.getAuthtokenAccountId(), zsc);
+                if (enforceLimit) {
+                    // remove this soap context from the blocked-conext hash, but only
+                    // if it hasn't already been removed by someone else...
+                    sBlockedNops.remove(origContext.getAuthtokenAccountId(), origContext);
+                }
             }
         }
         Element toRet = zsc.createElement(MailConstants.NO_OP_RESPONSE);
