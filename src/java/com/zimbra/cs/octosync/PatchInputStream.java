@@ -103,7 +103,7 @@ public class PatchInputStream extends InputStream
     public static PatchInputStream create(InputStream is, Mailbox mbox, OperationContext opContext,
             int defaultFileId, int defaultVersion, OutputStream patchOs, PatchManifest manifest) throws IOException, ServiceException
     {
-        InputStream input;
+        InputStream input = null;
 
         if (patchOs != null) {
             input = new TeeInputStream(is, patchOs);

@@ -44,6 +44,8 @@ public abstract class BlobStore
         public abstract String getId();
 
         /**
+         * @todo for resumable upload
+         *
          * Returns the current size of the incoming blob.
          *
          * @return the size
@@ -51,6 +53,8 @@ public abstract class BlobStore
         //public abstract long getCurrentSize();
 
         /**
+         * @todo for resumable upload
+         *
          * Gets the expected size, if set. 0 if not set/unknown.
          *
          * @return the expected size
@@ -58,6 +62,8 @@ public abstract class BlobStore
         //public abstract long getExpectedSize();
 
         /**
+         * @todo for resumable upload
+         *
          * Sets the expected size.
          *
          * @param value The expected size. Must be greater than 0.
@@ -111,7 +117,6 @@ public abstract class BlobStore
      *
      * The details of how the blob is stored, possible aspects such as
      * retention period are implementation dependent.
-     *
      */
     public abstract class StoredBlob
     {
@@ -150,6 +155,14 @@ public abstract class BlobStore
          * @param value the new context
          */
         public abstract void setContext(Object value);
+
+        /**
+         * Returns the patch size (in bytes). This must be actual
+         * patch size, uncompressed.
+         *
+         * @return the patch size
+         */
+        public abstract long getSize();
 
         protected StoredBlob(String id)
         {

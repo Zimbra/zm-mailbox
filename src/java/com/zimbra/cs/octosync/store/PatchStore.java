@@ -119,6 +119,26 @@ public class PatchStore
         {
             return manifestBlob.getInputStream();
         }
+
+        /**
+         * Returns the patch size (uncompressed)
+         *
+         * @return patch size
+         */
+        public long getPatchSize()
+        {
+            return patchBlob.getSize();
+        }
+
+        /**
+         * Returns the patch manifest size (uncompressed)
+         *
+         * @return manifest size
+         */
+        public long getManifestSize()
+        {
+            return manifestBlob.getSize();
+        }
     }
 
 

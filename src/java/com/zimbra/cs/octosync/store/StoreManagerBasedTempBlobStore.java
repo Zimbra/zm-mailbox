@@ -165,12 +165,14 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
         private Blob blob;
         private Object ctx;
         private long lastAccessTime;
+        private long size;
 
-        protected StoredBlob(String id, Blob blob, Object ctx)
+        protected StoredBlob(String id, Blob blob, Object ctx, long size)
         {
             super(id);
             this.blob = blob;
             this.ctx = ctx;
+            this.size = size;
 
             lastAccessTime = System.currentTimeMillis();
         }
@@ -197,6 +199,12 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
         private long getLastAccessTime()
         {
             return lastAccessTime;
+        }
+
+        @Override
+        public long getSize()
+        {
+            return size;
         }
     }
 
@@ -266,7 +274,8 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
             assert existingBlob == myIb : "Wrong blob removed: " + myIb.getId();
         }
 
-        StoredBlob sb = new StoredBlob(id, myIb.blobBuilder.getBlob(), myIb.getContext());
+        Blob blob = myIb.blobBuilder.getBlob();
+        StoredBlob sb = new StoredBlob(id, blob, myIb.getContext(), blob.getRawSize());
 
         synchronized (storedBlobs) {
             TreeMap<Integer, StoredBlob> versionMap = storedBlobs.get(id);

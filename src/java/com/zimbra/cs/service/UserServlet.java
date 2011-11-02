@@ -40,6 +40,9 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PutMethod;
 
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.mime.ContentDisposition;
@@ -47,42 +50,40 @@ import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.ZimbraAuthTokenEncoded;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.httpclient.URLUtil;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.service.admin.AdminAccessControl;
 import com.zimbra.cs.service.formatter.Formatter;
 import com.zimbra.cs.service.formatter.FormatterFactory;
+import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 import com.zimbra.cs.service.formatter.IfbFormatter;
+import com.zimbra.cs.service.formatter.OctopusPatchFormatter;
 import com.zimbra.cs.service.formatter.TarFormatter;
 import com.zimbra.cs.service.formatter.ZipFormatter;
-import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.UserServletUtil;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.client.ZFolder;
-import com.zimbra.client.ZMailbox;
 
 /**
  *
@@ -196,6 +197,11 @@ public class UserServlet extends ZimbraServlet {
     public static final String QP_FBFORMAT = "fbfmt"; // free/busy format - "fb" (default) or "event"
 
     /**
+     * Used by {@link OctopusPatchFormatter}
+     */
+    public static final String QP_MANIFEST = "manifest"; // selects whether server returns patch manifest or not
+
+    /**
      * Used by {@link TarFormatter} to specify whether the <tt>.meta</tt>
      * files should be added to the tarball (<tt>meta=1</tt>) or not (<tt>meta=0</tt>).
      * The default is <tt>1</tt>.
@@ -223,12 +229,12 @@ public class UserServlet extends ZimbraServlet {
 
     public static final String HTTP_URL = "http_url";
     public static final String HTTP_STATUS_CODE = "http_code";
-    
+
     public static final String QP_MAX_WIDTH = "max_width";
 
     protected static final String MSGPAGE_BLOCK = "errorpage.attachment.blocked";
-    
-    public static final Log log = LogFactory.getLog(UserServlet.class); 
+
+    public static final Log log = LogFactory.getLog(UserServlet.class);
 
     /** Returns the REST URL for the account. */
     public static String getRestUrl(Account acct) throws ServiceException {
@@ -363,21 +369,21 @@ public class UserServlet extends ZimbraServlet {
 
     /**
      * Constructs the exteral url for a mount point. This gets the link back to the correct server without need for proxying it
-     * @param authToken 
+     * @param authToken
      * @param mpt The mount point to create the url for
      * @return The url for the mountpoint/share that goes back to the original user/share/server
-     * @throws ServiceException 
+     * @throws ServiceException
      */
     public static String getExternalRestUrl(OperationContext octxt, Mountpoint mpt) throws ServiceException {
         AuthToken authToken = octxt.getAuthToken();
-        // check to see if it is a local mount point, if it is there's 
+        // check to see if it is a local mount point, if it is there's
         // no need to do anything
         if(mpt.isLocal()) {
             return null;
         }
-        
+
         String folderPath = null;
-        
+
         // Figure out the target server from the target user's account.
         // This will let us get the correct server/port
         Provisioning prov = Provisioning.getInstance();
@@ -387,7 +393,7 @@ public class UserServlet extends ZimbraServlet {
             return null;
         }
         Server targetServer = prov.getServer(targetAccount);
-        
+
 
         // Avoid the soap call if its a local mailbox
         if (Provisioning.onLocalServer(targetAccount)) {
@@ -404,7 +410,7 @@ public class UserServlet extends ZimbraServlet {
             folderPath = folder.getPath();
         } else {
             // The remote server case
-            // Get the target user's mailbox.. 
+            // Get the target user's mailbox..
             ZMailbox.Options zoptions = new ZMailbox.Options(authToken.toZAuthToken(), AccountUtil.getSoapUri(targetAccount));
             zoptions.setTargetAccount(mpt.getOwnerId());
             zoptions.setTargetAccountBy(AccountBy.id);
@@ -414,7 +420,7 @@ public class UserServlet extends ZimbraServlet {
                 // we didn't manage to get a mailbox
                 return null;
             }
-            
+
             // Get an instance of their folder so we can build the path correctly
              ZFolder folder = zmbx.getFolderById(mpt.getTarget().toString(authToken.getAccount().getId()));
             // if for some reason we can't find the folder, return null
@@ -426,26 +432,26 @@ public class UserServlet extends ZimbraServlet {
         // For now we'll always use SSL
         return URLUtil.getServiceURL(targetServer, SERVLET_PATH + HttpUtil.urlEscape(getAccountPath(targetAccount) +folderPath) , true);
     }
-    
+
     /**
      * Constructs the exteral url for a mount point. This gets the link back to the correct server without need for proxying it
-     * @param authToken 
+     * @param authToken
      * @param mpt The mount point to create the url for
      * @return The url for the mountpoint/share that goes back to the original user/share/server
-     * @throws ServiceException 
+     * @throws ServiceException
      */
     public static String getExternalRestUrl(Folder folder) throws ServiceException {
         // Figure out the target server from the target user's account.
         // This will let us get the correct server/port
         Provisioning prov = Provisioning.getInstance();
-        Account targetAccount = folder.getAccount(); 
-            
+        Account targetAccount = folder.getAccount();
+
         Server targetServer = prov.getServer(targetAccount);
-        
+
         // For now we'll always use SSL
         return URLUtil.getServiceURL(targetServer, SERVLET_PATH + HttpUtil.urlEscape(getAccountPath(targetAccount) +folder.getPath()) , true);
     }
-    
+
     private void doAuthGet(HttpServletRequest req, HttpServletResponse resp, UserServletContext context)
     throws ServletException, IOException, ServiceException, UserServletException {
         if (log.isDebugEnabled()) {
