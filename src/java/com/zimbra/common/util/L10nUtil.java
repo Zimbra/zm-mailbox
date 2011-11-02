@@ -212,8 +212,10 @@ public class L10nUtil {
         errUnsupportedFormat,
         errResourceNotAllowedOnPort,
 
-        passwordViolation
-        
+        passwordViolation,
+
+        domainAggrQuotaWarnMsgSubject,
+        domainAggrQuotaWarnMsgBody
         // add other messages in the future...
     }
 

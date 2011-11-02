@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111031-0952 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111102-0929 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -264,15 +264,15 @@ public class ZAttrProvisioning {
         public boolean isREJECT() { return this == REJECT;}
     }
 
-    public static enum DomainAboveAggregateQuotaHandling {
+    public static enum DomainAggregateQuotaPolicy {
         BLOCKSEND("BLOCKSEND"),
         BLOCKSENDRECEIVE("BLOCKSENDRECEIVE"),
         ALLOWSENDRECEIVE("ALLOWSENDRECEIVE");
         private String mValue;
-        private DomainAboveAggregateQuotaHandling(String value) { mValue = value; }
+        private DomainAggregateQuotaPolicy(String value) { mValue = value; }
         public String toString() { return mValue; }
-        public static DomainAboveAggregateQuotaHandling fromString(String s) throws ServiceException {
-            for (DomainAboveAggregateQuotaHandling value : values()) {
+        public static DomainAggregateQuotaPolicy fromString(String s) throws ServiceException {
+            for (DomainAggregateQuotaPolicy value : values()) {
                 if (value.mValue.equals(s)) return value;
              }
              throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
@@ -3334,14 +3334,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraDNSCheckHostname = "zimbraDNSCheckHostname";
 
     /**
-     * how to handle a domain which is over the aggregate quota
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1329)
-    public static final String A_zimbraDomainAboveAggregateQuotaHandling = "zimbraDomainAboveAggregateQuotaHandling";
-
-    /**
      * maximum amount of mail quota a domain admin can set on a user
      */
     @ZAttr(id=398)
@@ -3362,6 +3354,33 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1327)
     public static final String A_zimbraDomainAggregateQuota = "zimbraDomainAggregateQuota";
+
+    /**
+     * policy for a domain whose quota usage is above
+     * zimbraDomainAggregateQuota
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1329)
+    public static final String A_zimbraDomainAggregateQuotaPolicy = "zimbraDomainAggregateQuotaPolicy";
+
+    /**
+     * email recipients to be notified when zimbraAggregateQuotaLastUsage
+     * reaches zimbraDomainAggregateQuotaWarnPercent of the
+     * zimbraDomainAggregateQuota
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1331)
+    public static final String A_zimbraDomainAggregateQuotaWarnEmailRecipient = "zimbraDomainAggregateQuotaWarnEmailRecipient";
+
+    /**
+     * percentage threshold for domain aggregate quota warnings
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1330)
+    public static final String A_zimbraDomainAggregateQuotaWarnPercent = "zimbraDomainAggregateQuotaWarnPercent";
 
     /**
      * zimbraId of domain alias target

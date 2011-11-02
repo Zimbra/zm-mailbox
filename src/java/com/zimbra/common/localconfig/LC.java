@@ -1138,6 +1138,9 @@ public final class LC {
 
     public static final KnownKey robots_txt = KnownKey.newKey("${zimbra_home}/conf/robots.txt");
 
+    @Supported
+    public static final KnownKey compute_aggregate_quota_threads = KnownKey.newKey(10);
+
     // Remove this in 8.0.
     public static final KnownKey filter_null_env_sender_for_dsn_redirect = KnownKey.newKey(true);
 
