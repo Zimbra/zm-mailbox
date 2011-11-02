@@ -55,7 +55,6 @@ import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.SignatureBy;
 import com.zimbra.common.account.SignatureUtil;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -89,6 +88,17 @@ import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 
 public class CalendarMailSender {
+
+    /** Returns a {@link MailSender} object that can be used to send calendar messages.  Calendar emails
+     * must always allow send-on-behalf-of because an attendee may forward any received invite to any
+     * other user using send-on-behalf-of mechanism.  Microsoft Outlook client works this way and ZCS
+     * does the same for compatibility.
+     */
+    public static MailSender getCalendarMailSender(Mailbox mbox) throws ServiceException {
+        MailSender sender = mbox.getMailSender();
+        sender.setCalendarMode(true);
+        return sender;
+    }
 
     // custom email header indicating this invite email is intended for another user
     public static final String X_ZIMBRA_CALENDAR_INTENDED_FOR = "X-Zimbra-Calendar-Intended-For";
@@ -823,7 +833,7 @@ public class CalendarMailSender {
             @Override
             public void run() {
                 try {
-                    mbox.getMailSender().setSendPartial(true).sendMimeMessage(octxt, mbox, true, mm, null,
+                    getCalendarMailSender(mbox).setSendPartial(true).sendMimeMessage(octxt, mbox, true, mm, null,
                             origMsgId, MailSender.MSGTYPE_REPLY, null, false);
                 } catch (ServiceException e) {
                     ZimbraLog.calendar.warn("Ignoring error while sending permission-denied auto reply", e);
@@ -844,9 +854,9 @@ public class CalendarMailSender {
             @Override
             public void run() {
                 try {
-                    MailSender sender = mbox.getMailSender().setSaveToSent(true)
+                    MailSender sender = getCalendarMailSender(mbox).setSaveToSent(true)
                         .setOriginalMessageId(origMsgId).setReplyType(MailSender.MSGTYPE_REPLY)
-                        .setSendPartial(true).setSkipSendAsCheck(true);
+                        .setSendPartial(true);
                     sender.sendMimeMessage(octxt, mbox, mm);
                 } catch (ServiceException e) {
                     ZimbraLog.calendar.warn("Ignoring error while sending permission-denied auto reply", e);
@@ -867,7 +877,7 @@ public class CalendarMailSender {
             ItemId origMsgId, String replyType, String identityId, boolean replyToSender) throws ServiceException {
         ItemId id = null;
         try {
-            id = mbox.getMailSender().setSendPartial(true).sendMimeMessage(
+            id = getCalendarMailSender(mbox).setSendPartial(true).sendMimeMessage(
                 octxt, mbox, mm, uploads, origMsgId, replyType, identityId, replyToSender);
         } catch (MailServiceException e) {
             if (e.getCode().equals(MailServiceException.SEND_PARTIAL_ADDRESS_FAILURE)) {
@@ -1096,7 +1106,7 @@ public class CalendarMailSender {
             @Override
             public void run() {
                 try {
-                    mbox.getMailSender().setSendPartial(true).sendMimeMessage(octxt, mbox, saveToSent, mm, null,
+                    getCalendarMailSender(mbox).setSendPartial(true).sendMimeMessage(octxt, mbox, saveToSent, mm, null,
                             new ItemId(mbox, invId), replyType, null, false);
                 } catch (ServiceException e) {
                     ZimbraLog.calendar.warn("Ignoring error while sending auto accept/decline reply", e);

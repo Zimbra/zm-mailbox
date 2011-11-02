@@ -22,7 +22,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
@@ -64,7 +63,7 @@ public final class BounceMsg extends MailDocumentHandler {
         Element msgElem = request.getElement(MailConstants.E_MSG);
         ItemId iid = new ItemId(msgElem.getAttribute(MailConstants.A_ID), zsc);
 
-        MailSender msender = mbox.getMailSender().setSaveToSent(false).setSkipSendAsCheck(true).setSkipHeaderUpdate(true);
+        MailSender msender = mbox.getMailSender().setSaveToSent(false).setRedirectMode(true).setSkipHeaderUpdate(true);
 
         Upload upload = null;
         try {

@@ -270,7 +270,7 @@ public final class FilterUtil {
             }
         }
 
-        MailSender sender = sourceMbox.getMailSender().setSaveToSent(false).setSkipSendAsCheck(true);
+        MailSender sender = sourceMbox.getMailSender().setSaveToSent(false).setRedirectMode(true);
 
         try {
             if (Provisioning.getInstance().getLocalServer().isMailRedirectSetEnvelopeSender()) {
@@ -393,7 +393,7 @@ public final class FilterUtil {
             if (!copySubject && !StringUtil.isNullOrEmpty(subjectTemplate)) {
                 notification.setSubject(StringUtil.fillTemplate(subjectTemplate, vars));
             }
-            mailSender.setSkipSendAsCheck(true);
+            mailSender.setRedirectMode(true);
             mailSender.setRecipients(emailAddr);
         }
 

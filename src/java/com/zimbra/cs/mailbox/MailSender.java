@@ -87,7 +87,8 @@ public class MailSender {
     private Identity mIdentity;
     private Boolean mSendPartial;
     private boolean mReplyToSender = false;
-    private boolean mSkipSendAsCheck = false;
+    private boolean mRedirectMode = false;
+    private boolean mCalendarMode = false;
     private boolean mSkipHeaderUpdate = false;
     private List<String> mSmtpHosts = new ArrayList<String>();
     private Session mSession;
@@ -154,11 +155,23 @@ public class MailSender {
     }
 
     /**
-     * @param skip if <tt>true</tt>, don't confirm that the user can send
-     * the message from the specified address.  The default is <tt>false</tt>.
+     * Redirect mode allows any value for From and Sender headers.  This mode should
+     * be used only for redirecting/bouncing mail.
      */
-    public MailSender setSkipSendAsCheck(boolean skip) {
-        mSkipSendAsCheck = skip;
+    public MailSender setRedirectMode(boolean onoff) {
+        mRedirectMode = onoff;
+        return this;
+    }
+
+    /**
+     * Calendar mode allows anyone to send on behalf of anyone else without having
+     * the sendOnBehalfOf right granted.  This seemingly contradictory behavior is
+     * necessary to remain compatible with Outlook's invite forwarding mechanism.
+     * @param onoff
+     * @return
+     */
+    public MailSender setCalendarMode(boolean onoff) {
+        mCalendarMode = onoff;
         return this;
     }
 
@@ -443,7 +456,7 @@ public class MailSender {
             }
 
             // set the From, Sender, Date, Reply-To, etc. headers
-            updateHeaders(mm, acct, authuser, octxt, octxt != null ? octxt.getRequestIP() : null, mReplyToSender, mSkipSendAsCheck);
+            updateHeaders(mm, acct, authuser, octxt, octxt != null ? octxt.getRequestIP() : null, mReplyToSender);
 
             // Determine envelope sender.
             if (mEnvelopeFrom == null) {
@@ -707,7 +720,7 @@ public class MailSender {
     }
 
     void updateHeaders(MimeMessage mm, Account acct, Account authuser, OperationContext octxt, String originIP,
-            boolean replyToSender, boolean skipSendAsCheck) throws MessagingException, ServiceException {
+            boolean replyToSender) throws MessagingException, ServiceException {
         if (mSkipHeaderUpdate) {
             return;
         }
@@ -733,10 +746,8 @@ public class MailSender {
         // set various headers on the outgoing message
         InternetAddress from = (InternetAddress) ArrayUtil.getFirstElement(mm.getFrom());
         InternetAddress sender = (InternetAddress) mm.getSender();
-        if (skipSendAsCheck) {
-            if (Objects.equal(from, sender)) {
-                sender = null; // no need for matching Sender and From addresses
-            }
+        if (mRedirectMode) {
+            // Don't touch the message at all in redirect mode.
         } else {
             Pair<InternetAddress, InternetAddress> fromsender = getSenderHeaders(from, sender, acct, authuser,
                     octxt != null ? octxt.isUsingAdminPrivileges() : false);
@@ -799,7 +810,7 @@ public class MailSender {
                 }
                 return new Pair<InternetAddress, InternetAddress>(from, null);
             }
-            if (AccessManager.getInstance().canDo(authuser, account, User.R_sendOnBehalfOf, asAdmin)) {
+            if (mCalendarMode || AccessManager.getInstance().canDo(authuser, account, User.R_sendOnBehalfOf, asAdmin)) {
                 // From must be the grantor's address.
                 if (from == null || !AccountUtil.allowFromAddress(account, from.getAddress())) {
                     from = AccountUtil.getFriendlyEmailAddress(account);

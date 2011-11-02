@@ -39,6 +39,7 @@ import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.calendar.ZCalendar.ZParameter;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
@@ -62,6 +63,7 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.CalendarDataSource;
+import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
@@ -202,11 +204,24 @@ public final class SendMsg extends MailDocumentHandler {
             ItemId origMsgId, String replyType, String identityId, boolean noSaveToSent,
             boolean needCalendarSentByFixup) throws ServiceException {
 
+        boolean isCalendarMessage = false;
         if (needCalendarSentByFixup) {
-            fixupICalendarFromOutlook(mbox, mm);
+            OutlookICalendarFixupMimeVisitor mv = new OutlookICalendarFixupMimeVisitor(mbox.getAccount(), mbox);
+            mv.needFixup(true);
+            try {
+                mv.accept(mm);
+            } catch (MessagingException e) {
+                throw ServiceException.PARSE_ERROR("Error while fixing up SendMsg for SENT-BY", e);
+            }
+            isCalendarMessage = mv.isCalendarMessage();
         }
 
-        MailSender sender = mbox.getMailSender();
+        MailSender sender;
+        if (isCalendarMessage) {
+            sender = CalendarMailSender.getCalendarMailSender(mbox);
+        } else {
+            sender = mbox.getMailSender();
+        }
         if (noSaveToSent) {
             return sender.sendMimeMessage(oc, mbox, false, mm, uploads, origMsgId, replyType, null, false);
         } else {
@@ -324,16 +339,6 @@ public final class SendMsg extends MailDocumentHandler {
     }
 
 
-    private static void fixupICalendarFromOutlook(Mailbox ownerMbox, MimeMessage mm)
-    throws ServiceException {
-        MimeVisitor mv = new OutlookICalendarFixupMimeVisitor(ownerMbox.getAccount(), ownerMbox);
-        try {
-            mv.accept(mm);
-        } catch (MessagingException e) {
-            throw ServiceException.PARSE_ERROR("Error while fixing up SendMsg for SENT-BY", e);
-        }
-    }
-
     /**
      * When Outlook/ZCO sends a calendar invitation or reply message on behalf
      * of another user, the From and Sender message headers are set correctly
@@ -345,6 +350,8 @@ public final class SendMsg extends MailDocumentHandler {
      *
      */
     private static class OutlookICalendarFixupMimeVisitor extends MimeVisitor {
+        private boolean needFixup;
+        private boolean isCalendarMessage;
         private Account mAccount;
         private Mailbox mMailbox;
         private int mMsgDepth;
@@ -365,11 +372,14 @@ public final class SendMsg extends MailDocumentHandler {
             mDefaultCharset = (acct == null ? null : acct.getPrefMailDefaultCharset());
         }
 
+        public void needFixup(boolean needFixup) { this.needFixup = needFixup; }
+        public boolean isCalendarMessage() { return isCalendarMessage; }
+
         @Override protected boolean visitMessage(MimeMessage mm, VisitPhase visitKind) throws MessagingException {
             boolean modified = false;
             if (VisitPhase.VISIT_BEGIN.equals(visitKind)) {
                 mMsgDepth++;
-                if (mMsgDepth == 1) {
+                if (mMsgDepth == 1 && needFixup) {
                     Address[] fromAddrs = mm.getFrom();
                     Address senderAddr = mm.getSender();
                     if (senderAddr != null && fromAddrs != null) {
@@ -433,8 +443,20 @@ public final class SendMsg extends MailDocumentHandler {
             try {
                 DataSource source = bp.getDataHandler().getDataSource();
                 is = source.getInputStream();
+                String ctHdr = source.getContentType();
+                String methodParam = new ContentType(ctHdr).getParameter("method");
+                if (methodParam == null || methodParam.trim().isEmpty()) {
+                    // A text/calendar part without method parameter is just an attachment of a regular email.
+                    return false;
+                }
+                isCalendarMessage = true;
+
+                if (!needFixup) {
+                    return false;
+                }
+
                 String charset = mDefaultCharset;
-                String cs = Mime.getCharset(source.getContentType());
+                String cs = Mime.getCharset(ctHdr);
                 if (cs != null)
                     charset = cs;
                 ical = ZCalendarBuilder.build(is, charset);
