@@ -6580,9 +6580,18 @@ TODO: delete them permanently from here
   <desc>last calculated aggregate quota usage for the domain in bytes</desc>
 </attr>
 
-<attr id="1329" name="zimbraDomainAboveAggregateQuotaHandling" type="enum" value="ALLOWSENDRECEIVE,BLOCKSEND,BLOCKSENDRECEIVE" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited" since="8.0.0">
+<attr id="1329" name="zimbraDomainAggregateQuotaPolicy" type="enum" value="ALLOWSENDRECEIVE,BLOCKSEND,BLOCKSENDRECEIVE" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited" since="8.0.0">
   <globalConfigValue>ALLOWSENDRECEIVE</globalConfigValue>
-  <desc>how to handle a domain whose quota usage is above the maximum aggregate quota</desc>
+  <desc>policy for a domain whose quota usage is above zimbraDomainAggregateQuota</desc>
+</attr>
+
+<attr id="1330" name="zimbraDomainAggregateQuotaWarnPercent" type="integer" min="0" max="100" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited" since="8.0.0">
+  <globalConfigValue>80</globalConfigValue>
+  <desc>percentage threshold for domain aggregate quota warnings</desc>
+</attr>
+
+<attr id="1331" name="zimbraDomainAggregateQuotaWarnEmailRecipient" type="email" cardinality="multi" optionalIn="domain,globalConfig" flags="domainInherited" since="8.0.0">
+  <desc>email recipients to be notified when zimbraAggregateQuotaLastUsage reaches zimbraDomainAggregateQuotaWarnPercent of the zimbraDomainAggregateQuota</desc>
 </attr>
 
 </attrs>

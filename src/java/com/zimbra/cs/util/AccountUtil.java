@@ -75,13 +75,11 @@ public class AccountUtil {
     }
 
     public static boolean isSendAllowedOverAggregateQuota(Domain domain) {
-        return domain.getDomainAboveAggregateQuotaHandling() ==
-                ZAttrProvisioning.DomainAboveAggregateQuotaHandling.ALLOWSENDRECEIVE;
+        return domain.getDomainAggregateQuotaPolicy().isALLOWSENDRECEIVE();
     }
 
     public static boolean isReceiveAllowedOverAggregateQuota(Domain domain) {
-        return domain.getDomainAboveAggregateQuotaHandling() !=
-                ZAttrProvisioning.DomainAboveAggregateQuotaHandling.BLOCKSENDRECEIVE;
+        return !domain.getDomainAggregateQuotaPolicy().isBLOCKSENDRECEIVE();
     }
 
     public static InternetAddress getFriendlyEmailAddress(Account acct) {

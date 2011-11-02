@@ -449,9 +449,10 @@ When sorting by "quotaLimit", 0 is treated as the highest value possible.
 -----------------------------
 
 Computes the aggregate quota usage for all domains in the system.
-The request handler issues GetAggregateQuotaUsageOnServerRequest to all mailbox servers
-and computes the aggregate quota used by each domain.
-The request handler also updates the zimbraAggregateQuotaLastUsage domain attribute.
+The request handler issues GetAggregateQuotaUsageOnServerRequest to all mailbox servers and computes the aggregate
+quota used by each domain.
+The request handler updates the zimbraAggregateQuotaLastUsage domain attribute and sends out warning messages for each
+domain having quota usage greater than a defined percentage threshold.
 
 <ComputeAggregateQuotaUsageRequest/>
 

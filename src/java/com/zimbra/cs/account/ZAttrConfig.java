@@ -43,7 +43,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111031-0952 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111102-0929 */
 
     /**
      * RFC2256: descriptive information
@@ -7005,137 +7005,6 @@ public abstract class ZAttrConfig extends Entry {
     }
 
     /**
-     * how to handle a domain which is over the aggregate quota
-     *
-     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
-     *
-     * @return zimbraDomainAboveAggregateQuotaHandling, or ZAttrProvisioning.DomainAboveAggregateQuotaHandling.ALLOWSENDRECEIVE if unset and/or has invalid value
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1329)
-    public ZAttrProvisioning.DomainAboveAggregateQuotaHandling getDomainAboveAggregateQuotaHandling() {
-        try { String v = getAttr(Provisioning.A_zimbraDomainAboveAggregateQuotaHandling); return v == null ? ZAttrProvisioning.DomainAboveAggregateQuotaHandling.ALLOWSENDRECEIVE : ZAttrProvisioning.DomainAboveAggregateQuotaHandling.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.DomainAboveAggregateQuotaHandling.ALLOWSENDRECEIVE; }
-    }
-
-    /**
-     * how to handle a domain which is over the aggregate quota
-     *
-     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
-     *
-     * @return zimbraDomainAboveAggregateQuotaHandling, or "ALLOWSENDRECEIVE" if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1329)
-    public String getDomainAboveAggregateQuotaHandlingAsString() {
-        return getAttr(Provisioning.A_zimbraDomainAboveAggregateQuotaHandling, "ALLOWSENDRECEIVE");
-    }
-
-    /**
-     * how to handle a domain which is over the aggregate quota
-     *
-     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
-     *
-     * @param zimbraDomainAboveAggregateQuotaHandling new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1329)
-    public void setDomainAboveAggregateQuotaHandling(ZAttrProvisioning.DomainAboveAggregateQuotaHandling zimbraDomainAboveAggregateQuotaHandling) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDomainAboveAggregateQuotaHandling, zimbraDomainAboveAggregateQuotaHandling.toString());
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * how to handle a domain which is over the aggregate quota
-     *
-     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
-     *
-     * @param zimbraDomainAboveAggregateQuotaHandling new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1329)
-    public Map<String,Object> setDomainAboveAggregateQuotaHandling(ZAttrProvisioning.DomainAboveAggregateQuotaHandling zimbraDomainAboveAggregateQuotaHandling, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDomainAboveAggregateQuotaHandling, zimbraDomainAboveAggregateQuotaHandling.toString());
-        return attrs;
-    }
-
-    /**
-     * how to handle a domain which is over the aggregate quota
-     *
-     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
-     *
-     * @param zimbraDomainAboveAggregateQuotaHandling new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1329)
-    public void setDomainAboveAggregateQuotaHandlingAsString(String zimbraDomainAboveAggregateQuotaHandling) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDomainAboveAggregateQuotaHandling, zimbraDomainAboveAggregateQuotaHandling);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * how to handle a domain which is over the aggregate quota
-     *
-     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
-     *
-     * @param zimbraDomainAboveAggregateQuotaHandling new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1329)
-    public Map<String,Object> setDomainAboveAggregateQuotaHandlingAsString(String zimbraDomainAboveAggregateQuotaHandling, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDomainAboveAggregateQuotaHandling, zimbraDomainAboveAggregateQuotaHandling);
-        return attrs;
-    }
-
-    /**
-     * how to handle a domain which is over the aggregate quota
-     *
-     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1329)
-    public void unsetDomainAboveAggregateQuotaHandling() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDomainAboveAggregateQuotaHandling, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * how to handle a domain which is over the aggregate quota
-     *
-     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1329)
-    public Map<String,Object> unsetDomainAboveAggregateQuotaHandling(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraDomainAboveAggregateQuotaHandling, "");
-        return attrs;
-    }
-
-    /**
      * Deprecated since: 5.0. deprecated in favor of the
      * domainAdminAdminModifiable flag. Orig desc: account attributes that a
      * domain administrator is allowed to modify
@@ -7338,6 +7207,369 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetDomainAggregateQuota(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraDomainAggregateQuota, "");
+        return attrs;
+    }
+
+    /**
+     * policy for a domain whose quota usage is above
+     * zimbraDomainAggregateQuota
+     *
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
+     *
+     * @return zimbraDomainAggregateQuotaPolicy, or ZAttrProvisioning.DomainAggregateQuotaPolicy.ALLOWSENDRECEIVE if unset and/or has invalid value
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1329)
+    public ZAttrProvisioning.DomainAggregateQuotaPolicy getDomainAggregateQuotaPolicy() {
+        try { String v = getAttr(Provisioning.A_zimbraDomainAggregateQuotaPolicy); return v == null ? ZAttrProvisioning.DomainAggregateQuotaPolicy.ALLOWSENDRECEIVE : ZAttrProvisioning.DomainAggregateQuotaPolicy.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.DomainAggregateQuotaPolicy.ALLOWSENDRECEIVE; }
+    }
+
+    /**
+     * policy for a domain whose quota usage is above
+     * zimbraDomainAggregateQuota
+     *
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
+     *
+     * @return zimbraDomainAggregateQuotaPolicy, or "ALLOWSENDRECEIVE" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1329)
+    public String getDomainAggregateQuotaPolicyAsString() {
+        return getAttr(Provisioning.A_zimbraDomainAggregateQuotaPolicy, "ALLOWSENDRECEIVE");
+    }
+
+    /**
+     * policy for a domain whose quota usage is above
+     * zimbraDomainAggregateQuota
+     *
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
+     *
+     * @param zimbraDomainAggregateQuotaPolicy new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1329)
+    public void setDomainAggregateQuotaPolicy(ZAttrProvisioning.DomainAggregateQuotaPolicy zimbraDomainAggregateQuotaPolicy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAggregateQuotaPolicy, zimbraDomainAggregateQuotaPolicy.toString());
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * policy for a domain whose quota usage is above
+     * zimbraDomainAggregateQuota
+     *
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
+     *
+     * @param zimbraDomainAggregateQuotaPolicy new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1329)
+    public Map<String,Object> setDomainAggregateQuotaPolicy(ZAttrProvisioning.DomainAggregateQuotaPolicy zimbraDomainAggregateQuotaPolicy, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAggregateQuotaPolicy, zimbraDomainAggregateQuotaPolicy.toString());
+        return attrs;
+    }
+
+    /**
+     * policy for a domain whose quota usage is above
+     * zimbraDomainAggregateQuota
+     *
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
+     *
+     * @param zimbraDomainAggregateQuotaPolicy new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1329)
+    public void setDomainAggregateQuotaPolicyAsString(String zimbraDomainAggregateQuotaPolicy) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAggregateQuotaPolicy, zimbraDomainAggregateQuotaPolicy);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * policy for a domain whose quota usage is above
+     * zimbraDomainAggregateQuota
+     *
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
+     *
+     * @param zimbraDomainAggregateQuotaPolicy new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1329)
+    public Map<String,Object> setDomainAggregateQuotaPolicyAsString(String zimbraDomainAggregateQuotaPolicy, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAggregateQuotaPolicy, zimbraDomainAggregateQuotaPolicy);
+        return attrs;
+    }
+
+    /**
+     * policy for a domain whose quota usage is above
+     * zimbraDomainAggregateQuota
+     *
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1329)
+    public void unsetDomainAggregateQuotaPolicy() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAggregateQuotaPolicy, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * policy for a domain whose quota usage is above
+     * zimbraDomainAggregateQuota
+     *
+     * <p>Valid values: [BLOCKSENDRECEIVE, BLOCKSEND, ALLOWSENDRECEIVE]
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1329)
+    public Map<String,Object> unsetDomainAggregateQuotaPolicy(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAggregateQuotaPolicy, "");
+        return attrs;
+    }
+
+    /**
+     * email recipients to be notified when zimbraAggregateQuotaLastUsage
+     * reaches zimbraDomainAggregateQuotaWarnPercent of the
+     * zimbraDomainAggregateQuota
+     *
+     * @return zimbraDomainAggregateQuotaWarnEmailRecipient, or empty array if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1331)
+    public String[] getDomainAggregateQuotaWarnEmailRecipient() {
+        return getMultiAttr(Provisioning.A_zimbraDomainAggregateQuotaWarnEmailRecipient);
+    }
+
+    /**
+     * email recipients to be notified when zimbraAggregateQuotaLastUsage
+     * reaches zimbraDomainAggregateQuotaWarnPercent of the
+     * zimbraDomainAggregateQuota
+     *
+     * @param zimbraDomainAggregateQuotaWarnEmailRecipient new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1331)
+    public void setDomainAggregateQuotaWarnEmailRecipient(String[] zimbraDomainAggregateQuotaWarnEmailRecipient) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAggregateQuotaWarnEmailRecipient, zimbraDomainAggregateQuotaWarnEmailRecipient);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * email recipients to be notified when zimbraAggregateQuotaLastUsage
+     * reaches zimbraDomainAggregateQuotaWarnPercent of the
+     * zimbraDomainAggregateQuota
+     *
+     * @param zimbraDomainAggregateQuotaWarnEmailRecipient new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1331)
+    public Map<String,Object> setDomainAggregateQuotaWarnEmailRecipient(String[] zimbraDomainAggregateQuotaWarnEmailRecipient, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAggregateQuotaWarnEmailRecipient, zimbraDomainAggregateQuotaWarnEmailRecipient);
+        return attrs;
+    }
+
+    /**
+     * email recipients to be notified when zimbraAggregateQuotaLastUsage
+     * reaches zimbraDomainAggregateQuotaWarnPercent of the
+     * zimbraDomainAggregateQuota
+     *
+     * @param zimbraDomainAggregateQuotaWarnEmailRecipient new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1331)
+    public void addDomainAggregateQuotaWarnEmailRecipient(String zimbraDomainAggregateQuotaWarnEmailRecipient) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraDomainAggregateQuotaWarnEmailRecipient, zimbraDomainAggregateQuotaWarnEmailRecipient);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * email recipients to be notified when zimbraAggregateQuotaLastUsage
+     * reaches zimbraDomainAggregateQuotaWarnPercent of the
+     * zimbraDomainAggregateQuota
+     *
+     * @param zimbraDomainAggregateQuotaWarnEmailRecipient new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1331)
+    public Map<String,Object> addDomainAggregateQuotaWarnEmailRecipient(String zimbraDomainAggregateQuotaWarnEmailRecipient, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraDomainAggregateQuotaWarnEmailRecipient, zimbraDomainAggregateQuotaWarnEmailRecipient);
+        return attrs;
+    }
+
+    /**
+     * email recipients to be notified when zimbraAggregateQuotaLastUsage
+     * reaches zimbraDomainAggregateQuotaWarnPercent of the
+     * zimbraDomainAggregateQuota
+     *
+     * @param zimbraDomainAggregateQuotaWarnEmailRecipient existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1331)
+    public void removeDomainAggregateQuotaWarnEmailRecipient(String zimbraDomainAggregateQuotaWarnEmailRecipient) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraDomainAggregateQuotaWarnEmailRecipient, zimbraDomainAggregateQuotaWarnEmailRecipient);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * email recipients to be notified when zimbraAggregateQuotaLastUsage
+     * reaches zimbraDomainAggregateQuotaWarnPercent of the
+     * zimbraDomainAggregateQuota
+     *
+     * @param zimbraDomainAggregateQuotaWarnEmailRecipient existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1331)
+    public Map<String,Object> removeDomainAggregateQuotaWarnEmailRecipient(String zimbraDomainAggregateQuotaWarnEmailRecipient, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraDomainAggregateQuotaWarnEmailRecipient, zimbraDomainAggregateQuotaWarnEmailRecipient);
+        return attrs;
+    }
+
+    /**
+     * email recipients to be notified when zimbraAggregateQuotaLastUsage
+     * reaches zimbraDomainAggregateQuotaWarnPercent of the
+     * zimbraDomainAggregateQuota
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1331)
+    public void unsetDomainAggregateQuotaWarnEmailRecipient() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAggregateQuotaWarnEmailRecipient, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * email recipients to be notified when zimbraAggregateQuotaLastUsage
+     * reaches zimbraDomainAggregateQuotaWarnPercent of the
+     * zimbraDomainAggregateQuota
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1331)
+    public Map<String,Object> unsetDomainAggregateQuotaWarnEmailRecipient(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAggregateQuotaWarnEmailRecipient, "");
+        return attrs;
+    }
+
+    /**
+     * percentage threshold for domain aggregate quota warnings
+     *
+     * @return zimbraDomainAggregateQuotaWarnPercent, or 80 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1330)
+    public int getDomainAggregateQuotaWarnPercent() {
+        return getIntAttr(Provisioning.A_zimbraDomainAggregateQuotaWarnPercent, 80);
+    }
+
+    /**
+     * percentage threshold for domain aggregate quota warnings
+     *
+     * @param zimbraDomainAggregateQuotaWarnPercent new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1330)
+    public void setDomainAggregateQuotaWarnPercent(int zimbraDomainAggregateQuotaWarnPercent) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAggregateQuotaWarnPercent, Integer.toString(zimbraDomainAggregateQuotaWarnPercent));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * percentage threshold for domain aggregate quota warnings
+     *
+     * @param zimbraDomainAggregateQuotaWarnPercent new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1330)
+    public Map<String,Object> setDomainAggregateQuotaWarnPercent(int zimbraDomainAggregateQuotaWarnPercent, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAggregateQuotaWarnPercent, Integer.toString(zimbraDomainAggregateQuotaWarnPercent));
+        return attrs;
+    }
+
+    /**
+     * percentage threshold for domain aggregate quota warnings
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1330)
+    public void unsetDomainAggregateQuotaWarnPercent() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAggregateQuotaWarnPercent, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * percentage threshold for domain aggregate quota warnings
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1330)
+    public Map<String,Object> unsetDomainAggregateQuotaWarnPercent(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraDomainAggregateQuotaWarnPercent, "");
         return attrs;
     }
 
