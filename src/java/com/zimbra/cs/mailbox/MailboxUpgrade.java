@@ -127,7 +127,7 @@ public final class MailboxUpgrade {
 
     public static void upgradeTo2_0(Mailbox mbox) throws ServiceException {
         migrateHighestIndexed(mbox);
-        
+
         // bug 56772
         migrateContactGroups(mbox);
 
@@ -204,7 +204,7 @@ public final class MailboxUpgrade {
             conn.closeQuietly();
         }
     }
-    
+
     public static void migrateContactGroups(Mailbox mbox) throws ServiceException {
         ContactGroup.MigrateContactGroup migrate = new ContactGroup.MigrateContactGroup(mbox);
         try {
@@ -224,9 +224,9 @@ public final class MailboxUpgrade {
             } else {
                 migrateFlagColumn(conn, mbox);
                 migrateTagColumn(conn, mbox);
-    
+
                 // the tag load when the Mailbox object was constructed returned no tags
-                //   because we hadn't migrated the tags yet, so force a reload 
+                //   because we hadn't migrated the tags yet, so force a reload
                 mbox.purge(MailItem.Type.TAG);
             }
             conn.commit();
@@ -254,6 +254,44 @@ public final class MailboxUpgrade {
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
+        }
+    }
+
+    /**
+     * Create PRIORITY flag in TAG table and migrate FLAGS column to TAGGED_ITEM table.
+     */
+    public static void upgradeTo2_3(Mailbox mbox) throws ServiceException {
+        DbConnection conn = DbPool.getConnection(mbox);
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT COUNT(*) FROM " + DbTag.getTagTableName(mbox) +
+                    " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "id = ?");
+            int pos = DbMailItem.setMailboxId(stmt, mbox, 1);
+            stmt.setInt(pos, Flag.ID_PRIORITY);
+            rs = stmt.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                ZimbraLog.mailbox.debug("PRIORITY flag already exists");
+                return;
+            }
+
+            // put PRIORITY flag in the TAG table
+            DbTag.createTag(conn, mbox, Flag.FlagInfo.PRIORITY.toFlag(mbox).mData, null, false);
+            // get all the different FLAGS column values for the mailbox
+            List<Long> flagsets = getTagsets(conn, mbox, "flags");
+            // create rows in the TAGGED_ITEM table for flagged items
+            migrateColumnToTaggedItem(conn, mbox, "flags",
+                    Flag.ID_PRIORITY, matchTagsets(flagsets, Flag.BITMASK_PRIORITY));
+            conn.commit();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Failed to migrate PRIORITY flag", e);
+        } catch (ServiceException e) {
+            conn.rollback();
+            throw e;
+        } finally {
+            conn.closeQuietly(rs);
+            conn.closeQuietly(stmt);
+            conn.closeQuietly();
         }
     }
 
@@ -322,7 +360,7 @@ public final class MailboxUpgrade {
             for (long match : matches) {
                 stmt.setLong(pos++, match);
             }
-    
+
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw ServiceException.FAILURE("creating rows in TAGGED_ITEM for tag/flag " + tagId + " in mbox " + mbox.getId(), e);

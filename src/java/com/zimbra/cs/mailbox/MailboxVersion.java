@@ -22,7 +22,7 @@ import com.zimbra.common.service.ServiceException;
 public final class MailboxVersion {
     // These should be incremented with changes to serialization format.
     private static final short CURRENT_MAJOR = 2; // range: 0 - Short.MAX_VALUE
-    private static final short CURRENT_MINOR = 2; // range: 0 - Short.MAX_VALUE
+    private static final short CURRENT_MINOR = 3; // range: 0 - Short.MAX_VALUE
 
     private final short majorVer;
     private final short minorVer;
@@ -100,7 +100,7 @@ public final class MailboxVersion {
 
     /** Returns if this version is at least as high as the version specified by
      *  major and minor.
-     * 
+     *
      * @return true if this version is higher than or equal to major/minor,
      *         false if this version is lower */
     public boolean atLeast(int major, int minor) {
@@ -108,7 +108,7 @@ public final class MailboxVersion {
     }
 
     /** Returns if this version is at least as high as version b.
-     * 
+     *
      * @return true if this version is higher than or equal to version b, false
      *         if this version is lower than version b */
     public boolean atLeast(MailboxVersion b) {

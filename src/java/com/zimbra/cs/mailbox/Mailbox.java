@@ -529,6 +529,13 @@ public class Mailbox {
                     // writing the new version itself performs the upgrade!
                     updateVersion(new MailboxVersion((short) 2, (short) 2));
                 }
+
+                // PRIORITY flag
+                if (!mData.version.atLeast(2, 3)) {
+                    ZimbraLog.mailbox.info("Upgrade mailbox from %s to 2.3", getVersion());
+                    MailboxUpgrade.upgradeTo2_3(this);
+                    updateVersion(new MailboxVersion((short) 2, (short) 3));
+                }
             }
 
             // done!
@@ -1542,7 +1549,7 @@ public class Mailbox {
             Flag.ID_FROM_ME, Flag.ID_ATTACHED, Flag.ID_REPLIED, Flag.ID_FORWARDED,
             Flag.ID_COPIED, Flag.ID_FLAGGED, Flag.ID_DRAFT, Flag.ID_DELETED,
             Flag.ID_NOTIFIED, Flag.ID_UNREAD, Flag.ID_HIGH_PRIORITY, Flag.ID_LOW_PRIORITY,
-            Flag.ID_VERSIONED, Flag.ID_POPPED, Flag.ID_NOTE, Flag.ID_INVITE
+            Flag.ID_VERSIONED, Flag.ID_POPPED, Flag.ID_NOTE, Flag.ID_PRIORITY, Flag.ID_INVITE
     );
 
     /** Creates the default set of immutable system folders in a new mailbox.
