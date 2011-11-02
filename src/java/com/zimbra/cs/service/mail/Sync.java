@@ -78,6 +78,7 @@ public class Sync extends MailDocumentHandler {
 
         // permit the caller to restrict initial sync only to calendar items with a recurrence after a given date
         long calendarStart = request.getAttributeLong(MailConstants.A_CALENDAR_CUTOFF, -1);
+        long messageSyncStart  = request.getAttributeLong(MailConstants.A_MSG_CUTOFF, -1);
 
         // if the sync is constrained to a folder subset, we need to first figure out what can be seen
         Folder root = null;
@@ -95,7 +96,7 @@ public class Sync extends MailDocumentHandler {
             // resolve grantee names of all ACLs on the mailbox 
             rootNode = mbox.getFolderTree(octxt, null, true);
         } else {
-            // resolve grantee names of all ACLs on all sub-folders of the requested folder 
+            // resolve grantee names of all ACLs on all sub-folders of the requested folder
             rootNode = mbox.getFolderTree(octxt, iidFolder, true);
         }
         OperationContextData.addGranteeNames(octxt, rootNode);
@@ -108,13 +109,13 @@ public class Sync extends MailDocumentHandler {
                 response.addAttribute(MailConstants.A_TOKEN, mbox.getLastChangeID());
                 response.addAttribute(MailConstants.A_SIZE, mbox.getSize());
 
-                boolean anyFolders = folderSync(response, octxt, ifmt, mbox, root, visible, calendarStart, SyncPhase.INITIAL);
+                boolean anyFolders = folderSync(response, octxt, ifmt, mbox, root, visible, calendarStart, messageSyncStart, SyncPhase.INITIAL);
                 // if no folders are visible, add an empty "<folder/>" as a hint
                 if (!anyFolders)
                     response.addElement(MailConstants.E_FOLDER);
             } else {
                 boolean typedDeletes = request.getAttributeBool(MailConstants.A_TYPED_DELETES, false);
-                String newToken = deltaSync(response, octxt, ifmt, mbox, tokenInt, itemCutoff, typedDeletes, root, visible);
+                String newToken = deltaSync(response, octxt, ifmt, mbox, tokenInt, itemCutoff, typedDeletes, root, visible, messageSyncStart);
                 response.addAttribute(MailConstants.A_TOKEN, newToken);
             }
         }
@@ -126,7 +127,7 @@ public class Sync extends MailDocumentHandler {
     private static enum SyncPhase { INITIAL, DELTA };
 
     private static boolean folderSync(Element response, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox, Folder folder,
-            Set<Folder> visible, long calendarStart, SyncPhase phase)
+            Set<Folder> visible, long calendarStart, long messageSyncStart, SyncPhase phase)
     throws ServiceException {
         if (folder == null)
             return false;
@@ -148,7 +149,7 @@ public class Sync extends MailDocumentHandler {
                 initialTagSync(f, octxt, ifmt, mbox);
             } else {
                 TypedIdList idlist = mbox.getItemIds(octxt, folder.getId());
-                initialItemSync(f, MailConstants.E_MSG, idlist.getIds(MailItem.TYPE_MESSAGE));
+                initialMsgSync(f, idlist, octxt, mbox, folder, messageSyncStart);
                 initialItemSync(f, MailConstants.E_CHAT, idlist.getIds(MailItem.TYPE_CHAT));
                 initialItemSync(f, MailConstants.E_CONTACT, idlist.getIds(MailItem.TYPE_CONTACT));
                 initialItemSync(f, MailConstants.E_NOTE, idlist.getIds(MailItem.TYPE_NOTE));
@@ -164,7 +165,7 @@ public class Sync extends MailDocumentHandler {
         // write the subfolders' data to the response
         for (Folder subfolder : subfolders) {
             if (subfolder != null)
-                isVisible |= folderSync(f, octxt, ifmt, mbox, subfolder, visible, calendarStart, phase);
+                isVisible |= folderSync(f, octxt, ifmt, mbox, subfolder, visible, calendarStart, messageSyncStart, phase);
         }
 
         // if this folder and all its subfolders are not visible (oops!), remove them from the response
@@ -172,6 +173,14 @@ public class Sync extends MailDocumentHandler {
             f.detach();
 
         return isVisible;
+    }
+
+    private static void initialMsgSync(Element f, TypedIdList idlist, OperationContext octxt, Mailbox mbox, Folder folder, long messageSyncStart) throws ServiceException {
+        if (messageSyncStart > 0 && (idlist.getTypesMask() & MailItem.typeToBitmask(MailItem.TYPE_MESSAGE)) != 0) {
+            idlist = mbox.listMessageItems(octxt, folder.getId(), messageSyncStart);
+        }
+
+        initialItemSync(f, MailConstants.E_MSG, idlist.getIds(MailItem.TYPE_MESSAGE));
     }
 
     private static void initialTagSync(Element f, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox) throws ServiceException {
@@ -212,7 +221,7 @@ public class Sync extends MailDocumentHandler {
                                                     MailItem.typeToBitmask(MailItem.TYPE_SEARCHFOLDER) |
                                                     MailItem.typeToBitmask(MailItem.TYPE_MOUNTPOINT);
 
-    private static String deltaSync(Element response, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox, int begin, int itemCutoff, boolean typedDeletes, Folder root, Set<Folder> visible)
+    private static String deltaSync(Element response, OperationContext octxt, ItemIdFormatter ifmt, Mailbox mbox, int begin, int itemCutoff, boolean typedDeletes, Folder root, Set<Folder> visible, long messageSyncStart)
     throws ServiceException {
         String newToken = mbox.getLastChangeID() + "";
         if (begin >= mbox.getLastChangeID())
@@ -234,7 +243,7 @@ public class Sync extends MailDocumentHandler {
             // first, make sure that something changed...
             if (!mbox.getModifiedFolders(begin).isEmpty() || (tombstones != null && (tombstones.getTypesMask() & FOLDER_TYPES_BITMASK) != 0)) {
                 // special-case the folder hierarchy for delegated delta sync
-                boolean anyFolders = folderSync(response, octxt, ifmt, mbox, root, visible, -1, SyncPhase.DELTA);
+                boolean anyFolders = folderSync(response, octxt, ifmt, mbox, root, visible, -1, messageSyncStart, SyncPhase.DELTA);
                 // if no folders are visible, add an empty "<folder/>" as a hint
                 if (!anyFolders)
                     response.addElement(MailConstants.E_FOLDER);

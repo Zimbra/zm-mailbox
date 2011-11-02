@@ -4037,7 +4037,6 @@ public class DbMailItem {
                 sFlagsetCache.put(id, flagsets);
             }
         }
-
         return flagsets;
     }
 
@@ -4062,5 +4061,40 @@ public class DbMailItem {
             }
         }
         return idList.toString();
+    }
+
+    public static TypedIdList listMsgItems(Folder folder, long messageSyncStart, boolean descending, boolean older) throws ServiceException {
+        Mailbox mbox = folder.getMailbox();
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
+        TypedIdList result = new TypedIdList();
+        Connection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            if (older) {
+                stmt = conn.prepareStatement("SELECT id, type FROM " + getMailItemTableName(folder) +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND date < ?" +
+                        " ORDER BY date" + (descending ? " DESC" : ""));
+            } else {
+                stmt = conn.prepareStatement("SELECT id, type FROM " + getMailItemTableName(folder) +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND date >= ?" +
+                        " ORDER BY date" + (descending ? " DESC" : ""));
+            }
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
+            stmt.setInt(pos++, folder.getId());
+            stmt.setLong(pos++, messageSyncStart);
+            rs = stmt.executeQuery();
+
+            while (rs.next())
+                result.add(rs.getByte(2), rs.getInt(1));
+            return result;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("fetching item list for folder " + folder.getId(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
     }
 }
