@@ -22,24 +22,30 @@ import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.map.JsonSerializer;
 import org.codehaus.jackson.map.SerializerProvider;
 
+import com.zimbra.soap.type.ZmBoolean;
+
 /**
- * For Zimbra SOAP, Booleans are represented as "0" and "1" in Xml which differs from the default "true" and "false".
- * Boolean's are therefore annotated with @XmlJavaTypeAdapter(BooleanAdapter.class) to get the historical Zimbra
- * values for Xml.  Unfortunately, for JSON, the historical values are "true" and "false", so we need to over-ride
- * the over-ride to get back to "true" and "false"!
+ * For Zimbra SOAP, Historically Booleans have been represented as "0" for false and "1" for true in XML.
+ * This is valid but differs from the default values JAXB marshals to - "true" and "false".
+ *
+ * Some legacy client code cannot accept the values "true" and "false", so the ZmBoolean class has been introduced
+ * whose values will always marshal to either "0" or "1".
+ *
+ * However, for JSON SOAP, the values true and false need to be used.  This serializer is responsible for ensuring
+ * that happens.
  */
-public class BooleanSerializer extends JsonSerializer<Boolean> {
+public class ZmBooleanSerializer extends JsonSerializer<ZmBoolean> {
     
-    public BooleanSerializer() {
+    public ZmBooleanSerializer() {
         super();
     }
 
     @Override
-    public void serialize(Boolean value, JsonGenerator jgen, SerializerProvider provider)
+    public void serialize(ZmBoolean value, JsonGenerator jgen, SerializerProvider provider)
     throws IOException, JsonProcessingException {
         if (value == null) {
             return;
         }
-        jgen.writeBoolean(value);
+        jgen.writeBoolean(ZmBoolean.toBool(value));
     }
 }

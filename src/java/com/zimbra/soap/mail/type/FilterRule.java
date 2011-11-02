@@ -29,13 +29,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.json.jackson.BooleanSerializer;
-import com.zimbra.soap.util.BooleanAdapter;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"tests", "actions"})
@@ -45,9 +40,7 @@ public final class FilterRule {
     private final String name;
 
     @XmlAttribute(name=MailConstants.A_ACTIVE, required=true)
-    @XmlJavaTypeAdapter(BooleanAdapter.class)
-    @JsonSerialize(using=BooleanSerializer.class)
-    private final Boolean active;
+    private final ZmBoolean active;
 
     @XmlElement(name=MailConstants.E_FILTER_TESTS, required=true)
     private FilterTests tests;
@@ -76,13 +69,13 @@ public final class FilterRule {
 
     public FilterRule(String name, boolean active) {
         this.name = name;
-        this.active = active;
+        this.active = ZmBoolean.fromBool(active);
     }
 
     public FilterRule(String name, FilterTests tests, boolean active) {
         this.name = name;
         this.tests = tests;
-        this.active = active;
+        this.active = ZmBoolean.fromBool(active);
     }
 
     public static FilterRule createForNameFilterTestsAndActiveSetting(String name, FilterTests tests, boolean active) {
@@ -110,7 +103,7 @@ public final class FilterRule {
     }
 
     public boolean isActive() {
-        return active;
+        return ZmBoolean.toBool(active);
     }
 
     public FilterTests getFilterTests() {

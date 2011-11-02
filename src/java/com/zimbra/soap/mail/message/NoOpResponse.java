@@ -20,22 +20,15 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
-import org.codehaus.jackson.map.annotate.JsonSerialize;
-
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.json.jackson.BooleanSerializer;
-import com.zimbra.soap.util.BooleanAdapter;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_NO_OP_RESPONSE)
 public final class NoOpResponse {
 
     @XmlAttribute(name=MailConstants.A_WAIT_DISALLOWED, required=false)
-    @JsonSerialize(using=BooleanSerializer.class)
-    @XmlJavaTypeAdapter(BooleanAdapter.class)
-    private Boolean waitDisallowed;
+    private ZmBoolean waitDisallowed;
 
     public NoOpResponse() {
     }
@@ -49,9 +42,9 @@ public final class NoOpResponse {
     }
 
     public void setWaitDisallowed(Boolean waitDisallowed) {
-        this.waitDisallowed = waitDisallowed;
+        this.waitDisallowed = ZmBoolean.fromBool(waitDisallowed);
     }
-    public Boolean getWaitDisallowed() { return waitDisallowed; }
+    public Boolean getWaitDisallowed() { return ZmBoolean.toBool(waitDisallowed); }
 
     @Override
     public String toString() {

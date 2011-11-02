@@ -360,14 +360,18 @@ public class JaxbToJsonTest {
      */
     @Test
     public void booleanMarshal() throws Exception {
-        Element legacyElem = JSONElement.mFactory.createElement(MailConstants.NO_OP_RESPONSE);
-        legacyElem.addAttribute(MailConstants.A_WAIT_DISALLOWED, false);
-        logInfo("JSONElement ---> prettyPrint\n%1$s", legacyElem.prettyPrint());
+        Element legacy0Elem = JSONElement.mFactory.createElement(MailConstants.NO_OP_RESPONSE);
+        legacy0Elem.addAttribute(MailConstants.A_WAIT_DISALLOWED, false);
+        logInfo("JSONElement ---> prettyPrint\n%1$s", legacy0Elem.prettyPrint());
+        Element legacy1Elem = JSONElement.mFactory.createElement(MailConstants.NO_OP_RESPONSE);
+        legacy1Elem.addAttribute(MailConstants.A_WAIT_DISALLOWED, true);
+        Element legacyFalseElem = JSONElement.mFactory.createElement(MailConstants.NO_OP_RESPONSE);
+        legacyFalseElem.addAttribute(MailConstants.A_WAIT_DISALLOWED, "false");
+        Element legacyTrueElem = JSONElement.mFactory.createElement(MailConstants.NO_OP_RESPONSE);
+        legacyTrueElem.addAttribute(MailConstants.A_WAIT_DISALLOWED, "true");
         // NoOpResponse has:
         //     @XmlAttribute(name=MailConstants.A_WAIT_DISALLOWED, required=false)
-        //     @JsonSerialize(using=BooleanSerializer.class)
-        //     @XmlJavaTypeAdapter(BooleanAdapter.class)
-        //     private Boolean waitDisallowed;
+        //     private ZmBoolean waitDisallowed;
         NoOpResponse jaxb = NoOpResponse.create(false);
         Element xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory);
         logInfo("XMLElement from JAXB (false)---> prettyPrint\n%1$s", xmlElem.prettyPrint());
@@ -378,6 +382,7 @@ public class JaxbToJsonTest {
         Assert.assertEquals("false Value of 'waitDisallowed'",
                 "false", jsonElem.getAttribute(MailConstants.A_WAIT_DISALLOWED));
 
+        // ensure that marshaling where Boolean has value true works
         jaxb.setWaitDisallowed(true);
         xmlElem = JaxbUtil.jaxbToElement(jaxb, Element.XMLElement.mFactory);
         logInfo("XMLElement from JAXB (true) ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
@@ -387,6 +392,18 @@ public class JaxbToJsonTest {
         logInfo("JSONElement from JAXB (true) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         Assert.assertEquals("true Value of 'waitDisallowed'",
                 "true", jsonElem.getAttribute(MailConstants.A_WAIT_DISALLOWED));
+        // ensure that unmarshaling where XML Boolean representation is "1" for true works
+        jaxb = JaxbUtil.elementToJaxb(legacy1Elem);
+        Assert.assertEquals("legacy1Elem waitDisallowed value", Boolean.TRUE, jaxb.getWaitDisallowed());
+        // ensure that unmarshaling where XML Boolean representation is "0" for false works
+        jaxb = JaxbUtil.elementToJaxb(legacy0Elem);
+        Assert.assertEquals("legacy0Elem waitDisallowed value", Boolean.FALSE, jaxb.getWaitDisallowed());
+        // ensure that unmarshaling where XML Boolean representation is "false" works
+        jaxb = JaxbUtil.elementToJaxb(legacyFalseElem);
+        Assert.assertEquals("legacyFalseElem waitDisallowed value", Boolean.FALSE, jaxb.getWaitDisallowed());
+        // ensure that unmarshaling where XML Boolean representation is "true" works
+        jaxb = JaxbUtil.elementToJaxb(legacyTrueElem);
+        Assert.assertEquals("legacyTrueElem waitDisallowed value", Boolean.TRUE, jaxb.getWaitDisallowed());
     }
 
     /*

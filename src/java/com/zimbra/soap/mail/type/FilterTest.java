@@ -28,16 +28,14 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlEnum;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.json.jackson.BooleanSerializer;
 import com.zimbra.soap.json.jackson.ContentListSerializer;
-import com.zimbra.soap.util.BooleanAdapter;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class FilterTest {
@@ -46,9 +44,7 @@ public class FilterTest {
     private int index = 0;
 
     @XmlAttribute(name=MailConstants.A_NEGATIVE, required=false)
-    @XmlJavaTypeAdapter(BooleanAdapter.class)
-    @JsonSerialize(using=BooleanSerializer.class)
-    private Boolean negative;
+    private ZmBoolean negative;
 
     protected FilterTest() {
     }
@@ -67,15 +63,15 @@ public class FilterTest {
     }
 
     public Boolean getNegative() {
-        return negative;
+        return ZmBoolean.toBool(negative);
     }
 
     public boolean isNegative() {
-        return negative != null ? negative : false;
+        return ZmBoolean.toBool(negative, false);
     }
 
     public void setNegative(Boolean negative) {
-        this.negative = negative;
+        this.negative = ZmBoolean.fromBool(negative);
     }
 
     @Override
@@ -96,9 +92,7 @@ public class FilterTest {
         private String comparison;
 
         @XmlAttribute(name = MailConstants.A_CASE_SENSITIVE, required = false)
-        @XmlJavaTypeAdapter(BooleanAdapter.class)
-        @JsonSerialize(using=BooleanSerializer.class)
-        private Boolean caseSensitive;
+        private ZmBoolean caseSensitive;
 
         @XmlAttribute(name = MailConstants.A_VALUE, required = true)
         private String value;
@@ -129,15 +123,15 @@ public class FilterTest {
         }
 
         public Boolean getCaseSensitive() {
-            return caseSensitive;
+            return ZmBoolean.toBool(caseSensitive);
         }
 
         public boolean isCaseSensitive() {
-            return caseSensitive != null ? caseSensitive : false;
+            return ZmBoolean.toBool(caseSensitive, false);
         }
 
         public void setCaseSensitive(Boolean val) {
-            caseSensitive = val;
+            caseSensitive = ZmBoolean.fromBool(val);
         }
 
         public String getValue() {
@@ -196,19 +190,18 @@ public class FilterTest {
         private String value;
 
         @XmlAttribute(name=MailConstants.A_CASE_SENSITIVE, required=false)
-        @XmlJavaTypeAdapter(BooleanAdapter.class)
-        private Boolean caseSensitive;
+        private ZmBoolean caseSensitive;
 
         public Boolean getCaseSensitive() {
-            return caseSensitive;
+            return ZmBoolean.toBool(caseSensitive);
         }
 
         public boolean isCaseSensitive() {
-            return caseSensitive != null ? caseSensitive : false;
+            return ZmBoolean.toBool(caseSensitive, false);
         }
 
         public void setCaseSensitive(Boolean caseSensitive) {
-            this.caseSensitive = caseSensitive;
+            this.caseSensitive = ZmBoolean.fromBool(caseSensitive);
         }
 
         public String getValue() {
@@ -428,9 +421,7 @@ public class FilterTest {
         private String value;
 
         @XmlAttribute(name=MailConstants.A_CASE_SENSITIVE, required=false)
-        @XmlJavaTypeAdapter(BooleanAdapter.class)
-        @JsonSerialize(using=BooleanSerializer.class)
-        private Boolean caseSensitive;
+        private ZmBoolean caseSensitive;
 
         public HeaderTest() {
         }
@@ -460,15 +451,15 @@ public class FilterTest {
         }
 
         public Boolean getCaseSensitive() {
-            return caseSensitive;
+            return ZmBoolean.toBool(caseSensitive);
         }
 
         public boolean isCaseSensitive() {
-            return caseSensitive != null ? caseSensitive : false;
+            return ZmBoolean.toBool(caseSensitive, false);
         }
 
         public void setCaseSensitive(Boolean caseSensitive) {
-            this.caseSensitive = caseSensitive;
+            this.caseSensitive = ZmBoolean.fromBool(caseSensitive);
         }
 
         public String getValue() {
@@ -614,9 +605,7 @@ public class FilterTest {
         private String value;
 
         @XmlAttribute(name=MailConstants.A_CASE_SENSITIVE, required=false)
-        @XmlJavaTypeAdapter(BooleanAdapter.class)
-        @JsonSerialize(using=BooleanSerializer.class)
-        private Boolean caseSensitive;
+        private ZmBoolean caseSensitive;
 
         public String getHeaders() {
             return headers;
@@ -643,15 +632,15 @@ public class FilterTest {
         }
 
         public Boolean getCaseSensitive() {
-            return caseSensitive;
+            return ZmBoolean.toBool(caseSensitive);
         }
 
         public boolean isCaseSensitive() {
-            return caseSensitive != null ? caseSensitive : false;
+            return ZmBoolean.toBool(caseSensitive, false);
         }
 
         public void setCaseSensitive(Boolean caseSensitive) {
-            this.caseSensitive = caseSensitive;
+            this.caseSensitive = ZmBoolean.fromBool(caseSensitive);
         }
 
         @Override
