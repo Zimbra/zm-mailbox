@@ -26,6 +26,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.UserRight;
@@ -62,12 +63,20 @@ public class DiscoverRights extends AccountDocumentHandler {
             eTargets.addAttribute(MailConstants.A_RIGHT, right.getName());
             
             for (Entry target : targets) {
-                // support only account targets for now
+                // support only account and group targets for now
                 if (target instanceof Account) {
                     Account acct = (Account)target;
                     Element eTarget = eTargets.addElement(AccountConstants.E_ACCOUNT);
                     eTarget.addAttribute(AccountConstants.A_ID, acct.getId());
                     eTarget.addAttribute(AccountConstants.A_NAME, acct.getName());
+                } else if (target instanceof Group) {
+                    Group group = (Group)target;
+                    Element eTarget = eTargets.addElement(AccountConstants.E_DL);
+                    eTarget.addAttribute(AccountConstants.A_ID, group.getId());
+                    eTarget.addAttribute(AccountConstants.A_NAME, group.getName());
+                } else {
+                    throw ServiceException.FAILURE("target type unsupported yet: " +
+                            target.getLabel(), null);
                 }
             }
         }

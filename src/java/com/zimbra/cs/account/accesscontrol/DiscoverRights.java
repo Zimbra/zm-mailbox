@@ -24,6 +24,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.ldap.entry.LdapEntry;
 
 public class DiscoverRights {
     Account acct;
@@ -34,11 +35,24 @@ public class DiscoverRights {
         this.rights = Sets.newHashSet(rights);
     }
     
+    /*
+     * Discover grants that are granted on the designated target type for the 
+     * specified rights.  Note: grants granted on other targets are not searched/returned.
+     * 
+     * e.g for an account right, returns grants that are granted on account entries that 
+     *     are applicable to the acct, granted granted on DL, group, domain, and global 
+     *     are NOT returned.
+     */
     Map<Right, Set<Entry>> handle() throws ServiceException {
         Provisioning prov = Provisioning.getInstance();
         
-        SearchGrants search = new SearchGrants(prov, EnumSet.of(TargetType.account),
-                acct, rights);
+        // collect target types for requested rights
+        Set<TargetType> targetTypesToSearch = Sets.newHashSet();
+        for (Right right : rights) {
+            targetTypesToSearch.add(right.getTargetType());
+        }
+        
+        SearchGrants search = new SearchGrants(prov, targetTypesToSearch, acct, rights);
         Set<SearchGrants.GrantsOnTarget> searchResults = search.doSearch().getResults();
         
         Map<Right, Set<Entry>> result = Maps.newHashMap();
@@ -50,16 +64,32 @@ public class DiscoverRights {
             for (ZimbraACE ace : acl.getAllACEs()) {
                 Right right = ace.getRight();
                 
-                if (rights.contains(right)) {
-                    Set<Entry> entries = result.get(right);
-                    if (entries == null) {
-                        entries = Sets.newHashSet();
-                        result.put(right, entries);
+                if (rights.contains(right) && !isSameEntry(targetEntry, acct)) {
+                    // include the entry only if it is the designated target type for the right
+                    TargetType targetTypeForRight = right.getTargetType();
+                    TargetType taregtTypeOfEntry = TargetType.getTargetType(targetEntry);
+                    
+                    if (targetTypeForRight.equals(taregtTypeOfEntry)) {
+                        Set<Entry> entries = result.get(right);
+                        if (entries == null) {
+                            entries = Sets.newHashSet();
+                            result.put(right, entries);
+                        }
+                        entries.add(targetEntry);
                     }
-                    entries.add(targetEntry);
                 }
             }
         }
         return result;
+    }
+    
+    private boolean isSameEntry(Entry entry1, Entry entry2) throws ServiceException {
+        if ((entry1 instanceof LdapEntry) && (entry2 instanceof LdapEntry)) {
+            String entry1DN = ((LdapEntry) entry1).getDN();
+            String entry2DN = ((LdapEntry) entry2).getDN();
+            return (entry1DN != null && entry2DN != null && entry1DN.equals(entry2DN));
+        } else {
+            throw ServiceException.FAILURE("internal server error - not LdapEntry", null);
+        }
     }
 }

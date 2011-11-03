@@ -3428,17 +3428,37 @@ allow = 1 | 0
 
 
 ---------------------------
-<DiscoverPermissionRequest>
+<DiscoverRightsRequest>
     <right>...</right>+
-</DiscoverPermissionRequest>
+</DiscoverRightsRequest>
 
-Return all grantors of the specified rights applicable to the requested account.
+Return all targets of the specified rights applicable to the requested account.
+Note: Thi call only discovers grants granted on the designated target type of the specified rights.  
+      It does not return grants granted on target types the rights can inherit from.
 
-<DiscoverPermissionResponse>
+<DiscoverRightsResponse>
     <targets right="...">
-        <account id="..." name="...">+   
+        [<account id="..." name="...">+]   
+        [<dl id="..." name="...">+]   
     </targets>+
-</DiscoverPermissionResponse>
+</DiscoverRightsResponse>
+
+e.g. 
+<DiscoverRightsRequest>
+    <right>sendAs</right>
+    <right>sendAsDistList</right>
+</DiscoverRightsRequest>
+
+<DiscoverRightsResponse>
+    <targets right="sendAs">
+        <account id="..." name="user1@test.com">
+        <account id="..." name="user2@test.com">
+    </targets>
+    <targets right="sendAsDistList">
+        <dl id="..." name="group1@test.com">
+        <dl id="..." name="group2@test.com">
+    </targets>+
+</DiscoverRightsResponse>
 
 ---------------------------
 

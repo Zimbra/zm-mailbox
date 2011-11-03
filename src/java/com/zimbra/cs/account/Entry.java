@@ -80,12 +80,6 @@ public abstract class Entry implements ToZJSONObject {
         return EntryType.ENTRY;
     }
     
-    /*
-    public EntryType getEntryType() {
-        throw new UnsupportedOperationException();
-    }
-    */
-    
     protected Entry(Map<String,Object> attrs, Map<String,Object> defaults, 
             Provisioning provisioning) {
     	mProvisioning = provisioning;
