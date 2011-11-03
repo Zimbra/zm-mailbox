@@ -32,6 +32,14 @@
   <desc>send messages on behalf of the grantor</desc>
 </right>
 
+<right name="sendAsDistList" userRight="1" cache="1" targetType="dl" grantTargetType="dl">
+  <desc>reply to messages in a shared folder as the owner of the folder</desc>
+</right>
+
+<right name="sendOnBehalfOfDistList" userRight="1" cache="1" targetType="dl" grantTargetType="dl">
+  <desc>send messages on behalf of the grantor</desc>
+</right>
+
 <right name="sendToDistList" userRight="1" targetType="dl" cache="1">
   <desc>send mails to distribution list</desc>
   <default>allow</default>
