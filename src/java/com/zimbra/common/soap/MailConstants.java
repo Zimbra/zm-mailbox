@@ -841,6 +841,7 @@ public final class MailConstants {
     public static final String A_SYNC = "sync";
     public static final String A_TYPED_DELETES = "typed";
     public static final String A_CALENDAR_CUTOFF = "calCutoff";
+    public static final String A_MSG_CUTOFF = "msgCutoff";
 
     // filter rules
     public static final String A_LHS = "k0";
