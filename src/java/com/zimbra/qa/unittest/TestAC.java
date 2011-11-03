@@ -40,6 +40,7 @@ public class TestAC extends TestProv {
     protected static Right USER_RIGHT;
     protected static Right USER_RIGHT_DISTRIBUTION_LIST;
     protected static Right USER_RIGHT_DOMAIN;
+    protected static Right USER_RIGHT_RESTRICTED_GRANT_TARGET_TYPE;
     
     // admin preset rights
     protected static Right ADMIN_PRESET_LOGIN_AS;
@@ -105,7 +106,7 @@ public class TestAC extends TestProv {
     protected static Right ADMIN_COMBO_SERVER;
     protected static Right ADMIN_COMBO_XMPP_COMPONENT;
     protected static Right ADMIN_COMBO_ZIMLET;
-    
+    // protected static Right ADMIN_COMBO_ALL;
     
     protected static final String ATTR_ALLOWED_IN_THE_RIGHT = Provisioning.A_description;
     protected static final String ATTR_NOTALLOWED_IN_THE_RIGHT = Provisioning.A_objectClass;
@@ -124,6 +125,7 @@ public class TestAC extends TestProv {
             USER_RIGHT                    = getRight("test-user");
             USER_RIGHT_DISTRIBUTION_LIST  = getRight("test-user-distributionlist");
             USER_RIGHT_DOMAIN             = User.R_createDistList;
+            USER_RIGHT_RESTRICTED_GRANT_TARGET_TYPE = User.R_sendAs;
             
             ADMIN_PRESET_LOGIN_AS          = Admin.R_adminLoginAs;
             ADMIN_PRESET_ACCOUNT           = getRight("test-preset-account");
@@ -186,10 +188,13 @@ public class TestAC extends TestProv {
             ADMIN_COMBO_SERVER            = getRight("test-combo-server");
             ADMIN_COMBO_XMPP_COMPONENT    = getRight("test-combo-xmppcomponent");
             ADMIN_COMBO_ZIMLET            = getRight("test-combo-zimlet");
+            // ADMIN_COMBO_ALL               = getRight("test-combo-all");
             
             sRights.add(USER_LOGIN_AS);              
             sRights.add(USER_RIGHT);                    
-            sRights.add(USER_RIGHT_DISTRIBUTION_LIST);    
+            sRights.add(USER_RIGHT_DISTRIBUTION_LIST);   
+            sRights.add(USER_RIGHT_DOMAIN);
+            sRights.add(USER_RIGHT_RESTRICTED_GRANT_TARGET_TYPE);
             
             sRights.add(ADMIN_PRESET_LOGIN_AS);          
             sRights.add(ADMIN_PRESET_ACCOUNT);
@@ -252,6 +257,7 @@ public class TestAC extends TestProv {
             sRights.add(ADMIN_COMBO_SERVER);
             sRights.add(ADMIN_COMBO_XMPP_COMPONENT);
             sRights.add(ADMIN_COMBO_ZIMLET);
+            // sRights.add(ADMIN_COMBO_ALL);
             
         } catch (ServiceException e) {
             e.printStackTrace();

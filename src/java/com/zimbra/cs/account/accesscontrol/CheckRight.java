@@ -64,10 +64,11 @@ public abstract class CheckRight {
             // only if target type of the right is not account.
             // i.e. account right cannot be granted on groups
             
-            if (rightNeeded.getTargetType() == TargetType.account)
+            if (rightNeeded.getTargetType() == TargetType.account) {
                 allowed = false;
-            else
+            } else {
                 allowed = true;
+            }
             
         } else {
             // group targets can be turned off for admin rights by a localconfig key
@@ -84,12 +85,14 @@ public abstract class CheckRight {
             Right rightNeeded, boolean canDelegateNeeded) {
         if (canDelegateNeeded) {
             // check if the right is grantable on the target
-            if (!rightNeeded.grantableOnTargetType(targetType))
+            if (!rightNeeded.grantableOnTargetType(targetType)) {
                 return false;
+            }
         } else {
             // check if the right is executable on the target
-            if (!rightNeeded.executableOnTargetType(targetType))
+            if (!rightNeeded.executableOnTargetType(targetType)) {
                 return false;
+            }
         }
         return true;
     }

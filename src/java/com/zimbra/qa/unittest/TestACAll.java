@@ -141,26 +141,60 @@ public class TestACAll extends TestAC {
             UserRight userRight, TargetType targetType) 
     throws Exception {
         TargetType rightTarget = userRight.getTargetType();
+        TargetType rightGrantTarget = userRight.getGrantTargetType();
+        
         switch (rightTarget) {
         case account:
-            return targetType == TargetType.account ||
-                   targetType == TargetType.calresource ||
-                   targetType == TargetType.dl ||
-                   targetType == TargetType.group ||
-                   targetType == TargetType.domain ||
-                   targetType == TargetType.global;
+            if (rightGrantTarget == null) {
+                return targetType == TargetType.account ||
+                       targetType == TargetType.calresource ||
+                       targetType == TargetType.dl ||
+                       targetType == TargetType.group ||
+                       targetType == TargetType.domain ||
+                       targetType == TargetType.global;
+            } else if (rightGrantTarget == TargetType.account) {
+                return targetType == TargetType.account ||
+                       targetType == TargetType.calresource;
+            } else if (rightGrantTarget == TargetType.dl) {
+                return targetType == TargetType.dl ||
+                       targetType == TargetType.group;
+            } else if (rightGrantTarget == TargetType.domain) {
+                return targetType == TargetType.domain;
+            } else if (rightGrantTarget == TargetType.global) {
+                return targetType == TargetType.global;
+            } else {
+                return false;
+            }
         case calresource:
             fail();
         case cos:
             fail();
         case dl:
-            return targetType == TargetType.dl ||
-                   targetType == TargetType.group ||
-                   targetType == TargetType.domain ||
-                   targetType == TargetType.global;
+            if (rightGrantTarget == null) {
+                return targetType == TargetType.dl ||
+                       targetType == TargetType.group ||
+                       targetType == TargetType.domain ||
+                       targetType == TargetType.global;
+            } else if (rightGrantTarget == TargetType.dl) {
+                return targetType == TargetType.dl ||
+                       targetType == TargetType.group;
+            } else if (rightGrantTarget == TargetType.domain) {
+                return targetType == TargetType.domain;
+            } else if (rightGrantTarget == TargetType.global) {
+                return targetType == TargetType.global;
+            } else {
+                return false;
+            }
         case domain:
-            return targetType == TargetType.domain ||
-                   targetType == TargetType.global;
+            if (rightGrantTarget == null) {
+                return targetType == TargetType.domain ||
+                       targetType == TargetType.global;
+            } else if (rightGrantTarget == TargetType.global) {
+                return targetType == TargetType.global;
+            } else {
+                return false;
+            }
+        case group:    
         case server:
         case xmppcomponent:
         case zimlet:
@@ -283,8 +317,19 @@ public class TestACAll extends TestAC {
         return false; // just to keep the compiler happy
     }
     
+    private void skipTest(String note, TargetType grantedOnTargetType, 
+            TestGranteeType testGranteeType, Right right) 
+    throws Exception {
+        
+        System.out.println("skipping test (" + note + "): " + 
+                "grant target=" + grantedOnTargetType.getCode() + 
+                ", grantee type=" + testGranteeType.getCode() +
+                ", right=" + right.getName());
+    }
+    
     private void execTest(String note, TargetType grantedOnTargetType, 
-            TestGranteeType testGranteeType, Right right) throws Exception {
+            TestGranteeType testGranteeType, Right right) 
+    throws Exception {
         
         System.out.println("testing (" + note + "): " + 
                 "grant target=" + grantedOnTargetType.getCode() + 
@@ -604,11 +649,13 @@ public class TestACAll extends TestAC {
         if (right.isComboRight()) {
             for (Right rt : ((ComboRight) right).getAllRights()) {
                 setupTargetAndVerify(domain, grantedOnTarget,
-                        grantedOnTargetType, rt, true, allowedAccts, deniedAccts);
+                        grantedOnTargetType, rt, true, allowedAccts, deniedAccts, 
+                        !gotInvalidRequestException);
             }
         } else {
             setupTargetAndVerify(domain, grantedOnTarget,
-                    grantedOnTargetType, right, false, allowedAccts, deniedAccts);
+                    grantedOnTargetType, right, false, allowedAccts, deniedAccts, 
+                    !gotInvalidRequestException);
         }
 
     }
@@ -667,7 +714,8 @@ public class TestACAll extends TestAC {
     
     private void setupTargetAndVerify(Domain domain, Entry grantedOnTarget,
             TargetType grantedOnTargetType, Right right, boolean fromComboRight,
-            List<Account> allowedAccts, List<Account> deniedAccts) 
+            List<Account> allowedAccts, List<Account> deniedAccts,
+            boolean grantWasValid) 
     throws Exception {
         // System.out.println("Right: " + right.getName());
         
@@ -681,7 +729,7 @@ public class TestACAll extends TestAC {
         } else if (right.isAttrRight()) {
             for (TargetType targetTypeOfRight : ((AttrRight) right).getTargetTypes()) {
                 setupTarget(goodTargets, badTargets, domain, grantedOnTarget, 
-                grantedOnTargetType, targetTypeOfRight, right);
+                        grantedOnTargetType, targetTypeOfRight, right);
             }
         } else {
             fail();
@@ -693,7 +741,7 @@ public class TestACAll extends TestAC {
         //
         for (Entry goodTarget : goodTargets) {
             boolean canGrantBeInheritedForCreate = canGrantBeInheritedForCreate(grantedOnTarget, goodTarget);
-            verify(goodTarget, canGrantBeInheritedForCreate, allowedAccts, deniedAccts, right, fromComboRight, true);
+            verify(goodTarget, canGrantBeInheritedForCreate, allowedAccts, deniedAccts, right, fromComboRight, grantWasValid);
         }
         for (Entry badTarget : badTargets) {
             boolean canGrantBeInheritedForCreate = canGrantBeInheritedForCreate(grantedOnTarget, badTarget);
@@ -1381,7 +1429,8 @@ public class TestACAll extends TestAC {
             if (right.isPresetRight()) {
                 verifyPresetRight(deniedAcct, target, right, false);
             } else if (right.isAttrRight()) {
-                verifyAttrRight(deniedAcct, target, (AttrRight) right, canGrantBeInheritedForCreate, fromComboRight, false);
+                verifyAttrRight(deniedAcct, target, (AttrRight) right, 
+                        canGrantBeInheritedForCreate, fromComboRight, false);
             } else {
                 fail();  // not yet implemented
             }
@@ -1414,17 +1463,36 @@ public class TestACAll extends TestAC {
         }
     }
     
+    // called from testOne()
     private void doTest(String note, TargetType grantedOnTargetType, 
-            GranteeType granteeType, Right right) throws Exception {
-        TestGranteeType testGranteeType = TestGranteeType.get(granteeType);
-        
-        doTest(note, grantedOnTargetType, testGranteeType, right);
+            GranteeType granteeType, Right right) 
+    throws Exception {
+        doTest(note, grantedOnTargetType, granteeType, right, false);
+    }
+    
+    // called from testOne()
+    private void doTest(String note, TargetType grantedOnTargetType, 
+            TestGranteeType granteeType, Right right) 
+    throws Exception {
+        doTest(note, grantedOnTargetType, granteeType, right, false);
     }
     
     private void doTest(String note, TargetType grantedOnTargetType, 
-            TestGranteeType granteeType, Right right) throws Exception {
+            GranteeType granteeType, Right right, boolean skip) throws Exception {
+        TestGranteeType testGranteeType = TestGranteeType.get(granteeType);
+        
+        doTest(note, grantedOnTargetType, testGranteeType, right, skip);
+    }
+    
+    private void doTest(String note, TargetType grantedOnTargetType, 
+            TestGranteeType granteeType, Right right, boolean skip) 
+    throws Exception {
         try {
-            execTest(note, grantedOnTargetType, granteeType, right);
+            if (skip) {
+                skipTest(note, grantedOnTargetType, granteeType, right);
+            } else {
+                execTest(note, grantedOnTargetType, granteeType, right);
+            }
         } finally {
             revokeAllGrantsOnGlobalGrantAndGlobalConfig();
             cleanupTest();
@@ -1437,19 +1505,26 @@ public class TestACAll extends TestAC {
      * full test
      */
     private void testAll() throws Exception {
+        Set<String> excludeGranteeTypes = Sets.newHashSet(GranteeType.GT_EXT_GROUP.getCode());
+        
         int totalTests = TargetType.values().length * TestGranteeType.TEST_GRANTEE_TYPES.size() * sRights.size();
         int curTest = 1;
         for (TargetType targetType : TargetType.values()) {
             for (TestGranteeType granteeType : TestGranteeType.TEST_GRANTEE_TYPES) {
+                boolean skip = false;
+                if (excludeGranteeTypes.contains(granteeType.getCode())) {
+                    skip = true;
+                }
+                
                 for (Right right : sRights) {
-                    doTest((curTest++) + "/" + totalTests, targetType, granteeType, right);
+                    doTest((curTest++) + "/" + totalTests, targetType, granteeType, right, skip);
                 }
             }
         }
     }
     
     /*
-     * test a particular target and a range of rights
+     * test a particular target type and a range of rights for all grantee types
      */
     private void testTarget() throws Exception {
         
@@ -1466,24 +1541,32 @@ public class TestACAll extends TestAC {
          *  config
          *  global
          */
+        
+        TargetType targetType = TargetType.account;
+        Set<String> excludeGranteeTypes = Sets.newHashSet(GranteeType.GT_EXT_GROUP.getCode());
          
         int beginRight = 0; // sRights.indexOf(ADMIN_COMBO_ACCOUNT);  // inclusive
         int endRight = sRights.size() - 1;                            // inclusive
         
         int totalTests = TestGranteeType.TEST_GRANTEE_TYPES.size() * (endRight - beginRight + 1);
         int curTest = 1;
-        TargetType targetType = TargetType.account;
+        
         for (TestGranteeType granteeType : TestGranteeType.TEST_GRANTEE_TYPES) {
+            boolean skip = false;
+            if (excludeGranteeTypes.contains(granteeType.getCode())) {
+                skip = true;
+            }
+            
             // for (Right right : sRights) {
             for (int i = beginRight; i <= endRight; i++) {
                 Right right = sRights.get(i);
-                doTest((curTest++) + "/" + totalTests, targetType, granteeType, right);
+                doTest((curTest++) + "/" + totalTests, targetType, granteeType, right, skip);
             }
         }
     }
     
     /*
-     * test a particular grantee type and a range of rights for all targets
+     * test a particular grantee type and a range of rights for all target types
      */
     private void testGrantee() throws Exception {
                 
@@ -1498,16 +1581,38 @@ public class TestACAll extends TestAC {
          * GT_KEY
          * GT_PUBLIC
          */
-         
+        GranteeType granteeType = GranteeType.GT_EXT_GROUP; 
         int beginRight = 0; // sRights.indexOf(ADMIN_COMBO_ACCOUNT);  // inclusive
         int endRight = sRights.size() - 1;                            // inclusive
         
         int totalTests = TargetType.values().length * sRights.size();
         int curTest = 1;
-        GranteeType granteeType = GranteeType.GT_EXT_GROUP;
+        
         for (TargetType targetType : TargetType.values()) {
             for (Right right : sRights) {
-                doTest((curTest++) + "/" + totalTests, targetType, granteeType, right);
+                doTest((curTest++) + "/" + totalTests, targetType, granteeType, right, false);
+            }
+        }
+    }
+    
+    /*
+     * test a particular right for all target types and grantee types
+     */
+    private void testRight() throws Exception {
+
+        Set<String> excludeGranteeTypes = Sets.newHashSet(GranteeType.GT_EXT_GROUP.getCode());
+        Right right = ADMIN_COMBO_ACCOUNT;
+        
+        int totalTests = TargetType.values().length * TestGranteeType.TEST_GRANTEE_TYPES.size() * sRights.size();
+        int curTest = 1;
+        for (TargetType targetType : TargetType.values()) {
+            for (TestGranteeType granteeType : TestGranteeType.TEST_GRANTEE_TYPES) {
+                boolean skip = false;
+                if (excludeGranteeTypes.contains(granteeType.getCode())) {
+                    skip = true;
+                }
+                
+                doTest((curTest++) + "/" + totalTests, targetType, granteeType, right, skip);
             }
         }
     }
@@ -1518,26 +1623,29 @@ public class TestACAll extends TestAC {
     private void testOne() throws Exception {
         // test a particular grant target and grantee type and right
         // doTest("1/1", TargetType.account, GranteeType.GT_USER, ADMIN_ATTR_GETALL_ACCOUNT);
-        // doTest("1/1", TargetType.account, GranteeType.GT_GUEST, USER_RIGHT);
-        // doTest("1/1", TargetType.account, GranteeType.GT_KEY, USER_RIGHT);
-        // doTest("1/1", TargetType.account, GranteeType.GT_GROUP, USER_RIGHT);
         // doTest("1/1", TargetType.account, GranteeType.GT_USER, ADMIN_PRESET_ACCOUNT);
         // doTest("1/1", TargetType.account, GranteeType.GT_USER, ADMIN_ATTR_GETALL_ACCOUNT);
         // doTest("1/1", TargetType.account, GranteeType.GT_USER, ADMIN_ATTR_SETALL_ACCOUNT);
         // doTest("1/1", TargetType.account, GranteeType.GT_USER, ADMIN_COMBO_ACCOUNT);
+        // doTest("1/1", TargetType.account, GranteeType.GT_USER, ADMIN_COMBO_ALL);
+        // doTest("1/1", TargetType.account, GranteeType.GT_USER, ADMIN_PRESET_CALENDAR_RESOURCE);
+        // doTest("1/1", TargetType.account, GranteeType.GT_USER, USER_LOGIN_AS);
+        // doTest("1/1", TargetType.account, GranteeType.GT_GROUP, USER_RIGHT);
+        // doTest("1/1", TargetType.account, GranteeType.GT_GUEST, USER_RIGHT);
+        // doTest("1/1", TargetType.account, GranteeType.GT_KEY, USER_RIGHT);
         // doTest("1/1", TargetType.account, TestGranteeType.GRANTEE_DYNAMIC_GROUP, ADMIN_ATTR_GETALL_ACCOUNT);
         // doTest("1/1", TargetType.account, GranteeType.GT_EXT_GROUP, ADMIN_PRESET_ACCOUNT);
-        // doTest("1/1", TargetType.account, GranteeType.GT_USER, USER_LOGIN_AS);
         
         // doTest("1/1", TargetType.calresource, GranteeType.GT_USER, USER_RIGHT);
         // doTest("1/1", TargetType.calresource, GranteeType.GT_USER, ADMIN_PRESET_ACCOUNT);
-        // doTest("1/1", TargetType.account, GranteeType.GT_USER, ADMIN_PRESET_CALENDAR_RESOURCE);
         // doTest("1/1", TargetType.calresource, GranteeType.GT_USER, ADMIN_PRESET_CALENDAR_RESOURCE);
         
         // doTest("1/1", TargetType.config, TestGranteeType.GRANTEE_DYNAMIC_GROUP, ADMIN_ATTR_GETALL_ACCOUNT);
        
         // doTest("1/1", TargetType.global, TestGranteeType.GRANTEE_DYNAMIC_GROUP, ADMIN_PRESET_LOGIN_AS);
         // doTest("1/1", TargetType.global, GranteeType.GT_GROUP, ADMIN_PRESET_LOGIN_AS);
+        // doTest("1/1", TargetType.global, TestGranteeType.GRANTEE_DYNAMIC_GROUP, ADMIN_COMBO_ALL);
+        // doTest("1/1", TargetType.global, GranteeType.GT_USER, ADMIN_COMBO_ALL);
         
         // doTest("1/1", TargetType.dl, GranteeType.GT_USER, USER_LOGIN_AS);
         // doTest("1/1", TargetType.dl, GranteeType.GT_USER, ADMIN_RIGHT_ACCOUNT);
@@ -1557,7 +1665,7 @@ public class TestACAll extends TestAC {
         // doTest("1/1", TargetType.domain, GranteeType.GT_USER, ADMIN_PRESET_DISTRIBUTION_LIST);
         // doTest("1/1", TargetType.domain, GranteeType.GT_USER, ADMIN_PRESET_DOMAIN);
         // doTest("1/1", TargetType.domain, GranteeType.GT_EXT_GROUP, ADMIN_PRESET_DOMAIN);
-        doTest("1/1", TargetType.domain, GranteeType.GT_EXT_GROUP, USER_RIGHT_DOMAIN);
+        // doTest("1/1", TargetType.domain, GranteeType.GT_EXT_GROUP, USER_RIGHT_DOMAIN);
         
         // doTest("1/1", TargetType.config, GranteeType.GT_EXT_GROUP, ADMIN_ATTR_GETALL_CONFIG);
                
@@ -1570,9 +1678,9 @@ public class TestACAll extends TestAC {
      */
     @Test
     public void test() throws Exception {
-        // testAll();
+        testAll();
         // testTarget();
         // testGrantee();
-        testOne();
+        // testOne();
     }
 }

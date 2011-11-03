@@ -107,7 +107,7 @@ public class ComboRight extends AdminRight {
     }
     
     @Override
-    protected Set<TargetType> getGrantableTargetTypes() {
+    Set<TargetType> getGrantableTargetTypes() {
         // return *intersect* of target types from which *all* of the target types
         // for the right can inherit from
         Set<TargetType> targetTypes = null;

@@ -14,6 +14,9 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.accesscontrol.generated.UserRights;
 
@@ -69,7 +72,23 @@ public class UserRight extends Right {
     @Override
     boolean grantableOnTargetType(TargetType targetType) {
         targetType = disguiseTargetType(targetType);
-        return super.grantableOnTargetType(targetType); 
+        
+        /*
+         * see if there is restriction on grant target type for the right
+         */
+        if (mGrantTargetType != null) {
+            return mGrantTargetType == targetType;
+        }
+        return targetType.isInheritedBy(mTargetType);
+    }
+    
+
+    @Override
+    Set<TargetType> getGrantableTargetTypes() {
+        if (mGrantTargetType != null) {
+            return EnumSet.of(mGrantTargetType);
+        }
+        return mTargetType.inheritFrom();
     }
     
     @Override
@@ -90,5 +109,6 @@ public class UserRight extends Right {
         // no need to check is other is a combo right, because
         // combo right can only contain admin rights.
     }
+
 
 }

@@ -2229,13 +2229,17 @@ public class ProvUtil implements HttpDebugListener {
         console.println("------------------------------");
 
         console.println(right.getName());
-        console.println(indent + "   description: " + right.getDesc());
-        console.println(indent + "    right type: " + right.getRightType().name());
+        console.println(indent + "      description: " + right.getDesc());
+        console.println(indent + "       right type: " + right.getRightType().name());
 
         String targetType = right.getTargetTypeStr();
-        console.println(indent + "target type(s): " + (targetType==null?"":targetType));
+        console.println(indent + "   target type(s): " + (targetType==null ? "" : targetType));
+        
+        String grantTargetType = right.getGrantTargetTypeStr();
+        console.println(indent + "grant target type: " + 
+                (grantTargetType==null ? "(default)" : grantTargetType));
 
-        console.println(indent + "   right class: " + right.getRightClass().name());
+        console.println(indent + "      right class: " + right.getRightClass().name());
 
         if (right.isAttrRight()) {
             AttrRight attrRight = (AttrRight)right;

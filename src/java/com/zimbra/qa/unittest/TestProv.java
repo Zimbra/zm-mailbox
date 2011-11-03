@@ -29,7 +29,7 @@ import com.zimbra.cs.account.Zimlet;
 public abstract class TestProv extends TestLdap {
 
     protected static final String TEST_ID = TestProvisioningUtil.genTestId();
-    protected static final String BASE_DOMAIN_NAME = TestProvisioningUtil.baseDomainName("test-prov", TEST_ID);
+    protected static final String BASE_DOMAIN_NAME = TestLdap.baseDomainName(TestProv.class); // TestProvisioningUtil.baseDomainName("test-prov", TEST_ID);
     protected static final String PASSWORD = "test123";
     
     protected static Provisioning sSoapProv;

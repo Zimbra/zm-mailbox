@@ -72,6 +72,7 @@ public class RightManager {
     private static final String A_CACHE        = "cache";
     private static final String A_FALLBACK     = "fallback";
     private static final String A_FILE         = "file";
+    private static final String A_GRANT_TARGET_TYPE  = "grantTargetType";
     private static final String A_LIMIT        = "l";
     private static final String A_N            = "n";
     private static final String A_NAME         = "name";
@@ -296,10 +297,11 @@ public class RightManager {
         
         if (userRight) {
             TargetType targetType;
-            if (targetTypeStr != null)
+            if (targetTypeStr != null) {
                 targetType = TargetType.fromCode(targetTypeStr);
-            else
+            } else {
                 targetType = TargetType.account;  // default target type for user right is account
+            }
             
             right = new UserRight(name);
             right.setTargetType(targetType);
@@ -312,8 +314,9 @@ public class RightManager {
             
         } else {
             String rt = eRight.attributeValue(A_TYPE);
-            if (rt == null)
+            if (rt == null) {
                 throw ServiceException.PARSE_ERROR("missing attribute [" + A_TYPE + "]", null);
+            }
             rightType = AdminRight.RightType.fromString(rt);
             
             right = AdminRight.newAdminSystemRight(name, rightType);
@@ -326,24 +329,32 @@ public class RightManager {
             }
         }
         
+        String grantTargetTypeStr = eRight.attributeValue(A_GRANT_TARGET_TYPE, null);
+        if (grantTargetTypeStr != null) {
+            TargetType grantTargetType = TargetType.fromCode(grantTargetTypeStr);
+            right.setGrantTargetType(grantTargetType);
+        }
+        
         boolean cache = getBooleanAttr(eRight, A_CACHE, false);
-        if (cache)
+        if (cache) {
             right.setCacheable();
-
+        }
+        
         for (Iterator elemIter = eRight.elementIterator(); elemIter.hasNext();) {
             Element elem = (Element)elemIter.next();
-            if (elem.getName().equals(E_DESC))
+            if (elem.getName().equals(E_DESC)) {
                 parseDesc(elem, right);
-            else if (elem.getName().equals(E_DOC))
+            } else if (elem.getName().equals(E_DOC)) {
                 parseDoc(elem, right);
-            else if (elem.getName().equals(E_DEFAULT))
+            } else if (elem.getName().equals(E_DEFAULT)) {
                 parseDefault(elem, right);
-            else if (elem.getName().equals(E_ATTRS))
+            } else if (elem.getName().equals(E_ATTRS)) {
                 parseAttrs(elem, right);
-            else if (elem.getName().equals(E_RIGHTS))
+            } else if (elem.getName().equals(E_RIGHTS)) {
                 parseRights(elem, right);
-            else
+            } else {
                 throw ServiceException.PARSE_ERROR("invalid element: " + elem.getName(), null);
+            }
         }
         
         // verify that all required fields are set and populate internal data

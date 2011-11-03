@@ -406,7 +406,35 @@
 </right>
 
 
+<!-- 
+   TestACAll.setupTarget() made distributionlist and dynamicgroup
+   mutual exclusive.  i.e. for rights targeted on dl, it creates a
+   dl entry for the "good target" test, and creates a dynamic group 
+   entry for the "bad target" test.  But for combo right like this,
+   if this right is granted on the globalgrant entry, for getAttrs/setAttrs 
+   rights, since it uese the same atribute (description), it's gonna 
+   positive (allowed) on both the "good target" and "bad target".
+   Disable this right for now.
+-->
 
+<!-- 
+<right name="test-combo-all" type="combo">
+  <desc>a combo right that has only zimlet rights</desc>
+  <rights>
+    <r n="test-combo-account"/>
+    <r n="test-combo-calendarresource"/>
+    <r n="test-combo-cos"/>
+    <r n="test-combo-distributionlist"/>
+    <r n="test-combo-dynamicgroup"/>
+    <r n="test-combo-domain"/>
+    <r n="test-combo-globalconfig"/>
+    <r n="test-combo-globalgrant"/>
+    <r n="test-combo-server"/>
+    <r n="test-combo-xmppcomponent"/>
+    <r n="test-combo-zimlet"/>   
+  </rights>
+</right>
+-->
 
 <!--  
       ==================

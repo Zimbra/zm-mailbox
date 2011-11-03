@@ -14,7 +14,11 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Set;
+
+import com.google.common.collect.Sets;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.accesscontrol.generated.RightConsts;
 
@@ -48,6 +52,7 @@ public abstract class Right extends RightConsts {
     private String mDoc;   // a more detailed description, use cases, examples
     private Boolean mDefault;
     protected TargetType mTargetType;
+    protected TargetType mGrantTargetType;
     private CheckRightFallback mFallback;
     int mCacheIndex = NOT_CACHEABLE;
     
@@ -153,9 +158,9 @@ public abstract class Right extends RightConsts {
         return (mTargetType == targetType);
     }
     
-    boolean grantableOnTargetType(TargetType targetType) {
-        return targetType.isInheritedBy(mTargetType);
-    }
+    abstract boolean grantableOnTargetType(TargetType targetType);
+    
+    abstract Set<TargetType> getGrantableTargetTypes();
     
     /**
      * returns if the subDomain modifier can be specified for the right
@@ -189,30 +194,56 @@ public abstract class Right extends RightConsts {
         }
         return sb.toString();
     }
-    
-    protected Set<TargetType> getGrantableTargetTypes() {
-        return mTargetType.inheritFrom();
-    }
 
     void setTargetType(TargetType targetType) throws ServiceException {
-        if (mTargetType != null)
+        if (mTargetType != null) {
             throw ServiceException.PARSE_ERROR("target type already set", null);
+        };
         
         mTargetType = targetType;
     }
     
+    void setGrantTargetType(TargetType targetType) throws ServiceException {
+        if (!isUserRight()) {
+            throw ServiceException.PARSE_ERROR("grant target type is only supported on user rights", null);
+        }
+        
+        if (!grantableOnTargetType(targetType)) {
+            throw ServiceException.PARSE_ERROR(
+                    String.format("invalid grant target type: %s, valid grant target type for right %s are: %s",
+                    targetType.getCode(), getName(),
+                    Arrays.deepToString(getGrantableTargetTypes().toArray())), 
+                    null);
+        }
+        
+        mGrantTargetType = targetType;
+    }
+    
     void verifyTargetType() throws ServiceException {
-        if (mTargetType == null)
+        if (mTargetType == null) {
             throw ServiceException.PARSE_ERROR("missing target type", null);
+        }
     }
     
     public TargetType getTargetType() throws ServiceException {
         return mTargetType;
     }
     
+    public TargetType getGrantTargetType() {
+        return mGrantTargetType;
+    }
+    
     // for SOAP response only
     public String getTargetTypeStr() {
         return mTargetType.getCode();
+    }
+    
+    public String getGrantTargetTypeStr() {
+        if (mGrantTargetType == null) {
+            return null;
+        } else {
+            return mGrantTargetType.getCode();
+        }
     }
     
     /*

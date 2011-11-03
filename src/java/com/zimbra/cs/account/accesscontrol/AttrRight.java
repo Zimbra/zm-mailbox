@@ -114,7 +114,7 @@ public class AttrRight extends AdminRight {
     }
     
     @Override
-    protected Set<TargetType> getGrantableTargetTypes() {
+    Set<TargetType> getGrantableTargetTypes() {
         // return *union* of target types from which *any* of the target types
         // for the right can inherit from
         Set<TargetType> targetTypes = new HashSet<TargetType>();

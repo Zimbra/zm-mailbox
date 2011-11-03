@@ -573,6 +573,7 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
         AllowedAttrs allowedAttrs = 
             CheckAttrRight.accessibleAttrs(new Grantee(granteeAcct), target, 
                     AdminRight.PR_GET_ATTRS, canDelegateNeeded);
+        
         return allowedAttrs.canAccessAttrs(attrsNeeded, target);
     }
     

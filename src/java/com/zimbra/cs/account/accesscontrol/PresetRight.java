@@ -35,12 +35,17 @@ public class PresetRight extends AdminRight {
     //
     
     @Override
-    protected Set<TargetType> getGrantableTargetTypes() {
+    Set<TargetType> getGrantableTargetTypes() {
         Set<TargetType> targetTypes = new HashSet<TargetType>();
         for (TargetType targetType : mTargetType.inheritFrom()) {
             targetTypes.add(targetType);
         }
         return targetTypes;
+    }
+    
+    @Override
+    boolean grantableOnTargetType(TargetType targetType) {
+        return targetType.isInheritedBy(mTargetType);
     }
     
     @Override
