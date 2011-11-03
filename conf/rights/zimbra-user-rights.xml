@@ -5,28 +5,30 @@
 <!--
 *******************
     user rights
+    
+    For user rights, default targetType is "account"
 *******************
 -->
 
-<right name="invite" userRight="1" fallback="InviteFallback" cache="1">
+<right name="invite" userRight="1" fallback="InviteFallback" cache="1" targetType="account">
   <desc>automatically add meeting invites from grantee to the target's calendar</desc>
   <default>allow</default>
 </right>
 
-<right name="viewFreeBusy" userRight="1" cache="1">
+<right name="viewFreeBusy" userRight="1" cache="1" targetType="account">
   <desc>view free/busy</desc>
   <default>allow</default>
 </right>
 
-<right name="loginAs" userRight="1" cache="1">
+<right name="loginAs" userRight="1" cache="1" targetType="account">
   <desc>login as another user.  Currently this is only honored for imap/pop3 login.</desc>
 </right>
 
-<right name="sendAs" userRight="1" cache="1">
+<right name="sendAs" userRight="1" cache="1" targetType="account" grantTargetType="account">
   <desc>reply to messages in a shared folder as the owner of the folder</desc>
 </right>
 
-<right name="sendOnBehalfOf" userRight="1" cache="1">
+<right name="sendOnBehalfOf" userRight="1" cache="1" targetType="account" grantTargetType="account">
   <desc>send messages on behalf of the grantor</desc>
 </right>
 
