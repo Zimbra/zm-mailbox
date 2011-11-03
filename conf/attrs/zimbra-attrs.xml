@@ -4200,7 +4200,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="804" name="zimbraPrefReadingPaneLocation" type="enum" value="bottom,right,off" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="6.0.0_BETA1">
-  <defaultCOSValue>bottom</defaultCOSValue>
+  <defaultCOSValue>right</defaultCOSValue>
   <desc>where the message reading pane is displayed in list views</desc>
 </attr>
 
@@ -5308,12 +5308,12 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1151" name="zimbraPrefTasksReadingPaneLocation" type="enum" value="bottom,right,off" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="7.0.0">
-  <defaultCOSValue>bottom</defaultCOSValue>
+  <defaultCOSValue>right</defaultCOSValue>
   <desc>where the reading pane is displayed for tasks</desc>
 </attr>
 
 <attr id="1152" name="zimbraPrefBriefcaseReadingPaneLocation" type="enum" value="bottom,right,off" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="7.0.0">
-  <defaultCOSValue>bottom</defaultCOSValue>
+  <defaultCOSValue>right</defaultCOSValue>
   <desc>where the reading pane is displayed for briefcase</desc>
 </attr>
 
