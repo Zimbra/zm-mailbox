@@ -3988,9 +3988,10 @@ public class DbMailItem {
         return DbMailbox.qualifyTableName(mbox, TABLE_TOMBSTONE);
     }
 
-    /** Returns a comma-separated list of ids for logging.  If the {@code
-     *  String} is more than 200 characters long, cuts off the list and appends
-     *  &quot...&quot. */
+    /**
+     * Returns a comma-separated list of ids for logging.  If the <tt>String</tt> is
+     * more than 200 characters long, cuts off the list and appends &quot...&quot.
+     */
     static String getIdListForLogging(Collection<Integer> ids) {
         if (ids == null)
             return null;
@@ -4009,6 +4010,52 @@ public class DbMailItem {
             }
         }
         return idList.toString();
+    }
+
+    public static TypedIdList listMsgItems(Folder folder, long messageSyncStart, boolean descending, boolean older) throws ServiceException {
+        Mailbox mbox = folder.getMailbox();
+        assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
+
+        TypedIdList result = new TypedIdList();
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            if (older) {
+                stmt = conn.prepareStatement("SELECT id, type FROM " + getMailItemTableName(folder) +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND date < ?" +
+                        " ORDER BY date" + (descending ? " DESC" : ""));
+            } else {
+                stmt = conn.prepareStatement("SELECT id, type FROM " + getMailItemTableName(folder) +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND date >= ?" +
+                        " ORDER BY date" + (descending ? " DESC" : ""));
+            }
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
+            stmt.setInt(pos++, folder.getId());
+            stmt.setLong(pos++, messageSyncStart);
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                MailItem.Type type = MailItem.Type.of(rs.getByte(1));
+                String row = rs.getString(2);
+                if (row == null || row.equals(""))
+                    continue;
+                for (String entry : row.split(",")) {
+                    try {
+                        result.add(type, Integer.parseInt(entry));
+                    } catch (NumberFormatException nfe) {
+                        ZimbraLog.sync.warn("unparseable result entry: " + entry);
+                    }
+                }
+            }
+            return result;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("fetching item list for folder " + folder.getId(), e);
+        } finally {
+            DbPool.closeResults(rs);
+            DbPool.closeStatement(stmt);
+        }
     }
 
     private final Mailbox mailbox;

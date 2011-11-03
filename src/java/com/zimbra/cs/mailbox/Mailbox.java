@@ -8463,4 +8463,22 @@ public class Mailbox {
     public boolean isNewItemIdValid(int id) {
         return id < 2<<29;
     }
+
+    public TypedIdList listMessageItems(OperationContext octxt, int folderId, long messageSyncStart) throws ServiceException {
+        if (folderId == ID_AUTO_INCREMENT)
+            return new TypedIdList();
+
+        boolean success = false;
+        try {
+            beginTransaction("listMessageItemsforgivenDate", octxt);
+
+            // if they specified a folder, make sure it actually exists
+            Folder folder = getFolderById(folderId);
+            TypedIdList ids = DbMailItem.listMsgItems(folder, messageSyncStart, true, false);
+            success = true;
+            return ids;
+        } finally {
+            endTransaction(success);
+        }
+    }
 }
