@@ -6594,4 +6594,8 @@ TODO: delete them permanently from here
   <desc>email recipients to be notified when zimbraAggregateQuotaLastUsage reaches zimbraDomainAggregateQuotaWarnPercent of the zimbraDomainAggregateQuota</desc>
 </attr>
 
+<attr id="1332" name="zimbraReverseProxyErrorHandlerURL" type="string" cardinality="single" optionalIn="server,globalConfig" flags="serverInherited" since="8.0.0">
+  <desc>the URL of customized proxy error handler. If set, when errors happen in proxy, proxy will redirect to this URL with two paras - err: error code; up: the
+        addr of upstream server connecting to which the error happens</desc>
+</attr>
 </attrs>

@@ -986,6 +986,37 @@ class ZMSSODefaultEnablerVar extends ProxyConfVar {
     }
 }
 
+class ErrorPagesVar extends ProxyConfVar {
+    
+    static final String[] ERRORS = {"502", "504"};
+    
+    public ErrorPagesVar() {
+        super("web.:errorPages",
+              "zimbraReverseProxyErrorHandlerURL", 
+              "", 
+              ProxyConfValueType.STRING, 
+              ProxyConfOverride.SERVER, 
+              "the error page statements");
+    }
+    
+    @Override
+    public String format(Object o) throws ProxyConfException {
+
+        String errURL = (String)o;
+        StringBuilder sb = new StringBuilder();
+        if(errURL.length() == 0) {
+            for(String err: ErrorPagesVar.ERRORS) {
+                sb.append("error_page " + err + " /zmerror_upstream_" + err + ".html;\n");
+            }
+        } else {
+            for(String err: ErrorPagesVar.ERRORS) {
+                sb.append("error_page " + err + " " + errURL + "?err=" + err + "&up=$upstream_addr;\n");
+            }
+        }
+        return sb.toString();
+    }
+}
+
 /**
  * A simple class of Triple<VirtualHostName, VirtualIPAddress, DomainName>. Uses
  * this only for convenient and HashMap can't guarantee order
@@ -1573,6 +1604,7 @@ public class ProxyConfGen
         /* deprecated */ mConfVars.put("web.:routehandlers", new RouteHandlersVar());
         /* deprecated */ mConfVars.put("web.routetimeout", new ProxyConfVar("web.routetimeout", "zimbraReverseProxyRouteLookupTimeout", new Long(15000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER,"Time interval (ms) given to web route lookup handler to respond to route lookup request (after this time elapses, Proxy fails over to next handler, or fails the request if there are no more lookup handlers)"));
         mConfVars.put("web.uploadmax", new ProxyConfVar("web.uploadmax", "zimbraFileUploadMaxSize", new Long(10485760), ProxyConfValueType.LONG, ProxyConfOverride.SERVER,"Maximum accepted client request body size (indicated by Content-Length) - if content length exceeds this limit, then request fails with HTTP 413"));
+        mConfVars.put("web.:error_pages", new ErrorPagesVar());
         mConfVars.put("web.http.port", new ProxyConfVar("web.http.port", Provisioning.A_zimbraMailProxyPort, new Integer(0), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER,"Web Proxy HTTP Port"));
         mConfVars.put("web.http.maxbody", new ProxyConfVar("web.http.maxbody", "zimbraFileUploadMaxSize", new Long(10485760), ProxyConfValueType.LONG, ProxyConfOverride.SERVER,"Maximum accepted client request body size (indicated by Content-Length) - if content length exceeds this limit, then request fails with HTTP 413"));
         mConfVars.put("web.https.port", new ProxyConfVar("web.https.port", Provisioning.A_zimbraMailSSLProxyPort, new Integer(0), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER,"Web Proxy HTTPS Port"));
