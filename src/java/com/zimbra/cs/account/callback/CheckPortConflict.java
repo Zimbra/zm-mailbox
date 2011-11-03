@@ -40,7 +40,8 @@ public class CheckPortConflict extends AttributeCallback {
     static {
         // TODO: use a flag in zimbra-attrs.xml and generate this map automatically
         sPortAttrs.add(Provisioning.A_zimbraAdminPort);
-            
+        sPortAttrs.add(Provisioning.A_zimbraAdminProxyPort);
+
         sPortAttrs.add(Provisioning.A_zimbraImapBindPort);
         sPortAttrs.add(Provisioning.A_zimbraImapSSLBindPort);
         sPortAttrs.add(Provisioning.A_zimbraImapProxyBindPort);
