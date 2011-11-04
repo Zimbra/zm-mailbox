@@ -489,7 +489,6 @@ public final class MailboxIndex {
 
         ReIndexTask(Mailbox mbox, Collection<Integer> ids) {
             super(mbox);
-            assert(ids == null || !ids.isEmpty());
             this.ids = ids;
         }
 
