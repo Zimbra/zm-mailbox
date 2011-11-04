@@ -30,7 +30,7 @@ public class UserRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110911-1608 */
+    /* build: 8.0.0_BETA1_1111 jhahm 20111104-0947 */
 
 
     public static UserRight R_createDistList;
@@ -38,7 +38,9 @@ public class UserRights {
     public static UserRight R_loginAs;
     public static UserRight R_ownDistList;
     public static UserRight R_sendAs;
+    public static UserRight R_sendAsDistList;
     public static UserRight R_sendOnBehalfOf;
+    public static UserRight R_sendOnBehalfOfDistList;
     public static UserRight R_sendToDistList;
     public static UserRight R_viewDistList;
     public static UserRight R_viewFreeBusy;
@@ -50,7 +52,9 @@ public class UserRights {
         R_loginAs                              = rm.getUserRight(Right.RT_loginAs);
         R_ownDistList                          = rm.getUserRight(Right.RT_ownDistList);
         R_sendAs                               = rm.getUserRight(Right.RT_sendAs);
+        R_sendAsDistList                       = rm.getUserRight(Right.RT_sendAsDistList);
         R_sendOnBehalfOf                       = rm.getUserRight(Right.RT_sendOnBehalfOf);
+        R_sendOnBehalfOfDistList               = rm.getUserRight(Right.RT_sendOnBehalfOfDistList);
         R_sendToDistList                       = rm.getUserRight(Right.RT_sendToDistList);
         R_viewDistList                         = rm.getUserRight(Right.RT_viewDistList);
         R_viewFreeBusy                         = rm.getUserRight(Right.RT_viewFreeBusy);

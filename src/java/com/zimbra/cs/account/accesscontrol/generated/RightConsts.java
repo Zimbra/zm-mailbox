@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20110911-1608 */
+    /* build: 8.0.0_BETA1_1111 jhahm 20111104-0947 */
 
 
     /*
@@ -62,9 +62,19 @@ public class RightConsts {
     public static final String RT_sendAs = "sendAs";
 
     /**
+     * reply to messages in a shared folder as the owner of the folder
+     */
+    public static final String RT_sendAsDistList = "sendAsDistList";
+
+    /**
      * send messages on behalf of the grantor
      */
     public static final String RT_sendOnBehalfOf = "sendOnBehalfOf";
+
+    /**
+     * send messages on behalf of the grantor
+     */
+    public static final String RT_sendOnBehalfOfDistList = "sendOnBehalfOfDistList";
 
     /**
      * send mails to distribution list
