@@ -6597,4 +6597,9 @@ TODO: delete them permanently from here
   <desc>the URL of customized proxy error handler. If set, when errors happen in proxy, proxy will redirect to this URL with two paras - err: error code; up: the
         addr of upstream server connecting to which the error happens</desc>
 </attr>
+
+<attr id="1333" name="zimbraPrefAllowAddressForDelegatedSender" type="email" max="256" cardinality="multi" optionalIn="account" flags="accountInfo,domainAdminModifiable" since="8.0.0">
+  <desc>Addresses of the account that can be used by allowed delegated senders as From and Sender address.</desc>
+</attr>
+
 </attrs>

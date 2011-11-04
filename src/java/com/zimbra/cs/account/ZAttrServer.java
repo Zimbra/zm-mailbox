@@ -42,7 +42,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 jhahm 20111104-0947 */
+    /* build: 8.0.0_BETA1_1111 pshao 20111104-1616 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -9719,11 +9719,11 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * URL prefix for where the zimbra app resides on this server
      *
-     * @return zimbraMailURL, or "/" if unset
+     * @return zimbraMailURL, or null if unset
      */
     @ZAttr(id=340)
     public String getMailURL() {
-        return getAttr(Provisioning.A_zimbraMailURL, "/");
+        return getAttr(Provisioning.A_zimbraMailURL, null);
     }
 
     /**
