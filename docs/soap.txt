@@ -3438,8 +3438,7 @@ Note: Thi call only discovers grants granted on the designated target type of th
 
 <DiscoverRightsResponse>
     <targets right="...">
-        [<account id="..." name="...">+]   
-        [<dl id="..." name="...">+]   
+        [<target type="{target-type}" id="..." name="...">+]
     </targets>+
 </DiscoverRightsResponse>
 
@@ -3451,12 +3450,12 @@ e.g.
 
 <DiscoverRightsResponse>
     <targets right="sendAs">
-        <account id="..." name="user1@test.com">
-        <account id="..." name="user2@test.com">
+        <target type="account" id="..." name="user1@test.com">
+        <target type="account" id="..." name="user2@test.com">
     </targets>
     <targets right="sendAsDistList">
-        <dl id="..." name="group1@test.com">
-        <dl id="..." name="group2@test.com">
+        <target type="dl" id="..." name="group1@test.com">
+        <target type="dl" id="..." name="group2@test.com">
     </targets>+
 </DiscoverRightsResponse>
 

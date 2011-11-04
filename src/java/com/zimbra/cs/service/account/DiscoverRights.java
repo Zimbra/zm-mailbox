@@ -22,13 +22,14 @@ import com.google.common.collect.Sets;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.soap.MailConstants;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Group;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
+import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.UserRight;
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -46,7 +47,7 @@ public class DiscoverRights extends AccountDocumentHandler {
         
         RightManager rightMgr = RightManager.getInstance();
         Set<Right> rights = Sets.newHashSet();
-        for (Element eRight : request.listElements(MailConstants.E_RIGHT)) {
+        for (Element eRight : request.listElements(AccountConstants.E_RIGHT)) {
             UserRight r = rightMgr.getUserRight(eRight.getText());
             rights.add(r); 
         }
@@ -60,23 +61,20 @@ public class DiscoverRights extends AccountDocumentHandler {
             Set<Entry> targets = targetsForRight.getValue();
             
             Element eTargets = response.addElement(AccountConstants.E_TARGETS);
-            eTargets.addAttribute(MailConstants.A_RIGHT, right.getName());
+            eTargets.addAttribute(AccountConstants.A_RIGHT, right.getName());
             
             for (Entry target : targets) {
                 // support only account and group targets for now
-                if (target instanceof Account) {
-                    Account acct = (Account)target;
-                    Element eTarget = eTargets.addElement(AccountConstants.E_ACCOUNT);
-                    eTarget.addAttribute(AccountConstants.A_ID, acct.getId());
-                    eTarget.addAttribute(AccountConstants.A_NAME, acct.getName());
-                } else if (target instanceof Group) {
-                    Group group = (Group)target;
-                    Element eTarget = eTargets.addElement(AccountConstants.E_DL);
-                    eTarget.addAttribute(AccountConstants.A_ID, group.getId());
-                    eTarget.addAttribute(AccountConstants.A_NAME, group.getName());
+                TargetType targetType = TargetType.getTargetType(target);
+                Element eTarget = eTargets.addElement(AccountConstants.E_TARGET);
+                eTarget.addAttribute(AccountConstants.A_TYPE, targetType.getCode());
+                
+                if (target instanceof NamedEntry) {
+                    NamedEntry entry = (NamedEntry) target;
+                    eTarget.addAttribute(AccountConstants.A_ID, entry.getId());
+                    eTarget.addAttribute(AccountConstants.A_NAME, entry.getName());
                 } else {
-                    throw ServiceException.FAILURE("target type unsupported yet: " +
-                            target.getLabel(), null);
+                    eTarget.addAttribute(AccountConstants.A_NAME, target.getLabel());
                 }
             }
         }
