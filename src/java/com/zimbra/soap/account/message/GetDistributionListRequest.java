@@ -24,13 +24,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.AttrsImpl;
 import com.zimbra.soap.type.DistributionListSelector;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_DISTRIBUTION_LIST_REQUEST)
 public class GetDistributionListRequest extends AttrsImpl {
 
     @XmlAttribute(name=AccountConstants.A_NEED_OWNERS, required=false)
-    private Boolean needOwners;
+    private ZmBoolean needOwners;
     @XmlElement(name=AccountConstants.E_DL, required=true)
     private DistributionListSelector dl;
 
@@ -43,9 +44,9 @@ public class GetDistributionListRequest extends AttrsImpl {
         this.setNeedOwners(needOwners);
     }
 
-    public void setNeedOwners(Boolean needOwners) { this.needOwners = needOwners; }
+    public void setNeedOwners(Boolean needOwners) { this.needOwners = ZmBoolean.fromBool(needOwners); }
 
-    public Boolean getNeedOwners() { return needOwners; }
+    public Boolean getNeedOwners() { return ZmBoolean.toBool(needOwners); }
 
     public void setDl(DistributionListSelector dl) { this.dl = dl; }
     public DistributionListSelector getDl() { return dl; }

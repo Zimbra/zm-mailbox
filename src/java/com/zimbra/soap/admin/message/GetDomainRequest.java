@@ -21,11 +21,12 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.AttributeSelectorImpl;
 import com.zimbra.soap.admin.type.DomainSelector;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlRootElement(name=AdminConstants.E_GET_DOMAIN_REQUEST)
 public class GetDomainRequest extends AttributeSelectorImpl {
     @XmlAttribute(name=AdminConstants.A_APPLY_CONFIG, required=false)
-    private Boolean applyConfig = true;
+    private ZmBoolean applyConfig = ZmBoolean.ONE /* true */;
     @XmlElement(name=AdminConstants.E_DOMAIN)
     private DomainSelector domain;
 
@@ -43,9 +44,9 @@ public class GetDomainRequest extends AttributeSelectorImpl {
     }
 
     public void setApplyConfig(Boolean applyConfig) {
-        this.applyConfig = applyConfig;
+        this.applyConfig = ZmBoolean.fromBool(applyConfig);
     }
 
     public DomainSelector getDomain() { return domain; }
-    public Boolean isApplyConfig() { return applyConfig; }
+    public Boolean isApplyConfig() { return ZmBoolean.toBool(applyConfig); }
 }

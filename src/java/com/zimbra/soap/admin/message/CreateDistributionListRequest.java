@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.AdminAttrsImpl;
 import com.zimbra.soap.admin.type.Attr;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_CREATE_DISTRIBUTION_LIST_REQUEST)
@@ -33,7 +34,7 @@ public class CreateDistributionListRequest extends AdminAttrsImpl {
     @XmlAttribute(name=AdminConstants.E_NAME /* name */, required=true)
     private String name;
     @XmlAttribute(name=AdminConstants.A_DYNAMIC /* dynamic */, required=false)
-    private Boolean dynamic;
+    private ZmBoolean dynamic;
 
     public CreateDistributionListRequest() {
         this((String)null);
@@ -52,6 +53,6 @@ public class CreateDistributionListRequest extends AdminAttrsImpl {
     public void setName(String name) { this.name = name; }
     public String getName() { return name; }
 
-    public void setDynamic(Boolean dynamic) { this.dynamic = dynamic; }
-    public Boolean getDynamic() { return dynamic; }
+    public void setDynamic(Boolean dynamic) { this.dynamic = ZmBoolean.fromBool(dynamic); }
+    public Boolean getDynamic() { return ZmBoolean.toBool(dynamic); }
 }

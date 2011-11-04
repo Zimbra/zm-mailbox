@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class AccountACEinfo {
@@ -44,7 +45,7 @@ public class AccountACEinfo {
     private String password;
 
     @XmlAttribute(name=MailConstants.A_DENY /* deny */, required=false)
-    private Boolean deny;
+    private ZmBoolean deny;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -65,14 +66,14 @@ public class AccountACEinfo {
     }
     public void setAccessKey(String accessKey) { this.accessKey = accessKey; }
     public void setPassword(String password) { this.password = password; }
-    public void setDeny(Boolean deny) { this.deny = deny; }
+    public void setDeny(Boolean deny) { this.deny = ZmBoolean.fromBool(deny); }
     public String getZimbraId() { return zimbraId; }
     public Grant.GranteeType getGrantType() { return grantType; }
     public String getRight() { return right; }
     public String getDisplayName() { return displayName; }
     public String getAccessKey() { return accessKey; }
     public String getPassword() { return password; }
-    public Boolean getDeny() { return deny; }
+    public Boolean getDeny() { return ZmBoolean.toBool(deny); }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {

@@ -24,18 +24,17 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.CalendarItemMsg;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_SEND_MSG_REQUEST)
 public class SendMsgRequest {
 
-    @XmlAttribute(name=MailConstants.A_NEED_CALENDAR_SENTBY_FIXUP
-                        /* needCalendarSentByFixup */, required=false)
-    private Boolean needCalendarSentbyFixup;
+    @XmlAttribute(name=MailConstants.A_NEED_CALENDAR_SENTBY_FIXUP /* needCalendarSentByFixup */, required=false)
+    private ZmBoolean needCalendarSentbyFixup;
 
-    @XmlAttribute(name=MailConstants.A_NO_SAVE_TO_SENT /* noSave */,
-                        required=false)
-    private Boolean noSaveToSent;
+    @XmlAttribute(name=MailConstants.A_NO_SAVE_TO_SENT /* noSave */, required=false)
+    private ZmBoolean noSaveToSent;
 
     @XmlAttribute(name=MailConstants.A_SEND_UID /* suid */, required=false)
     private String sendUid;
@@ -48,17 +47,15 @@ public class SendMsgRequest {
     }
 
     public void setNeedCalendarSentbyFixup(Boolean needCalendarSentbyFixup) {
-        this.needCalendarSentbyFixup = needCalendarSentbyFixup;
+        this.needCalendarSentbyFixup = ZmBoolean.fromBool(needCalendarSentbyFixup);
     }
     public void setNoSaveToSent(Boolean noSaveToSent) {
-        this.noSaveToSent = noSaveToSent;
+        this.noSaveToSent = ZmBoolean.fromBool(noSaveToSent);
     }
     public void setSendUid(String sendUid) { this.sendUid = sendUid; }
     public void setMsg(CalendarItemMsg msg) { this.msg = msg; }
-    public Boolean getNeedCalendarSentbyFixup() {
-        return needCalendarSentbyFixup;
-    }
-    public Boolean getNoSaveToSent() { return noSaveToSent; }
+    public Boolean getNeedCalendarSentbyFixup() { return ZmBoolean.toBool(needCalendarSentbyFixup); }
+    public Boolean getNoSaveToSent() { return ZmBoolean.toBool(noSaveToSent); }
     public String getSendUid() { return sendUid; }
     public CalendarItemMsg getMsg() { return msg; }
 

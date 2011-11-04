@@ -18,6 +18,7 @@ package com.zimbra.soap.admin.message;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlRootElement(name=AdminConstants.E_GET_ALL_SERVERS_REQUEST)
 public class GetAllServersRequest {
@@ -26,7 +27,7 @@ public class GetAllServersRequest {
     private String service;
 
     @XmlAttribute(name=AdminConstants.A_APPLY_CONFIG, required=false)
-    private Boolean applyConfig;
+    private ZmBoolean applyConfig;
 
     public GetAllServersRequest() {
         this(null, null);
@@ -42,9 +43,9 @@ public class GetAllServersRequest {
     }
 
     public void setApplyConfig(Boolean applyConfig) {
-        this.applyConfig = applyConfig;
+        this.applyConfig = ZmBoolean.fromBool(applyConfig);
     }
 
     public String getService() { return service; }
-    public Boolean isApplyConfig() { return applyConfig; }
+    public Boolean isApplyConfig() { return ZmBoolean.toBool(applyConfig); }
 }

@@ -33,6 +33,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.Id;
 import com.zimbra.soap.type.IdAndType;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_ADMIN_WAIT_SET_RESPONSE)
@@ -43,7 +44,7 @@ public class AdminWaitSetResponse {
     private final String waitSetId;
 
     @XmlAttribute(name=MailConstants.A_CANCELED /* canceled */, required=false)
-    private Boolean canceled;
+    private ZmBoolean canceled;
 
     @XmlAttribute(name=MailConstants.A_SEQ /* seq */, required=false)
     private String seqNo;
@@ -66,7 +67,7 @@ public class AdminWaitSetResponse {
         this.waitSetId = waitSetId;
     }
 
-    public void setCanceled(Boolean canceled) { this.canceled = canceled; }
+    public void setCanceled(Boolean canceled) { this.canceled = ZmBoolean.fromBool(canceled); }
     public void setSeqNo(String seqNo) { this.seqNo = seqNo; }
     public void setSignalledAccounts(Iterable <Id> signalledAccounts) {
         this.signalledAccounts.clear();
@@ -93,7 +94,7 @@ public class AdminWaitSetResponse {
     }
 
     public String getWaitSetId() { return waitSetId; }
-    public Boolean getCanceled() { return canceled; }
+    public Boolean getCanceled() { return ZmBoolean.toBool(canceled); }
     public String getSeqNo() { return seqNo; }
     public List<Id> getSignalledAccounts() {
         return Collections.unmodifiableList(signalledAccounts);

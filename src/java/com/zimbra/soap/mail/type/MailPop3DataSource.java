@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.Pop3DataSource;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class MailPop3DataSource
@@ -29,7 +30,7 @@ extends MailDataSource
 implements Pop3DataSource {
 
     @XmlAttribute(name=MailConstants.A_DS_LEAVE_ON_SERVER /* leaveOnServer */, required=false)
-    private Boolean leaveOnServer;
+    private ZmBoolean leaveOnServer;
 
     public MailPop3DataSource() {
         super();
@@ -37,15 +38,15 @@ implements Pop3DataSource {
 
     public MailPop3DataSource(Pop3DataSource data) {
         super(data);
-        leaveOnServer = data.isLeaveOnServer();
+        setLeaveOnServer(data.isLeaveOnServer());
     }
 
     @Override
     public void setLeaveOnServer(Boolean leaveOnServer) {
-        this.leaveOnServer = leaveOnServer;
+        this.leaveOnServer = ZmBoolean.fromBool(leaveOnServer);
     }
     @Override
-    public Boolean isLeaveOnServer() { return leaveOnServer; }
+    public Boolean isLeaveOnServer() { return ZmBoolean.toBool(leaveOnServer); }
 
     @Override
     public Objects.ToStringHelper addToStringInfo(

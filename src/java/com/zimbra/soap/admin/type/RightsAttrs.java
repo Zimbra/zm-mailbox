@@ -31,12 +31,13 @@ import com.google.common.collect.Lists;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.Attr;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class RightsAttrs {
 
     @XmlAttribute(name=AdminConstants.A_ALL, required=false)
-    private Boolean all;
+    private ZmBoolean all;
 
     //  Need to support 2 forms:
     //  1.    <a n="attributeName"/>
@@ -88,7 +89,7 @@ public class RightsAttrs {
         return Collections.unmodifiableList(elements);
     }
 
-    public void setAll(Boolean all) { this.all = all; }
+    public void setAll(Boolean all) { this.all = ZmBoolean.fromBool(all); }
 
-    public Boolean getAll() { return all; }
+    public Boolean getAll() { return ZmBoolean.toBool(all); }
 }

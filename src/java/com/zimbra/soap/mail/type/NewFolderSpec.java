@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class NewFolderSpec {
@@ -55,10 +56,10 @@ public class NewFolderSpec {
     private String parentFolderId;
 
     @XmlAttribute(name=MailConstants.A_FETCH_IF_EXISTS, required=false)
-    private Boolean fetchIfExists;
+    private ZmBoolean fetchIfExists;
 
     @XmlAttribute(name=MailConstants.A_SYNC, required=false)
-    private Boolean syncToUrl;
+    private ZmBoolean syncToUrl;
 
     @XmlElementWrapper(name=MailConstants.E_ACL, required=false)
     @XmlElement(name=MailConstants.E_GRANT, required=false)
@@ -86,10 +87,8 @@ public class NewFolderSpec {
     public void setParentFolderId(String parentFolderId) {
         this.parentFolderId = parentFolderId;
     }
-    public void setFetchIfExists(Boolean fetchIfExists) {
-        this.fetchIfExists = fetchIfExists;
-    }
-    public void setSyncToUrl(Boolean syncToUrl) { this.syncToUrl = syncToUrl; }
+    public void setFetchIfExists(Boolean fetchIfExists) { this.fetchIfExists = ZmBoolean.fromBool(fetchIfExists); }
+    public void setSyncToUrl(Boolean syncToUrl) { this.syncToUrl = ZmBoolean.fromBool(syncToUrl); }
     public void setGrants(Iterable <ActionGrantSelector> grants) {
         this.grants.clear();
         if (grants != null) {
@@ -109,8 +108,8 @@ public class NewFolderSpec {
     public String getRgb() { return rgb; }
     public String getUrl() { return url; }
     public String getParentFolderId() { return parentFolderId; }
-    public Boolean getFetchIfExists() { return fetchIfExists; }
-    public Boolean getSyncToUrl() { return syncToUrl; }
+    public Boolean getFetchIfExists() { return ZmBoolean.toBool(fetchIfExists); }
+    public Boolean getSyncToUrl() { return ZmBoolean.toBool(syncToUrl); }
     public List<ActionGrantSelector> getGrants() {
         return Collections.unmodifiableList(grants);
     }

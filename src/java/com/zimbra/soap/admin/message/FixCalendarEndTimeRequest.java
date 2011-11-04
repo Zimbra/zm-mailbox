@@ -29,13 +29,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.NamedElement;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_FIX_CALENDAR_END_TIME_REQUEST)
 public class FixCalendarEndTimeRequest {
 
     @XmlAttribute(name=AdminConstants.A_TZFIXUP_SYNC, required=false)
-    private final Boolean sync;
+    private final ZmBoolean sync;
 
     @XmlElement(name=AdminConstants.E_ACCOUNT, required=false)
     private List<NamedElement> accounts = Lists.newArrayList();
@@ -49,7 +50,7 @@ public class FixCalendarEndTimeRequest {
     }
 
     public FixCalendarEndTimeRequest(Boolean sync) {
-        this.sync = sync;
+        this.sync = ZmBoolean.fromBool(sync);
     }
 
     public void setAccounts(Iterable <NamedElement> accounts) {
@@ -64,7 +65,7 @@ public class FixCalendarEndTimeRequest {
         return this;
     }
 
-    public Boolean getSync() { return sync; }
+    public Boolean getSync() { return ZmBoolean.toBool(sync); }
     public List<NamedElement> getAccounts() {
         return Collections.unmodifiableList(accounts);
     }

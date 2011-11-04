@@ -24,13 +24,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.AttributeSelectorImpl;
 import com.zimbra.soap.admin.type.CalendarResourceSelector;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_CALENDAR_RESOURCE_REQUEST)
 public class GetCalendarResourceRequest extends AttributeSelectorImpl {
 
     @XmlAttribute(name=AdminConstants.A_APPLY_COS, required=false)
-    private Boolean applyCos;
+    private ZmBoolean applyCos;
     @XmlElement(name=AdminConstants.E_CALENDAR_RESOURCE)
     private CalendarResourceSelector calResource;
 
@@ -58,11 +59,11 @@ public class GetCalendarResourceRequest extends AttributeSelectorImpl {
         setCalResource(calResource);
     }
 
-    public void setApplyCos(Boolean applyCos) { this.applyCos = applyCos; }
+    public void setApplyCos(Boolean applyCos) { this.applyCos = ZmBoolean.fromBool(applyCos); }
     public void setCalResource(CalendarResourceSelector calResource) {
         this.calResource = calResource;
     }
 
-    public Boolean getApplyCos() { return applyCos; }
+    public Boolean getApplyCos() { return ZmBoolean.toBool(applyCos); }
     public CalendarResourceSelector getCalResource() { return calResource; }
 }

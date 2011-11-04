@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.BackupConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {})
@@ -32,7 +33,7 @@ public class BackupAccountQueryInfo {
     private final String name;
 
     @XmlAttribute(name=BackupConstants.A_MORE /* more */, required=false)
-    private Boolean more;
+    private ZmBoolean more;
 
     @XmlElement(name=BackupConstants.E_BACKUP /* backup */, required=false)
     private BackupAccountQueryBackupInfo backup;
@@ -49,12 +50,12 @@ public class BackupAccountQueryInfo {
         this.name = name;
     }
 
-    public void setMore(Boolean more) { this.more = more; }
+    public void setMore(Boolean more) { this.more = ZmBoolean.fromBool(more); }
     public void setBackup(BackupAccountQueryBackupInfo backup) {
         this.backup = backup;
     }
     public String getName() { return name; }
-    public Boolean getMore() { return more; }
+    public Boolean getMore() { return ZmBoolean.toBool(more); }
     public BackupAccountQueryBackupInfo getBackup() { return backup; }
 
     public Objects.ToStringHelper addToStringInfo(

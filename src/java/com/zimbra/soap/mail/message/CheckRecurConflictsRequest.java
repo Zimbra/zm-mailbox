@@ -37,6 +37,7 @@ import com.zimbra.soap.mail.type.ExpandedRecurrenceComponent;
 import com.zimbra.soap.mail.type.ExpandedRecurrenceException;
 import com.zimbra.soap.mail.type.ExpandedRecurrenceInvite;
 import com.zimbra.soap.mail.type.FreeBusyUserSpec;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_CHECK_RECUR_CONFLICTS_REQUEST)
@@ -50,22 +51,18 @@ public class CheckRecurConflictsRequest {
     private Long endTime;
 
     @XmlAttribute(name=MailConstants.A_CAL_ALL /* all */, required=false)
-    private Boolean allInstances;
+    private ZmBoolean allInstances;
 
-    @XmlAttribute(name=MailConstants.A_APPT_FREEBUSY_EXCLUDE_UID /* excludeUid */,
-                        required=false)
+    @XmlAttribute(name=MailConstants.A_APPT_FREEBUSY_EXCLUDE_UID /* excludeUid */, required=false)
     private String excludeUid;
 
     @XmlElement(name=MailConstants.E_CAL_TZ /* tz */, required=false)
     private List<CalTZInfo> timezones = Lists.newArrayList();
 
     @XmlElements({
-        @XmlElement(name=MailConstants.E_CAL_CANCEL /* cancel */,
-            type=ExpandedRecurrenceCancel.class),
-        @XmlElement(name=MailConstants.E_INVITE_COMPONENT /* comp */,
-            type=ExpandedRecurrenceInvite.class),
-        @XmlElement(name=MailConstants.E_CAL_EXCEPT /* except */,
-            type=ExpandedRecurrenceException.class)
+        @XmlElement(name=MailConstants.E_CAL_CANCEL /* cancel */, type=ExpandedRecurrenceCancel.class),
+        @XmlElement(name=MailConstants.E_INVITE_COMPONENT /* comp */, type=ExpandedRecurrenceInvite.class),
+        @XmlElement(name=MailConstants.E_CAL_EXCEPT /* except */, type=ExpandedRecurrenceException.class)
     })
     private List<ExpandedRecurrenceComponent> components = Lists.newArrayList();
 
@@ -78,7 +75,7 @@ public class CheckRecurConflictsRequest {
     public void setStartTime(Long startTime) { this.startTime = startTime; }
     public void setEndTime(Long endTime) { this.endTime = endTime; }
     public void setAllInstances(Boolean allInstances) {
-        this.allInstances = allInstances;
+        this.allInstances = ZmBoolean.fromBool(allInstances);
     }
     public void setExcludeUid(String excludeUid) {
         this.excludeUid = excludeUid;
@@ -124,7 +121,7 @@ public class CheckRecurConflictsRequest {
 
     public Long getStartTime() { return startTime; }
     public Long getEndTime() { return endTime; }
-    public Boolean getAllInstances() { return allInstances; }
+    public Boolean getAllInstances() { return ZmBoolean.toBool(allInstances); }
     public String getExcludeUid() { return excludeUid; }
     public List<CalTZInfo> getTimezones() {
         return Collections.unmodifiableList(timezones);

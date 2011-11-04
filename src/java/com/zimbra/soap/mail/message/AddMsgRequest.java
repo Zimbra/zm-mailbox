@@ -24,14 +24,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.AddMsgSpec;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_ADD_MSG_REQUEST)
 public class AddMsgRequest {
 
-    @XmlAttribute(name=MailConstants.A_FILTER_SENT /* filterSent */,
-                        required=false)
-    private Boolean filterSent;
+    @XmlAttribute(name=MailConstants.A_FILTER_SENT /* filterSent */, required=false)
+    private ZmBoolean filterSent;
 
     @XmlElement(name=MailConstants.E_MSG /* m */, required=true)
     private final AddMsgSpec msg;
@@ -49,9 +49,9 @@ public class AddMsgRequest {
     }
 
     public void setFilterSent(Boolean filterSent) {
-        this.filterSent = filterSent;
+        this.filterSent = ZmBoolean.fromBool(filterSent);
     }
-    public Boolean getFilterSent() { return filterSent; }
+    public Boolean getFilterSent() { return ZmBoolean.toBool(filterSent); }
     public AddMsgSpec getMsg() { return msg; }
 
     public Objects.ToStringHelper addToStringInfo(

@@ -19,6 +19,8 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
+
 /*
             <link id="1" name="new-mount-point" l="1" n="6" u="1" f="u" owner="user1@example.com" zid="151bd192-e19a-40be-b8c9-259b21ffac48" rid="2" oname="user1folder">
 
@@ -47,7 +49,7 @@ extends Folder {
 
     // MailConstants.A_REMINDER == "reminder"
     @XmlAttribute(name=MailConstants.A_REMINDER, required=false)
-    private Boolean reminderEnabled;
+    private ZmBoolean reminderEnabled;
 
     public Mountpoint() {
     }
@@ -69,7 +71,7 @@ extends Folder {
     }
 
     public Boolean getReminderEnabled() {
-        return reminderEnabled;
+        return ZmBoolean.toBool(reminderEnabled);
     }
 
     public void setOwnerEmail(String ownerEmail) {
@@ -89,6 +91,6 @@ extends Folder {
     }
 
     public void setReminderEnabled(Boolean reminderEnabled) {
-        this.reminderEnabled = reminderEnabled;
+        this.reminderEnabled = ZmBoolean.fromBool(reminderEnabled);
     }
 }

@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AccountConstants.E_COS)
@@ -30,10 +31,10 @@ import com.zimbra.common.soap.AccountConstants;
 public class DLInfo extends ObjectInfo {
 
     @XmlAttribute(name=AccountConstants.A_DYNAMIC, required=false)
-    Boolean dynamic;
+    ZmBoolean dynamic;
     @XmlAttribute(name=AccountConstants.A_VIA, required=false)
     private final String via;
-    
+
     /**
      * no-argument constructor wanted by JAXB
      */
@@ -44,19 +45,15 @@ public class DLInfo extends ObjectInfo {
 
     public DLInfo(String id, String name, Boolean dynamic, String via) {
         super(id, name, null);
-        this.dynamic = dynamic;
+        this.dynamic = ZmBoolean.fromBool(dynamic);
         this.via = via;
     }
 
     public String getVia() {
         return via;
     }
-    
+
     public Boolean isDynamic() {
-        if (dynamic == null) {
-            return Boolean.FALSE;
-        } else {
-            return dynamic;
-        }
+        return ZmBoolean.toBool(dynamic, false);
     }
 }

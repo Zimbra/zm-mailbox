@@ -22,13 +22,14 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_VERIFY_CODE_RESPONSE)
 public class VerifyCodeResponse {
 
     @XmlAttribute(name=MailConstants.A_VERIFICATION_SUCCESS, required=true)
-    private final boolean success;
+    private final ZmBoolean success;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -39,10 +40,10 @@ public class VerifyCodeResponse {
     }
 
     public VerifyCodeResponse(boolean success) {
-        this.success = success;
+        this.success = ZmBoolean.fromBool(success);
     }
 
-    public boolean getSuccess() { return success; }
+    public boolean getSuccess() { return ZmBoolean.toBool(success); }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {

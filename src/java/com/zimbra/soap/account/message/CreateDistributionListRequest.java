@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.AccountKeyValuePairs;
 import com.zimbra.soap.type.KeyValuePair;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AccountConstants.E_CREATE_DISTRIBUTION_LIST_REQUEST)
@@ -33,7 +34,7 @@ public class CreateDistributionListRequest extends AccountKeyValuePairs {
     @XmlAttribute(name=AccountConstants.E_NAME, required=true)
     private String name;
     @XmlAttribute(name=AccountConstants.A_DYNAMIC, required=false)
-    private Boolean dynamic;
+    private ZmBoolean dynamic;
 
     public CreateDistributionListRequest() {
         this((String)null);
@@ -43,13 +44,13 @@ public class CreateDistributionListRequest extends AccountKeyValuePairs {
         this(name, (Collection<KeyValuePair>) null, false);
     }
 
-    public CreateDistributionListRequest(String name, Collection<KeyValuePair> attrs, 
-            boolean dynamic) {
+    public CreateDistributionListRequest(String name, Collection<KeyValuePair> attrs, Boolean dynamic) {
         super(attrs);
         this.name = name;
-        this.dynamic = dynamic;
+        this.dynamic = ZmBoolean.fromBool(dynamic);
     }
 
     public void setName(String name) { this.name = name; }
     public String getName() { return name; }
+    public Boolean getDynamic() { return ZmBoolean.toBool(dynamic); }
 }

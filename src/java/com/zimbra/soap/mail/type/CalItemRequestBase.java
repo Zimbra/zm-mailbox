@@ -23,45 +23,45 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {})
 public class CalItemRequestBase {
 
     @XmlAttribute(name=MailConstants.A_CAL_ECHO /* echo */, required=false)
-    private Boolean echo;
+    private ZmBoolean echo;
 
-    @XmlAttribute(name=MailConstants.A_MAX_INLINED_LENGTH /* max */,
-                        required=false)
+    @XmlAttribute(name=MailConstants.A_MAX_INLINED_LENGTH /* max */, required=false)
     private Integer maxSize;
 
     @XmlAttribute(name=MailConstants.A_WANT_HTML /* html */, required=false)
-    private Boolean wantHtml;
+    private ZmBoolean wantHtml;
 
     @XmlAttribute(name=MailConstants.A_NEUTER /* neuter */, required=false)
-    private Boolean neuter;
+    private ZmBoolean neuter;
 
     @XmlElement(name=MailConstants.E_MSG /* m */, required=false)
     private CalendarItemMsg msg;
     
     @XmlAttribute(name=MailConstants.A_CAL_FORCESEND /* forcesend */, required=false)
-    private Boolean forceSend;
+    private ZmBoolean forceSend;
 
     public CalItemRequestBase() {
     }
 
-    public void setEcho(Boolean echo) { this.echo = echo; }
+    public void setEcho(Boolean echo) { this.echo = ZmBoolean.fromBool(echo); }
     public void setMaxSize(Integer maxSize) { this.maxSize = maxSize; }
-    public void setWantHtml(Boolean wantHtml) { this.wantHtml = wantHtml; }
-    public void setNeuter(Boolean neuter) { this.neuter = neuter; }
+    public void setWantHtml(Boolean wantHtml) { this.wantHtml = ZmBoolean.fromBool(wantHtml); }
+    public void setNeuter(Boolean neuter) { this.neuter = ZmBoolean.fromBool(neuter); }
     public void setMsg(CalendarItemMsg msg) { this.msg = msg; }
-    public void setForceSend(Boolean force) { this.forceSend = force; }
-    public Boolean getEcho() { return echo; }
+    public void setForceSend(Boolean force) { this.forceSend = ZmBoolean.fromBool(force); }
+    public Boolean getEcho() { return ZmBoolean.toBool(echo); }
     public Integer getMaxSize() { return maxSize; }
-    public Boolean getWantHtml() { return wantHtml; }
-    public Boolean getNeuter() { return neuter; }
+    public Boolean getWantHtml() { return ZmBoolean.toBool(wantHtml); }
+    public Boolean getNeuter() { return ZmBoolean.toBool(neuter); }
     public CalendarItemMsg getMsg() { return msg; }
-    public Boolean getForceSend() { return forceSend; }
+    public Boolean getForceSend() { return ZmBoolean.toBool(forceSend); }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {

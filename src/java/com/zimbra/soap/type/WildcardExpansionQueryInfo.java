@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.soap.type.BaseQueryInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class WildcardExpansionQueryInfo implements BaseQueryInfo {
@@ -29,7 +30,7 @@ public class WildcardExpansionQueryInfo implements BaseQueryInfo {
     private final String str;
 
     @XmlAttribute(name="expanded", required=true)
-    private final boolean expanded;
+    private final ZmBoolean expanded;
 
     @XmlAttribute(name="numExpanded", required=true)
     private final int numExpanded;
@@ -45,12 +46,12 @@ public class WildcardExpansionQueryInfo implements BaseQueryInfo {
     public WildcardExpansionQueryInfo(String str, boolean expanded,
                             int numExpanded) {
         this.str = str;
-        this.expanded = expanded;
+        this.expanded = ZmBoolean.fromBool(expanded);
         this.numExpanded = numExpanded;
     }
 
     public String getStr() { return str; }
-    public boolean getExpanded() { return expanded; }
+    public boolean getExpanded() { return ZmBoolean.toBool(expanded); }
     public int getNumExpanded() { return numExpanded; }
 
     public Objects.ToStringHelper addToStringInfo(

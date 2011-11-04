@@ -29,6 +29,7 @@ import com.google.common.collect.Lists;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class CacheSelector {
@@ -39,7 +40,7 @@ public class CacheSelector {
     private List<CacheEntryType> types = Lists.newArrayList();
 
     @XmlAttribute(name=AdminConstants.A_ALLSERVERS, required=false)
-    private Boolean allServers;
+    private ZmBoolean allServers;
 
     @XmlElement(name=AdminConstants.E_ENTRY, required=false)
     private List <CacheEntrySelector> entries = Lists.newArrayList();
@@ -51,12 +52,12 @@ public class CacheSelector {
 
     public CacheSelector(Boolean allServers, String types)
     throws ServiceException {
-        this.allServers = allServers;
+        this.allServers = ZmBoolean.fromBool(allServers);
         setTypes(types);
     }
 
     public void setAllServers(Boolean allServers) {
-        this.allServers = allServers;
+        this.allServers = ZmBoolean.fromBool(allServers);
     }
 
     public void setTypes(String types)
@@ -86,7 +87,7 @@ public class CacheSelector {
         this.entries.add(entry);
     }
 
-    public Boolean isAllServers() { return allServers; }
+    public Boolean isAllServers() { return ZmBoolean.toBool(allServers); }
     @XmlAttribute(name=AdminConstants.A_TYPE)
     public String getTypes() { return COMMA_JOINER.join(types); }
     public List<CacheEntrySelector> getEntries() {

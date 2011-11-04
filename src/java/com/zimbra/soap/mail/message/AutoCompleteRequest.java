@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.GalSearchType;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_AUTO_COMPLETE_REQUEST)
@@ -35,15 +36,14 @@ public class AutoCompleteRequest {
     private GalSearchType type;
 
     @XmlAttribute(name=MailConstants.A_NEED_EXP /* needExp */, required=false)
-    private Boolean needCanExpand;
+    private ZmBoolean needCanExpand;
 
     // Comma separated list of integers
     @XmlAttribute(name=MailConstants.A_FOLDERS /* folders */, required=false)
     private String folderList;
 
-    @XmlAttribute(name=MailConstants.A_INCLUDE_GAL /* includeGal */,
-            required=false)
-    private Boolean includeGal;
+    @XmlAttribute(name=MailConstants.A_INCLUDE_GAL /* includeGal */, required=false)
+    private ZmBoolean includeGal;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -59,19 +59,19 @@ public class AutoCompleteRequest {
 
     public void setType(GalSearchType type) { this.type = type; }
     public void setNeedCanExpand(Boolean needCanExpand) {
-        this.needCanExpand = needCanExpand;
+        this.needCanExpand = ZmBoolean.fromBool(needCanExpand);
     }
     public void setFolderList(String folderList) {
         this.folderList = folderList;
     }
     public void setIncludeGal(Boolean includeGal) {
-        this.includeGal = includeGal;
+        this.includeGal = ZmBoolean.fromBool(includeGal);
     }
     public String getName() { return name; }
     public GalSearchType getType() { return type; }
-    public Boolean getNeedCanExpand() { return needCanExpand; }
+    public Boolean getNeedCanExpand() { return ZmBoolean.toBool(needCanExpand); }
     public String getFolderList() { return folderList; }
-    public Boolean getIncludeGal() { return includeGal; }
+    public Boolean getIncludeGal() { return ZmBoolean.toBool(includeGal); }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {

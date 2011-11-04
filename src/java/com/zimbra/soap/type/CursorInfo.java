@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public final class CursorInfo {
@@ -35,7 +36,7 @@ public final class CursorInfo {
     private String endSortVal;
 
     @XmlAttribute(name=MailConstants.A_INCLUDE_OFFSET /* includeOffset */, required=false)
-    private Boolean includeOffset;
+    private ZmBoolean includeOffset;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -55,12 +56,12 @@ public final class CursorInfo {
         return new CursorInfo(id, sortVal, endSortVal);
     }
 
-    public void setIncludeOffset(Boolean includeOffset) { this.includeOffset = includeOffset; }
+    public void setIncludeOffset(Boolean includeOffset) { this.includeOffset = ZmBoolean.fromBool(includeOffset); }
 
     public String getId() { return id; }
     public String getSortVal() { return sortVal; }
     public String getEndSortVal() { return endSortVal; }
-    public Boolean getIncludeOffset() { return includeOffset; }
+    public Boolean getIncludeOffset() { return ZmBoolean.toBool(includeOffset); }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {

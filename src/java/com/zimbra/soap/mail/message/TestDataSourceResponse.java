@@ -22,13 +22,14 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_TEST_DATA_SOURCE_RESPONSE)
 public class TestDataSourceResponse {
 
     @XmlAttribute(name=MailConstants.A_DS_SUCCESS /* success */, required=true)
-    private final boolean success;
+    private final ZmBoolean success;
 
     @XmlAttribute(name=MailConstants.A_DS_ERROR /* error */, required=false)
     private String error;
@@ -42,11 +43,11 @@ public class TestDataSourceResponse {
     }
 
     public TestDataSourceResponse(boolean success) {
-        this.success = success;
+        this.success = ZmBoolean.fromBool(success);
     }
 
     public void setError(String error) { this.error = error; }
-    public boolean getSuccess() { return success; }
+    public boolean getSuccess() { return ZmBoolean.toBool(success); }
     public String getError() { return error; }
 
     public Objects.ToStringHelper addToStringInfo(

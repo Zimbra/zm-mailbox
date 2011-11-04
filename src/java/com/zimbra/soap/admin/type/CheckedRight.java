@@ -21,12 +21,13 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CheckedRight {
 
     @XmlAttribute(name=AdminConstants.A_DENY, required=false)
-    private final Boolean deny;
+    private final ZmBoolean deny;
 
     @XmlValue
     private final String value;
@@ -41,10 +42,10 @@ public class CheckedRight {
     }
 
     public CheckedRight(Boolean deny, String value) {
-        this.deny = deny;
+        this.deny = ZmBoolean.fromBool(deny);
         this.value = value;
     }
 
-    public Boolean getDeny() { return deny; }
+    public Boolean getDeny() { return ZmBoolean.toBool(deny); }
     public String getValue() { return value; }
 }

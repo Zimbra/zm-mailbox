@@ -21,12 +21,13 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class InheritedFlaggedValue {
 
     @XmlAttribute(name=AdminConstants.A_INHERITED, required=true)
-    private final boolean inherited;
+    private final ZmBoolean inherited;
 
     @XmlValue
     private final String value;
@@ -40,10 +41,10 @@ public class InheritedFlaggedValue {
     }
 
     public InheritedFlaggedValue(boolean inherited, String value) {
-        this.inherited = inherited;
+        this.inherited = ZmBoolean.fromBool(inherited);
         this.value = value;
     }
 
-    public boolean getInherited() { return inherited; }
+    public boolean getInherited() { return ZmBoolean.toBool(inherited); }
     public String getValue() { return value; }
 }

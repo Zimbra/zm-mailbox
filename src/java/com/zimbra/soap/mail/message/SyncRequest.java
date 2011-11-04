@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_SYNC_REQUEST)
@@ -30,16 +31,14 @@ public class SyncRequest {
     @XmlAttribute(name=MailConstants.A_TOKEN /* token */, required=false)
     private String token;
 
-    @XmlAttribute(name=MailConstants.A_CALENDAR_CUTOFF /* calCutoff */,
-                                    required=false)
+    @XmlAttribute(name=MailConstants.A_CALENDAR_CUTOFF /* calCutoff */, required=false)
     private Long calendarCutoff;
 
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folderId;
 
-    @XmlAttribute(name=MailConstants.A_TYPED_DELETES /* typed */,
-                                    required=false)
-    private Boolean typedDeletes;
+    @XmlAttribute(name=MailConstants.A_TYPED_DELETES /* typed */, required=false)
+    private ZmBoolean typedDeletes;
 
     public SyncRequest() {
     }
@@ -50,12 +49,12 @@ public class SyncRequest {
     }
     public void setFolderId(String folderId) { this.folderId = folderId; }
     public void setTypedDeletes(Boolean typedDeletes) {
-        this.typedDeletes = typedDeletes;
+        this.typedDeletes = ZmBoolean.fromBool(typedDeletes);
     }
     public String getToken() { return token; }
     public Long getCalendarCutoff() { return calendarCutoff; }
     public String getFolderId() { return folderId; }
-    public Boolean getTypedDeletes() { return typedDeletes; }
+    public Boolean getTypedDeletes() { return ZmBoolean.toBool(typedDeletes); }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {

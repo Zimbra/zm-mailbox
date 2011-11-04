@@ -21,13 +21,14 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_ACCOUNT_MEMBERSHIP_REQUEST)
 public class GetAccountMembershipRequest {
 
     @XmlAttribute(name=AccountConstants.A_DIRECT_ONLY, required=false)
-    private Boolean directOnly;
+    private ZmBoolean directOnly;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -41,6 +42,6 @@ public class GetAccountMembershipRequest {
         this.setDirectOnly(directOnly);
     }
 
-    public void setDirectOnly(Boolean directOnly) { this.directOnly = directOnly; }
-    public Boolean getDirectOnly() { return directOnly; }
+    public void setDirectOnly(Boolean directOnly) { this.directOnly = ZmBoolean.fromBool(directOnly); }
+    public Boolean getDirectOnly() { return ZmBoolean.toBool(directOnly); }
 }

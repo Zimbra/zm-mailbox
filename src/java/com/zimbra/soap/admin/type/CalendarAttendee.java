@@ -31,6 +31,7 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.CalendarAttendeeInterface;
 import com.zimbra.soap.base.XParamInterface;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
@@ -65,7 +66,7 @@ public class CalendarAttendee implements CalendarAttendeeInterface {
     private String partStat;
 
     @XmlAttribute(name=MailConstants.A_CAL_RSVP /* rsvp */, required=false)
-    private Boolean rsvp;
+    private ZmBoolean rsvp;
 
     @XmlAttribute(name=MailConstants.A_CAL_MEMBER /* member */, required=false)
     private String member;
@@ -103,7 +104,7 @@ public class CalendarAttendee implements CalendarAttendeeInterface {
     @Override
     public void setPartStat(String partStat) { this.partStat = partStat; }
     @Override
-    public void setRsvp(Boolean rsvp) { this.rsvp = rsvp; }
+    public void setRsvp(Boolean rsvp) { this.rsvp = ZmBoolean.fromBool(rsvp); }
     @Override
     public void setMember(String member) { this.member = member; }
     @Override
@@ -146,7 +147,7 @@ public class CalendarAttendee implements CalendarAttendeeInterface {
     @Override
     public String getPartStat() { return partStat; }
     @Override
-    public Boolean getRsvp() { return rsvp; }
+    public Boolean getRsvp() { return ZmBoolean.toBool(rsvp); }
     @Override
     public String getMember() { return member; }
     @Override

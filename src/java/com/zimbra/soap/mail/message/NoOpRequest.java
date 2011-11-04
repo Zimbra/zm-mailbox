@@ -22,19 +22,20 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_NO_OP_REQUEST)
 public class NoOpRequest {
 
     @XmlAttribute(name=MailConstants.A_WAIT, required=false)
-    private Boolean wait;
+    private ZmBoolean wait;
 
     @XmlAttribute(name=MailConstants.A_DELEGATE, required=false)
-    private Boolean includeDelegates;
+    private ZmBoolean includeDelegates;
 
     @XmlAttribute(name=MailConstants.A_LIMIT_TO_ONE_BLOCKED, required=false)
-    private Boolean enforceLimit;
+    private ZmBoolean enforceLimit;
 
     @XmlAttribute(name=MailConstants.A_TIMEOUT, required=false)
     private Long timeout;
@@ -42,21 +43,19 @@ public class NoOpRequest {
     public NoOpRequest() {
     }
 
-    public void setWait(Boolean wait) { this.wait = wait; }
+    public void setWait(Boolean wait) { this.wait = ZmBoolean.fromBool(wait); }
 
     public void setIncludeDelegates(Boolean includeDelegates) {
-        this.includeDelegates = includeDelegates;
+        this.includeDelegates = ZmBoolean.fromBool(includeDelegates);
     }
 
-    public void setEnforceLimit(Boolean enforceLimit) {
-        this.enforceLimit = enforceLimit;
-    }
+    public void setEnforceLimit(Boolean enforceLimit) { this.enforceLimit = ZmBoolean.fromBool(enforceLimit); }
 
     public void setTimeout(Long timeout) { this.timeout = timeout; }
 
-    public Boolean getWait() { return wait; }
-    public Boolean getIncludeDelegates() { return includeDelegates; }
-    public Boolean getEnforceLimit() { return enforceLimit; }
+    public Boolean getWait() { return ZmBoolean.toBool(wait); }
+    public Boolean getIncludeDelegates() { return ZmBoolean.toBool(includeDelegates); }
+    public Boolean getEnforceLimit() { return ZmBoolean.toBool(enforceLimit); }
     public Long getTimeout() { return timeout; }
 
     @Override

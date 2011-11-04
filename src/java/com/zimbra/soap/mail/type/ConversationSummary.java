@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"metadatas", "subject", "fragment", "emails"})
@@ -57,7 +58,7 @@ public class ConversationSummary {
     private Long date;
 
     @XmlAttribute(name=MailConstants.A_ELIDED /* elided */, required=false)
-    private Boolean elided;
+    private ZmBoolean elided;
 
     @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=false)
     private Long changeDate;
@@ -94,7 +95,7 @@ public class ConversationSummary {
     public void setTags(String tags) { this.tags = tags; }
     public void setTagNames(String tagNames) { this.tagNames = tagNames; }
     public void setDate(Long date) { this.date = date; }
-    public void setElided(Boolean elided) { this.elided = elided; }
+    public void setElided(Boolean elided) { this.elided = ZmBoolean.fromBool(elided); }
     public void setChangeDate(Long changeDate) { this.changeDate = changeDate; }
     public void setModifiedSequence(Integer modifiedSequence) {
         this.modifiedSequence = modifiedSequence;
@@ -130,7 +131,7 @@ public class ConversationSummary {
     public String getTags() { return tags; }
     public String getTagNames() { return tagNames; }
     public Long getDate() { return date; }
-    public Boolean getElided() { return elided; }
+    public Boolean getElided() { return ZmBoolean.toBool(elided); }
     public Long getChangeDate() { return changeDate; }
     public Integer getModifiedSequence() { return modifiedSequence; }
     public List<MailCustomMetadata> getMetadatas() {

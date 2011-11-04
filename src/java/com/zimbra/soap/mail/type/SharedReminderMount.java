@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class SharedReminderMount {
@@ -30,7 +31,7 @@ public class SharedReminderMount {
     private final String id;
 
     @XmlAttribute(name=MailConstants.A_REMINDER, required=false)
-    private final Boolean showReminders;
+    private final ZmBoolean showReminders;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -42,11 +43,11 @@ public class SharedReminderMount {
 
     public SharedReminderMount(String id, Boolean showReminders) {
         this.id = id;
-        this.showReminders = showReminders;
+        this.showReminders = ZmBoolean.fromBool(showReminders);
     }
 
     public String getId() { return id; }
-    public Boolean getShowReminders() { return showReminders; }
+    public Boolean getShowReminders() { return ZmBoolean.toBool(showReminders); }
 
     @Override
     public String toString() {

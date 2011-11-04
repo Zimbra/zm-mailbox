@@ -22,13 +22,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.MailSearchParams;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_SEARCH_REQUEST)
 public final class SearchRequest extends MailSearchParams {
     @XmlAttribute(name=MailConstants.A_WARMUP /* warmup */, required=false)
-    private Boolean warmup;
+    private ZmBoolean warmup;
 
-    public void setWarmup(Boolean warmup) { this.warmup = warmup; }
-    public Boolean getWarmup() { return warmup; }
+    public void setWarmup(Boolean warmup) { this.warmup = ZmBoolean.fromBool(warmup); }
+    public Boolean getWarmup() { return ZmBoolean.toBool(warmup); }
 }

@@ -21,12 +21,13 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class AccountInfo extends AdminObjectInfo {
 
     @XmlAttribute(name=AccountConstants.A_IS_EXTERNAL, required=false)
-    private final Boolean isExternal;
+    private final ZmBoolean isExternal;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -42,14 +43,12 @@ public class AccountInfo extends AdminObjectInfo {
 
     public AccountInfo(String id, String name, Boolean isExternal) {
         this(id, name, isExternal, (Collection <Attr>)null);
-        
     }
 
-    public AccountInfo(String id, String name, Boolean isExternal,
-            Collection <Attr> attrs) {
+    public AccountInfo(String id, String name, Boolean isExternal, Collection <Attr> attrs) {
         super(id, name, attrs);
-        this.isExternal = isExternal;
+        this.isExternal = ZmBoolean.fromBool(isExternal);
     }
 
-    public Boolean getIsExternal() { return isExternal; }
+    public Boolean getIsExternal() { return ZmBoolean.toBool(isExternal); }
 }

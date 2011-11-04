@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = { "metadatas", "fragment", "grants" })
@@ -76,7 +77,7 @@ public class CommonDocumentInfo {
     private String contentType;
 
     @XmlAttribute(name=MailConstants.A_DESC_ENABLED /* descEnabled */, required=false)
-    private Boolean descEnabled;
+    private ZmBoolean descEnabled;
 
     @XmlAttribute(name=MailConstants.A_VERSION /* ver */, required=false)
     private Integer version;
@@ -129,7 +130,7 @@ public class CommonDocumentInfo {
         this.contentType = contentType;
     }
     public void setDescEnabled(Boolean descEnabled) {
-        this.descEnabled = descEnabled;
+        this.descEnabled = ZmBoolean.fromBool(descEnabled);
     }
     public void setVersion(Integer version) { this.version = version; }
     public void setLastEditedBy(String lastEditedBy) {
@@ -176,7 +177,7 @@ public class CommonDocumentInfo {
     public String getTagNames() { return tagNames; }
     public String getDescription() { return description; }
     public String getContentType() { return contentType; }
-    public Boolean getDescEnabled() { return descEnabled; }
+    public Boolean getDescEnabled() { return ZmBoolean.toBool(descEnabled); }
     public Integer getVersion() { return version; }
     public String getLastEditedBy() { return lastEditedBy; }
     public String getCreator() { return creator; }

@@ -651,6 +651,6 @@ public class JaxbToElementTest {
         String eXml2 = elem2.toString();
         LOG.info("XML from JAXB denied attr\n" + eXml2);
         Assert.assertEquals("XML from JAXB denied attr\n",
-                "<a pd=\"true\" name=\"keyDenied\" xmlns=\"urn:zimbraAccount\"/>", eXml2);
+                "<a pd=\"1\" name=\"keyDenied\" xmlns=\"urn:zimbraAccount\"/>", eXml2);
     }
 }

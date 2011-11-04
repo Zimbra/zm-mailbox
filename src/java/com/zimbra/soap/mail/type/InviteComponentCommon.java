@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.InviteComponentCommonInterface;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class InviteComponentCommon
@@ -35,7 +36,7 @@ implements InviteComponentCommonInterface {
     private final int componentNum;
 
     @XmlAttribute(name=MailConstants.A_CAL_RSVP /* rsvp */, required=true)
-    private final boolean rsvp;
+    private final ZmBoolean rsvp;
 
     @XmlAttribute(name=MailConstants.A_CAL_PRIORITY /* priority */,
             required=false)
@@ -56,7 +57,7 @@ implements InviteComponentCommonInterface {
     private String completed;
 
     @XmlAttribute(name=MailConstants.A_CAL_NO_BLOB /* noBlob */, required=false)
-    private Boolean noBlob;
+    private ZmBoolean noBlob;
 
     @XmlAttribute(name=MailConstants.A_APPT_FREEBUSY_ACTUAL /* fba */,
             required=false)
@@ -70,7 +71,7 @@ implements InviteComponentCommonInterface {
     private String transparency;
 
     @XmlAttribute(name=MailConstants.A_CAL_ISORG /* isOrg */, required=false)
-    private Boolean isOrganizer;
+    private ZmBoolean isOrganizer;
 
     @XmlAttribute(name="x_uid", required=false)
     private String xUid;
@@ -107,21 +108,21 @@ implements InviteComponentCommonInterface {
     private String url;
 
     @XmlAttribute(name=MailConstants.A_CAL_IS_EXCEPTION /* ex */, required=false)
-    private Boolean isException;
+    private ZmBoolean isException;
 
     @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID_Z /* ridZ */,
             required=false)
     private String recurIdZ;
 
     @XmlAttribute(name=MailConstants.A_CAL_ALLDAY /* allDay */, required=false)
-    private Boolean isAllDay;
+    private ZmBoolean isAllDay;
 
     @XmlAttribute(name=MailConstants.A_CAL_DRAFT /* draft */, required=false)
-    private Boolean isDraft;
+    private ZmBoolean isDraft;
 
     @XmlAttribute(name=MailConstants.A_CAL_NEVER_SENT /* neverSent */,
             required=false)
-    private Boolean neverSent;
+    private ZmBoolean neverSent;
 
     @XmlAttribute(name=MailConstants.A_CAL_CHANGES /* changes */,
             required=false)
@@ -139,7 +140,7 @@ implements InviteComponentCommonInterface {
                     boolean rsvp) {
         this.method = method;
         this.componentNum = componentNum;
-        this.rsvp = rsvp;
+        this.rsvp = ZmBoolean.fromBool(rsvp);
     }
 
     @Override
@@ -161,7 +162,7 @@ implements InviteComponentCommonInterface {
     @Override
     public void setCompleted(String completed) { this.completed = completed; }
     @Override
-    public void setNoBlob(Boolean noBlob) { this.noBlob = noBlob; }
+    public void setNoBlob(Boolean noBlob) { this.noBlob = ZmBoolean.fromBool(noBlob); }
     @Override
     public void setFreeBusyActual(String freeBusyActual) {
         this.freeBusyActual = freeBusyActual;
@@ -173,9 +174,7 @@ implements InviteComponentCommonInterface {
         this.transparency = transparency;
     }
     @Override
-    public void setIsOrganizer(Boolean isOrganizer) {
-        this.isOrganizer = isOrganizer;
-    }
+    public void setIsOrganizer(Boolean isOrganizer) { this.isOrganizer = ZmBoolean.fromBool(isOrganizer); }
     @Override
     public void setXUid(String xUid) { this.xUid = xUid; }
     @Override
@@ -201,17 +200,15 @@ implements InviteComponentCommonInterface {
     @Override
     public void setUrl(String url) { this.url = url; }
     @Override
-    public void setIsException(Boolean isException) {
-        this.isException = isException;
-    }
+    public void setIsException(Boolean isException) { this.isException = ZmBoolean.fromBool(isException); }
     @Override
     public void setRecurIdZ(String recurIdZ) { this.recurIdZ = recurIdZ; }
     @Override
-    public void setIsAllDay(Boolean isAllDay) { this.isAllDay = isAllDay; }
+    public void setIsAllDay(Boolean isAllDay) { this.isAllDay = ZmBoolean.fromBool(isAllDay); }
     @Override
-    public void setIsDraft(Boolean isDraft) { this.isDraft = isDraft; }
+    public void setIsDraft(Boolean isDraft) { this.isDraft = ZmBoolean.fromBool(isDraft); }
     @Override
-    public void setNeverSent(Boolean neverSent) { this.neverSent = neverSent; }
+    public void setNeverSent(Boolean neverSent) { this.neverSent = ZmBoolean.fromBool(neverSent); }
     @Override
     public void setChanges(String changes) { this.changes = changes; }
     @Override
@@ -219,7 +216,7 @@ implements InviteComponentCommonInterface {
     @Override
     public int getComponentNum() { return componentNum; }
     @Override
-    public boolean getRsvp() { return rsvp; }
+    public boolean getRsvp() { return ZmBoolean.toBool(rsvp); }
     @Override
     public String getPriority() { return priority; }
     @Override
@@ -231,7 +228,7 @@ implements InviteComponentCommonInterface {
     @Override
     public String getCompleted() { return completed; }
     @Override
-    public Boolean getNoBlob() { return noBlob; }
+    public Boolean getNoBlob() { return ZmBoolean.toBool(noBlob); }
     @Override
     public String getFreeBusyActual() { return freeBusyActual; }
     @Override
@@ -239,7 +236,7 @@ implements InviteComponentCommonInterface {
     @Override
     public String getTransparency() { return transparency; }
     @Override
-    public Boolean getIsOrganizer() { return isOrganizer; }
+    public Boolean getIsOrganizer() { return ZmBoolean.toBool(isOrganizer); }
     @Override
     public String getXUid() { return xUid; }
     @Override
@@ -261,15 +258,15 @@ implements InviteComponentCommonInterface {
     @Override
     public String getUrl() { return url; }
     @Override
-    public Boolean getIsException() { return isException; }
+    public Boolean getIsException() { return ZmBoolean.toBool(isException); }
     @Override
     public String getRecurIdZ() { return recurIdZ; }
     @Override
-    public Boolean getIsAllDay() { return isAllDay; }
+    public Boolean getIsAllDay() { return ZmBoolean.toBool(isAllDay); }
     @Override
-    public Boolean getIsDraft() { return isDraft; }
+    public Boolean getIsDraft() { return ZmBoolean.toBool(isDraft); }
     @Override
-    public Boolean getNeverSent() { return neverSent; }
+    public Boolean getNeverSent() { return ZmBoolean.toBool(neverSent); }
     @Override
     public String getChanges() { return changes; }
 

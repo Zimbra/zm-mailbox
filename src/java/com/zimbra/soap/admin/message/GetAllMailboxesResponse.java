@@ -30,6 +30,7 @@ import com.google.common.collect.Lists;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.MailboxInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_ALL_MAILBOXES_RESPONSE)
@@ -40,7 +41,7 @@ public class GetAllMailboxesResponse {
     private List <MailboxInfo> mboxes = Lists.newArrayList();
 
     @XmlAttribute(name=AdminConstants.A_MORE, required=true)
-    private boolean more;
+    private ZmBoolean more;
     @XmlAttribute(name=AdminConstants.A_SEARCH_TOTAL, required=true)
     private int searchTotal;
 
@@ -65,7 +66,7 @@ public class GetAllMailboxesResponse {
     }
 
     public void setMore(boolean more) {
-        this.more = more;
+        this.more = ZmBoolean.fromBool(more);
     }
 
     public void setSearchTotal(int searchTotal) {
@@ -73,5 +74,5 @@ public class GetAllMailboxesResponse {
     }
 
     public int getSearchTotal() { return searchTotal; }
-    public boolean isMore() { return more; }
+    public boolean isMore() { return ZmBoolean.toBool(more); }
 }

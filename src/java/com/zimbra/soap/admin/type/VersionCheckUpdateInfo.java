@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class VersionCheckUpdateInfo {
@@ -29,7 +30,7 @@ public class VersionCheckUpdateInfo {
     private String type;
 
     @XmlAttribute(name=AdminConstants.A_CRITICAL, required=false)
-    private Boolean critical;
+    private ZmBoolean critical;
 
     @XmlAttribute(name=AdminConstants.A_UPDATE_URL, required=false)
     private String updateURL;
@@ -57,7 +58,7 @@ public class VersionCheckUpdateInfo {
     }
 
     public void setType(String type) { this.type = type; }
-    public void setCritical(Boolean critical) { this.critical = critical; }
+    public void setCritical(Boolean critical) { this.critical = ZmBoolean.fromBool(critical); }
     public void setUpdateURL(String updateURL) { this.updateURL = updateURL; }
     public void setDescription(String description) { this.description = description; }
     public void setShortVersion(String shortVersion) { this.shortVersion = shortVersion; }
@@ -66,7 +67,7 @@ public class VersionCheckUpdateInfo {
     public void setBuildType(String buildType) { this.buildType = buildType; }
     public void setPlatform(String platform) { this.platform = platform; }
     public String getType() { return type; }
-    public Boolean getCritical() { return critical; }
+    public Boolean getCritical() { return ZmBoolean.toBool(critical); }
     public String getUpdateURL() { return updateURL; }
     public String getDescription() { return description; }
     public String getShortVersion() { return shortVersion; }

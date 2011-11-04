@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class NewMountpointSpec {
@@ -47,10 +48,10 @@ public class NewMountpointSpec {
     private String folderId;
 
     @XmlAttribute(name=MailConstants.A_FETCH_IF_EXISTS, required=false)
-    private Boolean fetchIfExists;
+    private ZmBoolean fetchIfExists;
 
     @XmlAttribute(name=MailConstants.A_REMINDER, required=false)
-    private Boolean reminderEnabled;
+    private ZmBoolean reminderEnabled;
 
     @XmlAttribute(name=MailConstants.A_ZIMBRA_ID, required=false)
     private String ownerId;
@@ -83,10 +84,10 @@ public class NewMountpointSpec {
     public void setUrl(String url) { this.url = url; }
     public void setFolderId(String folderId) { this.folderId = folderId; }
     public void setFetchIfExists(Boolean fetchIfExists) {
-        this.fetchIfExists = fetchIfExists;
+        this.fetchIfExists = ZmBoolean.fromBool(fetchIfExists);
     }
     public void setReminderEnabled(Boolean reminderEnabled) {
-        this.reminderEnabled = reminderEnabled;
+        this.reminderEnabled = ZmBoolean.fromBool(reminderEnabled);
     }
     public void setOwnerId(String ownerId) { this.ownerId = ownerId; }
     public void setOwnerName(String ownerName) { this.ownerName = ownerName; }
@@ -99,8 +100,8 @@ public class NewMountpointSpec {
     public String getRgb() { return rgb; }
     public String getUrl() { return url; }
     public String getFolderId() { return folderId; }
-    public Boolean getFetchIfExists() { return fetchIfExists; }
-    public Boolean getReminderEnabled() { return reminderEnabled; }
+    public Boolean getFetchIfExists() { return ZmBoolean.toBool(fetchIfExists); }
+    public Boolean getReminderEnabled() { return ZmBoolean.toBool(reminderEnabled); }
     public String getOwnerId() { return ownerId; }
     public String getOwnerName() { return ownerName; }
     public Integer getRemoteId() { return remoteId; }

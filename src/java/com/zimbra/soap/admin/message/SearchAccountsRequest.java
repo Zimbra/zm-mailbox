@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_SEARCH_ACCOUNTS_REQUEST)
@@ -39,7 +40,7 @@ public class SearchAccountsRequest {
     private String domain;
 
     @XmlAttribute(name=AdminConstants.A_APPLY_COS, required=false)
-    private Boolean applyCos;
+    private ZmBoolean applyCos;
 
     @XmlAttribute(name=AdminConstants.A_ATTRS, required=false)
     private String attrs;
@@ -51,7 +52,7 @@ public class SearchAccountsRequest {
     private String types;
 
     @XmlAttribute(name=AdminConstants.A_SORT_ASCENDING, required=false)
-    private Boolean sortAscending;
+    private ZmBoolean sortAscending;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -68,18 +69,18 @@ public class SearchAccountsRequest {
     }
 
     public void setDomain(String domain) { this.domain = domain; }
-    public void setApplyCos(Boolean applyCos) { this.applyCos = applyCos; }
+    public void setApplyCos(Boolean applyCos) { this.applyCos = ZmBoolean.fromBool(applyCos); }
     public void setAttrs(String attrs) { this.attrs = attrs; }
     public void setSortBy(String sortBy) { this.sortBy = sortBy; }
     public void setTypes(String types) { this.types = types; }
-    public void setSortAscending(Boolean sortAscending) { this.sortAscending = sortAscending; }
+    public void setSortAscending(Boolean sortAscending) { this.sortAscending = ZmBoolean.fromBool(sortAscending); }
     public String getQuery() { return query; }
     public Integer getLimit() { return limit; }
     public Integer getOffset() { return offset; }
     public String getDomain() { return domain; }
-    public Boolean getApplyCos() { return applyCos; }
+    public Boolean getApplyCos() { return ZmBoolean.toBool(applyCos); }
     public String getAttrs() { return attrs; }
     public String getSortBy() { return sortBy; }
     public String getTypes() { return types; }
-    public Boolean getSortAscending() { return sortAscending; }
+    public Boolean getSortAscending() { return ZmBoolean.toBool(sortAscending); }
 }

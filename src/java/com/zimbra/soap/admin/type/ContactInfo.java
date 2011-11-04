@@ -33,6 +33,7 @@ import com.zimbra.soap.base.ContactGroupMemberInterface;
 import com.zimbra.soap.base.ContactInterface;
 import com.zimbra.soap.base.CustomMetadataInterface;
 import com.zimbra.soap.type.ContactAttr;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class ContactInfo
@@ -43,7 +44,7 @@ implements ContactInterface {
     private String sortField;
 
     @XmlAttribute(name=AccountConstants.A_EXP /* exp */, required=false)
-    private Boolean canExpand;
+    private ZmBoolean canExpand;
 
     // id is the only attribute or element that can be required:
     //    GalSearchResultCallback.handleContact(Contact c) and CreateContact.handle
@@ -130,7 +131,7 @@ implements ContactInterface {
     @Override
     public void setSortField(String sortField) { this.sortField = sortField; }
     @Override
-    public void setCanExpand(Boolean canExpand) { this.canExpand = canExpand; }
+    public void setCanExpand(Boolean canExpand) { this.canExpand = ZmBoolean.fromBool(canExpand); }
     @Override
     public void setId(String id) { this.id = id; }
     @Override
@@ -205,7 +206,7 @@ implements ContactInterface {
     @Override
     public String getSortField() { return sortField; }
     @Override
-    public Boolean getCanExpand() { return canExpand; }
+    public Boolean getCanExpand() { return ZmBoolean.toBool(canExpand); }
     @Override
     public String getId() { return id; }
     @Override

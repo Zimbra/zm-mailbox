@@ -33,6 +33,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.soap.base.KeyAndValue;
+import com.zimbra.soap.type.ZmBoolean;
 
 /**
  * e.g. For element named "attr":
@@ -54,7 +55,7 @@ public class Attr implements KeyAndValue {
 
     // If true, flags that the real value of this attribute has not been provided - i.e. value is set to ""
     @XmlAttribute(name=AccountConstants.A_PERM_DENIED /* pd */, required=false)
-    private Boolean permDenied;
+    private ZmBoolean permDenied;
 
     @XmlValue
     private String value;
@@ -65,7 +66,7 @@ public class Attr implements KeyAndValue {
     public Attr(Attr attr) {
         name = attr.getName();
         value = attr.getValue();
-        permDenied = attr.getPermDenied();
+        permDenied = ZmBoolean.fromBool(attr.getPermDenied());
     }
 
     public Attr(String name) {
@@ -94,8 +95,8 @@ public class Attr implements KeyAndValue {
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
-    public Boolean getPermDenied() { return permDenied; }
-    public void setPermDenied(Boolean permDenied) { this.permDenied = permDenied; }
+    public Boolean getPermDenied() { return ZmBoolean.toBool(permDenied); }
+    public void setPermDenied(Boolean permDenied) { this.permDenied = ZmBoolean.fromBool(permDenied); }
 
     @Override
     public String getValue() { return value; }

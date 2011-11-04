@@ -22,16 +22,17 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_GET_APPOINTMENT_REQUEST)
 public class GetAppointmentRequest {
 
     @XmlAttribute(name=MailConstants.A_SYNC, required=false)
-    private Boolean sync;
+    private ZmBoolean sync;
 
     @XmlAttribute(name=MailConstants.A_CAL_INCLUDE_CONTENT, required=false)
-    private Boolean includeContent;
+    private ZmBoolean includeContent;
 
     @XmlAttribute(name=MailConstants.A_UID, required=false)
     private String uid;
@@ -42,14 +43,12 @@ public class GetAppointmentRequest {
     public GetAppointmentRequest() {
     }
 
-    public void setSync(Boolean sync) { this.sync = sync; }
-    public void setIncludeContent(Boolean includeContent) {
-        this.includeContent = includeContent;
-    }
+    public void setSync(Boolean sync) { this.sync = ZmBoolean.fromBool(sync); }
+    public void setIncludeContent(Boolean includeContent) { this.includeContent = ZmBoolean.fromBool(includeContent); }
     public void setUid(String uid) { this.uid = uid; }
     public void setId(String id) { this.id = id; }
-    public Boolean getSync() { return sync; }
-    public Boolean getIncludeContent() { return includeContent; }
+    public Boolean getSync() { return ZmBoolean.toBool(sync); }
+    public Boolean getIncludeContent() { return ZmBoolean.toBool(includeContent); }
     public String getUid() { return uid; }
     public String getId() { return id; }
 

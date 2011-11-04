@@ -32,13 +32,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.TZFixupRule;
 import com.zimbra.soap.type.NamedElement;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_FIX_CALENDAR_TZ_REQUEST)
 public class FixCalendarTZRequest {
 
     @XmlAttribute(name=AdminConstants.A_TZFIXUP_SYNC /* sync */, required=false)
-    private Boolean sync;
+    private ZmBoolean sync;
 
     @XmlAttribute(name=AdminConstants.A_TZFIXUP_AFTER /* after */, required=false)
     private Long after;
@@ -53,7 +54,7 @@ public class FixCalendarTZRequest {
     public FixCalendarTZRequest() {
     }
 
-    public void setSync(Boolean sync) { this.sync = sync; }
+    public void setSync(Boolean sync) { this.sync = ZmBoolean.fromBool(sync); }
     public void setAfter(Long after) { this.after = after; }
     public void setAccounts(Iterable <NamedElement> accounts) {
         this.accounts.clear();
@@ -77,7 +78,7 @@ public class FixCalendarTZRequest {
         this.fixupRules.add(fixupRule);
     }
 
-    public Boolean getSync() { return sync; }
+    public Boolean getSync() { return ZmBoolean.toBool(sync); }
     public Long getAfter() { return after; }
     public List<NamedElement> getAccounts() {
         return Collections.unmodifiableList(accounts);

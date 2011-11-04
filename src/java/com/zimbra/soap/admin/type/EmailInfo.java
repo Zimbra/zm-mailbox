@@ -27,6 +27,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.EmailInfoInterface;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class EmailInfo
@@ -45,10 +46,10 @@ implements EmailInfoInterface {
     private final String addressType;
 
     @XmlAttribute(name=MailConstants.A_IS_GROUP /* isGroup */, required=false)
-    private Boolean group;
+    private ZmBoolean group;
 
     @XmlAttribute(name=MailConstants.A_EXP /* exp */, required=false)
-    private Boolean canExpandGroupMembers;
+    private ZmBoolean canExpandGroupMembers;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -73,10 +74,10 @@ implements EmailInfoInterface {
     }
 
     @Override
-    public void setGroup(Boolean group) { this.group = group; }
+    public void setGroup(Boolean group) { this.group = ZmBoolean.fromBool(group); }
     @Override
     public void setCanExpandGroupMembers(Boolean canExpandGroupMembers) {
-        this.canExpandGroupMembers = canExpandGroupMembers;
+        this.canExpandGroupMembers = ZmBoolean.fromBool(canExpandGroupMembers);
     }
 
     @Override
@@ -88,9 +89,9 @@ implements EmailInfoInterface {
     @Override
     public String getAddressType() { return addressType; }
     @Override
-    public Boolean getGroup() { return group; }
+    public Boolean getGroup() { return ZmBoolean.toBool(group); }
     @Override
-    public Boolean getCanExpandGroupMembers() { return canExpandGroupMembers; }
+    public Boolean getCanExpandGroupMembers() { return ZmBoolean.toBool(canExpandGroupMembers); }
 
     public static Iterable <EmailInfo> fromInterfaces(Iterable <EmailInfoInterface> ifs) {
         if (ifs == null)

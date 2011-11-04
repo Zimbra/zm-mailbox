@@ -37,6 +37,7 @@ import com.zimbra.soap.mail.type.NestedSearchConversation;
 import com.zimbra.soap.mail.type.SpellingSuggestionsQueryInfo;
 import com.zimbra.soap.type.BaseQueryInfo;
 import com.zimbra.soap.type.WildcardExpansionQueryInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_SEARCH_CONV_RESPONSE)
@@ -50,7 +51,7 @@ public class SearchConvResponse {
     private Integer queryOffset;
 
     @XmlAttribute(name=MailConstants.A_QUERY_MORE /* more */, required=false)
-    private Boolean queryMore;
+    private ZmBoolean queryMore;
 
     @XmlElement(name=MailConstants.E_CONV /* c */, required=false)
     private NestedSearchConversation conversation;
@@ -73,7 +74,7 @@ public class SearchConvResponse {
     public void setQueryOffset(Integer queryOffset) {
         this.queryOffset = queryOffset;
     }
-    public void setQueryMore(Boolean queryMore) { this.queryMore = queryMore; }
+    public void setQueryMore(Boolean queryMore) { this.queryMore = ZmBoolean.fromBool(queryMore); }
     public void setConversation(NestedSearchConversation conversation) {
         this.conversation = conversation;
     }
@@ -102,7 +103,7 @@ public class SearchConvResponse {
 
     public String getSortBy() { return sortBy; }
     public Integer getQueryOffset() { return queryOffset; }
-    public Boolean getQueryMore() { return queryMore; }
+    public Boolean getQueryMore() { return ZmBoolean.toBool(queryMore); }
     public NestedSearchConversation getConversation() { return conversation; }
     public List<MessageHitInfo> getMessages() {
         return Collections.unmodifiableList(messages);

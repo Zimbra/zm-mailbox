@@ -32,6 +32,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.CalReply;
 import com.zimbra.soap.mail.type.SetCalendarItemInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_SET_APPOINTMENT_REQUEST)
@@ -51,7 +52,7 @@ public class SetAppointmentRequest {
     private String folderId;
 
     @XmlAttribute(name=MailConstants.A_CAL_NO_NEXT_ALARM /* noNextAlarm */, required=false)
-    private Boolean noNextAlarm;
+    private ZmBoolean noNextAlarm;
 
     @XmlAttribute(name=MailConstants.A_CAL_NEXT_ALARM /* nextAlarm */, required=false)
     private Long nextAlarm;
@@ -78,7 +79,7 @@ public class SetAppointmentRequest {
     public void setTagNames(String tagNames) { this.tagNames = tagNames; }
     public void setFolderId(String folderId) { this.folderId = folderId; }
     public void setNoNextAlarm(Boolean noNextAlarm) {
-        this.noNextAlarm = noNextAlarm;
+        this.noNextAlarm = ZmBoolean.fromBool(noNextAlarm);
     }
     public void setNextAlarm(Long nextAlarm) { this.nextAlarm = nextAlarm; }
     public void setDefaultId(SetCalendarItemInfo defaultId) {
@@ -122,7 +123,7 @@ public class SetAppointmentRequest {
     public String getTags() { return tags; }
     public String getTagNames() { return tagNames; }
     public String getFolderId() { return folderId; }
-    public Boolean getNoNextAlarm() { return noNextAlarm; }
+    public Boolean getNoNextAlarm() { return ZmBoolean.toBool(noNextAlarm); }
     public Long getNextAlarm() { return nextAlarm; }
     public SetCalendarItemInfo getDefaultId() { return defaultId; }
     public List<SetCalendarItemInfo> getExceptions() {

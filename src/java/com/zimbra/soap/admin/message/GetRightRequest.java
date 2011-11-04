@@ -22,13 +22,14 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_RIGHT_REQUEST)
 public class GetRightRequest {
 
     @XmlAttribute(name=AdminConstants.A_EXPAND_ALL_ATTRS, required=false)
-    private final Boolean expandAllAttrs;
+    private final ZmBoolean expandAllAttrs;
     @XmlElement(name=AdminConstants.E_RIGHT, required=true)
     private final String right;
 
@@ -42,9 +43,9 @@ public class GetRightRequest {
 
     public GetRightRequest(String right, Boolean expandAllAttrs) {
         this.right = right;
-        this.expandAllAttrs = expandAllAttrs;
+        this.expandAllAttrs = ZmBoolean.fromBool(expandAllAttrs);
     }
 
     public String getRight() { return right; }
-    public Boolean getExpandAllAttrs() { return expandAllAttrs; }
+    public Boolean getExpandAllAttrs() { return ZmBoolean.toBool(expandAllAttrs); }
 }

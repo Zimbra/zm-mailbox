@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.BackupConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {"fileCopier", "accounts"})
@@ -39,8 +40,7 @@ public class RestoreSpec {
     private String method;
 
     // Valid values are include/exclude (case insensitive)
-    @XmlAttribute(name=BackupConstants.A_SEARCH_INDEX
-                    /* searchIndex */, required=false)
+    @XmlAttribute(name=BackupConstants.A_SEARCH_INDEX /* searchIndex */, required=false)
     private String searchIndex;
 
     // Valid values are include/exclude (case insensitive)
@@ -48,65 +48,52 @@ public class RestoreSpec {
     private String blobs;
 
     // Valid values are include/exclude (case insensitive)
-    @XmlAttribute(name=BackupConstants.A_SECONDARY_BLOBS
-                    /* secondaryBlobs */, required=false)
+    @XmlAttribute(name=BackupConstants.A_SECONDARY_BLOBS /* secondaryBlobs */, required=false)
     private String secondaryBlobs;
 
-    @XmlAttribute(name=BackupConstants.A_BACKUP_TARGET
-                    /* target */, required=false)
+    @XmlAttribute(name=BackupConstants.A_BACKUP_TARGET /* target */, required=false)
     private String target;
 
     @XmlAttribute(name=BackupConstants.A_LABEL /* label */, required=false)
     private String label;
 
     @XmlAttribute(name=BackupConstants.A_SYSDATA /* sysData */, required=false)
-    private Boolean sysData;
+    private ZmBoolean sysData;
 
-    @XmlAttribute(name=BackupConstants.A_INCLUDEINCREMENTALS
-                    /* includeIncrementals */, required=false)
-    private Boolean includeIncrementals;
+    @XmlAttribute(name=BackupConstants.A_INCLUDEINCREMENTALS /* includeIncrementals */, required=false)
+    private ZmBoolean includeIncrementals;
 
-    @XmlAttribute(name=BackupConstants.A_REPLAY_CURRENT_REDOLOGS
-                    /* replayRedo */, required=false)
-    private Boolean replayCurrentRedoLogs;
+    @XmlAttribute(name=BackupConstants.A_REPLAY_CURRENT_REDOLOGS /* replayRedo */, required=false)
+    private ZmBoolean replayCurrentRedoLogs;
 
-    @XmlAttribute(name=BackupConstants.A_CONTINUE
-                    /* continue */, required=false)
-    private Boolean continueOnError;
+    @XmlAttribute(name=BackupConstants.A_CONTINUE /* continue */, required=false)
+    private ZmBoolean continueOnError;
 
     @XmlAttribute(name=BackupConstants.A_PREFIX /* prefix */, required=false)
     private String prefix;
 
-    @XmlAttribute(name=BackupConstants.A_RESTORE_TO_TIME
-                    /* restoreToTime */, required=false)
+    @XmlAttribute(name=BackupConstants.A_RESTORE_TO_TIME /* restoreToTime */, required=false)
     private Long restoreToTime;
 
-    @XmlAttribute(name=BackupConstants.A_RESTORE_TO_REDO_SEQ
-                    /* restoreToRedoSeq */, required=false)
+    @XmlAttribute(name=BackupConstants.A_RESTORE_TO_REDO_SEQ /* restoreToRedoSeq */, required=false)
     private Long restoreToRedoSeq;
 
-    @XmlAttribute(name=BackupConstants.A_RESTORE_TO_INCR_LABEL
-                    /* restoreToIncrLabel */, required=false)
+    @XmlAttribute(name=BackupConstants.A_RESTORE_TO_INCR_LABEL /* restoreToIncrLabel */, required=false)
     private String restoreToIncrLabel;
 
-    @XmlAttribute(name=BackupConstants.A_IGNORE_REDO_ERRORS
-                    /* ignoreRedoErrors */, required=false)
-    private Boolean ignoreRedoErrors;
+    @XmlAttribute(name=BackupConstants.A_IGNORE_REDO_ERRORS /* ignoreRedoErrors */, required=false)
+    private ZmBoolean ignoreRedoErrors;
 
-    @XmlAttribute(name=BackupConstants.A_SKIP_DELETE_OPS
-                    /* skipDeleteOps */, required=false)
-    private Boolean skipDeleteOps;
+    @XmlAttribute(name=BackupConstants.A_SKIP_DELETE_OPS /* skipDeleteOps */, required=false)
+    private ZmBoolean skipDeleteOps;
 
-    @XmlAttribute(name=BackupConstants.A_SKIP_DELETED_ACCT
-                    /* skipDeletedAccounts */, required=false)
-    private Boolean skipDeletedAccounts;
+    @XmlAttribute(name=BackupConstants.A_SKIP_DELETED_ACCT /* skipDeletedAccounts */, required=false)
+    private ZmBoolean skipDeletedAccounts;
 
-    @XmlElement(name=BackupConstants.E_FILE_COPIER
-                    /* fileCopier */, required=false)
+    @XmlElement(name=BackupConstants.E_FILE_COPIER /* fileCopier */, required=false)
     private FileCopierSpec fileCopier;
 
-    @XmlElement(name=BackupConstants.E_ACCOUNT
-                    /* account */, required=false)
+    @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=false)
     private List<Name> accounts = Lists.newArrayList();
 
     public RestoreSpec() {
@@ -122,15 +109,15 @@ public class RestoreSpec {
     }
     public void setTarget(String target) { this.target = target; }
     public void setLabel(String label) { this.label = label; }
-    public void setSysData(Boolean sysData) { this.sysData = sysData; }
+    public void setSysData(Boolean sysData) { this.sysData = ZmBoolean.fromBool(sysData); }
     public void setIncludeIncrementals(Boolean includeIncrementals) {
-        this.includeIncrementals = includeIncrementals;
+        this.includeIncrementals = ZmBoolean.fromBool(includeIncrementals);
     }
     public void setReplayCurrentRedoLogs(Boolean replayCurrentRedoLogs) {
-        this.replayCurrentRedoLogs = replayCurrentRedoLogs;
+        this.replayCurrentRedoLogs = ZmBoolean.fromBool(replayCurrentRedoLogs);
     }
     public void setContinueOnError(Boolean continueOnError) {
-        this.continueOnError = continueOnError;
+        this.continueOnError = ZmBoolean.fromBool(continueOnError);
     }
     public void setPrefix(String prefix) { this.prefix = prefix; }
     public void setRestoreToTime(Long restoreToTime) {
@@ -143,13 +130,13 @@ public class RestoreSpec {
         this.restoreToIncrLabel = restoreToIncrLabel;
     }
     public void setIgnoreRedoErrors(Boolean ignoreRedoErrors) {
-        this.ignoreRedoErrors = ignoreRedoErrors;
+        this.ignoreRedoErrors = ZmBoolean.fromBool(ignoreRedoErrors);
     }
     public void setSkipDeleteOps(Boolean skipDeleteOps) {
-        this.skipDeleteOps = skipDeleteOps;
+        this.skipDeleteOps = ZmBoolean.fromBool(skipDeleteOps);
     }
     public void setSkipDeletedAccounts(Boolean skipDeletedAccounts) {
-        this.skipDeletedAccounts = skipDeletedAccounts;
+        this.skipDeletedAccounts = ZmBoolean.fromBool(skipDeletedAccounts);
     }
     public void setFileCopier(FileCopierSpec fileCopier) {
         this.fileCopier = fileCopier;
@@ -171,17 +158,17 @@ public class RestoreSpec {
     public String getSecondaryBlobs() { return secondaryBlobs; }
     public String getTarget() { return target; }
     public String getLabel() { return label; }
-    public Boolean getSysData() { return sysData; }
-    public Boolean getIncludeIncrementals() { return includeIncrementals; }
-    public Boolean getReplayCurrentRedoLogs() { return replayCurrentRedoLogs; }
-    public Boolean getContinueOnError() { return continueOnError; }
+    public Boolean getSysData() { return ZmBoolean.toBool(sysData); }
+    public Boolean getIncludeIncrementals() { return ZmBoolean.toBool(includeIncrementals); }
+    public Boolean getReplayCurrentRedoLogs() { return ZmBoolean.toBool(replayCurrentRedoLogs); }
+    public Boolean getContinueOnError() { return ZmBoolean.toBool(continueOnError); }
     public String getPrefix() { return prefix; }
     public Long getRestoreToTime() { return restoreToTime; }
     public Long getRestoreToRedoSeq() { return restoreToRedoSeq; }
     public String getRestoreToIncrLabel() { return restoreToIncrLabel; }
-    public Boolean getIgnoreRedoErrors() { return ignoreRedoErrors; }
-    public Boolean getSkipDeleteOps() { return skipDeleteOps; }
-    public Boolean getSkipDeletedAccounts() { return skipDeletedAccounts; }
+    public Boolean getIgnoreRedoErrors() { return ZmBoolean.toBool(ignoreRedoErrors); }
+    public Boolean getSkipDeleteOps() { return ZmBoolean.toBool(skipDeleteOps); }
+    public Boolean getSkipDeletedAccounts() { return ZmBoolean.toBool(skipDeletedAccounts); }
     public FileCopierSpec getFileCopier() { return fileCopier; }
     public List<Name> getAccounts() {
         return Collections.unmodifiableList(accounts);

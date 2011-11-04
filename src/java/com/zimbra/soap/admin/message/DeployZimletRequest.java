@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.admin.type.AttachmentIdAttrib;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_DEPLOY_ZIMLET_REQUEST)
@@ -34,11 +35,11 @@ public class DeployZimletRequest {
     private final String action;
 
     @XmlAttribute(name=AdminConstants.A_FLUSH /* flush */, required=false)
-    private final Boolean flushCache;
+    private final ZmBoolean flushCache;
 
     @XmlAttribute(name=AdminConstants.A_SYNCHRONOUS /* synchronous */,
                     required=false)
-    private final Boolean synchronous;
+    private final ZmBoolean synchronous;
 
     @XmlElement(name=MailConstants.E_CONTENT /* content */, required=true)
     private final AttachmentIdAttrib content;
@@ -55,14 +56,14 @@ public class DeployZimletRequest {
     public DeployZimletRequest(String action, Boolean flushCache,
                     Boolean synchronous, AttachmentIdAttrib content) {
         this.action = action;
-        this.flushCache = flushCache;
-        this.synchronous = synchronous;
+        this.flushCache = ZmBoolean.fromBool(flushCache);
+        this.synchronous = ZmBoolean.fromBool(synchronous);
         this.content = content;
     }
 
     public String getAction() { return action; }
-    public Boolean getFlushCache() { return flushCache; }
-    public Boolean getSynchronous() { return synchronous; }
+    public Boolean getFlushCache() { return ZmBoolean.toBool(flushCache); }
+    public Boolean getSynchronous() { return ZmBoolean.toBool(synchronous); }
     public AttachmentIdAttrib getContent() { return content; }
 
     public Objects.ToStringHelper addToStringInfo(

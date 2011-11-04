@@ -30,13 +30,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.AutoProvDirectoryEntry;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_SEARCH_AUTO_PROV_DIRECTORY_RESPONSE)
 public class SearchAutoProvDirectoryResponse {
 
     @XmlAttribute(name=AdminConstants.A_MORE /* more */, required=true)
-    private boolean more;
+    private ZmBoolean more;
 
     @XmlAttribute(name=AdminConstants.A_SEARCH_TOTAL /* searchTotal */, required=true)
     private int searchTotal;
@@ -47,7 +48,7 @@ public class SearchAutoProvDirectoryResponse {
     public SearchAutoProvDirectoryResponse() {
     }
 
-    public void setMore(boolean more) { this.more = more; }
+    public void setMore(boolean more) { this.more = ZmBoolean.fromBool(more); }
     public void setSearchTotal(int searchTotal) { this.searchTotal = searchTotal; }
     public void setEntries(Iterable <AutoProvDirectoryEntry> entries) {
         this.entries.clear();
@@ -60,7 +61,7 @@ public class SearchAutoProvDirectoryResponse {
         this.entries.add(entry);
     }
 
-    public boolean getMore() { return more; }
+    public boolean getMore() { return ZmBoolean.toBool(more); }
     public int getSearchTotal() { return searchTotal; }
     public List<AutoProvDirectoryEntry> getEntries() {
         return Collections.unmodifiableList(entries);

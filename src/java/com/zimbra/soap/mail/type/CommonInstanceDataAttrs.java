@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CommonInstanceDataAttrs {
@@ -41,12 +42,12 @@ public class CommonInstanceDataAttrs {
     private String taskPercentComplete;
 
     @XmlAttribute(name=MailConstants.A_CAL_RECUR /* recur */, required=false)
-    private Boolean isRecurring;
+    private ZmBoolean isRecurring;
 
     // The hasEx attribute should be set at <appt>/<task> level only and should not be overridden at <inst> level.
     // This is because the presence of exceptions instances is a property of the entire appointment/task.
     @XmlAttribute(name=MailConstants.A_CAL_HAS_EXCEPTIONS /* hasEx */, required=false)
-    private Boolean hasExceptions;
+    private ZmBoolean hasExceptions;
 
     @XmlAttribute(name=MailConstants.A_CAL_PRIORITY /* priority */, required=false)
     private String priority;
@@ -64,13 +65,13 @@ public class CommonInstanceDataAttrs {
     private String location;
 
     @XmlAttribute(name=MailConstants.A_CAL_OTHER_ATTENDEES /* otherAtt */, required=false)
-    private Boolean hasOtherAttendees;
+    private ZmBoolean hasOtherAttendees;
 
     @XmlAttribute(name=MailConstants.A_CAL_ALARM /* alarm */, required=false)
-    private Boolean hasAlarm;
+    private ZmBoolean hasAlarm;
 
     @XmlAttribute(name=MailConstants.A_CAL_ISORG /* isOrg */, required=false)
-    private Boolean isOrganizer;
+    private ZmBoolean isOrganizer;
 
     @XmlAttribute(name=MailConstants.A_CAL_INV_ID /* invId */, required=false)
     private String invId;
@@ -85,13 +86,13 @@ public class CommonInstanceDataAttrs {
     private String calClass;
 
     @XmlAttribute(name=MailConstants.A_CAL_ALLDAY /* allDay */, required=false)
-    private Boolean allDay;
+    private ZmBoolean allDay;
 
     @XmlAttribute(name=MailConstants.A_CAL_DRAFT /* draft */, required=false)
-    private Boolean draft;
+    private ZmBoolean draft;
 
     @XmlAttribute(name=MailConstants.A_CAL_NEVER_SENT /* neverSent */, required=false)
-    private Boolean neverSent;
+    private ZmBoolean neverSent;
 
     @XmlAttribute(name=MailConstants.A_TASK_DUE_DATE /* dueDate */, required=false)
     private Long taskDueDate;
@@ -111,12 +112,8 @@ public class CommonInstanceDataAttrs {
     public void setTaskPercentComplete(String taskPercentComplete) {
         this.taskPercentComplete = taskPercentComplete;
     }
-    public void setIsRecurring(Boolean isRecurring) {
-        this.isRecurring = isRecurring;
-    }
-    public void setHasExceptions(Boolean hasExceptions) {
-        this.hasExceptions = hasExceptions;
-    }
+    public void setIsRecurring(Boolean isRecurring) { this.isRecurring = ZmBoolean.fromBool(isRecurring); }
+    public void setHasExceptions(Boolean hasExceptions) { this.hasExceptions = ZmBoolean.fromBool(hasExceptions); }
     public void setPriority(String priority) { this.priority = priority; }
     public void setFreeBusyIntended(String freeBusyIntended) {
         this.freeBusyIntended = freeBusyIntended;
@@ -127,21 +124,19 @@ public class CommonInstanceDataAttrs {
     public void setName(String name) { this.name = name; }
     public void setLocation(String location) { this.location = location; }
     public void setHasOtherAttendees(Boolean hasOtherAttendees) {
-        this.hasOtherAttendees = hasOtherAttendees;
+        this.hasOtherAttendees = ZmBoolean.fromBool(hasOtherAttendees);
     }
-    public void setHasAlarm(Boolean hasAlarm) { this.hasAlarm = hasAlarm; }
-    public void setIsOrganizer(Boolean isOrganizer) {
-        this.isOrganizer = isOrganizer;
-    }
+    public void setHasAlarm(Boolean hasAlarm) { this.hasAlarm = ZmBoolean.fromBool(hasAlarm); }
+    public void setIsOrganizer(Boolean isOrganizer) { this.isOrganizer = ZmBoolean.fromBool(isOrganizer); }
     public void setInvId(String invId) { this.invId = invId; }
     public void setComponentNum(Integer componentNum) {
         this.componentNum = componentNum;
     }
     public void setStatus(String status) { this.status = status; }
     public void setCalClass(String calClass) { this.calClass = calClass; }
-    public void setAllDay(Boolean allDay) { this.allDay = allDay; }
-    public void setDraft(Boolean draft) { this.draft = draft; }
-    public void setNeverSent(Boolean neverSent) { this.neverSent = neverSent; }
+    public void setAllDay(Boolean allDay) { this.allDay = ZmBoolean.fromBool(allDay); }
+    public void setDraft(Boolean draft) { this.draft = ZmBoolean.fromBool(draft); }
+    public void setNeverSent(Boolean neverSent) { this.neverSent = ZmBoolean.fromBool(neverSent); }
     public void setTaskDueDate(Long taskDueDate) {
         this.taskDueDate = taskDueDate;
     }
@@ -153,23 +148,23 @@ public class CommonInstanceDataAttrs {
     public Long getTzOffset() { return tzOffset; }
     public String getFreeBusyActual() { return freeBusyActual; }
     public String getTaskPercentComplete() { return taskPercentComplete; }
-    public Boolean getIsRecurring() { return isRecurring; }
-    public Boolean getHasExceptions() { return hasExceptions; }
+    public Boolean getIsRecurring() { return ZmBoolean.toBool(isRecurring); }
+    public Boolean getHasExceptions() { return ZmBoolean.toBool(hasExceptions); }
     public String getPriority() { return priority; }
     public String getFreeBusyIntended() { return freeBusyIntended; }
     public String getTransparency() { return transparency; }
     public String getName() { return name; }
     public String getLocation() { return location; }
-    public Boolean getHasOtherAttendees() { return hasOtherAttendees; }
-    public Boolean getHasAlarm() { return hasAlarm; }
-    public Boolean getIsOrganizer() { return isOrganizer; }
+    public Boolean getHasOtherAttendees() { return ZmBoolean.toBool(hasOtherAttendees); }
+    public Boolean getHasAlarm() { return ZmBoolean.toBool(hasAlarm); }
+    public Boolean getIsOrganizer() { return ZmBoolean.toBool(isOrganizer); }
     public String getInvId() { return invId; }
     public Integer getComponentNum() { return componentNum; }
     public String getStatus() { return status; }
     public String getCalClass() { return calClass; }
-    public Boolean getAllDay() { return allDay; }
-    public Boolean getDraft() { return draft; }
-    public Boolean getNeverSent() { return neverSent; }
+    public Boolean getAllDay() { return ZmBoolean.toBool(allDay); }
+    public Boolean getDraft() { return ZmBoolean.toBool(draft); }
+    public Boolean getNeverSent() { return ZmBoolean.toBool(neverSent); }
     public Long getTaskDueDate() { return taskDueDate; }
     public Integer getTaskTzOffsetDue() { return taskTzOffsetDue; }
 

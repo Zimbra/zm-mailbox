@@ -38,6 +38,7 @@ import com.zimbra.soap.admin.type.CalendarResourceInfo;
 import com.zimbra.soap.admin.type.CosInfo;
 import com.zimbra.soap.admin.type.DomainInfo;
 import com.zimbra.soap.admin.type.DistributionListInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_SEARCH_DIRECTORY_RESPONSE)
@@ -45,7 +46,7 @@ import com.zimbra.soap.admin.type.DistributionListInfo;
 public class SearchDirectoryResponse {
 
     @XmlAttribute(name=AdminConstants.A_MORE, required=true)
-    private boolean more;
+    private ZmBoolean more;
     @XmlAttribute(name=AdminConstants.A_SEARCH_TOTAL, required=true)
     private long searchTotal;
     @XmlElements({
@@ -70,7 +71,7 @@ public class SearchDirectoryResponse {
     }
 
     public void setMore(boolean more) {
-        this.more = more;
+        this.more = ZmBoolean.fromBool(more);
     }
 
     public void setSearchTotal(long searchTotal) {
@@ -87,7 +88,7 @@ public class SearchDirectoryResponse {
     }
 
     public long getSearchTotal() { return searchTotal; }
-    public boolean isMore() { return more; }
+    public boolean isMore() { return ZmBoolean.toBool(more); }
 
     public List<CalendarResourceInfo> getCalendarResources() {
         List<CalendarResourceInfo> subset = Lists.newArrayList();

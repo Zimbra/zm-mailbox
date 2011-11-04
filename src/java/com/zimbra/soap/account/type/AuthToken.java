@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class AuthToken {
@@ -30,7 +31,7 @@ public class AuthToken {
     private String value;
 
     @XmlAttribute(name=AccountConstants.A_VERIFY_ACCOUNT, required=false)
-    private Boolean verifyAccount;
+    private ZmBoolean verifyAccount;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -42,14 +43,14 @@ public class AuthToken {
 
     public AuthToken(String value, Boolean verifyAccount) {
         this.value = value;
-        this.verifyAccount = verifyAccount;
+        this.verifyAccount = ZmBoolean.fromBool(verifyAccount);
     }
 
     public String getValue() { return value; }
     public void setValue(String value) { this.value = value; }
 
-    public Boolean getVerifyAccount() { return verifyAccount; }
-    public void setVerifyAccount(Boolean verifyAccount) { this.verifyAccount = verifyAccount; }
+    public Boolean getVerifyAccount() { return ZmBoolean.toBool(verifyAccount); }
+    public void setVerifyAccount(Boolean verifyAccount) { this.verifyAccount = ZmBoolean.fromBool(verifyAccount); }
 
     @Override
     public String toString() {

@@ -30,13 +30,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.Name;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=BackupConstants.E_QUERY_MAILBOX_MOVE_REQUEST)
 public class QueryMailboxMoveRequest {
 
     @XmlAttribute(name=BackupConstants.A_CHECK_PEER, required=false)
-    private Boolean checkPeer;
+    private ZmBoolean checkPeer;
 
     // If empty report on all outstanding moves
     @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=false)
@@ -45,7 +46,7 @@ public class QueryMailboxMoveRequest {
     public QueryMailboxMoveRequest() {
     }
 
-    public void setCheckPeer(Boolean checkPeer) { this.checkPeer = checkPeer; }
+    public void setCheckPeer(Boolean checkPeer) { this.checkPeer = ZmBoolean.fromBool(checkPeer); }
     public void setAccounts(Iterable <Name> accounts) {
         this.accounts.clear();
         if (accounts != null) {
@@ -57,7 +58,7 @@ public class QueryMailboxMoveRequest {
         this.accounts.add(account);
     }
 
-    public Boolean getCheckPeer() { return checkPeer; }
+    public Boolean getCheckPeer() { return ZmBoolean.toBool(checkPeer); }
     public List<Name> getAccounts() {
         return Collections.unmodifiableList(accounts);
     }

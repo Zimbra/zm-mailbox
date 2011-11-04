@@ -32,6 +32,7 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.account.type.CalendarResourceInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_SEARCH_CALENDAR_RESOURCES_RESPONSE)
@@ -45,13 +46,13 @@ public class SearchCalendarResourcesResponse {
     private Integer offset;
 
     @XmlAttribute(name=MailConstants.A_QUERY_MORE /* more */, required=false)
-    private Boolean more;
+    private ZmBoolean more;
 
     @XmlAttribute(name=MailConstants.A_TOKEN /* token */, required=false)
     private String token;
 
     @XmlAttribute(name=AccountConstants.A_PAGINATION_SUPPORTED /* paginationSupported */, required=false)
-    private Boolean pagingSupported;
+    private ZmBoolean pagingSupported;
 
     @XmlElement(name=AccountConstants.E_CALENDAR_RESOURCE /* calresource */, required=false)
     private List<CalendarResourceInfo> calendarResources = Lists.newArrayList();
@@ -61,9 +62,11 @@ public class SearchCalendarResourcesResponse {
 
     public void setSortBy(String sortBy) { this.sortBy = sortBy; }
     public void setOffset(Integer offset) { this.offset = offset; }
-    public void setMore(Boolean more) { this.more = more; }
+    public void setMore(Boolean more) { this.more = ZmBoolean.fromBool(more); }
     public void setToken(String token) { this.token = token; }
-    public void setPagingSupported(Boolean pagingSupported) { this.pagingSupported = pagingSupported; }
+    public void setPagingSupported(Boolean pagingSupported) {
+        this.pagingSupported = ZmBoolean.fromBool(pagingSupported);
+    }
     public void setCalendarResources(Iterable <CalendarResourceInfo> calendarResources) {
         this.calendarResources.clear();
         if (calendarResources != null) {
@@ -77,9 +80,9 @@ public class SearchCalendarResourcesResponse {
 
     public String getSortBy() { return sortBy; }
     public Integer getOffset() { return offset; }
-    public Boolean getMore() { return more; }
+    public Boolean getMore() { return ZmBoolean.toBool(more); }
     public String getToken() { return token; }
-    public Boolean getPagingSupported() { return pagingSupported; }
+    public Boolean getPagingSupported() { return ZmBoolean.toBool(pagingSupported); }
     public List<CalendarResourceInfo> getCalendarResources() {
         return Collections.unmodifiableList(calendarResources);
     }

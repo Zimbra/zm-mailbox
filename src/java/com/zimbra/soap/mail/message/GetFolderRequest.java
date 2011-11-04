@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.GetFolderSpec;
+import com.zimbra.soap.type.ZmBoolean;
 
 /*
 <GetFolderRequest [visible="0|1"] [needGranteeName="0|1"] [view="{folder-view-constraint}"] [depth="{subfolder-levels}"]>
@@ -34,10 +35,10 @@ import com.zimbra.soap.mail.type.GetFolderSpec;
 public class GetFolderRequest {
 
     @XmlAttribute(name=MailConstants.A_VISIBLE, required=false)
-    private Boolean isVisible;
+    private ZmBoolean isVisible;
 
     @XmlAttribute(name=MailConstants.A_NEED_GRANTEE_NAME, required=false)
-    private boolean needGranteeName;
+    private ZmBoolean needGranteeName;
 
     @XmlAttribute(name=MailConstants.A_DEFAULT_VIEW, required=false)
     private String viewConstraint;
@@ -61,11 +62,11 @@ public class GetFolderRequest {
     }
 
     public Boolean isVisible() {
-        return isVisible;
+        return ZmBoolean.toBool(isVisible);
     }
 
     public boolean isNeedGranteeName() {
-        return needGranteeName;
+        return ZmBoolean.toBool(needGranteeName);
     }
 
     public String getViewConstraint() {
@@ -81,11 +82,11 @@ public class GetFolderRequest {
     }
 
     public void setVisible(Boolean isVisible) {
-        this.isVisible = isVisible;
+        this.isVisible = ZmBoolean.fromBool(isVisible);
     }
 
     public void setNeedGranteeName(boolean needGranteeName) {
-        this.needGranteeName = needGranteeName;
+        this.needGranteeName = ZmBoolean.fromBool(needGranteeName);
     }
 
     public void setViewConstraint(String viewConstraint) {

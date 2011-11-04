@@ -31,6 +31,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.SearchHit;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {"organizer", "categories", "geo", "fragment",
@@ -46,17 +47,15 @@ public class CalendarItemHitInfo
     private long date;
 
     @XmlAttribute(name=MailConstants.A_CONTENTMATCHED /* cm */, required=false)
-    private Boolean contentMatched;
+    private ZmBoolean contentMatched;
 
-    @XmlAttribute(name=MailConstants.A_CAL_NEXT_ALARM /* nextAlarm */,
-                                    required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_NEXT_ALARM /* nextAlarm */, required=false)
     private Long nextAlarm;
 
     @XmlElement(name=MailConstants.E_CAL_ORGANIZER /* or */, required=false)
     private CalOrganizer organizer;
 
-    @XmlElement(name=MailConstants.E_CAL_CATEGORY /* category */,
-                                    required=false)
+    @XmlElement(name=MailConstants.E_CAL_CATEGORY /* category */, required=false)
     private List<String> categories = Lists.newArrayList();
 
     @XmlElement(name=MailConstants.E_CAL_GEO /* geo */, required=false)
@@ -68,15 +67,13 @@ public class CalendarItemHitInfo
     @XmlElement(name=MailConstants.E_INSTANCE /* inst */, required=false)
     private List<InstanceDataInfo> instances = Lists.newArrayList();
 
-    @XmlElement(name=MailConstants.E_CAL_ALARM_DATA /* alarmData */,
-                                    required=false)
+    @XmlElement(name=MailConstants.E_CAL_ALARM_DATA /* alarmData */, required=false)
     private AlarmDataInfo alarmData;
 
     @XmlElement(name=MailConstants.E_INVITE /* inv */, required=false)
     private List<Invitation> invites = Lists.newArrayList();
 
-    @XmlElementWrapper(name=MailConstants.E_CAL_REPLIES /* replies */,
-                                    required=false)
+    @XmlElementWrapper(name=MailConstants.E_CAL_REPLIES /* replies */, required=false)
     @XmlElement(name=MailConstants.E_CAL_REPLY /* reply */, required=false)
     private List<CalReply> replies = Lists.newArrayList();
 
@@ -86,7 +83,7 @@ public class CalendarItemHitInfo
     public void setSortField(String sortField) { this.sortField = sortField; }
     public void setDate(long date) { this.date = date; }
     public void setContentMatched(Boolean contentMatched) {
-        this.contentMatched = contentMatched;
+        this.contentMatched = ZmBoolean.fromBool(contentMatched);
     }
     public void setNextAlarm(Long nextAlarm) { this.nextAlarm = nextAlarm; }
     public void setOrganizer(CalOrganizer organizer) {
@@ -147,7 +144,7 @@ public class CalendarItemHitInfo
 
     public String getSortField() { return sortField; }
     public long getDate() { return date; }
-    public Boolean getContentMatched() { return contentMatched; }
+    public Boolean getContentMatched() { return ZmBoolean.toBool(contentMatched); }
     public Long getNextAlarm() { return nextAlarm; }
     public CalOrganizer getOrganizer() { return organizer; }
     public List<String> getCategories() {

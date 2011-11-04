@@ -26,32 +26,28 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.ReplicationConstants;
 import com.zimbra.soap.replication.type.ReplicationMasterStatus;
 import com.zimbra.soap.replication.type.ReplicationSlaveStatus;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=ReplicationConstants.E_REPLICATION_STATUS_RESPONSE)
 @XmlType(propOrder = {})
 public class ReplicationStatusResponse {
 
-    @XmlAttribute(name=ReplicationConstants.A_REPLICATION_ENABLED
-                /* replicationEnabled */, required=true)
-    private final boolean replicationEnabled;
+    @XmlAttribute(name=ReplicationConstants.A_REPLICATION_ENABLED /* replicationEnabled */, required=true)
+    private final ZmBoolean replicationEnabled;
 
-    @XmlAttribute(name=ReplicationConstants.A_CURRENT_ROLE
-                /* currentRole */, required=false)
+    @XmlAttribute(name=ReplicationConstants.A_CURRENT_ROLE /* currentRole */, required=false)
     private String currentRole;
 
-    @XmlAttribute(name=ReplicationConstants.A_ORIGINAL_ROLE
-                /* originalRole */, required=false)
+    @XmlAttribute(name=ReplicationConstants.A_ORIGINAL_ROLE /* originalRole */, required=false)
     private String originalRole;
 
     // Only one of masterStatus and slaveStatus can be present
 
-    @XmlElement(name=ReplicationConstants.E_MASTER_STATUS
-                /* masterStatus */, required=false)
+    @XmlElement(name=ReplicationConstants.E_MASTER_STATUS /* masterStatus */, required=false)
     private ReplicationMasterStatus masterStatus;
 
-    @XmlElement(name=ReplicationConstants.E_SLAVE_STATUS
-                /* slaveStatus */, required=false)
+    @XmlElement(name=ReplicationConstants.E_SLAVE_STATUS /* slaveStatus */, required=false)
     private ReplicationSlaveStatus slaveStatus;
 
     /**
@@ -63,7 +59,7 @@ public class ReplicationStatusResponse {
     }
 
     public ReplicationStatusResponse(boolean replicationEnabled) {
-        this.replicationEnabled = replicationEnabled;
+        this.replicationEnabled = ZmBoolean.fromBool(replicationEnabled);
     }
 
     public void setCurrentRole(String currentRole) {
@@ -78,7 +74,7 @@ public class ReplicationStatusResponse {
     public void setSlaveStatus(ReplicationSlaveStatus slaveStatus) {
         this.slaveStatus = slaveStatus;
     }
-    public boolean getReplicationEnabled() { return replicationEnabled; }
+    public boolean getReplicationEnabled() { return ZmBoolean.toBool(replicationEnabled); }
     public String getCurrentRole() { return currentRole; }
     public String getOriginalRole() { return originalRole; }
     public ReplicationMasterStatus getMasterStatus() { return masterStatus; }

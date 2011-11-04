@@ -21,7 +21,12 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.json.jackson.ContentSerializer;
+import com.zimbra.soap.json.jackson.ZmBooleanContentSerializer;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_VERIFY_INDEX_RESPONSE)
@@ -29,8 +34,10 @@ import com.zimbra.common.soap.AdminConstants;
 public class VerifyIndexResponse {
 
     @XmlElement(name=AdminConstants.E_STATUS, required=true)
-    private final boolean status;
+    @JsonSerialize(using=ZmBooleanContentSerializer.class)
+    private final ZmBoolean status;
     @XmlElement(name=AdminConstants.E_MESSAGE, required=true)
+    @JsonSerialize(using=ContentSerializer.class)
     private final String message;
 
     /**
@@ -42,10 +49,10 @@ public class VerifyIndexResponse {
     }
 
     public VerifyIndexResponse(boolean status, String message) {
-        this.status = status;
+        this.status = ZmBoolean.fromBool(status);
         this.message = message;
     }
 
-    public boolean isStatus() { return status; }
+    public boolean isStatus() { return ZmBoolean.toBool(status); }
     public String getMessage() { return message; }
 }

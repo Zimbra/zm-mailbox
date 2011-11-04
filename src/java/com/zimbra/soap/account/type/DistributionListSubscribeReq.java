@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AccountConstants.E_DL_SUBS_REQ)
@@ -29,7 +30,7 @@ public class DistributionListSubscribeReq {
     @XmlAttribute(name=AccountConstants.A_OP, required=true)
     private DistributionListSubscribeOp op;
     @XmlAttribute(name=AccountConstants.A_BCC_OWNERS, required=false)
-    private boolean bccOwners = true;
+    private ZmBoolean bccOwners = ZmBoolean.ONE /* true */;
     @XmlValue
     private String memberEmail;
     
@@ -51,11 +52,11 @@ public class DistributionListSubscribeReq {
     }
     
     public void setBccOwners(boolean bccOwners) {
-        this.bccOwners = bccOwners;
+        this.bccOwners = ZmBoolean.fromBool(bccOwners);
     }
     
     public boolean getBccOwners() {
-        return bccOwners;
+        return ZmBoolean.toBool(bccOwners);
     }
     
     public void setMemberEmail(String memberEmail) {

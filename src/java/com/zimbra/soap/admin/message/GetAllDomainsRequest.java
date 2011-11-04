@@ -18,12 +18,13 @@ package com.zimbra.soap.admin.message;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlRootElement(name=AdminConstants.E_GET_ALL_DOMAINS_REQUEST)
 public class GetAllDomainsRequest {
 
     @XmlAttribute(name=AdminConstants.A_APPLY_CONFIG, required=false)
-    private final Boolean applyConfig;
+    private final ZmBoolean applyConfig;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -34,8 +35,8 @@ public class GetAllDomainsRequest {
     }
 
     public GetAllDomainsRequest(Boolean applyConfig) {
-        this.applyConfig = applyConfig;
+        this.applyConfig = ZmBoolean.fromBool(applyConfig);
     }
 
-    public boolean isApplyConfig() { return applyConfig; }
+    public boolean isApplyConfig() { return ZmBoolean.toBool(applyConfig); }
 }

@@ -19,6 +19,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import com.zimbra.soap.type.ZmBoolean;
 
 import com.zimbra.common.soap.AdminConstants;
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -28,7 +29,7 @@ public class MailQueueQuery {
     private final String queueName;
 
     @XmlAttribute(name=AdminConstants.A_SCAN, required=false)
-    private final Boolean scan;
+    private final ZmBoolean scan;
 
     @XmlAttribute(name=AdminConstants.A_WAIT, required=false)
     private final Long waitSeconds;
@@ -47,13 +48,13 @@ public class MailQueueQuery {
     public MailQueueQuery(String queueName, Boolean scan, Long waitSeconds,
                         QueueQuery query) {
         this.queueName = queueName;
-        this.scan = scan;
+        this.scan = ZmBoolean.fromBool(scan);
         this.waitSeconds = waitSeconds;
         this.query = query;
     }
 
     public String getQueueName() { return queueName; }
-    public Boolean getScan() { return scan; }
+    public Boolean getScan() { return ZmBoolean.toBool(scan); }
     public Long getWaitSeconds() { return waitSeconds; }
     public QueueQuery getQuery() { return query; }
 }

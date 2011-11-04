@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.BackupConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ExportMailboxSelector {
@@ -40,7 +41,7 @@ public class ExportMailboxSelector {
     private String tempDir;
 
     @XmlAttribute(name=BackupConstants.A_OVERWRITE /* overwrite */, required=false)
-    private Boolean overwrite;
+    private ZmBoolean overwrite;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -57,12 +58,12 @@ public class ExportMailboxSelector {
 
     public void setDestPort(Integer destPort) { this.destPort = destPort; }
     public void setTempDir(String tempDir) { this.tempDir = tempDir; }
-    public void setOverwrite(Boolean overwrite) { this.overwrite = overwrite; }
+    public void setOverwrite(Boolean overwrite) { this.overwrite = ZmBoolean.fromBool(overwrite); }
     public String getName() { return name; }
     public String getTarget() { return target; }
     public Integer getDestPort() { return destPort; }
     public String getTempDir() { return tempDir; }
-    public Boolean getOverwrite() { return overwrite; }
+    public Boolean getOverwrite() { return ZmBoolean.toBool(overwrite); }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {

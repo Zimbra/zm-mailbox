@@ -24,22 +24,20 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.LDAPUtilsConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=LDAPUtilsConstants.E_GET_LDAP_ENTRIES_REQUEST)
 public class GetLDAPEntriesRequest {
 
-    @XmlElement(name=LDAPUtilsConstants.E_LDAPSEARCHBASE
-                    /* ldapSearchBase */, required=true)
+    @XmlElement(name=LDAPUtilsConstants.E_LDAPSEARCHBASE /* ldapSearchBase */, required=true)
     private final String ldapSearchBase;
 
-    @XmlAttribute(name=AdminConstants.A_SORT_BY
-                    /* sortBy */, required=false)
+    @XmlAttribute(name=AdminConstants.A_SORT_BY /* sortBy */, required=false)
     private String sortBy;
 
-    @XmlAttribute(name=AdminConstants.A_SORT_ASCENDING
-                    /* sortAscending */, required=false)
-    private Boolean sortAscending;
+    @XmlAttribute(name=AdminConstants.A_SORT_ASCENDING /* sortAscending */, required=false)
+    private ZmBoolean sortAscending;
 
     @XmlAttribute(name=AdminConstants.A_LIMIT /* limit */, required=false)
     private Integer limit;
@@ -64,7 +62,7 @@ public class GetLDAPEntriesRequest {
 
     public void setSortBy(String sortBy) { this.sortBy = sortBy; }
     public void setSortAscending(Boolean sortAscending) {
-        this.sortAscending = sortAscending;
+        this.sortAscending = ZmBoolean.fromBool(sortAscending);
     }
     public void setLimit(Integer limit) { this.limit = limit; }
     public void setOffset(Integer offset) { this.offset = offset; }
@@ -72,7 +70,7 @@ public class GetLDAPEntriesRequest {
 
     public String getLdapSearchBase() { return ldapSearchBase; }
     public String getSortBy() { return sortBy; }
-    public Boolean getSortAscending() { return sortAscending; }
+    public Boolean getSortAscending() { return ZmBoolean.toBool(sortAscending); }
     public Integer getLimit() { return limit; }
     public Integer getOffset() { return offset; }
     public String getQuery() { return query; }

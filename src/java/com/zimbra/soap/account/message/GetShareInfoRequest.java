@@ -25,16 +25,17 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.GranteeChooser;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AccountConstants.E_GET_SHARE_INFO_REQUEST)
 public class GetShareInfoRequest {
 
     @XmlAttribute(name=AccountConstants.A_INTERNAL, required=false)
-    private Boolean internal;
+    private ZmBoolean internal;
 
     @XmlAttribute(name=AccountConstants.A_INCLUDE_SELF, required=false)
-    private Boolean includeSelf;
+    private ZmBoolean includeSelf;
 
     @XmlElement(name=AccountConstants.E_GRANTEE, required=false)
     private GranteeChooser grantee;
@@ -45,15 +46,13 @@ public class GetShareInfoRequest {
     public GetShareInfoRequest() {
     }
 
-    public void setInternal(Boolean internal) { this.internal = internal; }
-    public void setIncludeSelf(Boolean includeSelf) {
-        this.includeSelf = includeSelf;
-    }
+    public void setInternal(Boolean internal) { this.internal = ZmBoolean.fromBool(internal); }
+    public void setIncludeSelf(Boolean includeSelf) { this.includeSelf = ZmBoolean.fromBool(includeSelf); }
 
     public void setGrantee(GranteeChooser grantee) { this.grantee = grantee; }
     public void setOwner(AccountSelector owner) { this.owner = owner; }
-    public Boolean getInternal() { return internal; }
-    public Boolean getIncludeSelf() { return includeSelf; }
+    public Boolean getInternal() { return ZmBoolean.toBool(internal); }
+    public Boolean getIncludeSelf() { return ZmBoolean.toBool(includeSelf); }
     public GranteeChooser getGrantee() { return grantee; }
     public AccountSelector getOwner() { return owner; }
 

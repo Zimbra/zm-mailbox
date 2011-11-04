@@ -29,18 +29,19 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class FolderActionSelector extends ActionSelector {
 
     @XmlAttribute(name=MailConstants.A_RECURSIVE /* recursive */, required=false)
-    private Boolean recursive;
+    private ZmBoolean recursive;
 
     @XmlAttribute(name=MailConstants.A_URL /* url */, required=false)
     private String url;
 
     @XmlAttribute(name=MailConstants.A_EXCLUDE_FREEBUSY /* excludeFreeBusy */, required=false)
-    private Boolean excludeFreebusy;
+    private ZmBoolean excludeFreebusy;
 
     @XmlAttribute(name=MailConstants.A_ZIMBRA_ID /* zid */, required=false)
     private String zimbraId;
@@ -70,10 +71,10 @@ public class FolderActionSelector extends ActionSelector {
         super(ids, operation);
     }
 
-    public void setRecursive(Boolean recursive) { this.recursive = recursive; }
+    public void setRecursive(Boolean recursive) { this.recursive = ZmBoolean.fromBool(recursive); }
     public void setUrl(String url) { this.url = url; }
     public void setExcludeFreebusy(Boolean excludeFreebusy) {
-        this.excludeFreebusy = excludeFreebusy;
+        this.excludeFreebusy = ZmBoolean.fromBool(excludeFreebusy);
     }
     public void setZimbraId(String zimbraId) { this.zimbraId = zimbraId; }
     public void setGrantType(String grantType) { this.grantType = grantType; }
@@ -93,9 +94,9 @@ public class FolderActionSelector extends ActionSelector {
     }
 
     public void setRetentionPolicy(RetentionPolicy retentionPolicy) { this.retentionPolicy = retentionPolicy; }
-    public Boolean getRecursive() { return recursive; }
+    public Boolean getRecursive() { return ZmBoolean.toBool(recursive); }
     public String getUrl() { return url; }
-    public Boolean getExcludeFreebusy() { return excludeFreebusy; }
+    public Boolean getExcludeFreebusy() { return ZmBoolean.toBool(excludeFreebusy); }
     public String getZimbraId() { return zimbraId; }
     public String getGrantType() { return grantType; }
     public String getView() { return view; }

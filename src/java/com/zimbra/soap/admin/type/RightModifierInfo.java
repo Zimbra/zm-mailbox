@@ -21,18 +21,19 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class RightModifierInfo {
 
     @XmlAttribute(name=AdminConstants.A_DENY, required=false)
-    private final Boolean deny;
+    private final ZmBoolean deny;
 
     @XmlAttribute(name=AdminConstants.A_CAN_DELEGATE, required=false)
-    private final Boolean canDelegate;
+    private final ZmBoolean canDelegate;
 
     @XmlAttribute(name=AdminConstants.A_SUB_DOMAIN, required=false)
-    private final Boolean subDomain;
+    private final ZmBoolean subDomain;
 
     @XmlValue
     private final String value;
@@ -47,14 +48,14 @@ public class RightModifierInfo {
 
     public RightModifierInfo(Boolean deny, Boolean canDelegate,
                 Boolean subDomain, String value) {
-        this.deny = deny;
-        this.canDelegate = canDelegate;
-        this.subDomain = subDomain;
+        this.deny = ZmBoolean.fromBool(deny);
+        this.canDelegate = ZmBoolean.fromBool(canDelegate);
+        this.subDomain = ZmBoolean.fromBool(subDomain);
         this.value = value;
     }
 
-    public Boolean getDeny() { return deny; }
-    public Boolean getCanDelegate() { return canDelegate; }
-    public Boolean getSubDomain() { return subDomain; }
+    public Boolean getDeny() { return ZmBoolean.toBool(deny); }
+    public Boolean getCanDelegate() { return ZmBoolean.toBool(canDelegate); }
+    public Boolean getSubDomain() { return ZmBoolean.toBool(subDomain); }
     public String getValue() { return value; }
 }

@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {})
@@ -44,7 +45,7 @@ public class AddMsgSpec {
 
     // If true then don't process ICAL attachments
     @XmlAttribute(name=MailConstants.A_NO_ICAL /* noICal */, required=false)
-    private Boolean noICal;
+    private ZmBoolean noICal;
 
     @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
     private String dateReceived;
@@ -63,7 +64,7 @@ public class AddMsgSpec {
     public void setTags(String tags) { this.tags = tags; }
     public void setTagNames(String tagNames) { this.tagNames = tagNames; }
     public void setFolder(String folder) { this.folder = folder; }
-    public void setNoICal(Boolean noICal) { this.noICal = noICal; }
+    public void setNoICal(Boolean noICal) { this.noICal = ZmBoolean.fromBool(noICal); }
     public void setDateReceived(String dateReceived) {
         this.dateReceived = dateReceived;
     }
@@ -76,7 +77,7 @@ public class AddMsgSpec {
     public String getTags() { return tags; }
     public String getTagNames() { return tagNames; }
     public String getFolder() { return folder; }
-    public Boolean getNoICal() { return noICal; }
+    public Boolean getNoICal() { return ZmBoolean.toBool(noICal); }
     public String getDateReceived() { return dateReceived; }
     public String getAttachmentId() { return attachmentId; }
     public String getContent() { return content; }

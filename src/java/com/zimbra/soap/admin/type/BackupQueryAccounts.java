@@ -29,25 +29,23 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.BackupConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {})
 public class BackupQueryAccounts {
 
-    @XmlAttribute(name=BackupConstants.A_TOTAL_COUNT /* total */,
-                            required=false)
+    @XmlAttribute(name=BackupConstants.A_TOTAL_COUNT /* total */, required=false)
     private Integer totalCount;
 
-    @XmlAttribute(name=BackupConstants.A_COMPLETION_COUNT /* completionCount */,
-                            required=false)
+    @XmlAttribute(name=BackupConstants.A_COMPLETION_COUNT /* completionCount */, required=false)
     private Integer completionCount;
 
-    @XmlAttribute(name=BackupConstants.A_ERROR_COUNT /* errorCount */,
-                            required=false)
+    @XmlAttribute(name=BackupConstants.A_ERROR_COUNT /* errorCount */, required=false)
     private Integer errorCount;
 
     @XmlAttribute(name=BackupConstants.A_MORE /* more */, required=false)
-    private Boolean more;
+    private ZmBoolean more;
 
     @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=false)
     private List<BackupQueryAccountStatus> accounts = Lists.newArrayList();
@@ -64,7 +62,7 @@ public class BackupQueryAccounts {
     public void setErrorCount(Integer errorCount) {
         this.errorCount = errorCount;
     }
-    public void setMore(Boolean more) { this.more = more; }
+    public void setMore(Boolean more) { this.more = ZmBoolean.fromBool(more); }
     public void setAccounts(Iterable <BackupQueryAccountStatus> accounts) {
         this.accounts.clear();
         if (accounts != null) {
@@ -79,7 +77,7 @@ public class BackupQueryAccounts {
     public Integer getTotalCount() { return totalCount; }
     public Integer getCompletionCount() { return completionCount; }
     public Integer getErrorCount() { return errorCount; }
-    public Boolean getMore() { return more; }
+    public Boolean getMore() { return ZmBoolean.toBool(more); }
     public List<BackupQueryAccountStatus> getAccounts() {
         return Collections.unmodifiableList(accounts);
     }

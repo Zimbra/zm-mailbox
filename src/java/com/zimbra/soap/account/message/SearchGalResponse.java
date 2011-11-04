@@ -32,6 +32,7 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.account.type.ContactInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_SEARCH_GAL_RESPONSE)
@@ -45,17 +46,17 @@ public class SearchGalResponse {
     private Integer offset;
 
     @XmlAttribute(name=MailConstants.A_QUERY_MORE /* more */, required=false)
-    private Boolean more;
+    private ZmBoolean more;
 
     @XmlAttribute(name=MailConstants.A_TOKEN /* token */, required=false)
     private String token;
 
     @XmlAttribute(name=AccountConstants.A_PAGINATION_SUPPORTED /* paginationSupported */, required=false)
-    private Boolean pagingSupported;
+    private ZmBoolean pagingSupported;
 
     // TODO:Documented in soap.txt - not sure if this is still used
     @XmlAttribute(name=AccountConstants.A_TOKENIZE_KEY /* tokenizeKey */, required=false)
-    private Boolean tokenizeKey;
+    private ZmBoolean tokenizeKey;
 
     @XmlElement(name=MailConstants.E_CONTACT /* cn */, required=false)
     private List<ContactInfo> contacts = Lists.newArrayList();
@@ -65,10 +66,12 @@ public class SearchGalResponse {
 
     public void setSortBy(String sortBy) { this.sortBy = sortBy; }
     public void setOffset(Integer offset) { this.offset = offset; }
-    public void setMore(Boolean more) { this.more = more; }
+    public void setMore(Boolean more) { this.more = ZmBoolean.fromBool(more); }
     public void setToken(String token) { this.token = token; }
-    public void setPagingSupported(Boolean pagingSupported) { this.pagingSupported = pagingSupported; }
-    public void setTokenizeKey(Boolean tokenizeKey) { this.tokenizeKey = tokenizeKey; }
+    public void setPagingSupported(Boolean pagingSupported) {
+        this.pagingSupported = ZmBoolean.fromBool(pagingSupported);
+    }
+    public void setTokenizeKey(Boolean tokenizeKey) { this.tokenizeKey = ZmBoolean.fromBool(tokenizeKey); }
     public void setContacts(Iterable <ContactInfo> contacts) {
         this.contacts.clear();
         if (contacts != null) {
@@ -82,10 +85,10 @@ public class SearchGalResponse {
 
     public String getSortBy() { return sortBy; }
     public Integer getOffset() { return offset; }
-    public Boolean getMore() { return more; }
+    public Boolean getMore() { return ZmBoolean.toBool(more); }
     public String getToken() { return token; }
-    public Boolean getPagingSupported() { return pagingSupported; }
-    public Boolean getTokenizeKey() { return tokenizeKey; }
+    public Boolean getPagingSupported() { return ZmBoolean.toBool(pagingSupported); }
+    public Boolean getTokenizeKey() { return ZmBoolean.toBool(tokenizeKey); }
     public List<ContactInfo> getContacts() {
         return Collections.unmodifiableList(contacts);
     }

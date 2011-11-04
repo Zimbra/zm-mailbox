@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.type.MailboxMoveType;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class MailboxMoveInfo {
@@ -42,7 +43,7 @@ public class MailboxMoveInfo {
     private String target;
 
     @XmlAttribute(name=BackupConstants.A_NO_PEER /* noPeer */, required=false)
-    private Boolean noPeer;
+    private ZmBoolean noPeer;
 
     public MailboxMoveInfo() {
     }
@@ -52,13 +53,13 @@ public class MailboxMoveInfo {
     public void setMoveType(MailboxMoveType moveType) { this.moveType = moveType; }
     public void setSource(String source) { this.source = source; }
     public void setTarget(String target) { this.target = target; }
-    public void setNoPeer(Boolean noPeer) { this.noPeer = noPeer; }
+    public void setNoPeer(Boolean noPeer) { this.noPeer = ZmBoolean.fromBool(noPeer); }
     public String getName() { return name; }
     public long getStart() { return start; }
     public MailboxMoveType getMoveType() { return moveType; }
     public String getSource() { return source; }
     public String getTarget() { return target; }
-    public Boolean getNoPeer() { return noPeer; }
+    public Boolean getNoPeer() { return ZmBoolean.toBool(noPeer); }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {

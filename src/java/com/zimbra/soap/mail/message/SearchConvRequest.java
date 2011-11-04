@@ -23,19 +23,20 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.MailSearchParams;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_SEARCH_CONV_REQUEST)
 public class SearchConvRequest extends MailSearchParams {
 
     @XmlAttribute(name=MailConstants.A_NEST_MESSAGES /* nest */, required=false)
-    private Boolean nestMessages;
+    private ZmBoolean nestMessages;
 
     @XmlAttribute(name=MailConstants.A_CONV_ID /* cid */, required=true)
     private final String conversationId;
 
     @XmlAttribute(name=MailConstants.A_NEED_EXP /* needExp */, required=false)
-    private Boolean needCanExpand;
+    private ZmBoolean needCanExpand;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -49,11 +50,11 @@ public class SearchConvRequest extends MailSearchParams {
         this.conversationId = conversationId;
     }
 
-    public void setNestMessages(Boolean nestMessages) { this.nestMessages = nestMessages; }
-    public void setNeedCanExpand(Boolean needCanExpand) { this.needCanExpand = needCanExpand; }
-    public Boolean getNestMessages() { return nestMessages; }
+    public void setNestMessages(Boolean nestMessages) { this.nestMessages = ZmBoolean.fromBool(nestMessages); }
+    public void setNeedCanExpand(Boolean needCanExpand) { this.needCanExpand = ZmBoolean.fromBool(needCanExpand); }
+    public Boolean getNestMessages() { return ZmBoolean.toBool(nestMessages); }
     public String getConversationId() { return conversationId; }
-    public Boolean getNeedCanExpand() { return needCanExpand; }
+    public Boolean getNeedCanExpand() { return ZmBoolean.toBool(needCanExpand); }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {

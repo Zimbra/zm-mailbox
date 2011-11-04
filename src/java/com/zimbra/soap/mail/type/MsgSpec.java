@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.AttributeName;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {})
@@ -42,27 +43,25 @@ public class MsgSpec {
     private String part;
 
     @XmlAttribute(name=MailConstants.A_RAW /* raw */, required=false)
-    private Boolean raw;
+    private ZmBoolean raw;
 
     @XmlAttribute(name=MailConstants.A_MARK_READ /* read */, required=false)
-    private Boolean markRead;
+    private ZmBoolean markRead;
 
-    @XmlAttribute(name=MailConstants.A_MAX_INLINED_LENGTH /* max */,
-                    required=false)
+    @XmlAttribute(name=MailConstants.A_MAX_INLINED_LENGTH /* max */, required=false)
     private Integer maxInlinedLength;
 
     @XmlAttribute(name=MailConstants.A_WANT_HTML /* html */, required=false)
-    private Boolean wantHtml;
+    private ZmBoolean wantHtml;
 
     @XmlAttribute(name=MailConstants.A_NEUTER /* neuter */, required=false)
-    private Boolean neuter;
+    private ZmBoolean neuter;
 
-    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID_Z /* ridZ */,
-                    required=false)
+    @XmlAttribute(name=MailConstants.A_CAL_RECURRENCE_ID_Z /* ridZ */, required=false)
     private String recurIdZ;
 
     @XmlAttribute(name=MailConstants.A_NEED_EXP /* needExp */, required=false)
-    private Boolean needCanExpand;
+    private ZmBoolean needCanExpand;
 
     @XmlElement(name=MailConstants.A_HEADER /* header */, required=false)
     private List<AttributeName> headers = Lists.newArrayList();
@@ -80,17 +79,15 @@ public class MsgSpec {
     }
 
     public void setPart(String part) { this.part = part; }
-    public void setRaw(Boolean raw) { this.raw = raw; }
-    public void setMarkRead(Boolean markRead) { this.markRead = markRead; }
+    public void setRaw(Boolean raw) { this.raw = ZmBoolean.fromBool(raw); }
+    public void setMarkRead(Boolean markRead) { this.markRead = ZmBoolean.fromBool(markRead); }
     public void setMaxInlinedLength(Integer maxInlinedLength) {
         this.maxInlinedLength = maxInlinedLength;
     }
-    public void setWantHtml(Boolean wantHtml) { this.wantHtml = wantHtml; }
-    public void setNeuter(Boolean neuter) { this.neuter = neuter; }
+    public void setWantHtml(Boolean wantHtml) { this.wantHtml = ZmBoolean.fromBool(wantHtml); }
+    public void setNeuter(Boolean neuter) { this.neuter = ZmBoolean.fromBool(neuter); }
     public void setRecurIdZ(String recurIdZ) { this.recurIdZ = recurIdZ; }
-    public void setNeedCanExpand(Boolean needCanExpand) {
-        this.needCanExpand = needCanExpand;
-    }
+    public void setNeedCanExpand(Boolean needCanExpand) { this.needCanExpand = ZmBoolean.fromBool(needCanExpand); }
     public void setHeaders(Iterable <AttributeName> headers) {
         this.headers.clear();
         if (headers != null) {
@@ -104,13 +101,13 @@ public class MsgSpec {
 
     public String getId() { return id; }
     public String getPart() { return part; }
-    public Boolean getRaw() { return raw; }
-    public Boolean getMarkRead() { return markRead; }
+    public Boolean getRaw() { return ZmBoolean.toBool(raw); }
+    public Boolean getMarkRead() { return ZmBoolean.toBool(markRead); }
     public Integer getMaxInlinedLength() { return maxInlinedLength; }
-    public Boolean getWantHtml() { return wantHtml; }
-    public Boolean getNeuter() { return neuter; }
+    public Boolean getWantHtml() { return ZmBoolean.toBool(wantHtml); }
+    public Boolean getNeuter() { return ZmBoolean.toBool(neuter); }
     public String getRecurIdZ() { return recurIdZ; }
-    public Boolean getNeedCanExpand() { return needCanExpand; }
+    public Boolean getNeedCanExpand() { return ZmBoolean.toBool(needCanExpand); }
     public List<AttributeName> getHeaders() {
         return Collections.unmodifiableList(headers);
     }

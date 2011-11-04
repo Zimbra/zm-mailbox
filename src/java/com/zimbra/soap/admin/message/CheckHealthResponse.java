@@ -22,19 +22,20 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_CHECK_HEALTH_RESPONSE)
 @XmlType(propOrder = {})
 public class CheckHealthResponse {
     @XmlAttribute(name=AdminConstants.A_HEALTHY, required=true)
-    private boolean healthy;
+    private ZmBoolean healthy;
 
     public CheckHealthResponse() { }
 
-    public CheckHealthResponse(boolean healthy) { this.healthy = healthy; }
+    public CheckHealthResponse(boolean healthy) { this.healthy = ZmBoolean.fromBool(healthy); }
 
-    public void setHealthy(boolean healthy) { this.healthy = healthy; }
+    public void setHealthy(boolean healthy) { this.healthy = ZmBoolean.fromBool(healthy); }
 
-    public boolean isHealthy() { return healthy; }
+    public boolean isHealthy() { return ZmBoolean.toBool(healthy); }
 }

@@ -22,19 +22,20 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_GET_YAHOO_AUTH_TOKEN_RESPONSE)
 public class GetYahooAuthTokenResponse {
 
     @XmlAttribute(name="failed", required=false)
-    private Boolean failed;
+    private ZmBoolean failed;
 
     public GetYahooAuthTokenResponse() {
     }
 
-    public void setFailed(Boolean failed) { this.failed = failed; }
-    public Boolean getFailed() { return failed; }
+    public void setFailed(Boolean failed) { this.failed = ZmBoolean.fromBool(failed); }
+    public Boolean getFailed() { return ZmBoolean.toBool(failed); }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {

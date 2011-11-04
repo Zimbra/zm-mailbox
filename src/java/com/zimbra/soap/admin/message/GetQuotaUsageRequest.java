@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_QUOTA_USAGE_REQUEST)
@@ -35,7 +36,7 @@ public class GetQuotaUsageRequest {
     @XmlAttribute(name=AdminConstants.A_SORT_BY, required=false)
     private String sortBy;
     @XmlAttribute(name=AdminConstants.A_SORT_ASCENDING, required=false)
-    private Boolean sortAscending;
+    private ZmBoolean sortAscending;
 
     public GetQuotaUsageRequest() {
         this((String) null, (Integer) null, (Integer) null,
@@ -48,12 +49,12 @@ public class GetQuotaUsageRequest {
         this.limit = limit;
         this.offset = offset;
         this.sortBy = sortBy;
-        this.sortAscending = sortAscending;
+        this.sortAscending = ZmBoolean.fromBool(sortAscending);
     }
 
     public String getDomain() { return domain; }
     public Integer getLimit() { return limit; }
     public Integer getOffset() { return offset; }
     public String getSortBy() { return sortBy; }
-    public Boolean isSortAscending() { return sortAscending; }
+    public Boolean isSortAscending() { return ZmBoolean.toBool(sortAscending); }
 }

@@ -23,15 +23,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.DistributionListInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AccountConstants.E_GET_DISTRIBUTION_LIST_RESPONSE)
 public class GetDistributionListResponse {
-    
+
     @XmlAttribute(name=AccountConstants.A_IS_MEMBER, required=true)
-    private Boolean isMember;
+    private ZmBoolean isMember;
     @XmlAttribute(name=AccountConstants.A_IS_OWNER, required=true)
-    private Boolean isOwner;
+    private ZmBoolean isOwner;
     @XmlElement(name=AccountConstants.E_DL, required=false)
     DistributionListInfo dl;
 
@@ -46,13 +47,13 @@ public class GetDistributionListResponse {
     public void setDl(DistributionListInfo dl) { this.dl = dl; }
 
     public DistributionListInfo getDl() { return dl; }
-    
-    
-    public boolean isMember() {
-        return isMember;
+
+
+    public Boolean isMember() {
+        return ZmBoolean.toBool(isMember);
     }
-    
-    public boolean isOwner() {
-        return isOwner;
+
+    public Boolean isOwner() {
+        return ZmBoolean.toBool(isOwner);
     }
 }

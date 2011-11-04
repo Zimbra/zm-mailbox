@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.DistributionListInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_DISTRIBUTION_LIST_RESPONSE)
@@ -32,7 +33,7 @@ public class GetDistributionListResponse {
      * more/total are only present if the list of members is given
      */
     @XmlAttribute(name=AdminConstants.A_MORE, required=false)
-    Boolean more;
+    ZmBoolean more;
     @XmlAttribute(name=AdminConstants.A_TOTAL, required=false)
     Integer total;
 
@@ -51,10 +52,10 @@ public class GetDistributionListResponse {
     }
 
     public void setDl(DistributionListInfo dl) { this.dl = dl; }
-    public void setMore(Boolean more) { this.more = more; }
+    public void setMore(Boolean more) { this.more = ZmBoolean.fromBool(more); }
     public void setTotal(Integer total) { this.total = total; }
 
     public DistributionListInfo getDl() { return dl; }
-    public Boolean isMore() { return more; }
+    public Boolean isMore() { return ZmBoolean.toBool(more); }
     public Integer getTotal() { return total; }
 }

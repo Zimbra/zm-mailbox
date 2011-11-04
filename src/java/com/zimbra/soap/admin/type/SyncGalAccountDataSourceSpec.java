@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class SyncGalAccountDataSourceSpec {
@@ -30,10 +31,10 @@ public class SyncGalAccountDataSourceSpec {
     private String by;
 
     @XmlAttribute(name=AdminConstants.A_FULLSYNC /* fullSync */, required=false)
-    private Boolean fullSync;
+    private ZmBoolean fullSync;
 
     @XmlAttribute(name=AdminConstants.A_RESET /* reset */, required=false)
-    private Boolean reset;
+    private ZmBoolean reset;
 
     @XmlValue
     private String value;
@@ -51,12 +52,12 @@ public class SyncGalAccountDataSourceSpec {
     }
 
     public void setBy(String by) { this.by = by; }
-    public void setFullSync(Boolean fullSync) { this.fullSync = fullSync; }
-    public void setReset(Boolean reset) { this.reset = reset; }
+    public void setFullSync(Boolean fullSync) { this.fullSync = ZmBoolean.fromBool(fullSync); }
+    public void setReset(Boolean reset) { this.reset = ZmBoolean.fromBool(reset); }
     public void setValue(String value) { this.value = value; }
     public String getBy() { return by; }
-    public Boolean getFullSync() { return fullSync; }
-    public Boolean getReset() { return reset; }
+    public Boolean getFullSync() { return ZmBoolean.toBool(fullSync); }
+    public Boolean getReset() { return ZmBoolean.toBool(reset); }
     public String getValue() { return value; }
 
     public Objects.ToStringHelper addToStringInfo(

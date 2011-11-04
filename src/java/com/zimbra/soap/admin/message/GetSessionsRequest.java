@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.GetSessionsSortBy;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_SESSIONS_REQUEST)
@@ -41,7 +42,7 @@ public class GetSessionsRequest {
     private final Long limit;
 
     @XmlAttribute(name=AdminConstants.A_REFRESH, required=false)
-    private final Boolean refresh;
+    private final ZmBoolean refresh;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -58,12 +59,12 @@ public class GetSessionsRequest {
         this.sortBy = sortBy;
         this.offset = offset;
         this.limit = limit;
-        this.refresh = refresh;
+        this.refresh = ZmBoolean.fromBool(refresh);
     }
 
     public String getType() { return type; }
     public GetSessionsSortBy getSortBy() { return sortBy; }
     public Long getOffset() { return offset; }
     public Long getLimit() { return limit; }
-    public Boolean getRefresh() { return refresh; }
+    public Boolean getRefresh() { return ZmBoolean.toBool(refresh); }
 }

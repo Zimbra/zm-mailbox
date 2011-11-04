@@ -28,12 +28,13 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.EffectiveAttrInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class EffectiveAttrsInfo {
 
     @XmlAttribute(name=AdminConstants.A_ALL, required=false)
-    private final Boolean all;
+    private final ZmBoolean all;
 
     @XmlElement(name=AdminConstants.E_A, required=false)
     private List <EffectiveAttrInfo> attrs = Lists.newArrayList();
@@ -47,7 +48,7 @@ public class EffectiveAttrsInfo {
     }
 
     private EffectiveAttrsInfo(Boolean all) {
-        this.all = all;
+        this.all = ZmBoolean.fromBool(all);
     }
 
     public EffectiveAttrsInfo setAttrs(Collection <EffectiveAttrInfo> attrs) {
@@ -67,5 +68,5 @@ public class EffectiveAttrsInfo {
         return Collections.unmodifiableList(attrs);
     }
 
-    public Boolean getAll() { return all; }
+    public Boolean getAll() { return ZmBoolean.toBool(all); }
 }

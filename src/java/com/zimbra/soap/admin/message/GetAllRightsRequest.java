@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_ALL_RIGHTS_REQUEST)
@@ -29,7 +30,7 @@ public class GetAllRightsRequest {
     @XmlAttribute(name=AdminConstants.A_TARGET_TYPE, required=false)
     private final String targetType;
     @XmlAttribute(name=AdminConstants.A_EXPAND_ALL_ATTRS, required=false)
-    private final Boolean expandAllAttrs;
+    private final ZmBoolean expandAllAttrs;
     @XmlAttribute(name=AdminConstants.A_RIGHT_CLASS, required=false)
     private final String rightClass;
 
@@ -44,11 +45,11 @@ public class GetAllRightsRequest {
     public GetAllRightsRequest(String targetType, Boolean expandAllAttrs,
             String rightClass) {
         this.targetType = targetType;
-        this.expandAllAttrs = expandAllAttrs;
+        this.expandAllAttrs = ZmBoolean.fromBool(expandAllAttrs);
         this.rightClass = rightClass;
     }
 
     public String getTargetType() { return targetType; }
-    public Boolean isExpandAllAttrs() { return expandAllAttrs; }
+    public Boolean isExpandAllAttrs() { return ZmBoolean.toBool(expandAllAttrs); }
     public String getRightClass() { return rightClass; }
 }

@@ -20,6 +20,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class FreeBusyProviderInfo {
@@ -28,7 +29,7 @@ public class FreeBusyProviderInfo {
     private final String name;
 
     @XmlAttribute(name=AdminConstants.A_PROPAGATE, required=true)
-    private final boolean propagate;
+    private final ZmBoolean propagate;
 
     @XmlAttribute(name=AdminConstants.A_START, required=true)
     private final long start;
@@ -53,7 +54,7 @@ public class FreeBusyProviderInfo {
     public FreeBusyProviderInfo(String name, boolean propagate,
                     long start, long end, String queue, String prefix) {
         this.name = name;
-        this.propagate = propagate;
+        this.propagate = ZmBoolean.fromBool(propagate);
         this.start = start;
         this.end = end;
         this.queue = queue;
@@ -61,7 +62,7 @@ public class FreeBusyProviderInfo {
     }
 
     public String getName() { return name; }
-    public boolean getPropagate() { return propagate; }
+    public boolean getPropagate() { return ZmBoolean.toBool(propagate); }
     public long getStart() { return start; }
     public long getEnd() { return end; }
     public String getQueue() { return queue; }

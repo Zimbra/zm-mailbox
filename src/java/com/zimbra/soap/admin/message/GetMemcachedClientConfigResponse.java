@@ -21,29 +21,25 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_MEMCACHED_CLIENT_CONFIG_RESPONSE)
 public class GetMemcachedClientConfigResponse {
 
-    @XmlAttribute(name=AdminConstants.A_MEMCACHED_CLIENT_CONFIG_SERVER_LIST,
-            required=false)
+    @XmlAttribute(name=AdminConstants.A_MEMCACHED_CLIENT_CONFIG_SERVER_LIST, required=false)
     private String serverList;
 
-    @XmlAttribute(name=AdminConstants.A_MEMCACHED_CLIENT_CONFIG_HASH_ALGORITHM,
-            required=false)
+    @XmlAttribute(name=AdminConstants.A_MEMCACHED_CLIENT_CONFIG_HASH_ALGORITHM, required=false)
     private String hashAlgorithm;
 
-    @XmlAttribute(name=AdminConstants.A_MEMCACHED_CLIENT_CONFIG_BINARY_PROTOCOL,
-            required=false)
-    private Boolean binaryProtocolEnabled;
+    @XmlAttribute(name=AdminConstants.A_MEMCACHED_CLIENT_CONFIG_BINARY_PROTOCOL, required=false)
+    private ZmBoolean binaryProtocolEnabled;
 
-    @XmlAttribute(name=AdminConstants.A_MEMCACHED_CLIENT_CONFIG_DEFAULT_EXPIRY_SECONDS,
-            required=false)
+    @XmlAttribute(name=AdminConstants.A_MEMCACHED_CLIENT_CONFIG_DEFAULT_EXPIRY_SECONDS, required=false)
     private Integer defaultExpirySeconds;
 
-    @XmlAttribute(name=AdminConstants.A_MEMCACHED_CLIENT_CONFIG_DEFAULT_TIMEOUT_MILLIS,
-            required=false)
+    @XmlAttribute(name=AdminConstants.A_MEMCACHED_CLIENT_CONFIG_DEFAULT_TIMEOUT_MILLIS, required=false)
     private Long defaultTimeoutMillis;
 
     public GetMemcachedClientConfigResponse() {
@@ -58,7 +54,7 @@ public class GetMemcachedClientConfigResponse {
     }
 
     public void setBinaryProtocolEnabled(Boolean binaryProtocolEnabled) {
-        this.binaryProtocolEnabled = binaryProtocolEnabled;
+        this.binaryProtocolEnabled = ZmBoolean.fromBool(binaryProtocolEnabled);
     }
 
     public void setDefaultExpirySeconds(Integer defaultExpirySeconds) {
@@ -71,7 +67,7 @@ public class GetMemcachedClientConfigResponse {
 
     public String getServerList() { return serverList; }
     public String getHashAlgorithm() { return hashAlgorithm; }
-    public Boolean getBinaryProtocolEnabled() { return binaryProtocolEnabled; }
+    public Boolean getBinaryProtocolEnabled() { return ZmBoolean.toBool(binaryProtocolEnabled); }
     public Integer getDefaultExpirySeconds() { return defaultExpirySeconds; }
     public Long getDefaultTimeoutMillis() { return defaultTimeoutMillis; }
 }

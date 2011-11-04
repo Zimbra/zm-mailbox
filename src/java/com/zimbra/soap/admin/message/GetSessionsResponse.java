@@ -29,13 +29,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.SimpleSessionInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_SESSIONS_RESPONSE)
 public class GetSessionsResponse {
 
     @XmlAttribute(name=AdminConstants.A_MORE, required=true)
-    private final boolean more;
+    private final ZmBoolean more;
 
     @XmlAttribute(name=AdminConstants.A_TOTAL, required=true)
     private final int total;
@@ -52,7 +53,7 @@ public class GetSessionsResponse {
     }
 
     public GetSessionsResponse(boolean more, int total) {
-        this.more = more;
+        this.more = ZmBoolean.fromBool(more);
         this.total = total;
     }
 
@@ -68,7 +69,7 @@ public class GetSessionsResponse {
         return this;
     }
 
-    public boolean getMore() { return more; }
+    public boolean getMore() { return ZmBoolean.toBool(more); }
     public int getTotal() { return total; }
     public List<SimpleSessionInfo> getSessions() {
         return Collections.unmodifiableList(sessions);

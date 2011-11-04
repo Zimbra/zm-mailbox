@@ -30,13 +30,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.CalendarResourceInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_SEARCH_CALENDAR_RESOURCES_RESPONSE)
 public class SearchCalendarResourcesResponse {
 
     @XmlAttribute(name=AdminConstants.A_MORE, required=true)
-    private boolean more;
+    private ZmBoolean more;
     @XmlAttribute(name=AdminConstants.A_SEARCH_TOTAL, required=true)
     private long searchTotal;
     @XmlElement(name=AdminConstants.E_CALENDAR_RESOURCE)
@@ -67,10 +68,10 @@ public class SearchCalendarResourcesResponse {
     public List <CalendarResourceInfo> getCalResources() {
         return Collections.unmodifiableList(calResources);
     }
-    public void setMore(boolean more) { this.more = more; }
+    public void setMore(boolean more) { this.more = ZmBoolean.fromBool(more); }
 
     public long getSearchTotal() { return searchTotal; }
-    public boolean isMore() { return more; }
+    public boolean isMore() { return ZmBoolean.toBool(more); }
     public void setSearchTotal(long searchTotal) {
         this.searchTotal = searchTotal;
     }

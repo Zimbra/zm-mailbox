@@ -21,18 +21,19 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class AttachSpec {
 
     @XmlAttribute(name=MailConstants.A_OPTIONAL, required=false)
-    private Boolean optional;
+    private ZmBoolean optional;
 
     public AttachSpec() {
     }
 
-    public void setOptional(Boolean optional) { this.optional = optional; }
-    public Boolean getOptional() { return optional; }
+    public void setOptional(Boolean optional) { this.optional = ZmBoolean.fromBool(optional); }
+    public Boolean getOptional() { return ZmBoolean.toBool(optional); }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {

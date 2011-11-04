@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {"organizer", "categories", "geo", "fragment"})
@@ -40,7 +41,7 @@ implements InstanceDataInterface {
     private Long startTime;
 
     @XmlAttribute(name=MailConstants.A_CAL_IS_EXCEPTION /* ex */, required=false)
-    private Boolean isException;
+    private ZmBoolean isException;
 
     @XmlElement(name=MailConstants.E_CAL_ORGANIZER /* or */, required=false)
     private CalOrganizer organizer;
@@ -61,7 +62,7 @@ implements InstanceDataInterface {
     public void setStartTime(Long startTime) { this.startTime = startTime; }
     @Override
     public void setIsException(Boolean isException) {
-        this.isException = isException;
+        this.isException = ZmBoolean.fromBool(isException);
     }
     @Override
     public void setOrganizer(CalOrganizer organizer) {
@@ -87,7 +88,7 @@ implements InstanceDataInterface {
     @Override
     public Long getStartTime() { return startTime; }
     @Override
-    public Boolean getIsException() { return isException; }
+    public Boolean getIsException() { return ZmBoolean.toBool(isException); }
     @Override
     public CalOrganizer getOrganizer() { return organizer; }
     @Override

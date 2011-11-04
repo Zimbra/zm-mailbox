@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import com.zimbra.soap.type.ZmBoolean;
 
 import com.zimbra.common.soap.AdminConstants;
 
@@ -40,13 +41,13 @@ public class MailQueueDetails {
     private final long time;
 
     @XmlAttribute(name=AdminConstants.A_SCAN, required=true)
-    private final boolean stillScanning;
+    private final ZmBoolean stillScanning;
 
     @XmlAttribute(name=AdminConstants.A_TOTAL, required=true)
     private final int total;
 
     @XmlAttribute(name=AdminConstants.A_MORE, required=true)
-    private final boolean more;
+    private final ZmBoolean more;
 
     @XmlElement(name=AdminConstants.A_QUEUE_SUMMARY, required=false)
     private List<QueueSummary> queueSummaries = Lists.newArrayList();
@@ -66,9 +67,9 @@ public class MailQueueDetails {
                     int total, boolean more) {
         this.name = name;
         this.time = time;
-        this.stillScanning = stillScanning;
+        this.stillScanning = ZmBoolean.fromBool(stillScanning);
         this.total = total;
-        this.more = more;
+        this.more = ZmBoolean.fromBool(more);
     }
 
     public void setQueueSummaries(Iterable <QueueSummary> queueSummaries) {
@@ -98,9 +99,9 @@ public class MailQueueDetails {
 
     public String getName() { return name; }
     public long getTime() { return time; }
-    public boolean getStillScanning() { return stillScanning; }
+    public boolean getStillScanning() { return ZmBoolean.toBool(stillScanning); }
     public int getTotal() { return total; }
-    public boolean getMore() { return more; }
+    public boolean getMore() { return ZmBoolean.toBool(more); }
     public List<QueueSummary> getQueueSummaries() {
         return Collections.unmodifiableList(queueSummaries);
     }

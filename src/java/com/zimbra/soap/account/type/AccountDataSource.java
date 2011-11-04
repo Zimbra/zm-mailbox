@@ -31,6 +31,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.DataSource;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {"lastError", "attributes"})
@@ -49,11 +50,11 @@ implements DataSource {
 
     @XmlAttribute(name=MailConstants.A_DS_IS_ENABLED /* isEnabled */,
                     required=false)
-    private Boolean enabled;
+    private ZmBoolean enabled;
 
     @XmlAttribute(name=MailConstants.A_DS_IS_IMPORTONLY /* importOnly */,
                     required=false)
-    private Boolean importOnly;
+    private ZmBoolean importOnly;
 
     @XmlAttribute(name=MailConstants.A_DS_HOST /* host */, required=false)
     private String host;
@@ -83,7 +84,7 @@ implements DataSource {
 
     @XmlAttribute(name=MailConstants.A_DS_USE_ADDRESS_FOR_FORWARD_REPLY
                     /* useAddressForForwardReply */, required=false)
-    private Boolean useAddressForForwardReply;
+    private ZmBoolean useAddressForForwardReply;
 
     @XmlAttribute(name=MailConstants.A_DS_DEFAULT_SIGNATURE
                     /* defaultSignature */, required=false)
@@ -137,8 +138,8 @@ implements DataSource {
         id = from.getId();
         name = from.getName();
         folderId = from.getFolderId();
-        enabled = from.isEnabled();
-        importOnly = from.isImportOnly();
+        enabled = ZmBoolean.fromBool(from.isEnabled());
+        importOnly = ZmBoolean.fromBool(from.isImportOnly());
         host = from.getHost();
         port = from.getPort();
         adsConnectionType = AdsConnectionType.CT_TO_ACT.apply(
@@ -147,7 +148,7 @@ implements DataSource {
         password = from.getPassword();
         pollingInterval = from.getPollingInterval();
         emailAddress = from.getEmailAddress();
-        useAddressForForwardReply = from.isUseAddressForForwardReply();
+        useAddressForForwardReply = ZmBoolean.fromBool(from.isUseAddressForForwardReply());
         defaultSignature = from.getDefaultSignature();
         forwardReplySignature = from.getForwardReplySignature();
         fromDisplay = from.getFromDisplay();
@@ -167,9 +168,9 @@ implements DataSource {
     @Override
     public void setFolderId(String folderId) { this.folderId = folderId; }
     @Override
-    public void setEnabled(Boolean enabled) { this.enabled = enabled; }
+    public void setEnabled(Boolean enabled) { this.enabled = ZmBoolean.fromBool(enabled); }
     @Override
-    public void setImportOnly(Boolean importOnly) { this.importOnly = importOnly; }
+    public void setImportOnly(Boolean importOnly) { this.importOnly = ZmBoolean.fromBool(importOnly); }
     @Override
     public void setHost(String host) { this.host = host; }
     @Override
@@ -187,7 +188,7 @@ implements DataSource {
     public void setEmailAddress(String emailAddress) { this.emailAddress = emailAddress; }
     @Override
     public void setUseAddressForForwardReply(Boolean useAddressForForwardReply) {
-        this.useAddressForForwardReply = useAddressForForwardReply;
+        this.useAddressForForwardReply = ZmBoolean.fromBool(useAddressForForwardReply);
     }
     @Override
     public void setDefaultSignature(String defaultSignature) { this.defaultSignature = defaultSignature; }
@@ -227,9 +228,9 @@ implements DataSource {
     @Override
     public String getFolderId() { return folderId; }
     @Override
-    public Boolean isEnabled() { return enabled; }
+    public Boolean isEnabled() { return ZmBoolean.toBool(enabled); }
     @Override
-    public Boolean isImportOnly() { return importOnly; }
+    public Boolean isImportOnly() { return ZmBoolean.toBool(importOnly); }
     @Override
     public String getHost() { return host; }
     @Override
@@ -244,7 +245,7 @@ implements DataSource {
     @Override
     public String getEmailAddress() { return emailAddress; }
     @Override
-    public Boolean isUseAddressForForwardReply() { return useAddressForForwardReply; }
+    public Boolean isUseAddressForForwardReply() { return ZmBoolean.toBool(useAddressForForwardReply); }
     @Override
     public String getDefaultSignature() { return defaultSignature; }
     @Override

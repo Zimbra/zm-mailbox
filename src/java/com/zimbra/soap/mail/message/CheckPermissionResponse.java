@@ -22,13 +22,14 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_CHECK_PERMISSION_RESPONSE)
 public class CheckPermissionResponse {
 
     @XmlAttribute(name=MailConstants.A_ALLOW /* allow */, required=true)
-    private final boolean allow;
+    private final ZmBoolean allow;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -39,10 +40,10 @@ public class CheckPermissionResponse {
     }
 
     public CheckPermissionResponse(boolean allow) {
-        this.allow = allow;
+        this.allow = ZmBoolean.fromBool(allow);
     }
 
-    public boolean getAllow() { return allow; }
+    public boolean getAllow() { return ZmBoolean.toBool(allow); }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {

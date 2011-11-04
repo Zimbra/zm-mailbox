@@ -19,6 +19,7 @@ import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import com.zimbra.soap.type.ZmBoolean;
 
 import com.zimbra.common.soap.BackupConstants;
 
@@ -50,7 +51,7 @@ public class MoveMailboxInfo {
     private Long syncFinishThreshold;
 
     @XmlAttribute(name=BackupConstants.A_SYNC /* sync */, required=false)
-    private Boolean sync;
+    private ZmBoolean sync;
 
     private MoveMailboxInfo() {
     }
@@ -73,7 +74,7 @@ public class MoveMailboxInfo {
     public void setSearchIndex(String searchIndex) { this.searchIndex = searchIndex; }
     public void setMaxSyncs(Integer maxSyncs) { this.maxSyncs = maxSyncs; }
     public void setSyncFinishThreshold(Long syncFinishThreshold) { this.syncFinishThreshold = syncFinishThreshold; }
-    public void setSync(Boolean sync) { this.sync = sync; }
+    public void setSync(Boolean sync) { this.sync = ZmBoolean.fromBool(sync); }
     public String getName() { return name; }
     public String getTarget() { return target; }
     public String getSource() { return source; }
@@ -82,7 +83,7 @@ public class MoveMailboxInfo {
     public String getSearchIndex() { return searchIndex; }
     public Integer getMaxSyncs() { return maxSyncs; }
     public Long getSyncFinishThreshold() { return syncFinishThreshold; }
-    public Boolean getSync() { return sync; }
+    public Boolean getSync() { return ZmBoolean.toBool(sync); }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {

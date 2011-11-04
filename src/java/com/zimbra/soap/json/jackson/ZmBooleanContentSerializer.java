@@ -23,30 +23,33 @@ import org.codehaus.jackson.map.JsonSerializer;
 import org.codehaus.jackson.map.SerializerProvider;
 
 import com.zimbra.common.soap.Element.JSONElement;
+import com.zimbra.soap.type.ZmBoolean;
 /**
- * JsonSerializer to be used for a list of Strings derived from elements where the elements were NOT
+ * JsonSerializer to be used for a list of {@link ZmBoolean} derived from elements where the elements were NOT
  * added as attributes of type CONTENT :
  * Without this, the default Jackson serialization with pair of introspectors :
  *     JacksonAnnotationIntrospector and JaxbAnnotationIntrospector
  * yields something like :
- *         "contentElem" : "contentValue"
+ *         "contentElem" : true
  * To match old Element serialization behavior, we want :
  *         "contentElem": [{
- *             "_content": "contentValue"
+ *             "_content": true
  *               }]
  *
  */
-public class ContentSerializer extends JsonSerializer<Object>{
+public class ZmBooleanContentSerializer extends JsonSerializer<ZmBoolean>{
 
     @Override
-    public void serialize(Object obj, JsonGenerator jgen, SerializerProvider provider) throws
+    public void serialize(ZmBoolean obj, JsonGenerator jgen, SerializerProvider provider) throws
     IOException, JsonProcessingException {
         if (obj == null) {
             return;
         }
         jgen.writeStartArray();
         jgen.writeStartObject();
-        jgen.writeStringField(JSONElement.A_CONTENT /* "_content" */, obj.toString());
+        // Write as a string rather than a boolean - the Element equivalent is something similar to:
+        //     resp.addElement(AdminConstants.E_STATUS).addText(String.valueOf(status));
+        jgen.writeStringField(JSONElement.A_CONTENT /* "_content" */, ZmBoolean.toBool(obj).toString());
         jgen.writeEndObject();
         jgen.writeEndArray();
     }

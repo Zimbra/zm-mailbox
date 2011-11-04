@@ -55,6 +55,7 @@ import com.zimbra.soap.account.type.LicenseInfo;
 import com.zimbra.soap.account.type.Pref;
 import com.zimbra.soap.account.type.Prop;
 import com.zimbra.soap.account.type.Signature;
+import com.zimbra.soap.type.ZmBoolean;
 
 import com.zimbra.soap.json.jackson.StringListSerializer;
 import com.zimbra.soap.json.jackson.WrappedAttrListSerializer;
@@ -169,7 +170,7 @@ public final class GetInfoResponse {
 
     // For JSON treat as Attribute
     @XmlElement(name=AccountConstants.E_ADMIN_DELEGATED /* adminDelegated */, required=false)
-    private Boolean adminDelegated;
+    private ZmBoolean adminDelegated;
 
     // For JSON treat as Attribute
     @XmlElement(name=AccountConstants.E_REST /* rest */, required=false)
@@ -263,7 +264,7 @@ public final class GetInfoResponse {
     public void setAccountName(String accountName) { this.accountName = accountName; }
     public void setCrumb(String crumb) { this.crumb = crumb; }
     public void setLifetime(long lifetime) { this.lifetime = lifetime; }
-    public void setAdminDelegated(Boolean adminDelegated) { this.adminDelegated = adminDelegated; }
+    public void setAdminDelegated(Boolean adminDelegated) { this.adminDelegated = ZmBoolean.fromBool(adminDelegated); }
     public void setRestUrl(String restUrl) { this.restUrl = restUrl; }
     public void setQuotaUsed(Long quotaUsed) { this.quotaUsed = quotaUsed; }
     public void setPreviousSessionTime(Long previousSessionTime) { this.previousSessionTime = previousSessionTime; }
@@ -380,7 +381,7 @@ public final class GetInfoResponse {
     public String getAccountName() { return accountName; }
     public String getCrumb() { return crumb; }
     public long getLifetime() { return lifetime; }
-    public Boolean getAdminDelegated() { return (adminDelegated != null ? adminDelegated : Boolean.FALSE); }
+    public Boolean getAdminDelegated() { return ZmBoolean.toBool(adminDelegated, Boolean.FALSE); }
     public String getRestUrl() { return restUrl; }
     public Long getQuotaUsed() { return quotaUsed; }
     public Long getPreviousSessionTime() { return previousSessionTime; }

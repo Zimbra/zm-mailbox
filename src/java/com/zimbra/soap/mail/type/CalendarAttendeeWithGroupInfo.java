@@ -21,25 +21,26 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CalendarAttendeeWithGroupInfo extends CalendarAttendee {
 
     @XmlAttribute(name=MailConstants.A_IS_GROUP /* isGroup */, required=false)
-    private Boolean group;
+    private ZmBoolean group;
 
     @XmlAttribute(name=MailConstants.A_EXP /* exp */, required=false)
-    private Boolean canExpandGroupMembers;
+    private ZmBoolean canExpandGroupMembers;
 
     public CalendarAttendeeWithGroupInfo() {
     }
 
-    public void setGroup(Boolean group) { this.group = group; }
+    public void setGroup(Boolean group) { this.group = ZmBoolean.fromBool(group); }
     public void setCanExpandGroupMembers(Boolean canExpandGroupMembers) {
-        this.canExpandGroupMembers = canExpandGroupMembers;
+        this.canExpandGroupMembers = ZmBoolean.fromBool(canExpandGroupMembers);
     }
-    public Boolean getGroup() { return group; }
-    public Boolean getCanExpandGroupMembers() { return canExpandGroupMembers; }
+    public Boolean getGroup() { return ZmBoolean.toBool(group); }
+    public Boolean getCanExpandGroupMembers() { return ZmBoolean.toBool(canExpandGroupMembers); }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {

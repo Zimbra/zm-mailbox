@@ -32,6 +32,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.Id;
 import com.zimbra.soap.type.WaitSetAddSpec;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_WAIT_SET_REQUEST)
@@ -44,7 +45,7 @@ public class WaitSetRequest {
     private final String lastKnownSeqNo;
 
     @XmlAttribute(name=MailConstants.A_BLOCK /* block */, required=false)
-    private Boolean block;
+    private ZmBoolean block;
 
     // default interest types required for "All" waitsets
     @XmlAttribute(name=MailConstants.A_DEFTYPES /* defTypes */, required=false)
@@ -81,7 +82,7 @@ public class WaitSetRequest {
         this.lastKnownSeqNo = lastKnownSeqNo;
     }
 
-    public void setBlock(Boolean block) { this.block = block; }
+    public void setBlock(Boolean block) { this.block = ZmBoolean.fromBool(block); }
     public void setDefaultInterests(String defaultInterests) {
         this.defaultInterests = defaultInterests;
     }
@@ -124,7 +125,7 @@ public class WaitSetRequest {
 
     public String getWaitSetId() { return waitSetId; }
     public String getLastKnownSeqNo() { return lastKnownSeqNo; }
-    public Boolean getBlock() { return block; }
+    public Boolean getBlock() { return ZmBoolean.toBool(block); }
     public String getDefaultInterests() { return defaultInterests; }
     public Long getTimeout() { return timeout; }
     public List<WaitSetAddSpec> getAddAccounts() {

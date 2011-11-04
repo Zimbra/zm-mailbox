@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.SyncConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {})
@@ -46,50 +47,48 @@ public class DeviceStatusInfo {
     @XmlAttribute(name=SyncConstants.A_IMEI /* imei */, required=false)
     private String IMEI;
 
-    @XmlAttribute(name=SyncConstants.A_FRIENDLYNAME
-                    /* friendly_name */, required=false)
+    @XmlAttribute(name=SyncConstants.A_FRIENDLYNAME /* friendly_name */, required=false)
     private String friendlyName;
 
     @XmlAttribute(name=SyncConstants.A_OS /* os */, required=false)
     private String os;
 
-    @XmlAttribute(name=SyncConstants.A_OSLANGUAGE
-                    /* os_language */, required=false)
+    @XmlAttribute(name=SyncConstants.A_OSLANGUAGE /* os_language */, required=false)
     private String osLanguage;
 
-    @XmlAttribute(name=SyncConstants.A_PHONENUMBER
-                    /* phone_number */, required=false)
+    @XmlAttribute(name=SyncConstants.A_PHONENUMBER /* phone_number */, required=false)
     private String phoneNumber;
 
-    @XmlElement(name=SyncConstants.E_PROVISIONABLE
-                    /* provisionable */, required=true)
-    private Boolean provisionable;
+    // For JSON treat as Attribute
+    @XmlElement(name=SyncConstants.E_PROVISIONABLE /* provisionable */, required=true)
+    private ZmBoolean provisionable;
 
+    // For JSON treat as Attribute
     @XmlElement(name=SyncConstants.E_STATUS /* status */, required=true)
     private Byte status;
 
-    @XmlElement(name=SyncConstants.E_FIRST_REQ_RECEIVED
-                    /* firstReqReceived */, required=true)
+    // For JSON treat as Attribute
+    @XmlElement(name=SyncConstants.E_FIRST_REQ_RECEIVED /* firstReqReceived */, required=true)
     private Integer firstReqReceived;
 
-    @XmlElement(name=SyncConstants.E_LAST_POLICY_UPDATE
-                    /* lastPolicyUpdate */, required=false)
+    // For JSON treat as Attribute
+    @XmlElement(name=SyncConstants.E_LAST_POLICY_UPDATE /* lastPolicyUpdate */, required=false)
     private Integer lastPolicyUpdate;
 
-    @XmlElement(name=SyncConstants.E_REMOTE_WIPE_REQ_TIME
-                    /* remoteWipeReqTime */, required=false)
+    // For JSON treat as Attribute
+    @XmlElement(name=SyncConstants.E_REMOTE_WIPE_REQ_TIME /* remoteWipeReqTime */, required=false)
     private Integer remoteWipeReqTime;
 
-    @XmlElement(name=SyncConstants.E_REMOTE_WIPE_ACK_TIME
-                    /* remoteWipeAckTime */, required=false)
+    // For JSON treat as Attribute
+    @XmlElement(name=SyncConstants.E_REMOTE_WIPE_ACK_TIME /* remoteWipeAckTime */, required=false)
     private Integer remoteWipeAckTime;
 
-    @XmlElement(name=SyncConstants.E_RECOVERY_PASSWORD
-                    /* recoveryPassword */, required=false)
+    // For JSON treat as Attribute
+    @XmlElement(name=SyncConstants.E_RECOVERY_PASSWORD /* recoveryPassword */, required=false)
     private String recoveryPassword;
 
-    @XmlElement(name=SyncConstants.E_LAST_USED_DATE
-                    /* lastUsedDate */, required=false)
+    // For JSON treat as Attribute
+    @XmlElement(name=SyncConstants.E_LAST_USED_DATE /* lastUsedDate */, required=false)
     private String lastUsedDate;
 
     /**
@@ -120,7 +119,7 @@ public class DeviceStatusInfo {
         this.phoneNumber = phoneNumber;
     }
     public void setProvisionable(Boolean provisionable) {
-        this.provisionable = provisionable;
+        this.provisionable = ZmBoolean.fromBool(provisionable);
     }
     public void setStatus(Byte status) { this.status = status; }
     public void setFirstReqReceived(Integer firstReqReceived) {
@@ -152,7 +151,7 @@ public class DeviceStatusInfo {
     public String getOs() { return os; }
     public String getOsLanguage() { return osLanguage; }
     public String getPhoneNumber() { return phoneNumber; }
-    public Boolean getProvisionable() { return provisionable; }
+    public Boolean getProvisionable() { return ZmBoolean.toBool(provisionable); }
     public Byte getStatus() { return status; }
     public Integer getFirstReqReceived() { return firstReqReceived; }
     public Integer getLastPolicyUpdate() { return lastPolicyUpdate; }

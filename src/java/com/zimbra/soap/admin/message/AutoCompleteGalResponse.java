@@ -34,6 +34,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.admin.type.ContactInfo;
 import com.zimbra.soap.base.ContactInterface;
 import com.zimbra.soap.base.AutoCompleteGalInterface;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_AUTO_COMPLETE_GAL_RESPONSE)
@@ -46,7 +47,7 @@ public class AutoCompleteGalResponse implements AutoCompleteGalInterface {
     private Integer offset;
 
     @XmlAttribute(name=MailConstants.A_QUERY_MORE /* more */, required=false)
-    private Boolean more;
+    private ZmBoolean more;
 
     // Probably not actually used for AutoCompleteGal
     @XmlAttribute(name=MailConstants.A_TOKEN /* token */, required=false)
@@ -54,10 +55,10 @@ public class AutoCompleteGalResponse implements AutoCompleteGalInterface {
 
     // TODO:Is this actually set anywhere in the server?
     @XmlAttribute(name=AccountConstants.A_TOKENIZE_KEY /* tokenizeKey */, required=false)
-    private Boolean tokenizeKey;
+    private ZmBoolean tokenizeKey;
 
     @XmlAttribute(name=AccountConstants.A_PAGINATION_SUPPORTED /* paginationSupported */, required=false)
-    private Boolean pagingSupported;
+    private ZmBoolean pagingSupported;
 
     @XmlElement(name=MailConstants.E_CONTACT /* cn */, required=false)
     private List<ContactInfo> contacts = Lists.newArrayList();
@@ -74,7 +75,7 @@ public class AutoCompleteGalResponse implements AutoCompleteGalInterface {
         this.setSortBy(sortBy);
         this.setOffset(offset);
         this.setMore(more);
-        this.tokenizeKey = tokenizeKey;
+        this.setTokenizeKey(tokenizeKey);
     }
 
     public static AutoCompleteGalResponse createForSortByOffsetMoreAndTokenizeKey(String sortBy, Integer offset,
@@ -88,13 +89,15 @@ public class AutoCompleteGalResponse implements AutoCompleteGalInterface {
     @Override
     public void setOffset(Integer offset) { this.offset = offset; }
     @Override
-    public void setMore(Boolean more) { this.more = more; }
+    public void setMore(Boolean more) { this.more = ZmBoolean.fromBool(more); }
     @Override
     public void setToken(String token) { this.token = token; }
     @Override
-    public void setTokenizeKey(Boolean tokenizeKey) { this.tokenizeKey = tokenizeKey; }
+    public void setTokenizeKey(Boolean tokenizeKey) { this.tokenizeKey = ZmBoolean.fromBool(tokenizeKey); }
     @Override
-    public void setPagingSupported(Boolean pagingSupported) { this.pagingSupported = pagingSupported; }
+    public void setPagingSupported(Boolean pagingSupported) {
+        this.pagingSupported = ZmBoolean.fromBool(pagingSupported);
+    }
 
     public void setContacts(Iterable <ContactInfo> contacts) {
         this.contacts.clear();
@@ -112,13 +115,13 @@ public class AutoCompleteGalResponse implements AutoCompleteGalInterface {
     @Override
     public Integer getOffset() { return offset; }
     @Override
-    public Boolean getMore() { return more; }
+    public Boolean getMore() { return ZmBoolean.toBool(more); }
     @Override
     public String getToken() { return token; }
     @Override
-    public Boolean getTokenizeKey() { return tokenizeKey; }
+    public Boolean getTokenizeKey() { return ZmBoolean.toBool(tokenizeKey); }
     @Override
-    public Boolean getPagingSupported() { return pagingSupported; }
+    public Boolean getPagingSupported() { return ZmBoolean.toBool(pagingSupported); }
     public List<ContactInfo> getContacts() {
         return contacts;
     }

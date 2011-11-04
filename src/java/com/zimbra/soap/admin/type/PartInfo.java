@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.PartInfoInterface;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = { "content", "mimeParts"})
@@ -58,10 +59,10 @@ implements PartInfoInterface {
     private String location;
 
     @XmlAttribute(name=MailConstants.A_BODY, required=false)
-    private Boolean body;
+    private ZmBoolean body;
 
     @XmlAttribute(name=MailConstants.A_TRUNCATED_CONTENT, required=false)
-    private Boolean truncatedContent;
+    private ZmBoolean truncatedContent;
 
     @XmlElement(name=MailConstants.E_CONTENT, required=false)
     private String content;
@@ -103,10 +104,10 @@ implements PartInfoInterface {
     @Override
     public void setLocation(String location) { this.location = location; }
     @Override
-    public void setBody(Boolean body) { this.body = body; }
+    public void setBody(Boolean body) { this.body = ZmBoolean.fromBool(body); }
     @Override
     public void setTruncatedContent(Boolean truncatedContent) {
-        this.truncatedContent = truncatedContent;
+        this.truncatedContent = ZmBoolean.fromBool(truncatedContent);
     }
     @Override
     public void setContent(String content) { this.content = content; }
@@ -137,9 +138,9 @@ implements PartInfoInterface {
     @Override
     public String getLocation() { return location; }
     @Override
-    public Boolean getBody() { return body; }
+    public Boolean getBody() { return ZmBoolean.toBool(body); }
     @Override
-    public Boolean getTruncatedContent() { return truncatedContent; }
+    public Boolean getTruncatedContent() { return ZmBoolean.toBool(truncatedContent); }
     @Override
     public String getContent() { return content; }
     public List<PartInfo> getMimeParts() {
@@ -149,7 +150,7 @@ implements PartInfoInterface {
     @Override
     public void setMimePartInterfaces(Iterable<PartInfoInterface> mimeParts) {
         setMimeParts(PartInfo.fromInterfaces(mimeParts));
-        
+
     }
 
     @Override

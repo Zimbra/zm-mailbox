@@ -20,6 +20,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class DirPathInfo {
@@ -27,13 +28,13 @@ public class DirPathInfo {
     @XmlAttribute(name=AdminConstants.A_PATH, required=true)
     private final String path;
     @XmlAttribute(name=AdminConstants.A_EXISTS, required=true)
-    private final boolean exists;
+    private final ZmBoolean exists;
     @XmlAttribute(name=AdminConstants.A_IS_DIRECTORY, required=true)
-    private final boolean directory;
+    private final ZmBoolean directory;
     @XmlAttribute(name=AdminConstants.A_READABLE, required=true)
-    private final boolean readable;
+    private final ZmBoolean readable;
     @XmlAttribute(name=AdminConstants.A_WRITABLE, required=true)
-    private final boolean writable;
+    private final ZmBoolean writable;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -46,15 +47,15 @@ public class DirPathInfo {
     public DirPathInfo(String path, boolean exists, boolean directory,
             boolean readable, boolean writable) {
         this.path = path;
-        this.exists = exists;
-        this.directory = directory;
-        this.readable = readable;
-        this.writable = writable;
+        this.exists = ZmBoolean.fromBool(exists);
+        this.directory = ZmBoolean.fromBool(directory);
+        this.readable = ZmBoolean.fromBool(readable);
+        this.writable = ZmBoolean.fromBool(writable);
     }
 
     public String getPath() { return path; }
-    public boolean isExists() { return exists; }
-    public boolean isDirectory() { return directory; }
-    public boolean isReadable() { return readable; }
-    public boolean isWritable() { return writable; }
+    public boolean isExists() { return ZmBoolean.toBool(exists); }
+    public boolean isDirectory() { return ZmBoolean.toBool(directory); }
+    public boolean isReadable() { return ZmBoolean.toBool(readable); }
+    public boolean isWritable() { return ZmBoolean.toBool(writable); }
 }

@@ -28,6 +28,7 @@ import org.codehaus.jackson.map.ser.BeanPropertyWriter;
 import org.codehaus.jackson.map.ser.impl.PropertySerializerMap;
 
 import com.zimbra.soap.base.KeyAndValue;
+import com.zimbra.soap.type.ZmBoolean;
 
 /**
  * Used by {@link ZimbraBeanSerializerModifier} to handle some Zimbra JSON specific ways of processing JAXB object
@@ -157,12 +158,24 @@ public class ZimbraBeanPropertyWriter
             } else if (wrappedName != null) {
                 jgen.writeFieldName(wrappedName.getLocalPart());
                 // @XmlElement or @XmlElementRef
-                // Zimbra wraps values inside an array
+                // Zimbra wraps values inside an array even if they are not in an array
                 if (!(value instanceof ArrayList)) {
                     if (value.getClass().getPackage().getName().startsWith("com.zimbra.soap")) {
-                        jgen.writeStartArray();
-                        jgen.writeObject(value);
-                        jgen.writeEndArray();
+                        if (value instanceof ZmBoolean) {
+                            // If an @XmlElement applies to an element then normally ZmBooleanContentSerializer
+                            // will have been applied.  If that hasn't happened then this should be treated as an
+                            // attribute in JSON - hence don't wrap inside an array.
+                            ZmBoolean zmbVal = (ZmBoolean) value;
+                            if ((zmbVal.equals(ZmBoolean.TRUE)) || (zmbVal.equals(ZmBoolean.ONE))) {
+                                jgen.writeObject(ZmBoolean.TRUE);
+                            } else {
+                                jgen.writeObject(ZmBoolean.FALSE);
+                            }
+                        } else {
+                            jgen.writeStartArray();
+                            jgen.writeObject(value);
+                            jgen.writeEndArray();
+                        }
                         finishWrapping(wrapperName, jgen);
                         return;
                     }

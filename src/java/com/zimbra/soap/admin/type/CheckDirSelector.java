@@ -20,6 +20,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class CheckDirSelector {
@@ -27,7 +28,7 @@ public class CheckDirSelector {
     @XmlAttribute(name=AdminConstants.A_PATH, required=true)
     private final String path;
     @XmlAttribute(name=AdminConstants.A_CREATE, required=false)
-    private final Boolean create;
+    private final ZmBoolean create;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -43,9 +44,9 @@ public class CheckDirSelector {
 
     public CheckDirSelector(String path, Boolean create) {
         this.path = path;
-        this.create = create;
+        this.create = ZmBoolean.fromBool(create);
     }
 
     public String getPath() { return path; }
-    public Boolean isCreate() { return create; }
+    public Boolean isCreate() { return ZmBoolean.toBool(create); }
 }

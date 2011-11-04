@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class PurgeRevisionSpec {
@@ -31,9 +32,8 @@ public class PurgeRevisionSpec {
     @XmlAttribute(name=MailConstants.A_VERSION /* ver */, required=true)
     private final int version;
 
-    @XmlAttribute(name=MailConstants.A_INCLUDE_OLDER_REVISIONS
-            /* includeOlderRevisions */, required=false)
-    private Boolean includeOlderRevisions;
+    @XmlAttribute(name=MailConstants.A_INCLUDE_OLDER_REVISIONS /* includeOlderRevisions */, required=false)
+    private ZmBoolean includeOlderRevisions;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -49,11 +49,11 @@ public class PurgeRevisionSpec {
     }
 
     public void setIncludeOlderRevisions(Boolean includeOlderRevisions) {
-        this.includeOlderRevisions = includeOlderRevisions;
+        this.includeOlderRevisions = ZmBoolean.fromBool(includeOlderRevisions);
     }
     public String getId() { return id; }
     public int getVersion() { return version; }
-    public Boolean getIncludeOlderRevisions() { return includeOlderRevisions; }
+    public Boolean getIncludeOlderRevisions() { return ZmBoolean.toBool(includeOlderRevisions); }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {

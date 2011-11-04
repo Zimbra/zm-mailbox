@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.BackupConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {"currentAccounts", "accounts", "errors", "stats"})
@@ -42,7 +43,7 @@ public class BackupQueryInfo {
     private String type;
 
     @XmlAttribute(name=BackupConstants.A_ABORTED /* aborted */, required=false)
-    private Boolean aborted;
+    private ZmBoolean aborted;
 
     @XmlAttribute(name=BackupConstants.A_START /* start */, required=false)
     private Long start;
@@ -59,7 +60,7 @@ public class BackupQueryInfo {
     private Long maxRedoSeq;
 
     @XmlAttribute(name=BackupConstants.A_LIVE /* live */, required=false)
-    private Boolean live;
+    private ZmBoolean live;
 
     @XmlElement(name=BackupConstants.E_CURRENT_ACCOUNTS /* currentAccounts */,
                         required=false)
@@ -80,12 +81,12 @@ public class BackupQueryInfo {
 
     public void setLabel(String label) { this.label = label; }
     public void setType(String type) { this.type = type; }
-    public void setAborted(Boolean aborted) { this.aborted = aborted; }
+    public void setAborted(Boolean aborted) { this.aborted = ZmBoolean.fromBool(aborted); }
     public void setStart(Long start) { this.start = start; }
     public void setEnd(Long end) { this.end = end; }
     public void setMinRedoSeq(Long minRedoSeq) { this.minRedoSeq = minRedoSeq; }
     public void setMaxRedoSeq(Long maxRedoSeq) { this.maxRedoSeq = maxRedoSeq; }
-    public void setLive(Boolean live) { this.live = live; }
+    public void setLive(Boolean live) { this.live = ZmBoolean.fromBool(live); }
     public void setCurrentAccounts(CurrentAccounts currentAccounts) {
         this.currentAccounts = currentAccounts;
     }
@@ -116,12 +117,12 @@ public class BackupQueryInfo {
 
     public String getLabel() { return label; }
     public String getType() { return type; }
-    public Boolean getAborted() { return aborted; }
+    public Boolean getAborted() { return ZmBoolean.toBool(aborted); }
     public Long getStart() { return start; }
     public Long getEnd() { return end; }
     public Long getMinRedoSeq() { return minRedoSeq; }
     public Long getMaxRedoSeq() { return maxRedoSeq; }
-    public Boolean getLive() { return live; }
+    public Boolean getLive() { return ZmBoolean.toBool(live); }
     public CurrentAccounts getCurrentAccounts() { return currentAccounts; }
     public BackupQueryAccounts getAccounts() { return accounts; }
     public List<BackupQueryError> getErrors() {

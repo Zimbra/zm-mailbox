@@ -43,6 +43,7 @@ import com.zimbra.soap.mail.type.NoteInfo;
 import com.zimbra.soap.mail.type.SyncDeletedInfo;
 import com.zimbra.soap.mail.type.TagInfo;
 import com.zimbra.soap.mail.type.TaskItemInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_SYNC_RESPONSE)
@@ -59,7 +60,7 @@ public class SyncResponse {
     private Long size;
 
     @XmlAttribute(name=MailConstants.A_QUERY_MORE /* more */, required=false)
-    private Boolean more;
+    private ZmBoolean more;
 
     @XmlElement(name=MailConstants.E_DELETED /* deleted */, required=false)
     private SyncDeletedInfo deleted;
@@ -92,7 +93,7 @@ public class SyncResponse {
 
     public void setToken(String token) { this.token = token; }
     public void setSize(Long size) { this.size = size; }
-    public void setMore(Boolean more) { this.more = more; }
+    public void setMore(Boolean more) { this.more = ZmBoolean.fromBool(more); }
     public void setDeleted(SyncDeletedInfo deleted) { this.deleted = deleted; }
     public void setItems(Iterable <Object> items) {
         this.items.clear();
@@ -109,7 +110,7 @@ public class SyncResponse {
     public long getChangeDate() { return changeDate; }
     public String getToken() { return token; }
     public Long getSize() { return size; }
-    public Boolean getMore() { return more; }
+    public Boolean getMore() { return ZmBoolean.toBool(more); }
     public SyncDeletedInfo getDeleted() { return deleted; }
     public List<Object> getItems() {
         return Collections.unmodifiableList(items);

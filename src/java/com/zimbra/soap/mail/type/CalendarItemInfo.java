@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"invites", "calendarReplies", "metadatas"})
@@ -73,7 +74,7 @@ public class CalendarItemInfo {
     private Long nextAlarm;
 
     @XmlAttribute(name=MailConstants.A_CAL_ORPHAN /* orphan */, required=false)
-    private Boolean orphan;
+    private ZmBoolean orphan;
 
     @XmlElement(name=MailConstants.E_INVITE /* inv */, required=false)
     private List<Invitation> invites = Lists.newArrayList();
@@ -103,7 +104,7 @@ public class CalendarItemInfo {
         this.modifiedSequence = modifiedSequence;
     }
     public void setNextAlarm(Long nextAlarm) { this.nextAlarm = nextAlarm; }
-    public void setOrphan(Boolean orphan) { this.orphan = orphan; }
+    public void setOrphan(Boolean orphan) { this.orphan = ZmBoolean.fromBool(orphan); }
     public void setInvites(Iterable <Invitation> invites) {
         this.invites.clear();
         if (invites != null) {
@@ -150,7 +151,7 @@ public class CalendarItemInfo {
     public Long getChangeDate() { return changeDate; }
     public Integer getModifiedSequence() { return modifiedSequence; }
     public Long getNextAlarm() { return nextAlarm; }
-    public Boolean getOrphan() { return orphan; }
+    public Boolean getOrphan() { return ZmBoolean.toBool(orphan); }
     public List<Invitation> getInvites() {
         return Collections.unmodifiableList(invites);
     }

@@ -47,6 +47,7 @@ import com.zimbra.soap.type.BaseQueryInfo;
 import com.zimbra.soap.type.SearchHit;
 import com.zimbra.soap.type.SimpleSearchHit;
 import com.zimbra.soap.type.WildcardExpansionQueryInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_SEARCH_RESPONSE)
@@ -60,7 +61,7 @@ public class SearchResponse {
     private Integer queryOffset;
 
     @XmlAttribute(name=MailConstants.A_QUERY_MORE /* more */, required=false)
-    private Boolean queryMore;
+    private ZmBoolean queryMore;
 
     @XmlAttribute(name=MailConstants.A_TOTAL_SIZE /* total */, required=false)
     private Long totalSize;
@@ -94,7 +95,7 @@ public class SearchResponse {
     public void setQueryOffset(Integer queryOffset) {
         this.queryOffset = queryOffset;
     }
-    public void setQueryMore(Boolean queryMore) { this.queryMore = queryMore; }
+    public void setQueryMore(Boolean queryMore) { this.queryMore = ZmBoolean.fromBool(queryMore); }
     public void setTotalSize(Long totalSize) { this.totalSize = totalSize; }
     public void setSearchHits(Iterable <SearchHit> searchHits) {
         this.searchHits.clear();
@@ -122,7 +123,7 @@ public class SearchResponse {
 
     public String getSortBy() { return sortBy; }
     public Integer getQueryOffset() { return queryOffset; }
-    public Boolean getQueryMore() { return queryMore; }
+    public Boolean getQueryMore() { return ZmBoolean.toBool(queryMore); }
     public Long getTotalSize() { return totalSize; }
     public List<SearchHit> getSearchHits() {
         return Collections.unmodifiableList(searchHits);

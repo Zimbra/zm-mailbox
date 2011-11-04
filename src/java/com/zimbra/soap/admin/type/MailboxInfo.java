@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {})
@@ -50,7 +51,7 @@ public class MailboxInfo {
     @XmlAttribute(name=AdminConstants.A_MT_TRACKINGSYNC, required=true)
     private final int trackingSync;
     @XmlAttribute(name=AdminConstants.A_MT_TRACKINGIMAP, required=true)
-    private final boolean trackingImap;
+    private final ZmBoolean trackingImap;
     @XmlAttribute(name=AdminConstants.A_MT_LASTBACKUPAT, required=false)
     private final Integer lastBackupAt;
     @XmlAttribute(name=AdminConstants.A_MT_LASTSOAPACCESS, required=true)
@@ -80,7 +81,7 @@ public class MailboxInfo {
         this.sizeCheckPoint = sizeCheckPoint;
         this.changeCheckPoint = changeCheckPoint;
         this.trackingSync = trackingSync;
-        this.trackingImap = trackingImap;
+        this.trackingImap = ZmBoolean.fromBool(trackingImap);
         this.lastBackupAt = lastBackupAt;
         this.lastSoapAccess = lastSoapAccess;
         this.newMessages = newMessages;
@@ -95,7 +96,7 @@ public class MailboxInfo {
     public long getSizeCheckPoint() { return sizeCheckPoint; }
     public int getChangeCheckPoint() { return changeCheckPoint; }
     public int getTrackingSync() { return trackingSync; }
-    public boolean isTrackingImap() { return trackingImap; }
+    public boolean isTrackingImap() { return ZmBoolean.toBool(trackingImap); }
     public Integer getLastBackupAt() { return lastBackupAt; } 
     public int getLastSoapAccess() { return lastSoapAccess; }
     public int getNewMessages() { return newMessages; }

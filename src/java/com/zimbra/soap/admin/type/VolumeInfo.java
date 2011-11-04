@@ -20,6 +20,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public final class VolumeInfo {
@@ -37,7 +38,7 @@ public final class VolumeInfo {
     private short type = -1;
 
     @XmlAttribute(name=AdminConstants.A_VOLUME_COMPRESS_BLOBS, required=false)
-    private Boolean compressBlobs;
+    private ZmBoolean compressBlobs;
 
     @XmlAttribute(name=AdminConstants.A_VOLUME_COMPRESSION_THRESHOLD, required=false)
     private long compressionThreshold = -1;
@@ -55,7 +56,7 @@ public final class VolumeInfo {
     private short fbits;
 
     @XmlAttribute(name=AdminConstants.A_VOLUME_IS_CURRENT, required=false)
-    private boolean current;
+    private ZmBoolean current;
 
     public void setId(short value) {
         id = value;
@@ -90,15 +91,15 @@ public final class VolumeInfo {
     }
 
     public void setCompressBlobs(Boolean value) {
-        compressBlobs = value;
+        compressBlobs = ZmBoolean.fromBool(value);
     }
 
     public boolean isCompressBlobs() {
-        return compressBlobs != null ? compressBlobs : false;
+        return ZmBoolean.toBool(compressBlobs, false);
     }
 
     public Boolean getCompressBlobs() {
-        return compressBlobs;
+        return ZmBoolean.toBool(compressBlobs);
     }
 
     public void setCompressionThreshold(long value) {
@@ -142,10 +143,10 @@ public final class VolumeInfo {
     }
 
     public void setCurrent(boolean value) {
-        current = value;
+        current = ZmBoolean.fromBool(value);
     }
 
-    public boolean isCurrent() {
-        return current;
+    public Boolean isCurrent() {
+        return ZmBoolean.toBool(current);
     }
 }

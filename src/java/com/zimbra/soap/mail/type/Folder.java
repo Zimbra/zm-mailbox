@@ -35,6 +35,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
+
 /*
 <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] [color="{color}"]
                u="{unread}" [i4u="{imap-unread}"] n="{msg-count}" [i4n="{imap-count}"] s="{total-size}" [view="{default-type}"]
@@ -150,7 +152,7 @@ public class Folder {
     private String perm;
 
     @XmlAttribute(name=MailConstants.A_RECURSIVE /* recursive */, required=false)
-    private Boolean recursive;
+    private ZmBoolean recursive;
 
     @XmlAttribute(name=MailConstants.A_REST_URL /* rest */, required=false)
     private String restUrl;
@@ -216,7 +218,7 @@ public class Folder {
     public Integer getImapUidNext() { return imapUidNext; }
     public Integer getImapModifiedSequence() { return imapModifiedSequence; }
     public RetentionPolicy getRetentionPolicy() { return retentionPolicy; }
-    public Boolean getRecursive() { return recursive; }
+    public Boolean getRecursive() { return ZmBoolean.toBool(recursive); }
     
     public void setId(String id) { this.id = id; }
     public void setId(int id) { this.id = Integer.toString(id); }
@@ -279,5 +281,5 @@ public class Folder {
         this.imapModifiedSequence = imapModifiedSequence;
     }
 
-    public void setRecursive(Boolean recursive) { this.recursive = recursive; }
+    public void setRecursive(Boolean recursive) { this.recursive = ZmBoolean.fromBool(recursive); }
 }

@@ -32,13 +32,14 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.json.jackson.ContentListSerializer;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_DISTRIBUTION_LIST_MEMBERS_RESPONSE)
 public class GetDistributionListMembersResponse {
 
     @XmlAttribute(name=AccountConstants.A_MORE, required=false)
-    private Boolean more;
+    private ZmBoolean more;
 
     @XmlAttribute(name=AccountConstants.A_TOTAL, required=false)
     private Integer total;
@@ -50,7 +51,7 @@ public class GetDistributionListMembersResponse {
     public GetDistributionListMembersResponse() {
     }
 
-    public void setMore(Boolean more) { this.more = more; }
+    public void setMore(Boolean more) { this.more = ZmBoolean.fromBool(more); }
     public void setTotal(Integer total) { this.total = total; }
     public void setDlMembers(Iterable <String> dlMembers) {
         this.dlMembers.clear();
@@ -64,7 +65,7 @@ public class GetDistributionListMembersResponse {
         return this;
     }
 
-    public Boolean getMore() { return more; }
+    public Boolean getMore() { return ZmBoolean.toBool(more); }
     public Integer getTotal() { return total; }
     public List<String> getDlMembers() {
         return Collections.unmodifiableList(dlMembers);

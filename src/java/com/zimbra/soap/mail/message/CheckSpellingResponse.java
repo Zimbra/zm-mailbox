@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -30,21 +30,30 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.Misspelling;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_CHECK_SPELLING_RESPONSE)
 public class CheckSpellingResponse {
 
     @XmlAttribute(name=MailConstants.A_AVAILABLE, required=true)
-    private boolean available;
+    private ZmBoolean available;
 
     @XmlElement(name=MailConstants.E_MISSPELLED, required=false)
     private List<Misspelling> misspelledWords = Lists.newArrayList();
 
-    public CheckSpellingResponse() {
+    private CheckSpellingResponse() {
     }
 
-    public void setAvailable(boolean available) { this.available = available; }
+    private CheckSpellingResponse(boolean available) {
+        setAvailable(available);
+    }
+
+    public static CheckSpellingResponse createForAvailable(boolean available) {
+        return new CheckSpellingResponse(available);
+    }
+
+    public void setAvailable(boolean available) { this.available = ZmBoolean.fromBool(available); }
     public void setMisspelledWords(Iterable<Misspelling> misspelledWords) {
         this.misspelledWords.clear();
         if (misspelledWords != null) {
@@ -57,8 +66,8 @@ public class CheckSpellingResponse {
         return this;
     }
 
-    public boolean isAvailable() { return available; }
-    
+    public boolean isAvailable() { return ZmBoolean.toBool(available); }
+
     public List<Misspelling> getMisspelledWords() {
         return Collections.unmodifiableList(misspelledWords);
     }

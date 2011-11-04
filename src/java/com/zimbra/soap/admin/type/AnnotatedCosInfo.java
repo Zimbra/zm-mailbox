@@ -22,12 +22,13 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class AnnotatedCosInfo extends CosInfo {
 
     @XmlAttribute(name=AdminConstants.A_IS_DEFAULT_COS, required=false)
-    private final Boolean isDefaultCos;
+    private final ZmBoolean isDefaultCos;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -49,8 +50,8 @@ public class AnnotatedCosInfo extends CosInfo {
     public AnnotatedCosInfo(String id, String name, Boolean isDefaultCos,
             Collection <Attr> attrs) {
         super(id, name, attrs);
-        this.isDefaultCos = isDefaultCos;
+        this.isDefaultCos = ZmBoolean.fromBool(isDefaultCos);
     }
 
-    public Boolean getIsDefaultCos() { return isDefaultCos; }
+    public Boolean getIsDefaultCos() { return ZmBoolean.toBool(isDefaultCos); }
 }

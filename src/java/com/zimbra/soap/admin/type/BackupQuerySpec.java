@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.BackupConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class BackupQuerySpec {
@@ -42,26 +43,21 @@ public class BackupQuerySpec {
     private Long to;
 
     @XmlAttribute(name=BackupConstants.A_STATS /* stats */, required=false)
-    private Boolean showStats;
+    private ZmBoolean showStats;
 
-    @XmlAttribute(name=BackupConstants.A_BACKUP_LIST_OFFSET
-                    /* backupListOffset */, required=false)
+    @XmlAttribute(name=BackupConstants.A_BACKUP_LIST_OFFSET /* backupListOffset */, required=false)
     private Integer backupListOffset;
 
-    @XmlAttribute(name=BackupConstants.A_BACKUP_LIST_COUNT
-                    /* backupListCount */, required=false)
+    @XmlAttribute(name=BackupConstants.A_BACKUP_LIST_COUNT /* backupListCount */, required=false)
     private Integer backupListCount;
 
-    @XmlAttribute(name=BackupConstants.A_ACCOUNT_LIST_STATUS
-                    /* accountListStatus */, required=false)
+    @XmlAttribute(name=BackupConstants.A_ACCOUNT_LIST_STATUS /* accountListStatus */, required=false)
     private String accountListStatus;
 
-    @XmlAttribute(name=BackupConstants.A_ACCOUNT_LIST_OFFSET
-                    /* accountListOffset */, required=false)
+    @XmlAttribute(name=BackupConstants.A_ACCOUNT_LIST_OFFSET /* accountListOffset */, required=false)
     private Integer accountListOffset;
 
-    @XmlAttribute(name=BackupConstants.A_ACCOUNT_LIST_COUNT
-                    /* accountListCount */, required=false)
+    @XmlAttribute(name=BackupConstants.A_ACCOUNT_LIST_COUNT /* accountListCount */, required=false)
     private Integer accountListCount;
 
     public BackupQuerySpec() {
@@ -72,7 +68,7 @@ public class BackupQuerySpec {
     public void setType(String type) { this.type = type; }
     public void setFrom(Long from) { this.from = from; }
     public void setTo(Long to) { this.to = to; }
-    public void setShowStats(Boolean showStats) { this.showStats = showStats; }
+    public void setShowStats(Boolean showStats) { this.showStats = ZmBoolean.fromBool(showStats); }
     public void setBackupListOffset(Integer backupListOffset) {
         this.backupListOffset = backupListOffset;
     }
@@ -93,7 +89,7 @@ public class BackupQuerySpec {
     public String getType() { return type; }
     public Long getFrom() { return from; }
     public Long getTo() { return to; }
-    public Boolean getShowStats() { return showStats; }
+    public Boolean getShowStats() { return ZmBoolean.toBool(showStats); }
     public Integer getBackupListOffset() { return backupListOffset; }
     public Integer getBackupListCount() { return backupListCount; }
     public String getAccountListStatus() { return accountListStatus; }

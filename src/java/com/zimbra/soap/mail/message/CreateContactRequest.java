@@ -24,13 +24,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.ContactSpec;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_CREATE_CONTACT_REQUEST)
 public class CreateContactRequest {
 
     @XmlAttribute(name=MailConstants.A_VERBOSE, required=false)
-    private Boolean verbose;
+    private ZmBoolean verbose;
 
     @XmlElement(name=MailConstants.E_CONTACT, required=true)
     private final ContactSpec contact;
@@ -47,8 +48,8 @@ public class CreateContactRequest {
         this.contact = contact;
     }
 
-    public void setVerbose(Boolean verbose) { this.verbose = verbose; }
-    public Boolean getVerbose() { return verbose; }
+    public void setVerbose(Boolean verbose) { this.verbose = ZmBoolean.fromBool(verbose); }
+    public Boolean getVerbose() { return ZmBoolean.toBool(verbose); }
     public ContactSpec getContact() { return contact; }
 
     @Override

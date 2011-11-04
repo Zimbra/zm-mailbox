@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class AutoCompleteMatch {
@@ -35,10 +36,10 @@ public class AutoCompleteMatch {
     private Integer ranking;
 
     @XmlAttribute(name=MailConstants.A_IS_GROUP /* isGroup */, required=false)
-    private Boolean group;
+    private ZmBoolean group;
 
     @XmlAttribute(name=MailConstants.A_EXP /* exp */, required=false)
-    private Boolean canExpandGroupMembers;
+    private ZmBoolean canExpandGroupMembers;
 
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
@@ -46,8 +47,7 @@ public class AutoCompleteMatch {
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private Integer folder;
 
-    @XmlAttribute(name=MailConstants.A_DISPLAYNAME /* display */,
-                    required=false)
+    @XmlAttribute(name=MailConstants.A_DISPLAYNAME /* display */, required=false)
     private String displayName;
 
     public AutoCompleteMatch() {
@@ -56,9 +56,9 @@ public class AutoCompleteMatch {
     public void setEmail(String email) { this.email = email; }
     public void setMatchType(String matchType) { this.matchType = matchType; }
     public void setRanking(Integer ranking) { this.ranking = ranking; }
-    public void setGroup(Boolean group) { this.group = group; }
+    public void setGroup(Boolean group) { this.group = ZmBoolean.fromBool(group); }
     public void setCanExpandGroupMembers(Boolean canExpandGroupMembers) {
-        this.canExpandGroupMembers = canExpandGroupMembers;
+        this.canExpandGroupMembers = ZmBoolean.fromBool(canExpandGroupMembers);
     }
     public void setId(String id) { this.id = id; }
     public void setFolder(Integer folder) { this.folder = folder; }
@@ -68,8 +68,8 @@ public class AutoCompleteMatch {
     public String getEmail() { return email; }
     public String getMatchType() { return matchType; }
     public Integer getRanking() { return ranking; }
-    public Boolean getGroup() { return group; }
-    public Boolean getCanExpandGroupMembers() { return canExpandGroupMembers; }
+    public Boolean getGroup() { return ZmBoolean.toBool(group); }
+    public Boolean getCanExpandGroupMembers() { return ZmBoolean.toBool(canExpandGroupMembers); }
     public String getId() { return id; }
     public Integer getFolder() { return folder; }
     public String getDisplayName() { return displayName; }

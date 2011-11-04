@@ -37,7 +37,7 @@ import com.zimbra.soap.admin.type.CalendarResourceInfo;
 import com.zimbra.soap.admin.type.CosInfo;
 import com.zimbra.soap.admin.type.DomainInfo;
 import com.zimbra.soap.admin.type.DistributionListInfo;
-
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_SEARCH_ACCOUNTS_RESPONSE)
@@ -46,7 +46,7 @@ public class SearchAccountsResponse {
     //       Worth extending a base class?
 
     @XmlAttribute(name=AdminConstants.A_MORE, required=true)
-    private final boolean more;
+    private final ZmBoolean more;
 
     @XmlAttribute(name=AdminConstants.A_SEARCH_TOTAL, required=true)
     private final int searchTotal;
@@ -71,7 +71,7 @@ public class SearchAccountsResponse {
     }
 
     public SearchAccountsResponse(boolean more, int searchTotal) {
-        this.more = more;
+        this.more = ZmBoolean.fromBool(more);
         this.searchTotal = searchTotal;
     }
 
@@ -93,7 +93,7 @@ public class SearchAccountsResponse {
         return Collections.unmodifiableList(entries);
     }
 
-    public boolean getMore() { return more; }
+    public boolean getMore() { return ZmBoolean.toBool(more); }
     public int getSearchTotal() { return searchTotal; }
 
     public List<CalendarResourceInfo> getCalendarResources() {

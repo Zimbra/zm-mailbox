@@ -29,13 +29,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.IntIdAttr;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_CHECK_BLOB_CONSISTENCY_REQUEST)
 public class CheckBlobConsistencyRequest {
 
     @XmlAttribute(name=AdminConstants.A_CHECK_SIZE, required=false)
-    private final Boolean checkSize;
+    private final ZmBoolean checkSize;
 
     @XmlElement(name=AdminConstants.E_VOLUME, required=false)
     private List<IntIdAttr> volumes = Lists.newArrayList();
@@ -52,7 +53,7 @@ public class CheckBlobConsistencyRequest {
     }
 
     public CheckBlobConsistencyRequest(Boolean checkSize) {
-        this.checkSize = checkSize;
+        this.checkSize = ZmBoolean.fromBool(checkSize);
     }
 
     public void setVolumes(Iterable <IntIdAttr> volumes) {
@@ -79,7 +80,7 @@ public class CheckBlobConsistencyRequest {
         return this;
     }
 
-    public Boolean getCheckSize() { return checkSize; }
+    public Boolean getCheckSize() { return ZmBoolean.toBool(checkSize); }
     public List<IntIdAttr> getVolumes() {
         return Collections.unmodifiableList(volumes);
     }

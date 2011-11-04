@@ -36,6 +36,7 @@ import com.zimbra.soap.base.CalTZInfoInterface;
 import com.zimbra.soap.type.AttributeName;
 import com.zimbra.soap.type.CursorInfo;
 import com.zimbra.soap.type.GalSearchType;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_AUTO_COMPLETE_GAL_REQUEST)
@@ -54,7 +55,7 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
     private String galAccountId;
 
     @XmlAttribute(name=MailConstants.A_INCLUDE_TAG_DELETED /* includeTagDeleted */, required=false)
-    private Boolean includeTagDeleted;
+    private ZmBoolean includeTagDeleted;
 
     @XmlAttribute(name=MailConstants.A_ALLOWABLE_TASK_STATUS /* allowableTaskStatus */, required=false)
     private String allowableTaskStatus;
@@ -69,7 +70,7 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
     private String query;
 
     @XmlAttribute(name=MailConstants.A_IN_DUMPSTER /* inDumpster */, required=false)
-    private Boolean inDumpster;
+    private ZmBoolean inDumpster;
 
     @XmlAttribute(name=MailConstants.A_SEARCH_TYPES /* types */, required=false)
     private String searchTypes;
@@ -78,7 +79,7 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
     private String groupBy;
 
     @XmlAttribute(name=MailConstants.A_QUICK /* quick */, required=false)
-    private Boolean quick;
+    private ZmBoolean quick;
 
     // Based on SortBy which is NOT an enum and appears to support runtime construction
     @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
@@ -89,22 +90,22 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
     private String fetch;
 
     @XmlAttribute(name=MailConstants.A_MARK_READ /* read */, required=false)
-    private Boolean markRead;
+    private ZmBoolean markRead;
 
     @XmlAttribute(name=MailConstants.A_MAX_INLINED_LENGTH /* max */, required=false)
     private Integer maxInlinedLength;
 
     @XmlAttribute(name=MailConstants.A_WANT_HTML /* html */, required=false)
-    private Boolean wantHtml;
+    private ZmBoolean wantHtml;
 
     @XmlAttribute(name=MailConstants.A_NEUTER /* neuter */, required=false)
-    private Boolean neuterImages;
+    private ZmBoolean neuterImages;
 
     @XmlAttribute(name=MailConstants.A_RECIPIENTS /* recip */, required=false)
-    private Boolean wantRecipients;
+    private ZmBoolean wantRecipients;
 
     @XmlAttribute(name=MailConstants.A_PREFETCH /* prefetch */, required=false)
-    private Boolean prefetch;
+    private ZmBoolean prefetch;
 
     // Valid if is a case insensitive match to a value in enum SearchResultMode
     @XmlAttribute(name=MailConstants.A_RESULT_MODE /* resultMode */, required=false)
@@ -156,7 +157,9 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
     public void setGalAccountId(String galAccountId) { this.galAccountId = galAccountId; }
 
     @Override
-    public void setIncludeTagDeleted(Boolean includeTagDeleted) { this.includeTagDeleted = includeTagDeleted; }
+    public void setIncludeTagDeleted(Boolean includeTagDeleted) {
+        this.includeTagDeleted = ZmBoolean.fromBool(includeTagDeleted);
+    }
     @Override
     public void setAllowableTaskStatus(String allowableTaskStatus) { this.allowableTaskStatus = allowableTaskStatus; }
     @Override
@@ -166,29 +169,29 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
     @Override
     public void setQuery(String query) { this.query = query; }
     @Override
-    public void setInDumpster(Boolean inDumpster) { this.inDumpster = inDumpster; }
+    public void setInDumpster(Boolean inDumpster) { this.inDumpster = ZmBoolean.fromBool(inDumpster); }
     @Override
     public void setSearchTypes(String searchTypes) { this.searchTypes = searchTypes; }
     @Override
     public void setGroupBy(String groupBy) { this.groupBy = groupBy; }
     @Override
-    public void setQuick(Boolean quick) { this.quick = quick; }
+    public void setQuick(Boolean quick) { this.quick = ZmBoolean.fromBool(quick); }
     @Override
     public void setSortBy(String sortBy) { this.sortBy = sortBy; }
     @Override
     public void setFetch(String fetch) { this.fetch = fetch; }
     @Override
-    public void setMarkRead(Boolean markRead) { this.markRead = markRead; }
+    public void setMarkRead(Boolean markRead) { this.markRead = ZmBoolean.fromBool(markRead); }
     @Override
     public void setMaxInlinedLength(Integer maxInlinedLength) { this.maxInlinedLength = maxInlinedLength; }
     @Override
-    public void setWantHtml(Boolean wantHtml) { this.wantHtml = wantHtml; }
+    public void setWantHtml(Boolean wantHtml) { this.wantHtml = ZmBoolean.fromBool(wantHtml); }
     @Override
-    public void setNeuterImages(Boolean neuterImages) { this.neuterImages = neuterImages; }
+    public void setNeuterImages(Boolean neuterImages) { this.neuterImages = ZmBoolean.fromBool(neuterImages); }
     @Override
-    public void setWantRecipients(Boolean wantRecipients) { this.wantRecipients = wantRecipients; }
+    public void setWantRecipients(Boolean wantRecipients) { this.wantRecipients = ZmBoolean.fromBool(wantRecipients); }
     @Override
-    public void setPrefetch(Boolean prefetch) { this.prefetch = prefetch; }
+    public void setPrefetch(Boolean prefetch) { this.prefetch = ZmBoolean.fromBool(prefetch); }
     @Override
     public void setResultMode(String resultMode) { this.resultMode = resultMode; }
     @Override
@@ -224,7 +227,7 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
     @Override
     public String getGalAccountId() { return galAccountId; }
     @Override
-    public Boolean getIncludeTagDeleted() { return includeTagDeleted; }
+    public Boolean getIncludeTagDeleted() { return ZmBoolean.toBool(includeTagDeleted); }
     @Override
     public String getAllowableTaskStatus() { return allowableTaskStatus; }
     @Override
@@ -234,29 +237,29 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
     @Override
     public String getQuery() { return query; }
     @Override
-    public Boolean getInDumpster() { return inDumpster; }
+    public Boolean getInDumpster() { return ZmBoolean.toBool(inDumpster); }
     @Override
     public String getSearchTypes() { return searchTypes; }
     @Override
     public String getGroupBy() { return groupBy; }
     @Override
-    public Boolean getQuick() { return quick; }
+    public Boolean getQuick() { return ZmBoolean.toBool(quick); }
     @Override
     public String getSortBy() { return sortBy; }
     @Override
     public String getFetch() { return fetch; }
     @Override
-    public Boolean getMarkRead() { return markRead; }
+    public Boolean getMarkRead() { return ZmBoolean.toBool(markRead); }
     @Override
     public Integer getMaxInlinedLength() { return maxInlinedLength; }
     @Override
-    public Boolean getWantHtml() { return wantHtml; }
+    public Boolean getWantHtml() { return ZmBoolean.toBool(wantHtml); }
     @Override
-    public Boolean getNeuterImages() { return neuterImages; }
+    public Boolean getNeuterImages() { return ZmBoolean.toBool(neuterImages); }
     @Override
-    public Boolean getWantRecipients() { return wantRecipients; }
+    public Boolean getWantRecipients() { return ZmBoolean.toBool(wantRecipients); }
     @Override
-    public Boolean getPrefetch() { return prefetch; }
+    public Boolean getPrefetch() { return ZmBoolean.toBool(prefetch); }
     @Override
     public String getResultMode() { return resultMode; }
     @Override

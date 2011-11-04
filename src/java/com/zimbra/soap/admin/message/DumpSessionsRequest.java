@@ -21,16 +21,17 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_DUMP_SESSIONS_REQUEST)
 public class DumpSessionsRequest {
 
     @XmlAttribute(name=AdminConstants.A_LIST_SESSIONS, required=false)
-    private final Boolean includeAccounts;
+    private final ZmBoolean includeAccounts;
 
     @XmlAttribute(name=AdminConstants.A_GROUP_BY_ACCOUNT, required=false)
-    private final Boolean groupByAccount;
+    private final ZmBoolean groupByAccount;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -42,10 +43,10 @@ public class DumpSessionsRequest {
 
     public DumpSessionsRequest(Boolean includeAccounts,
                     Boolean groupByAccount) {
-        this.includeAccounts = includeAccounts;
-        this.groupByAccount = groupByAccount;
+        this.includeAccounts = ZmBoolean.fromBool(includeAccounts);
+        this.groupByAccount = ZmBoolean.fromBool(groupByAccount);
     }
 
-    public Boolean getIncludeAccounts() { return includeAccounts; }
-    public Boolean getGroupByAccount() { return groupByAccount; }
+    public Boolean getIncludeAccounts() { return ZmBoolean.toBool(includeAccounts); }
+    public Boolean getGroupByAccount() { return ZmBoolean.toBool(groupByAccount); }
 }

@@ -22,53 +22,43 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.HsmConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=HsmConstants.E_GET_HSM_STATUS_RESPONSE)
 public class GetHsmStatusResponse {
 
-    @XmlAttribute(name=HsmConstants.A_RUNNING
-                    /* running */, required=true)
-    private final boolean running;
+    @XmlAttribute(name=HsmConstants.A_RUNNING /* running */, required=true)
+    private final ZmBoolean running;
 
-    @XmlAttribute(name=HsmConstants.A_START_DATE
-                    /* startDate */, required=false)
+    @XmlAttribute(name=HsmConstants.A_START_DATE /* startDate */, required=false)
     private Long startDate;
 
-    @XmlAttribute(name=HsmConstants.A_END_DATE
-                    /* endDate */, required=false)
+    @XmlAttribute(name=HsmConstants.A_END_DATE /* endDate */, required=false)
     private Long endDate;
 
-    @XmlAttribute(name=HsmConstants.A_WAS_ABORTED
-                    /* wasAborted */, required=false)
-    private Boolean wasAborted;
+    @XmlAttribute(name=HsmConstants.A_WAS_ABORTED /* wasAborted */, required=false)
+    private ZmBoolean wasAborted;
 
-    @XmlAttribute(name=HsmConstants.A_ABORTING
-                    /* aborting */, required=false)
-    private Boolean aborting;
+    @XmlAttribute(name=HsmConstants.A_ABORTING /* aborting */, required=false)
+    private ZmBoolean aborting;
 
-    @XmlAttribute(name=HsmConstants.A_ERROR
-                    /* error */, required=false)
+    @XmlAttribute(name=HsmConstants.A_ERROR /* error */, required=false)
     private String error;
 
-    @XmlAttribute(name=HsmConstants.A_NUM_BLOBS_MOVED
-                    /* numBlobsMoved */, required=false)
+    @XmlAttribute(name=HsmConstants.A_NUM_BLOBS_MOVED /* numBlobsMoved */, required=false)
     private Integer numBlobsMoved;
 
-    @XmlAttribute(name=HsmConstants.A_NUM_BYTES_MOVED
-                    /* numBytesMoved */, required=false)
+    @XmlAttribute(name=HsmConstants.A_NUM_BYTES_MOVED /* numBytesMoved */, required=false)
     private Long numBytesMoved;
 
-    @XmlAttribute(name=HsmConstants.A_NUM_MAILBOXES
-                    /* numMailboxes */, required=false)
+    @XmlAttribute(name=HsmConstants.A_NUM_MAILBOXES /* numMailboxes */, required=false)
     private Integer numMailboxes;
 
-    @XmlAttribute(name=HsmConstants.A_TOTAL_MAILBOXES
-                    /* totalMailboxes */, required=false)
+    @XmlAttribute(name=HsmConstants.A_TOTAL_MAILBOXES /* totalMailboxes */, required=false)
     private Integer totalMailboxes;
 
-    @XmlAttribute(name=HsmConstants.A_DEST_VOLUME_ID
-                    /* destVolumeId */, required=false)
+    @XmlAttribute(name=HsmConstants.A_DEST_VOLUME_ID /* destVolumeId */, required=false)
     private Short destVolumeId;
 
     @XmlAttribute(name=HsmConstants.A_QUERY /* query */, required=false)
@@ -83,15 +73,13 @@ public class GetHsmStatusResponse {
     }
 
     public GetHsmStatusResponse(boolean running) {
-        this.running = running;
+        this.running = ZmBoolean.fromBool(running);
     }
 
     public void setStartDate(Long startDate) { this.startDate = startDate; }
     public void setEndDate(Long endDate) { this.endDate = endDate; }
-    public void setWasAborted(Boolean wasAborted) {
-        this.wasAborted = wasAborted;
-    }
-    public void setAborting(Boolean aborting) { this.aborting = aborting; }
+    public void setWasAborted(Boolean wasAborted) { this.wasAborted = ZmBoolean.fromBool(wasAborted); }
+    public void setAborting(Boolean aborting) { this.aborting = ZmBoolean.fromBool(aborting); }
     public void setError(String error) { this.error = error; }
     public void setNumBlobsMoved(Integer numBlobsMoved) {
         this.numBlobsMoved = numBlobsMoved;
@@ -110,11 +98,11 @@ public class GetHsmStatusResponse {
     }
     public void setQuery(String query) { this.query = query; }
 
-    public boolean getRunning() { return running; }
+    public boolean getRunning() { return ZmBoolean.toBool(running); }
     public Long getStartDate() { return startDate; }
     public Long getEndDate() { return endDate; }
-    public Boolean getWasAborted() { return wasAborted; }
-    public Boolean getAborting() { return aborting; }
+    public Boolean getWasAborted() { return ZmBoolean.toBool(wasAborted); }
+    public Boolean getAborting() { return ZmBoolean.toBool(aborting); }
     public String getError() { return error; }
     public Integer getNumBlobsMoved() { return numBlobsMoved; }
     public Long getNumBytesMoved() { return numBytesMoved; }

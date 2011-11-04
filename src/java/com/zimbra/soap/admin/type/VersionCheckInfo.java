@@ -30,13 +30,14 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {})
 public class VersionCheckInfo {
 
     @XmlAttribute(name=AdminConstants.A_VERSION_CHECK_STATUS, required=false)
-    private Boolean status;
+    private ZmBoolean status;
 
     @XmlElementWrapper(name=AdminConstants.E_UPDATES, required=false)
     @XmlElement(name=AdminConstants.E_UPDATE, required=false)
@@ -45,7 +46,7 @@ public class VersionCheckInfo {
     public VersionCheckInfo() {
     }
 
-    public void setStatus(Boolean status) { this.status = status; }
+    public void setStatus(Boolean status) { this.status = ZmBoolean.fromBool(status); }
     public void setUpdates(Iterable <VersionCheckUpdateInfo> updates) {
         this.updates.clear();
         if (updates != null) {
@@ -57,7 +58,7 @@ public class VersionCheckInfo {
         this.updates.add(update);
     }
 
-    public Boolean getStatus() { return status; }
+    public Boolean getStatus() { return ZmBoolean.toBool(status); }
     public List<VersionCheckUpdateInfo> getUpdates() {
         return Collections.unmodifiableList(updates);
     }

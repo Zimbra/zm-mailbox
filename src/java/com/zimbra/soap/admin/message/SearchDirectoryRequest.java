@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.AttributeSelectorImpl;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_SEARCH_DIRECTORY_REQUEST)
@@ -38,15 +39,15 @@ public class SearchDirectoryRequest extends AttributeSelectorImpl {
     @XmlAttribute(name=AdminConstants.A_DOMAIN, required=false)
     private String domain;
     @XmlAttribute(name=AdminConstants.A_APPLY_COS, required=false)
-    private Boolean applyCos;
+    private ZmBoolean applyCos;
     @XmlAttribute(name=AdminConstants.A_APPLY_CONFIG, required=false)
-    private Boolean applyConfig;
+    private ZmBoolean applyConfig;
     @XmlAttribute(name=AdminConstants.A_SORT_BY, required=false)
     private String sortBy;
     @XmlAttribute(name=AdminConstants.A_TYPES, required=false)
     private String types;
     @XmlAttribute(name=AdminConstants.A_SORT_ASCENDING, required=false)
-    private Boolean sortAscending;
+    private ZmBoolean sortAscending;
 
     public SearchDirectoryRequest() {
     }
@@ -72,11 +73,11 @@ public class SearchDirectoryRequest extends AttributeSelectorImpl {
     }
 
     public void setApplyCos(Boolean applyCos) {
-        this.applyCos = applyCos;
+        this.applyCos = ZmBoolean.fromBool(applyCos);
     }
 
     public void setApplyConfig(Boolean applyConfig) {
-        this.applyConfig = applyConfig;
+        this.applyConfig = ZmBoolean.fromBool(applyConfig);
     }
 
     public void setSortBy(String sortBy) {
@@ -88,7 +89,7 @@ public class SearchDirectoryRequest extends AttributeSelectorImpl {
     }
 
     public void setSortAscending(Boolean sortAscending) {
-        this.sortAscending = sortAscending;
+        this.sortAscending = ZmBoolean.fromBool(sortAscending);
     }
 
     public String getQuery() { return query; }
@@ -96,9 +97,9 @@ public class SearchDirectoryRequest extends AttributeSelectorImpl {
     public Integer getLimit() { return limit; }
     public Integer getOffset() { return offset; }
     public String getDomain() { return domain; }
-    public Boolean getApplyCos() { return applyCos; }
-    public Boolean getApplyConfig() { return applyConfig; }
+    public Boolean getApplyCos() { return ZmBoolean.toBool(applyCos); }
+    public Boolean getApplyConfig() { return ZmBoolean.toBool(applyConfig); }
     public String getSortBy() { return sortBy; }
     public String getTypes() { return types; }
-    public Boolean getSortAscending() { return sortAscending; }
+    public Boolean getSortAscending() { return ZmBoolean.toBool(sortAscending); }
 }

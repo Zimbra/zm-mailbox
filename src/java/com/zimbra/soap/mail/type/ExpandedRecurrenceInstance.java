@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ExpandedRecurrenceInstance {
@@ -33,7 +34,7 @@ public class ExpandedRecurrenceInstance {
     private Long duration;
 
     @XmlAttribute(name=MailConstants.A_CAL_ALLDAY /* allDay */, required=false)
-    private Boolean allDay;
+    private ZmBoolean allDay;
 
     @XmlAttribute(name=MailConstants.A_CAL_TZ_OFFSET /* tzo */, required=false)
     private Integer tzOffset;
@@ -47,12 +48,12 @@ public class ExpandedRecurrenceInstance {
 
     public void setStartTime(Long startTime) { this.startTime = startTime; }
     public void setDuration(Long duration) { this.duration = duration; }
-    public void setAllDay(Boolean allDay) { this.allDay = allDay; }
+    public void setAllDay(Boolean allDay) { this.allDay = ZmBoolean.fromBool(allDay); }
     public void setTzOffset(Integer tzOffset) { this.tzOffset = tzOffset; }
     public void setRecurIdZ(String recurIdZ) { this.recurIdZ = recurIdZ; }
     public Long getStartTime() { return startTime; }
     public Long getDuration() { return duration; }
-    public Boolean getAllDay() { return allDay; }
+    public Boolean getAllDay() { return ZmBoolean.toBool(allDay); }
     public Integer getTzOffset() { return tzOffset; }
     public String getRecurIdZ() { return recurIdZ; }
 

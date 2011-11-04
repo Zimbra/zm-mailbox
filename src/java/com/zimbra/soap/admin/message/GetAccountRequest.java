@@ -21,12 +21,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.AttributeSelectorImpl;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlRootElement(name=AdminConstants.E_GET_ACCOUNT_REQUEST)
 public class GetAccountRequest extends AttributeSelectorImpl {
 
     @XmlAttribute(name=AdminConstants.A_APPLY_COS, required=false)
-    private Boolean applyCos = true;
+    private ZmBoolean applyCos = ZmBoolean.ONE /* true */;
     @XmlElement(name=AdminConstants.E_ACCOUNT)
     private AccountSelector account;
 
@@ -45,7 +46,7 @@ public class GetAccountRequest extends AttributeSelectorImpl {
             Iterable<String> attrs) {
         super(attrs);
         this.account = account;
-        this.applyCos = applyCos;
+        this.applyCos = ZmBoolean.fromBool(applyCos);
     }
 
     public void setAccount(AccountSelector account) {
@@ -53,9 +54,9 @@ public class GetAccountRequest extends AttributeSelectorImpl {
     }
 
     public void setApplyCos(Boolean applyCos) {
-        this.applyCos = applyCos;
+        this.applyCos = ZmBoolean.fromBool(applyCos);
     }
 
     public AccountSelector getAccount() { return account; }
-    public Boolean isApplyCos() { return applyCos; }
+    public Boolean isApplyCos() { return ZmBoolean.toBool(applyCos); }
 }

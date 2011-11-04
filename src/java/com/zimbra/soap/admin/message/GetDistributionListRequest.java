@@ -24,6 +24,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.AdminAttrsImpl;
 import com.zimbra.soap.admin.type.DistributionListSelector;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_DISTRIBUTION_LIST_REQUEST)
@@ -34,7 +35,7 @@ public class GetDistributionListRequest extends AdminAttrsImpl {
     @XmlAttribute(name=AdminConstants.A_OFFSET, required=false)
     private Integer offset;
     @XmlAttribute(name=AdminConstants.A_SORT_ASCENDING, required=false)
-    private Boolean sortAscending;
+    private ZmBoolean sortAscending;
     @XmlElement(name=AdminConstants.E_DL, required=false)
     private DistributionListSelector dl;
 
@@ -59,11 +60,11 @@ public class GetDistributionListRequest extends AdminAttrsImpl {
     public void setLimit(Integer limit) { this.limit = limit; }
     public void setOffset(Integer offset) { this.offset = offset; }
     public void setSortAscending(Boolean sortAscending) {
-        this.sortAscending = sortAscending;
+        this.sortAscending = ZmBoolean.fromBool(sortAscending);
     }
 
     public DistributionListSelector getDl() { return dl; }
     public Integer getLimit() { return limit; }
     public Integer getOffset() { return offset; }
-    public Boolean isSortAscending() { return sortAscending; }
+    public Boolean isSortAscending() { return ZmBoolean.toBool(sortAscending); }
 }

@@ -31,6 +31,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.Name;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=BackupConstants.E_RESTORE_RESPONSE)
@@ -40,9 +41,8 @@ public class RestoreResponse {
     @XmlAttribute(name=BackupConstants.A_STATUS /* status */, required=false)
     private String status;
 
-    @XmlAttribute(name=BackupConstants.A_REBUILTSCHEMA
-                    /* rebuiltSchema */, required=false)
-    private Boolean rebuildSchema;
+    @XmlAttribute(name=BackupConstants.A_REBUILTSCHEMA /* rebuiltSchema */, required=false)
+    private ZmBoolean rebuildSchema;
 
     @XmlElement(name=BackupConstants.E_ACCOUNT /* account */, required=false)
     private List<Name> accounts = Lists.newArrayList();
@@ -51,9 +51,7 @@ public class RestoreResponse {
     }
 
     public void setStatus(String status) { this.status = status; }
-    public void setRebuildSchema(Boolean rebuildSchema) {
-        this.rebuildSchema = rebuildSchema;
-    }
+    public void setRebuildSchema(Boolean rebuildSchema) { this.rebuildSchema = ZmBoolean.fromBool(rebuildSchema); }
     public void setAccounts(Iterable <Name> accounts) {
         this.accounts.clear();
         if (accounts != null) {
@@ -66,7 +64,7 @@ public class RestoreResponse {
     }
 
     public String getStatus() { return status; }
-    public Boolean getRebuildSchema() { return rebuildSchema; }
+    public Boolean getRebuildSchema() { return ZmBoolean.toBool(rebuildSchema); }
     public List<Name> getAccounts() {
         return Collections.unmodifiableList(accounts);
     }

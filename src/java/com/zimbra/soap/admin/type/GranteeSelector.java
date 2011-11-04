@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class GranteeSelector {
@@ -48,7 +49,7 @@ public class GranteeSelector {
     @XmlAttribute(name=AdminConstants.A_SECRET, required=false)
     private final String secret;
     @XmlAttribute(name=AdminConstants.A_ALL, required=false)
-    private final Boolean all;
+    private final ZmBoolean all;
     @XmlValue
     private final String key;
 
@@ -86,7 +87,7 @@ public class GranteeSelector {
         this.type = type;
         this.by = by;
         this.key = key;
-        this.all = all;
+        this.all = ZmBoolean.fromBool(all);
         this.secret = secret;
     }
 
@@ -94,5 +95,5 @@ public class GranteeSelector {
     public GranteeBy getBy() { return by; }
     public String getKey() { return key; }
     public String getSecret() { return secret; }
-    public Boolean getAll() { return all; }
+    public Boolean getAll() { return ZmBoolean.toBool(all); }
 }

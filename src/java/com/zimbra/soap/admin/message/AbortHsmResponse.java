@@ -22,13 +22,14 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.HsmConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=HsmConstants.E_ABORT_HSM_RESPONSE)
 public class AbortHsmResponse {
 
     @XmlAttribute(name=HsmConstants.A_ABORTED /* aborted */, required=true)
-    private final boolean aborted;
+    private final ZmBoolean aborted;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -39,10 +40,10 @@ public class AbortHsmResponse {
     }
 
     public AbortHsmResponse(boolean aborted) {
-        this.aborted = aborted;
+        this.aborted = ZmBoolean.fromBool(aborted);
     }
 
-    public boolean getAborted() { return aborted; }
+    public boolean getAborted() { return ZmBoolean.toBool(aborted); }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {

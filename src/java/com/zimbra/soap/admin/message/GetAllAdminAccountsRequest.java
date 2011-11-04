@@ -18,12 +18,13 @@ package com.zimbra.soap.admin.message;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlRootElement(name=AdminConstants.E_GET_ALL_ADMIN_ACCOUNTS_REQUEST)
 public class GetAllAdminAccountsRequest {
 
     @XmlAttribute(name=AdminConstants.A_APPLY_COS, required=false)
-    private Boolean applyCos = true;
+    private ZmBoolean applyCos = ZmBoolean.ONE /* true */;
 
     public GetAllAdminAccountsRequest() {
     }
@@ -33,8 +34,8 @@ public class GetAllAdminAccountsRequest {
     }
 
     public void setApplyCos(Boolean applyCos) {
-        this.applyCos = applyCos;
+        this.applyCos = ZmBoolean.fromBool(applyCos);
     }
 
-    public Boolean isApplyCos() { return applyCos; }
+    public Boolean isApplyCos() { return ZmBoolean.toBool(applyCos); }
 }

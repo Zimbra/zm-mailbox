@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_SYNC_GAL_REQUEST)
@@ -35,17 +36,17 @@ public class SyncGalRequest {
     private String galAccountId;
 
     @XmlAttribute(name=AccountConstants.A_ID_ONLY /* idOnly */, required=false)
-    private Boolean idOnly;
+    private ZmBoolean idOnly;
 
     public SyncGalRequest() {
     }
 
     public void setToken(String token) { this.token = token; }
     public void setGalAccountId(String galAccountId) { this.galAccountId = galAccountId; }
-    public void setIdOnly(Boolean idOnly) { this.idOnly = idOnly; }
+    public void setIdOnly(Boolean idOnly) { this.idOnly = ZmBoolean.fromBool(idOnly); }
     public String getToken() { return token; }
     public String getGalAccountId() { return galAccountId; }
-    public Boolean getIdOnly() { return idOnly; }
+    public Boolean getIdOnly() { return ZmBoolean.toBool(idOnly); }
 
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {

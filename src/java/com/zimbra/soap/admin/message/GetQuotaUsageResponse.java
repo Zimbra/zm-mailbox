@@ -29,13 +29,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.AccountQuotaInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_GET_QUOTA_USAGE_RESPONSE)
 public class GetQuotaUsageResponse {
 
     @XmlAttribute(name=AdminConstants.A_MORE, required=true)
-    private final boolean more;
+    private final ZmBoolean more;
     @XmlAttribute(name=AdminConstants.A_SEARCH_TOTAL, required=true)
     private final int searchTotal;
     @XmlElement(name=AdminConstants.E_ACCOUNT, required=false)
@@ -56,7 +57,7 @@ public class GetQuotaUsageResponse {
     public GetQuotaUsageResponse(boolean more, int searchTotal,
             Collection <AccountQuotaInfo> accountQuotas) {
         setAccountQuotas(accountQuotas);
-        this.more = more;
+        this.more = ZmBoolean.fromBool(more);
         this.searchTotal = searchTotal;
     }
 
@@ -78,6 +79,6 @@ public class GetQuotaUsageResponse {
         return Collections.unmodifiableList(accountQuotas);
     }
 
-    public boolean isMore() { return more; }
+    public boolean isMore() { return ZmBoolean.toBool(more); }
     public int getSearchTotal() { return searchTotal; }
 }

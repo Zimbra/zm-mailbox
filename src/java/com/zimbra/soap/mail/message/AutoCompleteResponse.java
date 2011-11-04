@@ -31,15 +31,15 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.AutoCompleteMatch;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_AUTO_COMPLETE_RESPONSE)
 @XmlType(propOrder = {})
 public class AutoCompleteResponse {
 
-    @XmlAttribute(name=MailConstants.A_CANBECACHED /* canBeCached */,
-                    required=false)
-    private Boolean canBeCached;
+    @XmlAttribute(name=MailConstants.A_CANBECACHED /* canBeCached */, required=false)
+    private ZmBoolean canBeCached;
 
     @XmlElement(name=MailConstants.E_MATCH /* match */, required=false)
     private List<AutoCompleteMatch> matches = Lists.newArrayList();
@@ -48,7 +48,7 @@ public class AutoCompleteResponse {
     }
 
     public void setCanBeCached(Boolean canBeCached) {
-        this.canBeCached = canBeCached;
+        this.canBeCached = ZmBoolean.fromBool(canBeCached);
     }
     public void setMatches(Iterable <AutoCompleteMatch> matches) {
         this.matches.clear();
@@ -62,7 +62,7 @@ public class AutoCompleteResponse {
         return this;
     }
 
-    public Boolean getCanBeCached() { return canBeCached; }
+    public Boolean getCanBeCached() { return ZmBoolean.toBool(canBeCached); }
     public List<AutoCompleteMatch> getMatches() {
         return Collections.unmodifiableList(matches);
     }

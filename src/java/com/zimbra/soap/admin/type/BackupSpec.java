@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.BackupConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {"fileCopier", "accounts"})
@@ -47,11 +48,10 @@ public class BackupSpec {
     private String before;
 
     @XmlAttribute(name=BackupConstants.A_SYNC /* sync */, required=false)
-    private Boolean sync;
+    private ZmBoolean sync;
 
     // Valid values are config/include/exclude (case insensitive)
-    @XmlAttribute(name=BackupConstants.A_SEARCH_INDEX /* searchIndex */,
-                            required=false)
+    @XmlAttribute(name=BackupConstants.A_SEARCH_INDEX /* searchIndex */, required=false)
     private String searchIndex;
 
     // Valid values are config/include/exclude (case insensitive)
@@ -59,15 +59,14 @@ public class BackupSpec {
     private String blobs;
 
     // Valid values are config/include/exclude (case insensitive)
-    @XmlAttribute(name=BackupConstants.A_SECONDARY_BLOBS /* secondaryBlobs */,
-                            required=false)
+    @XmlAttribute(name=BackupConstants.A_SECONDARY_BLOBS /* secondaryBlobs */, required=false)
     private String secondaryBlobs;
 
     @XmlAttribute(name=BackupConstants.A_ZIP /* zip */, required=false)
-    private Boolean zip;
+    private ZmBoolean zip;
 
     @XmlAttribute(name=BackupConstants.A_ZIP_STORE /* zipStore */, required=false)
-    private Boolean zipStore;
+    private ZmBoolean zipStore;
 
     @XmlElement(name=BackupConstants.E_FILE_COPIER /* fileCopier */, required=false)
     private FileCopierSpec fileCopier;
@@ -82,14 +81,14 @@ public class BackupSpec {
     public void setTarget(String target) { this.target = target; }
     public void setLabel(String label) { this.label = label; }
     public void setBefore(String before) { this.before = before; }
-    public void setSync(Boolean sync) { this.sync = sync; }
+    public void setSync(Boolean sync) { this.sync = ZmBoolean.fromBool(sync); }
     public void setSearchIndex(String searchIndex) { this.searchIndex = searchIndex; }
     public void setBlobs(String blobs) { this.blobs = blobs; }
     public void setSecondaryBlobs(String secondaryBlobs) {
         this.secondaryBlobs = secondaryBlobs;
     }
-    public void setZip(Boolean zip) { this.zip = zip; }
-    public void setZipStore(Boolean zipStore) { this.zipStore = zipStore; }
+    public void setZip(Boolean zip) { this.zip = ZmBoolean.fromBool(zip); }
+    public void setZipStore(Boolean zipStore) { this.zipStore = ZmBoolean.fromBool(zipStore); }
     public void setFileCopier(FileCopierSpec fileCopier) { this.fileCopier = fileCopier; }
     public void setAccounts(Iterable <Name> accounts) {
         this.accounts.clear();
@@ -106,12 +105,12 @@ public class BackupSpec {
     public String getTarget() { return target; }
     public String getLabel() { return label; }
     public String getBefore() { return before; }
-    public Boolean getSync() { return sync; }
+    public Boolean getSync() { return ZmBoolean.toBool(sync); }
     public String getSearchIndex() { return searchIndex; }
     public String getBlobs() { return blobs; }
     public String getSecondaryBlobs() { return secondaryBlobs; }
-    public Boolean getZip() { return zip; }
-    public Boolean getZipStore() { return zipStore; }
+    public Boolean getZip() { return ZmBoolean.toBool(zip); }
+    public Boolean getZipStore() { return ZmBoolean.toBool(zipStore); }
     public FileCopierSpec getFileCopier() { return fileCopier; }
     public List<Name> getAccounts() {
         return Collections.unmodifiableList(accounts);

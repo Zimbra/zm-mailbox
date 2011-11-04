@@ -23,13 +23,14 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.NotificationInterface;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class Notification
 implements NotificationInterface {
 
     @XmlAttribute(name=MailConstants.A_TRUNCATED_CONTENT, required=false)
-    private Boolean truncatedContent;
+    private ZmBoolean truncatedContent;
 
     @XmlElement(name=MailConstants.E_CONTENT, required=false)
     private String content;
@@ -39,13 +40,13 @@ implements NotificationInterface {
 
     @Override
     public void setTruncatedContent(Boolean truncatedContent) {
-        this.truncatedContent = truncatedContent;
+        this.truncatedContent = ZmBoolean.fromBool(truncatedContent);
     }
     @Override
     public void setContent(String content) { this.content = content; }
 
     @Override
-    public Boolean getTruncatedContent() { return truncatedContent; }
+    public Boolean getTruncatedContent() { return ZmBoolean.toBool(truncatedContent); }
     @Override
     public String getContent() { return content; }
 

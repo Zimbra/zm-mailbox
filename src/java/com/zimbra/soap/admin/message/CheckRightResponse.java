@@ -23,13 +23,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.RightViaInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_CHECK_RIGHT_RESPONSE)
 public class CheckRightResponse {
 
     @XmlAttribute(name=AdminConstants.A_ALLOW, required=true)
-    private final boolean allow;
+    private final ZmBoolean allow;
 
     @XmlElement(name=AdminConstants.E_VIA, required=false)
     private final RightViaInfo via;
@@ -43,10 +44,10 @@ public class CheckRightResponse {
     }
 
     public CheckRightResponse(boolean allow, RightViaInfo via) {
-        this.allow = allow;
+        this.allow = ZmBoolean.fromBool(allow);
         this.via = via;
     }
 
-    public boolean getAllow() { return allow; }
+    public boolean getAllow() { return ZmBoolean.toBool(allow); }
     public RightViaInfo getVia() { return via; }
 }

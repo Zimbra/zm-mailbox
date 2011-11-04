@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ImportStatusInfo {
@@ -28,13 +29,11 @@ public class ImportStatusInfo {
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
-    @XmlAttribute(name=MailConstants.A_DS_IS_RUNNING /* isRunning */,
-                            required=false)
-    private Boolean running;
+    @XmlAttribute(name=MailConstants.A_DS_IS_RUNNING /* isRunning */, required=false)
+    private ZmBoolean running;
 
-    @XmlAttribute(name=MailConstants.A_DS_SUCCESS /* success */,
-                            required=false)
-    private Boolean success;
+    @XmlAttribute(name=MailConstants.A_DS_SUCCESS /* success */, required=false)
+    private ZmBoolean success;
 
     @XmlAttribute(name=MailConstants.A_DS_ERROR /* error */, required=false)
     private String error;
@@ -43,12 +42,12 @@ public class ImportStatusInfo {
     }
 
     public void setId(String id) { this.id = id; }
-    public void setRunning(Boolean running) { this.running = running; }
-    public void setSuccess(Boolean success) { this.success = success; }
+    public void setRunning(Boolean running) { this.running = ZmBoolean.fromBool(running); }
+    public void setSuccess(Boolean success) { this.success = ZmBoolean.fromBool(success); }
     public void setError(String error) { this.error = error; }
     public String getId() { return id; }
-    public Boolean getRunning() { return running; }
-    public Boolean getSuccess() { return success; }
+    public Boolean getRunning() { return ZmBoolean.toBool(running); }
+    public Boolean getSuccess() { return ZmBoolean.toBool(success); }
     public String getError() { return error; }
 
     public Objects.ToStringHelper addToStringInfo(

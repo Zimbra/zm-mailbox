@@ -24,13 +24,14 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.ArchiveConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {"name", "cos", "password"})
 public class ArchiveSpec extends AdminAttrsImpl {
 
     @XmlAttribute(name=ArchiveConstants.A_CREATE /* create */, required=false)
-    private Boolean create;
+    private ZmBoolean create;
 
     @XmlElement(name=AdminConstants.E_NAME /* name */, required=false)
     private String name;
@@ -44,11 +45,11 @@ public class ArchiveSpec extends AdminAttrsImpl {
     public ArchiveSpec() {
     }
 
-    public void setCreate(Boolean create) { this.create = create; }
+    public void setCreate(Boolean create) { this.create = ZmBoolean.fromBool(create); }
     public void setName(String name) { this.name = name; }
     public void setCos(CosSelector cos) { this.cos = cos; }
     public void setPassword(String password) { this.password = password; }
-    public Boolean getCreate() { return create; }
+    public Boolean getCreate() { return ZmBoolean.toBool(create); }
     public String getName() { return name; }
     public CosSelector getCos() { return cos; }
     public String getPassword() { return password; }

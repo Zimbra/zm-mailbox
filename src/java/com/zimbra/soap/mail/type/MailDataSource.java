@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.DataSource;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {"lastError", "attributes"})
@@ -44,13 +45,11 @@ abstract public class MailDataSource implements DataSource {
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folderId;
 
-    @XmlAttribute(name=MailConstants.A_DS_IS_ENABLED /* isEnabled */,
-                    required=false)
-    private Boolean enabled;
+    @XmlAttribute(name=MailConstants.A_DS_IS_ENABLED /* isEnabled */, required=false)
+    private ZmBoolean enabled;
 
-    @XmlAttribute(name=MailConstants.A_DS_IS_IMPORTONLY /* importOnly */,
-                    required=false)
-    private Boolean importOnly;
+    @XmlAttribute(name=MailConstants.A_DS_IS_IMPORTONLY /* importOnly */, required=false)
+    private ZmBoolean importOnly;
 
     @XmlAttribute(name=MailConstants.A_DS_HOST /* host */, required=false)
     private String host;
@@ -58,29 +57,24 @@ abstract public class MailDataSource implements DataSource {
     @XmlAttribute(name=MailConstants.A_DS_PORT /* port */, required=false)
     private Integer port;
 
-    @XmlAttribute(name=MailConstants.A_DS_CONNECTION_TYPE /* connectionType */,
-                    required=false)
+    @XmlAttribute(name=MailConstants.A_DS_CONNECTION_TYPE /* connectionType */, required=false)
     private MdsConnectionType mdsConnectionType;
 
-    @XmlAttribute(name=MailConstants.A_DS_USERNAME /* username */,
-                    required=false)
+    @XmlAttribute(name=MailConstants.A_DS_USERNAME /* username */, required=false)
     private String username;
 
-    @XmlAttribute(name=MailConstants.A_DS_PASSWORD /* password */,
-                    required=false)
+    @XmlAttribute(name=MailConstants.A_DS_PASSWORD /* password */, required=false)
     private String password;
 
-    @XmlAttribute(name=MailConstants.A_DS_POLLING_INTERVAL
-                    /* pollingInterval */, required=false)
+    @XmlAttribute(name=MailConstants.A_DS_POLLING_INTERVAL /* pollingInterval */, required=false)
     private String pollingInterval;
 
-    @XmlAttribute(name=MailConstants.A_DS_EMAIL_ADDRESS /* emailAddress */,
-                    required=false)
+    @XmlAttribute(name=MailConstants.A_DS_EMAIL_ADDRESS /* emailAddress */, required=false)
     private String emailAddress;
 
     @XmlAttribute(name=MailConstants.A_DS_USE_ADDRESS_FOR_FORWARD_REPLY
                     /* useAddressForForwardReply */, required=false)
-    private Boolean useAddressForForwardReply;
+    private ZmBoolean useAddressForForwardReply;
 
     @XmlAttribute(name=MailConstants.A_DS_DEFAULT_SIGNATURE
                     /* defaultSignature */, required=false)
@@ -132,8 +126,8 @@ abstract public class MailDataSource implements DataSource {
         id = from.getId();
         name = from.getName();
         folderId = from.getFolderId();
-        enabled = from.isEnabled();
-        importOnly = from.isImportOnly();
+        setEnabled(from.isEnabled());
+        setImportOnly(from.isImportOnly());
         host = from.getHost();
         port = from.getPort();
         mdsConnectionType = MdsConnectionType.CT_TO_MCT.apply(
@@ -142,7 +136,7 @@ abstract public class MailDataSource implements DataSource {
         password = from.getPassword();
         pollingInterval = from.getPollingInterval();
         emailAddress = from.getEmailAddress();
-        useAddressForForwardReply = from.isUseAddressForForwardReply();
+        setUseAddressForForwardReply(from.isUseAddressForForwardReply());
         defaultSignature = from.getDefaultSignature();
         forwardReplySignature = from.getForwardReplySignature();
         fromDisplay = from.getFromDisplay();
@@ -162,9 +156,9 @@ abstract public class MailDataSource implements DataSource {
     @Override
     public void setFolderId(String folderId) { this.folderId = folderId; }
     @Override
-    public void setEnabled(Boolean enabled) { this.enabled = enabled; }
+    public void setEnabled(Boolean enabled) { this.enabled = ZmBoolean.fromBool(enabled); }
     @Override
-    public void setImportOnly(Boolean importOnly) { this.importOnly = importOnly; }
+    public void setImportOnly(Boolean importOnly) { this.importOnly = ZmBoolean.fromBool(importOnly); }
     @Override
     public void setHost(String host) { this.host = host; }
     @Override
@@ -182,7 +176,7 @@ abstract public class MailDataSource implements DataSource {
     public void setEmailAddress(String emailAddress) { this.emailAddress = emailAddress; }
     @Override
     public void setUseAddressForForwardReply(Boolean useAddressForForwardReply) {
-        this.useAddressForForwardReply = useAddressForForwardReply;
+        this.useAddressForForwardReply = ZmBoolean.fromBool(useAddressForForwardReply);
     }
     @Override
     public void setDefaultSignature(String defaultSignature) { this.defaultSignature = defaultSignature; }
@@ -222,9 +216,9 @@ abstract public class MailDataSource implements DataSource {
     @Override
     public String getFolderId() { return folderId; }
     @Override
-    public Boolean isEnabled() { return enabled; }
+    public Boolean isEnabled() { return ZmBoolean.toBool(enabled); }
     @Override
-    public Boolean isImportOnly() { return importOnly; }
+    public Boolean isImportOnly() { return ZmBoolean.toBool(importOnly); }
     @Override
     public String getHost() { return host; }
     @Override
@@ -239,7 +233,7 @@ abstract public class MailDataSource implements DataSource {
     @Override
     public String getEmailAddress() { return emailAddress; }
     @Override
-    public Boolean isUseAddressForForwardReply() { return useAddressForForwardReply; }
+    public Boolean isUseAddressForForwardReply() { return ZmBoolean.toBool(useAddressForForwardReply); }
     @Override
     public String getDefaultSignature() { return defaultSignature; }
     @Override

@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.BackupConstants;
 import com.zimbra.soap.admin.type.BackupQueryInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=BackupConstants.E_BACKUP_QUERY_RESPONSE)
@@ -40,7 +41,7 @@ public class BackupQueryResponse {
     private final long freeSpace;
 
     @XmlAttribute(name=BackupConstants.A_MORE /* more */, required=false)
-    private Boolean more;
+    private ZmBoolean more;
 
     @XmlElement(name=BackupConstants.E_BACKUP /* backup */, required=false)
     private BackupQueryInfo backups;
@@ -58,11 +59,11 @@ public class BackupQueryResponse {
         this.freeSpace = freeSpace;
     }
 
-    public void setMore(Boolean more) { this.more = more; }
+    public void setMore(Boolean more) { this.more = ZmBoolean.fromBool(more); }
     public void setBackups(BackupQueryInfo backups) { this.backups = backups; }
     public long getTotalSpace() { return totalSpace; }
     public long getFreeSpace() { return freeSpace; }
-    public Boolean getMore() { return more; }
+    public Boolean getMore() { return ZmBoolean.toBool(more); }
     public BackupQueryInfo getBackups() { return backups; }
 
     public Objects.ToStringHelper addToStringInfo(

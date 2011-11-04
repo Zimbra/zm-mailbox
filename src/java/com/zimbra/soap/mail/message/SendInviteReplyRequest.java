@@ -26,6 +26,7 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.mail.type.CalendarItemMsg;
 import com.zimbra.soap.mail.type.CalTZInfo;
 import com.zimbra.soap.mail.type.DtTimeInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_SEND_INVITE_REPLY_REQUEST)
@@ -34,22 +35,19 @@ public class SendInviteReplyRequest {
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final String id;
 
-    @XmlAttribute(name=MailConstants.A_CAL_COMPONENT_NUM /* compNum */,
-                    required=true)
+    @XmlAttribute(name=MailConstants.A_CAL_COMPONENT_NUM /* compNum */, required=true)
     private final int numComponents;
 
     @XmlAttribute(name=MailConstants.A_VERB /* verb */, required=true)
     private final String verb;
 
-    @XmlAttribute(name=MailConstants.A_CAL_UPDATE_ORGANIZER /* updateOrganizer */,
-                    required=false)
-    private Boolean updateOrganizer;
+    @XmlAttribute(name=MailConstants.A_CAL_UPDATE_ORGANIZER /* updateOrganizer */, required=false)
+    private ZmBoolean updateOrganizer;
 
     @XmlAttribute(name=MailConstants.A_IDENTITY_ID /* idnt */, required=false)
     private String identityId;
 
-    @XmlElement(name=MailConstants.E_CAL_EXCEPTION_ID /* exceptId */,
-                    required=false)
+    @XmlElement(name=MailConstants.E_CAL_EXCEPTION_ID /* exceptId */, required=false)
     private DtTimeInfo exceptionId;
 
     @XmlElement(name=MailConstants.E_CAL_TZ /* tz */, required=false)
@@ -74,7 +72,7 @@ public class SendInviteReplyRequest {
     }
 
     public void setUpdateOrganizer(Boolean updateOrganizer) {
-        this.updateOrganizer = updateOrganizer;
+        this.updateOrganizer = ZmBoolean.fromBool(updateOrganizer);
     }
     public void setIdentityId(String identityId) {
         this.identityId = identityId;
@@ -87,7 +85,7 @@ public class SendInviteReplyRequest {
     public String getId() { return id; }
     public int getNumComponents() { return numComponents; }
     public String getVerb() { return verb; }
-    public Boolean getUpdateOrganizer() { return updateOrganizer; }
+    public Boolean getUpdateOrganizer() { return ZmBoolean.toBool(updateOrganizer); }
     public String getIdentityId() { return identityId; }
     public DtTimeInfo getExceptionId() { return exceptionId; }
     public CalTZInfo getTimezone() { return timezone; }

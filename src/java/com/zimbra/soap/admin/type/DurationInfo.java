@@ -23,12 +23,13 @@ import javax.xml.bind.annotation.XmlAttribute;
 import com.zimbra.common.calendar.ParsedDuration;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.DurationInfoInterface;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class DurationInfo implements DurationInfoInterface {
 
     @XmlAttribute(name=MailConstants.A_CAL_DURATION_NEGATIVE, required=false)
-    private Boolean durationNegative;
+    private ZmBoolean durationNegative;
 
     @XmlAttribute(name=MailConstants.A_CAL_DURATION_WEEKS, required=false)
     private Integer weeks;
@@ -74,7 +75,7 @@ public class DurationInfo implements DurationInfoInterface {
             return null;
         }
         if (pdVal < 0) {
-            this.durationNegative = true;
+            this.durationNegative = ZmBoolean.ONE /* true */;
             return -pdVal;
         } else {
             return pdVal;
@@ -83,7 +84,7 @@ public class DurationInfo implements DurationInfoInterface {
 
     @Override
     public void setDurationNegative(Boolean durationNegative) {
-        this.durationNegative = durationNegative;
+        this.durationNegative = ZmBoolean.fromBool(durationNegative);
     }
 
     @Override
@@ -104,7 +105,7 @@ public class DurationInfo implements DurationInfoInterface {
     }
 
     @Override
-    public Boolean getDurationNegative() { return durationNegative; }
+    public Boolean getDurationNegative() { return ZmBoolean.toBool(durationNegative); }
     @Override
     public Integer getWeeks() { return weeks; }
     @Override

@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlEnum;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ZimletStatus {
@@ -49,12 +50,11 @@ public class ZimletStatus {
     @XmlAttribute(name=AdminConstants.A_NAME, required=true)
     private final String name;
 
-    // TODO:Only has 2 values - enabled and disabled.  Use an enum?
     @XmlAttribute(name=AdminConstants.A_STATUS, required=true)
     private final ZimletStatusSetting status;
 
     @XmlAttribute(name=AdminConstants.A_EXTENSION, required=true)
-    private final boolean extension;
+    private final ZmBoolean extension;
 
     @XmlAttribute(name=AdminConstants.A_PRIORITY, required=false)
     private final Integer priority;
@@ -71,12 +71,12 @@ public class ZimletStatus {
                     boolean extension, Integer priority) {
         this.name = name;
         this.status = status;
-        this.extension = extension;
+        this.extension = ZmBoolean.fromBool(extension);
         this.priority = priority;
     }
 
     public String getName() { return name; }
     public ZimletStatusSetting getStatus() { return status; }
-    public boolean getExtension() { return extension; }
+    public boolean getExtension() { return ZmBoolean.toBool(extension); }
     public Integer getPriority() { return priority; }
 }

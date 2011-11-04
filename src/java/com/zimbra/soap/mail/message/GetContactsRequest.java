@@ -31,13 +31,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.AttributeName;
 import com.zimbra.soap.type.Id;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=MailConstants.E_GET_CONTACTS_REQUEST)
 public class GetContactsRequest {
 
     @XmlAttribute(name=MailConstants.A_SYNC /* sync */, required=false)
-    private Boolean sync;
+    private ZmBoolean sync;
 
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folderId;
@@ -47,10 +48,10 @@ public class GetContactsRequest {
     private String sortBy;
 
     @XmlAttribute(name=MailConstants.A_DEREF_CONTACT_GROUP_MEMBER /* derefGroupMember */, required=false)
-    private Boolean derefGroupMember;
+    private ZmBoolean derefGroupMember;
 
     @XmlAttribute(name=MailConstants.A_RETURN_HIDDEN_ATTRS /* returnHiddenAttrs */, required=false)
-    private Boolean returnHiddenAttrs;
+    private ZmBoolean returnHiddenAttrs;
 
     @XmlElement(name=MailConstants.E_ATTRIBUTE /* a */, required=false)
     private List<AttributeName> attributes = Lists.newArrayList();
@@ -64,11 +65,15 @@ public class GetContactsRequest {
     public GetContactsRequest() {
     }
 
-    public void setSync(Boolean sync) { this.sync = sync; }
+    public void setSync(Boolean sync) { this.sync = ZmBoolean.fromBool(sync); }
     public void setFolderId(String folderId) { this.folderId = folderId; }
     public void setSortBy(String sortBy) { this.sortBy = sortBy; }
-    public void setDerefGroupMember(Boolean derefGroupMember) { this.derefGroupMember = derefGroupMember; }
-    public void setReturnHiddenAttrs(Boolean returnHiddenAttrs) { this.returnHiddenAttrs = returnHiddenAttrs; }
+    public void setDerefGroupMember(Boolean derefGroupMember) {
+        this.derefGroupMember = ZmBoolean.fromBool(derefGroupMember);
+    }
+    public void setReturnHiddenAttrs(Boolean returnHiddenAttrs) {
+        this.returnHiddenAttrs = ZmBoolean.fromBool(returnHiddenAttrs);
+    }
     public void setAttributes(Iterable <AttributeName> attributes) {
         this.attributes.clear();
         if (attributes != null) {
@@ -102,11 +107,11 @@ public class GetContactsRequest {
         this.contacts.add(contact);
     }
 
-    public Boolean getSync() { return sync; }
+    public Boolean getSync() { return ZmBoolean.toBool(sync); }
     public String getFolderId() { return folderId; }
     public String getSortBy() { return sortBy; }
-    public Boolean getDerefGroupMember() { return derefGroupMember; }
-    public Boolean getReturnHiddenAttrs() { return returnHiddenAttrs; }
+    public Boolean getDerefGroupMember() { return ZmBoolean.toBool(derefGroupMember); }
+    public Boolean getReturnHiddenAttrs() { return ZmBoolean.toBool(returnHiddenAttrs); }
     public List<AttributeName> getAttributes() {
         return Collections.unmodifiableList(attributes);
     }

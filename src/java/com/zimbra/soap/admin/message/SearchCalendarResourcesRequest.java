@@ -25,6 +25,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.AttributeSelectorImpl;
 import com.zimbra.soap.admin.type.EntrySearchFilterInfo;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_SEARCH_CALENDAR_RESOURCES_REQUEST)
@@ -37,11 +38,11 @@ public class SearchCalendarResourcesRequest extends AttributeSelectorImpl {
     @XmlAttribute(name=AdminConstants.A_DOMAIN, required=false)
     private String domain;
     @XmlAttribute(name=AdminConstants.A_APPLY_COS, required=false)
-    private Boolean applyCos;
+    private ZmBoolean applyCos;
     @XmlAttribute(name=AdminConstants.A_SORT_BY, required=false)
     private String sortBy;
     @XmlAttribute(name=AdminConstants.A_SORT_ASCENDING, required=false)
-    private Boolean sortAscending;
+    private ZmBoolean sortAscending;
     @XmlElement(name=AccountConstants.E_ENTRY_SEARCH_FILTER, required=false)
     private EntrySearchFilterInfo searchFilter;
 
@@ -51,20 +52,16 @@ public class SearchCalendarResourcesRequest extends AttributeSelectorImpl {
     public void setLimit(Integer limit) { this.limit = limit; }
     public void setOffset(Integer offset) { this.offset = offset; }
     public void setDomain(String domain) { this.domain = domain; }
-    public void setApplyCos(Boolean applyCos) { this.applyCos = applyCos; }
+    public void setApplyCos(Boolean applyCos) { this.applyCos = ZmBoolean.fromBool(applyCos); }
     public void setSortBy(String sortBy) { this.sortBy = sortBy; }
-    public void setSortAscending(Boolean sortAscending) {
-        this.sortAscending = sortAscending;
-    }
-    public void setSearchFilter(EntrySearchFilterInfo searchFilter) {
-        this.searchFilter = searchFilter;
-    }
+    public void setSortAscending(Boolean sortAscending) { this.sortAscending = ZmBoolean.fromBool(sortAscending); }
+    public void setSearchFilter(EntrySearchFilterInfo searchFilter) { this.searchFilter = searchFilter; }
 
     public Integer getLimit() { return limit; }
     public Integer getOffset() { return offset; }
     public String getDomain() { return domain; }
-    public Boolean getApplyCos() { return applyCos; }
+    public Boolean getApplyCos() { return ZmBoolean.toBool(applyCos); }
     public String getSortBy() { return sortBy; }
-    public Boolean getSortAscending() { return sortAscending; }
+    public Boolean getSortAscending() { return ZmBoolean.toBool(sortAscending); }
     public EntrySearchFilterInfo getSearchFilter() { return searchFilter; }
 }

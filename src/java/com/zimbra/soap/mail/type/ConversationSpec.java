@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlElement;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.AttributeName;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ConversationSpec {
@@ -41,7 +42,7 @@ public class ConversationSpec {
     private String inlineRule;
 
     @XmlAttribute(name=MailConstants.A_WANT_HTML, required=false)
-    private Boolean wantHtml;
+    private ZmBoolean wantHtml;
 
     @XmlAttribute(name=MailConstants.A_MAX_INLINED_LENGTH, required=false)
     private Integer maxInlinedLength;
@@ -65,7 +66,7 @@ public class ConversationSpec {
         this.inlineRule = inlineRule;
     }
 
-    public void setWantHtml(Boolean wantHtml) { this.wantHtml = wantHtml; }
+    public void setWantHtml(Boolean wantHtml) { this.wantHtml = ZmBoolean.fromBool(wantHtml); }
     public void setMaxInlinedLength(Integer maxInlinedLength) {
         this.maxInlinedLength = maxInlinedLength;
     }
@@ -84,7 +85,7 @@ public class ConversationSpec {
 
     public String getId() { return id; }
     public String getInlineRule() { return inlineRule; }
-    public Boolean getWantHtml() { return wantHtml; }
+    public Boolean getWantHtml() { return ZmBoolean.toBool(wantHtml); }
     public Integer getMaxInlinedLength() { return maxInlinedLength; }
     public List<AttributeName> getHeaders() {
         return Collections.unmodifiableList(headers);

@@ -34,6 +34,7 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.account.type.ContactInfo;
 import com.zimbra.soap.type.Id;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_SYNC_GAL_RESPONSE)
@@ -47,7 +48,7 @@ public class SyncGalResponse {
     private Integer offset;
 
     @XmlAttribute(name=MailConstants.A_QUERY_MORE /* more */, required=false)
-    private Boolean more;
+    private ZmBoolean more;
 
     @XmlAttribute(name=MailConstants.A_TOKEN /* token */, required=false)
     private String token;
@@ -65,7 +66,7 @@ public class SyncGalResponse {
 
     public void setSortBy(String sortBy) { this.sortBy = sortBy; }
     public void setOffset(Integer offset) { this.offset = offset; }
-    public void setMore(Boolean more) { this.more = more; }
+    public void setMore(Boolean more) { this.more = ZmBoolean.fromBool(more); }
     public void setToken(String token) { this.token = token; }
     public void setHits(Iterable <Object> hits) {
         this.hits.clear();
@@ -80,7 +81,7 @@ public class SyncGalResponse {
 
     public String getSortBy() { return sortBy; }
     public Integer getOffset() { return offset; }
-    public Boolean getMore() { return more; }
+    public Boolean getMore() { return ZmBoolean.toBool(more); }
     public String getToken() { return token; }
     public List<Object> getHits() {
         return Collections.unmodifiableList(hits);

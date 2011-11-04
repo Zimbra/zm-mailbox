@@ -26,6 +26,7 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import com.google.common.collect.Iterables;
 
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.type.ZmBoolean;
 
 /*
      <childAccount name="{child-account-name}" visible="0|1" id="{child-account-id}">
@@ -42,9 +43,9 @@ public class ChildAccount {
     @XmlAttribute(name=AccountConstants.A_NAME, required=true)
     private final String name;
     @XmlAttribute(name=AccountConstants.A_VISIBLE, required=true)
-    private final boolean isVisible;
+    private final ZmBoolean isVisible;
     @XmlAttribute(name=AccountConstants.A_ACTIVE, required=true)
-    private final boolean isActive;
+    private final ZmBoolean isActive;
 
     @XmlElementWrapper(name=AccountConstants.E_ATTRS, required=false)
     @XmlElement(name=AccountConstants.E_ATTR, required=false)
@@ -67,8 +68,8 @@ public class ChildAccount {
             boolean isVisible, boolean isActive, Iterable<Attr> attrs) {
         this.id = id;
         this.name = name;
-        this.isVisible = isVisible;
-        this.isActive = isActive;
+        this.isVisible = ZmBoolean.fromBool(isVisible);
+        this.isActive = ZmBoolean.fromBool(isActive);
         setAttrs(attrs);
     }
 
@@ -85,6 +86,6 @@ public class ChildAccount {
 
     public String getId() { return id; }
     public String getName() { return name; }
-    public boolean isVisible() { return isVisible; }
-    public boolean isActive() { return isActive; }
+    public boolean isVisible() { return ZmBoolean.toBool(isVisible); }
+    public boolean isActive() { return ZmBoolean.toBool(isActive); }
 }

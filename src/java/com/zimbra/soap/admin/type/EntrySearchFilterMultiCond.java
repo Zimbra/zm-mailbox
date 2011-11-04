@@ -29,14 +29,15 @@ import javax.xml.bind.annotation.XmlElements;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.SearchFilterCondition;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class EntrySearchFilterMultiCond implements SearchFilterCondition {
 
     @XmlAttribute(name=AccountConstants.A_ENTRY_SEARCH_FILTER_NEGATION, required=false)
-    private Boolean not;
+    private ZmBoolean not;
     @XmlAttribute(name=AccountConstants.A_ENTRY_SEARCH_FILTER_OR, required=false)
-    private Boolean or;
+    private ZmBoolean or;
 
     @XmlElements({
         @XmlElement(name=AccountConstants.E_ENTRY_SEARCH_FILTER_MULTICOND,
@@ -64,12 +65,12 @@ public class EntrySearchFilterMultiCond implements SearchFilterCondition {
 
 
     @Override
-    public void setNot(Boolean not) { this.not = not; }
-    public void setOr(Boolean or) { this.or = or; }
+    public void setNot(Boolean not) { this.not = ZmBoolean.fromBool(not); }
+    public void setOr(Boolean or) { this.or = ZmBoolean.fromBool(or); }
 
     @Override
-    public Boolean isNot() { return not; }
-    public Boolean isOr() { return or; }
+    public Boolean isNot() { return ZmBoolean.toBool(not); }
+    public Boolean isOr() { return ZmBoolean.toBool(or); }
 
     public List<SearchFilterCondition> getConditions() {
         return Collections.unmodifiableList(conditions);

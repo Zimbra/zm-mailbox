@@ -31,6 +31,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.WaitSetAddSpec;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AdminConstants.E_ADMIN_CREATE_WAIT_SET_REQUEST)
@@ -40,7 +41,7 @@ public class AdminCreateWaitSetRequest {
     private final String defaultInterests;
 
     @XmlAttribute(name=MailConstants.A_ALL_ACCOUNTS, required=false)
-    private final Boolean allAccounts;
+    private final ZmBoolean allAccounts;
 
     @XmlElementWrapper(name=MailConstants.E_WAITSET_ADD)
     @XmlElement(name=MailConstants.E_A, required=false)
@@ -57,7 +58,7 @@ public class AdminCreateWaitSetRequest {
     public AdminCreateWaitSetRequest(String defaultInterests,
                     Boolean allAccounts) {
         this.defaultInterests = defaultInterests;
-        this.allAccounts = allAccounts;
+        this.allAccounts = ZmBoolean.fromBool(allAccounts);
     }
 
     public void setAccounts(Iterable <WaitSetAddSpec> accounts) {
@@ -73,7 +74,7 @@ public class AdminCreateWaitSetRequest {
     }
 
     public String getDefaultInterests() { return defaultInterests; }
-    public Boolean getAllAccounts() { return allAccounts; }
+    public Boolean getAllAccounts() { return ZmBoolean.toBool(allAccounts); }
     public List<WaitSetAddSpec> getAccounts() {
         return Collections.unmodifiableList(accounts);
     }

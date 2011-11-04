@@ -33,13 +33,14 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.soap.type.KeyValuePair;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_A)
 public class Attr extends KeyValuePair {
 
     @XmlAttribute(name=AdminConstants.A_C /* c */, required=false)
-    private Boolean isCosAttr;
+    private ZmBoolean isCosAttr;
 
     public Attr() {
         this(null, null, null);
@@ -51,15 +52,15 @@ public class Attr extends KeyValuePair {
 
     public Attr(String key, String value, Boolean isCosAttr) {
         super(key, value);
-        this.isCosAttr = isCosAttr;
+        this.isCosAttr = ZmBoolean.fromBool(isCosAttr);
     }
 
     public static Attr fromNameValue(String key, String value) {
         return new Attr(key, value);
     }
 
-    public void setIsCosAttr(Boolean isCosAttr) { this.isCosAttr = isCosAttr; }
-    public Boolean getIsCosAttr() { return isCosAttr; }
+    public void setIsCosAttr(Boolean isCosAttr) { this.isCosAttr = ZmBoolean.fromBool(isCosAttr); }
+    public Boolean getIsCosAttr() { return ZmBoolean.toBool(isCosAttr); }
 
     public static List <Attr> mapToList(Map<String, ? extends Object> attrs)
     throws ServiceException {

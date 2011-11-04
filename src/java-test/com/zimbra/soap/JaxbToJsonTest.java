@@ -60,7 +60,6 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.JSONElement;
 import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.MailConstants;
-import com.zimbra.common.soap.SoapParseException;
 import com.zimbra.common.soap.XMbxSearchConstants;
 
 public class JaxbToJsonTest {
@@ -244,13 +243,13 @@ public class JaxbToJsonTest {
         Element legacyElem = JSONElement.mFactory.createElement(AdminConstants.VERIFY_INDEX_RESPONSE);
         legacyElem.addElement(AdminConstants.E_STATUS).addText(String.valueOf(true));
         legacyElem.addElement(AdminConstants.E_MESSAGE).addText(msg);
-        logInfo("JSONElement ---> prettyPrint\n%1$s", legacyElem.prettyPrint());
+        logInfo("VerifyIndexResponse JSONElement ---> prettyPrint\n%1$s", legacyElem.prettyPrint());
 
         VerifyIndexResponse viResp = new VerifyIndexResponse(true, msg);
         Element elem = JacksonUtil.jaxbToJSONElement(viResp);
         Assert.assertEquals("status", true, elem.getAttributeBool(AdminConstants.E_STATUS));
         Assert.assertEquals("message", msg, elem.getAttribute(AdminConstants.E_MESSAGE));
-        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", elem.prettyPrint());
+        logInfo("VerifyIndexResponse JSONElement from JAXB ---> prettyPrint\n%1$s", elem.prettyPrint());
     }
 
     /**
@@ -270,13 +269,13 @@ public class JaxbToJsonTest {
         Element legacyElem = JSONElement.mFactory.createElement(MailConstants.DIFF_DOCUMENT_RESPONSE);
         legacyElem.addElement(MailConstants.E_CHUNK).addAttribute(MailConstants.A_DISP, dispos1).setText(text1);
         legacyElem.addElement(MailConstants.E_CHUNK).addAttribute(MailConstants.A_DISP, dispos2).setText(text2);
-        logInfo("JSONElement ---> prettyPrint\n%1$s", legacyElem.prettyPrint());
+        logInfo("DiffDocumentResponse JSONElement ---> prettyPrint\n%1$s", legacyElem.prettyPrint());
         // --------------------------------- @XmlValue handling test - need @JsonProperty("_content") annotation
         DiffDocumentResponse ddResp = new DiffDocumentResponse();
         ddResp.addChunk(DispositionAndText.create(dispos1, text1));
         ddResp.addChunk(DispositionAndText.create(dispos2, text2));
         Element elem = JacksonUtil.jaxbToJSONElement(ddResp);
-        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", elem.prettyPrint());
+        logInfo("DiffDocumentResponse JSONElement from JAXB ---> prettyPrint\n%1$s", elem.prettyPrint());
         List<Element> chunks = elem.listElements();
         Assert.assertEquals("Number of child elements", 2, chunks.size());
         Element chunk1 = chunks.get(0);
@@ -303,7 +302,7 @@ public class JaxbToJsonTest {
         legacyElem.addKeyValuePair("accounts", "*");
         legacyElem.addKeyValuePair("limit", "0");
         legacyElem.addKeyValuePair("notificationMessage", notifMsg);
-        logInfo("JSONElement ---> prettyPrint\n%1$s", legacyElem.prettyPrint());
+        logInfo("CreateXmbxSearchRequest JSONElement ---> prettyPrint\n%1$s", legacyElem.prettyPrint());
         // CreateXMbxSearchRequest extends AdminKeyValuePairs which uses a serializer to cope with KeyValuePairs
         //     @JsonSerialize(using=KeyAndValueListSerializer.class)
         //     @JsonProperty("_attrs")
@@ -315,7 +314,7 @@ public class JaxbToJsonTest {
         jaxb.addKeyValuePair(new KeyValuePair("limit", "0"));
         jaxb.addKeyValuePair(new KeyValuePair("notificationMessage", notifMsg));
         Element elem = JacksonUtil.jaxbToJSONElement(jaxb, XMbxSearchConstants.CREATE_XMBX_SEARCH_REQUEST);
-        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", elem.prettyPrint());
+        logInfo("CreateXmbxSearchRequest JSONElement from JAXB ---> prettyPrint\n%1$s", elem.prettyPrint());
         List<com.zimbra.common.soap.Element.KeyValuePair> kvps = elem.listKeyValuePairs();
         Assert.assertEquals("Number of keyValuePairs ", 4, kvps.size());
         com.zimbra.common.soap.Element.KeyValuePair kvp4 = kvps.get(3);
@@ -331,7 +330,7 @@ public class JaxbToJsonTest {
         legacyElem.addElement(AccountConstants.E_DLM).setText("dlmember3@no.where");
         legacyElem.addAttribute(AccountConstants.A_MORE, false);
         legacyElem.addAttribute(AccountConstants.A_TOTAL, 23);
-        logInfo("JSONElement ---> prettyPrint\n%1$s", legacyElem.prettyPrint());
+        logInfo("GetDistributionListMembersResponse JSONElement ---> prettyPrint\n%1$s", legacyElem.prettyPrint());
         // GetDistributionListMembersResponse has:
         //      @XmlElement(name=AccountConstants.E_DLM, required=false)
         //      @JsonSerialize(using=ContentListSerializer.class)
@@ -343,7 +342,7 @@ public class JaxbToJsonTest {
         jaxb.addDlMember("dlmember2@no.where");
         jaxb.addDlMember("dlmember3@no.where");
         Element elem = JacksonUtil.jaxbToJSONElement(jaxb, AccountConstants.GET_DISTRIBUTION_LIST_MEMBERS_RESPONSE);
-        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", elem.prettyPrint());
+        logInfo("GetDistributionListMembersResponse JSONElement from JAXB ---> prettyPrint\n%1$s", elem.prettyPrint());
         List<Element> dlMembers = elem.listElements(AccountConstants.E_DLM);
         Assert.assertEquals("Number of dlMembers", 3, dlMembers.size());
         Element dlMem3 = dlMembers.get(2);
@@ -362,7 +361,7 @@ public class JaxbToJsonTest {
     public void booleanMarshal() throws Exception {
         Element legacy0Elem = JSONElement.mFactory.createElement(MailConstants.NO_OP_RESPONSE);
         legacy0Elem.addAttribute(MailConstants.A_WAIT_DISALLOWED, false);
-        logInfo("JSONElement ---> prettyPrint\n%1$s", legacy0Elem.prettyPrint());
+        logInfo("NoOpResponse JSONElement ---> prettyPrint\n%1$s", legacy0Elem.prettyPrint());
         Element legacy1Elem = JSONElement.mFactory.createElement(MailConstants.NO_OP_RESPONSE);
         legacy1Elem.addAttribute(MailConstants.A_WAIT_DISALLOWED, true);
         Element legacyFalseElem = JSONElement.mFactory.createElement(MailConstants.NO_OP_RESPONSE);
@@ -378,7 +377,7 @@ public class JaxbToJsonTest {
         Assert.assertEquals("false Value of 'waitDisallowed'",
                 "0", xmlElem.getAttribute(MailConstants.A_WAIT_DISALLOWED));
         Element jsonElem = JacksonUtil.jaxbToJSONElement(jaxb, MailConstants.NO_OP_RESPONSE);
-        logInfo("JSONElement from JAXB (false)---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        logInfo("NoOpResponse JSONElement from JAXB (false)---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         Assert.assertEquals("false Value of 'waitDisallowed'",
                 "false", jsonElem.getAttribute(MailConstants.A_WAIT_DISALLOWED));
 
@@ -389,7 +388,7 @@ public class JaxbToJsonTest {
         Assert.assertEquals("true Value of 'waitDisallowed'",
                 "1", xmlElem.getAttribute(MailConstants.A_WAIT_DISALLOWED));
         jsonElem = JacksonUtil.jaxbToJSONElement(jaxb, MailConstants.NO_OP_RESPONSE);
-        logInfo("JSONElement from JAXB (true) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        logInfo("NoOpResponse JSONElement from JAXB (true) ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         Assert.assertEquals("true Value of 'waitDisallowed'",
                 "true", jsonElem.getAttribute(MailConstants.A_WAIT_DISALLOWED));
         // ensure that unmarshaling where XML Boolean representation is "1" for true works
@@ -472,8 +471,8 @@ header="X-Spam-Score"/>
         logInfo("XMLElement from JAXB ---> prettyPrint\n%1$s", xmlElem.prettyPrint());
         Assert.assertEquals("XML", legacyXmlElem.prettyPrint(), xmlElem.prettyPrint());
         Element jsonElem = JacksonUtil.jaxbToJSONElement(jaxb, MailConstants.GET_FILTER_RULES_RESPONSE);
-        logInfo("legacyJSONElement ---> prettyPrint\n%1$s", legacyJsonElem.prettyPrint());
-        logInfo("JSONElement from JAXB ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
+        logInfo("GetFilterRulesResponse legacyJSONElement ---> prettyPrint\n%1$s", legacyJsonElem.prettyPrint());
+        logInfo("GetFilterRulesResponse JSONElement from JAXB ---> prettyPrint\n%1$s", jsonElem.prettyPrint());
         Assert.assertEquals("JSON", legacyJsonElem.prettyPrint(), jsonElem.prettyPrint());
     }
 

@@ -22,13 +22,14 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.SearchFilterCondition;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public class EntrySearchFilterSingleCond
 implements SearchFilterCondition {
 
     @XmlAttribute(name=AccountConstants.A_ENTRY_SEARCH_FILTER_NEGATION /* not */, required=false)
-    private Boolean not;
+    private ZmBoolean not;
 
     @XmlAttribute(name=AccountConstants.A_ENTRY_SEARCH_FILTER_ATTR /* attr */, required=true)
     private String attr;
@@ -43,13 +44,13 @@ implements SearchFilterCondition {
     }
 
     @Override
-    public void setNot(Boolean not) { this.not = not; }
+    public void setNot(Boolean not) { this.not = ZmBoolean.fromBool(not); }
     public void setAttr(String attr) { this.attr = attr; }
     public void setOp(String op) { this.op = op; }
     public void setValue(String value) { this.value = value; }
 
     @Override
-    public Boolean isNot() { return not; }
+    public Boolean isNot() { return ZmBoolean.toBool(not); }
     public String getAttr() { return attr; }
     public String getOp() { return op; }
     public String getValue() { return value; }

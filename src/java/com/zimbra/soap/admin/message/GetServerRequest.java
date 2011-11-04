@@ -21,12 +21,13 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.ServerSelector;
 import com.zimbra.soap.type.AttributeSelectorImpl;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlRootElement(name=AdminConstants.E_GET_SERVER_REQUEST)
 public class GetServerRequest extends AttributeSelectorImpl {
 
     @XmlAttribute(name=AdminConstants.A_APPLY_CONFIG, required=false)
-    private Boolean applyConfig;
+    private ZmBoolean applyConfig;
     @XmlElement(name=AdminConstants.E_SERVER)
     private ServerSelector server;
 
@@ -44,9 +45,9 @@ public class GetServerRequest extends AttributeSelectorImpl {
     }
 
     public void setApplyConfig(Boolean applyConfig) {
-        this.applyConfig = applyConfig;
+        this.applyConfig = ZmBoolean.fromBool(applyConfig);
     }
 
     public ServerSelector getServer() { return server; }
-    public Boolean isApplyConfig() { return applyConfig; }
+    public Boolean isApplyConfig() { return ZmBoolean.toBool(applyConfig); }
 }

@@ -30,6 +30,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.SearchHit;
+import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(propOrder = {})
@@ -39,7 +40,7 @@ public class MessageHitInfo extends MessageInfo implements SearchHit {
     private String sortField;
 
     @XmlAttribute(name=MailConstants.A_CONTENTMATCHED /* cm */, required=false)
-    private Boolean contentMatched;
+    private ZmBoolean contentMatched;
 
     @XmlElement(name=MailConstants.E_HIT_MIMEPART /* hp */, required=false)
     private List<Part> messagePartHits = Lists.newArrayList();
@@ -55,7 +56,7 @@ public class MessageHitInfo extends MessageInfo implements SearchHit {
         this.sortField = sortField;
     }
     public void setContentMatched(Boolean contentMatched) {
-        this.contentMatched = contentMatched;
+        this.contentMatched = ZmBoolean.fromBool(contentMatched);
     }
     public void setMessagePartHits(Iterable <Part> messagePartHits) {
         this.messagePartHits.clear();
@@ -70,7 +71,7 @@ public class MessageHitInfo extends MessageInfo implements SearchHit {
     }
 
     public String getSortField() { return sortField; }
-    public Boolean getContentMatched() { return contentMatched; }
+    public Boolean getContentMatched() { return ZmBoolean.toBool(contentMatched); }
     public List<Part> getMessagePartHits() {
         return Collections.unmodifiableList(messagePartHits);
     }
