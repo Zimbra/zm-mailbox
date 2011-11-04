@@ -341,6 +341,9 @@ public class AccountConstants {
     public static final String A_VERIFY_ACCOUNT = "verifyAccount";
     
     // account ACLs
+    public static final String A_RIGHT = "right";
+    public static final String E_RIGHT = "right";
+    public static final String E_TARGET = "target";
     public static final String E_TARGETS = "targets";
     
     // gal
