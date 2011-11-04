@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111102-0929 */
+    /* build: 8.0.0_BETA1_1111 jhahm 20111104-0947 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -9281,6 +9281,17 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=546)
     public static final String A_zimbraReverseProxyDomainNameSearchBase = "zimbraReverseProxyDomainNameSearchBase";
+
+    /**
+     * the URL of customized proxy error handler. If set, when errors happen
+     * in proxy, proxy will redirect to this URL with two paras - err: error
+     * code; up: the addr of upstream server connecting to which the error
+     * happens
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1332)
+    public static final String A_zimbraReverseProxyErrorHandlerURL = "zimbraReverseProxyErrorHandlerURL";
 
     /**
      * Whether to enable HTTP proxy
