@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 jhahm 20111104-0947 */
+    /* build: 8.0.0_BETA1_1111 pshao 20111104-1616 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -7450,6 +7450,15 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefAdvancedClientEnforceMinDisplay = "zimbraPrefAdvancedClientEnforceMinDisplay";
 
     /**
+     * Addresses of the account that can be used by allowed delegated senders
+     * as From and Sender address.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1333)
+    public static final String A_zimbraPrefAllowAddressForDelegatedSender = "zimbraPrefAllowAddressForDelegatedSender";
+
+    /**
      * Use the iCal style delegation model for shared calendars for CalDAV
      * interface when set to TRUE.
      *
@@ -10429,6 +10438,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
