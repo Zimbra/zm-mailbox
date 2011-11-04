@@ -622,7 +622,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @return
      * @throws ServiceException
      */
-    public abstract Account createAccount(String emailAddress, String password, Map<String, Object> attrs) throws ServiceException;
+    public abstract Account createAccount(String emailAddress, String password, 
+            Map<String, Object> attrs) throws ServiceException;
 
     /**
      *
@@ -715,7 +716,8 @@ public abstract class Provisioning extends ZAttrProvisioning {
      * @return an account instance if the account is successfully created
      * @throws ServiceException
      */
-    public Account autoProvAccountManual(Domain domain, AutoProvPrincipalBy by, String principal) 
+    public Account autoProvAccountManual(Domain domain, AutoProvPrincipalBy by, 
+            String principal, String password) 
     throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
@@ -858,9 +860,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public abstract void modifyAccountStatus(Account acct, String newStatus) throws ServiceException;
 
-    public abstract void authAccount(Account acct, String password, AuthContext.Protocol proto) throws ServiceException;
+    public abstract void authAccount(Account acct, String password, AuthContext.Protocol proto) 
+    throws ServiceException;
 
-    public abstract void authAccount(Account acct, String password, AuthContext.Protocol proto, Map<String, Object> authCtxt) throws ServiceException;
+    public abstract void authAccount(Account acct, String password, 
+            AuthContext.Protocol proto, Map<String, Object> authCtxt) 
+    throws ServiceException;
 
     public void accountAuthed(Account acct) throws ServiceException {
         // noop by default

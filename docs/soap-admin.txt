@@ -2533,6 +2533,7 @@ If neither is specified, all attributes will be returned.
 <AutoProvAccountRequest>
     <domain by="name|id">...</domain>  
     <principal by="dn|name">...</principal>
+    [<password>...</password>]
 </AutoProvAccountRequest>
 
 

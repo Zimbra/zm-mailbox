@@ -29,12 +29,14 @@ public class AutoProvisionManual extends AutoProvision {
 
     private AutoProvPrincipalBy by;
     private String principal;
+    private String password;
     
     protected AutoProvisionManual(LdapProv prov, Domain domain, 
-            AutoProvPrincipalBy by, String principal) {
+            AutoProvPrincipalBy by, String principal, String password) {
         super(prov, domain);
         this.by = by;
         this.principal = principal;
+        this.password = password;
     }
 
     @Override
@@ -67,7 +69,7 @@ public class AutoProvisionManual extends AutoProvision {
         }
 
         ZimbraLog.autoprov.info("auto creating account in MANUAL mode: " + acctZimbraName);
-        return createAccount(acctZimbraName, externalEntry);
+        return createAccount(acctZimbraName, externalEntry, password);
     }
 
 }

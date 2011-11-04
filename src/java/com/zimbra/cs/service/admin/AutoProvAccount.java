@@ -37,7 +37,10 @@ public class AutoProvAccount extends AdminDocumentHandler {
         AutoProvPrincipalBy by = AutoProvPrincipalBy.fromString(ePrincipal.getAttribute(AdminConstants.A_BY));
         String principal = ePrincipal.getText();
         
-        Account acct = prov.autoProvAccountManual(domain, by, principal);
+        Element ePassword = request.getOptionalElement(AdminConstants.E_PASSWORD);
+        String password = ePassword == null ? null : ePassword.getText();
+        
+        Account acct = prov.autoProvAccountManual(domain, by, principal, password);
         if (acct == null) {
             throw ServiceException.FAILURE("unable to auto provision account: " + principal, null);
         }

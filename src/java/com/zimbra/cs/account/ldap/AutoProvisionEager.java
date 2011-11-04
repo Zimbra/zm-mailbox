@@ -143,7 +143,7 @@ public class AutoProvisionEager extends AutoProvision {
                 String acctZimbraName = mapName(externalAttrs, null);
                 
                 ZimbraLog.autoprov.info("auto creating account in EAGER mode: " + acctZimbraName);
-                Account acct = createAccount(acctZimbraName, entry);
+                Account acct = createAccount(acctZimbraName, entry, null);
             } catch (ServiceException e) {
                 // log and continue with next entry
                 ZimbraLog.autoprov.warn("unable to auto create account " + entry.getDN(), e);

@@ -90,7 +90,8 @@ public abstract class AutoProvision {
     
     abstract Account handle() throws ServiceException;
     
-    protected Account createAccount(String acctZimbraName, ExternalEntry externalEntry) 
+    protected Account createAccount(String acctZimbraName, ExternalEntry externalEntry,
+            String password) 
     throws ServiceException {
         ZAttributes externalAttrs = externalEntry.getAttrs();
         
@@ -101,7 +102,14 @@ public abstract class AutoProvision {
         String zimbraPassword = RandomPassword.generate();
         zimbraAttrs.put(Provisioning.A_zimbraPasswordMustChange, Provisioning.TRUE);
         */
+        
+        // if password is provided, use it
         String zimbraPassword = null;
+        if (password != null) {
+            zimbraPassword = password;
+            zimbraAttrs.remove(Provisioning.A_userPassword);
+        }
+        
         Account acct = null;
         
         try {

@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpMethod;
@@ -34,28 +33,24 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvMode;
 import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.PreAuthKey;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.DirectoryEntryVisitor;
 import com.zimbra.cs.account.Provisioning.EagerAutoProvisionScheduler;
+import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
-import com.zimbra.cs.account.ldap.AutoProvisionEager;
 import com.zimbra.cs.account.ldap.AutoProvisionListener;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.entry.LdapDomain;
-import com.zimbra.cs.ldap.LdapClient;
-import com.zimbra.cs.ldap.LdapConstants;
-import com.zimbra.cs.ldap.LdapServerType;
-import com.zimbra.cs.ldap.LdapUsage;
-import com.zimbra.cs.ldap.ZLdapContext;
 import com.zimbra.soap.type.AutoProvPrincipalBy;
 
 public class TestLdapProvAutoProvision extends TestLdap {
@@ -329,10 +324,24 @@ public class TestLdapProvAutoProvision extends TestLdap {
         zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, "(uid=%u)");
         Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
                 
-        // try auto provisioning with bad password
         String principal = extAcctLocalPart;
-        Account acct = prov.autoProvAccountManual(zimbraDomain, AutoProvPrincipalBy.name, principal);
+        String password = "test123";
+        Account acct = prov.autoProvAccountManual(zimbraDomain, AutoProvPrincipalBy.name, 
+                principal, password);
         verifyAcctAutoProvisioned(acct);
+        
+        // make sure the provided password, instead of the external password is used
+        prov.authAccount(acct, password, AuthContext.Protocol.test);
+        
+        boolean caughtException = false;
+        try {
+            prov.authAccount(acct, externalPassword, AuthContext.Protocol.test);
+        } catch (ServiceException e) {
+            if (AccountServiceException.AUTH_FAILED.equals(e.getCode())) {
+                caughtException = true;
+            }
+        }
+        assertTrue(caughtException);
     }
     
     @Test
@@ -352,9 +361,10 @@ public class TestLdapProvAutoProvision extends TestLdap {
         zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvAccountNameMap, Provisioning.A_description);
         Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
                 
-        // try auto provisioning with bad password
         String principal = externalEntryDN(extAcctLocalPart);
-        Account acct = prov.autoProvAccountManual(zimbraDomain, AutoProvPrincipalBy.dn, principal);
+        String password = null;
+        Account acct = prov.autoProvAccountManual(zimbraDomain, AutoProvPrincipalBy.dn, 
+                principal, password);
         verifyAcctAutoProvisioned(acct, zimbraAcctLocalpart + "@" + zimbraDomain.getName());
     }
     

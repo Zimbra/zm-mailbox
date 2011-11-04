@@ -866,14 +866,17 @@ public class LdapProvisioning extends LdapProv {
     public Account autoProvAccountLazy(Domain domain, String loginName,
             String loginPassword, AutoProvAuthMech authMech)
     throws ServiceException {
-        AutoProvisionLazy autoPorv = new AutoProvisionLazy(this, domain, loginName, loginPassword, authMech);
+        AutoProvisionLazy autoPorv = 
+            new AutoProvisionLazy(this, domain, loginName, loginPassword, authMech);
         return autoPorv.handle();
     }
 
     @Override
-    public Account autoProvAccountManual(Domain domain, AutoProvPrincipalBy by, String principal)
+    public Account autoProvAccountManual(Domain domain, AutoProvPrincipalBy by, 
+            String principal, String password)
     throws ServiceException {
-        AutoProvisionManual autoProv = new AutoProvisionManual(this, domain, by, principal);
+        AutoProvisionManual autoProv = 
+            new AutoProvisionManual(this, domain, by, principal, password);
         return autoProv.handle();
     }
 
