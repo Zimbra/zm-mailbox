@@ -42,7 +42,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111102-0929 */
+    /* build: 8.0.0_BETA1_1111 jhahm 20111104-0947 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -9719,11 +9719,11 @@ public abstract class ZAttrServer extends NamedEntry {
     /**
      * URL prefix for where the zimbra app resides on this server
      *
-     * @return zimbraMailURL, or "/zimbra" if unset
+     * @return zimbraMailURL, or "/" if unset
      */
     @ZAttr(id=340)
     public String getMailURL() {
-        return getAttr(Provisioning.A_zimbraMailURL, "/zimbra");
+        return getAttr(Provisioning.A_zimbraMailURL, "/");
     }
 
     /**
@@ -16721,6 +16721,93 @@ public abstract class ZAttrServer extends NamedEntry {
     public Map<String,Object> unsetReverseProxyDefaultRealm(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxyDefaultRealm, "");
+        return attrs;
+    }
+
+    /**
+     * the URL of customized proxy error handler. If set, when errors happen
+     * in proxy, proxy will redirect to this URL with two paras - err: error
+     * code; up: the addr of upstream server connecting to which the error
+     * happens
+     *
+     * @return zimbraReverseProxyErrorHandlerURL, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1332)
+    public String getReverseProxyErrorHandlerURL() {
+        return getAttr(Provisioning.A_zimbraReverseProxyErrorHandlerURL, null);
+    }
+
+    /**
+     * the URL of customized proxy error handler. If set, when errors happen
+     * in proxy, proxy will redirect to this URL with two paras - err: error
+     * code; up: the addr of upstream server connecting to which the error
+     * happens
+     *
+     * @param zimbraReverseProxyErrorHandlerURL new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1332)
+    public void setReverseProxyErrorHandlerURL(String zimbraReverseProxyErrorHandlerURL) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyErrorHandlerURL, zimbraReverseProxyErrorHandlerURL);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the URL of customized proxy error handler. If set, when errors happen
+     * in proxy, proxy will redirect to this URL with two paras - err: error
+     * code; up: the addr of upstream server connecting to which the error
+     * happens
+     *
+     * @param zimbraReverseProxyErrorHandlerURL new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1332)
+    public Map<String,Object> setReverseProxyErrorHandlerURL(String zimbraReverseProxyErrorHandlerURL, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyErrorHandlerURL, zimbraReverseProxyErrorHandlerURL);
+        return attrs;
+    }
+
+    /**
+     * the URL of customized proxy error handler. If set, when errors happen
+     * in proxy, proxy will redirect to this URL with two paras - err: error
+     * code; up: the addr of upstream server connecting to which the error
+     * happens
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1332)
+    public void unsetReverseProxyErrorHandlerURL() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyErrorHandlerURL, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * the URL of customized proxy error handler. If set, when errors happen
+     * in proxy, proxy will redirect to this URL with two paras - err: error
+     * code; up: the addr of upstream server connecting to which the error
+     * happens
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1332)
+    public Map<String,Object> unsetReverseProxyErrorHandlerURL(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyErrorHandlerURL, "");
         return attrs;
     }
 

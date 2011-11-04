@@ -42,7 +42,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111102-0929 */
+    /* build: 8.0.0_BETA1_1111 jhahm 20111104-0947 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -21527,13 +21527,13 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [off, bottom, right]
      *
-     * @return zimbraPrefBriefcaseReadingPaneLocation, or ZAttrProvisioning.PrefBriefcaseReadingPaneLocation.bottom if unset and/or has invalid value
+     * @return zimbraPrefBriefcaseReadingPaneLocation, or ZAttrProvisioning.PrefBriefcaseReadingPaneLocation.right if unset and/or has invalid value
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1152)
     public ZAttrProvisioning.PrefBriefcaseReadingPaneLocation getPrefBriefcaseReadingPaneLocation() {
-        try { String v = getAttr(Provisioning.A_zimbraPrefBriefcaseReadingPaneLocation); return v == null ? ZAttrProvisioning.PrefBriefcaseReadingPaneLocation.bottom : ZAttrProvisioning.PrefBriefcaseReadingPaneLocation.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefBriefcaseReadingPaneLocation.bottom; }
+        try { String v = getAttr(Provisioning.A_zimbraPrefBriefcaseReadingPaneLocation); return v == null ? ZAttrProvisioning.PrefBriefcaseReadingPaneLocation.right : ZAttrProvisioning.PrefBriefcaseReadingPaneLocation.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefBriefcaseReadingPaneLocation.right; }
     }
 
     /**
@@ -21541,13 +21541,13 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [off, bottom, right]
      *
-     * @return zimbraPrefBriefcaseReadingPaneLocation, or "bottom" if unset
+     * @return zimbraPrefBriefcaseReadingPaneLocation, or "right" if unset
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1152)
     public String getPrefBriefcaseReadingPaneLocationAsString() {
-        return getAttr(Provisioning.A_zimbraPrefBriefcaseReadingPaneLocation, "bottom");
+        return getAttr(Provisioning.A_zimbraPrefBriefcaseReadingPaneLocation, "right");
     }
 
     /**
@@ -31115,13 +31115,13 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [off, bottom, right]
      *
-     * @return zimbraPrefReadingPaneLocation, or ZAttrProvisioning.PrefReadingPaneLocation.bottom if unset and/or has invalid value
+     * @return zimbraPrefReadingPaneLocation, or ZAttrProvisioning.PrefReadingPaneLocation.right if unset and/or has invalid value
      *
      * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=804)
     public ZAttrProvisioning.PrefReadingPaneLocation getPrefReadingPaneLocation() {
-        try { String v = getAttr(Provisioning.A_zimbraPrefReadingPaneLocation); return v == null ? ZAttrProvisioning.PrefReadingPaneLocation.bottom : ZAttrProvisioning.PrefReadingPaneLocation.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefReadingPaneLocation.bottom; }
+        try { String v = getAttr(Provisioning.A_zimbraPrefReadingPaneLocation); return v == null ? ZAttrProvisioning.PrefReadingPaneLocation.right : ZAttrProvisioning.PrefReadingPaneLocation.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefReadingPaneLocation.right; }
     }
 
     /**
@@ -31129,13 +31129,13 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [off, bottom, right]
      *
-     * @return zimbraPrefReadingPaneLocation, or "bottom" if unset
+     * @return zimbraPrefReadingPaneLocation, or "right" if unset
      *
      * @since ZCS 6.0.0_BETA1
      */
     @ZAttr(id=804)
     public String getPrefReadingPaneLocationAsString() {
-        return getAttr(Provisioning.A_zimbraPrefReadingPaneLocation, "bottom");
+        return getAttr(Provisioning.A_zimbraPrefReadingPaneLocation, "right");
     }
 
     /**
@@ -32937,13 +32937,13 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [off, bottom, right]
      *
-     * @return zimbraPrefTasksReadingPaneLocation, or ZAttrProvisioning.PrefTasksReadingPaneLocation.bottom if unset and/or has invalid value
+     * @return zimbraPrefTasksReadingPaneLocation, or ZAttrProvisioning.PrefTasksReadingPaneLocation.right if unset and/or has invalid value
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1151)
     public ZAttrProvisioning.PrefTasksReadingPaneLocation getPrefTasksReadingPaneLocation() {
-        try { String v = getAttr(Provisioning.A_zimbraPrefTasksReadingPaneLocation); return v == null ? ZAttrProvisioning.PrefTasksReadingPaneLocation.bottom : ZAttrProvisioning.PrefTasksReadingPaneLocation.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefTasksReadingPaneLocation.bottom; }
+        try { String v = getAttr(Provisioning.A_zimbraPrefTasksReadingPaneLocation); return v == null ? ZAttrProvisioning.PrefTasksReadingPaneLocation.right : ZAttrProvisioning.PrefTasksReadingPaneLocation.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefTasksReadingPaneLocation.right; }
     }
 
     /**
@@ -32951,13 +32951,13 @@ public abstract class ZAttrCos extends NamedEntry {
      *
      * <p>Valid values: [off, bottom, right]
      *
-     * @return zimbraPrefTasksReadingPaneLocation, or "bottom" if unset
+     * @return zimbraPrefTasksReadingPaneLocation, or "right" if unset
      *
      * @since ZCS 7.0.0
      */
     @ZAttr(id=1151)
     public String getPrefTasksReadingPaneLocationAsString() {
-        return getAttr(Provisioning.A_zimbraPrefTasksReadingPaneLocation, "bottom");
+        return getAttr(Provisioning.A_zimbraPrefTasksReadingPaneLocation, "right");
     }
 
     /**
