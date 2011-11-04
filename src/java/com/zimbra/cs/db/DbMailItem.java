@@ -686,19 +686,21 @@ public class DbMailItem {
             conn.closeQuietly(rs);
             conn.closeQuietly(stmt);
         }
-        try { // also from MAIL_ITEM_DUMPSTER table
-            stmt = conn.prepareStatement("SELECT type, id FROM " + getMailItemTableName(mbox, true) +
-                    " WHERE " + IN_THIS_MAILBOX_AND + "index_id <= 1");
-            setMailboxId(stmt, mbox, 1);
-            rs = stmt.executeQuery();
-            while (rs.next()) {
-                result.put(MailItem.Type.of(rs.getByte(1)), rs.getInt(2));
+        if (mbox.dumpsterEnabled()) {
+            try { // also from MAIL_ITEM_DUMPSTER table
+                stmt = conn.prepareStatement("SELECT type, id FROM " + getMailItemTableName(mbox, true) +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "index_id <= 1");
+                setMailboxId(stmt, mbox, 1);
+                rs = stmt.executeQuery();
+                while (rs.next()) {
+                    result.put(MailItem.Type.of(rs.getByte(1)), rs.getInt(2));
+                }
+            } catch (SQLException e) {
+                throw ServiceException.FAILURE("Failed to query index deferred IDs from dumpster", e);
+            } finally {
+                conn.closeQuietly(rs);
+                conn.closeQuietly(stmt);
             }
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("Failed to query index deferred IDs from dumpster", e);
-        } finally {
-            conn.closeQuietly(rs);
-            conn.closeQuietly(stmt);
         }
         return result;
     }
@@ -726,23 +728,25 @@ public class DbMailItem {
             conn.closeQuietly(rs);
             conn.closeQuietly(stmt);
         }
-        try { // also from MAIL_ITEM_DUMPSTER table
-            stmt = conn.prepareStatement("SELECT id FROM " + getMailItemTableName(mbox, true) +
-                    " WHERE " + IN_THIS_MAILBOX_AND + "index_id IS NOT NULL" +
-                    (types.isEmpty() ? "" : " AND " + DbUtil.whereIn("type", types.size())));
-            int pos = setMailboxId(stmt, mbox, 1);
-            for (MailItem.Type type : types) {
-                stmt.setByte(pos++, type.toByte());
+        if (mbox.dumpsterEnabled()) {
+            try { // also from MAIL_ITEM_DUMPSTER table
+                stmt = conn.prepareStatement("SELECT id FROM " + getMailItemTableName(mbox, true) +
+                        " WHERE " + IN_THIS_MAILBOX_AND + "index_id IS NOT NULL" +
+                        (types.isEmpty() ? "" : " AND " + DbUtil.whereIn("type", types.size())));
+                int pos = setMailboxId(stmt, mbox, 1);
+                for (MailItem.Type type : types) {
+                    stmt.setByte(pos++, type.toByte());
+                }
+                rs = stmt.executeQuery();
+                while (rs.next()) {
+                    ids.add(rs.getInt(1));
+                }
+            } catch (SQLException e) {
+                throw ServiceException.FAILURE("Failed to query re-index IDs from dumpster", e);
+            } finally {
+                conn.closeQuietly(rs);
+                conn.closeQuietly(stmt);
             }
-            rs = stmt.executeQuery();
-            while (rs.next()) {
-                ids.add(rs.getInt(1));
-            }
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("Failed to query re-index IDs from dumpster", e);
-        } finally {
-            conn.closeQuietly(rs);
-            conn.closeQuietly(stmt);
         }
         return ids;
     }
@@ -771,18 +775,20 @@ public class DbMailItem {
             if (updated == count) { // all updates were in MAIL_ITEM table, no need to update MAIL_ITEM_DUMPSTER table
                 continue;
             }
-            try { // also update MAIL_ITEM_DUMPSTER table
-                stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox, true) +
-                        " SET index_id = id WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count));
-                int pos = setMailboxId(stmt, mbox, 1);
-                for (int j = i; j < i + count; j++) {
-                    stmt.setInt(pos++, ids.get(j));
+            if (mbox.dumpsterEnabled()) {
+                try { // also update MAIL_ITEM_DUMPSTER table
+                    stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox, true) +
+                            " SET index_id = id WHERE " + IN_THIS_MAILBOX_AND + DbUtil.whereIn("id", count));
+                    int pos = setMailboxId(stmt, mbox, 1);
+                    for (int j = i; j < i + count; j++) {
+                        stmt.setInt(pos++, ids.get(j));
+                    }
+                    stmt.executeUpdate();
+                } catch (SQLException e) {
+                    throw ServiceException.FAILURE("Failed to set index_id in dumpster", e);
+                } finally {
+                    conn.closeQuietly(stmt);
                 }
-                stmt.executeUpdate();
-            } catch (SQLException e) {
-                throw ServiceException.FAILURE("Failed to set index_id in dumpster", e);
-            } finally {
-                conn.closeQuietly(stmt);
             }
         }
     }
@@ -799,15 +805,17 @@ public class DbMailItem {
         } finally {
             conn.closeQuietly(stmt);
         }
-        try { // also update MAIL_ITEM_DUMPSTER table
-            stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox, true) +
-                    " SET index_id = 0 WHERE " + IN_THIS_MAILBOX_AND + "index_id > 0");
-            setMailboxId(stmt, mbox, 1);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw ServiceException.FAILURE("Failed to reset index_id in dumpster", e);
-        } finally {
-            conn.closeQuietly(stmt);
+        if (mbox.dumpsterEnabled()) {
+            try { // also update MAIL_ITEM_DUMPSTER table
+                stmt = conn.prepareStatement("UPDATE " + getMailItemTableName(mbox, true) +
+                        " SET index_id = 0 WHERE " + IN_THIS_MAILBOX_AND + "index_id > 0");
+                setMailboxId(stmt, mbox, 1);
+                stmt.executeUpdate();
+            } catch (SQLException e) {
+                throw ServiceException.FAILURE("Failed to reset index_id in dumpster", e);
+            } finally {
+                conn.closeQuietly(stmt);
+            }
         }
     }
 
