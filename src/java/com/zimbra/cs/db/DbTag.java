@@ -241,7 +241,7 @@ public final class DbTag {
             String mailboxesMatchAnd = DebugConfig.disableMailboxGroups ? "" : "mi.mailbox_id = ti.mailbox_id AND ";
             String folderconstraint = folders == null ? "" : " AND " + DbUtil.whereIn("folder_id", folders.size());
             stmt = conn.prepareStatement("SELECT " + DbMailItem.LEAF_NODE_FIELDS +
-                        " FROM " + DbMailItem.getMailItemTableName(mbox) +
+                        " FROM " + DbMailItem.getMailItemTableName(mbox, "mi") +
                         " INNER JOIN " + getTaggedItemTableName(mbox, "ti") + " ON " + mailboxesMatchAnd + "ti.item_id = mi.id" +
                         " WHERE " + inThisMailboxAnd("ti") + "ti.tag_id = " + Flag.ID_DELETED +
                         " AND type IN " + DbMailItem.IMAP_TYPES + folderconstraint);
