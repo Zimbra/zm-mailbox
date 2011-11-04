@@ -24,7 +24,6 @@ import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.util.EmailUtil;
@@ -34,12 +33,11 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.AuthToken;
 
@@ -269,6 +267,8 @@ public class AccountUtil {
     }
 
     public static class AccountAddressMatcher {
+        private Account account;
+        private boolean matchSendAs;
         private Set<String> addresses;
 
         public AccountAddressMatcher(Account account) throws ServiceException {
@@ -276,6 +276,9 @@ public class AccountUtil {
         }
 
         public AccountAddressMatcher(Account account, boolean matchSendAs) throws ServiceException {
+            this.account = account;
+            this.matchSendAs = matchSendAs;
+
             addresses = new HashSet<String>();
             String mainAddr = account.getName();
             if (!StringUtil.isNullOrEmpty(mainAddr)) {
@@ -296,42 +299,9 @@ public class AccountUtil {
             String[] addrs = account.getMultiAttr(Provisioning.A_zimbraAllowFromAddress);
             if (addrs != null) {
                 for (String addr : addrs) {
-                    if (StringUtil.isNullOrEmpty(addr)) {
-                        continue;
+                    if (!StringUtil.isNullOrEmpty(addr)) {
+                        addresses.add(addr.toLowerCase());
                     }
-                    
-                    if (addresses.contains(addr.toLowerCase())) {
-                        continue;
-                    }
-                    
-                    if (!matchSendAs) {
-                        // Find addresses that point to a different account.  We want to distinguish between sending
-                        // as another user and sending as an external address controlled/owned by this user.
-                        // This check can be removed when we stop adding sendAs addresses in zimbraAllowFromAddress.
-                        try {
-                            // Don't lookup account if email domain is not internal.  This will avoid unnecessary ldap searches
-                            // that will have returned no match anyway.
-                            String domain = EmailUtil.getValidDomainPart(addr);
-                            if (domain != null) {
-                                Domain internalDomain = Provisioning.getInstance().getDomain(DomainBy.name, domain, true);
-                                if (internalDomain != null) {
-                                    Account allowFromAccount;
-                                    if (Provisioning.getInstance().isDistributionList(addr)) {
-                                        // Avoid ldap search of DL address as an account.  This will have returned no match anyway.
-                                        allowFromAccount = null;
-                                    } else {
-                                        allowFromAccount = Provisioning.getInstance().get(AccountBy.name, addr);
-                                    }
-                                    if (allowFromAccount != null && !account.getId().equalsIgnoreCase(allowFromAccount.getId())) {
-                                        // The allow-from address refers to another account, and therefore it is not a match
-                                        // for this account.
-                                        continue;
-                                    }
-                                }
-                            }
-                        } catch (ServiceException e) {}
-                    }
-                    addresses.add(addr.toLowerCase());
                 }
             }
         }
@@ -347,17 +317,24 @@ public class AccountUtil {
             if (addresses.contains(address.toLowerCase())) {
                 return true;
             }
+            boolean match = false;
             if (checkDomainAlias) {
                 try {
                     String addrByDomainAlias = Provisioning.getInstance().getEmailAddrByDomainAlias(address);
                     if (addrByDomainAlias != null) {
-                        return matches(addrByDomainAlias, false);  // Assume domain aliases are never chained.
+                        match = matches(addrByDomainAlias, false);  // Assume domain aliases are never chained.
                     }
                 } catch (ServiceException e) {
                     ZimbraLog.account.warn("unable to get addr by alias domain" + e);
                 }
             }
-            return false;
+            if (!match && matchSendAs) {
+                match = AccessManager.getInstance().canSendAs(account, address, false);
+            }
+            if (match) {
+                addresses.add(address.toLowerCase());  // Cache for later matches() calls.
+            }
+            return match;
         }
     }
 

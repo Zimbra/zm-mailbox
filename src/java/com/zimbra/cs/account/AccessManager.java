@@ -15,20 +15,23 @@
 
 package com.zimbra.cs.account;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DistributionListBy;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.account.accesscontrol.Rights.User;
 
 public abstract class AccessManager {
 
@@ -377,4 +380,45 @@ public abstract class AccessManager {
         throw ServiceException.FAILURE("not supported", null);
     }
 
+    public boolean canSendAs(Account grantee, String targetAddress, boolean asAdmin) throws ServiceException {
+        return canSendInternal(grantee, targetAddress, User.R_sendAs, asAdmin);
+    }
+
+    public boolean canSendOnBehalfOf(Account grantee, String targetAddress, boolean asAdmin) throws ServiceException {
+        return canSendInternal(grantee, targetAddress, User.R_sendOnBehalfOf, asAdmin);
+    }
+
+    private boolean canSendInternal(Account grantee, String targetAddress, Right sendRight, boolean asAdmin)
+            throws ServiceException {
+        boolean allowed = false;
+        Right dlSendRight;
+        if (User.R_sendAs.equals(sendRight)) {
+            dlSendRight = User.R_sendAsDistList;
+        } else if (User.R_sendOnBehalfOf.equals(sendRight)) {
+            dlSendRight = User.R_sendOnBehalfOfDistList;
+        } else {
+            throw ServiceException.FAILURE("invalid send right " + sendRight, null);
+        }
+        // Don't lookup account if email domain is not internal.  This will avoid unnecessary ldap searches
+        // that will have returned no match anyway.
+        String domain = EmailUtil.getValidDomainPart(targetAddress);
+        if (domain != null) {
+            Provisioning prov = Provisioning.getInstance();
+            Domain internalDomain = prov.getDomain(DomainBy.name, domain, true);
+            if (internalDomain != null) {
+                if (prov.isDistributionList(targetAddress)) {
+                    Group group = prov.getGroupBasic(DistributionListBy.name, targetAddress);
+                    if (group != null) {
+                        allowed = canDo(grantee, group, dlSendRight, asAdmin);
+                    }
+                } else {
+                    Account addrAccount = prov.get(AccountBy.name, targetAddress);
+                    if (addrAccount != null) {
+                        allowed = canDo(grantee, addrAccount, sendRight, asAdmin);
+                    }
+                }
+            }
+        }
+        return allowed;
+    }
 }

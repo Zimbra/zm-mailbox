@@ -58,7 +58,6 @@ import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.filter.RuleManager;
 import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Threader.ThreadIndex;
@@ -749,7 +748,7 @@ public class MailSender {
         if (mRedirectMode) {
             // Don't touch the message at all in redirect mode.
         } else {
-            Pair<InternetAddress, InternetAddress> fromsender = getSenderHeaders(from, sender, acct, authuser,
+            Pair<InternetAddress, InternetAddress> fromsender = getSenderHeaders(from, sender, authuser,
                     octxt != null ? octxt.isUsingAdminPrivileges() : false);
             from = fromsender.getFirst();
             sender = fromsender.getSecond();
@@ -785,44 +784,46 @@ public class MailSender {
      * @return a {@link Pair} containing the approved {@code from} and {@code
      *         sender} header addresses, in that order. */
     public Pair<InternetAddress, InternetAddress> getSenderHeaders(InternetAddress from, InternetAddress sender,
-            Account account, Account authuser, boolean asAdmin) throws ServiceException {
-        if (account.getId().equals(authuser.getId())) { // non delegated sends
-            // From must be the account's address
-            if (from == null || !AccountUtil.allowFromAddress(account, from.getAddress())) {
-                from = AccountUtil.getFriendlyEmailAddress(account);
-            }
-            // Sender must be the account's address
-            if (sender != null && !AccountUtil.allowFromAddress(account, sender.getAddress())) {
-                return new Pair<InternetAddress, InternetAddress>(from, null);
-            }
-            if (Objects.equal(sender, from)) { // no need for matching Sender and From addresses
-                sender = null;
-            }
+            Account authuser, boolean asAdmin) throws ServiceException {
+        if (authuser.isAllowAnyFromAddress()) {
             return new Pair<InternetAddress, InternetAddress>(from, sender);
-        } else { // delegated sends
-            if (Objects.equal(sender, from)) { // no need for matching Sender and From addresses
-                sender = null;
-            }
-            if (sender == null && AccessManager.getInstance().canDo(authuser, account, User.R_sendAs, asAdmin)) {
-                // From must be the grantor's address.
-                if (from == null || !AccountUtil.allowFromAddress(account, from.getAddress())) {
-                    from = AccountUtil.getFriendlyEmailAddress(account);
-                }
-                return new Pair<InternetAddress, InternetAddress>(from, null);
-            }
-            if (mCalendarMode || AccessManager.getInstance().canDo(authuser, account, User.R_sendOnBehalfOf, asAdmin)) {
-                // From must be the grantor's address.
-                if (from == null || !AccountUtil.allowFromAddress(account, from.getAddress())) {
-                    from = AccountUtil.getFriendlyEmailAddress(account);
-                }
-                // Sender must be the authenticated user's address.
-                if (sender == null || !AccountUtil.allowFromAddress(authuser, sender.getAddress())) {
-                    sender = AccountUtil.getFriendlyEmailAddress(authuser);
-                }
-                return new Pair<InternetAddress, InternetAddress>(from, sender);
-            }
-            // unauthorized delegated sends
+        }
+        if (from == null && sender == null) {
             return new Pair<InternetAddress, InternetAddress>(AccountUtil.getFriendlyEmailAddress(authuser), null);
+        }
+        if (Objects.equal(sender, from)) { // no need for matching Sender and From addresses
+            sender = null;
+        }
+        if (from == null && sender != null) {  // if only one value is given, set From and unset Sender
+            from = sender;
+            sender = null;
+        }
+        AccessManager amgr = AccessManager.getInstance();
+        if (sender == null) {  // doing send-as
+            if (amgr.canSendAs(authuser, from.getAddress(), asAdmin)) {
+                return new Pair<InternetAddress, InternetAddress>(from, null);
+            } else if (amgr.canSendOnBehalfOf(authuser, from.getAddress(), asAdmin)) {
+                // Downgrade to send-obo.
+                return new Pair<InternetAddress, InternetAddress>(from, AccountUtil.getFriendlyEmailAddress(authuser));
+            } else {
+                // Send as self.
+                return new Pair<InternetAddress, InternetAddress>(AccountUtil.getFriendlyEmailAddress(authuser), null);
+            }
+        } else {  // doing send-obo
+            // Verify Sender is set to authuser's address.
+            if (!AccountUtil.allowFromAddress(authuser, sender.getAddress())) {
+                sender = AccountUtil.getFriendlyEmailAddress(authuser);
+            }
+            if (mCalendarMode) {
+                // In calendar mode any user may send on behalf of any other user.
+                return new Pair<InternetAddress, InternetAddress>(from, sender);
+            } else if (amgr.canSendOnBehalfOf(authuser, from.getAddress(), asAdmin)) {
+                // Allow based on rights granted.
+                return new Pair<InternetAddress, InternetAddress>(from, sender);
+            } else {
+                // Send as self.
+                return new Pair<InternetAddress, InternetAddress>(sender, null);
+            }
         }
     }
 
