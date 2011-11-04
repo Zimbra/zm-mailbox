@@ -1788,7 +1788,6 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
 </attr>
 
 <attr id="340" name="zimbraMailURL" type="string" max="1024" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited">
-  <globalConfigValue>/</globalConfigValue>
   <desc>URL prefix for where the zimbra app resides on this server</desc>
 </attr>
 
