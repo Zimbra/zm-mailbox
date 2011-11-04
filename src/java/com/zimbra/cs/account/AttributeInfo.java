@@ -313,7 +313,7 @@ public class AttributeInfo {
         case TYPE_CERTIFICATE:    
             byte[] binary = ByteUtil.decodeLDAPBase64(value);
             if (binary.length > mMax)
-                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+binary.length+") larger then max allowed: "+mMax, null);
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+binary.length+") larger than max allowed: "+mMax, null);
             return;
         case TYPE_DURATION:
             if (!DURATION_PATTERN.matcher(value).matches())
@@ -399,7 +399,7 @@ public class AttributeInfo {
         case TYPE_CSTRING:
         case TYPE_PHONE:
             if (value.length() > mMax)
-                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+value.length()+") larger then max allowed: "+mMax, null);
+                throw AccountServiceException.INVALID_ATTR_VALUE(mName+" value length("+value.length()+") larger than max allowed: "+mMax, null);
             // TODO
             return;
         case TYPE_REGEX:
