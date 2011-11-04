@@ -34,6 +34,9 @@ public class AutoProvAccountRequest {
 
     @XmlElement(name=AdminConstants.E_PRINCIPAL /* principal */, required=true)
     private PrincipalSelector principal;
+    
+    @XmlElement(name=AdminConstants.E_PASSWORD /* password */, required=false)
+    private String password;
 
     private AutoProvAccountRequest() {
     }
@@ -49,9 +52,11 @@ public class AutoProvAccountRequest {
 
     public void setDomain(DomainSelector domain) { this.domain = domain; }
     public void setPrincipal(PrincipalSelector principal) { this.principal = principal; }
+    public void setPassword(String password) { this.password = password; }
     public DomainSelector getDomain() { return domain; }
     public PrincipalSelector getPrincipal() { return principal; }
-
+    public String getPassword() { return password; }
+    
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
