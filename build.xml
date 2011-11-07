@@ -91,7 +91,7 @@
     <property name="jetty.home.dir" location="${zimbra.home.dir}/jetty"/>
     <property name="jetty.conf.dir" value="${jetty.home.dir}/etc"/>
     <property name="jetty.src.dir" location="../ThirdParty/jetty"/>
-    <property name="jetty.version" value="7.5.2-SNAPSHOT"/>
+    <property name="jetty.version" value="7.5.5-SNAPSHOT"/>
     <available property="jetty.start.jar.exists" file="${jetty.home.dir}/start.jar"/>
 
     <property name="ical4j.jar" value="ical4j-0.9.16-patched.jar"/>
@@ -1053,11 +1053,11 @@
     <target name="install-thirdparty-windows" depends="stop-webserver" description="Installs Jetty on Windows" if="is-windows">
         <delete dir="${jetty.home.dir}"/>
         <delete dir="${zimbra.home.dir}/data/tmp/jetty"/>
-        <untar src="${jetty.src.dir}/jetty-${jetty.version}.tar.gz" compression="gzip" dest="${zimbra.home.dir}" overwrite="true"/>
+        <untar src="${jetty.src.dir}/jetty-distribution-${jetty.version}.tar.gz" compression="gzip" dest="${zimbra.home.dir}" overwrite="true"/>
         <move toDir="${jetty.home.dir}">
-            <fileset dir="${zimbra.home.dir}/jetty-${jetty.version}" />
+            <fileset dir="${zimbra.home.dir}/jetty-distribution-${jetty.version}" />
         </move>
-        <delete file="${build.dir}/jetty-${jetty.version}.tar"/>
+        <delete file="${build.dir}/jetty-distribution-${jetty.version}.tar"/>
     </target>
 
     <target name="reset-all" depends="install-thirdparty,init-jetty,reset-the-world" description="Reset the world plus jetty and OpenLDAP">
