@@ -285,8 +285,10 @@ public class TestLdapProvAccount extends TestLdap {
     @Test
     public void renameAccount() throws Exception {
         String ACCT_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("renameAccount");
+        
         String ACCT_NEW_NAME_LOCALPART = 
             TestLdap.makeAccountNameLocalPart("renameAccount-new").toLowerCase();
+        
         String ACCT_NEW_NAME = TestUtil.getAddress(
                 ACCT_NEW_NAME_LOCALPART,
                 domain.getName()).toLowerCase();
@@ -316,6 +318,11 @@ public class TestLdapProvAccount extends TestLdap {
         String DATA_SOURCE_ID_2 = ds2.getId();
         String DATA_SOURCE_ID_3 = ds3.getId();
         
+        // set zimbraPrefAllowAddressForDelegatedSender
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, acct.getName());
+        prov.modifyAttrs(acct, attrs);
+        
         prov.renameAccount(acctId, ACCT_NEW_NAME);
         
         prov.flushCache(CacheEntryType.account, null);
@@ -329,6 +336,11 @@ public class TestLdapProvAccount extends TestLdap {
         assertEquals(DATA_SOURCE_ID_1, prov.get(renamedAcct, Key.DataSourceBy.name, DATA_SOURCE_NAME_1).getId());
         assertEquals(DATA_SOURCE_ID_2, prov.get(renamedAcct, Key.DataSourceBy.name, DATA_SOURCE_NAME_2).getId());
         assertEquals(DATA_SOURCE_ID_3, prov.get(renamedAcct, Key.DataSourceBy.name, DATA_SOURCE_NAME_3).getId());
+        
+        // make sure zimbraPrefAllowAddressForDelegatedSender is updated
+        Set<String> addrsForDelegatedSender = renamedAcct.getMultiAttrSet(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender);
+        assertEquals(1, addrsForDelegatedSender.size());
+        assertTrue(addrsForDelegatedSender.contains(ACCT_NEW_NAME));
         
         deleteAccount(renamedAcct);
     }
@@ -368,6 +380,23 @@ public class TestLdapProvAccount extends TestLdap {
         String DATA_SOURCE_ID_2 = ds2.getId();
         String DATA_SOURCE_ID_3 = ds3.getId();
         
+        
+        // create some aliases
+        String ALIAS_NAME_LOCALPART_1 = TestLdap.makeAccountNameLocalPart("renameAccount-alias1"); 
+        String ALIAS_NAME_LOCALPART_2 = TestLdap.makeAccountNameLocalPart("renameAccount-alias2");
+        String ALIAS_NAME_1 = TestUtil.getAddress(ALIAS_NAME_LOCALPART_1, domain.getName()).toLowerCase();
+        String ALIAS_NAME_2 = TestUtil.getAddress(ALIAS_NAME_LOCALPART_2, domain.getName()).toLowerCase();
+        String ALIAS_NEW_NAME_1 = TestUtil.getAddress(ALIAS_NAME_LOCALPART_1, NEW_DOMAIN_NAME).toLowerCase();
+        String ALIAS_NEW_NAME_2 = TestUtil.getAddress(ALIAS_NAME_LOCALPART_2, NEW_DOMAIN_NAME).toLowerCase();
+        prov.addAlias(acct, ALIAS_NAME_1);
+        prov.addAlias(acct, ALIAS_NAME_2);
+        
+        // set zimbraPrefAllowAddressForDelegatedSender
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, 
+                new String[]{acct.getName(), ALIAS_NAME_1, ALIAS_NAME_2});
+        prov.modifyAttrs(acct, attrs);
+        
         prov.renameAccount(acctId, ACCT_NEW_NAME);
         
         prov.flushCache(CacheEntryType.account, null);
@@ -380,6 +409,23 @@ public class TestLdapProvAccount extends TestLdap {
         assertEquals(DATA_SOURCE_ID_1, prov.get(renamedAcct, Key.DataSourceBy.name, DATA_SOURCE_NAME_1).getId());
         assertEquals(DATA_SOURCE_ID_2, prov.get(renamedAcct, Key.DataSourceBy.name, DATA_SOURCE_NAME_2).getId());
         assertEquals(DATA_SOURCE_ID_3, prov.get(renamedAcct, Key.DataSourceBy.name, DATA_SOURCE_NAME_3).getId());
+        
+        // make sure aliases in the same domain is renamed
+        Account acctByAlias1 = prov.get(AccountBy.name, ALIAS_NEW_NAME_1);
+        assertEquals(acctId, acctByAlias1.getId());
+        Account acctByAlias2 = prov.get(AccountBy.name, ALIAS_NEW_NAME_2);
+        assertEquals(acctId, acctByAlias2.getId());
+        Set<String> aliases = renamedAcct.getMultiAttrSet(Provisioning.A_zimbraMailAlias);
+        assertEquals(2, aliases.size());
+        assertTrue(aliases.contains(ALIAS_NEW_NAME_1));
+        assertTrue(aliases.contains(ALIAS_NEW_NAME_2));
+        
+        // make sure zimbraPrefAllowAddressForDelegatedSender is updated
+        Set<String> addrsForDelegatedSender = renamedAcct.getMultiAttrSet(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender);
+        assertEquals(3, addrsForDelegatedSender.size());
+        assertTrue(addrsForDelegatedSender.contains(ACCT_NEW_NAME));
+        assertTrue(addrsForDelegatedSender.contains(ALIAS_NEW_NAME_1));
+        assertTrue(addrsForDelegatedSender.contains(ALIAS_NEW_NAME_2));
         
         deleteAccount(renamedAcct);
         TestLdapProvDomain.deleteDomain(prov, newDomain);

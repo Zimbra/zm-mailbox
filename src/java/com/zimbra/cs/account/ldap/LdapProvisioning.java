@@ -2773,6 +2773,14 @@ public class LdapProvisioning extends LdapProv {
                         throw AccountServiceException.ACCOUNT_EXISTS(newName);
                 }
             }
+            
+            ReplaceAddressResult replacedAllowAddrForDelegatedSender = 
+                    replaceMailAddresses(acct, Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, 
+                    oldEmail, newName);
+            if (replacedAllowAddrForDelegatedSender.newAddrs().length > 0) {
+                newAttrs.put(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, 
+                        replacedAllowAddrForDelegatedSender.newAddrs());
+            }
 
             /*
             ZMutableEntry mutableEntry = LdapClient.createMutableEntry();
@@ -3521,6 +3529,14 @@ public class LdapProvisioning extends LdapProv {
                 // check up front if any of renamed aliases already exists in the new domain (if domain also got changed)
                 if (domainChanged && addressExists(zlc, newDomainDN, replacedAliases.newAddrs()))
                     throw AccountServiceException.DISTRIBUTION_LIST_EXISTS(newEmail);
+            }
+            
+            ReplaceAddressResult replacedAllowAddrForDelegatedSender = 
+                replaceMailAddresses(dl, Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, 
+                oldEmail, newEmail);
+            if (replacedAllowAddrForDelegatedSender.newAddrs().length > 0) {
+                attrs.put(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, 
+                        replacedAllowAddrForDelegatedSender.newAddrs());
             }
 
             /*
@@ -8233,6 +8249,14 @@ public class LdapProvisioning extends LdapProv {
                 // check up front if any of renamed aliases already exists in the new domain (if domain also got changed)
                 if (domainChanged && addressExists(zlc, newDomainDN, replacedAliases.newAddrs()))
                     throw AccountServiceException.DISTRIBUTION_LIST_EXISTS(newEmail);
+            }
+            
+            ReplaceAddressResult replacedAllowAddrForDelegatedSender = 
+                replaceMailAddresses(dl, Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, 
+                oldEmail, newEmail);
+            if (replacedAllowAddrForDelegatedSender.newAddrs().length > 0) {
+                attrs.put(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, 
+                        replacedAllowAddrForDelegatedSender.newAddrs());
             }
 
             // the naming rdn

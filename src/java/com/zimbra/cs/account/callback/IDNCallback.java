@@ -27,7 +27,10 @@ import com.zimbra.cs.account.AttributeManager.IDNType;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.IDNUtil;
 
-
+/**
+ * Convert unicode address to ASCII (ACE)
+ *
+ */
 public class IDNCallback extends AttributeCallback {
 
     @Override
@@ -48,8 +51,9 @@ public class IDNCallback extends AttributeCallback {
                 if (addr.charAt(0) == '@') {
                     // meant for catchall addresses
                     asciiName = "@" + IDNUtil.toAsciiDomainName(addr.substring(1));
-                } else
+                } else {
                     asciiName = IDNUtil.toAscii(addr, idnType);
+                }
                 
                 asciiValues.add(asciiName);
             }

@@ -22,7 +22,10 @@ import java.util.Set;
 import org.junit.*;
 import static org.junit.Assert.*;
 
+import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
@@ -49,7 +52,7 @@ public class TestLdapProvDistributionList extends TestLdap {
     }
     
     private static String baseDomainName() {
-        return TestLdapProvDistributionList.class.getName().toLowerCase();
+        return baseDomainName(TestLdapProvDistributionList.class);
     }
     
     static Group createGroup(Provisioning prov, String localPart, 
@@ -183,11 +186,22 @@ public class TestLdapProvDistributionList extends TestLdap {
         DistributionList dl = createDistributionList(DL_NAME_LOCALPART);
         String DL_ID = dl.getId();
         
+        // set zimbraPrefAllowAddressForDelegatedSender
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, dl.getName());
+        prov.modifyAttrs(dl, attrs);
+        
         prov.renameDistributionList(DL_ID, DL_NEW_NAME);
         
         prov.flushCache(CacheEntryType.group, null);
         getDistributionListById(DL_ID);
         getDistributionListByName(DL_NEW_NAME);
+        
+        // make sure zimbraPrefAllowAddressForDelegatedSender is updated
+        DistributionList renamedDl = prov.get(DistributionListBy.name, DL_NEW_NAME);
+        Set<String> addrsForDelegatedSender = renamedDl.getMultiAttrSet(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender);
+        assertEquals(1, addrsForDelegatedSender.size());
+        assertTrue(addrsForDelegatedSender.contains(DL_NEW_NAME));
         
         deleteDistributionList(dl);
     }
@@ -204,10 +218,21 @@ public class TestLdapProvDistributionList extends TestLdap {
         DistributionList dl = createDistributionList(DL_NAME_LOCALPART);
         String DL_ID = dl.getId();
         
+        // set zimbraPrefAllowAddressForDelegatedSender
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, dl.getName());
+        prov.modifyAttrs(dl, attrs);
+        
         prov.renameDistributionList(DL_ID, DL_NEW_NAME);
         
         getDistributionListById(DL_ID);
         getDistributionListByName(DL_NEW_NAME);
+        
+        // make sure zimbraPrefAllowAddressForDelegatedSender is updated
+        DistributionList renamedDl = prov.get(DistributionListBy.name, DL_NEW_NAME);
+        Set<String> addrsForDelegatedSender = renamedDl.getMultiAttrSet(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender);
+        assertEquals(1, addrsForDelegatedSender.size());
+        assertTrue(addrsForDelegatedSender.contains(DL_NEW_NAME));
         
         deleteDistributionList(dl);
         TestLdapProvDomain.deleteDomain(prov, newDomain);

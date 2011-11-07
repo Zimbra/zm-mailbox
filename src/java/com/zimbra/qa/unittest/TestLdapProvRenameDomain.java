@@ -30,10 +30,12 @@ import org.junit.*;
 
 import static org.junit.Assert.*;
 
+import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Alias;
@@ -41,14 +43,18 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.DynamicGroup;
+import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Identity;
+import com.zimbra.cs.account.MailTarget;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.SearchDirectoryOptions;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.XMPPComponent;
+import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.ldap.LdapProv;
+import com.zimbra.cs.account.ldap.LdapProvisioning;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
@@ -119,6 +125,7 @@ public class TestLdapProvRenameDomain extends TestLdap {
         sAttrsToVerify.add(Provisioning.A_zimbraMailCatchAllAddress);
         sAttrsToVerify.add(Provisioning.A_zimbraMailCatchAllCanonicalAddress);
         sAttrsToVerify.add(Provisioning.A_zimbraMailCatchAllForwardingAddress);
+        sAttrsToVerify.add(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender);
     }
     
     int NUM_OBJS(int objType) throws Exception {
@@ -255,7 +262,8 @@ public class TestLdapProvRenameDomain extends TestLdap {
     }
     
     private static String baseDomainName() {
-        return TestProvisioningUtil.baseDomainName("renamedomain", TEST_ID);
+        return baseDomainName(TestLdapProvAccount.class);
+        // return TestProvisioningUtil.baseDomainName("renamedomain", TEST_ID);
     }
     
     private String DOMAIN_NAME(String leafDomainName) {
@@ -460,9 +468,30 @@ public class TestLdapProvRenameDomain extends TestLdap {
         }
     }
     
+    
+    private String makeAttrValue(String entryName, String attrName, IDNName domainIDNName) {
+        
+        /*
+         * currently only aName will pass the test in verifyEntryAttrs, should probably 
+         * fix renameDoamin to take care uName in these attrs
+         */
+        String domainName = domainIDNName.uName();
+        
+        if (Provisioning.A_zimbraMailCatchAllAddress.equals(attrName) ||
+            Provisioning.A_zimbraMailCatchAllCanonicalAddress.equals(attrName) ||
+            Provisioning.A_zimbraMailCatchAllForwardingAddress.equals(attrName)) {
+            return "@" + domainName;
+        } else if (Provisioning.A_zimbraPrefAllowAddressForDelegatedSender.equals(attrName)) {
+            return entryName;
+        } else {
+            return attrName + "@" + domainName;
+        }
+    }
+    
     private Account createAccount(String acctName, IDNName domainName) throws Exception {
         Map<String, Object> acctAttrs = new HashMap<String, Object>();
         
+        /*
         acctAttrs.put(Provisioning.A_zimbraMailCanonicalAddress, "canonical-address" + "@" + domainName.uName());
         // acctAttrs.put(Provisioning.A_zimbraMailDeliveryAddress, "delivery-address" + "@" + domainName.uName());
         acctAttrs.put(Provisioning.A_zimbraMailForwardingAddress, "forwarding-address" + "@" + domainName.uName());
@@ -470,7 +499,11 @@ public class TestLdapProvRenameDomain extends TestLdap {
         acctAttrs.put(Provisioning.A_zimbraMailCatchAllAddress, "" + "@" + domainName.uName());
         acctAttrs.put(Provisioning.A_zimbraMailCatchAllCanonicalAddress, "" + "@" + domainName.uName());
         acctAttrs.put(Provisioning.A_zimbraMailCatchAllForwardingAddress, "" + "@" + domainName.uName());
+        */
         
+        for (String attr : sAttrsToVerify) {
+            acctAttrs.put(attr, makeAttrValue(acctName, attr, domainName));
+        }
         Account acct = mProv.createAccount(acctName, PASSWORD, acctAttrs);
         return acct;
     }
@@ -662,10 +695,26 @@ public class TestLdapProvRenameDomain extends TestLdap {
         System.out.println();
     }
     
-    Set<String> namedEntryListToNameSet(List<NamedEntry> entries) {
+    private static enum UnicodeOrACE {
+        ACE,
+        UNICODE,
+    };
+    
+    Set<String> namedEntryListToNameSet(List<NamedEntry> entries, UnicodeOrACE unicodeOrACE) {
         Set<String> nameSet = new HashSet<String>();
-        for (NamedEntry entry : entries)
-            nameSet.add(entry.getName());
+        for (NamedEntry entry : entries) {
+            String name;
+            if (entry instanceof MailTarget) {
+                if (unicodeOrACE == UnicodeOrACE.UNICODE) {
+                    name = ((MailTarget) entry).getUnicodeName();
+                } else {
+                    name = entry.getName();
+                }
+            } else {
+                name = entry.getName();
+            }
+            nameSet.add(name);
+        }
         return nameSet;     
     }
     
@@ -676,7 +725,7 @@ public class TestLdapProvRenameDomain extends TestLdap {
         case OBJ_DL_NESTED:
         case OBJ_DL_TOP:
         case OBJ_DYNAMIC_GROUP:
-            return mProv.get(Key.DistributionListBy.name, name);
+            return mProv.getGroup(Key.DistributionListBy.name, name);
         }
         throw new Exception();
     }
@@ -711,7 +760,8 @@ public class TestLdapProvRenameDomain extends TestLdap {
     /*
      * verify all attrs of the old domain are carried over to the new domain
      */ 
-    private void verifyNewDomainAttrs(Domain newDomain, Map<String, Object> oldDomainAttrs) throws Exception {
+    private void verifyNewDomainAttrs(Domain newDomain, Map<String, Object> oldDomainAttrs) 
+    throws Exception {
         Map<String, Object> newDomainAttrs = newDomain.getAttrs(false);
 
         // make a copy of the two attrs maps, becase we are deleting from them
@@ -753,12 +803,16 @@ public class TestLdapProvRenameDomain extends TestLdap {
         }
     }
     
-    private void verifyEntryAttrs(List<NamedEntry> list) throws Exception {
+    private void verifyEntryAttrs(List<NamedEntry> list, Domain domain) throws Exception {
+        
+        IDNName domainIDNName = new IDNName(domain.getName());
+        
         for (NamedEntry e : list) {
             for (String attr : sAttrsToVerify) {
                 String value = e.getAttr(attr);
-                if (value != null) {
-                    // TODO
+                // System.out.println("Entry: " + e.getName() + " " + attr + " " + value);
+                if (e instanceof Account) {
+                    assertEquals(makeAttrValue(((Account) e).getName(), attr, domainIDNName), value);
                 }
             }
         }
@@ -809,13 +863,13 @@ public class TestLdapProvRenameDomain extends TestLdap {
         }
        
         // verify all our aliases are there
-        Set<String> actualEntries = namedEntryListToNameSet(list);
+        Set<String> actualEntries = namedEntryListToNameSet(list, UnicodeOrACE.UNICODE);
         
-        // dumpStrings("expectedEntries", expectedEntries);
-        // dumpStrings("actualEntries", actualEntries);
+        dumpStrings("expectedEntries", expectedEntries);
+        dumpStrings("actualEntries", actualEntries);
         TestProvisioningUtil.verifyEquals(expectedEntries, actualEntries);
         
-        verifyEntryAttrs(list);
+        verifyEntryAttrs(list, domain);
     }
     
     /*
@@ -848,7 +902,7 @@ public class TestLdapProvRenameDomain extends TestLdap {
         
         
         // verify all our aliases are there
-        Set<String> actualAliases = namedEntryListToNameSet(list);
+        Set<String> actualAliases = namedEntryListToNameSet(list, UnicodeOrACE.UNICODE);
         // dumpStrings(expectedAliases);
         // dumpStrings(actualAliases);
         TestProvisioningUtil.verifyEquals(expectedAliases, actualAliases);
@@ -920,12 +974,13 @@ public class TestLdapProvRenameDomain extends TestLdap {
             
             HashMap<String,String> via = new HashMap<String, String>();
             List lists;
-            if (memberType == OBJ_ACCT)
+            if (memberType == OBJ_ACCT) {
                 lists = mProv.getDistributionLists((Account)entry, false, via);
-            else
+            } else {
                 lists = mProv.getDistributionLists((DistributionList)entry, false, via);
+            }
             
-            Set<String> actualNames = namedEntryListToNameSet(lists);
+            Set<String> actualNames = namedEntryListToNameSet(lists, UnicodeOrACE.ACE);
             // dumpStrings(expectedNames);
             // dumpStrings(actualNames);
             TestProvisioningUtil.verifyEquals(expectedNames, actualNames);
@@ -947,34 +1002,50 @@ public class TestLdapProvRenameDomain extends TestLdap {
                 if ((memberTypes & OBJ_ACCT) != 0) {
                     for (int i = 0; i < NUM_ACCOUNTS; i++) {
                         Set<String> names = ACCOUNT_NAMES(i, dIdx, true);
-                        for (String n : names)
+                        for (String n : names) {
                             expectedNames.add(new IDNName(n).uName());
+                        }
                     }
                 } 
                 
                 if ((memberTypes & OBJ_DL_NESTED) != 0) {
                     for (int i = 0; i < NUM_DLS_NESTED; i++) {
                         Set<String> names = NESTED_DL_NAMES(i, dIdx, true);
-                        for (String n : names)
+                        for (String n : names) {
                             expectedNames.add(new IDNName(n).uName());
+                        }
                     }
                 } 
 
                 if ((memberTypes & OBJ_DL_TOP) != 0) {
                     for (int i = 0; i < NUM_DLS_TOP; i++) {
                         Set<String> names = TOP_DL_NAMES(i, dIdx, true);
-                        for (String n : names)
+                        for (String n : names) {
                             expectedNames.add(new IDNName(n).uName());
+                        }
                     }
                 } 
                 
                 // TODO: DYNAMIC GROUP
             }
             
+            // if we are verifying using SoapProvisioning, members contains unicode addrs,
+            // because they are converted in SOAP handlers.
+            // if we are verifying using LdapProvisioning, members contains ACE addrs, which 
+            // are values stored in LDAP.  convert them to unicode for verifying.
             String[] members = dl.getAllMembers();
             Set<String> actualNames = new HashSet<String>(Arrays.asList(members));
-            // dumpStrings(expectedNames);
-            // dumpStrings(actualNames);
+            
+            if (mProv instanceof LdapProvisioning) {
+                Set<String> actualNamesUnicode = Sets.newHashSet();
+                for (String addr : actualNames) {
+                    String addrUnicode = IDNUtil.toUnicode(addr);
+                    actualNamesUnicode.add(addrUnicode);
+                }
+                actualNames = actualNamesUnicode;
+            }
+            // dumpStrings("expectedNames", expectedNames);
+            // dumpStrings("actualNames", actualNames);
             TestProvisioningUtil.verifyEquals(expectedNames, actualNames);
         }
     }
@@ -1061,7 +1132,12 @@ public class TestLdapProvRenameDomain extends TestLdap {
         // instead of the old domain's id in the LdapProvisioning instance, and verifyNewDomainBasic 
         // would fail if we use the LdapProvisioning instance or verifying.  We did not remove it 
         // from cache in RenameDomain.endRenameDomain, we could though...
-        setSoapProv();
+        // setSoapProv();
+        
+        ((LdapProv) mProv).flushCache(CacheEntryType.domain, null);
+        ((LdapProv) mProv).flushCache(CacheEntryType.account, null);
+        ((LdapProv) mProv).flushCache(CacheEntryType.group, null);
+        
         verifyOldDomain();
         verifyNewDomain(oldDomainId, oldDomainAttrs);
         verifyOtherDomains(); 
@@ -1124,6 +1200,13 @@ public class TestLdapProvRenameDomain extends TestLdap {
             System.out.println(e.getMessage());
             e.printStackTrace(System.out);
         }
+    }
+    
+    public static void main(String[] args) throws Exception {
+        CliUtil.toolSetup();
+        init();
+        TestLdapProvRenameDomain test = new TestLdapProvRenameDomain();
+        test.testRenameDomain();
     }
 
 }
