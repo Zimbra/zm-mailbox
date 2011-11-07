@@ -299,6 +299,7 @@ public class AccountConstants {
     
     public static final String A_ACTIVE = "active";
     public static final String A_ATTRS = "attrs";
+    public static final String A_ADDR = "addr";
     public static final String A_BCC_OWNERS = "bccOwners";
     public static final String A_DIRECT_ONLY = "directOnly";
     public static final String A_DYNAMIC = "dynamic";
