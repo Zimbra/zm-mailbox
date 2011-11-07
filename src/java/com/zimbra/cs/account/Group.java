@@ -16,10 +16,12 @@ package com.zimbra.cs.account;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ZAttrProvisioning.DistributionListSubscriptionPolicy;
 import com.zimbra.common.account.ZAttrProvisioning.DistributionListUnsubscriptionPolicy;
@@ -89,6 +91,14 @@ public abstract class Group extends MailTarget implements AliasedEntry {
             Set<String> aliases = getMultiAttrSet(Provisioning.A_zimbraMailAlias);
             return aliases.contains(addr);
         }
+    }
+    
+    @Override
+    public Set<String> getAllAddrsSet() {
+        Set<String> addrs = Sets.newHashSet();
+        addrs.add(getName());
+        addrs.addAll(getMultiAttrSet(Provisioning.A_zimbraMailAlias));
+        return Collections.unmodifiableSet(addrs);
     }
     
     

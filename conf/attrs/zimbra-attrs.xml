@@ -6598,7 +6598,7 @@ TODO: delete them permanently from here
         addr of upstream server connecting to which the error happens</desc>
 </attr>
 
-<attr id="1333" name="zimbraPrefAllowAddressForDelegatedSender" type="email" max="256" cardinality="multi" optionalIn="account" flags="accountInfo,domainAdminModifiable" since="8.0.0">
+<attr id="1333" name="zimbraPrefAllowAddressForDelegatedSender" type="email" max="256" cardinality="multi" optionalIn="account,distributionList,group" flags="accountInfo,domainAdminModifiable" callback="AllowAddressForDelegatedSender" since="8.0.0">
   <desc>Addresses of the account that can be used by allowed delegated senders as From and Sender address.</desc>
 </attr>
 
