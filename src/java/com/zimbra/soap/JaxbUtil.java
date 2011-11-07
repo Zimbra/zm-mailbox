@@ -87,6 +87,8 @@ public final class JaxbUtil {
             com.zimbra.soap.account.message.DeleteIdentityResponse.class,
             com.zimbra.soap.account.message.DeleteSignatureRequest.class,
             com.zimbra.soap.account.message.DeleteSignatureResponse.class,
+            com.zimbra.soap.account.message.DiscoverRightsRequest.class,
+            com.zimbra.soap.account.message.DiscoverRightsResponse.class,
             com.zimbra.soap.account.message.DistributionListActionRequest.class,
             com.zimbra.soap.account.message.DistributionListActionResponse.class,
             com.zimbra.soap.account.message.EndSessionRequest.class,
