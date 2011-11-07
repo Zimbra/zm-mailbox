@@ -31,7 +31,6 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.CalendarResourceBy;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.UserRight;
@@ -51,19 +50,16 @@ public class CheckPermission extends MailDocumentHandler {
         String targetValue = eTarget.getText();
         
         NamedEntry entry = null;
-        
-        //
-        // Note, to defend against harvest attack, if the target is not found, return "not allowed"
-        // instead of NO_SUCH_XXX.
-        //
+
         Element response = zsc.createElement(MailConstants.CHECK_PERMISSION_RESPONSE);
         
         if (TargetType.account == tt) {
             AccountBy acctBy = AccountBy.fromString(targetBy);
             entry = prov.get(acctBy, targetValue, zsc.getAuthToken());
             
-            if (entry == null && acctBy == AccountBy.id)
+            if (entry == null && acctBy == AccountBy.id) {
                 throw AccountServiceException.NO_SUCH_ACCOUNT(targetValue);
+            }
             
             // otherwise, the target could be an external user, let it fall through
             // to return the default permission.
@@ -72,21 +68,21 @@ public class CheckPermission extends MailDocumentHandler {
             Key.CalendarResourceBy crBy = Key.CalendarResourceBy.fromString(targetBy);
             entry = prov.get(crBy, targetValue);
             
-            if (entry == null && crBy == Key.CalendarResourceBy.id)
+            if (entry == null && crBy == Key.CalendarResourceBy.id) {
                 throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(targetValue);
+            }
             
         } else if (TargetType.dl == tt) {
-            // entry = prov.get(DistributionListBy.fromString(targetBy), targetValue);
+            Key.DistributionListBy dlBy = Key.DistributionListBy.fromString(targetBy);
+            entry = prov.getGroupBasic(dlBy, targetValue);
             
-            // target for all user rights is "account", it doesn't make sense to 
-            // check if the authed user has right on a DL (e.g. can I invite this DL?)
-            // until we add an inviteDistributionList right targeted for DLs.
-            // 
-            // let it fall through to return the default permission
-            entry = null;
+            if (entry == null && dlBy == Key.DistributionListBy.id) {
+                throw AccountServiceException.NO_SUCH_CALENDAR_RESOURCE(targetValue);
+            }
             
-        } else
+        } else {
             throw ServiceException.INVALID_REQUEST("invalid target type: " + targetType, null);
+        }
         
         List<UserRight> rights = new ArrayList<UserRight>();
         for (Element eRight : request.listElements(MailConstants.E_RIGHT)) {

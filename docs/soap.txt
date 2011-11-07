@@ -3396,7 +3396,7 @@ RevokePermissionResponse returns permissions that are successfully revoked.
   <right>...</right>+
 </CheckPermissionRequest>
 
-{target-type} = account | calresource
+{target-type} = account | calresource | dl
 
     Check if the authed user has the specified right(s) on a target.
 
