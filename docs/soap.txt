@@ -3433,12 +3433,28 @@ allow = 1 | 0
 </DiscoverRightsRequest>
 
 Return all targets of the specified rights applicable to the requested account.
-Note: Thi call only discovers grants granted on the designated target type of the specified rights.  
-      It does not return grants granted on target types the rights can inherit from.
+Notes: 
+  1. This call only discovers grants granted on the designated target type of the specified rights.  
+     It does not return grants granted on target types the rights can inherit from.
+     
+  2. For sendAs, sendOnBehalgOf, sendAsDistList, sendOnBehalgOfDistList rights,
+     name attribute is not returned on <target> elements.  Instead, addresses 
+     in the target entry's zimbraPrefAllowAddressForDelegatedSender are returned in   
+     <e a="{email-address}"/> elements under the <target> element.  
+     If zimbraPrefAllowAddressForDelegatedSender is not set on the target entry, the entry's 
+     primary email address will be return in the only <e a="{email-address}"/> element 
+     under the <target> element.
+     
+  3. For all other rights, name attribute is always returned on <target> elements, no 
+     <e a="{email-address}"/> will be returned.  name attribute contains the entry's 
+     primary name.
+      
 
 <DiscoverRightsResponse>
     <targets right="...">
-        [<target type="{target-type}" id="..." name="...">+]
+        [<target type="{target-type}" id="..." [name="..."]>
+             [<email addr="{email-address}"/>+]
+         </target>+]
     </targets>+
 </DiscoverRightsResponse>
 
@@ -3446,17 +3462,32 @@ e.g.
 <DiscoverRightsRequest>
     <right>sendAs</right>
     <right>sendAsDistList</right>
+    <right>viewFreeBusy</right>
 </DiscoverRightsRequest>
 
 <DiscoverRightsResponse>
     <targets right="sendAs">
-        <target type="account" id="..." name="user1@test.com">
-        <target type="account" id="..." name="user2@test.com">
+        <target type="account" id="...">
+            <e a="user-one@test.com"/>
+            <e a="user.one@test.com"/>
+        </target>    
+        <target type="account" id="...">
+            <e a="user2@test.com"/>
+        </target>
     </targets>
     <targets right="sendAsDistList">
-        <target type="dl" id="..." name="group1@test.com">
-        <target type="dl" id="..." name="group2@test.com">
-    </targets>+
+        <target type="dl" id="...">
+            <e a="group1@test.com"/>
+            <e a="group-one@test.com"/>
+        </target>
+        <target type="dl" id="...">
+            <e a="group2@test.com"/>
+            <e a="group-two@test.com"/>
+        </target>
+    </targets>
+    <targets right="viewFreeBusy">
+        <target type="account" id="..." name="user1@test.com">
+    </targets>    
 </DiscoverRightsResponse>
 
 ---------------------------
