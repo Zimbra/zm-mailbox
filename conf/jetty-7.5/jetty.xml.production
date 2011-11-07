@@ -312,7 +312,7 @@
 	    <Arg>        
 		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
 		    <Set name="pattern">/*</Set>
-		    <Set name="replacement">/zimbra</Set>
+		    <Set name="replacement">%%zimbraMailURL%%</Set>
 		</New>
 	    </Arg>
         </Call>       
