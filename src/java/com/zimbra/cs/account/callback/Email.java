@@ -34,8 +34,8 @@ public class Email extends AttributeCallback {
 
 
     @Override
-    public void preModify(Map context, String attrName, Object attrValue,
-            Map attrsToModify, Entry entry, boolean isCreate)
+    public void preModify(CallbackContext context, String attrName, Object attrValue,
+            Map attrsToModify, Entry entry)
             throws ServiceException {
         
         SingleValueMod mod = singleValueMod(attrsToModify, attrName);
@@ -46,10 +46,7 @@ public class Email extends AttributeCallback {
     }
     
     @Override
-    public void postModify(Map context, String attrName, Entry entry,
-            boolean isCreate) {
-        // TODO Auto-generated method stub
-
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
     }
 
 

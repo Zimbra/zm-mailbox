@@ -19,7 +19,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -29,16 +28,16 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 
 public class AccountStatus extends AttributeCallback {
-	
-    private static final String KEY = AccountStatus.class.getName();
 
     /**
      * disable mail delivery if account status is changed to closed
      * reset lockout attributes if account status is changed to active
      */
     @SuppressWarnings("unchecked")
-    public void preModify(Map context, String attrName, Object value,
-            Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
+    @Override
+    public void preModify(CallbackContext context, String attrName, Object value,
+            Map attrsToModify, Entry entry) 
+    throws ServiceException {
         
         String status;
         
@@ -63,26 +62,23 @@ public class AccountStatus extends AttributeCallback {
         }
     }
 
-    /**
-     * need to keep track in context on whether or not we have been called yet, only 
-     * reset info once
-     */
+    @Override
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
 
-    public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
-        if (!isCreate) {
-            Object done = context.get(KEY);
-            if (done == null) {
-                context.put(KEY, KEY);
-                if (entry instanceof Account) {
-                    try {
-                        handleAccountStatusClosed((Account)entry);
-                    } catch (ServiceException se) {
-                        // all exceptions are already swallowed by LdapProvisioning, just to be safe here.
-                        ZimbraLog.account.warn("unable to remove account address and aliases from all DLs for closed account", se);
-                        return;
-                    }
-                }    
-            }
+        if (context.isDoneAndSetIfNot(AccountStatus.class)) {
+            return;
+        }
+        
+        if (!context.isCreate()) {
+            if (entry instanceof Account) {
+                try {
+                    handleAccountStatusClosed((Account)entry);
+                } catch (ServiceException se) {
+                    // all exceptions are already swallowed by LdapProvisioning, just to be safe here.
+                    ZimbraLog.account.warn("unable to remove account address and aliases from all DLs for closed account", se);
+                    return;
+                }
+            }   
         }
     }
     

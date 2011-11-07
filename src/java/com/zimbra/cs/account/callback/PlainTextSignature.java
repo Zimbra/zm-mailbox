@@ -18,7 +18,6 @@ package com.zimbra.cs.account.callback;
 import java.util.Map;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.SignatureBy;
 import com.zimbra.common.account.SignatureUtil;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
@@ -36,33 +35,39 @@ import com.zimbra.cs.account.Signature;
  */
 public class PlainTextSignature extends AttributeCallback {
 
-    public void preModify(Map context, String attrName, Object value, Map attrsToModify, Entry entry, boolean isCreate)
+    @Override
+    public void preModify(CallbackContext context, String attrName, Object value, 
+            Map attrsToModify, Entry entry)
     throws ServiceException {
         SingleValueMod mod = singleValueMod(attrName, value);
         if (mod.unsetting())
             return;
 
         Account account;
-        if (entry instanceof Account)
+        if (entry instanceof Account) {
             account = (Account) entry;
-        else if (entry instanceof Identity)
+        } else if (entry instanceof Identity) {
             account = ((Identity) entry).getAccount();
-        else if (entry instanceof DataSource)
+        } else if (entry instanceof DataSource) {
             account = ((DataSource) entry).getAccount();
-        else
+        } else {
             return;
-
+        }
+        
         Signature sig = Provisioning.getInstance().get(account, Key.SignatureBy.id, mod.value());
         if (sig == null) {
-            throw ServiceException.INVALID_REQUEST("No such signature " + mod.value() + " for account " + account.getName(), null);
+            throw ServiceException.INVALID_REQUEST("No such signature " + mod.value() + 
+                    " for account " + account.getName(), null);
         }
         String sigAttr = SignatureUtil.mimeTypeToAttrName(MimeConstants.CT_TEXT_PLAIN);
         String plainSig = sig.getAttr(sigAttr, null);
         if (StringUtil.isNullOrEmpty(plainSig)) {
-            throw ServiceException.INVALID_REQUEST("Signature " + mod.value() + " must have plain text content", null);
+            throw ServiceException.INVALID_REQUEST("Signature " + mod.value() + 
+                    " must have plain text content", null);
         }
     }
 
-    public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
+    @Override
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
     }
 }

@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.SetUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeCallback;
@@ -29,21 +28,19 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key.AccountBy;
  
 public class ChildAccount extends AttributeCallback {
-
-    private static final String KEY = ChildAccount.class.getName();
     
-    public void preModify(Map context, String attrName, Object value,
-                          Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
+    @Override
+    public void preModify(CallbackContext context, String attrName, Object value,
+            Map attrsToModify, Entry entry) 
+    throws ServiceException {
 
         /*
          * This callback is for both zimbraPrefChildVisibleAccount and zimbraChildAccount, and it handles
          * both in one shot.  If we've been called just return.
          */ 
-        Object done = context.get(KEY);
-        if (done == null)
-            context.put(KEY, KEY);
-        else
+        if (context.isDoneAndSetIfNot(ChildAccount.class)) {
             return;
+        }
         
         // the +/- has been striped off from attrName but we need that info, it is in attrsToModify
         
@@ -97,12 +94,9 @@ public class ChildAccount extends AttributeCallback {
             }
         }
     }
-    
 
-
-    
-    public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
-
+    @Override
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
     }
 }
 

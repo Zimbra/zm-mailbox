@@ -21,17 +21,15 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeCallback;
-import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.Provisioning;
  
 public class MailCharset extends AttributeCallback {
 
-    public void preModify(Map context, String attrName, Object value,
-            Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
+    @Override
+    public void preModify(CallbackContext context, String attrName, Object value,
+            Map attrsToModify, Entry entry) 
+    throws ServiceException {
 
         String charset = null;
         SingleValueMod mod = singleValueMod(attrName, value);
@@ -50,12 +48,7 @@ public class MailCharset extends AttributeCallback {
         }
     }
 
-    /**
-     * need to keep track in context on whether or not we have been called yet, only 
-     * reset info once
-     */
-
-    public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
-
+    @Override
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
     }
 }

@@ -24,8 +24,8 @@ import com.zimbra.cs.zimlet.ZimletPresence.Presence;
 public class AvailableZimlets extends AttributeCallback {
     
     @Override 
-    public void preModify(Map context, String attrName, Object value,
-            Map attrsToModify, Entry entry, boolean isCreate) {
+    public void preModify(CallbackContext context, String attrName, Object value,
+            Map attrsToModify, Entry entry) {
         
         Object replacing = attrsToModify.get(attrName);
         Object deleting = attrsToModify.get("-" + attrName);
@@ -134,8 +134,7 @@ public class AvailableZimlets extends AttributeCallback {
     }
     
     @Override 
-    public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
-        
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
     }
 
 }

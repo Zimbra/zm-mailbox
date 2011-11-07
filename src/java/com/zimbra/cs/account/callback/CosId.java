@@ -17,7 +17,6 @@ package com.zimbra.cs.account.callback;
 import java.util.Map;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Cos;
@@ -27,9 +26,9 @@ import com.zimbra.cs.account.Provisioning;
 public class CosId extends AttributeCallback {
 
     @Override
-    public void preModify(Map context, String attrName, Object attrValue,
-            Map attrsToModify, Entry entry, boolean isCreate)
-            throws ServiceException {
+    public void preModify(CallbackContext context, String attrName, Object attrValue,
+            Map attrsToModify, Entry entry)
+    throws ServiceException {
         
         validateCosId(attrsToModify, attrName);
     }
@@ -57,9 +56,6 @@ public class CosId extends AttributeCallback {
     }
 
     @Override
-    public void postModify(Map context, String attrName, Entry entry,
-            boolean isCreate) {
-        // TODO Auto-generated method stub
-
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
     }
 }

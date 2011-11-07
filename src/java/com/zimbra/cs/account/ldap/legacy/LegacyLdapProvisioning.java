@@ -93,7 +93,9 @@ import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthMechanism;
 import com.zimbra.cs.account.auth.PasswordUtil;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
+import com.zimbra.cs.account.callback.CallbackContext;
 import com.zimbra.cs.account.callback.MailSignature;
+import com.zimbra.cs.account.callback.CallbackContext.DataKey;
 import com.zimbra.cs.account.gal.GalNamedFilter;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalParams;
@@ -336,10 +338,10 @@ public class LegacyLdapProvisioning extends LdapProv {
     @Override
     public void modifyAttrs(Entry e, Map<String, ? extends Object> attrs, boolean checkImmutable, boolean allowCallback)
             throws ServiceException {
-        Map<Object, Object> context = new HashMap<Object, Object>();
-        AttributeManager.getInstance().preModify(attrs, e, context, false, checkImmutable, allowCallback);
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.MODIFY);
+        AttributeManager.getInstance().preModify(attrs, e, callbackContext, checkImmutable, allowCallback);
         modifyAttrsInternal(e, null, attrs);
-        AttributeManager.getInstance().postModify(attrs, e, context, false, allowCallback);
+        AttributeManager.getInstance().postModify(attrs, e, callbackContext, allowCallback);
     }
 
     /**
@@ -905,11 +907,11 @@ public class LegacyLdapProvisioning extends LdapProv {
                     emailAddress, acctAttrs);
         }
 
-        Map<?, ?> attrManagerContext = new HashMap<Object, Object>();
         if (acctAttrs == null) {
             acctAttrs = new HashMap<String, Object>();
         }
-        AttributeManager.getInstance().preModify(acctAttrs, null, attrManagerContext, true, true);
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+        AttributeManager.getInstance().preModify(acctAttrs, null, callbackContext, true);
 
         String dn = null;
         LegacyZimbraLdapContext zlc = null;
@@ -1083,7 +1085,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             Account acct = getAccountById(zimbraIdStr, zlc, true);
             if (acct == null)
                 throw ServiceException.FAILURE("unable to get account after creating LDAP account entry: "+emailAddress+", check ldap log for possible BDB deadlock", null);
-            AttributeManager.getInstance().postModify(acctAttrs, acct, attrManagerContext, true);
+            AttributeManager.getInstance().postModify(acctAttrs, acct, callbackContext);
 
             validate(ProvisioningValidator.CREATE_ACCOUNT_SUCCEEDED,
                     emailAddress, acct);
@@ -1888,8 +1890,6 @@ public class LegacyLdapProvisioning extends LdapProv {
             if (d != null)
                 throw AccountServiceException.DOMAIN_EXISTS(name);
 
-            Map<?, ?> attrManagerContext = new HashMap<Object, Object>();
-
             // Attribute checking can not express "allow setting on
             // creation, but do not allow modifies afterwards"
             String domainType = (String) domainAttrs.get(A_zimbraDomainType);
@@ -1906,7 +1906,8 @@ public class LegacyLdapProvisioning extends LdapProv {
                 domainAttrs.remove(A_zimbraDomainStatus); // add back later
             }
 
-            AttributeManager.getInstance().preModify(domainAttrs, null, attrManagerContext, true, true);
+            CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+            AttributeManager.getInstance().preModify(domainAttrs, null, callbackContext, true);
 
             // Add back attrs we circumvented from attribute checking
             domainAttrs.put(A_zimbraDomainType, domainType);
@@ -1963,7 +1964,7 @@ public class LegacyLdapProvisioning extends LdapProv {
 
             Domain domain = getDomainById(zimbraIdStr, zlc);
 
-            AttributeManager.getInstance().postModify(domainAttrs, domain, attrManagerContext, true);
+            AttributeManager.getInstance().postModify(domainAttrs, domain, callbackContext);
             return domain;
 
         } catch (NameAlreadyBoundException nabe) {
@@ -2236,8 +2237,8 @@ public class LegacyLdapProvisioning extends LdapProv {
             }
         }
 
-        Map<?, ?> attrManagerContext = new HashMap<Object, Object>();
-        AttributeManager.getInstance().preModify(allAttrs, null, attrManagerContext, true, true);
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+        AttributeManager.getInstance().preModify(allAttrs, null, callbackContext, true);
 
         LegacyZimbraLdapContext zlc = null;
         try {
@@ -2257,7 +2258,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             zlc.createEntry(dn, attrs, "createCos");
 
             Cos cos = getCosById(zimbraIdStr, zlc);
-            AttributeManager.getInstance().postModify(allAttrs, cos, attrManagerContext, true);
+            AttributeManager.getInstance().postModify(allAttrs, cos, callbackContext);
             return cos;
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.COS_EXISTS(destCosName);
@@ -2787,8 +2788,8 @@ public class LegacyLdapProvisioning extends LdapProv {
     public Server createServer(String name, Map<String, Object> serverAttrs) throws ServiceException {
         name = name.toLowerCase().trim();
 
-        Map<?, ?> attrManagerContext = new HashMap<Object, Object>();
-        AttributeManager.getInstance().preModify(serverAttrs, null, attrManagerContext, true, true);
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+        AttributeManager.getInstance().preModify(serverAttrs, null, callbackContext, true);
 
         String authHost = (String)serverAttrs.get(A_zimbraMtaAuthHost);
         if (authHost != null) {
@@ -2819,7 +2820,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             zlc.createEntry(dn, attrs, "createServer");
 
             Server server = getServerById(zimbraIdStr, zlc, true);
-            AttributeManager.getInstance().postModify(serverAttrs, server, attrManagerContext, true);
+            AttributeManager.getInstance().postModify(serverAttrs, server, callbackContext);
             return server;
 
         } catch (NameAlreadyBoundException nabe) {
@@ -3076,8 +3077,8 @@ public class LegacyLdapProvisioning extends LdapProv {
 
         validEmailAddress(listAddress);
 
-        Map<?, ?> attrManagerContext = new HashMap<Object, Object>();
-        AttributeManager.getInstance().preModify(listAttrs, null, attrManagerContext, true, true);
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+        AttributeManager.getInstance().preModify(listAttrs, null, callbackContext, true);
 
         LegacyZimbraLdapContext zlc = null;
         try {
@@ -3121,7 +3122,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             DistributionList dlist = getDistributionListById(zimbraIdStr, zlc);
             
             if (dlist != null) {
-	            AttributeManager.getInstance().postModify(listAttrs, dlist, attrManagerContext, true);
+	            AttributeManager.getInstance().postModify(listAttrs, dlist, callbackContext);
 	            mAllDLs.addGroup(dlist);
             } else {
             	throw ServiceException.FAILURE("unable to get distribution list after creating LDAP entry: "+
@@ -4555,8 +4556,8 @@ public class LegacyLdapProvisioning extends LdapProv {
     public Zimlet createZimlet(String name, Map<String, Object> zimletAttrs) throws ServiceException {
         name = name.toLowerCase().trim();
 
-        Map<String, Object> attrManagerContext = new HashMap<String, Object>();
-        AttributeManager.getInstance().preModify(zimletAttrs, null, attrManagerContext, true, true);
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+        AttributeManager.getInstance().preModify(zimletAttrs, null, callbackContext, true);
 
         LegacyZimbraLdapContext zlc = null;
         try {
@@ -4577,7 +4578,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             zlc.createEntry(dn, attrs, "createZimlet");
 
             Zimlet zimlet = lookupZimlet(name, zlc);
-            AttributeManager.getInstance().postModify(zimletAttrs, zimlet, attrManagerContext, true);
+            AttributeManager.getInstance().postModify(zimletAttrs, zimlet, callbackContext);
             return zimlet;
         } catch (NameAlreadyBoundException nabe) {
             throw ServiceException.FAILURE("zimlet already exists: "+name, nabe);
@@ -4615,7 +4616,7 @@ public class LegacyLdapProvisioning extends LdapProv {
 
         SpecialAttrs specialAttrs = mDIT.handleSpecialAttrs(calResAttrs);
 
-        Map<String, Object> attrManagerContext = new HashMap<String, Object>();
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
 
         Set<String> ocs = LdapObjectClass.getCalendarResourceObjectClasses(this);
         Account acct = createAccount(emailAddress, password, calResAttrs, specialAttrs, ocs.toArray(new String[0]), false, null);
@@ -4623,7 +4624,7 @@ public class LegacyLdapProvisioning extends LdapProv {
         LdapCalendarResource resource =
             (LdapCalendarResource) getCalendarResourceById(acct.getId(), true);
         AttributeManager.getInstance().
-            postModify(calResAttrs, resource, attrManagerContext, true);
+            postModify(calResAttrs, resource, callbackContext);
         return resource;
     }
 
@@ -5690,9 +5691,9 @@ public class LegacyLdapProvisioning extends LdapProv {
 
         account.setCachedData(IDENTITY_LIST_CACHE_KEY, null);
 
-        Map<?, ?> attrManagerContext = new HashMap<Object, Object>();
         boolean checkImmutable = !restoring;
-        AttributeManager.getInstance().preModify(identityAttrs, null, attrManagerContext, true, checkImmutable);
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+        AttributeManager.getInstance().preModify(identityAttrs, null, callbackContext, checkImmutable);
 
         LegacyZimbraLdapContext zlc = null;
         try {
@@ -5714,7 +5715,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             zlc.createEntry(dn, attrs, "createIdentity");
 
             Identity identity = getIdentityByName(ldapEntry, identityName, zlc);
-            AttributeManager.getInstance().postModify(identityAttrs, identity, attrManagerContext, true);
+            AttributeManager.getInstance().postModify(identityAttrs, identity, callbackContext);
 
             return identity;
         } catch (NameAlreadyBoundException nabe) {
@@ -5963,10 +5964,11 @@ public class LegacyLdapProvisioning extends LdapProv {
 
         account.setCachedData(SIGNATURE_LIST_CACHE_KEY, null);
 
-        Map<Object, Object> attrManagerContext = new HashMap<Object, Object>();
-        attrManagerContext.put(MailSignature.CALLBACK_KEY_MAX_SIGNATURE_LEN, account.getAttr(Provisioning.A_zimbraMailSignatureMaxLength, "1024"));
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+        callbackContext.setData(DataKey.MAX_SIGNATURE_LEN, 
+                account.getAttr(Provisioning.A_zimbraMailSignatureMaxLength, "1024"));
         boolean checkImmutable = !restoring;
-        AttributeManager.getInstance().preModify(signatureAttrs, null, attrManagerContext, true, checkImmutable);
+        AttributeManager.getInstance().preModify(signatureAttrs, null, callbackContext, checkImmutable);
 
         String signatureId = (String)signatureAttrs.get(Provisioning.A_zimbraSignatureId);
         if (signatureId == null) {
@@ -5997,7 +5999,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             zlc.createEntry(dn, attrs, "createSignature");
 
             Signature signature = getSignatureById(account, ldapEntry, signatureId, zlc);
-            AttributeManager.getInstance().postModify(signatureAttrs, signature, attrManagerContext, true);
+            AttributeManager.getInstance().postModify(signatureAttrs, signature, callbackContext);
 
             if (setAsDefault)
                 setDefaultSignature(account, signatureId);
@@ -6333,9 +6335,9 @@ public class LegacyLdapProvisioning extends LdapProv {
 
         account.setCachedData(DATA_SOURCE_LIST_CACHE_KEY, null);
 
-        Map<?, ?> attrManagerContext = new HashMap<Object, Object>();
         boolean checkImmutable = !restoring;
-        AttributeManager.getInstance().preModify(dataSourceAttrs, null, attrManagerContext, true, checkImmutable);
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+        AttributeManager.getInstance().preModify(dataSourceAttrs, null, callbackContext, checkImmutable);
 
         LegacyZimbraLdapContext zlc = null;
         try {
@@ -6366,7 +6368,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             zlc.createEntry(dn, attrs, "createDataSource");
 
             DataSource ds = getDataSourceById(ldapEntry, dsId, zlc);
-            AttributeManager.getInstance().postModify(dataSourceAttrs, ds, attrManagerContext, true);
+            AttributeManager.getInstance().postModify(dataSourceAttrs, ds, callbackContext);
             return ds;
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.DATA_SOURCE_EXISTS(dsName);
@@ -6596,8 +6598,8 @@ public class LegacyLdapProvisioning extends LdapProv {
         removeAttrIgnoreCase(A_zimbraDomainId, inAttrs);
         removeAttrIgnoreCase(A_zimbraServerId, inAttrs);
 
-        Map<?, ?> attrManagerContext = new HashMap<Object, Object>();
-        AttributeManager.getInstance().preModify(inAttrs, null, attrManagerContext, true, true);
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+        AttributeManager.getInstance().preModify(inAttrs, null, callbackContext, true);
 
         LegacyZimbraLdapContext zlc = null;
         try {
@@ -6619,7 +6621,7 @@ public class LegacyLdapProvisioning extends LdapProv {
             zlc.createEntry(dn, attrs, "createXMPPComponent");
 
             XMPPComponent comp = getXMPPComponentById(compId, zlc, true);
-            AttributeManager.getInstance().postModify(inAttrs, comp, attrManagerContext, true);
+            AttributeManager.getInstance().postModify(inAttrs, comp, callbackContext);
             return comp;
         } catch (NameAlreadyBoundException nabe) {
             throw AccountServiceException.IM_COMPONENT_EXISTS(name);

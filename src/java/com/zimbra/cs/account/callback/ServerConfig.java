@@ -34,8 +34,7 @@ import com.zimbra.cs.util.Zimbra;
 public class ServerConfig extends AttributeCallback {
 
     @Override
-    public void postModify(Map context, String attrName, Entry entry,
-                           boolean isCreate) {
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
         
         // do not run this callback unless inside the server
         if (!Zimbra.started())
@@ -61,8 +60,8 @@ public class ServerConfig extends AttributeCallback {
     }
 
     @Override
-    public void preModify(Map context, String attrName, Object attrValue,
-                          Map attrsToModify, Entry entry, boolean isCreate)
+    public void preModify(CallbackContext context, String attrName, Object attrValue,
+            Map attrsToModify, Entry entry)
     throws ServiceException {
     }
 

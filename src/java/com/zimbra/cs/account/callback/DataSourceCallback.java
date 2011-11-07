@@ -37,7 +37,6 @@ import com.zimbra.cs.datasource.DataSourceManager;
 import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
-import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.util.Zimbra;
 
@@ -63,8 +62,9 @@ public class DataSourceCallback extends AttributeCallback {
      * Confirms that polling interval values are not set lower than the minimum.
      */
     @SuppressWarnings("unchecked")
-    @Override public void preModify(Map context, String attrName, Object attrValue,
-                                    Map attrsToModify, Entry entry, boolean isCreate)
+    @Override 
+    public void preModify(CallbackContext context, String attrName, Object attrValue,
+            Map attrsToModify, Entry entry)
     throws ServiceException {
         if (INTERVAL_ATTRS.contains(attrName)) {
             String interval = (String) attrValue;
@@ -82,14 +82,16 @@ public class DataSourceCallback extends AttributeCallback {
      * Updates scheduled tasks for data sources whose polling interval has changed.
      */
     @SuppressWarnings("unchecked")
-    @Override public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
+    @Override 
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
         // Don't do anything unless inside the server
-        if (!Zimbra.started() || !LC.data_source_scheduling_enabled.booleanValue())
+        if (!Zimbra.started() || !LC.data_source_scheduling_enabled.booleanValue()) {
             return;
-
+        }
+        
         // Don't do anything if this postModify is triggered by creating a COS,
         // because no account will be on this COS yet.
-        if (isCreate && (entry instanceof Cos))
+        if (context.isCreate() && (entry instanceof Cos))
             return;
 
         if (INTERVAL_ATTRS.contains(attrName) || Provisioning.A_zimbraDataSourceEnabled.equals(attrName)) {

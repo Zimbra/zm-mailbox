@@ -23,7 +23,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.Provisioning;
 
 /**
  * {@link AttributeCallback} for {@code zimbraPrefMailTrustedSenderList}.
@@ -53,18 +52,21 @@ import com.zimbra.cs.account.Provisioning;
  */
 public final class TrustedSenderList extends AttributeCallback {
 
-    @Override
     @SuppressWarnings("unchecked")
-    public void preModify(@SuppressWarnings("rawtypes") Map ctx, String name,
-            Object value, @SuppressWarnings("rawtypes") Map mod, Entry entry,
-            boolean isCreate) throws ServiceException {
+    @Override
+    public void preModify(CallbackContext context, String name,
+            Object value, @SuppressWarnings("rawtypes") Map mod, Entry entry) 
+    throws ServiceException {
 
-        // This is called for each of name, +name and -name.
-        // Skip if already processed.
-        if (isCreate || !(entry instanceof Account) || ctx.containsKey(name)) {
+        if (context.isCreate() || !(entry instanceof Account)) {
             return;
         }
-        ctx.put(name, null);
+        
+        // This is called for each of name, +name and -name.
+        // Skip if already processed.
+        if (context.isDoneAndSetIfNot(TrustedSenderList.class)) {
+            return;
+        }
 
         Account account = (Account) entry;
 
@@ -118,12 +120,8 @@ public final class TrustedSenderList extends AttributeCallback {
         }
     }
 
-    /**
-     * This implementation does nothing.
-     */
     @Override
-    public void postModify(@SuppressWarnings("rawtypes") Map context,
-            String attrName, Entry entry, boolean isCreate) {
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
     }
 
 }

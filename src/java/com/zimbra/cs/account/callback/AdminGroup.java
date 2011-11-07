@@ -26,15 +26,13 @@ import com.zimbra.cs.account.ldap.LdapProv;
 public class AdminGroup extends AttributeCallback {
 
     @Override
-    public void preModify(Map context, String attrName, Object attrValue,
-            Map attrsToModify, Entry entry, boolean isCreate)
-            throws ServiceException {
-        // TODO Auto-generated method stub
-
+    public void preModify(CallbackContext context, String attrName, Object attrValue,
+            Map attrsToModify, Entry entry)
+    throws ServiceException {
     }
     
     @Override
-    public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
         
         if (!(entry instanceof DistributionList))
             return;

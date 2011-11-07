@@ -9,19 +9,24 @@ import com.zimbra.cs.account.Provisioning;
 
 public class GalLdapFilter extends AttributeCallback {
 
-    public void preModify(Map context, String attrName, Object value,
-            Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
+    @Override
+    public void preModify(CallbackContext context, String attrName, Object value,
+            Map attrsToModify, Entry entry) 
+    throws ServiceException {
         
         SingleValueMod mod = singleValueMod(attrsToModify, attrName);
         if (mod.unsetting())
             return;
         
         String newValue = mod.value();
-        if ("ad".equalsIgnoreCase(newValue))
-            attrsToModify.put(Provisioning.A_zimbraGalLdapGroupHandlerClass, com.zimbra.cs.account.grouphandler.ADGroupHandler.class.getCanonicalName());
+        if ("ad".equalsIgnoreCase(newValue)) {
+            attrsToModify.put(Provisioning.A_zimbraGalLdapGroupHandlerClass, 
+                    com.zimbra.cs.account.grouphandler.ADGroupHandler.class.getCanonicalName());
+        }
     }
 
-    public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
+    @Override
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
     }
     
 }

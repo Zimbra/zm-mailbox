@@ -24,47 +24,49 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.callback.CallbackContext.DataKey;
 
 public class WhiteBlackList extends AttributeCallback {
-
-    public static final String CALLBACK_KEY_zimbraMailWhitelistMaxNumEntries = "CALLBACK_KEY_zimbraMailWhitelistMaxNumEntries";
-    public static final String CALLBACK_KEY_zimbraMailBlacklistMaxNumEntries = "CALLBACK_KEY_zimbraMailBlacklistMaxNumEntries";
-
     
     @Override
-    public void preModify(Map context, String attrName, Object attrValue,
-            Map attrsToModify, Entry entry, boolean isCreate)
-            throws ServiceException {
+    public void preModify(CallbackContext context, String attrName, Object attrValue,
+            Map attrsToModify, Entry entry)
+    throws ServiceException {
         
-        if (entry != null && !(entry instanceof Account))
+        if (entry != null && !(entry instanceof Account)) {
             return;
+        }
         
         Account acct = (Account)entry;
         String max;
         
-        if (isCreate || entry == null) {
-            if (Provisioning.A_amavisWhitelistSender.equals(attrName))
-                max = (String)context.get(CALLBACK_KEY_zimbraMailWhitelistMaxNumEntries);
-            else
-                max = (String)context.get(CALLBACK_KEY_zimbraMailBlacklistMaxNumEntries);
+        if (context.isCreate() || entry == null) {
+            if (Provisioning.A_amavisWhitelistSender.equals(attrName)) {
+                max = context.getData(DataKey.MAIL_WHITELIST_MAX_NUM_ENTRIES);
+            } else {
+                max = context.getData(DataKey.MAIL_BLACKLIST_MAX_NUM_ENTRIES);
+            }
         } else {
-            if (Provisioning.A_amavisWhitelistSender.equals(attrName))
+            if (Provisioning.A_amavisWhitelistSender.equals(attrName)) {
                 max = acct.getAttr(Provisioning.A_zimbraMailWhitelistMaxNumEntries);
-            else
+            } else {
                 max = acct.getAttr(Provisioning.A_zimbraMailBlacklistMaxNumEntries);
+            }
         }
 
-        if (max != null)
+        if (max != null) {
             check(max, acct, attrName, attrsToModify);
+        }
         
         // if limit is not set, we take it as no limit and don't do any check.
     }
     
     @Override
-    public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
     }
 
-    private void check(String max, Account acct, String attrName, Map attrsToModify) throws ServiceException {
+    private void check(String max, Account acct, String attrName, Map attrsToModify) 
+    throws ServiceException {
         
         // if max can't be parsed as an integer, NumberFormatException will be thrown
         // and the check will fail.   It is not likely to happen though, becasue the 
@@ -132,7 +134,9 @@ public class WhiteBlackList extends AttributeCallback {
                 if (curNum > numMax) {
                     // remove the adds from attrsToModify if there is any
                     if (add != null) {
-                        ZimbraLog.account.warn("number of values for " + attrName + " already exceeded the limit: " + numMax + ", additional values are ignored");
+                        ZimbraLog.account.warn("number of values for " + attrName + 
+                                " already exceeded the limit: " + numMax + 
+                                ", additional values are ignored");
                         attrsToModify.remove("+" + attrName);
                         
                         // if not also requesting for any removal, fail the request, since nothing has been done

@@ -30,11 +30,10 @@ import com.zimbra.cs.account.IDNUtil;
 
 public class IDNCallback extends AttributeCallback {
 
-    /**
-     * check to make sure zimbraMailHost points to a valid server zimbraServiceHostname
-     */
-    public void preModify(Map context, String attrName, Object value,
-            Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
+    @Override
+    public void preModify(CallbackContext context, String attrName, Object value,
+            Map attrsToModify, Entry entry) 
+    throws ServiceException {
         
         MultiValueMod mod = multiValueMod(attrsToModify, attrName);
         IDNType idnType = AttributeManager.idnType(AttributeManager.getInstance(), attrName);
@@ -61,7 +60,7 @@ public class IDNCallback extends AttributeCallback {
         }
     }
 
-    public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
-
+    @Override
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
     }
 }

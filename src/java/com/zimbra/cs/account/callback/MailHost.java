@@ -31,8 +31,10 @@ public class MailHost extends AttributeCallback {
     /**
      * check to make sure zimbraMailHost points to a valid server zimbraServiceHostname
      */
-    public void preModify(Map context, String attrName, Object value,
-            Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
+    @Override
+    public void preModify(CallbackContext context, String attrName, Object value,
+            Map attrsToModify, Entry entry) 
+    throws ServiceException {
         
         if (StringUtil.isNullOrEmpty((String)value) || 
             attrsToModify.get("-" + Provisioning.A_zimbraMailHost) != null)
@@ -71,7 +73,7 @@ public class MailHost extends AttributeCallback {
              * if it would, then replace both zimbraMailHost and set new zimbraMailTransport.  
              * Otherwise error.
              */
-            if (entry != null && !isCreate) {
+            if (entry != null && !context.isCreate()) {
         	
                 String oldMailHost = entry.getAttr(Provisioning.A_zimbraMailHost);
                 if (oldMailHost != null) {
@@ -106,14 +108,8 @@ public class MailHost extends AttributeCallback {
     }
 
 
-    /**
-     * need to keep track in context on whether or not we have been called yet, only 
-     * reset info once
-     */
-
-    public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
-
+    @Override
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
     }
-    
 
 }

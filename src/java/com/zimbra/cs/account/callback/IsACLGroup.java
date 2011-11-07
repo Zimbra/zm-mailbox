@@ -16,7 +16,6 @@ package com.zimbra.cs.account.callback;
 
 import java.util.Map;
 
-import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.DynamicGroup;
@@ -25,17 +24,14 @@ import com.zimbra.cs.account.Provisioning;
 
 public class IsACLGroup extends AttributeCallback {
 
-    private static final String KEY = "IsACLGroupCallback";
     @Override
-    public void preModify(Map context, String attrName, Object attrValue,
-            Map attrsToModify, Entry entry, boolean isCreate)
+    public void preModify(CallbackContext context, String attrName, Object attrValue,
+            Map attrsToModify, Entry entry)
     throws ServiceException {
         
-        if (context.get(KEY) != null) {
+        if (context.isDoneAndSetIfNot(IsACLGroup.class)) {
             return;
         }
-        
-        context.put(KEY, KEY);
         
         Boolean isACLGroup = null;
         String memberURL = null;
@@ -88,9 +84,6 @@ public class IsACLGroup extends AttributeCallback {
     }
 
     @Override
-    public void postModify(Map context, String attrName, Entry entry,
-            boolean isCreate) {
-        // TODO Auto-generated method stub
-        
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
     }
 }

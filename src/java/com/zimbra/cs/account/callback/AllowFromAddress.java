@@ -32,8 +32,10 @@ public class AllowFromAddress extends AttributeCallback {
     /**
      * zimbraAllowFromAddress may not contain the address of an internal account or a distribution list
      */
-    public void preModify(Map context, String attrName, Object value,
-            Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
+    @Override
+    public void preModify(CallbackContext context, String attrName, Object value,
+            Map attrsToModify, Entry entry) 
+    throws ServiceException {
 
         MultiValueMod mod = multiValueMod(attrsToModify, Provisioning.A_zimbraAllowFromAddress);
         if (mod != null && (mod.adding() || mod.replacing())) {
@@ -62,6 +64,7 @@ public class AllowFromAddress extends AttributeCallback {
         }
     }
     
-    public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
+    @Override
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
     }
 }

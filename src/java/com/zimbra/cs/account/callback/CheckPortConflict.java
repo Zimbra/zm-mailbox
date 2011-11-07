@@ -33,8 +33,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 
 public class CheckPortConflict extends AttributeCallback {
-
-    private static final String KEY = CheckPortConflict.class.getName();
+    
     private static final Set<String> sPortAttrs = new HashSet<String>();
         
     static {
@@ -67,22 +66,17 @@ public class CheckPortConflict extends AttributeCallback {
         sPortAttrs.add(Provisioning.A_zimbraMailSSLProxyClientCertPort);
     }
         
-       
-    /**
-     * check port conflict
-     * 
-     */
-    public void preModify(Map context, String attrName, Object attrValue,
-                          Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
+    @Override
+    public void preModify(CallbackContext context, String attrName, Object attrValue,
+            Map attrsToModify, Entry entry) 
+    throws ServiceException {
 
         if (entry != null && !(entry instanceof Server) && !(entry instanceof Config)) return;
-        
-        Object done = context.get(KEY);
-        if (done == null)
-            context.put(KEY, KEY);
-        else
+
+        if (context.isDoneAndSetIfNot(CheckPortConflict.class)) {
             return;
-            
+        }
+        
         // sanity check, zimbra-attrs.xml and the sPortAttrsToCheck map has to be in sync
         if (!sPortAttrs.contains(attrName) ||
             !AttributeManager.getInstance().isServerInherited(attrName))
@@ -179,7 +173,9 @@ public class CheckPortConflict extends AttributeCallback {
         }
     }
     
-    private void checkServerWithNewDefaults(Server server, BiMap<String, String> newDefaults, Map<String, Object> configAttrsToModify) throws ServiceException {
+    private void checkServerWithNewDefaults(Server server, BiMap<String, String> newDefaults, 
+            Map<String, Object> configAttrsToModify) 
+    throws ServiceException {
         Map<String, String> ports = new HashMap<String, String>();
         
         for (String attrName : sPortAttrs) {
@@ -211,10 +207,7 @@ public class CheckPortConflict extends AttributeCallback {
             return ports.containsKey(port);
     }
         
-    /**
-     * need to keep track in context on whether or not we have been called yet, only 
-     * reset info once
-     */
-    public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
+    @Override
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
     }
 }

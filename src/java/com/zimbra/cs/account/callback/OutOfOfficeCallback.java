@@ -21,7 +21,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.db.DbMailbox;
 import com.zimbra.cs.db.DbOutOfOffice;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbPool.DbConnection;
@@ -33,25 +32,22 @@ import com.zimbra.common.util.ZimbraLog;
 
 public class OutOfOfficeCallback extends AttributeCallback {
 
-    private static final String KEY = OutOfOfficeCallback.class.getName();
-
-    @Override public void preModify(Map context, String attrName, Object value,
-                                    Map attrsToModify, Entry entry, boolean isCreate) {
+    @Override 
+    public void preModify(CallbackContext context, String attrName, Object value,
+            Map attrsToModify, Entry entry) {
     }
 
-    /**
-     * need to keep track in context on whether or not we have been called yet, only
-     * reset info once
-     */
-
-    @Override public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
-        if (!isCreate) {
-            Object done = context.get(KEY);
-            if (done == null) {
-                context.put(KEY, KEY);
-                ZimbraLog.misc.info("need to reset vacation info");
-                if (entry instanceof Account)
-                    handleOutOfOffice((Account)entry);
+    @Override 
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
+        
+        if (context.isDoneAndSetIfNot(OutOfOfficeCallback.class)) {
+            return;
+        }
+        
+        if (!context.isCreate()) {
+            ZimbraLog.misc.info("need to reset vacation info");
+            if (entry instanceof Account) {
+                handleOutOfOffice((Account)entry);
             }
         }
     }

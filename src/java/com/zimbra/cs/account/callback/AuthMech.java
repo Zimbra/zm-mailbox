@@ -6,15 +6,13 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.auth.AuthMechanism;
 
 public class AuthMech extends AttributeCallback {
 
-
     @Override
-    public void preModify(Map context, String attrName, Object attrValue,
-            Map attrsToModify, Entry entry, boolean isCreate)
+    public void preModify(CallbackContext context, String attrName, Object attrValue,
+            Map attrsToModify, Entry entry)
             throws ServiceException {
         // TODO Auto-generated method stub
         
@@ -48,10 +46,7 @@ public class AuthMech extends AttributeCallback {
 
     
     @Override
-    public void postModify(Map context, String attrName, Entry entry,
-            boolean isCreate) {
-        // TODO Auto-generated method stub
-
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
     }
 
 }

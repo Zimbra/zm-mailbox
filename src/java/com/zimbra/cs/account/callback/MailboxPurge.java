@@ -31,11 +31,13 @@ import com.zimbra.cs.util.Zimbra;
  */
 public class MailboxPurge extends AttributeCallback {
 
-    public void preModify(Map context, String attrName, Object attrValue, Map attrsToModify,
-                          Entry entry, boolean isCreate) {
+    @Override
+    public void preModify(CallbackContext context, String attrName, Object attrValue, 
+            Map attrsToModify, Entry entry) {
     }
 
-    public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
+    @Override
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
         if (!Provisioning.A_zimbraMailPurgeSleepInterval.equals(attrName)) {
             return;
         }

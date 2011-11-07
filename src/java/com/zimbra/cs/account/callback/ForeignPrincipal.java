@@ -26,11 +26,14 @@ import com.zimbra.cs.account.ldap.LdapProv;
 
 public class ForeignPrincipal extends AttributeCallback {
     
-    public void preModify(Map context, String attrName, Object value,
-            Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
+    @Override
+    public void preModify(CallbackContext context, String attrName, Object value,
+            Map attrsToModify, Entry entry) 
+    throws ServiceException {
         
-        if (entry == null || isCreate)
+        if (entry == null || context.isCreate()) {
             return;
+        }
         
         if (!(entry instanceof Account))
             return;
@@ -43,9 +46,8 @@ public class ForeignPrincipal extends AttributeCallback {
         ((LdapProv) prov).removeFromCache(acct);
     }
     
-    public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
-        
-
+    @Override
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
     }
     
 }

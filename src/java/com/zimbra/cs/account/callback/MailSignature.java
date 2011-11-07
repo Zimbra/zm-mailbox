@@ -25,39 +25,36 @@ import com.zimbra.cs.account.AttributeCallback;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
+import com.zimbra.cs.account.callback.CallbackContext.DataKey;
  
 public class MailSignature extends AttributeCallback {
-    
-    /*
-     * for modifying signature, we can get the max len from entry.getAccount
-     * 
-     * if the signature entry is being created, or if someone is setting it (not a valid supported case) directly with createAccount, 
-     * the entry field will be null, and we cannot do entry.getAccount to get the max signature length.  So we pass the max length 
-     * in the context.
-     */
-    public static final String CALLBACK_KEY_MAX_SIGNATURE_LEN = "KEY_MAX_SIGNATURE_LEN";
 
     /**
      * check to make sure zimbraPrefMailSignature is shorter than the limit
      */
-    public void preModify(Map context, String attrName, Object value,
-            Map attrsToModify, Entry entry, boolean isCreate) throws ServiceException {
+    @Override
+    public void preModify(CallbackContext context, String attrName, Object value,
+            Map attrsToModify, Entry entry) 
+    throws ServiceException {
 
         SingleValueMod mod = singleValueMod(attrName, value);
         if (mod.unsetting())
             return;
                 
-        if (entry != null && !((entry instanceof Account)||(entry instanceof Identity)||(entry instanceof Signature))) 
+        if (entry != null && 
+            !((entry instanceof Account)||(entry instanceof Identity)||(entry instanceof Signature))) {
             return;
-        
+        }
+
         long maxLen = -1;
         
-        String maxInContext = (String)context.get(CALLBACK_KEY_MAX_SIGNATURE_LEN);
+        String maxInContext = context.getData(DataKey.MAX_SIGNATURE_LEN);
         if (maxInContext != null) {
             try {
                 maxLen = Integer.parseInt(maxInContext);
             } catch (NumberFormatException e) {
-                ZimbraLog.account.warn("encountered invalid " + CALLBACK_KEY_MAX_SIGNATURE_LEN + ": " + maxInContext);
+                ZimbraLog.account.warn("encountered invalid " + 
+                        DataKey.MAX_SIGNATURE_LEN.name() + ": " + maxInContext);
             }
         }
 
@@ -67,39 +64,41 @@ public class MailSignature extends AttributeCallback {
                 try {
                     maxLen = Integer.parseInt(maxInAttrsToModify);
                 } catch (NumberFormatException e) {
-                    ZimbraLog.account.warn("encountered invalid " + Provisioning.A_zimbraMailSignatureMaxLength + ": " + maxInAttrsToModify);
+                    ZimbraLog.account.warn("encountered invalid " + 
+                            Provisioning.A_zimbraMailSignatureMaxLength + ": " +
+                            maxInAttrsToModify);
                 }
             }
         }
 
         if (maxLen == -1) {
-            if (entry == null)
+            if (entry == null) {
                 return;
+            }
             
             Account account;
-            if (entry instanceof Account)
+            if (entry instanceof Account) {
                 account = (Account)entry;
-            else if (entry instanceof Identity)
+            } else if (entry instanceof Identity) {
                 account = ((Identity)entry).getAccount();
-            else if (entry instanceof Signature)
+            } else if (entry instanceof Signature) {
                 account = ((Signature)entry).getAccount();
-            else
+            } else {
                 return;
-                
+            }
+            
             maxLen = account.getMailSignatureMaxLength();
         }
 
         // 0 means unlimited
-        if (maxLen != 0 && ((String)value).length() > maxLen)
-            throw ServiceException.INVALID_REQUEST(Provisioning.A_zimbraPrefMailSignature + " is longer than the limited value " + maxLen, null);
+        if (maxLen != 0 && ((String)value).length() > maxLen) {
+            throw ServiceException.INVALID_REQUEST(
+                    Provisioning.A_zimbraPrefMailSignature + 
+                    " is longer than the limited value " + maxLen, null);
+        }
     }
 
-    /**
-     * need to keep track in context on whether or not we have been called yet, only 
-     * reset info once
-     */
-
-    public void postModify(Map context, String attrName, Entry entry, boolean isCreate) {
-
+    @Override
+    public void postModify(CallbackContext context, String attrName, Entry entry) {
     }
 }

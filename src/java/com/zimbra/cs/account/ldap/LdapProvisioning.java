@@ -72,7 +72,9 @@ import com.zimbra.cs.account.auth.AuthContext;
 import com.zimbra.cs.account.auth.AuthMechanism;
 import com.zimbra.cs.account.auth.PasswordUtil;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
+import com.zimbra.cs.account.callback.CallbackContext;
 import com.zimbra.cs.account.callback.MailSignature;
+import com.zimbra.cs.account.callback.CallbackContext.DataKey;
 import com.zimbra.cs.account.gal.GalNamedFilter;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalParams;
@@ -377,10 +379,10 @@ public class LdapProvisioning extends LdapProv {
     public void modifyAttrs(Entry e, Map<String, ? extends Object> attrs, 
             boolean checkImmutable, boolean allowCallback)
     throws ServiceException {
-        Map<Object, Object> context = new HashMap<Object, Object>();
-        AttributeManager.getInstance().preModify(attrs, e, context, false, checkImmutable, allowCallback);
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.MODIFY);
+        AttributeManager.getInstance().preModify(attrs, e, callbackContext, checkImmutable, allowCallback);
         modifyAttrsInternal(e, null, attrs);
-        AttributeManager.getInstance().postModify(attrs, e, context, false, allowCallback);
+        AttributeManager.getInstance().postModify(attrs, e, callbackContext, allowCallback);
     }
 
     /**
@@ -938,11 +940,12 @@ public class LdapProvisioning extends LdapProv {
                     emailAddress, acctAttrs);
         }
 
-        Map<?, ?> attrManagerContext = new HashMap<Object, Object>();
         if (acctAttrs == null) {
             acctAttrs = new HashMap<String, Object>();
         }
-        AttributeManager.getInstance().preModify(acctAttrs, null, attrManagerContext, true, true);
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+        callbackContext.setCreatingEntryName(emailAddress);
+        AttributeManager.getInstance().preModify(acctAttrs, null, callbackContext, true);
 
         String dn = null;
         ZLdapContext zlc = null;
@@ -1130,7 +1133,7 @@ public class LdapProvisioning extends LdapProv {
                         emailAddress + ", check ldap log for possible BDB deadlock", null);
             }
                 
-            AttributeManager.getInstance().postModify(acctAttrs, acct, attrManagerContext, true);
+            AttributeManager.getInstance().postModify(acctAttrs, acct, callbackContext);
 
             validate(ProvisioningValidator.CREATE_ACCOUNT_SUCCEEDED,
                     emailAddress, acct);
@@ -2139,11 +2142,10 @@ public class LdapProvisioning extends LdapProv {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.CREATE_DOMAIN);
 
             LdapDomain d = (LdapDomain) getDomainByAsciiName(name, zlc);
-            if (d != null)
+            if (d != null) {
                 throw AccountServiceException.DOMAIN_EXISTS(name);
-
-            Map<?, ?> attrManagerContext = new HashMap<Object, Object>();
-
+            }
+            
             // Attribute checking can not express "allow setting on
             // creation, but do not allow modifies afterwards"
             String domainType = (String) domainAttrs.get(A_zimbraDomainType);
@@ -2160,7 +2162,8 @@ public class LdapProvisioning extends LdapProv {
                 domainAttrs.remove(A_zimbraDomainStatus); // add back later
             }
 
-            AttributeManager.getInstance().preModify(domainAttrs, null, attrManagerContext, true, true);
+            CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+            AttributeManager.getInstance().preModify(domainAttrs, null, callbackContext, true);
 
             // Add back attrs we circumvented from attribute checking
             domainAttrs.put(A_zimbraDomainType, domainType);
@@ -2223,7 +2226,7 @@ public class LdapProvisioning extends LdapProv {
 
             Domain domain = getDomainById(zimbraIdStr, zlc);
 
-            AttributeManager.getInstance().postModify(domainAttrs, domain, attrManagerContext, true);
+            AttributeManager.getInstance().postModify(domainAttrs, domain, callbackContext);
             return domain;
 
         } catch (LdapEntryAlreadyExistException nabe) {
@@ -2480,8 +2483,8 @@ public class LdapProvisioning extends LdapProv {
             }
         }
 
-        Map<?, ?> attrManagerContext = new HashMap<Object, Object>();
-        AttributeManager.getInstance().preModify(allAttrs, null, attrManagerContext, true, true);
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+        AttributeManager.getInstance().preModify(allAttrs, null, callbackContext, true);
 
         ZLdapContext zlc = null;
         try {
@@ -2502,7 +2505,7 @@ public class LdapProvisioning extends LdapProv {
             zlc.createEntry(entry);
 
             Cos cos = getCosById(zimbraIdStr, zlc);
-            AttributeManager.getInstance().postModify(allAttrs, cos, attrManagerContext, true);
+            AttributeManager.getInstance().postModify(allAttrs, cos, callbackContext);
             return cos;
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.COS_EXISTS(destCosName);
@@ -3063,8 +3066,8 @@ public class LdapProvisioning extends LdapProv {
     throws ServiceException {
         name = name.toLowerCase().trim();
 
-        Map<?, ?> attrManagerContext = new HashMap<Object, Object>();
-        AttributeManager.getInstance().preModify(serverAttrs, null, attrManagerContext, true, true);
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+        AttributeManager.getInstance().preModify(serverAttrs, null, callbackContext, true);
 
         String authHost = (String)serverAttrs.get(A_zimbraMtaAuthHost);
         if (authHost != null) {
@@ -3095,7 +3098,7 @@ public class LdapProvisioning extends LdapProv {
             zlc.createEntry(entry);
 
             Server server = getServerById(zimbraIdStr, zlc, true);
-            AttributeManager.getInstance().postModify(serverAttrs, server, attrManagerContext, true);
+            AttributeManager.getInstance().postModify(serverAttrs, server, callbackContext);
             return server;
 
         } catch (LdapEntryAlreadyExistException nabe) {
@@ -3349,8 +3352,9 @@ public class LdapProvisioning extends LdapProv {
 
         validEmailAddress(listAddress);
 
-        Map<String, Object> attrManagerContext = new HashMap<String, Object>();
-        AttributeManager.getInstance().preModify(listAttrs, null, attrManagerContext, true, true);
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+        callbackContext.setCreatingEntryName(listAddress);
+        AttributeManager.getInstance().preModify(listAttrs, null, callbackContext, true);
 
         ZLdapContext zlc = null;
         try {
@@ -3409,7 +3413,7 @@ public class LdapProvisioning extends LdapProv {
             DistributionList dlist = getDistributionListById(zimbraIdStr, zlc);
 
             if (dlist != null) {
-                AttributeManager.getInstance().postModify(listAttrs, dlist, attrManagerContext, true);
+                AttributeManager.getInstance().postModify(listAttrs, dlist, callbackContext);
                 allDLs.addGroup(dlist);
             } else {
                 throw ServiceException.FAILURE("unable to get distribution list after creating LDAP entry: "+
@@ -4859,8 +4863,8 @@ public class LdapProvisioning extends LdapProv {
     throws ServiceException {
         name = name.toLowerCase().trim();
 
-        Map<String, Object> attrManagerContext = new HashMap<String, Object>();
-        AttributeManager.getInstance().preModify(zimletAttrs, null, attrManagerContext, true, true);
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+        AttributeManager.getInstance().preModify(zimletAttrs, null, callbackContext, true);
 
         ZLdapContext zlc = null;
         try {
@@ -4884,7 +4888,7 @@ public class LdapProvisioning extends LdapProv {
             zlc.createEntry(entry);
 
             Zimlet zimlet = lookupZimlet(name, zlc);
-            AttributeManager.getInstance().postModify(zimletAttrs, zimlet, attrManagerContext, true);
+            AttributeManager.getInstance().postModify(zimletAttrs, zimlet, callbackContext);
             return zimlet;
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.ZIMLET_EXISTS(name);
@@ -4927,7 +4931,7 @@ public class LdapProvisioning extends LdapProv {
 
         SpecialAttrs specialAttrs = mDIT.handleSpecialAttrs(calResAttrs);
 
-        Map<String, Object> attrManagerContext = new HashMap<String, Object>();
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
 
         Set<String> ocs = LdapObjectClass.getCalendarResourceObjectClasses(this);
         Account acct = createAccount(emailAddress, password, calResAttrs, specialAttrs, 
@@ -4936,7 +4940,7 @@ public class LdapProvisioning extends LdapProv {
         LdapCalendarResource resource =
             (LdapCalendarResource) getCalendarResourceById(acct.getId(), true);
         AttributeManager.getInstance().
-            postModify(calResAttrs, resource, attrManagerContext, true);
+            postModify(calResAttrs, resource, callbackContext);
         return resource;
     }
 
@@ -6099,9 +6103,9 @@ public class LdapProvisioning extends LdapProv {
 
         account.setCachedData(IDENTITY_LIST_CACHE_KEY, null);
 
-        Map<?, ?> attrManagerContext = new HashMap<Object, Object>();
         boolean checkImmutable = !restoring;
-        AttributeManager.getInstance().preModify(identityAttrs, null, attrManagerContext, true, checkImmutable);
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+        AttributeManager.getInstance().preModify(identityAttrs, null, callbackContext, checkImmutable);
 
         ZLdapContext zlc = null;
         try {
@@ -6124,7 +6128,7 @@ public class LdapProvisioning extends LdapProv {
             zlc.createEntry(entry);
 
             Identity identity = getIdentityByName(ldapEntry, identityName, zlc);
-            AttributeManager.getInstance().postModify(identityAttrs, identity, attrManagerContext, true);
+            AttributeManager.getInstance().postModify(identityAttrs, identity, callbackContext);
 
             return identity;
         } catch (LdapEntryAlreadyExistException nabe) {
@@ -6372,12 +6376,12 @@ public class LdapProvisioning extends LdapProv {
 
         account.setCachedData(SIGNATURE_LIST_CACHE_KEY, null);
 
-        Map<Object, Object> attrManagerContext = new HashMap<Object, Object>();
-        attrManagerContext.put(MailSignature.CALLBACK_KEY_MAX_SIGNATURE_LEN, 
-                account.getAttr(Provisioning.A_zimbraMailSignatureMaxLength, "1024"));
         boolean checkImmutable = !restoring;
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+        callbackContext.setData(DataKey.MAX_SIGNATURE_LEN, 
+                account.getAttr(Provisioning.A_zimbraMailSignatureMaxLength, "1024"));
         AttributeManager.getInstance().preModify(signatureAttrs, null, 
-                attrManagerContext, true, checkImmutable);
+                callbackContext, checkImmutable);
 
         String signatureId = (String)signatureAttrs.get(Provisioning.A_zimbraSignatureId);
         if (signatureId == null) {
@@ -6410,7 +6414,7 @@ public class LdapProvisioning extends LdapProv {
             zlc.createEntry(entry);
 
             Signature signature = getSignatureById(account, ldapEntry, signatureId, zlc);
-            AttributeManager.getInstance().postModify(signatureAttrs, signature, attrManagerContext, true);
+            AttributeManager.getInstance().postModify(signatureAttrs, signature, callbackContext);
 
             if (setAsDefault)
                 setDefaultSignature(account, signatureId);
@@ -6754,9 +6758,9 @@ public class LdapProvisioning extends LdapProv {
 
         account.setCachedData(DATA_SOURCE_LIST_CACHE_KEY, null);
 
-        Map<?, ?> attrManagerContext = new HashMap<Object, Object>();
         boolean checkImmutable = !restoring;
-        AttributeManager.getInstance().preModify(dataSourceAttrs, null, attrManagerContext, true, checkImmutable);
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+        AttributeManager.getInstance().preModify(dataSourceAttrs, null, callbackContext, checkImmutable);
 
         ZLdapContext zlc = null;
         try {
@@ -6790,7 +6794,7 @@ public class LdapProvisioning extends LdapProv {
             zlc.createEntry(entry);
 
             DataSource ds = getDataSourceById(ldapEntry, dsId, zlc);
-            AttributeManager.getInstance().postModify(dataSourceAttrs, ds, attrManagerContext, true);
+            AttributeManager.getInstance().postModify(dataSourceAttrs, ds, callbackContext);
             return ds;
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.DATA_SOURCE_EXISTS(dsName);
@@ -7015,8 +7019,8 @@ public class LdapProvisioning extends LdapProv {
         removeAttrIgnoreCase(A_zimbraDomainId, inAttrs);
         removeAttrIgnoreCase(A_zimbraServerId, inAttrs);
 
-        Map<?, ?> attrManagerContext = new HashMap<Object, Object>();
-        AttributeManager.getInstance().preModify(inAttrs, null, attrManagerContext, true, true);
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+        AttributeManager.getInstance().preModify(inAttrs, null, callbackContext, true);
 
         ZLdapContext zlc = null;
         try {
@@ -7040,7 +7044,7 @@ public class LdapProvisioning extends LdapProv {
             zlc.createEntry(entry);
 
             XMPPComponent comp = getXMPPComponentById(compId, zlc, true);
-            AttributeManager.getInstance().postModify(inAttrs, comp, attrManagerContext, true);
+            AttributeManager.getInstance().postModify(inAttrs, comp, callbackContext);
             return comp;
         } catch (LdapEntryAlreadyExistException nabe) {
             throw AccountServiceException.IM_COMPONENT_EXISTS(name);
@@ -7978,8 +7982,9 @@ public class LdapProvisioning extends LdapProv {
 
         validEmailAddress(groupAddress);
 
-        Map<?, ?> attrManagerContext = new HashMap<Object, Object>();
-        AttributeManager.getInstance().preModify(groupAttrs, null, attrManagerContext, true, true);
+        CallbackContext callbackContext = new CallbackContext(CallbackContext.Op.CREATE);
+        callbackContext.setCreatingEntryName(groupAddress);
+        AttributeManager.getInstance().preModify(groupAttrs, null, callbackContext, true);
 
         ZLdapContext zlc = null;
         try {
@@ -8052,7 +8057,7 @@ public class LdapProvisioning extends LdapProv {
             DynamicGroup group = getDynamicGroupById(zimbraId, zlc, false);
 
             if (group != null) {
-                AttributeManager.getInstance().postModify(groupAttrs, group, attrManagerContext, true);
+                AttributeManager.getInstance().postModify(groupAttrs, group, callbackContext);
                 allDLs.addGroup(group);
             } else {
                 throw ServiceException.FAILURE("unable to get distribution list after creating LDAP entry: "+
