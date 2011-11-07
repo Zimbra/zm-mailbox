@@ -22,18 +22,16 @@ import com.google.common.collect.Sets;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.NamedEntry;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.UserRight;
-import com.zimbra.cs.account.accesscontrol.Rights.User;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 
 public class DiscoverRights extends AccountDocumentHandler {
@@ -94,17 +92,10 @@ public class DiscoverRights extends AccountDocumentHandler {
                 
                 if (isDelegatedSendRight) {
                     if (target instanceof Account || target instanceof Group) {
-                        NamedEntry entry = (NamedEntry) target;
-                        String[] addrs = target.getMultiAttr(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender);
-                        eTarget.addAttribute(AccountConstants.A_ID, entry.getId());
-                        if (addrs.length == 0) {
+                        String[] addrs = AccountUtil.getAllowedSendAddresses((NamedEntry) target);
+                        for (String addr : addrs) {
                             Element eEmail = eTarget.addElement(AccountConstants.E_EMAIL);
-                            eEmail.addAttribute(AccountConstants.A_ADDR, entry.getName());
-                        } else {
-                            for (String addr : addrs) {
-                                Element eEmail = eTarget.addElement(AccountConstants.E_EMAIL);
-                                eEmail.addAttribute(AccountConstants.A_ADDR, addr);
-                            }
+                            eEmail.addAttribute(AccountConstants.A_ADDR, addr);
                         }
                     } else {
                         throw ServiceException.FAILURE("internal error, target for " +

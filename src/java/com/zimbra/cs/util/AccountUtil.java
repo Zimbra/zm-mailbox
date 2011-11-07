@@ -36,6 +36,7 @@ import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.cs.account.Server;
@@ -433,5 +434,23 @@ public class AccountUtil {
     public static boolean isZDesktopLocalAccount(String accountId) {
         String zdLocalAcctId = LC.zdesktop_local_account_id.value();
         return zdLocalAcctId != null && zdLocalAcctId.equalsIgnoreCase(accountId);
+    }
+
+    public static String[] getAllowedSendAddresses(NamedEntry grantor) {
+        String[] addrs = grantor.getMultiAttr(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender);
+        if (addrs.length == 0) {
+            addrs = new String[] { grantor.getName() };
+        }
+        return addrs;
+    }
+
+    public static boolean isAllowedSendAddress(NamedEntry grantor, String address) {
+        String[] addrs = getAllowedSendAddresses(grantor);
+        for (String a : addrs) {
+            if (a.equalsIgnoreCase(address)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

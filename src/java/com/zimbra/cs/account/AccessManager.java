@@ -32,6 +32,7 @@ import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
+import com.zimbra.cs.util.AccountUtil;
 
 public abstract class AccessManager {
 
@@ -410,11 +411,17 @@ public abstract class AccessManager {
                     Group group = prov.getGroupBasic(DistributionListBy.name, targetAddress);
                     if (group != null) {
                         allowed = canDo(grantee, group, dlSendRight, asAdmin);
+                        if (allowed) {
+                            allowed = AccountUtil.isAllowedSendAddress(group, targetAddress);
+                        }
                     }
                 } else {
                     Account addrAccount = prov.get(AccountBy.name, targetAddress);
                     if (addrAccount != null) {
                         allowed = canDo(grantee, addrAccount, sendRight, asAdmin);
+                        if (allowed) {
+                            allowed = AccountUtil.isAllowedSendAddress(addrAccount, targetAddress);
+                        }
                     }
                 }
             }
