@@ -37,7 +37,7 @@ public abstract class ZAttrDynamicGroup extends Group {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111104-1616 */
+    /* build: unknown unknown unknown unknown */
 
     /**
      * RFC2256: descriptive information
@@ -1497,6 +1497,149 @@ public abstract class ZAttrDynamicGroup extends Group {
     public Map<String,Object> unsetMailStatus(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailStatus, "");
+        return attrs;
+    }
+
+    /**
+     * Addresses of the account that can be used by allowed delegated senders
+     * as From and Sender address.
+     *
+     * @return zimbraPrefAllowAddressForDelegatedSender, or empty array if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1333)
+    public String[] getPrefAllowAddressForDelegatedSender() {
+        return getMultiAttr(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender);
+    }
+
+    /**
+     * Addresses of the account that can be used by allowed delegated senders
+     * as From and Sender address.
+     *
+     * @param zimbraPrefAllowAddressForDelegatedSender new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1333)
+    public void setPrefAllowAddressForDelegatedSender(String[] zimbraPrefAllowAddressForDelegatedSender) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, zimbraPrefAllowAddressForDelegatedSender);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Addresses of the account that can be used by allowed delegated senders
+     * as From and Sender address.
+     *
+     * @param zimbraPrefAllowAddressForDelegatedSender new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1333)
+    public Map<String,Object> setPrefAllowAddressForDelegatedSender(String[] zimbraPrefAllowAddressForDelegatedSender, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, zimbraPrefAllowAddressForDelegatedSender);
+        return attrs;
+    }
+
+    /**
+     * Addresses of the account that can be used by allowed delegated senders
+     * as From and Sender address.
+     *
+     * @param zimbraPrefAllowAddressForDelegatedSender new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1333)
+    public void addPrefAllowAddressForDelegatedSender(String zimbraPrefAllowAddressForDelegatedSender) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, zimbraPrefAllowAddressForDelegatedSender);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Addresses of the account that can be used by allowed delegated senders
+     * as From and Sender address.
+     *
+     * @param zimbraPrefAllowAddressForDelegatedSender new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1333)
+    public Map<String,Object> addPrefAllowAddressForDelegatedSender(String zimbraPrefAllowAddressForDelegatedSender, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, zimbraPrefAllowAddressForDelegatedSender);
+        return attrs;
+    }
+
+    /**
+     * Addresses of the account that can be used by allowed delegated senders
+     * as From and Sender address.
+     *
+     * @param zimbraPrefAllowAddressForDelegatedSender existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1333)
+    public void removePrefAllowAddressForDelegatedSender(String zimbraPrefAllowAddressForDelegatedSender) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, zimbraPrefAllowAddressForDelegatedSender);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Addresses of the account that can be used by allowed delegated senders
+     * as From and Sender address.
+     *
+     * @param zimbraPrefAllowAddressForDelegatedSender existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1333)
+    public Map<String,Object> removePrefAllowAddressForDelegatedSender(String zimbraPrefAllowAddressForDelegatedSender, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, zimbraPrefAllowAddressForDelegatedSender);
+        return attrs;
+    }
+
+    /**
+     * Addresses of the account that can be used by allowed delegated senders
+     * as From and Sender address.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1333)
+    public void unsetPrefAllowAddressForDelegatedSender() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Addresses of the account that can be used by allowed delegated senders
+     * as From and Sender address.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1333)
+    public Map<String,Object> unsetPrefAllowAddressForDelegatedSender(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, "");
         return attrs;
     }
 
