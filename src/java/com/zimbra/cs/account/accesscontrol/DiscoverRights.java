@@ -14,7 +14,6 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
-import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -39,9 +38,9 @@ public class DiscoverRights {
      * Discover grants that are granted on the designated target type for the 
      * specified rights.  Note: grants granted on other targets are not searched/returned.
      * 
-     * e.g for an account right, returns grants that are granted on account entries that 
-     *     are applicable to the acct, granted granted on DL, group, domain, and global 
-     *     are NOT returned.
+     * e.g. for an account right, returns grants that are granted on account entries that 
+     *      are applicable to the account.  Grants granted on DL, group, domain, and global 
+     *      are NOT returned.
      */
     Map<Right, Set<Entry>> handle() throws ServiceException {
         Provisioning prov = Provisioning.getInstance();

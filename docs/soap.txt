@@ -3492,6 +3492,36 @@ e.g.
 
 ---------------------------
 
+<CheckRightsRequest>
+  <target type="{target-type}" by="id|name" key="{key}">
+    <right>...</right>+
+  </target>+
+</CheckRightsRequest>
+
+Check if the authed user has the specified right(s) on a target.
+
+{key} = if by id, zimbraId of the target entry
+        if by name, name of the target entry
+{target-type} = account | calresource | dl | domain
+
+
+<CheckRightsResponse>
+  <target type="{target-type}" by="id|name" key="{key}" allow="{1|0}">
+    <right allow="{1|0}">...</right>+
+  </target>+
+</CheckRightsResponse>
+
+allow = 1 | 0
+        1: the authed user has the right on the target
+        0: the authed user does not have the right on the target
+        For the allow="1|0" on each <target>, it is the AND value of all requetsed rights 
+        for the target.
+
+
+
+        
+---------------------------
+
 <GetVersionInfoRequest/>
 
 <GetVersionInfoResponse>

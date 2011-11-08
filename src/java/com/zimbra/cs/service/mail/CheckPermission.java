@@ -13,9 +13,6 @@
  * ***** END LICENSE BLOCK *****
  */
 
-/*
- * Created on Jun 17, 2004
- */
 package com.zimbra.cs.service.mail;
 
 import java.util.ArrayList;
@@ -34,7 +31,10 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.UserRight;
+import com.zimbra.cs.service.account.DiscoverRights;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector.TargetBy;
 
 public class CheckPermission extends MailDocumentHandler {
 
@@ -44,9 +44,10 @@ public class CheckPermission extends MailDocumentHandler {
         
         Element eTarget = request.getElement(MailConstants.E_TARGET);
         String targetType = eTarget.getAttribute(MailConstants.A_TARGET_TYPE);
-        
         TargetType tt = TargetType.fromCode(targetType);
+        
         String targetBy = eTarget.getAttribute(MailConstants.A_TARGET_BY);
+        
         String targetValue = eTarget.getText();
         
         NamedEntry entry = null;
@@ -94,6 +95,11 @@ public class CheckPermission extends MailDocumentHandler {
         AccessManager am = AccessManager.getInstance();
         for (UserRight right : rights) {
             boolean allow = am.canDo(zsc.getAuthToken(), entry, right, false);
+            if (allow && 
+                DiscoverRights.isDelegatedSendRight(right) &&
+                TargetBy.name.name().equals(targetBy)) {
+                allow = AccountUtil.isAllowedSendAddress(entry, targetValue);
+            }
             response.addElement(MailConstants.E_RIGHT).addAttribute(MailConstants.A_ALLOW, allow).setText(right.getName());
             finalResult = finalResult & allow;
         }

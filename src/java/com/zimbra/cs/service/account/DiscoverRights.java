@@ -79,13 +79,12 @@ public class DiscoverRights extends AccountDocumentHandler {
             Right right = targetsForRight.getKey();
             Set<Entry> targets = targetsForRight.getValue();
             
-            boolean isDelegatedSendRight = DELEGATED_SEND_RIGHTS.contains(right.getName());
+            boolean isDelegatedSendRight = isDelegatedSendRight(right);
             
             Element eTargets = response.addElement(AccountConstants.E_TARGETS);
             eTargets.addAttribute(AccountConstants.A_RIGHT, right.getName());
             
             for (Entry target : targets) {
-                // support only account and group targets for now
                 TargetType targetType = TargetType.getTargetType(target);
                 Element eTarget = eTargets.addElement(AccountConstants.E_TARGET);
                 eTarget.addAttribute(AccountConstants.A_TYPE, targetType.getCode());
@@ -113,6 +112,10 @@ public class DiscoverRights extends AccountDocumentHandler {
             }
         }
         return response;
+    }
+    
+    public static boolean isDelegatedSendRight(Right right) {
+        return DELEGATED_SEND_RIGHTS.contains(right.getName());
     }
 
 }

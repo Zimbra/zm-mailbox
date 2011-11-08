@@ -290,7 +290,7 @@ public enum TargetType {
      * @return
      * @throws ServiceException
      */
-    static Entry lookupTarget(Provisioning prov, TargetType targetType, Key.TargetBy targetBy, 
+    public static Entry lookupTarget(Provisioning prov, TargetType targetType, Key.TargetBy targetBy, 
             String target, boolean mustFind) throws ServiceException {
         Entry targetEntry = null;
         
