@@ -6603,4 +6603,8 @@ TODO: delete them permanently from here
   <desc>Addresses of the account that can be used by allowed delegated senders as From and Sender address.</desc>
 </attr>
 
+<attr id="1334" name="zimbraPrefOutOfOfficeFreeBusyStatus" type="enum" value="FREE,TENTATIVE,BUSY,OOO" cardinality="single" optionalIn="account" since="8.0.0">
+  <desc>free/busy status while out of office</desc>
+</attr>
+
 </attrs>
