@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pburgu 20111107-1637 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111107-1045 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1020,6 +1020,26 @@ public class ZAttrProvisioning {
         }
         public boolean isOutlook() { return this == outlook;}
         public boolean isInternet() { return this == internet;}
+    }
+
+    public static enum PrefOutOfOfficeFreeBusyStatus {
+        FREE("FREE"),
+        TENTATIVE("TENTATIVE"),
+        BUSY("BUSY"),
+        OOO("OOO");
+        private String mValue;
+        private PrefOutOfOfficeFreeBusyStatus(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static PrefOutOfOfficeFreeBusyStatus fromString(String s) throws ServiceException {
+            for (PrefOutOfOfficeFreeBusyStatus value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isFREE() { return this == FREE;}
+        public boolean isTENTATIVE() { return this == TENTATIVE;}
+        public boolean isBUSY() { return this == BUSY;}
+        public boolean isOOO() { return this == OOO;}
     }
 
     public static enum PrefPop3DeleteOption {
@@ -8590,6 +8610,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1318)
     public static final String A_zimbraPrefOutOfOfficeExternalReplyEnabled = "zimbraPrefOutOfOfficeExternalReplyEnabled";
+
+    /**
+     * free/busy status while out of office
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1334)
+    public static final String A_zimbraPrefOutOfOfficeFreeBusyStatus = "zimbraPrefOutOfOfficeFreeBusyStatus";
 
     /**
      * out of office notifications (if enabled) are sent only if current date
