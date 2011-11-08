@@ -305,7 +305,7 @@ public final class MockProvisioning extends Provisioning {
 
     @Override
     public Cos get(Key.CosBy keyType, String key) {
-        throw new UnsupportedOperationException();
+        return new MockCos(key, UUID.randomUUID().toString(), new HashMap<String,Object>(), this);
     }
 
     @Override

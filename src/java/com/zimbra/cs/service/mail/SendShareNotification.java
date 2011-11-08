@@ -55,6 +55,7 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.UserServlet;
+import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.JaxbUtil;
@@ -65,6 +66,11 @@ import com.zimbra.soap.mail.type.EmailAddrInfo;
 public class SendShareNotification extends MailDocumentHandler {
 
     private static final Log sLog = LogFactory.getLog(SendShareNotification.class);
+
+    private static final String[] TARGET_ITEM_PATH = new String[] { MailConstants.E_ITEM, MailConstants.A_ID };
+    @Override protected String[] getProxiedIdPath(Element request) {
+        return TARGET_ITEM_PATH;
+    }
 
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -100,14 +106,13 @@ public class SendShareNotification extends MailDocumentHandler {
 
         ArrayList<ShareInfoData> shareInfos = new ArrayList<ShareInfoData>();
         SendShareNotificationRequest req = JaxbUtil.elementToJaxb(request);
-        int id = Integer.parseInt(req.getItem().getId());
-        MailItem item = mbox.getItemById(octxt, id, MailItem.Type.UNKNOWN);
+        ItemId iid = new ItemId(req.getItem().getId(), zsc);
+        MailItem item = mbox.getItemById(octxt, iid.getId(), MailItem.Type.UNKNOWN);
         Provisioning prov = Provisioning.getInstance();
         Account account = getRequestedAccount(zsc);
         if (item instanceof Mountpoint) {
             Mountpoint mp = (Mountpoint)item;
             account = prov.get(AccountBy.id, mp.getOwnerId());
-            id = mp.getRemoteId();
         }
         for (EmailAddrInfo email : req.getEmailAddresses()) {
             // treat the non-existing accounts as guest for now
