@@ -413,11 +413,11 @@ public abstract class MailConnection {
         Socket sock = sf.createSocket();
         int connectTimeout = (int)
             Math.min(config.getConnectTimeout() * 1000L, Integer.MAX_VALUE);
-        sock.connect(new InetSocketAddress(config.getHost(), config.getPort()),
-            connectTimeout > 0 ? connectTimeout : Integer.MAX_VALUE);
         int readTimeout = (int)
             Math.min(config.getReadTimeout() * 1000L, Integer.MAX_VALUE);
         sock.setSoTimeout(readTimeout > 0 ? readTimeout : Integer.MAX_VALUE);
+        sock.connect(new InetSocketAddress(config.getHost(), config.getPort()),
+            connectTimeout > 0 ? connectTimeout : Integer.MAX_VALUE);
         return sock;
     }
 
