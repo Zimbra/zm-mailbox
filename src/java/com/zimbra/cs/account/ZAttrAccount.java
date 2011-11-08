@@ -40272,78 +40272,25 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * free/busy status while out of office
      *
-     * <p>Valid values: [FREE, TENTATIVE, BUSY, OOO]
-     *
-     * @return zimbraPrefOutOfOfficeFreeBusyStatus, or null if unset and/or has invalid value
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1334)
-    public ZAttrProvisioning.PrefOutOfOfficeFreeBusyStatus getPrefOutOfOfficeFreeBusyStatus() {
-        try { String v = getAttr(Provisioning.A_zimbraPrefOutOfOfficeFreeBusyStatus); return v == null ? null : ZAttrProvisioning.PrefOutOfOfficeFreeBusyStatus.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return null; }
-    }
-
-    /**
-     * free/busy status while out of office
-     *
-     * <p>Valid values: [FREE, TENTATIVE, BUSY, OOO]
-     *
      * @return zimbraPrefOutOfOfficeFreeBusyStatus, or null if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1334)
-    public String getPrefOutOfOfficeFreeBusyStatusAsString() {
+    public String getPrefOutOfOfficeFreeBusyStatus() {
         return getAttr(Provisioning.A_zimbraPrefOutOfOfficeFreeBusyStatus, null);
     }
 
     /**
      * free/busy status while out of office
      *
-     * <p>Valid values: [FREE, TENTATIVE, BUSY, OOO]
-     *
      * @param zimbraPrefOutOfOfficeFreeBusyStatus new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1334)
-    public void setPrefOutOfOfficeFreeBusyStatus(ZAttrProvisioning.PrefOutOfOfficeFreeBusyStatus zimbraPrefOutOfOfficeFreeBusyStatus) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeFreeBusyStatus, zimbraPrefOutOfOfficeFreeBusyStatus.toString());
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * free/busy status while out of office
-     *
-     * <p>Valid values: [FREE, TENTATIVE, BUSY, OOO]
-     *
-     * @param zimbraPrefOutOfOfficeFreeBusyStatus new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1334)
-    public Map<String,Object> setPrefOutOfOfficeFreeBusyStatus(ZAttrProvisioning.PrefOutOfOfficeFreeBusyStatus zimbraPrefOutOfOfficeFreeBusyStatus, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefOutOfOfficeFreeBusyStatus, zimbraPrefOutOfOfficeFreeBusyStatus.toString());
-        return attrs;
-    }
-
-    /**
-     * free/busy status while out of office
-     *
-     * <p>Valid values: [FREE, TENTATIVE, BUSY, OOO]
-     *
-     * @param zimbraPrefOutOfOfficeFreeBusyStatus new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1334)
-    public void setPrefOutOfOfficeFreeBusyStatusAsString(String zimbraPrefOutOfOfficeFreeBusyStatus) throws com.zimbra.common.service.ServiceException {
+    public void setPrefOutOfOfficeFreeBusyStatus(String zimbraPrefOutOfOfficeFreeBusyStatus) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefOutOfOfficeFreeBusyStatus, zimbraPrefOutOfOfficeFreeBusyStatus);
         getProvisioning().modifyAttrs(this, attrs);
@@ -40352,8 +40299,6 @@ public abstract class ZAttrAccount  extends MailTarget {
     /**
      * free/busy status while out of office
      *
-     * <p>Valid values: [FREE, TENTATIVE, BUSY, OOO]
-     *
      * @param zimbraPrefOutOfOfficeFreeBusyStatus new value
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -40361,7 +40306,7 @@ public abstract class ZAttrAccount  extends MailTarget {
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1334)
-    public Map<String,Object> setPrefOutOfOfficeFreeBusyStatusAsString(String zimbraPrefOutOfOfficeFreeBusyStatus, Map<String,Object> attrs) {
+    public Map<String,Object> setPrefOutOfOfficeFreeBusyStatus(String zimbraPrefOutOfOfficeFreeBusyStatus, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefOutOfOfficeFreeBusyStatus, zimbraPrefOutOfOfficeFreeBusyStatus);
         return attrs;
@@ -40369,8 +40314,6 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * free/busy status while out of office
-     *
-     * <p>Valid values: [FREE, TENTATIVE, BUSY, OOO]
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -40385,8 +40328,6 @@ public abstract class ZAttrAccount  extends MailTarget {
 
     /**
      * free/busy status while out of office
-     *
-     * <p>Valid values: [FREE, TENTATIVE, BUSY, OOO]
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
