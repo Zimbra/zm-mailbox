@@ -19,6 +19,7 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AliasedEntry;
 import com.zimbra.cs.account.AttributeCallback;
@@ -61,7 +62,7 @@ public class AllowAddressForDelegatedSender extends AttributeCallback {
         // can't replace and add in one command
         Set<String> values = getMultiValueSet((replace != null) ? replace : add);
         for (String value : values) {
-            if (!allowedValues.contains(value)) {
+            if (!StringUtil.isNullOrEmpty(value) && !allowedValues.contains(value)) {
                 throw ServiceException.INVALID_REQUEST("value is not one of the addresses of the entry: " +
                         value, null);
             }
