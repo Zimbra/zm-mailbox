@@ -1022,26 +1022,6 @@ public class ZAttrProvisioning {
         public boolean isInternet() { return this == internet;}
     }
 
-    public static enum PrefOutOfOfficeFreeBusyStatus {
-        FREE("FREE"),
-        TENTATIVE("TENTATIVE"),
-        BUSY("BUSY"),
-        OOO("OOO");
-        private String mValue;
-        private PrefOutOfOfficeFreeBusyStatus(String value) { mValue = value; }
-        public String toString() { return mValue; }
-        public static PrefOutOfOfficeFreeBusyStatus fromString(String s) throws ServiceException {
-            for (PrefOutOfOfficeFreeBusyStatus value : values()) {
-                if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
-        }
-        public boolean isFREE() { return this == FREE;}
-        public boolean isTENTATIVE() { return this == TENTATIVE;}
-        public boolean isBUSY() { return this == BUSY;}
-        public boolean isOOO() { return this == OOO;}
-    }
-
     public static enum PrefPop3DeleteOption {
         delete("delete"),
         trash("trash"),
