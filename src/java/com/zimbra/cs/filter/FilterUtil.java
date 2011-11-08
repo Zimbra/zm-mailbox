@@ -370,28 +370,39 @@ public final class FilterUtil {
 
         Map<String, String> vars = getVarsMap(mailbox, parsedMessage, mimeMessage);
         if (origHeaders == null || origHeaders.isEmpty()) {
+            // no headers need to be copied from the original message
             notification.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(emailAddr));
             notification.setSentDate(new Date());
             if (!StringUtil.isNullOrEmpty(subjectTemplate)) {
                 notification.setSubject(StringUtil.fillTemplate(subjectTemplate, vars));
             }
         } else {
-            Set<String> headersToCopy = Sets.newHashSet(origHeaders);
-            boolean copySubject = false;
-            for (String header : headersToCopy) {
-                if ("Subject".equalsIgnoreCase(header)) {
-                    copySubject = true;
+            if (origHeaders.size() == 1 && "*".equals(origHeaders.get(0))) {
+                // all headers need to be copied from the original message
+                Enumeration enumeration = mimeMessage.getAllHeaders();
+                while (enumeration.hasMoreElements()) {
+                    Header header = (Header) enumeration.nextElement();
+                    notification.addHeader(header.getName(), header.getValue());
                 }
-                String[] hdrVals = mimeMessage.getHeader(header);
-                if (hdrVals == null) {
-                    continue;
+            } else {
+                // some headers need to be copied from the original message
+                Set<String> headersToCopy = Sets.newHashSet(origHeaders);
+                boolean copySubject = false;
+                for (String header : headersToCopy) {
+                    if ("Subject".equalsIgnoreCase(header)) {
+                        copySubject = true;
+                    }
+                    String[] hdrVals = mimeMessage.getHeader(header);
+                    if (hdrVals == null) {
+                        continue;
+                    }
+                    for (String hdrVal : hdrVals) {
+                        notification.addHeader(header, hdrVal);
+                    }
                 }
-                for (String hdrVal : hdrVals) {
-                    notification.addHeader(header, hdrVal);
+                if (!copySubject && !StringUtil.isNullOrEmpty(subjectTemplate)) {
+                    notification.setSubject(StringUtil.fillTemplate(subjectTemplate, vars));
                 }
-            }
-            if (!copySubject && !StringUtil.isNullOrEmpty(subjectTemplate)) {
-                notification.setSubject(StringUtil.fillTemplate(subjectTemplate, vars));
             }
             mailSender.setRedirectMode(true);
             mailSender.setRecipients(emailAddr);
