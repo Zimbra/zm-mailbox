@@ -315,7 +315,7 @@
 	    <Arg>        
 		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
 		    <Set name="pattern">/zimbra/*</Set>
-		    <Set name="replacement">/zimbra</Set>
+		    <Set name="replacement">/</Set>
 		    <Set name="terminating">true</Set>
 		</New>
 	    </Arg>
@@ -325,7 +325,7 @@
 	    <Arg>        
 		<New class="org.eclipse.jetty.rewrite.handler.RewritePatternRule">
 		    <Set name="pattern">/*</Set>
-		    <Set name="replacement">/zimbra</Set>
+		    <Set name="replacement">/</Set>
 		</New>
 	    </Arg>
         </Call>       
@@ -375,7 +375,7 @@
     <New id="zimbra" class="org.eclipse.jetty.webapp.WebAppContext">
       <Arg><Ref id="Contexts"/></Arg>
       <Arg><SystemProperty name="jetty.home" default="."/>/webapps/zimbra</Arg>
-      <Arg>/zimbra</Arg>
+      <Arg>/</Arg>
       <Set name="configurationClasses"><Ref id="plusConfig"/></Set>
       <Set name="defaultsDescriptor"><SystemProperty name="jetty.home" default="."/>/etc/webdefault.xml</Set>
       <Set name="tempDirectory"><SystemProperty name="jetty.home" default="."/>/work/zimbra</Set>
