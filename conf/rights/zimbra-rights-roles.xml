@@ -36,4 +36,18 @@
     <r n="get.server.zimbraId"/>
   </rights>
 </right>
+
+<right type="combo" name="migrationAdminRights">
+  <desc>rights for running the migration wizard</desc>
+  <rights>
+    <r n="listDomain"/>
+    <r n="createAccount"/>
+    <r n="modifyAccount"/>
+    <r n="createAlias"/>
+    <r n="addAccountAlias"/>
+    <r n="getAccountInfo"/>
+    <r n="adminLoginAs"/>
+  </rights>
+</right>
+
 </rights>
