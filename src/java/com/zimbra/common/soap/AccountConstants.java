@@ -105,6 +105,8 @@ public class AccountConstants {
     public static final String E_SUBSCRIBE_DISTRIBUTION_LIST_RESPONSE = "SubscribeDistributionListResponse";
     
     // rights
+    public static final String E_CHECK_RIGHTS_REQUEST = "CheckRightsRequest";
+    public static final String E_CHECK_RIGHTS_RESPONSE = "CheckRightsResponse";
     public static final String E_DISCOVER_RIGHTS_REQUEST = "DiscoverRightsRequest";
     public static final String E_DISCOVER_RIGHTS_RESPONSE = "DiscoverRightsResponse";
     
@@ -205,6 +207,8 @@ public class AccountConstants {
     public static final QName SUBSCRIBE_DISTRIBUTION_LIST_RESPONSE = QName.get(E_SUBSCRIBE_DISTRIBUTION_LIST_RESPONSE, NAMESPACE);
     
     // rights
+    public static final QName CHECK_RIGHTS_REQUEST = QName.get(E_CHECK_RIGHTS_REQUEST, NAMESPACE);
+    public static final QName CHECK_RIGHTS_RESPONSE = QName.get(E_CHECK_RIGHTS_RESPONSE, NAMESPACE);
     public static final QName DISCOVER_RIGHTS_REQUEST = QName.get(E_DISCOVER_RIGHTS_REQUEST, NAMESPACE);
     public static final QName DISCOVER_RIGHTS_RESPONSE = QName.get(E_DISCOVER_RIGHTS_RESPONSE, NAMESPACE);
     
@@ -303,6 +307,7 @@ public class AccountConstants {
     public static final String A_BCC_OWNERS = "bccOwners";
     public static final String A_DIRECT_ONLY = "directOnly";
     public static final String A_DYNAMIC = "dynamic";
+    public static final String A_KEY = "key";
     public static final String A_N = "n";
     public static final String A_NAME = "name";
     public static final String A_ID = "id";
@@ -342,6 +347,7 @@ public class AccountConstants {
     public static final String A_VERIFY_ACCOUNT = "verifyAccount";
     
     // account ACLs
+    public static final String A_ALLOW = "allow";
     public static final String A_RIGHT = "right";
     public static final String E_RIGHT = "right";
     public static final String E_TARGET = "target";
