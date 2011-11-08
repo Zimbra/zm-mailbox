@@ -75,6 +75,7 @@
     <a n="zimbraCalendarCalDavSharedFolderCacheDuration"/>
     <a n="zimbraCalendarCalDavSyncEnd"/>
     <a n="zimbraCalendarCalDavSyncStart"/>
+    <a n="zimbraCalendarKeepExceptionsOnSeriesTimeChange"/>
     <a n="zimbraCalendarMaxRevisions"/>
     <a n="zimbraCalendarReminderDeviceEmail"/>
     <a n="zimbraChildAccount"/>
@@ -94,6 +95,8 @@
     <a n="zimbraDataSourceYabPollingInterval"/>
     <a n="zimbraDefaultFolderFlags"/>
     <a n="zimbraDumpsterEnabled"/>
+    <a n="zimbraDumpsterPurgeEnabled"/>
+    <a n="zimbraDumpsterUserVisibleAge"/>
     <a n="zimbraExternalImapHostname"/>
     <a n="zimbraExternalImapPort"/>
     <a n="zimbraExternalImapSSLHostname"/>
@@ -102,6 +105,10 @@
     <a n="zimbraExternalPop3Port"/>
     <a n="zimbraExternalPop3SSLHostname"/>
     <a n="zimbraExternalPop3SSLPort"/>
+    <a n="zimbraExternalShareDomainWhitelistEnabled"/>
+    <a n="zimbraExternalShareLifetime"/>
+    <a n="zimbraExternalShareWhitelistDomain"/>
+    <a n="zimbraExternalSharingEnabled"/>
     <a n="zimbraFeatureAntispamEnabled"/>
     <a n="zimbraFeatureCalendarUpsellURL"/>
     <a n="zimbraFeatureContactsUpsellURL"/>
@@ -129,6 +136,7 @@
     <a n="zimbraInterceptSubject"/>
     <a n="zimbraIsDomainAdminAccount"/>
     <a n="zimbraJunkMessagesIndexingEnabled"/>
+    <a n="zimbraLimitExternalShareLifetime"/>
     <a n="zimbraLocale"/>
     <a n="zimbraMailCanonicalAddress"/>
     <a n="zimbraMailDumpsterLifetime"/>
@@ -139,6 +147,7 @@
     <a n="zimbraMailQuota"/>
     <a n="zimbraMailSpamLifetime"/>
     <a n="zimbraMailStatus"/>
+    <a n="zimbraMailThreadingAlgorithm"/>
     <a n="zimbraMailTrashLifetime"/>
     <a n="zimbraMailTrustedSenderListMaxNumEntries"/>
     <a n="zimbraMaxContactsPerPage"/>
@@ -149,6 +158,7 @@
     <a n="zimbraNewMailNotificationSubject"/>
     <a n="zimbraNotes"/>
     <a n="zimbraPasswordAllowedChars"/>
+    <a n="zimbraPasswordAllowedPunctuationChars"/>
     <a n="zimbraPasswordEnforceHistory"/>
     <a n="zimbraPasswordLocked"/>
     <a n="zimbraPasswordLockoutDuration"/>
@@ -161,6 +171,7 @@
     <a n="zimbraPasswordMaxLength"/>
     <a n="zimbraPasswordMinAge"/>
     <a n="zimbraPasswordMinAlphaChars"/>
+    <a n="zimbraPasswordMinDigitsOrPuncs"/>
     <a n="zimbraPasswordMinLength"/>
     <a n="zimbraPasswordMinLowerCaseChars"/>
     <a n="zimbraPasswordMinNumericChars"/>
@@ -182,6 +193,7 @@
     <a n="zimbraPrefAutocompleteAddressBubblesEnabled"/>
     <a n="zimbraPrefBccAddress"/>
     <a n="zimbraPrefBriefcaseReadingPaneLocation"/>
+    <a n="zimbraPrefCalendarAcceptSignatureId"/>
     <a n="zimbraPrefCalendarAllowCancelEmailToSelf"/>
     <a n="zimbraPrefCalendarAllowForwardedInvite"/>
     <a n="zimbraPrefCalendarAllowPublishMethodInvite"/>
@@ -189,9 +201,14 @@
     <a n="zimbraPrefCalendarApptAllowAtendeeEdit"/>
     <a n="zimbraPrefCalendarApptReminderWarningTime"/>
     <a n="zimbraPrefCalendarApptVisibility"/>
+    <a n="zimbraPrefCalendarAutoAcceptSignatureId"/>
     <a n="zimbraPrefCalendarAutoAddInvites"/>
+    <a n="zimbraPrefCalendarAutoDeclineSignatureId"/>
+    <a n="zimbraPrefCalendarAutoDenySignatureId"/>
     <a n="zimbraPrefCalendarDayHourEnd"/>
     <a n="zimbraPrefCalendarDayHourStart"/>
+    <a n="zimbraPrefCalendarDeclineSignatureId"/>
+    <a n="zimbraPrefCalendarDefaultApptDuration"/>
     <a n="zimbraPrefCalendarFirstDayOfWeek"/>
     <a n="zimbraPrefCalendarForwardInvitesTo"/>
     <a n="zimbraPrefCalendarInitialCheckedCalendars"/>
@@ -207,11 +224,13 @@
     <a n="zimbraPrefCalendarReminderYMessenger"/>
     <a n="zimbraPrefCalendarSendInviteDeniedAutoReply"/>
     <a n="zimbraPrefCalendarShowPastDueReminders"/>
+    <a n="zimbraPrefCalendarTentativeSignatureId"/>
     <a n="zimbraPrefCalendarToasterEnabled"/>
     <a n="zimbraPrefCalendarUseQuickAdd"/>
     <a n="zimbraPrefCalendarWorkingHours"/>
     <a n="zimbraPrefChildVisibleAccount"/>
     <a n="zimbraPrefClientType"/>
+    <a n="zimbraPrefComposeDirection"/>
     <a n="zimbraPrefComposeFormat"/>
     <a n="zimbraPrefComposeInNewWindow"/>
     <a n="zimbraPrefContactsDisableAutocompleteOnContactGroupMembers"/>
@@ -219,6 +238,7 @@
     <a n="zimbraPrefContactsInitialView"/>
     <a n="zimbraPrefContactsPerPage"/>
     <a n="zimbraPrefConvReadingPaneLocation"/>
+    <a n="zimbraPrefConversationMode"/>
     <a n="zimbraPrefConversationOrder"/>
     <a n="zimbraPrefDedupeMessagesSentToSelf"/>
     <a n="zimbraPrefDefaultPrintFontSize"/>
@@ -226,6 +246,7 @@
     <a n="zimbraPrefDeleteInviteOnReply"/>
     <a n="zimbraPrefDisabledZimlets"/>
     <a n="zimbraPrefDisplayExternalImages"/>
+    <a n="zimbraPrefFileSharingApplication"/>
     <a n="zimbraPrefFolderColorEnabled"/>
     <a n="zimbraPrefFolderTreeOpen"/>
     <a n="zimbraPrefForwardIncludeOriginalText"/>
@@ -302,7 +323,9 @@
     <a n="zimbraPrefOutOfOfficeReply"/>
     <a n="zimbraPrefOutOfOfficeReplyEnabled"/>
     <a n="zimbraPrefOutOfOfficeUntilDate"/>
+    <a n="zimbraPrefPop3DeleteOption"/>
     <a n="zimbraPrefPop3DownloadSince"/>
+    <a n="zimbraPrefPop3IncludeSpam"/>
     <a n="zimbraPrefReadReceiptsToAddress"/>
     <a n="zimbraPrefReadingPaneEnabled"/>
     <a n="zimbraPrefReadingPaneLocation"/>
@@ -318,12 +341,14 @@
     <a n="zimbraPrefShortEmailAddress"/>
     <a n="zimbraPrefShortcuts"/>
     <a n="zimbraPrefShowCalendarWeek"/>
+    <a n="zimbraPrefShowComposeDirection"/>
     <a n="zimbraPrefShowFragments"/>
     <a n="zimbraPrefShowSearchString"/>
     <a n="zimbraPrefShowSelectionCheckbox"/>
     <a n="zimbraPrefSkin"/>
     <a n="zimbraPrefSortOrder"/>
     <a n="zimbraPrefSpellDictionary"/>
+    <a n="zimbraPrefSpellIgnoreAllCaps"/>
     <a n="zimbraPrefSpellIgnoreWord"/>
     <a n="zimbraPrefStandardClientAccessibilityMode"/>
     <a n="zimbraPrefTagTreeOpen"/>
@@ -394,6 +419,9 @@
     <a n="zimbraMailForwardingAddress"/>
     <a n="zimbraMailStatus"/>
     <a n="zimbraNotes"/>
+    <a n="zimbraPrefReplyToAddress"/>
+    <a n="zimbraPrefReplyToDisplay"/>
+    <a n="zimbraPrefReplyToEnabled"/>
 
   </attrs>
 </right>
@@ -415,6 +443,9 @@
     <a n="zimbraExternalPop3Port"/>
     <a n="zimbraExternalPop3SSLHostname"/>
     <a n="zimbraExternalPop3SSLPort"/>
+    <a n="zimbraExternalShareDomainWhitelistEnabled"/>
+    <a n="zimbraExternalShareWhitelistDomain"/>
+    <a n="zimbraExternalSharingEnabled"/>
     <a n="zimbraFreebusyExchangeServerType"/>
     <a n="zimbraGalAlwaysIncludeLocalCalendarResources"/>
     <a n="zimbraGalSyncMaxConcurrentClients"/>
@@ -459,7 +490,6 @@
   good enough for now
   =========================================================
 -->
-
     <right name="domainAdminAccountRights" type="combo">
       <desc>domain admin account right</desc>
       <rights>
@@ -518,9 +548,7 @@
         <r n="deleteDistributionList"/>
         <r n="getDistributionList"/>
         <r n="getDistributionListMembership"/>
-        <r n="getDistributionListShareInfo"/>
         <r n="listDistributionList"/>
-        <r n="publishDistributionListShareInfo"/>
         <r n="removeDistributionListAlias"/>
         <r n="removeDistributionListMember"/>
         <r n="renameDistributionList"/>
