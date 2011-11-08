@@ -591,6 +591,7 @@
           <include name="ant-tar*.jar"/>
           <include name="icu4j-*.jar"/>
           <include name="ews.jar"/>
+          <include name="ehcache-*.jar"/>
         </lib>
         <lib dir="${im.jars.dir}" includes="*.jar"/>
         <classes dir="${config.dir}" includes="sieveConfig.xml"/>

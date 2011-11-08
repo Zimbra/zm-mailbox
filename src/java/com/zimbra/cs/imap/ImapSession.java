@@ -44,7 +44,8 @@ import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.Session;
 
 public class ImapSession extends Session {
-
+    private static final ImapSessionManager MANAGER = ImapSessionManager.getInstance();
+    
     interface ImapFolderData {
         int getId();
         int getSize();
@@ -224,12 +225,14 @@ public class ImapSession extends Session {
         }
     }
 
-    /** Serializes this <code>ImapSession</code> to the session manager's
-     *  current {@link ImapSessionManager.FolderSerializer} if it's not
-     *  already serialized there.
-     * @return The cachekey under which we serialized the folder, or
-     *         <tt>null</tt> if the folder was already serialized. */
-    synchronized String serialize() throws IOException, ServiceException {
+    /**
+     * Serializes this {@link ImapSession} to the session manager's current {@link ImapSessionManager.FolderSerializer}
+     * if it's not already serialized there.
+     *
+     * @param mem true to use memcached if available, otherwise false
+     * @return the cachekey under which we serialized the folder, or {@code null} if the folder was already serialized
+     */
+    private String serialize(boolean active) throws ServiceException {
         // if the data's already paged out, we can short-circuit
         ImapFolder i4folder = mFolder instanceof ImapFolder ? (ImapFolder) mFolder : null;
         if (i4folder == null) {
@@ -245,15 +248,20 @@ public class ImapSession extends Session {
             i4folder.collapseExpunged(false);
         }
 
-        String cachekey = ImapSessionManager.cacheKey(this);
-        ImapSessionManager.serialize(cachekey, i4folder);
+        String cachekey = MANAGER.cacheKey(this, active);
+        MANAGER.serialize(cachekey, i4folder);
         return cachekey;
     }
 
-    synchronized void unload() throws IOException, ServiceException {
+    /**
+     * Unload this session data into cache.
+     *
+     * @param active true to use active session cache, otherwise use inactive session cache
+     */
+    synchronized void unload(boolean active) throws ServiceException {
         // if the data's already paged out, we can short-circuit
         if (mMailbox != null && mFolder instanceof ImapFolder) {
-            mFolder = new PagedFolderData(serialize(), (ImapFolder) mFolder);
+            mFolder = new PagedFolderData(serialize(active), (ImapFolder) mFolder);
         }
     }
 
@@ -268,7 +276,7 @@ public class ImapSession extends Session {
             synchronized (this) {
                 PagedFolderData paged = mFolder instanceof PagedFolderData ? (PagedFolderData) mFolder : null;
                 if (paged != null) { // if the data's already paged in, we can short-circuit
-                    ImapFolder i4folder = ImapSessionManager.deserialize(paged.getCacheKey());
+                    ImapFolder i4folder = MANAGER.deserialize(paged.getCacheKey());
                     try {
                         paged.restore(i4folder);
                     } catch (ServiceException e) {

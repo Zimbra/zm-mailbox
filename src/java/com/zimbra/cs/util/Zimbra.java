@@ -208,6 +208,9 @@ public class Zimbra {
         if (app.supports(MemcachedConnector.class.getName())) {
             MemcachedConnector.startup();
         }
+        if (app.supports(EhcacheManager.class.getName())) {
+            EhcacheManager.getInstance().startup();
+        }
 
         ExtensionUtil.initAll();
 
@@ -259,6 +262,7 @@ public class Zimbra {
             if (app.supports(PurgeThread.class.getName())) {
                 PurgeThread.startup();
             }
+
 
             if (LC.smtp_to_lmtp_enabled.booleanValue()) {
                 int smtpPort = LC.smtp_to_lmtp_port.intValue();
@@ -331,6 +335,9 @@ public class Zimbra {
 
         if (app.supports(MemcachedConnector.class.getName())) {
             MemcachedConnector.shutdown();
+        }
+        if (app.supports(EhcacheManager.class.getName())) {
+            EhcacheManager.getInstance().shutdown();
         }
 
         MailboxManager.getInstance().shutdown();
