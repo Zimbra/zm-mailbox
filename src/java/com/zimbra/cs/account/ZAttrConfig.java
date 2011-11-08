@@ -43,7 +43,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 8.0.0_BETA1_1111 pburgu 20111107-1637 */
 
     /**
      * RFC2256: descriptive information
@@ -17983,11 +17983,11 @@ public abstract class ZAttrConfig extends Entry {
     /**
      * URL prefix for where the zimbra app resides on this server
      *
-     * @return zimbraMailURL, or null if unset
+     * @return zimbraMailURL, or "/" if unset
      */
     @ZAttr(id=340)
     public String getMailURL() {
-        return getAttr(Provisioning.A_zimbraMailURL, null);
+        return getAttr(Provisioning.A_zimbraMailURL, "/");
     }
 
     /**

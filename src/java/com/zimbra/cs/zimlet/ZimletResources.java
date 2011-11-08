@@ -126,7 +126,7 @@ public class ZimletResources extends DiskCacheServlet {
 
             // zimlet messages
             if (type.equals(T_JAVASCRIPT)) {
-                String mailUrl = "/zimbra";
+                String mailUrl = "/";
                 try {
                     mailUrl = Provisioning.getInstance().getLocalServer().getMailURL();
                 } catch (Exception e) {
