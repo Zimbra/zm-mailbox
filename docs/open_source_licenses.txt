@@ -40,7 +40,7 @@ SECTION 1: BSD-STYLE, MIT-STYLE, OR SIMILAR STYLE LICENSES
    >>> jakarta-oro-2.0.8
    >>> jakarta-taglibs-standard-1.1.0-b1
    >>> jaxen-1.1.1
-   >>> jdk-1.6.0_27
+   >>> jdk-1.6.0_29
    >>> jdom-1.1
    >>> joscar-0.9.3
    >>> json-1.0
@@ -1570,11 +1570,11 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
->>> jdk-1.6.0_27
+>>> jdk-1.6.0_29
 
 [USE OF THIS PACKAGE IS SUBJECT TO THE TERMS AND CONDITIONS OF YOUR VMWARE END USER LICENSE AGREEMENT. ADDITIONAL COPYRIGHT NOTICES AND LICENSE TERMS APPLICABLE TO PORTIONS OF THIS PACKAGE ARE SET FORTH BELOW.]
 
-Copyright  2006, 2011, Oracle and/or its affiliates.
+Copyright © 2006, 2011, Oracle and/or its affiliates.
 All rights reserved.
 
 This software and related documentation are provided under a
@@ -2571,7 +2571,7 @@ of this software is governed by the terms of the license below:
 
 Cryptix General License
 
-Copyright  1995-2003 The Cryptix Foundation Limited. All rights reserved.
+Copyright Â© 1995-2003 The Cryptix Foundation Limited. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -9022,6 +9022,7 @@ org-openide-filesystems_ja.jar
 org-openide-filesystems_zh_CN.jar
 core.jar
 org-openide-filesystems.jar
+
 
 
 >>> jdom-1.1
@@ -20110,4 +20111,4 @@ the source code corresponding to the binaries for such open
 source components and modifications thereto, if any, (the
 "Source Files"), by downloading the Source Files from VMware's website at http://www.vmware.com/download/open_source.html, or by sending a request, with your name and address to: VMware, Inc., 3401 Hillview Avenue, Palo Alto, CA 94304,United States of America or email info@vmware.com. All such requests should clearly specify: OPEN SOURCE FILES REQUEST, Attention General Counsel. VMware shall mail a copy of the Source Files to you on a CD or equivalent physical medium. This offer to obtain a copy of the Source Files is valid for three years from the date you acquired this Software product. Alternatively, the Source Files may accompany the VMware product.
 
-[ZIMBRACOLLABORATIONSUITE6015GAKV110311]
+[ZIMBRACOLLABORATIONSUITE6015GAKV110711]
