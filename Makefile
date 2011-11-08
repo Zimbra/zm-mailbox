@@ -42,14 +42,18 @@ PROXY_INFO := MacProxyInfo
 endif
 
 ifeq (MACOSXx86,$(BUILD_PLATFORM))
-# Build system is OS/X 10.4 x86
+# Build system is OS/X 10.6 x86
 CF :=-fPIC -g -O2 -force_cpusubtype_ALL -mmacosx-version-min=10.4 -arch i386 -arch ppc
 PROXY_INFO := DefaultProxyInfo
 endif
 
+ifeq ($(BUILD_PLATFORM), MACOSXx86_10.6)
+CF :=-fPIC -g -O2 -force_cpusubtype_ALL -mmacosx-version-min=10.6 -arch x86_64
+endif
+
 ifeq ($(BUILD_PLATFORM), MACOSXx86_10.7)
-# Build system is OS/X 10.5 and above, x86
-CC	:= gcc-4.2
+# Build system is OS/X 10.7 and above, x86
+CC	:= gcc
 JAVAINC := -I/System/Library/Frameworks/JavaVM.framework/Headers
 SHARED := -dynamiclib
 MACDEF := -DDARWIN
