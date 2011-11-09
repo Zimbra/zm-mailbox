@@ -72,6 +72,9 @@ public final class MockProvisioning extends Provisioning {
         if (!attrs.containsKey(Provisioning.A_zimbraAccountStatus)) {
             attrs.put(Provisioning.A_zimbraAccountStatus, Provisioning.ACCOUNT_STATUS_ACTIVE);
         }
+        if (!attrs.containsKey(Provisioning.A_zimbraDumpsterEnabled)) {
+            attrs.put(Provisioning.A_zimbraDumpsterEnabled, Provisioning.TRUE);
+        }
         attrs.put(Provisioning.A_zimbraBatchedIndexingSize, Integer.MAX_VALUE); // suppress indexing
         Account account = new Account(email, email, attrs, null, this);
         try {

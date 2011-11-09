@@ -17,6 +17,7 @@ package com.zimbra.cs.db;
 import java.util.HashMap;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -47,16 +48,23 @@ public final class DbSearchTest {
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
 
+    private DbConnection conn = null;
+    private Mailbox mbox = null;
+    
     @Before
     public void setUp() throws Exception {
         MailboxTestUtil.clearData();
+        mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        conn = DbPool.getConnection(mbox);
+    }
+    
+    @After
+    public void tearDown() {
+        conn.closeQuietly();
     }
 
     @Test
     public void sortByAttachment() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-
-        DbConnection conn = DbPool.getConnection();
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, flags, date, size, tags, mod_metadata, mod_content) " +
                 "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0)", mbox.getId(), 100, MailItem.Type.MESSAGE.toByte(),
@@ -89,15 +97,10 @@ public final class DbSearchTest {
         Assert.assertEquals("00000000102", result.get(1).getSortValue());
         Assert.assertEquals(100, result.get(2).getId());
         Assert.assertEquals("00000000100", result.get(2).getSortValue());
-
-        conn.closeQuietly();
     }
 
     @Test
     public void sortByFlag() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-
-        DbConnection conn = DbPool.getConnection();
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, flags, date, size, tags, mod_metadata, mod_content) " +
                 "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0)", mbox.getId(), 100, MailItem.Type.MESSAGE.toByte(),
@@ -130,15 +133,10 @@ public final class DbSearchTest {
         Assert.assertEquals("00000000102", result.get(1).getSortValue());
         Assert.assertEquals(100, result.get(2).getId());
         Assert.assertEquals("00000000100", result.get(2).getSortValue());;
-
-        conn.closeQuietly();
     }
 
     @Test
     public void sortByPriority() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-
-        DbConnection conn = DbPool.getConnection();
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, flags, date, size, tags, mod_metadata, mod_content) " +
                 "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0)", mbox.getId(), 100, MailItem.Type.MESSAGE.toByte(),
@@ -171,15 +169,10 @@ public final class DbSearchTest {
         Assert.assertEquals("10000000102", result.get(1).getSortValue());
         Assert.assertEquals(100, result.get(2).getId());
         Assert.assertEquals("00000000100", result.get(2).getSortValue());
-
-        conn.closeQuietly();
     }
 
     @Test
     public void subjectCursor() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-
-        DbConnection conn = DbPool.getConnection();
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, flags, date, size, tags, mod_metadata, mod_content, subject) " +
                 "VALUES(?, ?, ?, 0, 0, 0, 0, 0, 0, ?)", mbox.getId(), 100, MailItem.Type.MESSAGE.toByte(), "subject");
@@ -208,15 +201,10 @@ public final class DbSearchTest {
         Assert.assertEquals("SUBJECT0000000103", result.get(1).getSortValue());
         Assert.assertEquals(104, result.get(2).getId());
         Assert.assertEquals("SUBJECT0000000104", result.get(2).getSortValue());
-
-        conn.closeQuietly();
     }
 
     @Test
     public void mdate() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-
-        DbConnection conn = DbPool.getConnection();
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
                 "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 101, MailItem.Type.MESSAGE.toByte(), 100, 1000);
@@ -247,15 +235,10 @@ public final class DbSearchTest {
         Assert.assertEquals(2, result.size());
         Assert.assertEquals(102, result.get(0).getId());
         Assert.assertEquals(103, result.get(1).getId());
-
-        conn.closeQuietly();
     }
 
     @Test
     public void tag() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-
-        DbConnection conn = DbPool.getConnection();
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, flags, date, change_date, size, tags, mod_metadata, mod_content) " +
                 "VALUES(?, ?, ?, 0, ?, ?, 0, 0, 0, 0)", mbox.getId(), 101, MailItem.Type.MESSAGE.toByte(), 100, 1000);
@@ -316,15 +299,10 @@ public final class DbSearchTest {
         result = new DbSearch(mbox).search(conn, constraints, SortBy.NONE, 0, 100, DbSearch.FetchMode.ID);
         Assert.assertEquals(1, result.size());
         Assert.assertEquals(101, result.get(0).getId());
-
-        conn.closeQuietly();
     }
 
     @Test
     public void tagInDumpster() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-
-        DbConnection conn = DbPool.getConnection();
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item_dumpster " +
                 "(mailbox_id, id, type, flags, unread, tag_names, date, size, mod_metadata, mod_content) " +
                 "VALUES(?, ?, ?, ?, ?, ?, ?, ?, 0, 0)",
@@ -384,14 +362,10 @@ public final class DbSearchTest {
         Assert.assertEquals(101, result.get(0).getId());
 
         //TODO Can't test tag_names because HSQLDB's LIKE doesn't match NUL.
-        conn.closeQuietly();
     }
 
     @Test
     public void caseInsensitiveSort() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-
-        DbConnection conn = DbPool.getConnection();
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, flags, date, size, tags, mod_metadata, mod_content, sender) " +
                 "VALUES(?, ?, ?, 0, 0, 0, 0, 0, 0, ?)", mbox.getId(), 101, MailItem.Type.CONTACT.toByte(), "Zimbra");
@@ -416,8 +390,5 @@ public final class DbSearchTest {
         Assert.assertEquals(101, result.get(0).getId());
         Assert.assertEquals(103, result.get(1).getId());
         Assert.assertEquals(102, result.get(2).getId());
-
-        conn.closeQuietly();
     }
-
 }

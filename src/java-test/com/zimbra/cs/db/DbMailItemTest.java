@@ -17,6 +17,7 @@ package com.zimbra.cs.db;
 import java.util.EnumSet;
 import java.util.HashMap;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -29,7 +30,6 @@ import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -49,16 +49,23 @@ public final class DbMailItemTest {
         prov.createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
 
+    private DbConnection conn = null;
+    private Mailbox mbox = null;
+    
     @Before
     public void setUp() throws Exception {
         MailboxTestUtil.clearData();
+        mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        conn = DbPool.getConnection(mbox);
+    }
+    
+    @After
+    public void tearDown() {
+        conn.closeQuietly();
     }
 
     @Test
     public void getIndexDeferredIds() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-
-        DbConnection conn = DbPool.getConnection(mbox);
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
                 "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 100, MailItem.Type.MESSAGE.toByte(), 0);
@@ -106,14 +113,10 @@ public final class DbMailItemTest {
         Assert.assertEquals(10, result.size());
         Assert.assertEquals(ImmutableSet.of(100, 101, 102, 300, 301, 302), result.get(MailItem.Type.MESSAGE));
         Assert.assertEquals(ImmutableSet.of(200, 201, 400, 401), result.get(MailItem.Type.CONTACT));
-        conn.closeQuietly();
     }
 
     @Test
     public void setIndexIds() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-
-        DbConnection conn = DbPool.getConnection(mbox);
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
                 "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 100, MailItem.Type.MESSAGE.toByte(), 0);
@@ -126,14 +129,10 @@ public final class DbMailItemTest {
                 "SELECT index_id FROM mboxgroup1.mail_item WHERE id = ?", 100).getInt(1));
         Assert.assertEquals(200, DbUtil.executeQuery(conn,
                 "SELECT index_id FROM mboxgroup1.mail_item_dumpster WHERE id = ?", 200).getInt(1));
-        conn.closeQuietly();
     }
 
     @Test
     public void getReIndexIds() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-
-        DbConnection conn = DbPool.getConnection(mbox);
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
                 "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 100, MailItem.Type.MESSAGE.toByte(), 0);
@@ -183,14 +182,10 @@ public final class DbMailItemTest {
                 DbMailItem.getReIndexIds(conn, mbox, EnumSet.<MailItem.Type>of(MailItem.Type.CONTACT)));
         Assert.assertEquals(ImmutableList.of(100, 101, 102, 200, 201, 300, 301, 302, 400, 401),
                 DbMailItem.getReIndexIds(conn, mbox, EnumSet.<MailItem.Type>noneOf(MailItem.Type.class)));
-        conn.closeQuietly();
     }
 
     @Test
     public void resetIndexId() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-
-        DbConnection conn = DbPool.getConnection(mbox);
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
                 "VALUES(?, ?, ?, ?, 0, 0, 0, 0, 0, 0)", mbox.getId(), 100, MailItem.Type.MESSAGE.toByte(), 100);
@@ -203,15 +198,10 @@ public final class DbMailItemTest {
                 "SELECT index_id FROM mboxgroup1.mail_item WHERE id = ?", 100).getInt(1));
         Assert.assertEquals(0, DbUtil.executeQuery(conn,
                 "SELECT index_id FROM mboxgroup1.mail_item_dumpster WHERE id = ?", 200).getInt(1));
-        conn.closeQuietly();
     }
 
     @Test
     public void completeConversation() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-
-        DbConnection conn = DbPool.getConnection(mbox);
-
         DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
                 "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, mod_content) " +
                 "VALUES(?, ?, ?, 0, 0, 0, 0, 0, 0, 0)", mbox.getId(), 200, MailItem.Type.CONVERSATION.toByte());
@@ -255,8 +245,5 @@ public final class DbMailItemTest {
         data.type = MailItem.Type.CONVERSATION.toByte();
         DbMailItem.completeConversation(mbox, conn, data);
         Assert.assertTrue(data.isSet(Flag.FlagInfo.FROM_ME));
-
-        conn.closeQuietly();
     }
-
 }
