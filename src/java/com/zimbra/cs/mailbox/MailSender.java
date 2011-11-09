@@ -800,7 +800,8 @@ public class MailSender {
         }
         AccessManager amgr = AccessManager.getInstance();
         if (sender == null) {  // doing send-as
-            if (amgr.canSendAs(authuser, from.getAddress(), asAdmin)) {
+            if (AccountUtil.addressMatchesAccount(authuser, from.getAddress()) ||
+                amgr.canSendAs(authuser, from.getAddress(), asAdmin)) {
                 return new Pair<InternetAddress, InternetAddress>(from, null);
             } else if (amgr.canSendOnBehalfOf(authuser, from.getAddress(), asAdmin)) {
                 // Downgrade to send-obo.
