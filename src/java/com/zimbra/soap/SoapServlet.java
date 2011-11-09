@@ -338,6 +338,7 @@ public class SoapServlet extends ZimbraServlet {
 
         resp.setContentType(soapProto.getContentType());
         resp.setStatus(statusCode);
+        resp.setHeader("Cache-Control", "no-store, no-cache");
 
         if (chunkingEnabled) {
             // Let jetty chunk the response if applicable.
