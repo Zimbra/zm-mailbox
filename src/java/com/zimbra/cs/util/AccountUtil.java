@@ -17,6 +17,7 @@ package com.zimbra.cs.util;
 
 import java.io.UnsupportedEncodingException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.mail.Address;
@@ -35,12 +36,15 @@ import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.soap.admin.type.DataSourceType;
 
 public class AccountUtil {
 
@@ -218,21 +222,11 @@ public class AccountUtil {
     }
 
     /**
-     * Check if given account is allowed to set given from header.
-     */
-    public static boolean allowFromAddress(Account acct, String fromAddr) throws ServiceException {
-        if (fromAddr == null) {
-            return false;
-        }
-        return addressMatchesAccount(acct, fromAddr) || acct.isAllowAnyFromAddress();
-    }
-
-    /**
      * True if this address matches some address for this account (aliases, domain re-writes, etc) or address of
      * another account that this account may send as.
      */
     public static boolean addressMatchesAccountOrSendAs(Account acct, String givenAddress) throws ServiceException {
-        return (new AccountAddressMatcher(acct, true)).matches(givenAddress);
+        return (new AccountAddressMatcher(acct, false, true)).matches(givenAddress);
     }
 
     /**
@@ -273,10 +267,21 @@ public class AccountUtil {
         private Set<String> addresses;
 
         public AccountAddressMatcher(Account account) throws ServiceException {
-            this(account, false);
+            this(account, false, false);
         }
 
-        public AccountAddressMatcher(Account account, boolean matchSendAs) throws ServiceException {
+        public AccountAddressMatcher(Account account, boolean internalOnly) throws ServiceException {
+            this(account, internalOnly, false);
+        }
+
+        /**
+         * 
+         * @param account
+         * @param internalOnly only match internal addresses, i.e. ignore zimbraAllowFromAddress values
+         * @param matchSendAs match sendAs/sendAsDistList addresses granted
+         * @throws ServiceException
+         */
+        public AccountAddressMatcher(Account account, boolean internalOnly, boolean matchSendAs) throws ServiceException {
             this.account = account;
             this.matchSendAs = matchSendAs;
 
@@ -297,11 +302,13 @@ public class AccountUtil {
                     }
                 }
             }
-            String[] addrs = account.getMultiAttr(Provisioning.A_zimbraAllowFromAddress);
-            if (addrs != null) {
-                for (String addr : addrs) {
-                    if (!StringUtil.isNullOrEmpty(addr)) {
-                        addresses.add(addr.toLowerCase());
+            if (!internalOnly) {
+                String[] addrs = account.getMultiAttr(Provisioning.A_zimbraAllowFromAddress);
+                if (addrs != null) {
+                    for (String addr : addrs) {
+                        if (!StringUtil.isNullOrEmpty(addr)) {
+                            addresses.add(addr.toLowerCase());
+                        }
                     }
                 }
             }
@@ -448,6 +455,38 @@ public class AccountUtil {
         String[] addrs = getAllowedSendAddresses(grantor);
         for (String a : addrs) {
             if (a.equalsIgnoreCase(address)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // returns true if address is the From address of an enabled pop/imap/caldav data source
+    public static boolean isAllowedDataSourceSendAddress(Account account, String address) throws ServiceException {
+        if (address == null || !addressHasInternalDomain(address)) {
+            // only external addresses are allowed because internal addresses require the address owner to grant send rights
+            return false;
+        }
+        List<DataSource> dsList = Provisioning.getInstance().getAllDataSources(account);
+        for (DataSource ds : dsList) {
+            DataSourceType dsType = ds.getType();
+            if (ds.isEnabled() &&
+                (DataSourceType.pop3.equals(dsType) || DataSourceType.imap.equals(dsType) || DataSourceType.caldav.equals(dsType)) &&
+                (address.equalsIgnoreCase(ds.getEmailAddress()) || address.equalsIgnoreCase(ds.getFromAddress()))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // returns true if address's domain is a local domain
+    // it doesn't necessarily imply an account with the address exists
+    public static boolean addressHasInternalDomain(String address) throws ServiceException {
+        String domain = EmailUtil.getValidDomainPart(address);
+        if (domain != null) {
+            Provisioning prov = Provisioning.getInstance();
+            Domain internalDomain = prov.getDomain(DomainBy.name, domain, true);
+            if (internalDomain != null) {
                 return true;
             }
         }

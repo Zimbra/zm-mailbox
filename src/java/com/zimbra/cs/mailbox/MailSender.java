@@ -72,6 +72,7 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.client.ZMailbox;
 
 public class MailSender {
@@ -799,32 +800,34 @@ public class MailSender {
             sender = null;
         }
         AccessManager amgr = AccessManager.getInstance();
-        if (sender == null) {  // doing send-as
-            if (AccountUtil.addressMatchesAccount(authuser, from.getAddress()) ||
-                amgr.canSendAs(authuser, from.getAddress(), asAdmin)) {
-                return new Pair<InternetAddress, InternetAddress>(from, null);
-            } else if (amgr.canSendOnBehalfOf(authuser, from.getAddress(), asAdmin)) {
-                // Downgrade to send-obo.
-                return new Pair<InternetAddress, InternetAddress>(from, AccountUtil.getFriendlyEmailAddress(authuser));
-            } else {
-                // Send as self.
-                return new Pair<InternetAddress, InternetAddress>(AccountUtil.getFriendlyEmailAddress(authuser), null);
-            }
-        } else {  // doing send-obo
-            // Verify Sender is set to authuser's address.
-            if (!AccountUtil.allowFromAddress(authuser, sender.getAddress())) {
+        if (sender == null &&  // send-as requested
+            (AccountUtil.addressMatchesAccount(authuser, from.getAddress()) ||  // either it's my address
+             amgr.canSendAs(authuser, from.getAddress(), asAdmin))) {           // or I've been granted permission
+            return new Pair<InternetAddress, InternetAddress>(from, null);
+        }
+        if (sender != null) {
+            // send-obo requested.
+            // Restrict Sender value to owned addresses.  Not even zimbraAllowFromAddress is acceptable.
+            AccountAddressMatcher matcher = new AccountAddressMatcher(authuser, true);
+            if (!matcher.matches(sender.getAddress())) {
                 sender = AccountUtil.getFriendlyEmailAddress(authuser);
             }
-            if (mCalendarMode) {
-                // In calendar mode any user may send on behalf of any other user.
-                return new Pair<InternetAddress, InternetAddress>(from, sender);
-            } else if (amgr.canSendOnBehalfOf(authuser, from.getAddress(), asAdmin)) {
-                // Allow based on rights granted.
-                return new Pair<InternetAddress, InternetAddress>(from, sender);
-            } else {
-                // Send as self.
-                return new Pair<InternetAddress, InternetAddress>(sender, null);
-            }
+        } else {
+            // Downgrade disallowed send-as to send-obo.
+            sender = AccountUtil.getFriendlyEmailAddress(authuser);
+        }
+        if (mCalendarMode) {
+            // In calendar mode any user may send on behalf of any other user.
+            return new Pair<InternetAddress, InternetAddress>(from, sender);
+        } else if (amgr.canSendOnBehalfOf(authuser, from.getAddress(), asAdmin)) {
+            // Allow based on rights granted.
+            return new Pair<InternetAddress, InternetAddress>(from, sender);
+        } else if (AccountUtil.isAllowedDataSourceSendAddress(authuser, from.getAddress())) {
+            // Allow send-obo if address is a pop/imap/caldav data source address. (bugs 38813/46378)
+            return new Pair<InternetAddress, InternetAddress>(from, sender);
+        } else {
+            // Not allowed to use the requested From value.  Send as self.
+            return new Pair<InternetAddress, InternetAddress>(sender, null);
         }
     }
 
