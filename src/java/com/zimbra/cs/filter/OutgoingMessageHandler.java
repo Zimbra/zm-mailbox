@@ -103,7 +103,7 @@ public final class OutgoingMessageHandler implements FilterHandler {
     @Override
     public void redirect(String destinationAddress)
     throws ServiceException {
-        FilterUtil.redirect(octxt, mailbox, parsedMessage.getMimeMessage(), destinationAddress);
+        FilterUtil.redirect(octxt, mailbox, parsedMessage.getOriginalMessage(), destinationAddress);
     }
 
     @Override

@@ -137,7 +137,7 @@ public final class IncomingMessageHandler implements FilterHandler {
     @Override
     public void redirect(String destinationAddress)
     throws ServiceException {
-        FilterUtil.redirect(octxt, mailbox, parsedMessage.getMimeMessage(), destinationAddress);
+        FilterUtil.redirect(octxt, mailbox, parsedMessage.getOriginalMessage(), destinationAddress);
     }
 
     @Override
