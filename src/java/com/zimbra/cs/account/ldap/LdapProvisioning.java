@@ -39,6 +39,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.account.ProvisioningConstants;
@@ -503,19 +504,14 @@ public class LdapProvisioning extends LdapProv {
             else
                 entry.setAttrs(attrs, defaults, secondaryDefaults);
 
-            extendLifeInCache(entry);
+            extendLifeInCacheOrFlush(entry);
+            
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to refresh entry", e);
         }
     }
 
-    public void extendLifeInCache(Entry entry) {
-        //
-        // Note: do NOT do this for Group, entry
-        //       here always contains all members
-        //       of the group, which is big.
-        //
-
+    public void extendLifeInCacheOrFlush(Entry entry) {
         if (entry instanceof Account) {
             sAccountCache.replace((Account)entry);
         } else if (entry instanceof LdapCos) {
@@ -528,6 +524,24 @@ public class LdapProvisioning extends LdapProv {
             sXMPPComponentCache.replace((XMPPComponent)entry);
         } else if (entry instanceof LdapZimlet) {
             sZimletCache.replace((LdapZimlet)entry);
+        } else if (entry instanceof Group) {
+            /*
+             * DLs returned by Provisioning.get(DistributionListBy) and 
+             * DLs/dynamic groups returned by Provisioning.getGroup(DistributionListBy)
+             * are "not" cached.
+             * 
+             * DLs returned by Provisioning.getDLBasic(DistributionListBy) and
+             * DLs/dynamic groups returned by Provisioning.getGroupBasic(DistributionListBy)
+             * "are" cached.
+             * 
+             * Need to flush out the cached entries if the instance being modified is not
+             * in cache. (i.e. the instance being modified was obtained by get/getGroup)
+             */
+            Group modifiedInstance = (Group) entry;
+            Group cachedInstance = getGroupFromCache(DistributionListBy.id, modifiedInstance.getId());
+            if (cachedInstance != null && modifiedInstance != cachedInstance) {
+                sGroupCache.remove(cachedInstance);
+            }
         }
     }
 
