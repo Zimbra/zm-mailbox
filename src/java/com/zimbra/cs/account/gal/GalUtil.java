@@ -19,6 +19,7 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.ldap.LdapUtil;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 
 public class GalUtil {
     
@@ -32,20 +33,27 @@ public class GalUtil {
         String query;
         
         if (key != null) {
-            while (key.startsWith("*")) key = key.substring(1);
-            while (key.endsWith("*")) key = key.substring(0,key.length()-1);
+            while (key.startsWith("*")) {
+                key = key.substring(1);
+            }
+            while (key.endsWith("*")) {
+                key = key.substring(0,key.length()-1);
+            }
         }
         query = expandKey(tokenize, filterTemplate, key);
 
-        if (query.indexOf("**") > 0)
+        if (query.indexOf("**") > 0) {
         	query = query.replaceAll("\\*\\*", "*");
+        }
+        
         if (token != null && token.length() > 0) {
         	String arg = LdapUtil.escapeSearchFilterArg(token);
         	query = "(&(|(modifyTimeStamp>="+arg+")(createTimeStamp>="+arg+"))"+query+")";
         }
         
-        if (extraQuery != null)
+        if (extraQuery != null) {
             query = "(&" + query + extraQuery + ")";
+        }
         
         return query;
     }
@@ -73,6 +81,8 @@ public class GalUtil {
         String query = null;
         Map<String, String> vars = new HashMap<String, String>();
         
+        ZLdapFilterFactory filterFactory = ZLdapFilterFactory.getInstance();
+        
         if (tokenize != null) {
             String tokens[] = key.split("\\s+");
             if (tokens.length > 1) {
@@ -81,12 +91,13 @@ public class GalUtil {
                     q = "(&";
                 } else if (GalConstants.TOKENIZE_KEY_OR.equals(tokenize)) {
                     q = "(|";
-                } else
+                } else {
                     throw ServiceException.FAILURE("invalid attribute value for tokenize key: " + tokenize, null);
-                    
+                }
+                
                 for (String t : tokens) {
                     vars.clear();
-                    vars.put("s", t);
+                    vars.put("s", filterFactory.encodeValue(t));
                     q = q + LdapUtil.expandStr(filterTemplate, vars);
                 }
                 q = q + ")";
@@ -95,7 +106,7 @@ public class GalUtil {
         }
         
         if (query == null) {
-            vars.put("s", key);
+            vars.put("s", filterFactory.encodeValue(key));
             query = LdapUtil.expandStr(filterTemplate, vars);
         }
         

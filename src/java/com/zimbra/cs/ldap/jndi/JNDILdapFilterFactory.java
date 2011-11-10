@@ -16,7 +16,6 @@ package com.zimbra.cs.ldap.jndi;
 
 import java.util.List;
 
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZLdapFilter;
@@ -30,6 +29,12 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
         
     }
 
+
+    @Override
+    public String encodeValue(String value) {
+        // TODO
+        throw new UnsupportedOperationException();
+    }
     
     /*
      * operational
@@ -57,6 +62,45 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     throws LdapException {
         return new JNDILdapFilter(encloseFilterIfNot(filterString));
     }
+
+    @Override
+    public ZLdapFilter presenceFilter(FilterId filterId, String attr) {
+        return new JNDILdapFilter("(" + attr + "=*" + ")");
+    }
+    
+    @Override
+    public ZLdapFilter equalityFilter(FilterId filterId, String attr, String value) {
+        return new JNDILdapFilter("(" + attr + "=" + value + ")");
+    }
+
+    @Override
+    public ZLdapFilter greaterOrEqualFilter(FilterId filterId, String attr, String value) {
+        return new JNDILdapFilter("(" + attr + ">=" + value + ")");
+    }
+
+    @Override
+    public ZLdapFilter lessOrEqualFilter(FilterId filterId, String attr, String value) {
+        return new JNDILdapFilter("(" + attr + "<=" + value + ")");
+    }
+
+    @Override
+    public ZLdapFilter startsWithFilter(FilterId filterId, String attr,
+            String value) {
+        return new JNDILdapFilter("(" + attr + "=" + value + "*)");
+    }
+
+    @Override
+    public ZLdapFilter endsWithFilter(FilterId filterId, String attr,
+            String value) {
+        return new JNDILdapFilter("(" + attr + "=*" + value + ")");
+    }
+
+    @Override
+    public ZLdapFilter substringFilter(FilterId filterId, String attr,
+            String value) {
+        return new JNDILdapFilter("(" + attr + "=*" + value + "*)");
+    }
+    
     
     /*
      * Mail target (accounts and groups)
@@ -462,5 +506,8 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter velodromeAllCalendarResourcesByDomainAndServer(String domainName, String serverServiceHostname) {
         return new JNDILdapFilter(LegacyLdapFilter.velodromeAllCalendarResourcesByDomainAndServer(domainName, serverServiceHostname));
     }
+
+
+
     
 }

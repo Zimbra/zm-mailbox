@@ -167,6 +167,14 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         
     }
     
+    /**
+     * Encodes the provided value into a form suitable for use as the assertion value 
+     * in the string representation of a search filter.
+     * 
+     * @param value
+     * @return
+     */
+    public abstract String encodeValue(String value);
     
     protected String encloseFilterIfNot(String filterString) {
         if (filterString.startsWith("(") && filterString.endsWith(")")) {
@@ -186,7 +194,16 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
      * general
      */
     public abstract ZLdapFilter anyEntry();
-    public abstract ZLdapFilter fromFilterString(FilterId filterId, String filterString) throws LdapException;
+    public abstract ZLdapFilter fromFilterString(FilterId filterId, String filterString) 
+    throws LdapException;
+    
+    public abstract ZLdapFilter presenceFilter(FilterId filterId, String attr);
+    public abstract ZLdapFilter equalityFilter(FilterId filterId, String attr, String value);
+    public abstract ZLdapFilter greaterOrEqualFilter(FilterId filterId, String attr, String value);
+    public abstract ZLdapFilter lessOrEqualFilter(FilterId filterId, String attr, String value);
+    public abstract ZLdapFilter startsWithFilter(FilterId filterId, String attr, String value);
+    public abstract ZLdapFilter endsWithFilter(FilterId filterId, String attr, String value);
+    public abstract ZLdapFilter substringFilter(FilterId filterId, String attr, String value);
     
     /*
      * Mail target (accounts and groups)

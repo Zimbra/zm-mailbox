@@ -288,15 +288,17 @@ public class LdapUtil {
             char ch = fmt.charAt(i);
             if (ch == '%') {
                 i++;
-                if (i > fmt.length())
+                if (i > fmt.length()) {
                     return sb.toString();
+                }
                 ch = fmt.charAt(i);
                 if (ch != '%') {
                     String val = vars.get(Character.toString(ch));
-                    if (val != null)
+                    if (val != null) {
                         sb.append(val);
-                    else
+                    } else {
                         sb.append(ch);
+                    }
                 } else {
                     sb.append(ch);
                 }

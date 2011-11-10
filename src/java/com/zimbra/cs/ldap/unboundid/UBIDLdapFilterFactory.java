@@ -24,6 +24,7 @@ import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 
 public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     
@@ -183,6 +184,10 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         FILTER_ALL_DISTRIBUTION_LISTS);
     }
 
+    @Override
+    public String encodeValue(String value) {
+        return Filter.encodeValue(value);
+    }
 
     private Filter homedOnServerFilter(String serverServiceHostname) {
         return Filter.createEqualityFilter(Provisioning.A_zimbraMailHost, serverServiceHostname);
@@ -225,6 +230,58 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
             throw UBIDLdapException.mapToLdapException(filterString, e);
         }
     }
+    
+
+    @Override
+    public ZLdapFilter presenceFilter(FilterId filterId, String attr) {
+        return new UBIDLdapFilter(
+                filterId,
+                Filter.createPresenceFilter(attr));
+    }
+
+    @Override
+    public ZLdapFilter equalityFilter(FilterId filterId, String attr, String value) {
+        return new UBIDLdapFilter(
+                filterId,
+                Filter.createEqualityFilter(attr, value));
+    }
+    
+    @Override
+    public ZLdapFilter greaterOrEqualFilter(FilterId filterId, String attr, String value) {
+        return new UBIDLdapFilter(
+                filterId,
+                Filter.createEqualityFilter(attr, value));
+    }
+
+    @Override
+    public ZLdapFilter lessOrEqualFilter(FilterId filterId, String attr, String value) {
+        return new UBIDLdapFilter(
+                filterId,
+                Filter.createLessOrEqualFilter(attr, value));
+    }
+
+    @Override
+    public ZLdapFilter startsWithFilter(FilterId filterId, String attr, String value) {
+        return new UBIDLdapFilter(
+                filterId,
+                Filter.createSubstringFilter(attr, value, null, null));
+    }
+    
+
+    @Override
+    public ZLdapFilter endsWithFilter(FilterId filterId, String attr, String value) {
+        return new UBIDLdapFilter(
+                filterId,
+                Filter.createSubstringFilter(attr, null, null, value));
+    }
+
+    @Override
+    public ZLdapFilter substringFilter(FilterId filterId, String attr, String value) {
+        return new UBIDLdapFilter(
+                filterId,
+                Filter.createSubstringFilter(attr, null, new String[]{value}, null));
+    }
+    
     
     /*
      * Mail target (accounts and groups)
@@ -910,6 +967,6 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         velodromePrimaryEmailOnDomainFilter(domainName)));
 
     }
-    
+
     
 }

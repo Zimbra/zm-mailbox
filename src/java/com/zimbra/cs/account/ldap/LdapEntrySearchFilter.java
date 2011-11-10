@@ -29,6 +29,9 @@ import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Term;
 import com.zimbra.cs.account.EntrySearchFilter.Visitor;
 import com.zimbra.cs.ldap.LdapUtil;
+import com.zimbra.cs.ldap.ZLdapFilter;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
+import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 
 public class LdapEntrySearchFilter {
 
@@ -41,16 +44,6 @@ public class LdapEntrySearchFilter {
 
         public String getFilter() {
             return mLdapFilter.toString();
-        }
-
-        private static StringBuilder addCond(StringBuilder sb,
-                                             String lhs,
-                                             String op,
-                                             String rhs) {
-            sb.append('(');
-            sb.append(lhs).append(op).append(rhs);
-            sb.append(')');
-            return sb;
         }
 
         public void visitSingle(Single term) {
@@ -66,32 +59,38 @@ public class LdapEntrySearchFilter {
                 negation = !negation;
             }
 
-            if (negation) mLdapFilter.append("(!");
-
+            if (negation) {
+                mLdapFilter.append("(!");
+            }
+            
+            ZLdapFilterFactory filterFactory = ZLdapFilterFactory.getInstance();
+            FilterId filterId = FilterId.GAL_SEARCH;
+            ZLdapFilter filter;
+            
             String attr = term.getLhs();
             String val = getVal(term);
             if (op.equals(Operator.has)) {
-                mLdapFilter.append('(').append(attr);
-                mLdapFilter.append("=*").append(val).append("*)");
+                filter = filterFactory.substringFilter(filterId, attr, val);
             } else if (op.equals(Operator.eq)) {
-                addCond(mLdapFilter, attr, "=", val);
+                filter = filterFactory.equalityFilter(filterId, attr, val);
             } else if (op.equals(Operator.ge)) {
-                addCond(mLdapFilter, attr, ">=", val);
+                filter = filterFactory.greaterOrEqualFilter(filterId, attr, val);
             } else if (op.equals(Operator.le)) {
-                addCond(mLdapFilter, attr, "<=", val);
+                filter = filterFactory.lessOrEqualFilter(filterId, attr, val);
             } else if (op.equals(Operator.startswith)) {
-                mLdapFilter.append('(').append(attr);
-                mLdapFilter.append('=').append(val).append("*)");
+                filter = filterFactory.startsWithFilter(filterId, attr, val);
             } else if (op.equals(Operator.endswith)) {
-                mLdapFilter.append('(').append(attr);
-                mLdapFilter.append("=*").append(val);
-                mLdapFilter.append(')');
+                filter = filterFactory.endsWithFilter(filterId, attr, val);
             } else {
                 // fallback to EQUALS
-                addCond(mLdapFilter, attr, "=", val);
+                filter = filterFactory.equalityFilter(filterId, attr, val);
             }
+            
+            mLdapFilter.append(filter.toFilterString());
 
-            if (negation) mLdapFilter.append(')');
+            if (negation) {
+                mLdapFilter.append(')');
+            }
         }
 
         public void enterMulti(Multi term) {
