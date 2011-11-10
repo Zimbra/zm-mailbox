@@ -45,11 +45,6 @@ import java.net.URISyntaxException;
  * figure out how to block images by default, and how to re-enable them. styles?  
  * strict attr value checking?
  *  don't allow id attr in tags if we aren't putting html into an iframe (I'm assuming we are, and id's in iframes don't conflict with iframes elsewhere)
- * 
- *  
- * MAYBE:
- *  allow style but strip out /url(.*)/? Might have other reasons to leave it 
- * 
  */
 public class DefangFilter extends DefaultFilter {
 
@@ -173,7 +168,6 @@ public class DefangFilter extends DefaultFilter {
         acceptElement("q", CORE_LANG+"cite");
         acceptElement("span", CORE_LANG);
 
-        // style removed. TODO: see if we can safely include it or not, maybe by sanitizing
         acceptElement("style", CORE_LANG);
         acceptElement("sub",  CORE_LANG);
         acceptElement("sup",  CORE_LANG);
@@ -273,8 +267,7 @@ public class DefangFilter extends DefaultFilter {
         removeElement("iframe");
         removeElement("object");
         removeElement("script");
-        removeElement("style");
-        
+
         // don't remove "content" of these tags since they have none.
         //removeElement("meta");
         //removeElement("param");        
@@ -407,13 +400,19 @@ public class DefangFilter extends DefaultFilter {
     throws XNIException {
         if (mRemovalElementName == null) {
             if (mStyleDepth > 0) {
-                String result = text.toString().replaceAll("[uU][Rr][Ll]\\s*\\(.*\\)","url()");
-                result = result.replaceAll("expression\\s*\\(.*\\)","");
-                super.characters(new XMLString(result.toCharArray(), 0, result.length()), augs);    
+                String result = sanitizeStyleValue(text.toString());
+                super.characters(new XMLString(result.toCharArray(), 0, result.length()), augs);
             } else {
                 super.characters(text, augs);
             }
         }
+    }
+
+    private static String sanitizeStyleValue(String value) {
+        // remove comments
+        String result = value.replaceAll("/\\*.*\\*/", "");
+        // strip off any functions (like url(), expression())
+        return result.replaceAll(":.*\\(.*\\)",":");
     }
 
     /** Ignorable whitespace. */
@@ -670,9 +669,7 @@ public class DefangFilter extends DefaultFilter {
         String result = AV_JS_ENTITY.matcher(value).replaceAll("JS-ENTITY-BLOCKED");
         result = AV_SCRIPT_TAG.matcher(result).replaceAll("SCRIPT-TAG-BLOCKED");
         if (aName.equalsIgnoreCase("style")) {
-            result = value.replaceAll("/\\*.*\\*/","");
-            result = result.replaceAll("[uU][Rr][Ll]\\s*\\(.*\\)","none");
-            result = result.replaceAll("expression\\s*\\(.*\\)","");
+            result = sanitizeStyleValue(value);
         }
 
         if (!result.equals(value)) {

@@ -1,0 +1,612 @@
+Return-Path: sslpostmessage+JxcZ2BGQAwgRVhsTZ8w90pRKJCr4qUy1@sslpost.com
+Received: from mta02.zimbra.com (LHLO mta02.zimbra.com) (10.113.63.62) by
+ corp.zimbra.com with LMTP; Fri, 22 Jul 2011 03:11:16 -0700 (PDT)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mta02.zimbra.com (Postfix) with ESMTP id 65DE27C001D
+	for <mgolfieri@zimbra.com>; Fri, 22 Jul 2011 03:11:16 -0700 (PDT)
+X-Virus-Scanned: amavisd-new at zimbra.com
+X-Spam-Flag: NO
+X-Spam-Score: -2.119
+X-Spam-Level: 
+X-Spam-Status: No, score=-2.119 tagged_above=-10 required=3
+	tests=[BAYES_00=-1.9, DKIM_SIGNED=0.1, DKIM_VALID=-0.1,
+	DKIM_VALID_AU=-0.1, HTML_COMMENT_SAVED_URL=1.391, HTML_MESSAGE=0.001,
+	PROOFPOINT_HAM=-1.5, SPF_HELO_PASS=-0.001, T_RP_MATCHES_RCVD=-0.01]
+	autolearn=ham
+Authentication-Results: mta02.zimbra.com (amavisd-new); dkim=pass
+	header.i=@sslpost.com
+Received: from mta02.zimbra.com ([127.0.0.1])
+	by localhost (mta02.zimbra.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id nPDnFxZVOsR7 for <mgolfieri@zimbra.com>;
+	Fri, 22 Jul 2011 03:11:02 -0700 (PDT)
+Received: from mailhost3.vmware.com (unknown [10.16.27.45])
+	by mta02.zimbra.com (Postfix) with ESMTP id D3A367C0017
+	for <mgolfieri@zimbra.com>; Fri, 22 Jul 2011 03:11:02 -0700 (PDT)
+Received: from proofpoint-agent-2.vmware.com (proofpoint-agent-2.vmware.com [10.16.79.27])
+	by mailhost3.vmware.com (Postfix) with ESMTP id A7514CDA93
+	for <mgolfieri@zimbra.com>; Fri, 22 Jul 2011 03:11:02 -0700 (PDT)
+Received: from sledgehammer.vmware.com (sledgehammer.vmware.com [10.16.79.36])
+	by proofpoint-agent-2 (8.14.3/8.14.3) with ESMTP id p6MAB1Di010727
+	for <mgolfieri@zimbra.com>; Fri, 22 Jul 2011 03:11:01 -0700
+Received: from secure.sslpost.com (secure.sslpost.com [213.253.22.90])
+	by sledgehammer.vmware.com (Postfix) with ESMTP id 031E1E002
+	for <mgolfieri@zimbra.com>; Fri, 22 Jul 2011 03:11:01 -0700 (PDT)
+Received: from gcrypt-web01.customer.clara.net (gcrypt-web01.customer.clara.net [127.0.0.1])
+	by secure.sslpost.com (Postfix) with ESMTP id CFEBAF18002
+	for <mgolfieri@zimbra.com>; Fri, 22 Jul 2011 11:10:59 +0100 (BST)
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; d=sslpost.com;
+ i=@sslpost.com; q=dns/txt; s=selector; t=1311329459; h=Content-Type :
+ MIME-Version : Subject : From : To : Date : Message-ID : Reply-To;
+ bh=+c3Btp4px+asEZ3WwVtRw9HBJ3ZLmzQRE1Hy5aTrpPM=; b=iEWz1/WSEG6hNSqnJEOknwduh6gv4/HEXAfrzYMdRmb8ATsDiA1JCpw9JJo5R30hj0bsi78Ih3uELb9m1wnXibXuDiyZHIe9ObWLNRHPmgSRZesanPNEy6x7sxrHiWZ35RfModyQNKCan9SAxmQ9hWSJRufCaMyyKcSgnWRxqow=
+Content-Type: multipart/mixed; boundary="===============0892621337=="
+MIME-Version: 1.0
+Subject: SSLPost test (e)
+From: "Stuart James" <stuart.james@sslpost.com>
+To: mgolfieri@zimbra.com
+Date: Fri, 22 Jul 2011 10:10:59 -0000
+Message-ID: <20110722101059.27890.32760@gcrypt-web01.customer.clara.net>
+Reply-To: stuart.james@sslpost.com
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10432:5.4.6813,1.0.211,0.0.0000
+ definitions=2011-07-22_01:2011-07-22,2011-07-22,1970-01-01 signatures=0
+X-Proofpoint-Spam-Details: rule=tag_notspam policy=tag score=1 spamscore=1 ipscore=0 suspectscore=3
+ phishscore=0 bulkscore=0 adultscore=0 classifier=spam adjust=0 reason=mlx
+ engine=6.0.2-1012030000 definitions=main-1107220034
+
+--===============0892621337==
+Content-Type: multipart/alternative; boundary="===============1766616772=="
+MIME-Version: 1.0
+
+--===============1766616772==
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+
+SSLPost: You have received a new secure email message.
+
+WHY ARE YOU GETTING THIS EMAIL?
+
+You have a secure email message waiting for you from stuart.james@sslpost.c=
+om. This service enables you and the sender to communicate easily, effectiv=
+ely and securely. In order to get your message you just need to follow the =
+simple instructions below.
+
+HOW DO YOU READ YOUR SECURE EMAIL MESSAGE?
+
+You just need to access your secure account with the unique password you ha=
+ve already created through your SSLPost Welcome email sent previously (if y=
+ou have not received your Welcome email, then please contact your Administr=
+ator or email customerservice@sslpost.com ).
+
+
+
+To do this please open (by double clicking) either the attachment labelled =
+"message.htm", or the attachment labelled "message.zip. This will open a li=
+nk in your browser where you should then follow the simple online instructi=
+ons to view your secure email message. If you need assistance opening the z=
+ip file attachment please visit https://secure.sslpost.com/app/help/decodin=
+g/ to view further instructions.
+
+NEED HELP OR SUPPORT?
+
+For help and support on any aspect of this email please contact our custome=
+r support team:
+
+Telephone: 08456 425425
+Email: support@sslpost.com or customerservice@sslpost.com
+Browse to: https://secure.sslpost.com/app/help/decoding/
+
+Kind Regards,
+The SSLPost Team
+
+For further information about SSLPost products, features and benefits pleas=
+e visit our website: www.sslpost.com.
+
+--===============1766616772==
+Content-Type: text/html; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/htm=
+l4/strict.dtd">
+<html>
+<body bgcolor=3D"#CCCCCC">
+<table width=3D"100%" cellspacing=3D"0" cellpadding=3D"0">
+		<tr>
+    		<td width=3D"580" align=3D"center" valign=3D"top">
+    				<table width=3D"580" border=3D"0" cellspacing=3D"0" cellpadding=3D"=
+0">
+        				<tr>
+          					<td>
+                        <table width=3D"100%" border=3D"0" cellspacing=3D"0=
+" cellpadding=3D"0" bgcolor=3D"#FFFFFF">
+                            <tr>
+                              <td align=3D"left" valign=3D"middle" style=3D=
+"background-color:#419F51; border:solid 1px #323232; font-family:Arial, Ver=
+dana, Helvetica, sans serif; font-size:11px; color:#FFFFFF; text-align:cent=
+er; padding:5px 0px 5px 0px;">You are receiving this email from SSLPost Sec=
+ure Document Delivery&nbsp;&ndash;&nbsp;<a href=3D"http://www.sslpost.com" =
+style=3D"color:#FFFFFF;" title=3D"Visit the SSLPost website" target=3D"_bla=
+nk">www.sslpost.com</a></td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+            <table width=3D"580" height=3D"70" border=3D"0" cellspacing=3D"=
+0" cellpadding=3D"0" bgcolor=3D"#FFFFFF">
+                <tr>
+                	<td width=3D"15" style=3D"border-left: #999999 dotted 1px;=
+">&nbsp;</td>
+                  	<td width=3D"548"><a href=3D"http://www.sslpost.com" tit=
+le=3D"Visit the SSLPost website" target=3D"_blank"><img src=3D"http://www.m=
+ypayrewards.com/marketing/images/sslpost_email_logo.jpg" alt=3D"SSLPost" wi=
+dth=3D"170" height=3D"65" border=3D"0" /></a></td>
+                	<td width=3D"15" style=3D"border-right: #999999 dotted 1px=
+;">&nbsp;</td>
+                </tr>
+            </table>
+            <table width=3D"580" border=3D"0" cellspacing=3D"0" cellpadding=
+=3D"0" bgcolor=3D"#FFFFFF">
+                <tr>
+                	<td width=3D"15" style=3D"border-left: #999999 dotted 1px;=
+">&nbsp;</td>
+                	<td width=3D"548" style=3D"font-family:Arial, Verdana, Hel=
+vetica, sans serif; font-size:22px; font-weight:normal; color:#323232; line=
+-height:40px; border-bottom:solid 1px #767878; padding: 0px 0px 3px 0px;">Y=
+ou have received a new secure email message</td>
+                  <td width=3D"15" style=3D"border-right: #999999 dotted 1p=
+x;">&nbsp;</td>
+                </tr>
+            </table>
+            <table width=3D"580" border=3D"0" cellspacing=3D"0" cellpadding=
+=3D"0" bgcolor=3D"#FFFFFF">
+                <tr>
+                	<td width=3D"15" style=3D"border-left: #999999 dotted 1px;=
+">&nbsp;</td>
+                	<td style=3D"font-family:Arial, Verdana, Helvetica, sans s=
+erif; font-size:14px; font-weight:bold; color:#419F51; padding:15px 0px 15p=
+x 0px;">WHY ARE YOU GETTING THIS EMAIL?</td>
+                  	<td width=3D"15" style=3D"border-right: #999999 dotted 1=
+px;">&nbsp;</td>
+                </tr>
+            </table>
+            <table width=3D"580" border=3D"0" cellspacing=3D"0" cellpadding=
+=3D"0" bgcolor=3D"#FFFFFF">
+                <tr>
+                	<td width=3D"15" style=3D"border-left: #999999 dotted 1px;=
+">&nbsp;</td>
+                	<td width=3D"548" style=3D"font-family:Arial, Verdana, Hel=
+vetica, sans serif; font-size:12px; color:#323232; line-height:18px;">You h=
+ave a secure email message waiting for you from <span style=3D"color:#00660=
+0; font-weight:bold;">stuart.james@sslpost.com</span>.  This service enable=
+s you and the sender to communicate easily, effectively and securely. In or=
+der to get your message you just need to follow the simple instructions bel=
+ow.<br /><br /></td>
+                	<td width=3D"15" style=3D"border-right: #999999 dotted 1px=
+;">&nbsp;</td>
+                </tr>
+            </table>
+            <table width=3D"580" border=3D"0" cellspacing=3D"0" cellpadding=
+=3D"0" bgcolor=3D"#FFFFFF">
+                <tr>
+                	<td width=3D"15" style=3D"border-left: #999999 dotted 1px;=
+">&nbsp;</td>
+                	<td width=3D"548" style=3D"font-family:Arial, Verdana, Hel=
+vetica, sans serif; font-size:14px; font-weight:bold; color:#419F51; border=
+-top:1px solid #767878; padding:15px 0px 15px 0px;">HOW DO YOU READ YOUR SE=
+CURE EMAIL MESSAGE?</td>
+                  <td width=3D"15" style=3D"border-right: #999999 dotted 1p=
+x;">&nbsp;</td>
+                </tr>
+            </table>
+            <table width=3D"580" border=3D"0" cellspacing=3D"0" cellpadding=
+=3D"0" bgcolor=3D"#FFFFFF">
+                <tr>
+                	<td width=3D"15" style=3D"border-left: #999999 dotted 1px;=
+">&nbsp;</td>
+                	<td width=3D"548" style=3D"font-family:Arial, Verdana, Hel=
+vetica, sans serif; font-size:12px; color:#323232; line-height:18px;">You j=
+ust need to access your secure account with the unique password you have al=
+ready created through your SSLPost Welcome email sent previously (if you ha=
+ve not received your Welcome email, then please contact your Administrator =
+or email <a href=3D"mailto:customerservice@sslpost.com" style=3D"color:#006=
+600;" title=3D"Contact the SSLPost customer service team by email">customer=
+service@sslpost.com</a>).<br /><br />
+                    =
+
+                    =
+
+                    =
+
+                    To do this please open (by double clicking) either the =
+attachment labelled <b>&ldquo;message.htm&rdquo;</b> or <b>&ldquo;message.z=
+ip&rdquo;</b>. This will open a link in your browser where you should then =
+follow the simple online instructions to view your secure email message. If=
+ you need assistance opening the zip file attachment please <a href=3D"http=
+s://secure.sslpost.com/app/help/decoding/" style=3D"color:#006600;" title=
+=3D"Visit the SSLPost website support pages" target=3D"_blank">click here</=
+a> to view further instructions.
+                    =
+
+                  	<br /><br /></td>
+                	<td width=3D"15" style=3D"border-right: #999999 dotted 1px=
+;">&nbsp;</td>
+                </tr>
+            </table>
+            <table width=3D"580" border=3D"0" cellspacing=3D"0" cellpadding=
+=3D"0" bgcolor=3D"#FFFFFF">
+                <tr>
+                	<td width=3D"15" style=3D"border-left: #999999 dotted 1px;=
+">&nbsp;</td>
+                	<td width=3D"548" style=3D"font-family:Arial, Verdana, Hel=
+vetica, sans serif; font-size:14px; font-weight:bold; color:#419F51; border=
+-top:1px solid #767878; padding:15px 0px 15px 0px;">NEED HELP OR SUPPORT?</=
+td>
+                  <td width=3D"15" style=3D"border-right: #999999 dotted 1p=
+x;">&nbsp;</td>
+                </tr>
+            </table>
+            <table width=3D"580" border=3D"0" cellspacing=3D"0" cellpadding=
+=3D"0" bgcolor=3D"#FFFFFF">
+                <tr>
+                	<td width=3D"15" style=3D"border-left: #999999 dotted 1px;=
+">&nbsp;</td>
+                	<td width=3D"548" style=3D"font-family:Arial, Verdana, Hel=
+vetica, sans serif; font-size:12px; color:#323232; line-height:20px;">For h=
+elp and support on any aspect of this email please contact our customer sup=
+port team:<br /><br />Telephone: <span style=3D"color:#006600; font-weight:=
+bold;">08456 425425</span><br />Email: <a href=3D"mailto:support@sslpost.co=
+m" style=3D"color:#006600;" title=3D"Contact the SSLPost support team by em=
+ail">support@sslpost.com</a> or <a href=3D"mailto:customerservice@sslpost.c=
+om" style=3D"color:#006600;" title=3D"Contact the SSLPost customer service =
+team by email">customerservice@sslpost.com</a><br />Browse to: <a href=3D"h=
+ttps://secure.sslpost.com/app/help/decoding/" style=3D"color:#006600;" titl=
+e=3D"Visit the SSLPost website support pages" target=3D"_blank">https://sec=
+ure.sslpost.com/app/help/decoding/</a><br /><br />Kind Regards<br />The SSL=
+Post Team<br /><br />For further information about SSLPost products, featur=
+es and benefits please visit our website: <a href=3D"http://www.sslpost.com=
+" style=3D"color:#006600;" title=3D"Visit the SSLPost website" target=3D"_b=
+lank">www.sslpost.com</a>.<br /><br /></td>
+                	<td width=3D"15" style=3D"border-right: #999999 dotted 1px=
+;">&nbsp;</td>
+                </tr>
+            </table>
+            <table width=3D"580" border=3D"0" cellspacing=3D"0" cellpadding=
+=3D"0" bgcolor=3D"#FFFFFF">
+                <tr>
+                	<td width=3D"15" style=3D"border-left: #999999 dotted 1px;=
+">&nbsp;</td>
+                	<td width=3D"548" align=3D"center" style=3D"font-family:Ar=
+ial, Verdana, Helvetica, sans serif; font-size:14px; font-weight:bold; colo=
+r:#419F51; border-top:1px solid #767878;"><a href=3D"http://www.mypayreward=
+s.com" title=3D"Visit the MyPayRewards website" target=3D"_blank"><img src=
+=3D"http://www.mypayrewards.com/marketing/images/mypay_logo_email.jpg" alt=
+=3D"MyPayRewards: Savings You&apos;ll Love" width=3D"300" height=3D"130" bo=
+rder=3D"0" /></a></td>
+                  <td width=3D"15" style=3D"border-right: #999999 dotted 1p=
+x;">&nbsp;</td>
+                </tr>
+            </table>
+    				<table width=3D"580" border=3D"0" cellspacing=3D"0" cellpadding=3D"=
+0">
+        				<tr>
+          					<td>
+                        <table width=3D"100%" border=3D"0" cellspacing=3D"0=
+" cellpadding=3D"0" bgcolor=3D"#FFFFFF">
+                            <tr>
+                              <td valign=3D"middle" style=3D"background-col=
+or:#419F51; border:solid 1px #323232; font-family:Arial, Verdana, Helvetica=
+, sans serif; font-size:11px; color:#FFFFFF; text-align:center; padding:5px=
+ 0px 5px 0px;">&copy;&nbsp;2011 SSLPost&nbsp;&ndash;&nbsp;All rights reserv=
+ed.</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+				</td>
+		</tr>
+</table>
+</body>
+</html>
+
+--===============1766616772==--
+--===============0892621337==
+Content-Type: text/html; charset="utf-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment; filename="message.htm"
+
+<html>
+  <!-- saved from url=3D(0026)https://secure.sslpost.com -->
+  <head>
+    <style>
+
+p {
+		font: 12px Arial, Helvetica, sans-serif;
+	    color: #333333;
+		text-decoration: none;
+		}
+
+p a {
+		font: bold 12px Arial, Helvetica, sans-serif;
+	    color: #369A48;
+		text-decoration: none;
+		}
+		=
+
+p a:hover {
+		font: bold 12px Arial, Helvetica, sans-serif;
+	    color: #369A48;
+		text-decoration: underline;
+		}
+		=
+
+		=
+
+#progress_container {
+	font-size: .9em;
+	width: 100%;
+	height: 1.25em;
+	position: relative;
+	margin: 3em 0;
+	display: none;
+}
+
+#main_box {
+}
+
+#inner_box {
+}
+
+#progress_filename {
+	font: 11px Arial, Helvetica, sans-serif;
+	color: #333333;
+	width: 100%;
+	padding: 5px 0px;
+}
+
+#progress_bar {
+	width: 208px;
+	height: 13px;
+	border: 1px solid #CCCCCC;
+	margin: 0 auto;
+	background-image: url( 'https://sslpoststatic.s3.amazonaws.com/static/imag=
+es/loadingAnimation.gif' );
+	background-repeat: no-repeat;
+}
+
+#progress_indicator {
+}
+    </style>
+  </head>
+
+  <body>
+  	<div align=3D"center">
+        <div style=3D"width: 700px; padding:20px 10px; background-color: #F=
+7F7F7; border: solid 1px #CCCCCC;" id=3D"main_box">
+        	<div align=3D"center" style=3D"margin:10px 0px;"><img src=3D"https=
+://secure.sslpost.com/static/images/sslpost_logo.png" /></div>
+            <h3 style=3D"color: #006600; font: bold 18px Arial, Helvetica, =
+sans-serif;">SSLPost Delivery Notification</h3>  =
+
+            <p>You have been sent a secure message by <a href=3D"mailto:stu=
+art.james@sslpost.com">stuart.james@sslpost.com</a>.</p>
+            <p>For information on how to safely decode this message, please=
+ browse to <a href=3D"https://secure.sslpost.com/app/help/decoding/" target=
+=3D"_blank">https://secure.sslpost.com/app/help/decoding/</a></p>
+            <br />
+            <div id=3D"inner_box" style=3D"border: solid 1px #CCCCCC; backg=
+round-color: #FFFFFF;">
+                <form action=3D"https://secure.sslpost.com/app/verify/" met=
+hod=3D"POST" enctype=3D"multipart/form-data" id=3D"upload_form">
+                  =
+
+                  <input type=3D"hidden" name=3D"param_data00000" value=3D"=
+Q29udGVudC10eXBlOiBtdWx0aXBhcnQvbWl4ZWQ7IGJvdW5kYXJ5PSI9PT09PT09PT09PT09PT0x
+MzE3OTY5Njk1PT0iCgotLT09PT09PT09PT09PT09PTEzMTc5Njk2OTU9PQpDb250ZW50LURpc3Bv
+c2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9ImhlYWQiCgo8P3htbCB2ZXJzaW9uPSIxLjAiPz4KICAg
+ICAgIDxlbnZlbG9wZT4KICAgICAgICAgPHJlY2lwaWVudHM+CiAgICAgICAgICAgPHZhbHVlPgog
+ICAgICAgIDxkYXRhPgogICAgICAgICAgPHVzZXI+CiAgICAgICAgICAgIDxhdXRoZW50aWNhdG9y
+PjwvYXV0aGVudGljYXRvcj4KICAgICAgICAgICAgPGF1dGhvcml0eT48L2F1dGhvcml0eT4KICAg
+ICAgICAgICAgPGVtYWlsPm1nb2xmaWVyaUB6aW1icmEuY29tPC9lbWFpbD4KICAgICAgICAgIDwv
+dXNlcj4KICAgICAgICAgIDx0eXBlPnRvPC90eXBlPgogICAgICAgIDwvZGF0YT4KICAgICAgICA8
+a2V5PgogICAgICAgICAgPGlkPjxzZXJ2ZXI+PC9zZXJ2ZXI+PGlkPjY0ZEo2aHV4VUZQZ0pLZFMw
+V25xRFE9PTwvaWQ+PC9pZD4KICAgICAgICAgIDxyYXdfc2VhbGVkX2tleT45a1JFUUZRQ0FtSlB1
+dzBZNW9FalBaUHV4Q2Fvb1RwYTVUZ1MzcHdBQ0l4MlVoV3hVdERaOGJMZit0VU5aRHFWaW1XR2RJ
+ZE1qaW9LRHBsUXhQUXpUWXpHQk5FUnFDL1hYMDdHZy83S0ZZNXlnYXFCTE9tN0t4Z2l5anRNczJQ
+T1Fqc0UvMWdOOW9uQ3Jnem1yb3Y4a29pVnl0cytlWlF2QW5UQTFiVTlBcDI2Rlp4NUxzTWZ6REpS
+UGhFSVNOajZ3aVZQRTBseU9aK3cxME5SbFlOQmQ0bC83RExrSUloUVlSNzY2OGNXRmdUcmR2djEw
+QTBxMUNrcExnemt5dDR3TGZtVW1IUlpLbVFBb3NlVTRBaFRFWXcvbnpsRittbFVHSmRiVHd2eDdZ
+bU9PWTI2V1Njb2lNdWhqeXg1SWdKaGJrQnZDSFFLU2VObTAvVU9HbGlpU2d0QzhNVlljMjFVdm45
+TCsxYzFyQVdZS3dMTkpzcURPQ0c4ZHF4YndjWFM8L3Jhd19zZWFsZWRfa2V5PgogICAgICAgIDwv
+a2V5PgogICAgICA8L3ZhbHVlPgogICAgICAgICAgIAogICAgICAgICA8L3JlY2lwaWVudHM+CiAg
+ICAgICAgIDxzZXNzaW9uX2tleV9oYXNoPnc5ODZqVFltaFQxenM1ejBReVoxQ001MVVDbz08L3Nl
+c3Npb25fa2V5X2hhc2g+CiAgICAgICAgIDxlbmNvZGVkX3BsYWludGV4dD48L2VuY29kZWRfcGxh
+aW50ZXh0PgogICAgICAgICA8ZW5jcnlwdGVkX2NvbnRlbnRfZGVzY3JpcHRpb24+PC9lbmNyeXB0
+ZWRfY29udGVudF9kZXNjcmlwdGlvbj4KICAgICAgIDwvZW52ZWxvcGU+Ci0tPT09PT09PT09PT09
+PT09MTMxNzk2OTY5NT09CkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iYm9k
+eSIKCid9It62Gx7OrLWu0xMnyJVBA2Ntc6WmRKmTmFpmLBRD6KIaf8wLPl8AGVMKAgLT/9K/kc0m
+6s9RnHH6bLg9WmueIVwH7XowLWUcXszjNm+ujGpHTOafF7wO3KbBGjUrIPqJa4G1aNzXWsnnxCjc
+6tr93KgRtST4ax+fDusLZeyGefTupLTfSHGPj/H38rZRONMsB5qAvf4kHmU0D/hmSSTS52rL5J/9
+BJrsfuaz9JIQ6cMSIK/hUifZeUq1DlpCvL3pm3i+2qF874IUKcxzq31Engb7+IWY8Z5gkPwNKtZf
+75jAOSOt+yJIa4JXQZWZeCZSwtkFSQQ6ENBN/3ha+fMvCrv+gDXGrUhA7orL80UO6bSnx0hVzVPN
+9B8/3OJANMY9WPsnlxk1wr7VchvxBftS23zI/9nQVGUxBJSGH8FWbvRPrpDVdiXwpAJBOAmx/dev
+peBKzsGayTSim2jJUMl70ACvVo922HhLCyH2tvbZxKs/AMyQfg5++AYsOsSx8ON1H2KdHrSRsLY9
+UVE1tVEm6Xhb300xczspp6y/dQOCLBJtb5e+lUQsr0aoK10N2zAhTIQtWiSFYbJuecoHEJFUf+BG
+fehAvkB7YnnN0QoeTGCYnyQ2QyAkxVUkSRARX0NbS7wnsvo+W+RWxDTZNSKB54VUhf6RT43M3Fe6
+scQqZZz5n+EZaGWcjrT9Sri28zRh6Dl6xjpVBKp6u+X9Mz1vHQpZuvPX4x0xHwoNr6anTE6FdT2p
+apBu+QoQ+KYVozFePZujaiUKnrs+RK6IUUZfcu7T4viuU5HjFXZxm9s4/eB1r+HPOPk3WSElkU7W
+FD7BAPPUliXvrAmwzqoZ3R8jKdGQzUDihilgbLrbo71lK+eS5ObC8PO9MUtpz46QiaDL9zHuy6LS
+mm7YJ8HR2hoLZjaktA/6rSXh6lTfhPUXkoMF6m1fObqLAZNYiCJtn7dAiqi4w9Ui2KY4jbYPcYvC
+dzfeI7jwnh+0Qrto0O0TvEYqrtXT488sZ7eYgr9QrQgYgl3WoVgVm5sISk7b7yqnRACLu5hyLvOF
+eEVUaB1pSKsEdbtvtG9c0j5RG+xd3VNcK1vjptG5Zf4yp76x5e1ojZi/H3VjnexPt6+dCvw1EQym
+XWBviWoj2PtSBTtevdnaeIOhnQw8RYUnMTukakf1xJw8iTO/LWbIrA/3Dyd+3aCqeuJz98UbofIY
++fa56+n6HArOFrjshxzh8hUvP+OpItwnGB0Y3D9cODKyOnKfVeJaSpSS0n2etV/+cIvheKwVkFeH
+iMlIbb06PDRY7bzTeJi95GcKP73c1ccMLRhhgRcqGvepGFrDinVmpl0AYgAmK+XuE7EJ9wiHXokk
+xDCY8lG9WqAkmn4mDTohRH/18gS4u8o63TcUOjDRAeQK98NiuatMP7nX0TPBbM/UfdJD2upONv0L
+UZtqaLsVizMKCi0tPT09PT09PT09PT09PT09MTMxNzk2OTY5NT09CkNvbnRlbnQtRGlzcG9zaXRp
+b246IGZvcm0tZGF0YTsgbmFtZT0iZm9vdCIKCjw/eG1sIHZlcnNpb249IjEuMCI/PgogICAgICA8
+ZW52ZWxvcGU+CiAgICAgICA8c2VuZGVyc19zaWduYXR1cmU+CiAgICAgICAgICA8dXNlcj4KICAg
+ICAgICAgICAgPGF1dGhlbnRpY2F0b3I+PC9hdXRoZW50aWNhdG9yPgogICAgICAgICAgICA8YXV0
+aG9yaXR5PjwvYXV0aG9yaXR5PgogICAgICAgICAgICA8ZW1haWw+c3R1YXJ0LmphbWVzQHNzbHBv
+c3QuY29tPC9lbWFpbD4KICAgICAgICAgIDwvdXNlcj4KICAgICAgICAgIDxyYXdfc2lnbmF0dXJl
+PlNJSnNQWUwvSVhDd0VHekkvOGtQZVFrNmoySVdFcmd4NEppZzg2MUNoa0Y0a093VExZZHo2L3pi
+ajUrSlh6Z2RnSlNGMmF0UFYzR05ublErMWhnS21SOCtHWGFLRjFvTjNCQ2RoMVlSRmlkUGl6bUtE
+WGo0YVBLV2VCUHlnRUpWS3BoZnk4SXZsQ3BGUWhGSWFhNTdkQjVzYWFLL0JmNlFRRXNtSGd6VEJt
+eHhBYmtDQndaWUVBd2luQ3ltNC9LUk1LMVBHZUY1RlNKSnZ1M3NFcU5WMUhXaUdLM2NYSE45ZTdJ
+Zmd5YmdtcS9kNXF4by8xMUdFOUh3UzFPUEV1OFgrRGFOMGlIakhmRFh4cGJkNmZiNW5zd2Y4RUQw
+eDZiYTBkYVVITjhmR3dIZFN1eWtPT1Uwa25NVDQ4Mlc3emxMRDFWdytlVEgwUU1uTm9DWmpmc3Uy
+Zz09PC9yYXdfc2lnbmF0dXJlPgogICAgICAgIDwvc2VuZGVyc19zaWduYXR1cmU+CiAgICAgIDwv
+ZW52ZWxvcGU+Ci0tPT09PT09PT09PT09PT09MTMxNzk2OTY5NT09LS0=3D
+"/>
+                  =
+
+                  <br />
+                  <div align=3D"center"><input name=3D"image" type=3D"image=
+" value=3D"submit" src=3D"https://secure.sslpost.com/static/images/open_doc=
+ument.png" /></div>
+                </form>
+                <div id=3D"progress_container">
+                    <div id=3D"progress_filename"></div>
+                    <div id=3D"progress_bar">
+                        <div id=3D"progress_indicator"></div>
+                    </div>
+                </div>
+            </div>
+            <br/>
+            <p>If you are on a slow connection, please be patient as the en=
+crypted data is sent to the server.</p>
+            <br />
+            <div class=3D"decodeFoot"></div>
+        </div>
+    </div>
+<script type=3D"text/javascript" src=3D"https://sslpoststatic.s3.amazonaws.=
+com/static/libs/jquery.js"></script>
+<script type=3D"text/javascript" src=3D"https://sslpoststatic.s3.amazonaws.=
+com/static/libs/jquery.uploadProgress.remote.js"></script> =
+
+<script type=3D"text/javascript" charset=3D"utf-8">
+//<![CDATA[
+$(document).ready(function() =
+
+	{ =
+
+		$(function() {
+			$('#upload_form').uploadProgress({
+				jqueryPath: "https://sslpoststatic.s3.amazonaws.com/static/libs/jquery.=
+js",
+				progressBar: '#progress_indicator',
+				progressUrl: 'https://secure.sslpost.com/app/progress/?callback=3D?',
+				start: function() {
+					$("#upload_form").hide();
+					$("#progress_filename").html("Uploading; please wait...");
+					$("#progress_container").show();
+				},
+				uploadProgressPath: "https://sslpoststatic.s3.amazonaws.com/static/libs=
+/jquery.uploadProgress.js",
+				uploading: function(upload) {
+					if (upload.percents =3D=3D 100) {
+						window.clearTimeout(this.timer);
+						$("#progress_filename").html("Processing...");
+					} else {
+						$("#progress_filename").html("Uploading... " + upload.percents + "% c=
+omplete");
+					}
+				},
+				interval: 1000
+			});
+		});
+	}
+);
+//]]>
+</script>
+
+  </body>
+</html>
+
+--===============0892621337==
+Content-Type: application/zip
+MIME-Version: 1.0
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="message.zip"
+
+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
+--===============0892621337==--

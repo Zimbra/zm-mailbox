@@ -1,0 +1,214 @@
+Return-Path: orders@oclc.org
+Received: from email.clevnet.org (LHLO email.clevnet.org) (10.0.1.38) by
+ email.clevnet.org with LMTP; Fri, 5 Aug 2011 13:51:21 -0400 (EDT)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by email.clevnet.org (Postfix) with ESMTP id 56B2818B3211
+	for <patricia.lowrey@cpl.org>; Fri,  5 Aug 2011 13:51:21 -0400 (EDT)
+X-Virus-Scanned: amavisd-new at email.clevnet.org
+X-Spam-Flag: NO
+X-Spam-Score: -0.954
+X-Spam-Level: 
+X-Spam-Status: No, score=-0.954 tagged_above=-10 required=6.6
+	tests=[AWL=0.056, BAYES_00=-2.599, DNS_FROM_OPENWHOIS=1.13,
+	HTML_MESSAGE=0.001, MIME_HTML_ONLY=1.457, MISSING_MIMEOLE=0.001,
+	RCVD_IN_DNSWL_LOW=-1]
+Received: from email.clevnet.org ([127.0.0.1])
+	by localhost (email.clevnet.org [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id CthmEQ2SPIyR for <patricia.lowrey@cpl.org>;
+	Fri,  5 Aug 2011 13:51:17 -0400 (EDT)
+Received: from mail10.cpl.org (mail10.cpl.org [10.0.1.24])
+	by email.clevnet.org (Postfix) with ESMTP id 2A3C9212B91F
+	for <patricia.lowrey@cpl.org>; Fri,  5 Aug 2011 13:51:17 -0400 (EDT)
+X-ASG-Debug-ID: 1312566673-775772c80001-C6Jse7
+Received: from mshieldserver1.oclc.org (mshieldserver1.oclc.org [132.174.29.209]) by mail10.cpl.org with SMTP id KjxQDuocUF2F5PLn for <patricia.lowrey@cpl.org>; Fri, 05 Aug 2011 13:51:13 -0400 (EDT)
+X-Barracuda-Envelope-From: orders@oclc.org
+X-Barracuda-Apparent-Source-IP: 132.174.29.209
+X-ASG-Whitelist: Client
+Received: From rmsap02ewdu ([132.174.65.204]) by mshieldserver1.oclc.org (WebShield SMTP v4.5 MR3)
+	id 1312566669461; Fri, 5 Aug 2011 13:51:09 -0400
+MIME-Version: 1.0
+Content-Transfer-Encoding: Quoted-Printable
+Content-Type: text/html;
+	charset="UTF-8"
+Date: 5 Aug 2011 13:51:09 -0400
+From: orders@oclc.org
+Reply-To: orders@oclc.org
+Subject: New Billing Information for CLEVELAND PUB LIBR (2716)
+To: patricia.lowrey@cpl.org
+X-ASG-Orig-Subj: New Billing Information for CLEVELAND PUB LIBR (2716)
+X-Mailer: Siebel 7.8.2.5 [19225] LANG_INDEPENDENT
+X-MSMail-Priority: Normal
+X-Priority: 3
+X-Barracuda-Connect: mshieldserver1.oclc.org[132.174.29.209]
+X-Barracuda-Start-Time: 1312566673
+X-Barracuda-URL: http://10.0.1.24:8000/cgi-mod/mark.cgi
+X-Virus-Scanned: by bsmtpd at cpl.org
+Message-Id: <20110805175117.23D06294505@mail10.cpl.org>
+
+<HTML><head>
+<title>
+  New Billing Information
+</title>
+<style>
+  .cartdiscount td {
+   font-style: italic;
+   color: #006633;
+   background-color: #FFFFCC;
+  }
+</style>
+</head>
+
+<body style=3D"background: #c4b7a6; font-family: Arial, Helvetica, sans-=
+serif; font-size: 12px; line-height: 17px;">
+<table width=3D"608" border=3D"0" align=3D"center" cellpadding=3D"0" =
+cellspacing=3D"0">
+  <tr>
+      <td><p style=3D" font-size: 11px; text-align: right; margin: 30px =
+20px 5px 0; color: #f0e9e1;"><a href=3D"http://www.oclc.org/about/" =
+style=3D"color:#fff; font-weight: bold; text-decoration: none;">About =
+OCLC</a> | <a href=3D"http://www.oclc.org/news/" style=3D"color:#fff; font-=
+weight: bold; text-decoration: none;">News and Events</a> | <a =
+href=3D"http://www.oclc.org/membership/" style=3D"color:#fff; font-weight: =
+bold; text-decoration: none;">Membership</a> | <a href=3D"http://www.oclc.=
+org/contacts/" style=3D"color:#fff; font-weight: bold; text-decoration: =
+none;">Contacts</a> | <a href=3D"http://www.oclc.org/support/" =
+style=3D"color:#fff; font-weight: bold; text-decoration: =
+none;">Support</a> | <a href=3D"http://www.oclc.org/ordering/" =
+style=3D"color:#fff; font-weight: bold; text-decoration: =
+none;">Ordering</a></p></td>
+    </tr>
+    <tr>
+      <td><img src=3D"http://www.oclc.=
+org/content/dam/emailcontent/osc/header-bg.gif" width=3D"608" =
+height=3D"28" /></td>
+   </tr>
+</table>
+<table width=3D"608" border=3D"0" align=3D"center" cellpadding=3D"0" =
+cellspacing=3D"0" bgcolor=3D"#FFFFFF">
+   <tr>
+     <td width=3D"320" valign=3D"middle"><a href=3D"http://www.oclc.=
+org"><img src=3D"http://www.oclc.org/content/dam/emailcontent/osc/oclc-=
+logo.gif" alt=3D"OCLC | The world's libraries. Connected." width=3D"300" =
+height=3D"46" border=3D"0" style=3D"margin: 0 0 0 20px" /></a></td> =
+
+     <td valign=3D"middle">&nbsp;</td>
+   </tr>
+</table>
+
+<table width=3D"608" border=3D"0" align=3D"center" cellpadding=3D"30" =
+cellspacing=3D"0" bgcolor=3D"#FFFFFF">
+<tr>
+     <td>   =
+
+  <p><b>PATRICIA LOWREY,</b>
+  </p>  =
+
+  <p>Updated billing information has been added to your OCLC account - =
+
+   <b>2716 (CLEVELAND PUB LIBR)</b>, =
+
+   Institution Symbol =
+
+   <b>CLE</b>
+   , in the OCLC Online Service Center(OSC). To view the new information =
+please click on any of the items listed below.  </p>
+  <table width=3D"65%" border=3D"0" cellspacing=3D"0">
+   <tr>
+    <td style=3D"border: ; padding: 20px">
+     <table width=3D"100%" border=3D"0" cellspacing=3D"0">
+      <tr>
+       <td style=3D"text-align: right" width=3D"67%"><b>Billing =
+Information Item(s)</b>
+       </td>
+      </tr>     =
+
+      <tr><td style=3D"text-align: right" width=3D"67%"><b>Statement:  <a =
+href=3D" https://www.oclc.=
+org/webapp/wcs/stores/servlet/BillingInfoDisplayCmd?bi_URL=3DdisplayStateme=
+nt.=
+action&bi_accountNumber=3D2716&bi_accountDivision=3DRCON&bi_businessUnit=3D=
+01000&bi_statementDate=3D07/31/2011&bi_dateFormat=3DMM%2Fdd%2Fyyyy"target=
+=3D"_blank">07/31/2011</a></b></td></tr>   =
+
+     </table>
+    </td>
+   </tr>
+  </table>
+
+<p><b>In addition to this online information, OCLC mails a paper invoice =
+to you.  We=E2=80=99ve recently introduced an option to receive the =
+invoice in electronic form only via this email.  If you wish to eliminate =
+receiving the paper invoice please <a href=3D"http://www.oclc.=
+org/servicecenter" title=3D"Online Service Center Login" =
+target=3D"_blank">click here</a> to make that selection in the OSC.  If =
+you don=E2=80=99t have an OSC account, you=E2=80=99ll need to create one =
+before you are able to make this selection.</b></p>
+<p>As the billing contact on the account, notice of new activity will be =
+sent to you each time new invoices or statements are posted to the OSC - =
+Billing Information section. If you are not certain you should be =
+receiving this message, please go to the Contacts page for the account in =
+the Manage My Institution area of the Online Service Center to identify =
+one of your institution's administrative users (identified with an "*" =
+next to their name). This user can reassign the account to the appropriate =
+Billing Contact.</p>
+  <p>For technical assistance with this message or using the Billing =
+Information area of the OSC, please call <a href=3D"http://www.oclc.=
+org/support/" target=3D"_blank">OCLC Support</a> at 1-800-848-5800 and ask =
+for help with the Billing Information in the Online Service Center. For =
+questions about or assistance with your billing statements or invoices, =
+please email <a href=3D"OCLC'>mailto:acctsrecrms@oclc.org">OCLC Accounts =
+Receivable</a>.</p>
+  <p><b>Thank you again for choosing OCLC!</b>
+  <!--<p><p>Sincerely,</p> <p>OCLC Customer Support Department</p>-->
+  </td>
+</tr>
+</table>
+<table width=3D"608" border=3D"0" align=3D"center" cellpadding=3D"30" =
+cellspacing=3D"0" bgcolor=3D"#1c1c1c">
+   <tr>
+     <td width=3D"170" valign=3D"top">
+     <p style=3D"color: #b9b9b9; font-size: 11px; line-height: 17px; =
+margin: 0;"><a href=3D"http://www.oclc.org/community/" style=3D"color: =
+#fff">Community</a><br />
+     <a href=3D"http://www.oclc.org/services/" style=3D"color: =
+#fff">Products and Services</a><br />
+     <a href=3D"http://www.oclc.org/education/" style=3D"color: =
+#fff">Professional Development</a><br />
+     <a href=3D"http://www.oclc.org/research/" style=3D"color: =
+#fff">Research</a></p></td>
+     <td width=3D"318" valign=3D"top"><p style=3D"color: #b9b9b9; font-=
+size: 11px; line-height: 17px; margin: 0; padding: 0 0 0 20px; border-=
+left: 1px solid #383838;">If you have an <a href=3D"http://www.oclc.=
+org/servicecenter/" style=3D"color: #fff;">OCLC Online Service Center</a> =
+account and wish to update your e-mail address, please enter your changes =
+under &quot;My Profile info&quot;.<br /><br /></p></td>
+   </tr>
+</table>
+<table width=3D"608" border=3D"0" align=3D"center" cellpadding=3D"0" =
+cellspacing=3D"0">
+   <tr>
+     <td><p style=3D"color: #685d4f; font-size: 11px; line-height: 15px; =
+margin: 15px 0 10px 0;">Please do not reply to this e-mail as we are not =
+able to respond to messages sent to this address. For corporate contact =
+information please visit our <a href=3D"http://www.oclc.org/contacts/" =
+style=3D"color: #383127;">Contacts</a> page.</p>
+       <p style=3D"color: #685d4f; font-size: 11px; line-height: 15px; =
+margin: 0 0 10px 0;">OCLC is committed to respecting your privacy. For =
+more information, visit our <a href=3D"http://www.oclc.=
+org/policies/privacy/" style=3D"color: #383127;">privacy policy</a> or =
+contact us at <a href=3D"mailto:privacy@oclc.org?subject=3DPrivacy Policy" =
+style=3D"color: #383127;">privacy@oclc.org</a>.</p>
+       <p style=3D"color: #685d4f; font-size: 11px; line-height: 15px; =
+margin: 0 0 10px 0;">&copy;  OCLC </p>
+       <p style=3D"color: #685d4f; font-size: 11px; line-height: 15px; =
+margin: 0 0 10px 0;">OCLC &nbsp;6565 Kilgour Place, Dublin OH USA 43017-=
+3395 &nbsp;<a href=3D"mailto:oclc@oclc.org" style=3D"color: =
+#383127;">oclc@oclc.org</a> &nbsp;1-614-764-6000 &nbsp;USA 1-800-848-=
+5878</p>
+     </td>
+   </tr>
+</table>
+</body>
+</HTML>
+
+

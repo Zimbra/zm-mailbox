@@ -1,0 +1,85 @@
+Return-Path: lew@pt.net
+Received: from mail.pt.net (LHLO zmail.pt.net) (206.210.194.151) by
+ mail.pt.net with LMTP; Fri, 3 Apr 2009 10:11:49 -0600 (GMT-06:00)
+Received: from localhost (localhost [127.0.0.1])
+	by zmail.pt.net (Postfix) with ESMTP id CCE2AD2C26E;
+	Fri,  3 Apr 2009 11:11:49 -0500 (CDT)
+X-Virus-Scanned: amavisd-new at mail.pt.net
+X-Spam-Flag: NO
+X-Spam-Score: -4.334
+X-Spam-Level: 
+X-Spam-Status: No, score=-4.334 tagged_above=-10 required=4
+	tests=[ALL_TRUSTED=-1.8, AWL=0.064, BAYES_00=-2.599,
+	HTML_MESSAGE=0.001]
+Received: from zmail.pt.net ([127.0.0.1])
+	by localhost (mail.pt.net [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id 9RxCZwspHXWr; Fri,  3 Apr 2009 11:11:47 -0500 (CDT)
+Received: from mail.pt.net (zmail.pt.net [206.210.192.89])
+	by zmail.pt.net (Postfix) with ESMTP id 719BDD2C2B9;
+	Fri,  3 Apr 2009 11:11:47 -0500 (CDT)
+From: "Lewis Donzis" <lew@pt.net>
+To: "'Henry Donzis'" <henry@perftech.com>
+References: <F662EE4E8F4244998FCC3C5E4D74E943@aaeon.com> <20090325124153.1F363D2C21E@zmail.pt.net> <EEA56D9C042E449DA2A307CC4B355670@aaeon.com>
+Subject: CPU sockets
+Date: Fri, 3 Apr 2009 10:11:47 -0600 (GMT-06:00)
+Message-ID: <6C4C70A8028546CBBAD9363D66C6404A@perftech.com>
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+	boundary="----=_NextPart_000_38BE_01C9B44C.FB04CDC0"
+X-Mailer: Microsoft Office Outlook 11
+X-Mailer: Zimbra 5.0.13_GA_2791.UBUNTU8_64 (ZimbraConnectorForOutlook/5.0.2767.10)
+X-MimeOLE: Produced By Microsoft MimeOLE V6.00.2900.5579
+In-Reply-To: <EEA56D9C042E449DA2A307CC4B355670@aaeon.com>
+Thread-Index: AcmWnEz42KTljaCeRRGLbi0/vcrclAAA74mgADdreAAAIypggAJkMHBAAAAFKiAAAD2vgAAADrVAAAESYAAAAAlO8AAKDPQgAFOPkbAAA2TrsAAzgs/gAABCnhAAAFNPQAJUaZ8QAADIzQAByktiUA==
+X-Originating-IP: [206.210.221.110]
+
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_38BE_01C9B44C.FB04CDC0
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+
+Here is a photo of the most recent one:
+ftp://ftp.perftech.com/hidden/aaeon/cpupins.jpg
+ 
+I think we could straighten one of them, but the other is twisted and I
+wouldn't feel good about shipping it to a customer.  The socket should be
+replaced.
+ 
+Thanks,
+lew
+
+------=_NextPart_000_38BE_01C9B44C.FB04CDC0
+Content-Type: text/html;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML><HEAD><TITLE></TITLE>
+<META http-equiv=3DContent-Type content=3D"text/html; =
+charset=3Dus-ascii">
+<META content=3D"MSHTML 6.00.6000.16809" name=3DGENERATOR></HEAD>
+<BODY><!-- Converted from text/plain format -->
+<DIV><FONT face=3DArial size=3D2><SPAN class=3D899324515-03042009>Here =
+is a photo of=20
+the most recent one:</SPAN></FONT></DIV>
+<DIV><FONT face=3DArial size=3D2><SPAN class=3D899324515-03042009><A=20
+href=3D"ftp://ftp.perftech.com/hidden/aaeon/cpupins.jpg">ftp://ftp.perfte=
+ch.com/hidden/aaeon/cpupins.jpg</A></SPAN></FONT></DIV>
+<DIV><FONT face=3DArial size=3D2><SPAN=20
+class=3D899324515-03042009></SPAN></FONT>&nbsp;</DIV>
+<DIV><FONT face=3DArial size=3D2><SPAN class=3D899324515-03042009>I =
+think we could=20
+straighten one of them, but the other is twisted and I wouldn't feel =
+good about=20
+shipping it to a customer.&nbsp; The socket should be=20
+replaced.</SPAN></FONT></DIV>
+<DIV><FONT face=3DArial size=3D2><SPAN=20
+class=3D899324515-03042009></SPAN></FONT>&nbsp;</DIV>
+<DIV><FONT face=3DArial size=3D2><SPAN=20
+class=3D899324515-03042009>Thanks,</SPAN></FONT></DIV>
+<DIV><FONT face=3DArial size=3D2><SPAN=20
+class=3D899324515-03042009>lew</SPAN></FONT></DIV></BODY></HTML>
+
+------=_NextPart_000_38BE_01C9B44C.FB04CDC0--

@@ -1,0 +1,149 @@
+﻿Return-Path: av1@zmmighp-vm2.delhi.corp.yahoo.com
+Received: from zmmighp-vm2.delhi.corp.yahoo.com (LHLO
+ zmmighp-vm2.delhi.corp.yahoo.com) (10.66.48.67) by
+ zmmighp-vm2.delhi.corp.yahoo.com with LMTP; Wed, 3 Feb 2010 21:10:56 +0530
+ (IST)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by zmmighp-vm2.delhi.corp.yahoo.com (Postfix) with ESMTP id A6394A802F
+	for <av3@zmmighp-vm2.delhi.corp.yahoo.com>; Wed,  3 Feb 2010 21:10:56 +0530 (IST)
+X-Virus-Scanned: amavisd-new at zmmighp-vm2.delhi.corp.yahoo.com
+X-Spam-Flag: NO
+X-Spam-Score: 1.086
+X-Spam-Level: *
+X-Spam-Status: No, score=1.086 tagged_above=-10 required=6.6
+	tests=[AWL=-1.357, BAYES_00=-2.599, FH_DATE_PAST_20XX=3.188,
+	HTML_MESSAGE=0.001, MIME_BASE64_TEXT=1.753, RDNS_NONE=0.1]
+	autolearn=no
+Received: from zmmighp-vm2.delhi.corp.yahoo.com ([127.0.0.1])
+	by localhost (zmmighp-vm2.delhi.corp.yahoo.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id DNY98nNKSeBV for <av3@zmmighp-vm2.delhi.corp.yahoo.com>;
+	Wed,  3 Feb 2010 21:10:52 +0530 (IST)
+Received: from zmmighp-vm2.delhi.corp.yahoo.com (zmmighp-vm2.delhi.corp.yahoo.com [10.66.48.67])
+	by zmmighp-vm2.delhi.corp.yahoo.com (Postfix) with ESMTP id D97B6A802D
+	for <av3@zmmighp-vm2.delhi.corp.yahoo.com>; Wed,  3 Feb 2010 21:10:50 +0530 (IST)
+From: <av1@zmmighp-vm2.delhi.corp.yahoo.com>
+To: "av3" <av3@zmmighp-vm2.delhi.corp.yahoo.com>
+Subject: =?utf-8?B?0LDQstGC0L7RgCDQsNCy0YLQvtGAINCw0LLRgtC+0YAg?=
+Date: Wed, 3 Feb 2010 21:10:50 +0530 (IST)
+Message-ID: <010501caa4e7$e0e8bc30$a2ba3490$@delhi.corp.yahoo.com>
+MIME-Version: 1.0
+X-Mailer: Microsoft Office Outlook 12.0
+X-Mailer: Zimbra 6.0.4_GA_1974.RHEL4 (ZimbraConnectorForOutlook/6.0.5833.6)
+Thread-Index: Acqk5977mpeiKVKATNKyqH3tQ8hGnAAAAAFw
+Content-Type: multipart/alternative;
+  boundary="------------Boundary-00=_FRV94Y7kX93yP9uUPRhg"
+X-Originating-IP: [10.66.104.18]
+
+--------------Boundary-00=_FRV94Y7kX93yP9uUPRhg
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: base64
+
+V2hlbjogV2VkbmVzZGF5LCBGZWJydWFyeSAwMywgMjAxMCAxMDozMCBQTS0xMTowMCBQTSAo
+R01UKzA1OjMwKSBDaGVubmFpLCBLb2xrYXRhLCBNdW1iYWksIE5ldyBEZWxoaS4NCldoZXJl
+OiDQsNCy0YLQvtGAINCw0LLRgtC+0YAg0LDQstGC0L7RgCANCg0KTm90ZTogVGhlIEdNVCBv
+ZmZzZXQgYWJvdmUgZG9lcyBub3QgcmVmbGVjdCBkYXlsaWdodCBzYXZpbmcgdGltZSBhZGp1
+c3RtZW50cy4NCg0KKn4qfip+Kn4qfip+Kn4qfip+Kg0KDQrQsNCy0YLQvtGA0LDQstGC0L7R
+gNCw0LLRgtC+0YDQsNCy0YLQvtGA0LDQstGC0L7RgNCw0LLRgtC+0YDQsNCy0YLQvtGA0LDQ
+stGC0L7RgNCw0LLRgtC+0YDQsNCy0YLQvtGA0LDQstGC0L7RgNCw0LLRgtC+0YDQsNCy0YLQ
+vtGA0LDQstGC0L7RgNCw0LLRgtC+0YDQsNCy0YLQvtGA0LDQstGC0L7RgNCw0LLRgtC+0YDQ
+sNCy0YLQvtGA0LDQstGC0L7RgNCw0LLRgtC+0YDQsNCy0YLQvtGA0LDQstGC0L7RgNCw0LLR
+gtC+0YDQsNCy0YLQvtGA0LDQstGC0L7RgNCw0LLRgtC+0YDQsNCy0YLQvtGA0LDQstGC0L7R
+gNCw0LLRgtC+0YANCg==
+
+--------------Boundary-00=_FRV94Y7kX93yP9uUPRhg
+Content-Type: text/html; charset=koi8-r
+Content-Transfer-Encoding: base64
+
+PCFET0NUWVBFIEhUTUwgUFVCTElDICItLy9XM0MvL0RURCBIVE1MIDMuMi8vRU4iPg0KPEhU
+TUw+DQo8SEVBRD4NCjxNRVRBIEhUVFAtRVFVSVY9IkNvbnRlbnQtVHlwZSIgQ09OVEVOVD0i
+dGV4dC9odG1sOyBjaGFyc2V0PWtvaTgtciI+DQo8TUVUQSBOQU1FPSJHZW5lcmF0b3IiIENP
+TlRFTlQ9Ik1TIEV4Y2hhbmdlIFNlcnZlciB2ZXJzaW9uIDA4LjAwLjA2ODEuMDAwIj4NCjxU
+SVRMRT4/Pz8/PyA/Pz8/PyA/Pz8/PyA8L1RJVExFPg0KPC9IRUFEPg0KPEJPRFk+DQo8IS0t
+IENvbnZlcnRlZCBmcm9tIHRleHQvcnRmIGZvcm1hdCAtLT4NCg0KPFAgRElSPUxUUj48U1BB
+TiBMQU5HPSJlbi11cyI+PEZPTlQgRkFDRT0iQ2FsaWJyaSI+V2hlbjogV2VkbmVzZGF5LCBG
+ZWJydWFyeSAwMywgMjAxMCAxMDozMCBQTS0xMTowMCBQTSAoR01UKzA1OjMwKSBDaGVubmFp
+LCBLb2xrYXRhLCBNdW1iYWksIE5ldyBEZWxoaS48L0ZPTlQ+PC9TUEFOPjwvUD4NCg0KPFAg
+RElSPUxUUj48U1BBTiBMQU5HPSJlbi11cyI+PC9TUEFOPjxTUEFOIExBTkc9ImVuLXVzIj48
+Rk9OVCBGQUNFPSJDYWxpYnJpIEN5ciI+V2hlcmU6IMHX1M/SIMHX1M/SIMHX1M/SIDwvRk9O
+VD48L1NQQU4+PC9QPg0KDQo8UCBESVI9TFRSPjxTUEFOIExBTkc9ImVuLXVzIj48L1NQQU4+
+PC9QPg0KDQo8UCBESVI9TFRSPjxTUEFOIExBTkc9ImVuLXVzIj48Rk9OVCBGQUNFPSJDYWxp
+YnJpIj5Ob3RlOiBUaGUgR01UIG9mZnNldCBhYm92ZSBkb2VzIG5vdCByZWZsZWN0IGRheWxp
+Z2h0IHNhdmluZyB0aW1lIGFkanVzdG1lbnRzLjwvRk9OVD48L1NQQU4+PC9QPg0KDQo8UCBE
+SVI9TFRSPjxTUEFOIExBTkc9ImVuLXVzIj48Rk9OVCBGQUNFPSJDYWxpYnJpIj4qfip+Kn4q
+fip+Kn4qfip+Kn4qPC9GT05UPjwvU1BBTj48L1A+DQoNCjxQIERJUj1MVFI+PFNQQU4gTEFO
+Rz0iZW4tdXMiPjwvU1BBTj48U1BBTiBMQU5HPSJlbi11cyI+PEZPTlQgRkFDRT0iQ2FsaWJy
+aSBDeXIiPsHX1M/SwdfUz9LB19TP0sHX1M/SwdfUz9LB19TP0sHX1M/SwdfUz9LB19TP0sHX
+1M/SwdfUz9LB19TP0sHX1M/SwdfUz9LB19TP0sHX1M/SwdfUz9LB19TP0sHX1M/SwdfUz9LB
+19TP0sHX1M/SwdfUz9LB19TP0sHX1M/SwdfUz9LB19TP0sHX1M/SwdfUz9LB19TP0jwvRk9O
+VD48L1NQQU4+PC9QPg0KDQo8L0JPRFk+DQo8L0hUTUw+
+
+--------------Boundary-00=_FRV94Y7kX93yP9uUPRhg
+Content-Type: text/calendar; method=REQUEST;
+	charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Content-Language: en-us
+
+BEGIN:VCALENDAR
+PRODID:-//Microsoft Corporation//Outlook 12.0 MIMEDIR//EN
+VERSION:2.0
+METHOD:REQUEST
+X-MS-OLK-FORCEINSPECTOROPEN:TRUE
+BEGIN:VEVENT
+ATTENDEE;CN=av3;RSVP=TRUE:mailto:av3@zmmighp-vm2.delhi.corp.yahoo.com
+CLASS:PUBLIC
+CREATED:20100203T154511Z
+DESCRIPTION:When: Wednesday\, February 03\, 2010 10:30 PM-11:00 PM (GMT+05:
+	30) Chennai\, Kolkata\, Mumbai\, New Delhi.\nWhere: автор автор 
+	автор \n\nNote: The GMT offset above does not reflect daylight saving
+	 time adjustments.\n\n*~*~*~*~*~*~*~*~*~*\n\nавторавторавто
+	равторавторавторавторавторавторавтора
+	вторавторавторавторавторавторавторавт
+	оравторавторавторавторавторавторавтор
+	авторавторавторавторавтор\n
+DTEND:20100203T173000Z
+DTSTAMP:20100203T154511Z
+DTSTART:20100203T170000Z
+LAST-MODIFIED:20100203T154515Z
+LOCATION:автор автор автор 
+ORGANIZER;CN=av1@zmmighp-vm2.delhi.corp.yahoo.com:mailto:av1@zmmighp-vm2.de
+	lhi.corp.yahoo.com
+PRIORITY:5
+SEQUENCE:0
+SUMMARY;LANGUAGE=en-us:автор автор автор 
+TRANSP:OPAQUE
+UID:041000008200E00074C5B7101A82E0080000000000E8B0F815A5CA01000000000000000
+	010000000EA075A61ADE9284F85949CD39FACEEF4
+X-ALT-DESC;FMTTYPE=text/html:<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//E
+	N">\n<HTML>\n<HEAD>\n<META NAME="Generator" CONTENT="MS Exchange Server ve
+	rsion 08.00.0681.000">\n<TITLE></TITLE>\n</HEAD>\n<BODY>\n<!-- Converted f
+	rom text/rtf format -->\n\n<P DIR=LTR><SPAN LANG="en-us"><FONT FACE="Calib
+	ri">When: Wednesday\, February 03\, 2010 10:30 PM-11:00 PM (GMT+05:30) Che
+	nnai\, Kolkata\, Mumbai\, New Delhi.</FONT></SPAN></P>\n\n<P DIR=LTR><SPAN
+	 LANG="en-us"></SPAN><SPAN LANG="en-us"><FONT FACE="Calibri Cyr">Where: а
+	втор автор автор </FONT></SPAN></P>\n\n<P DIR=LTR><SPAN LANG
+	="en-us"></SPAN></P>\n\n<P DIR=LTR><SPAN LANG="en-us"><FONT FACE="Calibri"
+	>Note: The GMT offset above does not reflect daylight saving time adjustme
+	nts.</FONT></SPAN></P>\n\n<P DIR=LTR><SPAN LANG="en-us"><FONT FACE="Calibr
+	i">*~*~*~*~*~*~*~*~*~*</FONT></SPAN></P>\n\n<P DIR=LTR><SPAN LANG="en-us">
+	</SPAN><SPAN LANG="en-us"><FONT FACE="Calibri Cyr">авторавтора
+	вторавторавторавторавторавторавторавт
+	оравторавторавторавторавторавторавтор
+	авторавторавторавторавторавторавторав
+	торавторавторавторавторавтор</FONT></SPAN></P>
+	\n\n</BODY>\n</HTML>
+X-MICROSOFT-CDO-BUSYSTATUS:TENTATIVE
+X-MICROSOFT-CDO-IMPORTANCE:1
+X-MICROSOFT-CDO-INTENDEDSTATUS:BUSY
+X-MICROSOFT-DISALLOW-COUNTER:FALSE
+X-MS-OLK-ALLOWEXTERNCHECK:TRUE
+X-MS-OLK-AUTOSTARTCHECK:FALSE
+X-MS-OLK-CONFTYPE:0
+BEGIN:VALARM
+TRIGGER:-PT15M
+ACTION:DISPLAY
+DESCRIPTION:Reminder
+END:VALARM
+END:VEVENT
+END:VCALENDAR
+
+--------------Boundary-00=_FRV94Y7kX93yP9uUPRhg--
