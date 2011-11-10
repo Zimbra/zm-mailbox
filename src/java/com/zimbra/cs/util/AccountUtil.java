@@ -472,7 +472,7 @@ public class AccountUtil {
             DataSourceType dsType = ds.getType();
             if (ds.isEnabled() &&
                 (DataSourceType.pop3.equals(dsType) || DataSourceType.imap.equals(dsType) || DataSourceType.caldav.equals(dsType)) &&
-                (address.equalsIgnoreCase(ds.getEmailAddress()) || address.equalsIgnoreCase(ds.getFromAddress()))) {
+                address.equalsIgnoreCase(ds.getEmailAddress())) {
                 return true;
             }
         }
