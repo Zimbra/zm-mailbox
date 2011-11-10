@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Set;
 
-import com.zimbra.common.util.StringBufferStream;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -289,5 +288,29 @@ public class DefangFilterTest {
         InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
         String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
         Assert.assertTrue(result.equals("<html><body></body></html>"));
+    }
+
+    /**
+     * Checks that expression() in style value is removed.
+     * @throws Exception
+     */
+    @Test
+    public void testBug67021() throws Exception {
+        String html =
+                "<html><body>" +
+                "<div style=\"{ left:\\0065\\0078pression( alert('XSS2') ) }\">" +
+                "<div style=\"{ left:&#x5c;0065&#x5c;0078pression( alert('XSS3') ) }\">" +
+                "<style>\n" +
+                "*{width:ex\\pression( eval(alert(\"XSS4\")));}\n" +
+                "</style>" +
+                "<span style=\"ldsf;lksdf;lksdf:expre\\ss\\ion( alert('XSS5' ) )\">\n" +
+                "</span>" +
+                "</body></html>";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertFalse(result.contains("XSS2"));
+        Assert.assertFalse(result.contains("XSS3"));
+        Assert.assertFalse(result.contains("XSS4"));
+        Assert.assertFalse(result.contains("XSS5"));
     }
 }
