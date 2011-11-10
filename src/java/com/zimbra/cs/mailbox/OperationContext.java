@@ -178,14 +178,14 @@ public class OperationContext {
         return userAgent;
     }
     
-    void setCtxtData(String key, OperationContextData data) {
+    public void setCtxtData(String key, OperationContextData data) {
         if (contextData == null) {
             contextData = new HashMap<String, OperationContextData>();
         }
         contextData.put(key, data);
     }
     
-    OperationContextData getCtxtData(String key) {
+    public OperationContextData getCtxtData(String key) {
         if (contextData == null) {
             return null;
         } else {
