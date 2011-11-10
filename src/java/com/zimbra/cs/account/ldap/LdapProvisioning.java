@@ -3676,6 +3676,7 @@ public class LdapProvisioning extends LdapProv {
         try {
             zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.DELETE_DISTRIBUTIONLIST);
             zlc.deleteEntry(dl.getDN());
+            sGroupCache.remove(dl);
             allDLs.removeGroup(addrs);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to purge distribution list: "+zimbraId, e);
@@ -8151,7 +8152,7 @@ public class LdapProvisioning extends LdapProv {
 
             // remove zimbraMemberOf if this group from all accounts
             deleteMemberOfOnAccounts(zlc, zimbraId);
-
+            sGroupCache.remove(group);
             allDLs.removeGroup(addrs);
         } catch (ServiceException e) {
             throw ServiceException.FAILURE("unable to purge group: "+zimbraId, e);
