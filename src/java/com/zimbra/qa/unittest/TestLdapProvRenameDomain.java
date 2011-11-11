@@ -43,6 +43,7 @@ import com.zimbra.cs.account.DataSource;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.DynamicGroup;
+import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.MailTarget;
@@ -585,7 +586,8 @@ public class TestLdapProvRenameDomain extends TestLdap {
         // Domain sourceDomain = mProv.get(Provisioning.DomainBy.name, domainName);
         
         List<String>[][] nestedDLMembers = new ArrayList[NUM_DOMAINS][NUM_DLS_NESTED];
-        List<String>[][] topDLMembers = new ArrayList[NUM_DOMAINS][NUM_DLS_TOP];        
+        List<String>[][] topDLMembers = new ArrayList[NUM_DOMAINS][NUM_DLS_TOP];   
+        List<String>[][] dynamicGroupMembers = new ArrayList[NUM_DOMAINS][NUM_DYNAMIC_GROUPS];      
         
         for (int d = 0; d < NUM_DOMAINS; d++) {
             for (int nd = 0; nd < NUM_DLS_TOP; nd++) {
@@ -594,9 +596,14 @@ public class TestLdapProvRenameDomain extends TestLdap {
             for (int td = 0; td < NUM_DLS_TOP; td++) {
                 topDLMembers[d][td] = new ArrayList();
             }
+            for (int dd = 0; dd < NUM_DYNAMIC_GROUPS; dd++) {
+                dynamicGroupMembers[d][dd] = new ArrayList();
+            }
         }
         
-        // add accounts and their aliases to top and nested dls
+        // add accounts and their aliases to top and nested dls, and dynamic groups
+        // note: for dynamic groups, the net outcome is the memberOf attr of account 
+        // entries is set to the dynamic group.
         for (int a = 0; a < NUM_ACCOUNTS; a++) {
             Set<String> members = ACCOUNT_NAMES(a, domainIdx, false);
            
@@ -608,6 +615,10 @@ public class TestLdapProvRenameDomain extends TestLdap {
                 for (int td = 0; td < NUM_DLS_TOP; td++) {
                     for (String m : members)
                         topDLMembers[d][td].add(m);
+                }
+                for (int dd = 0; dd < NUM_DYNAMIC_GROUPS; dd++) {
+                    for (String m : members)
+                        dynamicGroupMembers[d][dd].add(m);
                 }
             }
         }
@@ -633,6 +644,10 @@ public class TestLdapProvRenameDomain extends TestLdap {
             for (int td = 0; td < NUM_DLS_TOP; td++) {
                 DistributionList dl = mProv.get(Key.DistributionListBy.name, TOP_DL_NAME(td, d));
                 mProv.addMembers(dl, topDLMembers[d][td].toArray(new String[0]));
+            }
+            for (int dd = 0; dd < NUM_DYNAMIC_GROUPS; dd++) {
+                Group dynGroup = mProv.getGroup(Key.DistributionListBy.name, DYNAMIC_GROUP_NAME(dd, d));
+                mProv.addGroupMembers(dynGroup, dynamicGroupMembers[d][dd].toArray(new String[0]));
             }
         }
     }

@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
@@ -710,7 +711,13 @@ public class RenameDomain {
         private Map<String, Object> fixupAddrs(NamedEntry entry, String[] attrsNeedRename)  {
 
             // replace the addr attrs
-            Map<String, Object> attrs = entry.getAttrs(false);
+            Map<String, Object> attrs = Maps.newHashMap(entry.getAttrs(false));
+            
+            // remove the pseudo attr on dynamic group
+            if (entry instanceof DynamicGroup) {
+                attrs.remove(Provisioning.A_member);
+            }
+            
             for (String attr : attrsNeedRename) {
                 boolean addrCanBeDomainOnly = addrContainsDomainOnly(attr);
                 
