@@ -58,6 +58,7 @@ import com.zimbra.cs.zclient.ZFilterCondition.ZMimeHeaderCondition;
 import com.zimbra.cs.zclient.ZFilterRule;
 import com.zimbra.cs.zclient.ZFilterRules;
 import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZGetMessageParams;
 import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZMessage.Flag;
@@ -708,7 +709,7 @@ extends TestCase {
         // copy headers From,To,Cc,Subject from the original message onto the notification message
         actions.add(new ZFilterAction.ZNotifyAction(
                 TestUtil.getAddress(REMOTE_USER_NAME), null, "${BODY}", -1, "From,To,Cc,Subject"));
-        rules.add(new ZFilterRule("testNotifyAction", true, false, conditions, actions));
+        rules.add(new ZFilterRule("testNotifyActionUseOrigHeaders", true, false, conditions, actions));
         saveIncomingRules(mMbox, new ZFilterRules(rules));
 
         String subject = NAME_PREFIX + " testNotifyActionUseOrigHeaders";
@@ -750,6 +751,42 @@ extends TestCase {
             }
         }
         assertEquals(subject, zMessage.getSubject());
+    }
+
+    public void testNotifyActionCopyAllOrigHeaders()
+    throws Exception {
+        List<ZFilterRule> rules = new ArrayList<ZFilterRule>();
+        List<ZFilterCondition> conditions = new ArrayList<ZFilterCondition>();
+        List<ZFilterAction> actions = new ArrayList<ZFilterAction>();
+        conditions.add(new ZFilterCondition.ZTrueCondition());
+        // add an action to notify user2
+        // copy all headers (From,To,Cc,Subject) from the original message onto the notification message
+        actions.add(new ZFilterAction.ZNotifyAction(
+                TestUtil.getAddress(REMOTE_USER_NAME), null, "${BODY}", -1, "*"));
+        rules.add(new ZFilterRule("testNotifyActionCopyAllOrigHeaders", true, false, conditions, actions));
+        saveIncomingRules(mMbox, new ZFilterRules(rules));
+
+        String subject = NAME_PREFIX + " testNotifyActionCopyAllOrigHeaders";
+        String body = "Hi, How r u?";
+        String msg = new MessageBuilder().withFrom(REMOTE_USER_NAME).withToRecipient(USER_NAME).
+                withCcRecipient(USER_NAME).withSubject(subject).withBody(body).create();
+        // send msg to user1
+        TestUtil.addMessageLmtp(new String[] { USER_NAME }, REMOTE_USER_NAME, msg);
+        // check notification msg from user1 in user2's mailbox
+        ZMailbox zMailbox = TestUtil.getZMailbox(REMOTE_USER_NAME);
+        ZMessage zMessage = TestUtil.waitForMessage(zMailbox, "in:inbox subject:\"" + subject + "\"");
+
+        // Get the message content, since a search won't return the content
+        ZGetMessageParams params = new ZGetMessageParams();
+        params.setId(zMessage.getId());
+        params.setRawContent(true);
+        zMessage = zMailbox.getMessage(params);
+        String content = zMessage.getContent();
+
+        assertTrue(content.contains("From: " + REMOTE_USER_NAME));
+        assertTrue(content.contains("To: " + USER_NAME));
+        assertTrue(content.contains("Cc: " + USER_NAME));
+        assertTrue(content.contains("Subject: " + subject));
     }
 
     public void testNotifyWithDiscard()
