@@ -104,8 +104,8 @@ public class AutoProvisionEager extends AutoProvision {
         }
 
         if (!lockDomain(zlc)) {
-            ZimbraLog.autoprov.info("EAGER auto provision: skip domain " + domain.getName() +
-                    " on server " + prov.getLocalServer().getName());
+            ZimbraLog.autoprov.info("EAGER auto provision unable to lock domain: skip domain " +
+                    domain.getName() + " on server " + prov.getLocalServer().getName());
             return;
         }
 
@@ -130,7 +130,8 @@ public class AutoProvisionEager extends AutoProvision {
         
         long polledAt = System.currentTimeMillis();
         
-        List<ExternalEntry> entries = searchAccounts();
+        List<ExternalEntry> entries = new ArrayList<ExternalEntry>();
+        boolean hitSizeLimitExceededException = searchAccounts(entries);
         
         for (ExternalEntry entry : entries) {
             if (scheduler.isShutDownRequested()) {
@@ -150,11 +151,23 @@ public class AutoProvisionEager extends AutoProvision {
             }
         }
         
-        // keep track of the last polled timestamp.
+        // Keep track of the last polled timestamp.
         // The next batch will fetch entries with createTimeStamp later than the last polled 
         // timestamp in this batch.
-        String lastPolledAt = DateUtil.toGeneralizedTime(new Date(polledAt));
-        domain.setAutoProvLastPolledTimestampAsString(lastPolledAt);
+        // But don't update it if the search hit SizeLimitExceededException.  In that case 
+        // we want to retain the current stamp so the next poll will still use this stamp.
+        // Note: it is expected a AutoProvisionListener is configured on the domain.  
+        //       The postCreate method of AutoProvisionListener should update the external 
+        //       directory to indicate the entry was provisioned in Zimbra.  
+        //       Also, the same assertion (e.g. (provisionNotes=provisioned-in-zimbra)) 
+        //       should be included in zimbraAutoProvLdapSearchFilter.
+        //
+        //       See how TestLdapProvAutoProvision.eagerMode() does it.
+        //
+        if (!hitSizeLimitExceededException) {
+            String lastPolledAt = DateUtil.toGeneralizedTime(new Date(polledAt));
+            domain.setAutoProvLastPolledTimestampAsString(lastPolledAt);
+        }
     }
     
     private boolean lockDomain(ZLdapContext zlc) throws ServiceException {
@@ -164,8 +177,14 @@ public class AutoProvisionEager extends AutoProvision {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraAutoProvLock, localServer.getId());
         
-        return prov.getHelper().testAndModifyEntry(zlc, ((LdapEntry)domain).getDN(), 
+        boolean gotLock = prov.getHelper().testAndModifyEntry(zlc, ((LdapEntry)domain).getDN(), 
                 filter, attrs, domain);
+        
+        // need to refresh the domain entry, because this modify is not done via the normal 
+        // LdapProvisioning.modifyAttr path.  
+        prov.reload(domain, true);
+        
+        return gotLock;
     }
     
     private void unlockDomain(ZLdapContext zlc) throws ServiceException {
@@ -176,12 +195,11 @@ public class AutoProvisionEager extends AutoProvision {
         prov.getHelper().modifyAttrs(zlc, ((LdapEntry)domain).getDN(), attrs, domain);
     }
     
-    private List<ExternalEntry> searchAccounts() throws ServiceException {
+    private boolean searchAccounts(final List<ExternalEntry> entries) 
+    throws ServiceException {
         int maxResults = domain.getAutoProvBatchSize();
         String lastPolledAt = domain.getAutoProvLastPolledTimestampAsString();
         String[] returnAttrs = getAttrsToFetch();
-        
-        final List<ExternalEntry> entries = new ArrayList<ExternalEntry>();
         
         SearchLdapVisitor visitor = new SearchLdapVisitor(false) {
             @Override
@@ -191,10 +209,11 @@ public class AutoProvisionEager extends AutoProvision {
             }
         };
 
-        AutoProvision.searchAutoProvDirectory(prov, domain, null, null, 
-                lastPolledAt, returnAttrs, maxResults, visitor);
+        boolean hitSizeLimitExceededException = 
+                AutoProvision.searchAutoProvDirectory(prov, domain, null, null, 
+                        lastPolledAt, returnAttrs, maxResults, visitor, true);
         
-        return entries;
+        return hitSizeLimitExceededException;
     }
 
 }

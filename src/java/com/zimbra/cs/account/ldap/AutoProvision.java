@@ -38,7 +38,6 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
 
 import com.sun.mail.smtp.SMTPMessage;
-import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
@@ -61,7 +60,6 @@ import com.zimbra.cs.extension.ExtensionUtil;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
-import com.zimbra.cs.ldap.LdapServerConfig;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.SearchLdapOptions;
@@ -126,7 +124,8 @@ public abstract class AutoProvision {
         ZimbraLog.autoprov.info("auto provisioned account: " + acctZimbraName);
         
         ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                new String[] {"cmd", "auto provision Account", "name", acct.getName(), "id", acct.getId()}, zimbraAttrs));  
+                new String[] {"cmd", "auto provision Account", 
+                        "name", acct.getName(), "id", acct.getId()}, zimbraAttrs));  
         
         // send notification email
         try {
@@ -210,14 +209,20 @@ public abstract class AutoProvision {
             if (className != null) {
                 try {
                     if (className != null) {
-                        listener = ExtensionUtil.findClass(className).asSubclass(AutoProvisionListener.class).newInstance();
+                        listener = ExtensionUtil.findClass(className).
+                                asSubclass(AutoProvisionListener.class).newInstance();
                     }
                 } catch (ClassNotFoundException e) {
-                    ZimbraLog.autoprov.warn("unable to find auto provision listener class " + className, e);
+                    ZimbraLog.autoprov.warn(
+                            "unable to find auto provision listener class " + className, e);
                 } catch (InstantiationException e) {
-                    ZimbraLog.autoprov.warn("unable to instantiate auto provision listener object of class " + className, e);
+                    ZimbraLog.autoprov.warn(
+                            "unable to instantiate auto provision listener object of class " 
+                            + className, e);
                 } catch (IllegalAccessException e) {
-                    ZimbraLog.autoprov.warn("unable to instantiate auto provision listener object of class " + className, e);
+                    ZimbraLog.autoprov.warn(
+                            "unable to instantiate auto provision listener object of class " 
+                            + className, e);
                 }
             }
         }
@@ -246,18 +251,21 @@ public abstract class AutoProvision {
      * @return
      * @throws ServiceException
      */
-    protected String mapName(ZAttributes externalAttrs, String loginName) throws ServiceException {
+    protected String mapName(ZAttributes externalAttrs, String loginName) 
+    throws ServiceException {
         String localpart = null;
         
         String localpartAttr = domain.getAutoProvAccountNameMap();
         if (localpartAttr != null) {
             localpart = externalAttrs.getAttrString(localpartAttr);
             if (localpart == null) {
-                throw ServiceException.FAILURE("AutoProvision: unable to get localpart: " + loginName, null);
+                throw ServiceException.FAILURE(
+                        "AutoProvision: unable to get localpart: " + loginName, null);
             }
         } else {
             if (loginName == null) {
-                throw ServiceException.FAILURE("AutoProvision: unable to map acount name, must configure " +
+                throw ServiceException.FAILURE(
+                        "AutoProvision: unable to map acount name, must configure " +
                         Provisioning.A_zimbraAutoProvAccountNameMap, null);
             }
             EmailAddress emailAddr = new EmailAddress(loginName, false);
@@ -268,7 +276,8 @@ public abstract class AutoProvision {
         
     }
     
-    protected Map<String, Object> mapAttrs(ZAttributes externalAttrs) throws ServiceException {
+    protected Map<String, Object> mapAttrs(ZAttributes externalAttrs) 
+    throws ServiceException {
         AutoProvisionCachedInfo attrMap = AutoProvisionCachedInfo.getInfo(domain);
         
         Map<String, Object> extAttrs = externalAttrs.getAttrs();
@@ -330,7 +339,8 @@ public abstract class AutoProvision {
         }
     }
 
-    protected ExternalEntry getExternalAttrsByName(String loginName) throws ServiceException {
+    protected ExternalEntry getExternalAttrsByName(String loginName) 
+    throws ServiceException {
         String url = domain.getAutoProvLdapURL();
         boolean wantStartTLS = domain.isAutoProvLdapStartTlsEnabled();
         String adminDN = domain.getAutoProvLdapAdminBindDn();
@@ -378,7 +388,8 @@ public abstract class AutoProvision {
                 " or " + Provisioning.A_zimbraAutoProvLdapSearchFilter + " must be set", null);
     }
     
-    protected void sendNotifMessage(Account acct, String password) throws ServiceException {
+    protected void sendNotifMessage(Account acct, String password) 
+    throws ServiceException {
         String from = domain.getAutoProvNotificationFromAddress();
         if (from == null) {
             // if From address is configured, notification is not sent.
@@ -450,7 +461,8 @@ public abstract class AutoProvision {
             StringBuilder rcptAddr = new StringBuilder();
             for (Address a : rcpts)
                 rcptAddr.append(a.toString());
-            ZimbraLog.autoprov.info("auto provision notification sent rcpt='" + rcptAddr + "' Message-ID=" + out.getMessageID());
+            ZimbraLog.autoprov.info("auto provision notification sent rcpt='" + 
+                    rcptAddr + "' Message-ID=" + out.getMessageID());
 
         } catch (MessagingException e) {
             ZimbraLog.autoprov.warn("send auto provision notification failed rcpt='" + toAddr +"'", e);
@@ -526,27 +538,44 @@ public abstract class AutoProvision {
         };
         
         searchAutoProvDirectory(prov, domain, filter,  name,  createTimestampLaterThan,
-                returnAttrs,  maxResults,  ldapVisitor);
+                returnAttrs,  maxResults,  ldapVisitor, false);
     }
     
     /**
      * Search the external auto provision LDAP source
      * 
      * Only one of filter or name can be provided.  
+     * - if name is provided, the search filter will be zimbraAutoProvLdapSearchFilter 
+     *   with place holders filled with the name.
+     *   
+     * - if filter is provided, the provided filter will be the search filter.  
      * 
-     * - if name is provided, the search filter will be zimbraAutoProvLdapSearchFilter with place 
-     *   holders filled with the name.
-     * 
-     * - if filter is provided, the provided filter will be the search filter.
-     * 
-     * - if neither is provided, the search filter will be zimbraAutoProvLdapSearchFilter with 
-     *   place holders filled with "*".   If createTimestampLaterThan 
+     * - if neither is provided, the search filter will be zimbraAutoProvLdapSearchFilter 
+     *   with place holders filled with "*".   If createTimestampLaterThan 
      *   is provided, the search filter will be ANDed with (createTimestamp >= {timestamp}) 
-     *
+     *     
+     * @param prov
+     * @param domain
+     * @param filter
+     * @param name
+     * @param createTimestampLaterThan
+     * @param returnAttrs
+     * @param maxResults
+     * @param ldapVisitor
+     * @param wantPartialResult whether TOO_MANY_SEARCH_RESULTS should be thrown if the 
+     *                          ldap search encountered LdapSizeLimitExceededException
+     *                          Note: regardless of this parameter, the ldapVisitor.visit 
+     *                          is called for each entry returned from LDAP.  
+     *                          This behavior is currently hardcoded in 
+     *                          UBIDLdapContext.searchPaged and has been the legacy behavior.
+     *                          We can probably change it into a parameter in SearchLdapOptions.
+     * @throws ServiceException
+     * @return whether LdapSizeLimitExceededException was hit
      */
-    static void searchAutoProvDirectory(LdapProv prov, Domain domain, 
+    static boolean searchAutoProvDirectory(LdapProv prov, Domain domain, 
             String filter, String name, String createTimestampLaterThan,
-            String[] returnAttrs, int maxResults, SearchLdapVisitor ldapVisitor)
+            String[] returnAttrs, int maxResults, SearchLdapVisitor ldapVisitor,
+            boolean wantPartialResult)
     throws ServiceException {
         // use either filter or name, make sure only one is provided
         if ((filter != null) && (name != null)) {
@@ -568,7 +597,9 @@ public abstract class AutoProvision {
         ExternalLdapConfig config = new ExternalLdapConfig(url, wantStartTLS, 
                 null, adminDN, adminPassword, null, "search auto provision directory");
         
+        boolean hitSizeLimitExceededException = false;
         ZLdapContext zlc = null;
+        ZLdapFilter zFilter = null;
         try {
             zlc = LdapClient.getExternalContext(config, LdapUsage.AUTO_PROVISION_ADMIN_SEARCH);
             
@@ -597,16 +628,26 @@ public abstract class AutoProvision {
                 }
             }
             
-            ZLdapFilter zFilter = ZLdapFilterFactory.getInstance().fromFilterString(filterId, searchFilter);
+            zFilter = ZLdapFilterFactory.getInstance().fromFilterString(filterId, searchFilter);
             SearchLdapOptions searchOptions = new SearchLdapOptions(searchBase, zFilter, 
                     returnAttrs, maxResults, null, ZSearchScope.SEARCH_SCOPE_SUBTREE, ldapVisitor);
             
             zlc.searchPaged(searchOptions);
         } catch (LdapSizeLimitExceededException e) {
-            throw AccountServiceException.TOO_MANY_SEARCH_RESULTS("too many search results returned", e);    
+            hitSizeLimitExceededException = true;
+            if (wantPartialResult) {
+                // log at debug level
+                ZimbraLog.autoprov.debug(
+                        String.format("searchAutoProvDirectory encountered LdapSizeLimitExceededException: " +
+                        "base=%s, filter=%s", searchBase, zFilter == null ? "" : zFilter.toFilterString()),
+                        e);
+            } else {
+                throw AccountServiceException.TOO_MANY_SEARCH_RESULTS("too many search results returned", e);    
+            }
         } finally {
             LdapClient.closeContext(zlc);
         }
+        return hitSizeLimitExceededException;
     }
    
 }

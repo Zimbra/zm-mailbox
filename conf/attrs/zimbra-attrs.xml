@@ -5916,8 +5916,8 @@ TODO: delete them permanently from here
 <attr id="1229" name="zimbraAutoProvLdapBindDn" type="string" max="256" cardinality="single" optionalIn="domain" since="8.0.0">
   <desc>
      EAGER mode: required
-      LAZY mode: optional (if not using zimbraAutoProvLdapSearchFilters) 
-    MANUAL mode: optional (if not using zimbraAutoProvLdapSearchFilters) 
+      LAZY mode: optional (if not using zimbraAutoProvLdapSearchFilter) 
+    MANUAL mode: optional (if not using zimbraAutoProvLdapSearchFilter) 
     
     LDAP external DN template for account auto provisioning.
     For LAZY and MANUAL modes, either zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn 

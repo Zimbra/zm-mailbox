@@ -29,6 +29,7 @@ import org.junit.*;
 
 import static org.junit.Assert.*;
 
+import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvAuthMech;
 import com.zimbra.common.account.ZAttrProvisioning.AutoProvMode;
@@ -51,6 +52,11 @@ import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.account.ldap.AutoProvisionListener;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.entry.LdapDomain;
+import com.zimbra.cs.ldap.LdapClient;
+import com.zimbra.cs.ldap.LdapServerType;
+import com.zimbra.cs.ldap.LdapUsage;
+import com.zimbra.cs.ldap.ZLdapContext;
+import com.zimbra.cs.ldap.ZMutableEntry;
 import com.zimbra.soap.type.AutoProvPrincipalBy;
 
 public class TestLdapProvAutoProvision extends TestLdap {
@@ -107,6 +113,18 @@ public class TestLdapProvAutoProvision extends TestLdap {
         extAcctAttrs.put(Provisioning.A_sn, "last name");
         Account extAcct = prov.createAccount(extAcctName, externalPassword, extAcctAttrs);
         return extAcctName;
+    }
+    
+    private static void modifyExternalAcctEntry(String externalDN, Map<String, Object> extAcctAttrs) 
+    throws Exception {
+        ZLdapContext zlc = LdapClient.getContext(LdapServerType.MASTER, LdapUsage.UNITTEST);
+        try {
+            ZMutableEntry entry = LdapClient.createMutableEntry();
+            entry.mapToAttrs(extAcctAttrs);
+            zlc.replaceAttributes(externalDN, entry.getAttributes());
+        } finally {
+            LdapClient.closeContext(zlc);
+        }
     }
     
     private Map<String, Object> commonZimbraDomainAttrs() {
@@ -187,7 +205,6 @@ public class TestLdapProvAutoProvision extends TestLdap {
         verifyAcctAutoProvisioned(acct);
     }
     
-    
     public static class TestListener implements AutoProvisionListener {
         private static TestListener instance;
         
@@ -201,7 +218,7 @@ public class TestLdapProvAutoProvision extends TestLdap {
         
         @Override
         public void postCreate(Domain domain, Account acct, String externalDN) {
-            // rememebr teh act and external DN for verification
+            // rememebr the acct and external DN for verification
             this.acct = acct;
             this.externalDN = externalDN;
             
@@ -210,8 +227,32 @@ public class TestLdapProvAutoProvision extends TestLdap {
         private static TestListener getInstance() {
             return instance;
         }
-        
     }
+    
+    /**
+     * A AutoProvisionListener that marks entry "provisioned" in the external directory
+     *
+     */
+    public static class MarkEntryProvisionedListener implements AutoProvisionListener {
+        private static final String PROVED_INDICATOR_ATTR = Provisioning.A_zimbraNotes;
+        private static final String PROVED_NOTE = "PROVISIONIN IN ZIMBRA";
+        private static final String NOT_PROVED_FILTER = "(!(" + PROVED_INDICATOR_ATTR + "=" + PROVED_NOTE + "))";
+        
+        public MarkEntryProvisionedListener() {
+        }
+        
+        @Override
+        public void postCreate(Domain domain, Account acct, String externalDN) {
+            Map<String, Object> attrs = Maps.newHashMap();
+            attrs.put(PROVED_INDICATOR_ATTR, PROVED_NOTE);
+            try {
+                modifyExternalAcctEntry(externalDN, attrs);
+            } catch (Exception e) {
+                fail();
+            }
+        }
+    }
+
     
     @Test
     public void lazyModeListener() throws Exception {
@@ -481,21 +522,34 @@ public class TestLdapProvAutoProvision extends TestLdap {
     public void eagerMode() throws Exception {
         String testName = getTestName();
         
-        String externalPassword = "test456";
+        final String externalPassword = "test456";
+        
+        
+        int totalAccts = 4;
         String extAcctLocalPart1 = testName + "_1";
         String extAcctLocalPart2 = testName + "_2";
         String extAcctLocalPart3 = testName + "_3";
+        String extAcctLocalPart4 = testName + "_4";
         createExternalAcctEntry(extAcctLocalPart1, externalPassword, null);
         createExternalAcctEntry(extAcctLocalPart2, externalPassword, null);
         createExternalAcctEntry(extAcctLocalPart3, externalPassword, null);
+        createExternalAcctEntry(extAcctLocalPart4, externalPassword, null);
         
         Map<String, Object> zimbraDomainAttrs = commonZimbraDomainAttrs();
         // setup auto prov
         zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchBase, extDomainDn);
-        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, "(&(uid=%u)(mail=eagerMode*))");
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvLdapSearchFilter, 
+                "(&(uid=%u)(mail=eagerMode*)" + MarkEntryProvisionedListener.NOT_PROVED_FILTER + ")");
         zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvAccountNameMap, Provisioning.A_uid);
-        Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
         
+        // set batch size to a smaller number then num account matching the filter, 
+        // so we hit the TOO_MANY_SEARCH_RESULTS (bug 66605)
+        int batchSize = totalAccts - 1;
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvBatchSize, Integer.valueOf(batchSize).toString());
+        zimbraDomainAttrs.put(Provisioning.A_zimbraAutoProvListenerClass, 
+                "com.zimbra.qa.unittest.TestLdapProvAutoProvision$MarkEntryProvisionedListener");
+        Domain zimbraDomain = createZimbraDomain(testName, zimbraDomainAttrs);
+                
         // schedule the domain on local server
         prov.getLocalServer().addAutoProvScheduledDomains(zimbraDomain.getName());
         
@@ -509,7 +563,14 @@ public class TestLdapProvAutoProvision extends TestLdap {
         prov.autoProvAccountEager(scheduler);
 
         List<Account> zimbraAccts = prov.getAllAccounts(zimbraDomain);
-        assertEquals(3, zimbraAccts.size());
+        assertEquals(batchSize, zimbraAccts.size());
+        
+        // do it again, this time the 4th account should be provisioned
+        prov.autoProvAccountEager(scheduler);
+        zimbraAccts = prov.getAllAccounts(zimbraDomain);
+        assertEquals(totalAccts, zimbraAccts.size());
+        
+        
         Set<String> acctNames = new HashSet<String>();
         for (Account acct : zimbraAccts) {
             acctNames.add(acct.getName());
@@ -518,8 +579,9 @@ public class TestLdapProvAutoProvision extends TestLdap {
         assertTrue(acctNames.contains(TestUtil.getAddress(extAcctLocalPart1, zimbraDomain.getName()).toLowerCase()));
         assertTrue(acctNames.contains(TestUtil.getAddress(extAcctLocalPart2, zimbraDomain.getName()).toLowerCase()));
         assertTrue(acctNames.contains(TestUtil.getAddress(extAcctLocalPart3, zimbraDomain.getName()).toLowerCase()));
+        assertTrue(acctNames.contains(TestUtil.getAddress(extAcctLocalPart4, zimbraDomain.getName()).toLowerCase()));
         
-        // clear scheduled doamins on the lcoal server
+        // clear scheduled domains on the local server
         prov.getLocalServer().unsetAutoProvScheduledDomains();
     }
     
