@@ -1112,7 +1112,7 @@ public class Message extends MailItem {
                                         mmOrig, origSender, forwarder, rcptsUnfiltered.toArray(new String[0]));
                                 if (mm != null) {
                                     ItemId origMsgId = new ItemId(getMailbox(), getId());
-                                    CalendarMailSender.sendInviteForwardMessage(octxt, getMailbox(), origMsgId, mm);
+                                    CalendarMailSender.sendInviteAutoForwardMessage(octxt, getMailbox(), origMsgId, mm);
                                 }
                             }
                             if (!rcptsFiltered.isEmpty()) {
@@ -1120,7 +1120,7 @@ public class Message extends MailItem {
                                         acct.getLocale(), method, invites, origSender, forwarder, rcptsFiltered.toArray(new String[0]));
                                 if (mm != null) {
                                     ItemId origMsgId = new ItemId(getMailbox(), getId());
-                                    CalendarMailSender.sendInviteForwardMessage(octxt, getMailbox(), origMsgId, mm);
+                                    CalendarMailSender.sendInviteAutoForwardMessage(octxt, getMailbox(), origMsgId, mm);
                                 }
                             }
                         }

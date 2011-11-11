@@ -847,7 +847,7 @@ public class CalendarMailSender {
         senderThread.start();
     }
 
-    public static void sendInviteForwardMessage(
+    public static void sendInviteAutoForwardMessage(
             final OperationContext octxt, final Mailbox mbox, final ItemId origMsgId, final MimeMessage mm) {
         // Send in a separate thread to avoid nested transaction error when saving a copy to Sent folder.
         Runnable r = new Runnable() {
@@ -857,6 +857,7 @@ public class CalendarMailSender {
                     MailSender sender = getCalendarMailSender(mbox).setSaveToSent(true)
                         .setOriginalMessageId(origMsgId).setReplyType(MailSender.MSGTYPE_REPLY)
                         .setSendPartial(true);
+                    sender.setRedirectMode(true);  // Preserve original From and Sender to avoid confusing the delegate user.
                     sender.sendMimeMessage(octxt, mbox, mm);
                 } catch (ServiceException e) {
                     ZimbraLog.calendar.warn("Ignoring error while sending permission-denied auto reply", e);
