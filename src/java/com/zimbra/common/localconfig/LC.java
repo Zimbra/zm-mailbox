@@ -639,7 +639,9 @@ public final class LC {
             " -XX:+PrintGCDetails" +
             " -XX:+PrintGCTimeStamps" +
             " -XX:+PrintGCApplicationStoppedTime" +
-            " -XX:-OmitStackTraceInFastThrow");
+            " -XX:-OmitStackTraceInFastThrow" +
+            " -Dsun.security.ssl.allowUnsafeRenegotiation=false" +
+            " -Dsun.security.ssl.allowLegacyHelloMessages=false");
     @Supported
     public static final KnownKey mailboxd_pidfile = KnownKey.newKey("${zimbra_log_directory}/mailboxd.pid");
 
