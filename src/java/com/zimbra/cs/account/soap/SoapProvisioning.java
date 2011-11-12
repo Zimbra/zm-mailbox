@@ -395,14 +395,18 @@ public class SoapProvisioning extends Provisioning {
         String newUri = URLUtil.getAdminURL(serverName);
         boolean diff = !oldUri.equals(newUri);
         try {
-            if (diff) soapSetURI(newUri);
+            if (diff) {
+                soapSetURI(newUri);
+            }
             return mTransport.invoke(request);
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
         } catch (IOException e) {
             throw ZClientException.IO_ERROR("invoke "+e.getMessage()+", server: "+serverName, e);
         } finally {
-            if (diff) soapSetURI(oldUri);
+            if (diff) {
+                soapSetURI(oldUri);
+            }
         }
     }
 
@@ -825,15 +829,28 @@ public class SoapProvisioning extends Provisioning {
     }
 
     public List<AccountLogger> addAccountLogger(Account account,
-            String category, String level, String server)
+            String category, String level, String serverName)
     throws ServiceException {
-        if (server == null) {
-            server = getServer(account).getName();
+        if (serverName == null) {
+            Server server = getServer(account);
+            
+            // all accounts don't necessarily have a server.
+            // accounts under the config tree don't have a home server nor an email address
+            if (server != null) {
+                serverName = server.getName();
+            }
         }
         LoggerInfo logger = LoggerInfo.createForCategoryAndLevel(category, level);
-        AddAccountLoggerResponse resp =
-                invokeJaxb(AddAccountLoggerRequest.createForAccountAndLogger(
-                        getSelector(account), logger), server);
+        AddAccountLoggerRequest req = AddAccountLoggerRequest.createForAccountAndLogger(
+                        getSelector(account), logger);
+        
+        AddAccountLoggerResponse resp;
+        if (serverName == null) {
+            // goto the default server in the zimbra_zmprov_default_soap_server
+            resp = invokeJaxb(req);
+        } else {
+            resp = invokeJaxb(req, serverName);
+        }
         return accountLoggersFromLoggerInfos(resp.getLoggers(),
                 account.getName());
     }
