@@ -44,7 +44,9 @@ extends TestCase {
     throws Exception {
         cleanUp();
     }
-    
+
+    public void testDummy() {
+    }
     /**
      * Tests {@link ZMailbox#getValidFolderIds(String)}.
      */
