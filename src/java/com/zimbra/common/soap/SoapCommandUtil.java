@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -59,7 +59,8 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
 
     private static final String LO_HELP = "help";
     private static final String LO_MAILBOX = "mailbox";
-    private static final String LO_TARGET = "target";
+    private static final String LO_AUTH = "auth";
+    private static final String LO_ADMIN_PRIV = "admin-priv";
     private static final String LO_ADMIN = "admin";
     private static final String LO_PASSWORD = "password";
     private static final String LO_PASSFILE = "passfile";
@@ -95,7 +96,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private String mUrl;
     private String mType;
     private Namespace mNamespace;
-    private String mMailboxName;
+    private String mAuthAccountName;
     private String mAdminAccountName;
     private String mTargetAccountName;
     private String mPassword;
@@ -115,18 +116,19 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
 
     SoapCommandUtil() {
         // Initialize options.
-        mOptions.addOption(new Option("h", LO_HELP, false, "Display this help message.")); 
-        
+        mOptions.addOption(new Option("h", LO_HELP, false, "Display this help message."));
+
         Option opt = new Option("m", LO_MAILBOX, true, "Send mail and account requests to this account.  " +
-            "Also used for authentication if -a and -z are not specified.");
+            "Also used for authentication if --auth, -a and -z are not specified.");
         opt.setArgName("account-name");
         mOptions.addOption(opt);
-        
-        opt = new Option(null, LO_TARGET, true, "Target account name to which requests will be sent.  " +
-            "Only used for non-admin sessions.");
+
+        opt = new Option(null, LO_AUTH, true, "Account name to authenticate as.  Defaults to account in -m.");
         opt.setArgName("account-name");
         mOptions.addOption(opt);
-        
+
+        mOptions.addOption(new Option("A", LO_ADMIN_PRIV, false, "Execute requests with admin privileges."));
+
         opt = new Option("a", LO_ADMIN, true, "Admin account name to authenticate as.");
         opt.setArgName("account-name");
         mOptions.addOption(opt);
@@ -207,7 +209,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         
         // Set member variables
         String val = CliUtil.getOptionValue(cl, LO_PASSFILE);
-        if (val != null) {
+        if (!StringUtil.isNullOrEmpty(val)) {
             String path = CliUtil.getOptionValue(cl, LO_PASSFILE);
             try {
                 mPassword = StringUtil.readSingleLineFromFile(path);
@@ -226,9 +228,16 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
                 mPassword = LC.zimbra_ldap_password.value();
             }
         }
-        
-        mMailboxName = CliUtil.getOptionValue(cl, LO_MAILBOX);
-        if (mMailboxName == null && mAdminAccountName == null) {
+
+        mTargetAccountName = CliUtil.getOptionValue(cl, LO_MAILBOX);
+        if (CliUtil.hasOption(cl, LO_ADMIN_PRIV) && CliUtil.hasOption(cl, LO_AUTH)) {
+            usage("Cannot combine --auth and -A.");
+        }
+        mAuthAccountName = CliUtil.getOptionValue(cl, LO_AUTH);
+        if (StringUtil.isNullOrEmpty(mAuthAccountName) && !CliUtil.hasOption(cl, LO_ADMIN_PRIV)) {
+            mAuthAccountName = mTargetAccountName;
+        }
+        if (StringUtil.isNullOrEmpty(mAuthAccountName) && StringUtil.isNullOrEmpty(mAdminAccountName)) {
             usage("Authentication account not specified.");
         }
         
@@ -237,11 +246,12 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             if (!sTypeToNamespace.containsKey(mType)) {
                 usage("Invalid type: " + mType);
             }
-            if ((mType.equals(TYPE_MAIL) || mType.equals(TYPE_ACCOUNT) || mType.equals(TYPE_IM)) && mMailboxName == null) {
+            if ((mType.equals(TYPE_MAIL) || mType.equals(TYPE_ACCOUNT) || mType.equals(TYPE_IM)) &&
+                StringUtil.isNullOrEmpty(mTargetAccountName)) {
                 usage("Mailbox must be specified for mail, account, and im requests.");
             }
         } else {
-            if (mMailboxName != null) {
+            if (!StringUtil.isNullOrEmpty(mTargetAccountName)) {
                 mType = TYPE_MAIL;
             } else {
                 mType = "admin";
@@ -250,21 +260,14 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         mNamespace = sTypeToNamespace.get(mType);
         
         mUrl = CliUtil.getOptionValue(cl, LO_URL);
-        if (mUrl == null) {
-            if (mAdminAccountName != null) {
+        if (StringUtil.isNullOrEmpty(mUrl)) {
+            if (!StringUtil.isNullOrEmpty(mAdminAccountName)) {
                 mUrl = DEFAULT_ADMIN_URL;  
             } else {
                 mUrl = DEFAULT_URL;
             }
         }
 
-        if (CliUtil.hasOption(cl, LO_TARGET)) {
-            if (mAdminAccountName != null) {
-                usage("--target option cannot be used with admin authentication.");
-            }
-            mTargetAccountName = CliUtil.getOptionValue(cl, LO_TARGET);
-        }
-        
         mVeryVerbose = CliUtil.hasOption(cl, LO_VERY_VERBOSE);
         mVerbose = CliUtil.hasOption(cl, LO_VERBOSE);
         
@@ -321,10 +324,12 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         handleAuthResponse(response);
         
         // Do delegate auth if this is a mail or account service request
-        if (!mType.equals(TYPE_ADMIN)) {
+        if (!mType.equals(TYPE_ADMIN) && !StringUtil.isNullOrEmpty(mAuthAccountName)) {
+            boolean nameIsUUID = StringUtil.isUUID(mAuthAccountName);
+
             Element getInfo = mFactory.createElement(AdminConstants.GET_ACCOUNT_INFO_REQUEST);
-            Element account = getInfo.addElement(AccountConstants.E_ACCOUNT).setText(mMailboxName);
-            account.addAttribute(AdminConstants.A_BY, AdminConstants.BY_NAME);
+            Element account = getInfo.addElement(AccountConstants.E_ACCOUNT).setText(mAuthAccountName);
+            account.addAttribute(AdminConstants.A_BY, nameIsUUID ? AdminConstants.BY_ID : AdminConstants.BY_NAME);
             if (mVeryVerbose) {
                 mOut.println(getInfo.prettyPrint());
             }
@@ -333,8 +338,8 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             
             // Get delegate auth token
             Element delegateAuth = mFactory.createElement(AdminConstants.DELEGATE_AUTH_REQUEST);
-            account = delegateAuth.addElement(AccountConstants.E_ACCOUNT).setText(mMailboxName);
-            account.addAttribute(AdminConstants.A_BY, AdminConstants.BY_NAME);
+            account = delegateAuth.addElement(AccountConstants.E_ACCOUNT).setText(mAuthAccountName);
+            account.addAttribute(AdminConstants.A_BY, nameIsUUID ? AdminConstants.BY_ID : AdminConstants.BY_NAME);
             response = getTransport().invoke(delegateAuth, false, !mUseSession, null);
             handleAuthResponse(response);
             
@@ -368,13 +373,13 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         if (mVeryVerbose) {
             mOut.println("Sending auth request to " + mUrl);
         }
-        
+
         // Create auth element
         Element auth = mFactory.createElement(AccountConstants.AUTH_REQUEST);
-        Element account = auth.addElement(AccountConstants.E_ACCOUNT).setText(mMailboxName);
-        account.addAttribute(AdminConstants.A_BY, AdminConstants.BY_NAME);
+        Element account = auth.addElement(AccountConstants.E_ACCOUNT).setText(mAuthAccountName);
+        account.addAttribute(AdminConstants.A_BY, StringUtil.isUUID(mAuthAccountName) ? AdminConstants.BY_ID : AdminConstants.BY_NAME);
         auth.addElement(AccountConstants.E_PASSWORD).setText(mPassword);
-        
+
         // Authenticate and get auth token
         Element response = getTransport().invoke(auth, false, !mUseSession, null);
         handleAuthResponse(response);
@@ -438,7 +443,8 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         }
         
         // Send request and print response.
-        if (!mType.equals(TYPE_ADMIN) && mTargetAccountName != null) {
+        if (!mType.equals(TYPE_ADMIN) && !StringUtil.isNullOrEmpty(mTargetAccountName) &&
+            !StringUtil.equalIgnoreCase(mAuthAccountName, mTargetAccountName)) {
             getTransport().setTargetAcctName(mTargetAccountName);
         }
         Element response = null;
@@ -578,7 +584,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
             }
             System.exit(1);
         } catch (Exception e) {
-            if (app.mVerbose) {
+            if (app.mVerbose || app.mVeryVerbose) {
                 e.printStackTrace(System.err);
             } else {
                 System.err.println(e);
