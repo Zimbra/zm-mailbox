@@ -64,6 +64,8 @@ public class SoapServlet extends ZimbraServlet {
     public static final String SERVLET_REQUEST = "servlet.request";
     /** context name of servlet HTTP response */
     public static final String SERVLET_RESPONSE = "servlet.response";
+    /** If this is a request sent to the admin port */
+    public static final String IS_ADMIN_REQUEST = "zimbra.isadminreq";
 
     // Used by sExtraServices
     private static class ArrayListFactory implements Function<String, List<DocumentService>> {
@@ -266,6 +268,13 @@ public class SoapServlet extends ZimbraServlet {
         context.put(SERVLET_CONTEXT, getServletContext());
         context.put(SERVLET_REQUEST, req);
         context.put(SERVLET_RESPONSE, resp);
+        
+        try {
+            Boolean isAdminReq = isAdminRequest(req);
+            context.put(IS_ADMIN_REQUEST, isAdminReq);
+        } catch (ServiceException se) {
+            ZimbraLog.soap.warn("unable to determine isAdminReq", se);
+        }
 
         // setup IPs in the context and add to logging context
         RemoteIP remoteIp = new RemoteIP(req, ZimbraServlet.getTrustedIPs());
