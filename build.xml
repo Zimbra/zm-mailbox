@@ -1457,12 +1457,13 @@
             zimbraSmtpHostname ${zimbra.smtp.host} \
             zimbraSmtpPort 7024 \
             zimbraMailPort 7070 \
-          zimbraMailSSLPort 7443 \
+            zimbraMailSSLPort 7443 \
             zimbraMailSSLClientCertPort 9443 \
-          zimbraMailMode http \
+            zimbraMailMode http \
             zimbraMailSSLClientCertMode WantClientAuth \
             zimbraImapCleartextLoginEnabled TRUE \
-            zimbraPop3CleartextLoginEnabled TRUE
+            zimbraPop3CleartextLoginEnabled TRUE \
+        	zimbraSoapExposeVersion TRUE
             ModifyServer ${zimbra.server.hostname} \
             zimbraServiceInstalled ldap \
             zimbraServiceInstalled mta \
@@ -1880,6 +1881,7 @@
                 zimbraPop3BindPort 11110 \
                 zimbraPop3SSLBindPort 11995 \
                 zimbraPop3CleartextLoginEnabled TRUE \
+        	    zimbraSoapExposeVersion TRUE \
                 zimbraXMPPEnabled FALSE
             ms ${zimbra.alt.hostname} \
                 zimbraServiceInstalled ldap \
