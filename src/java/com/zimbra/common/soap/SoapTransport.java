@@ -294,7 +294,7 @@ public abstract class SoapTransport {
         return envelope;
     }
 
-    Element parseSoapResponse(String envelopeStr, boolean raw) throws SoapParseException, SoapFaultException {
+    protected Element parseSoapResponse(String envelopeStr, boolean raw) throws SoapParseException, SoapFaultException {
         Element env;
         try {
             if (envelopeStr.trim().startsWith("<"))
