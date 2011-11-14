@@ -44,6 +44,7 @@ public interface ContactInterface {
     public void setType(String type);
     public void setDlist(String dlist);
     public void setReference(String reference);
+    public void setTooManyMembers(Boolean tooManyMembers);
     public void setMetadataInterfaces(Iterable <CustomMetadataInterface> metadatas);
     public void addMetadataInterfaces(CustomMetadataInterface metadata);
     // ContactAttr extends KeyValuePair.
@@ -73,6 +74,7 @@ public interface ContactInterface {
     public String getType();
     public String getDlist();
     public String getReference();
+    public Boolean getTooManyMembers();
     public List<CustomMetadataInterface> getMetadataInterfaces();
     public List<ContactAttr> getAttrs();
     public List<ContactGroupMemberInterface> getContactGroupMemberInterfaces();

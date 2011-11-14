@@ -98,6 +98,9 @@ implements ContactInterface {
     // See GalSearchResultCallback.handleContact(Contact c)
     @XmlAttribute(name=AccountConstants.A_REF /* ref */, required=false)
     private String reference;
+    
+    @XmlAttribute(name=MailConstants.A_TOO_MANY_MEMBERS /* tooManyMembers */, required=false)
+    private ZmBoolean tooManyMembers;
 
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private List<AdminCustomMetadata> metadatas = Lists.newArrayList();
@@ -168,6 +171,10 @@ implements ContactInterface {
     public void setDlist(String dlist) { this.dlist = dlist; }
     @Override
     public void setReference(String reference) { this.reference = reference; }
+    @Override
+    public void setTooManyMembers(Boolean tooManyMembers) {
+        this.tooManyMembers = ZmBoolean.fromBool(tooManyMembers);
+    }
     public void setMetadatas(Iterable <AdminCustomMetadata> metadatas) {
         this.metadatas.clear();
         if (metadatas != null) {
@@ -239,7 +246,9 @@ implements ContactInterface {
     public String getDlist() { return dlist; }
     @Override
     public String getReference() { return reference; }
-
+    @Override
+    public Boolean getTooManyMembers() { return ZmBoolean.toBool(tooManyMembers); }
+    
     public List<AdminCustomMetadata> getMetadatas() {
         return metadatas;
     }

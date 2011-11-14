@@ -52,6 +52,9 @@ public class GetContactsRequest {
 
     @XmlAttribute(name=MailConstants.A_RETURN_HIDDEN_ATTRS /* returnHiddenAttrs */, required=false)
     private ZmBoolean returnHiddenAttrs;
+    
+    @XmlAttribute(name=MailConstants.A_MAX_MEMBERS /* maxMembers */, required=false)
+    private Long maxMembers;
 
     @XmlElement(name=MailConstants.E_ATTRIBUTE /* a */, required=false)
     private List<AttributeName> attributes = Lists.newArrayList();
@@ -73,6 +76,9 @@ public class GetContactsRequest {
     }
     public void setReturnHiddenAttrs(Boolean returnHiddenAttrs) {
         this.returnHiddenAttrs = ZmBoolean.fromBool(returnHiddenAttrs);
+    }
+    public void setMaxMembers(Long maxMembers) {
+        this.maxMembers = maxMembers;
     }
     public void setAttributes(Iterable <AttributeName> attributes) {
         this.attributes.clear();
@@ -112,6 +118,7 @@ public class GetContactsRequest {
     public String getSortBy() { return sortBy; }
     public Boolean getDerefGroupMember() { return ZmBoolean.toBool(derefGroupMember); }
     public Boolean getReturnHiddenAttrs() { return ZmBoolean.toBool(returnHiddenAttrs); }
+    public Long getMaxMembers() { return maxMembers; }
     public List<AttributeName> getAttributes() {
         return Collections.unmodifiableList(attributes);
     }
