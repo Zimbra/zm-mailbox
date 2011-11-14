@@ -121,23 +121,6 @@ public class Key {
         }
     }
 
-    //
-    // rights
-    //
-    public static enum TargetBy {
-    
-        // case must match protocol
-        id, name;
-    
-        public static TargetBy fromString(String s) throws ServiceException {
-            try {
-                return TargetBy.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
-            }
-        }
-    }
-
     public static enum CacheEntryBy {
     
         // case must match protocol
