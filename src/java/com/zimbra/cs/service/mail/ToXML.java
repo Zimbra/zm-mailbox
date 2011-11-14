@@ -1037,7 +1037,7 @@ public final class ToXML {
                 if (!msg.isTagged(Flag.FlagInfo.DELETED)) {
                     flags |= msg.getFlagBitmask();
                     tags.addAll(Arrays.asList(msg.getTags()));
-                    tagIds.addAll(msg.getTagIds());
+                    tagIds.addAll(TagUtil.getTagIds(msg));
                 }
             }
             if (needToOutput(fields, Change.FLAGS | Change.UNREAD)) {

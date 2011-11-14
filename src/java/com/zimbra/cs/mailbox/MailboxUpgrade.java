@@ -228,6 +228,10 @@ public final class MailboxUpgrade {
                 // the tag load when the Mailbox object was constructed returned no tags
                 //   because we hadn't migrated the tags yet, so force a reload
                 mbox.purge(MailItem.Type.TAG);
+
+                // any items already in the item cache don't have their tags set because
+                //   we hadn't migrated the tags when they were loaded, so purge them
+                mbox.purge(MailItem.Type.CONTACT);
             }
             conn.commit();
         } catch (ServiceException e) {

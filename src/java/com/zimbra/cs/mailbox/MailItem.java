@@ -985,22 +985,6 @@ public abstract class MailItem implements Comparable<MailItem> {
         return copy;
     }
 
-    @Deprecated
-    public List<Integer> getTagIds() {
-        String[] tags = mData.getTags();
-        if (tags.length == 0) {
-            return Collections.emptyList();
-        }
-
-        List<Integer> tagIds = new ArrayList<Integer>(tags.length);
-        for (String tag : tags) {
-            try {
-                tagIds.add(mMailbox.getTagByName(tag).getId());
-            } catch (ServiceException e) { }
-        }
-        return tagIds;
-    }
-
     public boolean isTagged(Flag.FlagInfo finfo) {
         return mData.isSet(finfo);
     }

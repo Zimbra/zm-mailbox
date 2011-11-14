@@ -14,8 +14,10 @@
  */
 package com.zimbra.cs.mailbox.util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -54,7 +56,35 @@ public class TagUtil {
 
     @Deprecated
     public static String getTagIdString(MailItem item) {
-        return Joiner.on(',').join(item.getTagIds());
+        return getTagIdString(item.getMailbox(), item.getTags());
+    }
+
+    @Deprecated
+    public static String getTagIdString(Mailbox mbox, String[] tags) {
+        return Joiner.on(',').join(getTagIds(mbox, tags));
+    }
+
+    @Deprecated
+    public static List<Integer> getTagIds(MailItem item) {
+        return getTagIds(item.getMailbox(), item.getTags());
+    }
+
+    @Deprecated
+    public static List<Integer> getTagIds(Mailbox mbox, String[] tags) {
+        if (tags == null || tags.length == 0) {
+            return Collections.emptyList();
+        }
+
+        List<Integer> tagIds = new ArrayList<Integer>(tags.length);
+        for (String tag : tags) {
+            try {
+                tagIds.add(mbox.getTagByName(tag).getId());
+            } catch (ServiceException e) { }
+        }
+        if (tagIds.size() > 1) {
+            Collections.sort(tagIds);
+        }
+        return tagIds;
     }
 
     @Deprecated
@@ -149,10 +179,12 @@ public class TagUtil {
         if (tags != null) {
             return decodeTags(tags);
         }
+
         String tagIds = elt.getAttribute(MailConstants.A_TAGS, null);
         if (tagIds != null) {
             return tagIdStringToNames(mbox, octxt, tagIds);
         }
+
         return null;
     }
 }

@@ -207,13 +207,14 @@ public class ItemData {
         if (tags.length() == 0) {
             // either 6.0.6 format (TagStr=":<tag-name>[:<tag-name>]"), or pre-6.0.6 format (TagStr="<tag int>[,<tag int>]")
             tags = json.optString(Keys.TagStr.toString());
-            if (isOldTags()) // is pre-6.0.6
+            if (isOldTags()) { // is pre-6.0.6
                 tagsOldFmt = tags;
+            }
         }
     }
 
     public boolean tagsEqual(MailItem mi) {
         // FIXME: may not work with misordered tags
-        return isOldTags() ? tags.equals(Joiner.on(',').join(mi.getTagIds())) : tags.equals(getTagString(mi.getTags()));
+        return isOldTags() ? tags.equals(TagUtil.getTagIdString(mi)) : tags.equals(getTagString(mi.getTags()));
     }
 }
