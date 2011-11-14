@@ -15,12 +15,14 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.common.service.ServiceException;
@@ -53,6 +55,7 @@ import com.zimbra.cs.account.accesscontrol.PseudoTarget;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.account.accesscontrol.HardRules.HardRule;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 
 /**
@@ -229,6 +232,19 @@ public abstract class AdminAccessControl {
      */
     public abstract AccessManager.AttrRightChecker getAttrRightChecker(Entry target) throws ServiceException;
     
+
+    /**
+     * 
+     * @param target
+     * @param ignoreHardRules Set of hard rules that should be ignored.
+     *                        If a specified hard rule is violated, return an
+     *                        AttrRightChecker that allows no attribute
+     * @return
+     * @throws ServiceException
+     */
+    public abstract AccessManager.AttrRightChecker getAttrRightChecker(
+            Entry target, Set<HardRule> ignoreHardRules) 
+    throws ServiceException;
 
     
     /* ================
@@ -448,6 +464,12 @@ public abstract class AdminAccessControl {
             return null;
         }
 
+        @Override
+        public AttrRightChecker getAttrRightChecker(Entry target,
+                Set<HardRule> ignoreHardRules) throws ServiceException {
+            return null;
+        }
+
     }
     
     /**
@@ -551,6 +573,12 @@ public abstract class AdminAccessControl {
         public AttrRightChecker getAttrRightChecker(Entry target)
                 throws ServiceException {
             return new AttributeRightChecker(this, target);
+        }
+        
+        @Override
+        public AttrRightChecker getAttrRightChecker(Entry target,
+                Set<HardRule> ignoreHardRules) throws ServiceException {
+            return getAttrRightChecker(target);
         }
 
         @Override
@@ -776,6 +804,31 @@ public abstract class AdminAccessControl {
             return new AttributeRightChecker(this, target);
         }
         
+
+        @Override
+        public AttrRightChecker getAttrRightChecker(Entry target,
+                Set<HardRule> ignoreHardRules) throws ServiceException {
+            try {
+                return getAttrRightChecker(target);
+            } catch (ServiceException e) {
+                if (ServiceException.PERM_DENIED.equals(e.getCode())) {
+                    HardRule violatedRule = HardRule.ruleVolated(e);
+                    if (ignoreHardRules.contains(violatedRule)) {
+                        // return an AttrRightChecker that allows no attr
+                        return new AttrRightChecker() {
+                            @Override
+                            public boolean allowAttr(String attrName) {
+                                return false;
+                            }
+                        };
+                    }
+                }
+                
+                // rethrow for any other cases
+                throw e;
+            }
+        }
+        
         /*
          * =================================
          * ACLAccessControl internal methods
@@ -839,6 +892,7 @@ public abstract class AdminAccessControl {
             else
                 throw ServiceException.FAILURE("internal error", null);
         }
+
     }
     
     /**
@@ -858,10 +912,16 @@ public abstract class AdminAccessControl {
         protected AdminAccessControl mAC;
         protected Provisioning mProv;
         RightCommand.AllEffectiveRights mAllEffRights;
+        private Map<Right, Set<HardRule>> mIgnoreHardRules;
         
         public BulkRightChecker(AdminAccessControl accessControl, Provisioning prov) throws ServiceException {
             mAC = accessControl;
             mProv = (prov == null)? Provisioning.getInstance() : prov;
+        }
+        
+        protected void setIgnoreHardRules(Map<Right, Set<HardRule>> ignoreHardRuleViolation) 
+        throws ServiceException {
+            mIgnoreHardRules = ignoreHardRuleViolation;
         }
         
         /* Can't do this because of perf bug 39514
@@ -914,10 +974,28 @@ public abstract class AdminAccessControl {
             } catch (ServiceException e) {
                 // if PERM_DENIED, log and return false, do not throw, so we can continue with the next entry
                 if (ServiceException.PERM_DENIED.equals(e.getCode())) {
-                    ZimbraLog.acl.warn(getClass().getName() + ": skipping entry " + target.getName() + ": " + e.getMessage());
-                    return false;
-                } else
+                    boolean violatedIgnoredHardRule = false;
+                    
+                    if (mIgnoreHardRules != null) {
+                        Set<HardRule> ignoreRules = mIgnoreHardRules.get(rightNeeded);
+                        if (ignoreRules != null) {
+                            HardRule violatedRule = HardRule.ruleVolated(e);
+                            if (ignoreRules.contains(violatedRule)) {
+                                violatedIgnoredHardRule = true;
+                            }
+                        }
+                    }
+
+                    if (violatedIgnoredHardRule) {
+                        // log a debug line and let go
+                        ZimbraLog.acl.debug(getClass().getName() + ": not skipping entry " + target.getName() + ": " + e.getMessage());
+                    } else {
+                        ZimbraLog.acl.warn(getClass().getName() + ": skipping entry " + target.getName() + ": " + e.getMessage());
+                        return false;
+                    }
+                } else {
                     throw e;
+                }
             }
             
             if (mAllEffRights == null)
@@ -991,7 +1069,16 @@ public abstract class AdminAccessControl {
         public SearchDirectoryRightChecker(AdminAccessControl accessControl, Provisioning prov, Set<String> reqAttrs) throws ServiceException {
             // reqAttrs is no longer needed, TODO, cleanup from all callsites 
             super(accessControl, prov);
+            
+            Map<Right, Set<HardRule>> ignoreHardRules = Maps.newHashMap();
+            ignoreHardRules.put(Admin.R_listAccount, 
+                    EnumSet.of(HardRule.DELEGATED_ADMIN_CANNOT_ACCESS_GLOBAL_ADMIN));
+            ignoreHardRules.put(Admin.R_listCalendarResource, 
+                    EnumSet.of(HardRule.DELEGATED_ADMIN_CANNOT_ACCESS_GLOBAL_ADMIN));
+            setIgnoreHardRules(ignoreHardRules);  // bug 64357
+            
             mAllowAll = allowAll();
+            
         }
         
         private boolean hasRightsToListDanglingAlias(Alias alias) throws ServiceException {
@@ -1108,6 +1195,7 @@ public abstract class AdminAccessControl {
             mRightChecker = accessControl.mAccessMgr.canGetAttrs(accessControl.mAuthedAcct, target, true);
         }
             
+        @Override
         public boolean allowAttr(String attrName) {
             return mRightChecker.allowAttr(attrName);
         }

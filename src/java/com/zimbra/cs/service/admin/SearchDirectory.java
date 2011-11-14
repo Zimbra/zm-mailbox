@@ -32,6 +32,7 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.DomainBy;
 import com.zimbra.cs.account.Provisioning.SearchOptions;
+import com.zimbra.cs.account.accesscontrol.HardRules.HardRule;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.TargetType;
@@ -42,6 +43,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -227,15 +229,21 @@ public class SearchDirectory extends AdminDocumentHandler {
     static void encodeEntry(Provisioning prov, Element parent, NamedEntry entry, boolean applyDefault, Set<String> reqAttrs, AdminAccessControl aac) 
     throws ServiceException {
         if (entry instanceof CalendarResource) {
-            ToXML.encodeCalendarResource(parent, (CalendarResource)entry, applyDefault, reqAttrs, aac.getAttrRightChecker((CalendarResource)entry));
+            ToXML.encodeCalendarResource(parent, (CalendarResource)entry, applyDefault, reqAttrs, 
+                    aac.getAttrRightChecker((CalendarResource)entry,
+                    EnumSet.of(HardRule.DELEGATED_ADMIN_CANNOT_ACCESS_GLOBAL_ADMIN))); // bug 64357
         } else if (entry instanceof Account) {
-            ToXML.encodeAccount(parent, (Account)entry, applyDefault, true, reqAttrs, aac.getAttrRightChecker((Account)entry));
+            ToXML.encodeAccount(parent, (Account)entry, applyDefault, true, reqAttrs, 
+                    aac.getAttrRightChecker((Account)entry,
+                    EnumSet.of(HardRule.DELEGATED_ADMIN_CANNOT_ACCESS_GLOBAL_ADMIN))); // bug 64357
         } else if (entry instanceof DistributionList) {
-            GetDistributionList.encodeDistributionList(parent, (DistributionList)entry, false, reqAttrs, aac.getAttrRightChecker((DistributionList)entry));
+            GetDistributionList.encodeDistributionList(parent, (DistributionList)entry, false, reqAttrs, 
+                    aac.getAttrRightChecker((DistributionList)entry));
         } else if (entry instanceof Alias) {
             encodeAlias(parent, prov, (Alias)entry, reqAttrs);
         } else if (entry instanceof Domain) {
-            GetDomain.encodeDomain(parent, (Domain)entry, applyDefault, reqAttrs, aac.getAttrRightChecker((Domain)entry));
+            GetDomain.encodeDomain(parent, (Domain)entry, applyDefault, reqAttrs, 
+                    aac.getAttrRightChecker((Domain)entry));
         } else if (entry instanceof Cos) {
             GetCos.encodeCos(parent, (Cos)entry, reqAttrs, aac.getAttrRightChecker((Cos)entry));
         }
