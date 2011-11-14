@@ -250,6 +250,10 @@ final class RemoteFolder {
         LOG.error(errmsg(msg), e);
     }
 
+    public void warn(String fmt, Object... args) {
+        LOG.warn(errmsg(String.format(fmt, args)));
+    }
+
     public void error(String msg, Throwable e) {
         LOG.error(errmsg(msg), e);
     }
