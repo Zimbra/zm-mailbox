@@ -15,12 +15,14 @@
 package com.zimbra.cs.service.admin;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.common.service.ServiceException;
@@ -55,6 +57,7 @@ import com.zimbra.cs.account.accesscontrol.PseudoTarget;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.TargetType;
+import com.zimbra.cs.account.accesscontrol.HardRules.HardRule;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.names.NameUtil;
 
@@ -254,6 +257,19 @@ public abstract class AdminAccessControl {
     throws ServiceException;
     
 
+    /**
+     * 
+     * @param target
+     * @param ignoreHardRules Set of hard rules that should be ignored.
+     *                        If a specified hard rule is violated, return an
+     *                        AttrRightChecker that allows no attribute
+     * @return
+     * @throws ServiceException
+     */
+    public abstract AccessManager.AttrRightChecker getAttrRightChecker(
+            Entry target, Set<HardRule> ignoreHardRules) 
+    throws ServiceException;
+    
     
     /* ================
      * internal methods
@@ -313,8 +329,8 @@ public abstract class AdminAccessControl {
             domain = (Domain)target;
         } else {
             domain = TargetType.getTargetDomain(Provisioning.getInstance(), target);
-        }
-        
+    }
+    
         // will throw if domain is not in an accessible state
         mAccessMgr.checkDomainStatus(domain); 
     }
@@ -322,7 +338,7 @@ public abstract class AdminAccessControl {
     protected void soapOnly() throws ServiceException {
         if (mZsc == null) {
             throw ServiceException.FAILURE("internal error, called from non-SOAP servlet", null);
-        }
+    }
     }
 
     
@@ -362,8 +378,8 @@ public abstract class AdminAccessControl {
 
                 if (!AttributeManager.getInstance().isDomainAdminModifiable(attrName, attrClass)) {
                     throw ServiceException.PERM_DENIED("can not modify attr: "+attrName);
-                }
             }
+        }
         }
         
         /**
@@ -405,8 +421,8 @@ public abstract class AdminAccessControl {
             if (isDomainAdminOnly()) {
                 if (!mAccessMgr.canAccessCos(mAuthToken, cos)) {
                     throw ServiceException.PERM_DENIED("can not access cos");
-                }
             }
+        }
         }
         
         @Override
@@ -420,7 +436,7 @@ public abstract class AdminAccessControl {
             
             if (isDomainAdminOnly() && (needed instanceof Map)) {
                 checkModifyAttrs(AttributeClass.account, (Map<String, Object>)needed);
-            }
+        }
         }
 
         @Override
@@ -431,10 +447,10 @@ public abstract class AdminAccessControl {
             if (!handler.canAccessAccount(mZsc, cr)) {
                 throw ServiceException.PERM_DENIED("can not access calendar resource");
             }
-            
+
             if (isDomainAdminOnly() && (needed instanceof Map)) {
                 checkModifyAttrs(AttributeClass.calendarResource, (Map<String, Object>)needed);
-            }
+        }
         }
 
         @Override
@@ -444,7 +460,7 @@ public abstract class AdminAccessControl {
             
             if (!handler.canAccessEmail(mZsc, dl.getName())) {
                 throw ServiceException.PERM_DENIED("can not access dl");
-            }
+        }
         }
 
         @Override
@@ -478,8 +494,8 @@ public abstract class AdminAccessControl {
                 
                 if (needed instanceof Map) {
                     checkModifyAttrs(AttributeClass.domain, (Map<String, Object>)needed);
-                }
             }
+        }
         }
         
         @Override
@@ -499,6 +515,12 @@ public abstract class AdminAccessControl {
             return null;
         }
 
+        @Override
+        public AttrRightChecker getAttrRightChecker(Entry target,
+                Set<HardRule> ignoreHardRules) throws ServiceException {
+            return null;
+    }
+    
     }
     
     /**
@@ -527,8 +549,8 @@ public abstract class AdminAccessControl {
                 boolean hasRight = canAccess.booleanValue();
                 if (!hasRight) {
                     throw ServiceException.PERM_DENIED("only global admin is allowed");
-                }
             }     
+        }
         }
 
         @Override
@@ -549,7 +571,7 @@ public abstract class AdminAccessControl {
             checkDomainStatus(dl);
             throwIfNotAllowed();
         }
-        
+
         @Override
         public void checkDynamicGroupRight(AdminDocumentHandler handler,
                 DynamicGroup group, Object needed) throws ServiceException {
@@ -616,6 +638,12 @@ public abstract class AdminAccessControl {
         }
 
         @Override
+        public AttrRightChecker getAttrRightChecker(Entry target,
+                Set<HardRule> ignoreHardRules) throws ServiceException {
+            return getAttrRightChecker(target);
+        }
+
+        @Override
         public boolean hasRightsToList(NamedEntry target, AdminRight listRight,
                 Object getAttrRight) throws ServiceException {
             return doCheckRight();
@@ -646,7 +674,7 @@ public abstract class AdminAccessControl {
             
             if (!hasRight) {
                 throw ServiceException.PERM_DENIED("only global admin is allowed");
-            }
+        }
         }
         
         private boolean doCheckRight() {
@@ -692,7 +720,7 @@ public abstract class AdminAccessControl {
      
             if (!hasRight) {
                 throw ServiceException.PERM_DENIED("cannot set attrs");
-            }
+        }
         }
         
         /**
@@ -715,7 +743,7 @@ public abstract class AdminAccessControl {
                     return false;
                 } else {
                     throw e;
-                }
+            }
             }
             
             // check only the list right, do not check the get attrs right
@@ -742,7 +770,7 @@ public abstract class AdminAccessControl {
                     return false;
                 } else {
                     throw e;
-                }
+            }
             }
             
             return true;
@@ -761,7 +789,7 @@ public abstract class AdminAccessControl {
             }
             if (!doCheckRight(target, needed)) {
                 throw ServiceException.PERM_DENIED(printNeededRight(target, needed));
-            }
+        }
         }
         
         @Override
@@ -786,7 +814,7 @@ public abstract class AdminAccessControl {
             }
             if (!hasRight) {
                 throw ServiceException.PERM_DENIED(printNeededRight(account, needed));
-            }
+        }
         }
         
         @Override
@@ -806,7 +834,7 @@ public abstract class AdminAccessControl {
             
             if (!hasRight) {
                 throw ServiceException.PERM_DENIED(printNeededRight(cr, needed));
-            }
+        }
         }
         
         @Override
@@ -818,7 +846,7 @@ public abstract class AdminAccessControl {
             
             if (!doCheckRight(dl, needed)) {
                 throw ServiceException.PERM_DENIED(printNeededRight(dl, needed));
-            }
+        }
         }
         
         @Override
@@ -848,7 +876,7 @@ public abstract class AdminAccessControl {
             
             if (!doCheckRight(domain, needed)) {
                 throw ServiceException.PERM_DENIED(printNeededRight(domain, needed));
-            }
+        }
         }
         
         @Override
@@ -863,7 +891,7 @@ public abstract class AdminAccessControl {
             
             if (!doCheckRight(domain, needed)) {
                 throw ServiceException.PERM_DENIED(printNeededRight(domain, needed));
-            }
+        }
         }
         
         @Override
@@ -873,7 +901,7 @@ public abstract class AdminAccessControl {
             
             if (!doCheckRight(domain, needed)) {
                 throw ServiceException.PERM_DENIED(printNeededRight(domain, needed));
-            }
+        }
         }
         
         
@@ -881,6 +909,31 @@ public abstract class AdminAccessControl {
         public AccessManager.AttrRightChecker getAttrRightChecker(Entry target) 
         throws ServiceException {
             return new AttributeRightChecker(this, target);
+        }
+        
+
+        @Override
+        public AttrRightChecker getAttrRightChecker(Entry target,
+                Set<HardRule> ignoreHardRules) throws ServiceException {
+            try {
+                return getAttrRightChecker(target);
+            } catch (ServiceException e) {
+                if (ServiceException.PERM_DENIED.equals(e.getCode())) {
+                    HardRule violatedRule = HardRule.ruleVolated(e);
+                    if (ignoreHardRules.contains(violatedRule)) {
+                        // return an AttrRightChecker that allows no attr
+                        return new AttrRightChecker() {
+                            @Override
+                            public boolean allowAttr(String attrName) {
+                                return false;
+                            }
+                        };
+                    }
+                }
+                
+                // rethrow for any other cases
+                throw e;
+            }
         }
         
         /*
@@ -925,7 +978,7 @@ public abstract class AdminAccessControl {
                 return dar.checkRight(mAccessMgr, mAuthedAcct, target);
             } else {
                 throw ServiceException.FAILURE("internal error", null);
-            }
+        }
         }
         
         private String printNeededRight(Entry target, Object needed) throws ServiceException {
@@ -950,8 +1003,9 @@ public abstract class AdminAccessControl {
                 return "cannot set attrs on " + targetInfo;
             } else {
                 throw ServiceException.FAILURE("internal error", null);
-            }
         }
+
+    }
     }
     
     /**
@@ -971,11 +1025,17 @@ public abstract class AdminAccessControl {
         protected AdminAccessControl mAC;
         protected Provisioning mProv;
         RightCommand.AllEffectiveRights mAllEffRights;
+        private Map<Right, Set<HardRule>> mIgnoreHardRules;
         
         public BulkRightChecker(AdminAccessControl accessControl, Provisioning prov) 
         throws ServiceException {
             mAC = accessControl;
             mProv = (prov == null)? Provisioning.getInstance() : prov;
+        }
+        
+        protected void setIgnoreHardRules(Map<Right, Set<HardRule>> ignoreHardRuleViolation) 
+        throws ServiceException {
+            mIgnoreHardRules = ignoreHardRuleViolation;
         }
         
         /* Can't do this because of perf bug 39514
@@ -1033,11 +1093,30 @@ public abstract class AdminAccessControl {
                     return hardRulesResult.booleanValue();
                 }
             } catch (ServiceException e) {
-                // if PERM_DENIED, log and return false, do not throw, so we can continue with the next entry
+                // if PERM_DENIED, log and return false, do not throw, 
+                // so we can continue with the next entry
                 if (ServiceException.PERM_DENIED.equals(e.getCode())) {
-                    ZimbraLog.acl.warn(getClass().getName() + 
-                            ": skipping entry " + target.getName() + ": " + e.getMessage());
-                    return false;
+                    boolean violatedIgnoredHardRule = false;
+                    
+                    if (mIgnoreHardRules != null) {
+                        Set<HardRule> ignoreRules = mIgnoreHardRules.get(rightNeeded);
+                        if (ignoreRules != null) {
+                            HardRule violatedRule = HardRule.ruleVolated(e);
+                            if (ignoreRules.contains(violatedRule)) {
+                                violatedIgnoredHardRule = true;
+                            }
+                        }
+                    }
+
+                    if (violatedIgnoredHardRule) {
+                        // log a debug line and allow
+                        ZimbraLog.acl.debug(getClass().getName() + 
+                                ": not skipping entry " + target.getName() + ": " + e.getMessage());
+                    } else {
+                        ZimbraLog.acl.warn(getClass().getName() + 
+                                ": skipping entry " + target.getName() + ": " + e.getMessage());
+                        return false;
+                    }
                 } else {
                     throw e;
                 }
@@ -1118,7 +1197,16 @@ public abstract class AdminAccessControl {
                 Provisioning prov, Set<String> reqAttrs) throws ServiceException {
             // reqAttrs is no longer needed, TODO, cleanup from all callsites 
             super(accessControl, prov);
+            
+            Map<Right, Set<HardRule>> ignoreHardRules = Maps.newHashMap();
+            ignoreHardRules.put(Admin.R_listAccount, 
+                    EnumSet.of(HardRule.DELEGATED_ADMIN_CANNOT_ACCESS_GLOBAL_ADMIN));
+            ignoreHardRules.put(Admin.R_listCalendarResource, 
+                    EnumSet.of(HardRule.DELEGATED_ADMIN_CANNOT_ACCESS_GLOBAL_ADMIN));
+            setIgnoreHardRules(ignoreHardRules);  // bug 64357
+            
             mAllowAll = allowAll();
+            
         }
         
         private boolean hasRightsToListDanglingAlias(Alias alias) throws ServiceException {
@@ -1182,7 +1270,7 @@ public abstract class AdminAccessControl {
                 return Admin.R_listCos;
             } else {
                 return null;
-            }
+        }
         }
         
         /**
@@ -1201,8 +1289,8 @@ public abstract class AdminAccessControl {
                     return hasRight(entry, listRightNeeded);
                 } else {
                     return false;
-                }
             }
+        }
         }
         
         /**
@@ -1215,7 +1303,7 @@ public abstract class AdminAccessControl {
                 NamedEntry entry = (NamedEntry)entries.get(i);
                 if (allow(entry)) {
                     allowedEntries.add(entry);
-                }
+            }
             }
             return allowedEntries;
         }
@@ -1242,6 +1330,7 @@ public abstract class AdminAccessControl {
                     accessControl.mAuthedAcct, target, true);
         }
             
+        @Override
         public boolean allowAttr(String attrName) {
             return mRightChecker.allowAttr(attrName);
         }
