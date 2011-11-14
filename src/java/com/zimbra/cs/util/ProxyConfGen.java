@@ -1018,6 +1018,39 @@ class ErrorPagesVar extends ProxyConfVar {
 }
 
 /**
+ * a wrapper class that convert a ProxyConfVar which
+ * contains the time in milliseconds to seconds. This
+ * is useful when the default timeout unit used by 
+ * Provisioning API is "ms" but nginx uses "s".
+ * @author jiankuan
+ *
+ */
+class TimeInSecVarWrapper extends ProxyConfVar {
+    private ProxyConfVar mVar;
+    
+    public TimeInSecVarWrapper (ProxyConfVar var) {
+        super(null, null, null, null, null, null);
+        
+        if (var.mValueType != ProxyConfValueType.TIME) {
+            throw new RuntimeException("Only Proxy Conf Var with TIME" +
+            		" type can be used in this wrapper");
+        }
+        
+        mVar = var;
+    }
+    
+    @Override
+    public void update() throws ServiceException, ProxyConfException {
+        mVar.update();
+        mVar.mValue = ((Long)mVar.mValue).longValue() / 1000;
+    }
+    
+    public String format(Object o) throws ProxyConfException {
+        return mVar.mValue.toString();
+    }
+}
+
+/**
  * A simple class of Triple<VirtualHostName, VirtualIPAddress, DomainName>. Uses
  * this only for convenient and HashMap can't guarantee order
  * @author jiankuan
@@ -1614,7 +1647,9 @@ public class ProxyConfGen
         /* deprecated */ mConfVars.put("web.ssl.key", new ProxyConfVar("web.ssl.key", null, "/opt/zimbra/conf/nginx.key", ProxyConfValueType.STRING, ProxyConfOverride.NONE,"Web Proxy SSL certificate key"));
         mConfVars.put("web.ssl.ciphers", new ProxyConfVar("web.ssl.ciphers", "zimbraReverseProxySSLCiphers", "!SSLv2:!MD5:HIGH", ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Permitted ciphers for mail proxy"));
         mConfVars.put("web.http.uport", new ProxyConfVar("web.http.uport", Provisioning.A_zimbraMailPort, new Integer(80), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER,"Web upstream server port"));
-        mConfVars.put("web.upstream.polling.timeout", new ProxyConfVar("web.upstream.polling.timeout", null, new Integer(3600), ProxyConfValueType.INTEGER, ProxyConfOverride.NONE, "the response timeout for Microsoft Active Sync polling"));
+        mConfVars.put("web.upstream.read.timeout", new TimeInSecVarWrapper(new ProxyConfVar("web.upstream.read.timeout", "zimbraReverseProxyUpstreamReadTimeout", new Long(60), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "upstream read timeout")));
+        mConfVars.put("web.upstream.send.timeout", new TimeInSecVarWrapper(new ProxyConfVar("web.upstream.send.timeout", "zimbraReverseProxyUpstreamSendTimeout", new Long(60), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "upstream send timeout")));
+        mConfVars.put("web.upstream.polling.timeout", new TimeInSecVarWrapper(new ProxyConfVar("web.upstream.polling.timeout", "zimbraReverseProxyUpstreamPollingTimeout", new Long(3600), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "the response timeout for Microsoft Active Sync polling")));
         mConfVars.put("web.enabled", new ProxyConfVar("web.enabled", "zimbraReverseProxyHttpEnabled", false, ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER, "Indicates whether HTTP proxying is enabled"));
         mConfVars.put("web.http.enabled", new HttpEnablerVar());
         mConfVars.put("web.https.enabled", new HttpsEnablerVar());
