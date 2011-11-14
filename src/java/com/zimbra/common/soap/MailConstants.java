@@ -455,6 +455,8 @@ public final class MailConstants {
     public static final String A_NEED_GRANTEE_NAME = "needGranteeName";
     public static final String A_INVALID = "invalid";
     public static final String A_RETURN_HIDDEN_ATTRS = "returnHiddenAttrs";
+    public static final String A_MAX_MEMBERS = "maxMembers";
+    public static final String A_TOO_MANY_MEMBERS = "tooManyMembers";
 
     //contact groups
     public static final String A_DEREF_CONTACT_GROUP_MEMBER = "derefGroupMember";
