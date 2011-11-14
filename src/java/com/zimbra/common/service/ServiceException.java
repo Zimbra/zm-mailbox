@@ -129,6 +129,10 @@ public class ServiceException extends Exception {
         public int hashCode() {
             return Objects.hashCode(name, value, type);
         }
+        
+        public String getName() {
+            return name;
+        }
     }
 
     /**
@@ -279,6 +283,10 @@ public class ServiceException extends Exception {
 
     public static ServiceException PERM_DENIED(String message) {
         return new ServiceException("permission denied: "+message, PERM_DENIED, SENDERS_FAULT);
+    }
+    
+    public static ServiceException PERM_DENIED(String message, Argument... arguments) {
+        return new ServiceException("permission denied: "+message, PERM_DENIED, SENDERS_FAULT, arguments);
     }
 
     public static ServiceException AUTH_EXPIRED(String message) {
