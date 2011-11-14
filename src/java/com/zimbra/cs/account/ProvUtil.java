@@ -1699,9 +1699,15 @@ public class ProvUtil implements HttpDebugListener {
 
     private void doGetDistributionListMembership(String[] args) throws ServiceException {
         String key = args[1];
-        DistributionList dist = lookupDistributionList(key);
+        Group group = lookupGroup(key);
+        
+        if (group.isDynamic()) {
+            throw ServiceException.INVALID_REQUEST(
+                    "getDistributionListMembership is not applicable to dynamic group", null);
+        }
+        
         HashMap<String,String> via = new HashMap<String, String>();
-        List<DistributionList> lists = prov.getDistributionLists(dist, false, via);
+        List<DistributionList> lists = prov.getDistributionLists((DistributionList)group, false, via);
         for (DistributionList dl: lists) {
             String viaDl = via.get(dl.getName());
             if (viaDl != null) {
