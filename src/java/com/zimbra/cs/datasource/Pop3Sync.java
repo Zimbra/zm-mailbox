@@ -250,6 +250,10 @@ public class Pop3Sync extends MailItemImport {
             cis = connection.getMessage(msgno);
             mc = MessageContent.read(cis, size);
             ParsedMessage pm = mc.getParsedMessage(null, indexAttachments);
+            if (pm == null) {
+                LOG.warn("Empty message body for UID %d. Must be ignored.", uid);
+                return;
+            }
             Message msg = null;
         // bug 47796: Set received date to sent date if available otherwise use current time
             try {

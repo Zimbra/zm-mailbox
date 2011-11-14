@@ -55,7 +55,7 @@ public class MessageContent {
     public ParsedMessage getParsedMessage(Long receivedDate, boolean indexAttachments)
         throws IOException, ServiceException {
         if (data != null) {
-            return new ParsedMessage(data, receivedDate, indexAttachments);
+            return data.length == 0 ? null : new ParsedMessage(data, receivedDate, indexAttachments);
         } else {
             return new ParsedMessage(blob, receivedDate, indexAttachments);
         }
