@@ -30,6 +30,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
@@ -50,6 +51,8 @@ import com.zimbra.cs.mime.ParsedContact;
  *
  * @author ysasaki
  */
+
+@Ignore("bug 67353") 
 public final class CassandraIndexTest {
     private static CassandraDaemon cassandra;
     private static CassandraIndex.Factory factory;
