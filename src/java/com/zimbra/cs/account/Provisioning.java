@@ -55,6 +55,7 @@ import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.AutoProvPrincipalBy;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.NamedElement;
+import com.zimbra.soap.type.TargetBy;
 
 /**
  * @since Sep 23, 2004
@@ -1767,7 +1768,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public boolean checkRight(
-            String targetType, Key.TargetBy targetBy, String target,
+            String targetType, TargetBy targetBy, String target,
             Key.GranteeBy granteeBy, String grantee,
             String right, Map<String, Object> attrs,
             AccessManager.ViaGrant via) throws ServiceException {
@@ -1781,7 +1782,7 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public RightCommand.EffectiveRights getEffectiveRights(
-            String targetType, Key.TargetBy targetBy, String target,
+            String targetType, TargetBy targetBy, String target,
             Key.GranteeBy granteeBy, String grantee,
             boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
@@ -1796,21 +1797,21 @@ public abstract class Provisioning extends ZAttrProvisioning {
     }
 
     public RightCommand.Grants getGrants(
-            String targetType, Key.TargetBy targetBy, String target,
+            String targetType, TargetBy targetBy, String target,
             String granteeType, Key.GranteeBy granteeBy, String grantee,
             boolean granteeIncludeGroupsGranteeBelongs) throws ServiceException{
         throw ServiceException.UNSUPPORTED();
     }
 
     public void grantRight(
-            String targetType, Key.TargetBy targetBy, String target,
+            String targetType, TargetBy targetBy, String target,
             String granteeType, Key.GranteeBy granteeBy, String grantee, String secret,
             String right, RightModifier rightModifier) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
     }
 
     public void revokeRight(
-            String targetType, Key.TargetBy targetBy, String target,
+            String targetType, TargetBy targetBy, String target,
             String granteeType, Key.GranteeBy granteeBy, String grantee,
             String right, RightModifier rightModifier) throws ServiceException {
         throw ServiceException.UNSUPPORTED();

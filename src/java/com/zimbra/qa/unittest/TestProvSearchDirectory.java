@@ -46,6 +46,7 @@ import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
+import com.zimbra.soap.type.TargetBy;
 
 public class TestProvSearchDirectory {
     
@@ -262,11 +263,11 @@ public class TestProvSearchDirectory {
             //
             // Right right = AdminRight.RT_adminConsoleDomainRights;
             String right = AdminRight.RT_domainAdminConsoleRights;
-            prov.grantRight(TargetType.domain.getCode(), Key.TargetBy.id, domain1.getId(), 
+            prov.grantRight(TargetType.domain.getCode(), TargetBy.id, domain1.getId(), 
                     GranteeType.GT_GROUP.getCode(), Key.GranteeBy.id, adminGroup1.getId(), null,
                     right, null);
             
-            prov.grantRight(TargetType.domain.getCode(), Key.TargetBy.id, domain2.getId(), 
+            prov.grantRight(TargetType.domain.getCode(), TargetBy.id, domain2.getId(), 
                     GranteeType.GT_GROUP.getCode(), Key.GranteeBy.id, adminGroup2.getId(), null,
                     right, null);
             
@@ -437,7 +438,7 @@ public class TestProvSearchDirectory {
                     right, null);
             
             // grant negative adminConsoleDomainRights to one the the da's on a domain
-            prov.grantRight(TargetType.domain.getCode(), Key.TargetBy.id, denyDomain.getId(), 
+            prov.grantRight(TargetType.domain.getCode(), TargetBy.id, denyDomain.getId(), 
                     GranteeType.GT_USER.getCode(), Key.GranteeBy.id, denyAdmin.getId(), null,
                     right, RightModifier.RM_DENY);
             

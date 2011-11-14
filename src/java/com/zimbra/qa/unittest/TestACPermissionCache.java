@@ -5,7 +5,6 @@ import static org.junit.Assert.*;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.GranteeBy;
-import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.AccessManager;
@@ -24,6 +23,7 @@ import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
+import com.zimbra.soap.type.TargetBy;
 
 public class TestACPermissionCache extends TestAC {
 
@@ -52,7 +52,7 @@ public class TestACPermissionCache extends TestAC {
     throws ServiceException {
         RightCommand.revokeRight(
                 mProv, getGlobalAdminAcct(),
-                targetType.getCode(), Key.TargetBy.name, target.getLabel(),
+                targetType.getCode(), TargetBy.name, target.getLabel(),
                 granteeType.getCode(), Key.GranteeBy.name, grantee.getName(), 
                 right.getName(), null);
     }
@@ -63,7 +63,7 @@ public class TestACPermissionCache extends TestAC {
     throws ServiceException {
         RightCommand.grantRight(
                 mProv, getGlobalAdminAcct(),
-                targetType.getCode(), Key.TargetBy.name, target.getLabel(),
+                targetType.getCode(), TargetBy.name, target.getLabel(),
                 granteeType.getCode(), Key.GranteeBy.name, grantee.getName(), secret,
                 right.getName(), null);
     }

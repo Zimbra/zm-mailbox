@@ -53,6 +53,7 @@ import com.zimbra.soap.admin.type.NetworkInformation;
 import com.zimbra.soap.admin.type.ServerSelector;
 import com.zimbra.soap.admin.type.VersionInfo;
 import junit.framework.TestCase;
+import com.zimbra.soap.type.TargetBy;
 
 import java.util.List;
 import java.util.Map;
@@ -491,7 +492,7 @@ public class TestJaxbProvisioning extends TestCase {
     public void testGetEffectiveRights() throws Exception {
         ZimbraLog.test.debug("Starting testGetEffectiveRights");
         EffectiveRights er = prov.getEffectiveRights("account" /* targetType */,
-                Key.TargetBy.name /* targetBy */, "admin" /* target */,
+                TargetBy.name /* targetBy */, "admin" /* target */,
                 Key.GranteeBy.name /* granteeBy */, "admin" /* grantee */,
                 true /* expandSetAttrs */, true /* expandGetAttrs */);
         assertNotNull("EffectiveRights", er);

@@ -41,7 +41,6 @@ import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.common.account.Key.IdentityBy;
 import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.account.Key.SignatureBy;
-import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.account.Key.XMPPComponentBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.soap.admin.type.AdminObjectInfo;
@@ -87,6 +86,7 @@ import com.zimbra.soap.admin.message.*;
 import com.zimbra.soap.admin.type.*;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.GalSearchType;
+import com.zimbra.soap.type.TargetBy;
 
 public class SoapProvisioning extends Provisioning {
 
@@ -2213,8 +2213,7 @@ public class SoapProvisioning extends Provisioning {
         }
         EffectiveRightsTargetSelector targetSel =
             new EffectiveRightsTargetSelector(
-                    com.zimbra.soap.type.TargetType.fromString(targetType),
-                    toJaxb(targetBy), target);
+                    com.zimbra.soap.type.TargetType.fromString(targetType), targetBy, target);
         GetEffectiveRightsResponse resp =
             invokeJaxb(new GetEffectiveRightsRequest(targetSel, granteeSel,
                     expandSetAttrs, expandGetAttrs));
@@ -2489,12 +2488,6 @@ public class SoapProvisioning extends Provisioning {
     throws ServiceException {
         return CacheEntrySelector.CacheEntryBy.fromString(
                 provCacheEntryBy.toString());
-    }
-
-    /* Convert to equivalent JAXB object */
-    private static EffectiveRightsTargetSelector.TargetBy toJaxb(Key.TargetBy t)
-    throws ServiceException {
-        return EffectiveRightsTargetSelector.TargetBy.fromString(t.name());
     }
 
     /* Convert to equivalent JAXB object */

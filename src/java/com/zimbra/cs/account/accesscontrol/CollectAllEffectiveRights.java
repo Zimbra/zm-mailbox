@@ -32,6 +32,7 @@ import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.LdapTODO.ACLTODO;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
+import com.zimbra.soap.type.TargetBy;
 
 @ACLTODO   // check refs of targetType.dl and handle the same for group
 public class CollectAllEffectiveRights {
@@ -542,7 +543,7 @@ public class CollectAllEffectiveRights {
             
             try {
                 Domain subDomain = (Domain)TargetType.lookupTarget(mProv, 
-                        TargetType.domain, Key.TargetBy.id, zimbraId);
+                        TargetType.domain, TargetBy.id, zimbraId);
                 subDomains.add(subDomain);
             } catch (ServiceException e) {
                 ZimbraLog.acl.warn("canot find domain by id " + zimbraId, e);
@@ -607,7 +608,7 @@ public class CollectAllEffectiveRights {
             Entry target = null;
             EffectiveRights er = null;
             for (String memberName : shape.getMembers()) {
-                target = TargetType.lookupTarget(mProv, targetType, Key.TargetBy.name, memberName, false);
+                target = TargetType.lookupTarget(mProv, targetType, TargetBy.name, memberName, false);
                 if (target != null) {
                     String targetId = TargetType.getId(target);
                     if (!entryIdsHasGrants.contains(targetId)) {

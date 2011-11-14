@@ -19,7 +19,6 @@ import java.util.Map;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.GranteeBy;
-import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;

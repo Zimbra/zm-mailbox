@@ -42,6 +42,7 @@ import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
 import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
 import com.zimbra.cs.account.accesscontrol.RightCommand.RightAggregation;
 import com.zimbra.cs.account.accesscontrol.RightCommand.RightsByTargetType;
+import com.zimbra.soap.type.TargetBy;
 
 
 public class TestACEffectiveRights extends TestAC {
@@ -59,13 +60,13 @@ public class TestACEffectiveRights extends TestAC {
             
         RightCommand.grantRight(
                 mProv, grantingAccount,
-                targetType.getCode(), Key.TargetBy.name, target.getName(),
+                targetType.getCode(), TargetBy.name, target.getName(),
                 granteeType.getCode(), Key.GranteeBy.name, grantee.getName(), null,
                 right.getName(), null);
     
         EffectiveRights effRights = RightCommand.getEffectiveRights(
                 mProv,
-                TargetType.account.getCode(), Key.TargetBy.name, target.getName(),
+                TargetType.account.getCode(), TargetBy.name, target.getName(),
                 Key.GranteeBy.name, grantee.getName(),
                 false, false);
         
@@ -87,7 +88,7 @@ public class TestACEffectiveRights extends TestAC {
             
         RightCommand.grantRight(
                 mProv, grantingAccount,
-                targetType.getCode(), Key.TargetBy.name, target.getName(),
+                targetType.getCode(), TargetBy.name, target.getName(),
                 granteeType.getCode(), Key.GranteeBy.name, grantee.getName(), null,
                 right.getName(), null);
         

@@ -41,7 +41,6 @@ import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.common.account.Key.ServerBy;
-import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -50,6 +49,7 @@ import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.type.TargetBy;
 
 public class CheckRight extends RightDocumentHandler {
     
@@ -58,10 +58,10 @@ public class CheckRight extends RightDocumentHandler {
         
         Element eTarget = request.getElement(AdminConstants.E_TARGET);
         String targetType = eTarget.getAttribute(AdminConstants.A_TYPE);
-        Key.TargetBy targetBy = null;
+        TargetBy targetBy = null;
         String target = null;
         if (TargetType.fromCode(targetType).needsTargetIdentity()) {
-            targetBy = Key.TargetBy.fromString(eTarget.getAttribute(AdminConstants.A_BY));
+            targetBy = TargetBy.fromString(eTarget.getAttribute(AdminConstants.A_BY));
             target = eTarget.getText();
         }
             

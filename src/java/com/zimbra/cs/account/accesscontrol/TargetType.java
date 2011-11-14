@@ -46,6 +46,7 @@ import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.XMPPComponent;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.soap.type.TargetBy;
 
 
 public enum TargetType {
@@ -276,7 +277,7 @@ public enum TargetType {
     }
     
     public static Entry lookupTarget(Provisioning prov, TargetType targetType, 
-            Key.TargetBy targetBy, String target) throws ServiceException {
+            TargetBy targetBy, String target) throws ServiceException {
         return lookupTarget(prov, targetType, targetBy, target, true);
     }
     
@@ -290,7 +291,7 @@ public enum TargetType {
      * @return
      * @throws ServiceException
      */
-    public static Entry lookupTarget(Provisioning prov, TargetType targetType, Key.TargetBy targetBy, 
+    public static Entry lookupTarget(Provisioning prov, TargetType targetType, TargetBy targetBy, 
             String target, boolean mustFind) throws ServiceException {
         Entry targetEntry = null;
         

@@ -35,6 +35,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
+import com.zimbra.soap.type.TargetBy;
 
 public final class SearchGrants {
     private final Provisioning prov;
@@ -162,9 +163,9 @@ public final class SearchGrants {
             Entry entry = null;
             try {
                 if (tt == TargetType.zimlet) {
-                    entry = TargetType.lookupTarget(prov, tt, Key.TargetBy.name, sgr.cn);
+                    entry = TargetType.lookupTarget(prov, tt, TargetBy.name, sgr.cn);
                 } else {
-                    entry = TargetType.lookupTarget(prov, tt, Key.TargetBy.id, sgr.zimbraId);
+                    entry = TargetType.lookupTarget(prov, tt, TargetBy.id, sgr.zimbraId);
                 }
                 if (entry == null) {
                     ZimbraLog.acl.warn("canot find target by id %s", sgr.zimbraId);

@@ -33,7 +33,7 @@ public abstract class RightDocumentHandler extends AdminDocumentHandler {
     /*
     Entry getTargetEntry(Provisioning prov, Element eTarget, TargetType targetType) 
     throws ServiceException {
-        Key.TargetBy targetBy = Key.TargetBy.fromString(eTarget.getAttribute(AdminConstants.A_BY));
+        TargetBy targetBy = TargetBy.fromString(eTarget.getAttribute(AdminConstants.A_BY));
         String target = eTarget.getText();
          
         return TargetType.lookupTarget(prov, targetType, targetBy, target);

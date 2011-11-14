@@ -22,7 +22,6 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.account.Key.GranteeBy;
-import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
@@ -63,6 +62,7 @@ import com.zimbra.soap.type.DistributionListOwnerBy;
 import com.zimbra.soap.type.DistributionListOwnerType;
 import com.zimbra.soap.type.DistributionListSelector;
 import com.zimbra.soap.type.KeyValuePair;
+import com.zimbra.soap.type.TargetBy;
 
 public class TestProvDelegatedDL {
     private static boolean verbose = false;

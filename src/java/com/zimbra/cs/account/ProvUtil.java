@@ -119,6 +119,7 @@ import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.cs.wiki.WikiUtil;
 import com.zimbra.cs.zclient.ZMailboxUtil;
 import com.zimbra.soap.type.GalSearchType;
+import com.zimbra.soap.type.TargetBy;
 
 /**
  * @author schemers
@@ -2987,11 +2988,11 @@ public class ProvUtil implements HttpDebugListener {
         return Key.SignatureBy.name;
     }
 
-    public static Key.TargetBy guessTargetBy(String value) {
+    public static TargetBy guessTargetBy(String value) {
         if (Provisioning.isUUID(value)) {
-            return Key.TargetBy.id;
+            return TargetBy.id;
         }
-        return Key.TargetBy.name;
+        return TargetBy.name;
     }
 
     public static Key.GranteeBy guessGranteeBy(String value) {
@@ -4268,7 +4269,7 @@ public class ProvUtil implements HttpDebugListener {
 
         Map<String, Object> attrs = getMap(args, ra.mCurPos);
 
-        Key.TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
+        TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
         Key.GranteeBy granteeBy = guessGranteeBy(ra.mGranteeIdOrName);
 
         AccessManager.ViaGrant via = new AccessManager.ViaGrant();
@@ -4401,7 +4402,7 @@ public class ProvUtil implements HttpDebugListener {
             }
         }
 
-        Key.TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
+        TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
         Key.GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null: guessGranteeBy(ra.mGranteeIdOrName);
 
         RightCommand.EffectiveRights effRights = prov.getEffectiveRights(ra.mTargetType, targetBy, ra.mTargetIdOrName,
@@ -4529,7 +4530,7 @@ public class ProvUtil implements HttpDebugListener {
             }
         }
 
-        Key.TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
+        TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
         Key.GranteeBy granteeBy = (ra.mGranteeIdOrName == null) ? null : guessGranteeBy(ra.mGranteeIdOrName);
 
         RightCommand.Grants grants = prov.getGrants(ra.mTargetType, targetBy, ra.mTargetIdOrName,
@@ -4566,7 +4567,7 @@ public class ProvUtil implements HttpDebugListener {
         RightArgs ra = new RightArgs(args);
         getRightArgs(ra, true, true);
 
-        Key.TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
+        TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
         Key.GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null : guessGranteeBy(ra.mGranteeIdOrName);
 
         prov.grantRight(ra.mTargetType, targetBy, ra.mTargetIdOrName, ra.mGranteeType, granteeBy, ra.mGranteeIdOrName,
@@ -4577,7 +4578,7 @@ public class ProvUtil implements HttpDebugListener {
         RightArgs ra = new RightArgs(args);
         getRightArgs(ra, true, false);
 
-        Key.TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
+        TargetBy targetBy = (ra.mTargetIdOrName == null) ? null : guessTargetBy(ra.mTargetIdOrName);
         Key.GranteeBy granteeBy = (ra.mGranteeIdOrName == null)? null : guessGranteeBy(ra.mGranteeIdOrName);
 
         prov.revokeRight(ra.mTargetType, targetBy, ra.mTargetIdOrName, ra.mGranteeType, granteeBy, ra.mGranteeIdOrName,

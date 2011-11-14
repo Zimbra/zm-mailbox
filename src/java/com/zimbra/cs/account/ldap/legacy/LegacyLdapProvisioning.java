@@ -142,7 +142,7 @@ import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
 import com.zimbra.soap.type.GalSearchType;
-
+import com.zimbra.soap.type.TargetBy;
 
 
 /**
@@ -6709,7 +6709,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     }
 
     @Override
-    public boolean checkRight(String targetType, Key.TargetBy targetBy, String target,
+    public boolean checkRight(String targetType, TargetBy targetBy, String target,
                               Key.GranteeBy granteeBy, String grantee,
                               String right, Map<String, Object> attrs,
                               AccessManager.ViaGrant via) throws ServiceException {
@@ -6738,7 +6738,7 @@ public class LegacyLdapProvisioning extends LdapProv {
 
     @Override
     public RightCommand.EffectiveRights getEffectiveRights(
-            String targetType, Key.TargetBy targetBy, String target,
+            String targetType, TargetBy targetBy, String target,
             Key.GranteeBy granteeBy, String grantee,
             boolean expandSetAttrs, boolean expandGetAttrs) throws ServiceException {
         return RightCommand.getEffectiveRights(this,
@@ -6760,7 +6760,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     }
 
     @Override
-    public RightCommand.Grants getGrants(String targetType, Key.TargetBy targetBy, String target,
+    public RightCommand.Grants getGrants(String targetType, TargetBy targetBy, String target,
             String granteeType, Key.GranteeBy granteeBy, String grantee,
             boolean granteeIncludeGroupsGranteeBelongs) throws ServiceException {
         return RightCommand.getGrants(this, targetType, targetBy, target,
@@ -6768,7 +6768,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     }
 
     @Override
-    public void grantRight(String targetType, Key.TargetBy targetBy, String target,
+    public void grantRight(String targetType, TargetBy targetBy, String target,
                            String granteeType, Key.GranteeBy granteeBy, String grantee, String secret,
                            String right, RightModifier rightModifier) throws ServiceException {
         RightCommand.grantRight(this,
@@ -6779,7 +6779,7 @@ public class LegacyLdapProvisioning extends LdapProv {
     }
 
     @Override
-    public void revokeRight(String targetType, Key.TargetBy targetBy, String target,
+    public void revokeRight(String targetType, TargetBy targetBy, String target,
                             String granteeType, Key.GranteeBy granteeBy, String grantee,
                             String right, RightModifier rightModifier) throws ServiceException {
          RightCommand.revokeRight(this,

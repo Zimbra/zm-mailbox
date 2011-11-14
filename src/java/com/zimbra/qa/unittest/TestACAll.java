@@ -66,6 +66,7 @@ import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.UserRight;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.account.ldap.entry.LdapDomain;
+import com.zimbra.soap.type.TargetBy;
 
 public class TestACAll extends TestAC {
     
@@ -612,7 +613,7 @@ public class TestACAll extends TestAC {
             
             RightCommand.grantRight(
                     mProv, grantingAccount,
-                    grantedOnTargetType.getCode(), Key.TargetBy.name, targetName,
+                    grantedOnTargetType.getCode(), TargetBy.name, targetName,
                     granteeType.getCode(), Key.GranteeBy.name, granteeName, secret,
                     right.getName(), null);
             
@@ -1000,7 +1001,7 @@ public class TestACAll extends TestAC {
             effRights = RightCommand.getEffectiveRights(
                     mProv,
                     TargetType.getTargetType(target).getCode(), 
-                    Key.TargetBy.name, target.getLabel(),
+                    TargetBy.name, target.getLabel(),
                     Key.GranteeBy.name, grantee.getName(),
                     false, false);
         } catch (ServiceException e) {
@@ -1457,7 +1458,7 @@ public class TestACAll extends TestAC {
         for (RightCommand.ACE ace : grants.getACEs()) {
             RightCommand.revokeRight(mProv,
                 getGlobalAdminAcct(),
-                ace.targetType(), Key.TargetBy.id, ace.targetId(),
+                ace.targetType(), TargetBy.id, ace.targetId(),
                 ace.granteeType(), Key.GranteeBy.id, ace.granteeId(),
                 ace.right(), ace.rightModifier());
         }

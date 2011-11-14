@@ -56,6 +56,7 @@ import com.zimbra.soap.admin.type.InDomainInfo;
 import com.zimbra.soap.admin.type.RightWithName;
 import com.zimbra.soap.admin.type.RightsEntriesInfo;
 import com.zimbra.soap.type.NamedElement;
+import com.zimbra.soap.type.TargetBy;
 
 public class RightCommand {
     
@@ -943,7 +944,7 @@ public class RightCommand {
     }
     
     public static boolean checkRight(Provisioning prov,
-            String targetType, Key.TargetBy targetBy, String target,
+            String targetType, TargetBy targetBy, String target,
             Key.GranteeBy granteeBy, String grantee, GuestAccount guest,
             String right, Map<String, Object> attrs,
             AccessManager.ViaGrant via) throws ServiceException {
@@ -1001,7 +1002,7 @@ public class RightCommand {
     }
     
     public static EffectiveRights getEffectiveRights(Provisioning prov,
-            String targetType, Key.TargetBy targetBy, String target,
+            String targetType, TargetBy targetBy, String target,
             Key.GranteeBy granteeBy, String grantee,
             boolean expandSetAttrs, boolean expandGetAttrs) 
     throws ServiceException {
@@ -1064,7 +1065,7 @@ public class RightCommand {
     }
     
     public static Grants getGrants(Provisioning prov,
-            String targetType, Key.TargetBy targetBy, String target, 
+            String targetType, TargetBy targetBy, String target, 
             String granteeType, Key.GranteeBy granteeBy, String grantee, 
              boolean granteeIncludeGroupsGranteeBelongs) 
     throws ServiceException {
@@ -1262,7 +1263,7 @@ public class RightCommand {
     
     public static void grantRight(
             Provisioning prov, Account authedAcct,
-            String targetType, Key.TargetBy targetBy, String target,
+            String targetType, TargetBy targetBy, String target,
             String granteeType, Key.GranteeBy granteeBy, String grantee, String secret,
             String right, RightModifier rightModifier) 
     throws ServiceException {
@@ -1310,7 +1311,7 @@ public class RightCommand {
 
     public static void revokeRight(
             Provisioning prov, Account authedAcct,
-            String targetType, Key.TargetBy targetBy, String target,
+            String targetType, TargetBy targetBy, String target,
             String granteeType, Key.GranteeBy granteeBy, String grantee,
             String right, RightModifier rightModifier) 
     throws ServiceException {

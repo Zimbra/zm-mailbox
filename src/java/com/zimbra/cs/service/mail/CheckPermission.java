@@ -34,7 +34,7 @@ import com.zimbra.cs.account.accesscontrol.UserRight;
 import com.zimbra.cs.service.account.DiscoverRights;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.admin.type.EffectiveRightsTargetSelector.TargetBy;
+import com.zimbra.soap.type.TargetBy;
 
 public class CheckPermission extends MailDocumentHandler {
 

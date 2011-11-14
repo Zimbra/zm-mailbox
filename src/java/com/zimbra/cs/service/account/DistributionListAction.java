@@ -40,6 +40,7 @@ import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.type.DistributionListSubscribeOp;
+import com.zimbra.soap.type.TargetBy;
 
 public class DistributionListAction extends DistributionListDocumentHandler {
     
@@ -317,7 +318,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
                 Key.GranteeBy granteeBy, String grantee) throws ServiceException {
             RightCommand.grantRight(prov,
                     null,  // grant the right as a a system admin
-                    TargetType.dl.getCode(), Key.TargetBy.id, group.getId(),
+                    TargetType.dl.getCode(), TargetBy.id, group.getId(),
                     granteeType.getCode(), granteeBy, grantee, null,
                     UserRight.RT_ownDistList, null);
         }
@@ -354,7 +355,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
                 Key.GranteeBy granteeBy, String grantee) throws ServiceException {
             RightCommand.revokeRight(prov,
                     null,  // grant the right as a a system admin
-                    TargetType.dl.getCode(), Key.TargetBy.id, group.getId(),
+                    TargetType.dl.getCode(), TargetBy.id, group.getId(),
                     granteeType.getCode(), granteeBy, grantee, 
                     UserRight.RT_ownDistList, null);
         }

@@ -19,7 +19,6 @@ import java.util.Map;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.GranteeBy;
-import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -31,6 +30,7 @@ import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.soap.DocumentHandler;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.type.TargetBy;
 
 public class GrantRight extends RightDocumentHandler {
 
@@ -39,10 +39,10 @@ public class GrantRight extends RightDocumentHandler {
         
         Element eTarget = request.getElement(AdminConstants.E_TARGET);
         String targetType = eTarget.getAttribute(AdminConstants.A_TYPE);
-        Key.TargetBy targetBy = null;
+        TargetBy targetBy = null;
         String target = null;
         if (TargetType.fromCode(targetType).needsTargetIdentity()) {
-            targetBy = Key.TargetBy.fromString(eTarget.getAttribute(AdminConstants.A_BY));
+            targetBy = TargetBy.fromString(eTarget.getAttribute(AdminConstants.A_BY));
             target = eTarget.getText();
         }
             

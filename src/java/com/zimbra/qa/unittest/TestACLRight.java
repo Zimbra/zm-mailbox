@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.zimbra.common.account.Key.GranteeBy;
-import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.AccessManager;

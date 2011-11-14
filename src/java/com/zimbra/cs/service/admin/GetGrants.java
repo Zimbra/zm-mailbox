@@ -21,7 +21,6 @@ import java.util.Set;
 
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.GranteeBy;
-import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -32,6 +31,7 @@ import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.type.TargetBy;
 
 public class GetGrants extends RightDocumentHandler {
     
@@ -40,13 +40,13 @@ public class GetGrants extends RightDocumentHandler {
         Provisioning prov = Provisioning.getInstance();
         
         String targetType = null;
-        Key.TargetBy targetBy = null;
+        TargetBy targetBy = null;
         String target = null;
         Element eTarget = request.getOptionalElement(AdminConstants.E_TARGET);
         if (eTarget != null) {
             targetType = eTarget.getAttribute(AdminConstants.A_TYPE);
             if (TargetType.fromCode(targetType).needsTargetIdentity()) {
-                targetBy = Key.TargetBy.fromString(eTarget.getAttribute(AdminConstants.A_BY));
+                targetBy = TargetBy.fromString(eTarget.getAttribute(AdminConstants.A_BY));
                 target = eTarget.getText();
             }
             
@@ -82,7 +82,7 @@ public class GetGrants extends RightDocumentHandler {
         for (RightCommand.ACE ace : grants.getACEs()) {
             TargetType tt = TargetType.fromCode(ace.targetType());
             // has to look up target by name, because zimlet can only be looked up by name
-            Entry targetEntry = TargetType.lookupTarget(prov, tt, Key.TargetBy.name, ace.targetName());
+            Entry targetEntry = TargetType.lookupTarget(prov, tt, TargetBy.name, ace.targetName());
             String targetKey = ace.targetType() + "-" + ace.targetId();
             if (!OKedTarget.contains(targetKey)) {
                 checkRight(zsc, targetEntry, Admin.R_viewGrants);
