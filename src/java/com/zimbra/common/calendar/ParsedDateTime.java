@@ -348,11 +348,23 @@ public final class ParsedDateTime {
     static final long MSECS_PER_WEEK = MSECS_PER_DAY * 7;
 
     public ParsedDuration difference(ParsedDateTime other) {
+        // Force the other ParsedDateTime to the same time zone.  Necessary to resolve DST ambiguity.
+        if (!sameTimeZone(other)) {
+            other = ((ParsedDateTime) other.clone());
+            other.toTimeZone(mICalTimeZone);
+        }
+
         long myTime = mCal.getTimeInMillis();
         long otherTime = other.mCal.getTimeInMillis();
-
         long diff = myTime - otherTime;
         
+        // Adjust for shift in GMT offset if there was a DST transition between the two times.
+        if (mICalTimeZone != null && mICalTimeZone.useDaylightTime()) {
+            long myOffset = mICalTimeZone.getOffset(myTime);
+            long otherOffset = mICalTimeZone.getOffset(otherTime);
+            diff += (myOffset - otherOffset);
+        }
+
         boolean negative = false;
         if (diff < 0) {
             negative = true;
