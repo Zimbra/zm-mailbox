@@ -58,7 +58,6 @@ import com.zimbra.client.ZFilterCondition.ZMimeHeaderCondition;
 import com.zimbra.client.ZFilterRule;
 import com.zimbra.client.ZFilterRules;
 import com.zimbra.client.ZFolder;
-import com.zimbra.client.ZGetMessageParams;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZItem.Flag;
@@ -829,13 +828,7 @@ public final class TestFilter extends TestCase {
         // check notification msg from user1 in user2's mailbox
         ZMailbox zMailbox = TestUtil.getZMailbox(REMOTE_USER_NAME);
         ZMessage zMessage = TestUtil.waitForMessage(zMailbox, "in:inbox subject:\"" + subject + "\"");
-
-        // Get the message content, since a search won't return the content
-        ZGetMessageParams params = new ZGetMessageParams();
-        params.setId(zMessage.getId());
-        params.setRawContent(true);
-        zMessage = zMailbox.getMessage(params);
-        String content = zMessage.getContent();
+        String content = TestUtil.getContent(zMailbox, zMessage.getId());
 
         assertTrue(content.contains("From: " + REMOTE_USER_NAME));
         assertTrue(content.contains("To: " + USER_NAME));
