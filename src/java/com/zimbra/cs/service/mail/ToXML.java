@@ -88,6 +88,7 @@ import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.gal.GalGroupInfoProvider;
+import com.zimbra.cs.gal.GalGroupMembers.ContactDLMembers;
 import com.zimbra.cs.html.BrowserDefang;
 import com.zimbra.cs.html.DefangFactory;
 import com.zimbra.cs.html.HtmlDefang;
@@ -605,12 +606,14 @@ public final class ToXML {
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
             boolean summary, Collection<String> attrFilter, int fields)
     throws ServiceException {
-        return encodeContact(parent, ifmt, octxt, contact, null, null, summary, attrFilter, fields, null, false);
+        return encodeContact(parent, ifmt, octxt, contact, null, null, summary, 
+                attrFilter, fields, null, false, GetContacts.NO_LIMIT_MAX_MEMBERS);
     }
 
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Contact contact,
             ContactGroup contactGroup, Collection<String> memberAttrFilter, boolean summary,
-            Collection<String> attrFilter, int fields, String migratedDlist, boolean returnHiddenAttrs)
+            Collection<String> attrFilter, int fields, String migratedDlist, 
+            boolean returnHiddenAttrs, long maxMembers)
     throws ServiceException {
         Element el = parent.addElement(MailConstants.E_CONTACT);
         el.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
@@ -683,6 +686,19 @@ public final class ToXML {
             for (Map.Entry<String, String> me : contactFields.entrySet()) {
                 String name = me.getKey();
                 String value = me.getValue();
+                
+                // don't put returnHiddenAttrs in one of the && condition because member 
+                // can be configured as a hidden or non-hidden field
+                if (ContactConstants.A_member.equals(name) && 
+                            maxMembers != GetContacts.NO_LIMIT_MAX_MEMBERS) {
+                    // there is a limit on the max number of members to return
+                    ContactDLMembers dlMembers = new ContactDLMembers(contact);
+                    if (dlMembers.getTotal() > maxMembers) {
+                        el.addAttribute(MailConstants.A_TOO_MANY_MEMBERS, true);
+                        continue;
+                    }
+                }
+                
                 if (name != null && !name.trim().isEmpty() && !Strings.isNullOrEmpty(value)) {
                     encodeContactAttr(el, name, value, contact, encodeContactGroupMembersBasic);
                 }

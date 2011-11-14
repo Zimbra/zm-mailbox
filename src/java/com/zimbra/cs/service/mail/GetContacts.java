@@ -39,6 +39,11 @@ import com.zimbra.soap.ZimbraSoapContext;
 public final class GetContacts extends MailDocumentHandler  {
 
     private static final int ALL_FOLDERS = -1;
+    
+    // bug 65324
+    // default max number of members to return in the response for a gal group
+    private static final long DEFAULT_MAX_MEMBERS = 100; 
+    static final long NO_LIMIT_MAX_MEMBERS = 0;
 
     protected static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.A_FOLDER };
 
@@ -101,9 +106,11 @@ public final class GetContacts extends MailDocumentHandler  {
             }
         }
 
+        long maxMembers = DEFAULT_MAX_MEMBERS;
         boolean returnHiddenAttrs = false;
         if (attrs == null) {
             returnHiddenAttrs = request.getAttributeBool(MailConstants.A_RETURN_HIDDEN_ATTRS, false);
+            maxMembers = request.getAttributeLong(MailConstants.A_MAX_MEMBERS, DEFAULT_MAX_MEMBERS);
         }
 
         Element response = zsc.createElement(MailConstants.GET_CONTACTS_RESPONSE);
@@ -157,7 +164,7 @@ public final class GetContacts extends MailDocumentHandler  {
                             }
                             ToXML.encodeContact(response, ifmt, octxt, con, contactGroup,
                                     memberAttrs, false, attrs, fields, migratedDlist,
-                                    returnHiddenAttrs);
+                                    returnHiddenAttrs, maxMembers);
                         }
                     }
                 } finally {
@@ -168,7 +175,7 @@ public final class GetContacts extends MailDocumentHandler  {
             for (Contact con : mbox.getContactList(octxt, folderId, sort)) {
                 if (con != null) {
                     ToXML.encodeContact(response, ifmt, octxt, con, null, null,
-                            false, attrs, fields, null, returnHiddenAttrs);
+                            false, attrs, fields, null, returnHiddenAttrs, maxMembers);
                 }
             }
         }
