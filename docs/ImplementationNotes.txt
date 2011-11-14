@@ -9,7 +9,6 @@ needs to know about the top level requests and response classes - see the
 MESSAGE_CLASSES array in :
 src/java/com/zimbra/soap/JaxbUtil.java 
 
-
 Ordering of elements.
 ---------------------
 For pre-existing requests, best not to force an ordering of elements in case
@@ -24,7 +23,6 @@ Enforcing an order is achieved via the @XmlType annotation.  For example :
 The strings in the list are the names of fields which map to elements (NOT
 the @XmlElement names).
 Attributes cannot be ordered, so their field names are excluded.
-
 
 @XmlRootElement
 ---------------
@@ -57,6 +55,9 @@ com.zimbra.cs.account.accesscontrol.TargetType.  The latter enum includes the
 
 Gotchas
 -------
+.   Do NOT reference non-simple classes outside the ZimbraSoap hierarchy in fields relevant to JAXB.
+    Failing to do this will result in errors in the resulting WSDL as it will not have
+    the information it needs to specify the structure of these classes.
 .   Unmarshalling from Xml may not correctly identify superclasses.
     Test before using! e.g. See :
         JaxbToElementTest.ConvActionRequestJaxbSubclassHandlingTestDisabled()
@@ -108,6 +109,28 @@ Steps to add a new namespace
       </target>
 7.  Update build.xml so that wsdl-client-support depends on the target created
     above.
+
+Special handling
+================
+
+Boolean / boolean support using ZmBoolean
+-----------------------------------------
+XML schema regards the literals {true, false, 1, 0} as legal
+However, the canonical representation for boolean is the set of literals {true, false} and this is reflected in
+JAXB behavior when marshaling.  Historically, Zimbra Booleans have been rendered in SOAP response XML as {1, 0}
+To further complicate things, SOAP response JSON uses {true, false}.
+
+When adding Boolean or boolean attributes/elements to SOAP requests or responses :
+1.  Specify the corresponding fields in JAXB with type "ZmBoolean"
+2.  Add methods which get and set these fields via Boolean (or boolean).
+    The static methods ZmBoolean.fromBool(Boolean), ZmBoolean.toBool(ZmBoolean) and
+    ZmBoolean.toBool(ZmBoolean, boolean) should be used from these methods.
+3.  Do NOT create ZmBoolean getters and setters!
+4.  If you are creating an element that should be treated as an element in JSON, use an @JsonSerialize annotation,
+    for example :
+        @XmlElement(name=AdminConstants.E_STATUS, required=true)
+        @JsonSerialize(using=ZmBooleanContentSerializer.class)
+        private final ZmBoolean status;
 
 FAQ
 ===

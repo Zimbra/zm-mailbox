@@ -22,24 +22,11 @@ import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.TargetBy;
 import com.zimbra.soap.type.TargetType;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class EffectiveRightsTargetSelector {
-
-    public static enum TargetBy {
-
-        // case must match protocol
-        id, name;
-
-        public static TargetBy fromString(String s) throws ServiceException {
-            try {
-                return TargetBy.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown key: "+s, e);
-            }
-        }
-    }
 
     @XmlAttribute(name=AdminConstants.A_TYPE, required=true)
     private final TargetType type;
@@ -59,8 +46,7 @@ public class EffectiveRightsTargetSelector {
                 (String) null);
     }
 
-    public EffectiveRightsTargetSelector(TargetType type,
-            TargetBy by, String value) {
+    public EffectiveRightsTargetSelector(TargetType type, TargetBy by, String value) {
         this.type = type;
         this.by = by;
         this.value = value;

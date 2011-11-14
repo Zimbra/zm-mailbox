@@ -20,8 +20,8 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
 import com.google.common.collect.Lists;
-import com.zimbra.common.account.Key.TargetBy;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.type.TargetBy;
 import com.zimbra.soap.type.TargetType;
 
 public class CheckRightsTargetSpec {
