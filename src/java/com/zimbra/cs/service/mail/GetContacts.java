@@ -39,6 +39,11 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GetContacts extends MailDocumentHandler  {
 
 	private static final int ALL_FOLDERS = -1;
+	
+	// bug 65324
+	// default max number of members to return in the response for a gal group
+	private static final long DEFAULT_MAX_MEMBERS = 100; 
+	static final long NO_LIMIT_MAX_MEMBERS = 0;
 
 	protected static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.A_FOLDER };
 	@Override protected String[] getProxiedIdPath(Element request) {
@@ -91,9 +96,11 @@ public class GetContacts extends MailDocumentHandler  {
 			}
         }
 		
+		long maxMembers = DEFAULT_MAX_MEMBERS;
 		boolean returnHiddenAttrs = false;
 		if (attrs == null) {
 		    returnHiddenAttrs = request.getAttributeBool(MailConstants.A_RETURN_HIDDEN_ATTRS, false);
+		    maxMembers = request.getAttributeLong(MailConstants.A_MAX_MEMBERS, DEFAULT_MAX_MEMBERS);
 		}
 
 		Element response = zsc.createElement(MailConstants.GET_CONTACTS_RESPONSE);
@@ -123,7 +130,8 @@ public class GetContacts extends MailDocumentHandler  {
                     for (int id : local) {
                         Contact con = mbox.getContactById(octxt, id);
                         if (con != null && (folderId == ALL_FOLDERS || folderId == con.getFolderId())) {
-                            ToXML.encodeContact(response, ifmt, con, false, attrs, fields, returnHiddenAttrs);
+                            ToXML.encodeContact(response, ifmt, con, false, attrs, fields, 
+                                    returnHiddenAttrs, maxMembers);
                         }
                     }
 			    }
@@ -131,7 +139,8 @@ public class GetContacts extends MailDocumentHandler  {
 		} else {
 			for (Contact con : mbox.getContactList(octxt, folderId, sort)) {
 				if (con != null) {
-					ToXML.encodeContact(response, ifmt, con, false, attrs, fields, returnHiddenAttrs);
+					ToXML.encodeContact(response, ifmt, con, false, attrs, fields, 
+					        returnHiddenAttrs, maxMembers);
 				}
             }
 		}

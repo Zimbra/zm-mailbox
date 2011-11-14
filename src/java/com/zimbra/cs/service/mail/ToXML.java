@@ -65,6 +65,7 @@ import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.fb.FreeBusy;
 import com.zimbra.cs.gal.GalGroupInfoProvider;
+import com.zimbra.cs.gal.GalGroupMembers.ContactDLMembers;
 import com.zimbra.cs.html.BrowserDefang;
 import com.zimbra.cs.html.DefangFactory;
 import com.zimbra.cs.html.HtmlDefang;
@@ -496,12 +497,12 @@ public final class ToXML {
             int fields) {
 
         return encodeContact(parent, ifmt, contact, summary, attrFilter,
-                fields, false);
+                fields, false, GetContacts.NO_LIMIT_MAX_MEMBERS);
     }
 
     public static Element encodeContact(Element parent, ItemIdFormatter ifmt,
             Contact contact, boolean summary, Collection<String> attrFilter,
-            int fields, boolean returnHiddenAttrs) {
+            int fields, boolean returnHiddenAttrs, long maxMembers) {
         Element elem = parent.addElement(MailConstants.E_CONTACT);
         elem.addAttribute(MailConstants.A_ID, ifmt.formatItemId(contact));
         if (needToOutput(fields, Change.MODIFIED_FOLDER))
@@ -566,9 +567,23 @@ public final class ToXML {
         } else {
             Map<String, String> contactFields = returnHiddenAttrs ?
                     contact.getAllFields() : contact.getFields();
+                    
             for (Map.Entry<String, String> me : contactFields.entrySet()) {
                 String name = me.getKey();
                 String value = me.getValue();
+                
+                // don't put returnHiddenAttrs in one of the && condition because member 
+                // can be configured as a hidden or non-hidden field
+                if (ContactConstants.A_member.equals(name) && 
+                        maxMembers != GetContacts.NO_LIMIT_MAX_MEMBERS) {
+                    // there is a limit on the max number of members to return
+                    ContactDLMembers dlMembers = new ContactDLMembers(contact);
+                    if (dlMembers.getTotal() > maxMembers) {
+                        elem.addAttribute(MailConstants.A_TOO_MANY_MEMBERS, true);
+                        continue;
+                    }
+                }
+                
                 if (name != null && !name.trim().equals("") && value != null && !value.equals("")) {
                     encodeContactAttr(elem, name, value);
                 }

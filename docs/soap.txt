@@ -2391,7 +2391,8 @@ NOTE: should we return modified attrs in response?
 
 ----------
 
-<GetContactsRequest [sortBy="nameAsc|nameDesc"] [sync="1"] [l="{folder-id}"] [returnHiddenAttrs="1"]>
+<GetContactsRequest [sortBy="nameAsc|nameDesc"] [sync="1"] [l="{folder-id}"] 
+                    [returnHiddenAttrs="1"] [maxMembers="{max-members}"]>
   <a n="..."/>*
   <cn id="{contact-id}[,{contact-id}...]"/>*
 </GetContactsRequest>
@@ -2402,11 +2403,15 @@ NOTE: should we return modified attrs in response?
   if <cn id="..."/> present, only get the specified contact(s).
 
 
-  {returnHiddenAttrs} : whether to return contact hidden attrs defined in zimbraContactHiddenAttributes.
-                        ignored if <a> is present.
+  returnHiddenAttrs : whether to return contact hidden attrs defined in zimbraContactHiddenAttributes.
+                      ignored if <a> is present.
+  {max-members} : numebr of max GAL group members to return.
+                  If number of members on a GAL group is greater than the specified max, 
+                  do not return any members under <cn> for the entry.  
+                  Instead, return a "tooManyMembers="1" on the <cn>.                    
 
 <GetContactsResponse>
-  <cn [md="{metadata-change-date}"]>...</cn>*
+  <cn [md="{metadata-change-date}"] [tooManyMembers="1"]>...</cn>*
 </GetContactsResponse>
 
 ----------
