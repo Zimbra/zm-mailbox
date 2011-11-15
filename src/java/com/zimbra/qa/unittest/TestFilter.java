@@ -17,6 +17,7 @@ package com.zimbra.qa.unittest;
 import com.google.common.base.Strings;
 
 import com.zimbra.common.filter.Sieve;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.MimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapFaultException;
@@ -716,12 +717,17 @@ public final class TestFilter extends TestCase {
         // check msg got filed into user1's mailbox
         TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
         // check auto reply from user1 in user2's mailbox
-        ZMessage zMessage =
-                TestUtil.waitForMessage(TestUtil.getZMailbox(REMOTE_USER_NAME),
-                                        "in:inbox subject:\"Re: " + subject + "\"");
-        String content = zMessage.getMimeStructure().getContent();
-        assertTrue("template vars should be replaced", !content.contains("${FROM}") && !content.contains("${BODY}"));
-        assertTrue(content.contains(TestUtil.getAddress(REMOTE_USER_NAME)) && content.contains(body));
+        ZMessage zMessage = TestUtil.waitForMessage(
+                TestUtil.getZMailbox(REMOTE_USER_NAME), "in:inbox subject:\"Re: " + subject + "\"");
+        ZMessage.ZMimePart mimeStructure = zMessage.getMimeStructure();
+        String bodyContent = mimeStructure.getContent();
+        assertTrue("template vars should be replaced",
+                !bodyContent.contains("${FROM}") && !bodyContent.contains("${BODY}"));
+        assertTrue(bodyContent.contains(TestUtil.getAddress(REMOTE_USER_NAME)) && bodyContent.contains(body));
+
+        // bug 65369
+        assertTrue(!mimeStructure.getContentType().contains("charset") ||
+                mimeStructure.getContentType().contains(MimeConstants.P_CHARSET_ASCII));
     }
 
     public void testNotifyAction()
@@ -744,12 +750,17 @@ public final class TestFilter extends TestCase {
         // check msg got filed into user1's mailbox
         TestUtil.getMessage(mMbox, "in:inbox subject:\"" + subject + "\"");
         // check notification msg from user1 in user2's mailbox, it should have the same subject
-        ZMessage zMessage =
-                TestUtil.waitForMessage(TestUtil.getZMailbox(REMOTE_USER_NAME),
-                                        "in:inbox subject:\"" + subject + "\"");
-        String content = zMessage.getMimeStructure().getContent();
-        assertTrue("template vars should be replaced", !content.contains("${FROM}") && !content.contains("${BODY}"));
-        assertTrue(content.contains(TestUtil.getAddress(REMOTE_USER_NAME)) && content.contains(body));
+        ZMessage zMessage = TestUtil.waitForMessage(
+                TestUtil.getZMailbox(REMOTE_USER_NAME), "in:inbox subject:\"" + subject + "\"");
+        ZMessage.ZMimePart mimeStructure = zMessage.getMimeStructure();
+        String bodyContent = mimeStructure.getContent();
+        assertTrue("template vars should be replaced",
+                !bodyContent.contains("${FROM}") && !bodyContent.contains("${BODY}"));
+        assertTrue(bodyContent.contains(TestUtil.getAddress(REMOTE_USER_NAME)) && bodyContent.contains(body));
+
+        // bug 65369
+        assertTrue(!mimeStructure.getContentType().contains("charset") ||
+                mimeStructure.getContentType().contains(MimeConstants.P_CHARSET_ASCII));
     }
 
     public void testNotifyActionUseOrigHeaders()

@@ -32,6 +32,8 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
 import com.google.common.collect.Sets;
+import com.zimbra.common.util.CharsetUtil;
+import com.zimbra.common.util.L10nUtil;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
@@ -327,7 +329,8 @@ public final class FilterUtil {
         }
 
         MimeMessage replyMsg = new Mime.FixedMimeMessage(JMSession.getSession());
-        replyMsg.setHeader(HEADER_FORWARDED, mailbox.getAccount().getName());
+        Account account = mailbox.getAccount();
+        replyMsg.setHeader(HEADER_FORWARDED, account.getName());
 
         String to = mimeMessage.getHeader("Reply-To", null);
         if (StringUtil.isNullOrEmpty(to))
@@ -337,12 +340,18 @@ public final class FilterUtil {
         replyMsg.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(to));
 
         String subject = mimeMessage.getSubject();
-        if (!subject.toLowerCase().startsWith("re:"))
-            subject = "Re: " + subject;
-        replyMsg.setSubject(subject);
+        if (subject == null) {
+            subject = "";
+        }
+        String replySubjectPrefix = L10nUtil.getMessage(L10nUtil.MsgKey.replySubjectPrefix, account.getLocale());
+        if (!subject.toLowerCase().startsWith(replySubjectPrefix.toLowerCase())) {
+            subject = replySubjectPrefix + " " + subject;
+        }
+        replyMsg.setSubject(subject, getCharset(account, subject));
 
         Map<String, String> vars = getVarsMap(mailbox, parsedMessage, mimeMessage);
-        replyMsg.setText(StringUtil.fillTemplate(bodyTemplate, vars));
+        String body = StringUtil.fillTemplate(bodyTemplate, vars);
+        replyMsg.setText(body, getCharset(account, body));
 
         String origMsgId = mimeMessage.getMessageID();
         if (!StringUtil.isNullOrEmpty(origMsgId))
@@ -365,7 +374,8 @@ public final class FilterUtil {
         }
 
         MimeMessage notification = new Mime.FixedMimeMessage(JMSession.getSession());
-        notification.setHeader(HEADER_FORWARDED, mailbox.getAccount().getName());
+        Account account = mailbox.getAccount();
+        notification.setHeader(HEADER_FORWARDED, account.getName());
         MailSender mailSender = mailbox.getMailSender().setSaveToSent(false);
 
         Map<String, String> vars = getVarsMap(mailbox, parsedMessage, mimeMessage);
@@ -374,7 +384,8 @@ public final class FilterUtil {
             notification.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(emailAddr));
             notification.setSentDate(new Date());
             if (!StringUtil.isNullOrEmpty(subjectTemplate)) {
-                notification.setSubject(StringUtil.fillTemplate(subjectTemplate, vars));
+                String subject = StringUtil.fillTemplate(subjectTemplate, vars);
+                notification.setSubject(subject, getCharset(account, subject));
             }
         } else {
             if (origHeaders.size() == 1 && "*".equals(origHeaders.get(0))) {
@@ -401,7 +412,8 @@ public final class FilterUtil {
                     }
                 }
                 if (!copySubject && !StringUtil.isNullOrEmpty(subjectTemplate)) {
-                    notification.setSubject(StringUtil.fillTemplate(subjectTemplate, vars));
+                    String subject = StringUtil.fillTemplate(subjectTemplate, vars);
+                    notification.setSubject(subject, getCharset(account, subject));
                 }
             }
             mailSender.setRedirectMode(true);
@@ -410,15 +422,34 @@ public final class FilterUtil {
 
         String body = StringUtil.fillTemplate(bodyTemplate, vars);
         body = truncateBodyIfRequired(body, maxBodyBytes);
-        notification.setText(body);
+        notification.setText(body, getCharset(account, body));
         notification.saveChanges();
 
         if (isDeliveryStatusNotification(mimeMessage)) {
             mailSender.setEnvelopeFrom("<>");
         } else {
-            mailSender.setEnvelopeFrom(mailbox.getAccount().getName());
+            mailSender.setEnvelopeFrom(account.getName());
         }
         mailSender.sendMimeMessage(octxt, mailbox, notification);
+    }
+
+    /**
+     * Gets appropriate charset for the given data. The charset preference order is:
+     *                `
+     * 1. "us-ascii"
+     * 2. Account's zimbraPrefMailDefaultCharset attr
+     * 3. "utf-8"
+     *
+     * @param account
+     * @param data
+     * @return
+     */
+    private static String getCharset(Account account, String data) {
+        if (MimeConstants.P_CHARSET_ASCII.equals(CharsetUtil.checkCharset(data, MimeConstants.P_CHARSET_ASCII))) {
+            return MimeConstants.P_CHARSET_ASCII;
+        } else {
+            return CharsetUtil.checkCharset(data, account.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8));
+        }
     }
 
     static String truncateBodyIfRequired(String body, int maxBodyBytes) {
