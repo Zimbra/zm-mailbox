@@ -755,7 +755,7 @@ public class SoapProvisioning extends Provisioning {
         return result;        
     }
     
-    public List<AccountLogger> addAccountLogger(Account account, String category, String level, String server)
+    public List<AccountLogger> addAccountLogger(Account account, String category, String level, String serverName)
     throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.ADD_ACCOUNT_LOGGER_REQUEST);
         
@@ -767,10 +767,12 @@ public class SoapProvisioning extends Provisioning {
         eLogger.addAttribute(AdminConstants.A_CATEGORY, category);
         eLogger.addAttribute(AdminConstants.A_LEVEL, level);
         
-        if (server == null) {
-            server = getServer(account).getName();
+        if (serverName == null) {
+            serverName = account.getServerName();
         }
-        return accountLoggersFromElement(invoke(req, server), account.getName());
+        
+        Element resp = serverName == null ? invoke(req) : invoke(req, serverName);
+        return accountLoggersFromElement(resp, account.getName());
     }
     
     private List<AccountLogger> accountLoggersFromElement(Element parent, String accountName)
@@ -784,15 +786,16 @@ public class SoapProvisioning extends Provisioning {
         return loggers;
     }
     
-    public List<AccountLogger> getAccountLoggers(Account account, String server) throws ServiceException {
+    public List<AccountLogger> getAccountLoggers(Account account, String serverName) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_ACCOUNT_LOGGERS_REQUEST);
         Element eAccount = req.addElement(AdminConstants.E_ACCOUNT);
         eAccount.addAttribute(AdminConstants.A_BY, AdminConstants.BY_ID);
         eAccount.setText(account.getId());
-        if (server == null) {
-            server = getServer(account).getName();
+        if (serverName == null) {
+            serverName = account.getServerName();
         }
-        return accountLoggersFromElement(invoke(req, server), account.getName());
+        Element resp = serverName == null ? invoke(req) : invoke(req, serverName);
+        return accountLoggersFromElement(resp, account.getName());
     }
     
     /**
@@ -822,9 +825,9 @@ public class SoapProvisioning extends Provisioning {
      * Removes one or more account loggers.
      * @param account the account, or {@code null} for all accounts on the given server
      * @param category the log category, or {@code null} for all log categories
-     * @param server the server name, or {@code null} for the local server
+     * @param serverName the server name, or {@code null} for the local server
      */
-    public void removeAccountLoggers(Account account, String category, String server) throws ServiceException {
+    public void removeAccountLoggers(Account account, String category, String serverName) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.REMOVE_ACCOUNT_LOGGER_REQUEST);
         
         if (account != null) {
@@ -837,14 +840,15 @@ public class SoapProvisioning extends Provisioning {
             eLogger.addAttribute(AdminConstants.A_CATEGORY, category);
         }
 
-        if (server == null) {
+        if (serverName == null) {
             if (account == null) {
-                server = getLocalServer().getName();
+                serverName = getLocalServer().getName();
             } else {
-                server = getServer(account).getName();
+                serverName = account.getServerName();
             }
         }
-        invoke(req, server);
+        
+        Element resp = serverName == null ? invoke(req) : invoke(req, serverName);
     }
 
     public static class MailboxInfo {
