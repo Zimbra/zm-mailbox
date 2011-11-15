@@ -39,6 +39,7 @@ import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Mailbox.MailboxData;
 import com.zimbra.cs.redolog.op.CreateMailbox;
 import com.zimbra.cs.stats.ZimbraPerf;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
@@ -483,8 +484,11 @@ public class MailboxManager {
                         DbPool.quietClose(conn);
                 }
             }
-
+            
             mbox = instantiateMailbox(data);
+            Account account = mbox.getAccount();
+            boolean isGalSyncAccount = AccountUtil.isGalSyncAccount(account);
+            mbox.setGalSyncMailbox(isGalSyncAccount);
 
             if (!skipMailHostCheck) {
                 // The host check here makes sure that sessions that were
@@ -493,7 +497,6 @@ public class MailboxManager {
                 // essentially a soft-deleted copy.  The WRONG_HOST
                 // exception forces the clients to reconnect to the new
                 // server.
-                Account account = mbox.getAccount();
                 if (!Provisioning.onLocalServer(account))
                     throw ServiceException.WRONG_HOST(account.getMailHost(), null);
             }
@@ -801,7 +804,8 @@ public class MailboxManager {
         do {
             if (mailboxKey != null)
                 return getMailboxById(mailboxKey);
-
+            
+            boolean isGalSyncAccount = AccountUtil.isGalSyncAccount(account);
             synchronized (this) {
                 // check to make sure the mailbox doesn't already exist
                 mailboxKey = mMailboxIds.get(account.getId().toLowerCase());
@@ -809,7 +813,7 @@ public class MailboxManager {
                     continue;
 
                 // didn't have the mailbox in the database; need to create one now
-                mbox = createMailboxInternal(octxt, account);
+                mbox = createMailboxInternal(octxt, account, isGalSyncAccount);
             }
         } while (mbox == null);
 
@@ -821,7 +825,7 @@ public class MailboxManager {
         return mbox;
     }
 
-    private synchronized Mailbox createMailboxInternal(OperationContext octxt, Account account) throws ServiceException {
+    private synchronized Mailbox createMailboxInternal(OperationContext octxt, Account account, boolean isGalSyncAccount) throws ServiceException {
         CreateMailbox redoRecorder = new CreateMailbox(account.getId());
 
         Mailbox mbox = null;
@@ -839,7 +843,7 @@ public class MailboxManager {
             ZimbraLog.mailbox.info("Creating mailbox with id %d and group id %d for %s.", data.id, data.schemaGroupId, account.getName());
 
             mbox = instantiateMailbox(data);
-
+            mbox.setGalSyncMailbox(isGalSyncAccount);
             synchronized (mbox) { // this is here only so that the assert(Thread.holdsLock(this)) doesn't trip in Mailbox.beginTransaction
                 // the existing Connection is used for the rest of this transaction...
                 mbox.beginTransaction("createMailbox", octxt, redoRecorder, conn);
