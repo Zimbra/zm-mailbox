@@ -231,6 +231,17 @@ public class Account extends ZAttrAccount implements GroupedEntry {
         String serverId = getAttr(Provisioning.A_zimbraMailHost);
         return (serverId == null ? null : getProvisioning().get(ServerBy.name, serverId));
     }
+    
+    public String getServerName() throws ServiceException {
+        Server server = getServer();
+        // all accounts don't necessarily have a server.
+        // accounts under the config tree don't have a home server nor an email address
+        if (server != null) {
+            return server.getName();
+        } else {
+            return null;
+        }
+    }
 
     
     public String getAccountStatus(Provisioning prov) {
