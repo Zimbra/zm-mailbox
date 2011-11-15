@@ -4101,8 +4101,11 @@ public class ZMailbox implements ToZJSONObject {
             //3. Parse the response and add valid folderIds to sbResult.
             for (Element e : resp.listElements()) {
                 if (e.getName().equals(MailConstants.GET_FOLDER_RESPONSE.getName())) {
-                    String id = e.getElement(MailConstants.E_MOUNT).getAttribute(MailConstants.A_ID);
-                    validIds.add(id);
+                    boolean isBrokenMountpoint = e.getElement(MailConstants.E_MOUNT).getAttributeBool(MailConstants.A_BROKEN, false);
+                    if (!isBrokenMountpoint) {
+                        String id = e.getElement(MailConstants.E_MOUNT).getAttribute(MailConstants.A_ID);
+                        validIds.add(id);
+                    }
                 }
             }
 
