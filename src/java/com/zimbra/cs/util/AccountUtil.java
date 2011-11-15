@@ -443,10 +443,12 @@ public class AccountUtil {
         boolean isGalSync = false;    	
         try {
             Domain domain = Provisioning.getInstance().getDomain(account);
-            for (String galAcctId : domain.getGalAccountId()) {
-                if (galAcctId.equals(account.getId())) {
-                    isGalSync = true;
-                    break;
+            if (domain != null) {
+                for (String galAcctId : domain.getGalAccountId()) {
+                    if (galAcctId.equals(account.getId())) {
+                        isGalSync = true;
+                        break;
+                    }
                 }
             }
         } catch (ServiceException e) {
