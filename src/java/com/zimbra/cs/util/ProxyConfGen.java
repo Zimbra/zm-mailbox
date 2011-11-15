@@ -742,7 +742,7 @@ class TimeInSecVarWrapper extends ProxyConfVar {
     }
     
     @Override
-    public void update() throws ServiceException, ProxyConfException {
+    public void update() throws ServiceException {
         mVar.update();
         mVar.mValue = ((Long)mVar.mValue).longValue() / 1000;
     }
