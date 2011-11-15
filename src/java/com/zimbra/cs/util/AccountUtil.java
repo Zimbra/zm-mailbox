@@ -432,6 +432,28 @@ public class AccountUtil {
             ZimbraLog.addToContext(nameKey, acct.getName());
         }
     }
+    
+    /**
+     * Check if given account is a galsync account
+     * @param account to lookup
+     * @return true if account is galsync account, false otherwise.
+     */
+    
+    public static boolean isGalSyncAccount(Account account) {
+        boolean isGalSync = false;    	
+        try {
+            Domain domain = Provisioning.getInstance().getDomain(account);
+            for (String galAcctId : domain.getGalAccountId()) {
+                if (galAcctId.equals(account.getId())) {
+                    isGalSync = true;
+                    break;
+                }
+            }
+        } catch (ServiceException e) {
+            ZimbraLog.misc.warn("unable to lookup domain for account, id: " + account.getId());
+        }
+        return isGalSync;
+    }
 
     /**
      * True if accountId is the "local@host.local" special account of ZDesktop.

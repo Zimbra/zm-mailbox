@@ -391,6 +391,7 @@ public class Mailbox {
     // TODO: figure out correct caching strategy
     private static final int MAX_ITEM_CACHE_WITH_LISTENERS    = LC.zimbra_mailbox_active_cache.intValue();
     private static final int MAX_ITEM_CACHE_WITHOUT_LISTENERS = LC.zimbra_mailbox_inactive_cache.intValue();
+    private static final int MAX_ITEM_CACHE_FOR_GALSYNC_MAILBOX = LC.zimbra_mailbox_galsync_cache.intValue();
     private static final int MAX_MSGID_CACHE = 10;
 
     private int           mId;
@@ -407,6 +408,7 @@ public class Mailbox {
     private MailboxMaintenance maintenance;
     private IMPersona persona;
     private volatile boolean open = false;
+    private boolean isGalSyncMailbox = false;
 
     protected Mailbox(MailboxData data) {
         mId = data.id;
@@ -415,6 +417,10 @@ public class Mailbox {
         index = new MailboxIndex(this);
         // version init done in finishInitialization()
         // index init done in finishInitialization()
+    }
+    
+    public void setGalSyncMailbox(boolean isGalSync) {
+    	isGalSyncMailbox = isGalSync;
     }
 
     boolean isOpen() {
@@ -8252,6 +8258,8 @@ public class Mailbox {
     private void trimItemCache() {
         try {
             int sizeTarget = mListeners.isEmpty() ? MAX_ITEM_CACHE_WITHOUT_LISTENERS : MAX_ITEM_CACHE_WITH_LISTENERS;
+            if (isGalSyncMailbox) 
+                sizeTarget = MAX_ITEM_CACHE_FOR_GALSYNC_MAILBOX;
             Map<Integer, MailItem> cache = currentChange.itemCache;
             if (cache == null) {
                 return;
