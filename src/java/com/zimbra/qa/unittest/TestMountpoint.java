@@ -50,8 +50,8 @@ extends TestCase {
     /**
      * Tests {@link ZMailbox#getValidFolderIds(String)}.
      */
-    // TODO: Reenable after bug 66465 is fixed.
-    public void disabledTestInvalidMountpoint()
+
+    public void testInvalidMountpoint()
     throws Exception {
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         ZMailbox remoteMbox = TestUtil.getZMailbox(REMOTE_USER_NAME);
