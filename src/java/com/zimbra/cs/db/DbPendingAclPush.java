@@ -45,8 +45,9 @@ public class DbPendingAclPush {
         ZimbraLog.mailbox.debug("Queuing for ACL push - mailbox %s item %s", mbox.getId(), itemId);
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
+        boolean supportsReplace = Db.supports(Db.Capability.REPLACE_INTO);
         try {
-            String command = Db.supports(Db.Capability.REPLACE_INTO) ? "REPLACE" : "INSERT";
+            String command = supportsReplace ? "REPLACE" : "INSERT";
             stmt = conn.prepareStatement(
                     command + " INTO " + TABLE_PENDING_ACL_PUSH + " (mailbox_id, item_id, date) VALUES (?, ?, ?)");
             stmt.setInt(1, mbox.getId());
@@ -64,9 +65,11 @@ public class DbPendingAclPush {
         // because hsqldb does not support REPLACE command and if this method is called twice in
         // the same millisecond with the same (mailbox_id, item_id). Sleeping for 2ms would
         // take care of this.
-        try {
-            Thread.sleep(2);
-        } catch (InterruptedException ignored) {
+        if (!supportsReplace) {
+            try {
+                Thread.sleep(2);
+            } catch (InterruptedException ignored) {
+            }
         }
     }
 
