@@ -46,8 +46,9 @@ public class DbPendingAclPush {
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
+            String command = Db.supports(Db.Capability.REPLACE_INTO) ? "REPLACE" : "INSERT";
             stmt = conn.prepareStatement(
-                    "INSERT INTO " + TABLE_PENDING_ACL_PUSH + " (mailbox_id, item_id, date) VALUES (?, ?, ?)");
+                    command + " INTO " + TABLE_PENDING_ACL_PUSH + " (mailbox_id, item_id, date) VALUES (?, ?, ?)");
             stmt.setInt(1, mbox.getId());
             stmt.setInt(2, itemId);
             stmt.setLong(3, System.currentTimeMillis());
@@ -57,6 +58,15 @@ public class DbPendingAclPush {
                     "Unable to queue for ACL push - mailbox " + mbox.getId() + " item " + itemId, e);
         } finally {
             conn.closeQuietly(stmt);
+        }
+
+        // unit tests using hsqldb could potentially cause integrity constraint violation
+        // because hsqldb does not support REPLACE command and if this method is called twice in
+        // the same millisecond with the same (mailbox_id, item_id). Sleeping for 2ms would
+        // take care of this.
+        try {
+            Thread.sleep(2);
+        } catch (InterruptedException ignored) {
         }
     }
 
