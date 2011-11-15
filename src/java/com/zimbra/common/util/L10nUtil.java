@@ -44,6 +44,8 @@ public class L10nUtil {
      */
     public static enum MsgKey {
 
+        replySubjectPrefix,
+
         // calendar messages
         calendarSubjectCancelled,
         calendarSubjectWithheld,
