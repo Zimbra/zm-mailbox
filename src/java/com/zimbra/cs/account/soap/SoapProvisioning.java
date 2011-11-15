@@ -832,25 +832,16 @@ public class SoapProvisioning extends Provisioning {
             String category, String level, String serverName)
     throws ServiceException {
         if (serverName == null) {
-            Server server = getServer(account);
-            
-            // all accounts don't necessarily have a server.
-            // accounts under the config tree don't have a home server nor an email address
-            if (server != null) {
-                serverName = server.getName();
-            }
+            serverName = account.getServerName();
         }
         LoggerInfo logger = LoggerInfo.createForCategoryAndLevel(category, level);
         AddAccountLoggerRequest req = AddAccountLoggerRequest.createForAccountAndLogger(
                         getSelector(account), logger);
         
-        AddAccountLoggerResponse resp;
-        if (serverName == null) {
-            // goto the default server in the zimbra_zmprov_default_soap_server
-            resp = invokeJaxb(req);
-        } else {
-            resp = invokeJaxb(req, serverName);
-        }
+        AddAccountLoggerResponse resp = serverName == null ?
+                (AddAccountLoggerResponse) invokeJaxb(req) :
+                (AddAccountLoggerResponse) invokeJaxb(req, serverName);    
+
         return accountLoggersFromLoggerInfos(resp.getLoggers(),
                 account.getName());
     }
@@ -870,14 +861,17 @@ public class SoapProvisioning extends Provisioning {
         return loggers;
     }
 
-    public List<AccountLogger> getAccountLoggers(Account account, String server)
+    public List<AccountLogger> getAccountLoggers(Account account, String serverName)
     throws ServiceException {
-        if (server == null) {
-            server = getServer(account).getName();
+        if (serverName == null) {
+            serverName = account.getServerName();
         }
-        GetAccountLoggersResponse resp =
-                invokeJaxb(new GetAccountLoggersRequest(
-                        getSelector(account)), server);
+        
+        GetAccountLoggersRequest req = new GetAccountLoggersRequest(getSelector(account));
+        
+        GetAccountLoggersResponse resp = serverName == null ?
+                (GetAccountLoggersResponse) invokeJaxb(req) :
+                (GetAccountLoggersResponse) invokeJaxb(req, serverName);
         return accountLoggersFromLoggerInfos(resp.getLoggers(),
                 account.getName());
     }
@@ -910,23 +904,29 @@ public class SoapProvisioning extends Provisioning {
      * Removes one or more account loggers.
      * @param account the account, or {@code null} for all accounts on the given server
      * @param category the log category, or {@code null} for all log categories
-     * @param server the server name, or {@code null} for the local server
+     * @param serverName the server name, or {@code null} for the local server
      */
     public void removeAccountLoggers(Account account, String category,
-            String server)
+            String serverName)
     throws ServiceException {
-        if (server == null) {
+        if (serverName == null) {
             if (account == null) {
-                server = getLocalServer().getName();
+                serverName = getLocalServer().getName();
             } else {
-                server = getServer(account).getName();
+                serverName = account.getServerName();
             }
         }
         LoggerInfo logger = null;
-        if (category != null)
+        if (category != null) {
             logger = LoggerInfo.createForCategoryAndLevel(category, null);
-        invokeJaxb(new RemoveAccountLoggerRequest(
-                getSelector(account), logger), server);
+        }
+        
+        RemoveAccountLoggerRequest req = new RemoveAccountLoggerRequest(
+                getSelector(account), logger);
+        
+        RemoveAccountLoggerResponse resp = serverName == null ? 
+                (RemoveAccountLoggerResponse) invokeJaxb(req) : 
+                (RemoveAccountLoggerResponse) invokeJaxb(req, serverName);
     }
 
     public void resetAllLoggers(String server) throws ServiceException {
