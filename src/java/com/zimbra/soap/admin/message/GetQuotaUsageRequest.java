@@ -37,19 +37,22 @@ public class GetQuotaUsageRequest {
     private String sortBy;
     @XmlAttribute(name=AdminConstants.A_SORT_ASCENDING, required=false)
     private ZmBoolean sortAscending;
-
+    @XmlAttribute(name=AdminConstants.A_REFRESH, required=false)
+    private ZmBoolean refresh;
+    
     public GetQuotaUsageRequest() {
         this((String) null, (Integer) null, (Integer) null,
-                (String) null, (Boolean) null);
+                (String) null, (Boolean) null, (Boolean) null);
     }
 
     public GetQuotaUsageRequest(String domain, Integer limit, Integer offset,
-            String sortBy, Boolean sortAscending) {
+            String sortBy, Boolean sortAscending, Boolean refresh) {
         this.domain = domain;
         this.limit = limit;
         this.offset = offset;
         this.sortBy = sortBy;
         this.sortAscending = ZmBoolean.fromBool(sortAscending);
+        this.refresh = ZmBoolean.fromBool(refresh);
     }
 
     public String getDomain() { return domain; }
@@ -57,4 +60,5 @@ public class GetQuotaUsageRequest {
     public Integer getOffset() { return offset; }
     public String getSortBy() { return sortBy; }
     public Boolean isSortAscending() { return ZmBoolean.toBool(sortAscending); }
+    public Boolean isRefresh() { return ZmBoolean.toBool(refresh); }
 }
