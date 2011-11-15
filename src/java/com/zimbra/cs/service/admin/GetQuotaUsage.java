@@ -64,6 +64,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
         String domain = request.getAttribute(AdminConstants.A_DOMAIN, null);
         String sortBy = request.getAttribute(AdminConstants.A_SORT_BY, SORT_TOTAL_USED);
         final boolean sortAscending = request.getAttributeBool(AdminConstants.A_SORT_ASCENDING, false);
+        final boolean refresh = request.getAttributeBool(AdminConstants.A_REFRESH, false);
 
         if (!(sortBy.equals(SORT_TOTAL_USED) || sortBy.equals(SORT_PERCENT_USED) || sortBy.equals(SORT_QUOTA_LIMIT) || sortBy.equals(SORT_ACCOUNT)))
             throw ServiceException.INVALID_REQUEST("sortBy must be percentUsed or totalUsed", null);
@@ -103,7 +104,7 @@ public class GetQuotaUsage extends AdminDocumentHandler {
         AdminSession session = (AdminSession) getSession(zsc, Session.Type.ADMIN);
         if (session != null) {
             QuotaUsageParams cachedParams = getCachedQuotaUsage(session);
-            if (cachedParams == null || !cachedParams.equals(params)) {
+            if (cachedParams == null || !cachedParams.equals(params) || refresh) {
                 quotas = params.doSearch();
                 setCachedQuotaUsage(session, params);
             } else {

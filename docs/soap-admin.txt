@@ -423,7 +423,7 @@ Access: domain admin sufficient (though a domain admin can't specify "domains" a
 -----------------------------
 
 <GetQuotaUsageRequest [limit="..."] [offset="..."] [domain="{limit-to-domain}"]
-         [sortBy="{sort-by}"] [sortAscending="{sort-ascending}"]]>
+         [sortBy="{sort-by}"] [sortAscending="{sort-ascending}"] [refresh="1"]>
 </GetQuotaUsageRequest>
 
 <GetQuotaUsageResponse more="{more-flag}" [searchTotal="{search-total}"]>
@@ -437,6 +437,7 @@ GetQuotaUsageRequest
   domain - the domain name to limit the search to
   sortBy - valid values: "percentUsed", "totalUsed", "quotaLimit"
   sortAscending - whether to sort in ascending order (0/1), 0 is default, so highest quotas are returned first
+  refresh - whether to always recalculate the data even when cached values are available.  0 is default.
   more-flag = true if more accounts left to return
   search-total = total number of accounts that matched search (not affected by limit/offset)
   used = used quota in bytes, or 0 if no quota used
