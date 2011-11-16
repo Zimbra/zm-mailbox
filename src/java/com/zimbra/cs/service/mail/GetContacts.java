@@ -42,8 +42,8 @@ public final class GetContacts extends MailDocumentHandler  {
     
     // bug 65324
     // default max number of members to return in the response for a gal group
-    private static final long DEFAULT_MAX_MEMBERS = 100; 
     static final long NO_LIMIT_MAX_MEMBERS = 0;
+    private static final long DEFAULT_MAX_MEMBERS = NO_LIMIT_MAX_MEMBERS; 
 
     protected static final String[] TARGET_FOLDER_PATH = new String[] { MailConstants.A_FOLDER };
 
