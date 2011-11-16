@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
- *
+ * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- *
+ * 
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -98,8 +98,9 @@ public class SoapProvisioning extends Provisioning {
         private String mUri;
         private int mTimeout = -1;
         private int mRetryCount = -1;
-        private SoapTransport.DebugListener mDebugListener;
+        private SoapTransport.DebugListener mDebugListener;  
         private boolean mLocalConfigAuth;
+        private boolean mNeedSession;
 
         public Options() {
         }
@@ -151,6 +152,9 @@ public class SoapProvisioning extends Provisioning {
 
         public boolean getLocalConfigAuth() { return mLocalConfigAuth; }
         public void setLocalConfigAuth(boolean auth) { mLocalConfigAuth = auth; }
+        
+        public boolean getNeedSession() { return mNeedSession; }
+        public void setNeedSession(boolean needSession) { mNeedSession = needSession; }
     }
 
 
@@ -162,9 +166,14 @@ public class SoapProvisioning extends Provisioning {
     private long mAuthTokenExpiration;
     private DebugListener mDebugListener;
     private HttpDebugListener mHttpDebugListener;
+    private final boolean mNeedSession;
 
     public SoapProvisioning() {
+        mNeedSession = false;
+    }
 
+    public SoapProvisioning(boolean needSession) {
+        mNeedSession = needSession;
     }
 
     public SoapProvisioning(Options options) throws ServiceException {
@@ -172,6 +181,7 @@ public class SoapProvisioning extends Provisioning {
         mRetryCount = options.getRetryCount();
         mDebugListener = options.getDebugListener();
         mAuthToken = options.getAuthToken();
+        mNeedSession = options.getNeedSession();
         if (options.getUri() == null) options.setUri(getLocalConfigURI());
         soapSetURI(options.getUri());
 
@@ -213,7 +223,8 @@ public class SoapProvisioning extends Provisioning {
         // if never authed, mAuthTokenExpiration would be 0, isExpired will return true 
         return (mAuthTokenExpiration <= System.currentTimeMillis());
     }
-
+    
+    
     /**
      * @param uri URI of server we want to talk to
      */
@@ -245,8 +256,14 @@ public class SoapProvisioning extends Provisioning {
      * @throws ServiceException
      */
     public static SoapProvisioning getAdminInstance() throws ServiceException {
+        return getAdminInstance(false);
+    }
+    
+    public static SoapProvisioning getAdminInstance(boolean needSession) 
+    throws ServiceException {
         Options opts = new Options();
         opts.setLocalConfigAuth(true);
+        opts.setNeedSession(needSession);
         return new SoapProvisioning(opts);
     }
 
@@ -271,7 +288,7 @@ public class SoapProvisioning extends Provisioning {
         if (mTransport != null)
             mTransport.setDebugListener(mDebugListener);
     }
-
+    
     public DebugListener soapGetTransportDebugListener() {
         return mDebugListener;
     }
@@ -281,11 +298,11 @@ public class SoapProvisioning extends Provisioning {
         if (mTransport != null)
             mTransport.setHttpDebugListener(listener);
     }
-
+    
     public HttpDebugListener soapGetHttpTransportDebugListener() {
         return mHttpDebugListener;
     }
-
+    
     public ZAuthToken getAuthToken() {
         return mAuthToken;
     }
@@ -360,11 +377,19 @@ public class SoapProvisioning extends Provisioning {
             throw ServiceException.FAILURE("transport has not been initialized", null);
     }
 
+    private Element invokeRequest(Element request) throws ServiceException, IOException {
+        if (mNeedSession) {
+            return mTransport.invoke(request);
+        } else {
+            return mTransport.invokeWithoutSession(request);
+        }
+    }
+
     public synchronized Element invoke(Element request) throws ServiceException {
         checkTransport();
 
         try {
-            return mTransport.invoke(request);
+            return invokeRequest(request);
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
         } catch (IOException e) {
@@ -378,7 +403,7 @@ public class SoapProvisioning extends Provisioning {
         String oldTarget = mTransport.getTargetAcctId();
         try {
             mTransport.setTargetAcctId(targetId);
-            return mTransport.invoke(request);
+            return invokeRequest(request);
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
         } catch (IOException e) {
@@ -393,12 +418,12 @@ public class SoapProvisioning extends Provisioning {
 
         String oldUri = soapGetURI();
         String newUri = URLUtil.getAdminURL(serverName);
-        boolean diff = !oldUri.equals(newUri);
+        boolean diff = !oldUri.equals(newUri);        
         try {
             if (diff) {
                 soapSetURI(newUri);
             }
-            return mTransport.invoke(request);
+            return invokeRequest(request);
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
         } catch (IOException e) {
@@ -416,7 +441,7 @@ public class SoapProvisioning extends Provisioning {
         Element req = JaxbUtil.jaxbToElement(jaxbObject);
         Element res = invoke(req);
         return (T) JaxbUtil.elementToJaxb(res);
-    }
+        }
 
     @SuppressWarnings("unchecked")
     public <T> T invokeJaxbOnTargetAccount(Object jaxbObject, String targetId)
@@ -490,7 +515,7 @@ public class SoapProvisioning extends Provisioning {
         invokeJaxb(new AddDistributionListAliasRequest(dl.getId(), alias));
         reload(dl);
     }
-    
+
     @Override
     public void addGroupAlias(Group group, String alias)
             throws ServiceException {
@@ -512,7 +537,7 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public void authAccount(Account acct, String password, AuthContext.Protocol proto, Map<String, Object> context)
             throws ServiceException {
-    authAccount(acct, password, proto);
+	authAccount(acct, password, proto);
     }
 
 
@@ -533,9 +558,9 @@ public class SoapProvisioning extends Provisioning {
             invokeJaxb(new CreateAccountRequest(emailAddress, password, attrs));
         return new SoapAccount(resp.getAccount(), this);
     }
-
+    
     @Override
-    public Account restoreAccount(String emailAddress, String password, Map<String,
+    public Account restoreAccount(String emailAddress, String password, Map<String, 
             Object> attrs, Map<String, Object> origAttrs) throws ServiceException {
         throw new UnsupportedOperationException();
     }
@@ -711,7 +736,7 @@ public class SoapProvisioning extends Provisioning {
     public Account get(AccountBy keyType, String key) throws ServiceException {
         return get(keyType, key, true);
     }
-
+    
     /**
      * @param key
      * @param applyDefault
@@ -721,7 +746,7 @@ public class SoapProvisioning extends Provisioning {
     // SoapProvisioning only, for zmprov
     public Account getAccount(String key, boolean applyDefault) throws ServiceException {
         Account acct = null;
-
+        
         if (Provisioning.isUUID(key))
             acct = get(AccountBy.id, key, applyDefault);
         else {
@@ -730,10 +755,10 @@ public class SoapProvisioning extends Provisioning {
             if (acct == null)
                 acct = get(AccountBy.id, key, applyDefault);
         }
-
+        
         return acct;
     }
-
+    
     // SoapProvisioning only, for zmprov
     @Override
     public Account get(AccountBy keyType, String key, boolean applyDefault)
@@ -755,7 +780,7 @@ public class SoapProvisioning extends Provisioning {
     public List<Account> getAllAdminAccounts() throws ServiceException {
         return getAllAdminAccounts(true);
     }
-
+    
     // SoapProvisioning only, for zmprov
     public List<Account> getAllAdminAccounts(boolean applyDefault) throws ServiceException {
         ArrayList<Account> result = new ArrayList<Account>();
@@ -774,14 +799,14 @@ public class SoapProvisioning extends Provisioning {
         for (CosInfo cosInfo : resp.getCosList()) {
             result.add(new SoapCos(cosInfo, this));
         }
-        return result;
+        return result;        
     }
 
     @Override
     public List<Domain> getAllDomains() throws ServiceException {
         return getAllDomains(true);
     }
-
+    
     // SoapProvisioning only, for zmprov
     public List<Domain> getAllDomains(boolean applyDefault)
     throws ServiceException {
@@ -791,12 +816,12 @@ public class SoapProvisioning extends Provisioning {
         for (DomainInfo domainInfo : resp.getDomainList()) {
             result.add(new SoapDomain(domainInfo, this));
         }
-        return result;
+        return result;        
     }
 
     @Override
     public List<Server> getAllServers() throws ServiceException {
-        return getAllServers(null, true);
+        return getAllServers(null, true);   
     }
 
     public static class QuotaUsage {
@@ -804,10 +829,10 @@ public class SoapProvisioning extends Provisioning {
         public String mId;
         long mUsed;
         long mLimit;
-
+        
         public String getName() { return mName; }
         public String getId() { return mId; }
-        public long getUsed() { return mUsed; }
+        public long getUsed() { return mUsed; } 
         public long getLimit() { return mLimit; }
 
         QuotaUsage(AccountQuotaInfo quotaInfo) {
@@ -825,9 +850,9 @@ public class SoapProvisioning extends Provisioning {
         for (AccountQuotaInfo quotaInfo : resp.getAccountQuotas()) {
             result.add(new QuotaUsage(quotaInfo));
         }
-        return result;
+        return result;        
     }
-
+    
     public List<AccountLogger> addAccountLogger(Account account,
             String category, String level, String serverName)
     throws ServiceException {
@@ -841,17 +866,17 @@ public class SoapProvisioning extends Provisioning {
         AddAccountLoggerResponse resp = serverName == null ?
                 (AddAccountLoggerResponse) invokeJaxb(req) :
                 (AddAccountLoggerResponse) invokeJaxb(req, serverName);    
-
+        
         return accountLoggersFromLoggerInfos(resp.getLoggers(),
                 account.getName());
-    }
-
+        }
+        
     private AccountLogger accountLoggerFromLoggerInfo(
             LoggerInfo loggerInfo, String accountName) {
         return new AccountLogger(loggerInfo.getCategory(),
                     accountName, Level.valueOf(loggerInfo.getLevel()));
     }
-
+    
     private List<AccountLogger> accountLoggersFromLoggerInfos(
             List <LoggerInfo> loggerInfos, String accountName) {
         List<AccountLogger> loggers = Lists.newArrayList();
@@ -860,7 +885,7 @@ public class SoapProvisioning extends Provisioning {
         }
         return loggers;
     }
-
+    
     public List<AccountLogger> getAccountLoggers(Account account, String serverName)
     throws ServiceException {
         if (serverName == null) {
@@ -875,12 +900,12 @@ public class SoapProvisioning extends Provisioning {
         return accountLoggersFromLoggerInfos(resp.getLoggers(),
                 account.getName());
     }
-
+    
     /**
      * Returns all account loggers for the given server.  The <tt>Map</tt>'s key is
      * the account name, and values are all the <tt>AccountLogger</tt> objects for
      * that account.
-     *
+     * 
      * @server the server name, or <tt>null</tt> for the local server
      */
     public Map<String, List<AccountLogger>> getAllAccountLoggers(String server)
@@ -928,7 +953,7 @@ public class SoapProvisioning extends Provisioning {
                 (RemoveAccountLoggerResponse) invokeJaxb(req) : 
                 (RemoveAccountLoggerResponse) invokeJaxb(req, serverName);
     }
-
+        
     public void resetAllLoggers(String server) throws ServiceException {
         invokeJaxb(new ResetAllLoggersRequest(), server != null ? server : getLocalServer().getName());
     }
@@ -936,10 +961,10 @@ public class SoapProvisioning extends Provisioning {
     public static class MailboxInfo {
         private long mUsed;
         private String mMboxId;
-
+        
         public long getUsed() { return mUsed; }
         public String getMailboxId() { return mMboxId; }
-
+        
         public MailboxInfo(MailboxWithMailboxId jaxbMboxInfo) {
             mMboxId = Integer.toString(jaxbMboxInfo.getMbxid());
             mUsed = jaxbMboxInfo.getSize();
@@ -960,11 +985,11 @@ public class SoapProvisioning extends Provisioning {
         resp.getMbox();
         return new MailboxInfo(resp.getMbox());
     }
-
+    
     public static enum ReIndexBy {
         types, ids;
     }
-
+    
     public static final class ReIndexInfo {
         private String status;
         private Progress progress;
@@ -972,11 +997,11 @@ public class SoapProvisioning extends Provisioning {
         public String getStatus() {
             return status;
         }
-
+        
         public Progress getProgress() {
             return progress;
         }
-
+        
         ReIndexInfo(String status, Progress progress) {
             this.status = status;
             this.progress = progress;
@@ -989,16 +1014,16 @@ public class SoapProvisioning extends Provisioning {
 
             public long getNumSucceeded() {
                 return numSucceeded;
-            }
-
+        }
+        
             public long getNumFailed() {
                 return numFailed;
             }
-
+            
             public long getNumRemaining() {
                 return numRemaining;
             }
-
+            
             Progress() {
             }
 
@@ -1009,7 +1034,7 @@ public class SoapProvisioning extends Provisioning {
             }
         }
     }
-
+    
     public ReIndexInfo reIndex(Account acct, String action, ReIndexBy by,
             String[] values)
     throws ServiceException {
@@ -1044,8 +1069,8 @@ public class SoapProvisioning extends Provisioning {
             this.status = status;
             this.message = message;
         }
-    }
-
+        }
+        
     public VerifyIndexResult verifyIndex(Account account) throws ServiceException {
         VerifyIndexRequest req = new VerifyIndexRequest(
                 new MailboxByAccountIdSelector(account.getId()));
@@ -1063,9 +1088,9 @@ public class SoapProvisioning extends Provisioning {
 
     @Override
     public List<Server> getAllServers(String service) throws ServiceException {
-        return getAllServers(service, true);
+        return getAllServers(service, true);      
     }
-
+    
     // SoapProvisioning only, for zmprov
     public List<Server> getAllServers(String service, boolean applyDefault)
     throws ServiceException {
@@ -1075,7 +1100,7 @@ public class SoapProvisioning extends Provisioning {
         for (ServerInfo serverInfo : resp.getServerList()) {
             result.add(new SoapServer(serverInfo, this));
         }
-        return result;
+        return result;        
     }
 
     @Override
@@ -1100,7 +1125,7 @@ public class SoapProvisioning extends Provisioning {
         GetAllConfigResponse resp = invokeJaxb(new GetAllConfigRequest());
         return new SoapConfig(resp, this);
     }
-
+    
     @Override
     public Config getConfig(String needAttr) throws ServiceException {
         GetConfigRequest req = new GetConfigRequest();
@@ -1110,7 +1135,7 @@ public class SoapProvisioning extends Provisioning {
         GetConfigResponse resp = invokeJaxb(req);
         return new SoapConfig(resp, this);
     }
-
+    
     @Override
     public GlobalGrant getGlobalGrant() throws ServiceException {
         throw ServiceException.FAILURE("not supported", null);
@@ -1179,7 +1204,7 @@ public class SoapProvisioning extends Provisioning {
     public Domain get(DomainBy keyType, String key) throws ServiceException {
         return get(keyType, key, true);
     }
-
+    
     // SoapProvisioning only, for zmprov
     public Domain get(DomainBy keyType, String key, boolean applyDefault)
     throws ServiceException {
@@ -1200,10 +1225,10 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public Server getLocalServer() throws ServiceException {
         String hostname = LC.zimbra_server_hostname.value();
-        if (hostname == null)
+        if (hostname == null) 
             throw ServiceException.FAILURE("zimbra_server_hostname not specified in localconfig.xml", null);
         Server local = get(ServerBy.name, hostname);
-        if (local == null)
+        if (local == null) 
             throw ServiceException.FAILURE("Could not find an LDAP entry for server '" + hostname + "'", null);
         return local;
     }
@@ -1229,7 +1254,7 @@ public class SoapProvisioning extends Provisioning {
     public Server get(ServerBy keyType, String key) throws ServiceException {
         return get(keyType, key, true);
     }
-
+    
     // SoapProvisioning only, for zmprov
     public Server get(ServerBy keyType, String key, boolean applyDefault)
     throws ServiceException {
@@ -1293,9 +1318,9 @@ public class SoapProvisioning extends Provisioning {
         p.setText(preAuth);
         invoke(req);
     }
-
+    
     @Override
-    public void ssoAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt)
+    public void ssoAuthAccount(Account acct, AuthContext.Protocol proto, Map<String, Object> authCtxt) 
     throws ServiceException {
         throw new UnsupportedOperationException();
     }
@@ -1316,7 +1341,7 @@ public class SoapProvisioning extends Provisioning {
         if (dl != null)
             reload(dl);
     }
-    
+
     @Override
     public void removeGroupAlias(Group group, String alias)
             throws ServiceException {
@@ -1349,7 +1374,7 @@ public class SoapProvisioning extends Provisioning {
             throws ServiceException {
         invokeJaxb(new RenameDistributionListRequest(zimbraId, newName));
     }
-    
+
     @Override
     public void renameGroup(String zimbraId, String newName)
             throws ServiceException {
@@ -1373,7 +1398,7 @@ public class SoapProvisioning extends Provisioning {
             result.setMessage(eMsg);
         return result;
     }
-
+    
     @Override
     public void checkPasswordStrength(Account acct, String password) throws ServiceException {
         invokeJaxb(new CheckPasswordStrengthRequest(acct.getId(), password));
@@ -1413,11 +1438,11 @@ public class SoapProvisioning extends Provisioning {
         if (dls != null) {
             return dls;
         }
-
+     
         dls = new HashSet<String>();
-
-        List<DistributionList> lists = getDistributionLists(acct, false, null);
-
+       
+       List<DistributionList> lists = getDistributionLists(acct, false, null);
+        
         for (DistributionList dl : lists) {
             dls.add(dl.getId());
         }
@@ -1425,7 +1450,7 @@ public class SoapProvisioning extends Provisioning {
         acct.setCachedData(DATA_DL_SET, dls);
         return dls;
     }
-    
+
     private static final String DATA_GROUP_SET = "GROUP_SET";
     
     @SuppressWarnings("unchecked")
@@ -1490,7 +1515,7 @@ public class SoapProvisioning extends Provisioning {
     
     @Override
     public boolean inDistributionList(Account acct, String zimbraId) throws ServiceException {
-        return getDistributionLists(acct).contains(zimbraId);
+        return getDistributionLists(acct).contains(zimbraId);  
     }
 
     @Override
@@ -1542,8 +1567,8 @@ public class SoapProvisioning extends Provisioning {
     public void getAllAccounts(Domain d, Visitor visitor)
     throws ServiceException {
         getAllAccounts(d, (Server)null, visitor);
-    }
-
+        }
+    
     @Override
     public void getAllAccounts(Domain d, Server s, Visitor visitor)
     throws ServiceException {
@@ -1551,7 +1576,7 @@ public class SoapProvisioning extends Provisioning {
             visitor.visit(new SoapAccount(acct, this));
         }
     }
-
+        
     private List <CalendarResourceInfo> getAllCalendarResourcesInfo(
             Domain d, Server s)
     throws ServiceException {
@@ -1559,13 +1584,13 @@ public class SoapProvisioning extends Provisioning {
                 invokeJaxb(new GetAllCalendarResourcesRequest(
                         getSelector(s), getSelector(d)));
         return resp.getCalendarResourceList();
-    }
-
+        }
+        
     @Override
     public List <CalendarResource> getAllCalendarResources(Domain d)
     throws ServiceException {
         return getAllCalendarResources(d, (Server)null);
-    }
+        }
 
     public List <CalendarResource> getAllCalendarResources(Domain d, Server s)
     throws ServiceException {
@@ -1581,7 +1606,7 @@ public class SoapProvisioning extends Provisioning {
     throws ServiceException {
         getAllCalendarResources(d, (Server)null, visitor);
     }
-
+            
     @Override
     public void getAllCalendarResources(Domain d, Server s, Visitor visitor)
     throws ServiceException {
@@ -1600,8 +1625,8 @@ public class SoapProvisioning extends Provisioning {
             result.add(new SoapDistributionList(dl, this));
         }
         return result;
-    }
-    
+        }
+
     @Override
     public List<Group> getAllGroups(Domain domain) throws ServiceException {
         ArrayList<Group> result = new ArrayList<Group>();
@@ -1618,7 +1643,7 @@ public class SoapProvisioning extends Provisioning {
             int limit, GalContact.Visitor visitor) 
     throws ServiceException {
         String typeStr = type == null ? GalSearchType.all.name() : type.name();
-
+        
         XMLElement req = new XMLElement(AdminConstants.AUTO_COMPLETE_GAL_REQUEST);
         req.addElement(AdminConstants.E_NAME).setText(query);
         req.addAttribute(AdminConstants.A_DOMAIN, d.getName());
@@ -1639,7 +1664,7 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public List<NamedEntry> searchDirectory(SearchDirectoryOptions options) throws ServiceException {
         List<NamedEntry> result = new ArrayList<NamedEntry>();
-        
+
         SearchDirectoryRequest req = new SearchDirectoryRequest();
         req.setQuery(options.getFilterString());
         
@@ -1649,8 +1674,8 @@ public class SoapProvisioning extends Provisioning {
         
         if (options.getDomain() != null) {
             req.setDomain(options.getDomain().getName());
-        }
-        
+    }
+
         if (options.getSortAttr() != null) {
             req.setSortBy(options.getSortAttr());
         }
@@ -1659,16 +1684,16 @@ public class SoapProvisioning extends Provisioning {
         if (types != null) {
             req.setTypes(SearchDirectoryOptions.ObjectType.toCSVString(types));
         }
-        
+
         req.setSortAscending(options.getSortOpt() != SortOpt.SORT_DESCENDING);
-        
+
         if (options.getReturnAttrs() != null) {
             req.addAttrs(options.getReturnAttrs());
-        }
-        
+    }
+
         // TODO: handle ApplyCos, limit, offset?
         SearchDirectoryResponse resp = invokeJaxb(req);
-
+        
         List<AdminObjectInfo> entries = resp.getEntries();
         for (AdminObjectInfo entry : entries) {
             if (entry instanceof AccountInfo) {
@@ -1690,7 +1715,7 @@ public class SoapProvisioning extends Provisioning {
             String token, int limit, int offset, String sortBy) 
     throws ServiceException {
         String typeStr = type == null ? GalSearchType.all.name() : type.name();
-
+        
         XMLElement req = new XMLElement(AdminConstants.SEARCH_GAL_REQUEST);
         req.addElement(AdminConstants.E_NAME).setText(query);
         req.addAttribute(AdminConstants.A_DOMAIN, d.getName());
@@ -1701,7 +1726,7 @@ public class SoapProvisioning extends Provisioning {
             req.addAttribute(AdminConstants.A_OFFSET, limit);
         if (sortBy != null)
             req.addAttribute(AdminConstants.A_SORT_BY, sortBy);
-
+        	
         if (token != null) req.addAttribute(AdminConstants.A_TOKEN, token);
 
         Element resp = invoke(req);
@@ -1722,7 +1747,7 @@ public class SoapProvisioning extends Provisioning {
         invokeJaxb(new AddDistributionListMemberRequest(list.getId(),
                             Arrays.asList(members)));
         reload(list);
-    }
+        }
     
     @Override
     public void addGroupMembers(Group group, String[] members)
@@ -1737,7 +1762,7 @@ public class SoapProvisioning extends Provisioning {
         invokeJaxb(new RemoveDistributionListMemberRequest(list.getId(),
                             Arrays.asList(members)));
         reload(list);
-    }
+        }
     
     @Override
     public void removeGroupMembers(Group group, String[] members) throws ServiceException {
@@ -1748,7 +1773,7 @@ public class SoapProvisioning extends Provisioning {
 
     static void addAttrElementsMailService(Element req, Map<String, ? extends Object> attrs) throws ServiceException {
         if (attrs == null) return;
-
+        
         for (Entry<String, ? extends Object> entry : attrs.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
@@ -1766,7 +1791,7 @@ public class SoapProvisioning extends Provisioning {
             } else {
                 throw ZClientException.CLIENT_ERROR("invalid attr type: "+key+" "+value.getClass().getName(), null);
             }
-        }
+        }        
     }
 
     @Override
@@ -1781,7 +1806,7 @@ public class SoapProvisioning extends Provisioning {
             invokeJaxbOnTargetAccount(request, account.getId());
         return new SoapIdentity(account, response.getIdentity(), this);
     }
-
+    
     @Override
     public Identity restoreIdentity(Account account, String identityName,
             Map<String, Object> attrs)
@@ -1821,12 +1846,12 @@ public class SoapProvisioning extends Provisioning {
         ModifyIdentityRequest request = new ModifyIdentityRequest(id);
         invokeJaxbOnTargetAccount(request, account.getId());
     }
-
+    
     @Override
     public Signature createSignature(Account account, String signatureName, Map<String, Object> attrs) throws ServiceException {
         if (attrs.get(Provisioning.A_zimbraSignatureName) != null)
             throw ZClientException.CLIENT_ERROR("invalid attr: "+Provisioning.A_zimbraSignatureName, null);
-
+        
         XMLElement req = new XMLElement(AccountConstants.CREATE_SIGNATURE_REQUEST);
         Element signature = req.addElement(AccountConstants.E_SIGNATURE);
         signature.addAttribute(AccountConstants.A_NAME, signatureName);
@@ -1834,24 +1859,24 @@ public class SoapProvisioning extends Provisioning {
         Element response = invokeOnTargetAccount(req, account.getId()).getElement(AccountConstants.E_SIGNATURE);
         return new SoapSignature(account, response, this);
     }
-
+    
     @Override
     public Signature restoreSignature(Account account, String signatureName, Map<String, Object> attrs) throws ServiceException {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException();   
     }
-
+    
     @Override
     public void modifySignature(Account account, String signatureId, Map<String, Object> attrs) throws ServiceException {
         if (attrs.get(Provisioning.A_zimbraSignatureId) != null)
             throw ZClientException.CLIENT_ERROR("invalid attr: "+Provisioning.A_zimbraSignatureId, null);
-
+        
         XMLElement req = new XMLElement(AccountConstants.MODIFY_SIGNATURE_REQUEST);
         Element signature = req.addElement(AccountConstants.E_SIGNATURE);
         signature.addAttribute(AccountConstants.A_ID, signatureId);
         SoapSignature.toXML(signature, attrs);
         invokeOnTargetAccount(req, account.getId());
     }
-
+    
     @Override
     public void deleteSignature(Account account, String signatureId) throws ServiceException {
         XMLElement req = new XMLElement(AccountConstants.DELETE_SIGNATURE_REQUEST);
@@ -1887,7 +1912,7 @@ public class SoapProvisioning extends Provisioning {
     public DataSource createDataSource(Account account, DataSourceType dsType, String dsName, Map<String, Object> attrs, boolean passwdAlreadyEncrypted) throws ServiceException {
         throw new UnsupportedOperationException();
     }
-
+    
     @Override
     public DataSource restoreDataSource(Account account, DataSourceType dsType, String dsName, Map<String, Object> attrs) throws ServiceException {
         throw new UnsupportedOperationException();
@@ -1911,7 +1936,7 @@ public class SoapProvisioning extends Provisioning {
         for (Element dataSource: resp.listElements(AccountConstants.E_DATA_SOURCE)) {
             result.add(new SoapDataSource(account, dataSource, this));
         }
-        return result;
+        return result;        
     }
 
     @Override
@@ -1930,46 +1955,46 @@ public class SoapProvisioning extends Provisioning {
         switch (keyType) {
         case name:
             for (DataSource source : getAllDataSources(account))
-                if (source.getName().equalsIgnoreCase(key))
+                if (source.getName().equalsIgnoreCase(key)) 
                     return source;
             return null;
         case id:
             for (DataSource source : getAllDataSources(account))
-                if (source.getId().equalsIgnoreCase(key))
+                if (source.getId().equalsIgnoreCase(key)) 
                     return source;
+            return null;            
+        default: 
             return null;
-        default:
-            return null;
-
+            
         }
     }
     @Override
     public List<XMPPComponent> getAllXMPPComponents() throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_ALL_XMPPCOMPONENTS_REQUEST);
         Element response = invoke(req);
-
+        
         List<XMPPComponent> toRet = new ArrayList<XMPPComponent>();
         for (Element e : response.listElements(AdminConstants.E_XMPP_COMPONENT)) {
             toRet.add(new SoapXMPPComponent(e, this));
         }
         return toRet;
     }
-
+    
     @Override
     public XMPPComponent createXMPPComponent(String name, Domain domain, Server server, Map<String, Object> attrs) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.CREATE_XMPPCOMPONENT_REQUEST);
-
+        
         Element c = req.addElement(AccountConstants.E_XMPP_COMPONENT);
         c.addAttribute(AdminConstants.A_NAME, name);
-
+        
         Element domainElt = c.addElement(AdminConstants.E_DOMAIN);
         domainElt.addAttribute(AdminConstants.A_BY, "id");
         domainElt.setText(domain.getId());
-
+        
         Element serverElt = c.addElement(AdminConstants.E_SERVER);
         serverElt.addAttribute(AdminConstants.A_BY, "id");
         serverElt.setText(server.getId());
-
+        
         addAttrElements(c, attrs);
         Element response = invoke(req);
         response = response.getElement(AccountConstants.E_XMPP_COMPONENT);
@@ -1979,7 +2004,7 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public XMPPComponent get(XMPPComponentBy keyType, String key) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_XMPPCOMPONENT_REQUEST);
-
+        
         Element c = req.addElement(AccountConstants.E_XMPP_COMPONENT);
         c.addAttribute(AdminConstants.A_BY, keyType.name());
         c.setText(key);
@@ -1987,57 +2012,57 @@ public class SoapProvisioning extends Provisioning {
         response = response.getElement(AccountConstants.E_XMPP_COMPONENT);
         return new SoapXMPPComponent(response, this);
     }
-
+    
     @Override
     public void deleteXMPPComponent(XMPPComponent comp) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.DELETE_XMPPCOMPONENT_REQUEST);
-
+        
         Element c = req.addElement(AccountConstants.E_XMPP_COMPONENT);
         c.addAttribute(AdminConstants.A_BY, "id");
         c.setText(comp.getId());
         invoke(req);
     }
-
+    
     @Override
     public Identity get(Account account, IdentityBy keyType, String key) throws ServiceException {
         // TOOD: more efficient version and/or caching on account?
         switch (keyType) {
         case name:
             for (Identity identity : getAllIdentities(account))
-                if (identity.getName().equalsIgnoreCase(key))
+                if (identity.getName().equalsIgnoreCase(key)) 
                     return identity;
             return null;
         case id:
             for (Identity identity : getAllIdentities(account))
-                if (identity.getId().equalsIgnoreCase(key))
+                if (identity.getId().equalsIgnoreCase(key)) 
                     return identity;
+            return null;            
+        default: 
             return null;
-        default:
-            return null;
-
+            
         }
     }
-
+    
     @Override
     public Signature get(Account account, SignatureBy keyType, String key) throws ServiceException {
         // TOOD: more efficient version and/or caching on account?
         switch (keyType) {
         case name:
             for (Signature signature : getAllSignatures(account))
-                if (signature.getName().equalsIgnoreCase(key))
+                if (signature.getName().equalsIgnoreCase(key)) 
                     return signature;
             return null;
         case id:
             for (Signature signature : getAllSignatures(account))
-                if (signature.getId().equalsIgnoreCase(key))
+                if (signature.getId().equalsIgnoreCase(key)) 
                     return signature;
+            return null;            
+        default: 
             return null;
-        default:
-            return null;
-
+            
         }
     }
-
+    
     public void deleteMailbox(String accountId) throws ServiceException {
         invokeJaxb(new DeleteMailboxRequest(accountId));
     }
@@ -2052,11 +2077,11 @@ public class SoapProvisioning extends Provisioning {
             return resp.getMailboxes().get(0);
     }
 
-
+    
     //
     // rights
     //
-
+    
     // target
     private Element toXML(Element req,
                        String targetType, TargetBy targetBy, String target) {
@@ -2066,34 +2091,34 @@ public class SoapProvisioning extends Provisioning {
             eTarget.addAttribute(AdminConstants.A_BY, targetBy.toString());
             eTarget.setText(target);
         }
-
+        
         return eTarget;
     }
-
+        
     // grantee
     private Element toXML(Element req,
             String granteeType, GranteeBy granteeBy, String grantee) {
         return toXML(req, granteeType,  granteeBy,  grantee, null);
     }
-
+    
     private Element toXML(Element req,
                        String granteeType, GranteeBy granteeBy, String grantee, String secret) {
         Element eGrantee = req.addElement(AdminConstants.E_GRANTEE);
         if (granteeType != null)
             eGrantee.addAttribute(AdminConstants.A_TYPE, granteeType);
-
+        
         if (granteeBy != null)
             eGrantee.addAttribute(AdminConstants.A_BY, granteeBy.toString());
-
+        
         if (secret != null)
             eGrantee.addAttribute(AdminConstants.A_SECRET, secret);
-
+        
         if (grantee != null)
             eGrantee.setText(grantee);
-
+        
         return eGrantee;
     }
-
+    
     // right
     private Element toXML(Element req,
                        String right, RightModifier rightModifier) {
@@ -2102,20 +2127,20 @@ public class SoapProvisioning extends Provisioning {
             eRight.addAttribute(rightModifier.getSoapAttrMapping(), true);
         }
         eRight.setText(right);
-
+        
         return eRight;
     }
-
+    
     @Override
     public Map<String, List<RightsDoc>> getRightsDoc(String[] pkgs)
     throws ServiceException {
         GetRightsDocRequest req = new GetRightsDocRequest();
         if (pkgs != null) {
-            for (String pkg: pkgs)
+            for (String pkg : pkgs)
                 req.addPkg(new PackageSelector(pkg));
         }
         GetRightsDocResponse resp = invokeJaxb(req);
-
+        
         Map<String, List<RightsDoc>> allDocs =
                 new TreeMap<String, List<RightsDoc>>();
         for (PackageRightsInfo ePkg : resp.getPackages()) {
@@ -2123,10 +2148,10 @@ public class SoapProvisioning extends Provisioning {
             allDocs.put(ePkg.getName(), docs);
             for (CmdRightsInfo eCmd : ePkg.getCmds())
                 docs.add(new RightsDoc(eCmd));
-        }
+            }
         return allDocs;
     }
-
+    
     @Override
     public Right getRight(String rightName, boolean expandAllAttrs)
     throws ServiceException {
@@ -2136,7 +2161,7 @@ public class SoapProvisioning extends Provisioning {
         //       directly from Rights manager by name
         return RightCommand.RightNameToRight(resp.getRight().getName());
     }
-
+    
     @Override
     public List<Right> getAllRights(String targetType, boolean expandAllAttrs,
             String rightClass)
@@ -2151,7 +2176,7 @@ public class SoapProvisioning extends Provisioning {
         }
         return rights;
     }
-
+    
     @Override
     public boolean checkRight(String targetType, TargetBy targetBy, String target,
                               GranteeBy granteeBy, String grantee,
@@ -2161,9 +2186,9 @@ public class SoapProvisioning extends Provisioning {
         toXML(req, targetType, targetBy, target);
         toXML(req, null, granteeBy, grantee);
         toXML(req, right, null);
-
+        
         SoapProvisioning.addAttrElements(req, attrs);
-
+        
         Element resp = invoke(req);
         boolean result = resp.getAttributeBool(AdminConstants.A_ALLOW);
         if (via != null) {
@@ -2182,7 +2207,7 @@ public class SoapProvisioning extends Provisioning {
         }
         return result;
     }
-
+    
     @Override
     public RightCommand.AllEffectiveRights getAllEffectiveRights(
             String granteeType, GranteeBy granteeBy, String grantee,
@@ -2199,7 +2224,7 @@ public class SoapProvisioning extends Provisioning {
                     expandSetAttrs, expandGetAttrs));
         return RightCommand.AllEffectiveRights.fromJaxb(resp);
     }
-
+    
     @Override
     public RightCommand.EffectiveRights getEffectiveRights(
             String targetType, TargetBy targetBy, String target,
@@ -2219,7 +2244,7 @@ public class SoapProvisioning extends Provisioning {
                     expandSetAttrs, expandGetAttrs));
         return RightCommand.EffectiveRights.fromJaxb_EffectiveRights(resp);
     }
-
+    
     @Override
     public RightCommand.EffectiveRights getCreateObjectAttrs(
             String targetType,
@@ -2227,50 +2252,50 @@ public class SoapProvisioning extends Provisioning {
             CosBy cosBy, String cos,
             GranteeBy granteeBy, String grantee) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_CREATE_OBJECT_ATTRS_REQUEST);
-
+        
         Element eTarget = req.addElement(AdminConstants.E_TARGET);
         eTarget.addAttribute(AdminConstants.A_TYPE, targetType);
-
+        
         if (domainBy != null && domain != null) {
             Element eDomain = req.addElement(AdminConstants.E_DOMAIN);
             eDomain.addAttribute(AdminConstants.A_BY, domainBy.toString());
             eDomain.setText(domain);
         }
-
+        
         if (cosBy != null && cos != null) {
             Element eCos = req.addElement(AdminConstants.E_COS);
             eCos.addAttribute(AdminConstants.A_BY, cosBy.toString());
             eCos.setText(cos);
         }
-
+        
         /*
         if (granteeBy != null && grantee != null)
             toXML(req, null, granteeBy, grantee);
         */
-
+        
         Element resp = invoke(req);
         return RightCommand.EffectiveRights.fromXML_CreateObjectAttrs(resp);
     }
-
+    
     @Override
     public RightCommand.Grants getGrants(
             String targetType, TargetBy targetBy, String target,
             String granteeType, GranteeBy granteeBy, String grantee,
             boolean granteeIncludeGroupsGranteeBelongs) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_GRANTS_REQUEST);
-
+        
         if (targetType != null)
             toXML(req, targetType, targetBy, target);
-
+        
         if (granteeType != null) {
             Element eGrantee = toXML(req, granteeType, granteeBy, grantee);
             eGrantee.addAttribute(AdminConstants.A_ALL, granteeIncludeGroupsGranteeBelongs);
         }
-
+        
         Element resp = invoke(req);
         return new RightCommand.Grants(resp);
     }
-
+    
     @Override
     public void grantRight(String targetType, TargetBy targetBy, String target,
                            String granteeType, GranteeBy granteeBy, String grantee, String secret,
@@ -2279,10 +2304,10 @@ public class SoapProvisioning extends Provisioning {
         toXML(req, targetType, targetBy, target);
         toXML(req, granteeType, granteeBy, grantee, secret);
         toXML(req, right, rightModifier);
-
+        
         invoke(req);
     }
-
+    
     @Override
     public void revokeRight(String targetType, TargetBy targetBy, String target,
                             String granteeType, GranteeBy granteeBy, String grantee,
@@ -2291,17 +2316,17 @@ public class SoapProvisioning extends Provisioning {
         toXML(req, targetType, targetBy, target);
         toXML(req, granteeType, granteeBy, grantee);
         toXML(req, right, rightModifier);
-
+        
         invoke(req);
     }
-
+     
     @Override
     public void flushCache(CacheEntryType type, CacheEntry[] entries) throws ServiceException {
         flushCache(type.name(), entries, false);
     }
-
+    
     /*
-     * invoked from ProvUtil, as it has to support skin and locale caches, which are not
+     * invoked from ProvUtil, as it has to support skin and locale caches, which are not 
      * managed by Provisioning.
      */
     public void flushCache(String type, CacheEntry[] entries, boolean allServers) throws ServiceException {
@@ -2316,7 +2341,7 @@ public class SoapProvisioning extends Provisioning {
         }
         invokeJaxb(new FlushCacheRequest(sel));
     }
-
+    
     @Override
     public CountAccountResult countAccount(Domain domain) throws ServiceException {
         CountAccountResponse resp = invokeJaxb(new CountAccountRequest(
@@ -2335,7 +2360,7 @@ public class SoapProvisioning extends Provisioning {
         req.addAttribute(AdminConstants.A_ID, accountId);
         invoke(req);
     }
-
+    
     @Override
     public void reloadMemcachedClientConfig() throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.RELOAD_MEMCACHED_CLIENT_CONFIG_REQUEST);
@@ -2373,99 +2398,99 @@ public class SoapProvisioning extends Provisioning {
             visitor.visit(sid);
         }
     }
-
+    
 
     @Override
     public Map<String, Map<String, Object>> getDomainSMIMEConfig(Domain domain, String configName) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_SMIME_CONFIG_REQUEST);
-
+        
         Element eDomain = req.addElement(AdminConstants.E_DOMAIN);
         eDomain.addAttribute(AdminConstants.A_BY, AdminConstants.BY_ID).setText(domain.getId());
-
+        
         if (configName != null) {
             Element eConfig = req.addElement(AdminConstants.E_CONFIG);
             eConfig.addAttribute(AdminConstants.A_NAME, configName);
         }
-
+        
         Element resp = invoke(req);
         Map<String, Map<String, Object>> result = new HashMap<String, Map<String, Object>>();
         for (Element eConfig : resp.listElements(AdminConstants.E_CONFIG)) {
             result.put(eConfig.getAttribute(AdminConstants.A_NAME), getAttrs(eConfig));
         }
-
+        
         return result;
     }
-
+    
     @Override
     public void modifyDomainSMIMEConfig(Domain domain, String configName, Map<String, Object> attrs) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.MODIFY_SMIME_CONFIG_REQUEST);
-
+        
         Element eDomain = req.addElement(AdminConstants.E_DOMAIN);
         eDomain.addAttribute(AdminConstants.A_BY, AdminConstants.BY_ID).setText(domain.getId());
-
+        
         Element eConfig = req.addElement(AdminConstants.E_CONFIG);
         eConfig.addAttribute(AdminConstants.A_NAME, configName);
         eConfig.addAttribute(AdminConstants.A_OP, AdminConstants.OP_MODIFY);
-
+        
         addAttrElements(eConfig, attrs);
-
+        
         invoke(req);
     }
-
+    
     @Override
     public void removeDomainSMIMEConfig(Domain domain, String configName) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.MODIFY_SMIME_CONFIG_REQUEST);
-
+        
         Element eDomain = req.addElement(AdminConstants.E_DOMAIN);
         eDomain.addAttribute(AdminConstants.A_BY, AdminConstants.BY_ID).setText(domain.getId());
-
+        
         Element eConfig = req.addElement(AdminConstants.E_CONFIG);
         eConfig.addAttribute(AdminConstants.A_NAME, configName);
         eConfig.addAttribute(AdminConstants.A_OP, AdminConstants.OP_REMOVE);
-
+        
         invoke(req);
     }
 
     @Override
     public Map<String, Map<String, Object>> getConfigSMIMEConfig(String configName) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.GET_SMIME_CONFIG_REQUEST);
-
+        
         if (configName != null) {
             Element eConfig = req.addElement(AdminConstants.E_CONFIG);
             eConfig.addAttribute(AdminConstants.A_NAME, configName);
         }
-
+        
         Element resp = invoke(req);
         Map<String, Map<String, Object>> result = new HashMap<String, Map<String, Object>>();
         for (Element eConfig : resp.listElements(AdminConstants.E_CONFIG)) {
             result.put(eConfig.getAttribute(AdminConstants.A_NAME), getAttrs(eConfig));
         }
-
+        
         return result;
     }
 
-
+    
     @Override
     public void modifyConfigSMIMEConfig(String configName, Map<String, Object> attrs) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.MODIFY_SMIME_CONFIG_REQUEST);
-
+        
         Element eConfig = req.addElement(AdminConstants.E_CONFIG);
         eConfig.addAttribute(AdminConstants.A_NAME, configName);
         eConfig.addAttribute(AdminConstants.A_OP, AdminConstants.OP_MODIFY);
-
+        
         addAttrElements(eConfig, attrs);
-
+        
         invoke(req);
     }
-
+    
     @Override
     public void removeConfigSMIMEConfig(String configName) throws ServiceException {
         XMLElement req = new XMLElement(AdminConstants.MODIFY_SMIME_CONFIG_REQUEST);
-
+        
         Element eConfig = req.addElement(AdminConstants.E_CONFIG);
         eConfig.addAttribute(AdminConstants.A_NAME, configName);
         eConfig.addAttribute(AdminConstants.A_OP, AdminConstants.OP_REMOVE);
-
+        
         invoke(req);
     }
 
@@ -2523,7 +2548,7 @@ public class SoapProvisioning extends Provisioning {
     
     public static void main(String[] args) throws Exception {
         CliUtil.toolSetup();
-
+        
         SoapProvisioning prov = new SoapProvisioning();
         prov.soapSetURI("https://localhost:7071/service/admin/soap/");
         prov.soapZimbraAdminAuthenticate();
