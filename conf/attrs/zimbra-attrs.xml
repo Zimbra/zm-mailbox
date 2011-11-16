@@ -4666,7 +4666,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether to use gal sync account for autocomplete</desc>
 </attr>
 
-<attr id="1028" name="zimbraPrefAppleIcalDelegationEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="domainAdminModifiable" since="5.0.17">
+<attr id="1028" name="zimbraPrefAppleIcalDelegationEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="5.0.17">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>Use the iCal style delegation model for shared calendars for CalDAV interface when set to TRUE.</desc>
 </attr>
