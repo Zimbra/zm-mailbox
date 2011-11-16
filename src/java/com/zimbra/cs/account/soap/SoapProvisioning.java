@@ -49,7 +49,6 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.cs.account.*;
 import com.zimbra.cs.account.NamedEntry.Visitor;
-import com.zimbra.cs.account.Provisioning.SetPasswordResult;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
@@ -70,6 +69,7 @@ public class SoapProvisioning extends Provisioning {
         private int mRetryCount = -1;
         private SoapTransport.DebugListener mDebugListener;  
         private boolean mLocalConfigAuth;
+        private boolean mNeedSession;
 
         public Options() {
         }
@@ -121,6 +121,9 @@ public class SoapProvisioning extends Provisioning {
 
         public boolean getLocalConfigAuth() { return mLocalConfigAuth; }
         public void setLocalConfigAuth(boolean auth) { mLocalConfigAuth = auth; }
+        
+        public boolean getNeedSession() { return mNeedSession; }
+        public void setNeedSession(boolean needSession) { mNeedSession = needSession; }
     }
 
 
@@ -132,9 +135,14 @@ public class SoapProvisioning extends Provisioning {
     private long mAuthTokenExpiration;
     private DebugListener mDebugListener;
     private HttpDebugListener mHttpDebugListener;
+    private final boolean mNeedSession;
 
     public SoapProvisioning() {
-
+        mNeedSession = false;
+    }
+    
+    public SoapProvisioning(boolean needSession) {
+        mNeedSession = needSession;
     }
 
     public SoapProvisioning(Options options) throws ServiceException {
@@ -142,6 +150,7 @@ public class SoapProvisioning extends Provisioning {
         mRetryCount = options.getRetryCount();
         mDebugListener = options.getDebugListener();
         mAuthToken = options.getAuthToken();
+        mNeedSession = options.getNeedSession();
         if (options.getUri() == null) options.setUri(getLocalConfigURI());
         soapSetURI(options.getUri());
 
@@ -181,6 +190,7 @@ public class SoapProvisioning extends Provisioning {
         return String.format("[%s %s]", getClass().getName(), mTransport == null ? "" : mTransport.getURI());
     }
     
+    
     /**
      * @param uri URI of server we want to talk to
      */
@@ -212,8 +222,14 @@ public class SoapProvisioning extends Provisioning {
      * @throws ServiceException
      */
     public static SoapProvisioning getAdminInstance() throws ServiceException {
+        return getAdminInstance(false);
+    }
+    
+    public static SoapProvisioning getAdminInstance(boolean needSession) 
+    throws ServiceException {
         Options opts = new Options();
         opts.setLocalConfigAuth(true);
+        opts.setNeedSession(needSession);
         return new SoapProvisioning(opts);
     }
 
@@ -318,12 +334,20 @@ public class SoapProvisioning extends Provisioning {
         if (mTransport == null)
             throw ServiceException.FAILURE("transport has not been initialized", null);
     }
+    
+    private Element invokeRequest(Element request) throws ServiceException, IOException {
+        if (mNeedSession) {
+            return mTransport.invoke(request);
+        } else {
+            return mTransport.invokeWithoutSession(request);
+        }
+    }
 
     public synchronized Element invoke(Element request) throws ServiceException {
         checkTransport();
 
         try {
-            return mTransport.invoke(request);
+            return invokeRequest(request);
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
         } catch (IOException e) {
@@ -337,7 +361,7 @@ public class SoapProvisioning extends Provisioning {
         String oldTarget = mTransport.getTargetAcctId();
         try {
             mTransport.setTargetAcctId(targetId);
-            return mTransport.invoke(request);
+            return invokeRequest(request);
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
         } catch (IOException e) {
@@ -355,7 +379,7 @@ public class SoapProvisioning extends Provisioning {
         boolean diff = !oldUri.equals(newUri);        
         try {
             if (diff) soapSetURI(newUri);
-            return mTransport.invoke(request);
+            return invokeRequest(request);
         } catch (SoapFaultException e) {
             throw e; // for now, later, try to map to more specific exception
         } catch (IOException e) {
