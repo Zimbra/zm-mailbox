@@ -22,6 +22,7 @@ import org.junit.Test;
  * Unit test for {@link NormalizeTokenFilter}.
  *
  * @author ysasaki
+ * @author smukhopadhyay
  */
 public class NormalizeTokenFilterTest {
 
@@ -140,57 +141,147 @@ public class NormalizeTokenFilterTest {
         Assert.assertEquals('y', NormalizeTokenFilter.normalize('\u0178'));
         Assert.assertEquals('y', NormalizeTokenFilter.normalize('\u00ff'));
     }
-
+    
     /**
      * @see http://en.wikipedia.org/wiki/Katakana
      */
     @Test
     public void katakana() {
-        Assert.assertEquals('\u30A2', NormalizeTokenFilter.normalize('\uFF71'));
-        Assert.assertEquals('\u30A4', NormalizeTokenFilter.normalize('\uFF72'));
-        Assert.assertEquals('\u30A6', NormalizeTokenFilter.normalize('\uFF73'));
-        Assert.assertEquals('\u30A8', NormalizeTokenFilter.normalize('\uFF74'));
-        Assert.assertEquals('\u30AA', NormalizeTokenFilter.normalize('\uFF75'));
-        Assert.assertEquals('\u30AB', NormalizeTokenFilter.normalize('\uFF76'));
-        Assert.assertEquals('\u30AD', NormalizeTokenFilter.normalize('\uFF77'));
-        Assert.assertEquals('\u30AF', NormalizeTokenFilter.normalize('\uFF78'));
-        Assert.assertEquals('\u30B1', NormalizeTokenFilter.normalize('\uFF79'));
-        Assert.assertEquals('\u30B3', NormalizeTokenFilter.normalize('\uFF7A'));
-        Assert.assertEquals('\u30B5', NormalizeTokenFilter.normalize('\uFF7B'));
-        Assert.assertEquals('\u30B7', NormalizeTokenFilter.normalize('\uFF7C'));
-        Assert.assertEquals('\u30B9', NormalizeTokenFilter.normalize('\uFF7D'));
-        Assert.assertEquals('\u30BB', NormalizeTokenFilter.normalize('\uFF7E'));
-        Assert.assertEquals('\u30BD', NormalizeTokenFilter.normalize('\uFF7F'));
-        Assert.assertEquals('\u30BF', NormalizeTokenFilter.normalize('\uFF80'));
-        Assert.assertEquals('\u30C1', NormalizeTokenFilter.normalize('\uFF81'));
-        Assert.assertEquals('\u30C4', NormalizeTokenFilter.normalize('\uFF82'));
-        Assert.assertEquals('\u30C6', NormalizeTokenFilter.normalize('\uFF83'));
-        Assert.assertEquals('\u30C8', NormalizeTokenFilter.normalize('\uFF84'));
-        Assert.assertEquals('\u30CA', NormalizeTokenFilter.normalize('\uFF85'));
-        Assert.assertEquals('\u30CB', NormalizeTokenFilter.normalize('\uFF86'));
-        Assert.assertEquals('\u30CC', NormalizeTokenFilter.normalize('\uFF87'));
-        Assert.assertEquals('\u30CD', NormalizeTokenFilter.normalize('\uFF88'));
-        Assert.assertEquals('\u30CE', NormalizeTokenFilter.normalize('\uFF89'));
-        Assert.assertEquals('\u30CF', NormalizeTokenFilter.normalize('\uFF8A'));
-        Assert.assertEquals('\u30D2', NormalizeTokenFilter.normalize('\uFF8B'));
-        Assert.assertEquals('\u30D5', NormalizeTokenFilter.normalize('\uFF8C'));
-        Assert.assertEquals('\u30D8', NormalizeTokenFilter.normalize('\uFF8D'));
-        Assert.assertEquals('\u30DB', NormalizeTokenFilter.normalize('\uFF8E'));
-        Assert.assertEquals('\u30DE', NormalizeTokenFilter.normalize('\uFF8F'));
-        Assert.assertEquals('\u30DF', NormalizeTokenFilter.normalize('\uFF90'));
-        Assert.assertEquals('\u30E0', NormalizeTokenFilter.normalize('\uFF91'));
-        Assert.assertEquals('\u30E1', NormalizeTokenFilter.normalize('\uFF92'));
-        Assert.assertEquals('\u30E2', NormalizeTokenFilter.normalize('\uFF93'));
-        Assert.assertEquals('\u30E4', NormalizeTokenFilter.normalize('\uFF94'));
-        Assert.assertEquals('\u30E6', NormalizeTokenFilter.normalize('\uFF95'));
-        Assert.assertEquals('\u30E8', NormalizeTokenFilter.normalize('\uFF96'));
-        Assert.assertEquals('\u30E9', NormalizeTokenFilter.normalize('\uFF97'));
-        Assert.assertEquals('\u30EA', NormalizeTokenFilter.normalize('\uFF98'));
-        Assert.assertEquals('\u30EB', NormalizeTokenFilter.normalize('\uFF99'));
-        Assert.assertEquals('\u30EC', NormalizeTokenFilter.normalize('\uFF9A'));
-        Assert.assertEquals('\u30ED', NormalizeTokenFilter.normalize('\uFF9B'));
-        Assert.assertEquals('\u30EF', NormalizeTokenFilter.normalize('\uFF9C'));
-        Assert.assertEquals('\u30F3', NormalizeTokenFilter.normalize('\uFF9D'));
+        Assert.assertEquals('\u3041', NormalizeTokenFilter.normalize('\u30A1'));
+        Assert.assertEquals('\u3042', NormalizeTokenFilter.normalize('\u30A2'));
+        Assert.assertEquals('\u3043', NormalizeTokenFilter.normalize('\u30A3'));
+        Assert.assertEquals('\u3044', NormalizeTokenFilter.normalize('\u30A4'));
+        Assert.assertEquals('\u3045', NormalizeTokenFilter.normalize('\u30A5'));
+        Assert.assertEquals('\u3046', NormalizeTokenFilter.normalize('\u30A6'));
+        Assert.assertEquals('\u3047', NormalizeTokenFilter.normalize('\u30A7'));
+        Assert.assertEquals('\u3048', NormalizeTokenFilter.normalize('\u30A8'));
+        Assert.assertEquals('\u3049', NormalizeTokenFilter.normalize('\u30A9'));
+        Assert.assertEquals('\u304A', NormalizeTokenFilter.normalize('\u30AA'));
+        Assert.assertEquals('\u304B', NormalizeTokenFilter.normalize('\u30AB'));
+        Assert.assertEquals('\u304C', NormalizeTokenFilter.normalize('\u30AC'));
+        Assert.assertEquals('\u304D', NormalizeTokenFilter.normalize('\u30AD'));
+        Assert.assertEquals('\u304E', NormalizeTokenFilter.normalize('\u30AE'));
+        Assert.assertEquals('\u304F', NormalizeTokenFilter.normalize('\u30AF'));
+        Assert.assertEquals('\u3051', NormalizeTokenFilter.normalize('\u30B1'));
+        Assert.assertEquals('\u3052', NormalizeTokenFilter.normalize('\u30B2'));
+        Assert.assertEquals('\u3053', NormalizeTokenFilter.normalize('\u30B3'));
+        Assert.assertEquals('\u3054', NormalizeTokenFilter.normalize('\u30B4'));
+        Assert.assertEquals('\u3055', NormalizeTokenFilter.normalize('\u30B5'));
+        Assert.assertEquals('\u3056', NormalizeTokenFilter.normalize('\u30B6'));
+        Assert.assertEquals('\u3057', NormalizeTokenFilter.normalize('\u30B7'));
+        Assert.assertEquals('\u3058', NormalizeTokenFilter.normalize('\u30B8'));
+        Assert.assertEquals('\u3059', NormalizeTokenFilter.normalize('\u30B9'));
+        Assert.assertEquals('\u305A', NormalizeTokenFilter.normalize('\u30BA'));
+        Assert.assertEquals('\u305B', NormalizeTokenFilter.normalize('\u30BB'));
+        Assert.assertEquals('\u305C', NormalizeTokenFilter.normalize('\u30BC'));
+        Assert.assertEquals('\u305D', NormalizeTokenFilter.normalize('\u30BD'));
+        Assert.assertEquals('\u305E', NormalizeTokenFilter.normalize('\u30BE'));
+        Assert.assertEquals('\u305F', NormalizeTokenFilter.normalize('\u30BF'));
+        Assert.assertEquals('\u3061', NormalizeTokenFilter.normalize('\u30C1'));
+        Assert.assertEquals('\u3062', NormalizeTokenFilter.normalize('\u30C2'));
+        Assert.assertEquals('\u3063', NormalizeTokenFilter.normalize('\u30C3'));
+        Assert.assertEquals('\u3064', NormalizeTokenFilter.normalize('\u30C4'));
+        Assert.assertEquals('\u3065', NormalizeTokenFilter.normalize('\u30C5'));
+        Assert.assertEquals('\u3066', NormalizeTokenFilter.normalize('\u30C6'));
+        Assert.assertEquals('\u3067', NormalizeTokenFilter.normalize('\u30C7'));
+        Assert.assertEquals('\u3068', NormalizeTokenFilter.normalize('\u30C8'));
+        Assert.assertEquals('\u3069', NormalizeTokenFilter.normalize('\u30C9'));
+        Assert.assertEquals('\u306A', NormalizeTokenFilter.normalize('\u30CA'));
+        Assert.assertEquals('\u306B', NormalizeTokenFilter.normalize('\u30CB'));
+        Assert.assertEquals('\u306C', NormalizeTokenFilter.normalize('\u30CC'));
+        Assert.assertEquals('\u306D', NormalizeTokenFilter.normalize('\u30CD'));
+        Assert.assertEquals('\u306E', NormalizeTokenFilter.normalize('\u30CE'));
+        Assert.assertEquals('\u306F', NormalizeTokenFilter.normalize('\u30CF'));
+        Assert.assertEquals('\u3071', NormalizeTokenFilter.normalize('\u30D1'));
+        Assert.assertEquals('\u3072', NormalizeTokenFilter.normalize('\u30D2'));
+        Assert.assertEquals('\u3073', NormalizeTokenFilter.normalize('\u30D3'));
+        Assert.assertEquals('\u3074', NormalizeTokenFilter.normalize('\u30D4'));
+        Assert.assertEquals('\u3075', NormalizeTokenFilter.normalize('\u30D5'));
+        Assert.assertEquals('\u3076', NormalizeTokenFilter.normalize('\u30D6'));
+        Assert.assertEquals('\u3077', NormalizeTokenFilter.normalize('\u30D7'));
+        Assert.assertEquals('\u3078', NormalizeTokenFilter.normalize('\u30D8'));
+        Assert.assertEquals('\u3079', NormalizeTokenFilter.normalize('\u30D9'));
+        Assert.assertEquals('\u307A', NormalizeTokenFilter.normalize('\u30DA'));
+        Assert.assertEquals('\u307B', NormalizeTokenFilter.normalize('\u30DB'));
+        Assert.assertEquals('\u307C', NormalizeTokenFilter.normalize('\u30DC'));
+        Assert.assertEquals('\u307D', NormalizeTokenFilter.normalize('\u30DD'));
+        Assert.assertEquals('\u307E', NormalizeTokenFilter.normalize('\u30DE'));
+        Assert.assertEquals('\u307F', NormalizeTokenFilter.normalize('\u30DF'));
+        Assert.assertEquals('\u3081', NormalizeTokenFilter.normalize('\u30E1'));
+        Assert.assertEquals('\u3082', NormalizeTokenFilter.normalize('\u30E2'));
+        Assert.assertEquals('\u3083', NormalizeTokenFilter.normalize('\u30E3'));
+        Assert.assertEquals('\u3084', NormalizeTokenFilter.normalize('\u30E4'));
+        Assert.assertEquals('\u3085', NormalizeTokenFilter.normalize('\u30E5'));
+        Assert.assertEquals('\u3086', NormalizeTokenFilter.normalize('\u30E6'));
+        Assert.assertEquals('\u3087', NormalizeTokenFilter.normalize('\u30E7'));
+        Assert.assertEquals('\u3088', NormalizeTokenFilter.normalize('\u30E8'));
+        Assert.assertEquals('\u3089', NormalizeTokenFilter.normalize('\u30E9'));
+        Assert.assertEquals('\u308A', NormalizeTokenFilter.normalize('\u30EA'));
+        Assert.assertEquals('\u308B', NormalizeTokenFilter.normalize('\u30EB'));
+        Assert.assertEquals('\u308C', NormalizeTokenFilter.normalize('\u30EC'));
+        Assert.assertEquals('\u308D', NormalizeTokenFilter.normalize('\u30ED'));
+        Assert.assertEquals('\u308E', NormalizeTokenFilter.normalize('\u30EE'));
+        Assert.assertEquals('\u308F', NormalizeTokenFilter.normalize('\u30EF'));
+        Assert.assertEquals('\u3091', NormalizeTokenFilter.normalize('\u30F1'));
+        Assert.assertEquals('\u3092', NormalizeTokenFilter.normalize('\u30F2'));
+        Assert.assertEquals('\u3093', NormalizeTokenFilter.normalize('\u30F3'));
+        Assert.assertEquals('\u3094', NormalizeTokenFilter.normalize('\u30F4'));
+        Assert.assertEquals('\u3095', NormalizeTokenFilter.normalize('\u30F5'));
+        Assert.assertEquals('\u3096', NormalizeTokenFilter.normalize('\u30F6'));
     }
+
+    /**
+     * @see http://en.wikipedia.org/wiki/Katakana
+     */
+    @Test
+    public void HalfWidthkatakana() {
+        Assert.assertEquals('\u3042', NormalizeTokenFilter.normalize('\uFF71'));
+        Assert.assertEquals('\u3044', NormalizeTokenFilter.normalize('\uFF72'));
+        Assert.assertEquals('\u3046', NormalizeTokenFilter.normalize('\uFF73'));
+        Assert.assertEquals('\u3048', NormalizeTokenFilter.normalize('\uFF74'));
+        Assert.assertEquals('\u304A', NormalizeTokenFilter.normalize('\uFF75'));
+        Assert.assertEquals('\u304B', NormalizeTokenFilter.normalize('\uFF76'));
+        Assert.assertEquals('\u304D', NormalizeTokenFilter.normalize('\uFF77'));
+        Assert.assertEquals('\u304F', NormalizeTokenFilter.normalize('\uFF78'));
+        Assert.assertEquals('\u3051', NormalizeTokenFilter.normalize('\uFF79'));
+        Assert.assertEquals('\u3053', NormalizeTokenFilter.normalize('\uFF7A'));
+        Assert.assertEquals('\u3055', NormalizeTokenFilter.normalize('\uFF7B'));
+        Assert.assertEquals('\u3057', NormalizeTokenFilter.normalize('\uFF7C'));
+        Assert.assertEquals('\u3059', NormalizeTokenFilter.normalize('\uFF7D'));
+        Assert.assertEquals('\u305B', NormalizeTokenFilter.normalize('\uFF7E'));
+        Assert.assertEquals('\u305D', NormalizeTokenFilter.normalize('\uFF7F'));
+        Assert.assertEquals('\u305F', NormalizeTokenFilter.normalize('\uFF80'));
+        Assert.assertEquals('\u3061', NormalizeTokenFilter.normalize('\uFF81'));
+        Assert.assertEquals('\u3064', NormalizeTokenFilter.normalize('\uFF82'));
+        Assert.assertEquals('\u3066', NormalizeTokenFilter.normalize('\uFF83'));
+        Assert.assertEquals('\u3068', NormalizeTokenFilter.normalize('\uFF84'));
+        Assert.assertEquals('\u306A', NormalizeTokenFilter.normalize('\uFF85'));
+        Assert.assertEquals('\u306B', NormalizeTokenFilter.normalize('\uFF86'));
+        Assert.assertEquals('\u306C', NormalizeTokenFilter.normalize('\uFF87'));
+        Assert.assertEquals('\u306D', NormalizeTokenFilter.normalize('\uFF88'));
+        Assert.assertEquals('\u306E', NormalizeTokenFilter.normalize('\uFF89'));
+        Assert.assertEquals('\u306F', NormalizeTokenFilter.normalize('\uFF8A'));
+        Assert.assertEquals('\u3072', NormalizeTokenFilter.normalize('\uFF8B'));
+        Assert.assertEquals('\u3075', NormalizeTokenFilter.normalize('\uFF8C'));
+        Assert.assertEquals('\u3078', NormalizeTokenFilter.normalize('\uFF8D'));
+        Assert.assertEquals('\u307B', NormalizeTokenFilter.normalize('\uFF8E'));
+        Assert.assertEquals('\u307E', NormalizeTokenFilter.normalize('\uFF8F'));
+        Assert.assertEquals('\u307F', NormalizeTokenFilter.normalize('\uFF90'));
+        Assert.assertEquals('\u3080', NormalizeTokenFilter.normalize('\uFF91'));
+        Assert.assertEquals('\u3081', NormalizeTokenFilter.normalize('\uFF92'));
+        Assert.assertEquals('\u3082', NormalizeTokenFilter.normalize('\uFF93'));
+        Assert.assertEquals('\u3084', NormalizeTokenFilter.normalize('\uFF94'));
+        Assert.assertEquals('\u3086', NormalizeTokenFilter.normalize('\uFF95'));
+        Assert.assertEquals('\u3088', NormalizeTokenFilter.normalize('\uFF96'));
+        Assert.assertEquals('\u3089', NormalizeTokenFilter.normalize('\uFF97'));
+        Assert.assertEquals('\u308A', NormalizeTokenFilter.normalize('\uFF98'));
+        Assert.assertEquals('\u308B', NormalizeTokenFilter.normalize('\uFF99'));
+        Assert.assertEquals('\u308C', NormalizeTokenFilter.normalize('\uFF9A'));
+        Assert.assertEquals('\u308D', NormalizeTokenFilter.normalize('\uFF9B'));
+        Assert.assertEquals('\u308F', NormalizeTokenFilter.normalize('\uFF9C'));
+        Assert.assertEquals('\u3093', NormalizeTokenFilter.normalize('\uFF9D'));
+    }
+    
+    
 
 }

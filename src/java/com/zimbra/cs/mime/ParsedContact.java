@@ -50,6 +50,7 @@ import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.IndexDocument;
 import com.zimbra.cs.index.analysis.FieldTokenStream;
+import com.zimbra.cs.index.analysis.NormalizeTokenFilter;
 import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.mailbox.ContactGroup;
@@ -676,7 +677,7 @@ public final class ParsedContact {
     private static void appendContactField(StringBuilder sb, ParsedContact contact, String fieldName) {
         String value = contact.getFields().get(fieldName);
         if (!Strings.isNullOrEmpty(value)) {
-            sb.append(value).append(' ');
+            sb.append(NormalizeTokenFilter.normalize(value)).append(' ');
         }
     }
 

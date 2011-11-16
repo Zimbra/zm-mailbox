@@ -29,6 +29,7 @@ import org.apache.lucene.analysis.CharStream;
  * </ul>
  *
  * @author ysasaki
+ * @author smukhopadhyay
  */
 public final class NormalizeTokenFilter extends CharFilter {
 
@@ -1078,122 +1079,239 @@ public final class NormalizeTokenFilter extends CharFilter {
             case '\uFF19': // [FULLWIDTH DIGIT NINE]
                 return '9';
             case '\uFF66': // [HALFWIDTH KATAKANA LETTER WO]
-                return '\u30F2';
+            case '\u30F2': // [KATAKANA LETTER WO]
+                return '\u3092';
             case '\uFF67': // [HALFWIDTH KATAKANA LETTER SMALL A]
-                return '\u30A1';
+            case '\u30A1': // [KATAKANA LETTER SMALL A]
+                return '\u3041';
             case '\uFF68': // [HALFWIDTH KATAKANA LETTER SMALL I]
-                return '\u30A3';
+            case '\u30A3': // [KATAKANA LETTER SMALL I]
+                return '\u3043';
             case '\uFF69': // [HALFWIDTH KATAKANA LETTER SMALL U]
-                return '\u30A5';
+            case '\u30A5': // [KATAKANA LETTER SMALL U]
+                return '\u3045';
             case '\uFF6A': // [HALFWIDTH KATAKANA LETTER SMALL E]
-                return '\u30A7';
+            case '\u30A7': // [KATAKANA LETTER SMALL E]
+                return '\u3047';
             case '\uFF6B': // [HALFWIDTH KATAKANA LETTER SMALL O]
-                return '\u30A9';
+            case '\u30A9': // [KATAKANA LETTER SMALL O]
+                return '\u3049';
             case '\uFF6C': // [HALFWIDTH KATAKANA LETTER SMALL YA]
-                return '\u30E3';
+            case '\u30E3': // [KATAKANA LETTER SMALL YA]
+                return '\u3083';
             case '\uFF6D': // [HALFWIDTH KATAKANA LETTER SMALL YU]
-                return '\u30E5';
+            case '\u30E5': // [KATAKANA LETTER SMALL YU]
+                return '\u3085';
             case '\uFF6E': // [HALFWIDTH KATAKANA LETTER SMALL YO]
-                return '\u30E7';
+            case '\u30E7': // [KATAKANA LETTER SMALL YO]
+                return '\u3087';
             case '\uFF6F': // [HALFWIDTH KATAKANA LETTER SMALL TU]
-                return '\u30C3';
+            case '\u30C3': // [KATAKANA LETTER SMALL TU]
+                return '\u3063';
             case '\uFF70': // [HALFWIDTH KATAKANA-HIRAGANA PROLONGED SOUND MARK]
                 return '\u30FC';
             case '\uFF71': // [HALFWIDTH KATAKANA LETTER A]
-                return '\u30A2';
+            case '\u30A2': // [KATAKANA LETTER A]
+                return '\u3042';
             case '\uFF72': // [HALFWIDTH KATAKANA LETTER I]
-                return '\u30A4';
+            case '\u30A4': // [KATAKANA LETTER I]
+                return '\u3044';
             case '\uFF73': // [HALFWIDTH KATAKANA LETTER U]
-                return '\u30A6';
+            case '\u30A6': // [KATAKANA LETTER U]
+                return '\u3046';
             case '\uFF74': // [HALFWIDTH KATAKANA LETTER E]
-                return '\u30A8';
+            case '\u30A8': // [KATAKANA LETTER E]
+                return '\u3048';
             case '\uFF75': // [HALFWIDTH KATAKANA LETTER O]
-                return '\u30AA';
+            case '\u30AA': // [KATAKANA LETTER O]
+                return '\u304A';
             case '\uFF76': // [HALFWIDTH KATAKANA LETTER KA]
-                return '\u30AB';
+            case '\u30AB': // [KATAKANA LETTER KA]
+                return '\u304B';
             case '\uFF77': // [HALFWIDTH KATAKANA LETTER KI]
-                return '\u30AD';
+            case '\u30AD': // [KATAKANA LETTER KI]
+                return '\u304D';
             case '\uFF78': // [HALFWIDTH KATAKANA LETTER KU]
-                return '\u30AF';
+            case '\u30AF': // [KATAKANA LETTER KU]
+                return '\u304F';
             case '\uFF79': // [HALFWIDTH KATAKANA LETTER KE]
-                return '\u30B1';
+            case '\u30B1': // [KATAKANA LETTER KE]
+                return '\u3051';
             case '\uFF7A': // [HALFWIDTH KATAKANA LETTER KO]
-                return '\u30B3';
+            case '\u30B3': // [KATAKANA LETTER KO]
+                return '\u3053';
             case '\uFF7B': // [HALFWIDTH KATAKANA LETTER SA]
-                return '\u30B5';
+            case '\u30B5': // [KATAKANA LETTER SA]
+                return '\u3055';
             case '\uFF7C': // [HALFWIDTH KATAKANA LETTER SI]
-                return '\u30B7';
+            case '\u30B7': // [KATAKANA LETTER SI]
+                return '\u3057';
             case '\uFF7D': // [HALFWIDTH KATAKANA LETTER SU]
-                return '\u30B9';
+            case '\u30B9': // [KATAKANA LETTER SU]
+                return '\u3059';
             case '\uFF7E': // [HALFWIDTH KATAKANA LETTER SE]
-                return '\u30BB';
+            case '\u30BB': // [KATAKANA LETTER SE]
+                return '\u305B';
             case '\uFF7F': // [HALFWIDTH KATAKANA LETTER SO]
-                return '\u30BD';
+            case '\u30BD': // [KATAKANA LETTER SO]
+                return '\u305D';
             case '\uFF80': // [HALFWIDTH KATAKANA LETTER TA]
-                return '\u30BF';
+            case '\u30BF': // [KATAKANA LETTER TA]
+                return '\u305F';
             case '\uFF81': // [HALFWIDTH KATAKANA LETTER TI]
-                return '\u30C1';
+            case '\u30C1': // [KATAKANA LETTER TI]
+                return '\u3061';
             case '\uFF82': // [HALFWIDTH KATAKANA LETTER TU]
-                return '\u30C4';
+            case '\u30C4': // [KATAKANA LETTER TU]
+                return '\u3064';
             case '\uFF83': // [HALFWIDTH KATAKANA LETTER TE]
-                return '\u30C6';
+            case '\u30C6': // [KATAKANA LETTER TE]
+                return '\u3066';
             case '\uFF84': // [HALFWIDTH KATAKANA LETTER TO]
-                return '\u30C8';
+            case '\u30C8': // [KATAKANA LETTER TO]
+                return '\u3068';
             case '\uFF85': // [HALFWIDTH KATAKANA LETTER NA]
-                return '\u30CA';
+            case '\u30CA': // [KATAKANA LETTER NA]
+                return '\u306A';
             case '\uFF86': // [HALFWIDTH KATAKANA LETTER NI]
-                return '\u30CB';
+            case '\u30CB': // [KATAKANA LETTER NI]
+                return '\u306B';
             case '\uFF87': // [HALFWIDTH KATAKANA LETTER NU]
-                return '\u30CC';
+            case '\u30CC': // [KATAKANA LETTER NU]
+                return '\u306C';
             case '\uFF88': // [HALFWIDTH KATAKANA LETTER NE]
-                return '\u30CD';
+            case '\u30CD': // [KATAKANA LETTER NE]
+                return '\u306D';
             case '\uFF89': // [HALFWIDTH KATAKANA LETTER NO]
-                return '\u30CE';
+            case '\u30CE': // [KATAKANA LETTER NO]
+                return '\u306E';
             case '\uFF8A': // [HALFWIDTH KATAKANA LETTER HA]
-                return '\u30CF';
+            case '\u30CF': // [KATAKANA LETTER HA]
+                return '\u306F';
             case '\uFF8B': // [HALFWIDTH KATAKANA LETTER HI]
-                return '\u30D2';
+            case '\u30D2': // [KATAKANA LETTER HI]
+                return '\u3072';
             case '\uFF8C': // [HALFWIDTH KATAKANA LETTER HU]
-                return '\u30D5';
+            case '\u30D5': // [KATAKANA LETTER HU]
+                return '\u3075';
             case '\uFF8D': // [HALFWIDTH KATAKANA LETTER HE]
-                return '\u30D8';
+            case '\u30D8': // [KATAKANA LETTER HE]
+                return '\u3078';
             case '\uFF8E': // [HALFWIDTH KATAKANA LETTER HO]
-                return '\u30DB';
+            case '\u30DB': // [KATAKANA LETTER HO]
+                return '\u307B';
             case '\uFF8F': // [HALFWIDTH KATAKANA LETTER MA]
-                return '\u30DE';
+            case '\u30DE': // [KATAKANA LETTER MA]
+                return '\u307E';
             case '\uFF90': // [HALFWIDTH KATAKANA LETTER MI]
-                return '\u30DF';
+            case '\u30DF': // [KATAKANA LETTER MI]
+                return '\u307F';
             case '\uFF91': // [HALFWIDTH KATAKANA LETTER MU]
-                return '\u30E0';
+            case '\u30E0': // [KATAKANA LETTER MU]
+                return '\u3080';
             case '\uFF92': // [HALFWIDTH KATAKANA LETTER ME]
-                return '\u30E1';
+            case '\u30E1': // [KATAKANA LETTER ME]
+                return '\u3081';
             case '\uFF93': // [HALFWIDTH KATAKANA LETTER MO]
-                return '\u30E2';
+            case '\u30E2': // [KATAKANA LETTER MO]
+                return '\u3082';
             case '\uFF94': // [HALFWIDTH KATAKANA LETTER YA]
-                return '\u30E4';
+            case '\u30E4': // [KATAKANA LETTER YA]
+                return '\u3084';
             case '\uFF95': // [HALFWIDTH KATAKANA LETTER YU]
-                return '\u30E6';
+            case '\u30E6': // [KATAKANA LETTER YU]
+                return '\u3086';
             case '\uFF96': // [HALFWIDTH KATAKANA LETTER YO]
-                return '\u30E8';
+            case '\u30E8': // [KATAKANA LETTER YO]
+                return '\u3088';
             case '\uFF97': // [HALFWIDTH KATAKANA LETTER RA]
-                return '\u30E9';
+            case '\u30E9': // [KATAKANA LETTER RA]
+                return '\u3089';
             case '\uFF98': // [HALFWIDTH KATAKANA LETTER RI]
-                return '\u30EA';
+            case '\u30EA': // [KATAKANA LETTER RI]
+                return '\u308A';
             case '\uFF99': // [HALFWIDTH KATAKANA LETTER RU]
-                return '\u30EB';
+            case '\u30EB': // [KATAKANA LETTER RU]
+                return '\u308B';
             case '\uFF9A': // [HALFWIDTH KATAKANA LETTER RE]
-                return '\u30EC';
+            case '\u30EC': // [KATAKANA LETTER RE]
+                return '\u308C';
             case '\uFF9B': // [HALFWIDTH KATAKANA LETTER RO]
-                return '\u30ED';
+            case '\u30ED': // [KATAKANA LETTER RO]
+                return '\u308D';
             case '\uFF9C': // [HALFWIDTH KATAKANA LETTER WA]
-                return '\u30EF';
+            case '\u30EF': // [KATAKANA LETTER WA]
+                return '\u308F';
             case '\uFF9D': // [HALFWIDTH KATAKANA LETTER N]
-                return '\u30F3';
+            case '\u30F3': // [KATAKANA LETTER N]
+                return '\u3093';
             case '\uFF9E': // [HALFWIDTH KATAKANA VOICED SOUND MARK]
                 return '\u3099';
             case '\uFF9F': // [HALFWIDTH KATAKANA SEMI-VOICED SOUND MARK]
                 return '\u309A';
+            case '\u30AC': // [KATAKANA LETTER GA]
+                return '\u304C';
+            case '\u30AE': // [KATAKANA LETTER GI]
+                return '\u304E';
+            case '\u30B2': // [KATAKANA LETTER GE]
+                return '\u3052';
+            case '\u30B4': // [KATAKANA LETTER GO]
+                return '\u3054';
+            case '\u30B6': // [KATAKANA LETTER ZA]
+                return '\u3056';
+            case '\u30B8': // [KATAKANA LETTER ZI]
+                return '\u3058';
+            case '\u30BA': // [KATAKANA LETTER ZU]
+                return '\u305A';
+            case '\u30BC': // [KATAKANA LETTER ZE]
+                return '\u305C';
+            case '\u30BE': // [KATAKANA LETTER ZO]
+                return '\u305E';
+            case '\u30C2': // [KATAKANA LETTER DI]
+                return '\u3062';
+            case '\u30C5': // [KATAKANA LETTER DU]
+                return '\u3065';
+            case '\u30C7': // [KATAKANA LETTER DE]
+                return '\u3067';
+            case '\u30C9': // [KATAKANA LETTER DO]
+                return '\u3069';
+            case '\u30D1': // [KATAKANA LETTER PA]
+                return '\u3071';
+            case '\u30D3': // [KATAKANA LETTER BI]
+                return '\u3073';
+            case '\u30D4': // [KATAKANA LETTER PI]
+                return '\u3074';
+            case '\u30D6': // [KATAKANA LETTER BU]
+                return '\u3076';
+            case '\u30D7': // [KATAKANA LETTER PU]
+                return '\u3077';
+            case '\u30D9': // [KATAKANA LETTER BE]
+                return '\u3079';
+            case '\u30DA': // [KATAKANA LETTER PE]
+                return '\u307A';
+            case '\u30DC': // [KATAKANA LETTER BO]
+                return '\u307C';
+            case '\u30DD': // [KATAKANA LETTER PO]
+                return '\u307D';
+            case '\u30EE': // [KATAKANA LETTER SMALL WA]
+                return '\u308E';
+            case '\u30F1': // [KATAKANA LETTER WE]
+                return '\u3091';
+            case '\u30F4': // [KATAKANA LETTER VU]
+                return '\u3094';
+            case '\u30F5': // [KATAKANA LETTER SMALL KA]
+                return '\u3095';
+            case '\u30F6': // [KATAKANA LETTER SMALL KE]
+                return '\u3096';
         }
         return Character.toLowerCase(c);
+    }
+    
+    public static String normalize(String value) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < value.length(); i++)
+            result.append((char) NormalizeTokenFilter.normalize(value.charAt(i)));
+
+        return result.toString();
     }
 }
