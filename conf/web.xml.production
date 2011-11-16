@@ -217,6 +217,10 @@
       <param-name>allowed.ports</param-name>
       <param-value>%%zimbraMailSSLClientCertPort%%, 9443</param-value>
     </init-param>
+    <init-param>
+      <param-name>errorpage.forbidden</param-name>
+      <param-value>/error/403.jsp</param-value>
+    </init-param>
     <load-on-startup>5</load-on-startup>
   </servlet>
   %%uncomment VAR:zimbraMailSSLClientCertPort,<!--,0%% HTTPSCLIENTCERTEND -->
