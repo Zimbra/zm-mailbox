@@ -513,7 +513,8 @@ public final class ToXML {
         // transfer ACL and child folders to the serialized mountpoint from the serialized remote folder
         for (Element child : mptTarget.listElements()) {
             String name = child.getName();
-            if (name.equals(MailConstants.E_FOLDER) || name.equals(MailConstants.E_SEARCH) || name.equals(MailConstants.E_MOUNT)) {
+            if (name.equals(MailConstants.E_FOLDER) || name.equals(MailConstants.E_SEARCH) ||
+                    name.equals(MailConstants.E_MOUNT) || name.equals(MailConstants.E_RETENTION_POLICY)) {
                 elem.addElement(child.clone());
             } else {
                 elem.addUniqueElement(child.clone());
