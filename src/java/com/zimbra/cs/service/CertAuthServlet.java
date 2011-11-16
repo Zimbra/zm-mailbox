@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -42,8 +43,18 @@ public class CertAuthServlet extends SSOServlet {
     // The regex here is to ensure that this servlet is only serving the URLs it recognizes,
     private static final Pattern allowedUrl = Pattern.compile("^(/service/certauth)(/|/(admin)(/)?)?$");
     
+    private static final String MSGPAGE_FORBIDDEN = "errorpage.forbidden";
+    private String forbiddenPage = null;
+    
     @Override
-    public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    public void init() throws ServletException {
+        super.init();
+        forbiddenPage = getInitParameter(MSGPAGE_FORBIDDEN);
+    }
+    
+    @Override
+    public void doGet(HttpServletRequest req, HttpServletResponse resp) 
+    throws ServletException, IOException {
         ZimbraLog.clearContext();
         addRemoteIpToLoggingContext(req);
         addUAToLoggingContext(req);
@@ -55,7 +66,8 @@ public class CertAuthServlet extends SSOServlet {
             
             boolean isAdminRequest = false;
             if (!matcher.matches()) {
-                throw ServiceException.INVALID_REQUEST("resource not allowed for the certauth servlet: " + url, null);
+                throw ServiceException.INVALID_REQUEST(
+                        "resource not allowed on the certauth servlet: " + url, null);
             } else {
                 if (matcher.groupCount() > 3 && "admin".equals(matcher.group(3))) {
                     isAdminRequest = true;
@@ -83,24 +95,49 @@ public class CertAuthServlet extends SSOServlet {
             ZimbraLog.account.debug("client certificate auth failed", e);
             
             // if we've got here, the only treatment is 403, regardless of zimbraMailSSLClientCertMode
-            resp.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
+            sendback403Message(req, resp);
         }
     }
 
     
     @Override
-    public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    public void doPost(HttpServletRequest req, HttpServletResponse resp) 
+    throws ServletException, IOException {
         doGet(req, resp);
     }
         
     private void dispatchOnError(HttpServletRequest req, HttpServletResponse resp,
-            boolean isAdminRequest, ServiceException e) throws IOException, ServiceException {
+            boolean isAdminRequest, ServiceException e) 
+    throws ServletException, IOException, ServiceException {
         if (missingClientCertOK()) {
             redirectToErrorPage(req, resp, isAdminRequest, null);
         } else {
-            resp.sendError(HttpServletResponse.SC_FORBIDDEN /*, e.getMessage() */);
+            sendback403Message(req, resp);
         }
     }
+    
+    private void sendback403Message(HttpServletRequest req, HttpServletResponse resp) 
+    throws ServletException, IOException {
+        
+        if (forbiddenPage != null) {
+            // try to send back a customizable/stylesheet-able page
+            try {
+                RequestDispatcher dispatcher = getServletContext().getRequestDispatcher(forbiddenPage);
+                if (dispatcher != null) {
+                    dispatcher.forward(req, resp);
+                    return;
+                }
+            } catch (IOException e) {
+                ZimbraLog.account.warn("unable to forward to forbidden page" + forbiddenPage, e);
+            } catch (ServletException e) {
+                ZimbraLog.account.warn("unable to forward to forbidden page" + forbiddenPage, e);
+            }
+        }
+        
+        // if not worked out, send back raw 403
+        resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+    }
+    
     
     private boolean missingClientCertOK() {
         try {
