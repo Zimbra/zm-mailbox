@@ -48,9 +48,11 @@ public class CertAuthServlet extends SSOServlet {
         addRemoteIpToLoggingContext(req);
         addUAToLoggingContext(req);
         
+        
         try {
             String url = req.getRequestURI();
             Matcher matcher = allowedUrl.matcher(url);
+            
             boolean isAdminRequest = false;
             if (!matcher.matches()) {
                 throw ServiceException.INVALID_REQUEST("resource not allowed for the certauth servlet: " + url, null);
@@ -64,35 +66,40 @@ public class CertAuthServlet extends SSOServlet {
             ZimbraPrincipal principal = null;
             try {
                 principal = authenticator.authenticate();
+                AuthToken authToken = authorize(req, AuthContext.Protocol.client_certificate, principal, isAdminRequest);
+                setAuthTokenCookieAndRedirect(req, resp, principal.getAccount(), authToken);
+                return;
             } catch (SSOAuthenticatorServiceException e) {
-                if (SSOAuthenticatorServiceException.NO_CLIENT_CERTIFICATE.equals(e.getCode())) {
-                    if (missingClientCertOK()) {
-                        redirectToErrorPage(req, resp, isAdminRequest, null);
-                        return;
-                    } else {
-                        throw e;
-                    }
-                }
-            }
-            
-            AuthToken authToken = authorize(req, AuthContext.Protocol.client_certificate, principal, isAdminRequest);
-            setAuthTokenCookieAndRedirect(req, resp, principal.getAccount(), authToken);
-            
-        } catch (ServiceException e) {
-            if (e instanceof AuthFailedServiceException) {
+                ZimbraLog.account.debug("client certificate auth failed", e);
+                dispatchOnError(req, resp, isAdminRequest, e);
+            } catch (AuthFailedServiceException e) {
                 AuthFailedServiceException afe = (AuthFailedServiceException)e;
                 ZimbraLog.account.debug("client certificate auth failed: " + afe.getMessage() + afe.getReason(", %s"), e);
-            } else {
-                ZimbraLog.account.warn("client certificate auth failed: " + e.getMessage(), e);
+                dispatchOnError(req, resp, isAdminRequest, e);
             }
+            
+        } catch (ServiceException e) {
+            ZimbraLog.account.warn("client certificate auth failed: " + e.getMessage(), e);
             ZimbraLog.account.debug("client certificate auth failed", e);
+            
+            // if we've got here, the only treatment is 403, regardless of zimbraMailSSLClientCertMode
             resp.sendError(HttpServletResponse.SC_FORBIDDEN, e.getMessage());
         }
     }
+
     
     @Override
     public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         doGet(req, resp);
+    }
+        
+    private void dispatchOnError(HttpServletRequest req, HttpServletResponse resp,
+            boolean isAdminRequest, ServiceException e) throws IOException, ServiceException {
+        if (missingClientCertOK()) {
+            redirectToErrorPage(req, resp, isAdminRequest, null);
+        } else {
+            resp.sendError(HttpServletResponse.SC_FORBIDDEN /*, e.getMessage() */);
+        }
     }
     
     private boolean missingClientCertOK() {
