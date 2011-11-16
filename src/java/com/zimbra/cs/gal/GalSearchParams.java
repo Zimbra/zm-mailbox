@@ -310,15 +310,19 @@ public class GalSearchParams {
         mFetchGroupMembers = fetchGroupMembers;
     }
 
-	public void setOp(GalOp op) {
-	    mOp = op;
-	}
-	
-	public void setUserAgent(String ua) {
-	    mUserAgent = ua;
-	}
-	
-	public String getUserInfo() {
-	    return mAccount.getName() + " (" + ((mUserAgent == null) ? "" : mUserAgent) + ")";
-	}
+    public void setOp(GalOp op) {
+        mOp = op;
+    }
+
+    public void setUserAgent(String ua) {
+        mUserAgent = ua;
+    }
+
+    public String getUserInfo() {
+        if (mAccount != null) {
+            return mAccount.getName() + " (" + ((mUserAgent == null) ? "" : mUserAgent) + ")";
+        } else {
+            return " (" + ((mUserAgent == null) ? "" : mUserAgent) + ")";
+        }
+    }
 }
