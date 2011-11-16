@@ -542,6 +542,13 @@ public class Mailbox {
                     MailboxUpgrade.upgradeTo2_3(this);
                     updateVersion(new MailboxVersion((short) 2, (short) 3));
                 }
+                
+                // POST flag
+                if (!mData.version.atLeast(2, 4)) {
+                    ZimbraLog.mailbox.info("Upgrade mailbox from %s to 2.4", getVersion());
+                    MailboxUpgrade.upgradeTo2_4(this);
+                    updateVersion(new MailboxVersion((short) 2, (short) 4));
+                }
             }
 
             // done!
@@ -1555,7 +1562,7 @@ public class Mailbox {
             Flag.ID_FROM_ME, Flag.ID_ATTACHED, Flag.ID_REPLIED, Flag.ID_FORWARDED,
             Flag.ID_COPIED, Flag.ID_FLAGGED, Flag.ID_DRAFT, Flag.ID_DELETED,
             Flag.ID_NOTIFIED, Flag.ID_UNREAD, Flag.ID_HIGH_PRIORITY, Flag.ID_LOW_PRIORITY,
-            Flag.ID_VERSIONED, Flag.ID_POPPED, Flag.ID_NOTE, Flag.ID_PRIORITY, Flag.ID_INVITE
+            Flag.ID_VERSIONED, Flag.ID_POPPED, Flag.ID_NOTE, Flag.ID_PRIORITY, Flag.ID_INVITE, Flag.ID_POST
     );
 
     /** Creates the default set of immutable system folders in a new mailbox.
@@ -4937,8 +4944,8 @@ public class Mailbox {
             }
         }
 
-        // caller can't set system flags other than \Draft and \Sent
-        flags &= ~Flag.FLAGS_SYSTEM | Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME;
+        // caller can't set system flags other than \Draft, \Sent and \Post
+        flags &= ~Flag.FLAGS_SYSTEM | Flag.BITMASK_DRAFT | Flag.BITMASK_FROM_ME | Flag.BITMASK_POST;
         // caller can't specify non-message flags
         flags &= Flag.FLAGS_GENERIC | Flag.FLAGS_MESSAGE;
 

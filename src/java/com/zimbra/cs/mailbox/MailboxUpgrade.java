@@ -298,6 +298,39 @@ public final class MailboxUpgrade {
             conn.closeQuietly();
         }
     }
+    
+    /**
+     * Create POST flag in TAG table.
+     */
+    public static void upgradeTo2_4(Mailbox mbox) throws ServiceException {
+        DbConnection conn = DbPool.getConnection(mbox);
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            stmt = conn.prepareStatement("SELECT COUNT(*) FROM " + DbTag.getTagTableName(mbox) +
+                    " WHERE " + DbMailItem.IN_THIS_MAILBOX_AND + "id = ?");
+            int pos = DbMailItem.setMailboxId(stmt, mbox, 1);
+            stmt.setInt(pos, Flag.ID_POST);
+            rs = stmt.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                ZimbraLog.mailbox.debug("POST flag already exists");
+                return;
+            }
+
+            // put POST flag in the TAG table
+            DbTag.createTag(conn, mbox, Flag.FlagInfo.POST.toFlag(mbox).mData, null, false);
+            conn.commit();
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("Failed to create POST flag", e);
+        } catch (ServiceException e) {
+            conn.rollback();
+            throw e;
+        } finally {
+            conn.closeQuietly(rs);
+            conn.closeQuietly(stmt);
+            conn.closeQuietly();
+        }
+    }
 
     private static void migrateFlagColumn(DbConnection conn, Mailbox mbox) throws ServiceException {
         // for flags that we want to be searchable, put an entry in the TAG table
