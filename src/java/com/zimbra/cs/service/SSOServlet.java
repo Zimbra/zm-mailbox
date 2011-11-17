@@ -16,6 +16,7 @@
 package com.zimbra.cs.service;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -104,6 +105,33 @@ public abstract class SSOServlet extends ZimbraServlet {
         resp.setContentLength(0);
     }
     
+    private String getRedirectURL(HttpServletRequest req, Server server, boolean isAdmin) 
+    throws ServiceException, MalformedURLException {
+        boolean relative = redirectToRelativeURL();
+        
+        String redirectUrl;
+        if (isAdmin) {
+            redirectUrl = getAdminURL(server, relative);
+        } else {
+            redirectUrl = getMailURL(server, relative);
+        }
+        
+        if (!relative) {
+            URL url = new URL(redirectUrl);
+         
+            // replace host of the URL to the host the request was sent to
+            String reqHost = req.getServerName();
+            String host = url.getHost();
+            
+            if (!reqHost.equalsIgnoreCase(host)) {
+                URL destUrl = new URL(url.getProtocol(), reqHost, url.getPort(), url.getFile());
+                redirectUrl = destUrl.toString();
+            }
+        }
+        
+        return redirectUrl;
+    }
+    
     protected void setAuthTokenCookieAndRedirect(HttpServletRequest req, HttpServletResponse resp, 
             Account acct, AuthToken authToken) 
     throws IOException, ServiceException {
@@ -115,27 +143,22 @@ public abstract class SSOServlet extends ZimbraServlet {
         Provisioning prov = Provisioning.getInstance();
         Server server = prov.getServer(acct);
         
-        boolean relative = redirectToRelativeURL();
-        
-        String redirectUrl;
-        if (isAdmin) {
-            redirectUrl = getAdminUrl(server, relative);
-        } else {
-            redirectUrl = getMailUrl(server, relative);
-        }
+        String redirectUrl = getRedirectURL(req, server, isAdmin);
         
         // always append the ignore loginURL query so we do not get into a redirect loop.
         redirectUrl = redirectUrl + IGNORE_LOGIN_URL;  // not yet supported for admin console
         
+        boolean relative = redirectToRelativeURL();
         if (!relative) {
             URL url = new URL(redirectUrl);
             boolean isRedirectProtocolSecure = isProtocolSecure(url.getProtocol());
             
             if (secureCookie && !isRedirectProtocolSecure) {
-                throw ServiceException.INVALID_REQUEST("cannot redirect to non-secure protocol: " + redirectUrl, null);
+                throw ServiceException.INVALID_REQUEST(
+                        "cannot redirect to non-secure protocol: " + redirectUrl, null);
             }
         }
-                
+        
         ZimbraLog.account.debug("SSOServlet - redirecting (with auth token) to: " + redirectUrl);
         resp.sendRedirect(redirectUrl);
     }
@@ -149,14 +172,8 @@ public abstract class SSOServlet extends ZimbraServlet {
         String redirectUrl;
         
         if (errorUrl == null) {
-            boolean relative = redirectToRelativeURL();
             Server server = Provisioning.getInstance().getLocalServer();
-            
-            if (isAdminRequest) {
-                redirectUrl = getAdminUrl(server, relative); 
-            } else {
-                redirectUrl = getMailUrl(server, relative);
-            }
+            redirectUrl = getRedirectURL(req, server, isAdminRequest);
             
             // always append the ignore loginURL query so we do not get into a redirect loop.
             redirectUrl = redirectUrl + IGNORE_LOGIN_URL;  // not yet supported for admin console
@@ -174,10 +191,8 @@ public abstract class SSOServlet extends ZimbraServlet {
         return URLUtil.PROTO_HTTPS.equalsIgnoreCase(protocol);
     }
     
-    private String getMailUrl(Server server, boolean relative) throws ServiceException {
-        final String DEFAULT_MAIL_URL = "/zimbra";
-    
-        String serviceUrl = server.getAttr(Provisioning.A_zimbraMailURL, DEFAULT_MAIL_URL);
+    private String getMailURL(Server server, boolean relative) throws ServiceException {
+        String serviceUrl = server.getMailURL();
         
         if (relative) {
             return serviceUrl;
@@ -186,10 +201,8 @@ public abstract class SSOServlet extends ZimbraServlet {
         }
     }
     
-    private String getAdminUrl(Server server, boolean relative) throws ServiceException {
-        final String DEFAULT_ADMIN_URL = "/zimbraAdmin";
-        
-        String serviceUrl = server.getAttr(Provisioning.A_zimbraAdminURL, DEFAULT_ADMIN_URL);
+    private String getAdminURL(Server server, boolean relative) throws ServiceException {
+        String serviceUrl = server.getAdminURL();
         
         if (relative) {
             return serviceUrl;
