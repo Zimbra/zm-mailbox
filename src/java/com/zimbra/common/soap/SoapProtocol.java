@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -19,14 +19,12 @@
 
 package com.zimbra.common.soap;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
-import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 
 /**
@@ -162,6 +160,43 @@ public abstract class SoapProtocol {
         return prettyPrint ? env.prettyPrint() : env.toString();
     }
 
+//    /** Convert an Element to a String. Doesn't really belong here... */
+//    public static String toString(org.dom4j.Element env, boolean prettyPrint)
+//    {
+//        if (prettyPrint) {
+//            StringWriter buff = new StringWriter();
+//            try {
+//                OutputFormat format = OutputFormat.createPrettyPrint();
+//                XMLWriter writer = new XMLWriter(buff, format);
+//                writer.write(env);
+//                writer.close();
+//            } catch (IOException e) {
+//                // ignore, since StringWriter doesn't throw IOExceptions
+//            }
+//            return buff.toString();
+//        } else {
+//            return env.toString();
+//        }
+//    }
+//
+//    public static byte[] toBytes(Element env, boolean prettyPrint) {
+//        ByteArrayOutputStream os = new ByteArrayOutputStream();
+//        try {
+//            XMLWriter writer;
+//            if (prettyPrint) {
+//                OutputFormat format = OutputFormat.createPrettyPrint();
+//                writer = new XMLWriter(os, format);
+//            } else {
+//                writer = new XMLWriter(os);
+//            }
+//            writer.write(env);
+//            writer.close();
+//        } catch (IOException ioe) {
+//            // ignore, since ByteArrayOutputStream doesn't throw IOExceptions
+//        }
+//        return os.toByteArray();
+//    }
+
     /** 
      * returns the first child in the soap body
      */
@@ -177,9 +212,9 @@ public abstract class SoapProtocol {
             return null;
         }
         
-        Iterator<Element> it = body.elementIterator();
+        Iterator it = body.elementIterator();
         if (it.hasNext())
-            return it.next();
+            return (Element) it.next();
         return null;
     }
 

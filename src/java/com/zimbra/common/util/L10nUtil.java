@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -43,9 +43,6 @@ public class L10nUtil {
      * List all message keys here
      */
     public static enum MsgKey {
-        // account auto provisioning messages
-        accountAutoProvisionedBody,
-        accountAutoProvisionedSubject,
 
         replySubjectPrefix,
 
@@ -105,16 +102,9 @@ public class L10nUtil {
         carddavAddressbookDescription,
 
         // share notification
-        mail,
-        calendar,
-        task,
-        addressBook,
-        briefcase,
-
         shareNotifSubject,
-        sharedBySubject,
-        shareNotifBodyText,
-        shareNotifBodyHtml,
+
+        shareNotifBodyIntro,
 
         shareNotifBodyAddedToGroup1,
         shareNotifBodyAddedToGroup2,
@@ -123,11 +113,13 @@ public class L10nUtil {
         shareNotifBodyGranteeRoleManager,
         shareNotifBodyGranteeRoleAdmin,
 
+        shareNotifBodySharedItem,
         shareNotifBodyFolderDesc,
-        shareNotifBodyExternalShareText,
-        shareNotifBodyExternalShareHtml,
-        shareNotifBodyNotesText,
-        shareNotifBodyNotesHtml,
+        shareNotifBodyOwner,
+        shareNotifBodyGrantee,
+        shareNotifBodyRole,
+        shareNotifBodyAllowedActions,
+        shareNotifBodyNotes,
 
         shareNotifBodyActionRead,
         shareNotifBodyActionWrite,
@@ -139,18 +131,6 @@ public class L10nUtil {
         shareNotifBodyActionFreebusy,
         shareNotifBodyActionSubfolder,
         //////////////////////
-        
-        // group subscription request
-        dlSubscriptionRequestSubject,
-        dlSubscribeRequestText,
-        dlUnsubscribeRequestText,
-        
-        // group subscription response
-        dlSubscriptionResponseSubject,
-        dlSubscribeResponseAcceptedText,
-        dlSubscribeResponseRejectedText,
-        dlUnsubscribeResponseAcceptedText,
-        dlUnsubscribeResponseRejectedText,
 
         // read-receipt notification body
         readReceiptNotification,
@@ -214,10 +194,8 @@ public class L10nUtil {
         errUnsupportedFormat,
         errResourceNotAllowedOnPort,
 
-        passwordViolation,
-
-        domainAggrQuotaWarnMsgSubject,
-        domainAggrQuotaWarnMsgBody
+        passwordViolation
+        
         // add other messages in the future...
     }
 
