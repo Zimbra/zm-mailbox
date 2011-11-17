@@ -34,7 +34,9 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.dom4j.DocumentFactory;
 import org.dom4j.QName;
+import org.dom4j.io.SAXContentHandler;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 
@@ -42,6 +44,8 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.MailConstants;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 
 public abstract class Element implements Cloneable {
     protected String  mName;
@@ -426,10 +430,11 @@ public abstract class Element implements Cloneable {
     
     public static org.dom4j.io.SAXReader getSAXReader(org.dom4j.DocumentFactory fact) {
         org.dom4j.io.SAXReader saxReader;
-        if (fact != null)
-            saxReader = new org.dom4j.io.SAXReader(fact);
-        else
-            saxReader = new org.dom4j.io.SAXReader();
+        if (fact != null) {
+            saxReader = new SAXReader(fact);
+        } else {
+            saxReader = new SAXReader();
+        }
 
         EntityResolver nullEntityResolver = new EntityResolver() {
             public InputSource resolveEntity (String publicId, String systemId) {
@@ -440,7 +445,34 @@ public abstract class Element implements Cloneable {
         return saxReader; 
     }
 
-    public static Element convertDOM(org.dom4j.Element d4root) { return convertDOM(d4root, XMLElement.mFactory); }
+    public static class SAXReader extends org.dom4j.io.SAXReader {
+
+        public SAXReader() {
+            super();
+        }
+
+        public SAXReader(DocumentFactory factory) {
+            super(factory);
+        }
+
+        /**
+         * Factory Method to allow user derived SAXContentHandler objects to be used
+         */
+        @Override
+        protected SAXContentHandler createContentHandler(XMLReader reader) {
+            return new SAXContentHandler(getDocumentFactory(), getDispatchHandler()) {
+                @Override
+                public void startDTD(String name, String publicId, String systemId) throws SAXException {
+                    throw new SAXException("inline DTD not allowed");
+                }
+            };
+        }
+    }
+
+    public static Element convertDOM(org.dom4j.Element d4root) {
+        return convertDOM(d4root, XMLElement.mFactory);
+    }
+
     public static Element convertDOM(org.dom4j.Element d4root, ElementFactory factory) {
         Element elt = factory.createElement(d4root.getQName());
         for (Iterator<?> it = d4root.attributeIterator(); it.hasNext(); ) {
