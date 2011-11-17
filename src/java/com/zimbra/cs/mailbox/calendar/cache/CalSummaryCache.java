@@ -715,8 +715,8 @@ public class CalSummaryCache {
 
     void notifyCommittedChanges(PendingModifications mods, int changeId) {
         if (mods.created != null) {
-            for (Map.Entry<ModificationKey, MailItem> entry : mods.created.entrySet()) {
-                MailItem item = entry.getValue();
+            for (Map.Entry<ModificationKey, Change> entry : mods.created.entrySet()) {
+                MailItem item = (MailItem) entry.getValue().what;
                 if (item instanceof CalendarItem) {
                     int folderId = item.getFolderId();
                     invalidateItem(item.getMailbox(), folderId, item.getId());

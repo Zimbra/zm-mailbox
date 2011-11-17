@@ -117,8 +117,8 @@ public class CalListCache {
     void notifyCommittedChanges(PendingModifications mods, int changeId) {
         ChangeMap changeMap = new ChangeMap(1);
         if (mods.created != null) {
-            for (Map.Entry<ModificationKey, MailItem> entry : mods.created.entrySet()) {
-                MailItem item = entry.getValue();
+            for (Map.Entry<ModificationKey, Change> entry : mods.created.entrySet()) {
+                MailItem item = (MailItem) entry.getValue().what;
                 if (item instanceof Folder) {
                     Folder folder = (Folder) item;
                     MailItem.Type viewType = folder.getDefaultView();

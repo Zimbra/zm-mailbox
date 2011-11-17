@@ -59,7 +59,7 @@ public class ImapSession extends Session {
         void handleTagDelete(int changeId, int tagId, Change chg);
         void handleTagRename(int changeId, Tag tag, Change chg);
         void handleItemDelete(int changeId, int itemId, Change chg);
-        void handleItemCreate(int changeId, MailItem item, AddedItems added);
+        void handleItemCreate(int changeId, Change chg, AddedItems added);
         void handleFolderRename(int changeId, Folder folder, Change chg);
         void handleItemUpdate(int changeId, Change chg, AddedItems added);
         void handleAddedMessages(int changeId, AddedItems added);
@@ -364,8 +364,8 @@ public class ImapSession extends Session {
                     }
                 }
                 if (pns.created != null) {
-                    for (MailItem item : pns.created.values()) {
-                        handleCreate(changeId, item, added);
+                    for (Change chg : pns.created.values()) {
+                        handleCreate(changeId, chg, added);
                     }
                 }
                 if (pns.modified != null) {
@@ -420,11 +420,11 @@ public class ImapSession extends Session {
         }
     }
 
-    private void handleCreate(int changeId, MailItem item, AddedItems added) {
-        if (item == null || item.getId() <= 0) {
+    private void handleCreate(int changeId, Change chg, AddedItems added) {
+        if (chg.what == null || ((MailItem)chg.what).getId() <= 0) {
             return;
-        } else if (item.getFolderId() == mFolderId && (item instanceof Message || item instanceof Contact)) {
-            mFolder.handleItemCreate(changeId, item, added);
+        } else if (((MailItem)chg.what).getFolderId() == mFolderId && (chg.what instanceof Message || chg.what instanceof Contact)) {
+            mFolder.handleItemCreate(changeId, chg, added);
         }
     }
 
@@ -568,16 +568,16 @@ public class ImapSession extends Session {
 
         private synchronized void queueDelete(int changeId, int itemId, Change chg) {
             getQueuedNotifications(changeId).recordDeleted(
-                    getTargetAccountId(), itemId, (MailItem.Type) chg.what, chg.op, chg.when);
+                    getTargetAccountId(), itemId, (MailItem.Type) chg.what, chg.op, chg.when, chg.who);
         }
 
-        private synchronized void queueCreate(int changeId, MailItem item) {
-            getQueuedNotifications(changeId).recordCreated(item);
+        private synchronized void queueCreate(int changeId, Change chg) {
+            getQueuedNotifications(changeId).recordCreated((MailItem)chg.what, chg.who);
         }
 
         private synchronized void queueModify(int changeId, Change chg) {
             getQueuedNotifications(changeId).recordModified(
-                    chg.op, (MailItem) chg.what, chg.why, chg.when, (MailItem) chg.preModifyObj);
+                    chg.op, (MailItem) chg.what, chg.why, chg.when, chg.who, (MailItem) chg.preModifyObj);
         }
 
         synchronized void replay() {
@@ -611,8 +611,8 @@ public class ImapSession extends Session {
         }
 
         @Override
-        public void handleItemCreate(int changeId, MailItem item, AddedItems added) {
-            queueCreate(changeId, item);
+        public void handleItemCreate(int changeId, Change chg, AddedItems added) {
+            queueCreate(changeId, chg);
         }
 
         @Override

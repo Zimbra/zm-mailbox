@@ -227,8 +227,8 @@ public class CtagInfoCache {
         int inboxFolder = Mailbox.ID_FOLDER_INBOX;
         Set<CalendarKey> keysToInvalidate = new HashSet<CalendarKey>();
         if (mods.created != null) {
-            for (Map.Entry<ModificationKey, MailItem> entry : mods.created.entrySet()) {
-                MailItem item = entry.getValue();
+            for (Map.Entry<ModificationKey, Change> entry : mods.created.entrySet()) {
+                MailItem item = (MailItem) entry.getValue().what;
                 if (item instanceof Message) {
                     Message msg = (Message) item;
                     if (msg.hasCalendarItemInfos() && msg.getFolderId() == inboxFolder) {

@@ -29,8 +29,8 @@ public class CalItemReminderService extends MailboxListener {
     public void notify(ChangeNotification notification) {
         Account account = notification.mailboxAccount;
         if (notification.mods.created != null) {
-            for (Map.Entry<ModificationKey, MailItem> entry : notification.mods.created.entrySet()) {
-                MailItem item = entry.getValue();
+            for (Map.Entry<ModificationKey, Change> entry : notification.mods.created.entrySet()) {
+                MailItem item = (MailItem) entry.getValue().what;
                 if (item instanceof CalendarItem) {
                     ZimbraLog.scheduler.debug("Handling creation of calendar item (id=%s,mailboxId=%s)",
                             item.getId(), item.getMailboxId());

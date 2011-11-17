@@ -172,8 +172,8 @@ public class FoldersTagsCache {
 
         Map<String /* account id */, Mailbox> mboxesToUpdate = new HashMap<String, Mailbox>();
         if (mods.created != null) {
-            for (Map.Entry<ModificationKey, MailItem> entry : mods.created.entrySet()) {
-                MailItem item = entry.getValue();
+            for (Map.Entry<ModificationKey, Change> entry : mods.created.entrySet()) {
+                MailItem item = (MailItem) entry.getValue().what;
                 if (item instanceof Folder || item instanceof Tag) {
                     Mailbox mbox = item.getMailbox();
                     mboxesToUpdate.put(mbox.getAccountId(), mbox);

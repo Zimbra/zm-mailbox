@@ -205,7 +205,7 @@ public final class MailboxTest {
             Assert.assertNotNull("creates aren't null", ml.pms.created);
             Assert.assertEquals("one created folder", 1, ml.pms.created.size());
             Assert.assertNotNull("created folder has entry", ml.pms.created.get(fkey));
-            Assert.assertEquals("created folder matches created entry", f.getId(), ml.pms.created.get(fkey).getId());
+            Assert.assertEquals("created folder matches created entry", f.getId(), ((MailItem)ml.pms.created.get(fkey).what).getId());
 
             Assert.assertNotNull("modifications aren't null", ml.pms.modified);
             Assert.assertEquals("one modified folder", 1, ml.pms.modified.size());
