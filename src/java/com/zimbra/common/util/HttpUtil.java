@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
@@ -152,8 +153,13 @@ public final class HttpUtil {
 
         for (String pair : queryString.split("&")) {
             String[] keyVal = pair.split("=");
-            String value = keyVal.length > 1 ? urlUnescape(keyVal[1]) : "";
-            params.put(urlUnescape(keyVal[0]), value);
+            // URI query string is always encoded with application/x-www-form-urlencoded,
+            // so use URLDecoder.decode() which converts '+' to ' ' 
+            try {
+                String value = keyVal.length > 1 ? URLDecoder.decode(keyVal[1], "UTF-8") : "";
+                params.put(URLDecoder.decode(keyVal[0], "UTF-8"), value);
+            } catch (UnsupportedEncodingException e) {                
+            }            
         }
         return params;
     }
@@ -210,6 +216,7 @@ public final class HttpUtil {
         sUrlEscapeMap.put('{', "%7B");
         sUrlEscapeMap.put('|', "%7C");
         sUrlEscapeMap.put('}', "%7D");
+        sUrlEscapeMap.put('+', "%2B");
     }
 
     /**
