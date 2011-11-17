@@ -4045,8 +4045,8 @@ public class DbMailItem {
             rs = stmt.executeQuery();
 
             while (rs.next()) {
-                MailItem.Type type = MailItem.Type.of(rs.getByte(1));
-                String row = rs.getString(2);
+                MailItem.Type type = MailItem.Type.of(rs.getByte(2));
+                String row = rs.getString(1);
                 if (row == null || row.equals(""))
                     continue;
                 for (String entry : row.split(",")) {
