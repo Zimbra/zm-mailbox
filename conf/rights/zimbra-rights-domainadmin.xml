@@ -75,6 +75,7 @@
     <a n="zimbraCalendarCalDavSharedFolderCacheDuration"/>
     <a n="zimbraCalendarCalDavSyncEnd"/>
     <a n="zimbraCalendarCalDavSyncStart"/>
+    <a n="zimbraCalendarKeepExceptionsOnSeriesTimeChange"/>
     <a n="zimbraCalendarMaxRevisions"/>
     <a n="zimbraCalendarReminderDeviceEmail"/>
     <a n="zimbraChildAccount"/>
@@ -149,6 +150,7 @@
     <a n="zimbraNewMailNotificationSubject"/>
     <a n="zimbraNotes"/>
     <a n="zimbraPasswordAllowedChars"/>
+    <a n="zimbraPasswordAllowedPunctuationChars"/>
     <a n="zimbraPasswordEnforceHistory"/>
     <a n="zimbraPasswordLocked"/>
     <a n="zimbraPasswordLockoutDuration"/>
@@ -161,6 +163,7 @@
     <a n="zimbraPasswordMaxLength"/>
     <a n="zimbraPasswordMinAge"/>
     <a n="zimbraPasswordMinAlphaChars"/>
+    <a n="zimbraPasswordMinDigitsOrPuncs"/>
     <a n="zimbraPasswordMinLength"/>
     <a n="zimbraPasswordMinLowerCaseChars"/>
     <a n="zimbraPasswordMinNumericChars"/>
