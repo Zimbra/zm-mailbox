@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -41,6 +41,7 @@ import org.dom4j.io.SAXReader;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
@@ -69,6 +70,7 @@ public class RightManager {
     private static final String A_CACHE        = "cache";
     private static final String A_FALLBACK     = "fallback";
     private static final String A_FILE         = "file";
+    private static final String A_GRANT_TARGET_TYPE  = "grantTargetType";
     private static final String A_LIMIT        = "l";
     private static final String A_N            = "n";
     private static final String A_NAME         = "name";
@@ -84,14 +86,17 @@ public class RightManager {
     private Map<String, UserRight> sUserRights = new TreeMap<String, UserRight>();  
     private Map<String, AdminRight> sAdminRights = new TreeMap<String, AdminRight>();  
     private Map<String, Help> sHelp = new TreeMap<String, Help>();  
-
+    
     static private class CoreRightDefFiles {
         private static final HashSet<String> sCoreRightDefFiles = new HashSet<String>();
         
-        static {
+        static void init(boolean unittest) {
             sCoreRightDefFiles.add("zimbra-rights.xml");
             sCoreRightDefFiles.add("zimbra-user-rights.xml");
-            // sCoreRightDefFiles.add("rights-unittest.xml");
+            
+            if (unittest) {
+                sCoreRightDefFiles.add("rights-unittest.xml");
+            }
         }
         
         static boolean isCoreRightFile(File file) {
@@ -113,11 +118,16 @@ public class RightManager {
     }
     
     public static synchronized RightManager getInstance() throws ServiceException {
+        return getInstance(false);
+    }
+    
+    public static synchronized RightManager getInstance(boolean unittest) throws ServiceException {
         if (mInstance != null) {
             return mInstance;
         }
+        
         String dir = LC.zimbra_rights_directory.value();
-        mInstance = new RightManager(dir);
+        mInstance = new RightManager(dir, unittest);
         
         try {
             Right.init(mInstance);
@@ -128,7 +138,9 @@ public class RightManager {
         return mInstance;
     }
     
-    private RightManager(String dir) throws ServiceException {
+    private RightManager(String dir, boolean unittest) throws ServiceException {
+        CoreRightDefFiles.init(unittest);
+        
         File fdir = new File(dir);
         if (!fdir.exists()) {
             throw ServiceException.FAILURE("rights directory does not exists: " + dir, null);
@@ -297,10 +309,11 @@ public class RightManager {
         
         if (userRight) {
             TargetType targetType;
-            if (targetTypeStr != null)
+            if (targetTypeStr != null) {
                 targetType = TargetType.fromCode(targetTypeStr);
-            else
+            } else {
                 targetType = TargetType.account;  // default target type for user right is account
+            }
             
             right = new UserRight(name);
             right.setTargetType(targetType);
@@ -313,8 +326,9 @@ public class RightManager {
             
         } else {
             String rt = eRight.attributeValue(A_TYPE);
-            if (rt == null)
+            if (rt == null) {
                 throw ServiceException.PARSE_ERROR("missing attribute [" + A_TYPE + "]", null);
+            }
             rightType = AdminRight.RightType.fromString(rt);
             
             right = AdminRight.newAdminSystemRight(name, rightType);
@@ -327,24 +341,32 @@ public class RightManager {
             }
         }
         
+        String grantTargetTypeStr = eRight.attributeValue(A_GRANT_TARGET_TYPE, null);
+        if (grantTargetTypeStr != null) {
+            TargetType grantTargetType = TargetType.fromCode(grantTargetTypeStr);
+            right.setGrantTargetType(grantTargetType);
+        }
+        
         boolean cache = getBooleanAttr(eRight, A_CACHE, false);
-        if (cache)
+        if (cache) {
             right.setCacheable();
-
+        }
+        
         for (Iterator elemIter = eRight.elementIterator(); elemIter.hasNext();) {
             Element elem = (Element)elemIter.next();
-            if (elem.getName().equals(E_DESC))
+            if (elem.getName().equals(E_DESC)) {
                 parseDesc(elem, right);
-            else if (elem.getName().equals(E_HELP))
+            } else if (elem.getName().equals(E_HELP)) {
                 parseHelp(elem, right);
-            else if (elem.getName().equals(E_DEFAULT))
+            } else if (elem.getName().equals(E_DEFAULT)) {
                 parseDefault(elem, right);
-            else if (elem.getName().equals(E_ATTRS))
+            } else if (elem.getName().equals(E_ATTRS)) {
                 parseAttrs(elem, right);
-            else if (elem.getName().equals(E_RIGHTS))
+            } else if (elem.getName().equals(E_RIGHTS)) {
                 parseRights(elem, right);
-            else
+            } else {
                 throw ServiceException.PARSE_ERROR("invalid element: " + elem.getName(), null);
+            }
         }
         
         // verify that all required fields are set and populate internal data
@@ -412,7 +434,6 @@ public class RightManager {
             } else {
                 throw ServiceException.PARSE_ERROR("unknown element: " + elem.getName(), null);
             }
-            
         }
         
         return true;
@@ -476,8 +497,8 @@ public class RightManager {
         
         sHelp.put(name, help);
     }
-    
-    void checkName(String name) throws ServiceException {
+
+    private void checkName(String name) throws ServiceException {
         
         // help name cannot be the same as any of the right names because name is the 
         // key to the generated ZsMsgRights.properties file.
@@ -498,32 +519,37 @@ public class RightManager {
     
     public UserRight getUserRight(String right) throws ServiceException {
         UserRight r = sUserRights.get(right);
-        if (r == null)
+        if (r == null) {
             throw ServiceException.FAILURE("invalid right " + right, null);
+        }
         return r;
     }
     
     public AdminRight getAdminRight(String right) throws ServiceException {
         AdminRight r = sAdminRights.get(right);
-        if (r == null)
+        if (r == null) {
             throw ServiceException.FAILURE("invalid right " + right, null);
+        }
         return r;
     }
     
     public Right getRight(String right) throws ServiceException {
-        if (InlineAttrRight.looksLikeOne(right))
+        if (InlineAttrRight.looksLikeOne(right)) {
             return InlineAttrRight.newInlineAttrRight(right);
-        else
+        } else {
             return getRightInternal(right, true);
+        }
     }
     
     private Right getRightInternal(String right, boolean mustFind) throws ServiceException {
         Right r = sUserRights.get(right);
-        if (r == null)
+        if (r == null) {
             r = sAdminRights.get(right);
+        }
         
-        if (mustFind && r == null)
+        if (mustFind && r == null) {
             throw AccountServiceException.NO_SUCH_RIGHT("invalid right " + right);
+        }
         
         return r;
     }
@@ -537,8 +563,9 @@ public class RightManager {
     }
     
     private String dump(StringBuilder sb) {
-        if (sb == null)
+        if (sb == null) {
             sb = new StringBuilder();
+        }
         
         sb.append("============\n");
         sb.append("user rights:\n");
@@ -672,7 +699,7 @@ public class RightManager {
         private static void check() throws ServiceException  {
             ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
             
-            RightManager rm = new RightManager("/Users/pshao/p4/main/ZimbraServer/conf/rights");
+            RightManager rm = new RightManager("/Users/pshao/p4/main/ZimbraServer/conf/rights", false);
             System.out.println(rm.dump(null));
         }
         
@@ -775,7 +802,7 @@ public class RightManager {
             if (!"genDomainAdminSetAttrsRights".equals(action)) {
                 if (!cl.hasOption('i')) usage("no input dir specified");
                 inputDir = cl.getOptionValue('i');
-                rm = new RightManager(inputDir);
+                rm = new RightManager(inputDir, false);
             }
              
             if ("genRightConsts".equals(action))
