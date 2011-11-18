@@ -954,8 +954,7 @@ public final class ImapFolder implements ImapSession.ImapFolderData, java.io.Ser
     }
 
     @Override
-    public void handleItemCreate(int changeId, Change chg, ImapSession.AddedItems added) {
-        MailItem item = (MailItem) chg.what;
+    public void handleItemCreate(int changeId, MailItem item, ImapSession.AddedItems added) {
         int msgId = item.getId();
         // make sure this message hasn't already been detected in the folder
         if (getById(msgId) != null) {

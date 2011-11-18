@@ -572,14 +572,14 @@ public class TagTest {
             // new implicit tags should not be included in notifications
             DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX).setFlags(Flag.BITMASK_UNREAD).setTags(new String[] { tag2 });
             mbox.addMessage(null, ThreaderTest.getRootMessage(), dopt, null);
-            for (Change chg : ml.pms.created.values()) {
-                Assert.assertFalse("implicit tags should not be notified", chg.what instanceof Tag);
+            for (MailItem item : ml.pms.created.values()) {
+                Assert.assertFalse("implicit tags should not be notified", item instanceof Tag);
             }
 
             // new real tags *should* be included in notifications
             mbox.createTag(null, tag1, (byte) 0);
             Assert.assertFalse("explicit tag create must produce notifications", ml.pms.created.isEmpty());
-            Assert.assertTrue("explicit tags must be notified", ml.pms.created.values().iterator().next().what instanceof Tag);
+            Assert.assertTrue("explicit tags must be notified", ml.pms.created.values().iterator().next() instanceof Tag);
 
             // changes to implicit tags should not be included in notifications
             int msgId = mbox.addMessage(null, ThreaderTest.getRootMessage(), dopt, null).getId();

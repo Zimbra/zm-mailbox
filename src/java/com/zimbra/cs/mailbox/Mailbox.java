@@ -359,13 +359,6 @@ public class Mailbox {
             return false;
         }
 
-        String getAuthAccountId() {
-            if (octxt == null || octxt.getAuthenticatedUser() == null) {
-                return mData.accountId;
-            }
-            return octxt.getAuthenticatedUser().getId();
-        }
-
         void reset() {
             DbPool.quietClose(conn);
             this.active = false;
@@ -993,7 +986,7 @@ public class Mailbox {
             checkSizeChange(size);
         }
 
-        currentChange.dirty.recordModified(currentChange.getOperation(), this, Change.SIZE, currentChange.timestamp, currentChange.getAuthAccountId());
+        currentChange.dirty.recordModified(currentChange.getOperation(), this, Change.SIZE, currentChange.timestamp);
         currentChange.size = size;
     }
 
@@ -1111,7 +1104,7 @@ public class Mailbox {
      *  the transaction.
      * @param item  The created item. */
     void markItemCreated(MailItem item) {
-        currentChange.dirty.recordCreated(item, currentChange.getAuthAccountId());
+        currentChange.dirty.recordCreated(item);
     }
 
     /** Adds the item to the current change's list of items deleted during the transaction.
@@ -1127,7 +1120,7 @@ public class Mailbox {
         if (itemSnapshot == null) {
             markItemDeleted(item.getType(), item.getId());
         } else {
-            currentChange.dirty.recordDeleted(itemSnapshot, currentChange.getOperation(), currentChange.timestamp, currentChange.getAuthAccountId());
+            currentChange.dirty.recordDeleted(itemSnapshot, currentChange.getOperation(), currentChange.timestamp);
         }
     }
 
@@ -1136,14 +1129,14 @@ public class Mailbox {
      * @param type item type
      * @param itemId  The id of the item being deleted. */
     void markItemDeleted(MailItem.Type type, int itemId) {
-        currentChange.dirty.recordDeleted(mData.accountId, itemId, type, currentChange.getOperation(), currentChange.timestamp, currentChange.getAuthAccountId());
+        currentChange.dirty.recordDeleted(mData.accountId, itemId, type, currentChange.getOperation(), currentChange.timestamp);
     }
 
     /** Adds the items to the current change's list of items deleted during the transaction.
      *
      * @param idlist  The ids of the items being deleted. */
     void markItemDeleted(TypedIdList idlist) {
-        currentChange.dirty.recordDeleted(mData.accountId, idlist, currentChange.getOperation(), currentChange.timestamp, currentChange.getAuthAccountId());
+        currentChange.dirty.recordDeleted(mData.accountId, idlist, currentChange.getOperation(), currentChange.timestamp);
     }
 
     /** Adds the item to the current change's list of items modified during
@@ -1157,7 +1150,7 @@ public class Mailbox {
         if (item.inDumpster()) {
             throw MailServiceException.IMMUTABLE_OBJECT(item.getId());
         }
-        currentChange.dirty.recordModified(currentChange.getOperation(), item, reason, currentChange.timestamp, currentChange.getAuthAccountId(), preModifyItemSnapshot);
+        currentChange.dirty.recordModified(currentChange.getOperation(), item, reason, currentChange.timestamp, preModifyItemSnapshot);
     }
 
     /** Returns whether the given item has been marked dirty for a particular
@@ -1412,7 +1405,7 @@ public class Mailbox {
             if (!hasFullAccess()) {
                 throw ServiceException.PERM_DENIED("you do not have sufficient permissions");
             }
-            currentChange.dirty.recordModified(currentChange.getOperation(), this, Change.CONFIG, currentChange.timestamp, currentChange.getAuthAccountId());
+            currentChange.dirty.recordModified(currentChange.getOperation(), this, Change.CONFIG, currentChange.timestamp);
             currentChange.config = new Pair<String,Metadata>(section, config);
             DbMailbox.updateConfig(this, section, config);
             success = true;
@@ -1711,7 +1704,7 @@ public class Mailbox {
             boolean persist = stats != null;
             if (stats != null) {
                 if (mData.size != stats.size) {
-                    currentChange.dirty.recordModified(currentChange.getOperation(), this, Change.SIZE, currentChange.timestamp, currentChange.getAuthAccountId());
+                    currentChange.dirty.recordModified(currentChange.getOperation(), this, Change.SIZE, currentChange.timestamp);
                     ZimbraLog.mailbox.debug("setting mailbox size to %d (was %d) for mailbox %d", stats.size, mData.size, mId);
                     mData.size = stats.size;
                 }
@@ -1937,7 +1930,7 @@ public class Mailbox {
 
             // remove the deprecated ZIMBRA.MAILBOX_METADATA version value, if present
             if (mData.configKeys != null && mData.configKeys.contains(MailboxVersion.MD_CONFIG_VERSION)) {
-                currentChange.dirty.recordModified(currentChange.getOperation(), this, Change.CONFIG, currentChange.timestamp, currentChange.getAuthAccountId());
+                currentChange.dirty.recordModified(currentChange.getOperation(), this, Change.CONFIG, currentChange.timestamp);
                 currentChange.config = new Pair<String, Metadata>(MailboxVersion.MD_CONFIG_VERSION, null);
                 DbMailbox.updateConfig(this, MailboxVersion.MD_CONFIG_VERSION, null);
             }
@@ -2174,25 +2167,24 @@ public class Mailbox {
         }
 
         if (pms.created != null && !pms.created.isEmpty()) {
-            for (Change chg : pms.created.values()) {
-                MailItem item = (MailItem) chg.what;
+            for (MailItem item : pms.created.values()) {
                 if (item instanceof Folder && folders != null) {
                     Folder folder = folders.get(item.getId());
                     if (folder == null) {
                         ZimbraLog.mailbox.warn("folder missing from snapshotted folder set: %d", item.getId());
                         folder = (Folder) item;
                     }
-                    snapshot.recordCreated(chg);
+                    snapshot.recordCreated(folder);
                 } else if (item instanceof Tag) {
                     if (((Tag) item).isListed()) {
-                        snapshot.recordCreated(snapshotItem(item), currentChange.getAuthAccountId());
+                        snapshot.recordCreated(snapshotItem(item));
                     }
                 } else {
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
                     if (cache != null && cache.containsKey(item.getId())) {
                         item = snapshotItem(item);
                     }
-                    snapshot.recordCreated(chg);
+                    snapshot.recordCreated(item);
                 }
             }
         }
@@ -2212,17 +2204,17 @@ public class Mailbox {
                         ZimbraLog.mailbox.warn("folder missing from snapshotted folder set: %d", item.getId());
                         folder = (Folder) item;
                     }
-                    snapshot.recordModified(chg.op, folder, chg.why, chg.when, chg.who, (MailItem) chg.preModifyObj);
+                    snapshot.recordModified(chg.op, folder, chg.why, chg.when, (MailItem) chg.preModifyObj);
                 } else if (item instanceof Tag) {
                     if (((Tag) item).isListed()) {
-                        snapshot.recordModified(chg.op, snapshotItem(item), chg.why, chg.when, chg.who, (MailItem) chg.preModifyObj);
+                        snapshot.recordModified(chg.op, snapshotItem(item), chg.why, chg.when, (MailItem) chg.preModifyObj);
                     }
                 } else {
                     // NOTE: if the folder cache is null, folders fall down here and should always get copy == false
                     if (cache != null && cache.containsKey(item.getId())) {
                         item = snapshotItem(item);
                     }
-                    snapshot.recordModified(chg.op, item, chg.why, chg.when, chg.who, (MailItem) chg.preModifyObj);
+                    snapshot.recordModified(chg.op, item, chg.why, chg.when, (MailItem) chg.preModifyObj);
                 }
             }
         }
@@ -8088,8 +8080,7 @@ public class Mailbox {
 
         if (currentChange.dirty != null && currentChange.dirty.hasNotifications()) {
             if (currentChange.dirty.created != null) {
-                for (Change chg : currentChange.dirty.created.values()) {
-                    MailItem item = (MailItem) chg.what;
+                for (MailItem item : currentChange.dirty.created.values()) {
                     if (item instanceof Folder && item.getSize() != 0) {
                         ((Folder) item).saveFolderCounts(false);
                     } else if (item instanceof Tag && item.isUnread()) {
@@ -8111,8 +8102,7 @@ public class Mailbox {
 
         if (DebugConfig.checkMailboxCacheConsistency && currentChange.dirty != null && currentChange.dirty.hasNotifications()) {
             if (currentChange.dirty.created != null) {
-                for (Change chg : currentChange.dirty.created.values()) {
-                    MailItem item = (MailItem) chg.what;
+                for (MailItem item : currentChange.dirty.created.values()) {
                     DbMailItem.consistencyCheck(item, item.mData, item.encodeMetadata().toString());
                 }
             }

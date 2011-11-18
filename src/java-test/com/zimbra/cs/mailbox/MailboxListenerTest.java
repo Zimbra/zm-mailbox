@@ -74,9 +74,9 @@ public final class MailboxListenerTest {
 
             Assert.assertNotNull(notification.mods.created);
             boolean newDocFound = false;
-            for (Change change : notification.mods.created.values()) {
-                if (change.what instanceof Document) {
-                    if ("test".equals(((Document)change.what).getName()))
+            for (MailItem item : notification.mods.created.values()) {
+                if (item instanceof Document) {
+                    if ("test".equals(item.getName()))
                         newDocFound = true;
                 }
             }

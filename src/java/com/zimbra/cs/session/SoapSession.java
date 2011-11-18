@@ -189,8 +189,8 @@ public class SoapSession extends Session {
         private boolean folderRecalcRequired(PendingModifications pms) {
             boolean recalc = false;
             if (pms.created != null && !pms.created.isEmpty()) {
-                for (Change chg : pms.created.values()) {
-                    if (chg.what instanceof Folder)
+                for (MailItem item : pms.created.values()) {
+                    if (item instanceof Folder)
                         return true;
                 }
             }
@@ -224,15 +224,14 @@ public class SoapSession extends Session {
                 filtered.recordDeleted(pms.deleted);
             }
             if (pms.created != null && !pms.created.isEmpty()) {
-                for (Change chg : pms.created.values()) {
-                    MailItem item = (MailItem)chg.what;
+                for (MailItem item : pms.created.values()) {
                     if (item instanceof Conversation ||
                             visible.contains(item instanceof Folder ? item.getId() : item.getFolderId())) {
-                        filtered.recordCreated(chg);
+                        filtered.recordCreated(item);
                     } else if (item instanceof Comment) {
                         try {
                             mailbox.getItemById(octxt, item.getParentId(), MailItem.Type.UNKNOWN);
-                            filtered.recordCreated(chg);
+                            filtered.recordCreated(item);
                         } catch (ServiceException e) {
                             // no permission.  ignore the item.
                         }
@@ -254,10 +253,10 @@ public class SoapSession extends Session {
                                 visible.contains(item instanceof Folder ? item.getId() : item.getFolderId());
                         boolean moved = (chg.why & Change.FOLDER) != 0;
                         if (item instanceof Conversation) {
-                            filtered.recordModified(chg.op, item, chg.why | MODIFIED_CONVERSATION_FLAGS, chg.when, chg.who,
+                            filtered.recordModified(chg.op, item, chg.why | MODIFIED_CONVERSATION_FLAGS, chg.when,
                                                     (MailItem) chg.preModifyObj);
                         } else if (isVisible) {
-                            filtered.recordModified(chg.op, item, chg.why, chg.when, chg.who, (MailItem) chg.preModifyObj);
+                            filtered.recordModified(chg.op, item, chg.why, chg.when, (MailItem) chg.preModifyObj);
                             // if it's an unmoved visible message and it had a tag/flag/unread change,
                             // make sure the conv shows up in the modified or created list
                             if (item instanceof Message && (moved || (chg.why & BASIC_CONVERSATION_FLAGS) != 0)) {
@@ -266,7 +265,7 @@ public class SoapSession extends Session {
                                         moved ? MODIFIED_CONVERSATION_FLAGS : BASIC_CONVERSATION_FLAGS);
                             }
                         } else if (moved) {
-                            filtered.recordDeleted((MailItem) chg.preModifyObj, chg.op, chg.when, chg.who);
+                            filtered.recordDeleted((MailItem) chg.preModifyObj, chg.op, chg.when);
                             // if it's a message and it's moved, make sure the conv shows up in the
                             // modified or created list
                             if (item instanceof Message) {
@@ -276,7 +275,7 @@ public class SoapSession extends Session {
                         }
                     } else if (chg.what instanceof Mailbox) {
                         if (((Mailbox) chg.what).hasFullAccess(new OperationContext(getAuthenticatedAccountId()))) {
-                            filtered.recordModified(chg.op, (Mailbox) chg.what, chg.why, chg.when, chg.who);
+                            filtered.recordModified(chg.op, (Mailbox) chg.what, chg.why, chg.when);
                         }
                     }
                 }
@@ -295,13 +294,13 @@ public class SoapSession extends Session {
                 // do nothing
             } else if (pms.modified != null && (existing = pms.modified.get(mkey)) != null) {
                 filtered.recordModified(existing.op, (MailItem) existing.what, existing.why | changeMask,
-                                        existing.when, existing.who, (MailItem) existing.preModifyObj);
+                                        existing.when, (MailItem) existing.preModifyObj);
             } else {
                 try {
                     Conversation conv = mbox.getConversationById(null, convId);
                     // we don't know the preModify value here, so simply take the current conv snapshot
                     MailItem itemSnapshot = conv.snapshotItem();
-                    filtered.recordModified(chg.op, conv, changeMask, chg.when, chg.who, itemSnapshot);
+                    filtered.recordModified(chg.op, conv, changeMask, chg.when, itemSnapshot);
                 } catch (ServiceException e) {
                     ZimbraLog.session.warn("exception during forceConversationModification", e);
                 }
@@ -852,8 +851,7 @@ public class SoapSession extends Session {
         } else {
             // keep track of "recent" message count: all present before the session started, plus all received during the session
             if (pms.created != null) {
-                for (Change chg : pms.created.values()) {
-                    MailItem item = (MailItem) chg.what;
+                for (MailItem item : pms.created.values()) {
                     if (item instanceof Message) {
                         boolean isReceived = true;
                         if (item.getFolderId() == Mailbox.ID_FOLDER_SPAM || item.getFolderId() == Mailbox.ID_FOLDER_TRASH) {
@@ -1386,8 +1384,7 @@ public class SoapSession extends Session {
         if (hasLocalCreates || hasRemoteCreates) {
             Element eCreated = eNotify.addUniqueElement(ZimbraNamespace.E_CREATED);
             if (hasLocalCreates) {
-                for (Change chg : pms.created.values()) {
-                    MailItem item = (MailItem) chg.what;
+                for (MailItem item : pms.created.values()) {
                     ItemIdFormatter ifmt = new ItemIdFormatter(mAuthenticatedAccountId, item.getMailbox(), false);
                     try {
                         Element elem = ToXML.encodeItem(eCreated, ifmt, octxt, item, ToXML.NOTIFY_FIELDS);
