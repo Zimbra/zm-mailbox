@@ -81,4 +81,33 @@
   </rights>
 </right>
 
+
+
+<!-- 
+    =================
+    BES admin rights
+    =================
+ -->
+<help name="besAdminHelp">
+  <desc>Instruction on granting rights to a BES admin</desc>
+  <item>Grant besAdminDomainRights right on each domain the admin needs to access.</item>
+  <item>Grant besAdminServerRights right on each server the admin needs to access.</item>
+</help>
+
+<right type="combo" name="besAdminDomainRights">
+  <desc>rights targeted on domain-ed entries for BES admin</desc>
+  <help name="besAdminHelp"/>
+  <rights>
+    <r n="adminLoginAs"/>
+  </rights>
+</right>
+
+<right type="combo" name="besAdminServerRights">
+  <desc>server rights for BES admin</desc>
+  <help name="besAdminHelp"/>
+  <rights>
+    <r n="getServer"/>
+  </rights>
+</right>
+
 </rights>
