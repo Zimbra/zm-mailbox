@@ -411,8 +411,8 @@ public class DefangFilter extends DefaultFilter {
     private static String sanitizeStyleValue(String value) {
         // remove comments
         String result = value.replaceAll("/\\*.*\\*/", "");
-        // strip off any functions (like url(), expression())
-        return result.replaceAll(":.*\\(.*\\)",":");
+        // strip off any functions (like url(), expression()), except rgb()
+        return result.replaceAll(":[^(\\s*[rR][gG][bB]\\s*)]*\\(.*\\)",":");
     }
 
     /** Ignorable whitespace. */

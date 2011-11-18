@@ -313,4 +313,16 @@ public class DefangFilterTest {
         Assert.assertFalse(result.contains("XSS4"));
         Assert.assertFalse(result.contains("XSS5"));
     }
+
+    /**
+     * Checks that rgb() in style value is not removed.
+     * @throws Exception
+     */
+    @Test
+    public void testBug67537() throws Exception {
+        String html = "<html><body><span style=\"color: rgb(255, 0, 0);\">This is RED</span></body></html>";
+        InputStream htmlStream = new ByteArrayInputStream(html.getBytes());
+        String result = DefangFactory.getDefanger(MimeConstants.CT_TEXT_HTML).defang(htmlStream, true);
+        Assert.assertTrue(result.contains("style=\"color: rgb(255, 0, 0);\""));
+    }
 }
