@@ -30,7 +30,7 @@ public class AdminRights {
     
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 pshao 20110625-1519 */
+    /* build: 7.0.0_BETA1_1111 pshao 20111117-2058 */
 
 
     public static AdminRight R_accessGAL;
@@ -126,6 +126,8 @@ public class AdminRights {
     public static AdminRight R_applianceAll;
     public static AdminRight R_assignCos;
     public static AdminRight R_backupAccount;
+    public static AdminRight R_besAdminDomainRights;
+    public static AdminRight R_besAdminServerRights;
     public static AdminRight R_checkCalendarResourcePasswordStrength;
     public static AdminRight R_checkDirectoryOnFileSystem;
     public static AdminRight R_checkDomainMXRecord;
@@ -244,6 +246,8 @@ public class AdminRights {
     public static AdminRight R_manageMailQueue;
     public static AdminRight R_manageVolume;
     public static AdminRight R_manageZimlet;
+    public static AdminRight R_migrationAdminCosRights;
+    public static AdminRight R_migrationAdminDomainRights;
     public static AdminRight R_modifyAccount;
     public static AdminRight R_modifyCalendarResource;
     public static AdminRight R_modifyCos;
@@ -527,6 +531,8 @@ public class AdminRights {
         R_applianceAll                         = rm.getAdminRight(Right.RT_applianceAll);
         R_assignCos                            = rm.getAdminRight(Right.RT_assignCos);
         R_backupAccount                        = rm.getAdminRight(Right.RT_backupAccount);
+        R_besAdminDomainRights                 = rm.getAdminRight(Right.RT_besAdminDomainRights);
+        R_besAdminServerRights                 = rm.getAdminRight(Right.RT_besAdminServerRights);
         R_checkCalendarResourcePasswordStrength = rm.getAdminRight(Right.RT_checkCalendarResourcePasswordStrength);
         R_checkDirectoryOnFileSystem           = rm.getAdminRight(Right.RT_checkDirectoryOnFileSystem);
         R_checkDomainMXRecord                  = rm.getAdminRight(Right.RT_checkDomainMXRecord);
@@ -645,6 +651,8 @@ public class AdminRights {
         R_manageMailQueue                      = rm.getAdminRight(Right.RT_manageMailQueue);
         R_manageVolume                         = rm.getAdminRight(Right.RT_manageVolume);
         R_manageZimlet                         = rm.getAdminRight(Right.RT_manageZimlet);
+        R_migrationAdminCosRights              = rm.getAdminRight(Right.RT_migrationAdminCosRights);
+        R_migrationAdminDomainRights           = rm.getAdminRight(Right.RT_migrationAdminDomainRights);
         R_modifyAccount                        = rm.getAdminRight(Right.RT_modifyAccount);
         R_modifyCalendarResource               = rm.getAdminRight(Right.RT_modifyCalendarResource);
         R_modifyCos                            = rm.getAdminRight(Right.RT_modifyCos);
