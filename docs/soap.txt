@@ -2447,12 +2447,13 @@ END:VCARD]
 ----------
 
 <ModifyContactRequest [replace="{replace-mode}"] [verbose="0|1"]>
-  <cn id="...">
+  <cn id="..." [tn="{tag-names}"]>
     <a n="{name}" [op="{op}"]>{attr-value}</a>+
     <m op="{op}" type="{member-type}" value="{member-value}"/>*
   </cn>
 </ModifyContactRequest>
 
+ {tag-names} = list of tags to apply to the created contact
  {attr-value} = new attribute value. If empty (<a/>), then the attribute will be removed.
 
  {replace-mode} = 0|1 (0 is default)
@@ -2478,6 +2479,8 @@ END:VCARD]
 
         For <m> elements, op is required; also, {member-type} and {member-value} are required
 
+  When modifying tags, all specified tags are set and all others are unset.  If tn="{tag-names}" is NOT specified
+  then any existing tags will remain set.
 
 <ModifyContactResponse>
    <cn ...>
@@ -2517,8 +2520,8 @@ NOTE: should we return modified attrs in response?
 
   {returnHiddenAttrs} : whether to return contact hidden attrs defined in zimbraContactHiddenAttributes.
                         ignored if <a> is present.
-                        
-  {max-members} : numebr of max GAL group members to return.
+
+  {max-members} : number of max GAL group members to return.
                   If number of members on a GAL group is greater than the specified max, 
                   do not return any members under <cn> for the entry.  
                   Instead, return a "tooManyMembers="1" on the <cn>.
