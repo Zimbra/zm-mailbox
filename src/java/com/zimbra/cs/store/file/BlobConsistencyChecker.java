@@ -21,11 +21,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
@@ -209,7 +212,9 @@ public final class BlobConsistencyChecker {
                 int group = 0; // Current group number
 
                 while (minId < mailboxMaxId && group < numGroups) {
-                    Map<Integer, BlobInfo> blobsById = new HashMap<Integer, BlobInfo>();
+                    // We used Multimap to make sure we store multiple BlobInfo objects for the same itemId
+                    // multiple BlobInfo objects are created when there are multiple revisions of the same file
+                    Multimap<Integer, BlobInfo> blobsById = HashMultimap.create();
                     int maxId = minId + filesPerGroup - 1; // Maximum id for the current block
                     String blobDir = vol.getBlobDir(mbox.getId(), minId);
 
@@ -241,7 +246,7 @@ public final class BlobConsistencyChecker {
      * Reconciles blobs against the files in the given directory and adds any inconsistencies
      * to the current result set.
      */
-    private void check(short volumeId, String blobDirPath, Map<Integer, BlobInfo> blobsById)
+    private void check(short volumeId, String blobDirPath, Multimap<Integer, BlobInfo> blobsById)
     throws IOException {
         File blobDir = new File(blobDirPath);
         File[] files = blobDir.listFiles();
@@ -259,7 +264,17 @@ public final class BlobConsistencyChecker {
                 modContent = Integer.parseInt(matcher.group(2));
             }
 
-            BlobInfo blob = blobsById.remove(itemId);
+            BlobInfo blob = null;
+            if (blobsById.containsKey(itemId)) {
+                for (BlobInfo tempBlob : blobsById.get(itemId)) {
+                    if (tempBlob.modContent == modContent) {
+                        blob = tempBlob;
+                        blobsById.remove(itemId, tempBlob);
+                        break;
+                    }
+                }
+            }
+
             if (blob == null) {
                 BlobInfo unexpected = new BlobInfo();
                 unexpected.volumeId = volumeId;
