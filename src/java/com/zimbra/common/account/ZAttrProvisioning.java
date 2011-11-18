@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111107-1045 */
+    /* build: 8.0.0_BETA1_1111 pshao 20111117-2156 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -2142,8 +2142,8 @@ public class ZAttrProvisioning {
 
     /**
      * EAGER mode: required LAZY mode: optional (if not using
-     * zimbraAutoProvLdapSearchFilters) MANUAL mode: optional (if not using
-     * zimbraAutoProvLdapSearchFilters) LDAP external DN template for account
+     * zimbraAutoProvLdapSearchFilter) MANUAL mode: optional (if not using
+     * zimbraAutoProvLdapSearchFilter) LDAP external DN template for account
      * auto provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
@@ -8296,6 +8296,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefInboxUnreadLifetime = "zimbraPrefInboxUnreadLifetime";
 
     /**
+     * whether to include shared items in search
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1338)
+    public static final String A_zimbraPrefIncludeSharedItemsInSearch = "zimbraPrefIncludeSharedItemsInSearch";
+
+    /**
      * whether or not to include spam in search by default
      */
     @ZAttr(id=55)
@@ -9631,6 +9639,44 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxySSLCiphers = "zimbraReverseProxySSLCiphers";
 
     /**
+     * The read timeout for long polling support by proxy, e.g. ActiveSync
+     * for mobile devices. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1337)
+    public static final String A_zimbraReverseProxyUpstreamPollingTimeout = "zimbraReverseProxyUpstreamPollingTimeout";
+
+    /**
+     * The read timeout for the response of upstream server, which determines
+     * how long nginx will wait to get the response to a request. . Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1335)
+    public static final String A_zimbraReverseProxyUpstreamReadTimeout = "zimbraReverseProxyUpstreamReadTimeout";
+
+    /**
+     * The send timeout of transfering a request to the upstream server. If
+     * after this time the upstream server doesn&#039;t take new data, proxy
+     * will close the connection. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1336)
+    public static final String A_zimbraReverseProxyUpstreamSendTimeout = "zimbraReverseProxyUpstreamSendTimeout";
+
+    /**
      * There is a deployment scenario for migrations where all of the
      * customers users are pointed at the zimbra POP IMAP reverse proxy. We
      * then want their connections proxied back to the legacy system for
@@ -10462,6 +10508,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
