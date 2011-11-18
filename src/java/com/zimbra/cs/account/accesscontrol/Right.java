@@ -49,7 +49,7 @@ public abstract class Right extends RightConsts {
     private final String mName;
     protected RightType mRightType;
     private String mDesc;  // a brief description
-    private String mDoc;   // a more detailed description, use cases, examples
+    private Help mHelp;
     private Boolean mDefault;
     protected TargetType mTargetType;
     protected TargetType mGrantTargetType;
@@ -73,7 +73,7 @@ public abstract class Right extends RightConsts {
         sb.append("name         = " + mName + "\n");
         sb.append("type         = " + mRightType.name() + "\n");
         sb.append("desc         = " + mDesc + "\n");
-        sb.append("doc          = " + mDoc + "\n");
+        sb.append("help         = " + (mHelp==null ? "null" : mHelp.getName()  ) + "\n");
         sb.append("default      = " + mDefault + "\n");
         sb.append("target Type  = " + mTargetType + "\n");
 
@@ -130,12 +130,12 @@ public abstract class Right extends RightConsts {
         mDesc = desc;
     }
     
-    public String getDoc() {
-        return mDoc;
+    public Help getHelp() {
+        return mHelp;
     }
-        
-    void setDoc(String doc) {
-        mDoc = doc;
+    
+    void setHelp(Help help) {
+        mHelp = help;
     }
     
     public Boolean getDefault() {

@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -14,10 +14,7 @@
  */
 package com.zimbra.cs.account.accesscontrol;
 
-
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,7 +41,6 @@ import org.dom4j.io.SAXReader;
 
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.SetUtil;
 import com.zimbra.common.util.StringUtil;
@@ -63,8 +59,9 @@ public class RightManager {
     private static final String E_ATTRS        = "attrs";
     private static final String E_DEFAULT      = "default";
     private static final String E_DESC         = "desc";
-    private static final String E_DOC          = "doc";
+    private static final String E_HELP         = "help";
     private static final String E_INCLUDE      = "include";
+    private static final String E_ITEM         = "item";
     private static final String E_R            = "r";
     private static final String E_RIGHTS       = "rights";
     private static final String E_RIGHT        = "right";
@@ -72,7 +69,6 @@ public class RightManager {
     private static final String A_CACHE        = "cache";
     private static final String A_FALLBACK     = "fallback";
     private static final String A_FILE         = "file";
-    private static final String A_GRANT_TARGET_TYPE  = "grantTargetType";
     private static final String A_LIMIT        = "l";
     private static final String A_N            = "n";
     private static final String A_NAME         = "name";
@@ -87,17 +83,15 @@ public class RightManager {
     // keep the map sorted so "zmmailbox lp" can display in alphabetical order 
     private Map<String, UserRight> sUserRights = new TreeMap<String, UserRight>();  
     private Map<String, AdminRight> sAdminRights = new TreeMap<String, AdminRight>();  
+    private Map<String, Help> sHelp = new TreeMap<String, Help>();  
 
     static private class CoreRightDefFiles {
         private static final HashSet<String> sCoreRightDefFiles = new HashSet<String>();
         
-        static void init(boolean unittest) {
+        static {
             sCoreRightDefFiles.add("zimbra-rights.xml");
             sCoreRightDefFiles.add("zimbra-user-rights.xml");
-            
-            if (unittest) {
-                sCoreRightDefFiles.add("rights-unittest.xml");
-            }
+            // sCoreRightDefFiles.add("rights-unittest.xml");
         }
         
         static boolean isCoreRightFile(File file) {
@@ -119,16 +113,11 @@ public class RightManager {
     }
     
     public static synchronized RightManager getInstance() throws ServiceException {
-        return getInstance(false);
-    }
-    
-    public static synchronized RightManager getInstance(boolean unittest) throws ServiceException {
         if (mInstance != null) {
             return mInstance;
         }
-        
         String dir = LC.zimbra_rights_directory.value();
-        mInstance = new RightManager(dir, unittest);
+        mInstance = new RightManager(dir);
         
         try {
             Right.init(mInstance);
@@ -139,9 +128,7 @@ public class RightManager {
         return mInstance;
     }
     
-    private RightManager(String dir, boolean unittest) throws ServiceException {
-        CoreRightDefFiles.init(unittest);
-        
+    private RightManager(String dir) throws ServiceException {
         File fdir = new File(dir);
         if (!fdir.exists()) {
             throw ServiceException.FAILURE("rights directory does not exists: " + dir, null);
@@ -212,10 +199,23 @@ public class RightManager {
         right.setDesc(eDesc.getText());
     }
     
-    private void parseDoc(Element eDoc, Right right) throws ServiceException {
-        if (right.getDoc() != null)
-            throw ServiceException.PARSE_ERROR("multiple " + E_DOC, null);
-        right.setDoc(eDoc.getText());
+    private void parseHelp(Element eDesc, Right right) throws ServiceException {
+        if (right.getHelp() != null) {
+            throw ServiceException.PARSE_ERROR("multiple " + E_HELP, null);
+        }
+        
+        String helpName = eDesc.attributeValue(A_NAME);
+        if (helpName == null) {
+            throw ServiceException.PARSE_ERROR("missing hep name", null);
+        }
+        
+        Help help = sHelp.get(helpName);
+        
+        if (help == null) {
+            throw ServiceException.PARSE_ERROR("no such help: " + helpName, null);
+        }
+        
+        right.setHelp(help);
     }
     
     private void parseDefault(Element eDefault, Right right) throws ServiceException {
@@ -297,11 +297,10 @@ public class RightManager {
         
         if (userRight) {
             TargetType targetType;
-            if (targetTypeStr != null) {
+            if (targetTypeStr != null)
                 targetType = TargetType.fromCode(targetTypeStr);
-            } else {
+            else
                 targetType = TargetType.account;  // default target type for user right is account
-            }
             
             right = new UserRight(name);
             right.setTargetType(targetType);
@@ -314,9 +313,8 @@ public class RightManager {
             
         } else {
             String rt = eRight.attributeValue(A_TYPE);
-            if (rt == null) {
+            if (rt == null)
                 throw ServiceException.PARSE_ERROR("missing attribute [" + A_TYPE + "]", null);
-            }
             rightType = AdminRight.RightType.fromString(rt);
             
             right = AdminRight.newAdminSystemRight(name, rightType);
@@ -329,32 +327,24 @@ public class RightManager {
             }
         }
         
-        String grantTargetTypeStr = eRight.attributeValue(A_GRANT_TARGET_TYPE, null);
-        if (grantTargetTypeStr != null) {
-            TargetType grantTargetType = TargetType.fromCode(grantTargetTypeStr);
-            right.setGrantTargetType(grantTargetType);
-        }
-        
         boolean cache = getBooleanAttr(eRight, A_CACHE, false);
-        if (cache) {
+        if (cache)
             right.setCacheable();
-        }
-        
+
         for (Iterator elemIter = eRight.elementIterator(); elemIter.hasNext();) {
             Element elem = (Element)elemIter.next();
-            if (elem.getName().equals(E_DESC)) {
+            if (elem.getName().equals(E_DESC))
                 parseDesc(elem, right);
-            } else if (elem.getName().equals(E_DOC)) {
-                parseDoc(elem, right);
-            } else if (elem.getName().equals(E_DEFAULT)) {
+            else if (elem.getName().equals(E_HELP))
+                parseHelp(elem, right);
+            else if (elem.getName().equals(E_DEFAULT))
                 parseDefault(elem, right);
-            } else if (elem.getName().equals(E_ATTRS)) {
+            else if (elem.getName().equals(E_ATTRS))
                 parseAttrs(elem, right);
-            } else if (elem.getName().equals(E_RIGHTS)) {
+            else if (elem.getName().equals(E_RIGHTS))
                 parseRights(elem, right);
-            } else {
+            else
                 throw ServiceException.PARSE_ERROR("invalid element: " + elem.getName(), null);
-            }
         }
         
         // verify that all required fields are set and populate internal data
@@ -411,43 +401,95 @@ public class RightManager {
                     return false;
                 else
                     continue;
+            } else if (elem.getName().equals(E_RIGHT)) {
+                if (!seenRight) {
+                    seenRight = true;
+                    ZimbraLog.acl.debug("Loading " + file.getAbsolutePath());
+                }
+                loadRight(elem, file, allowPresetRight);
+            } else if (elem.getName().equals(E_HELP)) {
+                loadHelp(elem, file);
+            } else {
+                throw ServiceException.PARSE_ERROR("unknown element: " + elem.getName(), null);
             }
             
-            Element eRight = elem;
-            if (!eRight.getName().equals(E_RIGHT))
-                throw ServiceException.PARSE_ERROR("unknown element: " + eRight.getName(), null);
-
-            if (!seenRight) {
-                seenRight = true;
-                ZimbraLog.acl.debug("Loading " + file.getAbsolutePath());
-            }
-            
-            String name = eRight.attributeValue(A_NAME);
-            if (name == null)
-                throw ServiceException.PARSE_ERROR("no name specified", null);
-            
-            if (sUserRights.get(name) != null || sAdminRights.get(name) != null) 
-                throw ServiceException.PARSE_ERROR("right " + name + " is already defined", null);
-            
-            try {
-                Right right = parseRight(eRight); 
-                if (!allowPresetRight && RightType.preset == right.getRightType())
-                    throw ServiceException.PARSE_ERROR(
-                            "Encountered preset right " + name + " in " + file.getName() + 
-                            ", preset right can only be defined in one of the core right definition files: " +
-                            CoreRightDefFiles.listCoreDefFiles(), 
-                            null);
-                
-                if (right instanceof UserRight)
-                    sUserRights.put(name, (UserRight)right);
-                else
-                    sAdminRights.put(name, (AdminRight)right);
-            } catch (ServiceException e) {
-                throw ServiceException.PARSE_ERROR("unable to parse right: [" + name + "]", e);
-            }
         }
         
         return true;
+    }
+    
+    private void loadRight(Element eRight, File file, boolean allowPresetRight) 
+    throws ServiceException {
+        String name = eRight.attributeValue(A_NAME);
+        if (name == null) {
+            throw ServiceException.PARSE_ERROR("no name specified", null);
+        }
+        
+        checkName(name);
+        
+        try {
+            Right right = parseRight(eRight); 
+            if (!allowPresetRight && RightType.preset == right.getRightType()) {
+                throw ServiceException.PARSE_ERROR(
+                        "Encountered preset right " + name + " in " + file.getName() + 
+                        ", preset right can only be defined in one of the core right definition files: " +
+                        CoreRightDefFiles.listCoreDefFiles(), 
+                        null);
+            }
+            
+            if (right instanceof UserRight) {
+                sUserRights.put(name, (UserRight)right);
+            } else {
+                sAdminRights.put(name, (AdminRight)right);
+            }
+        } catch (ServiceException e) {
+            throw ServiceException.PARSE_ERROR("unable to parse right: [" + name + "]", e);
+        }
+    }
+    
+    private void loadHelp(Element eHelp, File file) throws ServiceException {
+        String name = eHelp.attributeValue(A_NAME);
+        if (name == null) {
+            throw ServiceException.PARSE_ERROR("no name specified", null);
+        }
+        
+        checkName(name);
+        
+        Help help = new Help(name);
+        
+        for (Iterator elemIter = eHelp.elementIterator(); elemIter.hasNext();) {
+            Element elem = (Element)elemIter.next();
+            if (elem.getName().equals(E_DESC)) {
+                if (help.getDesc() != null) {
+                    throw ServiceException.PARSE_ERROR("desc for help " + name + " already set", null);
+                }
+                help.setDesc(elem.getText());
+            } else if (elem.getName().equals(E_ITEM)) {
+                help.addItem(elem.getText());
+            } else {
+                throw ServiceException.PARSE_ERROR("invalid element: " + elem.getName(), null);
+            }
+        }
+        
+        // make all required bits are set in hte help
+        help.validate();
+        
+        sHelp.put(name, help);
+    }
+    
+    void checkName(String name) throws ServiceException {
+        
+        // help name cannot be the same as any of the right names because name is the 
+        // key to the generated ZsMsgRights.properties file.
+        // 
+        // Though we currently don't generate helps in ZsMsgRights.properties, because  
+        // all the formatting will be lost and it won't look good in admin console anyway.
+        // Enforce uniqueness to keep the option open.
+        // 
+        if (sUserRights.containsKey(name) || sAdminRights.containsKey(name) ||
+                sHelp.containsKey(name)) {
+            throw ServiceException.PARSE_ERROR("right or help " + name + " is already defined", null);
+        }
     }
     
     //
@@ -456,37 +498,32 @@ public class RightManager {
     
     public UserRight getUserRight(String right) throws ServiceException {
         UserRight r = sUserRights.get(right);
-        if (r == null) {
+        if (r == null)
             throw ServiceException.FAILURE("invalid right " + right, null);
-        }
         return r;
     }
     
     public AdminRight getAdminRight(String right) throws ServiceException {
         AdminRight r = sAdminRights.get(right);
-        if (r == null) {
+        if (r == null)
             throw ServiceException.FAILURE("invalid right " + right, null);
-        }
         return r;
     }
     
     public Right getRight(String right) throws ServiceException {
-        if (InlineAttrRight.looksLikeOne(right)) {
+        if (InlineAttrRight.looksLikeOne(right))
             return InlineAttrRight.newInlineAttrRight(right);
-        } else {
+        else
             return getRightInternal(right, true);
-        }
     }
     
     private Right getRightInternal(String right, boolean mustFind) throws ServiceException {
         Right r = sUserRights.get(right);
-        if (r == null) {
+        if (r == null)
             r = sAdminRights.get(right);
-        }
         
-        if (mustFind && r == null) {
+        if (mustFind && r == null)
             throw AccountServiceException.NO_SUCH_RIGHT("invalid right " + right);
-        }
         
         return r;
     }
@@ -500,9 +537,8 @@ public class RightManager {
     }
     
     private String dump(StringBuilder sb) {
-        if (sb == null) {
+        if (sb == null)
             sb = new StringBuilder();
-        }
         
         sb.append("============\n");
         sb.append("user rights:\n");
@@ -636,7 +672,7 @@ public class RightManager {
         private static void check() throws ServiceException  {
             ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
             
-            RightManager rm = new RightManager("/Users/pshao/p4/main/ZimbraServer/conf/rights", false);
+            RightManager rm = new RightManager("/Users/pshao/p4/main/ZimbraServer/conf/rights");
             System.out.println(rm.dump(null));
         }
         
@@ -739,7 +775,7 @@ public class RightManager {
             if (!"genDomainAdminSetAttrsRights".equals(action)) {
                 if (!cl.hasOption('i')) usage("no input dir specified");
                 inputDir = cl.getOptionValue('i');
-                rm = new RightManager(inputDir, false);
+                rm = new RightManager(inputDir);
             }
              
             if ("genRightConsts".equals(action))

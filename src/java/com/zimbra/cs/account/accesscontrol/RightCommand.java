@@ -1429,6 +1429,22 @@ public class RightCommand {
         if (desc == null) {
             desc = right.getDesc();
         }
+        
+        /*
+         * Don't do this.  Help text is too long and all the formatting will be lost so 
+         * it doesn't look good in admin console anyway.
+         * Just display help text in zmprov.
+         * 
+        Help help = right.getHelp();
+        if (help != null) {
+            String helpTxt = L10nUtil.getMessage(L10nUtil.MSG_RIGHTS_FILE_BASENAME, help.getName(), locale);
+            if (helpTxt != null) {
+                desc = desc + ".  " + helpTxt;
+            }
+        }
+        */
+        
+        
         eRight.addElement(AdminConstants.E_DESC).setText(desc);
             
         if (right.isPresetRight()) {
