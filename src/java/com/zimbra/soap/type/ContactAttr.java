@@ -19,25 +19,24 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.MailConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class ContactAttr extends KeyValuePair {
 
     // part/contentType/size/contentFilename are required when
     // encoding attachments
 
-    @XmlAttribute(name=MailConstants.A_PART, required=false)
+    @XmlAttribute(name=MailConstants.A_PART /* part */, required=false)
     private String part;
 
-    @XmlAttribute(name=MailConstants.A_CONTENT_TYPE, required=false)
+    @XmlAttribute(name=MailConstants.A_CONTENT_TYPE /* ct */, required=false)
     private String contentType;
 
-    @XmlAttribute(name=MailConstants.A_SIZE, required=false)
-    private int size;
+    @XmlAttribute(name=MailConstants.A_SIZE /* s */, required=false)
+    private Integer size;
 
-    @XmlAttribute(name=MailConstants.A_CONTENT_FILENAME, required=false)
+    @XmlAttribute(name=MailConstants.A_CONTENT_FILENAME /* filename */, required=false)
     private String contentFilename;
 
     public ContactAttr() {
@@ -48,13 +47,13 @@ public class ContactAttr extends KeyValuePair {
         this.contentType = contentType;
     }
 
-    public void setSize(int size) { this.size = size; }
+    public void setSize(Integer size) { this.size = size; }
     public void setContentFilename(String contentFilename) {
         this.contentFilename = contentFilename;
     }
 
     public String getPart() { return part; }
     public String getContentType() { return contentType; }
-    public int getSize() { return size; }
+    public Integer getSize() { return size; }
     public String getContentFilename() { return contentFilename; }
 }
