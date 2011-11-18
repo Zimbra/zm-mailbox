@@ -37,8 +37,31 @@
   </rights>
 </right>
 
-<right type="combo" name="migrationAdminRights">
-  <desc>rights for running the migration wizard</desc>
+
+<!-- 
+    ======================
+    migration admin rights
+    ======================
+ -->
+<help name="migrationAdminHelp">
+  <desc>Instruction on granting rights for running the migration wizard</desc>
+  <item>
+    Grant migrationAdminDomainRights right on each domain the admin needs to run the migration wizard for.
+    e.g. if a delegated admin needs to run the wizard for domain1.com and domain2.com
+         zmprov grr domain domain1.com usr ma@test.com migrationAdminDomainRights
+         zmprov grr domain domain2.com usr ma@test.com migrationAdminDomainRights
+  </item>
+  <item>
+    Grant migrationAdminCosRights right on each cos the admin needs to access.
+    e.g. if a delegated admin needs to access cos1 and cos2
+         zmprov grr cos cos1 usr ma@test.com migrationAdminCosRights
+         zmprov grr cos cos2 usr ma@test.com migrationAdminCosRights
+  </item>
+</help>
+
+<right type="combo" name="migrationAdminDomainRights">
+  <desc>rights targeted on domain-ed entries for running the migration wizard</desc>
+  <help name="migrationAdminHelp"/>
   <rights>
     <r n="listDomain"/>
     <r n="createAccount"/>
@@ -47,6 +70,14 @@
     <r n="addAccountAlias"/>
     <r n="getAccountInfo"/>
     <r n="adminLoginAs"/>
+  </rights>
+</right>
+
+<right type="combo" name="migrationAdminCosRights">
+  <desc>cos rights for running the migration wizard</desc>
+  <help name="migrationAdminHelp"/>
+  <rights>
+    <r n="listCos"/>
   </rights>
 </right>
 

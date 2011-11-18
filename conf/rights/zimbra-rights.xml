@@ -701,7 +701,7 @@
 
 <right name="viewGrants" type="getAttrs" targetType="account,calresource,cos,dl,domain,server,xmppcomponent,zimlet,config,global">
   <desc>view grants on all target types</desc>
-  <doc>
+  <!-- 
       Use just the one same right on all target types for now.
          
       e.g. If this right is granted on a domain, the grantee 
@@ -728,7 +728,7 @@
                 get.zimlet.zimbraACE
                 get.config.zimbraACE
                 get.global.zimbraACE
-  </doc>
+  -->
   <attrs>
       <a n="zimbraACE"/>
   </attrs>
