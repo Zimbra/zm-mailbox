@@ -186,6 +186,7 @@
     <a n="zimbraPrefAccountTreeOpen"/>
     <a n="zimbraPrefAdminConsoleWarnOnExit"/>
     <a n="zimbraPrefAdvancedClientEnforceMinDisplay"/>
+    <a n="zimbraPrefAllowAddressForDelegatedSender"/>
     <a n="zimbraPrefAppleIcalDelegationEnabled"/>
     <a n="zimbraPrefAutoAddAddressEnabled"/>
     <a n="zimbraPrefAutoCompleteQuickCompletionOnComma"/>
@@ -285,6 +286,7 @@
     <a n="zimbraPrefImapSearchFoldersEnabled"/>
     <a n="zimbraPrefInboxReadLifetime"/>
     <a n="zimbraPrefInboxUnreadLifetime"/>
+    <a n="zimbraPrefIncludeSharedItemsInSearch"/>
     <a n="zimbraPrefIncludeSpamInSearch"/>
     <a n="zimbraPrefIncludeTrashInSearch"/>
     <a n="zimbraPrefItemsPerVirtualPage"/>
@@ -419,6 +421,7 @@
     <a n="zimbraMailForwardingAddress"/>
     <a n="zimbraMailStatus"/>
     <a n="zimbraNotes"/>
+    <a n="zimbraPrefAllowAddressForDelegatedSender"/>
     <a n="zimbraPrefReplyToAddress"/>
     <a n="zimbraPrefReplyToDisplay"/>
     <a n="zimbraPrefReplyToEnabled"/>
