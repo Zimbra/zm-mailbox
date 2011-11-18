@@ -216,6 +216,13 @@ This can be done by either of the following two ways.
     addcacert appends an otherwise untrusted ssl certificate to the cacerts file. 
     This is the preferred way.
 
+As a FYI, on mac, example of the equivalent keytool comamnd that would be issued by 
+"zmcertmgr addcacert <certfile>" is:
+$ sudo keytool -import -keystore /System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Home/lib/security/cacerts -alias myca -file ca.crt
+
+Again, the above keytool command was provided as a FYI and for deugging purpose.  
+Do not use it, use zmcertmgr instead.
+
 
 (B) In dev environment, if zmcertmgr is not available, you can use keytool to 
     import the CA cert to /opt/zimbra/jetty/etc/keystore.

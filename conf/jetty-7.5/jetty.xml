@@ -91,6 +91,8 @@
           <Set name="keystore"><SystemProperty name="jetty.home" default="."/>/etc/keystore</Set>
           <Set name="password">zimbra</Set>
           <Set name="KeyPassword">zimbra</Set>
+          <Set name="Truststore">/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Home/lib/security/cacerts</Set>
+          <Set name="TrustPassword">changeit</Set>
           <Set name="NeedClientAuth">false</Set>
           <Set name="WantClientAuth">true</Set>
           <Set name="ExcludeCipherSuites">
