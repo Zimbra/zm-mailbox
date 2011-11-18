@@ -523,4 +523,10 @@ SSL mutual authentication flow
   logging in, the user will be let in.
 
 
-     
+================
+Debugging tips 
+================
+1. Add -Djavax.net.debug=ssl,handshake,data,trustmanager in localconfig key mailboxd_java_options
+   Output will be in zmmailboxd.out.
+   
+
