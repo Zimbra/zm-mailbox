@@ -179,7 +179,6 @@ public abstract class ArchiveFormatter extends Formatter {
         disableJettyTimeout();
 
         HashMap<Integer, Integer> cnts = new HashMap<Integer, Integer>();
-        boolean conversations = false;
         int dot;
         HashMap<Integer, String> fldrs = new HashMap<Integer, String>();
         String emptyname = context.params.get("emptyname");
@@ -232,16 +231,6 @@ public abstract class ArchiveFormatter extends Formatter {
             if (types != null && !types.equals("")) {
                 Arrays.sort(searchTypes = MailboxIndex.parseTypesString(types));
                 sysTypes = new byte[0];
-                if (Arrays.binarySearch(searchTypes, MailItem.TYPE_CONVERSATION) >= 0) {
-                    int i = 0;
-                    byte newTypes[] = new byte[searchTypes.length - 1];
-
-                    for (byte type : searchTypes)
-                        if (type != MailItem.TYPE_CONVERSATION)
-                            newTypes[i++] = type;
-                    conversations = true;
-                    searchTypes = newTypes;
-                }
             }
             if (lock != null && (lock.equals("1") || lock.equals("t") ||
                     lock.equals("true"))) {
@@ -275,7 +264,6 @@ public abstract class ArchiveFormatter extends Formatter {
                     Folder f = (Folder)context.target;
 
                     if (f.getId() != Mailbox.ID_FOLDER_USER_ROOT) {
-                        conversations = false;
                         saveTargetFolder = true;
                         query = "under:\"" + f.getPath() + "\"" +
                             (query == null ? "" : " " + query);
@@ -294,8 +282,6 @@ public abstract class ArchiveFormatter extends Formatter {
                             aos = saveItem(context, item, fldrs, cnts,
                                     false, aos, encoder, names);
                     }
-                    if (types == null || types.equals(""))
-                        conversations = true;
                     query = "is:local";
                 }
                 results = context.targetMailbox.search(context.opContext,
@@ -313,12 +299,6 @@ public abstract class ArchiveFormatter extends Formatter {
                     }
                     results.doneWithSearchResults();
                     results = null;
-                    if (conversations) {
-                        for (MailItem item : context.targetMailbox.getItemList(
-                            context.opContext, MailItem.TYPE_CONVERSATION))
-                            aos = saveItem(context, item, fldrs, cnts,
-                                    false, aos, encoder, names);
-                    }
                 } catch (Exception e) {
                     warn(e);
                 } finally {
