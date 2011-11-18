@@ -183,7 +183,6 @@ public abstract class ArchiveFormatter extends Formatter {
         disableJettyTimeout();
 
         HashMap<Integer, Integer> cnts = new HashMap<Integer, Integer>();
-        boolean conversations = false;
         int dot;
         HashMap<Integer, String> fldrs = new HashMap<Integer, String>();
         String emptyname = context.params.get("emptyname");
@@ -234,9 +233,9 @@ public abstract class ArchiveFormatter extends Formatter {
                     throw MailServiceException.INVALID_TYPE(e.getMessage());
                 }
                 sysTypes.clear();
-                if (searchTypes.remove(MailItem.Type.CONVERSATION)) {
-                    conversations = true;
-                }
+                // do not include conversations even when requested
+                // (to be compatible with 7.1.4 and later. bug 67407)
+                searchTypes.remove(MailItem.Type.CONVERSATION);
             }
             if (lock != null && (lock.equals("1") || lock.equals("t") || lock.equals("true"))) {
                 maintenance = MailboxManager.getInstance().beginMaintenance(
@@ -268,7 +267,6 @@ public abstract class ArchiveFormatter extends Formatter {
                     Folder f = (Folder)context.target;
 
                     if (f.getId() != Mailbox.ID_FOLDER_USER_ROOT) {
-                        conversations = false;
                         saveTargetFolder = true;
                         query = "under:\"" + f.getPath() + "\"" +
                             (query == null ? "" : " " + query);
@@ -284,9 +282,6 @@ public abstract class ArchiveFormatter extends Formatter {
                         for (MailItem item : items)
                             aos = saveItem(context, item, fldrs, cnts,
                                     false, aos, encoder, names);
-                    }
-                    if (Strings.isNullOrEmpty(types)) {
-                        conversations = true;
                     }
                     query = "is:local";
                 }
@@ -305,12 +300,6 @@ public abstract class ArchiveFormatter extends Formatter {
                     }
                     Closeables.closeQuietly(results);
                     results = null;
-                    if (conversations) {
-                        for (MailItem item : context.targetMailbox.getItemList(
-                            context.opContext, MailItem.Type.CONVERSATION))
-                            aos = saveItem(context, item, fldrs, cnts,
-                                    false, aos, encoder, names);
-                    }
                 } catch (Exception e) {
                     warn(e);
                 } finally {
