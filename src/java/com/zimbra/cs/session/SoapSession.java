@@ -219,6 +219,7 @@ public class SoapSession extends Session {
 
             OperationContext octxt = new OperationContext(getAuthenticatedAccountId());
             PendingModifications filtered = new PendingModifications();
+            filtered.accountId = pms.accountId;
             filtered.changedTypes = pms.changedTypes;
             if (pms.deleted != null && !pms.deleted.isEmpty()) {
                 filtered.recordDeleted(pms.deleted);

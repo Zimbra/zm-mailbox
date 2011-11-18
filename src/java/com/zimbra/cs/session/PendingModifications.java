@@ -151,6 +151,7 @@ public final class PendingModifications {
     public LinkedHashMap<ModificationKey, MailItem> created;
     public Map<ModificationKey, Change> modified;
     public Map<ModificationKey, Change> deleted;
+    public String accountId;
 
     public PendingModifications() { }
 
@@ -300,6 +301,7 @@ public final class PendingModifications {
     }
 
     PendingModifications add(PendingModifications other) {
+        accountId = other.accountId;
         changedTypes.addAll(other.changedTypes);
 
         if (other.deleted != null) {
@@ -328,6 +330,7 @@ public final class PendingModifications {
     }
 
     public void clear()  {
+        accountId = null;
         created = null;
         deleted = null;
         modified = null;

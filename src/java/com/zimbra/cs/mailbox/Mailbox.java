@@ -2162,6 +2162,7 @@ public class Mailbox {
 
         PendingModifications snapshot = new PendingModifications();
 
+        snapshot.accountId = pms.accountId;
         if (pms.deleted != null && !pms.deleted.isEmpty()) {
             snapshot.recordDeleted(pms.deleted);
         }
@@ -8129,6 +8130,11 @@ public class Mailbox {
         if (change.dirty != null && change.dirty.hasNotifications()) {
             dirty = change.dirty;
             change.dirty = new PendingModifications();
+            if (change.octxt == null || change.octxt.getAuthenticatedUser() == null) {
+                dirty.accountId = mData.accountId;
+            } else {
+                dirty.accountId = change.octxt.getAuthenticatedUser().getId();
+            }
         }
 
         Session source = change.octxt == null ? null : change.octxt.getSession();
