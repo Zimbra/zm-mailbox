@@ -2231,6 +2231,7 @@ public class ProvUtil implements HttpDebugListener {
             for (String helpItem : helpItems) {
                 // console.println(FileGenUtil.wrapComments(helpItem, 70, prefix) + "\n");
                 console.println("- " + helpItem.trim());
+                console.println();
             }
         }
         console.println();
