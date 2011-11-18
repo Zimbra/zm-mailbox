@@ -24,7 +24,7 @@ package com.zimbra.cs.account.accesscontrol.generated;
 public class RightConsts {
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 jhahm 20111104-0947 */
+    /* build: 8.0.0_BETA1_1111 pshao 20111117-2156 */
 
 
     /*
@@ -590,6 +590,16 @@ public class RightConsts {
      * backup accounts on a server
      */
     public static final String RT_backupAccount = "backupAccount";
+
+    /**
+     * rights targeted on domain-ed entries for BES admin
+     */
+    public static final String RT_besAdminDomainRights = "besAdminDomainRights";
+
+    /**
+     * server rights for BES admin
+     */
+    public static final String RT_besAdminServerRights = "besAdminServerRights";
 
     /**
      * check password strength
@@ -1187,6 +1197,16 @@ public class RightConsts {
      * activate/deactivate zimlets on a cos
      */
     public static final String RT_manageZimlet = "manageZimlet";
+
+    /**
+     * cos rights for running the migration wizard
+     */
+    public static final String RT_migrationAdminCosRights = "migrationAdminCosRights";
+
+    /**
+     * rights targeted on domain-ed entries for running the migration wizard
+     */
+    public static final String RT_migrationAdminDomainRights = "migrationAdminDomainRights";
 
     /**
      * modify all account attributes
