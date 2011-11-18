@@ -43,7 +43,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111107-1045 */
+    /* build: 8.0.0_BETA1_1111 pshao 20111117-2156 */
 
     /**
      * RFC2256: descriptive information
@@ -2559,8 +2559,8 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required LAZY mode: optional (if not using
-     * zimbraAutoProvLdapSearchFilters) MANUAL mode: optional (if not using
-     * zimbraAutoProvLdapSearchFilters) LDAP external DN template for account
+     * zimbraAutoProvLdapSearchFilter) MANUAL mode: optional (if not using
+     * zimbraAutoProvLdapSearchFilter) LDAP external DN template for account
      * auto provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
@@ -2579,8 +2579,8 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required LAZY mode: optional (if not using
-     * zimbraAutoProvLdapSearchFilters) MANUAL mode: optional (if not using
-     * zimbraAutoProvLdapSearchFilters) LDAP external DN template for account
+     * zimbraAutoProvLdapSearchFilter) MANUAL mode: optional (if not using
+     * zimbraAutoProvLdapSearchFilter) LDAP external DN template for account
      * auto provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
@@ -2602,8 +2602,8 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required LAZY mode: optional (if not using
-     * zimbraAutoProvLdapSearchFilters) MANUAL mode: optional (if not using
-     * zimbraAutoProvLdapSearchFilters) LDAP external DN template for account
+     * zimbraAutoProvLdapSearchFilter) MANUAL mode: optional (if not using
+     * zimbraAutoProvLdapSearchFilter) LDAP external DN template for account
      * auto provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
@@ -2626,8 +2626,8 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required LAZY mode: optional (if not using
-     * zimbraAutoProvLdapSearchFilters) MANUAL mode: optional (if not using
-     * zimbraAutoProvLdapSearchFilters) LDAP external DN template for account
+     * zimbraAutoProvLdapSearchFilter) MANUAL mode: optional (if not using
+     * zimbraAutoProvLdapSearchFilter) LDAP external DN template for account
      * auto provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take
@@ -2648,8 +2648,8 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * EAGER mode: required LAZY mode: optional (if not using
-     * zimbraAutoProvLdapSearchFilters) MANUAL mode: optional (if not using
-     * zimbraAutoProvLdapSearchFilters) LDAP external DN template for account
+     * zimbraAutoProvLdapSearchFilter) MANUAL mode: optional (if not using
+     * zimbraAutoProvLdapSearchFilter) LDAP external DN template for account
      * auto provisioning. For LAZY and MANUAL modes, either
      * zimbraAutoProvLdapSearchFilter or zimbraAutoProvLdapBindDn has to be
      * set. If both are set, zimbraAutoProvLdapSearchFilter will take

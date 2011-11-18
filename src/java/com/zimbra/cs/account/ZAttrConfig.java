@@ -43,7 +43,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111107-1045 */
+    /* build: 8.0.0_BETA1_1111 pshao 20111117-2156 */
 
     /**
      * RFC2256: descriptive information
@@ -30169,6 +30169,354 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetReverseProxySendPop3Xoip(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraReverseProxySendPop3Xoip, "");
+        return attrs;
+    }
+
+    /**
+     * The read timeout for long polling support by proxy, e.g. ActiveSync
+     * for mobile devices. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getReverseProxyUpstreamPollingTimeoutAsString to access value as a string.
+     *
+     * @see #getReverseProxyUpstreamPollingTimeoutAsString()
+     *
+     * @return zimbraReverseProxyUpstreamPollingTimeout in millseconds, or 3600000 (1h)  if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1337)
+    public long getReverseProxyUpstreamPollingTimeout() {
+        return getTimeInterval(Provisioning.A_zimbraReverseProxyUpstreamPollingTimeout, 3600000L);
+    }
+
+    /**
+     * The read timeout for long polling support by proxy, e.g. ActiveSync
+     * for mobile devices. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraReverseProxyUpstreamPollingTimeout, or "1h" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1337)
+    public String getReverseProxyUpstreamPollingTimeoutAsString() {
+        return getAttr(Provisioning.A_zimbraReverseProxyUpstreamPollingTimeout, "1h");
+    }
+
+    /**
+     * The read timeout for long polling support by proxy, e.g. ActiveSync
+     * for mobile devices. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraReverseProxyUpstreamPollingTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1337)
+    public void setReverseProxyUpstreamPollingTimeout(String zimbraReverseProxyUpstreamPollingTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamPollingTimeout, zimbraReverseProxyUpstreamPollingTimeout);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The read timeout for long polling support by proxy, e.g. ActiveSync
+     * for mobile devices. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraReverseProxyUpstreamPollingTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1337)
+    public Map<String,Object> setReverseProxyUpstreamPollingTimeout(String zimbraReverseProxyUpstreamPollingTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamPollingTimeout, zimbraReverseProxyUpstreamPollingTimeout);
+        return attrs;
+    }
+
+    /**
+     * The read timeout for long polling support by proxy, e.g. ActiveSync
+     * for mobile devices. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1337)
+    public void unsetReverseProxyUpstreamPollingTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamPollingTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The read timeout for long polling support by proxy, e.g. ActiveSync
+     * for mobile devices. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1337)
+    public Map<String,Object> unsetReverseProxyUpstreamPollingTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamPollingTimeout, "");
+        return attrs;
+    }
+
+    /**
+     * The read timeout for the response of upstream server, which determines
+     * how long nginx will wait to get the response to a request. . Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getReverseProxyUpstreamReadTimeoutAsString to access value as a string.
+     *
+     * @see #getReverseProxyUpstreamReadTimeoutAsString()
+     *
+     * @return zimbraReverseProxyUpstreamReadTimeout in millseconds, or 60000 (60s)  if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1335)
+    public long getReverseProxyUpstreamReadTimeout() {
+        return getTimeInterval(Provisioning.A_zimbraReverseProxyUpstreamReadTimeout, 60000L);
+    }
+
+    /**
+     * The read timeout for the response of upstream server, which determines
+     * how long nginx will wait to get the response to a request. . Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraReverseProxyUpstreamReadTimeout, or "60s" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1335)
+    public String getReverseProxyUpstreamReadTimeoutAsString() {
+        return getAttr(Provisioning.A_zimbraReverseProxyUpstreamReadTimeout, "60s");
+    }
+
+    /**
+     * The read timeout for the response of upstream server, which determines
+     * how long nginx will wait to get the response to a request. . Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraReverseProxyUpstreamReadTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1335)
+    public void setReverseProxyUpstreamReadTimeout(String zimbraReverseProxyUpstreamReadTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamReadTimeout, zimbraReverseProxyUpstreamReadTimeout);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The read timeout for the response of upstream server, which determines
+     * how long nginx will wait to get the response to a request. . Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraReverseProxyUpstreamReadTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1335)
+    public Map<String,Object> setReverseProxyUpstreamReadTimeout(String zimbraReverseProxyUpstreamReadTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamReadTimeout, zimbraReverseProxyUpstreamReadTimeout);
+        return attrs;
+    }
+
+    /**
+     * The read timeout for the response of upstream server, which determines
+     * how long nginx will wait to get the response to a request. . Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1335)
+    public void unsetReverseProxyUpstreamReadTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamReadTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The read timeout for the response of upstream server, which determines
+     * how long nginx will wait to get the response to a request. . Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1335)
+    public Map<String,Object> unsetReverseProxyUpstreamReadTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamReadTimeout, "");
+        return attrs;
+    }
+
+    /**
+     * The send timeout of transfering a request to the upstream server. If
+     * after this time the upstream server doesn&#039;t take new data, proxy
+     * will close the connection. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getReverseProxyUpstreamSendTimeoutAsString to access value as a string.
+     *
+     * @see #getReverseProxyUpstreamSendTimeoutAsString()
+     *
+     * @return zimbraReverseProxyUpstreamSendTimeout in millseconds, or 60000 (60s)  if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1336)
+    public long getReverseProxyUpstreamSendTimeout() {
+        return getTimeInterval(Provisioning.A_zimbraReverseProxyUpstreamSendTimeout, 60000L);
+    }
+
+    /**
+     * The send timeout of transfering a request to the upstream server. If
+     * after this time the upstream server doesn&#039;t take new data, proxy
+     * will close the connection. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraReverseProxyUpstreamSendTimeout, or "60s" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1336)
+    public String getReverseProxyUpstreamSendTimeoutAsString() {
+        return getAttr(Provisioning.A_zimbraReverseProxyUpstreamSendTimeout, "60s");
+    }
+
+    /**
+     * The send timeout of transfering a request to the upstream server. If
+     * after this time the upstream server doesn&#039;t take new data, proxy
+     * will close the connection. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraReverseProxyUpstreamSendTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1336)
+    public void setReverseProxyUpstreamSendTimeout(String zimbraReverseProxyUpstreamSendTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamSendTimeout, zimbraReverseProxyUpstreamSendTimeout);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The send timeout of transfering a request to the upstream server. If
+     * after this time the upstream server doesn&#039;t take new data, proxy
+     * will close the connection. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraReverseProxyUpstreamSendTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1336)
+    public Map<String,Object> setReverseProxyUpstreamSendTimeout(String zimbraReverseProxyUpstreamSendTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamSendTimeout, zimbraReverseProxyUpstreamSendTimeout);
+        return attrs;
+    }
+
+    /**
+     * The send timeout of transfering a request to the upstream server. If
+     * after this time the upstream server doesn&#039;t take new data, proxy
+     * will close the connection. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1336)
+    public void unsetReverseProxyUpstreamSendTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamSendTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * The send timeout of transfering a request to the upstream server. If
+     * after this time the upstream server doesn&#039;t take new data, proxy
+     * will close the connection. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1336)
+    public Map<String,Object> unsetReverseProxyUpstreamSendTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraReverseProxyUpstreamSendTimeout, "");
         return attrs;
     }
 

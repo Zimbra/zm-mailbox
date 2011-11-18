@@ -6628,4 +6628,10 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
+<attr id="1338" name="zimbraPrefIncludeSharedItemsInSearch" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0.0">
+  <defaultCOSValue>FALSE</defaultCOSValue>
+  <desc>whether to include shared items in search</desc>
+</attr>
+
+
 </attrs>
