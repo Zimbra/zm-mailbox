@@ -98,6 +98,7 @@ import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.AttrRight;
 import com.zimbra.cs.account.accesscontrol.ComboRight;
+import com.zimbra.cs.account.accesscontrol.Help;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightClass;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
@@ -2220,6 +2221,17 @@ public class ProvUtil implements HttpDebugListener {
             console.println();
             console.println(indent + "rights:");
             dumpComboRight(comboRight, expandComboRight, indent, new HashSet<String>());
+        }
+        console.println();
+        
+        Help help = right.getHelp();
+        if (help != null) {
+            console.println(help.getDesc());
+            List<String> helpItems = help.getItems();
+            for (String helpItem : helpItems) {
+                // console.println(FileGenUtil.wrapComments(helpItem, 70, prefix) + "\n");
+                console.println("- " + helpItem.trim());
+            }
         }
         console.println();
     }
