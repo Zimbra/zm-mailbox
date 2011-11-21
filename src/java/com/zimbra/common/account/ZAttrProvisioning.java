@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111117-2156 */
+    /* build: 8.0.0_BETA1_1111 pshao 20111121-1157 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -10732,6 +10732,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1142)
     public static final String A_zimbraWebClientLogoutURLAllowedUA = "zimbraWebClientLogoutURLAllowedUA";
+
+    /**
+     * max input buffer length for web client
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1339)
+    public static final String A_zimbraWebClientMaxInputBufferLength = "zimbraWebClientMaxInputBufferLength";
 
     /**
      * whether or not to show link to offline version in the web UI top bar
