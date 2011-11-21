@@ -506,7 +506,7 @@ public class ProvUtil implements HttpDebugListener {
         GET_IDENTITIES("getIdentities", "gid", "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         GET_SIGNATURES("getSignatures", "gsig", "{name@domain|id} [arg1 [arg...]]", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         GET_ACCOUNT_MEMBERSHIP("getAccountMembership", "gam", "{name@domain|id}", Category.ACCOUNT, 1, 2),
-        GET_ALL_ACCOUNTS("getAllAccounts","gaa", "[-v] [-e] [-s server] [{domain}]", Category.ACCOUNT, 0, 5),
+        GET_ALL_ACCOUNTS("getAllAccounts","gaa", "[-v] [-e] [-s server] [{domain}]", Category.ACCOUNT, 0, 5, Via.ldap),
         GET_ACCOUNT_LOGGERS("getAccountLoggers", "gal", "[-s/--server hostname] {name@domain|id}", Category.LOG, 1, 3),
         GET_ALL_ACCOUNT_LOGGERS("getAllAccountLoggers", "gaal", "[-s/--server hostname]", Category.LOG, 0, 2),
         GET_ALL_ADMIN_ACCOUNTS("getAllAdminAccounts", "gaaa", "[-v] [-e] [attr1 [attr2...]]", Category.ACCOUNT, 0, Integer.MAX_VALUE),
@@ -584,7 +584,7 @@ public class ProvUtil implements HttpDebugListener {
         VERIFY_INDEX("verifyIndex", "vi", "{name@domain|id}", Category.MAILBOX, 1, 1),
         REVOKE_RIGHT("revokeRight", "rvr", "{target-type} [{target-id|target-name}] {grantee-type} [{grantee-id|grantee-name}] {[-]right}", Category.RIGHT, 3, 5, null, new RightCommandHelp()),
         SEARCH_ACCOUNTS("searchAccounts", "sa", "[-v] {ldap-query} [limit {limit}] [offset {offset}] [sortBy {attr}] [sortAscending 0|1*] [domain {domain}]", Category.SEARCH, 1, Integer.MAX_VALUE),
-        SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]", Category.SEARCH),
+        SEARCH_CALENDAR_RESOURCES("searchCalendarResources", "scr", "[-v] domain attr op value [attr op value...]", Category.SEARCH, 1, Integer.MAX_VALUE, Via.ldap),
         SEARCH_GAL("searchGal", "sg", "{domain} {name} [limit {limit}] [offset {offset}] [sortBy {attr}]", Category.SEARCH, 2, Integer.MAX_VALUE),
         SELECT_MAILBOX("selectMailbox", "sm", "{account-name} [{zmmailbox commands}]", Category.MAILBOX, 1, Integer.MAX_VALUE),
         SET_ACCOUNT_COS("setAccountCos", "sac", "{name@domain|id} {cos-name|cos-id}", Category.ACCOUNT, 2, 2),
@@ -592,7 +592,7 @@ public class ProvUtil implements HttpDebugListener {
         GET_ALL_MTA_AUTH_URLS("getAllMtaAuthURLs", "gamau", "", Category.SERVER, 0, 0),
         GET_ALL_REVERSE_PROXY_URLS("getAllReverseProxyURLs", "garpu", "", Category.REVERSEPROXY, 0, 0),
         GET_ALL_REVERSE_PROXY_BACKENDS("getAllReverseProxyBackends", "garpb", "", Category.REVERSEPROXY, 0, 0),
-        GET_ALL_REVERSE_PROXY_DOMAINS("getAllReverseProxyDomains", "garpd", "", Category.REVERSEPROXY, 0, 0),
+        GET_ALL_REVERSE_PROXY_DOMAINS("getAllReverseProxyDomains", "garpd", "", Category.REVERSEPROXY, 0, 0, Via.ldap),
         GET_ALL_MEMCACHED_SERVERS("getAllMemcachedServers", "gamcs", "", Category.SERVER, 0, 0),
         RELOAD_MEMCACHED_CLIENT_CONFIG("reloadMemcachedClientConfig", "rmcc", "all | mailbox-server [...]", Category.MISC, 1, Integer.MAX_VALUE, Via.soap),
         GET_MEMCACHED_CLIENT_CONFIG("getMemcachedClientConfig", "gmcc", "all | mailbox-server [...]", Category.MISC, 1, Integer.MAX_VALUE, Via.soap),
@@ -713,14 +713,18 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     /**
-     * Commands that should always use LdapProv, but for convenience don't require the -l option specified.
+     * Commands that should always use LdapProv, but for convenience 
+     * don't require the -l option specified.
      *
-     * Commands that must use -l (e.g. gaa) are indicated in the Via field of the command definition
-     * or in the command handler.
-     * TODO: clean up all the validating in individual command handlers and use the Via mecheniam.
+     * Commands that must use -l (e.g. gaa) are indicated in the Via field 
+     * of the command definition
      */
     private boolean forceLdapButDontRequireUseLdapOption(Command command) {
-        return (command == Command.HELP || command == Command.DESCRIBE);
+        return (command == Command.DESCRIBE);
+    }
+    
+    private boolean needProvisioningInstance(Command command) {
+        return !(command == Command.HELP);
     }
 
     private ProvUtil() {
@@ -1309,9 +1313,6 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void doRenameDomain(String[] args) throws ServiceException {
-        if (!(prov instanceof LdapProv)) {
-            throwLdapOnly();
-        }
         
         // bug 56768
         // if we are not already using master only, force it to use master.  
@@ -1761,9 +1762,7 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void doGetAllAccounts(String[] args) throws ServiceException {
-        if (!(prov instanceof LdapProv)) {
-            throwLdapOnly();
-        }
+
         LdapProv ldapProv = (LdapProv) prov;
 
         boolean verbose = false;
@@ -2001,10 +2000,6 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void doCountObjects(String[] args) throws ServiceException {
-        // only used by installer for now.  LDAP only is good for now, add soap if needed.
-        if (!(prov instanceof LdapProv)) {
-            throwLdapOnly();
-        }
 
         CountObjectsType type = Provisioning.CountObjectsType.fromString(args[1]);
 
@@ -2687,9 +2682,7 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void doSearchCalendarResources(String[] args) throws ServiceException {
-        if (!(prov instanceof LdapProv)) {
-            throwLdapOnly();
-        }
+
         boolean verbose = false;
         int i = 1;
 
@@ -3387,8 +3380,10 @@ public class ProvUtil implements HttpDebugListener {
                     pu.setUseLdap(true, false);
                 }
                 
-                pu.initProvisioning();
-
+                if (pu.needProvisioningInstance(cmd)) {
+                    pu.initProvisioning();
+                }
+                
                 try {
                     if (!pu.execute(args)) {
                         pu.usage();
@@ -3973,9 +3968,7 @@ public class ProvUtil implements HttpDebugListener {
     }
 
     private void doGetAllReverseProxyDomains() throws ServiceException {
-        if (!(prov instanceof LdapProv)) {
-            throwLdapOnly();
-        }
+
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
             @Override
             public void visit(NamedEntry entry) throws ServiceException {
