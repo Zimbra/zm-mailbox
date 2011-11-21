@@ -1166,6 +1166,9 @@ public final class LC {
     public static final KnownKey octopus_incoming_patch_max_age = KnownKey.newKey(120); // 120 mins = 2 hours
     public static final KnownKey octopus_stored_patch_max_age = KnownKey.newKey(360); // 360 mins = 6 hours
 
+    // used for resumable document uploads (full files)
+    public static final KnownKey document_incoming_max_age = KnownKey.newKey(360); // 120 mins = 2 hours
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
