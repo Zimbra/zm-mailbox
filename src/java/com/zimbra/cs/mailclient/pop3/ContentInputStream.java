@@ -14,11 +14,9 @@
  */
 package com.zimbra.cs.mailclient.pop3;
 
-import com.zimbra.cs.mailclient.ParseException;
-
-import java.io.InputStream;
-import java.io.IOException;
 import java.io.EOFException;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Input stream for reading POP3 response content.
@@ -67,20 +65,18 @@ public final class ContentInputStream extends InputStream {
     // Fill input buffer with next line of content
     private boolean fillBuffer() throws IOException {
         sbuf.setLength(0);
-        int b;
+        int b = 0;
+        char lastChar;
         do {
+            lastChar = (char) b;
             b = in.read();
             if (b == -1) {
                 throw new EOFException(
                     "Unexpected end of stream while reading content");
             }
             sbuf.append((char) b);
-        } while (b != '\n');
+        } while (!(b == '\n' && lastChar == '\r'));
         int len = sbuf.length();
-        // Make sure line ends with "\r\n"
-        if (len < 2 || sbuf.charAt(len - 2) != '\r') {
-            throw new ParseException("Invalid end of line character");
-        }
         // Check for end of content
         if (len == 3 && sbuf.charAt(0) == '.') {
             pos = -1;
