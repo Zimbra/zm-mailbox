@@ -19,6 +19,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PushbackInputStream;
 import java.util.EnumSet;
 import java.util.List;
@@ -37,6 +38,8 @@ import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.eclipse.jetty.http.HttpException;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
@@ -67,10 +70,16 @@ import com.zimbra.cs.mime.MPartInfo;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedDocument;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.octosync.store.BlobStore;
+import com.zimbra.cs.octosync.store.BlobStore.IncomingBlob;
+import com.zimbra.cs.octosync.store.StoreManagerBasedTempBlobStore;
 import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.service.UserServletContext;
 import com.zimbra.cs.service.UserServletException;
 import com.zimbra.cs.service.formatter.FormatterFactory.FormatType;
+import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.util.http.ContentRange;
 
 public final class NativeFormatter extends Formatter {
 
@@ -82,12 +91,27 @@ public final class NativeFormatter extends Formatter {
     public static final String ATTR_CONTENTTYPE = "contenttype";
     public static final String ATTR_CONTENTLENGTH = "contentlength";
 
+    public static final String RESUME_ID_HEADER = "X-Zimbra-ResumeId";
+
     private static final Log log = LogFactory.getLog(NativeFormatter.class);
 
     private static final Set<String> SCRIPTABLE_CONTENT_TYPES = ImmutableSet.of(MimeConstants.CT_TEXT_HTML,
                                                                                 MimeConstants.CT_APPLICATION_XHTML,
                                                                                 MimeConstants.CT_TEXT_XML,
                                                                                 MimeConstants.CT_IMAGE_SVG);
+    /** Used for resumable upload of documents */
+    private StoreManagerBasedTempBlobStore blobStore;
+
+    /** Constructor */
+    public NativeFormatter()
+    {
+        final long incomingExpiration = LC.document_incoming_max_age.intValue() * 60 * 1000;
+
+        blobStore = new StoreManagerBasedTempBlobStore(StoreManager.getInstance(),
+                incomingExpiration,
+                0 /* no expiration for "stored blobs", we don't use them here */);
+    }
+
     @Override
     public FormatType getType() {
         return FormatType.HTML_CONVERTED;
@@ -388,22 +412,75 @@ public final class NativeFormatter extends Formatter {
 
     @Override
     public void saveCallback(UserServletContext context, String contentType, Folder folder, String filename)
-            throws IOException, ServiceException, UserServletException {
+            throws IOException, ServiceException, UserServletException
+    {
+        InputStream is = context.getRequestInputStream();
+
+        try {
+            ContentRange contentRange = null;
+
+            try {
+                contentRange = ContentRange.parse(context.req);
+            } catch (HttpException e) {
+                throw new UserServletException(e.getStatus(), "invalid Content-Range header");
+            }
+
+            final String resumeId = context.req.getHeader(RESUME_ID_HEADER);
+            Mailbox mbox = folder.getMailbox();
+
+            if (filename == null) {
+                try {
+                    if (contentRange != null && !contentRange.isComplete()) {
+                        throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST,
+                        "incomplete upload of messages unsupported");
+                    }
+
+                    ParsedMessage pm = new ParsedMessage(context.getPostBody(), mbox.attachmentsIndexingEnabled());
+                    DeliveryOptions dopt = new DeliveryOptions().setFolderId(folder).setNoICal(true);
+                    mbox.addMessage(context.opContext, pm, dopt, null);
+                    return;
+                } catch (ServiceException e) {
+                    throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "error parsing message");
+                }
+            }
+
+            if (resumeId == null) {
+                startNewUpload(context, is, contentType, contentRange, folder, filename);
+            } else {
+                BlobStore.IncomingBlob ib = blobStore.getIncoming(resumeId);
+
+                if (ib == null) {
+                    throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST,
+                            "unrecognized resume id: " + resumeId);
+                }
+
+                Object ibCtx = ib.getContext();
+
+                // @todo seems like authenticated account can be null - should even allow
+                // uploads in this case? exiting non-resumable code apparently allows that
+                if (context.getAuthAccount() != null && (!(ibCtx instanceof String) ||
+                        (String)ibCtx != context.getAuthAccount().getId())) {
+                    // @todo Should we report "forbidden" here? this is a case of someone
+                    // passing valid but stolen resume id (super rare)
+                    throw new UserServletException(HttpServletResponse.SC_FORBIDDEN,
+                        "invalid resume id");
+                }
+
+                resumeUpload(context, is, contentType, contentRange, resumeId, folder, filename, ib);
+            }
+
+        } finally {
+            is.close();
+        }
+    }
+
+    private void saveDocument(Blob blob, UserServletContext context, String contentType, Folder folder, String filename)
+        throws IOException, ServiceException, UserServletException
+    {
         Mailbox mbox = folder.getMailbox();
         MailItem item = null;
-        if (filename == null) {
-            try {
-                ParsedMessage pm = new ParsedMessage(context.getPostBody(), mbox.attachmentsIndexingEnabled());
-                DeliveryOptions dopt = new DeliveryOptions().setFolderId(folder).setNoICal(true);
-                item = mbox.addMessage(context.opContext, pm, dopt, null);
-                return;
-            } catch (ServiceException e) {
-                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, "error parsing message");
-            }
-        }
 
         String creator = context.getAuthAccount() == null ? null : context.getAuthAccount().getName();
-        InputStream is = context.getRequestInputStream();
         ParsedDocument pd = null;
 
         try {
@@ -412,7 +489,10 @@ public final class NativeFormatter extends Formatter {
                 if (contentType == null)
                     contentType = MimeConstants.CT_APPLICATION_OCTET_STREAM;
             }
-            pd = new ParsedDocument(is, filename, contentType, System.currentTimeMillis(), creator, context.req.getHeader("X-Zimbra-Description"));
+
+            pd = new ParsedDocument(blob, filename, contentType, System.currentTimeMillis(), creator,
+                    context.req.getHeader("X-Zimbra-Description"), true);
+
             item = mbox.getItemByPath(context.opContext, filename, folder.getId());
             // XXX: should we just overwrite here instead?
             if (!(item instanceof Document))
@@ -421,10 +501,186 @@ public final class NativeFormatter extends Formatter {
             item = mbox.addDocumentRevision(context.opContext, item.getId(), pd);
         } catch (NoSuchItemException nsie) {
             item = mbox.createDocument(context.opContext, folder.getId(), pd, MailItem.Type.DOCUMENT, 0);
-        } finally {
-            is.close();
         }
+
         sendZimbraHeaders(context.resp, item);
+    }
+
+    private static long getContentLength(HttpServletRequest req)
+    {
+        // note HttpServletRequest.getContentLength() returns int, that's
+        // why we parse it ourselves
+        final String contentLengthStr = req.getHeader("Content-Length");
+        return contentLengthStr != null ? Long.parseLong(contentLengthStr) : -1;
+    }
+
+    private void startNewUpload(
+            UserServletContext context,
+            InputStream is,
+            String contentType,
+            ContentRange contentRange,
+            Folder folder,
+            String filename) throws IOException, ServiceException, UserServletException
+    {
+        if (contentRange == null) {
+            // No content range so no resumable upload requested nor possible. Let's
+            // just go strait to the blob store (note, we don't respond until uploaded is
+            // completed, so we don't have opportunity to return the resume id to the
+            // client before he completes upload. Well, in theory we do if client was
+            // reading response headers asynchronously, but we're not supporting this
+            // for now.
+
+            Blob blob = StoreManager.getInstance().storeIncoming(is, null);
+            saveDocument(blob, context, contentType, folder, filename);
+            return;
+        }
+
+        // if actual range is given, it must start at 0
+        if (contentRange.hasStartEnd() && contentRange.getStart() != 0) {
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST,
+                    "upload at non-zero offset without resume id");
+        }
+
+        // @todo not sure we should allow non-authenticated requests?
+        String authAccountId = context.getAuthAccount() != null ? context.getAuthAccount().getId() : null;
+        BlobStore.IncomingBlob ib = blobStore.createIncoming(authAccountId);
+        final String resumeId = ib.getId();
+
+        if (contentRange.hasInstanceLength()) {
+            ib.setExpectedSize(contentRange.getInstanceLength());
+        }
+
+        OutputStream out = ib.getAppendingOutputStream();
+
+        try {
+            // please note, we may copy zero bytes here if client uses PUT to
+            ByteUtil.copy(is, true, out, true);
+        } catch (IOException e) {
+            blobStore.deleteIncoming(ib);
+            throw e;
+        }
+
+        // everything from the request has been written ok, now see if it's a complete upload
+
+        if (ib.isComplete()) {
+            Blob b = ((StoreManagerBasedTempBlobStore)blobStore).extractIncoming(ib);
+            saveDocument(b, context, contentType, folder, filename);
+        } else {
+            context.resp.addHeader(RESUME_ID_HEADER, resumeId);
+        }
+    }
+
+    private void resumeUpload(
+            UserServletContext context,
+            InputStream is,
+            String contentType,
+            ContentRange contentRange,
+            String resumeId,
+            Folder folder,
+            String filename,
+            IncomingBlob ib) throws UserServletException, ServiceException, IOException
+    {
+        assert resumeId != null : "Resume id must be provided";
+
+        if (contentRange == null) {
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST,
+                "cannot resume upload without Content-Range");
+        }
+
+        final long contentLength = getContentLength(context.req);
+
+        if (contentLength == -1) {
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST,
+                "cannot resume upload without Content-Length");
+        } else if (contentLength > 0) {
+            if (!contentRange.hasStartEnd() || contentRange.getStart() != ib.getCurrentSize()) {
+
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST,
+                    "upload must resume at the end offset (" + ib.getCurrentSize() + ")");
+            }
+        } else {
+            if (contentRange.hasStartEnd()) {
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST,
+                        "Can't specify byte range with zero Content-Length");
+            }
+            // note it's okay if nothing or only instance length is supplied in Content-Range
+            // without payload - it could be the final "closing" request -
+        }
+
+        if (contentRange.hasStartEnd() && contentLength != contentRange.getRangeLength()) {
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST,
+                "Content-Range and Content-Length mismatched");
+        }
+
+        if (contentRange.hasInstanceLength()) {
+            final long instanceLength = contentRange.getInstanceLength();
+
+            if (!ib.hasExpectedSize()) {
+
+               if (ib.getCurrentSize() > instanceLength) {
+                   throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST,
+                       "invalid instance length of " + instanceLength + "; current size: " +
+                       ib.getCurrentSize());
+               }
+
+               ib.setExpectedSize(instanceLength);
+
+            } else {
+                if (ib.getExpectedSize() != instanceLength) {
+                    throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST,
+                            "instance length cannot change, was: " + ib.getExpectedSize() +
+                            ", in req: " + instanceLength);
+                }
+            }
+        } else if (ib.hasExpectedSize()) {
+            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST,
+                    "instance length must be provided");
+        }
+
+        OutputStream out = ib.getAppendingOutputStream();
+
+        // don't catch exceptions here, if something fails we do not
+        // delete the incoming blob yet since client already has resume id
+        // and can resume
+
+        // also it's ok if input stream has no payload here; we'll just return
+        // Content-Range below; this is for clients polling for current state of upload
+
+        ByteUtil.copy(is, true, out, true, contentLength);
+
+        if (ib.isComplete()) {
+            Blob b = ((StoreManagerBasedTempBlobStore)blobStore).extractIncoming(ib);
+            saveDocument(b, context, contentType, folder, filename);
+        } else {
+            context.resp.addHeader(RESUME_ID_HEADER, resumeId);
+
+            ContentRange range = getCurrentContentRange(ib);
+            // Add Content-Range in response only if we have some data or if
+            // expected length is known (instance length); it's weird to return */*
+            // seems like not a valid combo to return (we accept it from clients, but
+            // this is per the rule "Be stict with what you send and tolerant in what you receive")
+            if (range != null) {
+                context.resp.addHeader("Content-Range", range.toString());
+            }
+
+        }
+    }
+
+    private static ContentRange getCurrentContentRange(IncomingBlob ib) throws HttpException
+    {
+        ContentRange range = null;
+
+        if (ib.getCurrentSize() == 0) {
+            if (ib.hasExpectedSize()) {
+                range = new ContentRange(ib.getExpectedSize());
+            }
+        } else {
+            range = ib.hasExpectedSize() ?
+                        new ContentRange(0, ib.getCurrentSize() - 1, ib.getExpectedSize()) :
+                        new ContentRange(0, ib.getCurrentSize() - 1);
+        }
+
+        return range;
     }
 
     public static void sendZimbraHeaders(HttpServletResponse resp, MailItem item) {

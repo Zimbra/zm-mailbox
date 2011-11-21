@@ -35,7 +35,7 @@ public class PatchStoreTest
     @Test
     public void acceptTest() throws Exception
     {
-        PatchStore.IncomingPatch ip = patchStore.createIncomingPatch("foo", "123");
+        PatchStore.IncomingPatch ip = patchStore.createIncomingPatch("foo");
         ip.getOutputStream().write("hello world".getBytes());
         patchStore.acceptPatch(ip, 1, 1);
 
@@ -65,7 +65,7 @@ public class PatchStoreTest
     @Test
     public void rejectTest() throws Exception
     {
-        PatchStore.IncomingPatch ip = patchStore.createIncomingPatch("foo", "123");
+        PatchStore.IncomingPatch ip = patchStore.createIncomingPatch("foo");
         ip.getOutputStream().write("hello world".getBytes());
         patchStore.rejectPatch(ip);
 

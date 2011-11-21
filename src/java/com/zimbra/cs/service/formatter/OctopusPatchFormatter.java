@@ -4,7 +4,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
-import java.util.UUID;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
@@ -102,13 +101,8 @@ public class OctopusPatchFormatter extends Formatter
         PatchInputStream pis = null;
         PatchStore.IncomingPatch ip = null;
 
-        // @todo Temporary, this is likely to be supplied by the client
-        // depending how we go about supporting resumable download
-        // for now just get a random uuid
-        String resumeId = UUID.randomUUID().toString();
-
         try {
-            ip = patchStore.createIncomingPatch(context.targetAccount.getId(), resumeId);
+            ip = patchStore.createIncomingPatch(context.targetAccount.getId());
 
             int defaultFileId = 0;
             int defaultVersion = 0;

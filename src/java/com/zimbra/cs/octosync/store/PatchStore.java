@@ -156,17 +156,15 @@ public class PatchStore
      * Creates the incoming patch.
      *
      * @param accountId The if of the account to associate the patch with.
-     * @param resumeId The user-created resume id to track this patch
-     *      (note, we may go with store generated ids TBD)
      *
      * @return IncomingPatch instance.
      *
      * @throws IOException Signals that an I/O exception has occurred.
      * @throws ServiceException the service exception
      */
-    public IncomingPatch createIncomingPatch(String accountId, String resumeId) throws IOException, ServiceException
+    public IncomingPatch createIncomingPatch(String accountId) throws IOException, ServiceException
     {
-        IncomingBlob ib = blobStore.createIncoming(getIncomingPatchId(accountId, resumeId), null);
+        IncomingBlob ib = blobStore.createIncoming(null);
 
         IncomingPatch ip = new IncomingPatch(ib, accountId);
         ib.setContext(ip);
@@ -177,16 +175,14 @@ public class PatchStore
     /**
      * Retrieves the incoming patch.
      *
-     * @param accountId The id of the account for the patch.
      * @param resumeId The resume id of the patch.
      *
      * @return IncomingPatch
      */
-    public IncomingPatch getIncomingPatch(String accountId, String resumeId)
+    public IncomingPatch getIncomingPatch(String resumeId)
     {
-        return (IncomingPatch)blobStore.getIncoming(getIncomingPatchId(accountId, resumeId)).getContext();
+        return (IncomingPatch)blobStore.getIncoming(resumeId).getContext();
     }
-
 
     /**
      * Accepts patch. Turns an IncomingPatch into a StoredPatch.
@@ -208,9 +204,7 @@ public class PatchStore
             deletePatch(ip.getAccountId(), fileId);
         }
 
-        // id for incoming manifest blob is temporary, we don't keep
-        // incoming blob around since the entire manifest is already in hand
-        IncomingBlob manifestBlob = blobStore.createIncoming(ip.patchBlob.getId() + "M", null);
+        IncomingBlob manifestBlob = blobStore.createIncoming(null);
 
         try {
             ip.getManifest().writeTo(manifestBlob.getAppendingOutputStream());
@@ -237,7 +231,6 @@ public class PatchStore
 
         return sp;
     }
-
     /**
      * Reject patch.
      *
@@ -282,11 +275,6 @@ public class PatchStore
             StoredBlob msb = blobStore.get(getStoredPatchId(accountId, fileId, true));
             blobStore.delete(msb);
         }
-    }
-
-    private String getIncomingPatchId(String accountId, String resumeId)
-    {
-        return accountId + ":" + resumeId;
     }
 
     private String getStoredPatchId(String accountId, int fileId, boolean manifest)

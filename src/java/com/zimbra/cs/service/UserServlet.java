@@ -611,10 +611,11 @@ public class UserServlet extends ZimbraServlet {
                 throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errUnsupportedFormat, context.req));
         }
 
-        if (context.formatter == null)
+        if (context.formatter == null) {
             context.formatter = FormatterFactory.mFormatters.get(context.format);
-        if (context.formatter == null)
-            throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errUnsupportedFormat, context.req));
+            if (context.formatter == null)
+                throw new UserServletException(HttpServletResponse.SC_BAD_REQUEST, L10nUtil.getMessage(MsgKey.errUnsupportedFormat, context.req));
+        }
     }
 
     private boolean isProxyRequest(HttpServletRequest req, HttpServletResponse resp, UserServletContext context, MailItem item)

@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TimerTask;
 import java.util.TreeMap;
+import java.util.UUID;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
@@ -69,7 +70,8 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
         private String id;
         private BlobBuilder blobBuilder;
         private Object ctx;
-        //private long expectedSize;
+        private long expectedSize;
+        private boolean expectedSizeSet;
         private long lastAccessTime;
 
         IncomingBlob(String id, BlobBuilder blobBuilder, Object ctx)
@@ -131,28 +133,32 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
             ctx = value;
         }
 
-        /** @todo These are to be used for resumable upload, not needed yet so commented out */
-
-        /*
         @Override
         public long getCurrentSize()
         {
-            // @todo Use getRawSize(), except that raw size is not updated until the finish() is called
-            // so that will need a solution
-            return blobBuilder.getBlob().getFile().length();
+            return blobBuilder.getTotalBytes();
+        }
+
+        @Override
+        public boolean hasExpectedSize()
+        {
+            return expectedSizeSet;
         }
 
         @Override
         public long getExpectedSize()
         {
+            assert expectedSizeSet : "Expected size not set";
             return expectedSize;
         }
 
         @Override
         public void setExpectedSize(long value)
         {
+            assert !expectedSizeSet : "Expected size already set: " + expectedSize;
             expectedSize = value;
-        }*/
+            expectedSizeSet = true;
+        }
 
         private long getLastAccessTime()
         {
@@ -231,20 +237,23 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
 
     // BlobStore API
     @Override
-    public IncomingBlob createIncoming(String id, Object ctx) throws IOException, ServiceException
+    public IncomingBlob createIncoming(Object ctx) throws IOException, ServiceException
     {
         BlobBuilder bb = storeManager.getBlobBuilder();
-        IncomingBlob ib = new IncomingBlob(id, bb, ctx);
 
         synchronized (incomingBlobs) {
-            if (incomingBlobs.containsKey(id)) {
-                throw ServiceException.INVALID_REQUEST("incoming blob already exists: " + id, null);
-            }
+
+            String id;
+
+            do {
+                id = UUID.randomUUID().toString();
+            } while (incomingBlobs.containsKey(id));
+
+            IncomingBlob ib = new IncomingBlob(id, bb, ctx);
 
             incomingBlobs.put(id, ib);
+            return ib;
         }
-
-        return ib;
     }
 
     // BlobStore API
@@ -459,4 +468,29 @@ public class StoreManagerBasedTempBlobStore extends BlobStore
             }
         }
     }
+
+    /**
+     * Bit of a hack, a special function that extracts underlying Blob instance
+     * (com.zimbra.cs.store.Blob) and removes specified IncomingBlob.
+     * This is a special use to take advantage of "resumability" of PatchStore
+     * in places that require the cs.store.Blob (e.g. NativeFormatter).
+     *
+     * @param ib Incoming blob to extract
+     * @return Underlying Blob instance
+     *
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public Blob extractIncoming(BlobStore.IncomingBlob ib) throws IOException, ServiceException
+    {
+        IncomingBlob myIb = (IncomingBlob)ib;
+
+        synchronized (incomingBlobs) {
+            IncomingBlob existingBlob = incomingBlobs.remove(myIb.getId());
+            assert existingBlob == null || existingBlob == myIb : "Wrong blob removed: " + myIb.getId();
+        }
+
+        return myIb.blobBuilder.finish();
+    }
+
 }

@@ -23,7 +23,7 @@ import com.zimbra.common.service.ServiceException;
  * Once complete, it can be turned into stored blob. An incoming blob that never got stored
  * should be automatically purged.
  *
- * Both incoming and stored blobs are identified by user supplied identifiers (strings).
+ * Incoming blobs are assigned ids by the store. Stored blobs use user supplied ids.
  * Namespaces for both types are separate. Additionally stored blobs support versioning.
  *
  * @author grzes
@@ -44,32 +44,35 @@ public abstract class BlobStore
         public abstract String getId();
 
         /**
-         * @todo for resumable upload
-         *
          * Returns the current size of the incoming blob.
          *
          * @return the size
          */
-        //public abstract long getCurrentSize();
+        public abstract long getCurrentSize();
 
         /**
-         * @todo for resumable upload
+         * Allows to check if expected size has been set.
          *
-         * Gets the expected size, if set. 0 if not set/unknown.
+         * @return True if expected size was set, false otherwise.
+         */
+        public abstract boolean hasExpectedSize();
+
+        /**
+         * Gets the expected size, if set.
          *
+         * @pre hasExpectedSize() returned true
          * @return the expected size
          */
-        //public abstract long getExpectedSize();
+        public abstract long getExpectedSize();
 
         /**
-         * @todo for resumable upload
-         *
          * Sets the expected size.
          *
-         * @param value The expected size. Must be greater than 0.
+         * @pre Must have not been set yet
+         * @param value The expected size.
          */
 
-        //public abstract void setExpectedSize(long value);
+        public abstract void setExpectedSize(long value);
 
         /**
          * Gets the output stream for the incoming blob. The
@@ -109,6 +112,18 @@ public abstract class BlobStore
          * @param value the new context
          */
         public abstract void setContext(Object value);
+
+        /**
+         * Checks if the incoming blob is complete, i.e.
+         * the current size matches expected size
+         *
+         * @return True if complete, false otherwise
+         */
+        public boolean isComplete()
+        {
+            return hasExpectedSize() && getExpectedSize() == getCurrentSize();
+        }
+
     }
 
     /**
@@ -173,8 +188,6 @@ public abstract class BlobStore
     /**
      * Creates an incoming blob.
      *
-     * @param id User assigned id. The name space for incoming blobs is separate from
-     *      stored blob id namespace.
      * @param ctx User context. Can be null.
      *
      * @return Instance of IncomingBlob
@@ -182,7 +195,7 @@ public abstract class BlobStore
      * @throws IOException Signals that an I/O exception has occurred.
      * @throws ServiceException the service exception
      */
-    public abstract IncomingBlob createIncoming(String id, Object ctx) throws IOException, ServiceException;
+    public abstract IncomingBlob createIncoming(Object ctx) throws IOException, ServiceException;
 
     /**
      * Retrieves the incoming blob by the id.
