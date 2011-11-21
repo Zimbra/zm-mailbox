@@ -1078,6 +1078,20 @@ class DomainAttrItem {
     }
 }
 
+/** The visit of LdapProvisioning can't throw the exception out.
+ *  Therefore uses this special item to indicate exception.
+ * @author jiankuan
+ *
+ */
+class DomainAttrExceptionItem extends DomainAttrItem {
+    public DomainAttrExceptionItem(ProxyConfException e) {
+        super(null, null, null, null, null, null, null);
+        this.exception = e;
+    }
+
+    public ProxyConfException exception;
+}
+
 public class ProxyConfGen
 {
     private static Log mLog = LogFactory.getLog (ProxyConfGen.class);
@@ -1172,6 +1186,7 @@ public class ProxyConfGen
 
         final Set<String> attrsNeeded = new HashSet<String>();
         attrsNeeded.add(Provisioning.A_zimbraVirtualHostname);
+        attrsNeeded.add(Provisioning.A_zimbraVirtualIPAddress);
         attrsNeeded.add(Provisioning.A_zimbraSSLCertificate);
         attrsNeeded.add(Provisioning.A_zimbraSSLPrivateKey);
         attrsNeeded.add(Provisioning.A_zimbraReverseProxyClientCertMode);
@@ -1188,6 +1203,8 @@ public class ProxyConfGen
                     .getAttr(Provisioning.A_zimbraDomainName);
                 String[] virtualHostnames = entry
                     .getMultiAttr(Provisioning.A_zimbraVirtualHostname);
+                String[] virtualIPAddresses = entry
+                    .getMultiAttr(Provisioning.A_zimbraVirtualIPAddress);
                 String certificate = entry
                     .getAttr(Provisioning.A_zimbraSSLCertificate);
                 String privateKey = entry
@@ -1206,6 +1223,16 @@ public class ProxyConfGen
                             // name, cert or key. Those domains will use the
                             // config
                 }
+                boolean lookupVIP = true; // lookup virutal IP from DNS or /etc/hosts
+                if (virtualIPAddresses.length > 0) {
+                    if (virtualIPAddresses.length != virtualHostnames.length) {
+                        result.add(new DomainAttrExceptionItem(
+                                new ProxyConfException("The configurations of zimbraVirtualHostname and " +
+                                                       "zimbraVirtualIPAddress are mismatched", null)));
+                        return;
+                    }
+                    lookupVIP = false;
+                }
 
                 //Here assume virtualHostnames and virtualIPAddresses are
                 //same in number
@@ -1213,7 +1240,14 @@ public class ProxyConfGen
                 try {
 
                     for( ; i < virtualHostnames.length; i++) {
-                        InetAddress vip = InetAddress.getByName(virtualHostnames[i]);
+                        //bug 66892, only lookup IP when zimbraVirtualIPAddress is unset
+                        InetAddress vip = null;
+                        if (lookupVIP) {
+                            vip = InetAddress.getByName(virtualHostnames[i]);
+                        } else {
+                            vip = InetAddress.getByName(virtualIPAddresses[i]);
+                        }
+                        
                         if (!ProxyConfUtil.isEmptyString(clientCertCA)){
 
                             createDomainSSLDirIfNotExists();
@@ -1224,8 +1258,10 @@ public class ProxyConfGen
 
                     }
                 } catch (UnknownHostException e) {
-                    throw ServiceException.
-                        FAILURE("Cannot find the IP of " + virtualHostnames[i], e);
+                    result.add(new DomainAttrExceptionItem(
+                                    new ProxyConfException("Cannot find the IP of " + virtualHostnames[i], e)));
+
+                    return;          
                 }
             }
         };
@@ -1437,7 +1473,12 @@ public class ProxyConfGen
 
     private static void fillVarsWithDomainAttrs(DomainAttrItem item)
             throws UnknownHostException, ProxyConfException {
-        String defaultVal = null;;
+        
+        if (item instanceof DomainAttrExceptionItem) {
+            throw ((DomainAttrExceptionItem)item).exception;
+        }
+        
+        String defaultVal = null;
         mVars.put("vhn", item.virtualHostname);
         if (IPModeEnablerVar.getZimbraIPMode() != IPModeEnablerVar.IPMode.BOTH) {
             if (IPModeEnablerVar.getZimbraIPMode() == IPModeEnablerVar.IPMode.IPV4_ONLY &&
