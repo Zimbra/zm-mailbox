@@ -43,7 +43,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111117-2156 */
+    /* build: 8.0.0_BETA1_1111 pshao 20111121-1157 */
 
     /**
      * RFC2256: descriptive information
@@ -39140,6 +39140,78 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetWebClientLogoutURLAllowedUA(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraWebClientLogoutURLAllowedUA, "");
+        return attrs;
+    }
+
+    /**
+     * max input buffer length for web client
+     *
+     * @return zimbraWebClientMaxInputBufferLength, or 1024 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1339)
+    public int getWebClientMaxInputBufferLength() {
+        return getIntAttr(Provisioning.A_zimbraWebClientMaxInputBufferLength, 1024);
+    }
+
+    /**
+     * max input buffer length for web client
+     *
+     * @param zimbraWebClientMaxInputBufferLength new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1339)
+    public void setWebClientMaxInputBufferLength(int zimbraWebClientMaxInputBufferLength) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientMaxInputBufferLength, Integer.toString(zimbraWebClientMaxInputBufferLength));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * max input buffer length for web client
+     *
+     * @param zimbraWebClientMaxInputBufferLength new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1339)
+    public Map<String,Object> setWebClientMaxInputBufferLength(int zimbraWebClientMaxInputBufferLength, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientMaxInputBufferLength, Integer.toString(zimbraWebClientMaxInputBufferLength));
+        return attrs;
+    }
+
+    /**
+     * max input buffer length for web client
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1339)
+    public void unsetWebClientMaxInputBufferLength() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientMaxInputBufferLength, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * max input buffer length for web client
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1339)
+    public Map<String,Object> unsetWebClientMaxInputBufferLength(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientMaxInputBufferLength, "");
         return attrs;
     }
 

@@ -6634,5 +6634,10 @@ TODO: delete them permanently from here
   <desc>whether to include shared items in search</desc>
 </attr>
 
+<attr id="1339" name="zimbraWebClientMaxInputBufferLength" type="integer" min="0" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited,domainInfo" since="8.0.0">
+  <globalConfigValue>1024</globalConfigValue>
+  <desc>max input buffer length for web client</desc>
+</attr>
+
 
 </attrs>
