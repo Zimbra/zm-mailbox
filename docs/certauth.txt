@@ -223,6 +223,12 @@ $ sudo keytool -import -keystore /System/Library/Frameworks/JavaVM.framework/Ver
 Again, the above keytool command was provided as a FYI and for deugging purpose.  
 Do not use it, use zmcertmgr instead.
 
+Dev notes: 
+For dev env on mac, to test providing CA certs from the trust manager, uncomment:
+  <Set name="Truststore">/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Home/lib/security/cacerts</Set>
+  <Set name="TrustPassword">changeit</Set>
+on the ssl-clientcert SslSelectChannelConnector in jetty.xml.
+
 
 (B) In dev environment, if zmcertmgr is not available, you can use keytool to 
     import the CA cert to /opt/zimbra/jetty/etc/keystore.

@@ -92,6 +92,11 @@
           <Set name="password">zimbra</Set>
           <Set name="KeyPassword">zimbra</Set>
           <!-- 
+               uncomment following two lines when testing providing CAs from the trust store.
+               see https://bugzilla.zimbra.com/show_bug.cgi?id=64689#c4 and 
+               https://bugzilla.zimbra.com/show_bug.cgi?id=64689#c8
+          -->  
+          <!--    
           <Set name="Truststore">/System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Home/lib/security/cacerts</Set>
           <Set name="TrustPassword">changeit</Set>
           -->
