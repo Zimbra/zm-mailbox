@@ -1824,10 +1824,12 @@
     <target name="start-jetty-java">
         <java dir="${jetty.home.dir}" jar="${jetty.home.dir}/start.jar" fork="true" spawn="true">
             <sysproperty key="java.library.path" value="${zimbra.home.dir}/lib"/>
+            <sysproperty key="jetty.home" value="${jetty.home.dir}"/>
             <sysproperty key="START" value="${jetty.conf.dir}/start.config"/>
             <sysproperty key="STOP.PORT" value="7867"/>
             <sysproperty key="STOP.KEY" value="stop"/>
             <sysproperty key="zimbra.config" value="${zimbra.home.dir}/conf/localconfig.xml"/>
+            <arg line="--ini OPTIONS=Server,jsp,jmx,resources,websocket,ext,jta,plus,rewrite etc/jetty.xml"/>
         </java>
     </target>
 
