@@ -31,79 +31,79 @@ import java.util.TreeMap;
  */
 public class TimeoutMap<K, V> implements Map<K, V> {
     
-    private long mTimeoutMillis;
-    private Map<K, V> mMap = new HashMap<K, V>();
-    private Map<Long, K> mTimestamps = new TreeMap<Long, K>();
-    private long mLastTimestamp = 0;
+    private long timeoutMillis;
+    private Map<K, V> map = new HashMap<K, V>();
+    private Map<Long, K> timestamps = new TreeMap<Long, K>();
+    private long lastTimestamp = 0;
 
     public TimeoutMap(long timeoutMillis) {
         if (timeoutMillis < 0) {
             throw new IllegalArgumentException("Invalid timeout value: " + timeoutMillis);
         }
-        mTimeoutMillis = timeoutMillis;
+        this.timeoutMillis = timeoutMillis;
     }
     
     public int size() {
         prune();
-        return mMap.size();
+        return map.size();
     }
 
     public boolean isEmpty() {
         prune();
-        return mMap.isEmpty();
+        return map.isEmpty();
     }
 
     public boolean containsKey(Object key) {
         prune();
-        return mMap.containsKey(key);
+        return map.containsKey(key);
     }
 
     public boolean containsValue(Object value) {
         prune();
-        return mMap.containsValue(value);
+        return map.containsValue(value);
     }
 
     public V get(Object key) {
         prune();
-        return mMap.get(key);
+        return map.get(key);
     }
 
     public V put(K key, V value) {
         prune();
-        mTimestamps.put(getTimestamp(), key);
-        return mMap.put(key, value);
+        timestamps.put(getTimestamp(), key);
+        return map.put(key, value);
     }
 
     public V remove(Object key) {
         prune();
-        return mMap.remove(key);
+        return map.remove(key);
     }
 
     public void putAll(Map<? extends K, ? extends V> t) {
         prune();
         for (K key : t.keySet())
-            mTimestamps.put(getTimestamp(), key);
-        mMap.putAll(t);
+            timestamps.put(getTimestamp(), key);
+        map.putAll(t);
     }
 
     public void clear() {
-        mTimestamps.clear();
-        mMap.clear();
+        timestamps.clear();
+        map.clear();
     }
 
     public Set<K> keySet() {
         prune();
-        return mMap.keySet();
+        return map.keySet();
     }
 
     public Collection<V> values() {
         prune();
-        return mMap.values();
+        return map.values();
     }
 
     public Set<Map.Entry<K, V>> entrySet() {
         prune();
-        return mMap.entrySet();
+        return map.entrySet();
     }
     
     /**
@@ -111,12 +111,11 @@ public class TimeoutMap<K, V> implements Map<K, V> {
      */
     private void prune() {
         long now = System.currentTimeMillis();
-        Iterator<Long> i = mTimestamps.keySet().iterator();
+        Iterator<Long> i = timestamps.keySet().iterator();
         while (i.hasNext()) {
             Long timestamp = i.next();
-            if (now - timestamp.longValue() > mTimeoutMillis) {
-                Object key = mTimestamps.get(timestamp);
-                mMap.remove(key);
+            if (now - timestamp > timeoutMillis) {
+                map.remove(timestamps.get(timestamp));
                 i.remove();
             } else {
                 // The timestamp map is sorted, so we know all other timestamps
@@ -132,10 +131,14 @@ public class TimeoutMap<K, V> implements Map<K, V> {
      */
     private Long getTimestamp() {
         long now = System.currentTimeMillis();
-        if (now <= mLastTimestamp) {
-            now = mLastTimestamp + 1;
+        if (now <= lastTimestamp) {
+            now = lastTimestamp + 1;
         }
-        mLastTimestamp = now;
-        return new Long(mLastTimestamp);
+        lastTimestamp = now;
+        return lastTimestamp;
+    }
+
+    public void setTimeout(long timeoutMillis) {
+        this.timeoutMillis = timeoutMillis;
     }
 }
