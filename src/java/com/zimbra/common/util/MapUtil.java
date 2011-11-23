@@ -28,10 +28,14 @@ import com.google.common.collect.Multimap;
 
 public class MapUtil {
 
+    public static <K, V> TimeoutMap<K, V> newTimeoutMap(long timeoutMillis) {
+        return new TimeoutMap<K, V>(timeoutMillis);
+    }
+    
     public static <K, V> LruMap<K, V> newLruMap(int maxSize) {
         return new LruMap<K, V>(maxSize);
     }
-    
+
     /**
      * Returns a new {@code Map} that maps a key to a {@code List} of values.
      * When {@code get()} is called on a key that does not exist in the map,
