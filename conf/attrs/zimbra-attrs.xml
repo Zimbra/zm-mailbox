@@ -1583,7 +1583,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>mapping to foreign principal identifier</desc>
 </attr>
 
-<attr id="296" name="zimbraZimletUserProperties" type="cstring" max="1024" cardinality="multi" optionalIn="account" flags="domainAdminModifiable">
+<attr id="296" name="zimbraZimletUserProperties" type="cstring" max="5120" cardinality="multi" optionalIn="account" flags="domainAdminModifiable">
   <desc>User properties for Zimlets</desc>
 </attr>
 
