@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 administrator 20110826-1045 */
+    /* build: 7.0.0_BETA1_1111 administrator 20111108-1035 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5311,6 +5311,19 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMessageIdDedupeCacheSize = "zimbraMessageIdDedupeCacheSize";
 
     /**
+     * Timeout for a Message-Id entry in the LMTP dedupe cache. A value of 0
+     * indicates no timeout. zimbraMessageIdDedupeCacheSize limit is ignored
+     * when this is set to a non-zero value. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1340)
+    public static final String A_zimbraMessageIdDedupeCacheTimeout = "zimbraMessageIdDedupeCacheTimeout";
+
+    /**
      * interface address(es) on which milter server should listen; if not
      * specified, binds to 127.0.0.1
      *
@@ -8101,6 +8114,44 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=640)
     public static final String A_zimbraReverseProxySSLCiphers = "zimbraReverseProxySSLCiphers";
+
+    /**
+     * The read timeout for long polling support by proxy, e.g. ActiveSync
+     * for mobile devices. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1337)
+    public static final String A_zimbraReverseProxyUpstreamPollingTimeout = "zimbraReverseProxyUpstreamPollingTimeout";
+
+    /**
+     * The read timeout for the response of upstream server, which determines
+     * how long nginx will wait to get the response to a request. . Must be
+     * in valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1335)
+    public static final String A_zimbraReverseProxyUpstreamReadTimeout = "zimbraReverseProxyUpstreamReadTimeout";
+
+    /**
+     * The send timeout of transfering a request to the upstream server. If
+     * after this time the upstream server doesn&#039;t take new data, proxy
+     * will close the connection. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1336)
+    public static final String A_zimbraReverseProxyUpstreamSendTimeout = "zimbraReverseProxyUpstreamSendTimeout";
 
     /**
      * There is a deployment scenario for migrations where all of the

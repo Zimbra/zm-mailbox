@@ -62,6 +62,7 @@ extends TestCase {
     private String originalQuota;
     private String originalAllowReceiveButNotSendWhenOverQuota;
     private String originalDedupeCacheSize;
+    private String originalDedupeCacheTimeout;
     
     private class LmtpClientThread
     implements Runnable {
@@ -97,6 +98,7 @@ extends TestCase {
         originalAllowReceiveButNotSendWhenOverQuota =
             TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota);
         originalDedupeCacheSize = TestUtil.getConfigAttr(Provisioning.A_zimbraMessageIdDedupeCacheSize);
+        originalDedupeCacheTimeout = TestUtil.getConfigAttr(Provisioning.A_zimbraMessageIdDedupeCacheTimeout);
         cleanUp();
     }
     
@@ -488,6 +490,37 @@ extends TestCase {
     }
     
     /**
+     * Verifies the behavior of {@code zimbraMessageIdDedupeCacheTimeout}.
+     */
+    public void testDedupeCacheTimeout()
+    throws Exception {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+
+        // Deliver initial message.
+        String subject = NAME_PREFIX + " testDedupeCacheTimeout";
+        String[] recipients = new String[] { USER_NAME };
+        String content = new MessageBuilder().withSubject(subject).withToRecipient(USER_NAME).withFrom(USER_NAME).
+                withMessageIdHeader().create();
+        TestUtil.addMessageLmtp(recipients, USER_NAME, content);
+        String query = "in:inbox subject:\"" + subject + "\"";
+        assertEquals("message should have been delivered", 1, TestUtil.search(mbox, query).size());
+
+        // Set deduping cache timeout to 0.5 sec
+        TestUtil.setConfigAttr(Provisioning.A_zimbraMessageIdDedupeCacheTimeout, "500ms");
+
+        // Redeliver same message immediately
+        TestUtil.addMessageLmtp(recipients, USER_NAME, content);
+        assertEquals("deduping should have happened", 1, TestUtil.search(mbox, query).size());
+
+        // sleep for just over 0.5 sec
+        Thread.sleep(501);
+
+        // Redeliver
+        TestUtil.addMessageLmtp(recipients, USER_NAME, content);
+        assertEquals("dedupe cache entry should have timed out", 2, TestUtil.search(mbox, query).size());
+    }
+
+    /**
      * Confirms that we reject messages that have a line that's longer
      * than the limit specified by {@link LC#zimbra_lmtp_max_line_length}.
      * Bug 42214.
@@ -607,6 +640,7 @@ extends TestCase {
         TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraMailAllowReceiveButNotSendWhenOverQuota,
             originalAllowReceiveButNotSendWhenOverQuota);
         TestUtil.setConfigAttr(Provisioning.A_zimbraMessageIdDedupeCacheSize, originalDedupeCacheSize);
+        TestUtil.setConfigAttr(Provisioning.A_zimbraMessageIdDedupeCacheTimeout, originalDedupeCacheTimeout);
         cleanUp();
     }
     
