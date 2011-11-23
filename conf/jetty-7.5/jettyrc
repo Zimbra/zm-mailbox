@@ -1,0 +1,5 @@
+JAVA_OPTIONS="-DSTART=${JETTY_HOME}/etc/start.config -DSTOP.PORT=7867 -DSTOP.KEY=stop -Dzimbra.config=/opt/zimbra/conf/localconfig.xml -Djava.library.path=/opt/zimbra/lib -Djava.endorsed.dirs=${JETTY_HOME}/common/endorsed"
+JETTY_CONSOLE=/opt/zimbra/log/jetty.out
+JETTY_RUN=/opt/zimbra/log
+JETTY_ARGS=" --ini OPTIONS=Server,jsp,jmx,resources,websocket,ext,jta,plus,rewrite"
+CONFIGS="etc/jetty.xml"
