@@ -43,7 +43,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111121-1157 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111121-1404 */
 
     /**
      * RFC2256: descriptive information
@@ -19277,6 +19277,124 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetMessageIdDedupeCacheSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMessageIdDedupeCacheSize, "");
+        return attrs;
+    }
+
+    /**
+     * Timeout for a Message-Id entry in the LMTP dedupe cache. A value of 0
+     * indicates no timeout. zimbraMessageIdDedupeCacheSize limit is ignored
+     * when this is set to a non-zero value. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * <p>Use getMessageIdDedupeCacheTimeoutAsString to access value as a string.
+     *
+     * @see #getMessageIdDedupeCacheTimeoutAsString()
+     *
+     * @return zimbraMessageIdDedupeCacheTimeout in millseconds, or 0 (0)  if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1340)
+    public long getMessageIdDedupeCacheTimeout() {
+        return getTimeInterval(Provisioning.A_zimbraMessageIdDedupeCacheTimeout, 0L);
+    }
+
+    /**
+     * Timeout for a Message-Id entry in the LMTP dedupe cache. A value of 0
+     * indicates no timeout. zimbraMessageIdDedupeCacheSize limit is ignored
+     * when this is set to a non-zero value. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @return zimbraMessageIdDedupeCacheTimeout, or "0" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1340)
+    public String getMessageIdDedupeCacheTimeoutAsString() {
+        return getAttr(Provisioning.A_zimbraMessageIdDedupeCacheTimeout, "0");
+    }
+
+    /**
+     * Timeout for a Message-Id entry in the LMTP dedupe cache. A value of 0
+     * indicates no timeout. zimbraMessageIdDedupeCacheSize limit is ignored
+     * when this is set to a non-zero value. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param zimbraMessageIdDedupeCacheTimeout new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1340)
+    public void setMessageIdDedupeCacheTimeout(String zimbraMessageIdDedupeCacheTimeout) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMessageIdDedupeCacheTimeout, zimbraMessageIdDedupeCacheTimeout);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Timeout for a Message-Id entry in the LMTP dedupe cache. A value of 0
+     * indicates no timeout. zimbraMessageIdDedupeCacheSize limit is ignored
+     * when this is set to a non-zero value. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param zimbraMessageIdDedupeCacheTimeout new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1340)
+    public Map<String,Object> setMessageIdDedupeCacheTimeout(String zimbraMessageIdDedupeCacheTimeout, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMessageIdDedupeCacheTimeout, zimbraMessageIdDedupeCacheTimeout);
+        return attrs;
+    }
+
+    /**
+     * Timeout for a Message-Id entry in the LMTP dedupe cache. A value of 0
+     * indicates no timeout. zimbraMessageIdDedupeCacheSize limit is ignored
+     * when this is set to a non-zero value. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1340)
+    public void unsetMessageIdDedupeCacheTimeout() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMessageIdDedupeCacheTimeout, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Timeout for a Message-Id entry in the LMTP dedupe cache. A value of 0
+     * indicates no timeout. zimbraMessageIdDedupeCacheSize limit is ignored
+     * when this is set to a non-zero value. . Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1340)
+    public Map<String,Object> unsetMessageIdDedupeCacheTimeout(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraMessageIdDedupeCacheTimeout, "");
         return attrs;
     }
 
