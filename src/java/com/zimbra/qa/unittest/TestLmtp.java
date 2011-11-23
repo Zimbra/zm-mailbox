@@ -499,8 +499,9 @@ extends TestCase {
         // Deliver initial message.
         String subject = NAME_PREFIX + " testDedupeCacheTimeout";
         String[] recipients = new String[] { USER_NAME };
-        String content = new MessageBuilder().withSubject(subject).withToRecipient(USER_NAME).withFrom(USER_NAME).
-                withMessageIdHeader().create();
+        String content =
+                new MessageBuilder().withSubject(subject).withToRecipient(USER_NAME).withFrom(USER_NAME).create();
+        content = "Message-ID: " + System.currentTimeMillis() + "\r\n" + content;
         TestUtil.addMessageLmtp(recipients, USER_NAME, content);
         String query = "in:inbox subject:\"" + subject + "\"";
         assertEquals("message should have been delivered", 1, TestUtil.search(mbox, query).size());
