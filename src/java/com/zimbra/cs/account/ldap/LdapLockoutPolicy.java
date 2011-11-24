@@ -138,6 +138,9 @@ public class LdapLockoutPolicy {
             attrs.put(Provisioning.A_zimbraPasswordLockoutFailureTime, "");
         if (mLockoutExpired) {
             if (mAccountStatus.equalsIgnoreCase(Provisioning.ACCOUNT_STATUS_LOCKOUT)) {
+                ZimbraLog.security.info(ZimbraLog.encodeAttrs(
+                        new String[] {"cmd", "Auth","account", mAccount.getName(), 
+                        "info", "account re-activated from lockout status upon successful login"}));
                 attrs.put(Provisioning.A_zimbraAccountStatus, Provisioning.ACCOUNT_STATUS_ACTIVE);
             }
             attrs.put(Provisioning.A_zimbraPasswordLockoutLockedTime, "");
