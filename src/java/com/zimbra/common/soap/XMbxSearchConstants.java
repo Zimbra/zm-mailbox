@@ -56,6 +56,7 @@ public final class XMbxSearchConstants {
     public static final String A_targetMbx = "targetMbx";
     public static final String A_status = "status";
     public static final String A_searchID = "searchID";
+    public static final String A_accountId = "accountId";
     public static final String A_serverId = "serverId";
     public static final String A_serverName = "serverName";
     public static final String A_query = "query";
