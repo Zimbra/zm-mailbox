@@ -22,14 +22,14 @@ import java.util.Map;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.AccountBy;
 import com.zimbra.cs.account.auth.AuthContext;
-import com.zimbra.cs.account.ldap.LdapUtil;
+import com.zimbra.cs.ldap.LdapConstants;
 
 public class TestLdapProvLockoutPolicy {
     
@@ -57,7 +57,7 @@ public class TestLdapProvLockoutPolicy {
         
         
         // setup lockout config attrs
-        attrs.put(Provisioning.A_zimbraPasswordLockoutEnabled, LdapUtil.LDAP_TRUE);
+        attrs.put(Provisioning.A_zimbraPasswordLockoutEnabled, LdapConstants.LDAP_TRUE);
         attrs.put(Provisioning.A_zimbraPasswordLockoutDuration, lockoutDurationSeconds + "s");
         attrs.put(Provisioning.A_zimbraPasswordLockoutMaxFailures, lockoutAfterNumFailures+"");
         attrs.put(Provisioning.A_zimbraPasswordLockoutFailureLifetime, "30s");
