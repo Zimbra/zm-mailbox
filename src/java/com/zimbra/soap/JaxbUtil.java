@@ -705,8 +705,6 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.GetVolumeResponse.class,
             com.zimbra.soap.admin.message.GetXMPPComponentRequest.class,
             com.zimbra.soap.admin.message.GetXMPPComponentResponse.class,
-            com.zimbra.soap.admin.message.GetXMbxSearchRequest.class,
-            com.zimbra.soap.admin.message.GetXMbxSearchResponse.class,
             com.zimbra.soap.admin.message.GetXMbxSearchesListRequest.class,
             com.zimbra.soap.admin.message.GetXMbxSearchesListResponse.class,
             com.zimbra.soap.admin.message.GetZimletRequest.class,

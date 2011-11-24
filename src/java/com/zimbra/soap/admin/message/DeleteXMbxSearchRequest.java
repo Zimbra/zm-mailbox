@@ -21,8 +21,10 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.XMbxSearchConstants;
 import com.zimbra.soap.admin.type.SearchID;
+import com.zimbra.soap.type.AccountSelector;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=XMbxSearchConstants.E_DELETE_XMBX_SEARCH_REQUEST)
@@ -31,19 +33,25 @@ public class DeleteXMbxSearchRequest {
     @XmlElement(name=XMbxSearchConstants.E_SrchTask
                 /* searchtask */, required=true)
     private final SearchID searchTask;
-
+    @XmlElement(name=AdminConstants.E_ACCOUNT
+    		/* account */,  required=false)
+    private AccountSelector account;
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private DeleteXMbxSearchRequest() {
-        this((SearchID) null);
+        this((SearchID) null, (AccountSelector)null);
     }
 
-    public DeleteXMbxSearchRequest(SearchID searchTask) {
+    /*public DeleteXMbxSearchRequest(SearchID searchTask) {
         this.searchTask = searchTask;
+    }*/
+    public DeleteXMbxSearchRequest(SearchID searchTask, AccountSelector account) {
+        this.searchTask = searchTask;
+        this.account = account;
     }
-
+    public AccountSelector getAccount() {return account; }
     public SearchID getSearchTask() { return searchTask; }
 
     public Objects.ToStringHelper addToStringInfo(
