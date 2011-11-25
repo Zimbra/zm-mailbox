@@ -25,6 +25,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.EmailUtil;
+import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -277,7 +278,11 @@ public class Notification implements LmtpCallback {
             out.setSentDate(new Date());
 
             // Subject
-            String subject = "Re: " + msg.getSubject();
+            String subject = msg.getSubject();
+            String replySubjectPrefix = L10nUtil.getMessage(L10nUtil.MsgKey.replySubjectPrefix, account.getLocale());
+            if (!subject.toLowerCase().startsWith(replySubjectPrefix.toLowerCase())) {
+                subject = replySubjectPrefix + " " + subject;
+            }
             String charset = getCharset(account, subject);
             out.setSubject(subject, charset);
 
