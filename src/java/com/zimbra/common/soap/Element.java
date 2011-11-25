@@ -609,21 +609,7 @@ public abstract class Element implements Cloneable {
     }
 
     public static org.dom4j.io.SAXReader getSAXReader(org.dom4j.DocumentFactory fact) {
-        org.dom4j.io.SAXReader saxReader;
-        if (fact != null) {
-            saxReader = new SAXReader(fact);
-        } else {
-            saxReader = new SAXReader();
-        }
-
-        EntityResolver nullEntityResolver = new EntityResolver() {
-            @Override
-            public InputSource resolveEntity(String publicId, String systemId) {
-                return new InputSource(new StringReader(""));
-            }
-        };
-        saxReader.setEntityResolver(nullEntityResolver);
-        return saxReader;
+        return fact != null ? new SAXReader(fact) : new SAXReader();
     }
 
     public static class SAXReader extends org.dom4j.io.SAXReader {
@@ -645,6 +631,16 @@ public abstract class Element implements Cloneable {
                 @Override
                 public void startDTD(String name, String publicId, String systemId) throws SAXException {
                     throw new SAXException("inline DTD not allowed");
+                }
+            };
+        }
+
+        @Override
+        protected EntityResolver createDefaultEntityResolver(String documentSystemId) {
+            return new EntityResolver() {
+                @Override
+                public InputSource resolveEntity(String publicId, String systemId) {
+                    return new InputSource(new StringReader(""));
                 }
             };
         }
