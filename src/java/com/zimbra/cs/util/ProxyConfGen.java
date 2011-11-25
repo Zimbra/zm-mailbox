@@ -1249,7 +1249,6 @@ public class ProxyConfGen
                         }
                         
                         if (!ProxyConfUtil.isEmptyString(clientCertCA)){
-
                             createDomainSSLDirIfNotExists();
                         }
                         result.add(new DomainAttrItem(domainName,
@@ -1403,6 +1402,12 @@ public class ProxyConfGen
             //for the first line of template, check the custom header command
             r.mark(100); //assume the first line won't beyond 100
             line = r.readLine();
+            
+            //only for back compability
+            if(line.equalsIgnoreCase("!{explode vhn_vip_ssl}")) {
+                expandTemplateExplodeSSLConfigsForAllVhnsAndVIPs(r, w);
+                return;
+            }
             Matcher cmdMatcher = cmdPattern.matcher(line);
             if(cmdMatcher.matches()) {
                 //the command is found
@@ -1410,11 +1415,19 @@ public class ProxyConfGen
                 //command selection can be extracted if more commands are introduced
                 if(cmd_arg.length == 2 && 
                    cmd_arg[0].compareTo("explode") == 0) {
-                    if (cmd_arg[1].compareTo("vhn_vip_ssl") == 0) {
-                        expandTemplateExplodeSSLConfigsForAllVhnsAndVIPs(r, w);
+                    if(cmd_arg[1].startsWith("domain(") &&cmd_arg[1].endsWith(")")) {
+                        //extract the args in "domain(arg1, arg2, ...)
+                        String arglist = cmd_arg[1].substring("domain(".length(), cmd_arg[1].length() - 1);
+                        String[] args;
+                        if(arglist.equals("")) {
+                            args = new String[0];
+                        } else {
+                            args = arglist.split(",( |\t)*");
+                        }
+                        expandTemplateByExplodeDomain(r, w, args);
                     } else {
                         throw new ProxyConfException("Illegal custom header command: " + cmdMatcher.group(2));
-                    } 
+                    }
                 } else {
                     throw new ProxyConfException("Illegal custom header command: " + cmdMatcher.group(2));
                 }
@@ -1444,10 +1457,11 @@ public class ProxyConfGen
     }
     
     /**
-     * Enumerate all virtual host names and virtual ip addresses and 
-     * apply them into the var replacement.
+     * Enumerate all domains, if the required attrs are valid, generate the
+     * "server" block according to the template.
      * @author Jiankuan
-     * @throws ProxyConfException 
+     * @throws ProxyConfException
+     * @deprecated use expandTemplateByExplodeDomain instead
      */
     private static void expandTemplateExplodeSSLConfigsForAllVhnsAndVIPs(
         BufferedReader temp, BufferedWriter conf) throws IOException, ProxyConfException {
@@ -1458,7 +1472,6 @@ public class ProxyConfGen
             Iterator<DomainAttrItem> it = mDomainReverseProxyAttrs.iterator();
             DomainAttrItem item = it.next();
             fillVarsWithDomainAttrs(item);
-
             cache = expandTemplateAndCache(temp, conf);
             conf.newLine();
 
@@ -1469,6 +1482,70 @@ public class ProxyConfGen
                 conf.newLine();
             }
         }
+    }
+    
+    /**
+     * Enumerate all virtual host names and virtual ip addresses and 
+     * apply them into the var replacement.<br/>
+     * explode domain command has this format:<br/>
+     * <code>!{explode domain(arg1, arg2, ...)}</code><br/>
+     * The args indicate the required attrs to generate a server block
+     * , which now supports:
+     * <ul>
+     * <li>vhn: zimbraVirtualHostname must not be empty</li>
+     * <li>sso: zimbraClientCertMode must not be empty or "off"</li>
+     * </ul>
+     * @author Jiankuan
+     * @throws ProxyConfException 
+     */
+    private static void expandTemplateByExplodeDomain(
+        BufferedReader temp, BufferedWriter conf, String[] requiredAttrs) throws IOException, ProxyConfException {
+        int size = mDomainReverseProxyAttrs.size();
+        List<String> cache = null;
+
+        if (size > 0) {
+            Iterator<DomainAttrItem> it = mDomainReverseProxyAttrs.iterator();
+            DomainAttrItem item;
+            while(cache == null && it.hasNext()) {
+                item = it.next();
+                if (!isRequiredAttrsValid(item, requiredAttrs)) {
+                    continue;
+                }
+                fillVarsWithDomainAttrs(item);
+                cache = expandTemplateAndCache(temp, conf);
+                conf.newLine();
+            }
+
+            while (it.hasNext()) {
+                item = it.next();
+                if (!isRequiredAttrsValid(item, requiredAttrs)) {
+                    continue;
+                }
+                fillVarsWithDomainAttrs(item);
+                expandTempateFromCache(cache, conf);
+                conf.newLine();
+            }
+        }
+    }
+    
+    private static boolean isRequiredAttrsValid(DomainAttrItem item, String[] requiredAttrs) {
+        for(String attr: requiredAttrs) {
+            if (attr.equals("vhn")) {
+                //check virtual hostname
+                if (item.virtualHostname == null || item.virtualHostname.equals("")) {
+                    return false;
+                }
+            } else if (attr.equals("sso")) {
+                if (item.clientCertMode == null ||
+                    item.clientCertMode.equals("") ||
+                    item.clientCertMode.equals("off")) {
+                    return false;
+                }
+            } else {
+                //... check other attrs
+            }
+        }
+        return true;
     }
 
     private static void fillVarsWithDomainAttrs(DomainAttrItem item)
