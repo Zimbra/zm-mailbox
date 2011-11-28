@@ -374,8 +374,6 @@ public class ParsedContact {
                 }
                 contactAttachments.add(attach);
             }
-        } else {
-            contactAttachments = null;
         }
 
         for (FieldDelta delta : fieldDeltaList.getDeltaList()) {
