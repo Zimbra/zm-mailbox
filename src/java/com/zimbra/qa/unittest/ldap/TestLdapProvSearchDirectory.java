@@ -351,6 +351,7 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         SearchAccountsOptions searchOpts = new SearchAccountsOptions();
         ZLdapFilter filter = ZLdapFilterFactory.getInstance().accountsOnServerAndCosHasSubordinates(
                 prov.getLocalServer().getServiceHostname(), COS_ID);
+        searchOpts.setFilter(filter);
         List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
         
         assertEquals(1, accounts.size());
