@@ -21,6 +21,8 @@ import java.security.SecureRandom;
 
 import org.apache.commons.codec.binary.Base64;
 
+import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
+
 public class PasswordUtil {
     
     /*
@@ -53,9 +55,15 @@ public class PasswordUtil {
             try {
                 MessageDigest md = MessageDigest.getInstance("SHA1");
                 if (salt == null) {
-                    salt = new byte[SALT_LEN];
-                    SecureRandom sr = new SecureRandom();
-                    sr.nextBytes(salt);
+                    
+                    if (InMemoryLdapServer.isOn()) {
+                        // use a fixed salt
+                        salt = new byte[]{127,127,127,127};
+                    } else {
+                        salt = new byte[SALT_LEN];
+                        SecureRandom sr = new SecureRandom();
+                        sr.nextBytes(salt);
+                    }
                 } 
                 md.update(password.getBytes("UTF-8"));
                 md.update(salt);

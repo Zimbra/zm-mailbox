@@ -46,7 +46,7 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.gal.ZimbraGalSearchBase.PredefinedSearchBase;
-import com.zimbra.qa.unittest.TestLdapBinary.Content;
+import com.zimbra.qa.unittest.ldap.TestLdapBinary.Content;
 
 public class TestSearchGal extends TestLdap {
     private static Provisioning prov;

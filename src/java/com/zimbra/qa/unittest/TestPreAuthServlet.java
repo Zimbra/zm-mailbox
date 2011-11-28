@@ -47,7 +47,7 @@ public class TestPreAuthServlet extends TestCase {
         return preAuthKey;
     }
     
-    static String genPreAuthUrl(String preAuthKey, String user, boolean admin, boolean shouldFail) throws Exception {
+    public static String genPreAuthUrl(String preAuthKey, String user, boolean admin, boolean shouldFail) throws Exception {
         
         HashMap<String,String> params = new HashMap<String,String>();
         String acctName = TestUtil.getAddress(user);

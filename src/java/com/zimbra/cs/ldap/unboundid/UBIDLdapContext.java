@@ -43,6 +43,7 @@ import com.unboundid.ldap.sdk.controls.SimplePagedResultsControl;
 import com.unboundid.ldap.sdk.extensions.StartTLSExtendedRequest;
 import com.unboundid.ldap.sdk.schema.Schema;
 
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.ldap.LdapServerConfig;
@@ -326,7 +327,13 @@ public class UBIDLdapContext extends ZLdapContext {
     @Override
     public ZLdapSchema getSchema() throws LdapException {
         try {
-            Schema schema = UBIDLdapOperation.GET_SCHEMA.execute(this);
+            Schema schema;
+            
+            if (InMemoryLdapServer.isOn()) {
+                schema = InMemoryLdapServer.getSchema(InMemoryLdapServer.ZIMBRA_LDAP_SERVER);
+            } else {
+                schema = UBIDLdapOperation.GET_SCHEMA.execute(this);
+            }
             return new UBIDLdapSchema(schema);
         } catch (LDAPException e) {
             throw mapToLdapException("unable to get schema", e);
@@ -578,7 +585,13 @@ public class UBIDLdapContext extends ZLdapContext {
         
         long startTime = UBIDLdapOperation.GENERIC_OP.begin();
         try {
-            connection = serverPool.getServerSet().getConnection();
+            if (InMemoryLdapServer.isOn()) {
+                connection = InMemoryLdapServer.getConnection();
+                password = InMemoryLdapServer.Password.treatPassword(password);
+            } else {
+                connection = serverPool.getServerSet().getConnection();
+            }
+            
             if (serverPool.getConnectionType() == LdapConnType.STARTTLS) {
                 SSLContext startTLSContext = 
                     LdapSSLUtil.createSSLContext(config.sslAllowUntrustedCerts());

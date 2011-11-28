@@ -30,7 +30,6 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.Element.XMLElement;
-import com.zimbra.cs.account.IDNUtil;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.LdapProv;
@@ -163,29 +162,6 @@ public class TestProvisioningUtil extends TestCase {
             assertTrue(expected.contains(a));
     }
     
-    
-    public static class IDNName {
-        String mUincodeName;
-        String mAsciiName;
-        
-        IDNName(String uName) {
-            mUincodeName = uName;
-            
-            String[] parts = uName.split("@");
-            if (parts.length == 2)
-                mAsciiName = parts[0] + "@" + IDNUtil.toAsciiDomainName(parts[1]);
-            else
-                mAsciiName = IDNUtil.toAsciiDomainName(uName);
-        }
-        
-        IDNName(String localPart, String uName) {
-            mUincodeName = localPart + "@" + uName;
-            mAsciiName = localPart + "@" + IDNUtil.toAsciiDomainName(uName);
-        }
-        
-        String uName() { return mUincodeName; } 
-        String aName() { return mAsciiName; }
-    }
     
     public static LdapProv getLdapProvisioning() throws ServiceException {
         LdapProv lp = (LdapProv)Provisioning.getInstance();

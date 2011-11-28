@@ -2257,6 +2257,8 @@
           <assertions><enable/></assertions>
           
           <formatter type="xml"/>
+          
+          <!--
           <batchtest todir="${ldaptest.dir}/output">
               <fileset dir="${src.java.dir}">
                   <include name="**/TestLdap*.java"/>
@@ -2265,12 +2267,22 @@
               </fileset>
           </batchtest>
           
+          -->
+          <batchtest todir="${ldaptest.dir}/output">
+              <fileset dir="${src.java.dir}">
+                  <include name="**/com/zimbra/qa/unittest/ldap/Test*.java"/>
+              </fileset>
+          </batchtest>
+          
           <!-- tests must run in its own JVM -->
+          <!--
           <batchtest todir="${ldaptest.dir}/output">
               <fileset dir="${src.java.dir}">
                   <include name="**/TestLdapConnection.java"/>
               </fileset>
           </batchtest>
+          -->
+          
       </junit>
       <junitreport todir="${ldaptest.dir}/report">
           <fileset dir="${ldaptest.dir}/output"/>

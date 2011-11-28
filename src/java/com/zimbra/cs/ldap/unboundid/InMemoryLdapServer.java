@@ -33,8 +33,10 @@ import com.unboundid.ldap.sdk.SearchScope;
 import com.unboundid.ldap.sdk.schema.Schema;
 import com.unboundid.ldif.LDIFException;
 import com.unboundid.ldif.LDIFWriter;
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.auth.PasswordUtil;
 import com.zimbra.cs.ldap.LdapClient;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapException;
@@ -52,6 +54,10 @@ public class InMemoryLdapServer {
     private static final String DIT_FILE_NAME = "zimbra_dit.ldif";
     
     private static Map<String, Server> servers = Maps.newHashMap();
+    
+    public static boolean isOn() {
+        return DebugConfig.useInMemoryLdapServer;
+    }
     
     private static String getSchemaFileName(String path) {
         return path + "/" + SCHEMA_FILE_NAME;
@@ -103,6 +109,60 @@ public class InMemoryLdapServer {
         }
         
         return server.getConnectionPool(config);
+    }
+    
+    // only used for external LDAP auth, just use the default Zimbra server, as all
+    // unit tests are using the Zimbra LDAP server for external LDAP server
+    static LDAPConnection getConnection() throws LdapException {
+        Server server = getServer(ZIMBRA_LDAP_SERVER);
+        return server.getConnection();
+    }
+    
+    static Schema getSchema(String serverName) throws LdapException {
+        Server server = getServer(serverName);
+        if (server == null) {
+            throw LdapException.LDAP_ERROR("in memory LDAP server was not started", null);
+        }
+        
+        return server.getSchema();
+    }
+    
+    public static void export() throws LdapException {
+        String path = LC.zimbra_tmp_directory.value() + "/inmem_ldap_%s.ldif";
+        
+        for (Map.Entry<String, Server> entry : servers.entrySet()) {
+            String serverName = entry.getKey();
+            Server server = entry.getValue();
+            String filePath = String.format(path, serverName);
+            server.export(filePath);
+        }
+    }
+        
+    /*
+     * unboundid InMemoryDirectoryServer only supports OctetStringMatchingRule
+     * for comparing the password.  Convert the password to it's SSHA 
+     * encryption so it will compared equal in InMemoryDirectoryServer's bind 
+     * handler.
+     * 
+     * Tesing hack for non-SSHA password: 
+     * check prefix of the password, if it matches the prefix then don't encode it to SSHA.
+     * Unit test code must use Password.genNonSSHAPassword() to get a non-SSHA password.
+     * 
+     */
+    public static class Password {
+        private static String NON_SSHA_PASSWORD_PREFIX = "__non_ssha__";
+        
+        public static String genNonSSHAPassword(String password) {
+            return NON_SSHA_PASSWORD_PREFIX + password;
+        }
+        
+        public static String treatPassword(String password) {
+            if (password.startsWith(NON_SSHA_PASSWORD_PREFIX)) {
+                return password;
+            } else {
+                return PasswordUtil.SSHA.generateSSHA(password, null);
+            }
+        }
     }
 
     public static class ServerConfig {
@@ -209,12 +269,55 @@ public class InMemoryLdapServer {
             server.shutDown(true);
         }
         
+        private Schema getSchema() throws LdapException {
+            try {
+                return server.getSchema();
+            } catch (LDAPException e) {
+                throw UBIDLdapException.mapToLdapException(e);
+            }
+        }
+        
+        private void export(String path) throws LdapException {
+            try {
+                boolean excludeGeneratedAttrs = false;
+                boolean excludeChangeLog = true;
+                server.exportToLDIF(path, excludeGeneratedAttrs, excludeChangeLog);
+            } catch (LDAPException e) {
+                throw UBIDLdapException.mapToLdapException(e);
+            }
+        }
+        
         private LDAPConnectionPool getConnectionPool(LdapServerConfig config) 
         throws LdapException {
             try {
+                /*
+                 * For external LDAP connections, config.getConnPoolInitSize() 
+                 * always returns 0 (see comments in ExternalLdapConfig.getConnPoolInitSize()).
+                 * 
+                 * But for InMemoryDirectoryServer.getConnectionPool(), it internally 
+                 * uses a sample connection as a template for connections in the the pool 
+                 * and puts the sample connection in the pool, and therefore requires the 
+                 * init size must be >= 1. 
+                 */
+                int initPoolSize = config.getConnPoolInitSize();
+                if (config instanceof LdapServerConfig.ExternalLdapConfig) {
+                    if (initPoolSize < 1) {
+                        initPoolSize = 1;
+                    }
+                }
+                assert(initPoolSize >= 1);
+                
                 // create a connection pool
                 return server.getConnectionPool(null, null, 
-                        config.getConnPoolInitSize(), config.getConnPoolMaxSize());
+                        initPoolSize, config.getConnPoolMaxSize());
+            } catch (LDAPException e) {
+                throw UBIDLdapException.mapToLdapException(e);
+            }
+        }
+        
+        private LDAPConnection getConnection() throws LdapException {
+            try {
+                return server.getConnection();
             } catch (LDAPException e) {
                 throw UBIDLdapException.mapToLdapException(e);
             }

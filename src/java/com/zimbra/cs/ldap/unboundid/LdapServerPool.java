@@ -33,7 +33,7 @@ import com.zimbra.cs.ldap.LdapException;
  * Represent a list of LDAP servers.  ZCS will attempt to establish 
  * connections in the order they are provided for failover. 
  * If the first server is unavailable, then it will attempt to connect 
- * to the second, then to the third, etc
+ * to the second, then to the third, etc.
  * 
  * @author pshao
  *

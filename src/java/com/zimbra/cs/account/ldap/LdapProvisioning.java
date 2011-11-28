@@ -1851,6 +1851,7 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public void removeAlias(Account acct, String alias) throws ServiceException {
+        sAccountCache.remove(acct);
         removeAliasInternal(acct, alias);
     }
 
@@ -1862,6 +1863,7 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public void removeAlias(DistributionList dl, String alias) throws ServiceException {
+        sGroupCache.remove(dl);
         removeAliasInternal(dl, alias);
         allDLs.removeGroup(alias);
     }
@@ -3551,18 +3553,25 @@ public class LdapProvisioning extends LdapProv {
                 attrs.put(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, 
                         replacedAllowAddrForDelegatedSender.newAddrs());
             }
-
-            /*
-             * always reset uid to the local part, because in non default DIT the naming RDN might not
-             * be uid, and ctxt.rename won't change the uid to the new localpart in that case.
-             */
-            attrs.put(A_uid, newLocal);
-
-            // move over the distribution list entry
+            
             String oldDn = dl.getDN();
             String newDn = mDIT.distributionListDNRename(oldDn, newLocal, domain.getName());
             boolean dnChanged = (!oldDn.equals(newDn));
 
+            if (dnChanged) {
+                // uid will be changed during renameEntry, so no need to modify it
+                // OpenLDAP is OK modifying it, as long as it matches the new DN, but
+                // InMemoryDirectoryServer does not like it.
+                attrs.remove(A_uid);
+            } else {
+                /*
+                 * always reset uid to the local part, because in non default DIT the naming RDN might not
+                 * be uid, and ctxt.rename won't change the uid to the new localpart in that case.
+                 */
+                attrs.put(A_uid, newLocal);
+            }
+            
+            // move over the distribution list entry
             if (dnChanged)
                 zlc.renameEntry(oldDn, newDn);
 
@@ -7895,6 +7904,7 @@ public class LdapProvisioning extends LdapProv {
 
     @Override
     public void removeGroupAlias(Group group, String alias) throws ServiceException {
+        sGroupCache.remove(group);
         removeAliasInternal(group, alias);
         allDLs.removeGroup(alias);
     }

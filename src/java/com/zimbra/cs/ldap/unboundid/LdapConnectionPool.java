@@ -58,7 +58,7 @@ public class LdapConnectionPool {
         
         LDAPConnectionPool connPool = null;
         
-        if (DebugConfig.useInMemoryLdapServer) {
+        if (InMemoryLdapServer.isOn()) {
             connPool = createConnPoolToInMemoryLdapServer(config);
         } else {
             connPool = createConnPool(config);
