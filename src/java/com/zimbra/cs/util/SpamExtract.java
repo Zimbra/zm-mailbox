@@ -63,13 +63,13 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.service.mail.ItemAction;
-import com.zimbra.cs.servlet.ZimbraServlet;
 
 public class SpamExtract {
 
@@ -204,7 +204,7 @@ public class SpamExtract {
         HttpState state = new HttpState();
         GetMethod gm = new GetMethod();
         gm.setFollowRedirects(true);
-        Cookie authCookie = new Cookie(restURL.getHost(), ZimbraServlet.COOKIE_ZM_AUTH_TOKEN, authToken, "/", -1, false);
+        Cookie authCookie = new Cookie(restURL.getHost(), ZimbraCookie.COOKIE_ZM_AUTH_TOKEN, authToken, "/", -1, false);
         state.addCookie(authCookie);
         hc.setState(state);
         hc.getHostConfiguration().setHost(restURL.getHost(), restURL.getPort(), Protocol.getProtocol(restURL.getProtocol()));

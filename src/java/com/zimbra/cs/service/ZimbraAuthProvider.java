@@ -19,17 +19,15 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.HeaderConstants;
 import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.ZimbraAuthToken;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
-import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.soap.SoapServlet;
 
 public class ZimbraAuthProvider extends AuthProvider{
@@ -42,15 +40,8 @@ public class ZimbraAuthProvider extends AuthProvider{
         super(name);
     }
 
-    // AP-TODO-6: dup in ZAuthToken, move to common?
-    public static String cookieName(boolean isAdminReq) {
-        return isAdminReq? 
-                ZimbraServlet.COOKIE_ZM_ADMIN_AUTH_TOKEN : 
-                ZimbraServlet.COOKIE_ZM_AUTH_TOKEN;
-    }
-    
     private String getEncodedAuthTokenFromCookie(HttpServletRequest req, boolean isAdminReq) {
-        String cookieName = cookieName(isAdminReq);
+        String cookieName = ZimbraCookie.authTokenCookieName(isAdminReq);
         String encodedAuthToken = null;
         javax.servlet.http.Cookie cookies[] =  req.getCookies();
         if (cookies != null) {

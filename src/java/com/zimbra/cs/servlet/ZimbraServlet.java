@@ -50,6 +50,7 @@ import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.RemoteIP;
+import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
@@ -75,9 +76,6 @@ public class ZimbraServlet extends HttpServlet {
     private static final long serialVersionUID = 5025244890767551679L;
 
     private static Log mLog = LogFactory.getLog(ZimbraServlet.class);
-
-    public static final String COOKIE_ZM_AUTH_TOKEN       = "ZM_AUTH_TOKEN";
-    public static final String COOKIE_ZM_ADMIN_AUTH_TOKEN = "ZM_ADMIN_AUTH_TOKEN"; 
 
     private static final String PARAM_ALLOWED_PORTS  = "allowed.ports";
 
@@ -328,7 +326,7 @@ public class ZimbraServlet extends HttpServlet {
             return false;
         
         for (Cookie c: cookies) {
-            if (c.getName().equals(COOKIE_ZM_AUTH_TOKEN))
+            if (c.getName().equals(ZimbraCookie.COOKIE_ZM_AUTH_TOKEN))
                 return true;
         }
         return false;
@@ -342,7 +340,7 @@ public class ZimbraServlet extends HttpServlet {
         boolean hasZMAuth = hasZimbraAuthCookie(state);
         if (cookies != null) {
             for (int i = 0; i < cookies.length; i++) {
-                if (cookies[i].getName().equals(COOKIE_ZM_AUTH_TOKEN) && hasZMAuth)
+                if (cookies[i].getName().equals(ZimbraCookie.COOKIE_ZM_AUTH_TOKEN) && hasZMAuth)
                     continue;
                 state.addCookie(new Cookie(hostname, cookies[i].getName(), cookies[i].getValue(), "/", null, false));
             }
