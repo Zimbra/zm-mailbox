@@ -53,6 +53,45 @@ import com.zimbra.cs.ldap.ZSearchResultEntry;
 import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.ZSearchScope;
 import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
+import com.zimbra.qa.unittest.ldap.TestAccountLockout;
+import com.zimbra.qa.unittest.ldap.TestLdapBinary;
+import com.zimbra.qa.unittest.ldap.TestLdapConnection;
+import com.zimbra.qa.unittest.ldap.TestLdapHelper;
+import com.zimbra.qa.unittest.ldap.TestLdapProvAccount;
+import com.zimbra.qa.unittest.ldap.TestLdapProvAlias;
+import com.zimbra.qa.unittest.ldap.TestLdapProvAttrCallback;
+import com.zimbra.qa.unittest.ldap.TestLdapProvAutoProvision;
+import com.zimbra.qa.unittest.ldap.TestLdapProvCos;
+import com.zimbra.qa.unittest.ldap.TestLdapProvDIT;
+import com.zimbra.qa.unittest.ldap.TestLdapProvDataSource;
+import com.zimbra.qa.unittest.ldap.TestLdapProvDistributionList;
+import com.zimbra.qa.unittest.ldap.TestLdapProvDomain;
+import com.zimbra.qa.unittest.ldap.TestLdapProvDynamicGroup;
+import com.zimbra.qa.unittest.ldap.TestLdapProvEntry;
+import com.zimbra.qa.unittest.ldap.TestLdapProvExternalLdapAuth;
+import com.zimbra.qa.unittest.ldap.TestLdapProvGal;
+import com.zimbra.qa.unittest.ldap.TestLdapProvGlobalConfig;
+import com.zimbra.qa.unittest.ldap.TestLdapProvGlobalGrant;
+import com.zimbra.qa.unittest.ldap.TestLdapProvIdentity;
+import com.zimbra.qa.unittest.ldap.TestLdapProvMimeType;
+import com.zimbra.qa.unittest.ldap.TestLdapProvMisc;
+import com.zimbra.qa.unittest.ldap.TestLdapProvModifyAttrs;
+import com.zimbra.qa.unittest.ldap.TestLdapProvRenameDomain;
+import com.zimbra.qa.unittest.ldap.TestLdapProvSearchDirectory;
+import com.zimbra.qa.unittest.ldap.TestLdapProvServer;
+import com.zimbra.qa.unittest.ldap.TestLdapProvSignature;
+import com.zimbra.qa.unittest.ldap.TestLdapProvXMPPComponent;
+import com.zimbra.qa.unittest.ldap.TestLdapProvZimlet;
+import com.zimbra.qa.unittest.ldap.TestLdapUpgrade;
+import com.zimbra.qa.unittest.ldap.TestLdapUtil;
+import com.zimbra.qa.unittest.ldap.TestLdapZLdapContext;
+import com.zimbra.qa.unittest.ldap.TestLdapZLdapFilter;
+import com.zimbra.qa.unittest.ldap.TestLdapZMutableEntry;
+import com.zimbra.qa.unittest.ldap.TestProvAlias;
+import com.zimbra.qa.unittest.ldap.TestProvAttr;
+import com.zimbra.qa.unittest.ldap.TestProvCallbackAvailableZimlets;
+import com.zimbra.qa.unittest.ldap.TestProvIDN;
+import com.zimbra.qa.unittest.ldap.TestProvZimbraId;
 
 public class TestLdap {
     private static final String TEST_LDAP_BASE_DOMAIN = "testldap";
@@ -445,7 +484,6 @@ public class TestLdap {
         classes.add(TestProvAlias.class);
         classes.add(TestProvAttr.class);
         classes.add(TestProvCallbackAvailableZimlets.class);
-        classes.add(TestProvCos.class);
         classes.add(TestProvGroup.class);
         classes.add(TestProvIDN.class);
         classes.add(TestProvValidator.class);
@@ -514,13 +552,14 @@ public class TestLdap {
         
         CliUtil.toolSetup(Log.Level.error.name());
         ZimbraLog.test.setLevel(Log.Level.info);
+        ZimbraLog.autoprov.setLevel(Log.Level.debug);
         // ZimbraLog.account.setLevel(Log.Level.debug);
         // ZimbraLog.ldap.setLevel(Log.Level.debug);
         // ZimbraLog.soap.setLevel(Log.Level.trace);
 
         if (useInMemoryLdapServerProperty == null) {
             useInMemoryLdapServerProperty = 
-                System.getProperty("use_in_memory_ldap_server", "true");
+                System.getProperty("use_in_memory_ldap_server", "false");
         }
         
         boolean useInMemoryLdapServer = 
@@ -529,7 +568,7 @@ public class TestLdap {
         KnownKey key = new KnownKey("debug_use_in_memory_ldap_server", 
                 useInMemoryLdapServerProperty);
         assert(DebugConfig.useInMemoryLdapServer == useInMemoryLdapServer);
-        useInMemoryLdapServer = DebugConfig.useInMemoryLdapServer;
+        useInMemoryLdapServer = InMemoryLdapServer.isOn();
         
         ZimbraLog.test.info("useInMemoryLdapServer = " + useInMemoryLdapServer);
         
