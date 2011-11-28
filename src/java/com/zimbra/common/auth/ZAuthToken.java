@@ -36,8 +36,6 @@ import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.util.ZimbraCookie;
 
 public class ZAuthToken {
-    private static final String COOKIE_ZM_AUTH_TOKEN       = "ZM_AUTH_TOKEN";
-    private static final String COOKIE_ZM_ADMIN_AUTH_TOKEN = "ZM_ADMIN_AUTH_TOKEN"; 
     
     private static final String YAHOO_CALENDAR_AUTHTOKEN_TYPE = "YAHOO_CALENDAR_AUTH_PROVIDER";
     private static final String YAHOO_MAIL_AUTHTOKEN_TYPE     = "YAHOO_MAIL_AUTH_PROVIDER";
@@ -205,7 +203,7 @@ public class ZAuthToken {
      * @param response
      */
     public static void clearCookies(HttpServletResponse response) {
-        clearCookie(response, COOKIE_ZM_AUTH_TOKEN);
+        clearCookie(response, ZimbraCookie.COOKIE_ZM_AUTH_TOKEN);
         clearCookie(response, AUTHTOKEN_TYPE_COOKIE);
         clearCookie(response, YAHOO_T_COOKIE);
         clearCookie(response, YAHOO_Y_COOKIE);
@@ -274,14 +272,10 @@ public class ZAuthToken {
         response.addCookie(authTokenCookie);
     }
     
-    private String zimbraCookieName(boolean isAdmin) {
-        return isAdmin? COOKIE_ZM_ADMIN_AUTH_TOKEN : COOKIE_ZM_AUTH_TOKEN;
-    }
-    
     private Map<String, String> toZimbraCookieMap(boolean isAdmin) {
         Map<String, String> cookieMap = null;
         if (mValue != null || mProxyAuthToken != null) {
-            String cookieName = zimbraCookieName(isAdmin);
+            String cookieName = ZimbraCookie.authTokenCookieName(isAdmin);
             cookieMap = new HashMap<String, String>();
             cookieMap.put(cookieName, mProxyAuthToken !=null ? mProxyAuthToken : mValue);
         }
@@ -289,7 +283,7 @@ public class ZAuthToken {
     }
     
     private boolean fromZimbraCookies(Map<String, String> cookieMap, boolean isAdmin) {
-        String cookieName = zimbraCookieName(isAdmin);
+        String cookieName = ZimbraCookie.authTokenCookieName(isAdmin);
         String cookieValue = cookieMap.get(cookieName);
             
         if (cookieValue != null) {
