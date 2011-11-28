@@ -32,6 +32,7 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.ZimbraCookie;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 
 
@@ -100,7 +101,7 @@ public class StatsImageServlet extends ZimbraServlet {
 				// create an HTTP client with the same cookies
 		        HttpState state = new HttpState();
 		        try {
-		            state.addCookie(new org.apache.commons.httpclient.Cookie(logHost, COOKIE_ZM_ADMIN_AUTH_TOKEN, authToken.getEncoded(), "/", null, false));
+		            state.addCookie(new org.apache.commons.httpclient.Cookie(logHost, ZimbraCookie.COOKIE_ZM_ADMIN_AUTH_TOKEN, authToken.getEncoded(), "/", null, false));
 		        } catch (AuthTokenException ate) {
 		            throw ServiceException.PROXY_ERROR(ate, url.toString());
 		        }
