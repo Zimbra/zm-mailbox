@@ -1,17 +1,3 @@
-/*
- * ***** BEGIN LICENSE BLOCK *****
- * Zimbra Collaboration Suite Server
- * Copyright (C) 2010, 2011 VMware, Inc.
- * 
- * The contents of this file are subject to the Zimbra Public License
- * Version 1.3 ("License"); you may not use this file except in
- * compliance with the License.  You may obtain a copy of the License at
- * http://www.zimbra.com/license.
- * 
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
- * ***** END LICENSE BLOCK *****
- */
 package com.zimbra.common.soap;
 
 import org.junit.Assert;
@@ -37,12 +23,24 @@ public class ElementTest {
         element.addElement("a").addAttribute("n", "pfxPassword").addText("secret");
         element.addElement("a").addAttribute("n", "hostPwd").addText("secret");
         element.addElement("a").addAttribute("n", "webexZimlet_pwd1").addText("secret");
-        element.addElement("dummy2").
-                addAttribute("password", "secret").
-                addAttribute("pass", "secret").
-                addAttribute("pwd", "secret");
+        element.addElement("dummy2")
+               .addAttribute("password", "secret")
+               .addAttribute("pass", "secret")
+               .addAttribute("pwd", "secret");
         element.addElement("prop").addAttribute("name", "passwd").addText("secret");
         String elementStr = element.prettyPrint(true);
         Assert.assertFalse("Sensitive values have not been masked\n" + elementStr, elementStr.contains("secret"));
+    }
+
+    @Test
+    public void jsonNamespace() throws Exception {
+        Element json = Element.parseJSON("{ \"purge\": [{}] }");
+        Assert.assertEquals("default toplevel namespace", "urn:zimbraSoap", json.getNamespaceURI(""));
+
+        json = Element.parseJSON("{ \"purge\": [{}], \"_jsns\": \"urn:zimbraMail\" }");
+        Assert.assertEquals("explicit toplevel namespace", "urn:zimbraMail", json.getNamespaceURI(""));
+
+        json = Element.parseJSON("{ \"purge\": [{}], foo: { a: 1, \"_jsns\": \"urn:zimbraMail\" } }");
+        Assert.assertEquals("explicit child namespace", "urn:zimbraMail", json.getElement("foo").getNamespaceURI(""));
     }
 }
