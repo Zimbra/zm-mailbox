@@ -487,7 +487,7 @@ public class AccountUtil {
 
     // returns true if address is the From address of an enabled pop/imap/caldav data source
     public static boolean isAllowedDataSourceSendAddress(Account account, String address) throws ServiceException {
-        if (address == null || !addressHasInternalDomain(address)) {
+        if (address == null || addressHasInternalDomain(address)) {
             // only external addresses are allowed because internal addresses require the address owner to grant send rights
             return false;
         }
