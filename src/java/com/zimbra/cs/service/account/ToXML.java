@@ -33,6 +33,8 @@ import com.zimbra.cs.account.EntrySearchFilter.Multi;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Visitor;
 import com.zimbra.cs.account.Signature.SignatureContent;
+import com.zimbra.cs.account.accesscontrol.GranteeType;
+import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Signature;
@@ -250,6 +252,24 @@ public class ToXML {
             return TZIDMapper.canonicalize(attrValue);
         else
             return attrValue;
+    }
+    
+    public static Element encodeACE(Element parent, ZimbraACE ace) {
+        Element eACE = parent.addElement(AccountConstants.E_ACE)
+                .addAttribute(AccountConstants.A_ZIMBRA_ID, ace.getGrantee())
+                .addAttribute(AccountConstants.A_GRANT_TYPE, ace.getGranteeType().getCode())
+                .addAttribute(AccountConstants.A_RIGHT, ace.getRight().getName())
+                .addAttribute(AccountConstants.A_DISPLAY, ace.getGranteeDisplayName());
+
+        if (ace.getGranteeType() == GranteeType.GT_KEY) {
+            eACE.addAttribute(AccountConstants.A_ACCESSKEY, ace.getSecret());
+        } else if (ace.getGranteeType() == GranteeType.GT_GUEST) {
+            eACE.addAttribute(AccountConstants.A_PASSWORD, ace.getSecret());
+        }
+        if (ace.deny()) {
+            eACE.addAttribute(AccountConstants.A_DENY, ace.deny());
+        }
+        return eACE;
     }
     
 }
