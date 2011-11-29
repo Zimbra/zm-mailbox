@@ -1,3 +1,17 @@
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2011 Zimbra, Inc.
+ *
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ *
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
 package com.zimbra.qa.unittest.ldap;
 
 import static org.junit.Assert.assertEquals;
@@ -134,7 +148,7 @@ public class TestLdapConnection extends LdapTest {
             curValues.put(key, curValue);
             
             // set to the new value
-            key.setDefault(value);
+            LocalconfigTestUtil.modifyLocalConfigTransient(key, value);
             assertEquals(value, key.value());
         }
         
@@ -305,7 +319,7 @@ public class TestLdapConnection extends LdapTest {
     }
     
     @Test
-    @Ignore  // TODO: must be the first test to run
+    // @Ignore  // TODO: must be the first test to run
     public void testConnPoolNumAvailConns() throws Exception {
         
         int INIT_POOL_SIZE = LC.ldap_connect_pool_initsize.intValue();

@@ -39,7 +39,7 @@ public class UBIDLdapClient extends LdapClient {
     
     @Override
     protected void terminate() {
-        LdapConnectionPool.closeAll();
+        UBIDLdapContext.shutdown();
     }
     
     @Override

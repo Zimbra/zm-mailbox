@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.qa.unittest;
+package com.zimbra.qa.unittest.ldap;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,9 +32,23 @@ import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.unboundid.LdapConnectionPool;
 import com.zimbra.cs.ldap.unboundid.UBIDLdapContext;
 
+// Note: do not extend LdapTest, because LdapClient will be initialized in LdapTest.init(),
+// which we don't want.   In this class, each test needs to init and shutdown LdapClient.
+public class TestLdapConnectivity {
+    
+    /*
+     * ensure assertion is disabled, otherwise will choke on:
+     * UBIDLdapFilterFactory.initialize
+     * ZLdapFilterFactory.setInstance
+     */
+    static {
+        boolean assertsEnabled = false;
+        assert assertsEnabled = true; // Intentional side effect!!!
 
-
-public class TestLdapSDK extends TestLdap {
+        if (assertsEnabled) {
+            throw new RuntimeException("Asserts must NOT be enabled!!!");
+        }
+    } 
     
     /*
      * For testConnectivity:
@@ -79,7 +93,7 @@ public class TestLdapSDK extends TestLdap {
      *       This issue should not be that bad because ssl_allow_mismatched_certs is default to true.
      *        
      */
-    private static ConnectionConfig connConfig = ConnectionConfig.LDAP;
+    // private static ConnectionConfig connConfig = ConnectionConfig.LDAP;
     
     /*
      * for testConnectivity 
@@ -139,20 +153,21 @@ public class TestLdapSDK extends TestLdap {
         }
         
         void setLocalConfig() throws Exception {
-            TestLdap.modifyLocalConfig(LC.ldap_url.key(), ldap_url);
-            TestLdap.modifyLocalConfig(LC.ldap_master_url.key(), ldap_master_url);
-            TestLdap.modifyLocalConfig(LC.ldap_starttls_supported.key(), ldap_starttls_supported);
-            TestLdap.modifyLocalConfig(LC.ssl_allow_untrusted_certs.key(), ssl_allow_untrusted_certs);
-            TestLdap.modifyLocalConfig(LC.ssl_allow_mismatched_certs.key(), ssl_allow_mismatched_certs);
+            LocalconfigTestUtil.modifyLocalConfigTransient(LC.ldap_url, ldap_url);
+            LocalconfigTestUtil.modifyLocalConfigTransient(LC.ldap_master_url, ldap_master_url);
+            LocalconfigTestUtil.modifyLocalConfigTransient(LC.ldap_starttls_supported, ldap_starttls_supported);
+            LocalconfigTestUtil.modifyLocalConfigTransient(LC.ssl_allow_untrusted_certs, ssl_allow_untrusted_certs);
+            LocalconfigTestUtil.modifyLocalConfigTransient(LC.ssl_allow_mismatched_certs, ssl_allow_mismatched_certs);
             LC.reload();
         }
     }
 
-    
+   
     @BeforeClass
     public static void init() throws Exception {
+        
         // these two lines are only needed for ldaps when not running inside the server,
-        // because CustomTrustManafer is not used when running in CLI
+        // because CustomTrustManager is not used when running in CLI
         //
         // these two lines are not needed for starttls
         System.setProperty("javax.net.ssl.trustStore", LC.mailboxd_truststore.value());
@@ -160,16 +175,14 @@ public class TestLdapSDK extends TestLdap {
         
         CliUtil.toolSetup();
         
-        connConfig.setLocalConfig();
-        TestLdap.TestConfig.useConfig(TestLdap.TestConfig.UBID);
+        // connConfig.setLocalConfig();
+        // TestLdap.TestConfig.useConfig(TestLdap.TestConfig.UBID);
         // TestLdap.TestConfig.useConfig(TestLdap.TestConfig.LEGACY);
-        
-        LdapClient.initialize();
     }
 
     @AfterClass
     public static void cleanup() throws Exception {
-        LdapClient.shutdown();
+        // LdapClient.shutdown();
     }
     
     private UBIDLdapContext getContext() throws Exception {
@@ -214,9 +227,13 @@ public class TestLdapSDK extends TestLdap {
         dumpUBIDSDKOject("poolStats", poolStats);
     }
     
-    @Test
-    @Ignore  // has to be run manually for each connConfig
-    public void testConnectivity() throws Exception {
+    /*
+     * Important: Each invocation of testConnectivity must be run in its own VM
+     */
+    public void testConnectivity(ConnectionConfig connConfig) throws Exception {
+        connConfig.setLocalConfig();
+        LdapClient.initialize();
+        
         int expectedPort;
         
         if (connConfig == ConnectionConfig.LDAP || 
@@ -240,63 +257,20 @@ public class TestLdapSDK extends TestLdap {
         
         closeContext(zlc1);
         closeContext(zlc2);
+        
+        // so next test can re-initialized UBIDLdapContext and run
+        LdapClient.shutdown();
     }
     
     @Test
-    @Ignore  // TODO: must be the first test to run
-    public void testConnPoolNumAvailConns() throws Exception {
-        
-        int INIT_POOL_SIZE = LC.ldap_connect_pool_initsize.intValue();
-        int MAX_POOL_SIZE = LC.ldap_connect_pool_maxsize.intValue();
-        
-        LDAPConnectionPool connPool = LdapConnectionPool.getConnPoolByName(
-                LdapConnectionPool.CP_ZIMBRA_REPLICA);
-        
-        assertEquals(INIT_POOL_SIZE, connPool.getCurrentAvailableConnections());
-        assertEquals(MAX_POOL_SIZE, connPool.getMaximumAvailableConnections());
-        
-        UBIDLdapContext zlc = getContext();
-        String poolName = connPool.getConnectionPoolName();
-        closeContext(zlc);
-        
-        assertEquals(LdapConnectionPool.CP_ZIMBRA_REPLICA, poolName);
-        
-        //
-        // available connections: 
-        //   connections that are connected and is available to be checked out.
-        //
-        
-        // get a connection and close it, num available connections in the pool 
-        // should not change.
-        for (int i = 0; i < 10; i++) {
-            UBIDLdapContext conn = getContext();
-            closeContext(conn);
-            assertEquals(INIT_POOL_SIZE, connPool.getCurrentAvailableConnections());
-        }
-        
-        int numOpen = 20;
-        // make sure numOpen is a good number to test
-        assertTrue(numOpen > INIT_POOL_SIZE);
-        assertTrue(numOpen < MAX_POOL_SIZE);
-        
-        // get connections, not closing them, num available connections in the pool 
-        // should keep decreasing until there is no more.
-        UBIDLdapContext[] conns = new UBIDLdapContext[numOpen];
-        for (int i = 0; i < numOpen; i++) {
-            conns[i] = getContext();
-            int expected = Math.max(0, INIT_POOL_SIZE - (i + 1));
-            assertEquals(expected, connPool.getCurrentAvailableConnections());
-        }
-        
-        // now, release all the open connections, num available connections in the pool 
-        // should keep increasing.
-        for (int i = 0; i < numOpen; i++) {
-            closeContext(conns[i]);
-            int expected = i + 1;
-            assertEquals(expected, connPool.getCurrentAvailableConnections());
-        }
-        
-        // dumpConnPool(connPool);
+    @Ignore
+    public void LDAP() throws Exception {
+        testConnectivity(ConnectionConfig.LDAP);
+    }
+    
+    @Test
+    public void LDAPS_F_UNTRUSTED_F_MISMATCHED() throws Exception {
+        testConnectivity(ConnectionConfig.LDAPS_F_UNTRUSTED_F_MISMATCHED);
     }
     
     @Test

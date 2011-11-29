@@ -105,6 +105,20 @@ public class UBIDLdapContext extends ZLdapContext {
         }
     }
     
+    // only called from TestLdapConnectivity unittest, so we can run multiple 
+    // ldap configs (ldap, ldaps, etc) in one VM
+    public static synchronized void shutdown() {
+        LdapConnectionPool.closeAll();
+        
+        initialized = false;
+        
+        replicaConfig = null;
+        masterConfig = null;
+        
+        replicaConnPool = null;
+        masterConnPool = null;
+    }
+    
     
     @Override
     public void debug() {

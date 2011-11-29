@@ -20,6 +20,7 @@ import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.qa.unittest.ldap.TestLdapConnectivity;
 
 
 public class LdapSuite {
@@ -72,7 +73,7 @@ public class LdapSuite {
         // TestGalGroupMembers (has to be run in the server)
         
         // connection test, ahs to be run manually
-        junit.run(TestLdapSDK.class);
+        junit.run(TestLdapConnectivity.class);
         
         /*
          * merge in tests in TestLdap

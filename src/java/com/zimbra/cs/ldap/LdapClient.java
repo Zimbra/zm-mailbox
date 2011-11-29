@@ -20,7 +20,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
-import com.zimbra.cs.ldap.LdapTODO.*;
 import com.zimbra.cs.ldap.ZSearchScope.ZSearchScopeFactory;
 import com.zimbra.cs.ldap.jndi.JNDILdapClient;
 import com.zimbra.cs.ldap.unboundid.UBIDLdapClient;
@@ -54,6 +53,10 @@ public abstract class LdapClient {
         }
         return ldapClient;
     }
+     
+    private static synchronized void unsetInstance() {
+        ldapClient = null;
+    }
     
     
     public static synchronized void masterOnly() {
@@ -69,9 +72,10 @@ public abstract class LdapClient {
         LdapClient.getInstance();
     }
     
-    @TODO  // called from unittest for now, call it from Zimbra
+    // called from unittest only
     public static void shutdown() {
         LdapClient.getInstance().terminate();
+        unsetInstance();
     }
     
     public static boolean isLegacy() {
@@ -110,7 +114,8 @@ public abstract class LdapClient {
     public static ZLdapContext toZLdapContext(
             com.zimbra.cs.account.Provisioning prov, ILdapContext ldapContext) {
         if (isLegacy(prov)) {
-            Zimbra.halt("Provisioning instance is not " + com.zimbra.cs.account.ldap.LdapProvisioning.class.getCanonicalName(),
+            Zimbra.halt("Provisioning instance is not " + 
+                    com.zimbra.cs.account.ldap.LdapProvisioning.class.getCanonicalName(),
                     ServiceException.FAILURE("internal error, wrong ldap context instance", null));
         }
         
