@@ -25,7 +25,7 @@ public class LdapTest {
     
     // - handy to set it to "true"/"false" when invoking a single test from inside Eclipse
     // - make sure it is always set to null in p4. 
-    private static String useInMemoryLdapServerProperty = null; // "true";
+    private static String useInMemoryLdapServerProperty = "true";
     
     // ensure assertion is enabled
     static {
@@ -100,7 +100,7 @@ public class LdapTest {
     
     static class SkippedForInMemLdapServer extends Exception {
         SkippedForInMemLdapServer(String reason) {
-            super(reason);
+            super("SkippedForInMemLdapServer: " + reason);
         }
     }
     

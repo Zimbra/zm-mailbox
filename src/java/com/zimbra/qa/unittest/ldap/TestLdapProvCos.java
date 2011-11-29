@@ -26,7 +26,6 @@ import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.CosBy;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Cos;
@@ -174,8 +173,29 @@ public class TestLdapProvCos extends LdapTest {
             }
         }
         
-        // -1 because description is not copied over
-        assertEquals(defaultCosAttrs.size() - 1, copiedCosAttrs.size());
+        /*
+         * Attr in defaultCosAttrs but not in copiedCosAttrs: description
+         * 
+         * zimbraCreateTimestamp will be in the default cos only if upgrade 22033 
+         * has been run after reset-the-world - i.r. whether TestLdapUpgrade has been
+         * run.
+         */
+        for (String attr : defaultCosAttrs.keySet()) {
+            if (!copiedCosAttrs.containsKey(attr)) {
+                System.out.println("Attr in defaultCosAttrs but not in copiedCosAttrs: " + attr);
+            }
+        }
+        for (String attr : copiedCosAttrs.keySet()) {
+            if (!defaultCosAttrs.containsKey(attr)) {
+                System.out.println("Attr in copiedCosAttrs but not in defaultCosAttrs: " + attr);
+            }
+        }
+        if (defaultCosAttrs.containsKey(Provisioning.A_zimbraCreateTimestamp)) {
+            assertEquals(defaultCosAttrs.size() - 1, copiedCosAttrs.size());
+        } else {
+            assertEquals(defaultCosAttrs.size(), copiedCosAttrs.size());
+        }
+        assertNull(copiedCosAttrs.get(Provisioning.A_description));
         
         deleteCos(copiedCos);
     }

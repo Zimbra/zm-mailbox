@@ -22,6 +22,7 @@ import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.junit.Test;
 
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPConnectionOptions;
@@ -35,6 +36,11 @@ import com.unboundid.ldap.sdk.SearchResultEntry;
 
 
 public class TestLdapReadTimeout {
+    
+    @Test
+    public void noop() throws Exception {
+        // just to get junit not to report error on "No runnable methods"
+    }
     
     private static abstract class LdapReadTimeoutTester {
         String uri;

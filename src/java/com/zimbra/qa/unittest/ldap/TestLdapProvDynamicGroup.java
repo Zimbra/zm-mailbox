@@ -16,6 +16,7 @@ package com.zimbra.qa.unittest.ldap;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Test;
 
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
@@ -37,5 +38,9 @@ public class TestLdapProvDynamicGroup extends LdapTest {
         Cleanup.deleteAll(baseDomainName());
     }
 
+    @Test
+    public void noop() throws Exception {
+        // just to get junit not to report error on "No runnable methods"
+    }
 
 }

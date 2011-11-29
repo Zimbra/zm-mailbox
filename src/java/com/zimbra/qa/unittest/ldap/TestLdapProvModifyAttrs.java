@@ -26,7 +26,9 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
+import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 import com.zimbra.qa.unittest.TestUtil;
 
 public class TestLdapProvModifyAttrs extends LdapTest {
@@ -238,6 +240,17 @@ public class TestLdapProvModifyAttrs extends LdapTest {
             if (AccountServiceException.INVALID_ATTR_VALUE.equals(e.getCode())) {
                 caughtException = true;
             }
+        } catch (ServiceException e) {
+            if (InMemoryLdapServer.isOn()) {
+                /*
+                 * ubid InMemoryDirectoryServer returns OBJECT_CLASS_VIOLATION instead of 
+                 * CONSTRAINT_VIOLATION/INVALID_ATTRIBUTE_SYNTAX.  OBJECT_CLASS_VIOLATION 
+                 * is mapped to FAILURE in LdapProvisioning
+                 */
+                if (AccountServiceException.FAILURE.equals(e.getCode())) {
+                    caughtException = true;
+                }
+            }
         }
         assertTrue(caughtException);
         
@@ -258,6 +271,17 @@ public class TestLdapProvModifyAttrs extends LdapTest {
         } catch (AccountServiceException e) {
             if (AccountServiceException.INVALID_ATTR_NAME.equals(e.getCode())) {
                 caughtException = true;
+            }
+        } catch (ServiceException e) {
+            if (InMemoryLdapServer.isOn()) {
+                /*
+                 * ubid InMemoryDirectoryServer returns OBJECT_CLASS_VIOLATION instead of 
+                 * UNDEFINED_ATTRIBUTE_TYPE.  OBJECT_CLASS_VIOLATION 
+                 * is mapped to FAILURE in LdapProvisioning
+                 */
+                if (AccountServiceException.FAILURE.equals(e.getCode())) {
+                    caughtException = true;
+                }
             }
         }
         assertTrue(caughtException);
