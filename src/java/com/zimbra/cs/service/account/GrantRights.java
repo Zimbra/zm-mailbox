@@ -38,7 +38,7 @@ import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class GrantRight extends AccountDocumentHandler {
+public class GrantRights extends AccountDocumentHandler {
     
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -56,7 +56,7 @@ public class GrantRight extends AccountDocumentHandler {
         }
 
         List<ZimbraACE> granted = ACLUtil.grantRight(Provisioning.getInstance(), account, aces);
-        Element response = zsc.createElement(AccountConstants.GRANT_RIGHT_RESPONSE);
+        Element response = zsc.createElement(AccountConstants.GRANT_RIGHTS_RESPONSE);
         if (aces != null) {
             for (ZimbraACE ace : granted) {
                 ToXML.encodeACE(response, ace);

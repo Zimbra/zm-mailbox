@@ -28,7 +28,7 @@ import com.zimbra.cs.account.accesscontrol.ACLUtil;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class RevokeRight extends AccountDocumentHandler {
+public class RevokeRights extends AccountDocumentHandler {
     
     @Override
     public Element handle(Element request, Map<String, Object> context) 
@@ -42,13 +42,13 @@ public class RevokeRight extends AccountDocumentHandler {
         
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         for (Element eACE : request.listElements(AccountConstants.E_ACE)) {
-            ZimbraACE ace = GrantRight.handleACE(eACE, zsc, false);
+            ZimbraACE ace = GrantRights.handleACE(eACE, zsc, false);
             aces.add(ace);
         }
 
         // TODO, change to Provisioning.grantPermission?
         List<ZimbraACE> revoked = ACLUtil.revokeRight(Provisioning.getInstance(), account, aces);
-        Element response = zsc.createElement(AccountConstants.REVOKE_RIGHT_RESPONSE);
+        Element response = zsc.createElement(AccountConstants.REVOKE_RIGHTS_RESPONSE);
         if (aces != null) {
             for (ZimbraACE ace : revoked) {
                 ToXML.encodeACE(response, ace);
