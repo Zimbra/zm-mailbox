@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.service.mail;
+package com.zimbra.cs.service.account;
 
 import java.util.HashSet;
 import java.util.List;
@@ -28,7 +28,7 @@ import com.zimbra.cs.account.accesscontrol.ACLUtil;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class RevokePermission extends MailDocumentHandler {
+public class RevokeRight extends AccountDocumentHandler {
     
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -40,7 +40,7 @@ public class RevokePermission extends MailDocumentHandler {
         
         Set<ZimbraACE> aces = new HashSet<ZimbraACE>();
         for (Element eACE : request.listElements(MailConstants.E_ACE)) {
-            ZimbraACE ace = GrantPermission.handleACE(eACE, zsc, false);
+            ZimbraACE ace = GrantRight.handleACE(eACE, zsc, false);
             aces.add(ace);
         }
 
@@ -49,7 +49,7 @@ public class RevokePermission extends MailDocumentHandler {
         Element response = zsc.createElement(MailConstants.REVOKE_PERMISSION_RESPONSE);
         if (aces != null) {
             for (ZimbraACE ace : revoked)
-                ToXML.encodeACE(response, ace);
+                com.zimbra.cs.service.mail.ToXML.encodeACE(response, ace);
         }
         return response;
     }

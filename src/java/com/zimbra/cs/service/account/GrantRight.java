@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.cs.service.mail;
+package com.zimbra.cs.service.account;
 
 import java.util.HashSet;
 import java.util.List;
@@ -40,7 +40,7 @@ import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class GrantPermission extends MailDocumentHandler {
+public class GrantRight extends AccountDocumentHandler {
     
     @Override
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
@@ -60,7 +60,7 @@ public class GrantPermission extends MailDocumentHandler {
         Element response = zsc.createElement(MailConstants.GRANT_PERMISSION_RESPONSE);
         if (aces != null) {
             for (ZimbraACE ace : granted)
-                ToXML.encodeACE(response, ace);
+                com.zimbra.cs.service.mail.ToXML.encodeACE(response, ace);
         }
 
         return response;
