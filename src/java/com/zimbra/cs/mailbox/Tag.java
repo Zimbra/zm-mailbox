@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.filter.RuleManager;
@@ -51,7 +52,7 @@ public class Tag extends MailItem {
         return (byte) (id - TAG_ID_OFFSET);
     }
 
-    /** Returns whether this id falls in the acceptable tag ID range (64..127).
+    /** Returns whether this id falls in the acceptable tag ID range (64..126).
      *  Does <u>not</u> verify that such a tag exists.
      *
      * @param id  Item id to check.
@@ -111,7 +112,7 @@ public class Tag extends MailItem {
         if (bitmask == 0)
             return "";
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; bitmask != 0 && i < MAX_TAG_COUNT - 1; i++) {
+        for (int i = 0; bitmask != 0 && i < MAX_TAG_COUNT; i++) {
             if ((bitmask & (1L << i)) != 0) {
                 if (sb.length() > 0)
                     sb.append(',');
@@ -122,11 +123,12 @@ public class Tag extends MailItem {
         return sb.toString();
     }
 
-    static List<Tag> bitmaskToTagList(Mailbox mbox, long bitmask) throws ServiceException {
+    @VisibleForTesting
+    public static List<Tag> bitmaskToTagList(Mailbox mbox, long bitmask) throws ServiceException {
         if (bitmask == 0)
             return Collections.emptyList();
         ArrayList<Tag> tags = new ArrayList<Tag>();
-        for (int i = 0; bitmask != 0 && i < MAX_TAG_COUNT - 1; i++) {
+        for (int i = 0; bitmask != 0 && i < MAX_TAG_COUNT; i++) {
             if ((bitmask & (1L << i)) != 0) {
                 tags.add(mbox.getTagById(i + TAG_ID_OFFSET));
                 bitmask &= ~(1L << i);

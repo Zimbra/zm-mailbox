@@ -20,6 +20,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.junit.Assert;
+import org.junit.Test;
+
 import junit.framework.TestCase;
 
 import com.zimbra.cs.account.Account;
@@ -305,6 +308,42 @@ public class TestTags extends TestCase
         }
         for (int i = 0; i < mTags.length; i++) {
             mTags[i] = mMbox.getTagById(null, mTags[i].getId());
+        }
+    }
+    
+    @Test
+    public void testTagBitmask() {
+        for (int i = Tag.TAG_ID_OFFSET; i < Tag.TAG_ID_OFFSET+Tag.MAX_TAG_COUNT; i++) {
+            Assert.assertTrue(Tag.validateId(i));
+            String tags = Tag.bitmaskToTags(Tag.tagsToBitmask(i+""));
+            Assert.assertTrue("tagId -> tagBitmask -> tagId returned empty string", tags != null && tags.length() > 0);
+            Assert.assertEquals("tagId -> tagBitmask -> tagId returned incorrect ID"+i, i, Integer.valueOf(tags).intValue());
+        }
+    }
+    
+    @Test
+    public void testTagList() throws ServiceException {
+        for (int i = Tag.TAG_ID_OFFSET; i < Tag.TAG_ID_OFFSET+Tag.MAX_TAG_COUNT; i++) {
+            Tag tag = mMbox.createTag(null, TAG_PREFIX+i, (byte) 0);
+            List<Tag> tags = Tag.bitmaskToTagList(mMbox, Tag.tagsToBitmask(""+i));
+            Assert.assertTrue(tags != null && tags.size() == 1);
+            Assert.assertTrue(tags.contains(tag));
+        }
+    }
+
+    @Test
+    public void testRecalculateTagCounts() throws Exception {
+        for (int i = Tag.TAG_ID_OFFSET; i < Tag.TAG_ID_OFFSET+Tag.MAX_TAG_COUNT; i++) {
+            Tag tag = mMbox.createTag(null, TAG_PREFIX+i, (byte) 0);
+            mMbox.alterTag(null, mMessage1.getId(), mMessage1.getType(), tag.getId(), true);
+            refresh();
+            tag = mMbox.getTagByName(TAG_PREFIX+i);
+            Assert.assertTrue(tag.getUnreadCount() == 1);
+        }
+        mMbox.recalculateFolderAndTagCounts();
+        for (int i = Tag.TAG_ID_OFFSET; i < Tag.TAG_ID_OFFSET+Tag.MAX_TAG_COUNT; i++) {
+            Tag tag = mMbox.getTagByName(TAG_PREFIX+i);
+            Assert.assertTrue(tag.getUnreadCount() == 1);
         }
     }
     
