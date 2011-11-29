@@ -2239,6 +2239,10 @@
  
   <property name="ldaptest.dir" location="${build.dir}/ldaptest"/>  
  
+  <!--
+     To run a particular test:
+     ant -Dtest={java class name} ldap-test
+  -->
   <target name="ldap-test" description="Run LDAP tests" depends="compile">
       <delete dir="${ldaptest.dir}" quiet="true"/>
       <mkdir dir="${ldaptest.dir}/output"/>
@@ -2258,30 +2262,28 @@
           
           <formatter type="xml"/>
           
-          <!--
-          <batchtest todir="${ldaptest.dir}/output">
+          <!-- run one test class -->
+          <batchtest todir="${ldaptest.dir}/output" if="test">
               <fileset dir="${src.java.dir}">
-                  <include name="**/TestLdap*.java"/>
-                  <exclude name="**/TestLdap.java"/>
-                  <exclude name="**/TestLdapConnection.java"/>
+                  <include name="**/com/zimbra/qa/unittest/ldap/${test}.java"/>
               </fileset>
           </batchtest>
           
-          -->
-          <batchtest todir="${ldaptest.dir}/output">
+          <!-- run all tests -->
+          <batchtest todir="${ldaptest.dir}/output" unless="test">
               <fileset dir="${src.java.dir}">
                   <include name="**/com/zimbra/qa/unittest/ldap/Test*.java"/>
+                  <exclude name="**/com/zimbra/qa/unittest/ldap/TestLdapConnection.java"/>
+                  <exclude name="**/com/zimbra/qa/unittest/ldap/TestLdapConnectivity.java"/>
               </fileset>
           </batchtest>
           
           <!-- tests must run in its own JVM -->
-          <!--
-          <batchtest todir="${ldaptest.dir}/output">
+          <batchtest todir="${ldaptest.dir}/output" unless="test">
               <fileset dir="${src.java.dir}">
-                  <include name="**/TestLdapConnection.java"/>
+                  <include name="**/com/zimbra/qa/unittest/ldap/TestLdapConnection.java"/>
               </fileset>
           </batchtest>
-          -->
           
       </junit>
       <junitreport todir="${ldaptest.dir}/report">
@@ -2292,6 +2294,10 @@
       <fail if="junit.failure" message="LDAP test failed"/>
   </target> 
     
+  <!--
+     To run a particular test:
+     ant -Dtest={java class name} ldap-test-inmem
+  -->  
   <target name="ldap-test-inmem" description="Run LDAP tests with in memory LDAP server">
       <antcall target="ldap-test">
           <param name="inmem" value="true"/>
