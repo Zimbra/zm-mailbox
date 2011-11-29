@@ -42,7 +42,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111121-1404 */
+    /* build: 8.0.0_BETA1_1111 pshao 20111129-1032 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -32301,11 +32301,11 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * Skin to use for this account
      *
-     * @return zimbraPrefSkin, or "carbon" if unset
+     * @return zimbraPrefSkin, or "serenity" if unset
      */
     @ZAttr(id=355)
     public String getPrefSkin() {
-        return getAttr(Provisioning.A_zimbraPrefSkin, "carbon");
+        return getAttr(Provisioning.A_zimbraPrefSkin, "serenity");
     }
 
     /**
