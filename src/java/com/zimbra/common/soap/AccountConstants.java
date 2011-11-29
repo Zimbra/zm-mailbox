@@ -109,6 +109,10 @@ public class AccountConstants {
     public static final String E_CHECK_RIGHTS_RESPONSE = "CheckRightsResponse";
     public static final String E_DISCOVER_RIGHTS_REQUEST = "DiscoverRightsRequest";
     public static final String E_DISCOVER_RIGHTS_RESPONSE = "DiscoverRightsResponse";
+    public static final String E_GRANT_RIGHT_REQUEST = "GrantRightRequest";
+    public static final String E_GRANT_RIGHT_RESPONSE = "GrantRightResponse";
+    public static final String E_REVOKE_RIGHT_REQUEST = "RevokeRightRequest";
+    public static final String E_REVOKE_RIGHT_RESPONSE = "RevokeRightResponse";
     
     // system
     public static final String E_GET_VERSION_INFO_REQUEST = "GetVersionInfoRequest";
@@ -211,6 +215,10 @@ public class AccountConstants {
     public static final QName CHECK_RIGHTS_RESPONSE = QName.get(E_CHECK_RIGHTS_RESPONSE, NAMESPACE);
     public static final QName DISCOVER_RIGHTS_REQUEST = QName.get(E_DISCOVER_RIGHTS_REQUEST, NAMESPACE);
     public static final QName DISCOVER_RIGHTS_RESPONSE = QName.get(E_DISCOVER_RIGHTS_RESPONSE, NAMESPACE);
+    public static final QName GRANT_RIGHT_REQUEST = QName.get(E_GRANT_RIGHT_REQUEST, NAMESPACE);
+    public static final QName GRANT_RIGHT_RESPONSE = QName.get(E_GRANT_RIGHT_RESPONSE, NAMESPACE);
+    public static final QName REVOKE_RIGHT_REQUEST = QName.get(E_REVOKE_RIGHT_REQUEST, NAMESPACE);
+    public static final QName REVOKE_RIGHT_RESPONSE = QName.get(E_REVOKE_RIGHT_RESPONSE, NAMESPACE);
     
     // system
     public static final QName GET_VERSION_INFO_REQUEST = QName.get(E_GET_VERSION_INFO_REQUEST, NAMESPACE);
@@ -347,8 +355,19 @@ public class AccountConstants {
     public static final String A_VERIFY_ACCOUNT = "verifyAccount";
     
     // account ACLs
+    public static final String A_ACCESSKEY = "key";
     public static final String A_ALLOW = "allow";
+    public static final String A_DENY = "deny";
+    public static final String A_DISPLAY = "d";
+    public static final String A_GRANT_TYPE = "gt";
+    public static final String A_PASSWORD = "pw";
     public static final String A_RIGHT = "right";
+    public static final String A_TARGET_BY = "by";
+    public static final String A_TARGET_TYPE = "type";
+    public static final String A_ZIMBRA_ID = "zid";
+    public static final String E_ACE = "ace";
+    public static final String E_ACL = "acl";
+    public static final String E_GRANT = "grant";
     public static final String E_RIGHT = "right";
     public static final String E_TARGET = "target";
     public static final String E_TARGETS = "targets";
