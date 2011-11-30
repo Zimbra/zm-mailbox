@@ -189,7 +189,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
     <desc>From Microsoft Schema</desc>
 </attr>
 
-<attr name="cn" type="string" optionalIn="account,alias,distributionList" requiredIn="cos,server,mimeEntry,objectEntry,timeZone,zimletEntry,xmppComponent,aclTarget" flags="domainAdminModifiable,accountInfo">
+<attr name="cn" type="string" optionalIn="account,alias,distributionList" requiredIn="cos,server,mimeEntry,objectEntry,zimletEntry,xmppComponent,aclTarget" flags="domainAdminModifiable,accountInfo">
     <desc>RFC2256: common name(s) for which the entity is known by</desc>
 </attr>
 
@@ -1302,28 +1302,34 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>Maximum size in bytes for attachments</desc>
 </attr>
 
-<attr id="229" name="zimbraTimeZoneStandardDtStart" type="string" max="256" cardinality="multi" requiredIn="timeZone">
+<attr id="229" name="zimbraTimeZoneStandardDtStart" type="string" max="256" cardinality="multi" requiredIn="timeZone" deprecatedSince="5.0">
   <desc>Start date for standard time</desc>
+  <deprecateDesc>Deprecated as of bug 12416</deprecateDesc>
 </attr>
 
-<attr id="230" name="zimbraTimeZoneStandardOffset" type="string" max="5" cardinality="multi" requiredIn="timeZone">
+<attr id="230" name="zimbraTimeZoneStandardOffset" type="string" max="5" cardinality="multi" requiredIn="timeZone" deprecatedSince="5.0">
   <desc>Offset in standard time</desc>
+  <deprecateDesc>Deprecated as of bug 12416</deprecateDesc>
 </attr>
 
-<attr id="231" name="zimbraTimeZoneStandardRRule" type="string" max="256" cardinality="multi" optionalIn="timeZone">
+<attr id="231" name="zimbraTimeZoneStandardRRule" type="string" max="256" cardinality="multi" optionalIn="timeZone" deprecatedSince="5.0">
   <desc>iCalendar recurrence rule for onset of standard time</desc>
+  <deprecateDesc>Deprecated as of bug 12416</deprecateDesc>
 </attr>
 
-<attr id="232" name="zimbraTimeZoneDaylightDtStart" type="string" max="256" cardinality="multi" optionalIn="timeZone">
+<attr id="232" name="zimbraTimeZoneDaylightDtStart" type="string" max="256" cardinality="multi" optionalIn="timeZone" deprecatedSince="5.0">
   <desc>Start date for daylight time</desc>
+  <deprecateDesc>Deprecated as of bug 12416</deprecateDesc>
 </attr>
 
-<attr id="233" name="zimbraTimeZoneDaylightOffset" type="string" max="5" cardinality="multi" optionalIn="timeZone">
+<attr id="233" name="zimbraTimeZoneDaylightOffset" type="string" max="5" cardinality="multi" optionalIn="timeZone" deprecatedSince="5.0">
   <desc>Offset in daylight time</desc>
+  <deprecateDesc>Deprecated as of bug 12416</deprecateDesc>
 </attr>
 
-<attr id="234" name="zimbraTimeZoneDaylightRRule" type="string" max="256" cardinality="multi" optionalIn="timeZone">
+<attr id="234" name="zimbraTimeZoneDaylightRRule" type="string" max="256" cardinality="multi" optionalIn="timeZone" deprecatedSince="5.0">
   <desc>iCalendar recurrence rule for onset of daylight time</desc>
+  <deprecateDesc>Deprecated as of bug 12416</deprecateDesc>
 </attr>
 
 <attr id="235" name="zimbraPrefTimeZoneId" type="string" max="256" cardinality="multi" optionalIn="account,cos,domain" flags="accountCosDomainInherited,domainAdminModifiable">
