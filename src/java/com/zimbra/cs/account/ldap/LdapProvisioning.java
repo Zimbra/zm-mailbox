@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.Stack;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -2478,14 +2479,16 @@ public class LdapProvisioning extends LdapProv {
     throws ServiceException {
         destCosName = destCosName.toLowerCase().trim();
 
-        Map<String, Object> allAttrs = new HashMap<String, Object>();
         Cos srcCos = getCosById(srcCosId, null);
         if (srcCos == null)
             throw AccountServiceException.NO_SUCH_COS(srcCosId);
 
-        for (Map.Entry<String, Object> e : srcCos.getAttrs().entrySet()) {
-            allAttrs.put(e.getKey(), e.getValue());
-        }
+        // bug 67716, use a case insensitive map because provided attr names may not be 
+        // the canonical name and that will cause multiple entries in the map
+        Map<String, Object> allAttrs = new TreeMap<String, Object>(String.CASE_INSENSITIVE_ORDER);
+        
+        allAttrs.putAll(srcCos.getAttrs());
+
         allAttrs.remove(Provisioning.A_objectClass);
         allAttrs.remove(Provisioning.A_zimbraId);
         allAttrs.remove(Provisioning.A_zimbraCreateTimestamp);

@@ -24,6 +24,7 @@ import static org.junit.Assert.*;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.cs.account.Account;
@@ -367,4 +368,16 @@ public class TestLdapProvCos extends LdapTest {
         assertEquals(COS1_VALUE, acct.getAttr(ATTR_NAME));
     }
 
+    @Test
+    public void bug67716() throws Exception {
+        // case does match the case declared in zimbra-attrs.xml
+        String ATTR_REAL_ANME = Provisioning.A_zimbraMailQuota;
+        String ATTR_LOWERCASE_NAME = ATTR_REAL_ANME.toLowerCase();
+        String ATTR_VALUE = "12345";
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(ATTR_LOWERCASE_NAME, ATTR_VALUE);
+        Cos cos = createCos("bug67716", attrs);
+        assertEquals(ATTR_VALUE, cos.getAttr(ATTR_REAL_ANME));
+        assertEquals(ATTR_VALUE, cos.getAttr(ATTR_LOWERCASE_NAME));
+    }
 }
