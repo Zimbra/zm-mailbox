@@ -28,7 +28,10 @@ public class VoiceConstants {
 
     public static final QName MODIFY_VOICE_MAIL_PREFS_REQUEST  = QName.get("ModifyVoiceMailPrefsRequest", NAMESPACE);
     public static final QName MODIFY_VOICE_MAIL_PREFS_RESPONSE = QName.get("ModifyVoiceMailPrefsResponse", NAMESPACE);
-    
+
+    public static final QName MODIFY_VOICE_MAIL_PIN_REQUEST  = QName.get("ModifyVoiceMailPinRequest", NAMESPACE);
+    public static final QName MODIFY_VOICE_MAIL_PIN_RESPONSE = QName.get("ModifyVoiceMailPinResponse", NAMESPACE);
+
     public static final QName GET_VOICE_INFO_REQUEST  = QName.get("GetVoiceInfoRequest", NAMESPACE);
     public static final QName GET_VOICE_INFO_RESPONSE = QName.get("GetVoiceInfoResponse", NAMESPACE);
 
@@ -78,6 +81,8 @@ public class VoiceConstants {
     public static final String A_COUNTRY       = "co";
     public static final String A_VM            = "vm";
     public static final String A_CONTENT_TYPE  = "ct";
+    public static final String A_VMAIL_OLD_PIN  = "oldPin";
+    public static final String A_VMAIL_PIN  = "pin";
     
     public static final String FLAG_UNFORWARDABLE = "p";  // 'p'rivate
     

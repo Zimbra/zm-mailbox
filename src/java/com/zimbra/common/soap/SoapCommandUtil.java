@@ -81,6 +81,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
     private static final String TYPE_IM = "im";
     private static final String TYPE_MOBILE = "mobile";
     private static final String TYPE_OFFLINE = "offline";
+    private static final String TYPE_VOICE = "voice";
     
     static {
         // Namespaces
@@ -90,6 +91,7 @@ public class SoapCommandUtil implements SoapTransport.DebugListener {
         sTypeToNamespace.put(TYPE_IM, Namespace.get("urn:zimbraIM"));
         sTypeToNamespace.put(TYPE_MOBILE, Namespace.get("urn:zimbraSync"));
         sTypeToNamespace.put(TYPE_OFFLINE, Namespace.get("urn:zimbraOffline"));
+        sTypeToNamespace.put(TYPE_VOICE, Namespace.get("urn:zimbraVoice"));
     }
     
     private Options mOptions = new Options();
