@@ -1833,7 +1833,7 @@ public class DbMailItem {
                     ZimbraLog.mailbox.warn("inconsistent DB state: items with no corresponding folder (folder ID " + folderId + ")");
                 }
 
-                for (int i = 0; tags != 0 && i < MailItem.MAX_TAG_COUNT - 1; i++) {
+                for (int i = 0; tags != 0 && i < MailItem.MAX_TAG_COUNT; i++) {
                     if ((tags & (1L << i)) != 0) {
                         data = lookup.get(i + MailItem.TAG_ID_OFFSET);
                         if (data != null) {
