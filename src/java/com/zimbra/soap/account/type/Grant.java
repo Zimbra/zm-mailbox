@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.type;
+package com.zimbra.soap.account.type;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,14 +27,10 @@ import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlType;
 
-import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.AccountConstants;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
-
-/*
- * Delete this class in bug 66989
- */
 
 /*
 <grant perm="{rights}" gt="{grantee-type}" zid="{zimbra-id}" d="{grantee-name}" [pw="{password-for-guest}"] [key=="{access-key}"]/>*
@@ -83,22 +79,22 @@ public class Grant {
         }
     };
 
-    @XmlAttribute(name=MailConstants.A_RIGHTS /* perm */, required=true)
+    @XmlAttribute(name=AccountConstants.A_RIGHTS /* perm */, required=true)
     private String perm;
 
-    @XmlAttribute(name=MailConstants.A_GRANT_TYPE /* gt */, required=true)
+    @XmlAttribute(name=AccountConstants.A_GRANT_TYPE /* gt */, required=true)
     private GranteeType granteeType;
 
-    @XmlAttribute(name=MailConstants.A_ZIMBRA_ID /* zid */, required=true)
+    @XmlAttribute(name=AccountConstants.A_ZIMBRA_ID /* zid */, required=true)
     private String granteeId;
 
-    @XmlAttribute(name=MailConstants.A_DISPLAY /* d */, required=false)
+    @XmlAttribute(name=AccountConstants.A_DISPLAY /* d */, required=false)
     private String granteeName;
 
-    @XmlAttribute(name=MailConstants.A_PASSWORD /* pw */, required=false)
+    @XmlAttribute(name=AccountConstants.A_PASSWORD /* pw */, required=false)
     private String guestPassword;
 
-    @XmlAttribute(name=MailConstants.A_ACCESSKEY /* key */, required=false)
+    @XmlAttribute(name=AccountConstants.A_ACCESSKEY /* key */, required=false)
     private String accessKey;
 
     public Grant() {

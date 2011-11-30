@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.message;
+package com.zimbra.soap.account.message;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -26,24 +26,18 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.AccountACEinfo;
-
-/*
- * Delete this class in bug 66989
- */
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.account.type.AccountACEinfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=MailConstants.E_REVOKE_PERMISSION_RESPONSE)
-@XmlType(propOrder = {})
-public class RevokePermissionResponse {
+@XmlRootElement(name=AccountConstants.E_REVOKE_RIGHTS_REQUEST)
+public class RevokeRightsRequest {
 
-    @XmlElement(name=MailConstants.E_ACE /* ace */, required=false)
+    @XmlElement(name=AccountConstants.E_ACE /* ace */, required=false)
     private List<AccountACEinfo> aces = Lists.newArrayList();
 
-    public RevokePermissionResponse() {
+    public RevokeRightsRequest() {
     }
 
     public void setAces(Iterable <AccountACEinfo> aces) {
@@ -53,7 +47,7 @@ public class RevokePermissionResponse {
         }
     }
 
-    public RevokePermissionResponse addAce(AccountACEinfo ace) {
+    public RevokeRightsRequest addAce(AccountACEinfo ace) {
         this.aces.add(ace);
         return this;
     }

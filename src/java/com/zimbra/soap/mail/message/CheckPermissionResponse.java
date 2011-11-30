@@ -24,6 +24,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
+/*
+ * Delete this class in bug 66989
+ */
+
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=MailConstants.E_CHECK_PERMISSION_RESPONSE)
 public class CheckPermissionResponse {

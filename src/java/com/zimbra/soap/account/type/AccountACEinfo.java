@@ -13,43 +13,38 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.type;
+package com.zimbra.soap.account.type;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
-import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.ZmBoolean;
-
-/*
- * Delete this class in bug 66989
- */
-
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class AccountACEinfo {
 
-    @XmlAttribute(name=MailConstants.A_ZIMBRA_ID /* zid */, required=false)
+    @XmlAttribute(name=AccountConstants.A_ZIMBRA_ID /* zid */, required=false)
     private String zimbraId;
 
-    @XmlAttribute(name=MailConstants.A_GRANT_TYPE /* gt */, required=true)
+    @XmlAttribute(name=AccountConstants.A_GRANT_TYPE /* gt */, required=true)
     private final Grant.GranteeType grantType;
 
-    @XmlAttribute(name=MailConstants.A_RIGHT /* right */, required=true)
+    @XmlAttribute(name=AccountConstants.A_RIGHT /* right */, required=true)
     private final String right;
 
-    @XmlAttribute(name=MailConstants.A_DISPLAY /* d */, required=false)
+    @XmlAttribute(name=AccountConstants.A_DISPLAY /* d */, required=false)
     private String displayName;
 
-    @XmlAttribute(name=MailConstants.A_ACCESSKEY /* key */, required=false)
+    @XmlAttribute(name=AccountConstants.A_ACCESSKEY /* key */, required=false)
     private String accessKey;
 
-    @XmlAttribute(name=MailConstants.A_PASSWORD /* pw */, required=false)
+    @XmlAttribute(name=AccountConstants.A_PASSWORD /* pw */, required=false)
     private String password;
 
-    @XmlAttribute(name=MailConstants.A_DENY /* deny */, required=false)
+    @XmlAttribute(name=AccountConstants.A_DENY /* deny */, required=false)
     private ZmBoolean deny;
 
     /**
