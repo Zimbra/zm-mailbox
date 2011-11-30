@@ -38,6 +38,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.mail.Address;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
@@ -6535,8 +6536,8 @@ public class Mailbox {
     }
 
     /**
-     * Creates new contacts in AUTO_CONTACTS folder. Email addresses that already exist in any contacts folder are
-     * ignored.
+     * Creates new contacts in AUTO_CONTACTS folder.
+     * Note: Its upto the caller to check whether the email addresses in the list pre-exist.
      *
      * @param octxt operation context
      * @param addrs email addresses
@@ -6547,21 +6548,8 @@ public class Mailbox {
         if (addrs.isEmpty()) {
             return Collections.emptyList();
         }
-        if (lock.isLocked()) { //TODO can't search while holding the mailbox lock
-            ZimbraLog.mailbox.warn("Unable to auto-add contact while holding Mailbox lock");
-            return Collections.emptyList();
-        }
-        Set<InternetAddress> newAddrs = new HashSet<InternetAddress>();
+        List<Contact> result = new ArrayList<Contact>(addrs.size());
         for (InternetAddress addr : addrs) {
-            if (!Strings.isNullOrEmpty(addr.getAddress()) && !index.existsInContacts(Collections.singleton(addr))) {
-                newAddrs.add(addr);
-            }
-        }
-        if (newAddrs.isEmpty()) {
-            return Collections.emptyList();
-        }
-        List<Contact> result = new ArrayList<Contact>(newAddrs.size());
-        for (InternetAddress addr : newAddrs) {
             ZimbraLog.mailbox.debug("Auto-adding new contact addr=%s", addr);
             try {
                 result.add(createContact(octxt, new ParsedContact(new ParsedAddress(addr).getAttributes()),
@@ -6571,6 +6559,35 @@ public class Mailbox {
             }
         }
         return result;
+    }
+    
+    /**
+     * Returns a list of contacts don't exist in any contacts folders.
+     * 
+     * @param addrs email addresses
+     * @return addresses doesn't exist
+     */
+    public Collection<Address> newContactAddrs(Collection<Address> addrs) throws IOException {
+        if (addrs.isEmpty()) {
+            return Collections.emptySet();
+        }
+        if (lock.isLocked()) { //TODO can't search while holding the mailbox lock
+            ZimbraLog.mailbox.warn("Unable to auto-add contact while holding Mailbox lock");
+            return Collections.emptySet();
+        }
+        Set<Address> newAddrs = new HashSet<Address>();
+        for (Address addr : addrs) {
+            if (addr instanceof javax.mail.internet.InternetAddress) {
+                javax.mail.internet.InternetAddress iaddr = (javax.mail.internet.InternetAddress) addr;
+                if (!Strings.isNullOrEmpty(iaddr.getAddress()) &&
+                        !index.existsInContacts(Collections.singleton(new com.zimbra.common.mime.InternetAddress(
+                                iaddr.getPersonal(), iaddr.getAddress())))) {
+                    newAddrs.add(addr);
+                }
+                
+            }
+        }
+        return newAddrs;  
     }
 
     public Folder createFolder(OperationContext octxt, String name, int parentId, MailItem.Type defaultView, int flags,

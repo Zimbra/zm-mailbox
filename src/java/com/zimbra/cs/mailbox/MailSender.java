@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -490,6 +491,16 @@ public class MailSender {
 
             LinkedList<RollbackData> rollbacks = new LinkedList<RollbackData>();
             Object authMailbox = isDelegatedRequest ? null : mbox;
+            
+            // Bug: 66823
+            // createAutoContact() uses Lucene search to determine whether the address to be added in emailed contact;
+            // If the user has SaveInSent preference set, a copy of the message is stored on Sent folder. With
+            // zimbraBatchedIndexingSize is set to 1 or, with any search request the item stored in the sent folder
+            // gets indexed right away which causes createAutoContact() to skip the sender addresses to be added.
+            // To avoid this problem; let's determine a list of new address which we might need to add to emailed
+            // contact later before we add the message to sent folder.
+            Address[] rcptAddresses = getRecipients(mm);
+            Collection<Address> newAddrs = mbox.newContactAddrs(Arrays.asList(rcptAddresses));
 
             // if requested, save a copy of the message to the Sent Mail folder
             ParsedMessage pm = null;
@@ -602,10 +613,13 @@ public class MailSender {
                     ZimbraLog.smtp.error("Failed to update contact rankings", e);
                 }
                 if (authuser.isPrefAutoAddAddressEnabled()) {
+                    //intersect the lists;
+                    newAddrs.retainAll(sentAddresses);
+                    
                     // convert JavaMail Address to Zimbra InternetAddress
                     List<com.zimbra.common.mime.InternetAddress> iaddrs =
-                        new ArrayList<com.zimbra.common.mime.InternetAddress>(sentAddresses.size());
-                    for (Address addr : sentAddresses) {
+                        new ArrayList<com.zimbra.common.mime.InternetAddress>(newAddrs.size());
+                    for (Address addr : newAddrs) {
                         if (addr instanceof InternetAddress) {
                             InternetAddress iaddr = (InternetAddress) addr;
                             iaddrs.add(new com.zimbra.common.mime.InternetAddress(
