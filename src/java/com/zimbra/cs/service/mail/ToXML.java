@@ -368,6 +368,9 @@ public final class ToXML {
         return eACL;
     }
 
+    /*
+     * Delete this method in bug 66989
+     */
     // encode account ACE
     public static Element encodeACE(Element parent, ZimbraACE ace) {
         Element eACE = parent.addElement(MailConstants.E_ACE)

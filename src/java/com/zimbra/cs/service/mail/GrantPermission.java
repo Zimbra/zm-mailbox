@@ -30,8 +30,6 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DistributionListBy;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.ACLUtil;
@@ -39,6 +37,10 @@ import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.soap.ZimbraSoapContext;
+
+/*
+ * Delete this class in bug 66989
+ */
 
 public class GrantPermission extends MailDocumentHandler {
     
