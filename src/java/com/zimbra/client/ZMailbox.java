@@ -4818,55 +4818,57 @@ public class ZMailbox implements ToZJSONObject {
         updateSigs();
     }
 
-    public List<ZAce> getPermission(String[] rights) throws ServiceException {
-        Element req = newRequestElement(MailConstants.GET_PERMISSION_REQUEST);
+    public List<ZAce> getRights(String[] rights) throws ServiceException {
+        Element req = newRequestElement(AccountConstants.GET_RIGHTS_REQUEST);
         if (rights != null && rights.length > 0) {
-            for (String right : rights)
-                req.addElement(MailConstants.E_ACE).addAttribute(MailConstants.A_RIGHT, right);
+            for (String right : rights) {
+                req.addElement(AccountConstants.E_ACE).addAttribute(AccountConstants.A_RIGHT, right);
+            }
         }
         Element resp = invoke(req);
         List<ZAce> result = new ArrayList<ZAce>();
-        for (Element ace : resp.listElements(MailConstants.E_ACE)) {
+        for (Element ace : resp.listElements(AccountConstants.E_ACE)) {
             result.add(new ZAce(ace));
         }
         return result;
     }
 
-    public List<ZAce> grantPermission(ZAce ace) throws ServiceException {
-        Element req = newRequestElement(MailConstants.GRANT_PERMISSION_REQUEST);
+    public List<ZAce> grantRight(ZAce ace) throws ServiceException {
+        Element req = newRequestElement(AccountConstants.GRANT_RIGHTS_REQUEST);
         ace.toElement(req);
         Element resp = invoke(req);
         List<ZAce> result = new ArrayList<ZAce>();
-        for (Element a : resp.listElements(MailConstants.E_ACE)) {
+        for (Element a : resp.listElements(AccountConstants.E_ACE)) {
             result.add(new ZAce(a));
         }
         return result;
     }
 
-    public List<ZAce> revokePermission(ZAce ace) throws ServiceException {
-        Element req = newRequestElement(MailConstants.REVOKE_PERMISSION_REQUEST);
+    public List<ZAce> revokeRight(ZAce ace) throws ServiceException {
+        Element req = newRequestElement(AccountConstants.REVOKE_RIGHTS_REQUEST);
         ace.toElement(req);
         Element resp = invoke(req);
         List<ZAce> result = new ArrayList<ZAce>();
-        for (Element a : resp.listElements(MailConstants.E_ACE)) {
+        for (Element a : resp.listElements(AccountConstants.E_ACE)) {
             result.add(new ZAce(a));
         }
         return result;
     }
-
-    public boolean checkPermission(String name, List<String> rights) throws ServiceException {
-        Element req = newRequestElement(MailConstants.CHECK_PERMISSION_REQUEST);
-        Element eTarget = req.addElement(MailConstants.E_TARGET);
-        eTarget.addAttribute(MailConstants.A_TARGET_TYPE, "account");
-        eTarget.addAttribute(MailConstants.A_TARGET_BY, "name");
-        eTarget.setText(name);
+  
+    public boolean checkRights(String name, List<String> rights) throws ServiceException {
+        Element req = newRequestElement(AccountConstants.CHECK_RIGHTS_REQUEST);
+        Element eTarget = req.addElement(AccountConstants.E_TARGET);
+        eTarget.addAttribute(AccountConstants.A_TARGET_TYPE, "account");
+        eTarget.addAttribute(AccountConstants.A_TARGET_BY, "name");
+        eTarget.addAttribute(AccountConstants.A_KEY, name);
 
         for (String right : rights) {
-            Element eRight = req.addElement(MailConstants.E_RIGHT);
+            Element eRight = eTarget.addElement(AccountConstants.E_RIGHT);
             eRight.setText(right);
         }
         Element resp = invoke(req);
-        boolean allow = resp.getAttributeBool(MailConstants.A_ALLOW);
+        Element eTargetResp = resp.getElement(AccountConstants.E_TARGET);
+        boolean allow = eTargetResp.getAttributeBool(AccountConstants.A_ALLOW);
 
         return allow;
     }
