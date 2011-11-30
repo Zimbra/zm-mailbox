@@ -109,6 +109,8 @@ public class AccountConstants {
     public static final String E_CHECK_RIGHTS_RESPONSE = "CheckRightsResponse";
     public static final String E_DISCOVER_RIGHTS_REQUEST = "DiscoverRightsRequest";
     public static final String E_DISCOVER_RIGHTS_RESPONSE = "DiscoverRightsResponse";
+    public static final String E_GET_RIGHTS_REQUEST = "GetRightsRequest";
+    public static final String E_GET_RIGHTS_RESPONSE = "GetRightsResponse";
     public static final String E_GRANT_RIGHTS_REQUEST = "GrantRightsRequest";
     public static final String E_GRANT_RIGHTS_RESPONSE = "GrantRightsResponse";
     public static final String E_REVOKE_RIGHTS_REQUEST = "RevokeRightsRequest";
@@ -215,6 +217,8 @@ public class AccountConstants {
     public static final QName CHECK_RIGHTS_RESPONSE = QName.get(E_CHECK_RIGHTS_RESPONSE, NAMESPACE);
     public static final QName DISCOVER_RIGHTS_REQUEST = QName.get(E_DISCOVER_RIGHTS_REQUEST, NAMESPACE);
     public static final QName DISCOVER_RIGHTS_RESPONSE = QName.get(E_DISCOVER_RIGHTS_RESPONSE, NAMESPACE);
+    public static final QName GET_RIGHTS_REQUEST = QName.get(E_GET_RIGHTS_REQUEST, NAMESPACE);
+    public static final QName GET_RIGHTS_RESPONSE = QName.get(E_GET_RIGHTS_RESPONSE, NAMESPACE);
     public static final QName GRANT_RIGHTS_REQUEST = QName.get(E_GRANT_RIGHTS_REQUEST, NAMESPACE);
     public static final QName GRANT_RIGHTS_RESPONSE = QName.get(E_GRANT_RIGHTS_RESPONSE, NAMESPACE);
     public static final QName REVOKE_RIGHTS_REQUEST = QName.get(E_REVOKE_RIGHTS_REQUEST, NAMESPACE);
