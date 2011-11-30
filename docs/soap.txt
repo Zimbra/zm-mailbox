@@ -3315,6 +3315,8 @@ WaitSet: scalable mechanism for listening for changes to one or more accounts
 
 Get account level permissions.
 
+Note: to be deprecated in Zimbra 9.  Use zimbraAccount GetRights instead.
+
 <GetPermissionRequest>
    <!-- get only the permissions for the specified rights -->
    [<ace right="{right1}"/>
@@ -3440,6 +3442,45 @@ allow = 1 | 0
         In CheckPermissionResponse, it is the AND result of each individual result
         In each <right> element, it is the result for that right.
 
+
+---------------------------
+
+Get account level rights.
+
+<GetRightsRequest>
+   <!-- get only grants for the specified rights -->
+   [<ace right="{right1}"/>
+    <ace right="{right2}"/>]
+</GetRightsRequest>
+
+If no <ace> elements are provided, all ACEs are returned in the response.
+If <ace> elements are provided, only those ACEs with specified rights are returned in the response.
+
+<GetRightsResponse>
+  <ace right="{right}" [deny="{deny}"] gt="{grantee-type}" zid="{zimbra-id}" [d="{grantee-name}"] [pw="{password}"] [key="{accesskey}"]/>*
+</GetRightsResponse>
+
+    {right}        = viewFreeBusy | invite
+
+    {deny}         = 1 | 0(default)
+                     if a right is specifically denied
+
+    {grantee-type} = the type of grantee:
+                     usr - Zimbra user
+                     grp - Zimbra group(distribution list)
+                     all - all authenticated users
+                     gst - non-Zimbra email address and password (not yet supported)
+                     key - external user with an accesskey
+                     pub - public authenticated and unauthenticated access
+
+    {zimbra-id}    = zimbraId of the grantee
+
+    {grantee-name} = name or email address of the grantee.
+                     ot present if {grantee-type} is "all" or "pub"
+
+    {pw}           = optional arguments.  password when {grantee-type} is "gst" (not yet supported)
+
+    {key}          = optional arguments.  access key when {grantee-type} is "key"
 
 ---------------------------
 

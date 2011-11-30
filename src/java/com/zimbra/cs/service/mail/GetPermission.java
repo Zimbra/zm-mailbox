@@ -29,6 +29,10 @@ import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.soap.ZimbraSoapContext;
 
+/*
+ * Delete this class in bug 66989
+ */
+
 public class GetPermission extends MailDocumentHandler {
     
     @Override

@@ -96,6 +96,7 @@ public class AccountService implements DocumentService {
         // rights
         dispatcher.registerHandler(AccountConstants.CHECK_RIGHTS_REQUEST, new CheckRights());
         dispatcher.registerHandler(AccountConstants.DISCOVER_RIGHTS_REQUEST, new DiscoverRights());
+        dispatcher.registerHandler(AccountConstants.GET_RIGHTS_REQUEST, new GetRights());
         dispatcher.registerHandler(AccountConstants.GRANT_RIGHTS_REQUEST, new GrantRights());
         dispatcher.registerHandler(AccountConstants.REVOKE_RIGHTS_REQUEST, new RevokeRights());
         
