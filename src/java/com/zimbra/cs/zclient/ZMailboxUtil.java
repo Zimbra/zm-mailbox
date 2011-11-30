@@ -288,8 +288,8 @@ public class ZMailboxUtil implements DebugListener {
         ITEM("help on item-related commands"),
         MESSAGE("help on message-related commands"),
         MISC("help on misc commands"),
-        PERMISSION("help on permission commands",
-                "To grant/revoke permission on entries an account can inherit grants from(group, domain, global), use \"zmprov grr/rvr\" commands."),
+        RIGHT("help on right commands",
+                "To grant/revoke rights on entries an account can inherit grants from(group, domain, global), use \"zmprov grr/rvr\" commands."),
         SEARCH("help on search-related commands"),
         TAG("help on tag-related commands");
 
@@ -353,7 +353,7 @@ public class ZMailboxUtil implements DebugListener {
         AUTHENTICATE("authenticate", "a", "{auth-account-name} {password} [target-account-name]", "authenticate as account and open target mailbox; target defaults to auth account if unspecified", Category.MISC, 2, 3, O_URL),
         AUTO_COMPLETE("autoComplete", "ac", "{query}", "contact auto autocomplete", Category.CONTACT,  1, 1, O_VERBOSE),
         AUTO_COMPLETE_GAL("autoCompleteGal", "acg", "{query}", "gal auto autocomplete", Category.CONTACT,  1, 1, O_VERBOSE),
-        CHECK_PERMISSION("checkPermission", "cp", "{name} {right}", "check if the user has the specified right on target.", Category.PERMISSION, 2, 2, O_VERBOSE),
+        CHECK_RIGHT("checkRight", "ckr", "{name} {right}", "check if the user has the specified right on target.", Category.RIGHT, 2, 2, O_VERBOSE),
         CREATE_CONTACT("createContact", "cct", "[attr1 value1 [attr2 value2...]]", "create contact", Category.CONTACT, 2, Integer.MAX_VALUE, O_FOLDER, O_IGNORE, O_TAGS),
         CREATE_FOLDER("createFolder", "cf", "{folder-path}", "create folder", Category.FOLDER, 1, 1, O_VIEW, O_COLOR, O_FLAGS, O_URL),
         CREATE_IDENTITY("createIdentity", "cid", "{identity-name} [attr1 value1 [attr2 value2...]]", "create identity", Category.ACCOUNT, 1, Integer.MAX_VALUE),
@@ -393,14 +393,14 @@ public class ZMailboxUtil implements DebugListener {
         GET_FOLDER_GRANT("getFolderGrant", "gfg", "{folder-path}", "get folder grants", Category.FOLDER, 1, 1, O_VERBOSE),
         GET_MESSAGE("getMessage", "gm", "{msg-id}", "get a message", Category.MESSAGE, 1, 1, O_VERBOSE),
         GET_MAILBOX_SIZE("getMailboxSize", "gms", "", "get mailbox size", Category.MISC, 0, 0, O_VERBOSE),
-        GET_PERMISSION("getPermission", "gp", "[right1 [right2...]]", "get rights currently granted", Category.PERMISSION, 0, Integer.MAX_VALUE, O_VERBOSE),
+        GET_RIGHTS("getRights", "gr", "[right1 [right2...]]", "get rights currently granted", Category.RIGHT, 0, Integer.MAX_VALUE, O_VERBOSE),
         GET_REST_URL("getRestURL", "gru", "{relative-path}", "do a GET on a REST URL relative to the mailbox", Category.MISC, 1, 1,
                 O_OUTPUT_FILE, O_START_TIME, O_END_TIME, O_URL),
         GET_SIGNATURES("getSignatures", "gsig", "", "get all signatures", Category.ACCOUNT, 0, 0, O_VERBOSE),
-        GRANT_PERMISSION("grantPermission", "grp", "{account {name}|group {name}|domain {name}||all|public|guest {email} [{password}]|key {email} [{accesskey}] {[-]right}}", "allow or deny a right to a grantee or a group of grantee. to deny a right, put a '-' in front of the right", Category.PERMISSION, 2, 4),
+        GRANT_RIGHT("grantRight", "grr", "{account {name}|group {name}|domain {name}||all|public|guest {email} [{password}]|key {email} [{accesskey}] {[-]right}}", "allow or deny a right to a grantee or a group of grantee. to deny a right, put a '-' in front of the right", Category.RIGHT, 2, 4),
         HELP("help", "?", "commands", "return help on a group of commands, or all commands. Use -v for detailed help.", Category.MISC, 0, 1, O_VERBOSE),
         IMPORT_URL_INTO_FOLDER("importURLIntoFolder", "iuif", "{folder-path} {url}", "add the contents to the remote feed at {target-url} to the folder", Category.FOLDER, 2, 2),
-        LIST_PERMISSION("listPermission", "lp", "", "list and describe all rights that can be granted", Category.PERMISSION, 0, 0, O_VERBOSE),
+        LIST_RIGHTS("listRights", "lr", "", "list and describe all rights that can be granted", Category.RIGHT, 0, 0, O_VERBOSE),
         MARK_CONVERSATION_READ("markConversationRead", "mcr", "{conv-ids} [0|1*]", "mark conversation(s) as read/unread", Category.CONVERSATION, 1, 2),
         MARK_CONVERSATION_SPAM("markConversationSpam", "mcs", "{conv} [0|1*] [{dest-folder-path}]", "mark conversation as spam/not-spam, and optionally move", Category.CONVERSATION, 1, 3),
         MARK_ITEM_READ("markItemRead", "mir", "{item-ids} [0|1*]", "mark item(s) as read/unread", Category.ITEM, 1, 2),
@@ -433,7 +433,7 @@ public class ZMailboxUtil implements DebugListener {
         RENAME_FOLDER("renameFolder", "rf", "{folder-path} {new-folder-path}", "rename folder", Category.FOLDER, 2, 2),
         RENAME_SIGNATURE("renameSignature", "rsig", "{signature-name|signature-id} {new-name}", "rename signature", Category.ACCOUNT, 2, 2),
         RENAME_TAG("renameTag", "rt", "{tag-name} {new-tag-name}", "rename tag", Category.TAG, 2, 2),
-        REVOKE_PERMISSION("revokePermission", "rvp", "{account {name}|group {name}|domain {name}||all|public|guest {email} [{password}]|key {email} [{accesskey}] {[-]right}}", "revoke a right previously granted to a grantee or a group of grantees. to revoke a denied right, put a '-' in front of the right", Category.PERMISSION, 2, 4),
+        REVOKE_RIGHT("revokeRight", "rvr", "{account {name}|group {name}|domain {name}||all|public|guest {email} [{password}]|key {email} [{accesskey}] {[-]right}}", "revoke a right previously granted to a grantee or a group of grantees. to revoke a denied right, put a '-' in front of the right", Category.RIGHT, 2, 4),
         SEARCH("search", "s", "{query}", "perform search", Category.SEARCH, 0, 1, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS, O_DUMPSTER),
         SEARCH_CONVERSATION("searchConv", "sc", "{conv-id} {query}", "perform search on conversation", Category.SEARCH, 0, 2, O_LIMIT, O_SORT, O_TYPES, O_VERBOSE, O_CURRENT, O_NEXT, O_PREVIOUS),
         SELECT_MAILBOX("selectMailbox", "sm", "{name}", "select a different mailbox. can only be used by an admin", Category.ADMIN, 1, 1, O_AUTH, O_AS_ADMIN),
@@ -1052,8 +1052,8 @@ public class ZMailboxUtil implements DebugListener {
         case ADMIN_AUTHENTICATE:
             doAdminAuth(args);
             break;
-        case CHECK_PERMISSION:
-            doCheckPermission(args);
+        case CHECK_RIGHT:
+            doCheckRight(args);
             break;
         case CREATE_CONTACT:
             String ccId = mMbox.createContact(lookupFolderId(folderOpt()),tagsOpt(), getContactMap(args, 0, !ignoreOpt())).getId();
@@ -1178,14 +1178,14 @@ public class ZMailboxUtil implements DebugListener {
         case GET_MESSAGE:
             doGetMessage(args);
             break;
-        case GET_PERMISSION:
-            doGetPermission(args);
+        case GET_RIGHTS:
+            doGetRights(args);
             break;
         case GET_REST_URL:
             doGetRestURL(args);
             break;
-        case GRANT_PERMISSION:
-            doGrantPermission(args);
+        case GRANT_RIGHT:
+            doGrantRight(args);
             break;
         case HELP:
             doHelp(args);
@@ -1193,8 +1193,8 @@ public class ZMailboxUtil implements DebugListener {
         case IMPORT_URL_INTO_FOLDER:
             mMbox.importURLIntoFolder(lookupFolderId(args[0]), args[1]);
             break;
-        case LIST_PERMISSION:
-            doListPermission();
+        case LIST_RIGHTS:
+            doListRights();
             break;
         case MARK_CONVERSATION_READ:
             mMbox.markConversationRead(id(args[0]), paramb(args, 1, true), param(args, 2));
@@ -1289,8 +1289,8 @@ public class ZMailboxUtil implements DebugListener {
         case RENAME_TAG:
             mMbox.renameTag(lookupTag(args[0]).getId(), args[1]);
             break;
-        case REVOKE_PERMISSION:
-            doRevokePermission(args);
+        case REVOKE_RIGHT:
+            doRevokeRight(args);
             break;
         case SEARCH:
             doSearch(args);
@@ -1702,7 +1702,7 @@ public class ZMailboxUtil implements DebugListener {
         }
     }
 
-    private void doListPermission() throws ServiceException {
+    private void doListRights() throws ServiceException {
         for (Right r : RightManager.getInstance().getAllUserRights().values()) {
             stdout.println("  " + r.getName() + ": " + r.getDesc());
             stdout.println();
@@ -1710,20 +1710,20 @@ public class ZMailboxUtil implements DebugListener {
     }
 
 
-    private void doGetPermission(String[] args) throws ServiceException {
+    private void doGetRights(String[] args) throws ServiceException {
         if (verboseOpt()) {
             StringBuilder sb = new StringBuilder();
-            for (ZAce g : mMbox.getPermission(args)) {
+            for (ZAce g : mMbox.getRights(args)) {
                 if (sb.length() > 0) sb.append(",\n");
                 sb.append(g.dump());
             }
             stdout.format("[%n%s%n]%n", sb.toString());
         } else {
             String format = "%16.16s  %8.8s  %s%n";
-            stdout.format(format, "Permission",       "Type",     "Display");
+            stdout.format(format, "Right",            "Type",     "Display");
             stdout.format(format, "----------------", "--------", "-------");
 
-            List<ZAce> result = mMbox.getPermission(args);
+            List<ZAce> result = mMbox.getRights(args);
             Comparator<ZAce> comparator = new Comparator<ZAce>() {
                 @Override
                 public int compare(ZAce a, ZAce b) {
@@ -1797,11 +1797,11 @@ public class ZMailboxUtil implements DebugListener {
         return new ZAce(type, granteeId, granteeName, right, deny, secret);
     }
 
-    private void doGrantPermission(String[] args) throws ServiceException {
+    private void doGrantRight(String[] args) throws ServiceException {
         ZAce ace = getAceFromArgs(args);
-        List<ZAce> granted = mMbox.grantPermission(ace);
+        List<ZAce> granted = mMbox.grantRight(ace);
         if (granted.size() == 0)
-            stdout.println("  granted 0 permission");
+            stdout.println("  granted no right");
         else {
             stdout.println("  granted: ");
             for (ZAce g : granted)
@@ -1809,7 +1809,7 @@ public class ZMailboxUtil implements DebugListener {
         }
     }
 
-    private void doRevokePermission(String[] args) throws ServiceException {
+    private void doRevokeRight(String[] args) throws ServiceException {
         ZAce ace = getAceFromArgs(args);
 
         ZAce.GranteeType granteeType= ace.getGranteeType();
@@ -1818,7 +1818,7 @@ public class ZMailboxUtil implements DebugListener {
             String zid = null;
             String granteeName = ace.getGranteeName();
             String[] rights = new String[] {ace.getRight()};
-            for (ZAce g : mMbox.getPermission(rights)) {
+            for (ZAce g : mMbox.getRights(rights)) {
                 if (granteeName.equalsIgnoreCase(g.getGranteeName()) ||
                     granteeName.equalsIgnoreCase(g.getGranteeId())) {
                     zid = g.getGranteeId();
@@ -1830,9 +1830,9 @@ public class ZMailboxUtil implements DebugListener {
             ace.setGranteeId(zid);
         }
 
-        List<ZAce> revoked = mMbox.revokePermission(ace);
+        List<ZAce> revoked = mMbox.revokeRight(ace);
         if (revoked.size() == 0)
-            stdout.println("  revoked 0 permission");
+            stdout.println("  revoked no right");
         else {
             stdout.println("  revoked: ");
             for (ZAce r : revoked)
@@ -1840,12 +1840,12 @@ public class ZMailboxUtil implements DebugListener {
         }
     }
 
-    private void doCheckPermission(String[] args) throws ServiceException {
+    private void doCheckRight(String[] args) throws ServiceException {
         String user = args[0];
         List<String> rights = new ArrayList<String>();
         rights.add(args[1]); // support only one right in CLI
 
-        boolean allow =  mMbox.checkPermission(user, rights);
+        boolean allow =  mMbox.checkRights(user, rights);
         stdout.println((allow?"allowed":"not allowed"));
     }
 

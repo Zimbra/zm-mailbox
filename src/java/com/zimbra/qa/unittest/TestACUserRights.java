@@ -55,9 +55,9 @@ public class TestACUserRights extends TestProv {
         
         // grant account right
         ZAce aceAllow = new ZAce(ZAce.GranteeType.usr, allowed.getId(), allowed.getName(), "invite", false, null);
-        ownerMbox.grantPermission(aceAllow);
+        ownerMbox.grantRight(aceAllow);
         ZAce aceDeny = new ZAce(ZAce.GranteeType.usr, denied.getId(), denied.getName(), "invite", true, null);
-        ownerMbox.grantPermission(aceDeny);
+        ownerMbox.grantRight(aceDeny);
         
         // grant folder right
         String folderPath = "/Calendar";
@@ -72,16 +72,16 @@ public class TestACUserRights extends TestProv {
         rightsToCheck.add("invite");
         boolean result;
             
-        result = TestUtil.getZMailbox(allowed.getName()).checkPermission(owner.getName(), rightsToCheck);
+        result = TestUtil.getZMailbox(allowed.getName()).checkRights(owner.getName(), rightsToCheck);
         assertTrue(result);
          
-        result = TestUtil.getZMailbox(denied.getName()).checkPermission(owner.getName(), rightsToCheck);
+        result = TestUtil.getZMailbox(denied.getName()).checkRights(owner.getName(), rightsToCheck);
         assertTrue(result);
         
-        result = TestUtil.getZMailbox(noAclButHasFolderGrant.getName()).checkPermission(owner.getName(), rightsToCheck);
+        result = TestUtil.getZMailbox(noAclButHasFolderGrant.getName()).checkRights(owner.getName(), rightsToCheck);
         assertTrue(result);
         
-        result = TestUtil.getZMailbox(noAclAndNoFolderGrant.getName()).checkPermission(owner.getName(), rightsToCheck);
+        result = TestUtil.getZMailbox(noAclAndNoFolderGrant.getName()).checkRights(owner.getName(), rightsToCheck);
         assertFalse(result);
     }
 

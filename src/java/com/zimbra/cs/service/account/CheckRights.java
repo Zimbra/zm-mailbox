@@ -111,6 +111,11 @@ public class CheckRights extends AccountDocumentHandler {
                 // can only be user right, not admim rights
                 target.addRight(RightManager.getInstance().getUserRight(eRight.getText()));
             }
+            
+            if (target.getRights().size() == 0) {
+                throw ServiceException.INVALID_REQUEST(
+                        "missing right for target: " + key, null);
+            }
         }
         
         Element response = zsc.createElement(AccountConstants.CHECK_RIGHTS_RESPONSE);
