@@ -13,7 +13,7 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.message;
+package com.zimbra.soap.account.message;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Iterables;
@@ -27,21 +27,17 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import com.zimbra.common.soap.MailConstants;
-import com.zimbra.soap.mail.type.Right;
-
-/*
- * Delete this class in bug 66989
- */
+import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.account.type.Right;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=MailConstants.E_GET_PERMISSION_REQUEST)
-public class GetPermissionRequest {
+@XmlRootElement(name=AccountConstants.E_GET_RIGHTS_REQUEST)
+public class GetRightsRequest {
 
-    @XmlElement(name=MailConstants.E_ACE /* ace */, required=false)
+    @XmlElement(name=AccountConstants.E_ACE /* ace */, required=false)
     private List<Right> aces = Lists.newArrayList();
 
-    public GetPermissionRequest() {
+    public GetRightsRequest() {
     }
 
     public void setAces(Iterable <Right> aces) {
@@ -51,7 +47,7 @@ public class GetPermissionRequest {
         }
     }
 
-    public GetPermissionRequest addAce(Right ace) {
+    public GetRightsRequest addAce(Right ace) {
         this.aces.add(ace);
         return this;
     }

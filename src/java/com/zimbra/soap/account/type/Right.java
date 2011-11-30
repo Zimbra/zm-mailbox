@@ -13,23 +13,19 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.mail.type;
+package com.zimbra.soap.account.type;
 
 import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
-import com.zimbra.common.soap.MailConstants;
-
-/*
- * Delete this class in bug 66989
- */
+import com.zimbra.common.soap.AccountConstants;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Right {
 
-    @XmlAttribute(name=MailConstants.A_RIGHT /* right */, required=true)
+    @XmlAttribute(name=AccountConstants.A_RIGHT /* right */, required=true)
     private final String right;
 
     /**
