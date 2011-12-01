@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.mailbox;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -107,10 +108,12 @@ public final class ContactTest {
         Assert.assertEquals("TEST1@zimbra.com", contacts.get(0).getFields().get(ContactConstants.A_email));
         Assert.assertEquals("2, Test", contacts.get(1).getFileAsString());
         Assert.assertEquals("TEST2@zimbra.com", contacts.get(1).getFields().get(ContactConstants.A_email));
-
-        contacts = mbox.createAutoContact(null, ImmutableList.of(
-                new InternetAddress("Test 1", "test1@zimbra.com"), new InternetAddress("Test 2", "test2@zimbra.com")));
-        Assert.assertEquals(0, contacts.size());
+                
+        Collection<javax.mail.Address> newAddrs = mbox.newContactAddrs(ImmutableList.of(
+                (javax.mail.Address)new javax.mail.internet.InternetAddress("test1@zimbra.com", "Test 1"),
+                (javax.mail.Address)new javax.mail.internet.InternetAddress("test2@zimbra.com", "Test 2")));
+        
+        Assert.assertEquals(0, newAddrs.size());
     }
 
     /**
