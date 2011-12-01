@@ -1235,6 +1235,7 @@ Folders:
   {effective-perms} = for remote folders, the access rights the authenticated user has on the folder
                         - will contain the calculated (c)reate folder permission if the user has
                           both (i)nsert and (r)ead access on the folder
+  {zimbra-id}    = the Zimbra account id, or if the {grantee-type} is "guest", the user's email address
 
   folders can have an optional ACL set on them for sharing.  if they do (and the authenticated
     user has (a)dminister rights on the folder), an <acl> element will be returned containing
@@ -1246,7 +1247,7 @@ Folders:
                      "guest" (non-Zimbra email address and password),
                      "key" (non-Zimbra email address and access key)
     {grantee-name} = name or email address of the principal being granted rights.
-                     optional if {grantee-type} is "all".  When specified in a request,
+                     optional if {grantee-type} is "all" or "guest".  When specified in a request,
                      this can be just the username portion of the address in the default domain.
     {pw}           = optional argument.  password when {grantee-type} is "guest"
     {key}          = optional argument.  access key when {grantee-type} is "key"
