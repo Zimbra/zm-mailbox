@@ -59,43 +59,38 @@ public class CertAuthServlet extends SSOServlet {
         addRemoteIpToLoggingContext(req);
         addUAToLoggingContext(req);
         
+        String url = req.getRequestURI();
+        Matcher matcher = allowedUrl.matcher(url);
+            
+        boolean isAdminRequest = false;
+        if (!matcher.matches()) {
+            String msg = "resource not allowed on the certauth servlet: " + url;
+            ZimbraLog.account.error(msg);
+            sendback403Message(req, resp, msg);
+            return;
+        } else {
+            if (matcher.groupCount() > 3 && "admin".equals(matcher.group(3))) {
+                isAdminRequest = true;
+            }
+        }
         
         try {
-            String url = req.getRequestURI();
-            Matcher matcher = allowedUrl.matcher(url);
-            
-            boolean isAdminRequest = false;
-            if (!matcher.matches()) {
-                throw ServiceException.INVALID_REQUEST(
-                        "resource not allowed on the certauth servlet: " + url, null);
-            } else {
-                if (matcher.groupCount() > 3 && "admin".equals(matcher.group(3))) {
-                    isAdminRequest = true;
-                }
-            }
-            
             SSOAuthenticator authenticator = new ClientCertAuthenticator(req, resp);
             ZimbraPrincipal principal = null;
-            try {
-                principal = authenticator.authenticate();
-                AuthToken authToken = authorize(req, AuthContext.Protocol.client_certificate, principal, isAdminRequest);
-                setAuthTokenCookieAndRedirect(req, resp, principal.getAccount(), authToken);
-                return;
-            } catch (SSOAuthenticatorServiceException e) {
-                ZimbraLog.account.debug("client certificate auth failed", e);
-                dispatchOnError(req, resp, isAdminRequest, e);
-            } catch (AuthFailedServiceException e) {
-                AuthFailedServiceException afe = (AuthFailedServiceException)e;
-                ZimbraLog.account.debug("client certificate auth failed: " + afe.getMessage() + afe.getReason(", %s"), e);
-                dispatchOnError(req, resp, isAdminRequest, e);
-            }
+            
+            principal = authenticator.authenticate();
+            AuthToken authToken = authorize(req, AuthContext.Protocol.client_certificate, principal, isAdminRequest);
+            setAuthTokenCookieAndRedirect(req, resp, principal.getAccount(), authToken);
+            return;
             
         } catch (ServiceException e) {
-            ZimbraLog.account.warn("client certificate auth failed: " + e.getMessage(), e);
-            ZimbraLog.account.debug("client certificate auth failed", e);
+            String reason = "";
+            if (e instanceof AuthFailedServiceException) {
+                reason = ((AuthFailedServiceException) e).getReason(", %s");
+            }
+            ZimbraLog.account.debug("client certificate auth failed: " + e.getMessage() + reason, e);
             
-            // if we've got here, the only treatment is 403, regardless of zimbraMailSSLClientCertMode
-            sendback403Message(req, resp);
+            dispatchOnError(req, resp, isAdminRequest, e.getMessage());
         }
     }
 
@@ -107,16 +102,22 @@ public class CertAuthServlet extends SSOServlet {
     }
         
     private void dispatchOnError(HttpServletRequest req, HttpServletResponse resp,
-            boolean isAdminRequest, ServiceException e) 
-    throws ServletException, IOException, ServiceException {
+            boolean isAdminRequest, String msg) 
+    throws ServletException, IOException {
         if (missingClientCertOK()) {
-            redirectToErrorPage(req, resp, isAdminRequest, null);
+            try {
+                redirectToErrorPage(req, resp, isAdminRequest, null);
+            } catch (ServiceException e) {
+                ZimbraLog.account.error("failed to redirect to error page (" + msg + ")", e);
+                sendback403Message(req, resp, msg);
+            }
         } else {
-            sendback403Message(req, resp);
+            sendback403Message(req, resp, msg);
         }
     }
     
-    private void sendback403Message(HttpServletRequest req, HttpServletResponse resp) 
+    private void sendback403Message(HttpServletRequest req, HttpServletResponse resp,
+            String msg) 
     throws ServletException, IOException {
         
         if (forbiddenPage != null) {
@@ -135,7 +136,7 @@ public class CertAuthServlet extends SSOServlet {
         }
         
         // if not worked out, send back raw 403
-        resp.sendError(HttpServletResponse.SC_FORBIDDEN);
+        resp.sendError(HttpServletResponse.SC_FORBIDDEN, msg);
     }
     
     

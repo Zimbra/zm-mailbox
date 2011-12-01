@@ -66,6 +66,8 @@ public abstract class SSOServlet extends ZimbraServlet {
         Provisioning prov = Provisioning.getInstance();
         Account acct = principal.getAccount();
         
+        ZimbraLog.addAccountNameToContext(acct.getName());
+        
         prov.ssoAuthAccount(acct, proto, authCtxt); 
         
         if (isAdminRequest) {
