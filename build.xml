@@ -2262,14 +2262,22 @@
           
           <formatter type="xml"/>
           
-          <!-- run one test class -->
+          <!-- 
+              ==================
+              run one test class 
+              ==================
+          -->
           <batchtest todir="${ldaptest.dir}/output" if="test">
               <fileset dir="${src.java.dir}">
                   <include name="**/com/zimbra/qa/unittest/ldap/${test}.java"/>
               </fileset>
           </batchtest>
           
-          <!-- run all tests -->
+          <!-- 
+              =============
+              run all tests 
+              =============
+          -->
           <batchtest todir="${ldaptest.dir}/output" unless="test">
               <fileset dir="${src.java.dir}">
                   <include name="**/com/zimbra/qa/unittest/ldap/Test*.java"/>
@@ -2278,7 +2286,7 @@
               </fileset>
           </batchtest>
           
-          <!-- tests must run in its own JVM -->
+          <!-- test must run in its own JVM -->
           <batchtest todir="${ldaptest.dir}/output" unless="test">
               <fileset dir="${src.java.dir}">
                   <include name="**/com/zimbra/qa/unittest/ldap/TestLdapConnection.java"/>
@@ -2286,10 +2294,31 @@
           </batchtest>
           
       </junit>
+      
+      <!-- run TestLdapConnectivity seperately, with assertion disabled, not inmem -->
+      <if>
+          <not><isset property="test"/></not>
+          <then>
+              <junit printsummary="on" failureproperty="junit.failure" tempdir="${ldaptest.dir}" fork="yes" forkmode="perBatch">
+                  <classpath refid="class.path"/>
+                  <sysproperty key="use_in_memory_ldap_server" value="false"/>
+          
+                  <formatter type="xml"/>
+
+                  <batchtest todir="${ldaptest.dir}/output" unless="test">
+                      <fileset dir="${src.java.dir}">
+                          <include name="**/com/zimbra/qa/unittest/ldap/TestLdapConnectivity.java"/>
+                      </fileset>
+                  </batchtest>
+              </junit>
+          </then>
+      </if>
+      
       <junitreport todir="${ldaptest.dir}/report">
           <fileset dir="${ldaptest.dir}/output"/>
           <report todir="${ldaptest.dir}/report"/>
       </junitreport>
+      
       <echo>Test Report: ${ldaptest.dir}/report/index.html</echo>
       <fail if="junit.failure" message="LDAP test failed"/>
   </target> 

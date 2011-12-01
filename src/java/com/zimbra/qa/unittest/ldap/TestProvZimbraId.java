@@ -87,6 +87,7 @@ public class TestProvZimbraId extends LdapTest {
     }
 
     @Test    
+    @Ignore  // no longer supported/allowed
     public void createAccountWithCosName() throws Exception {
         // create a COS
         String cosName = "cos-createAccountWithCosName";
@@ -103,7 +104,7 @@ public class TestProvZimbraId extends LdapTest {
     
     @Test
     public void createAccountWithCosId() throws Exception {
-     // create a COS
+        // create a COS
         String cosName = "cos-createAccountWithCosId";
         Cos cos = provUtil.createCos(cosName);
         

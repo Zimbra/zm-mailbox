@@ -51,15 +51,32 @@ public class TestLdapConnectivity {
     } 
     
     /*
-     * For testConnectivity:
-     * 
-     * The connection configs have to be run in different JVM instances (i.e.
-     * run this test manually after changing the static connConfig), because many
-     * things are only initialized once and cached.
-     * 
-     * For other tests, just keep connConfig = ConnectionConfig.LDAP;
-     * 
-     * Or, write a drive to invoke each config in a separate JVM.  //TODO
+     * To run this test:
+       1. To enable TLS, modifying /opt/zimbra/conf/slapd.conf to uncomment the three lines:
+          TLSCertificateFile /opt/zimbra/conf/slapd.crt
+          TLSCertificateKeyFile /opt/zimbra/conf/slapd.key
+          TLSVerifyClient never   
+          
+       2. To listen to ldaps
+          edit /opt/zimbra/bin/ldap
+          modify the line:
+    
+          sudo /opt/zimbra/libexec/zmslapd -l LOCAL0 -4 -u `whoami` -h "ldap://:389/" \
+                        -f /opt/zimbra/conf/slapd.conf
+    
+          to:
+    
+          sudo /opt/zimbra/libexec/zmslapd -l LOCAL0 -4 -u `whoami` -h "ldap://:389/ ldaps://:636/" \
+                        -f /opt/zimbra/conf/slapd.conf       
+             
+        (1 and 2 are now checked in so we don't need to do them manually anymore.)                
+          
+        StartTLS and ldaps cannot co-exist in production, because if ldap url contains ldaps,
+        then startTLS will never be used regardless of the LC keys.
+        
+        We can run all protocols(ldap, ldaps, startTLS) in one VM in this class because 
+        LdapClient.initialize()/LdapClient.shutdown() is called before/after each test.
+                                    
      * 
      * Note: ssl_allow_mismatched_certs behavior is different in ZimbraLdapContext(JNDI) 
      *       and unboundid.
@@ -263,15 +280,51 @@ public class TestLdapConnectivity {
     }
     
     @Test
-    @Ignore
     public void LDAP() throws Exception {
         testConnectivity(ConnectionConfig.LDAP);
+    }
+    
+    @Test
+    public void LDAPS_T_UNTRUSTED_T_MISMATCHED() throws Exception {
+        testConnectivity(ConnectionConfig.LDAPS_T_UNTRUSTED_T_MISMATCHED);
+    }
+    
+    @Test
+    public void LDAPS_T_UNTRUSTED_F_MISMATCHED() throws Exception {
+        testConnectivity(ConnectionConfig.LDAPS_T_UNTRUSTED_F_MISMATCHED);
+    }
+    
+    @Test
+    public void LDAPS_F_UNTRUSTED_T_MISMATCHED() throws Exception {
+        testConnectivity(ConnectionConfig.LDAPS_F_UNTRUSTED_T_MISMATCHED);
     }
     
     @Test
     public void LDAPS_F_UNTRUSTED_F_MISMATCHED() throws Exception {
         testConnectivity(ConnectionConfig.LDAPS_F_UNTRUSTED_F_MISMATCHED);
     }
+    
+    @Test
+    public void STARTTLS_T_UNTRUSTED_T_MISMATCHED() throws Exception {
+        testConnectivity(ConnectionConfig.STARTTLS_T_UNTRUSTED_T_MISMATCHED);
+    }
+    
+    @Test
+    public void STARTTLS_T_UNTRUSTED_F_MISMATCHED() throws Exception {
+        testConnectivity(ConnectionConfig.STARTTLS_T_UNTRUSTED_F_MISMATCHED);
+    }
+    
+    @Test
+    public void STARTTLS_F_UNTRUSTED_T_MISMATCHED() throws Exception {
+        testConnectivity(ConnectionConfig.STARTTLS_F_UNTRUSTED_T_MISMATCHED);
+    }
+    
+    @Test
+    public void STARTTLS_F_UNTRUSTED_F_MISMATCHED() throws Exception {
+        testConnectivity(ConnectionConfig.STARTTLS_F_UNTRUSTED_F_MISMATCHED);
+    }
+    
+    
     
     @Test
     @Ignore
