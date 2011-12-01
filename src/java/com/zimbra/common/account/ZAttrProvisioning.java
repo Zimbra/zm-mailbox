@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111129-1032 */
+    /* build: 8.0.0_BETA1_1111 pshao 20111201-1051 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -774,22 +774,6 @@ public class ZAttrProvisioning {
         }
         public boolean isList() { return this == list;}
         public boolean isCards() { return this == cards;}
-    }
-
-    public static enum PrefConversationMode {
-        CLV2("CLV2"),
-        CLV("CLV");
-        private String mValue;
-        private PrefConversationMode(String value) { mValue = value; }
-        public String toString() { return mValue; }
-        public static PrefConversationMode fromString(String s) throws ServiceException {
-            for (PrefConversationMode value : values()) {
-                if (value.mValue.equals(s)) return value;
-             }
-             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
-        }
-        public boolean isCLV2() { return this == CLV2;}
-        public boolean isCLV() { return this == CLV;}
     }
 
     public static enum PrefConversationOrder {
@@ -7927,14 +7911,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefContactsPerPage = "zimbraPrefContactsPerPage";
 
     /**
-     * mode for conversation view
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1270)
-    public static final String A_zimbraPrefConversationMode = "zimbraPrefConversationMode";
-
-    /**
      * order of messages displayed within a conversation
      *
      * @since ZCS 6.0.0_BETA1
@@ -10487,36 +10463,42 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTextAnalyzer = "zimbraTextAnalyzer";
 
     /**
-     * Start date for daylight time
+     * Deprecated since: 5.0. Deprecated as of bug 12416. Orig desc: Start
+     * date for daylight time
      */
     @ZAttr(id=232)
     public static final String A_zimbraTimeZoneDaylightDtStart = "zimbraTimeZoneDaylightDtStart";
 
     /**
-     * Offset in daylight time
+     * Deprecated since: 5.0. Deprecated as of bug 12416. Orig desc: Offset
+     * in daylight time
      */
     @ZAttr(id=233)
     public static final String A_zimbraTimeZoneDaylightOffset = "zimbraTimeZoneDaylightOffset";
 
     /**
+     * Deprecated since: 5.0. Deprecated as of bug 12416. Orig desc:
      * iCalendar recurrence rule for onset of daylight time
      */
     @ZAttr(id=234)
     public static final String A_zimbraTimeZoneDaylightRRule = "zimbraTimeZoneDaylightRRule";
 
     /**
-     * Start date for standard time
+     * Deprecated since: 5.0. Deprecated as of bug 12416. Orig desc: Start
+     * date for standard time
      */
     @ZAttr(id=229)
     public static final String A_zimbraTimeZoneStandardDtStart = "zimbraTimeZoneStandardDtStart";
 
     /**
-     * Offset in standard time
+     * Deprecated since: 5.0. Deprecated as of bug 12416. Orig desc: Offset
+     * in standard time
      */
     @ZAttr(id=230)
     public static final String A_zimbraTimeZoneStandardOffset = "zimbraTimeZoneStandardOffset";
 
     /**
+     * Deprecated since: 5.0. Deprecated as of bug 12416. Orig desc:
      * iCalendar recurrence rule for onset of standard time
      */
     @ZAttr(id=231)
