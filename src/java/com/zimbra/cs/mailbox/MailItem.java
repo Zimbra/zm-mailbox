@@ -1643,7 +1643,7 @@ public abstract class MailItem implements Comparable<MailItem> {
      * @param reason  The bitmask of changes made to the item.
      * @see PendingModifications.Change */
     void markItemModified(int reason) throws ServiceException {
-        mMailbox.markItemModified(this, reason, snapshotItem());
+        mMailbox.markItemModified(this, reason);
     }
 
     /** Adds this item to the {@link Mailbox}'s list of blobs to be removed

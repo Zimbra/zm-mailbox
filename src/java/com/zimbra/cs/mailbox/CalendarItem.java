@@ -561,6 +561,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     public int fixRecurrenceEndTime() throws ServiceException {
         long endTime = recomputeRecurrenceEndTime(mEndTime);
         if (endTime != mEndTime) {
+            markItemModified(Change.CONTENT | Change.INVITE);
             mEndTime = endTime;
             DbMailItem.updateInCalendarItemTable(this);
             return 1;
@@ -2656,7 +2657,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
          * <code>mReplies</code> and discard any outdated response found.
          * @return true if decide to store <code>inv</code>
          */
-        boolean maybeStoreNewReply(Invite inv, ZAttendee at) throws ServiceException {
+        boolean maybeStoreNewReply(Invite inv, ZAttendee at, CalendarItem calendarItem) throws ServiceException {
             // Look up internal account for the attendee.  For internal users we want to match
             // on all email addresses of the account.
             AccountAddressMatcher acctMatcher = null;
@@ -2680,6 +2681,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                         // Good.  This new reply is more up to date than the previous one
                         iter.remove();
                         ReplyInfo toAdd = new ReplyInfo(at, inv.getSeqNo(), inv.getDTStamp(), inv.getRecurId());
+                        calendarItem.markItemModified(Change.INVITE);
                         mReplies.add(toAdd);
                         return true;
                     }
@@ -2688,6 +2690,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
 
             // if we get here, we didn't find one at all.  add a new one...
             ReplyInfo toAdd = new ReplyInfo(at, inv.getSeqNo(), inv.getDTStamp(), inv.getRecurId());
+            calendarItem.markItemModified(Change.INVITE);
             mReplies.add(toAdd);
             return true;
         }
@@ -3007,8 +3010,6 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
 
     boolean processNewInviteReply(Invite reply)
     throws ServiceException {
-        MailItem itemSnapshot = snapshotItem();
-
         List<ZAttendee> attendees = reply.getAttendees();
 
         // trace logging
@@ -3086,7 +3087,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         // OR alternatively we looked and couldn't find one with a matching RecurID (therefore
         // they must be replying to a arbitrary instance)
         for (ZAttendee at : attendees) {
-            if (mReplyList.maybeStoreNewReply(reply, at))
+            if (mReplyList.maybeStoreNewReply(reply, at, this))
                 dirty = true;
         }
 
@@ -3098,7 +3099,6 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             invMatchingRecurId.updateMatchingAttendeesFromReply(reply);
         }
         saveMetadata();
-        getMailbox().markItemModified(this, Change.INVITE, itemSnapshot);
         return true;
     }
 

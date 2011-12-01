@@ -25,7 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxOperation;
@@ -259,21 +261,26 @@ public final class PendingModifications {
     }
 
     public void recordModified(ModificationKey mkey, Change chg) {
-        recordModified(mkey, chg.op, chg.what, chg.why, chg.when, chg.preModifyObj);
+        recordModified(mkey, chg.op, chg.what, chg.why, chg.when, chg.preModifyObj, false);
     }
 
     public void recordModified(MailboxOperation op, Mailbox mbox, int reason, long timestamp) {
         // Not recording preModify state of the mailbox for now
-        recordModified(new ModificationKey(mbox.getAccountId(), 0), op, mbox, reason, timestamp, null);
+        recordModified(new ModificationKey(mbox.getAccountId(), 0), op, mbox, reason, timestamp, null, false);
+    }
+
+    public void recordModified(MailboxOperation op, MailItem item, int reason, long timestamp) {
+        changedTypes.add(item.getType());
+        recordModified(new ModificationKey(item), op, item, reason, timestamp, null, true);
     }
 
     public void recordModified(MailboxOperation op, MailItem item, int reason, long timestamp, MailItem preModifyItem) {
         changedTypes.add(item.getType());
-        recordModified(new ModificationKey(item), op, item, reason, timestamp, preModifyItem);
+        recordModified(new ModificationKey(item), op, item, reason, timestamp, preModifyItem, false);
     }
 
-    private void recordModified(
-            ModificationKey key, MailboxOperation op, Object item, int reason, long timestamp, Object preModifyObj) {
+    private void recordModified(ModificationKey key, MailboxOperation op, Object item, int reason, long timestamp,
+            Object preModifyObj, boolean snapshotItem) {
         Change chg = null;
         if (created != null && created.containsKey(key)) {
             if (item instanceof MailItem) {
@@ -290,14 +297,26 @@ public final class PendingModifications {
                 chg.what = item;
                 chg.why |= reason;
                 if (chg.preModifyObj == null) {
-                    chg.preModifyObj = preModifyObj;
+                    chg.preModifyObj = preModifyObj == null && snapshotItem ? snapshotItemIgnoreEx(item) : preModifyObj;
                 }
             }
         }
         if (chg == null) {
-            chg = new Change(op, item, reason, timestamp, preModifyObj);
+            chg = new Change(op, item, reason, timestamp,
+                    preModifyObj == null && snapshotItem ? snapshotItemIgnoreEx(item) : preModifyObj);
         }
         modified.put(key, chg);
+    }
+
+    private static Object snapshotItemIgnoreEx(Object item) {
+        if (item instanceof MailItem) {
+            try {
+                return ((MailItem) item).snapshotItem();
+            } catch (ServiceException e) {
+                ZimbraLog.mailbox.warn("Error in taking item snapshot", e);
+            }
+        }
+        return null;
     }
 
     PendingModifications add(PendingModifications other) {

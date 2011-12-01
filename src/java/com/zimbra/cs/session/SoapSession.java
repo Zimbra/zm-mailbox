@@ -298,10 +298,7 @@ public class SoapSession extends Session {
                                         existing.when, (MailItem) existing.preModifyObj);
             } else {
                 try {
-                    Conversation conv = mbox.getConversationById(null, convId);
-                    // we don't know the preModify value here, so simply take the current conv snapshot
-                    MailItem itemSnapshot = conv.snapshotItem();
-                    filtered.recordModified(chg.op, conv, changeMask, chg.when, itemSnapshot);
+                    filtered.recordModified(chg.op, mbox.getConversationById(null, convId), changeMask, chg.when);
                 } catch (ServiceException e) {
                     ZimbraLog.session.warn("exception during forceConversationModification", e);
                 }

@@ -1143,15 +1143,15 @@ public class Mailbox {
     /** Adds the item to the current change's list of items modified during
      *  the transaction.
      *
+     *
      * @param item    The modified item.
      * @param reason  The bitmask describing the modified item properties.
-     * @param preModifyItemSnapshot
      * @see com.zimbra.cs.session.PendingModifications.Change */
-    void markItemModified(MailItem item, int reason, MailItem preModifyItemSnapshot) throws ServiceException {
+    void markItemModified(MailItem item, int reason) throws ServiceException {
         if (item.inDumpster()) {
             throw MailServiceException.IMMUTABLE_OBJECT(item.getId());
         }
-        currentChange.dirty.recordModified(currentChange.getOperation(), item, reason, currentChange.timestamp, preModifyItemSnapshot);
+        currentChange.dirty.recordModified(currentChange.getOperation(), item, reason, currentChange.timestamp);
     }
 
     /** Returns whether the given item has been marked dirty for a particular
@@ -1735,7 +1735,7 @@ public class Mailbox {
                 // some broken upgrades ended up with CHANGE_DATE = NULL; patch it here
                 boolean badChangeDate = folder.getChangeDate() <= 0;
                 if (badChangeDate) {
-                    markItemModified(folder, Change.INTERNAL_ONLY, folder.snapshotItem());
+                    markItemModified(folder, Change.INTERNAL_ONLY);
                     folder.mData.metadataChanged(this);
                 }
                 // if we recalculated folder counts or had to fix CHANGE_DATE, persist those values now
@@ -4032,10 +4032,9 @@ public class Mailbox {
             if (calItem == null) {
                 throw MailServiceException.NO_SUCH_CALITEM(calItemId);
             }
-            MailItem itemSnapshot = calItem.snapshotItem();
+            markItemModified(calItem, Change.INVITE);
             calItem.snapshotRevision();
             calItem.updateNextAlarm(dismissedAt + 1, true);
-            markItemModified(calItem, Change.INVITE, itemSnapshot);
             success = true;
         } finally {
             endTransaction(success);
@@ -4052,10 +4051,9 @@ public class Mailbox {
             if (calItem == null) {
                 throw MailServiceException.NO_SUCH_CALITEM(calItemId);
             }
-            MailItem itemSnapshot = calItem.snapshotItem();
+            markItemModified(calItem, Change.INVITE);
             calItem.snapshotRevision();
             calItem.updateNextAlarm(snoozeUntil, false);
-            markItemModified(calItem, Change.INVITE, itemSnapshot);
             success = true;
         } finally {
             endTransaction(success);
@@ -4310,12 +4308,12 @@ public class Mailbox {
         try {
             beginTransaction("fixCalendarItemTimeZone2", octxt, redoRecorder);
             CalendarItem calItem = getCalendarItemById(octxt, calItemId);
-            MailItem itemSnapshot = calItem.snapshotItem();
             Map<String, ICalTimeZone> replaced = new HashMap<String, ICalTimeZone>();
             int numFixed = fixupRules.fixCalendarItem(calItem, replaced);
             if (numFixed > 0) {
                 ZimbraLog.calendar.info("Fixed " + numFixed + " timezone entries in calendar item " + calItem.getId());
                 redoRecorder.setReplacementMap(replaced);
+                markItemModified(calItem, Change.CONTENT | Change.INVITE);
                 calItem.snapshotRevision();
                 calItem.saveMetadata();
                 // Need to uncache and refetch the item because there are fields
@@ -4324,7 +4322,6 @@ public class Mailbox {
                 // or simply invalidate the calendar item and refetch it.
                 uncacheItem(calItemId);
                 calItem = getCalendarItemById(octxt, calItemId);
-                markItemModified(calItem, Change.CONTENT | Change.INVITE, itemSnapshot);
                 success = true;
 
                 Callback cb = CalendarItem.getCallback();
@@ -4371,13 +4368,11 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("fixupCalendarItemEndTime", octxt, redoRecorder);
-            MailItem itemSnapshot = calItem.snapshotItem();
             int numFixed = calItem.fixRecurrenceEndTime();
             if (numFixed > 0) {
                 ZimbraLog.calendar.info("Fixed calendar item " + calItem.getId());
                 calItem.snapshotRevision();
                 calItem.saveMetadata();
-                markItemModified(calItem, Change.CONTENT | Change.INVITE, itemSnapshot);
                 success = true;
             }
             return numFixed;
@@ -4419,7 +4414,6 @@ public class Mailbox {
         boolean success = false;
         try {
             beginTransaction("fixupCalendarItemPriority", octxt, redoRecorder);
-            MailItem itemSnapshot = calItem.snapshotItem();
             int flags = calItem.mData.getFlags() & ~(Flag.BITMASK_HIGH_PRIORITY | Flag.BITMASK_LOW_PRIORITY);
             Invite[] invs = calItem.getInvites();
             if (invs != null) {
@@ -4437,10 +4431,10 @@ public class Mailbox {
             int numFixed = 0;
             if (flags != calItem.mData.getFlags()) {
                 ZimbraLog.calendar.info("Fixed calendar item " + calItem.getId());
+                markItemModified(calItem, Change.INVITE);
                 calItem.mData.setFlags(flags);
                 calItem.snapshotRevision();
                 calItem.saveMetadata();
-                markItemModified(calItem, Change.INVITE, itemSnapshot);
                 success = true;
                 numFixed = 1;
             }
@@ -5405,10 +5399,9 @@ public class Mailbox {
         try {
             beginTransaction("updateInvitePartStat", octxt, redoRecorder);
             CalendarItem calItem = getCalendarItemById(calItemId);
-            MailItem itemSnapshot = calItem.snapshotItem();
             Account acct = getAccount();
+            markItemModified(calItem, Change.INVITE);
             calItem.modifyPartStat(acct, recurId, cnStr, addressStr, cutypeStr, roleStr, partStatStr, rsvp, seqNo, dtStamp);
-            markItemModified(calItem, Change.INVITE, itemSnapshot);
             success = true;
         } finally {
             endTransaction(success);
