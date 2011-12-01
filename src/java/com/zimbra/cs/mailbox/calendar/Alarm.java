@@ -225,6 +225,10 @@ public class Alarm {
                     Action.PROCEDURE.equals(mAction))
                 && DebugConfig.calendarConvertNonDisplayAlarm) {
             action = Action.DISPLAY;
+            // remove X-WR-ALARMUID set by iCal if there is any.
+            ZProperty prop = getXProperty("X-WR-ALARMUID");
+            if (prop != null)
+                removeXProp(prop);
         } else {
             action = mAction;
         }
@@ -268,9 +272,13 @@ public class Alarm {
     public Element toXml(Element parent) {
         Element alarm = parent.addElement(MailConstants.E_CAL_ALARM);
         Action action;
-        if ((Action.AUDIO.equals(mAction) || Action.PROCEDURE.equals(mAction)) && DebugConfig.calendarConvertNonDisplayAlarm)
+        if ((Action.AUDIO.equals(mAction) || Action.PROCEDURE.equals(mAction)) && DebugConfig.calendarConvertNonDisplayAlarm) {
             action = Action.DISPLAY;
-        else
+            // remove X-WR-ALARMUID set by iCal if there is any.
+            ZProperty prop = getXProperty("X-WR-ALARMUID");
+            if (prop != null)
+                removeXProp(prop);
+        } else
             action = mAction;
         alarm.addAttribute(MailConstants.A_CAL_ALARM_ACTION, action.toString());
         Element trigger = alarm.addElement(MailConstants.E_CAL_ALARM_TRIGGER);
@@ -588,6 +596,9 @@ public class Alarm {
     public Iterator<ZProperty> xpropsIterator() { return mXProps.iterator(); }
     public void addXProp(ZProperty prop) {
         mXProps.add(prop);
+    }
+    public void removeXProp(ZProperty prop) {
+        mXProps.remove(prop);
     }
     public ZProperty getXProperty(String xpropName) {
         for (ZProperty prop : mXProps) {
