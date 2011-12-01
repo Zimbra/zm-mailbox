@@ -520,19 +520,19 @@ final class ImapSessionManager {
      * Try to retrieve from inactive session cache, then fall back to active session cache.
      */
     private ImapFolder getCache(Folder folder) {
-        ImapFolder i4folder = inactiveSessionCache.get(cacheKey(folder, true));
+        ImapFolder i4folder = inactiveSessionCache.get(cacheKey(folder, false));
         if (i4folder != null) {
             return i4folder;
         }
-        return activeSessionCache.get(cacheKey(folder, false));
+        return activeSessionCache.get(cacheKey(folder, true));
     }
 
     /**
      * Remove cached values from both active session cache and inactive session cache.
      */
     private void clearCache(Folder folder) {
-        activeSessionCache.remove(cacheKey(folder, false));
-        inactiveSessionCache.remove(cacheKey(folder, true));
+        activeSessionCache.remove(cacheKey(folder, true));
+        inactiveSessionCache.remove(cacheKey(folder, false));
     }
 
     /**
@@ -577,7 +577,9 @@ final class ImapSessionManager {
         if (key.contains(":")) {
             return inactiveSessionCache.get(key);
         } else {
-            return activeSessionCache.get(key);
+            ImapFolder folder = activeSessionCache.get(key);
+            assert(folder != null);
+            return folder;
         }
     }
 
