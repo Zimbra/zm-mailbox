@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -19,14 +19,11 @@
 
 package com.zimbra.common.soap;
 
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 
 import org.dom4j.Namespace;
 import org.dom4j.QName;
 
-import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 
 /**
@@ -36,7 +33,7 @@ import com.zimbra.common.service.ServiceException;
 public abstract class SoapProtocol {
 
     protected static final String NS_PREFIX = "soap";
-    
+
     /** SOAP 1.2 Protocol Object */
     public static final SoapProtocol Soap12 = new Soap12Protocol();
 
@@ -63,8 +60,8 @@ public abstract class SoapProtocol {
         mFactory = getFactory();
     }
 
-    /** 
-     * Given an element, wrap it in an envelope and return the 
+    /**
+     * Given an element, wrap it in an envelope and return the
      * envelope.
      */
     public Element soapEnvelope(Element document) {
@@ -74,8 +71,8 @@ public abstract class SoapProtocol {
         return env;
     }
 
-    /** 
-     * Given an element and some headers, wrap it in an envelope and return the 
+    /**
+     * Given an element and some headers, wrap it in an envelope and return the
      * envelope.
      */
     public Element soapEnvelope(Element document, Element header) {
@@ -89,17 +86,17 @@ public abstract class SoapProtocol {
         return env;
     }
 
-    /** 
-     * Given a Exception, wrap it in a soap fault and return the 
+    /**
+     * Given a Exception, wrap it in a soap fault and return the
      * soap fault element.
      */
     public abstract Element soapFault(ServiceException e);
-    
-    /** 
-     * Given an element that represents a fault (i.e,. isFault returns 
+
+    /**
+     * Given an element that represents a fault (i.e,. isFault returns
      * true on it), construct a SoapFaultException from it.
      *
-     * @return new SoapFaultException or null if passed in document 
+     * @return new SoapFaultException or null if passed in document
      *         is not a soap fault.
      * @throws ServiceException
 
@@ -116,19 +113,19 @@ public abstract class SoapProtocol {
      * Return the namespace object
      */
     public abstract Namespace getNamespace();
-    
+
     public QName getFaultQName() {
         return mFaultQName;
     }
-    
+
     public QName getBodyQName() {
         return mBodyQName;
     }
-    
+
     public QName getEnvelopeQName() {
         return mEnvelopeQName;
     }
-    
+
     public QName getHeaderQName() {
         return mHeaderQName;
     }
@@ -139,14 +136,14 @@ public abstract class SoapProtocol {
     }
 
     /** Convert a SOAP message in a String to bytes */
-    public static byte[] toBytes(String message) 
+    public static byte[] toBytes(String message)
         throws java.io.UnsupportedEncodingException
     {
         return message.getBytes(getCharset());
     }
 
     /** Convert a SOAP message in bytes to a String */
-    public static String toString(byte[] message) 
+    public static String toString(byte[] message)
         throws java.io.UnsupportedEncodingException
     {
         if (message == null || message.length == 0)
@@ -162,7 +159,7 @@ public abstract class SoapProtocol {
         return prettyPrint ? env.prettyPrint() : env.toString();
     }
 
-    /** 
+    /**
      * returns the first child in the soap body
      */
     public Element getBodyElement(Element soapEnvelope) {
@@ -176,14 +173,14 @@ public abstract class SoapProtocol {
             //FIXME: should this be an exception?
             return null;
         }
-        
+
         Iterator<Element> it = body.elementIterator();
         if (it.hasNext())
             return it.next();
         return null;
     }
 
-    /** 
+    /**
      * returns the Header element
      */
     public Element getHeader(Element soapEnvelope) {
@@ -195,7 +192,7 @@ public abstract class SoapProtocol {
         return soapEnvelope.getOptionalElement(getHeaderQName());
     }
 
-    /** 
+    /**
      * returns the specified element in the Header element, or
      * null if it doesn't exist.
      */
@@ -208,18 +205,18 @@ public abstract class SoapProtocol {
         Element header;
         if (soapHeader != null)
         	header = soapHeader.getOptionalElement(headerQName);
-        else 
+        else
         	header = null;
         return header;
     }
-    
+
     /**
      * Returns true if this element represents a SOAP envelope
      */
     public boolean isEnvelope(Element element) {
         return mEnvelopeQName.equals(element.getQName());
     }
-    
+
     /**
      * Returns true if this element represents a SOAP fault
      */
@@ -229,20 +226,20 @@ public abstract class SoapProtocol {
 
     /**
      * Returns true if this soap envelope has a SOAP fault as the
-     * first child of its body.     
+     * first child of its body.
      */
     public boolean hasFault(Element soapEnvelope) {
         Element body = getBodyElement(soapEnvelope);
         return body != null && isFault(body);
     }
-    
-    
+
+
     private static final String[] ZIMBRA_ERROR_ELEMENT = new String[] { "Detail", "Error", "a" };
-    
+
     /**
      * Walk the passed-in Fault element, find Arguments (see ServiceException.Argument ) of type ItemID
-     * and update them so that they contain the target account ID 
-     * 
+     * and update them so that they contain the target account ID
+     *
      * @param element
      * @param remoteAccountId
      */
@@ -251,24 +248,21 @@ public abstract class SoapProtocol {
         if (!isFault(element)) {
             return;
         }
-        
+
         // We are going to proxy a REMOTE fault through, therefore we must
         // patch any arguments of type ITEMID so that they have the appropriate account info
-        List<Element> argList = element.getPathElementList(ZIMBRA_ERROR_ELEMENT);
-        if (argList != null) {
-            for (Element arg : argList) {
-                String type = arg.getAttribute("t", "UNKNOWN");
-                if (type.equals(ServiceException.Argument.Type.IID.toString())) {
-                    String value = arg.getTextTrim();
-                    if (value.indexOf(":") < 0) {
-                        arg.setText(remoteAccountId + ":" + value);
-                    }
+        for (Element arg : element.getPathElementList(ZIMBRA_ERROR_ELEMENT)) {
+            String type = arg.getAttribute("t", "UNKNOWN");
+            if (type.equals(ServiceException.Argument.Type.IID.toString())) {
+                String value = arg.getTextTrim();
+                if (value.indexOf(":") < 0) {
+                    arg.setText(remoteAccountId + ":" + value);
                 }
             }
         }
     }
 
-    /** 
+    /**
      * determine if given document is Soap11 or Soap12 envelope.
      * returns null if neither.
      */
@@ -286,7 +280,7 @@ public abstract class SoapProtocol {
     /** Whether or not to include a HTTP SOAPActionHeader. (Gag) */
     public abstract boolean hasSOAPActionHeader();
 
-    /** 
+    /**
      * returns the version as a string (e.g, "1.1" or "1.2")
      */
     public abstract String getVersion();

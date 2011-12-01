@@ -36,14 +36,14 @@ import org.dom4j.QName;
 import org.dom4j.io.SAXContentHandler;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
 
 /**
  * @since Mar 16, 2005
@@ -526,7 +526,7 @@ public abstract class Element implements Cloneable {
         return cur;
     }
 
-    /** Return the list of Elements matching the specified path, or null
+    /** Return the list of {@code Element}s matching the specified path, or an empty {@code List}
      *  if none were found.
      * @param xpath an array of names to traverse in the element tree */
     public List<Element> getPathElementList(String[] xpath) {
@@ -535,7 +535,7 @@ public abstract class Element implements Cloneable {
         while (depth < xpath.length-1 && cur != null)
             cur = cur.getOptionalElement(xpath[depth++]);
         if (cur == null)
-            return null;
+            return Collections.emptyList();
         return cur.listElements(xpath[xpath.length-1]);
     }
 
