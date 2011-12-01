@@ -27,7 +27,7 @@ import org.junit.Test;
 import com.zimbra.soap.mail.message.GetFolderResponse;
 import com.zimbra.soap.mail.type.Folder;
 import com.zimbra.soap.mail.type.Grant;
-import com.zimbra.soap.mail.type.Grant.GranteeType;
+import com.zimbra.soap.type.GranteeType;
 import com.zimbra.soap.mail.type.ItemType;
 import com.zimbra.soap.mail.type.SearchFolder;
 
@@ -61,7 +61,7 @@ public final class GetFolderTest {
                 Grant first = myGrants.get(0);
                 GranteeType mGranteeType = GranteeType.fromString(
                         first.getGranteeType().toString());
-                Assert.assertEquals(GranteeType.USER, mGranteeType);
+                Assert.assertEquals(GranteeType.usr, mGranteeType);
             }
         }
         Assert.assertTrue("Should have processed a valid <grant>", foundGrant);

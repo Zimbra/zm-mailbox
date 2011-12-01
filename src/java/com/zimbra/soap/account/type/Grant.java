@@ -31,6 +31,7 @@ import com.zimbra.common.soap.AccountConstants;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.soap.type.GranteeType;
 
 /*
 <grant perm="{rights}" gt="{grantee-type}" zid="{zimbra-id}" d="{grantee-name}" [pw="{password-for-guest}"] [key=="{access-key}"]/>*
@@ -38,46 +39,6 @@ import com.zimbra.common.util.StringUtil;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {})
 public class Grant {
-
-    @XmlEnum
-    public enum GranteeType {
-        @XmlEnumValue("usr") USER ("usr"),
-        @XmlEnumValue("grp") GROUP ("grp"),
-        @XmlEnumValue("all") AUTH_USER ("all"),
-        @XmlEnumValue("dom") DOMAIN ("dom"),
-        @XmlEnumValue("guest") GUEST ("guest"),
-        @XmlEnumValue("key") KEY ("key"),
-        @XmlEnumValue("pub") PUBLIC ("pub");
-
-        private static Map<String, GranteeType> nameToGranteeType = new HashMap<String, GranteeType>();
-
-        static {
-            for (GranteeType gt : values()) {
-                nameToGranteeType.put(gt.toString(), gt);
-            }
-        }
-
-        private String name;
-
-        private GranteeType(String name) {
-            this.name = name;
-        }
-
-        public static GranteeType fromString(String s)
-        throws ServiceException {
-            GranteeType gt = nameToGranteeType.get(s);
-            if (gt == null) {
-                throw ServiceException.INVALID_REQUEST("Invalid grantee type '" + s + "'.  Valid values are " +
-                    StringUtil.join(",", values()), null);
-            }
-            return gt;
-        }
-
-        @Override
-        public String toString() {
-            return name;
-        }
-    };
 
     @XmlAttribute(name=AccountConstants.A_RIGHTS /* perm */, required=true)
     private String perm;
