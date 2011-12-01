@@ -277,6 +277,13 @@ public class ImapSession extends Session {
                 PagedFolderData paged = mFolder instanceof PagedFolderData ? (PagedFolderData) mFolder : null;
                 if (paged != null) { // if the data's already paged in, we can short-circuit
                     ImapFolder i4folder = MANAGER.deserialize(paged.getCacheKey());
+                    if (i4folder == null) {
+                      //IOException expected up the stack when cache miss occurs
+                      //for now, keep it that way. 
+                      //TODO: refactor later (in 8.0) once we've shaken out any other bugs w/ new cache impl.
+                      throw new IOException("cache miss deserializing folder state");
+                    }
+
                     try {
                         paged.restore(i4folder);
                     } catch (ServiceException e) {
