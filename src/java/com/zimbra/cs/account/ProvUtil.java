@@ -1842,7 +1842,6 @@ public class ProvUtil implements HttpDebugListener {
         }
 
         String query = args[i];
-        query = LdapEntrySearchFilter.toLdapIDNFilter(query);
 
         Map<String, Object> attrs = getMap(args, i+1);
         String limitStr = (String) attrs.get("limit");
@@ -1876,7 +1875,13 @@ public class ProvUtil implements HttpDebugListener {
         searchOpts.setTypes(typesStr);
         searchOpts.setSortOpt(isSortAscending ? SortOpt.SORT_ASCENDING : SortOpt.SORT_DESCENDING);
         searchOpts.setSortAttr(sortBy);
-        searchOpts.setFilterString(FilterId.ADMIN_SEARCH, query);
+        
+        // if LdapClient is not initialized(the case for SoapProvisioning), FilterId 
+        // is not initialized.  Use null for SoapProvisioning, it will be set to 
+        // FilterId.ADMIN_SEARCH in SearchDirectory soap handler.
+        FilterId filterId = (prov instanceof LdapProv) ? FilterId.ADMIN_SEARCH : null;
+        searchOpts.setFilterString(filterId, query);
+        searchOpts.setConvertIDNToAscii(true);
         
         List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
 
