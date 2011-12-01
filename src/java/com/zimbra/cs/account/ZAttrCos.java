@@ -42,7 +42,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111129-1032 */
+    /* build: 8.0.0_BETA1_1111 pshao 20111201-1051 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -24757,137 +24757,6 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetPrefConvReadingPaneLocation(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraPrefConvReadingPaneLocation, "");
-        return attrs;
-    }
-
-    /**
-     * mode for conversation view
-     *
-     * <p>Valid values: [CLV2, CLV]
-     *
-     * @return zimbraPrefConversationMode, or ZAttrProvisioning.PrefConversationMode.CLV2 if unset and/or has invalid value
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1270)
-    public ZAttrProvisioning.PrefConversationMode getPrefConversationMode() {
-        try { String v = getAttr(Provisioning.A_zimbraPrefConversationMode); return v == null ? ZAttrProvisioning.PrefConversationMode.CLV2 : ZAttrProvisioning.PrefConversationMode.fromString(v); } catch(com.zimbra.common.service.ServiceException e) { return ZAttrProvisioning.PrefConversationMode.CLV2; }
-    }
-
-    /**
-     * mode for conversation view
-     *
-     * <p>Valid values: [CLV2, CLV]
-     *
-     * @return zimbraPrefConversationMode, or "CLV2" if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1270)
-    public String getPrefConversationModeAsString() {
-        return getAttr(Provisioning.A_zimbraPrefConversationMode, "CLV2");
-    }
-
-    /**
-     * mode for conversation view
-     *
-     * <p>Valid values: [CLV2, CLV]
-     *
-     * @param zimbraPrefConversationMode new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1270)
-    public void setPrefConversationMode(ZAttrProvisioning.PrefConversationMode zimbraPrefConversationMode) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefConversationMode, zimbraPrefConversationMode.toString());
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * mode for conversation view
-     *
-     * <p>Valid values: [CLV2, CLV]
-     *
-     * @param zimbraPrefConversationMode new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1270)
-    public Map<String,Object> setPrefConversationMode(ZAttrProvisioning.PrefConversationMode zimbraPrefConversationMode, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefConversationMode, zimbraPrefConversationMode.toString());
-        return attrs;
-    }
-
-    /**
-     * mode for conversation view
-     *
-     * <p>Valid values: [CLV2, CLV]
-     *
-     * @param zimbraPrefConversationMode new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1270)
-    public void setPrefConversationModeAsString(String zimbraPrefConversationMode) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefConversationMode, zimbraPrefConversationMode);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * mode for conversation view
-     *
-     * <p>Valid values: [CLV2, CLV]
-     *
-     * @param zimbraPrefConversationMode new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1270)
-    public Map<String,Object> setPrefConversationModeAsString(String zimbraPrefConversationMode, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefConversationMode, zimbraPrefConversationMode);
-        return attrs;
-    }
-
-    /**
-     * mode for conversation view
-     *
-     * <p>Valid values: [CLV2, CLV]
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1270)
-    public void unsetPrefConversationMode() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefConversationMode, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * mode for conversation view
-     *
-     * <p>Valid values: [CLV2, CLV]
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1270)
-    public Map<String,Object> unsetPrefConversationMode(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPrefConversationMode, "");
         return attrs;
     }
 
