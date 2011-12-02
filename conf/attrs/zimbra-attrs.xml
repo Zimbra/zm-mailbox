@@ -6648,29 +6648,29 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1341" name="zimbraOctopusSmtpHostname" type="string" max="128" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,octopus" since="8.0.0">
+<attr id="1341" name="zimbraRelaySmtpHostname" type="string" max="128" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,octopus" since="8.0.0">
   <desc>SMTP hostname for relay MTA used for sending email notifications.</desc>
 </attr>
 
-<attr id="1342" name="zimbraOctopusSmtpPort" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,octopus" since="8.0.0">
+<attr id="1342" name="zimbraRelaySmtpPort" type="integer" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,octopus" since="8.0.0">
   <desc>SMTP port for relay MTA used for sending email notifications.</desc>
 </attr>
 
-<attr id="1343" name="zimbraOctopusSmtpAuthAccount" type="string" max="128" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,octopus" since="8.0.0">
+<attr id="1343" name="zimbraRelaySmtpAuthAccount" type="string" max="128" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,octopus" since="8.0.0">
   <desc>Account name for authenticating to relay MTA.</desc>
 </attr>
 
-<attr id="1344" name="zimbraOctopusSmtpAuthPassword" type="string" max="64" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,octopus" since="8.0.0">
+<attr id="1344" name="zimbraRelaySmtpAuthPassword" type="string" max="64" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,octopus" since="8.0.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Password for authenticating to relay MTA.</desc>
 </attr>
 
-<attr id="1345" name="zimbraOctopusSmtpUseTls" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,octopus" since="8.0.0">
+<attr id="1345" name="zimbraRelaySmtpUseTls" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,octopus" since="8.0.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to use TLS when connecting to relay MTA.</desc>
 </attr>
 
-<attr id="1346" name="zimbraOctopusSmtpAuthRequired" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,octopus" since="8.0.0">
+<attr id="1346" name="zimbraRelaySmtpAuthRequired" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited,octopus" since="8.0.0">
   <globalConfigValue>FALSE</globalConfigValue>
   <desc>Whether to use credential to authenticate to relay MTA.</desc>
 </attr>
