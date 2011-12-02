@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111201-1051 */
+    /* build: unknown unknown unknown unknown */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -7091,6 +7091,54 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=161)
     public static final String A_zimbraObjectType = "zimbraObjectType";
+
+    /**
+     * Account name for authenticating to relay MTA.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1343)
+    public static final String A_zimbraOctopusSmtpAuthAccount = "zimbraOctopusSmtpAuthAccount";
+
+    /**
+     * Password for authenticating to relay MTA.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1344)
+    public static final String A_zimbraOctopusSmtpAuthPassword = "zimbraOctopusSmtpAuthPassword";
+
+    /**
+     * Whether to use credential to authenticate to relay MTA.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1346)
+    public static final String A_zimbraOctopusSmtpAuthRequired = "zimbraOctopusSmtpAuthRequired";
+
+    /**
+     * SMTP hostname for relay MTA used for sending email notifications.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1341)
+    public static final String A_zimbraOctopusSmtpHostname = "zimbraOctopusSmtpHostname";
+
+    /**
+     * SMTP port for relay MTA used for sending email notifications.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1342)
+    public static final String A_zimbraOctopusSmtpPort = "zimbraOctopusSmtpPort";
+
+    /**
+     * Whether to use TLS when connecting to relay MTA.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1345)
+    public static final String A_zimbraOctopusSmtpUseTls = "zimbraOctopusSmtpUseTls";
 
     /**
      * allowed OpenID Provider Endpoint URLs for authentication
