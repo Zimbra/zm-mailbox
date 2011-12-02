@@ -499,8 +499,10 @@ public class MailSender {
             // gets indexed right away which causes createAutoContact() to skip the sender addresses to be added.
             // To avoid this problem; let's determine a list of new address which we might need to add to emailed
             // contact later before we add the message to sent folder.
+            Collection<Address> newAddrs = Collections.emptySet();
             Address[] rcptAddresses = getRecipients(mm);
-            Collection<Address> newAddrs = mbox.newContactAddrs(Arrays.asList(rcptAddresses));
+            if (rcptAddresses != null && rcptAddresses.length > 0)
+                newAddrs = mbox.newContactAddrs(Arrays.asList(rcptAddresses));
 
             // if requested, save a copy of the message to the Sent Mail folder
             ParsedMessage pm = null;
