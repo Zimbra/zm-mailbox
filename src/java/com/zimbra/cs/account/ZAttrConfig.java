@@ -43,7 +43,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111201-1051 */
+    /* build: unknown unknown unknown unknown */
 
     /**
      * RFC2256: descriptive information
@@ -22990,6 +22990,438 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetOAuthConsumerCredentials(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraOAuthConsumerCredentials, "");
+        return attrs;
+    }
+
+    /**
+     * Account name for authenticating to relay MTA.
+     *
+     * @return zimbraOctopusSmtpAuthAccount, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1343)
+    public String getOctopusSmtpAuthAccount() {
+        return getAttr(Provisioning.A_zimbraOctopusSmtpAuthAccount, null);
+    }
+
+    /**
+     * Account name for authenticating to relay MTA.
+     *
+     * @param zimbraOctopusSmtpAuthAccount new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1343)
+    public void setOctopusSmtpAuthAccount(String zimbraOctopusSmtpAuthAccount) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpAuthAccount, zimbraOctopusSmtpAuthAccount);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Account name for authenticating to relay MTA.
+     *
+     * @param zimbraOctopusSmtpAuthAccount new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1343)
+    public Map<String,Object> setOctopusSmtpAuthAccount(String zimbraOctopusSmtpAuthAccount, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpAuthAccount, zimbraOctopusSmtpAuthAccount);
+        return attrs;
+    }
+
+    /**
+     * Account name for authenticating to relay MTA.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1343)
+    public void unsetOctopusSmtpAuthAccount() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpAuthAccount, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Account name for authenticating to relay MTA.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1343)
+    public Map<String,Object> unsetOctopusSmtpAuthAccount(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpAuthAccount, "");
+        return attrs;
+    }
+
+    /**
+     * Password for authenticating to relay MTA.
+     *
+     * @return zimbraOctopusSmtpAuthPassword, or "FALSE" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1344)
+    public String getOctopusSmtpAuthPassword() {
+        return getAttr(Provisioning.A_zimbraOctopusSmtpAuthPassword, "FALSE");
+    }
+
+    /**
+     * Password for authenticating to relay MTA.
+     *
+     * @param zimbraOctopusSmtpAuthPassword new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1344)
+    public void setOctopusSmtpAuthPassword(String zimbraOctopusSmtpAuthPassword) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpAuthPassword, zimbraOctopusSmtpAuthPassword);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Password for authenticating to relay MTA.
+     *
+     * @param zimbraOctopusSmtpAuthPassword new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1344)
+    public Map<String,Object> setOctopusSmtpAuthPassword(String zimbraOctopusSmtpAuthPassword, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpAuthPassword, zimbraOctopusSmtpAuthPassword);
+        return attrs;
+    }
+
+    /**
+     * Password for authenticating to relay MTA.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1344)
+    public void unsetOctopusSmtpAuthPassword() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpAuthPassword, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Password for authenticating to relay MTA.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1344)
+    public Map<String,Object> unsetOctopusSmtpAuthPassword(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpAuthPassword, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to use credential to authenticate to relay MTA.
+     *
+     * @return zimbraOctopusSmtpAuthRequired, or false if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1346)
+    public boolean isOctopusSmtpAuthRequired() {
+        return getBooleanAttr(Provisioning.A_zimbraOctopusSmtpAuthRequired, false);
+    }
+
+    /**
+     * Whether to use credential to authenticate to relay MTA.
+     *
+     * @param zimbraOctopusSmtpAuthRequired new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1346)
+    public void setOctopusSmtpAuthRequired(boolean zimbraOctopusSmtpAuthRequired) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpAuthRequired, zimbraOctopusSmtpAuthRequired ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to use credential to authenticate to relay MTA.
+     *
+     * @param zimbraOctopusSmtpAuthRequired new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1346)
+    public Map<String,Object> setOctopusSmtpAuthRequired(boolean zimbraOctopusSmtpAuthRequired, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpAuthRequired, zimbraOctopusSmtpAuthRequired ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to use credential to authenticate to relay MTA.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1346)
+    public void unsetOctopusSmtpAuthRequired() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpAuthRequired, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to use credential to authenticate to relay MTA.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1346)
+    public Map<String,Object> unsetOctopusSmtpAuthRequired(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpAuthRequired, "");
+        return attrs;
+    }
+
+    /**
+     * SMTP hostname for relay MTA used for sending email notifications.
+     *
+     * @return zimbraOctopusSmtpHostname, or null if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1341)
+    public String getOctopusSmtpHostname() {
+        return getAttr(Provisioning.A_zimbraOctopusSmtpHostname, null);
+    }
+
+    /**
+     * SMTP hostname for relay MTA used for sending email notifications.
+     *
+     * @param zimbraOctopusSmtpHostname new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1341)
+    public void setOctopusSmtpHostname(String zimbraOctopusSmtpHostname) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpHostname, zimbraOctopusSmtpHostname);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SMTP hostname for relay MTA used for sending email notifications.
+     *
+     * @param zimbraOctopusSmtpHostname new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1341)
+    public Map<String,Object> setOctopusSmtpHostname(String zimbraOctopusSmtpHostname, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpHostname, zimbraOctopusSmtpHostname);
+        return attrs;
+    }
+
+    /**
+     * SMTP hostname for relay MTA used for sending email notifications.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1341)
+    public void unsetOctopusSmtpHostname() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpHostname, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SMTP hostname for relay MTA used for sending email notifications.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1341)
+    public Map<String,Object> unsetOctopusSmtpHostname(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpHostname, "");
+        return attrs;
+    }
+
+    /**
+     * SMTP port for relay MTA used for sending email notifications.
+     *
+     * @return zimbraOctopusSmtpPort, or -1 if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1342)
+    public int getOctopusSmtpPort() {
+        return getIntAttr(Provisioning.A_zimbraOctopusSmtpPort, -1);
+    }
+
+    /**
+     * SMTP port for relay MTA used for sending email notifications.
+     *
+     * @param zimbraOctopusSmtpPort new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1342)
+    public void setOctopusSmtpPort(int zimbraOctopusSmtpPort) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpPort, Integer.toString(zimbraOctopusSmtpPort));
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SMTP port for relay MTA used for sending email notifications.
+     *
+     * @param zimbraOctopusSmtpPort new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1342)
+    public Map<String,Object> setOctopusSmtpPort(int zimbraOctopusSmtpPort, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpPort, Integer.toString(zimbraOctopusSmtpPort));
+        return attrs;
+    }
+
+    /**
+     * SMTP port for relay MTA used for sending email notifications.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1342)
+    public void unsetOctopusSmtpPort() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpPort, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * SMTP port for relay MTA used for sending email notifications.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1342)
+    public Map<String,Object> unsetOctopusSmtpPort(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpPort, "");
+        return attrs;
+    }
+
+    /**
+     * Whether to use TLS when connecting to relay MTA.
+     *
+     * @return zimbraOctopusSmtpUseTls, or false if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1345)
+    public boolean isOctopusSmtpUseTls() {
+        return getBooleanAttr(Provisioning.A_zimbraOctopusSmtpUseTls, false);
+    }
+
+    /**
+     * Whether to use TLS when connecting to relay MTA.
+     *
+     * @param zimbraOctopusSmtpUseTls new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1345)
+    public void setOctopusSmtpUseTls(boolean zimbraOctopusSmtpUseTls) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpUseTls, zimbraOctopusSmtpUseTls ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to use TLS when connecting to relay MTA.
+     *
+     * @param zimbraOctopusSmtpUseTls new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1345)
+    public Map<String,Object> setOctopusSmtpUseTls(boolean zimbraOctopusSmtpUseTls, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpUseTls, zimbraOctopusSmtpUseTls ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * Whether to use TLS when connecting to relay MTA.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1345)
+    public void unsetOctopusSmtpUseTls() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpUseTls, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Whether to use TLS when connecting to relay MTA.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1345)
+    public Map<String,Object> unsetOctopusSmtpUseTls(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraOctopusSmtpUseTls, "");
         return attrs;
     }
 
