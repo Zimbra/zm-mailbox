@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -36,12 +36,12 @@ import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
-import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
-import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailItem;
@@ -70,6 +70,7 @@ public class SpamHandler {
 
     public SpamHandler() {
         Runnable r = new Runnable() {
+            @Override
             public void run() {
                 reportLoop();
             }
@@ -88,9 +89,9 @@ public class SpamHandler {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(sr.mailboxId);
         Message msg = mbox.getMessageById(null, sr.messageId);
 
-        MimeMultipart mmp = new JavaMailMimeMultipart("mixed");
+        MimeMultipart mmp = new ZMimeMultipart("mixed");
 
-        MimeBodyPart infoPart = new JavaMailMimeBodyPart();
+        MimeBodyPart infoPart = new ZMimeBodyPart();
         infoPart.setHeader("Content-Description", "Zimbra spam classification report");
         String body = String.format(
             "Classified-By: %s\r\n" +
@@ -106,7 +107,7 @@ public class SpamHandler {
         mmp.addBodyPart(infoPart);
 
         MailboxBlob blob = msg.getBlob();
-        MimeBodyPart mbp = new JavaMailMimeBodyPart();
+        MimeBodyPart mbp = new ZMimeBodyPart();
         mbp.setDataHandler(new DataHandler(new MailboxBlobDataSource(blob)));
         mbp.setHeader("Content-Type", MimeConstants.CT_MESSAGE_RFC822);
         mbp.setHeader("Content-Disposition", Part.ATTACHMENT);
@@ -133,11 +134,11 @@ public class SpamHandler {
         private final boolean isSpam;
         private final String action;
         private final String destFolder;
-        
+
         // These fields are optionally set by the caller.
         private String sourceFolder;
         private String destAccountName;
-        
+
         // These fields are set internally.
         private String accountName;
         private InternetAddress reportRecipient;
@@ -150,7 +151,7 @@ public class SpamHandler {
             this.action = action;
             this.destFolder = destFolder;
         }
-        
+
         SpamReport(SpamReport report) {
             this.isSpam = report.isSpam;
             this.action = report.action;
@@ -163,11 +164,11 @@ public class SpamHandler {
             this.messageId = report.messageId;
             this.mailboxId = report.mailboxId;
         }
-        
+
         public void setSourceFolderPath(String path) {
             sourceFolder = path;
         }
-        
+
         public void setDestAccountName(String name) {
             destAccountName = name;
         }
@@ -186,7 +187,7 @@ public class SpamHandler {
                 add("reportRecipient", reportRecipient).toString();
         }
     }
-    
+
     private static final int spamReportQueueSize = LC.zimbra_spam_report_queue_size.intValue();
 
     private final Object spamReportQueueLock = new Object();
@@ -260,13 +261,13 @@ public class SpamHandler {
         } catch (MessagingException e) {
             throw ServiceException.INVALID_REQUEST("Invalid address: " + address, e);
         }
-        
+
         report.accountName = mbox.getAccount().getName();
         report.mailboxId = mbox.getId();
         if (octxt != null) {
             report.origIp = octxt.getRequestIP();
         }
-        
+
         List<SpamReport> reports = Lists.newArrayList();
         if (type == MailItem.TYPE_MESSAGE) {
             report.messageId = itemId;
@@ -282,7 +283,7 @@ public class SpamHandler {
                 " account=" + report.accountName +  " id=" + itemId);
             return;
         }
-        
+
         enqueue(reports);
     }
 

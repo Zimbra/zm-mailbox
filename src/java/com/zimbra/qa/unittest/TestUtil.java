@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -32,14 +32,12 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import org.junit.runner.JUnitCore;
-
 import junit.framework.Assert;
-import junit.framework.TestCase;
+
+import org.junit.runner.JUnitCore;
 
 import com.zimbra.common.lmtp.LmtpClient;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -53,6 +51,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.DataSource;
@@ -81,8 +80,18 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.zclient.*;
+import com.zimbra.cs.zclient.ZContact;
+import com.zimbra.cs.zclient.ZDataSource;
+import com.zimbra.cs.zclient.ZDateTime;
+import com.zimbra.cs.zclient.ZDocument;
+import com.zimbra.cs.zclient.ZEmailAddress;
+import com.zimbra.cs.zclient.ZFilterRule;
+import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZGetInfoResult;
+import com.zimbra.cs.zclient.ZGetMessageParams;
 import com.zimbra.cs.zclient.ZGrant.GranteeType;
+import com.zimbra.cs.zclient.ZIdentity;
+import com.zimbra.cs.zclient.ZInvite;
 import com.zimbra.cs.zclient.ZInvite.ZAttendee;
 import com.zimbra.cs.zclient.ZInvite.ZClass;
 import com.zimbra.cs.zclient.ZInvite.ZComponent;
@@ -91,6 +100,7 @@ import com.zimbra.cs.zclient.ZInvite.ZParticipantStatus;
 import com.zimbra.cs.zclient.ZInvite.ZRole;
 import com.zimbra.cs.zclient.ZInvite.ZStatus;
 import com.zimbra.cs.zclient.ZInvite.ZTransparency;
+import com.zimbra.cs.zclient.ZMailbox;
 import com.zimbra.cs.zclient.ZMailbox.ContactSortBy;
 import com.zimbra.cs.zclient.ZMailbox.OwnerBy;
 import com.zimbra.cs.zclient.ZMailbox.SharedItemBy;
@@ -99,7 +109,12 @@ import com.zimbra.cs.zclient.ZMailbox.ZImportStatus;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
 import com.zimbra.cs.zclient.ZMailbox.ZOutgoingMessage.MessagePart;
+import com.zimbra.cs.zclient.ZMessage;
 import com.zimbra.cs.zclient.ZMessage.ZMimePart;
+import com.zimbra.cs.zclient.ZMountpoint;
+import com.zimbra.cs.zclient.ZSearchHit;
+import com.zimbra.cs.zclient.ZSearchParams;
+import com.zimbra.cs.zclient.ZTag;
 
 /**
  * @author bburtin
@@ -143,7 +158,7 @@ extends Assert {
         else
             return userName + "@" + getDomain();
     }
-    
+
     public static String getAddress(String userName, String domainName) {
         return userName + "@" + domainName;
     }
@@ -156,7 +171,7 @@ extends Assert {
         }
         return null;
     }
-    
+
     public static String getBaseUrl()
     throws ServiceException {
         String scheme;
@@ -170,7 +185,7 @@ extends Assert {
         }
         return scheme + "://localhost:" + port;
     }
-    
+
     public static String getAdminSoapUrl() {
         int port;
         try {
@@ -548,7 +563,7 @@ extends Assert {
             sIsCliInitialized = true;
         }
     }
-    
+
     public static SoapProvisioning newSoapProvisioning()
     throws ServiceException {
         SoapProvisioning sp = new SoapProvisioning();
@@ -963,7 +978,7 @@ extends Assert {
             content = getContent(mbox, msg.getId());
         }
         assertNotNull("Content was not fetched from the server", content);
-        MimeMessage mimeMsg = new JavaMailMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content.getBytes()));
+        MimeMessage mimeMsg = new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content.getBytes()));
         return mimeMsg.getHeader(headerName, null);
     }
 
@@ -1024,7 +1039,7 @@ extends Assert {
         String docId = mbox.createDocument(folderId, name, attachId);
         return mbox.getDocument(docId);
     }
-    
+
     public static ZIdentity getDefaultIdentity(ZMailbox mbox)
     throws ServiceException {
         for (ZIdentity ident : mbox.getIdentities()) {

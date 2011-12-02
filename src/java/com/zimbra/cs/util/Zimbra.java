@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -66,9 +66,10 @@ public class Zimbra {
      *  servlet faults in classes or references properties before they're set
      *  here. */
     private static void setSystemProperties() {
-        System.setProperty("mail.mime.decodetext.strict", "false");
-        System.setProperty("mail.mime.encodefilename",    "true");
-        System.setProperty("mail.mime.charset",           "utf-8");
+        System.setProperty("mail.mime.decodetext.strict",   "false");
+        System.setProperty("mail.mime.encodefilename",      "true");
+        System.setProperty("mail.mime.charset",             "utf-8");
+        System.setProperty("mail.mime.base64.ignoreerrors", "true");
     }
 
     private static void checkForClass(String clzName, String jarName) {
@@ -89,13 +90,13 @@ public class Zimbra {
             return "(accessing " + prop + " is not allowed by security manager)";
         }
     }
-    
+
     private static void logVersionAndSysInfo() {
         ZimbraLog.misc.info("version=" + BuildInfo.VERSION +
                 " release=" + BuildInfo.RELEASE +
                 " builddate=" + BuildInfo.DATE +
                 " buildhost=" + BuildInfo.HOST);
-        
+
         ZimbraLog.misc.info("LANG environment is set to: " + System.getenv("LANG"));
 
         ZimbraLog.misc.info("System property java.home="            + getSysProperty("java.home"));
@@ -112,13 +113,13 @@ public class Zimbra {
         ZimbraLog.misc.info("System property sun.cpu.isalist="      + getSysProperty("sun.cpu.isalist"));
         ZimbraLog.misc.info("System property sun.os.patch.level="   + getSysProperty("sun.os.patch.level"));
     }
-    
+
     private static void checkForClasses() {
         checkForClass("javax.activation.DataSource", "activation.jar");
         checkForClass("javax.mail.internet.MimeMessage", "mail.jar");
         checkForClass("com.zimbra.znative.IO", "zimbra-native.jar");
     }
-    
+
     public static void startup() {
         try {
             startup(true);
@@ -152,13 +153,13 @@ public class Zimbra {
         SoapTransport.setDefaultUserAgent("ZCS", BuildInfo.VERSION);
 
         checkForClasses();
-        
+
         ZimbraApplication app = ZimbraApplication.getInstance();
 
         DbPool.startup();
 
         app.initializeZimbraDb(forMailboxd);
-        
+
         AttributeManager.setMinimize(forMailboxd);
 
         if (!Versions.checkVersions()) {
@@ -182,13 +183,13 @@ public class Zimbra {
                 AttributeManager.loadLdapSchemaExtensionAttrs((LdapProvisioning)prov);
             }
         }
-        
+
         try {
             RightManager.getInstance();
         } catch (ServiceException e) {
             Util.halt("cannot initialize RightManager", e);
         }
-            
+
         ZimbraHttpConnectionManager.startReaperThread();
 
         try {
@@ -200,7 +201,7 @@ public class Zimbra {
         } catch (IOException e) {
             throw ServiceException.FAILURE("Unable to initialize StoreManager.", e);
         }
-        
+
         MailboxManager.getInstance();
 
         app.startup();
@@ -295,7 +296,7 @@ public class Zimbra {
         ZimbraApplication app = ZimbraApplication.getInstance();
 
         app.shutdown();
-        
+
         if (sIsMailboxd) {
             if (app.supports(MemoryStats.class.getName())) {
                 MemoryStats.shutdown();
@@ -359,12 +360,12 @@ public class Zimbra {
     public static synchronized boolean started() {
         return sInited;
     }
-    
+
     public static Timer sTimer = new Timer("Timer-Zimbra", true);
 
     /**
      * Logs the given message and shuts down the server.
-     * 
+     *
      * @param message the message to log before shutting down
      */
     public static void halt(String message) {
@@ -377,7 +378,7 @@ public class Zimbra {
 
     /**
      * Logs the given message and shuts down the server.
-     * 
+     *
      * @param message the message to log before shutting down
      * @param t the exception that was thrown
      */

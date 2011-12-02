@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -37,24 +37,24 @@ import com.google.common.base.Strings;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
-import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CalculatorStream;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.convert.ConversionException;
-import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.analysis.FieldTokenStream;
 import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.localconfig.DebugConfig;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Contact.Attachment;
 import com.zimbra.cs.object.ObjectHandlerException;
 import com.zimbra.cs.util.JMSession;
 
@@ -202,13 +202,13 @@ public class ParsedContact {
     private static MimeMessage generateMimeMessage(List<Attachment> attachments)
     throws MessagingException {
         MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
-        MimeMultipart multi = new JavaMailMimeMultipart("mixed");
+        MimeMultipart multi = new ZMimeMultipart("mixed");
         int part = 1;
         for (Attachment attach : attachments) {
             ContentDisposition cdisp = new ContentDisposition(Part.ATTACHMENT);
             cdisp.setParameter("filename", attach.getFilename()).setParameter("field", attach.getName());
 
-            MimeBodyPart bp = new JavaMailMimeBodyPart();
+            MimeBodyPart bp = new ZMimeBodyPart();
             bp.addHeader("Content-Disposition", cdisp.toString());
             bp.addHeader("Content-Type", attach.getContentType());
             bp.addHeader("Content-Transfer-Encoding", MimeConstants.ET_8BIT);
@@ -277,17 +277,17 @@ public class ParsedContact {
         return digest;
     }
 
-    
-    
+
+
     private static class FieldDelta {
-        private String name;
-        private String value;
-        private Op op;
-        
+        private final String name;
+        private final String value;
+        private final Op op;
+
         enum Op {
             ADD,
             REMOVE;
-            
+
             private static Op fromString(String opStr) throws ServiceException {
                 if ("+".equals(opStr)) {
                     return ADD;
@@ -297,47 +297,47 @@ public class ParsedContact {
                 throw ServiceException.INVALID_REQUEST("unknown op: " + opStr, null);
             }
         }
-        
+
         private FieldDelta(String name, String value, Op op) {
             this.name = name;
             this.value = value;
             this.op = op;
         }
-        
+
         private String getName() {
             return name;
         }
-        
+
         private String getValue() {
             return value;
         }
-        
+
         private Op getOp() {
             return op;
         }
     }
-    
+
     public static class FieldDeltaList {
-        private List<FieldDelta> deltaList;
-        
+        private final List<FieldDelta> deltaList;
+
         public FieldDeltaList() {
             deltaList = new ArrayList<FieldDelta>();
         }
-        
+
         public void addDelta(String name, String value, String opStr) throws ServiceException {
             // name cannot be null or empty
             if (name == null || name.trim().equals("")) {
                 return;
             }
-            
+
             FieldDelta.Op op = (opStr == null)? null : FieldDelta.Op.fromString(opStr);
             deltaList.add(new FieldDelta(name, value, op));
         }
-        
+
         private List<FieldDelta> getDeltaList() {
             return deltaList;
         }
-        
+
         private void removeAllDeltaByName(String name) {
             for (Iterator<FieldDelta> iter = deltaList.iterator(); iter.hasNext();) {
                 FieldDelta delta = iter.next();
@@ -347,20 +347,20 @@ public class ParsedContact {
             }
         }
     }
-    
+
     // convert legacy API to the new API
-    public ParsedContact modify(Map<String, String> fieldDelta, List<Attachment> attachDelta) 
+    public ParsedContact modify(Map<String, String> fieldDelta, List<Attachment> attachDelta)
     throws ServiceException {
         FieldDeltaList fieldDeltaList = new FieldDeltaList();
-        
+
         for (Map.Entry<String, String> entry : fieldDelta.entrySet()) {
             fieldDeltaList.addDelta(entry.getKey(), entry.getValue(), null);
         }
-        
+
         return modify(fieldDeltaList, attachDelta);
     }
-    
-    public ParsedContact modify(FieldDeltaList fieldDeltaList, List<Attachment> attachDelta) 
+
+    public ParsedContact modify(FieldDeltaList fieldDeltaList, List<Attachment> attachDelta)
     throws ServiceException {
         if (attachDelta != null && !attachDelta.isEmpty()) {
             for (Attachment attach : attachDelta) {
@@ -386,31 +386,31 @@ public class ParsedContact {
 
             String newValue = StringUtil.stripControlCharacters(delta.getValue());
             FieldDelta.Op op = delta.getOp();
-            
+
             if (op == null) {
                 // legacy behavior before bug 59738
                 if (newValue == null || newValue.equals(""))
                     contactFields.remove(name);
                 else
                     contactFields.put(name, newValue);
-                
+
                 continue;
             }
-            
+
             // do not allow adding or removing an empty string
             if (newValue == null || newValue.equals("")) {
                 throw ServiceException.INVALID_REQUEST("adding or removing empty value is not allowed", null);
             }
-            
+
             String curValue = contactFields.get(name);
-            
+
             if (curValue == null) {
                 if (op == FieldDelta.Op.REMOVE) {
                     // do nothing
                 } else {
                     contactFields.put(name, newValue);
                 }
-                
+
             } else {
                 List<String> curValuesList = null;
                 try {
@@ -422,7 +422,7 @@ public class ParsedContact {
                             ".  delta entry ignored", e);
                     continue;
                 }
-                
+
                 if (op == FieldDelta.Op.REMOVE) {
                     // remove all occurrences of the value
                     for (Iterator<String> iter = curValuesList.iterator(); iter.hasNext();) {
@@ -438,7 +438,7 @@ public class ParsedContact {
                         curValuesList.add(newValue);
                     }
                 }
-                
+
                 if (curValuesList.size() > 0) {
                     // convert updated list to a new json array value
                     String[] newValues = curValuesList.toArray(new String[curValuesList.size()]);
@@ -452,7 +452,7 @@ public class ParsedContact {
                                 ".  delta entry ignored", e);
                         continue;
                     }
-                    
+
                     // finally, put the new value back
                     contactFields.put(name, newMultiValues);
                 } else {

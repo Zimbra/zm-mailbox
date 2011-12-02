@@ -2,25 +2,34 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.mailbox.alerts;
 
+import java.text.DateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
+
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
-import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
-import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.CalendarItem;
@@ -30,14 +39,6 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.util.JMSession;
-
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import java.text.DateFormat;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
 
 /**
  */
@@ -68,22 +69,22 @@ public class CalItemEmailReminderTask extends CalItemReminderTaskBase {
         }
         mm.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(to));
 
-        mm.setSubject(L10nUtil.getMessage(calItem.getType() == MailItem.TYPE_APPOINTMENT ? L10nUtil.MsgKey.apptReminderEmailSubject : L10nUtil.MsgKey.taskReminderEmailSubject, 
+        mm.setSubject(L10nUtil.getMessage(calItem.getType() == MailItem.TYPE_APPOINTMENT ? L10nUtil.MsgKey.apptReminderEmailSubject : L10nUtil.MsgKey.taskReminderEmailSubject,
                                           locale,
                                           calItem.getSubject()),
                       MimeConstants.P_CHARSET_UTF8);
 
         if (invite.getDescriptionHtml() == null) {
-            mm.setText(getBody(calItem, invite, false, locale, tz), MimeConstants.P_CHARSET_UTF8);            
+            mm.setText(getBody(calItem, invite, false, locale, tz), MimeConstants.P_CHARSET_UTF8);
         } else {
-            MimeMultipart mmp = new JavaMailMimeMultipart("alternative");
+            MimeMultipart mmp = new ZMimeMultipart("alternative");
             mm.setContent(mmp);
 
-            MimeBodyPart textPart = new JavaMailMimeBodyPart();
+            MimeBodyPart textPart = new ZMimeBodyPart();
             textPart.setText(getBody(calItem, invite, false, locale, tz), MimeConstants.P_CHARSET_UTF8);
             mmp.addBodyPart(textPart);
 
-            MimeBodyPart htmlPart = new JavaMailMimeBodyPart();
+            MimeBodyPart htmlPart = new ZMimeBodyPart();
             htmlPart.setContent(getBody(calItem, invite, true, locale, tz), MimeConstants.CT_TEXT_HTML + "; " + MimeConstants.P_CHARSET + "=" + MimeConstants.P_CHARSET_UTF8);
             mmp.addBodyPart(htmlPart);
         }

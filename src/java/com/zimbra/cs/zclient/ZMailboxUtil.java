@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -49,6 +49,7 @@ import java.util.zip.GZIPInputStream;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
+import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -60,7 +61,6 @@ import org.apache.commons.cli.ParseException;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
@@ -73,6 +73,7 @@ import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
@@ -128,7 +129,7 @@ public class ZMailboxUtil implements DebugListener {
     SoapProvisioning mProv;
     private int mTimeout = LC.httpclient_internal_connmgr_so_timeout.intValue();
 
-    private Map<Integer, String> mIndexToId = new HashMap<Integer, String>();
+    private final Map<Integer, String> mIndexToId = new HashMap<Integer, String>();
 
     /** current command */
     private Command mCommand;
@@ -137,7 +138,7 @@ public class ZMailboxUtil implements DebugListener {
     private CommandLine mCommandLine;
 
     /** parser for internal commands */
-    private CommandLineParser mParser = new GnuParser();
+    private final CommandLineParser mParser = new GnuParser();
 
     public void setDebug(boolean debug) { mDebug = debug; }
 
@@ -1185,7 +1186,7 @@ public class ZMailboxUtil implements DebugListener {
         return ExecuteStatus.OK;
     }
 
-    private ZEventHandler mTraceHandler = new TraceHandler();
+    private final ZEventHandler mTraceHandler = new TraceHandler();
 
     private static class TraceHandler extends ZEventHandler {
 
@@ -1755,10 +1756,13 @@ public class ZMailboxUtil implements DebugListener {
 
         try {
             if (date == -1) {
-                MimeMessage mm = new JavaMailMimeMessage(mSession, new ByteArrayInputStream(data));
+                MimeMessage mm = new ZMimeMessage(mSession, new SharedByteArrayInputStream(data));
                 Date d = mm.getSentDate();
-                if (d != null) date = d.getTime();
-                else date = 0;
+                if (d != null) {
+                    date = d.getTime();
+                } else {
+                    date = 0;
+                }
             }
         } catch (MessagingException e) {
             date = 0;

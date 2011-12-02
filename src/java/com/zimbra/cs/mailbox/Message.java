@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -37,6 +37,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
@@ -57,10 +58,10 @@ import com.zimbra.cs.mailbox.calendar.InviteChanges;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
-import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedAddress;
 import com.zimbra.cs.mime.ParsedMessage;
@@ -91,7 +92,7 @@ public class Message extends MailItem {
 
         private DraftInfo() {
         }
-        
+
         public DraftInfo(String rt, String id, String ident, String account, long autoSendTime) {
             replyType = rt;
             origId = id;
@@ -125,10 +126,10 @@ public class Message extends MailItem {
         // special calItem id value meaning no calendar item was created
         public static final int CALITEM_ID_NONE = 0;
 
-        private int mCalendarItemId;
-        private int mComponentNo;
-        private Invite mInvite;  // set only when mCalendarItemId == CALITEM_ID_NONE
-        private InviteChanges mInviteChanges;
+        private final int mCalendarItemId;
+        private final int mComponentNo;
+        private final Invite mInvite;  // set only when mCalendarItemId == CALITEM_ID_NONE
+        private final InviteChanges mInviteChanges;
 
         CalendarItemInfo(int calItemId, int componentNo, Invite inv, InviteChanges changes) {
             mCalendarItemId = calItemId;
@@ -279,7 +280,7 @@ public class Message extends MailItem {
     public String getDraftOrigId() {
         return (mDraftInfo == null || mDraftInfo.origId == null ? "" : mDraftInfo.origId);
     }
-    
+
     void setDraftOrigId(String origId) {
         if (mDraftInfo == null) {
             mDraftInfo = new DraftInfo();
@@ -299,7 +300,7 @@ public class Message extends MailItem {
     public String getDraftReplyType() {
         return (mDraftInfo == null || mDraftInfo.replyType == null ? "" : mDraftInfo.replyType);
     }
-    
+
     void setDraftReplyType(String replyType) {
         if (mDraftInfo == null) {
             mDraftInfo = new DraftInfo();
@@ -317,7 +318,7 @@ public class Message extends MailItem {
     public String getDraftAccountId() {
         return (mDraftInfo == null || mDraftInfo.accountId == null ? "" : mDraftInfo.accountId);
     }
-    
+
     void setDraftAccountId(String accountId) {
         if (mDraftInfo == null) {
             mDraftInfo = new DraftInfo();
@@ -335,7 +336,7 @@ public class Message extends MailItem {
     public String getDraftIdentityId() {
         return (mDraftInfo == null || mDraftInfo.identityId == null ? "" : mDraftInfo.identityId);
     }
-    
+
     void setDraftIdentityId(String identityId) {
         if (mDraftInfo == null) {
             mDraftInfo = new DraftInfo();
@@ -361,7 +362,7 @@ public class Message extends MailItem {
             saveMetadata();
         }
     }
-    
+
     /** Returns whether the Message has a vCal attachment. */
     public boolean isInvite() {
         return (mData.flags & Flag.BITMASK_INVITE) != 0;
@@ -425,7 +426,7 @@ public class Message extends MailItem {
      * @see UUEncodeConverter */
     public MimeMessage getMimeMessage(boolean runConverters) throws ServiceException {
         MimeMessage mm = MessageCache.getMimeMessage(this, runConverters);
-        if (mm instanceof JavaMailMimeMessage && JavaMailMimeMessage.usingZimbraParser()) {
+        if (mm instanceof JavaMailMimeMessage && ZMimeMessage.usingZimbraParser()) {
             try {
                 mm = new Mime.FixedMimeMessage(mm, mMailbox.getAccount());
             } catch (MessagingException e) {
@@ -771,7 +772,7 @@ public class Message extends MailItem {
                             ZOrganizer org = null;
                             CalendarItem ci = mMailbox.getCalendarItemByUid(cur.getUid());
                             if (ci != null) {
-                                Invite inv = ci.getInvite((RecurId) cur.getRecurId());
+                                Invite inv = ci.getInvite(cur.getRecurId());
                                 if (inv == null)
                                     inv = ci.getDefaultInviteOrNull();
                                 if (inv != null)

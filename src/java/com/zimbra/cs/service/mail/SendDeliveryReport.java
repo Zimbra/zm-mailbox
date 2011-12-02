@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -29,6 +29,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import com.sun.mail.smtp.SMTPMessage;
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -36,9 +37,8 @@ import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
-import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
-import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
@@ -113,17 +113,17 @@ public class SendDeliveryReport extends MailDocumentHandler {
             else
                 report.setEnvelopeFrom(authAccount.getName());
 
-            MimeMultipart multi = new JavaMailMimeMultipart("report");
+            MimeMultipart multi = new ZMimeMultipart("report");
 
             // part 1: human-readable notification
             String text = generateTextPart(owner, mm, authAccount.getLocale());
-            MimeBodyPart mpText = new JavaMailMimeBodyPart();
+            MimeBodyPart mpText = new ZMimeBodyPart();
             mpText.setText(text, CharsetUtil.checkCharset(text, charset));
             multi.addBodyPart(mpText);
 
             // part 2: disposition notification
             String mdn = generateReport(owner, mm, automatic, requestHost, userAgent);
-            MimeBodyPart mpMDN = new JavaMailMimeBodyPart();
+            MimeBodyPart mpMDN = new ZMimeBodyPart();
             mpMDN.setText(mdn, MimeConstants.P_CHARSET_UTF8);
             mpMDN.setHeader("Content-Type", "message/disposition-notification; charset=utf-8");
             multi.addBodyPart(mpMDN);

@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -36,7 +36,6 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -46,6 +45,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailSender;
@@ -55,13 +55,13 @@ import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.calendar.CalendarDataSource;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.RecurId;
-import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.service.FileUploadServlet;
@@ -182,7 +182,7 @@ public class SendMsg extends MailDocumentHandler {
                                        List<Upload> uploads, ItemId origMsgId, String replyType, String identityId,
                                        boolean noSaveToSent, boolean needCalendarSentByFixup, ItemId draftId)
     throws ServiceException {
-        
+
         if (needCalendarSentByFixup)
             fixupICalendarFromOutlook(mbox, mm);
         MailSender sender = mbox.getMailSender().setSavedDraftId(draftId);
@@ -210,7 +210,7 @@ public class SendMsg extends MailDocumentHandler {
         try {
             // if we may need to mutate the message, we can't use the "updateHeaders" hack...
             if (anySystemMutators || needCalendarSentByFixup) {
-                MimeMessage mm = new JavaMailMimeMessage(JMSession.getSession(), up.getInputStream());
+                MimeMessage mm = new ZMimeMessage(JMSession.getSession(), up.getInputStream());
                 if (anySystemMutators)
                     return mm;
 
@@ -224,7 +224,7 @@ public class SendMsg extends MailDocumentHandler {
             }
 
             // ... but in general, for most installs this is safe
-            return new JavaMailMimeMessage(JMSession.getSession(), up.getInputStream()) {
+            return new ZMimeMessage(JMSession.getSession(), up.getInputStream()) {
                 @Override protected void updateHeaders() throws MessagingException {
                     setHeader("MIME-Version", "1.0");
                     if (getMessageID() == null)
@@ -280,7 +280,7 @@ public class SendMsg extends MailDocumentHandler {
             }
         }
     }
-    
+
     private static void fixupICalendarFromOutlook(Mailbox ownerMbox, MimeMessage mm)
     throws ServiceException {
         MimeVisitor mv = new OutlookICalendarFixupMimeVisitor(ownerMbox.getAccount(), ownerMbox);
@@ -297,17 +297,17 @@ public class SendMsg extends MailDocumentHandler {
      * but the iCalendar object doesn't set SENT-BY parameter on ORGANIZER or
      * ATTENDEE property of VEVENT/VTODO components.  These need to be fixed
      * up.
-     * 
+     *
      * @author jhahm
      *
      */
     private static class OutlookICalendarFixupMimeVisitor extends MimeVisitor {
-        private Account mAccount;
-        private Mailbox mMailbox;
+        private final Account mAccount;
+        private final Mailbox mMailbox;
         private int mMsgDepth;
         private String[] mFromEmails;
         private String mSentBy;
-        private String mDefaultCharset;
+        private final String mDefaultCharset;
 
         static class ICalendarModificationCallback implements MimeVisitor.ModificationCallback {
             private boolean mWouldModify;

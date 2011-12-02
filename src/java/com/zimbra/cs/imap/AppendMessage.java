@@ -2,50 +2,49 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.imap;
 
-import com.zimbra.cs.store.Blob;
-import com.zimbra.cs.store.BlobBuilder;
-import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.zclient.ZMailbox;
-import com.zimbra.cs.zclient.ZFolder;
-import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.util.ItemId;
-import com.zimbra.common.mime.shim.JavaMailInternetAddress;
-import com.zimbra.common.mime.shim.JavaMailInternetHeaders;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.ZimbraLog;
-
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.InternetHeaders;
-import javax.mail.internet.MailDateFormat;
-import javax.mail.MessagingException;
-
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.ArrayList;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.BufferedInputStream;
-import java.text.ParseException;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.InternetHeaders;
+import javax.mail.internet.MailDateFormat;
+
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.BlobBuilder;
+import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.zclient.ZFolder;
+import com.zimbra.cs.zclient.ZMailbox;
 
 /**
  * Encapsulates append message data for an APPEND request.
@@ -242,7 +241,7 @@ final class AppendMessage {
         InputStream is = new BufferedInputStream(content.getInputStream());
         try {
             // inefficient, but must be done before creating the ParsedMessage
-            return getSentDate(new JavaMailInternetHeaders(is));
+            return getSentDate(new InternetHeaders(is));
         } catch (MessagingException e) {
             return null;
         } finally {

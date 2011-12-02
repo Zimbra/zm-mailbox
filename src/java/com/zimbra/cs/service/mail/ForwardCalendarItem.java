@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -27,9 +27,9 @@ import java.util.Map;
 import javax.activation.DataHandler;
 import javax.mail.Address;
 import javax.mail.Header;
+import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.mail.Part;
-import javax.mail.Message.RecipientType;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
@@ -38,11 +38,11 @@ import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
-import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -55,12 +55,12 @@ import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.ParsedDateTime;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.TimeZoneMap;
-import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ICalTok;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZComponent;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZParameter;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZProperty;
 import com.zimbra.cs.mailbox.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
@@ -97,7 +97,7 @@ public class ForwardCalendarItem extends CalendarRequest {
         Element msgElem = request.getElement(MailConstants.E_MSG);
         ParseMimeMessage.MimeMessageData parsedMessageData = new ParseMimeMessage.MimeMessageData();
         MimeMessage mm =
-            ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem, 
+            ParseMimeMessage.parseMimeMsgSoap(zsc, octxt, mbox, msgElem,
                 null, ParseMimeMessage.NO_INV_ALLOWED_PARSER, parsedMessageData);
 
         MimeMessage[] fwdMsgs = null;
@@ -403,7 +403,7 @@ public class ForwardCalendarItem extends CalendarRequest {
         try {
             String uid = inv.getUid();
             if (mmInv != null) {
-                MimeMessage mm = new JavaMailMimeMessage(mmInv);  // Get a copy so we can modify it.
+                MimeMessage mm = new ZMimeMessage(mmInv);  // Get a copy so we can modify it.
                 // Discard all old headers except Subject and Content-*.
                 Enumeration eh = mmInv.getAllHeaders();
                 while (eh.hasMoreElements()) {
@@ -498,10 +498,10 @@ public class ForwardCalendarItem extends CalendarRequest {
     // First part of each type encountered is replaced.
     private static class ReplacingVisitor extends MimeVisitor {
 
-        private String mUid;
-        private ZVCalendar mCalNew;          // data from which to generate new text/calendar part
-        private MimeBodyPart mPlainNew;      // new text/plain part to replace with
-        private MimeBodyPart mHtmlNew;       // new text/html part to replace with
+        private final String mUid;
+        private final ZVCalendar mCalNew;          // data from which to generate new text/calendar part
+        private final MimeBodyPart mPlainNew;      // new text/plain part to replace with
+        private final MimeBodyPart mHtmlNew;       // new text/html part to replace with
         private MimeBodyPart mCalendarPart;  // existing text/calendar part
         private MimeBodyPart mPlainPart;     // existing text/plain part
         private MimeBodyPart mHtmlPart;      // existing text/html part
@@ -585,7 +585,7 @@ public class ForwardCalendarItem extends CalendarRequest {
                     // We have a calendar part and we haven't replaced yet.  The calendar part must be
                     // a child of this multipart.
                     if (mp.removeBodyPart(mCalendarPart)) {
-                        MimeBodyPart newCalendarPart = new JavaMailMimeBodyPart();
+                        MimeBodyPart newCalendarPart = new ZMimeBodyPart();
                         setCalendarContent(newCalendarPart, mCalNew);
                         mp.addBodyPart(newCalendarPart);
                         mCalendarPartReplaced = true;
