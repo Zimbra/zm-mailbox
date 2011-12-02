@@ -57,6 +57,7 @@
     <Call name="addConnector">
       <Arg>
         <New id="ssl" class="org.mortbay.jetty.security.SslSelectChannelConnector">
+          <Set name="allowRenegotiate">FALSE</Set>
           <Set name="Port">7443</Set>
           <Set name="useDirectBuffers">false</Set>
           <Set name="maxIdleTime">30000</Set>
@@ -87,6 +88,7 @@
     <Call name="addConnector">
       <Arg>
         <New id="ssl-clientcert" class="org.mortbay.jetty.security.SslSelectChannelConnector">
+          <Set name="allowRenegotiate">FALSE</Set>
           <Set name="Port">9443</Set>
           <Set name="useDirectBuffers">false</Set>
           <Set name="maxIdleTime">30000</Set>
