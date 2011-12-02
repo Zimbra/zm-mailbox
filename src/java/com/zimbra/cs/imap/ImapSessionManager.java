@@ -356,8 +356,13 @@ final class ImapSessionManager {
                     } catch (ImapSessionClosedException e) {
                         return null;
                     } catch (IOException e) {
-                        ZimbraLog.imap.warn("skipping error while trying to page in for copy (%s)",
+                        if (!ImapSession.CACHE_MISS.equals(e.getMessage())) {
+                            ZimbraLog.imap.warn("skipping error while trying to page in for copy (%s)",
                                 i4listener.getPath(), e);
+                        } else {
+                            ZimbraLog.imap.warn("cache miss during duplicateExistingSession");
+                            //if many of these are seen, increase inactive cache size
+                        }
                     }
                 }
             }

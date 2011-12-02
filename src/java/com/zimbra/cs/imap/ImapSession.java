@@ -272,6 +272,8 @@ public class ImapSession extends Session {
         }
     }
 
+    public static final String CACHE_MISS = "cache miss deserializing folder state";
+
     ImapFolder reload() throws IOException, ImapSessionClosedException {
         Mailbox mbox = mMailbox;
         if (mbox == null) {
@@ -288,7 +290,7 @@ public class ImapSession extends Session {
                       //IOException expected up the stack when cache miss occurs
                       //for now, keep it that way. 
                       //TODO: refactor later (in 8.0) once we've shaken out any other bugs w/ new cache impl.
-                      throw new IOException("cache miss deserializing folder state");
+                      throw new IOException(CACHE_MISS);
                     }
 
                     try {
