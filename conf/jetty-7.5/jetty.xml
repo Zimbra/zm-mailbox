@@ -54,6 +54,7 @@
       <Arg>
         <New id="ssl" class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
           <Set name="Port">7443</Set>
+          <Set name="allowRenegotiate">FALSE</Set>
           <Set name="useDirectBuffers">false</Set>
           <Set name="maxIdleTime">30000</Set>
           <Set name="lowResourcesMaxIdleTime">1000</Set>
@@ -84,6 +85,7 @@
       <Arg>
         <New id="ssl-clientcert" class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
           <Set name="Port">9443</Set>
+          <Set name="allowRenegotiate">FALSE</Set>
           <Set name="useDirectBuffers">false</Set>
           <Set name="maxIdleTime">30000</Set>
           <Set name="lowResourcesMaxIdleTime">1000</Set>
@@ -122,6 +124,7 @@
       <Arg>
         <New id="admin" class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
           <Set name="Port">7071</Set>
+          <Set name="allowRenegotiate">FALSE</Set>
           <Set name="useDirectBuffers">false</Set>
           <Set name="maxIdleTime">0</Set>
           <Set name="lowResourcesMaxIdleTime">0</Set>
