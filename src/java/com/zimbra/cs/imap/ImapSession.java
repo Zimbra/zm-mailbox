@@ -259,12 +259,13 @@ public class ImapSession extends Session {
      * @param active true to use active session cache, otherwise use inactive session cache
      */
     void unload(boolean active) throws ServiceException {
-        // if the data's already paged out, we can short-circuit
-        if (mMailbox != null && mFolder instanceof ImapFolder) {
-            // Mailbox.endTransaction() -> ImapSession.notifyPendingChanges() locks in the order of Mailbox -> ImapSession.
-            // Need to lock in the same order here, otherwise can result in deadlock.
-            synchronized (mMailbox) {
-                synchronized (this) {
+        Mailbox mbox = mMailbox;
+        if (mbox == null) {
+            return;
+        }
+        synchronized (mbox) {
+            synchronized (this) {
+                if (mFolder instanceof ImapFolder) { // if the data's already paged out, we can short-circuit
                     mFolder = new PagedFolderData(serialize(active), (ImapFolder) mFolder);
                 }
             }
