@@ -2,30 +2,32 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.common.util;
 
-import java.io.ByteArrayInputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.SequenceInputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+
+import javax.mail.util.SharedByteArrayInputStream;
+import javax.mail.util.SharedFileInputStream;
 
 import com.zimbra.common.localconfig.LC;
 
@@ -77,7 +79,8 @@ public class BufferStream extends OutputStream {
             return 0;
         }
     }
-    
+
+    @Override
     public void close() {
         release();
         buf = null;
@@ -100,12 +103,13 @@ public class BufferStream extends OutputStream {
             }
         }
     }
-    
+
+    @Override
     protected void finalize() throws Throwable {
         release();
         super.finalize();
     }
-    
+
     public byte[] getBuffer() {
         try {
             sync();
@@ -113,37 +117,36 @@ public class BufferStream extends OutputStream {
         }
         if (buf != null && buf.length > size) {
             byte newBuf[] = new byte[(int)size];
-            
+
             System.arraycopy(buf, 0, newBuf, 0, (int)size);
             buf = newBuf;
         }
         return buf;
     }
 
-    public File getFile() throws IOException { 
+    public File getFile() throws IOException {
         sync();
         return file;
     }
-    
+
     public InputStream getInputStream() throws IOException {
         sync();
-        if (size > maxSize)
+        if (size > maxSize) {
             throw new EOFException("data exceeds copy capacity");
-        if (buf == null)
-            return file == null ? new ByteArrayInputStream(new byte[0]) :
-                new FileInputStream(file);
+        }
+        if (buf == null) {
+            return file == null ? new SharedByteArrayInputStream(new byte[0]) : new SharedFileInputStream(file);
+        }
 
-        InputStream in = new ByteArrayInputStream(buf, 0, (int)Math.min(
-            buf.length, size));
-        
-        return file == null ? in : new SequenceInputStream(in, new
-            FileInputStream(file));
+        InputStream in = new SharedByteArrayInputStream(buf, 0, (int) Math.min(buf.length, size));
+
+        return file == null ? in : new SequenceInputStream(in, new SharedFileInputStream(file));
     }
-    
+
     public int getMaxMem() { return maxMem; }
-    
+
     public long getMaxSize() { return maxSize; }
-    
+
     public byte[] getRawBuffer() {
         try {
             sync();
@@ -159,7 +162,7 @@ public class BufferStream extends OutputStream {
         }
         return size;
     }
-    
+
     public boolean isPartial() { return size > maxMem && file == null; }
 
     public boolean isSequenced() { return sequenced; }
@@ -173,13 +176,13 @@ public class BufferStream extends OutputStream {
     public long readFrom(InputStream is) throws IOException {
         return readFrom(is, Long.MAX_VALUE);
     }
-    
+
     public long readFrom(InputStream is, long len) throws IOException {
         int in;
         int left = buffer(len == Long.MAX_VALUE ? 0 : (int)Math.min(
             Integer.MAX_VALUE, len));
         long out = 0;
-        
+
         while (len > 0 && left > 0) {
             if ((in = is.read(buf, (int)size, left)) == -1)
                 return out;
@@ -207,7 +210,7 @@ public class BufferStream extends OutputStream {
             return out;
 
         byte tmp[] = new byte[(int)Math.min(len, 32 * 1024)];
-        
+
         while (len > 0) {
             if ((in = is.read(tmp, 0, (int)Math.min(len, tmp.length))) == -1)
                 return out;
@@ -217,7 +220,7 @@ public class BufferStream extends OutputStream {
         }
         return out;
     }
-    
+
     public void release() {
         if (file != null) {
             try {
@@ -231,7 +234,7 @@ public class BufferStream extends OutputStream {
             maxSize = maxMem;
         }
     }
-    
+
     public void reset() {
         try {
             sync();
@@ -240,11 +243,11 @@ public class BufferStream extends OutputStream {
         release();
         size = 0;
     }
-    
+
     public void setSequenced(boolean sequenced) { this.sequenced = sequenced; }
 
     public long size() { return getSize(); }
-    
+
     protected boolean spool(int len) {
         if (size + len > maxSize) {
             release();
@@ -267,7 +270,7 @@ public class BufferStream extends OutputStream {
         }
         return true;
     }
-    
+
     public void sync() throws IOException {
         if (file != null) {
             try {
@@ -278,7 +281,7 @@ public class BufferStream extends OutputStream {
             }
         }
     }
-    
+
     public byte[] toByteArray() {
         try {
             sync();
@@ -286,19 +289,19 @@ public class BufferStream extends OutputStream {
         }
         if (size <= maxMem) {
             byte tmp[] = getBuffer();
-            
+
             return tmp == null ? new byte[0] : tmp;
         } else if (file == null || size > Integer.MAX_VALUE) {
             throw new RuntimeException("BufferStream overflow");
         } else {
             byte newBuf[] = new byte[(int)size];
             FileInputStream fis = null;
-            
+
             System.arraycopy(buf, 0, newBuf, 0, buf.length);
             try {
                 int in;
                 int left = (int)(size - buf.length);
-                
+
                 fis = new FileInputStream(file);
                 while (left > 0) {
                     if ((in = fis.read(newBuf, buf.length, left)) == -1)
@@ -318,7 +321,7 @@ public class BufferStream extends OutputStream {
             return newBuf;
         }
     }
-    
+
     public ByteBuffer toByteBuffer() {
         try {
             sync();
@@ -332,7 +335,8 @@ public class BufferStream extends OutputStream {
             return ByteBuffer.wrap(toByteArray());
         }
     }
-    
+
+    @Override
     public String toString() {
         try {
             return toString(Charset.defaultCharset().toString());
@@ -340,7 +344,7 @@ public class BufferStream extends OutputStream {
             return new String(buf);
         }
     }
-    
+
     public String toString(String cset) throws IOException,
         UnsupportedEncodingException {
         sync();
@@ -351,7 +355,7 @@ public class BufferStream extends OutputStream {
         else
             throw new IOException("BufferStream data too large");
     }
-    
+
     public void truncate(long len) throws IOException {
         sync();
         if (len > size) {
@@ -364,7 +368,8 @@ public class BufferStream extends OutputStream {
         }
         size = len;
     }
-    
+
+    @Override
     public void write(int data) {
         if (buffer(1) > 0) {
             buf[(int)size] = (byte)data;
@@ -378,10 +383,11 @@ public class BufferStream extends OutputStream {
         }
         size++;
     }
-    
+
+    @Override
     public void write(byte data[], int off, int len) {
         int left = buffer(len);
-        
+
         if (left > 0) {
             if (left > len)
                 left = len;
@@ -405,7 +411,7 @@ public class BufferStream extends OutputStream {
     public long writeTo(OutputStream os) throws IOException {
         return writeTo(os, Long.MAX_VALUE);
     }
-    
+
     public long writeTo(OutputStream os, long len) throws IOException {
         int in;
         long out = 0;
@@ -426,7 +432,7 @@ public class BufferStream extends OutputStream {
 
         FileInputStream fis = null;
         byte tmp[] = new byte[(int)Math.min(len, 32 * 1024)];
-        
+
         try {
             fis = new FileInputStream(file);
             while (len > 0 && (in = fis.read(tmp, 0, (int)Math.min(len,
