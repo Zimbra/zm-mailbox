@@ -283,6 +283,8 @@ class ZMimeParser {
      *  <tt>null</tt>. */
     private BoundaryChecker boundaryChecker;
 
+    private static final int MAXIMUM_HEADER_LENGTH = 65536;
+
     /** The entire content of the current header.  This includes the name,
      *  the colon, the raw header value, any folding, and the trailing CRLF. */
     private final ZMimeUtility.ByteBuilder header;
@@ -352,13 +354,13 @@ class ZMimeParser {
             case HEADER_CR:
                 state = ParserState.HEADER_LINESTART;
                 if (b == '\n') {
-                    header.append(b);
+                    addHeaderByte(b);
                     lastEnding = LineEnding.CRLF;
                     break;
                 }
                 // \r without \n -- treat this as the first character of the next line
                 lastEnding = LineEnding.CR;
-                header.append('\n');
+                addHeaderByte((byte) '\n');
                 //$FALL-THROUGH$
 
             // at the beginning of a header line, after a CR/LF/CRLF
@@ -370,7 +372,7 @@ class ZMimeParser {
                 newline();
                 if (b == ' ' || b == '\t') {
                     // folded line; header value continues
-                    header.append(b);
+                    addHeaderByte(b);
                     state = ParserState.HEADER;
                     break;
                 }
@@ -392,10 +394,12 @@ class ZMimeParser {
 
             // in a header line, after reading at least one byte
             case HEADER:
-                header.append(b);
+                addHeaderByte(b);
                 if (b == '\n') {
                     lastEnding = LineEnding.LF;
-                    header.pop().append('\r').append('\n');
+                    if (!header.endsWith((byte) '\r')) {
+                        header.pop().append('\r').append('\n');
+                    }
                     state = ParserState.HEADER_LINESTART;
                 } else if (b == '\r') {
                     state = ParserState.HEADER_CR;
@@ -587,8 +591,11 @@ class ZMimeParser {
 
         if (pinfo.location == PartLocation.PREAMBLE) {
             try {
+                if (length > MAXIMUM_HEADER_LENGTH) {
+                    // constrain preamble length to some reasonable value (64K)
+                    bodyStream = (SharedInputStream) bodyStream.newStream(0, length = MAXIMUM_HEADER_LENGTH);
+                }
                 // save preamble to *parent* multipart
-                // FIXME: constrain preamble length to some reasonable value
                 String preamble = new String(ByteUtil.readInput((InputStream) bodyStream, (int) length, (int) length), defaultCharset());
                 currentPart().multi.setPreamble(preamble);
             } catch (IOException ioe) {
@@ -598,6 +605,19 @@ class ZMimeParser {
         }
 
         return currentPart();
+    }
+
+    private void addHeaderByte(byte b) {
+        if (header.size() <= MAXIMUM_HEADER_LENGTH) {
+            header.append(b);
+        } else if (header.endsWith((byte) '\n')) {
+            // it's too long and it's already terminated -- we're done
+            String foo = "1";
+        } else if (header.endsWith((byte) '\r')) {
+            header.append('\n');
+        } else {
+            header.append('\r').append('\n');
+        }
     }
 
     /** Resets all header-related members after processing a header line. */
@@ -691,7 +711,9 @@ class ZMimeParser {
 
         // catch any in-flight message headers without a newline
         if (!header.isEmpty()) {
-            if (!header.endsWith((byte) '\n')) {
+            if (header.endsWith((byte) '\r')) {
+                header.append('\n');
+            } else if (!header.endsWith((byte) '\n')) {
                 header.append('\r').append('\n');
             }
             saveHeader();
