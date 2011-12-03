@@ -15,13 +15,11 @@
 package com.zimbra.cs.account.ldap;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.EntrySearchFilter;
 import com.zimbra.cs.account.EntrySearchFilter.AndOr;
 import com.zimbra.cs.account.EntrySearchFilter.Multi;
 import com.zimbra.cs.account.EntrySearchFilter.Operator;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Term;
-import com.zimbra.cs.ldap.LdapClient;
 
 /*
  * parse string representation of LDAP query into EntrySearchFilter
@@ -192,29 +190,6 @@ public class LdapFilterParser {
         
         return new Single(false, attrName, op, attrValue);
       
-    }
-    
-    public static String test(String inFilterStr) {
-        String outFilterStr = LdapEntrySearchFilter.toLdapIDNFilter(inFilterStr);
-               
-        System.out.println("In: " + inFilterStr);
-        System.out.println("Out: " + outFilterStr);
-        System.out.println();
-        return outFilterStr;
-    }
-    
-    public static void main(String[] args) {
-        LdapClient.initialize();
-        
-        test("!(zimbraDomainName=*\u4e2d\u6587*)");
-
-        test("!(objectClass=*)");
-        test("!(objectClass=**)");
-        test("!(objectClass=*abc)");
-        test("!(objectClass=abc*)");
-        test("!(objectClass=*abc*)");
-        
-        test("(|(zimbraMailDeliveryAddress=*@test.\u4e2d\u6587.com)(zimbraMailAlias=*@test.\u4e2d\u6587.com))");
     }
 
 }
