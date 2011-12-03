@@ -20,15 +20,14 @@
  */
 package com.zimbra.cs.account;
 
-import com.zimbra.common.account.ZAttr;
-import com.zimbra.common.account.ZAttrProvisioning;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.DateUtil;
-import com.zimbra.common.util.StringUtil;
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.zimbra.common.account.ZAttr;
+import com.zimbra.common.account.ZAttrProvisioning;
+import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.StringUtil;
 
 
 /**
@@ -43,7 +42,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111201-1307 */
+    /* build: 8.0.0_BETA1_1111 dywang 20111202-1445 */
 
     /**
      * RFC2256: descriptive information

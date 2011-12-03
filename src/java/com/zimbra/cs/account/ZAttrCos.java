@@ -20,15 +20,14 @@
  */
 package com.zimbra.cs.account;
 
-import com.zimbra.common.account.ZAttr;
-import com.zimbra.common.account.ZAttrProvisioning;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.DateUtil;
-import com.zimbra.common.util.StringUtil;
-
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.zimbra.common.account.ZAttr;
+import com.zimbra.common.account.ZAttrProvisioning;
+import com.zimbra.common.util.DateUtil;
+import com.zimbra.common.util.StringUtil;
 
 /**
  * AUTO-GENERATED. DO NOT EDIT.
@@ -42,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111201-1307 */
+    /* build: 8.0.0_BETA1_1111 dywang 20111202-1445 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -16448,7 +16447,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * whether to allow simple password; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @return zimbraMobilePolicyAllowSimpleDevicePassword, or false if unset
      *
@@ -16462,7 +16461,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * whether to allow simple password; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param zimbraMobilePolicyAllowSimpleDevicePassword new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -16479,7 +16478,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * whether to allow simple password; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param zimbraMobilePolicyAllowSimpleDevicePassword new value
      * @param attrs existing map to populate, or null to create a new map
@@ -16497,7 +16496,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * whether to allow simple password; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -16513,7 +16512,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * whether to allow simple password; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -16940,7 +16939,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * whether to require alpha-numeric password as device pin; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @return zimbraMobilePolicyAlphanumericDevicePasswordRequired, or false if unset
      *
@@ -16954,7 +16953,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * whether to require alpha-numeric password as device pin; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param zimbraMobilePolicyAlphanumericDevicePasswordRequired new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -16971,7 +16970,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * whether to require alpha-numeric password as device pin; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param zimbraMobilePolicyAlphanumericDevicePasswordRequired new value
      * @param attrs existing map to populate, or null to create a new map
@@ -16989,7 +16988,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * whether to require alpha-numeric password as device pin; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -17005,7 +17004,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * whether to require alpha-numeric password as device pin; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -17328,7 +17327,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * number of days before device pin must expire; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @return zimbraMobilePolicyDevicePasswordExpiration, or 0 if unset
      *
@@ -17342,7 +17341,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * number of days before device pin must expire; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param zimbraMobilePolicyDevicePasswordExpiration new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -17359,7 +17358,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * number of days before device pin must expire; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param zimbraMobilePolicyDevicePasswordExpiration new value
      * @param attrs existing map to populate, or null to create a new map
@@ -17377,7 +17376,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * number of days before device pin must expire; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -17393,7 +17392,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * number of days before device pin must expire; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -17410,7 +17409,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * number of previously used password stored in history; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE or
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE or
      * zimbraMobilePolicyDevicePasswordExpiration=0
      *
      * @return zimbraMobilePolicyDevicePasswordHistory, or 8 if unset
@@ -17425,7 +17424,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * number of previously used password stored in history; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE or
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE or
      * zimbraMobilePolicyDevicePasswordExpiration=0
      *
      * @param zimbraMobilePolicyDevicePasswordHistory new value
@@ -17443,7 +17442,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * number of previously used password stored in history; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE or
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE or
      * zimbraMobilePolicyDevicePasswordExpiration=0
      *
      * @param zimbraMobilePolicyDevicePasswordHistory new value
@@ -17462,7 +17461,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * number of previously used password stored in history; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE or
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE or
      * zimbraMobilePolicyDevicePasswordExpiration=0
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -17479,7 +17478,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * number of previously used password stored in history; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE or
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE or
      * zimbraMobilePolicyDevicePasswordExpiration=0
      *
      * @param attrs existing map to populate, or null to create a new map
@@ -17584,7 +17583,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * number of consecutive incorrect pin input before device is wiped;
      * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @return zimbraMobilePolicyMaxDevicePasswordFailedAttempts, or 4 if unset
      *
@@ -17598,7 +17597,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * number of consecutive incorrect pin input before device is wiped;
      * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param zimbraMobilePolicyMaxDevicePasswordFailedAttempts new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -17615,7 +17614,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * number of consecutive incorrect pin input before device is wiped;
      * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param zimbraMobilePolicyMaxDevicePasswordFailedAttempts new value
      * @param attrs existing map to populate, or null to create a new map
@@ -17633,7 +17632,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * number of consecutive incorrect pin input before device is wiped;
      * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -17649,7 +17648,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * number of consecutive incorrect pin input before device is wiped;
      * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -17917,7 +17916,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * max idle time in minutes before device is locked; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @return zimbraMobilePolicyMaxInactivityTimeDeviceLock, or 15 if unset
      *
@@ -17931,7 +17930,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * max idle time in minutes before device is locked; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param zimbraMobilePolicyMaxInactivityTimeDeviceLock new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -17948,7 +17947,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * max idle time in minutes before device is locked; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param zimbraMobilePolicyMaxInactivityTimeDeviceLock new value
      * @param attrs existing map to populate, or null to create a new map
@@ -17966,7 +17965,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * max idle time in minutes before device is locked; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -17982,7 +17981,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * max idle time in minutes before device is locked; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -17999,7 +17998,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * least number of complex characters must be included in device pin;
      * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @return zimbraMobilePolicyMinDevicePasswordComplexCharacters, or 0 if unset
      *
@@ -18013,7 +18012,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * least number of complex characters must be included in device pin;
      * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param zimbraMobilePolicyMinDevicePasswordComplexCharacters new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -18030,7 +18029,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * least number of complex characters must be included in device pin;
      * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param zimbraMobilePolicyMinDevicePasswordComplexCharacters new value
      * @param attrs existing map to populate, or null to create a new map
@@ -18048,7 +18047,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * least number of complex characters must be included in device pin;
      * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -18064,7 +18063,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * least number of complex characters must be included in device pin;
      * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -18081,7 +18080,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * min length for device pin; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @return zimbraMobilePolicyMinDevicePasswordLength, or 4 if unset
      *
@@ -18095,7 +18094,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * min length for device pin; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param zimbraMobilePolicyMinDevicePasswordLength new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -18112,7 +18111,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * min length for device pin; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param zimbraMobilePolicyMinDevicePasswordLength new value
      * @param attrs existing map to populate, or null to create a new map
@@ -18130,7 +18129,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * min length for device pin; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -18146,7 +18145,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * min length for device pin; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -18163,7 +18162,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * support device pin recovery; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @return zimbraMobilePolicyPasswordRecoveryEnabled, or true if unset
      *
@@ -18177,7 +18176,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * support device pin recovery; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param zimbraMobilePolicyPasswordRecoveryEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -18194,7 +18193,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * support device pin recovery; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param zimbraMobilePolicyPasswordRecoveryEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -18212,7 +18211,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * support device pin recovery; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -18228,7 +18227,7 @@ public abstract class ZAttrCos extends NamedEntry {
     /**
      * support device pin recovery; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs

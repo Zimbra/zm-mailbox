@@ -4405,7 +4405,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <defaultCOSValue>4</defaultCOSValue>
   <desc>
     min length for device pin;
-    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobileDevicePasswordEnabled=FALSE
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyDevicePasswordEnabled=FALSE
   </desc>
 </attr>
 
@@ -4413,7 +4413,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>
     whether to allow simple password;
-    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobileDevicePasswordEnabled=FALSE
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyDevicePasswordEnabled=FALSE
   </desc>
 </attr>
 
@@ -4421,7 +4421,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>
     whether to require alpha-numeric password as device pin;
-    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobileDevicePasswordEnabled=FALSE
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyDevicePasswordEnabled=FALSE
   </desc>
 </attr>
 
@@ -4429,7 +4429,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <defaultCOSValue>0</defaultCOSValue>
   <desc>
     least number of complex characters must be included in device pin;
-    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobileDevicePasswordEnabled=FALSE
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyDevicePasswordEnabled=FALSE
   </desc>
 </attr>
 
@@ -4437,7 +4437,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <defaultCOSValue>0</defaultCOSValue>
   <desc>
     number of days before device pin must expire;
-    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobileDevicePasswordEnabled=FALSE
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyDevicePasswordEnabled=FALSE
   </desc>
 </attr>
 
@@ -4445,7 +4445,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <defaultCOSValue>8</defaultCOSValue>
   <desc>
     number of previously used password stored in history;
-    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobileDevicePasswordEnabled=FALSE or zimbraMobilePolicyDevicePasswordExpiration=0
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyDevicePasswordEnabled=FALSE or zimbraMobilePolicyDevicePasswordExpiration=0
   </desc>
 </attr>
 
@@ -4453,7 +4453,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <defaultCOSValue>15</defaultCOSValue>
   <desc>
     max idle time in minutes before device is locked;
-    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobileDevicePasswordEnabled=FALSE
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyDevicePasswordEnabled=FALSE
   </desc>
 </attr>
 
@@ -4461,7 +4461,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <defaultCOSValue>4</defaultCOSValue>
   <desc>
     number of consecutive incorrect pin input before device is wiped;
-    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobileDevicePasswordEnabled=FALSE
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyDevicePasswordEnabled=FALSE
   </desc>
 </attr>
 
@@ -4469,7 +4469,7 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>
     support device pin recovery;
-    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobileDevicePasswordEnabled=FALSE
+    ignored if zimbraFeatureMobilePolicyEnabled=FALSE or zimbraMobilePolicyDevicePasswordEnabled=FALSE
   </desc>
 </attr>
 
