@@ -21,6 +21,7 @@ import org.junit.*;
 import com.google.common.collect.Lists;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.ldap.LdapEntrySearchFilter;
 import com.zimbra.cs.account.ldap.legacy.LegacyLdapFilter;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapUtil;
@@ -31,13 +32,13 @@ import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import static org.junit.Assert.*;
 
 public class TestLdapZLdapFilter extends LdapTest {
-    private static ProvTestUtil provUtil;
+    private static LdapProvTestUtil provUtil;
     private static Provisioning prov;
     private static ZLdapFilterFactory filterDactory;
     
     @BeforeClass
     public static void init() throws Exception {
-        provUtil = new ProvTestUtil();
+        provUtil = new LdapProvTestUtil();
         prov = provUtil.getProv();
         filterDactory = ZLdapFilterFactory.getInstance();
     }
@@ -920,6 +921,30 @@ zmprov mcf +zimbraGalLdapFilterDef 'ad:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(
         String zFilter = zLdapFilter.toFilterString();
         assertEquals(filter, zFilter);
         verifyStatString(FilterId.VELODROME_ALL_CALENDAR_RESOURCES_BY_DOMAIN_AND_SERVER, zLdapFilter);
+    }
+    
+    @Test
+    public void toIDNFilter() throws Exception {
+        assertEquals("!(zimbraDomainName=*\u4e2d\u6587*)", 
+                LdapEntrySearchFilter.toLdapIDNFilter("!(zimbraDomainName=*\u4e2d\u6587*)"));
+
+        assertEquals("(!(objectClass=*))", 
+                LdapEntrySearchFilter.toLdapIDNFilter("!(objectClass=*)"));
+        
+        assertEquals("(!(objectClass=**))", 
+                LdapEntrySearchFilter.toLdapIDNFilter("!(objectClass=**)"));
+
+        assertEquals("(!(objectClass=*abc))", 
+                LdapEntrySearchFilter.toLdapIDNFilter("!(objectClass=*abc)"));
+        
+        assertEquals("(!(objectClass=abc*))", 
+                LdapEntrySearchFilter.toLdapIDNFilter("!(objectClass=abc*)"));
+        
+        assertEquals("(!(objectClass=*abc*))", 
+                LdapEntrySearchFilter.toLdapIDNFilter("!(objectClass=*abc*)"));
+        
+        assertEquals("(|(zimbraMailDeliveryAddress=*@test.xn--fiq228c.com)(zimbraMailAlias=*@test.xn--fiq228c.com))", 
+                LdapEntrySearchFilter.toLdapIDNFilter("(|(zimbraMailDeliveryAddress=*@test.\u4e2d\u6587.com)(zimbraMailAlias=*@test.\u4e2d\u6587.com))"));
     }
 
 }

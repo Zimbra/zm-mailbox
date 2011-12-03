@@ -52,19 +52,18 @@ import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
-import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.qa.unittest.TestUtil;
 
 public class TestLdapProvSearchDirectory extends LdapTest {
     
-    private static ProvTestUtil provUtil;
+    private static LdapProvTestUtil provUtil;
     private static Provisioning prov;
     private static Domain domain;
     
     @BeforeClass
     public static void init() throws Exception {
-        provUtil = new ProvTestUtil();
+        provUtil = new LdapProvTestUtil();
         prov = provUtil.getProv();
         domain = provUtil.createDomain(baseDomainName(), null);
     }
@@ -739,8 +738,7 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         Account acct = createAccount("renameDomainSearchAcctCrDl-acct");
         CalendarResource cr = createCalendarResource("renameDomainSearchAcctCrDl-cr");
         DistributionList dl = createDistributionList("renameDomainSearchAcctCrDl-dl");
-        
-        
+         
         String domainDN = ((LdapDomain) domain).getDN();
         String searchBase = ((LdapProv) prov).getDIT().domainDNToAccountSearchDN(domainDN);
         
@@ -770,6 +768,10 @@ public class TestLdapProvSearchDirectory extends LdapTest {
          Oct 12 22:10:43 pshao-macbookpro-2 slapd[3065]: conn=1081 op=434 SEARCH RESULT tag=101 err=0 nentries=3 text=
  
          */
+        
+        deleteAccount(acct);
+        deleteAccount(cr);
+        deleteGroup(dl);
     }
 
     @Test
@@ -813,6 +815,26 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         deleteAccount(cr);
         deleteGroup(dl);
         deleteGroup(dg);
+    }
+    
+    @Test  // bug 67379
+    public void wildcardFilter() throws Exception {
+        Account acct1 = createAccount("wildcardFilter-acct-1");
+        Account acct2 = createAccount("wildcardFilter-acct-2");
+        Account acct3 = createAccount("wildcardFilter-acct-3");
+        
+        SearchDirectoryOptions options = new SearchDirectoryOptions(domain);
+        options.setTypes(ObjectType.accounts);
+        options.setSortOpt(SortOpt.SORT_ASCENDING);
+        options.setFilterString(FilterId.UNITTEST, "(cn=*)");
+        options.setConvertIDNToAscii(true);
+        List<NamedEntry> entries = prov.searchDirectory(options);
+        
+        assertEquals(3, entries.size());
+        
+        for (NamedEntry entry : entries) {
+            System.out.println(entry.getName());
+        }
     }
     
 }

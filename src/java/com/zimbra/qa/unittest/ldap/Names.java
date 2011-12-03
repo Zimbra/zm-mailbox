@@ -92,6 +92,7 @@ public class Names {
         String UNICODE_CHARS = "\u4e2d\u6587";
         
         // hmm, javamail does not like any of the ATOM_CHARS 
+        // TODO: fix
         return /* ATOM_CHARS + */ UNICODE_CHARS + "---" + name;
     }
 

@@ -21,6 +21,7 @@ import com.zimbra.cs.account.EntrySearchFilter.Multi;
 import com.zimbra.cs.account.EntrySearchFilter.Operator;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Term;
+import com.zimbra.cs.ldap.LdapClient;
 
 /*
  * parse string representation of LDAP query into EntrySearchFilter
@@ -203,6 +204,7 @@ public class LdapFilterParser {
     }
     
     public static void main(String[] args) {
+        LdapClient.initialize();
         
         test("!(zimbraDomainName=*\u4e2d\u6587*)");
 

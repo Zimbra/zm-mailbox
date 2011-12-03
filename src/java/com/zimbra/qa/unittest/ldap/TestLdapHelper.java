@@ -47,14 +47,14 @@ import com.zimbra.cs.ldap.ZSearchResultEnumeration;
 import com.zimbra.cs.ldap.ZSearchScope;
 
 public class TestLdapHelper extends LdapTest {
-    private static ProvTestUtil provUtil;
+    private static LdapProvTestUtil provUtil;
     private static LdapProv prov;
     private static LdapHelper ldapHelper;
     private static Domain domain;
     
     @BeforeClass
     public static void init() throws Exception {
-        provUtil = new ProvTestUtil();
+        provUtil = new LdapProvTestUtil();
         prov = provUtil.getProv();
         ldapHelper = provUtil.getProv().getHelper();
         domain = provUtil.createDomain(baseDomainName(), null);

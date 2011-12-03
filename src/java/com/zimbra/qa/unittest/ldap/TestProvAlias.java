@@ -54,12 +54,12 @@ public class TestProvAlias extends LdapTest {
     
     private static String origDefaultDomainName;
     
-    private static ProvTestUtil provUtil;
+    private static LdapProvTestUtil provUtil;
     private static Provisioning prov;
         
     @BeforeClass
     public static void init() throws Exception {
-        provUtil = new ProvTestUtil();
+        provUtil = new LdapProvTestUtil();
         prov = provUtil.getProv();
         
         Config config = prov.getConfig();

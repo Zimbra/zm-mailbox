@@ -23,14 +23,14 @@ import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 
 public class TestLdapProvExternalLdapAuth extends LdapTest {
 
-    private static ProvTestUtil provUtil;
+    private static LdapProvTestUtil provUtil;
     private static LdapProv prov;
     private static Domain domain;
     private static LdapConnType testConnType = LdapConnType.PLAIN;  // LDAPS  STARTTLS
     
     @BeforeClass
     public static void init() throws Exception {
-        provUtil = new ProvTestUtil();
+        provUtil = new LdapProvTestUtil();
         prov = provUtil.getProv();
         domain = provUtil.createDomain(baseDomainName(), null);
     }

@@ -33,6 +33,7 @@ import org.junit.runner.notification.Failure;
 import com.google.common.collect.Lists;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.KnownKey;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
@@ -60,7 +61,7 @@ import com.zimbra.qa.unittest.ldap.TestLdapHelper;
 import com.zimbra.qa.unittest.ldap.TestLdapProvAccount;
 import com.zimbra.qa.unittest.ldap.TestLdapProvAlias;
 import com.zimbra.qa.unittest.ldap.TestLdapProvAttrCallback;
-import com.zimbra.qa.unittest.ldap.TestLdapProvAutoProvision;
+import com.zimbra.qa.unittest.ldap.TestAutoProvision;
 import com.zimbra.qa.unittest.ldap.TestLdapProvCos;
 import com.zimbra.qa.unittest.ldap.TestLdapProvDIT;
 import com.zimbra.qa.unittest.ldap.TestLdapProvDataSource;
@@ -92,6 +93,7 @@ import com.zimbra.qa.unittest.ldap.TestProvAttr;
 import com.zimbra.qa.unittest.ldap.TestProvCallbackAvailableZimlets;
 import com.zimbra.qa.unittest.ldap.TestProvIDN;
 import com.zimbra.qa.unittest.ldap.TestProvZimbraId;
+import com.zimbra.qa.unittest.soap.TestDelegatedDL;
 
 public class TestLdap {
     private static final String TEST_LDAP_BASE_DOMAIN = "testldap";
@@ -161,9 +163,8 @@ public class TestLdap {
             currentTestConfig = config;
             
             // support UBID only for now
-            assert(TestConfig.UBID == config);
-            
-            /*
+            // assert(TestConfig.UBID == config);
+
             if (config.ldapClientClass != null) {
                 modifyLocalConfig(LC.zimbra_class_ldap_client.key(), config.ldapClientClass.getCanonicalName());
             } else {
@@ -172,7 +173,6 @@ public class TestLdap {
             }
             modifyLocalConfig(LC.zimbra_class_provisioning.key(), config.ldapProvClass.getCanonicalName());
             LC.reload();
-            */
         }
         
         static synchronized TestConfig getCurrentTestConfig() {
@@ -442,7 +442,7 @@ public class TestLdap {
         classes.add(TestLdapProvAccount.class);
         classes.add(TestLdapProvAlias.class);
         classes.add(TestLdapProvAttrCallback.class);
-        classes.add(TestLdapProvAutoProvision.class);
+        classes.add(TestAutoProvision.class);
         classes.add(TestLdapProvCos.class);
         classes.add(TestLdapProvDataSource.class);
         classes.add(TestLdapProvDistributionList.class);
@@ -472,7 +472,7 @@ public class TestLdap {
         
         
         // Tests need server running
-        classes.add(TestProvDelegatedDL.class);
+        classes.add(TestDelegatedDL.class);
         
         // old tests, TODO: convert them 
         classes.add(TestAccountLockout.class);
@@ -626,8 +626,9 @@ public class TestLdap {
         junit.addListener(new TestLogger());
         
         // TestConfig.useConfig(TestConfig.LEGACY);
+        TestConfig.useConfig(TestConfig.UBID);
         
-        runTests(junit, TestConfig.UBID);
+        // runTests(junit, TestConfig.UBID);
         // runTests(junit, TestConfig.JNDI);
         // runTests(junit, TestConfig.LEGACY);
         

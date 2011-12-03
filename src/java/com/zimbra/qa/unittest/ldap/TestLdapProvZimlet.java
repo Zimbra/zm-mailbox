@@ -27,12 +27,12 @@ import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Zimlet;
 
 public class TestLdapProvZimlet extends LdapTest {
-    private static ProvTestUtil provUtil;
+    private static LdapProvTestUtil provUtil;
     private static Provisioning prov;
     
     @BeforeClass
     public static void init() throws Exception {
-        provUtil = new ProvTestUtil();
+        provUtil = new LdapProvTestUtil();
         prov = provUtil.getProv();
     }
     

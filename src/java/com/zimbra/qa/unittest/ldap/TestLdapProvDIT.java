@@ -21,13 +21,13 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.ldap.LdapProv;
 
 public class TestLdapProvDIT extends LdapTest {
-    private static ProvTestUtil provUtil;
+    private static LdapProvTestUtil provUtil;
     private static LdapProv prov;
     private static Domain domain;
     
     @BeforeClass
     public static void init() throws Exception {
-        provUtil = new ProvTestUtil();
+        provUtil = new LdapProvTestUtil();
         prov = provUtil.getProv();
         domain = provUtil.createDomain(baseDomainName(), null);
     }

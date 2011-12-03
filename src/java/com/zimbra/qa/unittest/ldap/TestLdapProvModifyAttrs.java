@@ -32,13 +32,13 @@ import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 import com.zimbra.qa.unittest.TestUtil;
 
 public class TestLdapProvModifyAttrs extends LdapTest {
-    private static ProvTestUtil provUtil;
+    private static LdapProvTestUtil provUtil;
     private static Provisioning prov;
     private static Domain domain;
     
     @BeforeClass
     public static void init() throws Exception {
-        provUtil = new ProvTestUtil();
+        provUtil = new LdapProvTestUtil();
         prov = provUtil.getProv();
         domain = provUtil.createDomain(baseDomainName());
     }

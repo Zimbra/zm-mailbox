@@ -28,7 +28,7 @@ public class TestLdapProvMimeType extends LdapTest {
     
     @BeforeClass
     public static void init() throws Exception {
-        prov = new ProvTestUtil().getProv();
+        prov = new LdapProvTestUtil().getProv();
     }
     
     @Test

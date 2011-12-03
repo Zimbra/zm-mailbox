@@ -14,7 +14,7 @@ private static Provisioning prov;
     
     @BeforeClass
     public static void init() throws Exception {
-        prov = new ProvTestUtil().getProv();
+        prov = new LdapProvTestUtil().getProv();
     }
     
     @Test

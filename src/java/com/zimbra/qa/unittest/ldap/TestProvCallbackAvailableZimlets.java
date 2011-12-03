@@ -29,12 +29,12 @@ import com.zimbra.cs.account.Provisioning;
 public class TestProvCallbackAvailableZimlets extends LdapTest {
     
     private static String COS_NAME = "cos1";
-    private static ProvTestUtil provUtil;
+    private static LdapProvTestUtil provUtil;
     private static Provisioning prov;
     
     @BeforeClass
     public static void init() throws Exception {
-        provUtil = new ProvTestUtil();
+        provUtil = new LdapProvTestUtil();
         prov = provUtil.getProv();
         
         Map<String, Object> attrs = new HashMap<String, Object>(); 

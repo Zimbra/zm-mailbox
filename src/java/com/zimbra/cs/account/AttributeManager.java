@@ -965,7 +965,7 @@ public class AttributeManager {
         emailp,    // attr type is emailp
         cs_emailp, // attr type is cs_emailp
         idn,       // attr has idn flag
-        none;      // attr is not of type smail, emailp, cs_emailp, nor does it has idn flag
+        none;      // attr is not of type smail, emailp, cs_emailp, nor does it have idn flag
 
         public boolean isEmailOrIDN() {
             return this != none;

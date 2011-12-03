@@ -47,7 +47,7 @@ public class TestLdapProvEntry extends LdapTest {
     
     private static final TestLdapBinary.Content binaryData = TestLdapBinary.Content.generateContent(1024);
     
-    private static ProvTestUtil provUtil;
+    private static LdapProvTestUtil provUtil;
     private static Provisioning prov;
     private static Domain domain;
     private static Cos cos;
@@ -57,7 +57,7 @@ public class TestLdapProvEntry extends LdapTest {
     
     @BeforeClass
     public static void init() throws Exception {
-        provUtil = new ProvTestUtil();
+        provUtil = new LdapProvTestUtil();
         prov = provUtil.getProv();
         
         domain = provUtil.createDomain(DOMAIN_NAME, new HashMap<String, Object>());

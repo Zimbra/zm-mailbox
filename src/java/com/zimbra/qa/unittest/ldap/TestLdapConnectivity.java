@@ -68,8 +68,6 @@ public class TestLdapConnectivity {
     
           sudo /opt/zimbra/libexec/zmslapd -l LOCAL0 -4 -u `whoami` -h "ldap://:389/ ldaps://:636/" \
                         -f /opt/zimbra/conf/slapd.conf       
-             
-        (1 and 2 are now checked in so we don't need to do them manually anymore.)                
           
         StartTLS and ldaps cannot co-exist in production, because if ldap url contains ldaps,
         then startTLS will never be used regardless of the LC keys.

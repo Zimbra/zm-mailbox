@@ -12,27 +12,14 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.qa.unittest.ldap;
+package com.zimbra.qa.unittest.soap;
 
-import org.junit.*;
-import static org.junit.Assert.*;
+import org.junit.Test;
 
-import com.zimbra.cs.account.Config;
-import com.zimbra.cs.account.Provisioning;
+public class TestSearchCalendarResources {
 
-public class TestLdapProvGlobalConfig extends LdapTest {
-
-    private static Provisioning prov;
-    
-    @BeforeClass
-    public static void init() throws Exception {
-        prov = new LdapProvTestUtil().getProv();
-    }
-    
     @Test
-    public void getGlobalConfig() throws Exception {
-        Config config = prov.getConfig();
-        assertNotNull(config);
+    public void searchCalendarResources() throws Exception {
+        // SearchCalendarResources 
     }
-
 }

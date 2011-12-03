@@ -71,13 +71,13 @@ public class TestProvIDN extends LdapTest {
     // private static String UNICODESTR = "\u5f35\u611b\u73b2";
     private static String PASSWORD = "test123";
     
-    private static ProvTestUtil provUtil;
+    private static LdapProvTestUtil provUtil;
     private static Provisioning prov;
     private static String BASE_DOMAIN_NAME;
     
     @BeforeClass
     public static void init() throws Exception {
-        provUtil = new ProvTestUtil();
+        provUtil = new LdapProvTestUtil();
         prov = provUtil.getProv();
         BASE_DOMAIN_NAME = baseDomainName();
     }

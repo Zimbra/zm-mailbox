@@ -2293,6 +2293,13 @@
               </fileset>
           </batchtest>
           
+          <!-- run soap tests in a seperate batch, ZCS must be up for this batch -->
+          <batchtest todir="${ldaptest.dir}/output" unless="test">
+              <fileset dir="${src.java.dir}">
+                  <include name="**/com/zimbra/qa/unittest/soap/Test*.java"/>
+              </fileset>
+          </batchtest>
+                  
       </junit>
       
       <!-- run TestLdapConnectivity seperately, with assertion disabled, not inmem -->

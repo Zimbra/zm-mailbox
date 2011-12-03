@@ -1,16 +1,27 @@
-package com.zimbra.qa.unittest;
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2011 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
+package com.zimbra.qa.unittest.soap;
 
 import static org.junit.Assert.*;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.httpclient.methods.PostMethod;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -19,15 +30,11 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapTransport;
-import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Group;
@@ -37,9 +44,7 @@ import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
-import com.zimbra.soap.JaxbUtil;
-import com.zimbra.soap.account.message.AuthRequest;
-import com.zimbra.soap.account.message.AuthResponse;
+import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.soap.account.message.CreateDistributionListRequest;
 import com.zimbra.soap.account.message.CreateDistributionListResponse;
 import com.zimbra.soap.account.message.DistributionListActionRequest;
@@ -64,77 +69,76 @@ import com.zimbra.soap.type.DistributionListSelector;
 import com.zimbra.soap.type.KeyValuePair;
 import com.zimbra.soap.type.TargetBy;
 
-public class TestProvDelegatedDL {
-    private static boolean verbose = false;
-    
-    private static String TEST_ID = TestProvisioningUtil.genTestId();
-    private static String DOMAIN_NAME = TestProvisioningUtil.baseDomainName("test-delegated-dl", TEST_ID);
-    private static String ADMIN = TestUtil.getAddress("admin", DOMAIN_NAME);
-    private static String USER_CREATOR = TestUtil.getAddress("creator", DOMAIN_NAME);
-    private static String USER_OWNER = TestUtil.getAddress("owner", DOMAIN_NAME);
-    private static String USER_NOT_OWNER = TestUtil.getAddress("not-owner", DOMAIN_NAME);
-    private static String DL_NAME = TestUtil.getAddress("dl", DOMAIN_NAME);
-    private static String PASSWORD = "test123";
+public class TestDelegatedDL extends SoapTest {
         
+    private static String DOMAIN_NAME;
+    private static String ADMIN;
+    private static String USER_CREATOR;
+    private static String USER_OWNER;
+    private static String USER_NOT_OWNER;
+    private static String DL_NAME;
+    private static String PASSWORD;
+        
+    private static SoapProvTestUtil provUtil;
     private static Provisioning prov;
-    private static HttpDebugListener soapDebugListener = new DebugListener();
     
-    private static class DebugListener implements HttpDebugListener {
-
-        @Override
-        public void receiveSoapMessage(PostMethod postMethod, Element envelope) {
-            if (!verbose) {
-                return;
-            }
-            
-            System.out.println();
-            System.out.println("=== Response ===");
-            System.out.println(envelope.prettyPrint());
-        }
-
-        @Override
-        public void sendSoapMessage(PostMethod postMethod, Element envelope) {
-            if (!verbose) {
-                return;
-            }
-            
-            System.out.println();
-            System.out.println("=== Request ===");
-            System.out.println(envelope.prettyPrint());
-        }
-    }
-
-    private static SoapTransport authUser(String acctName) throws Exception {
-        com.zimbra.soap.account.type.Account acct = 
-            new com.zimbra.soap.account.type.Account(
-                    com.zimbra.soap.account.type.Account.By.NAME, acctName);
+    @BeforeClass
+    public static void init() throws Exception {
+        DOMAIN_NAME = baseDomainName();
+        ADMIN = TestUtil.getAddress("admin", DOMAIN_NAME);
+        USER_CREATOR = TestUtil.getAddress("creator", DOMAIN_NAME);
+        USER_OWNER = TestUtil.getAddress("owner", DOMAIN_NAME);
+        USER_NOT_OWNER = TestUtil.getAddress("not-owner", DOMAIN_NAME);
+        DL_NAME = TestUtil.getAddress("dl", DOMAIN_NAME);
+        PASSWORD = "test123";
         
-        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
-        transport.setHttpDebugListener(soapDebugListener);
+        // init rights
+        RightManager.getInstance();
         
-        AuthRequest req = new AuthRequest(acct, PASSWORD);
-        AuthResponse resp = invokeJaxb(transport, req);
-        transport.setAuthToken(resp.getAuthToken());
-        return transport;
-    }
-    
-    private SoapTransport authAdmin() throws Exception {
+        provUtil = new SoapProvTestUtil();
+        prov = provUtil.getProv();
         
-        SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getAdminSoapUrl());
-        transport.setHttpDebugListener(soapDebugListener);
+        Domain domain = provUtil.createDomain(DOMAIN_NAME, new HashMap<String, Object>());
         
-        com.zimbra.soap.admin.message.AuthRequest req = new com.zimbra.soap.admin.message.AuthRequest(ADMIN, PASSWORD);
-        com.zimbra.soap.admin.message.AuthResponse resp = invokeJaxb(transport, req);
-        transport.setAuthToken(resp.getAuthToken());
-        return transport;
+        Map<String, Object> adminAttrs = new HashMap<String, Object>();
+        adminAttrs.put(Provisioning.A_zimbraIsAdminAccount, ProvisioningConstants.TRUE);
+        Account admin = provUtil.createAccount(ADMIN, adminAttrs);
+        
+        Account creator = provUtil.createAccount(USER_CREATOR, new HashMap<String, Object>());
+        
+        Account owner = provUtil.createAccount(USER_OWNER, new HashMap<String, Object>());
+        
+        Account notOwner = provUtil.createAccount(USER_NOT_OWNER, new HashMap<String, Object>());
+        
+        prov.grantRight(TargetType.domain.getCode(), TargetBy.name, domain.getName(), 
+                GranteeType.GT_USER.getCode(), GranteeBy.name, creator.getName(), null, 
+                User.R_createDistList.getName(), null);
+        
+        // create a DL for get/action tests
+        List<KeyValuePair> attrs = Lists.newArrayList(new KeyValuePair(
+                Provisioning.A_zimbraDistributionListSubscriptionPolicy, 
+                ZAttrProvisioning.DistributionListSubscriptionPolicy.ACCEPT.name()));
+        Group group = createGroupAndAddOwner(DL_NAME, attrs);
     }
     
-    private static <T> T invokeJaxb(SoapTransport transport, Object jaxbObject)
-    throws ServiceException, IOException {
-        Element req = JaxbUtil.jaxbToElement(jaxbObject);
-        Element res = transport.invoke(req);
-        return (T) JaxbUtil.elementToJaxb(res);
+    @AfterClass
+    public static void cleanup() throws Exception {
+        Account admin = prov.get(AccountBy.name, ADMIN);
+        prov.deleteAccount(admin.getId());
+        
+        Account creator = prov.get(AccountBy.name, USER_CREATOR);
+        prov.deleteAccount(creator.getId());
+        
+        Account owner = prov.get(AccountBy.name, USER_OWNER);
+        prov.deleteAccount(owner.getId());
+        
+        Account notOwner = prov.get(AccountBy.name, USER_NOT_OWNER);
+        prov.deleteAccount(notOwner.getId());
+        
+        Domain domain = prov.get(DomainBy.name, DOMAIN_NAME);
+        prov.deleteDomain(domain.getId());
     }
+
     
     private static Group createGroupAndAddOwner(String groupName) throws Exception {
         return createGroupAndAddOwner(groupName, null);
@@ -191,62 +195,6 @@ public class TestProvDelegatedDL {
         return group;
     }
     
-    @BeforeClass
-    public static void init() throws Exception {
-        // init rights
-        RightManager.getInstance();
-        
-        // use soap provisioning
-        TestUtil.cliSetup();
-        
-        prov = Provisioning.getInstance();
-        
-        Domain domain = prov.createDomain(DOMAIN_NAME, new HashMap<String, Object>());
-        assertNotNull(domain);
-        
-        Map<String, Object> adminAttrs = new HashMap<String, Object>();
-        adminAttrs.put(Provisioning.A_zimbraIsAdminAccount, ProvisioningConstants.TRUE);
-        Account admin = prov.createAccount(ADMIN, PASSWORD, adminAttrs);
-        assertNotNull(admin);
-        
-        Account creator = prov.createAccount(USER_CREATOR, PASSWORD, new HashMap<String, Object>());
-        assertNotNull(creator);
-        
-        Account owner = prov.createAccount(USER_OWNER, PASSWORD, new HashMap<String, Object>());
-        assertNotNull(owner);
-        
-        Account notOwner = prov.createAccount(USER_NOT_OWNER, PASSWORD, new HashMap<String, Object>());
-        assertNotNull(notOwner);
-        
-        prov.grantRight(TargetType.domain.getCode(), TargetBy.name, domain.getName(), 
-                GranteeType.GT_USER.getCode(), GranteeBy.name, creator.getName(), null, 
-                User.R_createDistList.getName(), null);
-        
-        // create a DL for get/action tests
-        List<KeyValuePair> attrs = Lists.newArrayList(new KeyValuePair(
-                Provisioning.A_zimbraDistributionListSubscriptionPolicy, 
-                ZAttrProvisioning.DistributionListSubscriptionPolicy.ACCEPT.name()));
-        Group group = createGroupAndAddOwner(DL_NAME, attrs);
-    }
-    
-    // @AfterClass
-    public static void cleanup() throws Exception {
-        Account admin = prov.get(AccountBy.name, ADMIN);
-        prov.deleteAccount(admin.getId());
-        
-        Account creator = prov.get(AccountBy.name, USER_CREATOR);
-        prov.deleteAccount(creator.getId());
-        
-        Account owner = prov.get(AccountBy.name, USER_OWNER);
-        prov.deleteAccount(owner.getId());
-        
-        Account notOwner = prov.get(AccountBy.name, USER_NOT_OWNER);
-        prov.deleteAccount(notOwner.getId());
-        
-        Domain domain = prov.get(DomainBy.name, DOMAIN_NAME);
-        prov.deleteDomain(domain.getId());
-    }
-    
     private String getAddress(String localpart) {
         return TestUtil.getAddress(localpart, DOMAIN_NAME);
     }
@@ -257,7 +205,7 @@ public class TestProvDelegatedDL {
      * Test the owners element in zimbraAdmin:GetDistributionList
      */
     public void getDistributionListAdmin() throws Exception {
-        SoapTransport transport = authAdmin();
+        SoapTransport transport = authAdmin(ADMIN);
         
         com.zimbra.soap.admin.message.GetDistributionListRequest req = 
             new com.zimbra.soap.admin.message.GetDistributionListRequest(

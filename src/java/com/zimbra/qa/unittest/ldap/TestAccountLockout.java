@@ -43,13 +43,13 @@ public class TestAccountLockout extends LdapTest {
     private final int LOCKOUT_DURATION_SECONDS = 10;
     
     
-    private static ProvTestUtil provUtil;
+    private static LdapProvTestUtil provUtil;
     private static Provisioning prov;
     private static Domain domain;
     
     @BeforeClass
     public static void init() throws Exception {
-        provUtil = new ProvTestUtil();
+        provUtil = new LdapProvTestUtil();
         prov = provUtil.getProv();
         domain = provUtil.createDomain(baseDomainName());
     }

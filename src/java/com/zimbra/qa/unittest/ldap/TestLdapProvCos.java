@@ -38,13 +38,13 @@ import com.zimbra.cs.account.Provisioning.CacheEntryType;
 
 public class TestLdapProvCos extends LdapTest {
 
-    private static ProvTestUtil provUtil;
+    private static LdapProvTestUtil provUtil;
     private static Provisioning prov;
     private static Domain domain;
     
     @BeforeClass
     public static void init() throws Exception {
-        provUtil = new ProvTestUtil();
+        provUtil = new LdapProvTestUtil();
         prov = provUtil.getProv();
         domain = provUtil.createDomain(baseDomainName());
     }
