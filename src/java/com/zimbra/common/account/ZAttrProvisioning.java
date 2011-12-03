@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111201-1307 */
+    /* build: 8.0.0_BETA1_1111 dywang 20111202-1445 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -6427,7 +6427,7 @@ public class ZAttrProvisioning {
     /**
      * whether to allow simple password; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -6511,7 +6511,7 @@ public class ZAttrProvisioning {
     /**
      * whether to require alpha-numeric password as device pin; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -6549,7 +6549,7 @@ public class ZAttrProvisioning {
     /**
      * number of days before device pin must expire; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -6559,7 +6559,7 @@ public class ZAttrProvisioning {
     /**
      * number of previously used password stored in history; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE or
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE or
      * zimbraMobilePolicyDevicePasswordExpiration=0
      *
      * @since ZCS 6.0.0_BETA1
@@ -6581,7 +6581,7 @@ public class ZAttrProvisioning {
     /**
      * number of consecutive incorrect pin input before device is wiped;
      * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -6622,7 +6622,7 @@ public class ZAttrProvisioning {
     /**
      * max idle time in minutes before device is locked; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -6632,7 +6632,7 @@ public class ZAttrProvisioning {
     /**
      * least number of complex characters must be included in device pin;
      * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -6642,7 +6642,7 @@ public class ZAttrProvisioning {
     /**
      * min length for device pin; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -6652,7 +6652,7 @@ public class ZAttrProvisioning {
     /**
      * support device pin recovery; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -10551,22 +10551,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
