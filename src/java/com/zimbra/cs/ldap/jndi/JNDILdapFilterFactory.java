@@ -32,8 +32,7 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
 
     @Override
     public String encodeValue(String value) {
-        // TODO
-        throw new UnsupportedOperationException();
+        return value;
     }
     
     /*

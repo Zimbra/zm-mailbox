@@ -33,6 +33,9 @@ import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 
+/*
+ * Traverse a EntrySearchFilter.Term tree and convert it to LDAP query
+ */
 public class LdapEntrySearchFilter {
 
     public static class LdapQueryVisitor implements Visitor {
@@ -72,7 +75,12 @@ public class LdapEntrySearchFilter {
             if (op.equals(Operator.has)) {
                 filter = filterFactory.substringFilter(filterId, attr, val);
             } else if (op.equals(Operator.eq)) {
-                filter = filterFactory.equalityFilter(filterId, attr, val);
+                // there is no presence operator in Single
+                if (val.equals("*")) {
+                    filter = filterFactory.presenceFilter(filterId, attr);
+                } else {
+                    filter = filterFactory.equalityFilter(filterId, attr, val);
+                }
             } else if (op.equals(Operator.ge)) {
                 filter = filterFactory.greaterOrEqualFilter(filterId, attr, val);
             } else if (op.equals(Operator.le)) {
@@ -109,7 +117,8 @@ public class LdapEntrySearchFilter {
         }
         
         protected String getVal(Single term) {
-            return LdapUtil.escapeSearchFilterArg(term.getRhs());
+            // return LdapUtil.escapeSearchFilterArg(term.getRhs());
+            return term.getRhs();
         }
     }
     

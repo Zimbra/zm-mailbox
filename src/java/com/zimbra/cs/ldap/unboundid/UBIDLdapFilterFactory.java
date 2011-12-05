@@ -250,7 +250,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter greaterOrEqualFilter(FilterId filterId, String attr, String value) {
         return new UBIDLdapFilter(
                 filterId,
-                Filter.createEqualityFilter(attr, value));
+                Filter.createGreaterOrEqualFilter(attr, value));
     }
 
     @Override
@@ -266,7 +266,6 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                 filterId,
                 Filter.createSubstringFilter(attr, value, null, null));
     }
-    
 
     @Override
     public ZLdapFilter endsWithFilter(FilterId filterId, String attr, String value) {
