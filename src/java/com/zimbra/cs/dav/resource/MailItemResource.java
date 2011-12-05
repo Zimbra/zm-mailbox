@@ -364,8 +364,11 @@ public abstract class MailItemResource extends DavResource {
 	 */
 	@Override
     public void patchProperties(DavContext ctxt, java.util.Collection<Element> set, java.util.Collection<QName> remove) throws DavException, IOException {
-		for (QName n : remove)
-				mDeadProps.remove(n);
+	    List<QName> reqProps = new ArrayList<QName>();
+	    for (QName n : remove) {
+	        mDeadProps.remove(n);
+	        reqProps.add(n);
+	    }		
 		for (Element e : set) {
 			QName name = e.getQName();
 			if (name.equals(DavElements.E_DISPLAYNAME) &&
@@ -402,6 +405,7 @@ public abstract class MailItemResource extends DavResource {
 				continue;
 			}
 			mDeadProps.put(name, e);
+			reqProps.add(name);
 		}
 		String configVal = "";
 		if (mDeadProps.size() > 0) {
@@ -429,9 +433,10 @@ public abstract class MailItemResource extends DavResource {
 				data.put(Integer.toString(mId), configVal);
 				mbox.setConfig(ctxt.getOperationContext(), CONFIG_KEY, data);
 			}
-		} catch (ServiceException se) {
-			throw new DavException("unable to patch properties", HttpServletResponse.SC_FORBIDDEN, se);
-		}
+	    } catch (ServiceException se) {
+	        for (QName qname : reqProps)
+	            ctxt.getResponseProp().addPropError(qname, new DavException(se.getMessage(), HttpServletResponse.SC_FORBIDDEN));
+	    }    
 	}
 	
 	public ResourceProperty getProperty(QName prop) {
