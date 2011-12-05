@@ -156,7 +156,7 @@ public class DavResponse {
 			ResourceProperty prop = rs.getProperty(name, props);
 			if (errPropMap.containsKey(name)) {
 				DavException ex = errPropMap.get(name);
-				propstat.add(name, ex.getMessage(), ex.getStatus());
+				propstat.add(name, null, ex.getStatus());
 			} else if (prop == null) {
 				propstat.add(name, null, HttpServletResponse.SC_NOT_FOUND);
 			} else {

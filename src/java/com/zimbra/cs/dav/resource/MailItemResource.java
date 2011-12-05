@@ -386,8 +386,11 @@ public abstract class MailItemResource extends DavResource {
     @Override
     public void patchProperties(DavContext ctxt, java.util.Collection<Element> set, java.util.Collection<QName> remove)
             throws DavException, IOException {
-        for (QName n : remove)
-                mDeadProps.remove(n);
+        List<QName> reqProps = new ArrayList<QName>();
+        for (QName n : remove) {
+            mDeadProps.remove(n);
+            reqProps.add(n);    
+        }
         for (Element e : set) {
             QName name = e.getQName();
             if (name.equals(DavElements.E_DISPLAYNAME) &&
@@ -426,6 +429,7 @@ public abstract class MailItemResource extends DavResource {
                 continue;
             }
             mDeadProps.put(name, e);
+            reqProps.add(name);
         }
         String configVal = "";
         if (mDeadProps.size() > 0) {
@@ -444,21 +448,22 @@ public abstract class MailItemResource extends DavResource {
                 for (Map.Entry<QName,Element> entry : mDeadProps.entrySet())
                     ctxt.getResponseProp().addPropError(entry.getKey(), new DavException("prop length exceeded", DavProtocol.STATUS_INSUFFICIENT_STORAGE));
         }
+        Mailbox mbox = null;            
         try {
-            Mailbox mbox = getMailbox(ctxt);
+            mbox = getMailbox(ctxt);
             mbox.lock.lock();
-            try {
-                Metadata data = mbox.getConfig(ctxt.getOperationContext(), CONFIG_KEY);
-                if (data == null) {
-                    data = new Metadata();
-                }
-                data.put(Integer.toString(mId), configVal);
-                mbox.setConfig(ctxt.getOperationContext(), CONFIG_KEY, data);
-            } finally {
-                mbox.lock.release();
+            Metadata data = mbox.getConfig(ctxt.getOperationContext(), CONFIG_KEY);
+            if (data == null) {
+                data = new Metadata();
             }
+            data.put(Integer.toString(mId), configVal);
+            mbox.setConfig(ctxt.getOperationContext(), CONFIG_KEY, data);
         } catch (ServiceException se) {
-            throw new DavException("unable to patch properties", HttpServletResponse.SC_FORBIDDEN, se);
+            for (QName qname : reqProps)
+                ctxt.getResponseProp().addPropError(qname, new DavException(se.getMessage(), HttpServletResponse.SC_FORBIDDEN));                
+        } finally {
+            if (mbox != null)
+                mbox.lock.release();
         }
     }
 
