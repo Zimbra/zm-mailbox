@@ -30,7 +30,8 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.db.DbSearchConstraints.NumericRange;
 import com.zimbra.cs.db.DbSearchConstraints.StringRange;
@@ -49,7 +50,7 @@ import com.zimbra.cs.mailbox.Tag;
 
 public class DbSearch {
 
-    private static Log sLog = LogFactory.getLog(DbSearch.class);
+    private static Log sLog = ZimbraLog.index_search;
 
     public static final class SearchResult {
         public int    id;
@@ -142,6 +143,21 @@ public class DbSearch {
                         }
                         // fall through to ID-based comparison below!
                         break;
+                    case SENDER:
+                    case SUBJECT:
+                    case NAME:
+                    case NAME_NATURAL_ORDER:
+                        String s1 = (String) o1.sortkey;
+                        String s2 = (String) o2.sortkey;
+                        if (!StringUtil.equal(s1, s2)) {
+                            if (mSort.getDirection() == SortDirection.DESCENDING) {
+                                return StringUtil.compareTo(s2, s1);
+                             } else {
+                                return StringUtil.compareTo(s1, s2);
+                             }
+                        }
+                        break;
+                    case ID:
                     case NONE:
                         break;
                     default:
@@ -552,12 +568,6 @@ public class DbSearch {
     }
 
     private static <T> List<T> mergeSortedLists(List<T> toRet, List<List<T>> lists, Comparator<? super T> comparator) {
-        // TODO find or code a proper merge-sort here
-        int totalNumValues = 0;
-        for (List<T> l : lists) {
-            totalNumValues += l.size();
-        }
-        
         for (List<T> l : lists) {
             toRet.addAll(l);
         }
@@ -567,6 +577,33 @@ public class DbSearch {
         return toRet;
     }
     
+    private static List<SearchResult> intersectSortedLists(List<SearchResult> toRet, List<List<SearchResult>> lists) {
+        if (lists.size() < 0) {
+            return toRet;
+        }
+        //optimize so shortest list is first
+        Collections.sort(lists, new Comparator<List<SearchResult>>() {
+            @Override
+            public int compare(List<SearchResult> l1, List<SearchResult> l2) {
+                return l1.size() - l2.size();
+            }
+        });
+        
+        for (SearchResult result : lists.get(0)) {
+            boolean intersect = true;
+            for (int i = 1; i < lists.size(); i++) {
+                if (!lists.get(i).contains(result)) {
+                    intersect = false;
+                    break;
+                }
+            }
+            if (intersect) {
+                toRet.add(result);
+            }
+        }
+        return toRet;
+    }
+
     public static List<SearchResult> search(List<SearchResult> result, Connection conn,
                                             DbSearchConstraintsNode node, Mailbox mbox, SortBy sort,
                                             int offset, int limit, SearchResult.ExtraData extra, boolean inDumpster)
@@ -574,34 +611,32 @@ public class DbSearch {
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
         // this monstrosity for bug 31343
-        if (!Db.supports(Db.Capability.AVOID_OR_IN_WHERE_CLAUSE) ||
-                        (sort.getCriterion() != SortCriterion.DATE && sort.getCriterion() != SortCriterion.SIZE) || 
-                        NodeType.OR != node.getNodeType()) {
+        if (!Db.supports(Db.Capability.AVOID_OR_IN_WHERE_CLAUSE) || NodeType.OR != node.getNodeType()) {
             // do it the old way
             try {
                 return searchInternal(result, conn, node, mbox, sort, offset, limit, extra, inDumpster);
             } catch (ServiceException se) {
-                boolean trySplitOr = false;
-                if (Db.supports(Db.Capability.SQL_PARAM_LIMIT)) {
+                boolean splitNodes = false;
+                if (Db.supports(Db.Capability.SQL_PARAM_LIMIT) && (NodeType.LEAF != node.getNodeType())) {
                     Throwable cause = se;
                     while (cause != null) {
                         if (cause instanceof SQLException) {
                             if (Db.errorMatches((SQLException)cause, Db.Error.TOO_MANY_SQL_PARAMS)) {
-                                sLog.debug("Query %s resulted in too many sql params; attempting split OR clauses into individual queries", node);
-                                trySplitOr = true;
+                                sLog.debug("Query %s resulted in too many sql params; attempting split clauses into individual queries", node);
+                                splitNodes = true;
                                 break;
                             }
                         }
                         cause = cause.getCause();
                     }
                 }
-                if (!trySplitOr) {
+                if (!splitNodes) {
                     throw se;
                 }
             }
         } 
         // if (where a or b) not supported or if we encountered too many sql params try splitting 
-        // run each toplevel ORed part as a separate SQL query, then merge
+        // run each toplevel OR/AND part as a separate SQL query, then merge
         // the results in memory
         List<List<SearchResult>> resultLists = new ArrayList<List<SearchResult>>();
             
@@ -612,7 +647,13 @@ public class DbSearch {
         }
 
         Comparator<SearchResult> comp = SearchResult.getComparator(sort);
-        result = mergeSortedLists(result, resultLists, comp);
+        if (NodeType.OR == node.getNodeType()) {
+            result = mergeSortedLists(result, resultLists, comp);
+        } else if (NodeType.AND == node.getNodeType()) {
+            result = intersectSortedLists(result, resultLists);
+        } else {
+            throw ServiceException.FAILURE("Reached merge/intersect block with something other than OR/AND clause", null);
+        }
         return result;
     }
         
@@ -735,6 +776,9 @@ public class DbSearch {
             if (sLog.isDebugEnabled())
                 sLog.debug("SQL: ("+numParams+" parameters): "+statement.toString());
             
+            if (Db.supports(Db.Capability.SQL_PARAM_LIMIT)) {
+                Db.getInstance().checkParamLimit(numParams);
+            }
             long startTime = LC.zimbra_slow_logging_enabled.booleanValue() ? System.currentTimeMillis() : 0;
             
             stmt = conn.prepareStatement(statement.toString());

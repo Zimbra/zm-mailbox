@@ -424,6 +424,15 @@ public class SQLite extends Db {
     @Override protected int getInClauseBatchSize() {
         return 200;
     }
+    
+    @Override
+    public void checkParamLimit(int numParams) throws ServiceException {
+        if (numParams > 999) {
+            throw ServiceException.FAILURE("SQLite parameter limit will be exceeded",
+                new SQLException(mErrorCodes.get(Db.Error.TOO_MANY_SQL_PARAMS)));
+        }
+    }
+
 
     public static void main(String args[]) {
         // command line argument parsing

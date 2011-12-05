@@ -36,6 +36,7 @@ import com.zimbra.cs.db.Db;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbSearch;
+import com.zimbra.cs.db.DbSearchConstraintsNode;
 import com.zimbra.cs.db.DbPool.Connection;
 import com.zimbra.cs.db.DbSearch.SearchResult;
 import com.zimbra.cs.mailbox.Folder;
@@ -122,7 +123,28 @@ public class DBQueryOperation extends QueryOperation {
     static List<Folder> getTrashFolders(Mailbox mbox) throws ServiceException {
         return mbox.getFolderById(null, Mailbox.ID_FOLDER_TRASH).getSubfolderHierarchy();
     }
-
+    
+    Set<Folder> getTargetFolders() {
+        if (mConstraints instanceof DbLeafNode) {
+            DbLeafNode leaf = (DbLeafNode) mConstraints;
+            return leaf.folders;
+        } else if (mConstraints instanceof DbOrNode) {
+            DbOrNode node = (DbOrNode) mConstraints;
+            Set<Folder> folders = new HashSet<Folder>();
+            for (DbSearchConstraintsNode constraints : node.getSubNodes()) {
+                if (constraints instanceof DbLeafNode) {
+                    folders.addAll(((DbLeafNode) constraints).folders);
+                }
+            }
+            return folders;
+        }
+        else {
+            //DbAndNode doesn't make sense (in:folder1 AND in:folder2 always returns empty)
+            //that gets handled elsewhere, just return null 
+            return null;
+        }
+    }
+ 
     @Override
     QueryOperation expandLocalRemotePart(Mailbox mbox) throws ServiceException {
         if (mConstraints instanceof DbLeafNode) {
