@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 administrator 20111108-1035 */
+    /* build: 7.0.0_BETA1_1111 dywang 20111204-2122 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -5415,7 +5415,7 @@ public class ZAttrProvisioning {
     /**
      * whether to allow simple password; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -5425,7 +5425,7 @@ public class ZAttrProvisioning {
     /**
      * whether to require alpha-numeric password as device pin; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -5453,7 +5453,7 @@ public class ZAttrProvisioning {
     /**
      * number of days before device pin must expire; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -5463,7 +5463,7 @@ public class ZAttrProvisioning {
     /**
      * number of previously used password stored in history; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE or
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE or
      * zimbraMobilePolicyDevicePasswordExpiration=0
      *
      * @since ZCS 6.0.0_BETA1
@@ -5474,7 +5474,7 @@ public class ZAttrProvisioning {
     /**
      * number of consecutive incorrect pin input before device is wiped;
      * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -5484,7 +5484,7 @@ public class ZAttrProvisioning {
     /**
      * max idle time in minutes before device is locked; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -5494,7 +5494,7 @@ public class ZAttrProvisioning {
     /**
      * least number of complex characters must be included in device pin;
      * ignored if zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -5504,7 +5504,7 @@ public class ZAttrProvisioning {
     /**
      * min length for device pin; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -5514,7 +5514,7 @@ public class ZAttrProvisioning {
     /**
      * support device pin recovery; ignored if
      * zimbraFeatureMobilePolicyEnabled=FALSE or
-     * zimbraMobileDevicePasswordEnabled=FALSE
+     * zimbraMobilePolicyDevicePasswordEnabled=FALSE
      *
      * @since ZCS 6.0.0_BETA1
      */
@@ -8919,36 +8919,42 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTextAnalyzer = "zimbraTextAnalyzer";
 
     /**
-     * Start date for daylight time
+     * Deprecated since: 5.0. Deprecated as of bug 12416. Orig desc: Start
+     * date for daylight time
      */
     @ZAttr(id=232)
     public static final String A_zimbraTimeZoneDaylightDtStart = "zimbraTimeZoneDaylightDtStart";
 
     /**
-     * Offset in daylight time
+     * Deprecated since: 5.0. Deprecated as of bug 12416. Orig desc: Offset
+     * in daylight time
      */
     @ZAttr(id=233)
     public static final String A_zimbraTimeZoneDaylightOffset = "zimbraTimeZoneDaylightOffset";
 
     /**
+     * Deprecated since: 5.0. Deprecated as of bug 12416. Orig desc:
      * iCalendar recurrence rule for onset of daylight time
      */
     @ZAttr(id=234)
     public static final String A_zimbraTimeZoneDaylightRRule = "zimbraTimeZoneDaylightRRule";
 
     /**
-     * Start date for standard time
+     * Deprecated since: 5.0. Deprecated as of bug 12416. Orig desc: Start
+     * date for standard time
      */
     @ZAttr(id=229)
     public static final String A_zimbraTimeZoneStandardDtStart = "zimbraTimeZoneStandardDtStart";
 
     /**
-     * Offset in standard time
+     * Deprecated since: 5.0. Deprecated as of bug 12416. Orig desc: Offset
+     * in standard time
      */
     @ZAttr(id=230)
     public static final String A_zimbraTimeZoneStandardOffset = "zimbraTimeZoneStandardOffset";
 
     /**
+     * Deprecated since: 5.0. Deprecated as of bug 12416. Orig desc:
      * iCalendar recurrence rule for onset of standard time
      */
     @ZAttr(id=231)
