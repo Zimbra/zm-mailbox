@@ -198,7 +198,8 @@ public class ZMimeBodyPart extends MimeBodyPart implements ZMimePart {
             return;
 
         // don't set transfer encoding on messages or multiparts
-        ZContentType ctype = new ZContentType(part.getContentType());
+        DataHandler dh = part.getDataHandler();
+        ZContentType ctype = new ZContentType(dh.getContentType());
         if (ctype.getBaseType().equals("message/rfc822") || ctype.getPrimaryType().equals("multipart"))
             return;
 
@@ -207,7 +208,6 @@ public class ZMimeBodyPart extends MimeBodyPart implements ZMimePart {
         boolean isAttachment = disp != null && disp.equals(ATTACHMENT);
 
         String encoding = "base64";
-        DataHandler dh = part.getDataHandler();
         if (dh.getName() == null) {
             try {
                 EncodingOutputStream eos = new EncodingOutputStream();
@@ -260,7 +260,7 @@ public class ZMimeBodyPart extends MimeBodyPart implements ZMimePart {
             int read = super.read(b, off, len);
             if (read > 0) {
                 for (int pos = off, max = off + read; pos < max; pos++) {
-                    tester.testByte(b[off]);
+                    tester.testByte(b[pos]);
                 }
             }
             return read;
