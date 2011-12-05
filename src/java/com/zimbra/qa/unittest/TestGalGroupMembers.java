@@ -22,6 +22,7 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ZAttrProvisioning.GalMode;
 import com.zimbra.cs.gal.GalGroupMembers;
 import com.zimbra.cs.ldap.LdapUtil;
+import com.zimbra.qa.unittest.prov.soap.GalTestUtil;
 
 /*
  * To run this test:
@@ -186,7 +187,7 @@ public class TestGalGroupMembers extends TestCase {
     private static void cleanupZimbraDomain() throws Exception {
         Provisioning prov = Provisioning.getInstance();
         
-        TestSearchGal.disableGalSyncAccount(prov, ZIMBRA_DOMAIN);
+        GalTestUtil.disableGalSyncAccount(prov, ZIMBRA_DOMAIN);
         
         // delete the test user
         String userAddr = TestUtil.getAddress(USER, ZIMBRA_DOMAIN);
@@ -281,13 +282,13 @@ public class TestGalGroupMembers extends TestCase {
     
     @Test
     public void testLdapSearch() throws Exception {
-        TestSearchGal.disableGalSyncAccount(Provisioning.getInstance(), ZIMBRA_DOMAIN);
+        GalTestUtil.disableGalSyncAccount(Provisioning.getInstance(), ZIMBRA_DOMAIN);
         doTest();
     }
     
     @Test
     public void testGSASearch() throws Exception {
-        TestSearchGal.enableGalSyncAccount(Provisioning.getInstance(), ZIMBRA_DOMAIN, TestSearchGal.GSAType.both);
+        GalTestUtil.enableGalSyncAccount(Provisioning.getInstance(), ZIMBRA_DOMAIN, GalTestUtil.GSAType.both);
         doTest();
     }
     

@@ -25,6 +25,7 @@ import com.zimbra.common.account.ZAttrProvisioning.GalMode;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.service.mail.CalendarUtils;
+import com.zimbra.qa.unittest.prov.soap.GalTestUtil;
 
 /*
  * To run this test:
@@ -132,7 +133,7 @@ public class TestCalAttendeesDiff extends TestCase {
     public static void cleanup() throws Exception {
         Provisioning prov = Provisioning.getInstance();
         
-        TestSearchGal.disableGalSyncAccount(prov, ZIMBRA_DOMAIN);
+        GalTestUtil.disableGalSyncAccount(prov, ZIMBRA_DOMAIN);
         
         // delete the test users
         String[] users = new String[] { REQUESTER, USER_L1, USER_L2, USER_L3, USER_R1, USER_R2, USER_R3 };

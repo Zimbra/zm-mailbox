@@ -20,7 +20,7 @@ import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 
 import com.zimbra.common.util.CliUtil;
-import com.zimbra.qa.unittest.ldap.TestLdapConnectivity;
+import com.zimbra.qa.unittest.prov.ldap.TestLdapConnectivity;
 
 
 public class LdapSuite {
