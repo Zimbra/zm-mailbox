@@ -27,7 +27,7 @@ public enum CacheEntryType {
     // non ldap entries
     acl, locale, skin, uistrings, license,
     // ldap entries
-    account, config, cos, domain, galgroup, group, mime, server, zimlet;
+    account, config, globalgrant, cos, domain, galgroup, group, mime, server, zimlet;
 
     private static Joiner PIPE_JOINER = Joiner.on("|");
 
