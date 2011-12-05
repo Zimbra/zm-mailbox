@@ -389,7 +389,7 @@ public class DavContext {
 			    mUpload = FileUploadServlet.saveUpload(mReq.getInputStream(), name, ctype, mAuthAccount.getId(), true);
                 ZimbraLog.dav.debug("Request: requested content-type: %s, actual content-type: %s", ctype, mUpload.getContentType());
 			} catch (ServiceException se) {
-				throw new DavException("can't save upload", se);
+				throw new DavException("can't save upload", HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE, se);
 			}
 		}
 		return mUpload;

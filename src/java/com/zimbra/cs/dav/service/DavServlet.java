@@ -207,19 +207,21 @@ public class DavServlet extends ZimbraServlet {
 		}
 
         long t0 = System.currentTimeMillis();
-        if (ZimbraLog.dav.isDebugEnabled()) {
-            try {
-                Upload upload = ctxt.getUpload();
-                if (upload.getSize() > 0 && upload.getContentType().startsWith("text")) {
-                    ZimbraLog.dav.debug("REQUEST:\n"+new String(ByteUtil.readInput(upload.getInputStream(), -1, 2048), "UTF-8"));
-                }
-            } catch (Exception e) {
-                ZimbraLog.dav.debug("ouch", e);
-            }
-        }
 
         CacheStates cache = null;
         try {
+            if (ZimbraLog.dav.isDebugEnabled()) {
+                try {
+                    Upload upload = ctxt.getUpload();
+                    if (upload.getSize() > 0 && upload.getContentType().startsWith("text")) {
+                        ZimbraLog.dav.debug("REQUEST:\n"+new String(ByteUtil.readInput(upload.getInputStream(), -1, 2048), "UTF-8"));
+                    }
+                } catch (DavException de) {
+                    throw de;
+                } catch (Exception e) {
+                    ZimbraLog.dav.debug("ouch", e);
+                }
+            }
         	cache = checkCachedResponse(ctxt, authUser);
     		if (!ctxt.isResponseSent() && !isProxyRequest(ctxt, method)) {
 		
@@ -268,7 +270,8 @@ public class DavServlet extends ZimbraServlet {
 		} finally {
             long t1 = System.currentTimeMillis();
             ZimbraLog.dav.info("DavServlet operation "+method.getName()+" to "+req.getPathInfo()+" (depth: "+ctxt.getDepth().name()+") finished in "+(t1-t0)+"ms");
-			cacheCleanUp(ctxt, cache);
+			if (cache != null)
+			    cacheCleanUp(ctxt, cache);
 		    ctxt.cleanup();
 		}
 	}
