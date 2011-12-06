@@ -9866,6 +9866,26 @@ public class ZAttrProvisioning {
     public static final String A_zimbraShareInfo = "zimbraShareInfo";
 
     /**
+     * lifetime of shares to users on the system. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1348)
+    public static final String A_zimbraShareLifetime = "zimbraShareLifetime";
+
+    /**
+     * flag indicates whether to limit lifetime of shares to users on the
+     * system
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1347)
+    public static final String A_zimbraShareLimitLifetime = "zimbraShareLimitLifetime";
+
+    /**
      * Interval between successive executions of the task that publishes
      * shared item updates to LDAP. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
