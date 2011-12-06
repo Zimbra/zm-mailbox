@@ -12,15 +12,13 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.qa.unittest;
+package com.zimbra.qa.unittest.prov.soap;
 
 import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Map;
-
-import junit.framework.TestCase;
 
 import org.apache.commons.httpclient.Cookie;
 import org.apache.commons.httpclient.HttpClient;
@@ -45,33 +43,42 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.util.BuildInfo;
+import com.zimbra.qa.unittest.TestUtil;
 
-public class TestAuth {
+public class TestAuth extends SoapTest {
+    
+    
+    @BeforeClass
+    public static void init() throws Exception {
+        
+    }
+    
     
     private String getAutoToken(String acctName, boolean isAdmin) throws Exception {
-        String uri = isAdmin ? TestUtil.getAdminSoapUrl() : TestUtil.getSoapUrl();
-        SoapHttpTransport transport = new SoapHttpTransport(uri);
-        
-        Element request = Element.create(transport.getRequestProtocol(), AccountConstants.AUTH_REQUEST);
-        request.addElement(AccountConstants.E_ACCOUNT).
-                addAttribute(AccountConstants.A_BY, AccountBy.name.name()).setText(acctName);
-        request.addElement(AccountConstants.E_PASSWORD).setText("test123");
-        
-        Element response = transport.invoke(request);
-        return response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
+        SoapTransport transport;
+        if (isAdmin) {
+            transport = authAdmin(acctName);
+        } else {
+            transport = authUser(acctName);
+        }
+        return transport.getAuthToken().getValue();
     }
     
     /**
-     * a SoapTransport that put autoken in cookie, not SOAP header
+     * a SoapTransport that puts auth token in cookie, not SOAP header
      */
-    private static class TestSoapTransport extends SoapTransport {
+    private static class AuthTokenInCookieTransport extends SoapHttpTransport {
 
         private boolean isAdmin;
         private String authTokenForCookie;
         
-        private TestSoapTransport(String authTokenForCookie, boolean isAdmin) {
+        private AuthTokenInCookieTransport(String authTokenForCookie, boolean isAdmin) {
+            super(null);
             this.isAdmin = isAdmin;
             this.authTokenForCookie = authTokenForCookie;
+            setHttpDebugListener(new SoapDebugListener());
         }
         
         @Override
@@ -84,7 +91,7 @@ public class TestAuth {
             ZAuthToken zAuthToken = new ZAuthToken(authTokenForCookie);
             Map<String, String> cookieMap = zAuthToken.cookieMap(isAdmin);
             
-            PostMethod method = new PostMethod(uri + "/unittest");
+            PostMethod method = new PostMethod(uri + "unittest");
             try {
                 Element soapReq = generateSoapMessage(document, raw, noSession, 
                         requestedAccountId, changeToken, tokenType);
@@ -104,6 +111,10 @@ public class TestAuth {
                 HttpMethodParams params = method.getParams();
                 params.setCookiePolicy(state == null ? CookiePolicy.IGNORE_COOKIES : CookiePolicy.BROWSER_COMPATIBILITY);
                 
+                if (getHttpDebugListener() != null) {
+                    getHttpDebugListener().sendSoapMessage(method, soapReq);
+                }
+                
                 int respCode = httpClient.executeMethod(null, method, state);
                 
                 InputStreamReader reader = 
@@ -111,6 +122,11 @@ public class TestAuth {
                 String responseStr = ByteUtil.getContent(
                         reader, (int) method.getResponseContentLength(), false);
                 Element soapResp = parseSoapResponse(responseStr, false);
+                
+                if (getHttpDebugListener() != null) {
+                    getHttpDebugListener().receiveSoapMessage(method, soapResp);
+                }
+                
                 return soapResp;
             } finally {
                 method.releaseConnection();
@@ -118,41 +134,37 @@ public class TestAuth {
         }
     }
     
-    @BeforeClass
-    public static void init() throws Exception {
-        CliUtil.toolSetup();
-    }
-    
     @Test
     public void soapByCookie() throws Exception {
+        boolean isAdmin = false;
+        
         String USER_NAME = TestUtil.getAddress("user1");
-        String authToken = getAutoToken(USER_NAME, false);
+        String authToken = getAutoToken(USER_NAME, isAdmin);
         
-        Element req = Element.create(SoapProtocol.Soap12, AccountConstants.GET_VERSION_INFO_REQUEST);
+        Element req = Element.create(SoapProtocol.Soap12, AccountConstants.GET_INFO_REQUEST);
         
-        SoapTransport transport = new TestSoapTransport(authToken, false);
+        SoapTransport transport = new AuthTokenInCookieTransport(authToken, isAdmin);
         Element resp = transport.invoke(req);
-        Element eInfo = resp.getElement(AccountConstants.E_VERSION_INFO_INFO);
-        // <info host="phoebe.mbp" buildDate="20111112-1806" release="pshao" version="7.0.0_BETA1_1111"/>
-        String host = eInfo.getAttribute(AccountConstants.A_VERSION_INFO_HOST);
-        assertEquals(LC.zimbra_server_hostname.value(), host);
+        Element eName = resp.getElement(AccountConstants.E_NAME);
+        String value = eName.getText();
+        assertEquals(USER_NAME, value);
     }
     
     @Test
     public void soapByCookieAdmin() throws Exception {
+        boolean isAdmin = true;
+        
         String USER_NAME = TestUtil.getAddress("admin");
-        String authToken = getAutoToken(USER_NAME, false);
+        String authToken = getAutoToken(USER_NAME, isAdmin);
         
-        Element req = Element.create(SoapProtocol.Soap12, AdminConstants.GET_VERSION_INFO_REQUEST);
+        Element req = Element.create(SoapProtocol.Soap12, AdminConstants.GET_CONFIG_REQUEST);
+        req.addElement(AdminConstants.E_A).addAttribute(AdminConstants.A_N, Provisioning.A_cn);
         
-        SoapTransport transport = new TestSoapTransport(authToken, true);
+        SoapTransport transport = new AuthTokenInCookieTransport(authToken, isAdmin);
         Element resp = transport.invoke(req);
-        Element eInfo = resp.getElement(AccountConstants.E_VERSION_INFO_INFO);
-        // <info host="phoebe.mbp" buildDate="20111112-1806" release="pshao" version="7.0.0_BETA1_1111"/>
-        String host = eInfo.getAttribute(AccountConstants.A_VERSION_INFO_HOST);
-        assertEquals(LC.zimbra_server_hostname.value(), host);
-        
+        Element eA = resp.getElement(AdminConstants.E_A);
+        String value = eA.getText();
+        assertEquals("config", value);
     }
-
 
 }

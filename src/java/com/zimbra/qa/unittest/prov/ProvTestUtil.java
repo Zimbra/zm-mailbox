@@ -201,6 +201,11 @@ public abstract class ProvTestUtil {
         assertNull(group);
     }
     
+    public DistributionList createDistributionList(String localPart, Domain domain) 
+    throws Exception {
+        return createDistributionList(localPart, domain, null);
+    }
+            
     public DistributionList createDistributionList(String localPart, 
             Domain domain, Map<String, Object> attrs) throws Exception {
         return (DistributionList) createGroup(localPart, domain, attrs, false);

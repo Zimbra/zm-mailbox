@@ -15,15 +15,18 @@
 package com.zimbra.qa.unittest.prov.ldap;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.junit.*;
+
 import static org.junit.Assert.*;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.cs.account.Account;
@@ -32,8 +35,10 @@ import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
+import com.zimbra.qa.QA.Bug;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.qa.unittest.prov.Names;
+import com.zimbra.qa.unittest.prov.Verify;
 
 public class TestLdapProvDistributionList extends LdapTest {
     private static LdapProvTestUtil provUtil;
@@ -75,6 +80,33 @@ public class TestLdapProvDistributionList extends LdapTest {
     
     private void deleteAccount(Account acct) throws Exception {
         provUtil.deleteAccount(acct);
+    }
+    
+    private void verifyEquals(Set<String> expectedNames, List<DistributionList> actual) 
+    throws Exception {
+        assertEquals(expectedNames.size(), actual.size());
+        Set<String> actualIds = new HashSet<String>();
+        for (DistributionList group : actual) {
+            actualIds.add(group.getName());
+        }
+        Verify.verifyEquals(expectedNames, actualIds);
+    }
+    
+    private void verifyMembership(String acctId, 
+            Set<String> expectedAllGroups, Set<String> expectedDirectGroups) 
+    throws Exception {
+        
+        // test twice, so we hit all paths in LdapProvisioning.getGroups
+        
+        for (int i = 0; i < 2; i++) {
+            Account acct = prov.get(AccountBy.id, acctId);
+            
+            List<DistributionList> allGroups = prov.getDistributionLists(acct, false, null);
+            verifyEquals(expectedAllGroups, allGroups);
+            
+            List<DistributionList> directGroups = prov.getDistributionLists(acct, true, null);
+            verifyEquals(expectedDirectGroups, directGroups);
+        }
     }
     
     @Test
@@ -347,5 +379,91 @@ public class TestLdapProvDistributionList extends LdapTest {
         deleteDistributionList(dl);
         deleteDistributionList(dl1);
         deleteDistributionList(dl2);
+    }
+    
+
+    @Test
+    public void testCircular1() throws Exception {
+        Domain domain = provUtil.createDomain("testCircular1" + "." + baseDomainName());
+        
+        DistributionList group1 = provUtil.createDistributionList("group1", domain);
+        DistributionList group2 = provUtil.createDistributionList("group2", domain);
+        Account acct1 = provUtil.createAccount("acct1", domain);
+        Account acct2 = provUtil.createAccount("acct2", domain);
+        String acct1Id = acct1.getId();
+        String acct2Id = acct2.getId();
+        
+        group1.addMembers(new String[]{group2.getName(), acct1.getName(), acct2.getName()});
+        group2.addMembers(new String[]{group1.getName(), acct1.getName(), acct2.getName()});
+        
+        Set<String> expectedAllGroups = new HashSet<String>();
+        Set<String> expectedDirectGroups = new HashSet<String>();
+        expectedAllGroups.add(group1.getName());
+        expectedAllGroups.add(group2.getName());
+        expectedDirectGroups.add(group1.getName());
+        expectedDirectGroups.add(group2.getName());
+
+        verifyMembership(acct1Id, expectedAllGroups, expectedDirectGroups);
+        verifyMembership(acct2Id, expectedAllGroups, expectedDirectGroups);
+    }
+    
+    @Test
+    public void testCircular2() throws Exception {
+        Domain domain = provUtil.createDomain("testCircular2" + "." + baseDomainName());
+        
+        DistributionList group1 = provUtil.createDistributionList("group1", domain);
+        DistributionList group2 = provUtil.createDistributionList("group2", domain);
+        DistributionList group3 = provUtil.createDistributionList("group3", domain);
+        Account acct1 = provUtil.createAccount("acct1", domain);
+        Account acct2 = provUtil.createAccount("acct2", domain);
+        String acct1Id = acct1.getId();
+        String acct2Id = acct2.getId();
+        
+        group1.addMembers(new String[]{group2.getName(), acct1.getName(), acct2.getName()});
+        group2.addMembers(new String[]{group3.getName()});
+        group3.addMembers(new String[]{group1.getName()});
+        
+        Set<String> expectedAllGroups = new HashSet<String>();
+        Set<String> expectedDirectGroups = new HashSet<String>();
+        expectedAllGroups.add(group1.getName());
+        expectedAllGroups.add(group2.getName());
+        expectedAllGroups.add(group3.getName());
+        expectedDirectGroups.add(group1.getName());
+
+        verifyMembership(acct1Id, expectedAllGroups, expectedDirectGroups);
+        verifyMembership(acct2Id, expectedAllGroups, expectedDirectGroups);
+    }
+    
+
+    @Test
+    @Bug(bug=42132)
+    // @Ignore  // LdapProvisioning no long allows adding self as a group 
+    public void bug42132() throws Exception {
+        Domain domain = provUtil.createDomain("bug42132" + "." + baseDomainName());
+        
+        DistributionList group1 = provUtil.createDistributionList("group1", domain);
+        DistributionList group2 = provUtil.createDistributionList("group2", domain);
+        Account acct1 = provUtil.createAccount("acct1", domain);
+        Account acct2 = provUtil.createAccount("acct2", domain);
+        String acct1Id = acct1.getId();
+        String acct2Id = acct2.getId();
+        
+        group2.addMembers(new String[]{group1.getName()});
+        
+        // group2.addMembers(new String[]{group2.getName()}); // no longer allowed in LdapProvisioning
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put("+" + Provisioning.A_zimbraMailForwardingAddress, group2.getName());
+        prov.modifyAttrs(group2, attrs);// modifyAttrs directly
+        
+        group1.addMembers(new String[]{acct1.getName(), acct2.getName()});
+        
+        Set<String> expectedAllGroups = new HashSet<String>();
+        Set<String> expectedDirectGroups = new HashSet<String>();
+        expectedAllGroups.add(group1.getName());
+        expectedAllGroups.add(group2.getName());
+        expectedDirectGroups.add(group1.getName());
+
+        verifyMembership(acct1Id, expectedAllGroups, expectedDirectGroups);
+        verifyMembership(acct2Id, expectedAllGroups, expectedDirectGroups);
     }
 }

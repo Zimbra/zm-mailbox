@@ -486,7 +486,6 @@ public class TestLdap {
         classes.add(TestProvAlias.class);
         classes.add(TestProvAttr.class);
         classes.add(TestProvCallbackAvailableZimlets.class);
-        classes.add(TestProvGroup.class);
         classes.add(TestProvIDN.class);
         classes.add(TestProvValidator.class);
         classes.add(TestProvZimbraId.class);
