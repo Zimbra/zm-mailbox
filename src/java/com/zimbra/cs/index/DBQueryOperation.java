@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -25,14 +26,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Closeables;
-import com.zimbra.common.util.ZimbraLog;
-
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.Term;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.io.Closeables;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.Db;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.DbSearch;
@@ -119,7 +119,29 @@ public class DBQueryOperation extends QueryOperation {
     static List<Folder> getTrashFolders(Mailbox mbox) throws ServiceException {
         return mbox.getFolderById(null, Mailbox.ID_FOLDER_TRASH).getSubfolderHierarchy();
     }
-
+    
+    Set<Folder> getTargetFolders() {
+        if (constraints instanceof DbSearchConstraints.Leaf) {
+            DbSearchConstraints.Leaf leaf = (DbSearchConstraints.Leaf) constraints;
+            return leaf.folders;
+        } 
+        else if (constraints instanceof DbSearchConstraints.Union) {
+            DbSearchConstraints.Union node = (DbSearchConstraints.Union) constraints;
+            Set<Folder> folders = new HashSet<Folder>();
+            for (DbSearchConstraints subConstraints : node.getChildren()) {
+                if (subConstraints instanceof DbSearchConstraints.Leaf) {
+                    folders.addAll(((DbSearchConstraints.Leaf) subConstraints).folders);
+                }
+            }
+            return folders;
+        }
+        else {
+            //DbAndNode doesn't make sense (in:folder1 AND in:folder2 always returns empty)
+            //that gets handled elsewhere, just return null 
+            return null;
+        }
+    }
+ 
     @Override
     QueryOperation expandLocalRemotePart(Mailbox mbox) throws ServiceException {
         if (constraints instanceof DbSearchConstraints.Leaf) {

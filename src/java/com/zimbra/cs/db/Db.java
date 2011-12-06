@@ -283,6 +283,15 @@ public abstract class Db {
 
     /** Force the database engine to flush committed changes to physical disk. */
     public abstract void flushToDisk();
+
+
+    /**
+     * Give DB implementations a chance to preemptively check if param limit will be exceeded
+     * If exceeded, a ServiceException which wraps a SQLException corresponding to Error.TOO_MANY_SQL_PARAMS must be thrown
+     * @param numParams
+     */
+    public void checkParamLimit(int numParams) throws ServiceException {
+    }
     
     /**
      * Concatenates two or more fields.

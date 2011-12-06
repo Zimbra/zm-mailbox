@@ -24,10 +24,13 @@ import java.util.Set;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.TermQuery;
 
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.SoapProtocol;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.AccessManager;
 import com.google.common.base.Joiner;
 import com.google.common.io.Closeables;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.index.query.ConjQuery;
 import com.zimbra.cs.index.query.Query;
 import com.zimbra.cs.index.query.SubQuery;
@@ -39,7 +42,7 @@ import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -777,10 +780,20 @@ public final class ZimbraQuery {
 
                         UnionQueryOperation newUnion = new UnionQueryOperation();
                         intersect.addQueryOp(newUnion);
+                        
+                        //if one or more target folders are specified, use those which are visible.
+                        Set<Folder> targetFolders = null;
+                        if (op instanceof DBQueryOperation) {
+                            DBQueryOperation dbOp = (DBQueryOperation) op;
+                            targetFolders = dbOp.getTargetFolders();
+                        }
 
                         for (Folder folder : visibleFolders) {
                             // exclude remote folders
                             if (!(folder instanceof Mountpoint) || ((Mountpoint) folder).isLocal()) {
+                                if (targetFolders != null && targetFolders.size() > 0 && !targetFolders.contains(folder)) {
+                                    continue; //don't bother searching other visible folders if the query asked for specific folders...
+                                }
                                 DBQueryOperation newOp = new DBQueryOperation();
                                 newUnion.add(newOp);
                                 newOp.addInFolder(folder, true);

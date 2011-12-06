@@ -33,6 +33,7 @@ import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ListUtil;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.imap.ImapMessage;
@@ -420,12 +421,37 @@ public final class DbSearch {
         }
         return node.toLeaf().hasAppointmentTableConstraints();
     }
+    
+    private static List<Result> intersectSortedLists(List<Result> toRet, List<List<Result>> lists) {
+        if (lists.size() < 0) {
+            return toRet;
+        }
+        //optimize so shortest list is first
+        Collections.sort(lists, new Comparator<List<Result>>() {
+            @Override
+            public int compare(List<Result> l1, List<Result> l2) {
+                return l1.size() - l2.size();
+            }
+        });
+        
+        for (Result result : lists.get(0)) {
+            boolean intersect = true;
+            for (int i = 1; i < lists.size(); i++) {
+                if (!lists.get(i).contains(result)) {
+                    intersect = false;
+                    break;
+                }
+            }
+            if (intersect) {
+                toRet.add(result);
+            }
+        }
+        return toRet;
+    }
 
     public List<Result> search(DbConnection conn, DbSearchConstraints node, SortBy sort, int offset, int limit,
             FetchMode fetch) throws ServiceException {
-        if (!Db.supports(Db.Capability.AVOID_OR_IN_WHERE_CLAUSE) ||
-                (sort.getKey() != SortBy.Key.DATE && sort.getKey() != SortBy.Key.SIZE) ||
-                !(node instanceof DbSearchConstraints.Union)) {
+        if (!Db.supports(Db.Capability.AVOID_OR_IN_WHERE_CLAUSE) || !(node instanceof DbSearchConstraints.Union)) {
             try {
                 return searchInternal(conn, node, sort, offset, limit, fetch);
             } catch (SQLException e) {
@@ -439,10 +465,21 @@ public final class DbSearch {
         // if (where a or b) not supported or if we encountered too many sql params try splitting
         // run each toplevel ORed part as a separate SQL query, then merge the results in memory
         List<Result> result = new ArrayList<Result>();
-        for (DbSearchConstraints child : node.getChildren()) {
-            result.addAll(new DbSearch(mailbox, dumpster).search(conn, child, sort, offset, limit, fetch));
+        if (node instanceof DbSearchConstraints.Union) {
+            for (DbSearchConstraints child : node.getChildren()) {
+                result.addAll(new DbSearch(mailbox, dumpster).search(conn, child, sort, offset, limit, fetch));
+            }
+            Collections.sort(result, new ResultComparator(sort));
+        } else if (node instanceof DbSearchConstraints.Intersection) {
+            List<List<Result>> resultLists = new ArrayList<List<Result>>();
+            
+            for (DbSearchConstraints child : node.getChildren()) {
+                resultLists.add(new DbSearch(mailbox, dumpster).search(conn, child, sort, offset, limit, fetch));
+            }
+            result = intersectSortedLists(result, resultLists);
+        } else {
+            throw ServiceException.FAILURE("Reached merge/intersect block with something other than OR/AND clause", null);
         }
-        Collections.sort(result, new ResultComparator(sort));;
         return result;
     }
 
@@ -511,6 +548,9 @@ public final class DbSearch {
             sql.append(' ').append(Db.getInstance().limit(offset, limit));
         }
 
+        if (Db.supports(Db.Capability.SQL_PARAM_LIMIT)) {
+            Db.getInstance().checkParamLimit(params.size());
+        }
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try {
@@ -982,6 +1022,21 @@ public final class DbSearch {
                     }
                     // fall through to ID-based comparison below!
                     break;
+                case SENDER:
+                case SUBJECT:
+                case NAME:
+                case NAME_NATURAL_ORDER:
+                    String s1 = (String) o1.getSortValue();
+                    String s2 = (String) o2.getSortValue();
+                    if (!StringUtil.equal(s1, s2)) {
+                        if (sort.getDirection() == SortBy.Direction.DESC) {
+                            return StringUtil.compareTo(s2, s1);
+                         } else {
+                            return StringUtil.compareTo(s1, s2);
+                         }
+                    }
+                    break;
+                case ID:
                 case NONE:
                     break;
                 default:
