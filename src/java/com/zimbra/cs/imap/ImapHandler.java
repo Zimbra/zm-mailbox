@@ -1139,11 +1139,13 @@ abstract class ImapHandler {
         return true;
     }
 
-    private void setIDFields(Map<String, String> fields) {
-        if (fields == null) {
+    private void setIDFields(Map<String, String> paramFields) {
+        if (paramFields == null) {
             return;
         }
-
+        //RFC 2971 section 3.3; fields are not case sensitive
+        Map<String, String> fields = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+        fields.putAll(paramFields);
         String ip = fields.get(IDInfo.X_ORIGINATING_IP);
         if (ip != null) {
             if (origRemoteIp == null) {
