@@ -6145,7 +6145,7 @@ TODO: delete them permanently from here
   <desc>regular expression for matching the value of zimbraSpamWhitelistHeader for flagging a message as not spam</desc>
 </attr>
 
-<attr id="1259" name="zimbraLimitExternalShareLifetime" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0.0" >
+<attr id="1259" name="zimbraExternalShareLimitLifetime" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0.0" >
   <desc>flag indicates whether to limit lifetime of external shares</desc>
   <defaultCOSValue>TRUE</defaultCOSValue>
 </attr>
