@@ -136,7 +136,7 @@
     <a n="zimbraInterceptSubject"/>
     <a n="zimbraIsDomainAdminAccount"/>
     <a n="zimbraJunkMessagesIndexingEnabled"/>
-    <a n="zimbraLimitExternalShareLifetime"/>
+    <a n="zimbraExternalShareLimitLifetime"/>
     <a n="zimbraLocale"/>
     <a n="zimbraMailCanonicalAddress"/>
     <a n="zimbraMailDumpsterLifetime"/>
