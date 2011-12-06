@@ -34236,6 +34236,189 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * lifetime of shares to users on the system. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * <p>Use getShareLifetimeAsString to access value as a string.
+     *
+     * @see #getShareLifetimeAsString()
+     *
+     * @return zimbraShareLifetime in millseconds, or 7776000000 (90d)  if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1348)
+    public long getShareLifetime() {
+        return getTimeInterval(Provisioning.A_zimbraShareLifetime, 7776000000L);
+    }
+
+    /**
+     * lifetime of shares to users on the system. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @return zimbraShareLifetime, or "90d" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1348)
+    public String getShareLifetimeAsString() {
+        return getAttr(Provisioning.A_zimbraShareLifetime, "90d");
+    }
+
+    /**
+     * lifetime of shares to users on the system. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param zimbraShareLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1348)
+    public void setShareLifetime(String zimbraShareLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShareLifetime, zimbraShareLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * lifetime of shares to users on the system. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param zimbraShareLifetime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1348)
+    public Map<String,Object> setShareLifetime(String zimbraShareLifetime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShareLifetime, zimbraShareLifetime);
+        return attrs;
+    }
+
+    /**
+     * lifetime of shares to users on the system. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1348)
+    public void unsetShareLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShareLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * lifetime of shares to users on the system. Must be in valid duration
+     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
+     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
+     * unit is not specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1348)
+    public Map<String,Object> unsetShareLifetime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShareLifetime, "");
+        return attrs;
+    }
+
+    /**
+     * flag indicates whether to limit lifetime of shares to users on the
+     * system
+     *
+     * @return zimbraShareLimitLifetime, or true if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1347)
+    public boolean isShareLimitLifetime() {
+        return getBooleanAttr(Provisioning.A_zimbraShareLimitLifetime, true);
+    }
+
+    /**
+     * flag indicates whether to limit lifetime of shares to users on the
+     * system
+     *
+     * @param zimbraShareLimitLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1347)
+    public void setShareLimitLifetime(boolean zimbraShareLimitLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShareLimitLifetime, zimbraShareLimitLifetime ? Provisioning.TRUE : Provisioning.FALSE);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * flag indicates whether to limit lifetime of shares to users on the
+     * system
+     *
+     * @param zimbraShareLimitLifetime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1347)
+    public Map<String,Object> setShareLimitLifetime(boolean zimbraShareLimitLifetime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShareLimitLifetime, zimbraShareLimitLifetime ? Provisioning.TRUE : Provisioning.FALSE);
+        return attrs;
+    }
+
+    /**
+     * flag indicates whether to limit lifetime of shares to users on the
+     * system
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1347)
+    public void unsetShareLimitLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShareLimitLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * flag indicates whether to limit lifetime of shares to users on the
+     * system
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1347)
+    public Map<String,Object> unsetShareLimitLifetime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraShareLimitLifetime, "");
+        return attrs;
+    }
+
+    /**
      * maximum number of signatures allowed on an account
      *
      * @return zimbraSignatureMaxNumEntries, or 20 if unset

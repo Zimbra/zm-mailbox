@@ -6675,4 +6675,14 @@ TODO: delete them permanently from here
   <desc>Whether to use credential to authenticate to relay MTA.</desc>
 </attr>
 
+<attr id="1347" name="zimbraShareLimitLifetime" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus" since="8.0.0" >
+  <desc>flag indicates whether to limit lifetime of shares to users on the system</desc>
+  <defaultCOSValue>TRUE</defaultCOSValue>
+</attr>
+
+<attr id="1348" name="zimbraShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus" since="8.0.0">
+  <desc>lifetime of shares to users on the system</desc>
+  <defaultCOSValue>90d</defaultCOSValue>
+</attr>
+
 </attrs>
