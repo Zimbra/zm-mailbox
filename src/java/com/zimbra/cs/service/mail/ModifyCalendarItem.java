@@ -103,6 +103,7 @@ public class ModifyCalendarItem extends CalendarRequest {
             isInterMboxMove = !iidFolder.belongsTo(mbox);
         }
 
+        MailSendQueue sendQueue = new MailSendQueue();
         Element response = getResponseElement(zsc);
         int compNum = (int) request.getAttributeLong(MailConstants.A_CAL_COMP, 0);
         mbox.lock.lock();
@@ -143,9 +144,10 @@ public class ModifyCalendarItem extends CalendarRequest {
                 folderId = iidFolder.getId();
             }
             modifyCalendarItem(zsc, octxt, request, acct, mbox, folderId, calItem, inv, seriesInv,
-                               response, isInterMboxMove);
+                               response, isInterMboxMove, sendQueue);
         } finally {
             mbox.lock.release();
+            sendQueue.send();
         }
 
         // Inter-mailbox move if necessary.
@@ -162,7 +164,8 @@ public class ModifyCalendarItem extends CalendarRequest {
     private Element modifyCalendarItem(
             ZimbraSoapContext zsc, OperationContext octxt, Element request,
             Account acct, Mailbox mbox, int folderId,
-            CalendarItem calItem, Invite inv, Invite seriesInv, Element response, boolean isInterMboxMove)
+            CalendarItem calItem, Invite inv, Invite seriesInv, Element response, boolean isInterMboxMove,
+            MailSendQueue sendQueue)
     throws ServiceException {
         // <M>
         Element msgElem = request.getElement(MailConstants.E_MSG);
@@ -227,7 +230,7 @@ public class ModifyCalendarItem extends CalendarRequest {
             List<ZAttendee> atsCanceled = parser.getAttendeesCanceled();
             if (!inv.isNeverSent()) {  // No need to notify for a draft appointment.
                 if (!atsCanceled.isEmpty()) {
-                    notifyRemovedAttendees(zsc, octxt, acct, mbox, inv.getCalendarItem(), inv, atsCanceled);
+                    notifyRemovedAttendees(zsc, octxt, acct, mbox, inv.getCalendarItem(), inv, atsCanceled, sendQueue);
                 }
             }
 
@@ -252,7 +255,7 @@ public class ModifyCalendarItem extends CalendarRequest {
                                 List<ZAttendee> toNotify = CalendarUtils.getRemovedAttendees(
                                         except.getAttendees(), seriesInv.getAttendees(), false, acct);
                                 if (!toNotify.isEmpty()) {
-                                    notifyRemovedAttendees(zsc, octxt, acct, mbox, calItem, except, toNotify);
+                                    notifyRemovedAttendees(zsc, octxt, acct, mbox, calItem, except, toNotify, sendQueue);
                                 }
                             }
                         }
@@ -260,7 +263,7 @@ public class ModifyCalendarItem extends CalendarRequest {
                 }
 
                 // Save the change to the series as specified by the client.
-                sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true, forceSend);
+                sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true, forceSend, sendQueue);
 
                 // Echo the updated inv in the response.
                 if (echo && dat.mAddInvData != null) {
@@ -282,7 +285,7 @@ public class ModifyCalendarItem extends CalendarRequest {
                 // Modifying a one-off appointment or an exception instance.  There are no
                 // complications like in the series update case.  Just update the invite with the
                 // data supplied by the client, and let the built-in notification take place.
-                sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true, forceSend);
+                sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true, forceSend, sendQueue);
 
                 // Echo the updated inv in the response.
                 if (echo && dat.mAddInvData != null) {
@@ -291,7 +294,7 @@ public class ModifyCalendarItem extends CalendarRequest {
             }
         } else {  // not organizer
             // Apply the change.
-            sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true, forceSend);
+            sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true, forceSend, sendQueue);
 
             // Echo the updated inv in the response.
             if (echo && dat.mAddInvData != null) {

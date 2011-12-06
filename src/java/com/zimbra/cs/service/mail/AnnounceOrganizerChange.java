@@ -49,13 +49,15 @@ public class AnnounceOrganizerChange extends CalendarRequest {
         OperationContext octxt = getOperationContext(zsc, context);
         ItemId iid = new ItemId(request.getAttribute(MailConstants.A_ID), zsc);
 
+        MailSendQueue sendQueue = new MailSendQueue();
         Element response = getResponseElement(zsc);
         mbox.lock.lock();
         try {
             CalendarItem calItem = mbox.getCalendarItemById(octxt, iid.getId());
-            sendOrganizerChangeMessage(zsc, octxt, calItem, acct, mbox, response);
+            sendOrganizerChangeMessage(zsc, octxt, calItem, acct, mbox, sendQueue);
         } finally {
             mbox.lock.release();
+            sendQueue.send();
         }
         return response;
     }

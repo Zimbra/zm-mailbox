@@ -377,7 +377,12 @@ public class SendInviteReply extends CalendarRequest {
                     apptFolderId = calItem.getFolderId();
                 else
                     apptFolderId = oldInv.isTodo() ? Mailbox.ID_FOLDER_TASKS : Mailbox.ID_FOLDER_CALENDAR;
-                sendCalendarMessage(zsc, octxt, apptFolderId, acct, mbox, csd, response);
+                MailSendQueue sendQueue = new MailSendQueue();
+                try {
+                    sendCalendarMessage(zsc, octxt, apptFolderId, acct, mbox, csd, response, sendQueue);
+                } finally {
+                    sendQueue.send();
+                }
             }
 
             RecurId recurId = null;

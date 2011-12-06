@@ -1047,6 +1047,54 @@ public class MailSender {
         }
     }
 
+    private void checkMTAConnectionToHost(String hostname) throws MessagingException {
+        mSession.getProperties().setProperty("mail.smtp.host", hostname);
+        if (mEnvelopeFrom != null) {
+            mSession.getProperties().setProperty("mail.smtp.from", mEnvelopeFrom);
+        }
+        ZimbraLog.smtp.debug("Testing connection to SMTP host %s with properties: %s",
+                             hostname, mSession.getProperties());
+        Transport transport = mSession.getTransport("smtp");
+        try {
+            transport.connect();
+        } finally {
+            transport.close();
+        }
+    }
+
+    /**
+     * Check connection to the MTA.  An exception is thrown if connection to the MTA cannot be established.
+     * Successful return from this method does not guarantee a subsequent send will succeed, but chances are
+     * good that the send will work.  Use this method to detect prolonged unavailability of the MTA.
+     * @throws ServiceException
+     */
+    public void checkMTAConnection() throws ServiceException {
+        MessagingException connectError = null;
+        mCurrentHostIndex = 0;
+        String hostname;
+        while ((hostname = getNextHost()) != null) {
+            try {
+                checkMTAConnectionToHost(hostname);
+                return;  // Good, we have an MTA that we can connect to.
+            } catch (MessagingException e) {
+                Exception chained = e.getNextException();
+                if (chained instanceof ConnectException || chained instanceof UnknownHostException) {
+                    if (connectError == null) {
+                        connectError = e;
+                    }
+                    String hostString = (hostname != null ? " " + hostname : "");
+                    ZimbraLog.smtp.warn("Unable to connect to SMTP server%s: %s.", hostString, chained.toString());
+                    if (mTrackBadHosts) {
+                        JMSession.markSmtpHostBad(hostname);
+                    }
+                } else {
+                    throw ServiceException.FAILURE("unexpected error during MTA connection check", e);
+                }
+            }
+        }
+        throw ServiceException.FAILURE("unable to connect to MTA", connectError);
+    }
+
     /**
      * Class that avoids JavaMail bug that throws OutOfMemoryError when sending
      * a message with many recipients and SMTP server rejects many of them.

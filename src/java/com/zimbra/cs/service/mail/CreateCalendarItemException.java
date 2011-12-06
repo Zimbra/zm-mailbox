@@ -43,10 +43,12 @@ public class CreateCalendarItemException extends CalendarRequest {
     protected class CreateCalendarItemExceptionInviteParser extends ParseMimeMessage.InviteParser {
         private String mUid;
         private Invite mDefaultInvite;
+        private MailSendQueue sendQueue;
 
-        CreateCalendarItemExceptionInviteParser(String uid, Invite defaultInvite) {
+        CreateCalendarItemExceptionInviteParser(String uid, Invite defaultInvite, MailSendQueue sendQueue) {
             mUid = uid;
             mDefaultInvite = defaultInvite;
+            this.sendQueue = sendQueue;
         }
 
         @Override
@@ -60,7 +62,8 @@ public class CreateCalendarItemException extends CalendarRequest {
                     mDefaultInvite.getAttendees(), toRet.mInvite.getAttendees(), true, account);
             if (removedAttendees.size() > 0) {
                 notifyRemovedAttendees(zsc, octxt, account,
-                        mDefaultInvite.getCalendarItem().getMailbox(), mDefaultInvite.getCalendarItem(), toRet.mInvite, removedAttendees);
+                        mDefaultInvite.getCalendarItem().getMailbox(), mDefaultInvite.getCalendarItem(), toRet.mInvite,
+                        removedAttendees, sendQueue);
             }
             return toRet;
         }
@@ -99,6 +102,7 @@ public class CreateCalendarItemException extends CalendarRequest {
 
         int compNum = (int) request.getAttributeLong(MailConstants.E_INVITE_COMPONENT);
 
+        MailSendQueue sendQueue = new MailSendQueue();
         Element response = getResponseElement(zsc);
         mbox.lock.lock();
         try {
@@ -132,7 +136,7 @@ public class CreateCalendarItemException extends CalendarRequest {
             if (!calItem.isRecurring())
                 throw ServiceException.INVALID_REQUEST("CalendarItem " + calItem.getId() + " is not a recurring calendar item", null);
 
-            CreateCalendarItemExceptionInviteParser parser = new CreateCalendarItemExceptionInviteParser(calItem.getUid(), inv);
+            CreateCalendarItemExceptionInviteParser parser = new CreateCalendarItemExceptionInviteParser(calItem.getUid(), inv, sendQueue);
             CalSendData dat = handleMsgElement(zsc, octxt, msgElem, acct, mbox, parser);
             dat.mDontNotifyAttendees = isInterMboxMove;
 
@@ -177,7 +181,7 @@ public class CreateCalendarItemException extends CalendarRequest {
                 dat.mInvite.setNeverSent(inv.isNeverSent());
             }
             boolean forceSend = request.getAttributeBool(MailConstants.A_CAL_FORCESEND, true);
-            sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true, forceSend);
+            sendCalendarMessage(zsc, octxt, folderId, acct, mbox, dat, response, true, forceSend, sendQueue);
             boolean echo = request.getAttributeBool(MailConstants.A_CAL_ECHO, false);
             if (echo && dat.mAddInvData != null) {
                 int maxSize = (int) request.getAttributeLong(MailConstants.A_MAX_INLINED_LENGTH, 0);
@@ -187,6 +191,7 @@ public class CreateCalendarItemException extends CalendarRequest {
             }
         } finally {
             mbox.lock.release();
+            sendQueue.send();
         }
 
         // Inter-mailbox move if necessary.

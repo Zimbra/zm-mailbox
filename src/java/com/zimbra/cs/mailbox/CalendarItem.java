@@ -3886,13 +3886,6 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         return super.canAccess(rightsNeeded, authuser, asAdmin);
     }
 
-    public void checkCancelPermission(Account authAccount, boolean asAdmin, Invite cancelInv)
-    throws ServiceException {
-        boolean requirePrivateCheck = requirePrivateCheck(cancelInv);
-        if (!canAccess((short) (ACL.RIGHT_DELETE | ACL.RIGHT_WRITE), authAccount, asAdmin, requirePrivateCheck))
-            throw ServiceException.PERM_DENIED("you do not have sufficient permissions to cancel this calendar item");
-    }
-
     // If we're adding a private invite, we must make sure the authenticated user has permission to
     // access private data.  If we're adding a public invite but the appointment currently has
     // some private data, private access permission is not needed as long as the instance(s) being

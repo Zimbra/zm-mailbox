@@ -115,7 +115,12 @@ public class CreateCalendarItem extends CalendarRequest {
             dat.mInvite.setNeverSent(true);
         }
         boolean forceSend = request.getAttributeBool(MailConstants.A_CAL_FORCESEND, true);
-        sendCalendarMessage(zsc, octxt, iidFolder.getId(), acct, mbox, dat, response, true, forceSend);
+        MailSendQueue sendQueue = new MailSendQueue();
+        try {
+            sendCalendarMessage(zsc, octxt, iidFolder.getId(), acct, mbox, dat, response, true, forceSend, sendQueue);
+        } finally {
+            sendQueue.send();
+        }
         boolean echo = request.getAttributeBool(MailConstants.A_CAL_ECHO, false);
         if (echo && dat.mAddInvData != null) {
             ItemIdFormatter ifmt = new ItemIdFormatter(zsc);
