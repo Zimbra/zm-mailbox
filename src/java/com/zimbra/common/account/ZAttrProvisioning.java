@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 dywang 20111202-1445 */
+    /* build: 8.0.0_BETA1_1111 pshao 20111206-1333 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3684,6 +3684,14 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExternalShareLifetime = "zimbraExternalShareLifetime";
 
     /**
+     * flag indicates whether to limit lifetime of external shares
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1259)
+    public static final String A_zimbraExternalShareLimitLifetime = "zimbraExternalShareLimitLifetime";
+
+    /**
      * list of external domains that users can share files and folders with
      *
      * @since ZCS 8.0.0
@@ -5340,14 +5348,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=114)
     public static final String A_zimbraLastLogonTimestampFrequency = "zimbraLastLogonTimestampFrequency";
-
-    /**
-     * flag indicates whether to limit lifetime of external shares
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1259)
-    public static final String A_zimbraLimitExternalShareLifetime = "zimbraLimitExternalShareLifetime";
 
     /**
      * name to use in greeting and sign-off; if empty, uses hostname
@@ -10551,6 +10551,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
