@@ -32,7 +32,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class DeleteDistributionList extends AdminDocumentHandler {
+public class DeleteDistributionList extends DistributionListDocumentHandler {
 
     /**
      * must be careful and only allow access to domain if domain admin
@@ -40,19 +40,25 @@ public class DeleteDistributionList extends AdminDocumentHandler {
     public boolean domainAuthSufficient(Map context) {
         return true;
     }
+    
+    @Override
+    protected Group getGroup(Element request) throws ServiceException {
+        String id = request.getAttribute(AdminConstants.E_ID);
+        return Provisioning.getInstance().getGroup(Key.DistributionListBy.id, id);
+    }
 
     public Element handle(Element request, Map<String, Object> context) 
     throws ServiceException {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-
-        String id = request.getAttribute(AdminConstants.E_ID);
-
-        Group group = prov.getGroup(Key.DistributionListBy.id, id);
-        if (group == null)
+        
+        Group group = getGroupFromContext(context);
+        if (group == null) {
+            String id = request.getAttribute(AdminConstants.E_ID);
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
-
+        }
+        
         if (group.isDynamic()) {
             checkDynamicGroupRight(zsc, (DynamicGroup) group, Admin.R_deleteGroup);      
         } else {

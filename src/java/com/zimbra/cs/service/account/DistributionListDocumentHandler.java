@@ -23,7 +23,6 @@ import java.io.OutputStreamWriter;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import javax.activation.DataSource;
 import javax.mail.Address;
@@ -32,7 +31,6 @@ import javax.mail.Transport;
 import javax.mail.internet.MimeMultipart;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.MapMaker;
 import com.google.common.collect.Maps;
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.account.Key;
@@ -77,14 +75,6 @@ public abstract class DistributionListDocumentHandler extends AccountDocumentHan
             
             return super.proxyIfNecessary(request, context);
         } catch (ServiceException e) {
-            // temporary fix until 66412 is fixed - provide an admin command/option
-            // to create delegated groups.
-            // if something went wrong proxying the request, just execute it locally
-            if (ServiceException.PROXY_ERROR.equals(e.getCode())) {
-                return null;
-            }
-            // but if it's a real error, it's a real error
-            
             // must be able to proxy, we don't want to fallback to local
             throw e;
         }

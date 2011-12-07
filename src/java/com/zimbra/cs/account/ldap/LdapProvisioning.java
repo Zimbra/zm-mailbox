@@ -3425,11 +3425,7 @@ public class LdapProvisioning extends LdapProv {
 
             entry.setAttr(A_uid, localPart);
             
-            // set a home server for proxying purpose if we are creating a delegated group
-            if (creator != null) {
-                Cos cos = getCOS(creator);
-                addMailHost(entry, cos, false);
-            }
+            setGroupHomeServer(entry, creator);
             
             String dn = mDIT.distributionListDNCreate(baseDn, entry.getAttributes(), localPart, domain);
             entry.setDN(dn);
@@ -7997,6 +7993,22 @@ public class LdapProvisioning extends LdapProv {
         return null;
     }
 
+    /*
+     * Set a home server for proxying purpose
+     * we now do this for all newly created groups instead of only for delegated groups 
+     * For existing groups that don't have a zimbraMailHost:
+     *   - admin soaps: just execute on the local server as before
+     *   - user soap: throw exception
+     */
+    private void setGroupHomeServer(ZMutableEntry entry, Account creator) 
+    throws ServiceException {
+        // 
+        Cos cosOfCreator = null;
+        if (creator != null) {
+            cosOfCreator = getCOS(creator);
+        }
+        addMailHost(entry, cosOfCreator, false);
+    }
 
     /* ==================
      *   Dynamic Groups
@@ -8086,11 +8098,7 @@ public class LdapProvisioning extends LdapProv {
             entry.setAttr(A_cn, localPart);
             // entry.setAttr(A_uid, localPart); need to use uid if we move dynamic groups to the ou=people tree
             
-            // set a home server for proxying purpose if we are creating a delegated group
-            if (creator != null) {
-                Cos cos = getCOS(creator);
-                addMailHost(entry, cos, false);
-            }
+            setGroupHomeServer(entry, creator);
 
             String dn = mDIT.dynamicGroupNameLocalPartToDN(localPart, domainDN);
             entry.setDN(dn);

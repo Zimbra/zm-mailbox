@@ -32,7 +32,7 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class ModifyDistributionList extends AdminDocumentHandler {
+public class ModifyDistributionList extends DistributionListDocumentHandler {
 
     /**
      * must be careful and only allow access to domain if domain admin
@@ -41,17 +41,23 @@ public class ModifyDistributionList extends AdminDocumentHandler {
         return true;
     }
 
+    @Override
+    protected Group getGroup(Element request) throws ServiceException {
+        String id = request.getAttribute(AdminConstants.E_ID);
+        return Provisioning.getInstance().getGroup(Key.DistributionListBy.id, id);
+    }
+    
     public Element handle(Element request, Map<String, Object> context) 
     throws ServiceException {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
 
-        String id = request.getAttribute(AdminConstants.E_ID);
         Map<String, Object> attrs = AdminService.getAttrs(request);
 	    
-        Group group = prov.getGroup(Key.DistributionListBy.id, id);
+        Group group = getGroupFromContext(context);
         if (group == null) {
+            String id = request.getAttribute(AdminConstants.E_ID);
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
         }
         

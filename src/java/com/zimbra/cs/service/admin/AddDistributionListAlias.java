@@ -25,14 +25,14 @@ import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.DistributionListBy;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class AddDistributionListAlias extends AdminDocumentHandler {
+public class AddDistributionListAlias extends DistributionListDocumentHandler {
 
     /**
      * must be careful and only allow access to domain if domain admin
@@ -40,18 +40,24 @@ public class AddDistributionListAlias extends AdminDocumentHandler {
     public boolean domainAuthSufficient(Map context) {
         return true;
     }
+    
+    @Override
+    protected Group getGroup(Element request) throws ServiceException {
+        String id = request.getAttribute(AdminConstants.E_ID);
+        return Provisioning.getInstance().getGroup(DistributionListBy.id, id);
+    }
 
 	public Element handle(Element request, Map<String, Object> context) 
 	throws ServiceException {
 
         ZimbraSoapContext lc = getZimbraSoapContext(context);
 	    Provisioning prov = Provisioning.getInstance();
-
-	    String id = request.getAttribute(AdminConstants.E_ID);
+	    
         String alias = request.getAttribute(AdminConstants.E_ALIAS);
 
-	    Group group = prov.getGroup(Key.DistributionListBy.id, id);
+        Group group = getGroupFromContext(context);
         if (group == null) {
+            String id = request.getAttribute(AdminConstants.E_ID);
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(id);
         }
         

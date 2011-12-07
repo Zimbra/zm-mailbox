@@ -34,16 +34,12 @@ import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AccessManager.AttrRightChecker;
 import com.zimbra.cs.account.Group.GroupOwner;
-import com.zimbra.cs.account.accesscontrol.ACLUtil;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
-import com.zimbra.cs.account.accesscontrol.Right;
-import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.soap.ZimbraSoapContext;
 
-public class GetDistributionList extends AdminDocumentHandler {
-
+public class GetDistributionList extends DistributionListDocumentHandler {
+    
     /**
      * must be careful and only allow access to domain if domain admin
      */
@@ -51,7 +47,17 @@ public class GetDistributionList extends AdminDocumentHandler {
         return true;
     }
 
-    public Element handle(Element request, Map<String, Object> context) throws ServiceException {
+    @Override
+    protected Group getGroup(Element request) throws ServiceException {
+        Element eDL = request.getElement(AdminConstants.E_DL);
+        String key = eDL.getAttribute(AdminConstants.A_BY);
+        String value = eDL.getText();
+        
+        return Provisioning.getInstance().getGroup(Key.DistributionListBy.fromString(key), value);
+    }
+    
+    public Element handle(Element request, Map<String, Object> context) 
+    throws ServiceException {
 	    
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
@@ -66,14 +72,11 @@ public class GetDistributionList extends AdminDocumentHandler {
         }
         boolean sortAscending = request.getAttributeBool(AdminConstants.A_SORT_ASCENDING, true);
         Set<String> reqAttrs = getReqAttrs(request, AttributeClass.distributionList);
-        
-        Element d = request.getElement(AdminConstants.E_DL);
-        String key = d.getAttribute(AdminConstants.A_BY);
-        String value = d.getText();
 	    
-        Group group = prov.getGroup(Key.DistributionListBy.fromString(key), value);
-        
+        Group group = getGroupFromContext(context);
         if (group == null) {
+            Element d = request.getElement(AdminConstants.E_DL);
+            String value = d.getText();
             throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(value);
         }
         
@@ -210,4 +213,5 @@ public class GetDistributionList extends AdminDocumentHandler {
         notes.add(String.format(AdminRightCheckPoint.Notes.GET_ENTRY, Admin.R_getDistributionList.getName()));
         notes.add(String.format(AdminRightCheckPoint.Notes.GET_ENTRY, Admin.R_getGroup.getName()));
     }
+
 }
