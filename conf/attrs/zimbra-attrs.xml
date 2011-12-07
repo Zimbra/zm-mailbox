@@ -3820,9 +3820,10 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>time interval that an entry cached by NGINX will remain in the cache</desc>
 </attr>
 
-<attr id="735" name="zimbraReverseProxyInactivityTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.10">
+<attr id="735" name="zimbraReverseProxyInactivityTimeout" type="duration" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.10" deprecatedSince="8.0.0">
   <globalConfigValue>1h</globalConfigValue>
   <desc>Time interval after which NGINX mail proxy will disconnect an inactive IMAP/POP connection</desc>
+  <deprecateDesc>deprecated in favor of local config "imap_max_idle_time", "pop3_max_idle_time", "imap_authenticated_max_idle_time" in bug 59685</deprecateDesc>
 </attr>
 
 <attr id="736" name="zimbraReverseProxyPassErrors" type="boolean" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" requiresRestart="nginxproxy" since="5.0.10">

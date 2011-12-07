@@ -1018,6 +1018,29 @@ class ErrorPagesVar extends ProxyConfVar {
 }
 
 /**
+ * Provide the timeout value which accepts an offset
+ * @author jiankuan
+ *
+ */
+class TimeoutVar extends ProxyConfVar {
+    private int offset;
+
+    public TimeoutVar(String keyword, String attribute, Object defaultValue,
+            ProxyConfOverride overrideType, int offset,
+            String description) {
+        super(keyword, attribute, defaultValue, ProxyConfValueType.INTEGER,
+                overrideType, description);
+        this.offset = offset;
+    }
+    
+    @Override
+    public void update() throws ServiceException, ProxyConfException {
+        super.update();
+        mValue = new Integer(((Integer)mValue).intValue() + offset);
+    }
+}
+
+/**
  * a wrapper class that convert a ProxyConfVar which
  * contains the time in milliseconds to seconds. This
  * is useful when the default timeout unit used by 
@@ -1710,7 +1733,11 @@ public class ProxyConfGen
         /* deprecated */ mConfVars.put("memcache.unqual", new ProxyConfVar("memcache.unqual", null, false, ProxyConfValueType.BOOLEAN, ProxyConfOverride.NONE, "Deprecated - always set to false"));
         mConfVars.put("memcache.ttl", new ProxyConfVar("memcache.ttl", "zimbraReverseProxyCacheEntryTTL", new Long(3600000), ProxyConfValueType.TIME, ProxyConfOverride.CONFIG, "Time interval (ms) for which cached entries remain in memcache"));
         mConfVars.put("mail.ctimeout", new ProxyConfVar("mail.ctimeout", "zimbraReverseProxyConnectTimeout", new Long(120000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "Time interval (ms) after which a POP/IMAP proxy connection to a remote host will give up"));
-        mConfVars.put("mail.timeout", new ProxyConfVar("mail.timeout", "zimbraReverseProxyInactivityTimeout", new Long(3600000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "Time interval (ms) after which, if a POP/IMAP connection is inactive, it will be automatically disconnected"));
+        /* deprecated */mConfVars.put("mail.timeout", new ProxyConfVar("mail.timeout", "zimbraReverseProxyInactivityTimeout", new Long(3600000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "Time interval (ms) after which, if a POP/IMAP connection is inactive, it will be automatically disconnected"));
+        mConfVars.put("mail.pop3.timeout", new ProxyConfVar("mail.pop3.timeout", "pop3_max_idle_time", 60, ProxyConfValueType.INTEGER, ProxyConfOverride.LOCALCONFIG, "pop3 network timeout before authentication"));
+        mConfVars.put("mail.pop3.proxytimeout", new ProxyConfVar("mail.pop3.proxytimeout", "pop3_max_idle_time", 60, ProxyConfValueType.INTEGER, ProxyConfOverride.LOCALCONFIG, "pop3 network timeout after authentication"));
+        mConfVars.put("mail.imap.timeout", new ProxyConfVar("mail.imap.timeout", "imap_max_idle_time", 60, ProxyConfValueType.INTEGER, ProxyConfOverride.LOCALCONFIG, "imap network timeout before authentication"));
+        mConfVars.put("mail.imap.proxytimeout", new TimeoutVar("mail.imap.proxytimeout", "imap_authenticated_max_idle_time", 1800, ProxyConfOverride.LOCALCONFIG, 300, "imap network timeout after authentication"));
         mConfVars.put("mail.passerrors", new ProxyConfVar("mail.passerrors", "zimbraReverseProxyPassErrors", true, ProxyConfValueType.BOOLEAN, ProxyConfOverride.SERVER, "Indicates whether mail proxy will pass any protocol specific errors from the upstream server back to the downstream client"));
         /* deprecated */ mConfVars.put("mail.:auth_http", new AuthHttpHandlersVar());
         mConfVars.put("mail.auth_http_timeout", new ProxyConfVar("mail.auth_http_timeout", "zimbraReverseProxyRouteLookupTimeout", new Long(15000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER,"Time interval (ms) given to mail route lookup handler to respond to route lookup request (after this time elapses, Proxy fails over to next handler, or fails the request if there are no more lookup handlers)"));
