@@ -6686,12 +6686,18 @@ TODO: delete them permanently from here
   <defaultCOSValue>90d</defaultCOSValue>
 </attr>
 
-<attr id="1349" name="zimbraExternalShareInvitationUrlExpiration" type="duration" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited" since="8.0.0">
+<attr id="1349" name="zimbraExternalShareInvitationUrlExpiration" type="duration" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited,octopus" since="8.0.0">
   <globalConfigValue>0</globalConfigValue>
   <desc>
     Duration for which the URL sent in the share invitation email to an external user is valid.
     A value of 0 indicates that the URL never expires.
   </desc>
+</attr>
+
+<attr id="1350" name="zimbraFileUploadMaxSizePerFile" type="long" cardinality="single" optionalIn="account,cos,domain,globalConfig" flags="accountCosDomainInherited,domainInherited" since="8.0.0">
+  <globalConfigValue>2147483648</globalConfigValue>
+  <defaultCOSValue>2147483648</defaultCOSValue>
+  <desc>Maximum size in bytes for each attachment.</desc>
 </attr>
 
 </attrs>
