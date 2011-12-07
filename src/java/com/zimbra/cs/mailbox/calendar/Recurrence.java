@@ -1602,8 +1602,8 @@ public class Recurrence
     public static void main(String[] args) throws Exception {
         ICalTimeZone pacific = new ICalTimeZone(
                 "America/Los_Angeles",
-                -28800000, "19710101T020000", "FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=11;BYDAY=1SU", "PST",
-                -25200000, "19710101T020000", "FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=3;BYDAY=2SU", "PDT");
+                -28800000, "16010101T020000", "FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=11;BYDAY=1SU", "PST",
+                -25200000, "16010101T020000", "FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=3;BYDAY=2SU", "PDT");
         TimeZoneMap tzmap = new TimeZoneMap(pacific);
         String str = "TZID=\"" + pacific.getID() + "\":20090105T120000";
         ParsedDateTime dtStart = ParsedDateTime.parse(str, tzmap);
