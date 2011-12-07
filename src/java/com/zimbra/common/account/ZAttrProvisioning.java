@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111206-1333 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111207-1106 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3671,6 +3671,19 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1264)
     public static final String A_zimbraExternalShareDomainWhitelistEnabled = "zimbraExternalShareDomainWhitelistEnabled";
+
+    /**
+     * Duration for which the URL sent in the share invitation email to an
+     * external user is valid. A value of 0 indicates that the URL never
+     * expires. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1349)
+    public static final String A_zimbraExternalShareInvitationUrlExpiration = "zimbraExternalShareInvitationUrlExpiration";
 
     /**
      * lifetime of external shares. Must be in valid duration format:
@@ -9442,6 +9455,9 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxyImapStartTlsMode = "zimbraReverseProxyImapStartTlsMode";
 
     /**
+     * Deprecated since: 8.0.0. deprecated in favor of local config
+     * &quot;imap_max_idle_time&quot;, &quot;pop3_max_idle_time&quot;,
+     * &quot;imap_authenticated_max_idle_time&quot; in bug 59685. Orig desc:
      * Time interval after which NGINX mail proxy will disconnect an inactive
      * IMAP/POP connection. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
@@ -10571,22 +10587,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
