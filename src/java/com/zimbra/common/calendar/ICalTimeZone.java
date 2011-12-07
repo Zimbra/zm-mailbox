@@ -157,7 +157,7 @@ public class ICalTimeZone extends SimpleTimeZone {
         }
     }
 
-    public static final String DEFAULT_DTSTART = "19710101T000000";
+    public static final String DEFAULT_DTSTART = "16010101T000000";  // 1601 is the magic year that keeps Microsoft clients happy.
 
     private int    mStandardOffset = 0;
     private String mDayToStdDtStart = DEFAULT_DTSTART;
@@ -428,7 +428,7 @@ public class ICalTimeZone extends SimpleTimeZone {
      *                   period for which stdRRule applies.  The format is
      *                   "YYYYMMDDThhmmss" with 24-hour hour.  In practice,
      *                   the date portion is set to some very early date, like
-     *                   "19710101", and only the time portion varies according
+     *                   "16010101", and only the time portion varies according
      *                   to the rules of the time zone.
      * @param stdRRule   iCal recurrence rule for transition into standard
      *                   time (i.e. transition out of daylight time)
@@ -517,7 +517,7 @@ public class ICalTimeZone extends SimpleTimeZone {
         String hourStr = Integer.toString(onset.getHour() + 100).substring(1);
         String minuteStr = Integer.toString(onset.getMinute() + 100).substring(1);
         String secondStr = Integer.toString(onset.getSecond() + 100).substring(1);
-        StringBuilder sb = new StringBuilder("19710101T");
+        StringBuilder sb = new StringBuilder("16010101T");
         sb.append(hourStr).append(minuteStr).append(secondStr);
         return sb.toString();
     }
@@ -555,8 +555,8 @@ public class ICalTimeZone extends SimpleTimeZone {
 
             ICalTimeZone mytz = new ICalTimeZone(
                     "Custom TZ",
-                    -28800000, "19710101T020000", "FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=10;BYDAY=-3FR", "FOO",
-                    -25200000, "19710101T020000", "FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=4;BYDAY=2TU", "BAR");
+                    -28800000, "16010101T020000", "FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=10;BYDAY=-3FR", "FOO",
+                    -25200000, "16010101T020000", "FREQ=YEARLY;WKST=MO;INTERVAL=1;BYMONTH=4;BYDAY=2TU", "BAR");
             if (!verifyTZRules(mytz, 2005))
                 badCount++;
             System.out.println();
