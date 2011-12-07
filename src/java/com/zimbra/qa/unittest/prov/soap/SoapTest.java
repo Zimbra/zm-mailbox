@@ -16,7 +16,6 @@ package com.zimbra.qa.unittest.prov.soap;
 
 import java.io.IOException;
 
-import org.apache.commons.httpclient.methods.PostMethod;
 import org.junit.BeforeClass;
 
 import com.zimbra.common.service.ServiceException;
@@ -26,11 +25,12 @@ import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.qa.unittest.TestUtil;
+import com.zimbra.qa.unittest.prov.ProvTest;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.AuthResponse;
 
-public class SoapTest {
+public class SoapTest extends ProvTest {
     private static final String TEST_SOAP_BASE_DOMAIN = "testsoap";
     
     private static String PASSWORD = "test123";

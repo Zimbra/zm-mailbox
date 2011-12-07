@@ -28,6 +28,7 @@ import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
+import com.zimbra.qa.QA.Bug;
 
 import static org.junit.Assert.*;
 
@@ -143,7 +144,7 @@ public class TestLdapZLdapFilter extends LdapTest {
     
     @Test
     public void accountByForeignPrincipal() throws Exception {
-        String FOREIFN_PRINCIPAL = "accountByForeignPrincipal";
+        String FOREIFN_PRINCIPAL = getTestName();
         
         String filter = LegacyLdapFilter.accountByForeignPrincipal(FOREIFN_PRINCIPAL);
         ZLdapFilter zLdapFilter = filterDactory.accountByForeignPrincipal(FOREIFN_PRINCIPAL);
@@ -165,7 +166,7 @@ public class TestLdapZLdapFilter extends LdapTest {
     
     @Test
     public void accountByMemberOf() throws Exception {
-        String MEMBEROF = "accountByMemberOf";
+        String MEMBEROF = getTestName();
             
         String filter = LegacyLdapFilter.accountByMemberOf(MEMBEROF);
         ZLdapFilter zLdapFilter = filterDactory.accountByMemberOf(MEMBEROF);
@@ -176,7 +177,7 @@ public class TestLdapZLdapFilter extends LdapTest {
     
     @Test
     public void accountByName() throws Exception {
-        String NAME = "accountByName";
+        String NAME = getTestName();
             
         String filter = LegacyLdapFilter.accountByName(NAME);
         ZLdapFilter zLdapFilter = filterDactory.accountByName(NAME);
@@ -188,7 +189,7 @@ public class TestLdapZLdapFilter extends LdapTest {
     @Test
     public void adminAccountByRDN() throws Exception {
         String NAMING_RDN_ATTR = "uid";
-        String NAME = "adminAccountByRDN";
+        String NAME = getTestName();
         
         String filter = LegacyLdapFilter.adminAccountByRDN(NAMING_RDN_ATTR, NAME);
         ZLdapFilter zLdapFilter = filterDactory.adminAccountByRDN(NAMING_RDN_ATTR, NAME);
@@ -330,7 +331,7 @@ public class TestLdapZLdapFilter extends LdapTest {
         // This assertion fails because we optimized it in the new code
         // it is now:
         // (&(&(objectClass=zimbraAccount)(!(objectClass=zimbraCalendarResource)))(zimbraArchiveAccount=*)(|(!(zimbraExcludeFromCMBSearch=*))(zimbraExcludeFromCMBSearch=FALSE)))
-        System.out.println(zLdapFilter.toFilterString());
+        // System.out.println(zLdapFilter.toFilterString());
         // assertEquals(filter, zFilter);
         // assertEquals(legacyFilter, zFilter);
         verifyStatString(FilterId.CMB_SEARCH_ACCOUNTS_ONLY_WITH_ARCHIVE, zLdapFilter);
@@ -373,7 +374,7 @@ public class TestLdapZLdapFilter extends LdapTest {
     
     @Test
     public void calendarResourceByForeignPrincipal() throws Exception {
-        String FOREIGN_PRINCIPAL = "calendarResourceByForeignPrincipal";
+        String FOREIGN_PRINCIPAL = getTestName();
         
         String filter = LegacyLdapFilter.calendarResourceByForeignPrincipal(FOREIGN_PRINCIPAL);
         ZLdapFilter zLdapFilter = filterDactory.calendarResourceByForeignPrincipal(FOREIGN_PRINCIPAL);
@@ -395,7 +396,7 @@ public class TestLdapZLdapFilter extends LdapTest {
     
     @Test
     public void calendarResourceByName() throws Exception {
-        String NAME = "calendarResourceByName";
+        String NAME = getTestName();
         
         String filter = LegacyLdapFilter.calendarResourceByName(NAME);
         ZLdapFilter zLdapFilter = filterDactory.calendarResourceByName(NAME);
@@ -469,7 +470,7 @@ public class TestLdapZLdapFilter extends LdapTest {
     
     @Test
     public void dataSourceByName() throws Exception {
-        String NAME = "dataSourceByName";
+        String NAME = getTestName();
         
         String filter = LegacyLdapFilter.dataSourceByName(NAME);
         ZLdapFilter zLdapFilter = filterDactory.dataSourceByName(NAME);
@@ -500,7 +501,7 @@ public class TestLdapZLdapFilter extends LdapTest {
     
     @Test
     public void distributionListByName() throws Exception {
-        String NAME = "distributionListByName";
+        String NAME = getTestName();
         
         String filter = LegacyLdapFilter.distributionListByName(NAME);
         ZLdapFilter zLdapFilter = filterDactory.distributionListByName(NAME);
@@ -533,7 +534,7 @@ public class TestLdapZLdapFilter extends LdapTest {
     
     @Test
     public void dynamicGroupByName() throws Exception {
-        String NAME = "dynamicGroupByName";
+        String NAME = getTestName();
         
         String filter = LegacyLdapFilter.dynamicGroupByName(NAME);
         ZLdapFilter zLdapFilter = filterDactory.dynamicGroupByName(NAME);
@@ -556,7 +557,7 @@ public class TestLdapZLdapFilter extends LdapTest {
     
     @Test
     public void groupByName() throws Exception {
-        String NAME = "groupByName";
+        String NAME = getTestName();
         
         String filter = LegacyLdapFilter.groupByName(NAME);
         ZLdapFilter zLdapFilter = filterDactory.groupByName(NAME);
@@ -587,7 +588,7 @@ public class TestLdapZLdapFilter extends LdapTest {
     
     @Test
     public void domainByName() throws Exception {
-        String NAME = "domainByName";
+        String NAME = getTestName();
         
         String filter = LegacyLdapFilter.domainByName(NAME);
         ZLdapFilter zLdapFilter = filterDactory.domainByName(NAME);
@@ -598,7 +599,7 @@ public class TestLdapZLdapFilter extends LdapTest {
     
     @Test
     public void domainByKrb5Realm() throws Exception {
-        String REALM = "domainByKrb5Realm";
+        String REALM = getTestName();
         
         String filter = LegacyLdapFilter.domainByKrb5Realm(REALM);
         ZLdapFilter zLdapFilter = filterDactory.domainByKrb5Realm(REALM);
@@ -609,7 +610,7 @@ public class TestLdapZLdapFilter extends LdapTest {
     
     @Test
     public void domainByVirtualHostame() throws Exception {
-        String VIRTUAL_HOST_NAME = "domainByVirtualHostame";
+        String VIRTUAL_HOST_NAME = getTestName();
         
         String filter = LegacyLdapFilter.domainByVirtualHostame(VIRTUAL_HOST_NAME);
         ZLdapFilter zLdapFilter = filterDactory.domainByVirtualHostame(VIRTUAL_HOST_NAME);
@@ -620,7 +621,7 @@ public class TestLdapZLdapFilter extends LdapTest {
     
     @Test
     public void domainByForeignName() throws Exception {
-        String FOREIGN_NAME = "domainByForeignName";
+        String FOREIGN_NAME = getTestName();
         
         String filter = LegacyLdapFilter.domainByForeignName(FOREIGN_NAME);
         ZLdapFilter zLdapFilter = filterDactory.domainByForeignName(FOREIGN_NAME);
@@ -667,7 +668,7 @@ public class TestLdapZLdapFilter extends LdapTest {
     
     @Test
     public void identityByName() throws Exception {
-        String NAME = "identityByName";
+        String NAME = getTestName();
         
         String filter = LegacyLdapFilter.identityByName(NAME);
         ZLdapFilter zLdapFilter = filterDactory.identityByName(NAME);
@@ -687,7 +688,7 @@ public class TestLdapZLdapFilter extends LdapTest {
     
     @Test
     public void mimeEntryByMimeType() throws Exception {
-        String MIME_TYPE = "mimeEntryByMimeType";
+        String MIME_TYPE = getTestName();
         
         String filter = LegacyLdapFilter.mimeEntryByMimeType(MIME_TYPE);
         ZLdapFilter zLdapFilter = filterDactory.mimeEntryByMimeType(MIME_TYPE);
@@ -718,7 +719,7 @@ public class TestLdapZLdapFilter extends LdapTest {
     
     @Test
     public void serverByService() throws Exception {
-        String SERVICE = "serverByService";
+        String SERVICE = getTestName();
         
         String filter = LegacyLdapFilter.serverByService(SERVICE);
         ZLdapFilter zLdapFilter = filterDactory.serverByService(SERVICE);
@@ -788,6 +789,7 @@ public class TestLdapZLdapFilter extends LdapTest {
     }
     
     @Test
+    @Bug(bug=64260)
     public void bug64260() throws Exception {
         String badStringFilter = "ad:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(givenName=*%s*)(mail=*%s*))(!(msExchHideFromAddressLists=TRUE))(!(displayName=*(EMC)))(mailnickname=*)(|(&(objectCategory=person)(objectClass=user)(!(homeMDB=*))(!(msExchHomeServerName=*)))(&(objectCategory=person)(objectClass=user)(|(homeMDB=*)(msExchHomeServerName=*)))(&(objectCategory=person)(objectClass=contact))(objectCategory=group)(objectCategory=publicFolder)(objectCategory=msExchDynamicDistributionList)))";
         

@@ -16,6 +16,7 @@ package com.zimbra.qa.unittest.prov.soap;
 
 import static org.junit.Assert.*;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,11 +27,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapFaultException;
@@ -44,6 +44,7 @@ import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
+import com.zimbra.qa.QA.Bug;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.soap.account.message.CreateDistributionListRequest;
 import com.zimbra.soap.account.message.CreateDistributionListResponse;
@@ -61,6 +62,18 @@ import com.zimbra.soap.account.type.DistributionListOwnerSelector;
 import com.zimbra.soap.account.type.DistributionListSubscribeOp;
 import com.zimbra.soap.account.type.DistributionListSubscribeStatus;
 import com.zimbra.soap.account.type.DistributionListAction.Operation;
+import com.zimbra.soap.admin.message.AddDistributionListAliasRequest;
+import com.zimbra.soap.admin.message.AddDistributionListAliasResponse;
+import com.zimbra.soap.admin.message.AddDistributionListMemberRequest;
+import com.zimbra.soap.admin.message.AddDistributionListMemberResponse;
+import com.zimbra.soap.admin.message.DeleteDistributionListRequest;
+import com.zimbra.soap.admin.message.DeleteDistributionListResponse;
+import com.zimbra.soap.admin.message.ModifyDistributionListRequest;
+import com.zimbra.soap.admin.message.ModifyDistributionListResponse;
+import com.zimbra.soap.admin.message.RemoveDistributionListAliasRequest;
+import com.zimbra.soap.admin.message.RemoveDistributionListAliasResponse;
+import com.zimbra.soap.admin.message.RemoveDistributionListMemberRequest;
+import com.zimbra.soap.admin.message.RemoveDistributionListMemberResponse;
 import com.zimbra.soap.admin.type.DLInfo;
 import com.zimbra.soap.base.DistributionListOwnerInfoInterface;
 import com.zimbra.soap.type.DistributionListOwnerBy;
@@ -77,7 +90,6 @@ public class TestDelegatedDL extends SoapTest {
     private static String USER_OWNER;
     private static String USER_NOT_OWNER;
     private static String DL_NAME;
-    private static String PASSWORD;
         
     private static SoapProvTestUtil provUtil;
     private static Provisioning prov;
@@ -90,7 +102,6 @@ public class TestDelegatedDL extends SoapTest {
         USER_OWNER = TestUtil.getAddress("owner", DOMAIN_NAME);
         USER_NOT_OWNER = TestUtil.getAddress("not-owner", DOMAIN_NAME);
         DL_NAME = TestUtil.getAddress("dl", DOMAIN_NAME);
-        PASSWORD = "test123";
         
         // init rights
         RightManager.getInstance();
@@ -185,11 +196,23 @@ public class TestDelegatedDL extends SoapTest {
         return TestUtil.getAddress(localpart, DOMAIN_NAME);
     }
     
+    private void verifyCaughtProxyError(SoapTransport transport, Object jaxbObject) 
+    throws Exception {
+        boolean caughtProxyError = false;
+        try {
+            invokeJaxb(transport, jaxbObject);
+        } catch (ServiceException e) {
+            if (ServiceException.PROXY_ERROR.equals(e.getCode())) {
+                caughtProxyError = true;
+            }
+        }
+        assertTrue(caughtProxyError);
+    }
     
-    @Test
     /*
      * Test the owners element in zimbraAdmin:GetDistributionList
      */
+    @Test
     public void getDistributionListAdmin() throws Exception {
         SoapTransport transport = authAdmin(ADMIN);
         
@@ -228,7 +251,7 @@ public class TestDelegatedDL extends SoapTest {
     
     @Test
     public void createDistributionListPermDenied() throws Exception {
-        String dlName = getAddress("dl-test-create-perm-denied");
+        String dlName = getAddress(genGroupNameLocalPart());
         boolean dynamic = true;
         
         SoapTransport transport = authUser(USER_OWNER);
@@ -251,7 +274,7 @@ public class TestDelegatedDL extends SoapTest {
     
     @Test
     public void createDistributionList() throws Exception {
-        String dlName = getAddress("dl-test-create");
+        String dlName = getAddress(genGroupNameLocalPart());
         boolean dynamic = true;
         
         SoapTransport transport = authUser(USER_CREATOR);
@@ -505,7 +528,7 @@ public class TestDelegatedDL extends SoapTest {
         SoapTransport transport = authUser(USER_OWNER);
         
         DistributionListAction action = new DistributionListAction(Operation.rename);
-        String DL_NEW_NAME = getAddress("dl-new-name");
+        String DL_NEW_NAME = getAddress(genGroupNameLocalPart("new-name"));
         action.setNewName(DL_NEW_NAME);
         
         DistributionListActionRequest req = new DistributionListActionRequest(
@@ -529,7 +552,7 @@ public class TestDelegatedDL extends SoapTest {
     @Test
     public void distributionListActionDelete() throws Exception {
         // create a group for the delete test
-        String NAME = getAddress("to-be-deleted");
+        String NAME = getAddress(genGroupNameLocalPart());
         Group group = createGroupAndAddOwner(NAME);
         
         SoapTransport transport = authUser(USER_OWNER);
@@ -573,50 +596,9 @@ public class TestDelegatedDL extends SoapTest {
         assertTrue(caughtPermDenied);
     }
     
-    /*
-    @Test
-    public void getDistributionListInfo() throws Exception {
-        String NAME = getAddress("get-dl-info-test");
-        Group group = createGroupAndAddOwner(NAME);
-        
-        SoapTransport transport = authUser(USER_NOT_OWNER);
-        
-        GetDistributionListInfoRequest req = new GetDistributionListInfoRequest(
-                DistributionListSelector.fromName(NAME));
-        
-        GetDistributionListInfoResponse resp = invokeJaxb(transport, req);
-        
-        assertFalse(resp.isOwner());
-        assertFalse(resp.isMember());
-        
-        DistributionListInfo dlInfo = resp.getDl();
-        
-        String dlId = dlInfo.getId();
-        assertEquals(group.getId(), dlId);
-
-        boolean seenSubsPolicy = false;
-        boolean seenUnsubsPolicy = false;
-        List<? extends Attr> attrs = dlInfo.getAttrList();
-        for (Attr attr : attrs) {
-            String name = attr.getName();
-            String value = attr.getValue();
-            if (Provisioning.A_zimbraDistributionListSubscriptionPolicy.equals(name)) {
-                assertEquals(ZAttrProvisioning.DistributionListSubscriptionPolicy.REJECT.name(), value);
-                seenSubsPolicy = true;
-            }
-            if (Provisioning.A_zimbraDistributionListUnsubscriptionPolicy.equals(name)) {
-                assertEquals(ZAttrProvisioning.DistributionListUnsubscriptionPolicy.REJECT.name(), value);
-                seenUnsubsPolicy = true;
-            }
-        }
-        assertTrue(seenSubsPolicy);
-        assertTrue(seenUnsubsPolicy);
-    }
-    */
-    
     @Test
     public void getAccountMembership() throws Exception {
-        String GROUP_NAME = getAddress("getAccountMembership".toLowerCase());
+        String GROUP_NAME = getAddress(genGroupNameLocalPart());
         Group group = createGroupAndAddOwner(GROUP_NAME);
         
         // add a member
@@ -639,7 +621,7 @@ public class TestDelegatedDL extends SoapTest {
         assertTrue(seenGroup);
         
         // rename group
-        String GROUP_NEW_NAME = getAddress("getAccountMembership-new".toLowerCase());
+        String GROUP_NEW_NAME = getAddress(genGroupNameLocalPart("new"));
         prov.renameGroup(group.getId(), GROUP_NEW_NAME);
         
         // get membership again, should show the new name
@@ -656,5 +638,122 @@ public class TestDelegatedDL extends SoapTest {
         }
         assertTrue(seenGroup);
     }
+
+    /*
+     * Verify groups without a home server will get PROXY_ERROR for zimbraAccount 
+     * SOAP calls.
+     */
+    @Test
+    @Bug(bug=66412)
+    public void noHomeServerZimbraAccount() throws Exception {
+        String groupName = TestUtil.getAddress(genGroupNameLocalPart(), DOMAIN_NAME);
+        Group group = provUtil.createGroup(groupName, false);
+        
+        // remove zimbraMailHost
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraMailHost, null);
+        prov.modifyAttrs(group, attrs);
+        
+        SoapTransport transport = authUser(USER_OWNER);
+        
+        /*
+         * GetDistributionList
+         */
+        GetDistributionListRequest getDLreq = new GetDistributionListRequest(
+                DistributionListSelector.fromName(groupName), Boolean.TRUE);
+        verifyCaughtProxyError(transport, getDLreq);
+        
+        
+        /*
+         * DistributionListAction
+         */
+        DistributionListActionRequest DLActionReq = new DistributionListActionRequest(
+                DistributionListSelector.fromName(groupName), 
+                new DistributionListAction(Operation.addMembers));
+        verifyCaughtProxyError(transport, DLActionReq);
+        
+        /*
+         * SubscribeDistributionList
+         */
+        SubscribeDistributionListRequest subsDLReq = new SubscribeDistributionListRequest(
+                DistributionListSelector.fromName(groupName),
+                DistributionListSubscribeOp.subscribe);
+        verifyCaughtProxyError(transport, subsDLReq);
+        
+        provUtil.deleteGroup(group);
+    }
     
+    /*
+     * Verify groups without a home server will get executed for zimbraAdmin 
+     * SOAP calls.
+     */
+    @Test
+    @Bug(bug=66412)
+    public void noHomeServerZimbraAdmin() throws Exception {
+        String groupName = TestUtil.getAddress(genGroupNameLocalPart(), DOMAIN_NAME);
+        Group group = provUtil.createGroup(groupName, false);
+        String groupId = group.getId();
+        
+        // remove zimbraMailHost
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraMailHost, null);
+        prov.modifyAttrs(group, attrs);
+        
+        SoapTransport transport = authAdmin(ADMIN);
+        Object req;
+        com.zimbra.soap.admin.type.DistributionListInfo dlInfo;
+        
+        /*
+         * GetDistributionList
+         */
+        req = new com.zimbra.soap.admin.message.GetDistributionListRequest(
+                    com.zimbra.soap.admin.type.DistributionListSelector.fromName(groupName));
+        com.zimbra.soap.admin.message.GetDistributionListResponse getDLResp = invokeJaxb(transport, req);
+        dlInfo = getDLResp.getDl();
+        assertEquals(groupId, dlInfo.getId());
+        
+        /*
+         * ModifyDistributionList
+         */
+        req = new ModifyDistributionListRequest(groupId);
+        ModifyDistributionListResponse modifyDLResp = invokeJaxb(transport, req);
+        dlInfo = modifyDLResp.getDl();
+        assertEquals(groupId, dlInfo.getId());
+        
+        /*
+         * AddDistributionAlias
+         */
+        req = new AddDistributionListAliasRequest(groupId, 
+                TestUtil.getAddress(genGroupNameLocalPart("alias"), DOMAIN_NAME));
+        AddDistributionListAliasResponse addDLAliasResp = invokeJaxb(transport, req);
+        
+        /*
+         * RemoveDistributionAlias
+         */
+        req = new RemoveDistributionListAliasRequest(groupId, 
+                TestUtil.getAddress(genGroupNameLocalPart("alias"), DOMAIN_NAME));
+        RemoveDistributionListAliasResponse removeDLAliasResp = invokeJaxb(transport, req);
+        
+        /*
+         * AddDistributionListMember
+         */
+        req = new AddDistributionListMemberRequest(groupId, 
+                Collections.singleton(TestUtil.getAddress(genAcctNameLocalPart("member"), DOMAIN_NAME)));
+        AddDistributionListMemberResponse addDLMemberResp = invokeJaxb(transport, req);
+        
+        /*
+         * RemoveDistributionListMember
+         */
+        req = new RemoveDistributionListMemberRequest(groupId, 
+                Collections.singleton(TestUtil.getAddress(genAcctNameLocalPart("member"), DOMAIN_NAME)));
+        RemoveDistributionListMemberResponse removeDLMemberResp = invokeJaxb(transport, req);
+        
+        /*
+         * DeleteDistributionList
+         */
+        req = new DeleteDistributionListRequest(groupId);
+        DeleteDistributionListResponse deleteDLResp = invokeJaxb(transport, req);
+
+    }
+
 }

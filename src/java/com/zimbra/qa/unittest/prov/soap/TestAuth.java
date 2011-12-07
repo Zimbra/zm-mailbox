@@ -30,9 +30,7 @@ import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
-import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -41,10 +39,8 @@ import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.qa.unittest.TestUtil;
 
 public class TestAuth extends SoapTest {

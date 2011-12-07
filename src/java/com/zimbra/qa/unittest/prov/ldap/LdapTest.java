@@ -28,8 +28,9 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
+import com.zimbra.qa.unittest.prov.ProvTest;
 
-public class LdapTest {
+public class LdapTest extends ProvTest {
     private static final String TEST_LDAP_BASE_DOMAIN = "testldap";
     
     // variable guarding initTest() enter only once per JVM
@@ -123,4 +124,5 @@ public class LdapTest {
             throw new SkippedForInMemLdapServer(reason);
         }
     }
+
 }

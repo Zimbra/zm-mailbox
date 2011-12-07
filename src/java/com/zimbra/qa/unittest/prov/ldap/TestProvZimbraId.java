@@ -61,7 +61,7 @@ public class TestProvZimbraId extends LdapTest {
         
         Map<String, Object> attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraId, zimbraId);
-        Account acct = provUtil.createAccount("createAccountWithZimbraId", domain, attrs);
+        Account acct = provUtil.createAccount(genAcctNameLocalPart(), domain, attrs);
         assertEquals(zimbraId, acct.getId());
         
         // get account by id
@@ -78,7 +78,7 @@ public class TestProvZimbraId extends LdapTest {
         
         boolean caughtException = false;
         try {
-            Account acct = provUtil.createAccount("createAccountWithInvalidZimbraId", domain, attrs);
+            Account acct = provUtil.createAccount(genAcctNameLocalPart(), domain, attrs);
         } catch (ServiceException e) {
             assertEquals(ServiceException.INVALID_REQUEST, e.getCode());
             caughtException = true;;
@@ -90,12 +90,12 @@ public class TestProvZimbraId extends LdapTest {
     @Ignore  // no longer supported/allowed
     public void createAccountWithCosName() throws Exception {
         // create a COS
-        String cosName = "cos-createAccountWithCosName";
+        String cosName = genCosName();
         Cos cos = provUtil.createCos(cosName);
         
         Map<String, Object> attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraCOSId, cosName); // use cos name instead of id
-        Account acct = provUtil.createAccount("createAccountWithCosName", domain, attrs);
+        Account acct = provUtil.createAccount(genAcctNameLocalPart(), domain, attrs);
         
         Cos acctCos = prov.getCOS(acct);
         assertEquals(cos.getName(), acctCos.getName());
@@ -105,12 +105,12 @@ public class TestProvZimbraId extends LdapTest {
     @Test
     public void createAccountWithCosId() throws Exception {
         // create a COS
-        String cosName = "cos-createAccountWithCosId";
+        String cosName = genCosName();
         Cos cos = provUtil.createCos(cosName);
         
         Map<String, Object> attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraCOSId, cos.getId());
-        Account acct = provUtil.createAccount("createAccountWithCosName", domain, attrs);
+        Account acct = provUtil.createAccount(genAcctNameLocalPart(), domain, attrs);
         
         Cos acctCos = prov.getCOS(acct);
         assertEquals(cos.getName(), acctCos.getName());
@@ -119,18 +119,20 @@ public class TestProvZimbraId extends LdapTest {
     
     @Test
     public void testFileUpload() throws Exception {
-        Account acct = provUtil.createAccount("testFileUpload", domain);
+        Account acct = provUtil.createAccount(genAcctNameLocalPart(), domain);
         
         int bodyLen = 128;
         byte[] body = new byte[bodyLen];
         SecureRandom sr = new SecureRandom();
         sr.nextBytes(body);
         
-        Upload ulSaved = FileUploadServlet.saveUpload(new ByteArrayInputStream(body), "zimbraId-test", "text/plain", acct.getId());
+        Upload ulSaved = FileUploadServlet.saveUpload(
+                new ByteArrayInputStream(body), "zimbraId-test", "text/plain", acct.getId());
         // System.out.println("Upload id is: " + ulSaved.getId());
         
         AuthToken authToken = AuthProvider.getAuthToken(acct);
-        Upload ulFetched = FileUploadServlet.fetchUpload(acct.getId(), ulSaved.getId(), authToken);
+        Upload ulFetched = FileUploadServlet.fetchUpload(
+                acct.getId(), ulSaved.getId(), authToken);
         
         assertEquals(ulSaved.getId(), ulFetched.getId());
         assertEquals(ulSaved.getName(), ulFetched.getName());
@@ -141,5 +143,4 @@ public class TestProvZimbraId extends LdapTest {
         byte[] bytesUploaded = ByteUtil.getContent(ulFetched.getInputStream(), -1);
         assertTrue(Arrays.equals(body, bytesUploaded));
     }
-
 }

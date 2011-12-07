@@ -166,14 +166,13 @@ public abstract class ProvTestUtil {
         return cr;
     }
     
-    public CalendarResource createCalendarResource(String localPart, Domain domain) throws Exception {
+    public CalendarResource createCalendarResource(String localPart, Domain domain) 
+    throws Exception {
         return createCalendarResource(localPart, domain, null);
     }
     
-    public Group createGroup(String localPart, Domain domain, 
-            Map<String, Object> attrs, boolean dynamic) 
+    public Group createGroup(String groupName, Map<String, Object> attrs, boolean dynamic) 
     throws Exception {
-        String groupName = TestUtil.getAddress(localPart, domain.getName());
         Group group = prov.getGroup(Key.DistributionListBy.name, groupName);
         assertNull(group);
         
@@ -190,6 +189,23 @@ public abstract class ProvTestUtil {
         assertEquals(groupName.toLowerCase(), group.getName().toLowerCase());
         
         return group;
+    }
+    
+    public Group createGroup(String groupName, boolean dynamic) 
+    throws Exception {
+        return createGroup(groupName, (Map<String, Object>) null, dynamic);
+    }
+    
+    public Group createGroup(String localPart, Domain domain, 
+            Map<String, Object> attrs, boolean dynamic) 
+    throws Exception {
+        String groupName = TestUtil.getAddress(localPart, domain.getName());
+        return createGroup(groupName, attrs, dynamic);
+    }
+    
+    public Group createGroup(String localPart, Domain domain, boolean dynamic) 
+    throws Exception {
+        return createGroup(localPart, domain, null, dynamic);
     }
     
     public void deleteGroup(Group group) 
@@ -223,6 +239,11 @@ public abstract class ProvTestUtil {
     public DynamicGroup createDynamicGroup(String localPart, 
             Domain domain, Map<String, Object> attrs) throws Exception {
         return (DynamicGroup) createGroup(localPart, domain, attrs, true);
+    }
+    
+    public DynamicGroup createDynamicGroup(String localPart, Domain domain) 
+    throws Exception {
+        return (DynamicGroup) createGroup(localPart, domain, null, true);
     }
     
     public void deleteDynamicGroup(DynamicGroup group) throws Exception {

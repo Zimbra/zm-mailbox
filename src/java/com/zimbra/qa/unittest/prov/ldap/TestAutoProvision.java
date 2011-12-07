@@ -66,10 +66,6 @@ public class TestAutoProvision extends LdapTest {
         Cleanup.deleteAll(baseDomainName());
     }
     
-    private String getTestName() {
-        return Thread.currentThread().getStackTrace()[2].getMethodName();
-    }
-    
     private String getZimbraDomainName(String testName) {
         return testName + "." + baseDomainName();
     }
@@ -83,7 +79,8 @@ public class TestAutoProvision extends LdapTest {
         return createExternalAcctEntry(localPart, null);
     }
     
-    private String createExternalAcctEntry(String localPart, Map<String, Object> attrs) throws Exception {
+    private String createExternalAcctEntry(String localPart, Map<String, Object> attrs) 
+    throws Exception {
         return createExternalAcctEntry(localPart, null, attrs);
     }
     

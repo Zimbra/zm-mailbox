@@ -58,18 +58,6 @@ public class TestLdapZLdapContext extends LdapTest {
         Cleanup.deleteAll(baseDomainName());
     }
     
-    private Account createAccount(String localPart) throws Exception {
-        return createAccount(localPart, null);
-    }
-    
-    private Account createAccount(String localPart, Map<String, Object> attrs) throws Exception {
-        return provUtil.createAccount(localPart, domain, attrs);
-    }
-    
-    private void deleteAccount(Account acct) throws Exception {
-        provUtil.deleteAccount(acct);
-    }
-    
     @Test
     public void searchPaged() throws Exception {
         int SIZE_LIMIT = 5;

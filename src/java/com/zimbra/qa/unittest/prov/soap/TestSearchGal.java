@@ -12,7 +12,6 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-
 package com.zimbra.qa.unittest.prov.soap;
 
 import java.util.ArrayList;
@@ -37,7 +36,6 @@ import com.zimbra.cs.account.GalContact;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.EntrySearchFilter.Operator;
 import com.zimbra.common.account.ProvisioningConstants;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.gal.ZimbraGalSearchBase.PredefinedSearchBase;
 import com.zimbra.qa.unittest.TestUtil;

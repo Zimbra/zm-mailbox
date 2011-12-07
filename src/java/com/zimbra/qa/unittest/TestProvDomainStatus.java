@@ -53,7 +53,7 @@ public class TestProvDomainStatus {
     private SoapProvisioning mSoapProvAdmin;
     
     private String TEST_ID;
-    private static String TEST_NAME = "test-domainstatus";
+    private static String TEST_CLASS_NAME = "test-domainstatus";
     
     private static String PASSWORD = "test123";
     private static String NAMEPREFIX_ACCOUNT     = "acct-";
@@ -158,7 +158,7 @@ public class TestProvDomainStatus {
         mProv = mSoapProvAdmin;
         
         
-        DOMAIN_NAME = TestProvisioningUtil.baseDomainName(TEST_NAME, TEST_ID);
+        DOMAIN_NAME = TestProvisioningUtil.baseDomainName(TEST_CLASS_NAME, TEST_ID);
         
         createDomain(DOMAIN_NAME);
         mAccts = new Account[AccountStatus.values().length];
@@ -239,7 +239,7 @@ public class TestProvDomainStatus {
         boolean ok = false;
         
         try {
-            // mSoapProv.authAccount(acct, PASSWORD, TEST_NAME);
+            // mSoapProv.authAccount(acct, PASSWORD, TEST_CLASS_NAME);
             mProv.authAccount(acct, PASSWORD, AuthContext.Protocol.test);
             
             if (status.equals(Provisioning.ACCOUNT_STATUS_ACTIVE))

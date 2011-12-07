@@ -14,12 +14,20 @@
  */
 package com.zimbra.qa.unittest.prov.ldap;
 
+import static org.junit.Assert.assertNotNull;
+
+import java.util.Map;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.qa.unittest.prov.Names;
 
 public class TestLdapProvDynamicGroup extends LdapTest {
     private static LdapProvTestUtil provUtil;
@@ -37,10 +45,26 @@ public class TestLdapProvDynamicGroup extends LdapTest {
     public static void cleanup() throws Exception {
         Cleanup.deleteAll(baseDomainName());
     }
-
+    
+    private DynamicGroup createDynamicGroup(String localPart) throws Exception {
+        return provUtil.createDynamicGroup(localPart, domain);
+    }
+    
+    private void deleteDynamicGroup(DynamicGroup dg) throws Exception {
+        provUtil.deleteDynamicGroup(dg);
+    }
+    
     @Test
-    public void noop() throws Exception {
-        // just to get junit not to report error on "No runnable methods"
+    public void createDynamicGroup() throws Exception {
+        String DG_NAME_LOCALPART = Names.makeDLNameLocalPart("createDynamicGroup");
+        
+        DynamicGroup dg = createDynamicGroup(DG_NAME_LOCALPART);
+        
+        // make sure the group has a home server
+        Server homeServer = dg.getServer();
+        assertNotNull(homeServer);
+        
+        deleteDynamicGroup(dg);
     }
 
 }

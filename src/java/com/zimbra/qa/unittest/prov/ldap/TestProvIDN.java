@@ -67,7 +67,6 @@ import com.zimbra.qa.unittest.prov.Names;
  */
 
 public class TestProvIDN extends LdapTest {
-    private static String TEST_NAME = "test-IDN";
     private static String UNICODESTR = "\u4e2d\u6587";
     // private static String UNICODESTR = "\u5f35\u611b\u73b2";
     private static String PASSWORD = "test123";

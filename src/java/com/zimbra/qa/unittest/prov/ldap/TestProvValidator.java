@@ -83,8 +83,8 @@ public class TestProvValidator extends LdapTest {
         
         final int COS_MAX_ACCOUNTS = 2;
         
-        Cos cos = provUtil.createCos("testCOSMaxCreateAccount");
-        Domain domain = createDomainWithCosLimit("testCOSMaxCreateAccount", cos, COS_MAX_ACCOUNTS);
+        Cos cos = provUtil.createCos(genCosName());
+        Domain domain = createDomainWithCosLimit(genDomainSegmentName(), cos, COS_MAX_ACCOUNTS);
         
         for (int i = 0; i <= COS_MAX_ACCOUNTS; i++) {
             Map<String, Object> attrs = new HashMap<String, Object>();
@@ -113,8 +113,8 @@ public class TestProvValidator extends LdapTest {
     public void testCOSMaxModifyAccount() throws Exception {
         final int COS_MAX_ACCOUNTS = 2;
         
-        Cos cos = provUtil.createCos("testCOSMaxModifyAccount");
-        Domain domain = createDomainWithCosLimit("testCOSMaxModifyAccount", cos, COS_MAX_ACCOUNTS);
+        Cos cos = provUtil.createCos(genCosName());
+        Domain domain = createDomainWithCosLimit(genDomainSegmentName(), cos, COS_MAX_ACCOUNTS);
         
         for (int i = 0; i < COS_MAX_ACCOUNTS; i++) {
             Map<String, Object> attrs = new HashMap<String, Object>();
@@ -146,7 +146,7 @@ public class TestProvValidator extends LdapTest {
         final String FEATURE = Provisioning.A_zimbraFeatureAdvancedSearchEnabled;
         final int FEATURE_MAX_ACCOUNTS = 2;
         
-        Domain domain = createDomainWithFeatureLimit("testFeatureMaxCreateAccount", FEATURE, FEATURE_MAX_ACCOUNTS);
+        Domain domain = createDomainWithFeatureLimit(genDomainSegmentName(), FEATURE, FEATURE_MAX_ACCOUNTS);
         
         for (int i = 0; i <= FEATURE_MAX_ACCOUNTS; i++) {
             Map<String, Object> attrs = new HashMap<String, Object>();
@@ -177,7 +177,7 @@ public class TestProvValidator extends LdapTest {
         final String FEATURE = Provisioning.A_zimbraFeatureAdvancedSearchEnabled;
         final int FEATURE_MAX_ACCOUNTS = 2;
         
-        Domain domain = createDomainWithFeatureLimit("testFeatureMaxModifyAccount", FEATURE, FEATURE_MAX_ACCOUNTS);
+        Domain domain = createDomainWithFeatureLimit(genDomainSegmentName(), FEATURE, FEATURE_MAX_ACCOUNTS);
         
         List<String> acctIds = new ArrayList<String /* account id */>();
         for (int i = 0; i <= FEATURE_MAX_ACCOUNTS; i++) {

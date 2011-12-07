@@ -43,6 +43,7 @@ import com.zimbra.cs.account.ldap.entry.LdapEntry;
 import com.zimbra.cs.ldap.LdapUsage;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
+import com.zimbra.qa.QA.Bug;
 
 public class TestProvAlias extends LdapTest {
     private static String PASSWORD = "test123";
@@ -131,7 +132,7 @@ public class TestProvAlias extends LdapTest {
     */
     @Test
     public void testAliasDomain_Case1() throws Exception {
-        String testName = "testAliasDomain_Case1"; // getName();
+        String testName = getTestName();
         
         String acctLocalPart = "account1";
         String acctName = getEmail(acctLocalPart, LOCAL_DOMAIN_NAME, testName);
@@ -158,7 +159,7 @@ public class TestProvAlias extends LdapTest {
     */
     @Test
     public void testAliasDomain_Case2() throws Exception {
-        String testName = "testAliasDomain_Case2"; // getName();
+        String testName = getTestName();
         
         String acctLocalPart = "account1";
         String acctName = getEmail(acctLocalPart, LOCAL_DOMAIN_NAME, testName);
@@ -190,7 +191,7 @@ public class TestProvAlias extends LdapTest {
     */
     @Test
     public void testAliasDomain_Case3() throws Exception {
-        String testName = "testAliasDomain_Case3"; // getName();
+        String testName = getTestName();
         
         String acctLocalPart = "account1";
         String acctName = getEmail(acctLocalPart, LOCAL_DOMAIN_NAME, testName);
@@ -246,9 +247,10 @@ public class TestProvAlias extends LdapTest {
     // 
     @Test
     public void testRemoveAlias_entryExist_aliasExist_aliasPointToEntry() throws Exception {
-        // Call toLowerCase to avoid the bug that we don't convert an address to lower case when it is 
-        // added as a DL member, and later the address can't be removed from the DL because case does not match.
-        String testName = "testRemoveAlias_entryExist_aliasExist_aliasPointToEntry".toLowerCase(); // getName().toLowerCase();  
+        // getTestName retusn all lower case.  This avoids the bug that we don't convert 
+        // an address to lower case when it is added as a DL member, and later the address 
+        // can't be removed from the DL because case does not match.
+        String testName = getTestName();
         
         // create the domain
         String domainName = "EE-AE-aliasPointToEntry" + "." + BASE_DOMAIN_NAME;
@@ -308,7 +310,7 @@ public class TestProvAlias extends LdapTest {
     //
     @Test
     public void testRemoveAlias_entryExist_aliasExist_aliasPointToOtherEntry() throws Exception {
-        String testName = "testRemoveAlias_entryExist_aliasExist_aliasPointToOtherEntry".toLowerCase(); // getName().toLowerCase();  
+        String testName = getTestName();
         
         // create the domain
         String domainName = "EE-AE-aliasPointToOtherEntry" + "." + BASE_DOMAIN_NAME;
@@ -408,7 +410,7 @@ public class TestProvAlias extends LdapTest {
     // 
     @Test
     public void testRemoveAlias_entryExist_aliasExist_aliasPointToNonExistEntry() throws Exception {
-        String testName = "testRemoveAlias_entryExist_aliasExist_aliasPointToNonExistEntry".toLowerCase(); // getName().toLowerCase();  
+        String testName = getTestName();
         
         // create the domain
         String domainName = "EE-AE-aliasPointToNonExistEntry" + "." + BASE_DOMAIN_NAME;
@@ -489,7 +491,7 @@ public class TestProvAlias extends LdapTest {
     //
     @Test
     public void testRemoveAlias_entryExist_aliasNotExist() throws Exception {
-        String testName = "testRemoveAlias_entryExist_aliasNotExist".toLowerCase(); // getName().toLowerCase();  
+        String testName = getTestName();
         
         // create the domain
         String domainName = "EE-AN" + "." + BASE_DOMAIN_NAME;
@@ -567,7 +569,7 @@ public class TestProvAlias extends LdapTest {
     // 
     @Test
     public void testRemoveAlias_entryNotExist_aliasExist_aliasPointToOtherEntry() throws Exception {
-        String testName = "testRemoveAlias_entryNotExist_aliasExist_aliasPointToOtherEntry".toLowerCase(); // getName().toLowerCase();  
+        String testName = getTestName();
         
         // create the domain
         String domainName = "EN-AE-aliasPointToOtherEntry" + "." + BASE_DOMAIN_NAME;
@@ -633,7 +635,7 @@ public class TestProvAlias extends LdapTest {
     //
     @Test
     public void testRemoveAlias_entryNotExist_aliasExist_aliasPointToNonExistEntry() throws Exception {
-        String testName = "testRemoveAlias_entryNotExist_aliasExist_aliasPointToNonExistEntry".toLowerCase(); //  getName().toLowerCase();  
+        String testName = getTestName(); 
         
         // create the domain
         String domainName = "EN-AE-aliasPointToNonExistEntry" + "." + BASE_DOMAIN_NAME;
@@ -711,7 +713,7 @@ public class TestProvAlias extends LdapTest {
     //
     @Test
     public void testRemoveAlias_entryNotExist_aliasNotExist() throws Exception {
-        String testName = "testRemoveAlias_entryNotExist_aliasNotExist".toLowerCase(); // getName().toLowerCase();  
+        String testName = getTestName();
         
         // create the domain
         String domainName = "EN-AN" + "." + BASE_DOMAIN_NAME;
@@ -780,7 +782,7 @@ public class TestProvAlias extends LdapTest {
     
     @Test
     public void testRemoveAlias_aliasNameExistsButIsNotAnAlias() throws Exception {
-        String testName = "testRemoveAlias_aliasNameExistsButIsNotAnAlias".toLowerCase(); // getName().toLowerCase();  
+        String testName = getTestName();
         
         // create the domain
         String domainName = underscoreToHyphen(testName) + "." + BASE_DOMAIN_NAME;
@@ -843,7 +845,7 @@ public class TestProvAlias extends LdapTest {
      */
     @Test
     public void testCreateAlias_aliasExistAndDangling() throws Exception {
-        String testName = "testCreateAlias_aliasExistAndDangling".toLowerCase(); // getName().toLowerCase();  
+        String testName = getTestName();
         
         // create the domain
         String domainName = underscoreToHyphen(testName) + "." + BASE_DOMAIN_NAME;
@@ -915,7 +917,7 @@ public class TestProvAlias extends LdapTest {
     
     @Test
     public void testCreateAlias_aliasNameExistsButIsNotAnAlias() throws Exception {
-        String testName = "testCreateAlias_aliasNameExistsButIsNotAnAlias".toLowerCase(); // getName().toLowerCase();  
+        String testName = getTestName();
         
         // create the domain
         String domainName = underscoreToHyphen(testName) + "." + BASE_DOMAIN_NAME;
@@ -956,7 +958,7 @@ public class TestProvAlias extends LdapTest {
     
     @Test
     public void testCreateAlias_aliasExists() throws Exception {
-        String testName = "testCreateAlias_aliasExists".toLowerCase(); // getName().toLowerCase();  
+        String testName = getTestName();
         
         // create the domain
         String domainName = underscoreToHyphen(testName) + "." + BASE_DOMAIN_NAME;
@@ -1033,6 +1035,7 @@ javax.naming.NameAlreadyBoundException: [LDAP: error code 68 - Entry Already Exi
         i.e. the renameAccount should not be allowed
       */
     @Test
+    @Bug(bug=41884)
     public void testBug41884() throws Exception {
         String OLD_DOMAIN_NAME = "main." + BASE_DOMAIN_NAME;
         String NEW_DOMAIN_NAME = "other." + BASE_DOMAIN_NAME;
@@ -1058,6 +1061,5 @@ javax.naming.NameAlreadyBoundException: [LDAP: error code 68 - Entry Already Exi
         }
         assertTrue(good);
     }
-
 
 }

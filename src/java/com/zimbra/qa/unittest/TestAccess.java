@@ -40,7 +40,7 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 
 public class TestAccess extends TestCase {
     private String TEST_ID;
-    private static String TEST_NAME = "test-access";
+    private static String TEST_CLASS_NAME = "test-access";
     
     private SoapAdminUser mProvAdmin;
     private SoapUser mSoapUser1;
@@ -64,7 +64,7 @@ public class TestAccess extends TestCase {
         mProvAdmin = new SoapAdminUser("admin");
         mProvAdmin.auth();
 
-        DOMAIN_NAME = TestProvisioningUtil.baseDomainName(TEST_NAME, TEST_ID);
+        DOMAIN_NAME = TestProvisioningUtil.baseDomainName(TEST_CLASS_NAME, TEST_ID);
         ACCT_1_EMAIL = "acct-1@" + DOMAIN_NAME;
         ACCT_2_EMAIL = "acct-2@" + DOMAIN_NAME;
         

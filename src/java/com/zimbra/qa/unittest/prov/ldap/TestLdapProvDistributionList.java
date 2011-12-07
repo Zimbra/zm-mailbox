@@ -34,6 +34,7 @@ import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.qa.QA.Bug;
 import com.zimbra.qa.unittest.TestUtil;
@@ -44,12 +45,14 @@ public class TestLdapProvDistributionList extends LdapTest {
     private static LdapProvTestUtil provUtil;
     private static Provisioning prov;
     private static Domain domain;
+    private static String BASE_DOMAIN_NAME;
     
     @BeforeClass
     public static void init() throws Exception {
         provUtil = new LdapProvTestUtil();
         prov = provUtil.getProv();
         domain = provUtil.createDomain(baseDomainName(), null);
+        BASE_DOMAIN_NAME = domain.getName();
     }
     
     @AfterClass
@@ -114,6 +117,11 @@ public class TestLdapProvDistributionList extends LdapTest {
         String DL_NAME_LOCALPART = Names.makeDLNameLocalPart("createDistributionList");
         
         DistributionList dl = createDistributionList(DL_NAME_LOCALPART);
+        
+        // make sure the group has a home server
+        Server homeServer = dl.getServer();
+        assertNotNull(homeServer);
+        
         deleteDistributionList(dl);
     }
     
@@ -194,7 +202,7 @@ public class TestLdapProvDistributionList extends LdapTest {
     public void renameDistributionListDomainChanged() throws Exception {
         String DL_NAME_LOCALPART = Names.makeDLNameLocalPart("renameDistributionList");
         
-        String NEW_DOMAIN_NAME = "renameDistributionList." + baseDomainName();
+        String NEW_DOMAIN_NAME = "renameDistributionList." + BASE_DOMAIN_NAME;
         Domain newDomain = provUtil.createDomain(NEW_DOMAIN_NAME, null);
         String DL_NEW_NAME_LOCALPART = Names.makeDLNameLocalPart("renameDistributionList-new");
         String DL_NEW_NAME = TestUtil.getAddress(DL_NEW_NAME_LOCALPART, newDomain.getName()).toLowerCase();
@@ -384,7 +392,7 @@ public class TestLdapProvDistributionList extends LdapTest {
 
     @Test
     public void testCircular1() throws Exception {
-        Domain domain = provUtil.createDomain("testCircular1" + "." + baseDomainName());
+        Domain domain = provUtil.createDomain("testCircular1" + "." + BASE_DOMAIN_NAME);
         
         DistributionList group1 = provUtil.createDistributionList("group1", domain);
         DistributionList group2 = provUtil.createDistributionList("group2", domain);
@@ -409,7 +417,7 @@ public class TestLdapProvDistributionList extends LdapTest {
     
     @Test
     public void testCircular2() throws Exception {
-        Domain domain = provUtil.createDomain("testCircular2" + "." + baseDomainName());
+        Domain domain = provUtil.createDomain("testCircular2" + "." + BASE_DOMAIN_NAME);
         
         DistributionList group1 = provUtil.createDistributionList("group1", domain);
         DistributionList group2 = provUtil.createDistributionList("group2", domain);
@@ -439,7 +447,7 @@ public class TestLdapProvDistributionList extends LdapTest {
     @Bug(bug=42132)
     // @Ignore  // LdapProvisioning no long allows adding self as a group 
     public void bug42132() throws Exception {
-        Domain domain = provUtil.createDomain("bug42132" + "." + baseDomainName());
+        Domain domain = provUtil.createDomain("bug42132" + "." + BASE_DOMAIN_NAME);
         
         DistributionList group1 = provUtil.createDistributionList("group1", domain);
         DistributionList group2 = provUtil.createDistributionList("group2", domain);

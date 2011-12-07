@@ -34,7 +34,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 
 public class TestProvAttr extends LdapTest {
-    private static String TEST_NAME = "test-attr";
+    private static String TEST_CLASS_NAME = "test-attr";
     private static String PASSWORD = "test123";
 
     private static String DOMAIN_NAME;
@@ -48,8 +48,8 @@ public class TestProvAttr extends LdapTest {
     public static void init() throws Exception {
         DOMAIN_NAME = baseDomainName();
         ACCT_EMAIL = "user1" + "@" + DOMAIN_NAME;
-        SERVER_NAME = "server-" + "-" + TEST_NAME;
-        COS_NAME = "cos-" + "-" + TEST_NAME;
+        SERVER_NAME = "server-" + "-" + TEST_CLASS_NAME;
+        COS_NAME = "cos-" + "-" + TEST_CLASS_NAME;
         
         prov = Provisioning.getInstance();        
     }

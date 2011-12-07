@@ -48,7 +48,7 @@ import com.zimbra.soap.type.GalSearchType;
 
 public class TestGal extends TestCase {
     private String TEST_ID = TestProvisioningUtil.genTestId();
-    private static String TEST_NAME = "test-gal";
+    private static String TEST_CLASS_NAME = "test-gal";
     private static String PASSWORD = "test123";
     private static String ACCT_NAME_PREFIX = "user";
     private static String QUERY = ACCT_NAME_PREFIX;
@@ -60,8 +60,8 @@ public class TestGal extends TestCase {
     // sizelimit in /opt/zimbra/conf/slapd.conf
     // set LDAP_SERVER_SIZE_LIMIT to either UNLIMITED or LIMITED and set slapd.conf accordingly, then restart ldap server
     private static int LDAP_SERVER_SIZE_LIMIT = UNLIMITED; 
-    private String DOMAIN_NAME = TestProvisioningUtil.baseDomainName(TEST_NAME, null);
-    private String TOKENIZE_TEST_DOMAIN_NAME = TestProvisioningUtil.baseDomainName(TEST_NAME + "-tokenize", null);
+    private String DOMAIN_NAME = TestProvisioningUtil.baseDomainName(TEST_CLASS_NAME, null);
+    private String TOKENIZE_TEST_DOMAIN_NAME = TestProvisioningUtil.baseDomainName(TEST_CLASS_NAME + "-tokenize", null);
     private Provisioning mProv;
     
     private boolean DEBUG = true;
