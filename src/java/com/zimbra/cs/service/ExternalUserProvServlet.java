@@ -35,7 +35,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.SearchAccountsOptions;
 import com.zimbra.cs.account.ShareInfoData;
 import com.zimbra.cs.account.ZimbraAuthToken;
-import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Flag;
@@ -349,6 +348,7 @@ public class ExternalUserProvServlet extends ZimbraServlet {
         }
         String hmac = param.substring(pos + 1, pos2);
         String data = param.substring(pos2 + 1);
+        Map<Object, Object> map;
         try {
             AuthTokenKey key = AuthTokenKey.getVersion(ver);
             if (key == null) {
@@ -359,9 +359,17 @@ public class ExternalUserProvServlet extends ZimbraServlet {
                 throw new ServletException("hmac failure");
             }
             String decoded = new String(Hex.decodeHex(data.toCharArray()));
-            return BlobMetaData.decode(decoded);
+            map = BlobMetaData.decode(decoded);
         } catch (Exception e) {
             throw new ServletException(e);
         }
+        Object expiry = map.get("exp");
+        if (expiry != null) {
+            // check validity
+            if (System.currentTimeMillis() > Long.parseLong((String) expiry)) {
+                throw new ServletException("url no longer valid");
+            }
+        }
+        return map;
     }
 }

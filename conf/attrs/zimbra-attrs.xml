@@ -6686,4 +6686,12 @@ TODO: delete them permanently from here
   <defaultCOSValue>90d</defaultCOSValue>
 </attr>
 
+<attr id="1349" name="zimbraExternalShareInvitationUrlExpiration" type="duration" cardinality="single" optionalIn="domain,globalConfig" flags="domainInherited" since="8.0.0">
+  <globalConfigValue>0</globalConfigValue>
+  <desc>
+    Duration for which the URL sent in the share invitation email to an external user is valid.
+    A value of 0 indicates that the URL never expires.
+  </desc>
+</attr>
+
 </attrs>

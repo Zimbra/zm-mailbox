@@ -41,7 +41,7 @@ public abstract class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111206-1333 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111207-1106 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -17812,6 +17812,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.0.0. deprecated in favor of local config
+     * &quot;imap_max_idle_time&quot;, &quot;pop3_max_idle_time&quot;,
+     * &quot;imap_authenticated_max_idle_time&quot; in bug 59685. Orig desc:
      * Time interval after which NGINX mail proxy will disconnect an inactive
      * IMAP/POP connection. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
@@ -17832,6 +17835,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.0.0. deprecated in favor of local config
+     * &quot;imap_max_idle_time&quot;, &quot;pop3_max_idle_time&quot;,
+     * &quot;imap_authenticated_max_idle_time&quot; in bug 59685. Orig desc:
      * Time interval after which NGINX mail proxy will disconnect an inactive
      * IMAP/POP connection. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
@@ -17848,6 +17854,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.0.0. deprecated in favor of local config
+     * &quot;imap_max_idle_time&quot;, &quot;pop3_max_idle_time&quot;,
+     * &quot;imap_authenticated_max_idle_time&quot; in bug 59685. Orig desc:
      * Time interval after which NGINX mail proxy will disconnect an inactive
      * IMAP/POP connection. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
@@ -17867,6 +17876,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.0.0. deprecated in favor of local config
+     * &quot;imap_max_idle_time&quot;, &quot;pop3_max_idle_time&quot;,
+     * &quot;imap_authenticated_max_idle_time&quot; in bug 59685. Orig desc:
      * Time interval after which NGINX mail proxy will disconnect an inactive
      * IMAP/POP connection. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
@@ -17887,6 +17899,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.0.0. deprecated in favor of local config
+     * &quot;imap_max_idle_time&quot;, &quot;pop3_max_idle_time&quot;,
+     * &quot;imap_authenticated_max_idle_time&quot; in bug 59685. Orig desc:
      * Time interval after which NGINX mail proxy will disconnect an inactive
      * IMAP/POP connection. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
@@ -17905,6 +17920,9 @@ public abstract class ZAttrServer extends NamedEntry {
     }
 
     /**
+     * Deprecated since: 8.0.0. deprecated in favor of local config
+     * &quot;imap_max_idle_time&quot;, &quot;pop3_max_idle_time&quot;,
+     * &quot;imap_authenticated_max_idle_time&quot; in bug 59685. Orig desc:
      * Time interval after which NGINX mail proxy will disconnect an inactive
      * IMAP/POP connection. Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -

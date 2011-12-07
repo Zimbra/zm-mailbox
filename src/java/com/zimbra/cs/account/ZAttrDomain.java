@@ -42,7 +42,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111206-1333 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111207-1106 */
 
     /**
      * RFC2256: descriptive information
@@ -7019,6 +7019,124 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetExternalShareDomainWhitelistEnabled(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraExternalShareDomainWhitelistEnabled, "");
+        return attrs;
+    }
+
+    /**
+     * Duration for which the URL sent in the share invitation email to an
+     * external user is valid. A value of 0 indicates that the URL never
+     * expires. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * <p>Use getExternalShareInvitationUrlExpirationAsString to access value as a string.
+     *
+     * @see #getExternalShareInvitationUrlExpirationAsString()
+     *
+     * @return zimbraExternalShareInvitationUrlExpiration in millseconds, or 0 (0)  if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1349)
+    public long getExternalShareInvitationUrlExpiration() {
+        return getTimeInterval(Provisioning.A_zimbraExternalShareInvitationUrlExpiration, 0L);
+    }
+
+    /**
+     * Duration for which the URL sent in the share invitation email to an
+     * external user is valid. A value of 0 indicates that the URL never
+     * expires. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @return zimbraExternalShareInvitationUrlExpiration, or "0" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1349)
+    public String getExternalShareInvitationUrlExpirationAsString() {
+        return getAttr(Provisioning.A_zimbraExternalShareInvitationUrlExpiration, "0");
+    }
+
+    /**
+     * Duration for which the URL sent in the share invitation email to an
+     * external user is valid. A value of 0 indicates that the URL never
+     * expires. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraExternalShareInvitationUrlExpiration new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1349)
+    public void setExternalShareInvitationUrlExpiration(String zimbraExternalShareInvitationUrlExpiration) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalShareInvitationUrlExpiration, zimbraExternalShareInvitationUrlExpiration);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Duration for which the URL sent in the share invitation email to an
+     * external user is valid. A value of 0 indicates that the URL never
+     * expires. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param zimbraExternalShareInvitationUrlExpiration new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1349)
+    public Map<String,Object> setExternalShareInvitationUrlExpiration(String zimbraExternalShareInvitationUrlExpiration, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalShareInvitationUrlExpiration, zimbraExternalShareInvitationUrlExpiration);
+        return attrs;
+    }
+
+    /**
+     * Duration for which the URL sent in the share invitation email to an
+     * external user is valid. A value of 0 indicates that the URL never
+     * expires. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1349)
+    public void unsetExternalShareInvitationUrlExpiration() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalShareInvitationUrlExpiration, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Duration for which the URL sent in the share invitation email to an
+     * external user is valid. A value of 0 indicates that the URL never
+     * expires. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1349)
+    public Map<String,Object> unsetExternalShareInvitationUrlExpiration(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraExternalShareInvitationUrlExpiration, "");
         return attrs;
     }
 

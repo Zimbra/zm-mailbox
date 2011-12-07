@@ -595,6 +595,13 @@ public class ShareInfo {
             BlobMetaData.encodeMetaData("aid", account.getId(), encodedBuff);
             BlobMetaData.encodeMetaData("fid", folderId, encodedBuff);
             BlobMetaData.encodeMetaData("email", externalUserEmail, encodedBuff);
+            Domain domain = Provisioning.getInstance().getDomain(account);
+            if (domain != null) {
+                long urlExpiration = domain.getExternalShareInvitationUrlExpiration();
+                if (urlExpiration != 0) {
+                    BlobMetaData.encodeMetaData("exp", System.currentTimeMillis() + urlExpiration, encodedBuff);
+                }
+            }
             String data = new String(Hex.encodeHex(encodedBuff.toString().getBytes()));
             AuthTokenKey key = AuthTokenKey.getCurrentKey();
             String hmac = ZimbraAuthToken.getHmac(data, key.getKey());
