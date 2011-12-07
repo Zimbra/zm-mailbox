@@ -470,6 +470,22 @@ public abstract class ArchiveFormatter extends Formatter {
             if (cnt > 0)
                 fldr = fldr + '!' + cnt;
         }
+        int targetBaseLength = 0;
+        if (context.noHierarchy()) {
+            // Parent hierarchy is not needed, so construct the folder names without parent hierarchy.
+            // e.g> represent "inbox/subfolder/target" as "target".
+            String targetPath = null;
+            if (context.itemPath.endsWith("/")) // inbox/subfolder/target/
+                targetPath = context.itemPath.substring(0, context.itemPath.lastIndexOf("/"));
+            else // inbox/subfolder/target
+                targetPath = context.itemPath;
+            targetBaseLength = targetPath.lastIndexOf('/'); // "inbox/subfolder".length()
+            if (targetBaseLength >= fldr.length()) // fldr is "inbox/subfolder"
+                fldr = "";
+            else if (targetBaseLength > 0) { // fldr is "inbox/subfolder/target"
+                fldr = fldr.substring(targetBaseLength+1);
+            }
+        }
         try {
             ArchiveOutputEntry aoe;
             byte data[] = null;
@@ -493,7 +509,15 @@ public abstract class ArchiveFormatter extends Formatter {
                 Flag.ID_FLAG_UNREAD) != 0)
                 aoe.setUnread();
             if (meta) {
-                byte[] metaData = new ItemData(mi, extra).encode();
+                ItemData itemData = new ItemData(mi, extra);
+                if (context.noHierarchy()) {
+                    // Parent hierarchy is not needed, so change the path in the metadata to start from target.
+                    // itemData.path is of the form /Inbox/subfolder/target and after this step it becomes /target.
+                    if (targetBaseLength > 0 && ((targetBaseLength+1) < itemData.path.length())) {
+                        itemData.path = itemData.path.substring(targetBaseLength+1);
+                    }
+                }
+                byte[] metaData = itemData.encode();
 
                 aoe.setSize(metaData.length);
                 aos.putNextEntry(aoe);
