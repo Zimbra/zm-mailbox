@@ -34,7 +34,7 @@ public class CalItemReminderService extends MailboxListener {
                 if (item instanceof CalendarItem) {
                     ZimbraLog.scheduler.debug("Handling creation of calendar item (id=%s,mailboxId=%s)",
                             item.getId(), item.getMailboxId());
-                    scheduleNextReminders((CalendarItem) item);
+                    scheduleNextReminders((CalendarItem) item, true, true);
                 }
             }
         }
@@ -55,7 +55,7 @@ public class CalItemReminderService extends MailboxListener {
                     }
                     // cancel any existing reminders and schedule new ones if cal item not canceled
                     if (cancelExistingReminders(calItem) && !calItemCanceled)
-                        scheduleNextReminders(calItem);
+                        scheduleNextReminders(calItem, true, true);
                 }
             }
         }
@@ -116,32 +116,38 @@ public class CalItemReminderService extends MailboxListener {
      * Schedules next reminders for the calendar item.
      *
      * @param calItem
+     * @param email
+     * @param sms
      */
-    static void scheduleNextReminders(CalendarItem calItem) {
+    static void scheduleNextReminders(CalendarItem calItem, boolean email, boolean sms) {
         try {
             CalendarItem.AlarmData alarmData = calItem.getNextEmailAlarm();
             if (alarmData == null)
                 return;
-            boolean sendEmail = true;
-            boolean sendSms = false;
+            boolean emailAlarmExists = true;
+            boolean smsAlarmExists = false;
             Alarm emailAlarm = alarmData.getAlarm();
             List<ZAttendee> recipients = emailAlarm.getAttendees();
             if (recipients != null && !recipients.isEmpty()) {
-                sendEmail = false;
+                emailAlarmExists = false;
                 Account acct = calItem.getAccount();
                 String defaultEmailAddress = acct.getPrefCalendarReminderEmail();
                 String defaultDeviceAddress = acct.getCalendarReminderDeviceEmail();
                 for (ZAttendee recipient : recipients) {
-                    if (recipient.getAddress().equals(defaultEmailAddress))
-                        sendEmail = true;
-                    if (recipient.getAddress().equals(defaultDeviceAddress))
-                        sendSms = true;
+                    if (recipient.getAddress().equals(defaultEmailAddress)) {
+                        emailAlarmExists = true;
+                    }
+                    if (recipient.getAddress().equals(defaultDeviceAddress)) {
+                        smsAlarmExists = true;
+                    }
                 }
             }
-            if (sendEmail)
+            if (emailAlarmExists && email) {
                 scheduleReminder(new CalItemEmailReminderTask(), calItem, alarmData);
-            if (sendSms)
+            }
+            if (smsAlarmExists && sms) {
                 scheduleReminder(new CalItemSmsReminderTask(), calItem, alarmData);
+            }
         } catch (ServiceException e) {
             ZimbraLog.scheduler.error("Error in scheduling reminder task", e);
         }

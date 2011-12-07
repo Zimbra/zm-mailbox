@@ -17,7 +17,8 @@ public class CalItemReminderTaskCallback implements ScheduledTaskCallback<Schedu
             return;
         if (task instanceof CalItemReminderTaskBase) {
             ZimbraLog.scheduler.debug("afterTaskRun() for %s", task);
-            CalItemReminderService.scheduleNextReminders((CalendarItem) lastResult);
+            CalItemReminderService.scheduleNextReminders((CalendarItem) lastResult,
+                    task instanceof CalItemEmailReminderTask, task instanceof CalItemSmsReminderTask);
         }
     }
 }
