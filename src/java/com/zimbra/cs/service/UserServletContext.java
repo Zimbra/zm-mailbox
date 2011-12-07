@@ -309,6 +309,17 @@ public final class UserServletContext {
         return false;
     }
 
+    public boolean noHierarchy() {
+        String val = params.get(UserServlet.QP_NOHIERARCHY);
+        if (val != null) {
+            try {
+                int n = Integer.parseInt(val);
+                return n != 0;
+            } catch (NumberFormatException e) {}
+        }
+        return false;
+    }
+    
     public String getQueryString() {
         return params.get(UserServlet.QP_QUERY);
     }

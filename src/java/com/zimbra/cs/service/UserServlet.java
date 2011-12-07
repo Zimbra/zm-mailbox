@@ -126,6 +126,8 @@ public class UserServlet extends ZimbraServlet {
     public static final String QP_AUTHTOKEN = "authToken";
 
     public static final String QP_FMT = "fmt"; // format query param
+    
+    public static final String QP_NOHIERARCHY = "nohierarchy"; // nohierarchy query param
 
     public static final String QP_ZLV = "zlv"; // zip level query param
 
