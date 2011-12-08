@@ -204,8 +204,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
         @Override
         void handle() throws ServiceException {
-            Map<String, Object> attrs = AccountService.getAttrs(
-                    eAction, true, AccountConstants.A_N);
+            Map<String, Object> attrs = AccountService.getKeyValuePairs(
+                    eAction, AccountConstants.E_A, AccountConstants.A_N);
             prov.modifyAttrs(group, attrs, true);    
             
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(

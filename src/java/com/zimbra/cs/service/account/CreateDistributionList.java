@@ -43,7 +43,8 @@ public class CreateDistributionList extends AccountDocumentHandler {
             throw ServiceException.PERM_DENIED("you do not have sufficient rights to create distribution list");
         }
         
-        Map<String, Object> attrs = AccountService.getAttrs(request, true, AccountConstants.A_N);
+        Map<String, Object> attrs = AccountService.getKeyValuePairs(
+                request, AccountConstants.E_A, AccountConstants.A_N);
         
         boolean dynamic = request.getAttributeBool(AccountConstants.A_DYNAMIC, false);
         

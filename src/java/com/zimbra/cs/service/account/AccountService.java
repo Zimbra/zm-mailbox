@@ -131,4 +131,29 @@ public class AccountService implements DocumentService {
         }
         return result;
     } 
+    
+    
+    /**
+     * parse key values pairs in the form of: 
+     *     <{elemName} {attrName}="{key}">{value}</{elemName}>
+     *     
+     *     e.g.
+     *     <a n="boo">bar</a>
+     *     
+     * @param parent
+     * @param elemName
+     * @param attrName
+     * @return
+     * @throws ServiceException
+     */
+    public static Map<String, Object> getKeyValuePairs(Element parent, String elemName, String attrName) 
+    throws ServiceException {
+        Map<String, Object> result = new HashMap<String, Object>();
+        for (Element eKV : parent.listElements(elemName)) {
+            String key = eKV.getAttribute(attrName);
+            String value = eKV.getText();
+            StringUtil.addToMultiMap(result, key, value);
+        }
+        return result;
+    } 
 }
