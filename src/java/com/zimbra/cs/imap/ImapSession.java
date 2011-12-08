@@ -267,6 +267,21 @@ public class ImapSession extends Session {
             synchronized (this) {
                 if (mFolder instanceof ImapFolder) { // if the data's already paged out, we can short-circuit
                     mFolder = new PagedFolderData(serialize(active), (ImapFolder) mFolder);
+                } else if (mFolder instanceof PagedFolderData) {
+                    PagedFolderData paged = (PagedFolderData) mFolder;
+                    if (paged.getCacheKey() == null || !paged.getCacheKey().equals(MANAGER.cacheKey(this, active))) {
+                        //currently cached to wrong cache need to move it so it doesn't get expired or LRU'd
+                        ZimbraLog.imap.debug("relocating cached item, already unloaded but cache key mismatched");
+                        ImapFolder folder = null;
+                        try {
+                            folder = reload();
+                            mFolder = new PagedFolderData(serialize(active), folder);
+                        } catch (ImapSessionClosedException e) {
+                            throw ServiceException.FAILURE("Session closed while relocating paged item", e);
+                        } catch (IOException e) {
+                            throw ServiceException.FAILURE("IOException while relocating paged item", e);
+                        }
+                    }
                 }
             }
         }
