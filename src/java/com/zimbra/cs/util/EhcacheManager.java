@@ -17,6 +17,7 @@ package com.zimbra.cs.util;
 import java.io.File;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.Constants;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.memcached.MemcachedConnector;
 
@@ -67,7 +68,7 @@ public final class EhcacheManager {
         conf.setName(IMAP_ACTIVE_SESSION_CACHE);
         conf.setOverflowToDisk(true);
         conf.setDiskPersistent(true);
-        conf.setTimeToIdleSeconds(LC.imap_authenticated_max_idle_time.intValue());
+        conf.setTimeToIdleSeconds(LC.imap_authenticated_max_idle_time.intValue() + 5 * Constants.SECONDS_PER_MINUTE);
         conf.setMaxElementsInMemory(1); // virtually disk cache only
         conf.setMaxElementsOnDisk(0); // infinite, but essentially limited by max concurrent IMAP connections
         return conf;
