@@ -53,7 +53,6 @@
       <Arg>
         <New id="ssl" class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
           <Set name="Port">%%zimbraMailSSLPort%%</Set>
-          <Set name="allowRenegotiate">FALSE</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">30000</Set> 
           <Set name="lowResourcesMaxIdleTime">10000</Set>
@@ -78,7 +77,6 @@
       <Arg>
         <New id="ssl-clientcert" class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
           <Set name="Port">%%zimbraMailSSLClientCertPort%%</Set>
-          <Set name="allowRenegotiate">FALSE</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">30000</Set> 
           <Set name="lowResourcesMaxIdleTime">10000</Set>
@@ -108,7 +106,6 @@
       <Arg>
         <New id="admin" class="org.eclipse.jetty.server.ssl.SslSelectChannelConnector">
           <Set name="Port">%%zimbraAdminPort%%</Set>
-          <Set name="allowRenegotiate">FALSE</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">0</Set>
           <Set name="lowResourcesMaxIdleTime">0</Set>
