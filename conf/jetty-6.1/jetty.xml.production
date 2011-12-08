@@ -55,7 +55,6 @@
     <Call name="addConnector">
       <Arg>
         <New id="ssl" class="org.mortbay.jetty.security.SslSelectChannelConnector">
-          <Set name="allowRenegotiate">FALSE</Set>
           <Set name="Port">%%zimbraMailSSLPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">30000</Set> 
@@ -80,7 +79,6 @@
     <Call name="addConnector">
       <Arg>
         <New id="ssl-clientcert" class="org.mortbay.jetty.security.SslSelectChannelConnector">
-          <Set name="allowRenegotiate">FALSE</Set>
           <Set name="Port">%%zimbraMailSSLClientCertPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">30000</Set> 
@@ -110,7 +108,6 @@
     <Call name="addConnector">
       <Arg>
         <New id="admin" class="org.mortbay.jetty.security.SslSelectChannelConnector">
-          <Set name="allowRenegotiate">FALSE</Set>
           <Set name="Port">%%zimbraAdminPort%%</Set>
           <Set name="useDirectBuffers">%%zimbraMailUseDirectBuffers%%</Set>
           <Set name="maxIdleTime">0</Set>
