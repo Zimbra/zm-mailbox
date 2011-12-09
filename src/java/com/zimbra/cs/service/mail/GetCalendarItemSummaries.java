@@ -129,11 +129,13 @@ public class GetCalendarItemSummaries extends CalendarRequest {
             // Use the marshalling code in calendar summary cache for uniform output, when we can.
             if (isAppointment && expandRanges) {
                 CalendarItemData calItemData = CalSummaryCache.reloadCalendarItemOverRange(calItem, rangeStart, rangeEnd);
-                int numInstances = calItemData.getNumInstances();
-                if (numInstances > 0) {
-                    Element calItemElem = CacheToXML.encodeCalendarItemData(lc, ifmt, calItemData, !hidePrivate, !newFormat);
-                    toRet.element = calItemElem;
-                    toRet.numInstancesExpanded = numInstances;
+                if (calItemData != null) {
+                    int numInstances = calItemData.getNumInstances();
+                    if (numInstances > 0) {
+                        Element calItemElem = CacheToXML.encodeCalendarItemData(lc, ifmt, calItemData, !hidePrivate, !newFormat);
+                        toRet.element = calItemElem;
+                        toRet.numInstancesExpanded = numInstances;
+                    }
                 }
                 return toRet;
             }
