@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -36,7 +36,7 @@ public class SoapJSProtocol extends SoapProtocol {
     private static final QName CODE = QName.get("Code", NS);
     private static final QName REASON = QName.get("Reason", NS);
     private static final String TEXT = "Text";
-    private static final QName DETAIL = QName.get("Detail", NS);
+    public static final QName DETAIL = QName.get("Detail", NS);
     private static final String VALUE = "Value";
     private static final QName SENDER_CODE = QName.get("Sender", NS);
     private static final QName RECEIVER_CODE = QName.get("Receiver", NS);
@@ -85,14 +85,12 @@ public class SoapJSProtocol extends SoapProtocol {
         else
             eError.addAttribute(ZimbraNamespace.E_TRACE.getName(), e.getId());
 
-        if (e.getArgs() != null) {
-            for (ServiceException.Argument arg : e.getArgs()) {
-                if (arg.externalVisible()) {
-                    Element val = eError.addElement(ZimbraNamespace.E_ARGUMENT);
-                    val.addAttribute(ZimbraNamespace.A_ARG_NAME, arg.mName);
-                    val.addAttribute(ZimbraNamespace.A_ARG_TYPE, arg.mType.toString());
-                    val.setText(arg.mValue);
-                }
+        for (ServiceException.Argument arg : e.getArgs()) {
+            if (arg.externalVisible()) {
+                Element val = eError.addElement(ZimbraNamespace.E_ARGUMENT);
+                val.addAttribute(ZimbraNamespace.A_ARG_NAME, arg.name);
+                val.addAttribute(ZimbraNamespace.A_ARG_TYPE, arg.type.toString());
+                val.setText(arg.value);
             }
         }
         return eFault;
