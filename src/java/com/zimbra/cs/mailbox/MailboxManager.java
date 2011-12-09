@@ -178,11 +178,15 @@ public class MailboxManager {
             try {
                 conn = DbPool.getConnection();
                 mMailboxIds = DbMailbox.listMailboxes(conn, this);
-                mMailboxCache = new MailboxMap(LC.zimbra_mailbox_manager_hardref_cache.intValue());
+                mMailboxCache = createCache();
             } finally {
                 DbPool.quietClose(conn);
             }
         }
+    }
+
+    protected MailboxMap createCache() {
+        return new MailboxMap(LC.zimbra_mailbox_manager_hardref_cache.intValue());
     }
 
     /**
@@ -912,7 +916,7 @@ public class MailboxManager {
     }
 
 
-    private static class MailboxMap implements Map<Integer, Object> {
+    protected static class MailboxMap implements Map<Integer, Object> {
         final int mHardSize;
         final LinkedHashMap<Integer, Object> mHardMap;
         final HashMap<Integer, Object> mSoftMap;
@@ -933,6 +937,12 @@ public class MailboxManager {
                     return true;
                 }
             };
+        }
+
+        protected MailboxMap() {
+            mHardSize = 0;
+            mHardMap = null;
+            mSoftMap = null;
         }
 
         @Override public void clear() {
