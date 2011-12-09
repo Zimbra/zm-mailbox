@@ -48,6 +48,7 @@ import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.db.DbPendingAclPush;
@@ -1106,6 +1107,9 @@ public abstract class MailItem implements Comparable<MailItem> {
     boolean canAccess(short rightsNeeded, Account authuser, boolean asAdmin) throws ServiceException {
         if (rightsNeeded == 0) {
             return true;
+        }
+        if (GuestAccount.ANONYMOUS_ACCT.equals(authuser) && !getAccount().isPublicSharingEnabled()) {
+            return false;
         }
         if (authuser != null && authuser.isIsExternalVirtualAccount() &&
                 (!getAccount().isExternalSharingEnabled() ||
@@ -3385,6 +3389,9 @@ public abstract class MailItem implements Comparable<MailItem> {
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul> */
     ACL.Grant grantAccess(String zimbraId, byte type, short rights, String args) throws ServiceException {
+        if (type == ACL.GRANTEE_PUBLIC && !getAccount().isPublicSharingEnabled()) {
+            throw ServiceException.PERM_DENIED("public sharing not allowed");
+        }
         if (type == ACL.GRANTEE_GUEST &&
                 (!getAccount().isExternalSharingEnabled() || !isAllowedExternalDomain(zimbraId))) {
             throw ServiceException.PERM_DENIED("external sharing not allowed");
