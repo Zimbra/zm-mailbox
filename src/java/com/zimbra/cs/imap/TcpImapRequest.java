@@ -15,6 +15,7 @@
 package com.zimbra.cs.imap;
 
 import com.zimbra.common.io.TcpServerInputStream;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 import java.io.IOException;
@@ -34,14 +35,35 @@ public class TcpImapRequest extends ImapRequest {
     private long mLiteral = -1;
     private boolean mUnlogged;
 
-    TcpImapRequest(String line, ImapHandler handler) {
-        super(handler);
-        addPart(line);
-    }
-
     TcpImapRequest(TcpServerInputStream tsis, ImapHandler handler) {
         super(handler);
         mStream = tsis;
+    }
+
+    private void checkSize(long size) throws ImapParseException {
+        int maxLiteralSize = Integer.MAX_VALUE;
+        if (isAppend()) {
+            try {
+                long msgLimit = mHandler.getConfig().getMaxMessageSize();
+                if (msgLimit < maxLiteralSize) {
+                    if (size > msgLimit) {
+                        throwSizeExceeded("message");
+                    } 
+                } 
+            } catch (ServiceException se) {
+                ZimbraLog.imap.warn("unable to check zimbraMtaMaxMessageSize", se);
+            }
+        } 
+        if (isMaxRequestSizeExceeded() || size > maxLiteralSize) {
+            throwSizeExceeded("request");
+        }
+    }
+
+    private void throwSizeExceeded(String exceededType) throws ImapParseException {
+        if (mTag == null && mIndex == 0 && mOffset == 0) {
+            mTag = readTag(); rewind();
+        }
+        throw new ImapParseException(mTag, "maximum " + exceededType + " size exceeded", true);
     }
 
     void continuation() throws IOException, ImapParseException {
@@ -80,6 +102,7 @@ public class TcpImapRequest extends ImapRequest {
                     if (!isAppend()) {
                         incrementSize(size);
                     }
+                    checkSize(size);
                     mLiteral = size;
                     continuation();
                 } else {
@@ -144,6 +167,7 @@ public class TcpImapRequest extends ImapRequest {
                 if (!isAppend()) {
                     incrementSize(length);
                 }
+                checkSize(length);
                 mLiteral = length;
             }
             if (!blocking && mStream.available() >= mLiteral)
