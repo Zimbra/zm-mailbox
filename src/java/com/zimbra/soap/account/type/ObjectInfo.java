@@ -26,7 +26,10 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import org.codehaus.jackson.map.annotate.JsonSerialize;
+
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.json.jackson.WrappedAttrListSerializer;
 import com.zimbra.soap.type.KeyValuePair;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -38,6 +41,7 @@ public class ObjectInfo {
     @XmlAttribute(name=AccountConstants.A_ID, required=true)
     private final String id;
     @XmlElement(name=AccountConstants.E_A)
+    @JsonSerialize(using=WrappedAttrListSerializer.class)
     private final List<KeyValuePair> attrList;
 
     /**
