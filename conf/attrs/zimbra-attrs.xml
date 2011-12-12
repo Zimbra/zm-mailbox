@@ -6609,21 +6609,21 @@ TODO: delete them permanently from here
   <desc>free/busy status while out of office</desc>
 </attr>
 
-<attr id="1335" name="zimbraReverseProxyUpstreamReadTimeout" type="duration" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited"  since="8.0.0">
+<attr id="1335" name="zimbraReverseProxyUpstreamReadTimeout" type="duration" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited"  since="7.1.4">
   <globalConfigValue>60s</globalConfigValue>
   <desc>The read timeout for the response of upstream server, which determines how long nginx will wait to get the response
         to a request.
   </desc>
 </attr>
 
-<attr id="1336" name="zimbraReverseProxyUpstreamSendTimeout" type="duration" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.0">
+<attr id="1336" name="zimbraReverseProxyUpstreamSendTimeout" type="duration" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="7.1.4">
   <globalConfigValue>60s</globalConfigValue>
   <desc>
   	The send timeout of transfering a request to the upstream server. If after this time the upstream server doesn't take new data, proxy will close the connection.
   </desc>
 </attr>
 
-<attr id="1337" name="zimbraReverseProxyUpstreamPollingTimeout" type="duration" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited"  since="8.0.0">
+<attr id="1337" name="zimbraReverseProxyUpstreamPollingTimeout" type="duration" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited"  since="7.1.4">
   <globalConfigValue>1h</globalConfigValue>
   <desc>
   	The read timeout for long polling support by proxy, e.g. ActiveSync for mobile devices.
@@ -6641,7 +6641,7 @@ TODO: delete them permanently from here
   <desc>max input buffer length for web client</desc>
 </attr>
 
-<attr id="1340" name="zimbraMessageIdDedupeCacheTimeout" type="duration" cardinality="single" optionalIn="globalConfig" since="8.0.0">
+<attr id="1340" name="zimbraMessageIdDedupeCacheTimeout" type="duration" cardinality="single" optionalIn="globalConfig" since="7.1.4">
   <globalConfigValue>0</globalConfigValue>
   <desc>
     Timeout for a Message-Id entry in the LMTP dedupe cache. A value of 0 indicates no timeout.
