@@ -47,6 +47,8 @@ import com.zimbra.cs.ldap.LdapUtil;
 public class InMemoryLdapServer {
     public static final String ZIMBRA_LDAP_SERVER = "ZIMBRA_LDAP_SERVER";
     
+    public static final String UNITTEST_BASE_DOMAIN_SEGMENT = "unittest";
+    
     private static final String UNITTEST_DATA_PATH = LC.zimbra_home.value() + 
             "/unittest/ldap/InMemoryLdapServer";
     
@@ -242,6 +244,7 @@ public class InMemoryLdapServer {
 
                 config.addAdditionalBindCredentials("cn=config", LC.ldap_root_password.value());
                 config.setSchema(schema);
+                config.setGenerateOperationalAttributes(true);
                 
                 server = new InMemoryDirectoryServer(config);
                 server.importFromLDIF(true, serverConfig.ditLDIFFile());

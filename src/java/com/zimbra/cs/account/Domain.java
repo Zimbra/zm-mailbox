@@ -95,10 +95,6 @@ public class Domain extends ZAttrDomain {
     public String getGalSearchBase(String searchBaseSpec) throws ServiceException {
         throw ServiceException.FAILURE("unsupported", null);
     }
-    
-    public String getDnSubtreeMatchFilter() throws ServiceException {
-        throw ServiceException.FAILURE("unsupported", null);
-    }
 
     @Override
     protected void resetData() {

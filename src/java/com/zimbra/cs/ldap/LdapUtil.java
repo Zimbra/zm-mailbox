@@ -181,10 +181,11 @@ public class LdapUtil {
       * zimbraAuthLdapURL    ldap://server.example.zimbra.com/
       * zimbraAuthLdapUserDn uid=%u,ou=people,%D
       */
-    public static String computeDn(String name, String bindDnRule) {
-       if (bindDnRule == null || bindDnRule.equals("") || bindDnRule.equals("%n"))
+    public static String computeDn(String name, String template) {
+       if (template == null || template.equals("") || template.equals("%n")) {
            return name;
-    
+       }
+       
        int at = name.indexOf("@");
     
        Map<String, String> vars = new HashMap<String, String>();
@@ -199,7 +200,7 @@ public class LdapUtil {
            vars.put("D", LdapUtil.domainToDN(d));
        }
          
-       return LdapUtil.expandStr(bindDnRule, vars);
+       return LdapUtil.expandStr(template, vars);
     }
 
     //

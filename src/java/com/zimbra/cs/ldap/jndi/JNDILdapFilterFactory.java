@@ -64,40 +64,44 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
 
     @Override
     public ZLdapFilter presenceFilter(FilterId filterId, String attr) {
-        return new JNDILdapFilter("(" + attr + "=*" + ")");
+        return new JNDILdapFilter(LegacyLdapFilter.presenceFilter(attr));
     }
     
     @Override
     public ZLdapFilter equalityFilter(FilterId filterId, String attr, String value) {
-        return new JNDILdapFilter("(" + attr + "=" + value + ")");
+        return new JNDILdapFilter(LegacyLdapFilter.equalityFilter(attr, value));
     }
 
     @Override
     public ZLdapFilter greaterOrEqualFilter(FilterId filterId, String attr, String value) {
-        return new JNDILdapFilter("(" + attr + ">=" + value + ")");
+        return new JNDILdapFilter(LegacyLdapFilter.greaterOrEqualFilter(attr, value));
     }
 
     @Override
     public ZLdapFilter lessOrEqualFilter(FilterId filterId, String attr, String value) {
-        return new JNDILdapFilter("(" + attr + "<=" + value + ")");
+        return new JNDILdapFilter(LegacyLdapFilter.lessOrEqualFilter(attr, value));
     }
 
     @Override
-    public ZLdapFilter startsWithFilter(FilterId filterId, String attr,
-            String value) {
-        return new JNDILdapFilter("(" + attr + "=" + value + "*)");
+    public ZLdapFilter startsWithFilter(FilterId filterId, String attr, String value) {
+        return new JNDILdapFilter(LegacyLdapFilter.startsWithFilter(attr, value));
     }
 
     @Override
-    public ZLdapFilter endsWithFilter(FilterId filterId, String attr,
-            String value) {
-        return new JNDILdapFilter("(" + attr + "=*" + value + ")");
+    public ZLdapFilter endsWithFilter(FilterId filterId, String attr, String value) {
+        return new JNDILdapFilter(LegacyLdapFilter.endsWithFilter(attr, value));
     }
 
     @Override
-    public ZLdapFilter substringFilter(FilterId filterId, String attr,
-            String value) {
-        return new JNDILdapFilter("(" + attr + "=*" + value + "*)");
+    public ZLdapFilter substringFilter(FilterId filterId, String attr, String value) {
+        return new JNDILdapFilter(LegacyLdapFilter.substringFilter(attr, value));
+    }
+    
+    @Override
+    public ZLdapFilter andWith(ZLdapFilter filter, ZLdapFilter otherFilter) {
+        return new JNDILdapFilter(LegacyLdapFilter.andWith(
+                filter.toFilterString(), 
+                otherFilter.toFilterString()));
     }
     
     
@@ -506,7 +510,9 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
         return new JNDILdapFilter(LegacyLdapFilter.velodromeAllCalendarResourcesByDomainAndServer(domainName, serverServiceHostname));
     }
 
-
-
+    @Override
+    public ZLdapFilter dnSubtreeMatch(String... dns) {
+        return new JNDILdapFilter(LegacyLdapFilter.dnSubtreeMatch(dns));
+    }
     
 }

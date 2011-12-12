@@ -121,6 +121,7 @@ import com.zimbra.cs.ldap.LdapTODO.TODO;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 import com.zimbra.cs.ldap.SearchLdapOptions.StopIteratingException;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
+import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
@@ -1429,31 +1430,70 @@ public class LdapProvisioning extends LdapProv {
          * base
          */
         String[] bases;
+        ZLdapFilter dnSubtreeMatchFilter = null;
 
         Domain domain = options.getDomain();
         if (domain != null) {
-            List<String> baseList = Lists.newArrayList();
-             
             String domainDN = ((LdapDomain) domain).getDN();
-            if (types.contains(ObjectType.dynamicgroups)) {
-                baseList.add(mDIT.domainDNToDynamicGroupsBaseDN(domainDN));
-            }
             
+            boolean groupsTree = false;
+            boolean peopleTree = false;
+            
+            if (types.contains(ObjectType.dynamicgroups)) {
+                groupsTree = true;
+            }
             if (types.contains(ObjectType.accounts) ||
                 types.contains(ObjectType.aliases) ||
                 types.contains(ObjectType.distributionlists) ||
                 types.contains(ObjectType.resources)) {
-                baseList.add(mDIT.domainDNToAccountSearchDN(domainDN));
+                peopleTree = true;
             }
             
-            // error if a domain is specified by non of domain-ed object types
-            // is specified.
-            if (baseList.isEmpty()) {
+            // error if a domain is specified but non of domain-ed object types is specified.
+            if (!groupsTree && !peopleTree) {
                 throw ServiceException.INVALID_REQUEST(
                         "domain is specified but non of domain-ed types is specified", null);
             }
-            
-            bases = baseList.toArray(new String[baseList.size()]);
+
+            /*
+             * InMemoryDirectoryServer does not support EXTENSIBLE-MATCH filter.
+             */
+            if (InMemoryLdapServer.isOn()) {
+                /*
+                 * unit test path 
+                 * 
+                 * Search twice: once under the people tree, once under the groups tree
+                 */
+                List<String> baseList = Lists.newArrayList();
+                 
+                if (groupsTree) {
+                    baseList.add(mDIT.domainDNToDynamicGroupsBaseDN(domainDN));
+                }
+                
+                if (peopleTree) {
+                    baseList.add(mDIT.domainDNToAccountSearchDN(domainDN));
+                }
+                
+                bases = baseList.toArray(new String[baseList.size()]);
+            } else {
+                /*
+                 * production path
+                 * 
+                 * use DN Subtree Match Filter and domain DN or base if objects in both 
+                 * people tree and groups tree are needed
+                 */
+                String searchBase;
+                if (groupsTree && peopleTree) {
+                    dnSubtreeMatchFilter = ((LdapDomain) domain).getDnSubtreeMatchFilter();
+                    searchBase = domainDN;
+                } else if (groupsTree) {
+                    searchBase = mDIT.domainDNToDynamicGroupsBaseDN(domainDN);
+                } else {
+                    searchBase = mDIT.domainDNToAccountSearchDN(domainDN);
+                }
+                bases = new String[]{searchBase};
+            }
+
         } else {
             bases = mDIT.getSearchBases(flags);
         }
@@ -1493,6 +1533,10 @@ public class LdapProvisioning extends LdapProv {
                 throw ServiceException.INVALID_REQUEST("missing filter id", null);
             }
             filter = filterFactory.fromFilterString(options.getFilterId(), filterStr);
+        }
+        
+        if (dnSubtreeMatchFilter != null) {
+            filter = filterFactory.andWith(filter, dnSubtreeMatchFilter);
         }
         
         /*

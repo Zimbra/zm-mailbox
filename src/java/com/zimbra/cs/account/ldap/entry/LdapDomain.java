@@ -24,6 +24,8 @@ import com.zimbra.cs.gal.ZimbraGalSearchBase.PredefinedSearchBase;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZAttributes;
+import com.zimbra.cs.ldap.ZLdapFilter;
+import com.zimbra.cs.ldap.ZLdapFilterFactory;
 
 /**
  * 
@@ -72,11 +74,10 @@ public class LdapDomain extends Domain implements LdapEntry {
         return searchBaseRaw;
     }
     
-    @Override
-    public String getDnSubtreeMatchFilter() throws ServiceException {
+    public ZLdapFilter getDnSubtreeMatchFilter() throws ServiceException {
         LdapProv ldapProv = (LdapProv)getProvisioning();
         
-        return String.format("(|(entryDN:dnSubtreeMatch:=%s)(entryDN:dnSubtreeMatch:=%s))", 
+        return ZLdapFilterFactory.getInstance().dnSubtreeMatch(
                 ldapProv.getDIT().domainDNToAccountSearchDN(getDN()),
                 ldapProv.getDIT().domainDNToDynamicGroupsBaseDN(getDN()));
     }

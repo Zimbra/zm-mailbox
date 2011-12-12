@@ -25,6 +25,7 @@ import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
 import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
+import com.zimbra.cs.ldap.jndi.JNDILdapFilter;
 
 public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     
@@ -279,6 +280,28 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         return new UBIDLdapFilter(
                 filterId,
                 Filter.createSubstringFilter(attr, null, new String[]{value}, null));
+    }
+    
+    @Override
+    public ZLdapFilter andWith(ZLdapFilter filter, ZLdapFilter otherFilter) {
+        /*
+        return new UBIDLdapFilter(
+                filter.getFilterId(),  // use filter id of the filter to which the other filter is appended.
+                Filter.createANDFilter(
+                        ((UBIDLdapFilter) filter).getNative(),
+                        ((UBIDLdapFilter) otherFilter).getNative()));
+                        */
+        try {
+            return new UBIDLdapFilter(
+                    filter.getFilterId(),  // use filter id of the filter to which the other filter is appended.
+                    Filter.createANDFilter(
+                            ((UBIDLdapFilter) filter).getNative(),
+                            ((UBIDLdapFilter) fromFilterString(FilterId.DN_SUBTREE_MATCH, otherFilter.toFilterString())).getNative()));
+        } catch (LdapException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            return null;
+        } 
     }
     
     
@@ -967,5 +990,20 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
 
     }
 
+    @Override
+    public ZLdapFilter dnSubtreeMatch(String... dns) {
+        List<Filter> filters = Lists.newArrayList();
+        for (String dn : dns) {
+            filters.add(Filter.createExtensibleMatchFilter(
+                    LdapConstants.DN_SUBTREE_MATCH_ATTR, 
+                    LdapConstants.DN_SUBTREE_MATCH_MATCHING_RULE, 
+                    false, 
+                    dn));
+        }
+        
+        return new UBIDLdapFilter(
+                FilterId.DN_SUBTREE_MATCH,
+                Filter.createORFilter(filters));
+    }
     
 }

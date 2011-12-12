@@ -24,6 +24,7 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.account.gal.GalUtil;
 import com.zimbra.cs.account.ldap.LdapGalMapRules;
+import com.zimbra.cs.account.ldap.entry.LdapDomain;
 import com.zimbra.cs.gal.GalFilter.NamedFilter;
 import com.zimbra.soap.type.GalSearchType;
 
@@ -172,7 +173,7 @@ public class GalSearchConfig {
 		String dnSubtreeMatchFilter = null;
 		String searchBaseRaw = ZimbraGalSearchBase.getSearchBaseRaw(domain, op);
 		if (ZimbraGalSearchBase.PredefinedSearchBase.DOMAIN.name().equals(searchBaseRaw)) {
-		    dnSubtreeMatchFilter = domain.getDnSubtreeMatchFilter();
+		    dnSubtreeMatchFilter = ((LdapDomain) domain).getDnSubtreeMatchFilter().toFilterString();
 		}
 		    
 		if (dnSubtreeMatchFilter == null) {

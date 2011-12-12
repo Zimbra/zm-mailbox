@@ -26,6 +26,10 @@ public abstract class ZLdapFilter extends ZLdapElement {
     
     public abstract String toFilterString();
     
+    public FilterId getFilterId() {
+        return filterId;
+    }
+    
     public String getStatString() {
         return filterId.getStatString();
     }

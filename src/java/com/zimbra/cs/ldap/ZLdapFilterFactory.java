@@ -80,6 +80,9 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         DISTRIBUTION_LIST_BY_ID(SINGLETON.distributionListById("{DISTRIBUTION-LIST-ID}")),
         DISTRIBUTION_LIST_BY_NAME(SINGLETON.distributionListByName("{DISTRIBUTION-LIST-NAME}")),
         DISTRIBUTION_LISTS_BY_MEMBER_ADDRS(SINGLETON.distributionListsByMemberAddrs(new String[]{"{ADDR-1}", "ADDR-2", "..."})),
+        
+        DN_SUBTREE_MATCH(SINGLETON.dnSubtreeMatch("dn1", "dn2")),
+        
         DOMAIN_BY_ID(SINGLETON.domainById("{DOMAIN-ID}")),
         DOMAIN_BY_NAME(SINGLETON.domainByName("{DOMAIN-NAME}")),
         DOMAIN_BY_KRB5_REALM(SINGLETON.domainByKrb5Realm("{DOMAIN-KRB5-REALM}")),
@@ -204,6 +207,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter startsWithFilter(FilterId filterId, String attr, String value);
     public abstract ZLdapFilter endsWithFilter(FilterId filterId, String attr, String value);
     public abstract ZLdapFilter substringFilter(FilterId filterId, String attr, String value);
+    public abstract ZLdapFilter andWith(ZLdapFilter filter, ZLdapFilter otherFilter);
     
     /*
      * Mail target (accounts and groups)
@@ -357,4 +361,9 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter velodromeAllCalendarResourcesByDomainAndServer(
             String domainName, String serverServiceHostname);
 
+    
+    /*
+     * util
+     */
+    public abstract ZLdapFilter dnSubtreeMatch(String... dns);
 }

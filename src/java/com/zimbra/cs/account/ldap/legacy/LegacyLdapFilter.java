@@ -17,7 +17,7 @@ package com.zimbra.cs.account.ldap.legacy;
 import java.util.List;
 
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.ldap.ZLdapFilter;
+import com.zimbra.cs.ldap.LdapConstants;
 
 public class LegacyLdapFilter {
 
@@ -45,6 +45,43 @@ public class LegacyLdapFilter {
     public static String anyEntry() {
         return "(objectClass=*)";
     }
+    
+
+    public static String presenceFilter(String attr) {
+        return "(" + attr + "=*" + ")";
+    }
+    
+    public static String equalityFilter(String attr, String value) {
+        return "(" + attr + "=" + value + ")";
+    }
+
+    public static String greaterOrEqualFilter(String attr, String value) {
+        return "(" + attr + ">=" + value + ")";
+    }
+
+    public static String lessOrEqualFilter(String attr, String value) {
+        return "(" + attr + "<=" + value + ")";
+    }
+
+    public static String startsWithFilter(String attr,
+            String value) {
+        return "(" + attr + "=" + value + "*)";
+    }
+
+    public static String endsWithFilter(String attr,
+            String value) {
+        return "(" + attr + "=*" + value + ")";
+    }
+
+    public static String substringFilter(String attr,
+            String value) {
+        return "(" + attr + "=*" + value + "*)";
+    }
+    
+    public static String andWith(String filter, String otherFilter) {
+        return "(&" + filter + otherFilter + ")";
+    }
+    
     
     /*
      * Mail target (accounts and groups)
@@ -447,6 +484,18 @@ public class LegacyLdapFilter {
                       homedOnServer(serverServiceHostname) + 
                       velodromePrimaryEmailOnDomainFilter(domainName) + ")";
     }
+    
+    public static String dnSubtreeMatch(String... dns) {
+        StringBuffer sb = new StringBuffer();
+        sb.append("(|");
+        for (String dn : dns) {
+            sb.append(String.format(LdapConstants.DN_SUBTREE_MATCH_FILTER_TEMPLATE, dn));
+        }
+        sb.append(")");
+        
+        return sb.toString();
+    }
+    
     
     private static void printFilter(String doc, String usage, String base, String filter) {
         System.out.println();

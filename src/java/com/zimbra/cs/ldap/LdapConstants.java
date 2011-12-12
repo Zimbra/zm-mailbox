@@ -32,4 +32,9 @@ public class LdapConstants {
     // milli seconds to wait for checking LDAP server health
     public static final int CHECK_LDAP_SLEEP_MILLIS = 5000;
     
+    public static final String DN_SUBTREE_MATCH_ATTR = "entryDN";
+    public static final String DN_SUBTREE_MATCH_MATCHING_RULE = "dnSubtreeMatch";
+    public static final String DN_SUBTREE_MATCH_FILTER_TEMPLATE = 
+            "(" + DN_SUBTREE_MATCH_ATTR + ":" + DN_SUBTREE_MATCH_MATCHING_RULE + ":=%s)";
+    
 }
