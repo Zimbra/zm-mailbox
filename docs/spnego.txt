@@ -241,15 +241,16 @@ zimbraSpnegoAuthPrincipal   : {zimbraSpnegoAuthTargetName}@{zimbraSpnegoAuthReal
     zmprov md zimbra.com +zimbraVirtualHostname dogfood.zimbra.com +zimbraVirtualHostname catfood.zimbra.com
     
     
-(C) Setup web client login URL and UAs allowed for the login URL on the domain
+(C) Setup web client login URL and UAs/IP addresses allowed for the login URL on the domain
     - Set login URL.  Login URL is the URL to redirect to for logging in and when
       Zimbra auth token is expired.  Set it to the spnego authentication servlet.
       zmprov md {domain} zimbraWebClientLoginURL '../../service/spnego'
     
     - Honor only supported platforms and browsers.  
       zimbraWebClientLoginURLAllowedUA is a multi-valued attribute, values are regex.
-      If not set, all UAs are allowed. If multiple values are set, an UA is allowed 
-      as long as it matches any one of the values.  
+      If not set, all UAs are honored. If multiple values are set, an UA is honored  
+      as long as it matches any one of the values.  If UA is not honored, the request 
+      will not be redirected to zimbraWebClientLoginURL.
       zmprov md {domain} +zimbraWebClientLoginURLAllowedUA {UA-regex-1} +zimbraWebClientLoginURLAllowedUA {UA-regex-2} ...
       
       e.g. honor zimbraWebClientLoginURL only for Firefox/IE/Chrome/Safari on Windows, and Safari on Mac)
@@ -259,15 +260,23 @@ zimbraSpnegoAuthPrincipal   : {zimbraSpnegoAuthTargetName}@{zimbraSpnegoAuthReal
       zmprov md {domain} +zimbraWebClientLoginURLAllowedUA '.*Windows.*Safari.*'
       zmprov md {domain} +zimbraWebClientLoginURLAllowedUA '.*Macintosh.*Safari.*'
 
-
+    - Honor only seletced client IP addresses
+      zimbraWebClientLoginURLAllowedIP is a multi-valued attribute, values are regex.
+      If not set, any client IP address is honored. If multiple values are set, an IP address is honored  
+      as long as it matches any one of the values.  If client IP is not honored, the request 
+      will not be redirected to zimbraWebClientLoginURL.
+      zmprov md {domain} +zimbraWebClientLoginURLAllowedIP '10\.112\.205\.[1-9][0-9]'
+      
+      
 (D) Setup web client logout URL and UAs allowed for the logout URL on the domain
     - Set logout URL.  Logout URL is the URL to redirect to when user clicks on "Logout".
       zmprov md {domain} zimbraWebClientLogoutURL '../?sso=1'
     
     - Honor only supported platforms and browsers.  
       zimbraWebClientLogoutURLAllowedUA is a multi-valued attribute, values are regex.
-      If not set, all UAs are allowed. If multiple values are set, an UA is allowed 
-      as long as it matches any one of the values.  
+      If not set, all UAs are honored. If multiple values are set, an UA is honored  
+      as long as it matches any one of the values.  If UA is not honored, user will not be 
+      redirected to zimbraWebClientLogoutURL when logged out.
       zmprov md {domain} +zimbraWebClientLogoutURLAllowedUA {UA-regex-1} +zimbraWebClientLogoutURLAllowedUA {UA-regex-2} ...
       
       e.g. honor zimbraWebClientLogoutURL only for Firefox/IE/Chrome/Safari on Windows, and Safari on Mac)
@@ -277,6 +286,12 @@ zimbraSpnegoAuthPrincipal   : {zimbraSpnegoAuthTargetName}@{zimbraSpnegoAuthReal
       zmprov md {domain} +zimbraWebClientLogoutURLAllowedUA '.*Windows.*Safari.*'
       zmprov md {domain} +zimbraWebClientLogoutURLAllowedUA '.*Macintosh.*Safari.*'
 
+    - Honor only seletced client IP addresses
+      zimbraWebClientLogoutURLAllowedIP is a multi-valued attribute, values are regex.
+      If not set, any client IP address is honored. If multiple values are set, an IP address is honored  
+      as long as it matches any one of the values.  If client IP is not honored, user will not be 
+      redirected to zimbraWebClientLogoutURL when logged out.
+      zmprov md {domain} +zimbraWebClientLogoutURLAllowedIP '10\.112\.205\.[1-9][0-9]'
 
 ===========================
 3. Configure Your Browser

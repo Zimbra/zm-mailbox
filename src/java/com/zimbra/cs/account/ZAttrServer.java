@@ -40,7 +40,7 @@ public class ZAttrServer extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 7.0.0_BETA1_1111 dywang 20111204-2122 */
+    /* build: 7.0.0_BETA1_1111 pshao 20111212-1232 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -17697,7 +17697,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @return zimbraReverseProxyUpstreamPollingTimeout in millseconds, or 3600000 (1h)  if unset
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.1.4
      */
     @ZAttr(id=1337)
     public long getReverseProxyUpstreamPollingTimeout() {
@@ -17713,7 +17713,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @return zimbraReverseProxyUpstreamPollingTimeout, or "1h" if unset
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.1.4
      */
     @ZAttr(id=1337)
     public String getReverseProxyUpstreamPollingTimeoutAsString() {
@@ -17730,7 +17730,7 @@ public class ZAttrServer extends NamedEntry {
      * @param zimbraReverseProxyUpstreamPollingTimeout new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.1.4
      */
     @ZAttr(id=1337)
     public void setReverseProxyUpstreamPollingTimeout(String zimbraReverseProxyUpstreamPollingTimeout) throws com.zimbra.common.service.ServiceException {
@@ -17750,7 +17750,7 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.1.4
      */
     @ZAttr(id=1337)
     public Map<String,Object> setReverseProxyUpstreamPollingTimeout(String zimbraReverseProxyUpstreamPollingTimeout, Map<String,Object> attrs) {
@@ -17768,7 +17768,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.1.4
      */
     @ZAttr(id=1337)
     public void unsetReverseProxyUpstreamPollingTimeout() throws com.zimbra.common.service.ServiceException {
@@ -17787,7 +17787,7 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.1.4
      */
     @ZAttr(id=1337)
     public Map<String,Object> unsetReverseProxyUpstreamPollingTimeout(Map<String,Object> attrs) {
@@ -17810,7 +17810,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @return zimbraReverseProxyUpstreamReadTimeout in millseconds, or 60000 (60s)  if unset
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.1.4
      */
     @ZAttr(id=1335)
     public long getReverseProxyUpstreamReadTimeout() {
@@ -17827,7 +17827,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @return zimbraReverseProxyUpstreamReadTimeout, or "60s" if unset
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.1.4
      */
     @ZAttr(id=1335)
     public String getReverseProxyUpstreamReadTimeoutAsString() {
@@ -17845,7 +17845,7 @@ public class ZAttrServer extends NamedEntry {
      * @param zimbraReverseProxyUpstreamReadTimeout new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.1.4
      */
     @ZAttr(id=1335)
     public void setReverseProxyUpstreamReadTimeout(String zimbraReverseProxyUpstreamReadTimeout) throws com.zimbra.common.service.ServiceException {
@@ -17866,7 +17866,7 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.1.4
      */
     @ZAttr(id=1335)
     public Map<String,Object> setReverseProxyUpstreamReadTimeout(String zimbraReverseProxyUpstreamReadTimeout, Map<String,Object> attrs) {
@@ -17885,7 +17885,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.1.4
      */
     @ZAttr(id=1335)
     public void unsetReverseProxyUpstreamReadTimeout() throws com.zimbra.common.service.ServiceException {
@@ -17905,7 +17905,7 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.1.4
      */
     @ZAttr(id=1335)
     public Map<String,Object> unsetReverseProxyUpstreamReadTimeout(Map<String,Object> attrs) {
@@ -17928,7 +17928,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @return zimbraReverseProxyUpstreamSendTimeout in millseconds, or 60000 (60s)  if unset
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.1.4
      */
     @ZAttr(id=1336)
     public long getReverseProxyUpstreamSendTimeout() {
@@ -17945,7 +17945,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @return zimbraReverseProxyUpstreamSendTimeout, or "60s" if unset
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.1.4
      */
     @ZAttr(id=1336)
     public String getReverseProxyUpstreamSendTimeoutAsString() {
@@ -17963,7 +17963,7 @@ public class ZAttrServer extends NamedEntry {
      * @param zimbraReverseProxyUpstreamSendTimeout new value
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.1.4
      */
     @ZAttr(id=1336)
     public void setReverseProxyUpstreamSendTimeout(String zimbraReverseProxyUpstreamSendTimeout) throws com.zimbra.common.service.ServiceException {
@@ -17984,7 +17984,7 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.1.4
      */
     @ZAttr(id=1336)
     public Map<String,Object> setReverseProxyUpstreamSendTimeout(String zimbraReverseProxyUpstreamSendTimeout, Map<String,Object> attrs) {
@@ -18003,7 +18003,7 @@ public class ZAttrServer extends NamedEntry {
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.1.4
      */
     @ZAttr(id=1336)
     public void unsetReverseProxyUpstreamSendTimeout() throws com.zimbra.common.service.ServiceException {
@@ -18023,7 +18023,7 @@ public class ZAttrServer extends NamedEntry {
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.1.4
      */
     @ZAttr(id=1336)
     public Map<String,Object> unsetReverseProxyUpstreamSendTimeout(Map<String,Object> attrs) {
