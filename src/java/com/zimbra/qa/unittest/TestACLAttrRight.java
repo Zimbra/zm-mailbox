@@ -104,7 +104,7 @@ public class TestACLAttrRight extends TestACL {
         /*
          * grantees
          */
-        Account GA = createAdminAccount(getEmailAddr(testName, "GA"));
+        Account GA = createDelegatedAdminAccount(getEmailAddr(testName, "GA"));
         
         /*
          * grants
@@ -138,7 +138,7 @@ public class TestACLAttrRight extends TestACL {
         /*
          * grantees
          */
-        Account GA = createAdminAccount(getEmailAddr(testName, "GA"));
+        Account GA = createDelegatedAdminAccount(getEmailAddr(testName, "GA"));
         
         /*
          * grants
@@ -173,7 +173,7 @@ public class TestACLAttrRight extends TestACL {
         /*
          * grantees
          */
-        Account GA = createAdminAccount(getEmailAddr(testName, "GA"));
+        Account GA = createDelegatedAdminAccount(getEmailAddr(testName, "GA"));
         
         /*
          * grants
@@ -222,7 +222,7 @@ public class TestACLAttrRight extends TestACL {
         /*
          * grantees
          */
-        Account GA = createAdminAccount(getEmailAddr(testName, "GA"));
+        Account GA = createDelegatedAdminAccount(getEmailAddr(testName, "GA"));
         DistributionList GG = createAdminGroup(getEmailAddr(testName, "GG"));
         mProv.addMembers(GG, new String[] {GA.getName()});
         

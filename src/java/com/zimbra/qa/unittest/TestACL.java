@@ -158,11 +158,11 @@ public abstract class TestACL extends TestCase {
         return localPart + "@" + DOMAIN_NAME;
     }
     
-    protected static String getEmailAddr(String testCaseName, String localPartPostfix) {
+    protected static String getEmailAddr(String testCaseName, String localPartSuffix) {
         if (testCaseName == null)
-            return localPartPostfix + "@" + DOMAIN_NAME;
+            return localPartSuffix + "@" + DOMAIN_NAME;
         else
-            return testCaseName + "-" + localPartPostfix + "@" + DOMAIN_NAME;
+            return testCaseName + "-" + localPartSuffix + "@" + DOMAIN_NAME;
     }
     
     protected static String getSubDomainName(String testCaseName) {
@@ -193,6 +193,12 @@ public abstract class TestACL extends TestCase {
     protected Account createAdminAccount(String email) throws ServiceException {
         Map<String, Object> attrs = new HashMap<String, Object>();
         attrs.put(Provisioning.A_zimbraIsAdminAccount, Provisioning.TRUE);
+        return mProv.createAccount(email, PASSWORD, attrs);
+    }
+    
+    protected Account createDelegatedAdminAccount(String email) throws ServiceException {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraIsDelegatedAdminAccount, Provisioning.TRUE);
         return mProv.createAccount(email, PASSWORD, attrs);
     }
     

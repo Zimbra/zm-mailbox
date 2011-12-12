@@ -69,7 +69,7 @@ public class CheckAttrRight extends CheckRight {
         
         mGrantee = grantee;
         mTargetType = TargetType.getTargetType(mTarget);
-        mAttrRightNeeded = rightNeeded;  // just to save a casting
+        mAttrRightNeeded = rightNeeded;
     }
     
     private AllowedAttrs computeAccessibleAttrs() throws ServiceException {

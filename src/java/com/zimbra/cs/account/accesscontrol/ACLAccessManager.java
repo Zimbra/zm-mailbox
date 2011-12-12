@@ -506,21 +506,21 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
             AttrRight rightNeeded, boolean canDelegateNeeded) throws ServiceException {
         AllowedAttrs allowedAttrs = 
             CheckAttrRight.accessibleAttrs(new Grantee(granteeAcct), target, rightNeeded, canDelegateNeeded);
-        return allowedAttrs.canAccessAttrs(rightNeeded.getAttrs(), target, rightNeeded);
+        return allowedAttrs.canAccessAttrs(rightNeeded.getAttrs(), target);
     }
     
     private boolean canGetAttrsInternal(Account granteeAcct, Entry target, 
             Set<String> attrsNeeded, boolean canDelegateNeeded) throws ServiceException {
         AllowedAttrs allowedAttrs = 
             CheckAttrRight.accessibleAttrs(new Grantee(granteeAcct), target, AdminRight.PR_GET_ATTRS, canDelegateNeeded);
-        return allowedAttrs.canAccessAttrs(attrsNeeded, target, AdminRight.PR_GET_ATTRS);
+        return allowedAttrs.canAccessAttrs(attrsNeeded, target);
     }
     
     private boolean canSetAttrsInternal(Account granteeAcct, Entry target, 
             Set<String> attrsNeeded, boolean canDelegateNeeded) throws ServiceException {
         AllowedAttrs allowedAttrs = 
             CheckAttrRight.accessibleAttrs(new Grantee(granteeAcct), target, AdminRight.PR_SET_ATTRS, canDelegateNeeded);
-        return allowedAttrs.canAccessAttrs(attrsNeeded, target, AdminRight.PR_SET_ATTRS);
+        return allowedAttrs.canAccessAttrs(attrsNeeded, target);
     }
 
     // ============
