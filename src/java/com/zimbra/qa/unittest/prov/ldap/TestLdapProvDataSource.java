@@ -54,7 +54,8 @@ public class TestLdapProvDataSource extends LdapTest {
         return createAccount(localPart, null);
     }
     
-    private Account createAccount(String localPart, Map<String, Object> attrs) throws Exception {
+    private Account createAccount(String localPart, Map<String, Object> attrs) 
+    throws Exception {
         return provUtil.createAccount(localPart, domain, attrs);
     }
     
@@ -62,11 +63,13 @@ public class TestLdapProvDataSource extends LdapTest {
         provUtil.deleteAccount(acct);
     }
     
-    private DataSource createDataSourceRaw(Account acct, String dataSourceName) throws Exception {
+    private DataSource createDataSourceRaw(Account acct, String dataSourceName) 
+    throws Exception {
         return provUtil.createDataSourceRaw(acct, dataSourceName);
     }
     
-    private DataSource createDataSource(Account acct, String dataSourceName) throws Exception {
+    private DataSource createDataSource(Account acct, String dataSourceName) 
+    throws Exception {
         return provUtil.createDataSource(acct, dataSourceName);
     }
     
@@ -81,8 +84,8 @@ public class TestLdapProvDataSource extends LdapTest {
     
     @Test
     public void createDataSource() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("createDataSource");
-        String DATA_SOURCE_NAME = Names.makeDataSourceName("createDataSource");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
+        String DATA_SOURCE_NAME = Names.makeDataSourceName(genDataSourceName());
         
         Account acct = createAccount(ACCT_NAME_LOCALPART);
         DataSource dataSource = createDataSource(acct, DATA_SOURCE_NAME);
@@ -95,8 +98,8 @@ public class TestLdapProvDataSource extends LdapTest {
     
     @Test
     public void createDataSourceAlreadyExists() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("createDataSourceAlreadyExists");
-        String DATA_SOURCE_NAME = Names.makeDataSourceName("createDataSourceAlreadyExists");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
+        String DATA_SOURCE_NAME = Names.makeDataSourceName(genDataSourceName());
         
         Account acct = createAccount(ACCT_NAME_LOCALPART);
         DataSource dataSource = createDataSource(acct, DATA_SOURCE_NAME);
@@ -117,8 +120,8 @@ public class TestLdapProvDataSource extends LdapTest {
     
     @Test
     public void modifyDataSource() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("modifyDataSource");
-        String DATA_SOURCE_NAME = Names.makeDataSourceName("modifyDataSource");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
+        String DATA_SOURCE_NAME = Names.makeDataSourceName(genDataSourceName());
         
         Account acct = createAccount(ACCT_NAME_LOCALPART);
         DataSource dataSource = createDataSource(acct, DATA_SOURCE_NAME);
@@ -139,8 +142,8 @@ public class TestLdapProvDataSource extends LdapTest {
     
     @Test
     public void renameDataSource() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("renameDataSource");
-        String DATA_SOURCE_NAME = Names.makeDataSourceName("renameDataSource");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
+        String DATA_SOURCE_NAME = Names.makeDataSourceName(genDataSourceName());
         
         Account acct = createAccount(ACCT_NAME_LOCALPART);
         DataSource dataSource = createDataSource(acct, DATA_SOURCE_NAME);
@@ -148,7 +151,7 @@ public class TestLdapProvDataSource extends LdapTest {
         Map<String, Object> attrs = new HashMap<String, Object>();
         // modifying zimbraDataSourceName will rename the data source and trigger a LDAP moddn
         String MODIFIED_ATTR_NAME = Provisioning.A_zimbraDataSourceName;
-        String NEW_DATA_SOURCE_NAME = Names.makeDataSourceName("renameDataSource-new");  
+        String NEW_DATA_SOURCE_NAME = Names.makeDataSourceName(genDataSourceName("new"));  
         String MODIFIED_ATTR_VALUE = NEW_DATA_SOURCE_NAME;
         attrs.put(MODIFIED_ATTR_NAME, MODIFIED_ATTR_VALUE);
         prov.modifyDataSource(acct, dataSource.getId(), attrs);
@@ -163,10 +166,10 @@ public class TestLdapProvDataSource extends LdapTest {
     
     @Test
     public void getAllDataSources() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("getAllDataSources");
-        String DATA_SOURCE_NAME_1 = Names.makeDataSourceName("getAllDataSources-1");
-        String DATA_SOURCE_NAME_2 = Names.makeDataSourceName("getAllDataSources-2");
-        String DATA_SOURCE_NAME_3 = Names.makeDataSourceName("getAllDataSources-3");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
+        String DATA_SOURCE_NAME_1 = Names.makeDataSourceName(genDataSourceName("1"));
+        String DATA_SOURCE_NAME_2 = Names.makeDataSourceName(genDataSourceName("2"));
+        String DATA_SOURCE_NAME_3 = Names.makeDataSourceName(genDataSourceName("3"));
         
         Account acct = createAccount(ACCT_NAME_LOCALPART);
         DataSource dataSource1 = createDataSource(acct, DATA_SOURCE_NAME_1);
@@ -194,8 +197,8 @@ public class TestLdapProvDataSource extends LdapTest {
     
     @Test
     public void getDataSource() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("getDataSource");
-        String DATA_SOURCE_NAME = Names.makeDataSourceName("getDataSource");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
+        String DATA_SOURCE_NAME = Names.makeDataSourceName(genDataSourceName());
         
         Account acct = createAccount(ACCT_NAME_LOCALPART);
         DataSource dataSource = createDataSource(acct, DATA_SOURCE_NAME);

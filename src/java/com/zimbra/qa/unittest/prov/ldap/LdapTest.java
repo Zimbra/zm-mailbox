@@ -18,20 +18,19 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.junit.BeforeClass;
+import static org.junit.Assert.*;
 
-import com.google.common.collect.Lists;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.KnownKey;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.accesscontrol.RightManager;
-import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 import com.zimbra.qa.unittest.prov.ProvTest;
 
 public class LdapTest extends ProvTest {
-    private static final String TEST_LDAP_BASE_DOMAIN = "testldap";
+    private static final String LDAP_TEST_BASE_DOMAIN = "ldaptest";
     
     // variable guarding initTest() enter only once per JVM
     // if test is triggered from ant test-ldap(-inmem), number of JVM's
@@ -40,7 +39,7 @@ public class LdapTest extends ProvTest {
     
     // - handy to set it to "true"/"false" when invoking a single test from inside Eclipse
     // - make sure it is always set to null in p4. 
-    private static String useInMemoryLdapServerProperty = null; // "true";
+    private static String useInMemoryLdapServerOverride = null ; // "true";
     
     // ensure assertion is enabled
     static {
@@ -59,7 +58,8 @@ public class LdapTest extends ProvTest {
     
     static String baseDomainName() {
         StackTraceElement [] s = new RuntimeException().getStackTrace();
-        return s[1].getClassName().toLowerCase() + "." + TEST_LDAP_BASE_DOMAIN;
+        return s[1].getClassName().toLowerCase() + "." + 
+                LDAP_TEST_BASE_DOMAIN + "." + InMemoryLdapServer.UNITTEST_BASE_DOMAIN_SEGMENT;
     }
     
     public static String genTestId() {
@@ -82,6 +82,7 @@ public class LdapTest extends ProvTest {
         // ZimbraLog.ldap.setLevel(Log.Level.debug);
         // ZimbraLog.soap.setLevel(Log.Level.trace);
 
+        /*
         if (useInMemoryLdapServerProperty == null) {
             useInMemoryLdapServerProperty = 
                 System.getProperty("use_in_memory_ldap_server", "false");
@@ -97,32 +98,36 @@ public class LdapTest extends ProvTest {
         
         ZimbraLog.test.info("useInMemoryLdapServer = " + useInMemoryLdapServer);
         
+
         if (useInMemoryLdapServer) {
             try {
                 InMemoryLdapServer.start(InMemoryLdapServer.ZIMBRA_LDAP_SERVER, 
                         new InMemoryLdapServer.ServerConfig(
-                        Lists.newArrayList(LdapConstants.ATTR_DC + "=" + TEST_LDAP_BASE_DOMAIN)));
+                        Lists.newArrayList(LdapConstants.ATTR_DC + "=" + LDAP_TEST_BASE_DOMAIN)));
             } catch (Exception e) {
                 e.printStackTrace();
                 throw e;
             }
         }
-        
+        */
+        if (useInMemoryLdapServerOverride != null) {
+            boolean useInMemoryLdapServer = 
+                    Boolean.parseBoolean(useInMemoryLdapServerOverride);
+            
+            KnownKey key = new KnownKey("debug_use_in_memory_ldap_server", 
+                    useInMemoryLdapServerOverride);
+            if (DebugConfig.useInMemoryLdapServer != useInMemoryLdapServer) {
+                System.out.println("useInMemoryLdapServerOverride is " + useInMemoryLdapServerOverride +
+                        " but LC key debug_use_in_memory_ldap_server is " + key.value() + 
+                        ".  Remove the value from LC key.");
+                fail();
+            }
+        }
+        ZimbraLog.test.info("useInMemoryLdapServer = " + InMemoryLdapServer.isOn());
+
         RightManager.getInstance(true);
         
         Cleanup.deleteAll();
-    }
-    
-    static class SkippedForInMemLdapServer extends Exception {
-        SkippedForInMemLdapServer(String reason) {
-            super("SkippedForInMemLdapServer: " + reason);
-        }
-    }
-    
-    void SKIP_IF_IN_MEM_LDAP_SERVER(String reason) throws SkippedForInMemLdapServer {
-        if (InMemoryLdapServer.isOn()) {
-            throw new SkippedForInMemLdapServer(reason);
-        }
     }
 
 }

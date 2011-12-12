@@ -63,7 +63,8 @@ public class TestLdapProvAlias extends LdapTest {
         provUtil.deleteDistributionList(dl);
     }
     
-    private Account createAccount(String localPart, Map<String, Object> attrs) throws Exception {
+    private Account createAccount(String localPart, Map<String, Object> attrs) 
+    throws Exception {
         return provUtil.createAccount(localPart, domain, attrs);
     }
     
@@ -73,11 +74,11 @@ public class TestLdapProvAlias extends LdapTest {
     
     @Test
     public void addAccountAlias() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAliasNameLocalPart("addAccountAlias-acct");
+        String ACCT_NAME_LOCALPART = Names.makeAliasNameLocalPart(genAcctNameLocalPart("acct"));
         Account acct = createAccount(ACCT_NAME_LOCALPART);
         String ACCT_ID = acct.getId();
         
-        String ALIAS_LOCALPART = Names.makeAliasNameLocalPart("addAccountAlias-alias");
+        String ALIAS_LOCALPART = Names.makeAliasNameLocalPart(genAcctNameLocalPart("alias"));
         String ALIAS_NAME = TestUtil.getAddress(ALIAS_LOCALPART, domain.getName());
         
         prov.addAlias(acct, ALIAS_NAME);
@@ -97,11 +98,11 @@ public class TestLdapProvAlias extends LdapTest {
     
     @Test
     public void removeAccountAlias() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAliasNameLocalPart("removeAccountAlias-acct");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart("acct"));
         Account acct = createAccount(ACCT_NAME_LOCALPART);
         String ACCT_ID = acct.getId();
         
-        String ALIAS_LOCALPART = Names.makeAliasNameLocalPart("removeAccountAlias-alias");
+        String ALIAS_LOCALPART = Names.makeAliasNameLocalPart(genAcctNameLocalPart("alias"));
         String ALIAS_NAME = TestUtil.getAddress(ALIAS_LOCALPART, domain.getName());
         
         prov.addAlias(acct, ALIAS_NAME);
@@ -123,11 +124,11 @@ public class TestLdapProvAlias extends LdapTest {
     
     @Test
     public void addDistributionListAlias() throws Exception {
-        String DL_NAME_LOCALPART = Names.makeAliasNameLocalPart("addDistributionListAlias-dl");
+        String DL_NAME_LOCALPART = Names.makeDLNameLocalPart(genGroupNameLocalPart("dl"));
         DistributionList dl = createDistributionList(DL_NAME_LOCALPART);
         String DL_ID = dl.getId();
         
-        String ALIAS_LOCALPART = Names.makeAliasNameLocalPart("addDistributionListAlias-alias");
+        String ALIAS_LOCALPART = Names.makeAliasNameLocalPart(genGroupNameLocalPart("alias"));
         String ALIAS_NAME = TestUtil.getAddress(ALIAS_LOCALPART, domain.getName());
         
         prov.addAlias(dl, ALIAS_NAME);
@@ -147,11 +148,11 @@ public class TestLdapProvAlias extends LdapTest {
     
     @Test
     public void removeDistributionListAlias() throws Exception {
-        String DL_NAME_LOCALPART = Names.makeAliasNameLocalPart("removeDistributionListAlias-dl");
+        String DL_NAME_LOCALPART = Names.makeDLNameLocalPart(genGroupNameLocalPart("dl"));
         DistributionList dl = createDistributionList(DL_NAME_LOCALPART);
         String DL_ID = dl.getId();
         
-        String ALIAS_LOCALPART = Names.makeAliasNameLocalPart("removeDistributionListAlias-alias");
+        String ALIAS_LOCALPART = Names.makeAliasNameLocalPart(genGroupNameLocalPart("alias"));
         String ALIAS_NAME = TestUtil.getAddress(ALIAS_LOCALPART, domain.getName());
         
         prov.addAlias(dl, ALIAS_NAME);

@@ -16,9 +16,15 @@ package com.zimbra.qa.unittest.prov.soap;
 
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.soap.SoapProvisioning;
+import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 
 public class Cleanup {
     static void deleteAll(String... domainNames) throws Exception {
+        
+        if (InMemoryLdapServer.isOn()) {
+            return;
+        }
+        
         com.zimbra.qa.unittest.prov.ldap.Cleanup.deleteAll(domainNames);
         
         SoapProvisioning prov = SoapProvisioning.getAdminInstance();

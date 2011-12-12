@@ -16,13 +16,17 @@ package com.zimbra.qa.unittest.prov;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
 import com.zimbra.cs.account.NamedEntry;
 
 public class Verify {
+    
     public static void verifySameId(NamedEntry entry1, NamedEntry entry2) 
     throws Exception {
         assertNotNull(entry1);
@@ -173,6 +177,63 @@ public class Verify {
             System.out.println(String.format("actual (size=%d)", actual.size()));
             for (NamedEntry entry : actual)
                 System.out.println("    " + entry.getName());
+            
+            System.out.println();
+            throw e;
+        }
+    }
+    
+    public static void verifyEquals(List<? extends NamedEntry> expected, List<? extends NamedEntry> actual,
+            boolean orderMatters) {
+        try {
+            if (expected == null) {
+                expected = new ArrayList<NamedEntry>();
+            }
+            
+            int size = expected.size();
+            
+            assertEquals(expected.size(), actual.size());
+            
+            List<String> expectedIds = Lists.newArrayList();
+            List<String> expectedNames = Lists.newArrayList();
+            for (NamedEntry entry : expected) {
+                expectedIds.add(entry.getId());
+                expectedNames.add(entry.getName());
+            }
+            
+            List<String> actualIds = Lists.newArrayList();
+            List<String> actualNames = Lists.newArrayList();
+            for (NamedEntry entry : actual) {
+                actualIds.add(entry.getId());
+                actualNames.add(entry.getName());
+            }
+
+            for (int i = 0; i < size; i++) {
+                if (orderMatters) {
+                    assertEquals(expectedIds.get(i), actualIds.get(i));
+                    assertEquals(expectedNames.get(i), actualNames.get(i));
+                } else {
+                    assertTrue(actualIds.contains(expectedIds.get(i)));
+                    assertTrue(actualNames.contains(expectedNames.get(i)));
+                }
+            }
+
+        } catch (AssertionError e) {
+            System.out.println();
+            System.out.println("===== verifyEquals failed =====");
+            System.out.println("Message: " + e.getMessage());
+            
+            System.out.println();
+            System.out.println(String.format("expected (size=%d)", expected.size()));
+            for (NamedEntry entry : expected) {
+                System.out.println("    " + entry.getName() + " (" + entry.getId() + ")");
+            }
+            
+            System.out.println();
+            System.out.println(String.format("actual (size=%d)", actual.size()));
+            for (NamedEntry entry : actual) {
+                System.out.println("    " + entry.getName() + " (" + entry.getId() + ")");
+            }
             
             System.out.println();
             throw e;

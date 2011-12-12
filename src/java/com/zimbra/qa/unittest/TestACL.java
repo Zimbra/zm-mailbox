@@ -20,22 +20,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpState;
-
 import junit.framework.TestCase;
 import junit.framework.AssertionFailedError;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.CacheEntryBy;
-import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.common.account.ProvisioningConstants;
-import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.ZimbraLog;
 
@@ -43,7 +33,6 @@ import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.AccessManager.ViaGrant;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
-import com.zimbra.cs.account.AuthTokenException;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
@@ -62,12 +51,10 @@ import com.zimbra.cs.account.accesscontrol.AllowedAttrs;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
-import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.cs.account.accesscontrol.ACLUtil;
 import com.zimbra.cs.account.accesscontrol.ACLAccessManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
-import com.zimbra.cs.account.accesscontrol.UserRight;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.soap.type.TargetBy;
@@ -160,11 +147,11 @@ public abstract class TestACL extends TestCase {
         return localPart + "@" + DOMAIN_NAME;
     }
     
-    protected static String getEmailAddr(String testCaseName, String localPartPostfix) {
+    protected static String getEmailAddr(String testCaseName, String localPartSufix) {
         if (testCaseName == null)
-            return localPartPostfix + "@" + DOMAIN_NAME;
+            return localPartSufix + "@" + DOMAIN_NAME;
         else
-            return testCaseName + "-" + localPartPostfix + "@" + DOMAIN_NAME;
+            return testCaseName + "-" + localPartSufix + "@" + DOMAIN_NAME;
     }
     
     protected static String getSubDomainName(String testCaseName) {
@@ -734,7 +721,7 @@ public abstract class TestACL extends TestCase {
   Note: do *not* copy it to /Users/pshao/p4/main/ZimbraServer/conf
         that could accidently generate a RightDef.java with our test rights.
         
-  cp /Users/pshao/p4/main/ZimbraServer/data/unittest/*.xml /opt/zimbra/conf/rights
+  cp /Users/pshao/p4/main/ZimbraServer/data/unittest/ldap/rights-unittest.xml /opt/zimbra/conf/rights
   and
   uncomment sCoreRightDefFiles.add("rights-unittest.xml"); in RightManager
   
@@ -756,7 +743,6 @@ public abstract class TestACL extends TestCase {
         
         if (mAM instanceof ACLAccessManager) {
             TestUtil.runTest(TestACLTarget.class);
-            TestUtil.runTest(TestACLAttrRight.class);
             TestUtil.runTest(TestACLRight.class);
             TestUtil.runTest(TestACLGrant.class);
         }

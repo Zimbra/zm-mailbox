@@ -14,6 +14,7 @@
  */
 package com.zimbra.cs.ldap;
 
+import com.google.common.collect.Lists;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -22,6 +23,7 @@ import com.zimbra.cs.account.ldap.legacy.LegacyZimbraLdapContext;
 import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.ZSearchScope.ZSearchScopeFactory;
 import com.zimbra.cs.ldap.jndi.JNDILdapClient;
+import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 import com.zimbra.cs.ldap.unboundid.UBIDLdapClient;
 import com.zimbra.cs.util.Zimbra;
 
@@ -32,6 +34,17 @@ public abstract class LdapClient {
     
      static synchronized LdapClient getInstance() {
         if (ldapClient == null) {
+            
+            if (InMemoryLdapServer.isOn()) {
+                try {
+                    InMemoryLdapServer.start(InMemoryLdapServer.ZIMBRA_LDAP_SERVER, 
+                            new InMemoryLdapServer.ServerConfig(
+                            Lists.newArrayList(LdapConstants.ATTR_DC + "=" + InMemoryLdapServer.UNITTEST_BASE_DOMAIN_SEGMENT)));
+                } catch (Exception e) {
+                    ZimbraLog.system.error("could not start InMemoryLdapServer", e);
+                }
+            }
+            
             String className = LC.zimbra_class_ldap_client.value();
             if (className != null && !className.equals("")) {
                 try {

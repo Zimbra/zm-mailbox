@@ -98,7 +98,8 @@ public class TestLdapHelper extends LdapTest {
     public void searchForEntryNotFound() throws Exception {
         LdapDIT dit = prov.getDIT();
         String base = dit.configBranchBaseDN();
-        ZLdapFilter filter = ZLdapFilterFactory.getInstance().fromFilterString(FilterId.UNITTEST, "(cn=bogus)");
+        ZLdapFilter filter = 
+            ZLdapFilterFactory.getInstance().fromFilterString(FilterId.UNITTEST, "(cn=bogus)");
         
         ZSearchResultEntry sr = ldapHelper.searchForEntry(
                 base, filter, null, false);

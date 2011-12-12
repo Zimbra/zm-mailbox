@@ -21,17 +21,22 @@ import org.junit.BeforeClass;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapHttpTransport;
+import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.qa.unittest.prov.ProvTest;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.AuthResponse;
+import com.zimbra.soap.json.JacksonUtil;
 
 public class SoapTest extends ProvTest {
-    private static final String TEST_SOAP_BASE_DOMAIN = "testsoap";
+    private static boolean JSON = false;
+    
+    private static final String SOAP_TEST_BASE_DOMAIN = "soaptest";
     
     private static String PASSWORD = "test123";
     private static HttpDebugListener soapDebugListener;
@@ -44,7 +49,8 @@ public class SoapTest extends ProvTest {
     
     static String baseDomainName() {
         StackTraceElement [] s = new RuntimeException().getStackTrace();
-        return s[1].getClassName().toLowerCase() + "." + TEST_SOAP_BASE_DOMAIN;
+        return s[1].getClassName().toLowerCase() + "." + 
+                SOAP_TEST_BASE_DOMAIN + "." + InMemoryLdapServer.UNITTEST_BASE_DOMAIN_SEGMENT;
     }
     
     static SoapTransport authUser(String acctName) throws Exception {
@@ -74,7 +80,9 @@ public class SoapTest extends ProvTest {
     
     static <T> T invokeJaxb(SoapTransport transport, Object jaxbObject)
     throws ServiceException, IOException {
-        Element req = JaxbUtil.jaxbToElement(jaxbObject);
+        SoapProtocol proto = JSON ? SoapProtocol.SoapJS : SoapProtocol.Soap12;
+        Element req = JaxbUtil.jaxbToElement(jaxbObject, proto.getFactory());
+        
         Element res = transport.invoke(req);
         return (T) JaxbUtil.elementToJaxb(res);
     }

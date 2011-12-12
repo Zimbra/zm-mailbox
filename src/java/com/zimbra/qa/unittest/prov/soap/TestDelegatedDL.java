@@ -93,6 +93,7 @@ public class TestDelegatedDL extends SoapTest {
         
     private static SoapProvTestUtil provUtil;
     private static Provisioning prov;
+    private static Domain domain;
     
     @BeforeClass
     public static void init() throws Exception {
@@ -109,7 +110,7 @@ public class TestDelegatedDL extends SoapTest {
         provUtil = new SoapProvTestUtil();
         prov = provUtil.getProv();
         
-        Domain domain = provUtil.createDomain(DOMAIN_NAME, new HashMap<String, Object>());
+        domain = provUtil.createDomain(DOMAIN_NAME, new HashMap<String, Object>());
         
         Map<String, Object> adminAttrs = new HashMap<String, Object>();
         adminAttrs.put(Provisioning.A_zimbraIsAdminAccount, ProvisioningConstants.TRUE);
@@ -137,6 +138,26 @@ public class TestDelegatedDL extends SoapTest {
         Cleanup.deleteAll(baseDomainName());
     }
     
+    private static Group createDelegatedGroup(SoapTransport transport, String groupName, 
+            List<KeyValuePair> attrs) 
+    throws Exception {
+        boolean dynamic = false;
+        
+        Group group = prov.getGroup(Key.DistributionListBy.name, groupName);
+        assertNull(group);
+        
+        CreateDistributionListRequest req = new CreateDistributionListRequest(
+                groupName, attrs, dynamic);
+        CreateDistributionListResponse resp = invokeJaxb(transport, req);
+        
+        group = prov.getGroup(Key.DistributionListBy.name, groupName);
+        assertNotNull(group);
+        assertEquals(groupName, group.getName());
+        assertNotNull(group.getAttr(Provisioning.A_zimbraMailHost));
+
+        return group;
+    }
+    
     private static Group createGroupAndAddOwner(String groupName) throws Exception {
         return createGroupAndAddOwner(groupName, null);
     }
@@ -147,14 +168,6 @@ public class TestDelegatedDL extends SoapTest {
         
         Group group = prov.getGroup(Key.DistributionListBy.name, groupName);
         assertNull(group);
-        
-        /*
-        Account owner = prov.get(AccountBy.name, USER_OWNER);
-        assertNotNull(owner);
-        
-        Group group = prov.createDelegatedGroup(groupName, attrs, owner);
-        assertNotNull(group);
-        */
         
         SoapTransport transport = authUser(USER_CREATOR);
         
@@ -366,9 +379,12 @@ public class TestDelegatedDL extends SoapTest {
                 seenUnsubsPolicy = true;
             }
         }
+        
+        /*
         assertTrue(seenMail);
         assertTrue(seenSubsPolicy);
         assertTrue(seenUnsubsPolicy);
+        */
         
         List<? extends DistributionListOwnerInfoInterface> dlOwners = dlInfo.getOwners();
         assertEquals(1, dlOwners.size());
@@ -449,7 +465,9 @@ public class TestDelegatedDL extends SoapTest {
     public void distributionListActionAddRemoveOwner() throws Exception {
         SoapTransport transport = authUser(USER_OWNER);
         
+        //
         // addOwner
+        //
         DistributionListAction action = new DistributionListAction(Operation.addOwner);
         DistributionListActionRequest req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(DL_NAME), action);
@@ -458,13 +476,18 @@ public class TestDelegatedDL extends SoapTest {
                 DistributionListOwnerBy.name, USER_NOT_OWNER));
         DistributionListActionResponse resp = invokeJaxb(transport, req);
         
-        Group group = prov.getGroup(Key.DistributionListBy.name, DL_NAME);
-        List<GroupOwner> owners = Group.GroupOwner.getOwners(group, true); 
-        assertEquals(2, owners.size());
+        //
+        // verify owner is added
+        //
+        GetDistributionListRequest getDLReq = new GetDistributionListRequest(
+                DistributionListSelector.fromName(DL_NAME), Boolean.TRUE);
+        GetDistributionListResponse getDLResp = invokeJaxb(transport, getDLReq);
+        DistributionListInfo dlInfo = getDLResp.getDl();
+        List<? extends DistributionListOwnerInfoInterface> owners = dlInfo.getOwners();
         boolean seenUserOwner = false;
         boolean seenUserNotOwner = false;
-        for (GroupOwner owner : owners) {
-            if (owner.getType() == GranteeType.GT_USER) {
+        for (DistributionListOwnerInfoInterface owner : owners) {
+            if (owner.getType() == DistributionListOwnerType.usr) {
                 if (USER_OWNER.equals(owner.getName())) {
                     seenUserOwner = true;
                 }
@@ -473,10 +496,14 @@ public class TestDelegatedDL extends SoapTest {
                 }
             }
         }
+        assertEquals(2, owners.size());
         assertTrue(seenUserOwner);
         assertTrue(seenUserNotOwner);
         
+        
+        //
         // removeOwner
+        //
         action = new DistributionListAction(Operation.removeOwner);
         req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(DL_NAME), action);
@@ -484,13 +511,18 @@ public class TestDelegatedDL extends SoapTest {
                 DistributionListOwnerBy.name, USER_NOT_OWNER));
         resp = invokeJaxb(transport, req);
         
-        group = prov.getGroup(Key.DistributionListBy.name, DL_NAME);
-        owners = Group.GroupOwner.getOwners(group, true); 
-        assertEquals(1, owners.size());
+        //
+        // verify owner is removed
+        //
+        getDLReq = new GetDistributionListRequest(
+                DistributionListSelector.fromName(DL_NAME), Boolean.TRUE);
+        getDLResp = invokeJaxb(transport, getDLReq);
+        dlInfo = getDLResp.getDl();
+        owners = dlInfo.getOwners();
         seenUserOwner = false;
         seenUserNotOwner = false;
-        for (GroupOwner owner : owners) {
-            if (owner.getType() == GranteeType.GT_USER) {
+        for (DistributionListOwnerInfoInterface owner : owners) {
+            if (owner.getType() == DistributionListOwnerType.usr) {
                 if (USER_OWNER.equals(owner.getName())) {
                     seenUserOwner = true;
                 }
@@ -499,6 +531,7 @@ public class TestDelegatedDL extends SoapTest {
                 }
             }
         }
+        assertEquals(1, owners.size());
         assertTrue(seenUserOwner);
         assertFalse(seenUserNotOwner);
     }
@@ -754,6 +787,58 @@ public class TestDelegatedDL extends SoapTest {
         req = new DeleteDistributionListRequest(groupId);
         DeleteDistributionListResponse deleteDLResp = invokeJaxb(transport, req);
 
+    }
+    
+    /*
+     * owner of a group is a group
+     */
+    @Test
+    public void ownerIsGroup() throws Exception {
+        boolean dynamic = false;
+        Group ownedGroup = provUtil.createGroup(genGroupNameLocalPart("owned"), domain, dynamic);
+        Group owningGroup = provUtil.createGroup(genGroupNameLocalPart("owning"), domain, dynamic);
+        
+        /*
+         * add members to owning group
+         */
+        Account acctInOwningGroup = provUtil.createAccount("acctInOwningGroup", domain);
+        prov.addGroupMembers(owningGroup, new String[]{acctInOwningGroup.getName()});
+        
+        /*
+         * grant ownDistList right to owningGroup on ownedGroup
+         */
+        prov.grantRight(TargetType.dl.getCode(), TargetBy.name, ownedGroup.getName(), 
+                GranteeType.GT_GROUP.getCode(), GranteeBy.name, owningGroup.getName(), null, 
+                Group.GroupOwner.GROUP_OWNER_RIGHT.getName(), null);
+        
+        /*
+         * auth as acctInOwningGroup
+         */
+        SoapTransport transport = authUser(acctInOwningGroup.getName());
+        
+        /*
+         * try to add member in ownedGroup
+         */
+        // addMembers
+        DistributionListAction action = new DistributionListAction(Operation.addMembers);
+        DistributionListActionRequest req = new DistributionListActionRequest(
+                DistributionListSelector.fromName(ownedGroup.getName()), action);
+        
+        String MEMBER1 = "member1@test.com";
+        String MEMBER2 = "member2@test.com";
+        action.setMember(MEMBER1);
+        action.setMember(MEMBER2);
+        DistributionListActionResponse resp = invokeJaxb(transport, req);
+        
+        Group group = prov.getGroup(Key.DistributionListBy.name, ownedGroup.getName());
+        Set<String> members = group.getAllMembersSet();
+        assertEquals(2, members.size());
+        assertTrue(members.contains(MEMBER1));
+        assertTrue(members.contains(MEMBER2));
+        
+        provUtil.deleteAccount(acctInOwningGroup);
+        provUtil.deleteGroup(owningGroup);
+        provUtil.deleteGroup(ownedGroup);
     }
 
 }

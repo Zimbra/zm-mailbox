@@ -98,7 +98,7 @@ public class TestLdapProvModifyAttrs extends LdapTest {
         String ATTR_NAME = Provisioning.A_displayName;
         String ATTR_VALUE = "setSingleValue";
         
-        Account acct = createAccount("setSingleValue");
+        Account acct = createAccount(genAcctNameLocalPart());
         
         // run twice, ensure it is handled correctly
         modifySingleValue(acct, ATTR_NAME, ATTR_VALUE);
@@ -112,7 +112,7 @@ public class TestLdapProvModifyAttrs extends LdapTest {
         String ATTR_NAME = Provisioning.A_userSMIMECertificate;
         String ATTR_VALUE = BinaryLdapData.Content.generateContent(32).getString();
         
-        Account acct = createAccount("setSingleValueBinary");
+        Account acct = createAccount(genAcctNameLocalPart());
         
         // run twice, ensure it is handled correctly
         modifySingleValue(acct, ATTR_NAME, ATTR_VALUE);
@@ -126,7 +126,7 @@ public class TestLdapProvModifyAttrs extends LdapTest {
         String ATTR_NAME = Provisioning.A_displayName;
         String ATTR_VALUE = "unsetSingleValue";
         
-        Account acct = createAccount("unsetSingleValue");
+        Account acct = createAccount(genAcctNameLocalPart());
         modifySingleValue(acct, ATTR_NAME, ATTR_VALUE);
         
         // run twice, ensure it is handled correctly
@@ -146,7 +146,7 @@ public class TestLdapProvModifyAttrs extends LdapTest {
         String ATTR_VALUE_3 = "addMultiValue-3";
         String ATTR_VALUE_4 = "addMultiValue-4";
         
-        Account acct = createAccount("addMultiValue");
+        Account acct = createAccount(genAcctNameLocalPart());
         modifyMultiValue(acct, "+" + ATTR_NAME, new String[]{ATTR_VALUE_1, ATTR_VALUE_2});
         modifyMultiValue(acct, "+" + ATTR_NAME, new String[]{ATTR_VALUE_3, ATTR_VALUE_4});
         modifyMultiValue(acct, "+" + ATTR_NAME, new String[]{ATTR_VALUE_1, ATTR_VALUE_2});
@@ -171,7 +171,7 @@ public class TestLdapProvModifyAttrs extends LdapTest {
         String ATTR_VALUE_3 = BinaryLdapData.Content.generateContent(32).getString();
         String ATTR_VALUE_4 = BinaryLdapData.Content.generateContent(32).getString();
         
-        Account acct = createAccount("addMultiValueBinary");
+        Account acct = createAccount(genAcctNameLocalPart());
         modifyMultiValue(acct, "+" + ATTR_NAME, new String[]{ATTR_VALUE_1, ATTR_VALUE_2});
         
         acct = getFresh(acct);
@@ -191,7 +191,7 @@ public class TestLdapProvModifyAttrs extends LdapTest {
         String ATTR_VALUE_3 = "removeMultiValue-3";
         String ATTR_VALUE_4 = "removeMultiValue-4";
         
-        Account acct = createAccount("removeMultiValue");
+        Account acct = createAccount(genAcctNameLocalPart());
         modifyMultiValue(acct, "+" + ATTR_NAME, new String[]{ATTR_VALUE_1, ATTR_VALUE_2, ATTR_VALUE_3, ATTR_VALUE_4});
         
         modifyMultiValue(acct, "-" + ATTR_NAME, new String[]{ATTR_VALUE_3, ATTR_VALUE_4});
@@ -213,7 +213,7 @@ public class TestLdapProvModifyAttrs extends LdapTest {
         String ATTR_VALUE_3 = "removeMultiValue-3";
         String ATTR_VALUE_4 = "removeMultiValue-4";
         
-        Account acct = createAccount("removeMultiValue");
+        Account acct = createAccount(genAcctNameLocalPart());
         modifyMultiValue(acct, "+" + ATTR_NAME, new String[]{ATTR_VALUE_1, ATTR_VALUE_2, ATTR_VALUE_3, ATTR_VALUE_4});
         
         modifyMultiValue(acct, ATTR_NAME, null);
@@ -232,7 +232,7 @@ public class TestLdapProvModifyAttrs extends LdapTest {
         String ATTR_VALUE_1 = "invalidAttrValue-1";
         String ATTR_VALUE_2 = "invalidAttrValue-2";
         
-        Account acct = createAccount("invalidAttrValue");
+        Account acct = createAccount(genAcctNameLocalPart());
         
         boolean caughtException= false;
         try {
@@ -264,7 +264,7 @@ public class TestLdapProvModifyAttrs extends LdapTest {
         String ATTR_NAME = "bogus";
         String ATTR_VALUE = "invalidAttrValue";
         
-        Account acct = createAccount("invalidAttrValue");
+        Account acct = createAccount(genAcctNameLocalPart());
         
         boolean caughtException= false;
         try {

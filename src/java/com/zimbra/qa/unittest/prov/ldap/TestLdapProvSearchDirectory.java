@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.*;
+
 import static org.junit.Assert.*;
 
 import com.google.common.collect.Lists;
@@ -56,6 +57,9 @@ import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.qa.QA.Bug;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.qa.unittest.prov.Names;
+import com.zimbra.qa.unittest.prov.ProvTest;
+import com.zimbra.qa.unittest.prov.Verify;
+import com.zimbra.qa.unittest.prov.ProvTest.SkippedForInMemLdapServerException.Reason;
 
 public class TestLdapProvSearchDirectory extends LdapTest {
     
@@ -146,12 +150,12 @@ public class TestLdapProvSearchDirectory extends LdapTest {
     @Test
     public void searchAccountsOnServer() throws Exception {
         // create a search domain
-        String DOMAIN_NAME = "searchAccountsOnServer." + baseDomainName();
+        String DOMAIN_NAME = genDomainSegmentName() + "." + baseDomainName();
         Domain searchDomain = provUtil.createDomain(DOMAIN_NAME, null);
         
         // create an account and a calendar resource on the domain
-        String ACCT_LOCALPART = Names.makeAccountNameLocalPart("searchAccountsOnServer-acct");
-        String CR_LOCALPART = Names.makeAccountNameLocalPart("searchAccountsOnServer-cr");
+        String ACCT_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart("acct"));
+        String CR_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart("cr"));
         
         Map<String, Object> crAttrs = Maps.newHashMap();
         crAttrs.put(Provisioning.A_displayName, "ACCT_LOCALPART");
@@ -167,7 +171,7 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         opts = new SearchAccountsOptions(searchDomain, new String[]{Provisioning.A_zimbraId});
         opts.setMakeObjectOpt(MakeObjectOpt.NO_DEFAULTS);
         result = prov.searchAccountsOnServer(server, opts);
-        assertEquals(2, result.size());
+        Verify.verifyEquals(Lists.newArrayList(acct, cr), result, false);
         
         // 2. test maxResults
         boolean caughtTooManySearchResultsException = false;
@@ -189,49 +193,43 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         opts.setMakeObjectOpt(MakeObjectOpt.NO_DEFAULTS);
         opts.setIncludeType(IncludeType.ACCOUNTS_ONLY);
         result = prov.searchAccountsOnServer(server, opts);
-        assertEquals(1, result.size());
+        Verify.verifyEquals(Lists.newArrayList(acct), result, false);
         
-        // 3. test sorting
+        // 4. test sorting
         opts = new SearchAccountsOptions(searchDomain, new String[]{Provisioning.A_zimbraId});
         opts.setMakeObjectOpt(MakeObjectOpt.NO_DEFAULTS);
         opts.setSortOpt(SortOpt.SORT_DESCENDING);
         result = prov.searchAccountsOnServer(server, opts);
-        assertEquals(2, result.size());
-        assertEquals(cr.getName(), result.get(0).getName());
+        Verify.verifyEquals(Lists.newArrayList(cr, acct), result, true);
         
         opts = new SearchAccountsOptions(searchDomain, new String[]{Provisioning.A_zimbraId});
         opts.setMakeObjectOpt(MakeObjectOpt.NO_DEFAULTS);
         opts.setSortOpt(SortOpt.SORT_ASCENDING);
         result = prov.searchAccountsOnServer(server, opts);
-        assertEquals(2, result.size());
-        assertEquals(acct.getName(), result.get(0).getName());
+        Verify.verifyEquals(Lists.newArrayList(acct, cr), result, true);
     }
     
     @Test
     public void getAllAccounts() throws Exception {
-        Account acct3 = createAccount("getAllAccounts-3");
-        Account acct2 = createAccount("getAllAccounts-2");
-        Account acct1 = createAccount("getAllAccounts-1");
-        CalendarResource cr = createCalendarResource("getAllAccounts-cr");
+        Account acct3 = createAccount(genAcctNameLocalPart("3"));
+        Account acct2 = createAccount(genAcctNameLocalPart("2"));
+        Account acct1 = createAccount(genAcctNameLocalPart("1"));
+        CalendarResource cr = createCalendarResource(genAcctNameLocalPart("cr"));
         
         List<NamedEntry> accounts = prov.getAllAccounts(domain);
-        assertEquals(3, accounts.size());
-        assertEquals(acct1.getName(), accounts.get(0).getName());
-        assertEquals(acct2.getName(), accounts.get(1).getName());
-        assertEquals(acct3.getName(), accounts.get(2).getName());
+        Verify.verifyEquals(Lists.newArrayList(acct1, acct2, acct3), accounts, true);
         
-        // test the visitor interface
+        // test the visitor interface, sorting is not supported with visitor interface
         final List<NamedEntry> acctsByVisitor = Lists.newArrayList();
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
 
             @Override
             public void visit(NamedEntry entry) throws ServiceException {
                 acctsByVisitor.add(entry);
-                
             }
         };
         prov.getAllAccounts(domain, visitor);
-        assertEquals(3, acctsByVisitor.size());
+        Verify.verifyEquals(Lists.newArrayList(acct1, acct2, acct3), accounts, false);
         
         deleteAccount(acct1);
         deleteAccount(acct2);
@@ -241,29 +239,27 @@ public class TestLdapProvSearchDirectory extends LdapTest {
     
     @Test
     public void getAllAccountsByDomainAndServer() throws Exception {
-        Account acct3 = createAccount("getAllAccounts-3");
-        Account acct2 = createAccount("getAllAccounts-2");
-        Account acct1 = createAccount("getAllAccounts-1");
-        CalendarResource cr = createCalendarResource("getAllAccounts-cr");
+        Account acct3 = createAccount(genAcctNameLocalPart("3"));
+        Account acct2 = createAccount(genAcctNameLocalPart("2"));
+        Account acct1 = createAccount(genAcctNameLocalPart("1"));
+        CalendarResource cr = createCalendarResource(genAcctNameLocalPart("cr"));
         
         final List<NamedEntry> acctsVisitor = Lists.newArrayList();
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
-
             @Override
             public void visit(NamedEntry entry) throws ServiceException {
                 acctsVisitor.add(entry);
-                
             }
         };
         
         Server server = prov.getLocalServer();
         prov.getAllAccounts(domain, server, visitor);
-        assertEquals(3, acctsVisitor.size());
+        Verify.verifyEquals(Lists.newArrayList(acct1, acct2, acct3), acctsVisitor, false);
         
         acctsVisitor.clear();
-        Server otherServer = createServer("getAllAccountsByDomainAndServer");
+        Server otherServer = createServer(genServerName());
         prov.getAllAccounts(domain, otherServer, visitor);
-        assertEquals(0, acctsVisitor.size());
+        Verify.verifyEquals(null, acctsVisitor, false);
         
         deleteAccount(acct1);
         deleteAccount(acct2);
@@ -277,7 +273,7 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         
         Map<String, Object> attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraSharedItem, "granteeId:" + EXT_USER_EMAIL + "blah blah");
-        Account acct = createAccount("accountsByExternalGrant", attrs);
+        Account acct = createAccount(genAcctNameLocalPart(), attrs);
         
         SearchAccountsOptions searchOpts = new SearchAccountsOptions(
                 domain, new String[] {
@@ -289,8 +285,7 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         searchOpts.setFilter(filter);
         List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
         
-        assertEquals(1, accounts.size());
-        assertEquals(acct.getName(), accounts.get(0).getName());
+        Verify.verifyEquals(Lists.newArrayList(acct), accounts, false);
         
         deleteAccount(acct);
     }
@@ -305,15 +300,15 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         
         Map<String, Object> attrs1 = Maps.newHashMap();
         attrs1.put(Provisioning.A_zimbraSharedItem, "granteeId:" + GRANTEE_ID_3 + "blah blah");
-        Account acct1 = createAccount("accountsByGrants-1", attrs1);
+        Account acct1 = createAccount(genAcctNameLocalPart("1"), attrs1);
         
         Map<String, Object> attrs2 = Maps.newHashMap();
         attrs2.put(Provisioning.A_zimbraSharedItem, "blah" + "granteeType:pub" + " blah");
-        Account acct2 = createAccount("accountsByGrants-2", attrs2);
+        Account acct2 = createAccount(genAcctNameLocalPart("2"), attrs2);
         
         Map<String, Object> attrs3 = Maps.newHashMap();
         attrs3.put(Provisioning.A_zimbraSharedItem, "blah" + "granteeType:all" + " blah");
-        Account acct3 = createAccount("accountsByGrants-3", attrs3);
+        Account acct3 = createAccount(genAcctNameLocalPart("3"), attrs3);
         
         SearchAccountsOptions searchOpts = new SearchAccountsOptions(
                  new String[] {
@@ -326,9 +321,7 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         searchOpts.setSortOpt(SortOpt.SORT_ASCENDING); // so our assertion below will always work
         List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
         
-        assertEquals(2, accounts.size());
-        assertEquals(acct1.getName(), accounts.get(0).getName());
-        assertEquals(acct2.getName(), accounts.get(1).getName());
+        Verify.verifyEquals(Lists.newArrayList(acct1, acct2), accounts, true);
         
         deleteAccount(acct1);
         deleteAccount(acct2);
@@ -341,11 +334,11 @@ public class TestLdapProvSearchDirectory extends LdapTest {
          *  X.501: 14.4.4 Has Subordinates operational attribute
          *  is not supported in ubid InMemoryLdapServer
          */
-        SKIP_IF_IN_MEM_LDAP_SERVER("Subordinates operational attribute is not supported by InMemoryDirectoryServer");
+        SKIP_FOR_INMEM_LDAP_SERVER(Reason.SUBORDINATES_OPERTIONAL_ATTRIBUTE);
         
         String COS_ID = prov.get(CosBy.name, Provisioning.DEFAULT_COS_NAME).getId();
         
-        Account acct = createAccount("accountsOnServerAndCosHasSubordinates");
+        Account acct = createAccount(genAcctNameLocalPart());
         Signature sig1 = prov.createSignature(acct, "sig1", new HashMap<String, Object>());
         Signature sig2 = prov.createSignature(acct, "sig2", new HashMap<String, Object>());
                 
@@ -355,22 +348,22 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         searchOpts.setFilter(filter);
         List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
         
-        assertEquals(1, accounts.size());
-        assertEquals(acct.getName(), accounts.get(0).getName());
+        Verify.verifyEquals(Lists.newArrayList(acct), accounts, false);
+        
         deleteAccount(acct);
     }
     
     @Test
     public void CMBSearchAccountsOnly() throws Exception {
-        Account acct1 = createAccount("CMBSearchAccountsOnly-1");
+        Account acct1 = createAccount(genAcctNameLocalPart("1"));
         
         Map<String, Object> acct2Attrs = Maps.newHashMap();
         acct2Attrs.put(Provisioning.A_zimbraExcludeFromCMBSearch, "TRUE");
-        Account acct2 = createAccount("CMBSearchAccountsOnly-2", acct2Attrs);
+        Account acct2 = createAccount(genAcctNameLocalPart("2"), acct2Attrs);
         
         Map<String, Object> acct3Attrs = Maps.newHashMap();
         acct3Attrs.put(Provisioning.A_zimbraExcludeFromCMBSearch, "FALSE");
-        Account acct3 = createAccount("CMBSearchAccountsOnly-3", acct3Attrs);
+        Account acct3 = createAccount(genAcctNameLocalPart("3"), acct3Attrs);
         
         String [] returnAttrs = {Provisioning.A_displayName, Provisioning.A_zimbraId, Provisioning.A_uid,
                 Provisioning.A_zimbraArchiveAccount, Provisioning.A_zimbraMailHost};
@@ -383,9 +376,7 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         searchOpts.setFilter(filter);
         List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
 
-        assertEquals(2, accounts.size());
-        assertEquals(acct3.getName(), accounts.get(0).getName());
-        assertEquals(acct1.getName(), accounts.get(1).getName());
+        Verify.verifyEquals(Lists.newArrayList(acct3, acct1), accounts, true);
         
         deleteAccount(acct1);
         deleteAccount(acct2);
@@ -415,20 +406,20 @@ public class TestLdapProvSearchDirectory extends LdapTest {
     @Test
     public void CMBSearchAccountsOnlyWithArchive() throws Exception {
         
-        Account acct1 = createAccount("CMBSearchAccountsOnlyWithArchive-1");
+        Account acct1 = createAccount(genAcctNameLocalPart("1"));
         
         Map<String, Object> acct2Attrs = Maps.newHashMap();
         acct2Attrs.put(Provisioning.A_zimbraExcludeFromCMBSearch, "TRUE");
-        Account acct2 = createAccount("CMBSearchAccountsOnlyWithArchive-2", acct2Attrs);
+        Account acct2 = createAccount(genAcctNameLocalPart("2"), acct2Attrs);
         
         Map<String, Object> acct3Attrs = Maps.newHashMap();
         acct3Attrs.put(Provisioning.A_zimbraExcludeFromCMBSearch, "FALSE");
-        Account acct3 = createAccount("CMBSearchAccountsOnlyWithArchive-3", acct3Attrs);
+        Account acct3 = createAccount(genAcctNameLocalPart("3"), acct3Attrs);
         
         Map<String, Object> acct4Attrs = Maps.newHashMap();
         acct4Attrs.put(Provisioning.A_zimbraExcludeFromCMBSearch, "FALSE");
         acct4Attrs.put(Provisioning.A_zimbraArchiveAccount, "archive@test.com");
-        Account acct4 = createAccount("CMBSearchAccountsOnlyWithArchive-4", acct4Attrs);
+        Account acct4 = createAccount(genAcctNameLocalPart("4"), acct4Attrs);
         
         String [] returnAttrs = {Provisioning.A_displayName, Provisioning.A_zimbraId, Provisioning.A_uid,
                 Provisioning.A_zimbraArchiveAccount, Provisioning.A_zimbraMailHost};
@@ -441,8 +432,7 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         searchOpts.setFilter(filter);
         List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
         
-        assertEquals(1, accounts.size());
-        assertEquals(acct4.getName(), accounts.get(0).getName());
+        Verify.verifyEquals(Lists.newArrayList(acct4), accounts, true);
         
         deleteAccount(acct1);
         deleteAccount(acct2);
@@ -472,25 +462,25 @@ public class TestLdapProvSearchDirectory extends LdapTest {
     
     @Test
     public void CMBSearchNonSystemResourceAccountsOnly() throws Exception {
-        Account acct1 = createAccount("CMBSearchNonSystemResourceAccountsOnly-1");
+        Account acct1 = createAccount(genAcctNameLocalPart("1"));
         
         Map<String, Object> acct2Attrs = Maps.newHashMap();
         acct2Attrs.put(Provisioning.A_zimbraExcludeFromCMBSearch, "TRUE");
-        Account acct2 = createAccount("CMBSearchNonSystemResourceAccountsOnly-2", acct2Attrs);
+        Account acct2 = createAccount(genAcctNameLocalPart("2"), acct2Attrs);
         
         Map<String, Object> acct3Attrs = Maps.newHashMap();
         acct3Attrs.put(Provisioning.A_zimbraExcludeFromCMBSearch, "FALSE");
-        Account acct3 = createAccount("CMBSearchNonSystemResourceAccountsOnly-3", acct3Attrs);
+        Account acct3 = createAccount(genAcctNameLocalPart("3"), acct3Attrs);
         
         Map<String, Object> acct4Attrs = Maps.newHashMap();
         acct4Attrs.put(Provisioning.A_zimbraExcludeFromCMBSearch, "FALSE");
         acct4Attrs.put(Provisioning.A_zimbraIsSystemResource, "TRUE");
-        Account acct4 = createAccount("CMBSearchNonSystemResourceAccountsOnly-4", acct4Attrs);
+        Account acct4 = createAccount(genAcctNameLocalPart("4"), acct4Attrs);
 
         Map<String, Object> acct5Attrs = Maps.newHashMap();
         acct5Attrs.put(Provisioning.A_zimbraExcludeFromCMBSearch, "FALSE");
         acct5Attrs.put(Provisioning.A_zimbraIsSystemResource, "FALSE");
-        Account acct5 = createAccount("CMBSearchNonSystemResourceAccountsOnly-5", acct5Attrs);
+        Account acct5 = createAccount(genAcctNameLocalPart("5"), acct5Attrs);
 
         
         String [] returnAttrs = {Provisioning.A_displayName, Provisioning.A_zimbraId, Provisioning.A_uid,
@@ -504,10 +494,7 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         searchOpts.setFilter(filter);
         List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
         
-        assertEquals(3, accounts.size());
-        assertEquals(acct5.getName(), accounts.get(0).getName());
-        assertEquals(acct3.getName(), accounts.get(1).getName());
-        assertEquals(acct1.getName(), accounts.get(2).getName());
+        Verify.verifyEquals(Lists.newArrayList(acct5, acct3, acct1), accounts, true);
         
         deleteAccount(acct1);
         deleteAccount(acct2);
@@ -537,6 +524,8 @@ public class TestLdapProvSearchDirectory extends LdapTest {
     
     @Test
     public void sslClientCertPrincipalMap() throws Exception {
+        // don't use genAcctNameLocalPart() for this test, sicne filterStr is also hardcoded
+        // we don't want to assume genAcctNameLocalPart() will always return the method name
         Account acct1 = createAccount("sslClientCertPrincipalMap-1");
         
         String filterStr = "(uid=sslClientCertPrincipalMap*)";
@@ -546,8 +535,7 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         searchOpts.setFilterString(FilterId.ACCOUNT_BY_SSL_CLENT_CERT_PRINCIPAL_MAP, filterStr);
         List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
         
-        assertEquals(1, accounts.size());
-        assertEquals(acct1.getName(), accounts.get(0).getName());
+        Verify.verifyEquals(Lists.newArrayList(acct1), accounts, false);
         
         // create another account with same uid prefix
         Account acct2 = createAccount("sslClientCertPrincipalMap-2");
@@ -659,12 +647,12 @@ public class TestLdapProvSearchDirectory extends LdapTest {
     
     @Test
     public void getAllCalendarResources() throws Exception {
-        Account acct = createAccount("getAllCalendarResources-acct");
-        CalendarResource cr = createCalendarResource("getAllCalendarResources-cr");
+        Account acct = createAccount(genAcctNameLocalPart("acct"));
+        CalendarResource cr = createCalendarResource(genAcctNameLocalPart("cr"));
         
         List<CalendarResource> crs = prov.getAllCalendarResources(domain);
-        assertEquals(1, crs.size());
-        assertEquals(cr.getName(), crs.get(0).getName());
+        
+        Verify.verifyEquals(Lists.newArrayList(cr), crs, true);
         
         deleteAccount(acct);
         deleteAccount(cr);
@@ -672,8 +660,8 @@ public class TestLdapProvSearchDirectory extends LdapTest {
     
     @Test
     public void getAllCalendarResourcesOnServer() throws Exception {
-        Account acct = createAccount("getAllCalendarResourcesOnServer-acct");
-        CalendarResource cr = createCalendarResource("getAllCalendarResourcesOnServer-cr");
+        Account acct = createAccount(genAcctNameLocalPart("acct"));
+        CalendarResource cr = createCalendarResource(genAcctNameLocalPart("cr"));
         
         final List<NamedEntry> crs = Lists.newArrayList();
         NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
@@ -685,14 +673,13 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         
         Server server = prov.getLocalServer();
         prov.getAllCalendarResources(domain, server, visitor);
-        assertEquals(1, crs.size());
-        assertEquals(cr.getName(), crs.get(0).getName());
+        Verify.verifyEquals(Lists.newArrayList(cr), crs, false);
         
         crs.clear();
-        Server otherServer = createServer("getAllCalendarResourcesOnServer");
+        Server otherServer = createServer(genServerName());
         assertNotNull(otherServer);
         prov.getAllCalendarResources(domain, otherServer, visitor);
-        assertEquals(0, crs.size());
+        Verify.verifyEquals(null, crs, false);
         
         deleteAccount(acct);
         deleteAccount(cr);
@@ -701,45 +688,42 @@ public class TestLdapProvSearchDirectory extends LdapTest {
     
     @Test
     public void getAllDistributionLists() throws Exception {
-        DistributionList dl = createDistributionList("getAllDistributionList");
+        DistributionList dl = createDistributionList(genGroupNameLocalPart());
         
         List<DistributionList> dls = prov.getAllDistributionLists(domain);
-        assertEquals(1, dls.size());
-        assertEquals(dl.getName(), dls.get(0).getName());
+        Verify.verifyEquals(Lists.newArrayList(dl), dls, true);
         
         deleteGroup(dl);
     }
     
     @Test
     public void getAllGroups() throws Exception {
-        DistributionList dl = createDistributionList("getAllGroups-dl");
-        DynamicGroup dg = createDynamicGroup("getAllGroups-dg");
+        DistributionList dl = createDistributionList(genGroupNameLocalPart("dl"));
+        DynamicGroup dg = createDynamicGroup(genGroupNameLocalPart("dg"));
         
         // create a sub domain
         String SUB_DOMAIN_NAME = "sub." + baseDomainName();
         Domain subDomain = provUtil.createDomain(SUB_DOMAIN_NAME, null);
         
         // create a DL and a DG in the sub domain
-        DistributionList dlSub = createDistributionList("getAllGroups-dl-sub", subDomain);
-        DynamicGroup dgSub = createDynamicGroup("getAllGroups-dg-sub", subDomain);
+        DistributionList dlSub = createDistributionList(genGroupNameLocalPart("dl-sub"), subDomain);
+        DynamicGroup dgSub = createDynamicGroup(genGroupNameLocalPart("dg-sub"), subDomain);
         
         List<Group> groups = prov.getAllGroups(domain);
         
-        assertEquals(2, groups.size());
-        
-        // should be sorted asc
-        assertEquals(dg.getName(), groups.get(0).getName());
-        assertEquals(dl.getName(), groups.get(1).getName());
+        Verify.verifyEquals(Lists.newArrayList(dg, dl), groups, true);
         
         deleteGroup(dl);
         deleteGroup(dg);
+        deleteGroup(dlSub);
+        deleteGroup(dgSub);
     }
     
     @Test
     public void renameDomainSearchAcctCrDl() throws Exception {
-        Account acct = createAccount("renameDomainSearchAcctCrDl-acct");
-        CalendarResource cr = createCalendarResource("renameDomainSearchAcctCrDl-cr");
-        DistributionList dl = createDistributionList("renameDomainSearchAcctCrDl-dl");
+        Account acct = createAccount(genAcctNameLocalPart("acct"));
+        CalendarResource cr = createCalendarResource(genAcctNameLocalPart("cr"));
+        DistributionList dl = createDistributionList(genGroupNameLocalPart("dl"));
          
         String domainDN = ((LdapDomain) domain).getDN();
         String searchBase = ((LdapProv) prov).getDIT().domainDNToAccountSearchDN(domainDN);
@@ -759,7 +743,7 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         options.setFilterString(FilterId.RENAME_DOMAIN, null);
         options.setTypes(ObjectType.accounts, ObjectType.resources, ObjectType.distributionlists);
         prov.searchDirectory(options, visitor);
-        assertEquals(3, entries.size());
+        Verify.verifyEquals(Lists.newArrayList(acct, cr, dl), entries, false);
         
         /*
          // legacy code and ldap trace
@@ -778,10 +762,10 @@ public class TestLdapProvSearchDirectory extends LdapTest {
 
     @Test
     public void searchAliasTarget() throws Exception {
-        Account acct = createAccount("searchAliasTarget-acct");
-        CalendarResource cr = createCalendarResource("searchAliasTarget-cr");
-        DistributionList dl = createDistributionList("searchAliasTarget-dl");
-        DynamicGroup dg = createDynamicGroup("searchAliasTarget-dg");
+        Account acct = createAccount(genAcctNameLocalPart("acct"));
+        CalendarResource cr = createCalendarResource(genAcctNameLocalPart("cr"));
+        DistributionList dl = createDistributionList(genGroupNameLocalPart("dl"));
+        DynamicGroup dg = createDynamicGroup(genGroupNameLocalPart("dg"));
         
         // prepend a digit so the order returned from SearchDirectory is predictable
         prov.addAlias(acct, TestUtil.getAddress("1-acct-alias", domain.getName()));
@@ -796,6 +780,7 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         List<NamedEntry> aliases = prov.searchDirectory(options);
         
         assertEquals(4, aliases.size());
+        
         Alias acctAlias = (Alias) aliases.get(0);
         Alias crAlias = (Alias) aliases.get(1);
         Alias dlAlias = (Alias) aliases.get(2);
@@ -822,9 +807,9 @@ public class TestLdapProvSearchDirectory extends LdapTest {
     @Test
     @Bug(bug=67379)
     public void wildcardFilter() throws Exception {
-        Account acct1 = createAccount("wildcardFilter-acct-1");
-        Account acct2 = createAccount("wildcardFilter-acct-2");
-        Account acct3 = createAccount("wildcardFilter-acct-3");
+        Account acct1 = createAccount(genAcctNameLocalPart("1"));
+        Account acct2 = createAccount(genAcctNameLocalPart("2"));
+        Account acct3 = createAccount(genAcctNameLocalPart("3"));
         
         SearchDirectoryOptions options = new SearchDirectoryOptions(domain);
         options.setTypes(ObjectType.accounts);
@@ -833,7 +818,7 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         options.setConvertIDNToAscii(true);
         List<NamedEntry> entries = prov.searchDirectory(options);
         
-        assertEquals(3, entries.size());
+        Verify.verifyEquals(Lists.newArrayList(acct1, acct2, acct3), entries, true);
         
         deleteAccount(acct1);
         deleteAccount(acct2);
@@ -845,15 +830,15 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         
         Map<String, Object> acct1Attrs = Maps.newHashMap();
         acct1Attrs.put(Provisioning.A_cn, "\u4e2d\u6587 1");
-        Account acct1 = createAccount("chineseFilter-acct-1", acct1Attrs);
+        Account acct1 = createAccount(genAcctNameLocalPart("1"), acct1Attrs);
         
         Map<String, Object> acct2Attrs = Maps.newHashMap();
         acct2Attrs.put(Provisioning.A_cn, "\u4e2d\u6587 2");
-        Account acct2 = createAccount("chineseFilter-acct-2", acct2Attrs);
+        Account acct2 = createAccount(genAcctNameLocalPart("2"), acct2Attrs);
         
         Map<String, Object> acct3Attrs = Maps.newHashMap();
         acct3Attrs.put(Provisioning.A_cn, "\u4e2d\u6587 3");
-        Account acct3 = createAccount("chineseFilter-acct-3", acct3Attrs);
+        Account acct3 = createAccount(genAcctNameLocalPart("3"), acct3Attrs);
         
         SearchDirectoryOptions options = new SearchDirectoryOptions(domain);
         options.setTypes(ObjectType.accounts);
@@ -862,8 +847,7 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         options.setConvertIDNToAscii(true);
         List<NamedEntry> entries = prov.searchDirectory(options);
         
-        assertEquals(1, entries.size());
-        assertEquals(acct2.getId(), entries.get(0).getId());
+        Verify.verifyEquals(Lists.newArrayList(acct2), entries, true);
         
         deleteAccount(acct1);
         deleteAccount(acct2);
@@ -874,7 +858,7 @@ public class TestLdapProvSearchDirectory extends LdapTest {
     public void idnFilter() throws Exception {
         String idnDomainUnicodeName = "\u4e2d\u6587" + "." + baseDomainName();
         Domain idnDomain = provUtil.createDomain(idnDomainUnicodeName);
-        Account acct = provUtil.createAccount("idnFilter", idnDomain);
+        Account acct = provUtil.createAccount(genAcctNameLocalPart(), idnDomain);
         String acctUnicodeName = "idnFilter" + "@" + idnDomainUnicodeName;
         
         SearchDirectoryOptions options = new SearchDirectoryOptions(idnDomain);
@@ -885,10 +869,146 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         options.setConvertIDNToAscii(true);
         List<NamedEntry> entries = prov.searchDirectory(options);
         
-        assertEquals(1, entries.size());
-        assertEquals(acct.getId(), entries.get(0).getId());
+        Verify.verifyEquals(Lists.newArrayList(acct), entries, true);
         
         deleteAccount(acct);
+    }
+    
+    @Test
+    public void maxResults() throws Exception {
+        int NUM_ACCTS = 3;  // must be greator than 1
+        
+        List<Account> accts = Lists.newArrayList();
+        for (int i = 0; i < NUM_ACCTS; i++) {
+            Map<String, Object> attrs = Maps.newHashMap();
+            attrs.put(Provisioning.A_displayName, "acct-" + i);
+            
+            String ACCT_LOCALPART = Names.makeAccountNameLocalPart("acct-" + i);
+            Account acct = createAccount(ACCT_LOCALPART, attrs);
+            accts.add(acct);
+        }
+        
+        String filter = "(uid=*)";
+        String sortAttr = Provisioning.A_displayName;
+        
+        String[] returnAttrs = new String[] {
+                Provisioning.A_displayName,
+                Provisioning.A_zimbraId,
+                Provisioning.A_zimbraMailHost,
+                Provisioning.A_uid,
+                Provisioning.A_zimbraAccountStatus,
+                Provisioning.A_zimbraIsAdminAccount,
+                Provisioning.A_zimbraMailStatus
+        };
+        
+        SearchDirectoryOptions searchOpts = new SearchDirectoryOptions();
+        searchOpts.setDomain(domain);
+        searchOpts.setTypes(SearchDirectoryOptions.ObjectType.accounts);
+        searchOpts.setMaxResults(0);  // unlimited
+        searchOpts.setFilterString(FilterId.UNITTEST, filter);
+        searchOpts.setReturnAttrs(returnAttrs);
+        searchOpts.setSortOpt(SortOpt.SORT_ASCENDING);
+        searchOpts.setSortAttr(sortAttr);
+        
+        List<NamedEntry> result = prov.searchDirectory(searchOpts);
+        Verify.verifyEquals(accts, result, true);
+        
+        searchOpts.setMaxResults(NUM_ACCTS - 1);
+        boolean caughtException = false;
+        try {
+            prov.searchDirectory(searchOpts);
+        } catch (ServiceException e) {
+            if (AccountServiceException.TOO_MANY_SEARCH_RESULTS.equals(e.getCode())) {
+                caughtException = true;
+            }
+        }
+        assertTrue(caughtException);
+        
+        for (Account acct : accts) {
+            deleteAccount(acct);
+        }
+    }
+    
+    @Test
+    public void dnSubtreeMatchFilter() throws Exception {
+        String SUB_DOMAIN_BASE = genDomainSegmentName() + "." + baseDomainName();
+        
+        String SUB_DOMAIN_NAME = "sub." + SUB_DOMAIN_BASE;
+        Domain subDomain = provUtil.createDomain(SUB_DOMAIN_NAME);
+        
+        String SUB_SUB_DOMAIN_NAME = "sub." + SUB_DOMAIN_NAME;
+        Domain subSubDomain = provUtil.createDomain(SUB_SUB_DOMAIN_NAME);
+        
+        // create objects in subDomain
+        Account acct = provUtil.createAccount(genAcctNameLocalPart("acct"), subDomain);
+        DistributionList dl = provUtil.createDistributionList(genGroupNameLocalPart("dl"), subDomain);
+        DynamicGroup dg = provUtil.createDynamicGroup(genGroupNameLocalPart("dg"), subDomain);
+        
+        // create objects in subSubDomain
+        Account acctSub = provUtil.createAccount(genAcctNameLocalPart("acct"), subSubDomain);
+        DistributionList dlSub = provUtil.createDistributionList(genGroupNameLocalPart("dl"), subSubDomain);
+        DynamicGroup dgSub = provUtil.createDynamicGroup(genGroupNameLocalPart("dg"), subSubDomain);
+        
+        SearchDirectoryOptions options;
+        List<NamedEntry> entries;
+        
+        try {
+            SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+            
+            // do not specify a domain, so DnSubtreeMatchFilter won't be appened again in Ldapprovisioning
+            options = new SearchDirectoryOptions();
+            options.setTypes(ObjectType.accounts, ObjectType.distributionlists, ObjectType.dynamicgroups);
+            options.setSortOpt(SortOpt.SORT_ASCENDING);
+            options.setFilterString(FilterId.UNITTEST, ((LdapDomain) subDomain).getDnSubtreeMatchFilter().toFilterString());
+            entries = prov.searchDirectory(options);
+            
+            Verify.verifyEquals(Lists.newArrayList(acct, dg, dl), entries, true);
+        } catch (ProvTest.SkippedForInMemLdapServerException e) {
+        }
+        
+        // specify a domain, search for accounts, distribution lists, and dynamic groups
+        options = new SearchDirectoryOptions(subDomain);
+        options.setTypes(ObjectType.accounts, ObjectType.distributionlists, ObjectType.dynamicgroups);
+        options.setSortOpt(SortOpt.SORT_ASCENDING);
+        options.setFilterString(FilterId.UNITTEST, null);
+        entries = prov.searchDirectory(options);
+        
+        Verify.verifyEquals(Lists.newArrayList(acct, dg, dl), entries, true);
+        
+        // specify a domain, search for accounts, distribution lists
+        options = new SearchDirectoryOptions(subDomain);
+        options.setTypes(ObjectType.accounts, ObjectType.distributionlists);
+        options.setSortOpt(SortOpt.SORT_ASCENDING);
+        options.setFilterString(FilterId.UNITTEST, null);
+        entries = prov.searchDirectory(options);
+        
+        Verify.verifyEquals(Lists.newArrayList(acct, dl), entries, true);
+        
+        // specify a domain, search for dynamic groups
+        options = new SearchDirectoryOptions(subDomain);
+        options.setTypes(ObjectType.dynamicgroups);
+        options.setSortOpt(SortOpt.SORT_ASCENDING);
+        options.setFilterString(FilterId.UNITTEST, null);
+        entries = prov.searchDirectory(options);
+        
+        Verify.verifyEquals(Lists.newArrayList(dg), entries, true);
+        
+        // specify a domain, search for accounts and dynamic groups
+        options = new SearchDirectoryOptions(subDomain);
+        options.setTypes(ObjectType.accounts, ObjectType.dynamicgroups);
+        options.setSortOpt(SortOpt.SORT_ASCENDING);
+        options.setFilterString(FilterId.UNITTEST, null);
+        entries = prov.searchDirectory(options);
+        
+        Verify.verifyEquals(Lists.newArrayList(acct, dg), entries, true);
+        
+        // cleanup
+        deleteAccount(acct);
+        deleteGroup(dl);
+        deleteGroup(dg);
+        deleteAccount(acctSub);
+        deleteGroup(dlSub);
+        deleteGroup(dgSub);
     }
     
 }

@@ -77,7 +77,8 @@ public class TestLdapProvDistributionList extends LdapTest {
         return createAccount(localPart, null);
     }
     
-    private Account createAccount(String localPart, Map<String, Object> attrs) throws Exception {
+    private Account createAccount(String localPart, Map<String, Object> attrs) 
+    throws Exception {
         return provUtil.createAccount(localPart, domain, attrs);
     }
     
@@ -112,37 +113,6 @@ public class TestLdapProvDistributionList extends LdapTest {
         }
     }
     
-    @Test
-    public void createDistributionList() throws Exception {
-        String DL_NAME_LOCALPART = Names.makeDLNameLocalPart("createDistributionList");
-        
-        DistributionList dl = createDistributionList(DL_NAME_LOCALPART);
-        
-        // make sure the group has a home server
-        Server homeServer = dl.getServer();
-        assertNotNull(homeServer);
-        
-        deleteDistributionList(dl);
-    }
-    
-    @Test
-    public void createDistributionListAlreadyExists() throws Exception {
-        String DL_NAME_LOCALPART = Names.makeDLNameLocalPart("createDistributionListAlreadyExists");
-        DistributionList dl = createDistributionList(DL_NAME_LOCALPART);
-        
-        boolean caughtException = false;
-        try {
-            prov.createDistributionList(dl.getName(), new HashMap<String, Object>());
-        } catch (AccountServiceException e) {
-            if (AccountServiceException.DISTRIBUTION_LIST_EXISTS.equals(e.getCode())) {
-                caughtException = true;
-            }
-        }
-        assertTrue(caughtException);
-        
-        deleteDistributionList(dl);
-    }
-    
     private void getDistributionListById(String id) throws Exception {
         prov.flushCache(CacheEntryType.group, null);
         DistributionList dl = prov.get(Key.DistributionListBy.id, id);
@@ -158,8 +128,39 @@ public class TestLdapProvDistributionList extends LdapTest {
     }
     
     @Test
+    public void createDistributionList() throws Exception {
+        String DL_NAME_LOCALPART = Names.makeDLNameLocalPart(genGroupNameLocalPart());
+        
+        DistributionList dl = createDistributionList(DL_NAME_LOCALPART);
+        
+        // make sure the group has a home server
+        Server homeServer = dl.getServer();
+        assertNotNull(homeServer);
+        
+        deleteDistributionList(dl);
+    }
+    
+    @Test
+    public void createDistributionListAlreadyExists() throws Exception {
+        String DL_NAME_LOCALPART = Names.makeDLNameLocalPart(genGroupNameLocalPart());
+        DistributionList dl = createDistributionList(DL_NAME_LOCALPART);
+        
+        boolean caughtException = false;
+        try {
+            prov.createDistributionList(dl.getName(), new HashMap<String, Object>());
+        } catch (AccountServiceException e) {
+            if (AccountServiceException.DISTRIBUTION_LIST_EXISTS.equals(e.getCode())) {
+                caughtException = true;
+            }
+        }
+        assertTrue(caughtException);
+        
+        deleteDistributionList(dl);
+    }
+    
+    @Test
     public void getDistributionList() throws Exception {
-        String DL_NAME_LOCALPART = Names.makeDLNameLocalPart("getDistributionList");
+        String DL_NAME_LOCALPART = Names.makeDLNameLocalPart(genGroupNameLocalPart());
         DistributionList dl = createDistributionList(DL_NAME_LOCALPART);
         String DL_ID = dl.getId();
         
@@ -171,8 +172,8 @@ public class TestLdapProvDistributionList extends LdapTest {
     
     @Test
     public void renameDistributionList() throws Exception {
-        String DL_NAME_LOCALPART = Names.makeDLNameLocalPart("renameDistributionList");
-        String DL_NEW_NAME_LOCALPART = Names.makeDLNameLocalPart("renameDistributionList-new");
+        String DL_NAME_LOCALPART = Names.makeDLNameLocalPart(genGroupNameLocalPart());
+        String DL_NEW_NAME_LOCALPART = Names.makeDLNameLocalPart(genGroupNameLocalPart("new"));
         String DL_NEW_NAME = TestUtil.getAddress(DL_NEW_NAME_LOCALPART, domain.getName()).toLowerCase();
         
         DistributionList dl = createDistributionList(DL_NAME_LOCALPART);
@@ -200,11 +201,11 @@ public class TestLdapProvDistributionList extends LdapTest {
     
     @Test
     public void renameDistributionListDomainChanged() throws Exception {
-        String DL_NAME_LOCALPART = Names.makeDLNameLocalPart("renameDistributionList");
+        String DL_NAME_LOCALPART = Names.makeDLNameLocalPart(genGroupNameLocalPart());
         
-        String NEW_DOMAIN_NAME = "renameDistributionList." + BASE_DOMAIN_NAME;
+        String NEW_DOMAIN_NAME = genDomainSegmentName() + "." + BASE_DOMAIN_NAME;
         Domain newDomain = provUtil.createDomain(NEW_DOMAIN_NAME, null);
-        String DL_NEW_NAME_LOCALPART = Names.makeDLNameLocalPart("renameDistributionList-new");
+        String DL_NEW_NAME_LOCALPART = Names.makeDLNameLocalPart(genGroupNameLocalPart("new"));
         String DL_NEW_NAME = TestUtil.getAddress(DL_NEW_NAME_LOCALPART, newDomain.getName()).toLowerCase();
         
         DistributionList dl = createDistributionList(DL_NAME_LOCALPART);
@@ -232,7 +233,7 @@ public class TestLdapProvDistributionList extends LdapTest {
     
     @Test
     public void addMembers() throws Exception {
-        String DL_NAME_LOCALPART = Names.makeDLNameLocalPart("addMembers");
+        String DL_NAME_LOCALPART = Names.makeDLNameLocalPart(genGroupNameLocalPart());
         String MEMBER_1 = "member_1@test.com";
         String MEMBER_2 = "member_2@test.com";
         String MEMBER_3 = "member_3@test.com";
@@ -259,7 +260,7 @@ public class TestLdapProvDistributionList extends LdapTest {
     
     @Test
     public void removeMembers() throws Exception {
-        String DL_NAME_LOCALPART = Names.makeDLNameLocalPart("addMembers");
+        String DL_NAME_LOCALPART = Names.makeDLNameLocalPart(genGroupNameLocalPart());
         String MEMBER_1 = "member_1@test.com";
         String MEMBER_2 = "member_2@test.com";
         String MEMBER_3 = "member_3@test.com";
@@ -286,13 +287,13 @@ public class TestLdapProvDistributionList extends LdapTest {
     
     @Test
     public void accountInDistributionList() throws Exception {
-        String DL_NAME_LOCALPART = Names.makeDLNameLocalPart("addMembers");
+        String DL_NAME_LOCALPART = Names.makeDLNameLocalPart(genGroupNameLocalPart());
         DistributionList dl = createDistributionList(DL_NAME_LOCALPART);
         String DL_ID = dl.getId();
         
-        String ACCT_NAME_IN_DL_LOCALPART = Names.makeAccountNameLocalPart("accountInDistributionList-acct-in");
+        String ACCT_NAME_IN_DL_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart("acct-in"));
         Account acctInDL = createAccount(ACCT_NAME_IN_DL_LOCALPART);
-        String ACCT_NAME_NOT_IN_DL_LOCALPART = "accountInDistributionList-acct-not-in";
+        String ACCT_NAME_NOT_IN_DL_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart("acct-not-in"));
         Account acctNotInDL = createAccount(ACCT_NAME_NOT_IN_DL_LOCALPART);
         
         prov.addMembers(dl, new String[]{acctInDL.getName()});
@@ -310,13 +311,13 @@ public class TestLdapProvDistributionList extends LdapTest {
     
     @Test
     public void dlInDistributionList() throws Exception {
-        String DL_NAME_LOCALPART = Names.makeDLNameLocalPart("addMembers");
+        String DL_NAME_LOCALPART = Names.makeDLNameLocalPart(genGroupNameLocalPart());
         DistributionList dl = createDistributionList(DL_NAME_LOCALPART);
         String DL_ID = dl.getId();
         
-        String DL_NAME_IN_DL_LOCALPART = Names.makeDLNameLocalPart("dlInDistributionList-dl-in");
+        String DL_NAME_IN_DL_LOCALPART = Names.makeDLNameLocalPart(genGroupNameLocalPart("dl-in"));
         DistributionList dlInDL = createDistributionList(DL_NAME_IN_DL_LOCALPART);
-        String DL_NAME_NOT_IN_DL_LOCALPART = Names.makeDLNameLocalPart("dlInDistributionList-dl-not-in");
+        String DL_NAME_NOT_IN_DL_LOCALPART = Names.makeDLNameLocalPart(genGroupNameLocalPart("dl-not-in"));
         DistributionList dlNotInDL = createDistributionList(DL_NAME_NOT_IN_DL_LOCALPART);
         
         prov.addMembers(dl, new String[]{dlInDL.getName()});
@@ -334,12 +335,12 @@ public class TestLdapProvDistributionList extends LdapTest {
     
     @Test
     public void getAccountDistributionLists() throws Exception {
-        String DL_NAME_1_LOCALPART = Names.makeDLNameLocalPart("getAccountDistributionLists-dl-1");
-        String DL_NAME_2_LOCALPART = Names.makeDLNameLocalPart("getAccountDistributionLists-dl-2");
+        String DL_NAME_1_LOCALPART = Names.makeDLNameLocalPart(genGroupNameLocalPart("dl-1"));
+        String DL_NAME_2_LOCALPART = Names.makeDLNameLocalPart(genGroupNameLocalPart("dl-2"));
         DistributionList dl1 = createDistributionList(DL_NAME_1_LOCALPART);
         DistributionList dl2 = createDistributionList(DL_NAME_2_LOCALPART);
         
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("getAccountDistributionLists-acct");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart("acct"));
         Account acct = createAccount(ACCT_NAME_LOCALPART);
         
         prov.addMembers(dl1, new String[]{dl2.getName()});
@@ -365,12 +366,12 @@ public class TestLdapProvDistributionList extends LdapTest {
     
     @Test
     public void getDlDistributionLists() throws Exception {
-        String DL_NAME_1_LOCALPART = Names.makeDLNameLocalPart("getDlDistributionLists-dl-1");
-        String DL_NAME_2_LOCALPART = Names.makeDLNameLocalPart("getDlDistributionLists-dl-2");
+        String DL_NAME_1_LOCALPART = Names.makeDLNameLocalPart(genGroupNameLocalPart("dl-1"));
+        String DL_NAME_2_LOCALPART = Names.makeDLNameLocalPart(genGroupNameLocalPart("dl-2"));
         DistributionList dl1 = createDistributionList(DL_NAME_1_LOCALPART);
         DistributionList dl2 = createDistributionList(DL_NAME_2_LOCALPART);
         
-        String DL_NAME_LOCALPART = Names.makeDLNameLocalPart("getDlDistributionLists-dl");
+        String DL_NAME_LOCALPART = Names.makeDLNameLocalPart(genGroupNameLocalPart("dl"));
         DistributionList dl = createDistributionList(DL_NAME_LOCALPART);
         
         prov.addMembers(dl1, new String[]{dl2.getName()});
@@ -392,7 +393,7 @@ public class TestLdapProvDistributionList extends LdapTest {
 
     @Test
     public void testCircular1() throws Exception {
-        Domain domain = provUtil.createDomain("testCircular1" + "." + BASE_DOMAIN_NAME);
+        Domain domain = provUtil.createDomain(genDomainSegmentName() + "." + BASE_DOMAIN_NAME);
         
         DistributionList group1 = provUtil.createDistributionList("group1", domain);
         DistributionList group2 = provUtil.createDistributionList("group2", domain);
@@ -417,7 +418,7 @@ public class TestLdapProvDistributionList extends LdapTest {
     
     @Test
     public void testCircular2() throws Exception {
-        Domain domain = provUtil.createDomain("testCircular2" + "." + BASE_DOMAIN_NAME);
+        Domain domain = provUtil.createDomain(genDomainSegmentName() + "." + BASE_DOMAIN_NAME);
         
         DistributionList group1 = provUtil.createDistributionList("group1", domain);
         DistributionList group2 = provUtil.createDistributionList("group2", domain);
@@ -447,7 +448,7 @@ public class TestLdapProvDistributionList extends LdapTest {
     @Bug(bug=42132)
     // @Ignore  // LdapProvisioning no long allows adding self as a group 
     public void bug42132() throws Exception {
-        Domain domain = provUtil.createDomain("bug42132" + "." + BASE_DOMAIN_NAME);
+        Domain domain = provUtil.createDomain(genDomainSegmentName() + "." + BASE_DOMAIN_NAME);
         
         DistributionList group1 = provUtil.createDistributionList("group1", domain);
         DistributionList group2 = provUtil.createDistributionList("group2", domain);

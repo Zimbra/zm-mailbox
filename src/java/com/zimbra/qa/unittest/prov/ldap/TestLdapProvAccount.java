@@ -105,31 +105,6 @@ public class TestLdapProvAccount extends LdapTest {
         provUtil.deleteCos(cos);
     }
     
-    @Test
-    public void createAccount() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("createAccount");
-        Account acct = createAccount(ACCT_NAME_LOCALPART);
-        deleteAccount(acct);
-    }
-    
-    @Test
-    public void createAccountAlreadyExists() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("createAccountAlreadyExists");
-        Account acct = createAccount(ACCT_NAME_LOCALPART);
-        
-        boolean caughtException = false;
-        try {
-            prov.createAccount(acct.getName(), "test123", null);
-        } catch (AccountServiceException e) {
-            if (AccountServiceException.ACCOUNT_EXISTS.equals(e.getCode())) {
-                caughtException = true;
-            }
-        }
-        assertTrue(caughtException);
-        
-        deleteAccount(acct);
-    }
-    
     private void getAccountByAdminName(String adminName) throws Exception {
         prov.flushCache(CacheEntryType.account, null);
         Account acct = prov.get(AccountBy.adminName, adminName);
@@ -166,6 +141,42 @@ public class TestLdapProvAccount extends LdapTest {
         assertNotNull(acct);
     }
     
+    private DataSource createDataSource(Account acct, String dataSourceName) throws Exception {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapConstants.LDAP_TRUE);
+        attrs.put(Provisioning.A_zimbraDataSourceFolderId, "123");
+        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, "ssl");
+        attrs.put(Provisioning.A_zimbraDataSourceHost, "zimbra.com");
+        attrs.put(Provisioning.A_zimbraDataSourcePort, "9999");
+        DataSource ds = prov.createDataSource(acct, DataSourceType.pop3, dataSourceName, attrs);
+        return ds;
+    }
+    
+    @Test
+    public void createAccount() throws Exception {
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
+        Account acct = createAccount(ACCT_NAME_LOCALPART);
+        deleteAccount(acct);
+    }
+    
+    @Test
+    public void createAccountAlreadyExists() throws Exception {
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
+        Account acct = createAccount(ACCT_NAME_LOCALPART);
+        
+        boolean caughtException = false;
+        try {
+            prov.createAccount(acct.getName(), "test123", null);
+        } catch (AccountServiceException e) {
+            if (AccountServiceException.ACCOUNT_EXISTS.equals(e.getCode())) {
+                caughtException = true;
+            }
+        }
+        assertTrue(caughtException);
+        
+        deleteAccount(acct);
+    }
+    
     @Test
     public void getAccount() throws Exception {
         String ACCT_NAME = "getAccount";
@@ -190,8 +201,8 @@ public class TestLdapProvAccount extends LdapTest {
     
     @Test
     public void getAllAdminAccounts() throws Exception {
-        String ADMIN_ACCT_NAME_1 = "getAllAdminAccounts-1";
-        String ADMIN_ACCT_NAME_2 = "getAllAdminAccounts-2";
+        String ADMIN_ACCT_NAME_1 = genAcctNameLocalPart("1");
+        String ADMIN_ACCT_NAME_2 = genAcctNameLocalPart("2");
         
         Map<String, Object> acct1Attrs1 = new HashMap<String, Object>();
         acct1Attrs1.put(Provisioning.A_zimbraIsAdminAccount, LdapConstants.LDAP_TRUE);
@@ -215,27 +226,16 @@ public class TestLdapProvAccount extends LdapTest {
         deleteAccount(adminAcct2);
     }
     
-    private DataSource createDataSource(Account acct, String dataSourceName) throws Exception {
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDataSourceEnabled, LdapConstants.LDAP_TRUE);
-        attrs.put(Provisioning.A_zimbraDataSourceFolderId, "123");
-        attrs.put(Provisioning.A_zimbraDataSourceConnectionType, "ssl");
-        attrs.put(Provisioning.A_zimbraDataSourceHost, "zimbra.com");
-        attrs.put(Provisioning.A_zimbraDataSourcePort, "9999");
-        DataSource ds = prov.createDataSource(acct, DataSourceType.pop3, dataSourceName, attrs);
-        return ds;
-    }
-    
     /*
      * This test does not work with JNDI.  The trailing space in data source name 
      * got stripped after the rename.
      */
     @Test
     public void renameAccount() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("renameAccount");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
         
         String ACCT_NEW_NAME_LOCALPART = 
-            Names.makeAccountNameLocalPart("renameAccount-new").toLowerCase();
+            Names.makeAccountNameLocalPart(genAcctNameLocalPart("new"));
         
         String ACCT_NEW_NAME = TestUtil.getAddress(
                 ACCT_NEW_NAME_LOCALPART,
@@ -249,9 +249,9 @@ public class TestLdapProvAccount extends LdapTest {
         String DATA_SOURCE_NAME_2;
         String DATA_SOURCE_NAME_3;
         
-        DATA_SOURCE_NAME_1 = Names.makeDataSourceName("ds1");
-        DATA_SOURCE_NAME_2 = Names.makeDataSourceName("ds2");
-        DATA_SOURCE_NAME_3 = Names.makeDataSourceName("ds3");
+        DATA_SOURCE_NAME_1 = Names.makeDataSourceName(genDataSourceName("1"));
+        DATA_SOURCE_NAME_2 = Names.makeDataSourceName(genDataSourceName("2"));
+        DATA_SOURCE_NAME_3 = Names.makeDataSourceName(genDataSourceName("3"));
         
         DataSource ds1 = createDataSource(acct, DATA_SOURCE_NAME_1);
         DataSource ds2 = createDataSource(acct, DATA_SOURCE_NAME_2);
@@ -289,11 +289,11 @@ public class TestLdapProvAccount extends LdapTest {
     
     @Test
     public void renameAccountDomainChanged() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("renameAccountDomainChanged");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
         
-        String NEW_DOMAIN_NAME = "renameAccountDomainChanged." + baseDomainName();
+        String NEW_DOMAIN_NAME = genDomainSegmentName() + "." + baseDomainName();
         Domain newDomain = provUtil.createDomain(NEW_DOMAIN_NAME);
-        String ACCT_NEW_NAME_LOCALPART = Names.makeAccountNameLocalPart("renameAccountDomainChanged-new");
+        String ACCT_NEW_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart("new"));
         String ACCT_NEW_NAME =  
             TestUtil.getAddress(ACCT_NEW_NAME_LOCALPART, NEW_DOMAIN_NAME).toLowerCase();
         
@@ -318,8 +318,8 @@ public class TestLdapProvAccount extends LdapTest {
         
         
         // create some aliases
-        String ALIAS_NAME_LOCALPART_1 = Names.makeAccountNameLocalPart("renameAccount-alias1"); 
-        String ALIAS_NAME_LOCALPART_2 = Names.makeAccountNameLocalPart("renameAccount-alias2");
+        String ALIAS_NAME_LOCALPART_1 = Names.makeAccountNameLocalPart(genAcctNameLocalPart("alias1")); 
+        String ALIAS_NAME_LOCALPART_2 = Names.makeAccountNameLocalPart(genAcctNameLocalPart("alias2"));
         String ALIAS_NAME_1 = TestUtil.getAddress(ALIAS_NAME_LOCALPART_1, domain.getName()).toLowerCase();
         String ALIAS_NAME_2 = TestUtil.getAddress(ALIAS_NAME_LOCALPART_2, domain.getName()).toLowerCase();
         String ALIAS_NEW_NAME_1 = TestUtil.getAddress(ALIAS_NAME_LOCALPART_1, NEW_DOMAIN_NAME).toLowerCase();
@@ -357,7 +357,8 @@ public class TestLdapProvAccount extends LdapTest {
         assertTrue(aliases.contains(ALIAS_NEW_NAME_2));
         
         // make sure zimbraPrefAllowAddressForDelegatedSender is updated
-        Set<String> addrsForDelegatedSender = renamedAcct.getMultiAttrSet(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender);
+        Set<String> addrsForDelegatedSender = 
+            renamedAcct.getMultiAttrSet(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender);
         assertEquals(3, addrsForDelegatedSender.size());
         assertTrue(addrsForDelegatedSender.contains(ACCT_NEW_NAME));
         assertTrue(addrsForDelegatedSender.contains(ALIAS_NEW_NAME_1));
@@ -369,8 +370,8 @@ public class TestLdapProvAccount extends LdapTest {
     
     @Test
     public void renameAccountAlreadyExists() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("renameAccountAlreadyExists");
-        String ACCT_NAME_EXISTS_LOCALPART = Names.makeAccountNameLocalPart("renameAccountAlreadyExists-exists");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
+        String ACCT_NAME_EXISTS_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart("exists"));
         
         Account acct = createAccount(ACCT_NAME_LOCALPART);
         Account acctExists = createAccount(ACCT_NAME_EXISTS_LOCALPART);
@@ -396,18 +397,18 @@ public class TestLdapProvAccount extends LdapTest {
     public void mailHost() throws Exception {
         Map<String, Object> server1Attrs = Maps.newHashMap();
         server1Attrs.put(Provisioning.A_zimbraServiceEnabled, Provisioning.SERVICE_MAILBOX);
-        Server server1 = createServer("server1", server1Attrs);
+        Server server1 = createServer(genServerName("1"), server1Attrs);
         
         Map<String, Object> server2Attrs = Maps.newHashMap();
         server2Attrs.put(Provisioning.A_zimbraServiceEnabled, Provisioning.SERVICE_MAILBOX);
-        Server server2 = createServer("server2", server2Attrs);
+        Server server2 = createServer(genServerName("2"), server2Attrs);
         
-        Server server3 = createServer("server3");
+        Server server3 = createServer(genServerName("3"));
         
         // specifies a mail host
         Map<String, Object> acct1Attrs = Maps.newHashMap();
         acct1Attrs.put(Provisioning.A_zimbraMailHost, server1.getName());
-        Account acct1 = createAccount("acct1", acct1Attrs);
+        Account acct1 = createAccount(genAcctNameLocalPart("1"), acct1Attrs);
         assertEquals(server1.getId(), prov.getServer(acct1).getId());
         
         // specifies a mail host without mailbox server
@@ -415,7 +416,7 @@ public class TestLdapProvAccount extends LdapTest {
         acct2Attrs.put(Provisioning.A_zimbraMailHost, server3.getName());
         boolean caughtException = false;
         try {
-            Account acct2 = createAccount("acct2", acct2Attrs);
+            Account acct2 = createAccount(genAcctNameLocalPart("2"), acct2Attrs);
         } catch (ServiceException e) {
             if (ServiceException.INVALID_REQUEST.equals(e.getCode())) {
                 caughtException = true;
@@ -426,20 +427,20 @@ public class TestLdapProvAccount extends LdapTest {
         // use a server pool in cos
         Map<String, Object> cos1Attrs = Maps.newHashMap();
         cos1Attrs.put(Provisioning.A_zimbraMailHostPool, server2.getId());
-        Cos cos1 = createCos("cos1", cos1Attrs);
+        Cos cos1 = createCos(genCosName("1"), cos1Attrs);
         Map<String, Object> acct3Attrs = Maps.newHashMap();
         acct3Attrs.put(Provisioning.A_zimbraCOSId, cos1.getId());
-        Account acct3 = createAccount("acct3", acct3Attrs);
+        Account acct3 = createAccount(genAcctNameLocalPart("3"), acct3Attrs);
         assertEquals(server2.getId(), prov.getServer(acct3).getId());
         
         // use a server pool in cos, but the server pool does not contain a 
         // server with mailbox server, should fallback to the local server
         Map<String, Object> cos2Attrs = Maps.newHashMap();
         cos2Attrs.put(Provisioning.A_zimbraMailHostPool, server3.getId());
-        Cos cos2 = createCos("cos2", cos2Attrs);
+        Cos cos2 = createCos(genCosName("3"), cos2Attrs);
         Map<String, Object> acct4Attrs = Maps.newHashMap();
         acct4Attrs.put(Provisioning.A_zimbraCOSId, cos2.getId());
-        Account acct4 = createAccount("acct4", acct4Attrs);
+        Account acct4 = createAccount(genAcctNameLocalPart("4"), acct4Attrs);
         assertEquals(prov.getLocalServer().getId(), prov.getServer(acct4).getId());
         
         

@@ -18,7 +18,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 import org.junit.*;
 import static org.junit.Assert.*;
 
@@ -120,12 +119,28 @@ public class TestLdapBinary extends LdapTest {
         String[] contentsToRemove;
         String[] contentsRemaining;
         
-        MultiValuedTestData(String attrName, String[] contents, String[] contentsToRemove, String[] contentsRemaining) {
+        MultiValuedTestData(String attrName, String[] contents, String[] contentsToRemove, 
+                String[] contentsRemaining) {
             this.attrName = attrName;
             this.contents = contents;
             this.contentsToRemove = contentsToRemove;
             this.contentsRemaining = contentsRemaining;
         }
+    }
+    
+
+    @BeforeClass
+    public static void init() throws Exception {
+        provUtil = new LdapProvTestUtil();
+        prov = provUtil.getProv();
+        domain = provUtil.createDomain(baseDomainName(), null);
+        
+        Account acct = provUtil.createAccount(USER, domain);
+    }
+    
+    @AfterClass
+    public static void cleanup() throws Exception {
+        Cleanup.deleteAll(baseDomainName());
     }
     
     private Entry getEntry() throws Exception {
@@ -141,7 +156,7 @@ public class TestLdapBinary extends LdapTest {
         prov.modifyAttrs(entry, attrs);
         
         byte[] value = entry.getBinaryAttr(attrName);
-        Assert.assertNull(value);
+        assertNull(value);
     }
     
     // testing the code path when value is a String 
@@ -195,8 +210,8 @@ public class TestLdapBinary extends LdapTest {
         byte[] binaryValue = entry.getBinaryAttr(attrName);
         
         BinaryLdapData.Content content = BinaryLdapData.Content.getContentByFileName(contentName);
-        Assert.assertTrue(content.equals(stringValue));
-        Assert.assertTrue(content.equals(binaryValue));
+        assertTrue(content.equals(stringValue));
+        assertTrue(content.equals(binaryValue));
     }
     
     private void verify(String attrName, String[] contentNames) throws Exception{
@@ -206,8 +221,8 @@ public class TestLdapBinary extends LdapTest {
         String[] stringValues = entry.getMultiAttr(attrName);
         List<byte[]> binaryValues = entry.getMultiBinaryAttr(attrName);
         
-        Assert.assertEquals(numContents, stringValues.length);
-        Assert.assertEquals(numContents, binaryValues.size());
+        assertEquals(numContents, stringValues.length);
+        assertEquals(numContents, binaryValues.size());
         
         for (int i = 0; i < numContents; i++) {
             BinaryLdapData.Content content = BinaryLdapData.Content.getContentByFileName(contentNames[i]);
@@ -218,7 +233,7 @@ public class TestLdapBinary extends LdapTest {
                     found = true;
                 }
             }
-            Assert.assertTrue(found);
+            assertTrue(found);
             
             found = false;
             for (int j = 0; j < binaryValues.size() && !found; j++) {
@@ -226,13 +241,13 @@ public class TestLdapBinary extends LdapTest {
                     found = true;
                 }
             }
-            Assert.assertTrue(found);
+            assertTrue(found);
         }
     }
     
     private void verifyIsEmpty(Entry entry, String attrName) {
         String value = entry.getAttr(attrName);
-        Assert.assertNull(value);
+        assertNull(value);
     }
     
     private void replaceSingle(SingleValuedTestData data) throws Exception {
@@ -295,20 +310,6 @@ public class TestLdapBinary extends LdapTest {
         verify(attrName, contentNames);
     }
     
-    @BeforeClass
-    public static void init() throws Exception {
-        provUtil = new LdapProvTestUtil();
-        prov = provUtil.getProv();
-        domain = provUtil.createDomain(baseDomainName(), null);
-        
-        Account acct = provUtil.createAccount(USER, domain);
-    }
-    
-    @AfterClass
-    public static void cleanup() throws Exception {
-        Cleanup.deleteAll(baseDomainName());
-    }
-    
     @Test
     public void testTooLarge() throws Exception {
         SingleValuedTestData data = ZIMBRA_BINARY_SINGLE_TEST_TOO_LARGE;
@@ -327,7 +328,7 @@ public class TestLdapBinary extends LdapTest {
             }
         }
         
-        Assert.assertTrue(caught);
+        assertTrue(caught);
     }
     
     @Test

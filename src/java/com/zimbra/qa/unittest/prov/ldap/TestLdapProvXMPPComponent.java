@@ -77,7 +77,7 @@ public class TestLdapProvXMPPComponent extends LdapTest {
     
     @Test
     public void createXMPPComponent() throws Exception {
-        String XMPPCPNT_NAME = Names.makeXMPPName("createXMPPComponent");
+        String XMPPCPNT_NAME = Names.makeXMPPName(genXMPPName());
         XMPPComponent xmppCpnt = createXMPPComponent(XMPPCPNT_NAME);
         
         deleteXMPPComponent(xmppCpnt);
@@ -85,7 +85,7 @@ public class TestLdapProvXMPPComponent extends LdapTest {
     
     @Test
     public void createXMPPComponentAlreadyExists() throws Exception {
-        String XMPPCPNT_NAME = Names.makeXMPPName("createXMPPComponentAlreadyExists");
+        String XMPPCPNT_NAME = Names.makeXMPPName(genXMPPName());
         XMPPComponent xmppCpnt = createXMPPComponent(XMPPCPNT_NAME);
         
         boolean caughtException = false;
@@ -107,7 +107,7 @@ public class TestLdapProvXMPPComponent extends LdapTest {
     
     @Test 
     public void getXMPPComponent() throws Exception {
-        String XMPPCPNT_NAME = Names.makeXMPPName("getXMPPComponent");
+        String XMPPCPNT_NAME = Names.makeXMPPName(genXMPPName());
         XMPPComponent xmppCpnt = createXMPPComponent(XMPPCPNT_NAME);
         String xmppCpntId = xmppCpnt.getId();
         
@@ -126,17 +126,17 @@ public class TestLdapProvXMPPComponent extends LdapTest {
     
     @Test 
     public void getXMPPComponentNotExist() throws Exception {
-        String XMPPCPNT_NAME = Names.makeXMPPName("getXMPPComponentNotExist");
+        String XMPPCPNT_NAME = Names.makeXMPPName(genXMPPName());
         XMPPComponent xmppCpnt = prov.get(Key.XMPPComponentBy.name, XMPPCPNT_NAME); 
         assertNull(xmppCpnt);
     }
     
     @Test
     public void getAllXMPPComponents() throws Exception {
-        String XMPPCPNT_NAME_1 = Names.makeXMPPName("getAllXMPPComponents-1");
+        String XMPPCPNT_NAME_1 = Names.makeXMPPName(genXMPPName("1"));
         XMPPComponent xmppCpnt1 = createXMPPComponent(XMPPCPNT_NAME_1);
         
-        String XMPPCPNT_NAME_2 = Names.makeXMPPName("getAllXMPPComponents-2");
+        String XMPPCPNT_NAME_2 = Names.makeXMPPName(genXMPPName("2"));
         XMPPComponent xmppCpnt2 = createXMPPComponent(XMPPCPNT_NAME_2);
         
         List<XMPPComponent> allXMPPCpnts = prov.getAllXMPPComponents();

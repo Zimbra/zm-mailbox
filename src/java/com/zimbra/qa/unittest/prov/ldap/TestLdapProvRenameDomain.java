@@ -36,7 +36,6 @@ import com.zimbra.qa.unittest.prov.Names;
 import com.zimbra.qa.unittest.prov.Verify;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Alias;

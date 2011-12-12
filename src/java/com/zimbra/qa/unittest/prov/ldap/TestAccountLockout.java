@@ -115,7 +115,7 @@ public class TestAccountLockout extends LdapTest {
     
     @Test
     public void successfulLogin() throws Exception {
-        Account acct = createAccount("successfulLogin");
+        Account acct = createAccount(genAcctNameLocalPart());
         lockout(acct);
         
         // try to login with correct password, before lockoutDurationSeconds, should fail
@@ -144,7 +144,7 @@ public class TestAccountLockout extends LdapTest {
     
     @Test
     public void ssoWhenAccountIsLockedout() throws Exception {
-        Account acct = createAccount("successfulLogin");
+        Account acct = createAccount(genAcctNameLocalPart());
         lockout(acct);
         
         boolean authFailed = false;

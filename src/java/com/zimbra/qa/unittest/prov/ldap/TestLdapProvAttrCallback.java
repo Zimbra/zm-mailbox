@@ -58,7 +58,8 @@ public class TestLdapProvAttrCallback extends LdapTest {
         return createAccount(localPart, null);
     }
     
-    private Account createAccount(String localPart, Map<String, Object> attrs) throws Exception {
+    private Account createAccount(String localPart, Map<String, Object> attrs) 
+    throws Exception {
         return provUtil.createAccount(localPart, domain, attrs);
     }
     
@@ -96,18 +97,19 @@ public class TestLdapProvAttrCallback extends LdapTest {
         return group;
     }
     
-    private Domain createDomain(String subDomainSegment, Map<String, Object> attrs) throws Exception {
+    private Domain createDomain(String subDomainSegment, Map<String, Object> attrs) 
+    throws Exception {
         return provUtil.createDomain(subDomainSegment + "." + baseDomainName(), attrs);
     }
     
     @Test
     public void accountStatus() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("accountStatus-account");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart("account"));
         Account acct = createAccount(ACCT_NAME_LOCALPART);
         
-        String ALIAS_LOCALPART_1 = Names.makeAliasNameLocalPart("accountStatus-alias-1");
+        String ALIAS_LOCALPART_1 = Names.makeAliasNameLocalPart(genAcctNameLocalPart("alias-1"));
         String ALIAS_NAME_1 = TestUtil.getAddress(ALIAS_LOCALPART_1, domain.getName()).toLowerCase();
-        String ALIAS_LOCALPART_2 = Names.makeAliasNameLocalPart("accountStatus-alias-2");
+        String ALIAS_LOCALPART_2 = Names.makeAliasNameLocalPart(genAcctNameLocalPart("alias-2"));
         String ALIAS_NAME_2 = TestUtil.getAddress(ALIAS_LOCALPART_2, domain.getName()).toLowerCase();
         
         prov.addAlias(acct, ALIAS_NAME_1);
@@ -162,7 +164,7 @@ public class TestLdapProvAttrCallback extends LdapTest {
         
         // 1. specify zimbraIsACLGroup to true -> OK
         attrs.put(Provisioning.A_zimbraIsACLGroup, ProvisioningConstants.TRUE);
-        group = createDynamicGroup("isACLGroupAndMemberURLCreate-1", attrs);
+        group = createDynamicGroup(genGroupNameLocalPart("1"), attrs);
         verifyIsACLGroup(group);
         deleteDynamicGroup(group);
         
@@ -171,7 +173,7 @@ public class TestLdapProvAttrCallback extends LdapTest {
         //    server will still generate a default memberURL in the case
         attrs.clear();
         attrs.put(Provisioning.A_zimbraIsACLGroup, ProvisioningConstants.FALSE);
-        group = createDynamicGroup("isACLGroupAndMemberURLCreate-2", attrs);
+        group = createDynamicGroup(genGroupNameLocalPart("2"), attrs);
         verifyIsNotACLGroup(group, group.getDefaultMemberURL());
         deleteDynamicGroup(group);
         
@@ -180,7 +182,7 @@ public class TestLdapProvAttrCallback extends LdapTest {
         attrs.clear();
         attrs.put(Provisioning.A_zimbraIsACLGroup, ProvisioningConstants.FALSE);
         attrs.put(Provisioning.A_memberURL, SOME_URL);
-        group = createDynamicGroup("isACLGroupAndMemberURLCreate-3", attrs);
+        group = createDynamicGroup(genGroupNameLocalPart("3"), attrs);
         verifyIsNotACLGroup(group, SOME_URL);
         deleteDynamicGroup(group);
         
@@ -190,7 +192,7 @@ public class TestLdapProvAttrCallback extends LdapTest {
         attrs.put(Provisioning.A_zimbraIsACLGroup, ProvisioningConstants.TRUE);
         attrs.put(Provisioning.A_memberURL, SOME_URL);
         try {
-            group = createDynamicGroup("isACLGroupAndMemberURLCreate-4", attrs);
+            group = createDynamicGroup(genGroupNameLocalPart("4"), attrs);
         } catch (ServiceException e) {
             if (ServiceException.INVALID_REQUEST.equals(e.getCode())) {
                 caughtException = true;
@@ -206,7 +208,7 @@ public class TestLdapProvAttrCallback extends LdapTest {
         attrs.clear();
         attrs.put(Provisioning.A_memberURL, SOME_URL);
         try {
-            group = createDynamicGroup("isACLGroupAndMemberURLCreate-5", attrs);
+            group = createDynamicGroup(genGroupNameLocalPart("5"), attrs);
         } catch (ServiceException e) {
             if (ServiceException.INVALID_REQUEST.equals(e.getCode())) {
                 caughtException = true;
@@ -233,7 +235,7 @@ public class TestLdapProvAttrCallback extends LdapTest {
          *      memberURL is the default URL
          */
 
-        group = createDynamicGroup("zimbraIsACLGroupAndMemberURLModify-1");
+        group = createDynamicGroup(genGroupNameLocalPart("1"));
         attrs.clear();
         attrs.put(Provisioning.A_zimbraIsACLGroup, ProvisioningConstants.TRUE);
         prov.modifyAttrs(group, attrs);
@@ -241,7 +243,7 @@ public class TestLdapProvAttrCallback extends LdapTest {
         verifyIsACLGroup(group);
         deleteDynamicGroup(group);
         
-        group = createDynamicGroup("zimbraIsACLGroupAndMemberURLModify-2");
+        group = createDynamicGroup(genGroupNameLocalPart("2"));
         attrs.clear();
         attrs.put(Provisioning.A_zimbraIsACLGroup, ProvisioningConstants.FALSE);
         prov.modifyAttrs(group, attrs);
@@ -249,7 +251,7 @@ public class TestLdapProvAttrCallback extends LdapTest {
         verifyIsNotACLGroup(group, group.getDefaultMemberURL());
         deleteDynamicGroup(group);
         
-        group = createDynamicGroup("zimbraIsACLGroupAndMemberURLModify-3");
+        group = createDynamicGroup(genGroupNameLocalPart("3"));
         attrs.clear();
         attrs.put(Provisioning.A_memberURL, SOME_URL);
         caughtException = false;
@@ -265,7 +267,7 @@ public class TestLdapProvAttrCallback extends LdapTest {
         assertTrue(caughtException);
         deleteDynamicGroup(group);
         
-        group = createDynamicGroup("zimbraIsACLGroupAndMemberURLModify-4");
+        group = createDynamicGroup(genGroupNameLocalPart("4"));
         attrs.clear();
         attrs.put(Provisioning.A_zimbraIsACLGroup, ProvisioningConstants.TRUE);
         attrs.put(Provisioning.A_memberURL, SOME_URL);
@@ -282,7 +284,7 @@ public class TestLdapProvAttrCallback extends LdapTest {
         assertTrue(caughtException);
         deleteDynamicGroup(group);
         
-        group = createDynamicGroup("zimbraIsACLGroupAndMemberURLModify-5");
+        group = createDynamicGroup(genGroupNameLocalPart("5"));
         attrs.clear();
         attrs.put(Provisioning.A_zimbraIsACLGroup, ProvisioningConstants.FALSE);
         attrs.put(Provisioning.A_memberURL, SOME_URL);
@@ -301,7 +303,7 @@ public class TestLdapProvAttrCallback extends LdapTest {
         attrs.clear();
         attrs.put(Provisioning.A_zimbraIsACLGroup, ProvisioningConstants.FALSE);
         attrs.put(Provisioning.A_memberURL, SOME_URL);
-        group = createDynamicGroup("zimbraIsACLGroupAndMemberURLModify-6", attrs);
+        group = createDynamicGroup(genGroupNameLocalPart("6"), attrs);
         attrs.clear();
         attrs.put(Provisioning.A_zimbraIsACLGroup, ProvisioningConstants.TRUE);
         prov.modifyAttrs(group, attrs);
@@ -312,7 +314,7 @@ public class TestLdapProvAttrCallback extends LdapTest {
         attrs.clear();
         attrs.put(Provisioning.A_zimbraIsACLGroup, ProvisioningConstants.FALSE);
         attrs.put(Provisioning.A_memberURL, SOME_URL);
-        group = createDynamicGroup("zimbraIsACLGroupAndMemberURLModify-7", attrs);
+        group = createDynamicGroup(genGroupNameLocalPart("7"), attrs);
         attrs.clear();
         attrs.put(Provisioning.A_zimbraIsACLGroup, ProvisioningConstants.FALSE);
         prov.modifyAttrs(group, attrs);
@@ -323,7 +325,7 @@ public class TestLdapProvAttrCallback extends LdapTest {
         attrs.clear();
         attrs.put(Provisioning.A_zimbraIsACLGroup, ProvisioningConstants.FALSE);
         attrs.put(Provisioning.A_memberURL, SOME_URL);
-        group = createDynamicGroup("zimbraIsACLGroupAndMemberURLModify-8", attrs);
+        group = createDynamicGroup(genGroupNameLocalPart("8"), attrs);
         attrs.clear();
         attrs.put(Provisioning.A_memberURL, SOME_URL_2);
         prov.modifyAttrs(group, attrs);
@@ -333,7 +335,7 @@ public class TestLdapProvAttrCallback extends LdapTest {
         attrs.clear();
         attrs.put(Provisioning.A_zimbraIsACLGroup, ProvisioningConstants.FALSE);
         attrs.put(Provisioning.A_memberURL, SOME_URL);
-        group = createDynamicGroup("zimbraIsACLGroupAndMemberURLModify-9", attrs);
+        group = createDynamicGroup(genGroupNameLocalPart("9"), attrs);
         attrs.clear();
         attrs.put(Provisioning.A_zimbraIsACLGroup, ProvisioningConstants.TRUE);
         attrs.put(Provisioning.A_memberURL, SOME_URL);
@@ -353,7 +355,7 @@ public class TestLdapProvAttrCallback extends LdapTest {
         attrs.clear();
         attrs.put(Provisioning.A_zimbraIsACLGroup, ProvisioningConstants.FALSE);
         attrs.put(Provisioning.A_memberURL, SOME_URL);
-        group = createDynamicGroup("zimbraIsACLGroupAndMemberURLModify-10", attrs);
+        group = createDynamicGroup(genGroupNameLocalPart("10"), attrs);
         attrs.clear();
         attrs.put(Provisioning.A_zimbraIsACLGroup, ProvisioningConstants.FALSE);
         attrs.put(Provisioning.A_memberURL, SOME_URL_2);

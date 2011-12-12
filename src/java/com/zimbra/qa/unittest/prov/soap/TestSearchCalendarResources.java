@@ -40,6 +40,7 @@ import com.zimbra.cs.account.EntrySearchFilter.Operator;
 import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.qa.QA.Bug;
 import com.zimbra.qa.unittest.TestUtil;
+import com.zimbra.qa.unittest.prov.ProvTest.SkippedForInMemLdapServerException.Reason;
 import com.zimbra.soap.account.message.SearchCalendarResourcesRequest;
 import com.zimbra.soap.account.message.SearchCalendarResourcesResponse;
 import com.zimbra.soap.account.type.CalendarResourceInfo;
@@ -251,23 +252,31 @@ public class TestSearchCalendarResources extends SoapTest {
 
     @Test
     public void testGSASerarhByName() throws Exception {
+        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        
         GalTestUtil.enableGalSyncAccount(prov, DOMAIN_GSA);
         searchByName(false, DOMAIN_GSA);
     }
     
     @Test
     public void testGSASerarhByFilter() throws Exception {
+        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        
         GalTestUtil.enableGalSyncAccount(prov, DOMAIN_GSA);
         searchByFilter(false, DOMAIN_GSA);
     }
     
     @Test
     public void testLdapSerarhByName() throws Exception {
+        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        
         searchByName(true, DOMAIN_LDAP);
     }
     
     @Test
     public void testLdapSerarhByFilter() throws Exception {
+        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        
         searchByFilter(true, DOMAIN_LDAP);
     }
     

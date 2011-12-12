@@ -12,50 +12,84 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.qa.unittest;
+package com.zimbra.qa.unittest.prov.ldap;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import static org.junit.Assert.*;
+
+import com.zimbra.common.account.Key;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.SetUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.DistributionList;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.Group;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.AttributeManager;
+import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.accesscontrol.ACLUtil;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.AllowedAttrs;
+import com.zimbra.cs.account.accesscontrol.CheckAttrRight;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
-import com.zimbra.cs.account.accesscontrol.RightManager;
+import com.zimbra.cs.account.accesscontrol.RightCommand;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
+import com.zimbra.cs.account.accesscontrol.RightBearer.Grantee;
+import com.zimbra.cs.account.ldap.LdapProv;
+import com.zimbra.qa.unittest.TestUtil;
+import com.zimbra.qa.unittest.prov.Verify;
+import com.zimbra.qa.unittest.prov.ldap.ACLTestUtil.AllowOrDeny;
+import com.zimbra.qa.unittest.prov.ldap.ACLTestUtil.GetOrSet;
+import com.zimbra.soap.type.TargetBy;
 
-public class TestACLAttrRight extends TestACL {
+public class TestACLAttrRight extends LdapTest {
     
+    private static Right ATTR_RIGHT_GET_ALL;
+    private static Right ATTR_RIGHT_GET_SOME;
     
-    static Right ATTR_RIGHT_GET_ALL;
-    static Right ATTR_RIGHT_GET_SOME;
-    
-    static Right ATTR_RIGHT_SET_ALL;
-    static Right ATTR_RIGHT_SET_SOME;
+    private static Right ATTR_RIGHT_SET_ALL;
+    private static Right ATTR_RIGHT_SET_SOME;
     
     // attrs covered by the ATTR_RIGHT_SOME right
-    static final Map<String, Object> ATTRS_SOME;
-    static final AllowedAttrs EXPECTED_SOME;
-    static final AllowedAttrs EXPECTED_SOME_EMPTY;
-    static final AllowedAttrs EXPECTED_ALL_MINUS_SOME;
+    private static Map<String, Object> ATTRS_SOME;
+    private static AllowedAttrs EXPECTED_SOME;
+    private static AllowedAttrs EXPECTED_SOME_EMPTY;
+    private static AllowedAttrs EXPECTED_ALL_MINUS_SOME;
     
-    static final Map<String, Object> ATTRS_SOME_MORE;
+    private static Map<String, Object> ATTRS_SOME_MORE;
     
-    static {
+    private static final AllowOrDeny ALLOW = AllowOrDeny.ALLOW;
+    private static final AllowOrDeny DENY = AllowOrDeny.DENY;
+    protected static final GetOrSet GET = GetOrSet.GET;
+    protected static final GetOrSet SET = GetOrSet.SET;
+    
+    private static LdapProvTestUtil provUtil;
+    private static LdapProv prov;
+    private static Domain domain;
+    private static String DOMAIN_NAME;
+    private static Account globalAdmin;
+    
+    @BeforeClass
+    public static void init() throws Exception {
+        
+        provUtil = new LdapProvTestUtil();
+        prov = provUtil.getProv();
+        domain = provUtil.createDomain(baseDomainName());
+        DOMAIN_NAME = domain.getName();
+        globalAdmin = provUtil.createGlobalAdmin("globaladmin", domain);
         
         Set<String> EMPTY_SET = new HashSet<String>();
         
@@ -71,17 +105,13 @@ public class TestACLAttrRight extends TestACL {
         ATTRS_SOME_MORE.put(Provisioning.A_zimbraPrefLocale, "en-us");
         
         Set<String> ALL_ACCOUNT_ATTRS = null;
-        try {
-            ALL_ACCOUNT_ATTRS = AttributeManager.getInstance().getAllAttrsInClass(AttributeClass.account);
+        ALL_ACCOUNT_ATTRS = AttributeManager.getInstance().getAllAttrsInClass(AttributeClass.account);
             
-            ATTR_RIGHT_GET_ALL   = TestACL.getRight("getAccount");
-            ATTR_RIGHT_GET_SOME  = TestACL.getRight("test-getAttrs-account-2");
-            ATTR_RIGHT_SET_ALL   = TestACL.getRight("modifyAccount");
-            ATTR_RIGHT_SET_SOME  = TestACL.getRight("test-setAttrs-account-2");
-            
-        } catch (ServiceException e) {
-            System.exit(1);
-        }
+        ATTR_RIGHT_GET_ALL   = ACLTestUtil.getRight("getAccount");
+        ATTR_RIGHT_GET_SOME  = ACLTestUtil.getRight("test-getAttrs-account-2");
+        ATTR_RIGHT_SET_ALL   = ACLTestUtil.getRight("modifyAccount");
+        ATTR_RIGHT_SET_SOME  = ACLTestUtil.getRight("test-setAttrs-account-2");
+
         Set<String> ALL_ACCOUNT_ATTRS_MINUS_SOME = SetUtil.subtract(ALL_ACCOUNT_ATTRS, ATTRS_SOME.keySet());
         
         EXPECTED_SOME = AllowedAttrs.ALLOW_SOME_ATTRS(ATTRS_SOME.keySet());
@@ -89,8 +119,94 @@ public class TestACLAttrRight extends TestACL {
         EXPECTED_ALL_MINUS_SOME = AllowedAttrs.ALLOW_SOME_ATTRS(ALL_ACCOUNT_ATTRS_MINUS_SOME);
     }
     
+    @AfterClass
+    public static void cleanup() throws Exception {
+        Cleanup.deleteAll(baseDomainName());
+    }
     
-    public void oneGrantSome(AllowOrDeny grant, GetOrSet getOrSet, AllowedAttrs expected) throws Exception {
+    private String getAddress(String localPart) {
+        return TestUtil.getAddress(localPart, DOMAIN_NAME);
+    }
+    
+    private String getAddress(String testCaseName, String localPartSuffix) {
+        return getAddress(testCaseName + "-" + localPartSuffix);
+    }
+    
+    private Account createAccount(String acctName) throws Exception {
+        return provUtil.createAccount(acctName);
+    }
+    
+    
+    /*
+     * TODO: following methods (grantRight and verify) copied from legacy 
+     *       com.zimbra.qa.unittest.TestACL.  
+     *       Move to ACLTestUtil if used in other classes as we continue to renovate ACL 
+     *       unit tests.
+     * 
+     * 
+     * utility methods to grant/revoke right
+     * 
+     * To simulate how grants are done in the real server/zmprov, we first call TargetType.lookupTarget to 
+     * "look for" the taret, then use the returned entry instead of giving the target entry passed in 
+     * directly to RightUtil.
+     * 
+     * This is for testing user rights, which goes to RightUtil directly (i.e. not through RightCommand)
+     * 
+     */
+    private List<ZimbraACE> grantRight(TargetType targetType, Entry target, Set<ZimbraACE> aces) throws ServiceException {
+        /*
+         * make sure all rights are user right, tests written earlier could still be using 
+         * this to grant
+         */
+        for (ZimbraACE ace : aces) {
+            assertTrue(ace.getRight().isUserRight());
+        }
+        
+        Entry targetEntry;
+        if (target instanceof Zimlet) {
+            // must be by name
+            String targetName = ((Zimlet)target).getName();
+            targetEntry = TargetType.lookupTarget(prov, targetType, TargetBy.name, targetName);
+        } else {
+            String targetId = (target instanceof NamedEntry)? ((NamedEntry)target).getId() : null;
+            targetEntry = TargetType.lookupTarget(prov, targetType, TargetBy.id, targetId);
+        }
+        return ACLUtil.grantRight(prov, targetEntry, aces);
+    }
+    
+    /*
+     * for testing admin rights
+     */
+    private void grantRight(Account authedAcct,
+                              TargetType targetType, NamedEntry target,
+                              GranteeType granteeType, NamedEntry grantee,
+                              Right right, AllowOrDeny grant) throws ServiceException {
+        
+        RightCommand.grantRight(prov, authedAcct,
+                                targetType.getCode(), TargetBy.name, target==null?null:target.getName(),
+                                granteeType.getCode(), Key.GranteeBy.name, grantee.getName(), null,
+                                right.getName(), grant.toRightModifier());
+    }
+    
+    private void verify(Account grantee, Entry target, GetOrSet getOrSet, AllowedAttrs expected) 
+    throws Exception {
+        // call RightChecker directly instead of mAM, we want to verify the interim result.
+        AllowedAttrs allowedAttrs = getOrSet.isGet() ? 
+                CheckAttrRight.accessibleAttrs(new Grantee(grantee), target, AdminRight.PR_GET_ATTRS, false):
+                CheckAttrRight.accessibleAttrs(new Grantee(grantee), target, AdminRight.PR_SET_ATTRS, false);
+        // System.out.println("========== Test result ==========\n" + allowedAttrs.dump());
+        verifyEquals(expected, allowedAttrs);
+    }
+    
+    void verifyEquals(AllowedAttrs expected, AllowedAttrs actual) throws Exception {
+        assertEquals(expected.getResult(), actual.getResult());
+        if (actual.getResult() == AllowedAttrs.Result.ALLOW_SOME) {
+            Verify.verifyEquals(expected.getAllowed(), actual.getAllowed());
+        }
+    }
+    
+    private void oneGrantSome(AllowOrDeny grant, GetOrSet getOrSet, AllowedAttrs expected) 
+    throws Exception {
         
         String testName = "oneGrantSome-" + grant.name() + "-" + getOrSet.name();
         
@@ -99,33 +215,34 @@ public class TestACLAttrRight extends TestACL {
         /*
          * setup authed account
          */
-        Account authedAcct = getSystemAdminAccount(getEmailAddr(testName, "authed"));
+        Account authedAcct = globalAdmin;
         
         /*
          * grantees
          */
-        Account GA = createAdminAccount(getEmailAddr(testName, "GA"));
+        Account GA = provUtil.createDelegatedAdmin(getAddress(testName, "GA"));
         
         /*
          * grants
          */
         Right someRight;
-        if (getOrSet.isGet())
+        if (getOrSet.isGet()) {
             someRight = ATTR_RIGHT_GET_SOME;
-        else
+        } else {
             someRight = ATTR_RIGHT_SET_SOME;
+        }
         
         /*
          * targets
          */
-        Account TA = mProv.createAccount(getEmailAddr(testName, "TA"), PASSWORD, null);
+        Account TA = createAccount(getAddress(testName, "TA"));
         grantRight(authedAcct, TargetType.account, TA, GranteeType.GT_USER, GA, someRight, grant);
         
         verify(GA, TA, getOrSet, expected);
     }
-
     
-    public void oneGrantAll(AllowOrDeny grant, GetOrSet getOrSet, AllowedAttrs expected) throws Exception {
+    public void oneGrantAll(AllowOrDeny grant, GetOrSet getOrSet, AllowedAttrs expected) 
+    throws Exception {
         String testName = "oneGrantAll-" + grant.name() + "-" + getOrSet.name();
         
         System.out.println("Testing " + testName);
@@ -133,47 +250,51 @@ public class TestACLAttrRight extends TestACL {
         /*
          * setup authed account
          */
-        Account authedAcct = getSystemAdminAccount(getEmailAddr(testName, "authed"));
+        Account authedAcct = globalAdmin;
         
         /*
          * grantees
          */
-        Account GA = createAdminAccount(getEmailAddr(testName, "GA"));
+        Account GA = provUtil.createDelegatedAdmin(getAddress(testName, "GA"));
         
         /*
          * grants
          */
         Right allRight;
-        if (getOrSet.isGet())
+        if (getOrSet.isGet()) {
             allRight = ATTR_RIGHT_GET_ALL;
-        else
+        } else {
             allRight = ATTR_RIGHT_SET_ALL;
+        }
         
         /*
          * targets
          */
-        Account TA = mProv.createAccount(getEmailAddr(testName, "TA"), PASSWORD, null);
+        Account TA = createAccount(getAddress(testName, "TA"));
         grantRight(authedAcct, TargetType.account, TA, GranteeType.GT_USER, GA, allRight, grant);
         
         verify(GA, TA, getOrSet, expected);
     }
 
     
-    private void someAllSameLevel(AllowOrDeny some, AllowOrDeny all, GetOrSet getOrSet, AllowedAttrs expected) throws ServiceException {
+    private void someAllSameLevel(AllowOrDeny some, AllowOrDeny all, 
+            GetOrSet getOrSet, AllowedAttrs expected) 
+    throws Exception {
         
-        String testName = "someAllSameLevel-" + some.name() + "-some-" + all.name() + "-all-" + getOrSet.name();
+        String testName = "someAllSameLevel-" + some.name() + "-some-" + 
+                all.name() + "-all-" + getOrSet.name();
        
         System.out.println("Testing " + testName);
         
         /*
          * setup authed account
          */
-        Account authedAcct = getSystemAdminAccount(getEmailAddr(testName, "authed"));
+        Account authedAcct = globalAdmin;
         
         /*
          * grantees
          */
-        Account GA = createAdminAccount(getEmailAddr(testName, "GA"));
+        Account GA = provUtil.createDelegatedAdmin(getAddress(testName, "GA"));
         
         /*
          * grants
@@ -191,14 +312,12 @@ public class TestACLAttrRight extends TestACL {
         /*
          * targets
          */
-        Account TA = mProv.createAccount(getEmailAddr(testName, "TA"), PASSWORD, null);
+        Account TA = createAccount(getAddress(testName, "TA"));
         grantRight(authedAcct, TargetType.account, TA, GranteeType.GT_USER, GA, someRight, some);
         grantRight(authedAcct, TargetType.account, TA, GranteeType.GT_USER, GA, allRight, all);
         
         verify(GA, TA, getOrSet, expected);
     }
-    
-
     
     /*
      * 2 grants
@@ -206,25 +325,26 @@ public class TestACLAttrRight extends TestACL {
      * => should allow some
      */
     public void someAllDiffLevel(AllowOrDeny some, AllowOrDeny all, 
-                                 boolean someIsCloser, // whether some or all is the closer grant
-                                 GetOrSet getOrSet,
-                                 AllowedAttrs expected) throws Exception {
+            boolean someIsCloser, // whether some or all is the closer grant
+            GetOrSet getOrSet, AllowedAttrs expected) 
+    throws Exception {
 
-        String testName = "someAllDiffLevel-" + some.name() + "-some-" + all.name() + "-all-" + (someIsCloser?"someIsCloser":"allIsCloser") + "-" + getOrSet.name();
+        String testName = "someAllDiffLevel-" + some.name() + "-some-" + 
+            all.name() + "-all-" + (someIsCloser?"someIsCloser":"allIsCloser") + "-" + getOrSet.name();
         
         System.out.println("Testing " + testName);
         
         /*
          * setup authed account
          */
-        Account authedAcct = getSystemAdminAccount(getEmailAddr(testName, "authed"));
+        Account authedAcct = globalAdmin;
         
         /*
          * grantees
          */
-        Account GA = createAdminAccount(getEmailAddr(testName, "GA"));
-        DistributionList GG = createAdminGroup(getEmailAddr(testName, "GG"));
-        mProv.addMembers(GG, new String[] {GA.getName()});
+        Account GA = provUtil.createDelegatedAdmin(getAddress(testName, "GA"));
+        Group GG = provUtil.createAdminGroup(getAddress(testName, "GG"));
+        prov.addGroupMembers(GG, new String[] {GA.getName()});
         
         /*
          * grants
@@ -242,7 +362,7 @@ public class TestACLAttrRight extends TestACL {
         /*
          * targets
          */
-        Account TA = mProv.createAccount(getEmailAddr(testName, "TA"), PASSWORD, null);
+        Account TA = createAccount(getAddress(testName, "TA"));
         
         if (someIsCloser) {
             grantRight(authedAcct, TargetType.account, TA, GranteeType.GT_USER, GA, someRight, some);
@@ -256,7 +376,7 @@ public class TestACLAttrRight extends TestACL {
         verify(GA, TA, getOrSet, expected);
     }
 
-    
+    @Test
     public void testOneGrantSome() throws Exception {
         oneGrantSome(ALLOW, SET, EXPECTED_SOME);
         oneGrantSome(DENY,  SET, EXPECTED_SOME_EMPTY);
@@ -264,6 +384,7 @@ public class TestACLAttrRight extends TestACL {
         oneGrantSome(DENY,  GET, EXPECTED_SOME_EMPTY);
     }
     
+    @Test
     public void testOneGrantAll() throws Exception {
         oneGrantAll(ALLOW, SET, AllowedAttrs.ALLOW_ALL_ATTRS());
         oneGrantAll(DENY,  SET, AllowedAttrs.DENY_ALL_ATTRS());
@@ -271,6 +392,7 @@ public class TestACLAttrRight extends TestACL {
         oneGrantAll(DENY,  GET, AllowedAttrs.DENY_ALL_ATTRS());
     }
     
+    @Test
     public void testTwoGrantsSameLevel() throws Exception {
         someAllSameLevel(ALLOW, ALLOW, SET, AllowedAttrs.ALLOW_ALL_ATTRS());
         someAllSameLevel(DENY,  ALLOW, SET, EXPECTED_ALL_MINUS_SOME);
@@ -283,6 +405,7 @@ public class TestACLAttrRight extends TestACL {
         someAllSameLevel(DENY,  DENY,  GET, AllowedAttrs.DENY_ALL_ATTRS());
     }
 
+    @Test
     public void testTwoGrantsDiffLevel() throws Exception {
         //               some   all    some-is-closer
         someAllDiffLevel(ALLOW, ALLOW, true, SET, AllowedAttrs.ALLOW_ALL_ATTRS());
@@ -304,15 +427,6 @@ public class TestACLAttrRight extends TestACL {
         someAllDiffLevel(DENY,  ALLOW, false, GET, AllowedAttrs.ALLOW_ALL_ATTRS());
         someAllDiffLevel(ALLOW, DENY,  false, GET, AllowedAttrs.DENY_ALL_ATTRS());
         someAllDiffLevel(DENY,  DENY,  false, GET, AllowedAttrs.DENY_ALL_ATTRS());
-    }
-    
-    // TODO: add test for adding/substracting attrs between two allow/deny SOME rights 
-    
-    public static void main(String[] args) throws Exception {
-        CliUtil.toolSetup("INFO");
-        // TestACL.logToConsole("DEBUG");
-        
-        TestUtil.runTest(TestACLAttrRight.class);
     }
     
 }

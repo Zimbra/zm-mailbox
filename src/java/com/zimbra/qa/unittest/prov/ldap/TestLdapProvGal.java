@@ -32,6 +32,8 @@ import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.qa.unittest.prov.Names;
+import com.zimbra.qa.unittest.prov.ProvTest;
+import com.zimbra.qa.unittest.prov.ProvTest.SkippedForInMemLdapServerException.Reason;
 import com.zimbra.soap.type.GalSearchType;
 
 public class TestLdapProvGal extends LdapTest {
@@ -65,7 +67,7 @@ public class TestLdapProvGal extends LdapTest {
     
     @Test
     public void checkGalConfig() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("checkGalConfig");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
         Account acct = createAccount(ACCT_NAME_LOCALPART);
         
         Map<String, Object> attrs = new HashMap<String, Object>();
@@ -86,14 +88,14 @@ public class TestLdapProvGal extends LdapTest {
     
     @Test
     public void searchGal() throws Exception {
-        SKIP_IF_IN_MEM_LDAP_SERVER("entryDN:dnSubtreeMatch filter is not supported by InMemoryDirectoryServer");
+        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
         
         int NUM_ACCTS = 10;
         int SIZE_LIMIT = 5;
         
         Account user = null;
         for (int i = 0; i < NUM_ACCTS; i++) {
-            String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("searchGal" + i);
+            String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart(String.valueOf(i)));
             Account acct = createAccount(ACCT_NAME_LOCALPART);
             
             // use the first one as the user
@@ -121,13 +123,13 @@ public class TestLdapProvGal extends LdapTest {
         
         result = prov.searchGal(domain, query, type, 0, null);
         assertEquals(NUM_ACCTS, result.getMatches().size());
-        assertTrue(!result.getHadMore());
+        assertFalse(result.getHadMore());
     }
 
     @Test
     @Ignore
     public void searchGalADGroupMember() throws Exception {
-        String DOMAIN_NAME = "searchGalADGroupMember." + baseDomainName();
+        String DOMAIN_NAME = genDomainSegmentName() + "." + baseDomainName();
         
         Map<String, Object> domainAttrs = new HashMap<String, Object>();
         domainAttrs.put(Provisioning.A_zimbraGalMode, ZAttrProvisioning.GalMode.ldap.name());

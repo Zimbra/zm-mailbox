@@ -24,7 +24,6 @@ import static org.junit.Assert.*;
 
 import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.CosBy;
 import com.zimbra.cs.account.Account;
@@ -35,6 +34,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
+import com.zimbra.qa.QA.Bug;
 import com.zimbra.qa.unittest.prov.Names;
 
 public class TestLdapProvCos extends LdapTest {
@@ -76,14 +76,14 @@ public class TestLdapProvCos extends LdapTest {
     
     @Test
     public void createCos() throws Exception {
-        String COS_NAME = Names.makeCosName("createCos");
+        String COS_NAME = Names.makeCosName(genCosName());
         Cos cos = createCos(COS_NAME);
         deleteCos(cos);
     }
     
     @Test
     public void createCosAlreadyExists() throws Exception {
-        String COS_NAME = Names.makeCosName("createCosAlreadyExists");
+        String COS_NAME = Names.makeCosName(genCosName());
         Cos cos = createCos(COS_NAME);
                 
         boolean caughtException = false;
@@ -107,7 +107,7 @@ public class TestLdapProvCos extends LdapTest {
     
     @Test
     public void getCos() throws Exception {
-        String COS_NAME = Names.makeCosName("getCos");
+        String COS_NAME = Names.makeCosName(genCosName());
         Cos cos = createCos(COS_NAME);
         String cosId = cos.getId();
         
@@ -124,7 +124,7 @@ public class TestLdapProvCos extends LdapTest {
     
     @Test
     public void getCosNotExist() throws Exception {
-        String COS_NAME = Names.makeCosName("getCosNotExist");
+        String COS_NAME = Names.makeCosName(genCosName());
         prov.flushCache(CacheEntryType.cos, null);
         Cos cos = prov.get(Key.CosBy.name, COS_NAME);
         assertNull(cos);
@@ -132,7 +132,7 @@ public class TestLdapProvCos extends LdapTest {
     
     @Test
     public void copyCos() throws Exception {
-        String COS_NAME = Names.makeCosName("copyCos");
+        String COS_NAME = Names.makeCosName(genCosName());
         Cos defaultCos = prov.get(Key.CosBy.name, Provisioning.DEFAULT_COS_NAME);
         Cos copiedCos = prov.copyCos(defaultCos.getId(), COS_NAME);
         
@@ -213,8 +213,8 @@ public class TestLdapProvCos extends LdapTest {
     
     @Test
     public void renameCos() throws Exception {
-        String OLD_COS_NAME = Names.makeCosName("renameCos-old");
-        String NEW_COS_NAME = Names.makeCosName("renameCos-NEW");
+        String OLD_COS_NAME = Names.makeCosName(genCosName("old"));
+        String NEW_COS_NAME = Names.makeCosName(genCosName("new"));
         
         Cos cos = createCos(OLD_COS_NAME);
         String cosId = cos.getId();
@@ -228,7 +228,7 @@ public class TestLdapProvCos extends LdapTest {
     
     @Test
     public void renameCosToExisting() throws Exception {
-        String OLD_COS_NAME = Names.makeCosName("renameCosToExisting-old");
+        String OLD_COS_NAME = Names.makeCosName(genCosName("old"));
         String NEW_COS_NAME = Provisioning.DEFAULT_COS_NAME;
         
         Cos cos = createCos(OLD_COS_NAME);
@@ -251,9 +251,9 @@ public class TestLdapProvCos extends LdapTest {
     public void domainCos() throws Exception {
         String ATTR_NAME = Provisioning.A_zimbraMailQuota;
         
-        final String COS1_NAME = "cos1-domainCos";
-        final String COS2_NAME = "cos2-domainCos";
-        final String DOMAIN_DEFAULT_COS_NAME = "domain-default-cos-domainCos";
+        final String COS1_NAME = genCosName("1");
+        final String COS2_NAME = genCosName("2");
+        final String DOMAIN_DEFAULT_COS_NAME = genCosName("domain-default-cos");
         
         final String COS1_VALUE = "10000";
         final String COS2_VALUE = "20000";
@@ -277,7 +277,7 @@ public class TestLdapProvCos extends LdapTest {
         
         modifyAttr(domain, Provisioning.A_zimbraDomainDefaultCOSId, domainDefaultCos.getId());
 
-        Account acct = provUtil.createAccount("domainCos", domain);
+        Account acct = provUtil.createAccount(genAcctNameLocalPart(), domain);
         final String ACCT_NAME = acct.getName();
         
         // account should inherit the domain default cos value
@@ -318,9 +318,9 @@ public class TestLdapProvCos extends LdapTest {
     public void acctCos() throws Exception {
         String ATTR_NAME = Provisioning.A_zimbraMailQuota;
         
-        final String COS1_NAME = "cos1-acctCos";
-        final String COS2_NAME = "cos2-acctCos";
-        final String DOMAIN_DEFAULT_COS_NAME = "domian-default-cos-acctCos";
+        final String COS1_NAME = genCosName("1");
+        final String COS2_NAME = genCosName("2");
+        final String DOMAIN_DEFAULT_COS_NAME = genCosName("domian-default-cos");
         
         final String COS1_VALUE = "10000";
         final String COS2_VALUE = "20000";
@@ -341,7 +341,7 @@ public class TestLdapProvCos extends LdapTest {
         
         modifyAttr(domain, Provisioning.A_zimbraDomainDefaultCOSId, domainDefaultCos.getId());
         
-        Account acct = provUtil.createAccount("acctCos", domain);
+        Account acct = provUtil.createAccount(genAcctNameLocalPart(), domain);
         final String ACCT_NAME = acct.getName();
         
         // set cos on account
@@ -370,6 +370,7 @@ public class TestLdapProvCos extends LdapTest {
     }
 
     @Test
+    @Bug(bug=67716)
     public void bug67716() throws Exception {
         // case does match the case declared in zimbra-attrs.xml
         String ATTR_REAL_ANME = Provisioning.A_zimbraMailQuota;
@@ -377,7 +378,7 @@ public class TestLdapProvCos extends LdapTest {
         String ATTR_VALUE = "12345";
         Map<String, Object> attrs = Maps.newHashMap();
         attrs.put(ATTR_LOWERCASE_NAME, ATTR_VALUE);
-        Cos cos = createCos("bug67716", attrs);
+        Cos cos = createCos(genCosName(), attrs);
         assertEquals(ATTR_VALUE, cos.getAttr(ATTR_REAL_ANME));
         assertEquals(ATTR_VALUE, cos.getAttr(ATTR_LOWERCASE_NAME));
     }

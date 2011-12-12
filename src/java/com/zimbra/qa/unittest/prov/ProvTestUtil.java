@@ -99,7 +99,11 @@ public abstract class ProvTestUtil {
     }
     
     public Account createAccount(String acctName, String password) throws Exception {
-        return createAccount(acctName, password, null);
+        return createAccount(acctName, password, (Map) null);
+    }
+    
+    public Account createAccount(String acctName) throws Exception {
+        return createAccount(acctName, (String) null, (Map) null);
     }
     
     public Account createAccount(String acctName, Map<String, Object> attrs) throws Exception {
@@ -130,15 +134,34 @@ public abstract class ProvTestUtil {
         return createAccount(acctName, password, attrs);
     }
     
+    public Account createGlobalAdmin(String localPart, Domain domain, String password) 
+    throws Exception {
+        String acctName = TestUtil.getAddress(localPart, domain.getName());
+        return createGlobalAdmin(acctName, password);
+    }
+    
+    public Account createGlobalAdmin(String localPart, Domain domain) throws Exception {
+        String acctName = TestUtil.getAddress(localPart, domain.getName());
+        return createGlobalAdmin(acctName, (String) null);
+    }
+    
     public Account createDelegatedAdmin(String acctName, String password) throws Exception {
         Map<String, Object> attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraIsDelegatedAdminAccount, ProvisioningConstants.TRUE);
         return createAccount(acctName, password, attrs);
     }
     
+    public Account createDelegatedAdmin(String acctName) throws Exception {
+        return createDelegatedAdmin(acctName, (String) null);
+    }
+    
     public Account createDelegatedAdmin(String localPart, Domain domain, String password) throws Exception {
         String acctName = TestUtil.getAddress(localPart, domain.getName());
         return createDelegatedAdmin(acctName, password);
+    }
+    
+    public Account createDelegatedAdmin(String localPart, Domain domain) throws Exception {
+        return createDelegatedAdmin(localPart, domain, (String) null);
     }
     
     public CalendarResource createCalendarResource(String localPart, Domain domain, 
@@ -206,6 +229,30 @@ public abstract class ProvTestUtil {
     public Group createGroup(String localPart, Domain domain, boolean dynamic) 
     throws Exception {
         return createGroup(localPart, domain, null, dynamic);
+    }
+    
+    public Group createAdminGroup(String groupName, boolean dynamic) 
+    throws Exception {
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, ProvisioningConstants.TRUE);
+        return createGroup(groupName, attrs, dynamic);
+    }
+    
+    public Group createAdminGroup(String groupName) 
+    throws Exception {
+        return createAdminGroup(groupName, false);
+    }
+    
+    public Group createAdminGroup(String localPart, Domain domain, boolean dynamic) 
+    throws Exception {
+        String groupName = TestUtil.getAddress(localPart, domain.getName());
+        return createAdminGroup(groupName, dynamic);
+    }
+    
+    public Group createAdminGroup(String localPart, Domain domain) 
+    throws Exception {
+        String groupName = TestUtil.getAddress(localPart, domain.getName());
+        return createAdminGroup(groupName);
     }
     
     public void deleteGroup(Group group) 

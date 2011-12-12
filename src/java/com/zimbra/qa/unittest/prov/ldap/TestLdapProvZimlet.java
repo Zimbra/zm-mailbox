@@ -63,7 +63,7 @@ public class TestLdapProvZimlet extends LdapTest {
     
     @Test
     public void createZimlet() throws Exception {
-        String ZIMLET_NAME = Names.makeZimletName("createZimlet");
+        String ZIMLET_NAME = Names.makeZimletName(genZimletName());
         Zimlet zimlet = createZimlet(ZIMLET_NAME);
         
         deleteZimlet(zimlet);
@@ -71,7 +71,7 @@ public class TestLdapProvZimlet extends LdapTest {
     
     @Test
     public void createZimletAlreadyExists() throws Exception {
-        String ZIMLET_NAME = Names.makeZimletName("createZimletAlreadyExists");
+        String ZIMLET_NAME = Names.makeZimletName(genZimletName());
         Zimlet zimlet = createZimlet(ZIMLET_NAME);
         
         boolean caughtException = false;
@@ -97,7 +97,7 @@ public class TestLdapProvZimlet extends LdapTest {
     
     @Test
     public void getZimlet() throws Exception {
-        String ZIMLET_NAME = Names.makeZimletName("getZimlet");
+        String ZIMLET_NAME = Names.makeZimletName(genZimletName());
         Zimlet zimlet = createZimlet(ZIMLET_NAME);
         
         prov.flushCache(CacheEntryType.zimlet, null);
@@ -109,7 +109,7 @@ public class TestLdapProvZimlet extends LdapTest {
     
     @Test
     public void getZimletNotExist() throws Exception {
-        String ZIMLET_NAME = Names.makeZimletName("getZimletNotExist");
+        String ZIMLET_NAME = Names.makeZimletName(genZimletName());
         Zimlet zimlet = prov.getZimlet(ZIMLET_NAME);
         assertNull(zimlet);
     }

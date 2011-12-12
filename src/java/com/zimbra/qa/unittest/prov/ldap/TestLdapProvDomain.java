@@ -79,71 +79,15 @@ public class TestLdapProvDomain extends LdapTest {
         return createDomain(domainName, null);
     }
     
-    private Domain createDomain(String domainName, Map<String, Object> attrs) throws Exception {
+    private Domain createDomain(String domainName, Map<String, Object> attrs) 
+    throws Exception {
         return provUtil.createDomain(domainName, attrs);
     }
     
     private void deleteDomain(Domain domain) throws Exception {
         provUtil.deleteDomain(domain);
     }
-
-    @Test
-    public void createTopDomain() throws Exception {
-        String DOMAIN_NAME = makeTestDomainName(null);
-        Domain domain = createDomain(DOMAIN_NAME);
-        
-        deleteDomain(domain);
-    }
     
-    @Test
-    public void createSubDomain() throws Exception {
-        String DOMAIN_NAME = makeTestDomainName("createSubDomain.sub1.sub2");
-        Domain domain = createDomain(DOMAIN_NAME);
-        
-        deleteDomain(domain);
-    }
-    
-    @Test
-    public void createDomainAlreadyExists() throws Exception {
-        String DOMAIN_NAME = makeTestDomainName("createDomainAlreadyExists");
-        Domain domain = createDomain(DOMAIN_NAME);
-        
-        boolean caughtException = false;
-        try {
-            prov.createDomain(DOMAIN_NAME, new HashMap<String, Object>());
-        } catch (AccountServiceException e) {
-            if (AccountServiceException.DOMAIN_EXISTS.equals(e.getCode())) {
-                caughtException = true;
-            }
-        }
-        assertTrue(caughtException);
-        
-        deleteDomain(domain);
-    }
-    
-    
-    @Test
-    public void deleteNonEmptyDomain() throws Exception {
-        String DOMAIN_NAME = makeTestDomainName("deleteNonEmptyDomain");
-        Domain domain = createDomain(DOMAIN_NAME);
-        
-        String ACCT_NAME = TestUtil.getAddress("acct", DOMAIN_NAME);
-        Account acct = prov.createAccount(ACCT_NAME, "test123", null);
-        
-        boolean caughtException = false;
-        try {
-            prov.deleteDomain(domain.getId());
-        } catch (ServiceException e) {
-            if (AccountServiceException.DOMAIN_NOT_EMPTY.equals(e.getCode())) {
-                caughtException = true;
-            }
-        }
-        assertTrue(caughtException);
-        
-        // now should able to delete domain
-        prov.deleteAccount(acct.getId());
-        deleteDomain(domain);
-    }
     
     private void verifyAllDomains(List<Domain> allDomains) throws Exception {
         // domains created by r-t-w
@@ -197,59 +141,6 @@ public class TestLdapProvDomain extends LdapTest {
         }
     }
     
-    @Test
-    public void getAllDomain() throws Exception {
-        List<Domain> allDomains = prov.getAllDomains();
-        verifyAllDomains(allDomains);
-    }
-    
-    @Test
-    public void getAllDomainVisitor() throws Exception {
-        final List<Domain> allDomains = new ArrayList<Domain>();
-        
-        NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
-            @Override
-            public void visit(NamedEntry entry) throws ServiceException {
-                allDomains.add((Domain) entry);
-            }
-        };
-        
-        prov.getAllDomains(visitor, new String[]{Provisioning.A_zimbraId});
-        
-        verifyAllDomains(allDomains);
-    }
-    
-    @Test
-    public void testAliasDomain() throws Exception {
-        String TARGET_DOMAIN_NAME = makeTestDomainName("testAliasDomain-target");
-        String ALIAS_DOMAIN_NAME = makeTestDomainName("testAliasDomain-alias");
-        String USER_LOCAL_PART = "user";
-        
-        Domain targetDomain = prov.get(Key.DomainBy.name, TARGET_DOMAIN_NAME);
-        assertNull(targetDomain);
-        Domain aliasDomain = prov.get(Key.DomainBy.name, ALIAS_DOMAIN_NAME);
-        assertNull(aliasDomain);
-        
-        targetDomain = createDomain(TARGET_DOMAIN_NAME);
-        
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraDomainType, ZAttrProvisioning.DomainType.alias.name());
-        attrs.put(Provisioning.A_zimbraDomainAliasTargetId, targetDomain.getId());
-        aliasDomain = createDomain(ALIAS_DOMAIN_NAME, attrs);
-        
-        String realEmail = prov.getEmailAddrByDomainAlias(TestUtil.getAddress(USER_LOCAL_PART, ALIAS_DOMAIN_NAME));
-        assertEquals(IDNUtil.toAscii(TestUtil.getAddress(USER_LOCAL_PART, TARGET_DOMAIN_NAME)), 
-                realEmail);
-        
-        deleteDomain(aliasDomain);
-        deleteDomain(targetDomain);
-    }
-    
-    @Test
-    public void getEmailAddrByDomainAlias() throws Exception {
-        // tested in testAliasDomain
-    }
-    
     private void getDomainById(String id) throws Exception {
         prov.flushCache(CacheEntryType.domain, null);
         Domain domain = prov.get(Key.DomainBy.id, id);
@@ -282,8 +173,118 @@ public class TestLdapProvDomain extends LdapTest {
     }
 
     @Test
+    public void createTopDomain() throws Exception {
+        String DOMAIN_NAME = makeTestDomainName(null);
+        Domain domain = createDomain(DOMAIN_NAME);
+        
+        deleteDomain(domain);
+    }
+    
+    @Test
+    public void createSubDomain() throws Exception {
+        String DOMAIN_NAME = makeTestDomainName(genDomainSegmentName() + ".sub1.sub2");
+        Domain domain = createDomain(DOMAIN_NAME);
+        
+        deleteDomain(domain);
+    }
+    
+    @Test
+    public void createDomainAlreadyExists() throws Exception {
+        String DOMAIN_NAME = makeTestDomainName(genDomainSegmentName());
+        Domain domain = createDomain(DOMAIN_NAME);
+        
+        boolean caughtException = false;
+        try {
+            prov.createDomain(DOMAIN_NAME, new HashMap<String, Object>());
+        } catch (AccountServiceException e) {
+            if (AccountServiceException.DOMAIN_EXISTS.equals(e.getCode())) {
+                caughtException = true;
+            }
+        }
+        assertTrue(caughtException);
+        
+        deleteDomain(domain);
+    }
+    
+    @Test
+    public void deleteNonEmptyDomain() throws Exception {
+        String DOMAIN_NAME = makeTestDomainName(genDomainSegmentName());
+        Domain domain = createDomain(DOMAIN_NAME);
+        
+        String ACCT_NAME = TestUtil.getAddress("acct", DOMAIN_NAME);
+        Account acct = prov.createAccount(ACCT_NAME, "test123", null);
+        
+        boolean caughtException = false;
+        try {
+            prov.deleteDomain(domain.getId());
+        } catch (ServiceException e) {
+            if (AccountServiceException.DOMAIN_NOT_EMPTY.equals(e.getCode())) {
+                caughtException = true;
+            }
+        }
+        assertTrue(caughtException);
+        
+        // now should able to delete domain
+        prov.deleteAccount(acct.getId());
+        deleteDomain(domain);
+    }
+    
+    @Test
+    public void getAllDomain() throws Exception {
+        List<Domain> allDomains = prov.getAllDomains();
+        verifyAllDomains(allDomains);
+    }
+    
+    @Test
+    public void getAllDomainVisitor() throws Exception {
+        final List<Domain> allDomains = new ArrayList<Domain>();
+        
+        NamedEntry.Visitor visitor = new NamedEntry.Visitor() {
+            @Override
+            public void visit(NamedEntry entry) throws ServiceException {
+                allDomains.add((Domain) entry);
+            }
+        };
+        
+        prov.getAllDomains(visitor, new String[]{Provisioning.A_zimbraId});
+        
+        verifyAllDomains(allDomains);
+    }
+    
+    @Test
+    public void testAliasDomain() throws Exception {
+        String TARGET_DOMAIN_NAME = makeTestDomainName(genDomainSegmentName("target"));
+        String ALIAS_DOMAIN_NAME = makeTestDomainName(genDomainSegmentName("alias"));
+        String USER_LOCAL_PART = "user";
+        
+        Domain targetDomain = prov.get(Key.DomainBy.name, TARGET_DOMAIN_NAME);
+        assertNull(targetDomain);
+        Domain aliasDomain = prov.get(Key.DomainBy.name, ALIAS_DOMAIN_NAME);
+        assertNull(aliasDomain);
+        
+        targetDomain = createDomain(TARGET_DOMAIN_NAME);
+        
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraDomainType, ZAttrProvisioning.DomainType.alias.name());
+        attrs.put(Provisioning.A_zimbraDomainAliasTargetId, targetDomain.getId());
+        aliasDomain = createDomain(ALIAS_DOMAIN_NAME, attrs);
+        
+        String realEmail = prov.getEmailAddrByDomainAlias(TestUtil.getAddress(USER_LOCAL_PART, ALIAS_DOMAIN_NAME));
+        assertEquals(IDNUtil.toAscii(TestUtil.getAddress(USER_LOCAL_PART, TARGET_DOMAIN_NAME)), 
+                realEmail);
+        
+        deleteDomain(aliasDomain);
+        deleteDomain(targetDomain);
+    }
+    
+    @Test
+    public void getEmailAddrByDomainAlias() throws Exception {
+        // tested in testAliasDomain
+    }
+
+    @Test
     public void getDomain() throws Exception {
-        String DOMAIN_NAME = makeTestDomainName("getDomain");
+        String DOMAIN_NAME = makeTestDomainName(genDomainSegmentName());
         
         String VIRTUAL_HOSTNAME = "virtual.com";
         String KRB5_REALM = "KRB5.REALM";
@@ -309,7 +310,7 @@ public class TestLdapProvDomain extends LdapTest {
     
     @Test
     public void getDomainNotExist() throws Exception {
-        String DOMAIN_NAME = makeTestDomainName("getDomainNotExist");
+        String DOMAIN_NAME = makeTestDomainName(genDomainSegmentName());
         Domain domain = prov.get(Key.DomainBy.name, DOMAIN_NAME);
         assertNull(domain);
     }

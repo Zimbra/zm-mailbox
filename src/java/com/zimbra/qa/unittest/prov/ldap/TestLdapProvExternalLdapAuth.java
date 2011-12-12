@@ -21,6 +21,8 @@ import com.zimbra.cs.ldap.LdapConnType;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 import com.zimbra.qa.unittest.prov.Names;
+import com.zimbra.qa.unittest.prov.ProvTest;
+import com.zimbra.qa.unittest.prov.ProvTest.SkippedForInMemLdapServerException.Reason;
 
 public class TestLdapProvExternalLdapAuth extends LdapTest {
 
@@ -78,7 +80,7 @@ public class TestLdapProvExternalLdapAuth extends LdapTest {
     
     @Test
     public void checkAuthConfigBySearch() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("checkAuthConfigBySearch");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
         Account acct = createAccount(ACCT_NAME_LOCALPART);
         String ACCT_DN = getAccountDN(acct);
         String PASSWORD = "test123";
@@ -129,7 +131,7 @@ public class TestLdapProvExternalLdapAuth extends LdapTest {
     public void checkAuthConfigByBindDNTemplate() throws Exception {
         // TODO: doesn't work with special chars, even in the legacy implementation.
         // String ACCT_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("checkAuthConfigByBindDNTemplate");
-        String ACCT_NAME_LOCALPART = "checkAuthConfigByBindDNTemplate";
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
         Account acct = createAccount(ACCT_NAME_LOCALPART);
         String ACCT_DN = getAccountDN(acct);
         String PASSWORD = "test123";
@@ -154,7 +156,7 @@ public class TestLdapProvExternalLdapAuth extends LdapTest {
 
     @Test
     public void checkAuthConfigFailures() throws Exception {
-        String ACCT_NAME_LOCALPART = "checkAuthConfigFailures";
+        String ACCT_NAME_LOCALPART = genAcctNameLocalPart();
         Account acct = createAccount(ACCT_NAME_LOCALPART);
         String ACCT_DN = getAccountDN(acct);
         String PASSWORD = "test123";
@@ -164,7 +166,7 @@ public class TestLdapProvExternalLdapAuth extends LdapTest {
         Map<String, Object> attrs = Maps.newHashMap();
         
         try {
-            SKIP_IF_IN_MEM_LDAP_SERVER("external auth STATUS_UNKNOWN_HOST status is not supported by InMemoryDirectoryServer");
+            SKIP_FOR_INMEM_LDAP_SERVER(Reason.EXTERNAL_AUTH_STATUS_UNKNOWN_HOST);
             
             attrs.put(Provisioning.A_zimbraAuthMech, AuthMech.ldap.name());
             attrs.put(Provisioning.A_zimbraAuthLdapURL, "ldap://" + "bogus" + ":389");
@@ -173,11 +175,11 @@ public class TestLdapProvExternalLdapAuth extends LdapTest {
             attrs.put(Provisioning.A_zimbraAuthLdapSearchFilter, "(zimbraMailDeliveryAddress=%n)");
             result = prov.checkAuthConfig(attrs, acct.getName(), PASSWORD);
             assertEquals(Check.STATUS_UNKNOWN_HOST, result.getCode());
-        } catch (SkippedForInMemLdapServer e) {
+        } catch (ProvTest.SkippedForInMemLdapServerException e) {
         }
         
         try {
-            SKIP_IF_IN_MEM_LDAP_SERVER("external auth STATUS_CONNECTION_REFUSED status is not supported by InMemoryDirectoryServer");
+            SKIP_FOR_INMEM_LDAP_SERVER(Reason.EXTERNAL_AUTH_STATUS_CONNECTION_REFUSED);
             
             attrs.clear();
             attrs.put(Provisioning.A_zimbraAuthMech, AuthMech.ldap.name());
@@ -187,11 +189,11 @@ public class TestLdapProvExternalLdapAuth extends LdapTest {
             attrs.put(Provisioning.A_zimbraAuthLdapSearchFilter, "(zimbraMailDeliveryAddress=%n)");
             result = prov.checkAuthConfig(attrs, acct.getName(), PASSWORD);
             assertEquals(Check.STATUS_CONNECTION_REFUSED, result.getCode());
-        } catch (SkippedForInMemLdapServer e) {
+        } catch (ProvTest.SkippedForInMemLdapServerException e) {
         }
         
         try {
-            SKIP_IF_IN_MEM_LDAP_SERVER("external auth STATUS_COMMUNICATION_FAILURE status is not supported by InMemoryDirectoryServer");
+            SKIP_FOR_INMEM_LDAP_SERVER(Reason.EXTERNAL_AUTH_STATUS_COMMUNICATION_FAILURE);
             
             attrs.clear();
             attrs.put(Provisioning.A_zimbraAuthMech, AuthMech.ldap.name());
@@ -203,11 +205,11 @@ public class TestLdapProvExternalLdapAuth extends LdapTest {
             result = prov.checkAuthConfig(attrs, acct.getName(), PASSWORD);
             // assertEquals(Check.STATUS_SSL_HANDSHAKE_FAILURE, result.getCode());  // if TLS is enabled in sladp.conf
             assertEquals(Check.STATUS_COMMUNICATION_FAILURE, result.getCode());     // if TLS is not enabled in sladp.conf
-        } catch (SkippedForInMemLdapServer e) {
+        } catch (ProvTest.SkippedForInMemLdapServerException e) {
         }
         
         try {
-            SKIP_IF_IN_MEM_LDAP_SERVER("external auth STATUS_AUTH_FAILED status is not supported by InMemoryDirectoryServer");
+            SKIP_FOR_INMEM_LDAP_SERVER(Reason.EXTERNAL_AUTH_STATUS_AUTH_FAILED);
             attrs.clear();
             attrs.put(Provisioning.A_zimbraAuthMech, AuthMech.ldap.name());
             attrs.put(Provisioning.A_zimbraAuthLdapURL, getLdapURL());
@@ -216,7 +218,7 @@ public class TestLdapProvExternalLdapAuth extends LdapTest {
             attrs.put(Provisioning.A_zimbraAuthLdapSearchFilter, "(zimbraMailDeliveryAddress=%n)");
             result = prov.checkAuthConfig(attrs, acct.getName(), PASSWORD);
             assertEquals(Check.STATUS_AUTH_FAILED, result.getCode());
-        } catch (SkippedForInMemLdapServer e) {
+        } catch (ProvTest.SkippedForInMemLdapServerException e) {
         }
         
         attrs.clear();
@@ -258,7 +260,7 @@ public class TestLdapProvExternalLdapAuth extends LdapTest {
         LdapProv ldapProv = (LdapProv) prov;
         
         String DOMAIN_NAME = Names.makeDomainName(
-                "externalLdapAuthByDNOnAccount.".toLowerCase() + baseDomainName());
+                genDomainSegmentName() + "." + baseDomainName());
         
         String authMech = AuthMech.ldap.name();
         Map<String, Object> domainAttrs = new HashMap<String, Object>();
@@ -268,7 +270,7 @@ public class TestLdapProvExternalLdapAuth extends LdapTest {
         
         Domain domain = provUtil.createDomain(DOMAIN_NAME, domainAttrs);
         
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("externalLdapAuthByDNOnAccount");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
         Account acct = provUtil.createAccount(ACCT_NAME_LOCALPART, domain);
         
         String ACCT_DN = getAccountDN(acct);
@@ -287,7 +289,7 @@ public class TestLdapProvExternalLdapAuth extends LdapTest {
         LdapProv ldapProv = (LdapProv) prov;
         
         String DOMAIN_NAME = Names.makeDomainName(
-                "externalLdapAuthBySearch.".toLowerCase() + baseDomainName());
+                genDomainSegmentName() + "." + baseDomainName());
         
         String authMech = AuthMech.ldap.name();
         Map<String, Object> domainAttrs = new HashMap<String, Object>();
@@ -300,7 +302,7 @@ public class TestLdapProvExternalLdapAuth extends LdapTest {
 
         Domain domain = provUtil.createDomain(DOMAIN_NAME, domainAttrs);
         
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("externalLdapAuthByDNOnAccount");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
         Account acct = provUtil.createAccount(ACCT_NAME_LOCALPART, domain);
         
         prov.authAccount(acct, "test123", AuthContext.Protocol.test);
@@ -313,7 +315,7 @@ public class TestLdapProvExternalLdapAuth extends LdapTest {
         LdapProv ldapProv = (LdapProv) prov;
         
         String DOMAIN_NAME = Names.makeDomainName(
-                "externalLdapAuthByBindDNtemplate.".toLowerCase() + baseDomainName());
+                genDomainSegmentName() + "."  + baseDomainName());
         
         String authMech = AuthMech.ldap.name();
         Map<String, Object> domainAttrs = new HashMap<String, Object>();
@@ -329,7 +331,7 @@ public class TestLdapProvExternalLdapAuth extends LdapTest {
         // TODO: doesn't work with special chars, even in the legacy implementation.
         // String ACCT_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("checkAuthConfigByBindDNTemplate");
         // String ACCT_NAME_LOCALPART = TestLdap.makeAccountNameLocalPart("externalLdapAuthByDNOnAccount");
-        String ACCT_NAME_LOCALPART = "externalLdapAuthByDNOnAccount";
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
         Account acct = provUtil.createAccount(ACCT_NAME_LOCALPART, domain);
         
         prov.authAccount(acct, "test123", AuthContext.Protocol.test);
@@ -339,7 +341,7 @@ public class TestLdapProvExternalLdapAuth extends LdapTest {
     
     @Test
     public void zimbraAuthNonSSHA() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("zimbraAuthNonSSHA");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
         Account acct = createAccount(ACCT_NAME_LOCALPART);
         
         String PASSWORD = InMemoryLdapServer.Password.genNonSSHAPassword("not-ssha-blah");

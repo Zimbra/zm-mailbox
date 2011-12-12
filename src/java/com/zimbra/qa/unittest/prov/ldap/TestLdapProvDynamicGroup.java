@@ -56,7 +56,7 @@ public class TestLdapProvDynamicGroup extends LdapTest {
     
     @Test
     public void createDynamicGroup() throws Exception {
-        String DG_NAME_LOCALPART = Names.makeDLNameLocalPart("createDynamicGroup");
+        String DG_NAME_LOCALPART = Names.makeDLNameLocalPart(genGroupNameLocalPart());
         
         DynamicGroup dg = createDynamicGroup(DG_NAME_LOCALPART);
         

@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.AfterClass;
-import org.junit.Assert;
+import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -40,6 +40,7 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.gal.ZimbraGalSearchBase.PredefinedSearchBase;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.qa.unittest.prov.BinaryLdapData;
+import com.zimbra.qa.unittest.prov.ProvTest.SkippedForInMemLdapServerException.Reason;
 
 public class TestSearchGal extends SoapTest {
     private static final boolean DO_CREATE_DOMAINS = true;
@@ -140,14 +141,14 @@ public class TestSearchGal extends SoapTest {
   
         if (ldap) {
             // pagination is not supported
-            Assert.assertFalse(paginationSupported);
+            assertFalse(paginationSupported);
         } else {
             // pagination is supported
-            Assert.assertTrue(paginationSupported);
+            assertTrue(paginationSupported);
         }
         
         // should find all objects, plus the authed user
-        Assert.assertEquals(expectedNumEntries, result.size());
+        assertEquals(expectedNumEntries, result.size());
     }
     
     private void searchWithOffsetLimit(boolean ldap, String domainName) throws Exception {
@@ -173,18 +174,18 @@ public class TestSearchGal extends SoapTest {
   
         if (ldap) {
             // pagination is not supported
-            Assert.assertFalse(paginationSupported);
+            assertFalse(paginationSupported);
             
             // limit is ignored, ldap search is limited by zimbraGalMaxResults
             // should find all objects, plus the authed user
-            Assert.assertEquals(NUM_ALL_OBJECTS + 1, result.size());
+            assertEquals(NUM_ALL_OBJECTS + 1, result.size());
         } else {
             // pagination is supported
-            Assert.assertTrue(paginationSupported);
+            assertTrue(paginationSupported);
             
-            Assert.assertEquals(limit, result.size());
+            assertEquals(limit, result.size());
             for (int i = 0; i < limit; i++) {
-                Assert.assertEquals(getAcctEmail(offset + i, domainName), result.get(i).getSingleAttr(ContactConstants.A_email));
+                assertEquals(getAcctEmail(offset + i, domainName), result.get(i).getSingleAttr(ContactConstants.A_email));
             }
         }
         
@@ -203,7 +204,7 @@ public class TestSearchGal extends SoapTest {
             result.add(new GalContact(AdminConstants.A_ID, SoapProvisioning.getAttrs(e)));
         }
   
-        Assert.assertEquals(NUM_ACCOUNTS, result.size());
+        assertEquals(NUM_ACCOUNTS, result.size());
     }
     
     private void searchByFilter(boolean ldap, String domainName) throws Exception {
@@ -235,8 +236,8 @@ public class TestSearchGal extends SoapTest {
             result.add(new GalContact(AdminConstants.A_ID, SoapProvisioning.getAttrs(e)));
         }
   
-        Assert.assertEquals(1, result.size());
-        Assert.assertEquals(getAcctEmail(acctToMatch, domainName), result.get(0).getSingleAttr(ContactConstants.A_email));
+        assertEquals(1, result.size());
+        assertEquals(getAcctEmail(acctToMatch, domainName), result.get(0).getSingleAttr(ContactConstants.A_email));
     }
 
     private void binaryDataInEntry(boolean ldap, String domainName, boolean wantSMIMECert) throws Exception {
@@ -255,19 +256,19 @@ public class TestSearchGal extends SoapTest {
             result.add(new GalContact(AdminConstants.A_ID, SoapProvisioning.getAttrs(e)));
         }
   
-        Assert.assertEquals(1, result.size());
+        assertEquals(1, result.size());
         GalContact galContact = result.get(0);
         Map<String, Object> fields = galContact.getAttrs();
         Object value = fields.get(BINARY_GALCONTACT_FIELD);
         
         if (!wantSMIMECert) {
-            Assert.assertNull(value);
+            assertNull(value);
             return;
         }
         
-        Assert.assertTrue(value instanceof String[]);
+        assertTrue(value instanceof String[]);
         String[] values = (String[])value;
-        Assert.assertEquals(2, values.length);
+        assertEquals(2, values.length);
         
         boolean foundContent1 = false;
         boolean foundContent2 = false;
@@ -281,8 +282,8 @@ public class TestSearchGal extends SoapTest {
             }
         }
         
-        Assert.assertTrue(foundContent1);
-        Assert.assertTrue(foundContent2);
+        assertTrue(foundContent1);
+        assertTrue(foundContent2);
     }
     
     private static String getAcctEmail(int index, String domainName) {
@@ -369,6 +370,8 @@ public class TestSearchGal extends SoapTest {
     
     @Test
     public void GSASerarhWithDot() throws Exception {
+        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        
         GalTestUtil.enableGalSyncAccount(prov, DOMAIN_GSA);
         // expect all accounts, dls, dynamic groups in the domain, plus the authed user
         searchWithDot(false, DOMAIN_GSA, NUM_ALL_OBJECTS + 1);
@@ -376,6 +379,8 @@ public class TestSearchGal extends SoapTest {
     
     @Test
     public void GSASerarhWithDotSubDomain() throws Exception {
+        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        
         GalTestUtil.enableGalSyncAccount(prov, SUB1_DOMAIN_GSA);
         // expect all objects in SUB1_DOMAIN_GSA *and* SUB2_DOMAIN_GSA
         searchWithDot(false, SUB1_DOMAIN_GSA, (NUM_ALL_OBJECTS + 1)*2);
@@ -383,24 +388,32 @@ public class TestSearchGal extends SoapTest {
     
     @Test
     public void GSASerarhWithOffsetlimit() throws Exception {
+        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        
         GalTestUtil.enableGalSyncAccount(prov, DOMAIN_GSA);
         searchWithOffsetLimit(false, DOMAIN_GSA);
     }
     
     @Test
     public void GSASerarhByName() throws Exception {
+        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        
         GalTestUtil.enableGalSyncAccount(prov, DOMAIN_GSA);
         searchByName(false, DOMAIN_GSA);
     }
     
     @Test
     public void GSASerarhByFilter() throws Exception {
+        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        
         GalTestUtil.enableGalSyncAccount(prov, DOMAIN_GSA);
         searchByFilter(false, DOMAIN_GSA);
     }
     
     @Test
     public void GSASerarhEntryWithBinaryData() throws Exception {
+        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        
         GalTestUtil.enableGalSyncAccount(prov, DOMAIN_GSA);
         binaryDataInEntry(false, DOMAIN_GSA, true);
         binaryDataInEntry(false, DOMAIN_GSA, false);
@@ -408,32 +421,44 @@ public class TestSearchGal extends SoapTest {
 
     @Test
     public void fallbackToLDAPSerarhWithDot() throws Exception {
+        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        
         searchWithDot(true, DOMAIN_LDAP, NUM_ALL_OBJECTS + 1);
     }
     
     @Test
     public void fallbackToLDAPSerarhWithDotSubDomain() throws Exception {
+        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        
         // expect all objects in SUB1_DOMAIN_LDAP *and* SUB2_DOMAIN_LDAP
         searchWithDot(true, SUB1_DOMAIN_LDAP, (NUM_ALL_OBJECTS + 1)*2);
     }
     
     @Test
     public void fallbackToLDAPSerarhWithOffsetlimit() throws Exception {
+        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        
         searchWithOffsetLimit(true, DOMAIN_LDAP);
     }
     
     @Test
     public void fallbackToLDAPSerarhByName() throws Exception {
+        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        
         searchByName(true, DOMAIN_LDAP);
     }
     
     @Test
     public void fallbackToLDAPSerarhByFilter() throws Exception {
+        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        
         searchByFilter(true, DOMAIN_LDAP);
     }
     
     @Test
     public void fallbackToLDAPSerarhEntryWithBinaryData() throws Exception {
+        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        
         binaryDataInEntry(true, DOMAIN_LDAP, true);
         binaryDataInEntry(true, DOMAIN_LDAP, false);
     }

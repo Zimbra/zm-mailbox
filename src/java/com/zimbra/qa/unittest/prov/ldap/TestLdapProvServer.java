@@ -54,14 +54,14 @@ public class TestLdapProvServer extends LdapTest {
     
     @Test
     public void createServer() throws Exception {
-        String SERVER_NAME = Names.makeServerName("createServer");
+        String SERVER_NAME = Names.makeServerName(genServerName());
         Server server = createServer(SERVER_NAME);
         deleteServer(server);
     }
     
     @Test
     public void createServerAlreadyExists() throws Exception {
-        String SERVER_NAME = Names.makeServerName("createServerAlreadyExists");
+        String SERVER_NAME = Names.makeServerName(genServerName());
         Server server = createServer(SERVER_NAME);
         
         boolean caughtException = false;
@@ -85,14 +85,14 @@ public class TestLdapProvServer extends LdapTest {
     
     @Test
     public void getAllServers() throws Exception {
-        String SERVER_NAME_1 = Names.makeServerName("getAllServers-1");
+        String SERVER_NAME_1 = Names.makeServerName(genServerName("1"));
         
         Map<String, Object> server1Attrs = new HashMap<String, Object>();
         server1Attrs.put(Provisioning.A_zimbraServiceEnabled, 
                 new String[]{Provisioning.SERVICE_MEMCACHED, Provisioning.SERVICE_MAILBOX});
         Server server1 = createServer(SERVER_NAME_1, server1Attrs);
         
-        String SERVER_NAME_2 = Names.makeServerName("getAllServers-2");
+        String SERVER_NAME_2 = Names.makeServerName(genServerName("2"));
         Server server2 = createServer(SERVER_NAME_2);
         
         List<Server> allServers = prov.getAllServers();
@@ -116,7 +116,7 @@ public class TestLdapProvServer extends LdapTest {
     
     @Test
     public void getServer() throws Exception {
-        String SERVER_NAME = Names.makeServerName("getServer");
+        String SERVER_NAME = Names.makeServerName(genServerName());
         Server server = createServer(SERVER_NAME);
         String serverId = server.getId();
         
@@ -133,7 +133,7 @@ public class TestLdapProvServer extends LdapTest {
 
     @Test
     public void getServerNotExist() throws Exception {
-        String SERVER_NAME = Names.makeServerName("getServer");
+        String SERVER_NAME = Names.makeServerName(genServerName());
         Server server = prov.get(Key.ServerBy.name, SERVER_NAME);
         assertNull(server);
     }

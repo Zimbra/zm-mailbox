@@ -102,8 +102,8 @@ public class TestLdapProvIdentity extends LdapTest {
     
     @Test
     public void createIdentity() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("createIdentity");
-        String IDENTITY_NAME = Names.makeIdentityName("createIdentity");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
+        String IDENTITY_NAME = Names.makeIdentityName(genIdentityName());
         
         Account acct = createAccount(ACCT_NAME_LOCALPART);
         Identity identity = createIdentity(acct, IDENTITY_NAME);
@@ -116,8 +116,8 @@ public class TestLdapProvIdentity extends LdapTest {
     
     @Test
     public void createIdentityAlreadyExists() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("createIdentityAlreadyExists");
-        String IDENTITY_NAME = Names.makeIdentityName("createIdentityAlreadyExists");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
+        String IDENTITY_NAME = Names.makeIdentityName(genIdentityName());
         
         Account acct = createAccount(ACCT_NAME_LOCALPART);
         Identity identity = createIdentity(acct, IDENTITY_NAME);
@@ -138,8 +138,8 @@ public class TestLdapProvIdentity extends LdapTest {
     
     @Test
     public void modifyIdentity() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("modifyIdentity");
-        String IDENTITYE_NAME = Names.makeIdentityName("modifyIdentity");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
+        String IDENTITYE_NAME = Names.makeIdentityName(genIdentityName());
         
         Account acct = createAccount(ACCT_NAME_LOCALPART);
         Identity identity = createIdentity(acct, IDENTITYE_NAME);
@@ -160,8 +160,8 @@ public class TestLdapProvIdentity extends LdapTest {
     
     @Test
     public void renameIdentity() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("renameIdentity");
-        String IDENTITYE_NAME = Names.makeIdentityName("renameIdentity");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
+        String IDENTITYE_NAME = Names.makeIdentityName(genIdentityName());
         
         Account acct = createAccount(ACCT_NAME_LOCALPART);
         Identity identity = createIdentity(acct, IDENTITYE_NAME);
@@ -169,7 +169,7 @@ public class TestLdapProvIdentity extends LdapTest {
         Map<String, Object> attrs = new HashMap<String, Object>();
         // modifying zimbraPrefIdentityName will rename the identity and trigger a LDAP moddn
         String MODIFIED_ATTR_NAME = Provisioning.A_zimbraPrefIdentityName;
-        String NEW_IDENTITY_NAME = "renameIdentity-new";  
+        String NEW_IDENTITY_NAME = genIdentityName("new");  
         String MODIFIED_ATTR_VALUE = NEW_IDENTITY_NAME;
         attrs.put(MODIFIED_ATTR_NAME, MODIFIED_ATTR_VALUE);
         prov.modifyIdentity(acct, identity.getName(), attrs);
@@ -184,10 +184,10 @@ public class TestLdapProvIdentity extends LdapTest {
     
     @Test
     public void getAllIdentitys() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("getAllIdentitys");
-        String IDENTITYE_NAME_1 = Names.makeIdentityName("getAllIdentitys-1");
-        String IDENTITYE_NAME_2 = Names.makeIdentityName("getAllIdentitys-2");
-        String IDENTITYE_NAME_3 = Names.makeIdentityName("getAllIdentitys-3");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
+        String IDENTITYE_NAME_1 = Names.makeIdentityName(genIdentityName("1"));
+        String IDENTITYE_NAME_2 = Names.makeIdentityName(genIdentityName("2"));
+        String IDENTITYE_NAME_3 = Names.makeIdentityName(genIdentityName("3"));
         
         Account acct = createAccount(ACCT_NAME_LOCALPART);
         Identity identity1 = createIdentity(acct, IDENTITYE_NAME_1);
@@ -215,8 +215,8 @@ public class TestLdapProvIdentity extends LdapTest {
     
     @Test
     public void getIdentity() throws Exception {
-        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart("getIdentity");
-        String IDENTITYE_NAME = Names.makeIdentityName("getIdentity");
+        String ACCT_NAME_LOCALPART = Names.makeAccountNameLocalPart(genAcctNameLocalPart());
+        String IDENTITYE_NAME = Names.makeIdentityName(genIdentityName());
         
         Account acct = createAccount(ACCT_NAME_LOCALPART);
         Identity identity = createIdentity(acct, IDENTITYE_NAME);

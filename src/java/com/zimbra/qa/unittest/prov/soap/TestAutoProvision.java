@@ -108,6 +108,13 @@ public class TestAutoProvision extends SoapTest {
                 acct, expectedAcctName);
     }
     
+    private String getAuthTokenAcctId(String authToken) throws Exception {
+        Map attrs = AuthToken.getInfo(authToken);
+        String zimbraId = (String) attrs.get("id");  // hardcode id here, C_ID in ZimbraAuthToken is private
+        assertNotNull(zimbraId);
+        return zimbraId;
+    }
+    
     
     /* ========================
      * SOAP and servlets tests
@@ -149,8 +156,7 @@ public class TestAutoProvision extends SoapTest {
         
         String encodedAuthToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
         assertNotNull(encodedAuthToken);
-        AuthToken authToken = AuthToken.getAuthToken(encodedAuthToken);
-        String acctId = authToken.getAccountId();
+        String acctId = getAuthTokenAcctId(encodedAuthToken);
         Account acct = prov.get(AccountBy.id, acctId);
         verifyAcctAutoProvisioned(acct, loginName.toLowerCase());
     }
@@ -213,8 +219,7 @@ public class TestAutoProvision extends SoapTest {
         
         String encodedAuthToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
         assertNotNull(encodedAuthToken);
-        AuthToken authToken = AuthToken.getAuthToken(encodedAuthToken);
-        String acctId = authToken.getAccountId();
+        String acctId = getAuthTokenAcctId(encodedAuthToken);
         Account acct = prov.get(AccountBy.id, acctId);
         verifyAcctAutoProvisioned(acct, loginName.toLowerCase());
     }
@@ -258,8 +263,7 @@ public class TestAutoProvision extends SoapTest {
         
         String encodedAuthToken = response.getElement(AccountConstants.E_AUTH_TOKEN).getText();
         assertNotNull(encodedAuthToken);
-        AuthToken authToken = AuthToken.getAuthToken(encodedAuthToken);
-        String acctId = authToken.getAccountId();
+        String acctId = getAuthTokenAcctId(encodedAuthToken);
         Account acct = prov.get(AccountBy.id, acctId);
         verifyAcctAutoProvisioned(acct, loginName.toLowerCase());
     }
