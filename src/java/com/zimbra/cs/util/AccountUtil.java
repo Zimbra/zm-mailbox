@@ -337,7 +337,7 @@ public class AccountUtil {
                 }
             }
             if (!match && matchSendAs) {
-                match = AccessManager.getInstance().canSendAs(account, address, false);
+                match = AccessManager.getInstance().canSendAs(account, account, address, false);
             }
             if (match) {
                 addresses.add(address.toLowerCase());  // Cache for later matches() calls.

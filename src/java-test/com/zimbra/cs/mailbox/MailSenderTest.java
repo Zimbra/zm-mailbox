@@ -49,35 +49,35 @@ public final class MailSenderTest {
         MailSender mailSender = new MailSender();
         Pair<InternetAddress, InternetAddress> pair;
 
-        pair = mailSender.getSenderHeaders(null, null, account, false);
+        pair = mailSender.getSenderHeaders(null, null, account, account, false);
         Assert.assertEquals("test@zimbra.com", pair.getFirst().toString());
         Assert.assertNull(pair.getSecond());
 
-        pair = mailSender.getSenderHeaders(new InternetAddress("test@zimbra.com"), null, account, false);
+        pair = mailSender.getSenderHeaders(new InternetAddress("test@zimbra.com"), null, account, account, false);
         Assert.assertEquals("test@zimbra.com", pair.getFirst().toString());
         Assert.assertNull(pair.getSecond());
 
-        pair = mailSender.getSenderHeaders(null, new InternetAddress("test@zimbra.com"), account, false);
+        pair = mailSender.getSenderHeaders(null, new InternetAddress("test@zimbra.com"), account, account, false);
         Assert.assertEquals("test@zimbra.com", pair.getFirst().toString());
         Assert.assertNull(pair.getSecond());
 
-        pair = mailSender.getSenderHeaders(new InternetAddress("test@zimbra.com"), new InternetAddress("test@zimbra.com"), account, false);
+        pair = mailSender.getSenderHeaders(new InternetAddress("test@zimbra.com"), new InternetAddress("test@zimbra.com"), account, account, false);
         Assert.assertEquals("test@zimbra.com", pair.getFirst().toString());
         Assert.assertNull(pair.getSecond());
 
-        pair = mailSender.getSenderHeaders(new InternetAddress("foo@zimbra.com"), null, account, false);
+        pair = mailSender.getSenderHeaders(new InternetAddress("foo@zimbra.com"), null, account, account, false);
         Assert.assertEquals("test@zimbra.com", pair.getFirst().toString());
         Assert.assertNull(pair.getSecond());
 
-        pair = mailSender.getSenderHeaders(new InternetAddress("foo@zimbra.com"), new InternetAddress("bar@zimbra.com"), account, false);
+        pair = mailSender.getSenderHeaders(new InternetAddress("foo@zimbra.com"), new InternetAddress("bar@zimbra.com"), account, account, false);
         Assert.assertEquals("test@zimbra.com", pair.getFirst().toString());
         Assert.assertNull(pair.getSecond());
 
-        pair = mailSender.getSenderHeaders(new InternetAddress("foo@zimbra.com"), new InternetAddress("test@zimbra.com"), account, false);
+        pair = mailSender.getSenderHeaders(new InternetAddress("foo@zimbra.com"), new InternetAddress("test@zimbra.com"), account, account, false);
         Assert.assertEquals("test@zimbra.com", pair.getFirst().toString());
         Assert.assertNull(pair.getSecond());
 
-        pair = mailSender.getSenderHeaders(new InternetAddress("test@zimbra.com"), new InternetAddress("foo@zimbra.com"), account, false);
+        pair = mailSender.getSenderHeaders(new InternetAddress("test@zimbra.com"), new InternetAddress("foo@zimbra.com"), account, account, false);
         Assert.assertEquals("test@zimbra.com", pair.getFirst().toString());
         Assert.assertNull(pair.getSecond());
     }
@@ -90,12 +90,12 @@ public final class MailSenderTest {
         Pair<InternetAddress, InternetAddress> pair;
 
         // Calendar mode allows send-obo without grants.
-        pair = calSender.getSenderHeaders(new InternetAddress("foo@zimbra.com"), new InternetAddress("test@zimbra.com"), account, false);
+        pair = calSender.getSenderHeaders(new InternetAddress("foo@zimbra.com"), new InternetAddress("test@zimbra.com"), account, account, false);
         Assert.assertEquals("foo@zimbra.com", pair.getFirst().toString());
         Assert.assertEquals("test@zimbra.com", pair.getSecond().toString());
 
         // Even in calendar mode, Sender must be the user's own address.
-        pair = calSender.getSenderHeaders(new InternetAddress("foo@zimbra.com"), new InternetAddress("bar@zimbra.com"), account, false);
+        pair = calSender.getSenderHeaders(new InternetAddress("foo@zimbra.com"), new InternetAddress("bar@zimbra.com"), account, account, false);
         Assert.assertEquals("foo@zimbra.com", pair.getFirst().toString());
         Assert.assertEquals("test@zimbra.com", pair.getSecond().toString());
     }

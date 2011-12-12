@@ -765,7 +765,7 @@ public class MailSender {
         if (mRedirectMode) {
             // Don't touch the message at all in redirect mode.
         } else {
-            Pair<InternetAddress, InternetAddress> fromsender = getSenderHeaders(from, sender, authuser,
+            Pair<InternetAddress, InternetAddress> fromsender = getSenderHeaders(from, sender, acct, authuser,
                     octxt != null ? octxt.isUsingAdminPrivileges() : false);
             from = fromsender.getFirst();
             sender = fromsender.getSecond();
@@ -801,7 +801,7 @@ public class MailSender {
      * @return a {@link Pair} containing the approved {@code from} and {@code
      *         sender} header addresses, in that order. */
     public Pair<InternetAddress, InternetAddress> getSenderHeaders(InternetAddress from, InternetAddress sender,
-            Account authuser, boolean asAdmin) throws ServiceException {
+            Account acct, Account authuser, boolean asAdmin) throws ServiceException {
         if (authuser.isAllowAnyFromAddress()) {
             return new Pair<InternetAddress, InternetAddress>(from, sender);
         }
@@ -818,7 +818,7 @@ public class MailSender {
         AccessManager amgr = AccessManager.getInstance();
         if (sender == null &&  // send-as requested
             (AccountUtil.addressMatchesAccount(authuser, from.getAddress()) ||  // either it's my address
-             amgr.canSendAs(authuser, from.getAddress(), asAdmin))) {           // or I've been granted permission
+             amgr.canSendAs(authuser, acct, from.getAddress(), asAdmin))) {           // or I've been granted permission
             return new Pair<InternetAddress, InternetAddress>(from, null);
         }
         if (sender != null) {
@@ -835,7 +835,7 @@ public class MailSender {
         if (mCalendarMode) {
             // In calendar mode any user may send on behalf of any other user.
             return new Pair<InternetAddress, InternetAddress>(from, sender);
-        } else if (amgr.canSendOnBehalfOf(authuser, from.getAddress(), asAdmin)) {
+        } else if (amgr.canSendOnBehalfOf(authuser, acct, from.getAddress(), asAdmin)) {
             // Allow based on rights granted.
             return new Pair<InternetAddress, InternetAddress>(from, sender);
         } else if (AccountUtil.isAllowedDataSourceSendAddress(authuser, from.getAddress())) {

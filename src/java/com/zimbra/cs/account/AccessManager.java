@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.account;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -379,15 +380,17 @@ public abstract class AccessManager {
         throw ServiceException.FAILURE("not supported", null);
     }
 
-    public boolean canSendAs(Account grantee, String targetAddress, boolean asAdmin) throws ServiceException {
-        return canSendInternal(grantee, targetAddress, User.R_sendAs, asAdmin);
+    public boolean canSendAs(Account grantee, Account targetAccount, String targetAddress, boolean asAdmin)
+            throws ServiceException {
+        return canSendInternal(grantee, targetAccount, targetAddress, User.R_sendAs, asAdmin);
     }
 
-    public boolean canSendOnBehalfOf(Account grantee, String targetAddress, boolean asAdmin) throws ServiceException {
-        return canSendInternal(grantee, targetAddress, User.R_sendOnBehalfOf, asAdmin);
+    public boolean canSendOnBehalfOf(Account grantee, Account targetAccount, String targetAddress, boolean asAdmin)
+            throws ServiceException {
+        return canSendInternal(grantee, targetAccount, targetAddress, User.R_sendOnBehalfOf, asAdmin);
     }
 
-    private boolean canSendInternal(Account grantee, String targetAddress, Right sendRight, boolean asAdmin)
+    private boolean canSendInternal(Account grantee, Account targetAccount, String targetAddress, Right sendRight, boolean asAdmin)
             throws ServiceException {
         boolean allowed = false;
         Right dlSendRight;
@@ -398,26 +401,33 @@ public abstract class AccessManager {
         } else {
             throw ServiceException.FAILURE("invalid send right " + sendRight, null);
         }
-        // Don't lookup account if email domain is not internal.  This will avoid unnecessary ldap searches
-        // that will have returned no match anyway.
+        NamedEntry target = null;
         if (AccountUtil.addressHasInternalDomain(targetAddress)) {
+            // If targetAddress has an internal domain, it could be another account or a distribution list.
             Provisioning prov = Provisioning.getInstance();
             if (prov.isDistributionList(targetAddress)) {
-                Group group = prov.getGroupBasic(DistributionListBy.name, targetAddress);
-                if (group != null) {
-                    allowed = canDo(grantee, group, dlSendRight, asAdmin);
-                    if (allowed) {
-                        allowed = AccountUtil.isAllowedSendAddress(group, targetAddress);
-                    }
-                }
+                target = prov.getGroupBasic(DistributionListBy.name, targetAddress);
+                sendRight = dlSendRight;
             } else {
-                Account addrAccount = prov.get(AccountBy.name, targetAddress);
-                if (addrAccount != null) {
-                    allowed = canDo(grantee, addrAccount, sendRight, asAdmin);
-                    if (allowed) {
-                        allowed = AccountUtil.isAllowedSendAddress(addrAccount, targetAddress);
-                    }
-                }
+                target = prov.get(AccountBy.name, targetAddress);
+            }
+        } else if (targetAccount != null) {
+            // If targetAddress has an external domain, it must be a zimbraAllowFromAddress of the target account.
+            Set<String> addrs = new HashSet<String>();
+            String[] allowedFromAddrs = targetAccount.getMultiAttr(Provisioning.A_zimbraAllowFromAddress);
+            for (String addr : allowedFromAddrs) {
+                addrs.add(addr.toLowerCase());
+            }
+            if (addrs.contains(targetAddress.toLowerCase())) {
+                target = targetAccount;
+            }
+        }
+        if (target != null) {
+            allowed = canDo(grantee, target, sendRight, asAdmin);
+            if (allowed && !asAdmin) {
+                // Admins can send as any address of the target.  Non-admins can only use the addresses designated
+                // by the target user/DL.
+                allowed = AccountUtil.isAllowedSendAddress(target, targetAddress);
             }
         }
         return allowed;

@@ -128,7 +128,7 @@ public final class BounceMsg extends MailDocumentHandler {
         InternetAddress rfrom = ArrayUtil.getFirstElement(maddrs.get(EmailType.FROM.toString()));
         InternetAddress rsender = ArrayUtil.getFirstElement(maddrs.get(EmailType.SENDER.toString()));
         Pair<InternetAddress, InternetAddress> fromsender = msender.getSenderHeaders(rfrom, rsender,
-                getAuthenticatedAccount(zsc), octxt != null ? octxt.isUsingAdminPrivileges() : false);
+                acct, getAuthenticatedAccount(zsc), octxt != null ? octxt.isUsingAdminPrivileges() : false);
         InternetAddress from = fromsender.getFirst();
         InternetAddress sender = fromsender.getSecond();
         assert(from != null);
