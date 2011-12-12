@@ -122,7 +122,7 @@ public final class NioImapDecoderTest {
         try {
             decoder.decode(session, IN, session.getDecoderOutput());
             Assert.fail();
-        } catch (InvalidLiteralFormatException expected) {
+        } catch (TooBigLiteralException expected) {
         }
         Assert.assertEquals(0, session.getDecoderOutputQueue().size());
 
@@ -130,7 +130,7 @@ public final class NioImapDecoderTest {
         try {
             decoder.decode(session, IN, session.getDecoderOutput());
             Assert.fail();
-        } catch (InvalidLiteralFormatException expected) {
+        } catch (TooBigLiteralException expected) {
         }
         Assert.assertEquals(0, session.getDecoderOutputQueue().size());
     }
