@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111208-1231 */
+    /* build: 8.0.0_BETA1_1111 pshao 20111212-1421 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -6235,7 +6235,7 @@ public class ZAttrProvisioning {
      * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
      * unit is not specified, the default is s(seconds).
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.1.4
      */
     @ZAttr(id=1340)
     public static final String A_zimbraMessageIdDedupeCacheTimeout = "zimbraMessageIdDedupeCacheTimeout";
@@ -9714,7 +9714,7 @@ public class ZAttrProvisioning {
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.1.4
      */
     @ZAttr(id=1337)
     public static final String A_zimbraReverseProxyUpstreamPollingTimeout = "zimbraReverseProxyUpstreamPollingTimeout";
@@ -9727,7 +9727,7 @@ public class ZAttrProvisioning {
      * milliseconds. If time unit is not specified, the default is
      * s(seconds).
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.1.4
      */
     @ZAttr(id=1335)
     public static final String A_zimbraReverseProxyUpstreamReadTimeout = "zimbraReverseProxyUpstreamReadTimeout";
@@ -9740,7 +9740,7 @@ public class ZAttrProvisioning {
      * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
      * specified, the default is s(seconds).
      *
-     * @since ZCS 8.0.0
+     * @since ZCS 7.1.4
      */
     @ZAttr(id=1336)
     public static final String A_zimbraReverseProxyUpstreamSendTimeout = "zimbraReverseProxyUpstreamSendTimeout";
@@ -10605,6 +10605,22 @@ public class ZAttrProvisioning {
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
 
     /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
+
+    /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
      */
     @ZAttr(id=146)
@@ -10780,6 +10796,17 @@ public class ZAttrProvisioning {
     public static final String A_zimbraWebClientLoginURL = "zimbraWebClientLoginURL";
 
     /**
+     * regex for allowed client IP addresses for honoring
+     * zimbraWebClientLoginURL. If not set, all IP addresses are allowed. If
+     * multiple values are set, an IP address is allowed as long as it
+     * matches any one of the values.
+     *
+     * @since ZCS 7.1.5
+     */
+    @ZAttr(id=1352)
+    public static final String A_zimbraWebClientLoginURLAllowedIP = "zimbraWebClientLoginURLAllowedIP";
+
+    /**
      * regex to be matched for allowed user agents for honoring
      * zimbraWebClientLoginURL. If not set, all UAs are allowed. If multiple
      * values are set, an UA is allowed as long as it matches any one of the
@@ -10798,6 +10825,17 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=507)
     public static final String A_zimbraWebClientLogoutURL = "zimbraWebClientLogoutURL";
+
+    /**
+     * regex for allowed client IP addresses for honoring
+     * zimbraWebClientLogoutURL. If not set, all IP addresses are allowed. If
+     * multiple values are set, an IP address is allowed as long as it
+     * matches any one of the values.
+     *
+     * @since ZCS 7.1.5
+     */
+    @ZAttr(id=1353)
+    public static final String A_zimbraWebClientLogoutURLAllowedIP = "zimbraWebClientLogoutURLAllowedIP";
 
     /**
      * regex to be matched for allowed user agents for honoring
