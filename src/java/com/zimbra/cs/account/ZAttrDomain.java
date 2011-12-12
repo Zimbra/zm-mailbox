@@ -42,7 +42,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111208-1231 */
+    /* build: 8.0.0_BETA1_1111 pshao 20111212-1421 */
 
     /**
      * RFC2256: descriptive information
@@ -18570,6 +18570,167 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
+     * regex for allowed client IP addresses for honoring
+     * zimbraWebClientLoginURL. If not set, all IP addresses are allowed. If
+     * multiple values are set, an IP address is allowed as long as it
+     * matches any one of the values.
+     *
+     * @return zimbraWebClientLoginURLAllowedIP, or empty array if unset
+     *
+     * @since ZCS 7.1.5
+     */
+    @ZAttr(id=1352)
+    public String[] getWebClientLoginURLAllowedIP() {
+        return getMultiAttr(Provisioning.A_zimbraWebClientLoginURLAllowedIP);
+    }
+
+    /**
+     * regex for allowed client IP addresses for honoring
+     * zimbraWebClientLoginURL. If not set, all IP addresses are allowed. If
+     * multiple values are set, an IP address is allowed as long as it
+     * matches any one of the values.
+     *
+     * @param zimbraWebClientLoginURLAllowedIP new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.5
+     */
+    @ZAttr(id=1352)
+    public void setWebClientLoginURLAllowedIP(String[] zimbraWebClientLoginURLAllowedIP) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientLoginURLAllowedIP, zimbraWebClientLoginURLAllowedIP);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * regex for allowed client IP addresses for honoring
+     * zimbraWebClientLoginURL. If not set, all IP addresses are allowed. If
+     * multiple values are set, an IP address is allowed as long as it
+     * matches any one of the values.
+     *
+     * @param zimbraWebClientLoginURLAllowedIP new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.5
+     */
+    @ZAttr(id=1352)
+    public Map<String,Object> setWebClientLoginURLAllowedIP(String[] zimbraWebClientLoginURLAllowedIP, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientLoginURLAllowedIP, zimbraWebClientLoginURLAllowedIP);
+        return attrs;
+    }
+
+    /**
+     * regex for allowed client IP addresses for honoring
+     * zimbraWebClientLoginURL. If not set, all IP addresses are allowed. If
+     * multiple values are set, an IP address is allowed as long as it
+     * matches any one of the values.
+     *
+     * @param zimbraWebClientLoginURLAllowedIP new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.5
+     */
+    @ZAttr(id=1352)
+    public void addWebClientLoginURLAllowedIP(String zimbraWebClientLoginURLAllowedIP) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraWebClientLoginURLAllowedIP, zimbraWebClientLoginURLAllowedIP);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * regex for allowed client IP addresses for honoring
+     * zimbraWebClientLoginURL. If not set, all IP addresses are allowed. If
+     * multiple values are set, an IP address is allowed as long as it
+     * matches any one of the values.
+     *
+     * @param zimbraWebClientLoginURLAllowedIP new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.5
+     */
+    @ZAttr(id=1352)
+    public Map<String,Object> addWebClientLoginURLAllowedIP(String zimbraWebClientLoginURLAllowedIP, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraWebClientLoginURLAllowedIP, zimbraWebClientLoginURLAllowedIP);
+        return attrs;
+    }
+
+    /**
+     * regex for allowed client IP addresses for honoring
+     * zimbraWebClientLoginURL. If not set, all IP addresses are allowed. If
+     * multiple values are set, an IP address is allowed as long as it
+     * matches any one of the values.
+     *
+     * @param zimbraWebClientLoginURLAllowedIP existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.5
+     */
+    @ZAttr(id=1352)
+    public void removeWebClientLoginURLAllowedIP(String zimbraWebClientLoginURLAllowedIP) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraWebClientLoginURLAllowedIP, zimbraWebClientLoginURLAllowedIP);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * regex for allowed client IP addresses for honoring
+     * zimbraWebClientLoginURL. If not set, all IP addresses are allowed. If
+     * multiple values are set, an IP address is allowed as long as it
+     * matches any one of the values.
+     *
+     * @param zimbraWebClientLoginURLAllowedIP existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.5
+     */
+    @ZAttr(id=1352)
+    public Map<String,Object> removeWebClientLoginURLAllowedIP(String zimbraWebClientLoginURLAllowedIP, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraWebClientLoginURLAllowedIP, zimbraWebClientLoginURLAllowedIP);
+        return attrs;
+    }
+
+    /**
+     * regex for allowed client IP addresses for honoring
+     * zimbraWebClientLoginURL. If not set, all IP addresses are allowed. If
+     * multiple values are set, an IP address is allowed as long as it
+     * matches any one of the values.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.5
+     */
+    @ZAttr(id=1352)
+    public void unsetWebClientLoginURLAllowedIP() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientLoginURLAllowedIP, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * regex for allowed client IP addresses for honoring
+     * zimbraWebClientLoginURL. If not set, all IP addresses are allowed. If
+     * multiple values are set, an IP address is allowed as long as it
+     * matches any one of the values.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.5
+     */
+    @ZAttr(id=1352)
+    public Map<String,Object> unsetWebClientLoginURLAllowedIP(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientLoginURLAllowedIP, "");
+        return attrs;
+    }
+
+    /**
      * regex to be matched for allowed user agents for honoring
      * zimbraWebClientLoginURL. If not set, all UAs are allowed. If multiple
      * values are set, an UA is allowed as long as it matches any one of the
@@ -18812,6 +18973,167 @@ public abstract class ZAttrDomain extends NamedEntry {
     public Map<String,Object> unsetWebClientLogoutURL(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraWebClientLogoutURL, "");
+        return attrs;
+    }
+
+    /**
+     * regex for allowed client IP addresses for honoring
+     * zimbraWebClientLogoutURL. If not set, all IP addresses are allowed. If
+     * multiple values are set, an IP address is allowed as long as it
+     * matches any one of the values.
+     *
+     * @return zimbraWebClientLogoutURLAllowedIP, or empty array if unset
+     *
+     * @since ZCS 7.1.5
+     */
+    @ZAttr(id=1353)
+    public String[] getWebClientLogoutURLAllowedIP() {
+        return getMultiAttr(Provisioning.A_zimbraWebClientLogoutURLAllowedIP);
+    }
+
+    /**
+     * regex for allowed client IP addresses for honoring
+     * zimbraWebClientLogoutURL. If not set, all IP addresses are allowed. If
+     * multiple values are set, an IP address is allowed as long as it
+     * matches any one of the values.
+     *
+     * @param zimbraWebClientLogoutURLAllowedIP new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.5
+     */
+    @ZAttr(id=1353)
+    public void setWebClientLogoutURLAllowedIP(String[] zimbraWebClientLogoutURLAllowedIP) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientLogoutURLAllowedIP, zimbraWebClientLogoutURLAllowedIP);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * regex for allowed client IP addresses for honoring
+     * zimbraWebClientLogoutURL. If not set, all IP addresses are allowed. If
+     * multiple values are set, an IP address is allowed as long as it
+     * matches any one of the values.
+     *
+     * @param zimbraWebClientLogoutURLAllowedIP new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.5
+     */
+    @ZAttr(id=1353)
+    public Map<String,Object> setWebClientLogoutURLAllowedIP(String[] zimbraWebClientLogoutURLAllowedIP, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientLogoutURLAllowedIP, zimbraWebClientLogoutURLAllowedIP);
+        return attrs;
+    }
+
+    /**
+     * regex for allowed client IP addresses for honoring
+     * zimbraWebClientLogoutURL. If not set, all IP addresses are allowed. If
+     * multiple values are set, an IP address is allowed as long as it
+     * matches any one of the values.
+     *
+     * @param zimbraWebClientLogoutURLAllowedIP new to add to existing values
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.5
+     */
+    @ZAttr(id=1353)
+    public void addWebClientLogoutURLAllowedIP(String zimbraWebClientLogoutURLAllowedIP) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraWebClientLogoutURLAllowedIP, zimbraWebClientLogoutURLAllowedIP);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * regex for allowed client IP addresses for honoring
+     * zimbraWebClientLogoutURL. If not set, all IP addresses are allowed. If
+     * multiple values are set, an IP address is allowed as long as it
+     * matches any one of the values.
+     *
+     * @param zimbraWebClientLogoutURLAllowedIP new to add to existing values
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.5
+     */
+    @ZAttr(id=1353)
+    public Map<String,Object> addWebClientLogoutURLAllowedIP(String zimbraWebClientLogoutURLAllowedIP, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraWebClientLogoutURLAllowedIP, zimbraWebClientLogoutURLAllowedIP);
+        return attrs;
+    }
+
+    /**
+     * regex for allowed client IP addresses for honoring
+     * zimbraWebClientLogoutURL. If not set, all IP addresses are allowed. If
+     * multiple values are set, an IP address is allowed as long as it
+     * matches any one of the values.
+     *
+     * @param zimbraWebClientLogoutURLAllowedIP existing value to remove
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.5
+     */
+    @ZAttr(id=1353)
+    public void removeWebClientLogoutURLAllowedIP(String zimbraWebClientLogoutURLAllowedIP) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraWebClientLogoutURLAllowedIP, zimbraWebClientLogoutURLAllowedIP);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * regex for allowed client IP addresses for honoring
+     * zimbraWebClientLogoutURL. If not set, all IP addresses are allowed. If
+     * multiple values are set, an IP address is allowed as long as it
+     * matches any one of the values.
+     *
+     * @param zimbraWebClientLogoutURLAllowedIP existing value to remove
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.5
+     */
+    @ZAttr(id=1353)
+    public Map<String,Object> removeWebClientLogoutURLAllowedIP(String zimbraWebClientLogoutURLAllowedIP, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraWebClientLogoutURLAllowedIP, zimbraWebClientLogoutURLAllowedIP);
+        return attrs;
+    }
+
+    /**
+     * regex for allowed client IP addresses for honoring
+     * zimbraWebClientLogoutURL. If not set, all IP addresses are allowed. If
+     * multiple values are set, an IP address is allowed as long as it
+     * matches any one of the values.
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 7.1.5
+     */
+    @ZAttr(id=1353)
+    public void unsetWebClientLogoutURLAllowedIP() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientLogoutURLAllowedIP, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * regex for allowed client IP addresses for honoring
+     * zimbraWebClientLogoutURL. If not set, all IP addresses are allowed. If
+     * multiple values are set, an IP address is allowed as long as it
+     * matches any one of the values.
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 7.1.5
+     */
+    @ZAttr(id=1353)
+    public Map<String,Object> unsetWebClientLogoutURLAllowedIP(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraWebClientLogoutURLAllowedIP, "");
         return attrs;
     }
 
