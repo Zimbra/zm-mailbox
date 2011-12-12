@@ -17,6 +17,8 @@ package com.zimbra.cs.server;
 
 import java.io.IOException;
 
+import org.apache.mina.filter.codec.ProtocolDecoderException;
+
 /**
  * Protocol handler for MINA-based server connections. The protocol handler defines the action to take whenever a new
  * connection is opened, is closed, becomes idle, or a new request is received on the connection.
@@ -48,8 +50,9 @@ public interface NioHandler {
      *
      * @param msg the message that has been received
      * @throws IOException if an I/O error occurs
+     * @throws ProtocolDecoderException 
      */
-    void messageReceived(Object msg) throws IOException;
+    void messageReceived(Object msg) throws IOException, ProtocolDecoderException;
 
     /**
      * Called when any exception is thrown by user IoHandler implementation or by MINA. If cause is instanceof

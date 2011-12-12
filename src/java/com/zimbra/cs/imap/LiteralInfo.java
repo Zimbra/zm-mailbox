@@ -14,11 +14,13 @@
  */
 package com.zimbra.cs.imap;
 
+import org.apache.mina.filter.codec.ProtocolDecoderException;
+
 public class LiteralInfo {
     int count;
     boolean blocking;
 
-    public static LiteralInfo parse(String line) {
+    public static LiteralInfo parse(String line) throws ProtocolDecoderException {
         if (line.endsWith("}")) {
             int i = line.lastIndexOf('{');
             if (i >= 0) {
@@ -31,7 +33,7 @@ public class LiteralInfo {
                 }
                 li.count = parseCount(s);
                 if (li.count < 0) {
-                    throw new IllegalArgumentException("bad literal format");
+                    throw new NioImapDecoder.TooBigLiteralException(line);
                 }
                 return li;
             }

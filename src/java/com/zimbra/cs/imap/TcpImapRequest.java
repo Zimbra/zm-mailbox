@@ -15,6 +15,7 @@
 package com.zimbra.cs.imap;
 
 import com.zimbra.common.io.TcpServerInputStream;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 
 import java.io.IOException;
@@ -36,14 +37,35 @@ final class TcpImapRequest extends ImapRequest {
     private long requestSize = 0;
     private boolean maxRequestSizeExceeded = false;
 
-    TcpImapRequest(String line, ImapHandler handler) {
-        super(handler);
-        addPart(line);
-    }
-
     TcpImapRequest(TcpServerInputStream input, ImapHandler handler) {
         super(handler);
         this.input = input;
+    }
+
+    private void checkSize(long size) throws ImapParseException {
+        int maxLiteralSize = Integer.MAX_VALUE;
+        if (isAppend()) {
+            try {
+                long msgLimit = mHandler.getConfig().getMaxMessageSize();
+                if (msgLimit < maxLiteralSize) {
+                    if (size > msgLimit) {
+                        throwSizeExceeded("message");
+                    } 
+                } 
+            } catch (ServiceException se) {
+                ZimbraLog.imap.warn("unable to check zimbraMtaMaxMessageSize", se);
+            }
+        } 
+        if (isMaxRequestSizeExceeded() || size > maxLiteralSize) {
+            throwSizeExceeded("request");
+        }
+    }
+
+    private void throwSizeExceeded(String exceededType) throws ImapParseException {
+        if (tag == null && index == 0 && offset == 0) {
+            tag = readTag(); rewind();
+        }
+        throw new ImapParseException(tag, "maximum " + exceededType + " size exceeded", true);
     }
 
     void continuation() throws IOException, ImapParseException {
@@ -83,6 +105,7 @@ final class TcpImapRequest extends ImapRequest {
                     if (!isAppend()) {
                         incrementSize(size);
                     }
+                    checkSize(size);
                     literalCounter = size;
                     continuation();
                 } else {
@@ -151,7 +174,8 @@ final class TcpImapRequest extends ImapRequest {
                 if (!isAppend()) {
                     incrementSize(length);
                 }
-                literalCounter = length;
+                checkSize(length);
+               	literalCounter = length;
             }
             if (!blocking && input.available() >= literalCounter) {
                 continuation();

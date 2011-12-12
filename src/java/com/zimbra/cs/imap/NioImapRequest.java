@@ -17,6 +17,8 @@ package com.zimbra.cs.imap;
 
 import java.io.IOException;
 
+import org.apache.mina.filter.codec.ProtocolDecoderException;
+
 final class NioImapRequest extends ImapRequest {
     private Literal literal;    // current literal data
     private int literalCount;   // remaining byte count for current literal
@@ -26,7 +28,7 @@ final class NioImapRequest extends ImapRequest {
         super(handler);
     }
 
-    boolean parse(Object obj) throws IOException {
+    boolean parse(Object obj) throws IOException, ProtocolDecoderException {
         if (literal != null) {
             parseLiteral((byte[]) obj);
         } else {
@@ -45,7 +47,7 @@ final class NioImapRequest extends ImapRequest {
         }
     }
 
-    private void parseCommand(String line) throws IOException {
+    private void parseCommand(String line) throws IOException, ProtocolDecoderException {
         addPart(line);
         LiteralInfo li = LiteralInfo.parse(line); // literal format is already validated in decoder
         if (li != null) {

@@ -15,25 +15,40 @@
 
 package com.zimbra.qa.unittest;
 
-import org.junit.*;
-import org.junit.runner.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import com.zimbra.common.util.Log;
-import com.zimbra.cs.mailclient.imap.ImapConnection;
-import com.zimbra.cs.mailclient.imap.ImapConfig;
-import com.zimbra.cs.mailclient.imap.AppendResult;
-import com.zimbra.cs.mailclient.imap.Literal;
-import com.zimbra.cs.mailclient.imap.MessageData;
-import com.zimbra.cs.mailclient.imap.Body;
-import com.zimbra.cs.mailclient.imap.AppendMessage;
-import com.zimbra.cs.mailclient.imap.Flags;
-
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.SocketException;
 import java.sql.Date;
+
+import junit.framework.Assert;
+
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.runner.JUnitCore;
+import org.junit.runner.Request;
+
+import com.zimbra.common.util.Log;
+import com.zimbra.cs.mailclient.imap.AppendMessage;
+import com.zimbra.cs.mailclient.imap.AppendResult;
+import com.zimbra.cs.mailclient.imap.Body;
+import com.zimbra.cs.mailclient.imap.CAtom;
+import com.zimbra.cs.mailclient.imap.Flags;
+import com.zimbra.cs.mailclient.imap.ImapConfig;
+import com.zimbra.cs.mailclient.imap.ImapConnection;
+import com.zimbra.cs.mailclient.imap.ImapRequest;
+import com.zimbra.cs.mailclient.imap.ImapResponse;
+import com.zimbra.cs.mailclient.imap.Literal;
+import com.zimbra.cs.mailclient.imap.MailboxName;
+import com.zimbra.cs.mailclient.imap.MessageData;
 
 /**
  * IMAP server tests.
@@ -71,6 +86,44 @@ public class TestImap {
             assertArrayEquals("content mismatch", msg.getBytes(), b);
         } finally {
             msg.dispose();
+        }
+    }
+    
+    @Test
+    public void testOverflowAppend() throws Exception {
+        assertTrue(connection.hasCapability("UIDPLUS"));
+        int oldReadTimeout = connection.getConfig().getReadTimeout();
+        try {
+            connection.setReadTimeout(10);
+            Flags flags = Flags.fromSpec("afs");
+            Date date = new Date(System.currentTimeMillis());
+            ImapRequest req = connection.newRequest(CAtom.APPEND, new MailboxName("INBOX"));
+            req.addParam("{"+((long)(Integer.MAX_VALUE)+1)+"+}");
+            ImapResponse resp = req.send();
+            Assert.assertTrue(resp.isNO() || resp.isBAD());
+            
+            req = connection.newRequest(CAtom.APPEND, new MailboxName("INBOX"));
+            req.addParam("{"+((long)(Integer.MAX_VALUE)+1)+"}");
+            resp = req.send();
+            Assert.assertTrue(resp.isNO() || resp.isBAD());
+        } finally {
+            connection.setReadTimeout(oldReadTimeout);
+        }
+    }
+    
+    @Test
+    public void testOverflowNotAppend() throws Exception {
+        int oldReadTimeout = connection.getConfig().getReadTimeout();
+        try {
+            connection.setReadTimeout(10);
+            Flags flags = Flags.fromSpec("afs");
+            Date date = new Date(System.currentTimeMillis());
+            ImapRequest req = connection.newRequest(CAtom.FETCH, "1:*");
+            req.addParam("{"+((long)(Integer.MAX_VALUE)+1)+"+}");
+            ImapResponse resp = req.send();
+            Assert.assertTrue(resp.isNO() || resp.isBAD());
+        } finally {
+            connection.setReadTimeout(oldReadTimeout);
         }
     }
 

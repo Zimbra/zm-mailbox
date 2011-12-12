@@ -181,7 +181,7 @@ final class NioImapDecoder extends CumulativeProtocolDecoder {
 
         private String request;
 
-        private TooBigLiteralException(String req) {
+        TooBigLiteralException(String req) {
             request = req;
         }
 

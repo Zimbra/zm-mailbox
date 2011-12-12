@@ -50,7 +50,7 @@ final class NioImapHandler extends ImapHandler implements NioHandler {
     }
 
     @Override
-    public void messageReceived(Object msg) throws IOException {
+    public void messageReceived(Object msg) throws IOException, ProtocolDecoderException {
         if (request == null) {
             request = new NioImapRequest(this);
         }
