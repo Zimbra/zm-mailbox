@@ -61,7 +61,10 @@
 
     <property name="lib.dir" location="lib"/>
     <property name="config.dir" location="conf"/>
-  <property name="war.web.xml" location="${config.dir}/web.xml${production.suffix}"/>
+	<condition property="war.web.xml" value="${config.dir}/web.xml${production.suffix}">
+	 	<not><isset property="war.web.xml"/></not>
+	</condition>
+	<property name="war.web.xml" location="${war.web.xml}${production.suffix}"/>
     <property name="jetty.xml.file" location='${config.dir}/jetty-7.5/jetty.xml' />
 
     <property name="spnego.dir" location="${config.dir}/jetty-7.5/spnego"/>
@@ -1948,7 +1951,7 @@
   </target>
 
   <target name="server2-war">
-    <copy file="${config.dir}/web.xml${production.suffix}" tofile="${build.dir}/web.xml" overwrite="true"/>
+    <copy file="${war.web.xml}" tofile="${build.dir}/web.xml" overwrite="true"/>
     <replace file="${build.dir}/web.xml">
       <replacefilter token="7070" value="11070"/>
       <replacefilter token="7443" value="11443"/>
