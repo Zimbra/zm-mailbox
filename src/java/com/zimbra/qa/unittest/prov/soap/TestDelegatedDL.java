@@ -39,7 +39,6 @@ import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Group.GroupOwner;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
@@ -62,6 +61,7 @@ import com.zimbra.soap.account.type.DistributionListOwnerSelector;
 import com.zimbra.soap.account.type.DistributionListSubscribeOp;
 import com.zimbra.soap.account.type.DistributionListSubscribeStatus;
 import com.zimbra.soap.account.type.DistributionListAction.Operation;
+import com.zimbra.soap.account.type.DLInfo;
 import com.zimbra.soap.admin.message.AddDistributionListAliasRequest;
 import com.zimbra.soap.admin.message.AddDistributionListAliasResponse;
 import com.zimbra.soap.admin.message.AddDistributionListMemberRequest;
@@ -74,7 +74,6 @@ import com.zimbra.soap.admin.message.RemoveDistributionListAliasRequest;
 import com.zimbra.soap.admin.message.RemoveDistributionListAliasResponse;
 import com.zimbra.soap.admin.message.RemoveDistributionListMemberRequest;
 import com.zimbra.soap.admin.message.RemoveDistributionListMemberResponse;
-import com.zimbra.soap.admin.type.DLInfo;
 import com.zimbra.soap.base.DistributionListOwnerInfoInterface;
 import com.zimbra.soap.type.DistributionListOwnerBy;
 import com.zimbra.soap.type.DistributionListOwnerType;
@@ -103,9 +102,6 @@ public class TestDelegatedDL extends SoapTest {
         USER_OWNER = TestUtil.getAddress("owner", DOMAIN_NAME);
         USER_NOT_OWNER = TestUtil.getAddress("not-owner", DOMAIN_NAME);
         DL_NAME = TestUtil.getAddress("dl", DOMAIN_NAME);
-        
-        // init rights
-        RightManager.getInstance();
         
         provUtil = new SoapProvTestUtil();
         prov = provUtil.getProv();
@@ -632,7 +628,11 @@ public class TestDelegatedDL extends SoapTest {
     @Test
     public void getAccountMembership() throws Exception {
         String GROUP_NAME = getAddress(genGroupNameLocalPart());
-        Group group = createGroupAndAddOwner(GROUP_NAME);
+        String GROUP_DISPLAY_NAME = "DISPLAY";
+        
+        List<KeyValuePair> attrs = Lists.newArrayList(new KeyValuePair(
+                Provisioning.A_displayName, GROUP_DISPLAY_NAME));
+        Group group = createGroupAndAddOwner(GROUP_NAME, attrs);
         
         // add a member
         prov.addGroupMembers(group, new String[]{USER_NOT_OWNER});
@@ -646,8 +646,11 @@ public class TestDelegatedDL extends SoapTest {
         for (DLInfo dlInfo : groups) {
             String id = dlInfo.getId();
             String name = dlInfo.getName();
+            String displayName = dlInfo.getDisplayName();
             
-            if (group.getId().equals(id) && name.equals(GROUP_NAME)) {
+            if (group.getId().equals(id) && 
+                name.equals(GROUP_NAME) && 
+                displayName.equals(GROUP_DISPLAY_NAME)) {
                 seenGroup = true;
             }
         }
@@ -664,8 +667,11 @@ public class TestDelegatedDL extends SoapTest {
         for (DLInfo dlInfo : groups) {
             String id = dlInfo.getId();
             String name = dlInfo.getName();
+            String displayName = dlInfo.getDisplayName();
             
-            if (group.getId().equals(id) && name.equals(GROUP_NEW_NAME)) {
+            if (group.getId().equals(id) && 
+                name.equals(GROUP_NEW_NAME) &&
+                displayName.equals(GROUP_DISPLAY_NAME)) {
                 seenGroup = true;
             }
         }

@@ -71,6 +71,10 @@ public class DiscoverRights extends AccountDocumentHandler {
             rights.add(r); 
         }
         
+        if (rights.size() == 0) {
+            throw ServiceException.INVALID_REQUEST("no right is specified", null);
+        }
+        
         AccessManager accessMgr = AccessManager.getInstance();
         Map<Right, Set<Entry>> discoveredRights = accessMgr.discoverRights(account, rights);
         
@@ -105,6 +109,11 @@ public class DiscoverRights extends AccountDocumentHandler {
                         NamedEntry entry = (NamedEntry) target;
                         eTarget.addAttribute(AccountConstants.A_ID, entry.getId());
                         eTarget.addAttribute(AccountConstants.A_NAME, entry.getName());
+                        if (target instanceof Account) {
+                            eTarget.addAttribute(AccountConstants.A_DISPLAY, ((Account) entry).getDisplayName());
+                        } else if (target instanceof Group) {
+                            eTarget.addAttribute(AccountConstants.A_DISPLAY, ((Group) entry).getDisplayName());
+                        }
                     } else {
                         eTarget.addAttribute(AccountConstants.A_NAME, target.getLabel());
                     }

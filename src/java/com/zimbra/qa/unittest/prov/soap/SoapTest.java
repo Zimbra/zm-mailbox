@@ -25,13 +25,13 @@ import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.common.util.CliUtil;
+import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.qa.unittest.prov.ProvTest;
 import com.zimbra.soap.JaxbUtil;
 import com.zimbra.soap.account.message.AuthRequest;
 import com.zimbra.soap.account.message.AuthResponse;
-import com.zimbra.soap.json.JacksonUtil;
 
 public class SoapTest extends ProvTest {
     private static boolean JSON = false;
@@ -45,6 +45,9 @@ public class SoapTest extends ProvTest {
     public static void beforeClass() throws Exception {
         CliUtil.toolSetup(); // init ssl stuff
         soapDebugListener = new SoapDebugListener();
+        
+        // init rights
+        RightManager.getInstance();
     }
     
     static String baseDomainName() {

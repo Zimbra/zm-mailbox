@@ -29,7 +29,10 @@ public class DiscoverRights {
     Account acct;
     Set<Right> rights;
     
-    DiscoverRights(Account credentials, Set<Right> rights) {
+    DiscoverRights(Account credentials, Set<Right> rights) throws ServiceException {
+        if (rights.size() == 0) {
+            throw ServiceException.FAILURE("no right is specified", null);
+        }
         this.acct = credentials;
         this.rights = Sets.newHashSet(rights);
     }

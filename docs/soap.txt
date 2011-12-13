@@ -3556,11 +3556,14 @@ Notes:
 
 <DiscoverRightsResponse>
     <targets right="...">
-        [<target type="{target-type}" id="..." [name="..."]>
+        [<target type="{target-type}" id="..." [name="..."] [d=".."]>
              [<email addr="{email-address}"/>+]
          </target>+]
     </targets>+
 </DiscoverRightsResponse>
+
+If a discoverd target is an account or a group, display name of the entry is return in the d="..." 
+attribute if the entry has a display name set.
 
 e.g. 
 <DiscoverRightsRequest>
@@ -4060,7 +4063,7 @@ Notes:
 </GetAccountMembershipRequest>
 
 <GetAccountMembershipResponse>
-  <dl name="{name}" id="{id}"  via="{via-dl-name}"/>+
+  <dl name="{name}" id="{id}" [d="{display-name}"] via="{via-dl-name}"/>+
 </GetAccountMembershipResponse>
 
 {directOnly}  = 1 (default): return only lists the account is a direct member of

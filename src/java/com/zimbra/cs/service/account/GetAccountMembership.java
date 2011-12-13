@@ -20,7 +20,6 @@ import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Group;
@@ -44,13 +43,14 @@ public class GetAccountMembership extends AccountDocumentHandler {
         
         Element response = zsc.createElement(AccountConstants.GET_ACCOUNT_MEMBERSHIP_RESPONSE);
         for (Group group: groups) {
-            Element eDL = response.addElement(AdminConstants.E_DL);
-            eDL.addAttribute(AdminConstants.A_NAME, group.getName());
-            eDL.addAttribute(AdminConstants.A_ID,group.getId());
-            eDL.addAttribute(AdminConstants.A_DYNAMIC, group.isDynamic());
+            Element eDL = response.addElement(AccountConstants.E_DL);
+            eDL.addAttribute(AccountConstants.A_NAME, group.getName());
+            eDL.addAttribute(AccountConstants.A_ID, group.getId());
+            eDL.addAttribute(AccountConstants.A_DISPLAY, group.getDisplayName());
+            eDL.addAttribute(AccountConstants.A_DYNAMIC, group.isDynamic());
             String viaDl = via.get(group.getName());
             if (viaDl != null) {
-                eDL.addAttribute(AdminConstants.A_VIA, viaDl);
+                eDL.addAttribute(AccountConstants.A_VIA, viaDl);
             }
         }
         return response;
