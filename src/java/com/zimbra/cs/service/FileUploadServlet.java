@@ -14,15 +14,49 @@
  */
 package com.zimbra.cs.service;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.TimerTask;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.fileupload.DefaultFileItem;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileUploadBase;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItem;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.HttpStatus;
+import org.apache.commons.httpclient.methods.GetMethod;
+
 import com.google.common.base.Strings;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.ServerBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
-import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.MimeDetect;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.service.ServiceException.Argument;
 import com.zimbra.common.service.ServiceException.InternalArgument;
@@ -49,38 +83,6 @@ import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.store.BlobInputStream;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.Zimbra;
-import org.apache.commons.fileupload.FileItem;
-import org.apache.commons.fileupload.FileUploadBase;
-import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.fileupload.disk.DiskFileItem;
-import org.apache.commons.fileupload.disk.DiskFileItemFactory;
-import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.GetMethod;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.TimerTask;
 
 public class FileUploadServlet extends ZimbraServlet {
     private static final long serialVersionUID = -3156986245375108467L;
@@ -373,7 +375,7 @@ public class FileUploadServlet extends ZimbraServlet {
         }
     }
 
-    private static String getUploadDir() {
+    protected static String getUploadDir() {
         if (sUploadDir == null) {
             sUploadDir = LC.zimbra_tmp_directory.value() + "/upload";
         }
@@ -442,10 +444,10 @@ public class FileUploadServlet extends ZimbraServlet {
         }
 
         try {
-            if (!isAdminRequest) {
-                Provisioning prov = Provisioning.getInstance();
-                Account acct = AuthProvider.validateAuthToken(prov, at, true);
-                
+            
+            Provisioning prov = Provisioning.getInstance();
+            Account acct = AuthProvider.validateAuthToken(prov, at, true);
+            if (!isAdminRequest) {    
                 // fetching the mailbox will except if it's in maintenance mode
                 if (Provisioning.onLocalServer(acct)) {
                     Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct, false);
@@ -459,9 +461,9 @@ public class FileUploadServlet extends ZimbraServlet {
 
             // file upload requires multipart enctype
             if (ServletFileUpload.isMultipartContent(req)) {
-                handleMultipartUpload(req, resp, fmt, at.getAccountId(), limitByFileUploadMaxSize);
+                handleMultipartUpload(req, resp, fmt, acct, limitByFileUploadMaxSize);
             } else {
-                handlePlainUpload(req, resp, fmt, at.getAccountId(), limitByFileUploadMaxSize);
+                handlePlainUpload(req, resp, fmt, acct, limitByFileUploadMaxSize);
             }
         } catch (ServiceException e) {
             mLog.info("File upload failed", e);
@@ -471,12 +473,12 @@ public class FileUploadServlet extends ZimbraServlet {
     }
 
     @SuppressWarnings("unchecked")
-    List<Upload> handleMultipartUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, String accountId, boolean limitByFileUploadMaxSize)
+    List<Upload> handleMultipartUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, Account acct, boolean limitByFileUploadMaxSize)
     throws IOException, ServiceException {
         List<FileItem> items = null;
         String reqId = null;
 
-        ServletFileUpload upload = getUploader(limitByFileUploadMaxSize);
+        ServletFileUpload upload = getUploader2(limitByFileUploadMaxSize, acct);
         try {
             items = upload.parseRequest(req);
         } catch (FileUploadBase.SizeLimitExceededException e) {
@@ -549,7 +551,7 @@ public class FileUploadServlet extends ZimbraServlet {
             String name = filenames.get(fi);
             if (name == null || name.trim().equals(""))
                 name = fi.getName();
-            Upload up = new Upload(accountId, fi, name);
+            Upload up = new Upload(acct.getId(), fi, name);
 
             mLog.info("Received multipart: %s", up);
             synchronized (mPending) {
@@ -562,7 +564,7 @@ public class FileUploadServlet extends ZimbraServlet {
         return uploads;
     }
 
-    List<Upload> handlePlainUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, String accountId, boolean limitByFileUploadMaxSize)
+    List<Upload> handlePlainUpload(HttpServletRequest req, HttpServletResponse resp, String fmt, Account acct, boolean limitByFileUploadMaxSize)
     throws IOException, ServiceException {
         // metadata is encoded in the response's HTTP headers
         ContentType ctype = new ContentType(req.getContentType());
@@ -579,7 +581,7 @@ public class FileUploadServlet extends ZimbraServlet {
         }
 
         // store the fetched file as a normal upload
-        ServletFileUpload upload = getUploader(limitByFileUploadMaxSize);
+        ServletFileUpload upload = getUploader2(limitByFileUploadMaxSize, acct);
         FileItem fi = upload.getFileItemFactory().createItem("upload", contentType, false, filename);
         try {
             // write the upload to disk, but make sure not to exceed the permitted max upload size
@@ -587,7 +589,7 @@ public class FileUploadServlet extends ZimbraServlet {
             if (size > upload.getSizeMax()) {
                 mLog.debug("handlePlainUpload(): deleting %s", fi);
                 fi.delete();
-                mLog.info("Exceeded maximum upload size of " + upload.getSizeMax() + " bytes: " + accountId);
+                mLog.info("Exceeded maximum upload size of " + upload.getSizeMax() + " bytes: " + acct.getId());
                 drainRequestStream(req);
                 sendResponse(resp, HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE, fmt, null, null, null);
                 return Collections.emptyList();
@@ -602,7 +604,7 @@ public class FileUploadServlet extends ZimbraServlet {
         List<FileItem> items = new ArrayList<FileItem>(1);
         items.add(fi);
 
-        Upload up = new Upload(accountId, fi, filename);
+        Upload up = new Upload(acct.getId(), fi, filename);
         mLog.info("Received plain: %s", up);
         synchronized (mPending) {
             mPending.put(up.uuid, up);
@@ -693,13 +695,17 @@ public class FileUploadServlet extends ZimbraServlet {
         }
     }
 
+    protected ServletFileUpload getUploader2(boolean limitByFileUploadMaxSize, Account acct) {
+    	return getUploader(limitByFileUploadMaxSize);
+    }
+    
     private static ServletFileUpload getUploader(boolean limitByFileUploadMaxSize) {
         // look up the maximum file size for uploads
-        long maxSize = DEFAULT_MAX_SIZE;
+    	long maxSize = DEFAULT_MAX_SIZE;
         DiskFileItemFactory dfif = new DiskFileItemFactory();
         ServletFileUpload upload;
-        
-        try {
+
+    	try {
             if (limitByFileUploadMaxSize) {
                 maxSize = Provisioning.getInstance().getLocalServer().getLongAttr(Provisioning.A_zimbraFileUploadMaxSize, DEFAULT_MAX_SIZE);
             } else {

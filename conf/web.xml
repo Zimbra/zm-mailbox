@@ -502,4 +502,6 @@
     <servlet-name>AutoDiscoverServlet</servlet-name>
     <url-pattern>/autodiscover/*</url-pattern>
   </servlet-mapping>
+  
+  <!--  additional servlets -->
 </web-app>

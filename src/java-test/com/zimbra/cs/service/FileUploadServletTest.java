@@ -26,13 +26,14 @@ import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.HeaderUtils.ByteBuilder;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CharsetUtil;
+import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.service.FileUploadServlet.Upload;
 
 public class FileUploadServletTest {
     private static FileUploadServlet servlet;
-
+    private static Account testAccount;
     private static final String accountId = "11122233-1111-1111-1111-111222333444";
 
     @BeforeClass
@@ -41,7 +42,7 @@ public class FileUploadServletTest {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraId, accountId);
         attrs.put(Provisioning.A_zimbraMailHost, "localhost");
-        prov.createAccount("test@zimbra.com", "secret", attrs);
+        testAccount = prov.createAccount("test@zimbra.com", "secret", attrs);
         Provisioning.setInstance(prov);
 
         LC.zimbra_tmp_directory.setDefault("build/test");
@@ -81,7 +82,7 @@ public class FileUploadServletTest {
         URL url = new URL("http://localhost:7070/service/upload?fmt=extended");
         MockHttpServletRequest req = new MockHttpServletRequest(form, url, "multipart/form-data; boundary=" + boundary);
         MockHttpServletResponse resp = new MockHttpServletResponse();
-        return servlet.handleMultipartUpload(req, resp, "extended", accountId, false);
+        return servlet.handleMultipartUpload(req, resp, "extended", testAccount, false);
     }
 
     private void compareUploads(Upload up, String expectedFilename, byte[] expectedContent) throws Exception {
