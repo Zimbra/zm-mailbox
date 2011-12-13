@@ -15,7 +15,6 @@
 
 package com.zimbra.soap.account.type;
 
-import java.util.Collection;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -30,6 +29,8 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlType(propOrder = {})
 public class DLInfo extends ObjectInfo {
 
+    @XmlAttribute(name=AccountConstants.A_DISPLAY, required=false)
+    private final String displayName;
     @XmlAttribute(name=AccountConstants.A_DYNAMIC, required=false)
     ZmBoolean dynamic;
     @XmlAttribute(name=AccountConstants.A_VIA, required=false)
@@ -40,15 +41,20 @@ public class DLInfo extends ObjectInfo {
      */
     @SuppressWarnings("unused")
     private DLInfo() {
-        this(null, null, null, null);
+        this(null, null, null, null, null);
     }
 
-    public DLInfo(String id, String name, Boolean dynamic, String via) {
+    public DLInfo(String id, String name, String displayName, Boolean dynamic, String via) {
         super(id, name, null);
+        this.displayName = displayName;
         this.dynamic = ZmBoolean.fromBool(dynamic);
         this.via = via;
     }
 
+    public String getDisplayName() {
+        return displayName;
+    }
+    
     public String getVia() {
         return via;
     }

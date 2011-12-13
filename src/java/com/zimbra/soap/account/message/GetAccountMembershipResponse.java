@@ -24,10 +24,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.soap.admin.type.DLInfo;
+import com.zimbra.soap.account.type.DLInfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AccountConstants.E_GET_ACCOUNT_MEMBERSHIP_RESPONSE)

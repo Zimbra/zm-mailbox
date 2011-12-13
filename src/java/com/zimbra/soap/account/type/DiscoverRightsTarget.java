@@ -33,25 +33,30 @@ public class DiscoverRightsTarget {
     @XmlAttribute(name=AccountConstants.A_NAME, required=false)
     private String name;
     
+    @XmlAttribute(name=AccountConstants.A_DISPLAY, required=false)
+    private String displayName;
+    
     @XmlElement(name=AccountConstants.E_EMAIL, required=false)
     private List<DiscoverRightsEmail> emails;
     
     public DiscoverRightsTarget() {
-        this(null, null, null);
+        this(null, null, null, null);
     }
     
     public DiscoverRightsTarget(String type) {
-        this(type, null, null);
+        this(type, null, null, null);
     }
     
-    public DiscoverRightsTarget(String type, String id, String name) {
+    public DiscoverRightsTarget(String type, String id, String name, String displayName) {
         setType(type);
         setId(id);
         setName(name);
+        setDisplayName(displayName);
     }
     
     public String getType() { return type; }
     public String getName() { return name; }
+    public String getDisplayName() { return displayName; }
     public String getId() { return id; }
     public List<DiscoverRightsEmail> getAddrs() { return emails; }
      
@@ -61,6 +66,10 @@ public class DiscoverRightsTarget {
     
     public void setName(String name) {
         this.name = name;
+    }
+    
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
     
     public void setId(String id) {
