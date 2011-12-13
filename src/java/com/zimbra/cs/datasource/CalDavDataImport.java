@@ -197,17 +197,27 @@ public class CalDavDataImport extends MailItemImport {
     private ArrayList<CalendarFolder> syncFolders() throws ServiceException, IOException, DavException {
         ArrayList<CalendarFolder> ret = new ArrayList<CalendarFolder>();
         DataSource ds = getDataSource();
-        CalDavClient client = getClient();
-        Map<String,DavObject> calendars = client.getCalendars();
-        OperationContext octxt = new OperationContext(mbox);
-        Folder rootFolder = mbox.getFolderById(octxt, getRootFolderId(ds));
+        OperationContext octxt = new OperationContext(mbox);        
         HashMap<String,DataSourceItem> allFolders = getAllFolderMappings(ds);
+        Folder rootFolder = null;
+        try {
+            rootFolder = mbox.getFolderById(octxt, getRootFolderId(ds));
+        } catch (NoSuchItemException e) {
+            // folder may be deleted. delete the datasource
+            ZimbraLog.datasource.info("Folder %d was deleted.  Deleting data source %s.",
+                    getRootFolderId(ds), ds.getName());
+            mbox.getAccount().deleteDataSource(ds.getId());
+            // return empty array
+            return new ArrayList<CalendarFolder>(0);
+        }
         List<Integer> deleted = new ArrayList<Integer>();
         int lastSync = (int)rootFolder.getLastSyncDate();
         if (lastSync > 0) {
             for (int itemId : mbox.getTombstones(lastSync).getAll())
                 deleted.add(itemId);
         }
+        CalDavClient client = getClient();
+        Map<String,DavObject> calendars = client.getCalendars();
         for (String name : calendars.keySet()) {
             DavObject obj = calendars.get(name);
             String ctag = obj.getPropertyText(DavElements.E_GETCTAG);
