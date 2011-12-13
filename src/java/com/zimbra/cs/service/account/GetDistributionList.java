@@ -15,19 +15,16 @@
 
 package com.zimbra.cs.service.account;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-import com.zimbra.common.calendar.TZIDMapper;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.service.account.DistributionListDocumentHandler.SynchronizedGroupHandler;
 
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -42,13 +39,15 @@ public class GetDistributionList extends DistributionListDocumentHandler {
             Provisioning.A_zimbraLocale,
             Provisioning.A_zimbraMailAlias,
             Provisioning.A_zimbraMailStatus,
+            Provisioning.A_zimbraNotes,
             Provisioning.A_zimbraPrefReplyToAddress,
             Provisioning.A_zimbraPrefReplyToDisplay,
             Provisioning.A_zimbraPrefReplyToEnabled);
     
     private static final Set<String> NON_OWNER_ATTRS = Sets.newHashSet(
             Provisioning.A_description,
-            Provisioning.A_displayName);
+            Provisioning.A_displayName,
+            Provisioning.A_zimbraNotes);
 
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         
