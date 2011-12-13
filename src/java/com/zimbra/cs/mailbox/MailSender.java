@@ -55,6 +55,7 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
@@ -98,7 +99,9 @@ public class MailSender {
     private List<String> mRecipients = new ArrayList<String>();
     private String mEnvelopeFrom;
 
-    public MailSender()  { }
+    public MailSender()  {
+        mSession = JMSession.getSession();
+    }
 
     /**
      * Specifies the uploads to attach to the outgoing message.
@@ -207,19 +210,20 @@ public class MailSender {
 
     /**
      * Sets an alternate JavaMail <tt>Session</tt> and SMTP hosts
-     * that will be used to send the message.  The default behavior
-     * is to use SMTP settings from the <tt>Session<tt> on the {@link MimeMessage}.
+     * that will be used to send the message from the account's
+     * domain.  The default behavior is to use SMTP settings from
+     * the <tt>Session<tt> on the {@link MimeMessage}.
+     * @throws ServiceException 
      */
-    public MailSender setSession(Session session, Collection<String> smtpHosts) {
-        if (session == null) {
-            throw new NullPointerException("session cannot be null");
+    public MailSender setSession(Account account) throws ServiceException {
+        try {
+            mSession = JMSession.getSmtpSession(account);
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE("Unable to get SMTP session for " + account, e);
         }
-        if (smtpHosts == null || smtpHosts.isEmpty()) {
-            throw new IllegalArgumentException("no hosts specified");
-        }
-        mSession = session;
+        Domain domain = Provisioning.getInstance().getDomain(account);
         mSmtpHosts.clear();
-        mSmtpHosts.addAll(smtpHosts);
+        mSmtpHosts.addAll(JMSession.getSmtpHosts(domain));
         return this;
     }
 

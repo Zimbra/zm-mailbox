@@ -621,24 +621,11 @@ public class Mailbox {
     public MailSender getMailSender() throws ServiceException {
         MailSender sender = new MailSender();
         sender.setTrackBadHosts(true);
-        Account account = getAccount();
-        Domain domain = Provisioning.getInstance().getDomain(account);
 
-        // Get the SMTP host list in random order.
-        List<String> hosts = new ArrayList<String>();
-        hosts.addAll(JMSession.getSmtpHosts(domain));
-        if (hosts.size() > 1) {
-            Collections.shuffle(hosts);
-        }
-
-        try {
-            // Set the SMTP session properties on MailSender, so
-            // that we don't require the caller to set them on
-            // the message.
-            sender.setSession(JMSession.getSmtpSession(account), hosts);
-        } catch (MessagingException e) {
-            throw ServiceException.FAILURE("Unable to get SMTP session for " + account, e);
-        }
+        // Set the SMTP session properties on MailSender, so
+        // that we don't require the caller to set them on
+        // the message.
+        sender.setSession(getAccount());
 
         return sender;
     }
