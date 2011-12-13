@@ -30,7 +30,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbPool;
 import com.zimbra.cs.db.HSQLDB;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.mime.MockMimeTypeInfo;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.mime.handler.MessageRFC822Handler;
@@ -68,6 +67,10 @@ public final class MailboxTestUtil {
      * Initializes the provisioning, database, index and store manager.
      */
     public static void initServer() throws Exception {
+        initServer(MockStoreManager.class);
+    }
+
+    public static void initServer(Class<? extends StoreManager> storeManagerClass) throws Exception {
         initProvisioning();
 
         LC.zimbra_class_database.setDefault(HSQLDB.class.getName());
@@ -77,7 +80,7 @@ public final class MailboxTestUtil {
         MailboxManager.setInstance(null);
         MailboxIndex.setIndexStoreFactory("lucene");
 
-        LC.zimbra_class_store.setDefault(MockStoreManager.class.getName());
+        LC.zimbra_class_store.setDefault(storeManagerClass.getName());
         StoreManager.getInstance().startup();
     }
 

@@ -14,10 +14,8 @@
  */
 package com.zimbra.cs.store.http;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.util.HashMap;
 
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.junit.After;
@@ -26,28 +24,25 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.google.common.io.ByteStreams;
+import com.google.common.io.Files;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.FileUtil;
+import com.zimbra.cs.account.MockProvisioning;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.ThreaderTest;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
-import com.zimbra.cs.store.StorageCallback;
 import com.zimbra.cs.store.StoreManager;
 
 public class HttpStoreManagerTest {
 
     public static class MockHttpStoreManager extends HttpStoreManager {
-        @Override
-        public void startup()  { }
-
-        @Override
-        public void shutdown()  { }
-
         @Override
         protected String getGetUrl(Mailbox mbox, String locator) {
             return MockHttpStore.URL_PREFIX + locator;
@@ -64,18 +59,8 @@ public class HttpStoreManagerTest {
         }
 
         @Override
-        public Blob storeIncoming(InputStream data, StorageCallback callback, boolean storeAsIs) throws IOException {
-            return new MockBlob(ByteStreams.toByteArray(data));
-        }
-
-        @Override
-        public InputStream getContent(Blob blob) throws IOException {
-            return blob.getInputStream();
-        }
-
-        @Override
         protected StagedBlob getStagedBlob(PostMethod post, String postDigest, long postSize, Mailbox mbox)
-        throws ServiceException, IOException {
+        throws ServiceException {
             String locator = post.getResponseHeader("Location").getValue();
             if (locator == null || locator.isEmpty()) {
                 throw ServiceException.FAILURE("no locator returned from POST", null);
@@ -84,55 +69,33 @@ public class HttpStoreManagerTest {
                 return new HttpStagedBlob(mbox, postDigest, postSize, parts[parts.length - 1]);
             }
         }
-
-        private static final class MockBlob extends Blob {
-            private final byte[] content;
-
-            MockBlob(byte[] data) {
-                super(new MockFile(data));
-                content = data;
-            }
-
-            @Override
-            public InputStream getInputStream() throws IOException {
-                return new ByteArrayInputStream(content);
-            }
-
-            @Override
-            public long getRawSize() {
-                return content.length;
-            }
-
-            @SuppressWarnings("serial")
-            private static class MockFile extends File {
-                public MockFile(byte[] data) {
-                    super("build/test/store");
-                }
-
-                @Override
-                public boolean exists() {
-                    return true;
-                }
-            }
-        }
     }
+
+    File tmpDir;
 
     @BeforeClass
     public static void init() throws Exception {
+        MailboxTestUtil.initServer(MockHttpStoreManager.class);
         MailboxTestUtil.initProvisioning();
-
-        LC.zimbra_class_store.setDefault(MockHttpStoreManager.class.getName());
-        StoreManager.getInstance().startup();
+        Provisioning.getInstance().createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
 
     @Before
     public void setUp() throws Exception {
         MockHttpStore.startup();
+        tmpDir = Files.createTempDir();
+        LC.zimbra_tmp_directory.setDefault(tmpDir.getPath());
+        StoreManager.getInstance().startup();
+        MailboxTestUtil.clearData();
     }
 
     @After
     public void tearDown() throws Exception {
+        StoreManager.getInstance().shutdown();
         MockHttpStore.shutdown();
+        if (tmpDir != null) {
+            FileUtil.deleteDir(tmpDir);
+        }
     }
 
     @Test
@@ -148,5 +111,26 @@ public class HttpStoreManagerTest {
 
         MailboxBlob mblob = sm.link(staged, null, 0, 0);
         Assert.assertEquals("mblob size = staged size", staged.getSize(), mblob.getSize());
+    }
+
+    /**
+     * Tests putting two copies of the same message into the store (bug 67969).
+     */
+    @Test
+    public void sameDigest() throws Exception {
+        ParsedMessage pm = ThreaderTest.getRootMessage();
+        StoreManager sm = StoreManager.getInstance();
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+
+        Blob blob1 = sm.storeIncoming(pm.getRawInputStream(), null);
+        StagedBlob staged1 = sm.stage(blob1, mbox);
+        MailboxBlob mblob1 = sm.link(staged1, mbox, 0, 0);
+
+        Blob blob2 = sm.storeIncoming(pm.getRawInputStream(), null);
+        StagedBlob staged2 = sm.stage(blob2, mbox);
+        MailboxBlob mblob2 = sm.link(staged2, mbox, 0, 0);
+
+        mblob1.getLocalBlob();
+        mblob2.getLocalBlob();
     }
 }

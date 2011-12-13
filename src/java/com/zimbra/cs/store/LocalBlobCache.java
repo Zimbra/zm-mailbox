@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -20,11 +20,11 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraLog;
 
-/** Temporarily caches files on disk.  Uses the digest of the file internally
- *  to dedupe multiple copies of the same data.  The cache size can be limited
+/** Temporarily caches files on disk.  The cache size can be limited
  *  by the number of files or the total size. */
 public class LocalBlobCache {
     private long mMaxBytes = 100 * 1024 * 1024;  // 100MB default
@@ -87,7 +87,10 @@ public class LocalBlobCache {
             return found;
 
         long size = blob.getRawSize();
-        blob.renameTo(mCacheDir + File.separator + blob.getDigest());
+        // Set the filename to a hash of the key, to make sure that it's
+        // filesystem-safe.
+        String filename = ByteUtil.getSHA1Digest(key.getBytes(), true);
+        blob.renameTo(mCacheDir + File.separator + filename);
         mKeyToBlob.put(key, blob);
         mNumBytes += size;
 
