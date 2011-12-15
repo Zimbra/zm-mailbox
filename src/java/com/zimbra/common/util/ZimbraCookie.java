@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2008, 2009, 2010, 2011 VMware, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -16,6 +16,8 @@ package com.zimbra.common.util;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
+
+import org.mortbay.jetty.HttpOnlyCookie;
 
 import com.zimbra.common.localconfig.LC;
 
@@ -57,8 +59,7 @@ public class ZimbraCookie {
         
         if (httpOnly) {
             // httpOnly code will be activated after bug 64052 is fixed
-            // see jetty-7.5 code below
-            cookie = new Cookie(name, value);
+            cookie = new Cookie(name, value);  // new HttpOnlyCookie(name, value); 
         } else {
             cookie = new Cookie(name, value);
         }
@@ -69,38 +70,7 @@ public class ZimbraCookie {
         ZimbraCookie.setAuthTokenCookieDomainPath(cookie, ZimbraCookie.PATH_ROOT);
 
         cookie.setSecure(secure);
-        // httpOnly code will be activated after bug 64052 is fixed
-        // jetty 7.6 https://bugs.eclipse.org/bugs/show_bug.cgi?id=364657
-        /*
-        if (httpOnly) {
-            cookie.setComment("__HTTP_ONLY__");
-        }
-        */
         response.addCookie(cookie);
     }
-    
-    // httpOnly code will be activated after bug 64052 is fixed
-    /*
-     * jetty 7.5
-     *  
-    org.eclipse.jetty.http.HttpCookie cookie = 
-        new org.eclipse.jetty.http.HttpCookie(
-            ck.getKey(),                             // name
-            ck.getValue(),                           // value
-            null,                                    // domain
-            ZimbraCookie.PATH_ROOT,                  // path
-            maxAge == null ? -1 : maxAge.intValue(), // maxAge
-            true,                                    // httpOnly
-            secure                                   // secure
-            );
-    
-    if (response instanceof javax.servlet.ServletResponseWrapper) {
-        javax.servlet.ServletResponse servletResp = ((javax.servlet.ServletResponseWrapper) response).getResponse();
-        if (servletResp instanceof org.eclipse.jetty.server.Response) {
-            org.eclipse.jetty.server.Response resp = (org.eclipse.jetty.server.Response) servletResp;
-            resp.addCookie(authTokenCookie);
-        }
-    }
-    */
 
 }
