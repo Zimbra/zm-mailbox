@@ -251,6 +251,9 @@ SECTION proxy
 	VAR zimbraReverseProxyRouteLookupTimeout 
 	VAR zimbraReverseProxySendPop3Xoip
 	VAR zimbraReverseProxySSLCiphers
+	VAR zimbraReverseProxyUpstreamPollingTimeout
+	VAR zimbraReverseProxyUpstreamReadTimeout
+	VAR zimbraReverseProxyUpstreamSendTimeout
 	VAR zimbraReverseProxyUserLoginLimit
 	VAR zimbraReverseProxyUserLoginLimitTime
 	VAR zimbraReverseProxyUserThrottleMsg
