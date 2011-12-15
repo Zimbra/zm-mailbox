@@ -27,6 +27,8 @@ public final class SyncAdminConstants {
     public static final String E_GET_DEVICES_COUNT_SINCE_LAST_USED_RESPONSE = "GetDevicesCountSinceLastUsedResponse";
     public static final String E_GET_DEVICES_COUNT_USED_TODAY_REQUEST = "GetDevicesCountUsedTodayRequest";
     public static final String E_GET_DEVICES_COUNT_USED_TODAY_RESPONSE = "GetDevicesCountUsedTodayResponse";
+    public static final String E_REMOTE_WIPE_REQUEST = "RemoteWipeRequest";
+    public static final String E_REMOTE_WIPE_RESPONSE = "RemoteWipeResponse";
 
     public static final QName GET_DEVICES_COUNT_REQUEST = QName.get(E_GET_DEVICES_COUNT_REQUEST, NAMESPACE);
     public static final QName GET_DEVICES_COUNT_RESPONSE = QName.get(E_GET_DEVICES_COUNT_RESPONSE, NAMESPACE);
@@ -34,6 +36,8 @@ public final class SyncAdminConstants {
     public static final QName GET_DEVICES_COUNT_SINCE_LAST_USED_RESPONSE = QName.get(E_GET_DEVICES_COUNT_SINCE_LAST_USED_RESPONSE, NAMESPACE);
     public static final QName GET_DEVICES_COUNT_USED_TODAY_REQUEST = QName.get(E_GET_DEVICES_COUNT_USED_TODAY_REQUEST, NAMESPACE);
     public static final QName GET_DEVICES_COUNT_USED_TODAY_RESPONSE = QName.get(E_GET_DEVICES_COUNT_USED_TODAY_RESPONSE, NAMESPACE);
+    public static final QName REMOTE_WIPE_REQUEST = QName.get(E_REMOTE_WIPE_REQUEST, NAMESPACE);
+    public static final QName REMOTE_WIPE_RESPONSE = QName.get(E_REMOTE_WIPE_RESPONSE, NAMESPACE);
 
     public static final String E_LAST_USED_DATE = "lastUsedDate";
 
