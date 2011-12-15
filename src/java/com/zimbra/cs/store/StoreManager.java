@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -50,6 +50,14 @@ public abstract class StoreManager {
     }
 
     /**
+     * Used for unit testing.
+     */
+    public static void setInstance(StoreManager instance) {
+        ZimbraLog.store.info("Setting StoreManager to " + instance.getClass().getName());
+        sInstance = instance;
+    }
+
+    /**
      * Starts the blob store.
      */
     public abstract void startup() throws IOException, ServiceException;
@@ -70,7 +78,7 @@ public abstract class StoreManager {
      * @throws ServiceException if a service exception occurred
      */
     public abstract BlobBuilder getBlobBuilder() throws IOException, ServiceException;
-    
+
     /**
      * Store a blob in incoming directory.  Blob will be compressed if volume supports compression
      * and blob size is over the compression threshold.
@@ -102,7 +110,7 @@ public abstract class StoreManager {
      * Stage an incoming <code>InputStream</code> to an
      * appropriate place for subsequent storage in a <code>Mailbox</code> via
      * {@link #link(StagedBlob, Mailbox, int, int)} or {@link #renameTo}.
-     * 
+     *
      * @param data the data stream
      * @param actualSize the content size, or {@code -1} if the content size is not available
      * @param callback callback, or {@code null}
@@ -115,7 +123,7 @@ public abstract class StoreManager {
      * Stage an incoming <code>InputStream</code> to an
      * appropriate place for subsequent storage in a <code>Mailbox</code> via
      * {@link #link(StagedBlob, Mailbox, int, int)} or {@link #renameTo}.
-     * 
+     *
      * @param data the data stream
      * @param callback callback, or {@code null}
      * @param mbox the mailbox
@@ -124,7 +132,7 @@ public abstract class StoreManager {
     throws IOException, ServiceException {
         return stage(data, -1, callback, mbox);
     }
-    
+
     /**
      * Stage an incoming <code>Blob</code> (see {@link #storeIncoming}) to an
      * appropriate place for subsequent storage in a <code>Mailbox</code> via
@@ -280,7 +288,7 @@ public abstract class StoreManager {
      * @param revision mail_item.mod_content value for message
      * @return the <code>MailboxBlob</code>, or <code>null</code> if the file
      * does not exist
-     * 
+     *
      * @throws ServiceException
      */
     public abstract MailboxBlob getMailboxBlob(Mailbox mbox, int msgId, int revision, String locator)
@@ -291,7 +299,7 @@ public abstract class StoreManager {
      * @param item An item already deposited in its Mailbox.
      * @return the <code>MailboxBlob</code>, or <code>null</code> if the file
      * does not exist
-     * 
+     *
      * @throws ServiceException
      */
     public MailboxBlob getMailboxBlob(MailItem item) throws ServiceException {

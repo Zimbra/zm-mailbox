@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -56,7 +56,7 @@ public class MessageCache {
     /** Number of bytes of message data stored in the cache.  This value includes only
      * messages that are read into memory, not streamed from disk. */
     private volatile static long sDataSize = 0;
-    
+
     static {
         try {
             loadSettings();
@@ -76,7 +76,13 @@ public class MessageCache {
             return sCache.size();
         }
     }
-    
+
+    public static boolean contains(String digest) {
+        synchronized (sCache) {
+            return sCache.containsKey(digest);
+        }
+    }
+
     public static long getDataSize() {
         return sDataSize;
     }
@@ -122,13 +128,13 @@ public class MessageCache {
             }
         }
     }
-    
+
     /** Returns a JavaMail {@link javax.mail.internet.MimeMessage}
      *  encapsulating the message content.  If possible, TNEF and uuencoded
      *  attachments are expanded and their components are presented as
      *  standard MIME attachments.  If TNEF or uuencode decoding fails, the
      *  MimeMessage wraps the raw message content.
-     * 
+     *
      * @return A MimeMessage wrapping the RFC822 content of the Message.
      * @throws ServiceException when errors occur opening, reading,
      *                          uncompressing, or parsing the message file,
@@ -143,7 +149,7 @@ public class MessageCache {
         boolean cacheHit = true;
         boolean newNode = false;
         InputStream in = null;
-        
+
         synchronized (sCache) {
             cnode = sCache.get(digest);
             if (cnode == null) {
@@ -188,7 +194,7 @@ public class MessageCache {
                     cnode.expanded = cnode.message;
                 }
             }
-            
+
             if (newNode) {
                 cacheItem(digest, cnode);
             }
@@ -207,7 +213,7 @@ public class MessageCache {
             sLog.debug("Cache miss for item %d: digest=%s, expand=%b.", item.getId(), item.getDigest(), expand);
             ZimbraPerf.COUNTER_MBOX_MSG_CACHE.increment(0);
         }
-        
+
         if (expand) {
             return cnode.expanded;
         } else {
