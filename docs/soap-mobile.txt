@@ -131,6 +131,8 @@ zimbra sync specific admin SOAP messages:
 <GetDevicesCountSinceLastUsedResponse>
 <GetDevicesCountUsedTodayRequest>
 <GetDevicesCountUsedTodayResponse>
+<RemoteWipeRequest>
+<RemoteWipeResponse>
 
 
 ------------------------
@@ -172,3 +174,27 @@ Get the mobile devices count on the server used today.
 <GetDevicesCountUsedTodayResponse>
   <count>1023</count>
 </GetDevicesCountUsedTodayResponse>
+
+
+-------------------
+<RemoteWipeRequest>
+-------------------
+
+Request a device (e.g. a lost device) be wiped of all its data on the next sync.
+
+<RemoteWipeRequest xmlns="urn:zimbraAdmin">
+  <device id="{device_id}" />
+</RemoteWipeRequest>
+         
+<RemoteWipeResponse xmlns="urn:zimbraAdmin">
+  <device id="{device_id}" type="{device_type}" protocol="{protocol_version}" [ua="{user_agent}"] [model="{model}"] [imei="{imei}"] [friendly_name="{friendly_name}"] [os="{os}"] [os_language="{os_language}"] [phone_number="{phone_number}"]>
+    <provisionable>{provisionable}</provisionable>
+    <status>{status}</status>
+    <firstReqReceived>{first_req_recv}</firstReqReceived>
+    [<lastPolicyUpdate>{last_policy_update}</lastPolicyUpdate>]
+    [<remoteWipeReqTime>{remote_wipe_req}</remoteWipeReqTime>
+    [<removeWipeAckTime>{remote_wipe_ack}</remoteWipeAckTime>]]
+    [<recoveryPassword>{recover_password}</recoveryPassword>]
+    [<lastUsedDate>{last_used_date}</lastUsedDate>]
+  </device>
+</RemoteWipeResponse>
