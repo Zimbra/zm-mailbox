@@ -121,10 +121,14 @@ public final class SearchGrants {
          * Returns a map of target entry and ZimbraACL object on the target.
          */
         Set<GrantsOnTarget> getResults() throws ServiceException {
+            return getResults(false);
+        }
+
+        Set<GrantsOnTarget> getResults(boolean needFullDL) throws ServiceException {
             if (results == null) {
                 results = new HashSet<GrantsOnTarget>();
                 for (GrantsOnTargetRaw grants : rawResults.values()) {
-                    results.add(getGrants(prov, grants));
+                    results.add(getGrants(prov, grants, needFullDL));
                 }
             }
             return results;
@@ -133,7 +137,8 @@ public final class SearchGrants {
         /**
          * Converts a {@link SearchGrantsResults} to {@code <Entry, ZimbraACL>} pair.
          */
-        private GrantsOnTarget getGrants(Provisioning prov, GrantsOnTargetRaw sgr) throws ServiceException {
+        private GrantsOnTarget getGrants(Provisioning prov, GrantsOnTargetRaw sgr, boolean needFullDL) 
+        throws ServiceException {
             TargetType tt;
             if (sgr.objectClass.contains(AttributeClass.OC_zimbraCalendarResource)) {
                 tt = TargetType.calresource;
@@ -165,7 +170,7 @@ public final class SearchGrants {
                 if (tt == TargetType.zimlet) {
                     entry = TargetType.lookupTarget(prov, tt, TargetBy.name, sgr.cn);
                 } else {
-                    entry = TargetType.lookupTarget(prov, tt, TargetBy.id, sgr.zimbraId);
+                    entry = TargetType.lookupTarget(prov, tt, TargetBy.id, sgr.zimbraId, needFullDL, true);
                 }
                 if (entry == null) {
                     ZimbraLog.acl.warn("canot find target by id %s", sgr.zimbraId);

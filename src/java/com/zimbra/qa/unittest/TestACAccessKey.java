@@ -22,7 +22,7 @@ public class TestACAccessKey {
         private String mName;
         private String mAccessKey;
         
-        KeyAuthToken(String name, String accessKey) {
+        public KeyAuthToken(String name, String accessKey) {
             mName = name;
             mAccessKey = accessKey;
         }

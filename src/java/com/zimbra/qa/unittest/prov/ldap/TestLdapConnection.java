@@ -39,8 +39,6 @@ import com.zimbra.cs.ldap.LdapServerConfig.ExternalLdapConfig;
 import com.zimbra.cs.ldap.unboundid.LdapConnectionPool;
 import com.zimbra.cs.ldap.unboundid.UBIDLdapContext;
 import com.zimbra.qa.unittest.prov.LocalconfigTestUtil;
-import com.zimbra.qa.unittest.prov.ProvTest;
-import com.zimbra.qa.unittest.prov.ProvTest.SkippedForInMemLdapServerException.Reason;
 
 public class TestLdapConnection extends LdapTest {
     
@@ -160,7 +158,7 @@ public class TestLdapConnection extends LdapTest {
     
     @Test
     public void onCheckoutHealthCheck() throws Exception {
-        SKIP_FOR_INMEM_LDAP_SERVER(Reason.CONNECTION_POOL_HEALTH_CHECK);
+        SKIP_FOR_INMEM_LDAP_SERVER(SkipTestReason.CONNECTION_POOL_HEALTH_CHECK);
         
         Map<KnownKey, String> lcKeysToModify = new HashMap<KnownKey, String>();
         lcKeysToModify.put(LC.ldap_connect_pool_health_check_on_checkout_enabled, "true");
@@ -278,7 +276,7 @@ public class TestLdapConnection extends LdapTest {
     
     @Test
     public void backgroundHealthCheck() throws Exception {
-        SKIP_FOR_INMEM_LDAP_SERVER(Reason.CONNECTION_POOL_HEALTH_CHECK);
+        SKIP_FOR_INMEM_LDAP_SERVER(SkipTestReason.CONNECTION_POOL_HEALTH_CHECK);
         
         final long BACKGROUND_HEALTH_CHECK_INTERVAL = 5000; // 5 secs
         

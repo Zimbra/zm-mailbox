@@ -12,7 +12,7 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.qa.unittest;
+package com.zimbra.qa.unittest.prov.ldap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -21,20 +21,24 @@ import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
+import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Cos;
@@ -44,7 +48,9 @@ import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.GlobalGrant;
 import com.zimbra.cs.account.Group;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
 import com.zimbra.cs.account.accesscontrol.AttrRight;
@@ -65,10 +71,21 @@ import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.UserRight;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
+import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.entry.LdapDomain;
+import com.zimbra.qa.unittest.TestACAccessKey;
 import com.zimbra.soap.type.TargetBy;
 
-public class TestACAll extends TestAC {
+public class TestACLAll extends LdapTest {
+
+    
+    private static final String ATTR_ALLOWED_IN_THE_RIGHT = Provisioning.A_description;
+    private static final String ATTR_NOTALLOWED_IN_THE_RIGHT = Provisioning.A_objectClass;
+    
+    private static final String PASSWORD = "test123";
+    private static int sequence = 1;
+    
+    private static List<Right> rights = Lists.newArrayList();
     
     private static class TestGranteeType {
         private static final TestGranteeType GRANTEE_DYNAMIC_GROUP = new TestGranteeType("dgp");
@@ -111,25 +128,114 @@ public class TestACAll extends TestAC {
         }
     };
     
-    @Before
-    public void initTest() throws Exception {
+    static final AccessManager accessMgr = AccessManager.getInstance();
+    private static LdapProvTestUtil provUtil;
+    private static LdapProv prov;
+    private static Domain baseDomain;
+    private static String BASE_DOMAIN_NAME;
+    private static Account globalAdmin;
+
+    
+    @BeforeClass
+    public static void init() throws Exception {
+        provUtil = new LdapProvTestUtil();
+        prov = provUtil.getProv();
+        baseDomain = provUtil.createDomain(baseDomainName());
+        BASE_DOMAIN_NAME = baseDomain.getName();
+        globalAdmin = provUtil.createGlobalAdmin("globaladmin", baseDomain);
+        
+        ACLTestUtil.initTestRights();
+        initRights();
+        
         // remove all grants on global grant so it will not interfere with later tests
         revokeAllGrantsOnGlobalGrantAndGlobalConfig();
     }
     
-    @After
-    public void cleanupTest() throws Exception {
+    @AfterClass
+    public static void cleanup() throws Exception {
         // remove all grants on global grant so it will not interfere with later tests
         revokeAllGrantsOnGlobalGrantAndGlobalConfig();
-        deleteAllEntries();
+        Cleanup.deleteAll(baseDomainName());
+    }
+    
+    private static void initRights() throws Exception {
+        
+        rights.add(ACLTestUtil.USER_LOGIN_AS);              
+        rights.add(ACLTestUtil.USER_RIGHT);                    
+        rights.add(ACLTestUtil.USER_RIGHT_DISTRIBUTION_LIST);   
+        rights.add(ACLTestUtil.USER_RIGHT_DOMAIN);
+        rights.add(ACLTestUtil.USER_RIGHT_RESTRICTED_GRANT_TARGET_TYPE);
+        
+        rights.add(ACLTestUtil.ADMIN_PRESET_LOGIN_AS);          
+        rights.add(ACLTestUtil.ADMIN_PRESET_ACCOUNT);
+        rights.add(ACLTestUtil.ADMIN_PRESET_CALENDAR_RESOURCE);
+        rights.add(ACLTestUtil.ADMIN_PRESET_CONFIG);
+        rights.add(ACLTestUtil.ADMIN_PRESET_COS);
+        rights.add(ACLTestUtil.ADMIN_PRESET_DISTRIBUTION_LIST);
+        rights.add(ACLTestUtil.ADMIN_PRESET_DYNAMIC_GROUP);
+        rights.add(ACLTestUtil.ADMIN_PRESET_DOMAIN);
+        rights.add(ACLTestUtil.ADMIN_PRESET_GLOBALGRANT);
+        rights.add(ACLTestUtil.ADMIN_PRESET_SERVER);
+        rights.add(ACLTestUtil.ADMIN_PRESET_XMPP_COMPONENT);
+        rights.add(ACLTestUtil.ADMIN_PRESET_ZIMLET);
+        
+        rights.add(ACLTestUtil.ADMIN_ATTR_GETALL_ACCOUNT);
+        rights.add(ACLTestUtil.ADMIN_ATTR_SETALL_ACCOUNT);
+        rights.add(ACLTestUtil.ADMIN_ATTR_GETSOME_ACCOUNT);
+        rights.add(ACLTestUtil.ADMIN_ATTR_SETSOME_ACCOUNT);
+        rights.add(ACLTestUtil.ADMIN_ATTR_GETALL_CALENDAR_RESOURCE);
+        rights.add(ACLTestUtil.ADMIN_ATTR_SETALL_CALENDAR_RESOURCE);
+        rights.add(ACLTestUtil.ADMIN_ATTR_GETSOME_CALENDAR_RESOURCE);
+        rights.add(ACLTestUtil.ADMIN_ATTR_SETSOME_CALENDAR_RESOURCE);
+        rights.add(ACLTestUtil.ADMIN_ATTR_GETALL_CONFIG);
+        rights.add(ACLTestUtil.ADMIN_ATTR_SETALL_CONFIG);
+        rights.add(ACLTestUtil.ADMIN_ATTR_GETSOME_CONFIG);
+        rights.add(ACLTestUtil.ADMIN_ATTR_SETSOME_CONFIG);
+        rights.add(ACLTestUtil.ADMIN_ATTR_GETALL_COS);
+        rights.add(ACLTestUtil.ADMIN_ATTR_SETALL_COS);
+        rights.add(ACLTestUtil.ADMIN_ATTR_GETSOME_COS);
+        rights.add(ACLTestUtil.ADMIN_ATTR_SETSOME_COS);
+        rights.add(ACLTestUtil.ADMIN_ATTR_GETALL_DISTRIBUTION_LIST);
+        rights.add(ACLTestUtil.ADMIN_ATTR_SETALL_DISTRIBUTION_LIST);
+        rights.add(ACLTestUtil.ADMIN_ATTR_GETSOME_DISTRIBUTION_LIST);
+        rights.add(ACLTestUtil.ADMIN_ATTR_SETSOME_DISTRIBUTION_LIST);
+        rights.add(ACLTestUtil.ADMIN_ATTR_GETALL_DYNAMIC_GROUP);
+        rights.add(ACLTestUtil.ADMIN_ATTR_SETALL_DYNAMIC_GROUP);
+        rights.add(ACLTestUtil.ADMIN_ATTR_GETSOME_DYNAMIC_GROUP);
+        rights.add(ACLTestUtil.ADMIN_ATTR_SETSOME_DYNAMIC_GROUP);
+        rights.add(ACLTestUtil.ADMIN_ATTR_GETALL_DOMAIN);
+        rights.add(ACLTestUtil.ADMIN_ATTR_SETALL_DOMAIN);
+        rights.add(ACLTestUtil.ADMIN_ATTR_GETSOME_DOMAIN);
+        rights.add(ACLTestUtil.ADMIN_ATTR_SETSOME_DOMAIN);
+        rights.add(ACLTestUtil.ADMIN_ATTR_GETALL_SERVER);
+        rights.add(ACLTestUtil.ADMIN_ATTR_SETALL_SERVER);
+        rights.add(ACLTestUtil.ADMIN_ATTR_GETSOME_SERVER);
+        rights.add(ACLTestUtil.ADMIN_ATTR_SETSOME_SERVER);
+        rights.add(ACLTestUtil.ADMIN_ATTR_GETALL_ZIMLET);
+        rights.add(ACLTestUtil.ADMIN_ATTR_SETALL_ZIMLET);
+        rights.add(ACLTestUtil.ADMIN_ATTR_GETSOME_ZIMLET);
+        rights.add(ACLTestUtil.ADMIN_ATTR_SETSOME_ZIMLET);
+        
+        rights.add(ACLTestUtil.ADMIN_COMBO_ACCOUNT);
+        rights.add(ACLTestUtil.ADMIN_COMBO_CALENDAR_RESOURCE);
+        rights.add(ACLTestUtil.ADMIN_COMBO_CONFIG);
+        rights.add(ACLTestUtil.ADMIN_COMBO_COS);
+        rights.add(ACLTestUtil.ADMIN_COMBO_DISTRIBUTION_LIST);
+        rights.add(ACLTestUtil.ADMIN_COMBO_DYNAMIC_GROUP);
+        rights.add(ACLTestUtil.ADMIN_COMBO_DOMAIN);
+        rights.add(ACLTestUtil.ADMIN_COMBO_GLOBALGRANT);
+        rights.add(ACLTestUtil.ADMIN_COMBO_SERVER);
+        rights.add(ACLTestUtil.ADMIN_COMBO_XMPP_COMPONENT);
+        rights.add(ACLTestUtil.ADMIN_COMBO_ZIMLET);
+        // sRights.add(ACLTestUtil.ADMIN_COMBO_ALL);
     }
     
     private Config getConfig() throws Exception {
-        return mProv.getConfig();
+        return prov.getConfig();
     }
     
     private GlobalGrant getGlobalGrant() throws Exception {
-        return mProv.getGlobalGrant();
+        return prov.getGlobalGrant();
     }
     
     private boolean asAdmin(Account acct) {
@@ -137,6 +243,182 @@ public class TestACAll extends TestAC {
         // TODO: test cases when the account is an admin account but is not using the admin privelege
         return (acct.isIsAdminAccount() || acct.isIsDelegatedAdminAccount());
     }
+    
+    private static synchronized String nextSeq() {
+        return "" + sequence++;
+    }
+    
+    private String domainName() {
+        return nextSeq() + "." + BASE_DOMAIN_NAME;
+    }
+    
+    private String accountName() {
+        return "acct-" + nextSeq();
+    }
+    
+    private String calendarResourceName() {
+        return "cr-" + nextSeq();
+    }
+    
+    private String distributionListName() {
+        return "dl-" + nextSeq();
+    }
+    
+    private String dynamicGroupName() {
+        return "group-" + nextSeq();
+    }
+    
+    private String cosName() {
+        return "cos-" + nextSeq();
+    }
+    
+    private String serverName() {
+        return "server-" + nextSeq();
+    }
+    
+    private String XMPPComponentName() {
+        return "xmpp-" + nextSeq();
+    }
+    
+    private String zimletName() {
+        return "zimlet-" + nextSeq();
+    }
+    
+    private Domain createDomain() throws Exception {
+        return provUtil.createDomain(domainName());
+    }  
+    
+    private Account anonAccount() {
+        return GuestAccount.ANONYMOUS_ACCT;
+    }
+    
+    private Account createUserAccount(String localpart, Domain domain) throws Exception {
+        if (domain == null) {
+            domain = createDomain();
+        }
+        return provUtil.createAccount(localpart, domain);
+    }
+    
+    private Account createUserAccount(Domain domain) throws Exception {
+        String localpart = accountName();
+        return createUserAccount(localpart, domain);
+    }
+
+    private Account createDelegatedAdminAccount(String localpart, Domain domain) 
+    throws Exception {
+        if (domain == null) {
+            domain = createDomain();
+        }
+        return provUtil.createDelegatedAdmin(localpart, domain);
+    }
+        
+    private Account createDelegatedAdminAccount(Domain domain) throws Exception {
+        String localpart = accountName();
+        return createDelegatedAdminAccount(localpart, domain);
+    }
+    
+    private Account createGuestAccount(String email, String password) {
+        return new GuestAccount(email, password);
+    }
+    
+    private Account createKeyAccount(String name, String accesKey) {
+        AuthToken authToken = new TestACAccessKey.KeyAuthToken(name, accesKey);
+        return new GuestAccount(authToken);
+    }
+    
+    private CalendarResource createCalendarResource(String localpart, Domain domain) 
+    throws Exception {
+        if (domain == null) {
+            domain = createDomain();
+        }
+        
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_displayName, localpart);
+        attrs.put(Provisioning.A_zimbraCalResType, "Equipment");
+        
+        return provUtil.createCalendarResource(localpart, domain, attrs);
+    }
+    
+    private CalendarResource createCalendarResource(Domain domain) throws Exception {
+        String localpart = calendarResourceName();
+        return createCalendarResource(localpart, domain);
+    }
+    
+    private DistributionList createDistributionList(String localpart, Domain domain, 
+            Map<String, Object> attrs) throws Exception {
+        if (domain == null) {
+            domain = createDomain();
+        }
+        return provUtil.createDistributionList(localpart, domain, attrs);
+    }
+        
+    private DistributionList createUserDistributionList(String localpart, Domain domain) 
+    throws Exception {
+        return createDistributionList(localpart, domain, new HashMap<String, Object>());
+    }
+    
+    private DistributionList createUserDistributionList(Domain domain) throws Exception {
+        String localpart = distributionListName();
+        return createUserDistributionList(localpart, domain);
+    }
+
+    private DistributionList createAdminDistributionList(String localpart, Domain domain) 
+    throws Exception {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, ProvisioningConstants.TRUE);
+        return createDistributionList(localpart, domain, attrs);
+    }
+    
+    private DistributionList createAdminDistributionList(Domain domain) throws Exception {
+        String localpart = distributionListName();
+        return createAdminDistributionList(localpart, domain);
+    }
+    
+    private DynamicGroup createDynamicGroup(String localpart, Domain domain, 
+            Map<String, Object> attrs) 
+    throws Exception {
+        if (domain == null) {
+            domain = createDomain();
+        }
+        return provUtil.createDynamicGroup(localpart, domain, attrs);
+    }
+    
+    private DynamicGroup createUserDynamicGroup(String localpart, Domain domain) 
+    throws Exception {
+        return createDynamicGroup(localpart, domain, new HashMap<String, Object>());
+    }
+    
+    private DynamicGroup createUserDynamicGroup(Domain domain) throws Exception {
+        String localpart = dynamicGroupName();
+        return createUserDynamicGroup(localpart, domain);
+    }
+    
+    private DynamicGroup createAdminDynamicGroup(String localpart, Domain domain) 
+    throws Exception {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraIsAdminGroup, ProvisioningConstants.TRUE);
+        return createDynamicGroup(localpart, domain, attrs);
+    }
+    
+    private DynamicGroup createAdminDynamicGroup(Domain domain) throws Exception {
+        String localpart = dynamicGroupName();
+        return createAdminDynamicGroup(localpart, domain);
+    }
+    
+    private Cos createCos() throws Exception {
+        return provUtil.createCos(cosName());
+    }
+    
+    private Server createServer() throws Exception {
+        return provUtil.createServer(serverName());
+    }
+    
+    private Zimlet createZimlet() throws Exception {
+        Map<String, Object> attrs = new HashMap<String, Object>();
+        attrs.put(Provisioning.A_zimbraZimletVersion, "1.0");
+        return provUtil.createZimlet(zimletName(), attrs);
+    }
+
     
     private boolean expectedIsUserRightGrantableOnTargetType(
             UserRight userRight, TargetType targetType) 
@@ -378,19 +660,19 @@ public class TestACAll extends TestAC {
                         grantee = createUserDistributionList(domain);
                         Account allowedAcct = createUserAccount(domain);
                         allowedAccts.add(allowedAcct);
-                        mProv.addMembers((DistributionList)grantee, new String[]{allowedAcct.getName()});
+                        prov.addMembers((DistributionList)grantee, new String[]{allowedAcct.getName()});
                         
                         // external members are also honored if the right is a user right
                         Account guestAcct = createGuestAccount("guest@guest.com", "test123");
                         allowedAccts.add(guestAcct);
-                        mProv.addMembers((DistributionList)grantee, new String[]{guestAcct.getName()});
+                        prov.addMembers((DistributionList)grantee, new String[]{guestAcct.getName()});
                         
                         deniedAccts.add(createUserAccount(domain));
                     } else {
                         grantee = createAdminDistributionList(domain);
                         Account allowedAcct = createDelegatedAdminAccount(domain);
                         allowedAccts.add(allowedAcct);
-                        mProv.addMembers((DistributionList)grantee, new String[]{allowedAcct.getName()});
+                        prov.addMembers((DistributionList)grantee, new String[]{allowedAcct.getName()});
                         deniedAccts.add(createDelegatedAdminAccount(domain));
                     }
                     granteeName = grantee.getName();
@@ -441,7 +723,7 @@ public class TestACAll extends TestAC {
                     domain.setExternalGroupLdapSearchBase("OU=Engineering,DC=vmware,DC=com", domainAttrs);
                     domain.setExternalGroupLdapSearchFilter("(&(objectClass=group)(mail=%n))", domainAttrs);
                     domain.setExternalGroupHandlerClass("com.zimbra.cs.account.grouphandler.ADGroupHandler", domainAttrs);
-                    mProv.modifyAttrs(domain, domainAttrs);
+                    prov.modifyAttrs(domain, domainAttrs);
                     
                     String extGroupName = "ENG_pao_users_home4@vmware.com"; // "ESPPEnrollment-USA@vmware.com";
                     
@@ -513,13 +795,13 @@ public class TestACAll extends TestAC {
                 grantee = createUserDynamicGroup(domain);
                 Account allowedAcct = createUserAccount(domain);
                 allowedAccts.add(allowedAcct);
-                mProv.addGroupMembers((DynamicGroup)grantee, new String[]{allowedAcct.getName()});
+                prov.addGroupMembers((DynamicGroup)grantee, new String[]{allowedAcct.getName()});
                 deniedAccts.add(createUserAccount(domain));
             } else {
                 grantee = createAdminDynamicGroup(domain);
                 Account allowedAcct = createDelegatedAdminAccount(domain);
                 allowedAccts.add(allowedAcct);
-                mProv.addGroupMembers((DynamicGroup)grantee, new String[]{allowedAcct.getName()});
+                prov.addGroupMembers((DynamicGroup)grantee, new String[]{allowedAcct.getName()});
                 deniedAccts.add(createDelegatedAdminAccount(domain));
             }
             granteeName = grantee.getName();
@@ -609,10 +891,10 @@ public class TestACAll extends TestAC {
             // TODO: in a different test, test granting by a different authed account: 
             //       global admin, delegated admin, user
             // 
-            Account grantingAccount = getGlobalAdminAcct();
+            Account grantingAccount = globalAdmin;
             
             RightCommand.grantRight(
-                    mProv, grantingAccount,
+                    prov, grantingAccount,
                     grantedOnTargetType.getCode(), TargetBy.name, targetName,
                     granteeType.getCode(), Key.GranteeBy.name, granteeName, secret,
                     right.getName(), null);
@@ -640,7 +922,7 @@ public class TestACAll extends TestAC {
         // in both cases the ACL should be on the entry.  We never do permission check right 
         // after group creation using the target object returned from the create call.
         if (grantedOnTarget instanceof Group) {
-            grantedOnTarget = mProv.getGroupBasic(Key.DistributionListBy.id, 
+            grantedOnTarget = prov.getGroupBasic(Key.DistributionListBy.id, 
                     ((Group) grantedOnTarget).getId());
         }
         
@@ -778,22 +1060,22 @@ public class TestACAll extends TestAC {
                     
                     // create a subgroup of the group on which the right is granted (testing multi levels of dl)
                     DistributionList subGroup = createUserDistributionList(domain);
-                    mProv.addMembers((DistributionList)grantedOnTarget, new String[]{subGroup.getName()});
-                    mProv.addMembers(subGroup, new String[]{((Account)good).getName()});
+                    prov.addMembers((DistributionList)grantedOnTarget, new String[]{subGroup.getName()});
+                    prov.addMembers(subGroup, new String[]{((Account)good).getName()});
                 } else {
                     bad = createUserAccount(domain);
-                    mProv.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)bad).getName()});
+                    prov.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)bad).getName()});
                     badTargets.add(bad);
                 }
                 
             } else if (grantedOnTargetType == TargetType.group) {
                 if (CheckRight.allowGroupTarget(right)) {
                     good = createUserAccount(domain);
-                    mProv.addGroupMembers((DynamicGroup)grantedOnTarget, new String[]{((Account)good).getName()});
+                    prov.addGroupMembers((DynamicGroup)grantedOnTarget, new String[]{((Account)good).getName()});
                     goodTargets.add(good);
                 } else {
                     bad = createUserAccount(domain);
-                    mProv.addGroupMembers((DynamicGroup)grantedOnTarget, new String[]{((Account)bad).getName()});
+                    prov.addGroupMembers((DynamicGroup)grantedOnTarget, new String[]{((Account)bad).getName()});
                     badTargets.add(bad);
                 }
                 
@@ -820,22 +1102,22 @@ public class TestACAll extends TestAC {
             } else if (grantedOnTargetType == TargetType.dl) {
                 if (CheckRight.allowGroupTarget(right)) {
                     good = createCalendarResource(domain);
-                    mProv.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)good).getName()});
+                    prov.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)good).getName()});
                     goodTargets.add(good);
                 } else {
                     bad = createCalendarResource(domain);
-                    mProv.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)bad).getName()});
+                    prov.addMembers((DistributionList)grantedOnTarget, new String[]{((Account)bad).getName()});
                     badTargets.add(bad);
                 }
                 
             } else if (grantedOnTargetType == TargetType.group) {
                 if (CheckRight.allowGroupTarget(right)) {
                     good = createCalendarResource(domain);
-                    mProv.addGroupMembers((DynamicGroup)grantedOnTarget, new String[]{((Account)good).getName()});
+                    prov.addGroupMembers((DynamicGroup)grantedOnTarget, new String[]{((Account)good).getName()});
                     goodTargets.add(good);
                 } else {
                     bad = createCalendarResource(domain);
-                    mProv.addGroupMembers((DynamicGroup)grantedOnTarget, new String[]{((Account)bad).getName()});
+                    prov.addGroupMembers((DynamicGroup)grantedOnTarget, new String[]{((Account)bad).getName()});
                     badTargets.add(bad);
                 }
                 
@@ -872,7 +1154,7 @@ public class TestACAll extends TestAC {
             if (grantedOnTargetType == TargetType.dl) {
                 // create a subgroup of the group on which the right is granted (testing multi levels of dl)
                 DistributionList subGroup = createUserDistributionList(domain);
-                mProv.addMembers((DistributionList)grantedOnTarget, new String[]{subGroup.getName()});
+                prov.addMembers((DistributionList)grantedOnTarget, new String[]{subGroup.getName()});
                 
                 goodTargets.add(subGroup);
                 goodTargets.add(grantedOnTarget);
@@ -964,7 +1246,7 @@ public class TestACAll extends TestAC {
             // zimlet is trouble, need to reload it or else the grant is not on the object
             // ldapProvisioning.getZimlet does not return a cached entry so our grantedOnTarget
             // object does not have the grant
-            mProv.reload(grantedOnTarget);
+            prov.reload(grantedOnTarget);
             
             if (grantedOnTargetType == TargetType.zimlet) {
                 goodTargets.add(grantedOnTarget);
@@ -999,7 +1281,7 @@ public class TestACAll extends TestAC {
         boolean expectFailure = !grantee.isIsDelegatedAdminAccount();
         try {
             effRights = RightCommand.getEffectiveRights(
-                    mProv,
+                    prov,
                     TargetType.getTargetType(target).getCode(), 
                     TargetBy.name, target.getLabel(),
                     Key.GranteeBy.name, grantee.getName(),
@@ -1026,7 +1308,7 @@ public class TestACAll extends TestAC {
         boolean expectFailure = !grantee.isIsDelegatedAdminAccount();
         try {
             allEffRights = RightCommand.getAllEffectiveRights(
-                    mProv,
+                    prov,
                     GranteeType.GT_USER.getCode(), Key.GranteeBy.name, grantee.getName(),
                     false, false);
         } catch (ServiceException e) {
@@ -1051,7 +1333,7 @@ public class TestACAll extends TestAC {
         boolean expectFailure = false;
         
         try {
-            String domainName = TargetType.getTargetDomainName(mProv, target);
+            String domainName = TargetType.getTargetDomainName(prov, target);
             TargetType targetType = TargetType.getTargetType(target);
             
             expectFailure = !grantee.isIsDelegatedAdminAccount() || 
@@ -1059,7 +1341,7 @@ public class TestACAll extends TestAC {
                 targetType == TargetType.global;
             
             effRights = RightCommand.getCreateObjectAttrs(
-                mProv, 
+                prov, 
                 TargetType.getTargetType(target).getCode(), 
                 Key.DomainBy.name, domainName,
                 null, null,
@@ -1149,7 +1431,7 @@ public class TestACAll extends TestAC {
             if (domainScope) {
                 Domain domain = null;
                 try {
-                    domain = TargetType.getTargetDomain(mProv, target);
+                    domain = TargetType.getTargetDomain(prov, target);
                 } catch (ServiceException e) {
                     e.printStackTrace();
                     fail();
@@ -1231,7 +1513,7 @@ public class TestACAll extends TestAC {
         // 
         boolean allow = false;
         try {
-            allow = sAM.canDo(grantee, target, right, asAdmin(grantee), null);
+            allow = accessMgr.canDo(grantee, target, right, asAdmin(grantee), null);
         } catch (ServiceException e) {
             // the only reasonable exception is PERM_DENIED 
             if (!ServiceException.PERM_DENIED.equals(e.getCode())) {
@@ -1269,7 +1551,7 @@ public class TestACAll extends TestAC {
         // verify getAttr
         // 
         try {
-            allow = sAM.canGetAttrs(grantee, target, attrs, true);  
+            allow = accessMgr.canGetAttrs(grantee, target, attrs, true);  
         } catch (ServiceException e) {
             // the only reasonable exception is PERM_DENIED 
             if (!ServiceException.PERM_DENIED.equals(e.getCode())) {
@@ -1324,7 +1606,7 @@ public class TestACAll extends TestAC {
         // verify setAttr
         //
         try {
-            allow = sAM.canSetAttrs(grantee, target, attrs, true);  
+            allow = accessMgr.canSetAttrs(grantee, target, attrs, true);  
         } catch (ServiceException e) {
             // the only reasonable exception is PERM_DENIED 
             if (!ServiceException.PERM_DENIED.equals(e.getCode())) {
@@ -1439,25 +1721,25 @@ public class TestACAll extends TestAC {
 
     }
     
-    private void revokeAllGrantsOnGlobalGrantAndGlobalConfig() throws Exception {
+    private static void revokeAllGrantsOnGlobalGrantAndGlobalConfig() throws Exception {
         
-        Grants grants = RightCommand.getGrants(mProv,
+        Grants grants = RightCommand.getGrants(prov,
                 TargetType.global.getCode(), null, null, 
                 null, null, null, false);
         
         revokeAllGrants(grants);
         
-        grants = RightCommand.getGrants(mProv,
+        grants = RightCommand.getGrants(prov,
                 TargetType.config.getCode(), null, null, 
                 null, null, null, false);
         
         revokeAllGrants(grants);
     }
     
-    private void revokeAllGrants(Grants grants) throws Exception {    
+    private static void revokeAllGrants(Grants grants) throws Exception {    
         for (RightCommand.ACE ace : grants.getACEs()) {
-            RightCommand.revokeRight(mProv,
-                getGlobalAdminAcct(),
+            RightCommand.revokeRight(prov,
+                globalAdmin,
                 ace.targetType(), TargetBy.id, ace.targetId(),
                 ace.granteeType(), Key.GranteeBy.id, ace.granteeId(),
                 ace.right(), ace.rightModifier());
@@ -1496,7 +1778,7 @@ public class TestACAll extends TestAC {
             }
         } finally {
             revokeAllGrantsOnGlobalGrantAndGlobalConfig();
-            cleanupTest();
+            provUtil.deleteAllEntries();
         }
     }
     
@@ -1506,9 +1788,11 @@ public class TestACAll extends TestAC {
      * full test
      */
     private void testAll() throws Exception {
+        SKIP_FOR_REAL_LDAP_SERVER(SkipTestReason.LONG_TEST);
+        
         Set<String> excludeGranteeTypes = Sets.newHashSet(GranteeType.GT_EXT_GROUP.getCode());
         
-        int totalTests = TargetType.values().length * TestGranteeType.TEST_GRANTEE_TYPES.size() * sRights.size();
+        int totalTests = TargetType.values().length * TestGranteeType.TEST_GRANTEE_TYPES.size() * rights.size();
         int curTest = 1;
         for (TargetType targetType : TargetType.values()) {
             for (TestGranteeType granteeType : TestGranteeType.TEST_GRANTEE_TYPES) {
@@ -1517,7 +1801,7 @@ public class TestACAll extends TestAC {
                     skip = true;
                 }
                 
-                for (Right right : sRights) {
+                for (Right right : rights) {
                     doTest((curTest++) + "/" + totalTests, targetType, granteeType, right, skip);
                 }
             }
@@ -1528,6 +1812,7 @@ public class TestACAll extends TestAC {
      * test a particular target type and a range of rights for all grantee types
      */
     private void testTarget() throws Exception {
+        SKIP_FOR_REAL_LDAP_SERVER(SkipTestReason.LONG_TEST);
         
         /*
          *  account 
@@ -1547,7 +1832,7 @@ public class TestACAll extends TestAC {
         Set<String> excludeGranteeTypes = Sets.newHashSet(GranteeType.GT_EXT_GROUP.getCode());
          
         int beginRight = 0; // sRights.indexOf(ADMIN_COMBO_ACCOUNT);  // inclusive
-        int endRight = sRights.size() - 1;                            // inclusive
+        int endRight = rights.size() - 1;                            // inclusive
         
         int totalTests = TestGranteeType.TEST_GRANTEE_TYPES.size() * (endRight - beginRight + 1);
         int curTest = 1;
@@ -1560,7 +1845,7 @@ public class TestACAll extends TestAC {
             
             // for (Right right : sRights) {
             for (int i = beginRight; i <= endRight; i++) {
-                Right right = sRights.get(i);
+                Right right = rights.get(i);
                 doTest((curTest++) + "/" + totalTests, targetType, granteeType, right, skip);
             }
         }
@@ -1570,6 +1855,7 @@ public class TestACAll extends TestAC {
      * test a particular grantee type and a range of rights for all target types
      */
     private void testGrantee() throws Exception {
+        SKIP_FOR_REAL_LDAP_SERVER(SkipTestReason.LONG_TEST);
                 
         /*
          * TestGranteeType.GRANTEE_DYNAMIC_GROUP
@@ -1584,13 +1870,13 @@ public class TestACAll extends TestAC {
          */
         GranteeType granteeType = GranteeType.GT_EXT_GROUP; 
         int beginRight = 0; // sRights.indexOf(ADMIN_COMBO_ACCOUNT);  // inclusive
-        int endRight = sRights.size() - 1;                            // inclusive
+        int endRight = rights.size() - 1;                            // inclusive
         
-        int totalTests = TargetType.values().length * sRights.size();
+        int totalTests = TargetType.values().length * rights.size();
         int curTest = 1;
         
         for (TargetType targetType : TargetType.values()) {
-            for (Right right : sRights) {
+            for (Right right : rights) {
                 doTest((curTest++) + "/" + totalTests, targetType, granteeType, right, false);
             }
         }
@@ -1600,11 +1886,12 @@ public class TestACAll extends TestAC {
      * test a particular right for all target types and grantee types
      */
     private void testRight() throws Exception {
+        SKIP_FOR_REAL_LDAP_SERVER(SkipTestReason.LONG_TEST);
 
         Set<String> excludeGranteeTypes = Sets.newHashSet(GranteeType.GT_EXT_GROUP.getCode());
-        Right right = ADMIN_COMBO_ACCOUNT;
+        Right right = ACLTestUtil.ADMIN_COMBO_ACCOUNT;
         
-        int totalTests = TargetType.values().length * TestGranteeType.TEST_GRANTEE_TYPES.size() * sRights.size();
+        int totalTests = TargetType.values().length * TestGranteeType.TEST_GRANTEE_TYPES.size() * rights.size();
         int curTest = 1;
         for (TargetType targetType : TargetType.values()) {
             for (TestGranteeType granteeType : TestGranteeType.TEST_GRANTEE_TYPES) {
@@ -1654,7 +1941,7 @@ public class TestACAll extends TestAC {
         // doTest("1/1", TargetType.dl, GranteeType.GT_USER, ADMIN_RIGHT_ZIMLET);
         // doTest("1/1", TargetType.dl, GranteeType.GT_USER, ADMIN_ATTR_GETALL_ACCOUNT);
         // doTest("1/1", TargetType.dl, GranteeType.GT_GUEST, USER_RIGHT_DISTRIBUTION_LIST);
-        doTest("1/1", TargetType.dl, TestGranteeType.GRANTEE_DYNAMIC_GROUP, ADMIN_PRESET_LOGIN_AS);
+        // doTest("1/1", TargetType.dl, TestGranteeType.GRANTEE_DYNAMIC_GROUP, ACLTestUtil.ADMIN_PRESET_LOGIN_AS);
         
         // doTest("1/1", TargetType.group, GranteeType.GT_USER, USER_RIGHT_DISTRIBUTION_LIST);
         // doTest("1/1", TargetType.group, GranteeType.GT_USER, ADMIN_PRESET_LOGIN_AS);
@@ -1668,6 +1955,7 @@ public class TestACAll extends TestAC {
         // doTest("1/1", TargetType.domain, GranteeType.GT_USER, ADMIN_PRESET_DOMAIN);
         // doTest("1/1", TargetType.domain, GranteeType.GT_EXT_GROUP, ADMIN_PRESET_DOMAIN);
         // doTest("1/1", TargetType.domain, GranteeType.GT_EXT_GROUP, USER_RIGHT_DOMAIN);
+        doTest("1/1", TargetType.domain, GranteeType.GT_DOMAIN, ACLTestUtil.USER_RIGHT_DOMAIN);
         
         // doTest("1/1", TargetType.config, GranteeType.GT_EXT_GROUP, ADMIN_ATTR_GETALL_CONFIG);
                
@@ -1680,9 +1968,12 @@ public class TestACAll extends TestAC {
      */
     @Test
     public void test() throws Exception {
-        // testAll();
+        
+        testAll();
         // testTarget();
         // testGrantee();
-        testOne();
+        // testOne();
     }
+
+
 }

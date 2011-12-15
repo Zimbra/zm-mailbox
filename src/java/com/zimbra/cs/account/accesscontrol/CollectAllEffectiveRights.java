@@ -269,7 +269,7 @@ public class CollectAllEffectiveRights {
         }
         
         SearchGrants searchGrants = new SearchGrants(mProv, targetTypesToSearch, granteeIdsToSearch);
-        Set<GrantsOnTarget> grantsOnTargets = searchGrants.doSearch().getResults();
+        Set<GrantsOnTarget> grantsOnTargets = searchGrants.doSearch().getResults(true);
         
         // staging for group grants
         Set<Group> groupsWithGrants = new HashSet<Group>();

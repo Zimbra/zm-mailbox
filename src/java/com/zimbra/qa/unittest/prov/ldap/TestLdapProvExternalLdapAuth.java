@@ -22,7 +22,7 @@ import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 import com.zimbra.qa.unittest.prov.Names;
 import com.zimbra.qa.unittest.prov.ProvTest;
-import com.zimbra.qa.unittest.prov.ProvTest.SkippedForInMemLdapServerException.Reason;
+
 
 public class TestLdapProvExternalLdapAuth extends LdapTest {
 
@@ -166,7 +166,7 @@ public class TestLdapProvExternalLdapAuth extends LdapTest {
         Map<String, Object> attrs = Maps.newHashMap();
         
         try {
-            SKIP_FOR_INMEM_LDAP_SERVER(Reason.EXTERNAL_AUTH_STATUS_UNKNOWN_HOST);
+            SKIP_FOR_INMEM_LDAP_SERVER(SkipTestReason.EXTERNAL_AUTH_STATUS_UNKNOWN_HOST);
             
             attrs.put(Provisioning.A_zimbraAuthMech, AuthMech.ldap.name());
             attrs.put(Provisioning.A_zimbraAuthLdapURL, "ldap://" + "bogus" + ":389");
@@ -179,7 +179,7 @@ public class TestLdapProvExternalLdapAuth extends LdapTest {
         }
         
         try {
-            SKIP_FOR_INMEM_LDAP_SERVER(Reason.EXTERNAL_AUTH_STATUS_CONNECTION_REFUSED);
+            SKIP_FOR_INMEM_LDAP_SERVER(SkipTestReason.EXTERNAL_AUTH_STATUS_CONNECTION_REFUSED);
             
             attrs.clear();
             attrs.put(Provisioning.A_zimbraAuthMech, AuthMech.ldap.name());
@@ -193,7 +193,7 @@ public class TestLdapProvExternalLdapAuth extends LdapTest {
         }
         
         try {
-            SKIP_FOR_INMEM_LDAP_SERVER(Reason.EXTERNAL_AUTH_STATUS_COMMUNICATION_FAILURE);
+            SKIP_FOR_INMEM_LDAP_SERVER(SkipTestReason.EXTERNAL_AUTH_STATUS_COMMUNICATION_FAILURE);
             
             attrs.clear();
             attrs.put(Provisioning.A_zimbraAuthMech, AuthMech.ldap.name());
@@ -209,7 +209,7 @@ public class TestLdapProvExternalLdapAuth extends LdapTest {
         }
         
         try {
-            SKIP_FOR_INMEM_LDAP_SERVER(Reason.EXTERNAL_AUTH_STATUS_AUTH_FAILED);
+            SKIP_FOR_INMEM_LDAP_SERVER(SkipTestReason.EXTERNAL_AUTH_STATUS_AUTH_FAILED);
             attrs.clear();
             attrs.put(Provisioning.A_zimbraAuthMech, AuthMech.ldap.name());
             attrs.put(Provisioning.A_zimbraAuthLdapURL, getLdapURL());

@@ -39,7 +39,7 @@ public class LdapTest extends ProvTest {
     
     // - handy to set it to "true"/"false" when invoking a single test from inside Eclipse
     // - make sure it is always set to null in p4. 
-    private static String useInMemoryLdapServerOverride = null ; // "true";
+    private static String useInMemoryLdapServerOverride = "true";
     
     // ensure assertion is enabled
     static {

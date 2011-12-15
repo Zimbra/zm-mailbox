@@ -59,7 +59,6 @@ import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.qa.unittest.prov.Names;
 import com.zimbra.qa.unittest.prov.ProvTest;
 import com.zimbra.qa.unittest.prov.Verify;
-import com.zimbra.qa.unittest.prov.ProvTest.SkippedForInMemLdapServerException.Reason;
 
 public class TestLdapProvSearchDirectory extends LdapTest {
     
@@ -334,7 +333,7 @@ public class TestLdapProvSearchDirectory extends LdapTest {
          *  X.501: 14.4.4 Has Subordinates operational attribute
          *  is not supported in ubid InMemoryLdapServer
          */
-        SKIP_FOR_INMEM_LDAP_SERVER(Reason.SUBORDINATES_OPERTIONAL_ATTRIBUTE);
+        SKIP_FOR_INMEM_LDAP_SERVER(SkipTestReason.SUBORDINATES_OPERTIONAL_ATTRIBUTE);
         
         String COS_ID = prov.get(CosBy.name, Provisioning.DEFAULT_COS_NAME).getId();
         
@@ -953,7 +952,7 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         List<NamedEntry> entries;
         
         try {
-            SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+            SKIP_FOR_INMEM_LDAP_SERVER(SkipTestReason.DN_SUBTREE_MATCH_FILTER);
             
             // do not specify a domain, so DnSubtreeMatchFilter won't be appened again in Ldapprovisioning
             options = new SearchDirectoryOptions();

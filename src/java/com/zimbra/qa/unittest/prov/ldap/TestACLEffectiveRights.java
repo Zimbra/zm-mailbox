@@ -12,60 +12,83 @@
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
-package com.zimbra.qa.unittest;
+package com.zimbra.qa.unittest.prov.ldap;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.account.Key;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
+import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.RightCommand.AllEffectiveRights;
 import com.zimbra.cs.account.accesscontrol.RightCommand.EffectiveRights;
-import com.zimbra.cs.account.accesscontrol.RightCommand.RightAggregation;
 import com.zimbra.cs.account.accesscontrol.RightCommand.RightsByTargetType;
+import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.soap.type.TargetBy;
 
-
-public class TestACEffectiveRights extends TestAC {
+public class TestACLEffectiveRights extends LdapTest {
+    
+    private static Right ADMIN_PRESET_ACCOUNT;
+    
+    private static LdapProvTestUtil provUtil;
+    private static LdapProv prov;
+    private static Domain domain;
+    private static String BASE_DOMAIN_NAME;
+    private static Account globalAdmin;
+    
+    @BeforeClass
+    public static void init() throws Exception {
+        provUtil = new LdapProvTestUtil();
+        prov = provUtil.getProv();
+        domain = provUtil.createDomain(baseDomainName(), null);
+        BASE_DOMAIN_NAME = domain.getName();
+        globalAdmin = provUtil.createGlobalAdmin("globaladmin", domain);
+        
+        ADMIN_PRESET_ACCOUNT = getRight("test-preset-account");
+    }
+    
+    @AfterClass
+    public static void cleanup() throws Exception {
+        Cleanup.deleteAll(baseDomainName());
+    }
+    
+    private static Right getRight(String right) throws ServiceException {
+        return RightManager.getInstance().getRight(right);
+    }
 
     @Test
     public void getEffectiveRights() throws Exception {
-        Domain domain = createDomain();
-        Account target = createUserAccount(domain);
-        Account grantee = createDelegatedAdminAccount(domain);
-        Account grantingAccount = getGlobalAdminAcct();
+        Domain domain = provUtil.createDomain(genDomainSegmentName() + "." + BASE_DOMAIN_NAME);
+        Account target = provUtil.createAccount(genAcctNameLocalPart("user"), domain);
+        Account grantee = provUtil.createDelegatedAdmin(genAcctNameLocalPart("da"), domain);
+        Account grantingAccount = globalAdmin;
         
         TargetType targetType = TargetType.getTargetType(target);
         GranteeType granteeType = GranteeType.GT_USER;
         Right right = ADMIN_PRESET_ACCOUNT;
             
         RightCommand.grantRight(
-                mProv, grantingAccount,
+                prov, grantingAccount,
                 targetType.getCode(), TargetBy.name, target.getName(),
                 granteeType.getCode(), Key.GranteeBy.name, grantee.getName(), null,
                 right.getName(), null);
     
         EffectiveRights effRights = RightCommand.getEffectiveRights(
-                mProv,
+                prov,
                 TargetType.account.getCode(), TargetBy.name, target.getName(),
                 Key.GranteeBy.name, grantee.getName(),
                 false, false);
@@ -77,23 +100,23 @@ public class TestACEffectiveRights extends TestAC {
 
     @Test
     public void getAllEffectiveRights() throws Exception {
-        Domain domain = createDomain();
-        Account target = createUserAccount(domain);
-        Account grantee = createDelegatedAdminAccount(domain);
-        Account grantingAccount = getGlobalAdminAcct();
+        Domain domain = provUtil.createDomain(genDomainSegmentName() + "." + BASE_DOMAIN_NAME);
+        Account target = provUtil.createAccount(genAcctNameLocalPart("user"), domain);
+        Account grantee = provUtil.createDelegatedAdmin(genAcctNameLocalPart("da"), domain);
+        Account grantingAccount = globalAdmin;
         
         TargetType targetType = TargetType.getTargetType(target);
         GranteeType granteeType = GranteeType.GT_USER;
         Right right = ADMIN_PRESET_ACCOUNT;
             
         RightCommand.grantRight(
-                mProv, grantingAccount,
+                prov, grantingAccount,
                 targetType.getCode(), TargetBy.name, target.getName(),
                 granteeType.getCode(), Key.GranteeBy.name, grantee.getName(), null,
                 right.getName(), null);
         
         AllEffectiveRights allEffRights = RightCommand.getAllEffectiveRights(
-                mProv,
+                prov,
                 granteeType.getCode(), Key.GranteeBy.name, grantee.getName(),
                 false, false);
         

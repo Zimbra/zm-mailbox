@@ -4,9 +4,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Strings;
@@ -14,6 +16,7 @@ import com.google.common.collect.Maps;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.Key.CacheEntryBy;
 import com.zimbra.common.account.Key.CalendarResourceBy;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
@@ -25,8 +28,11 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.IDNUtil;
+import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
+import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.qa.unittest.TestUtil;
@@ -34,10 +40,61 @@ import com.zimbra.soap.admin.type.DataSourceType;
 
 public abstract class ProvTestUtil {
     
+    // accounts, crs, groups, coses, servers, zimlets
+    private List<NamedEntry> createdEntries = new ArrayList<NamedEntry>();
+    
+    // data sources, identities, signatures, need to delete these before deleting accounts
+    private List<NamedEntry> createdAccountSubordinates = new ArrayList<NamedEntry>();
+    
+    // domains, will be deleted after domain-ed entries are deleted
+    private List<NamedEntry> createdDomains = new ArrayList<NamedEntry>();
+    
     protected Provisioning prov;
     
     protected ProvTestUtil(Provisioning prov) {
         this.prov = prov;
+    }
+    
+    public void deleteAllEntries() throws Exception {
+        for (NamedEntry entry : createdAccountSubordinates) {
+            deleteEntry(entry);
+        } 
+        createdAccountSubordinates.clear();
+        
+        for (NamedEntry entry : createdEntries) {
+            deleteEntry(entry);
+        } 
+        createdEntries.clear();
+        
+        for (NamedEntry entry : createdDomains) {
+            deleteEntry(entry);
+        }
+        createdDomains.clear();
+    }
+    
+    private void deleteEntry(NamedEntry entry) throws Exception {
+        if (entry instanceof Account) {
+            prov.deleteAccount(entry.getId());
+        } else if (entry instanceof CalendarResource) {
+            prov.deleteCalendarResource(entry.getId());
+        } else if (entry instanceof Cos) {
+            prov.deleteCos(entry.getId());
+        } else if (entry instanceof Group) {
+            prov.deleteGroup(entry.getId());
+        } else if (entry instanceof Domain) {
+            prov.deleteDomain(entry.getId());
+        } else if (entry instanceof Server) {
+            prov.deleteServer(entry.getId());
+        } else if (entry instanceof Zimlet) {
+            prov.deleteZimlet(entry.getName());
+        } else {
+            fail();
+        }
+    }
+    
+    private void flushCache(CacheEntryType type, CacheEntryBy by, String key) 
+    throws Exception {
+        prov.flushCache(type, new CacheEntry[]{new CacheEntry(by, key)});
     }
     
     public String getSystemDefaultDomainName() throws Exception {
@@ -62,12 +119,13 @@ public abstract class ProvTestUtil {
         domain = prov.createDomain(domainName, attrs);
         assertNotNull(domain);
         
-        prov.flushCache(CacheEntryType.domain, null);
+        flushCache(CacheEntryType.domain, CacheEntryBy.id, domain.getId());
         domain = prov.get(Key.DomainBy.name, domainName);
         assertNotNull(domain);
         assertEquals(IDNUtil.toAsciiDomainName(domainName).toLowerCase(), 
                 domain.getName().toLowerCase());
         
+        createdDomains.add(domain);
         return domain;
     }
     
@@ -80,7 +138,6 @@ public abstract class ProvTestUtil {
     
     public Account createAccount(String acctName, String password, Map<String, Object> attrs) 
     throws Exception {
-        prov.flushCache(CacheEntryType.account, null);
         Account acct = prov.get(AccountBy.name, acctName);
         assertNull(acct);
                 
@@ -90,11 +147,12 @@ public abstract class ProvTestUtil {
         acct = prov.createAccount(acctName, password, attrs);
         assertNotNull(acct);
         
-        prov.flushCache(CacheEntryType.account, null);
+        flushCache(CacheEntryType.account, CacheEntryBy.id, acct.getId());
         acct = prov.get(AccountBy.name, acctName);
         assertNotNull(acct);
         assertEquals(acctName.toLowerCase(), acct.getName().toLowerCase());
         
+        createdEntries.add(acct);
         return acct;
     }
     
@@ -123,7 +181,11 @@ public abstract class ProvTestUtil {
     public void deleteAccount(Account acct) throws Exception {
         String acctId = acct.getId();
         prov.deleteAccount(acctId);
-        prov.flushCache(CacheEntryType.account, null);
+        acct = prov.get(AccountBy.id, acctId);
+        assertNull(acct);
+        
+        // flush cache, make sure it is deleted from ldap
+        flushCache(CacheEntryType.account, CacheEntryBy.id, acctId);
         acct = prov.get(AccountBy.id, acctId);
         assertNull(acct);
     }
@@ -174,18 +236,18 @@ public abstract class ProvTestUtil {
         }
         
         String crName = TestUtil.getAddress(localPart, domain.getName());
-        prov.flushCache(CacheEntryType.account, null);
         CalendarResource cr = prov.get(CalendarResourceBy.name, crName);
         assertNull(cr);
                 
         cr = prov.createCalendarResource(crName, "test123", attrs);
         assertNotNull(cr);
         
-        prov.flushCache(CacheEntryType.account, null);
+        flushCache(CacheEntryType.account, CacheEntryBy.id, cr.getId());
         cr = prov.get(CalendarResourceBy.name, crName);
         assertNotNull(cr);
         assertEquals(crName.toLowerCase(), cr.getName().toLowerCase());
         
+        createdEntries.add(cr);
         return cr;
     }
     
@@ -206,11 +268,12 @@ public abstract class ProvTestUtil {
         group = prov.createGroup(groupName, attrs, dynamic);
         assertNotNull(group);
         
-        prov.flushCache(CacheEntryType.group, null);
+        flushCache(CacheEntryType.group, CacheEntryBy.id, group.getId());
         group = prov.getGroup(Key.DistributionListBy.name, groupName);
         assertNotNull(group);
         assertEquals(groupName.toLowerCase(), group.getName().toLowerCase());
         
+        createdEntries.add(group);
         return group;
     }
     
@@ -259,7 +322,11 @@ public abstract class ProvTestUtil {
     throws Exception {
         String groupId = group.getId();
         prov.deleteGroup(groupId);
-        prov.flushCache(CacheEntryType.group, null);
+        group = prov.get(Key.DistributionListBy.id, groupId);
+        assertNull(group);
+        
+        // flush cache, make sure it is deleted from ldap
+        flushCache(CacheEntryType.group, CacheEntryBy.id, groupId);
         group = prov.get(Key.DistributionListBy.id, groupId);
         assertNull(group);
     }
@@ -278,7 +345,11 @@ public abstract class ProvTestUtil {
     throws Exception {
         String dlId = dl.getId();
         prov.deleteDistributionList(dl.getId());
-        prov.flushCache(CacheEntryType.group, null);
+        dl = prov.get(Key.DistributionListBy.id, dlId);
+        assertNull(dl);
+        
+        // flush cache, make sure it is deleted from ldap
+        flushCache(CacheEntryType.group, CacheEntryBy.id, dlId);
         dl = prov.get(Key.DistributionListBy.id, dlId);
         assertNull(dl);
     }
@@ -313,18 +384,23 @@ public abstract class ProvTestUtil {
         cos = prov.createCos(cosName, attrs);
         assertNotNull(cos);
         
-        prov.flushCache(CacheEntryType.cos, null);
+        flushCache(CacheEntryType.cos, CacheEntryBy.id, cos.getId());
         cos = prov.get(Key.CosBy.name, cosName);
         assertNotNull(cos);
         assertEquals(cosName.toLowerCase(), cos.getName().toLowerCase());
         
+        createdEntries.add(cos);
         return cos;
     }
 
     public void deleteCos(Cos cos) throws Exception {
         String codId = cos.getId();
         prov.deleteCos(codId);
-        prov.flushCache(CacheEntryType.cos, null);
+        cos = prov.get(Key.CosBy.id, codId);
+        assertNull(cos);
+        
+        // flush cache, make sure it is deleted from ldap
+        flushCache(CacheEntryType.cos, CacheEntryBy.id, codId);
         cos = prov.get(Key.CosBy.id, codId);
         assertNull(cos);
     }
@@ -344,7 +420,12 @@ public abstract class ProvTestUtil {
         assertNotNull(server);
         assertEquals(serverName.toLowerCase(), server.getName().toLowerCase());
         
+        createdEntries.add(server);
         return server;
+    }
+    
+    public Server createServer(String serverName) throws Exception {
+        return createServer(serverName, null);
     }
     
     public void deleteServer(Server server) throws Exception {
@@ -362,19 +443,20 @@ public abstract class ProvTestUtil {
         attrs.put(Provisioning.A_zimbraDataSourceConnectionType, "ssl");
         attrs.put(Provisioning.A_zimbraDataSourceHost, "zimbra.com");
         attrs.put(Provisioning.A_zimbraDataSourcePort, "9999");
-        return prov.createDataSource(acct, DataSourceType.pop3, dataSourceName, attrs);
+        DataSource ds = prov.createDataSource(acct, DataSourceType.pop3, dataSourceName, attrs);
+        
+        createdAccountSubordinates.add(ds);
+        return ds;
     }
     
     public DataSource createDataSource(Account acct, String dataSourceName) 
     throws Exception {
-        prov.flushCache(CacheEntryType.account, null);
         DataSource dataSource = prov.get(acct, Key.DataSourceBy.name, dataSourceName);
         assertNull(dataSource);
         
         dataSource = createDataSourceRaw(acct, dataSourceName);
         assertNotNull(dataSource);
         
-        prov.flushCache(CacheEntryType.account, null);
         dataSource = prov.get(acct, Key.DataSourceBy.name, dataSourceName);
         assertNotNull(dataSource);
         assertEquals(dataSourceName, dataSource.getName());
@@ -386,9 +468,15 @@ public abstract class ProvTestUtil {
     throws Exception {
         String dataSourceId = dataSource.getId();
         prov.deleteDataSource(acct, dataSourceId);
-        prov.flushCache(CacheEntryType.account, null);
         dataSource = prov.get(acct, Key.DataSourceBy.id, dataSourceId);
         assertNull(dataSource);
+    }
+    
+    public Zimlet createZimlet(String zimletName, Map<String, Object> attrs) 
+    throws Exception {
+        Zimlet zimlet = prov.createZimlet(zimletName, attrs);
+        createdEntries.add(zimlet);
+        return zimlet;
     }
 }
 

@@ -7,32 +7,48 @@ import com.zimbra.cs.ldap.unboundid.InMemoryLdapServer;
 
 public class ProvTest {
     
-    public static class SkippedForInMemLdapServerException extends Exception {
+    public enum SkipTestReason {
+        // reasons for skipping for real ldap server
+        LONG_TEST("test takes too long to run"),
         
-        public static enum Reason {
-            CONNECTION_POOL_HEALTH_CHECK("connection pool health check does not work for InMemoryDirectoryServer"),
-            DN_SUBTREE_MATCH_FILTER("entryDN:dnSubtreeMatch filter is not supported by InMemoryDirectoryServer"),
-            EXTERNAL_AUTH_STATUS_AUTH_FAILED("external auth STATUS_AUTH_FAILED status is not supported by InMemoryDirectoryServer"),
-            EXTERNAL_AUTH_STATUS_COMMUNICATION_FAILURE("external auth STATUS_COMMUNICATION_FAILURE status is not supported by InMemoryDirectoryServer"),
-            EXTERNAL_AUTH_STATUS_CONNECTION_REFUSED("external auth STATUS_CONNECTION_REFUSED status is not supported by InMemoryDirectoryServer"),
-            EXTERNAL_AUTH_STATUS_UNKNOWN_HOST("external auth STATUS_UNKNOWN_HOST status is not supported by InMemoryDirectoryServer"),
-            SUBORDINATES_OPERTIONAL_ATTRIBUTE("Subordinates operational attribute is not supported by InMemoryDirectoryServer");
-            
-            private String notes;
-            private Reason(String notes) {
-                this.notes = notes;
-            }
-        }
+        // reasons for skipping for inmem ldap server
+        CONNECTION_POOL_HEALTH_CHECK("connection pool health check does not work for InMemoryDirectoryServer"),
+        DN_SUBTREE_MATCH_FILTER("entryDN:dnSubtreeMatch filter is not supported by InMemoryDirectoryServer"),
+        EXTERNAL_AUTH_STATUS_AUTH_FAILED("external auth STATUS_AUTH_FAILED status is not supported by InMemoryDirectoryServer"),
+        EXTERNAL_AUTH_STATUS_COMMUNICATION_FAILURE("external auth STATUS_COMMUNICATION_FAILURE status is not supported by InMemoryDirectoryServer"),
+        EXTERNAL_AUTH_STATUS_CONNECTION_REFUSED("external auth STATUS_CONNECTION_REFUSED status is not supported by InMemoryDirectoryServer"),
+        EXTERNAL_AUTH_STATUS_UNKNOWN_HOST("external auth STATUS_UNKNOWN_HOST status is not supported by InMemoryDirectoryServer"),
+        SUBORDINATES_OPERTIONAL_ATTRIBUTE("Subordinates operational attribute is not supported by InMemoryDirectoryServer");
         
-        public SkippedForInMemLdapServerException(Reason reason) {
-            super("SkippedForInMemLdapServer: " + reason.name());
+        private String notes;
+        private SkipTestReason(String notes) {
+            this.notes = notes;
         }
     }
     
-    protected void SKIP_FOR_INMEM_LDAP_SERVER(SkippedForInMemLdapServerException.Reason reason) 
+    public static class SkippedForInMemLdapServerException extends Exception {
+        public SkippedForInMemLdapServerException(SkipTestReason reason) {
+            super("Skipped for inmem ldap server: " + reason.name());
+        }
+    }
+    
+    public static class SkippedForRealLdapServerException extends Exception {
+        public SkippedForRealLdapServerException(SkipTestReason reason) {
+            super("Skipped for real ldap server: " + reason.name());
+        }
+    };
+    
+    protected void SKIP_FOR_INMEM_LDAP_SERVER(SkipTestReason reason) 
     throws SkippedForInMemLdapServerException {
         if (InMemoryLdapServer.isOn()) {
             throw new SkippedForInMemLdapServerException(reason);
+        }
+    }
+    
+    protected void SKIP_FOR_REAL_LDAP_SERVER(SkipTestReason reason) 
+    throws SkippedForRealLdapServerException {
+        if (!InMemoryLdapServer.isOn()) {
+            throw new SkippedForRealLdapServerException(reason);
         }
     }
 

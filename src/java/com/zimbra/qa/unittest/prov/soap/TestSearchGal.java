@@ -40,7 +40,6 @@ import com.zimbra.cs.account.soap.SoapProvisioning;
 import com.zimbra.cs.gal.ZimbraGalSearchBase.PredefinedSearchBase;
 import com.zimbra.qa.unittest.TestUtil;
 import com.zimbra.qa.unittest.prov.BinaryLdapData;
-import com.zimbra.qa.unittest.prov.ProvTest.SkippedForInMemLdapServerException.Reason;
 
 public class TestSearchGal extends SoapTest {
     private static final boolean DO_CREATE_DOMAINS = true;
@@ -370,7 +369,7 @@ public class TestSearchGal extends SoapTest {
     
     @Test
     public void GSASerarhWithDot() throws Exception {
-        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        SKIP_FOR_INMEM_LDAP_SERVER(SkipTestReason.DN_SUBTREE_MATCH_FILTER);
         
         GalTestUtil.enableGalSyncAccount(prov, DOMAIN_GSA);
         // expect all accounts, dls, dynamic groups in the domain, plus the authed user
@@ -379,7 +378,7 @@ public class TestSearchGal extends SoapTest {
     
     @Test
     public void GSASerarhWithDotSubDomain() throws Exception {
-        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        SKIP_FOR_INMEM_LDAP_SERVER(SkipTestReason.DN_SUBTREE_MATCH_FILTER);
         
         GalTestUtil.enableGalSyncAccount(prov, SUB1_DOMAIN_GSA);
         // expect all objects in SUB1_DOMAIN_GSA *and* SUB2_DOMAIN_GSA
@@ -388,7 +387,7 @@ public class TestSearchGal extends SoapTest {
     
     @Test
     public void GSASerarhWithOffsetlimit() throws Exception {
-        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        SKIP_FOR_INMEM_LDAP_SERVER(SkipTestReason.DN_SUBTREE_MATCH_FILTER);
         
         GalTestUtil.enableGalSyncAccount(prov, DOMAIN_GSA);
         searchWithOffsetLimit(false, DOMAIN_GSA);
@@ -396,7 +395,7 @@ public class TestSearchGal extends SoapTest {
     
     @Test
     public void GSASerarhByName() throws Exception {
-        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        SKIP_FOR_INMEM_LDAP_SERVER(SkipTestReason.DN_SUBTREE_MATCH_FILTER);
         
         GalTestUtil.enableGalSyncAccount(prov, DOMAIN_GSA);
         searchByName(false, DOMAIN_GSA);
@@ -404,7 +403,7 @@ public class TestSearchGal extends SoapTest {
     
     @Test
     public void GSASerarhByFilter() throws Exception {
-        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        SKIP_FOR_INMEM_LDAP_SERVER(SkipTestReason.DN_SUBTREE_MATCH_FILTER);
         
         GalTestUtil.enableGalSyncAccount(prov, DOMAIN_GSA);
         searchByFilter(false, DOMAIN_GSA);
@@ -412,7 +411,7 @@ public class TestSearchGal extends SoapTest {
     
     @Test
     public void GSASerarhEntryWithBinaryData() throws Exception {
-        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        SKIP_FOR_INMEM_LDAP_SERVER(SkipTestReason.DN_SUBTREE_MATCH_FILTER);
         
         GalTestUtil.enableGalSyncAccount(prov, DOMAIN_GSA);
         binaryDataInEntry(false, DOMAIN_GSA, true);
@@ -421,14 +420,14 @@ public class TestSearchGal extends SoapTest {
 
     @Test
     public void fallbackToLDAPSerarhWithDot() throws Exception {
-        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        SKIP_FOR_INMEM_LDAP_SERVER(SkipTestReason.DN_SUBTREE_MATCH_FILTER);
         
         searchWithDot(true, DOMAIN_LDAP, NUM_ALL_OBJECTS + 1);
     }
     
     @Test
     public void fallbackToLDAPSerarhWithDotSubDomain() throws Exception {
-        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        SKIP_FOR_INMEM_LDAP_SERVER(SkipTestReason.DN_SUBTREE_MATCH_FILTER);
         
         // expect all objects in SUB1_DOMAIN_LDAP *and* SUB2_DOMAIN_LDAP
         searchWithDot(true, SUB1_DOMAIN_LDAP, (NUM_ALL_OBJECTS + 1)*2);
@@ -436,28 +435,28 @@ public class TestSearchGal extends SoapTest {
     
     @Test
     public void fallbackToLDAPSerarhWithOffsetlimit() throws Exception {
-        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        SKIP_FOR_INMEM_LDAP_SERVER(SkipTestReason.DN_SUBTREE_MATCH_FILTER);
         
         searchWithOffsetLimit(true, DOMAIN_LDAP);
     }
     
     @Test
     public void fallbackToLDAPSerarhByName() throws Exception {
-        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        SKIP_FOR_INMEM_LDAP_SERVER(SkipTestReason.DN_SUBTREE_MATCH_FILTER);
         
         searchByName(true, DOMAIN_LDAP);
     }
     
     @Test
     public void fallbackToLDAPSerarhByFilter() throws Exception {
-        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        SKIP_FOR_INMEM_LDAP_SERVER(SkipTestReason.DN_SUBTREE_MATCH_FILTER);
         
         searchByFilter(true, DOMAIN_LDAP);
     }
     
     @Test
     public void fallbackToLDAPSerarhEntryWithBinaryData() throws Exception {
-        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        SKIP_FOR_INMEM_LDAP_SERVER(SkipTestReason.DN_SUBTREE_MATCH_FILTER);
         
         binaryDataInEntry(true, DOMAIN_LDAP, true);
         binaryDataInEntry(true, DOMAIN_LDAP, false);

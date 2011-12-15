@@ -32,8 +32,6 @@ import com.zimbra.cs.account.gal.GalOp;
 import com.zimbra.cs.gal.GalSearchConfig;
 import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.qa.unittest.prov.Names;
-import com.zimbra.qa.unittest.prov.ProvTest;
-import com.zimbra.qa.unittest.prov.ProvTest.SkippedForInMemLdapServerException.Reason;
 import com.zimbra.soap.type.GalSearchType;
 
 public class TestLdapProvGal extends LdapTest {
@@ -88,7 +86,7 @@ public class TestLdapProvGal extends LdapTest {
     
     @Test
     public void searchGal() throws Exception {
-        SKIP_FOR_INMEM_LDAP_SERVER(Reason.DN_SUBTREE_MATCH_FILTER);
+        SKIP_FOR_INMEM_LDAP_SERVER(SkipTestReason.DN_SUBTREE_MATCH_FILTER);
         
         int NUM_ACCTS = 10;
         int SIZE_LIMIT = 5;

@@ -281,6 +281,12 @@ public enum TargetType {
         return lookupTarget(prov, targetType, targetBy, target, true);
     }
     
+    public static Entry lookupTarget(Provisioning prov, TargetType targetType, 
+            TargetBy targetBy, String target, boolean mustFind) throws ServiceException {
+        return lookupTarget(prov, targetType, targetBy, target, false, mustFind); 
+    }
+    
+    
     /**
      * central place where a target should be loaded
      * 
@@ -291,8 +297,9 @@ public enum TargetType {
      * @return
      * @throws ServiceException
      */
-    public static Entry lookupTarget(Provisioning prov, TargetType targetType, TargetBy targetBy, 
-            String target, boolean mustFind) throws ServiceException {
+    public static Entry lookupTarget(Provisioning prov, TargetType targetType, 
+            TargetBy targetBy, String target, boolean needFullDL, boolean mustFind) 
+    throws ServiceException {
         Entry targetEntry = null;
         
         switch (targetType) {
@@ -309,6 +316,15 @@ public enum TargetType {
             }
             break;
         case dl:
+            if (needFullDL) {
+                targetEntry = prov.getGroup(Key.DistributionListBy.fromString(targetBy.name()), target);
+            } else {
+                targetEntry = prov.getGroupBasic(Key.DistributionListBy.fromString(targetBy.name()), target);
+            }
+            if (targetEntry == null && mustFind) {
+                throw AccountServiceException.NO_SUCH_DISTRIBUTION_LIST(target); 
+            }
+            break;
         case group:
             targetEntry = prov.getGroupBasic(Key.DistributionListBy.fromString(targetBy.name()), target);
             if (targetEntry == null && mustFind) {

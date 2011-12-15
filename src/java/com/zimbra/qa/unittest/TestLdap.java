@@ -98,7 +98,7 @@ import com.zimbra.qa.unittest.prov.soap.TestDelegatedDL;
 import com.zimbra.qa.unittest.prov.soap.TestSearchGal;
 
 public class TestLdap {
-    private static final String TEST_LDAP_BASE_DOMAIN = "testldap";
+    private static final String TEST_LDAP_BASE_DOMAIN = InMemoryLdapServer.UNITTEST_BASE_DOMAIN_SEGMENT; // "testldap";
     
     // variable guarding initTest() enter only once per JVM
     // if test is triggered from ant test-ldap(-inmem), number of JVM's
@@ -107,7 +107,7 @@ public class TestLdap {
     
     // - handy to set it to "true"/"false" when invoking a single test from inside Eclipse
     // - make sure it is always set to null in p4. 
-    private static String useInMemoryLdapServerProperty = null;
+    private static String useInMemoryLdapServerOverride = null; // "true";
     
     // ensure assertion is enabled
     static {
@@ -556,6 +556,7 @@ public class TestLdap {
         // ZimbraLog.ldap.setLevel(Log.Level.debug);
         // ZimbraLog.soap.setLevel(Log.Level.trace);
 
+        /*
         if (useInMemoryLdapServerProperty == null) {
             useInMemoryLdapServerProperty = 
                 System.getProperty("use_in_memory_ldap_server", "false");
@@ -581,6 +582,21 @@ public class TestLdap {
                 throw e;
             }
         }
+        */
+        if (useInMemoryLdapServerOverride != null) {
+            boolean useInMemoryLdapServer = 
+                    Boolean.parseBoolean(useInMemoryLdapServerOverride);
+            
+            KnownKey key = new KnownKey("debug_use_in_memory_ldap_server", 
+                    useInMemoryLdapServerOverride);
+            if (DebugConfig.useInMemoryLdapServer != useInMemoryLdapServer) {
+                System.out.println("useInMemoryLdapServerOverride is " + useInMemoryLdapServerOverride +
+                        " but LC key debug_use_in_memory_ldap_server is " + key.value() + 
+                        ".  Remove the value from LC key.");
+                fail();
+            }
+        }
+        ZimbraLog.test.info("useInMemoryLdapServer = " + InMemoryLdapServer.isOn());
         
         RightManager.getInstance(true);
         TestConfig.useConfig(testConfig);
