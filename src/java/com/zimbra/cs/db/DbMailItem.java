@@ -3445,6 +3445,7 @@ public class DbMailItem {
     public static class QueryParams {
         private SortedSet<Integer> mFolderIds = new TreeSet<Integer>();
         private Long mChangeDateBefore;
+        private Long changeDateAfter;
         private Integer mModifiedSequenceBefore;
         private Integer mRowLimit;
         private SortedSet<Byte> mIncludedTypes = new TreeSet<Byte>();
@@ -3485,11 +3486,22 @@ public class DbMailItem {
          * @return the timestamp, in seconds
          */
         public Long getChangeDateBefore() { return mChangeDateBefore; }
+
+        /**
+         * @return the timestamp, in seconds
+         */
+        public Long getChangeDateAfter() { return changeDateAfter; }
         /**
          * Return items modified earlier than the given timestamp.
          * @param timestamp the timestamp, in seconds
          */
         public QueryParams setChangeDateBefore(Long timestamp) { mChangeDateBefore = timestamp; return this; }
+
+        /**
+         * Return items modified later than the given timestamp.
+         * @param timestamp the timestamp, in seconds
+         */
+        public QueryParams setChangeDateAfter(Long timestamp) { changeDateAfter = timestamp; return this; }
         public Integer getModifiedSequenceBefore() { return mModifiedSequenceBefore; }
         public QueryParams setModifiedSequenceBefore(Integer changeId) { mModifiedSequenceBefore = changeId; return this; }
 
@@ -3518,6 +3530,7 @@ public class DbMailItem {
             Set<Byte> excludedTypes = params.getExcludedTypes();
             Set<Integer> folderIds = params.getFolderIds();
             Long changeDateBefore = params.getChangeDateBefore();
+            Long changeDateAfter = params.getChangeDateAfter();
             Integer modifiedSequenceBefore = params.getModifiedSequenceBefore();
             Integer rowLimit = params.getRowLimit();
 
@@ -3532,6 +3545,9 @@ public class DbMailItem {
             }
             if (changeDateBefore != null) {
                 buf.append(" AND ").append("change_date < ?");
+            }
+            if (changeDateAfter != null) {
+                buf.append(" AND ").append("change_date > ?");
             }
             if (modifiedSequenceBefore != null) {
                 buf.append(" AND ").append("mod_metadata < ?");
@@ -3555,6 +3571,9 @@ public class DbMailItem {
             }
             if (changeDateBefore != null) {
                 stmt.setInt(pos++, changeDateBefore.intValue());
+            }
+            if (changeDateAfter != null) {
+                stmt.setInt(pos++, changeDateAfter.intValue());
             }
             if (modifiedSequenceBefore != null) {
                 stmt.setInt(pos++, modifiedSequenceBefore);
