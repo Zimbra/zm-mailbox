@@ -60,7 +60,6 @@ import com.zimbra.cs.imap.ImapMessage;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.Conversation;
-import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
@@ -71,7 +70,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.Note;
-import com.zimbra.cs.mailbox.SearchFolder;
 import com.zimbra.cs.mailbox.Tag;
 import com.zimbra.cs.mailbox.VirtualConversation;
 import com.zimbra.cs.mailbox.util.TagUtil;
@@ -3439,6 +3437,7 @@ public class DbMailItem {
     public static class QueryParams {
         private SortedSet<Integer> folderIds = new TreeSet<Integer>();
         private Integer changeDateBefore;
+        private Integer changeDateAfter;
         private Integer modifiedSequenceBefore;
         private Integer rowLimit;
         private Integer offset;
@@ -3481,11 +3480,23 @@ public class DbMailItem {
          * @return the timestamp, in seconds
          */
         public Integer getChangeDateBefore() { return changeDateBefore; }
+
+        /**
+         * @return the timestamp, in seconds
+         */
+        public Integer getChangeDateAfter() { return changeDateAfter; }
+
         /**
          * Return items modified earlier than the given timestamp.
          * @param timestamp the timestamp, in seconds
          */
         public QueryParams setChangeDateBefore(Integer timestamp) { changeDateBefore = timestamp; return this; }
+
+        /**
+         * Return items modified later than the given timestamp.
+         * @param timestamp the timestamp, in seconds
+         */        
+        public QueryParams setChangeDateAfter(Integer timestamp) { changeDateAfter = timestamp; return this; }
         public Integer getModifiedSequenceBefore() { return modifiedSequenceBefore; }
         public QueryParams setModifiedSequenceBefore(Integer changeId) { modifiedSequenceBefore = changeId; return this; }
 
@@ -3567,6 +3578,12 @@ public class DbMailItem {
                     buf.append(" AND ");
                 }
                 buf.append("change_date < ").append(changeDateBefore);
+            }
+            if (changeDateAfter != null) {
+                if (buf.length() > 0) {
+                    buf.append(" AND ");
+                }
+                buf.append("change_date > ").append(changeDateAfter);
             }
             if (modifiedSequenceBefore != null) {
                 if (buf.length() > 0) {
