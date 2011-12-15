@@ -2252,7 +2252,7 @@
       <mkdir dir="${provtest.dir}/report"/>
       
       <!-- install init test rights -->
-      <copy todir="${zimbra.home.dir}/conf/rights" overwrite="true">
+      <copy todir="${zimbra.home.dir}/conf/rights" failonerror="true" overwrite="true" force="true">
           <fileset dir="data/unittest/ldap" includes="rights-unittest.xml"/>
       </copy>
       
@@ -2339,7 +2339,7 @@
       <echo>Test Report: ${provtest.dir}/report/index.html</echo>
       
       <!-- uninstall init test rights -->
-      <delete file="${zimbra.home.dir}/conf/rights/rights-unittest.xml"/>
+      <delete file="${zimbra.home.dir}/conf/rights/rights-unittest.xml" failonerror="true"/>
       
       <!-- don't fail it so after tasks in prov-test-inmem will be run
       <fail if="junit.failure" message="Provisioning test failed"/>
