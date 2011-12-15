@@ -16,6 +16,7 @@ package com.zimbra.cs.db;
 
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.Set;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -28,6 +29,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbMailItem.QueryParams;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.MailItem;
@@ -245,5 +247,49 @@ public final class DbMailItemTest {
         data.type = MailItem.Type.CONVERSATION.toByte();
         DbMailItem.completeConversation(mbox, conn, data);
         Assert.assertTrue(data.isSet(Flag.FlagInfo.FROM_ME));
+    }
+
+    @Test
+    public void getIds() throws Exception {
+        int now = (int) (System.currentTimeMillis()/1000);
+        int beforeNow = now - 1000;
+        int afterNow = now + 1000;
+        final int beforeNowCount = 9;
+        final int afterNowCount = 13;
+        int id = 100;
+        Set<Integer> ids = DbMailItem.getIds(mbox, conn, new QueryParams(), false);
+        QueryParams params = new QueryParams();
+        params.setChangeDateBefore(now);
+        Set<Integer> idsInitBeforeNow = DbMailItem.getIds(mbox, conn, params, false);
+        params = new QueryParams();
+        params.setChangeDateAfter(now);
+        Set<Integer> idsInitAftereNow = DbMailItem.getIds(mbox, conn, params, false);
+
+        int idsInit = ids.size();
+        for (int i = 0; i < beforeNowCount; i++) {
+            DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                    "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, change_date, mod_content) " +
+                    "VALUES(?, ?, ?, 0, 0, 0, 0, 0, 0, ?, 0)", mbox.getId(), id++, MailItem.Type.MESSAGE.toByte(), beforeNow);    
+        }
+        id = 200;
+        Set<Integer> idsAddBeforeNow = DbMailItem.getIds(mbox, conn, new QueryParams(), false);
+        Assert.assertTrue(beforeNowCount == idsAddBeforeNow.size() - idsInit);
+        for (int i = 0; i < afterNowCount; i++) {
+            DbUtil.executeUpdate(conn, "INSERT INTO mboxgroup1.mail_item " +
+                    "(mailbox_id, id, type, index_id, date, size, flags, tags, mod_metadata, change_date, mod_content) " +
+                    "VALUES(?, ?, ?, 0, 0, 0, 0, 0, 0, ?, 0)", mbox.getId(), id++, MailItem.Type.MESSAGE.toByte(), afterNow);    
+        }
+        Set<Integer> idsAddAfterNow = DbMailItem.getIds(mbox, conn, new QueryParams(), false);
+        Assert.assertTrue(afterNowCount == idsAddAfterNow.size() - idsAddBeforeNow.size());
+
+        params = new QueryParams();
+        params.setChangeDateBefore(now);
+        Set<Integer> idsBeforeNow = DbMailItem.getIds(mbox, conn, params, false);
+        Assert.assertTrue((idsBeforeNow.size()-idsInitBeforeNow.size()) == beforeNowCount);
+
+        params = new QueryParams();
+        params.setChangeDateAfter(now);
+        Set<Integer> idsAfterNow = DbMailItem.getIds(mbox, conn, params, false);
+        Assert.assertTrue((idsAfterNow.size()-idsInitAftereNow.size()) == afterNowCount);
     }
 }
