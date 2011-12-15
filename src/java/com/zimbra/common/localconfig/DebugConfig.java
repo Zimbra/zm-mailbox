@@ -183,6 +183,9 @@ public final class DebugConfig {
     public static boolean certAuthCaptureClientCertificate =
         value("debug_certauth_capture_client_certificate", false);
     
+    public static boolean running_unittest = 
+        value("debug_running_unittest", false);
+    
     public static boolean useInMemoryLdapServer = 
         value("debug_use_in_memory_ldap_server", false);
     
