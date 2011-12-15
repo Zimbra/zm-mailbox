@@ -67,4 +67,9 @@ public class GuestAccount extends Account {
     public boolean isIsExternalVirtualAccount() {
         return getDigest() != null && getAccessKey() == null;
     }
+
+    @Override
+    public String getExternalUserMailAddress() {
+        return isIsExternalVirtualAccount() ? getName() : null;
+    }
 }
