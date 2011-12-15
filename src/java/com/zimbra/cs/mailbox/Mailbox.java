@@ -7533,7 +7533,8 @@ public class Mailbox {
     throws ServiceException {
         Document doc = getDocumentById(octxt, docId);
         try {
-            ParsedDocument pd = new ParsedDocument(data, name, doc.getContentType(), System.currentTimeMillis(), author, description, descEnabled);
+            ParsedDocument pd = new ParsedDocument(data, name, doc.getContentType(), System.currentTimeMillis(), author, description, 
+                    descEnabled, !LC.documents_disable_instant_parsing.booleanValue());
             return addDocumentRevision(octxt, docId, pd);
         } catch (IOException ioe) {
             throw ServiceException.FAILURE("error writing document blob", ioe);

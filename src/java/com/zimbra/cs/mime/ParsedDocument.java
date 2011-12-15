@@ -66,9 +66,19 @@ public final class ParsedDocument {
             String description, boolean descEnabled) throws ServiceException, IOException {
         this(saveInputAsBlob(in), filename, ctype, createdDate, creator, description, descEnabled);
     }
-
+    
+    public ParsedDocument(InputStream in, String filename, String ctype, long createdDate, String creator,
+            String description, boolean descEnabled, boolean forceParsing) throws ServiceException, IOException {
+        this(saveInputAsBlob(in), filename, ctype, createdDate, creator, description, descEnabled, forceParsing);
+    }
+    
     public ParsedDocument(Blob blob, String filename, String ctype, long createdDate, String creator,
             String description, boolean descEnabled) throws IOException {
+        this(blob, filename, ctype, createdDate, creator, description, descEnabled, false);
+    }
+
+    public ParsedDocument(Blob blob, String filename, String ctype, long createdDate, String creator,
+            String description, boolean descEnabled, boolean forceParsing) throws IOException {
         this.blob = blob;
         this.size = (int) blob.getRawSize();
         this.digest = blob.getDigest();
@@ -78,6 +88,8 @@ public final class ParsedDocument {
         this.creator = creator;
         this.description = description;
         this.descEnabled = descEnabled;
+        if (forceParsing)
+            performExtraction();
     }
 
     /**
