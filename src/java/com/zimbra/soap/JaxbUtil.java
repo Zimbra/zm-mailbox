@@ -795,6 +795,8 @@ public final class JaxbUtil {
             com.zimbra.soap.admin.message.ReloadLocalConfigResponse.class,
             com.zimbra.soap.admin.message.ReloadMemcachedClientConfigRequest.class,
             com.zimbra.soap.admin.message.ReloadMemcachedClientConfigResponse.class,
+            com.zimbra.soap.admin.message.RemoteWipeRequest.class,
+            com.zimbra.soap.admin.message.RemoteWipeResponse.class,
             com.zimbra.soap.admin.message.RemoveAccountAliasRequest.class,
             com.zimbra.soap.admin.message.RemoveAccountAliasResponse.class,
             com.zimbra.soap.admin.message.RemoveAccountLoggerRequest.class,
