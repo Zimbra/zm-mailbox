@@ -2242,19 +2242,74 @@
  
   <property name="provtest.dir" location="${build.dir}/provtest"/>  
  
-  <!--
-     To run a particular test:
-     ant -Dtest={java class name} prov-test
-  -->
-  <target name="prov-test" description="Run Provisioning tests" depends="compile">
-      <delete dir="${provtest.dir}" quiet="true"/>
-      <mkdir dir="${provtest.dir}/output"/>
-      <mkdir dir="${provtest.dir}/report"/>
+  <target name="prov-test-setup" description="Setup tasks before running Provisioning tests">
+      <if>
+          <isset property="inmem"/>
+          <then>
+              <!-- real ldap server is not needed for inmem test mode, stop it to be sure -->
+              <antcall target="stop-ldap"/> 
+             
+              <!-- turn on inmem mode --> 
+              <antcall target="zmlocalconfig">
+                  <param name="localconfig-args" value="-e debug_use_in_memory_ldap_server=true"/>
+              </antcall>
+          </then>
+      </if>    
+      
+      <!-- turn on unittes mode for RightManager so it allows unittest rights-->
+      <antcall target="zmlocalconfig">
+          <param name="localconfig-args" value="-e debug_running_unittest=true"/>
+      </antcall>
       
       <!-- install init test rights -->
       <copy todir="${zimbra.home.dir}/conf/rights" failonerror="true" overwrite="true" force="true">
           <fileset dir="data/unittest/ldap" includes="rights-unittest.xml"/>
       </copy>
+      
+      <!-- restart ZCS server -->
+      <antcall target="stop-webserver"/>
+      <antcall target="start-webserver"/>
+  </target>
+    
+  <target name="prov-test-cleanup" description="Cleanup tasks before running Provisioning tests">  
+      
+      <!-- uninstall init test rights -->
+      <delete file="${zimbra.home.dir}/conf/rights/rights-unittest.xml" failonerror="true"/>
+      
+      <!-- turn off unittes mode for RightManager so it allows unittest rights-->
+      <antcall target="zmlocalconfig">
+          <param name="localconfig-args" value="-u debug_running_unittest"/>
+      </antcall>
+
+      <if>
+          <isset property="inmem"/>
+          <then>
+              <!-- bring back real ldap server -->
+              <antcall target="start-ldap"/>
+             
+              <!-- turn off inmem mode -->
+              <antcall target="zmlocalconfig">
+                  <param name="localconfig-args" value="-u debug_use_in_memory_ldap_server"/>
+              </antcall>
+          </then>
+      </if>          
+      
+      <!-- restart ZCS server -->
+      <antcall target="stop-webserver"/>
+      <antcall target="start-webserver"/>
+  </target>
+    
+    
+  <!--
+     To run a particular test:
+     ant -Dtest={java class name} prov-test
+  -->
+  <target name="prov-test" description="Run Provisioning tests">
+      <delete dir="${provtest.dir}" quiet="true"/>
+      <mkdir dir="${provtest.dir}/output"/>
+      <mkdir dir="${provtest.dir}/report"/>
+      
+      <antcall target="prov-test-setup"/>
       
       <!-- Note: Assertion statements are ignored in non-forked mode. -->
       <junit printsummary="on" failureproperty="junit.failure" tempdir="${provtest.dir}" fork="yes" forkmode="perBatch">
@@ -2338,8 +2393,7 @@
       
       <echo>Test Report: ${provtest.dir}/report/index.html</echo>
       
-      <!-- uninstall init test rights -->
-      <delete file="${zimbra.home.dir}/conf/rights/rights-unittest.xml" failonerror="true"/>
+      <antcall target="prov-test-cleanup"/>
       
       <!-- don't fail it so after tasks in prov-test-inmem will be run
       <fail if="junit.failure" message="Provisioning test failed"/>
@@ -2351,31 +2405,10 @@
      ant -Dtest={java class name} prov-test-inmem
   -->  
   <target name="prov-test-inmem" description="Run Provisioning tests with in memory LDAP server fpr LDAP tests">
-      <!-- real ldap server is not needed for inmem test mode, stop it to be sure -->
-      <antcall target="stop-ldap"/>  
-      
-      <!-- turn on inmem mode -->
-      <antcall target="zmlocalconfig">
-          <param name="localconfig-args" value="-e debug_use_in_memory_ldap_server=true"/>
-      </antcall>
-      <antcall target="stop-webserver"/>
-      <antcall target="start-webserver"/>
+      <property name="inmem" value="true"/>
       
       <!-- run tests -->
-      <antcall target="prov-test">
-          <param name="inmem" value="true"/>
-      </antcall>
-      
-      <!-- bring back real ldap server -->
-      <antcall target="start-ldap"/>
-      
-      <!-- turn off inmem mode -->
-      <antcall target="zmlocalconfig">
-          <param name="localconfig-args" value="-u debug_use_in_memory_ldap_server"/>
-      </antcall>
-      <antcall target="stop-webserver"/>
-      <antcall target="start-webserver"/>
-      
+      <antcall target="prov-test"/>
   </target>  
 
 </project>
