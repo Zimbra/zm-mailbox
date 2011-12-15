@@ -39,6 +39,7 @@ import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
 
+import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -94,7 +95,7 @@ public class RightManager {
             sCoreRightDefFiles.add("zimbra-rights.xml");
             sCoreRightDefFiles.add("zimbra-user-rights.xml");
             
-            if (unittest) {
+            if (unittest || DebugConfig.running_unittest) {
                 sCoreRightDefFiles.add("rights-unittest.xml");
             }
         }
