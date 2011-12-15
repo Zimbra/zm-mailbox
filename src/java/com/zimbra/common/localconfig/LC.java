@@ -1119,6 +1119,9 @@ public final class LC {
     public static final KnownKey zimbra_vami_password = KnownKey.newKey("vmware").protect();
     public static final KnownKey zimbra_vami_installmode = KnownKey.newKey("single");
 
+    public static final KnownKey http_store_local_cache_max_bytes = KnownKey.newKey(1024 * 1024 * 1024); // 1GB
+    public static final KnownKey http_store_local_cache_max_files = KnownKey.newKey(10000);
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
