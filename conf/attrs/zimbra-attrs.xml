@@ -1263,10 +1263,9 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>whether or not to compose in html or text.</desc>
 </attr>
 
-<attr id="218" name="zimbraPrefForwardReplyInOriginalFormat" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" deprecatedSince="4.5">
+<attr id="218" name="zimbraPrefForwardReplyInOriginalFormat" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <desc>whether or not to use same format (text or html) of message we are replying to</desc>
-  <deprecateDesc>Deprecated in favor of zimbraPrefForwardReplyFormat</deprecateDesc>
 </attr>
 
 <attr id="219" name="zimbraFeatureHtmlComposeEnabled" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited">
