@@ -133,7 +133,10 @@ zimbra sync specific admin SOAP messages:
 <GetDevicesCountUsedTodayResponse>
 <RemoteWipeRequest>
 <RemoteWipeResponse>
-
+<CancelPendingRemoteWipeRequest>
+<CancelPendingRemoteWipeResponse>
+<GetDeviceStatusRequest>
+<GetDeviceStatusResponse>
 
 ------------------------
 <GetDevicesCountRequest>
@@ -198,3 +201,56 @@ Request a device (e.g. a lost device) be wiped of all its data on the next sync.
     [<lastUsedDate>{last_used_date}</lastUsedDate>]
   </device>
 </RemoteWipeResponse>
+
+--------------------------------
+<CancelPendingRemoteWipeRequest>
+--------------------------------
+
+Cancel a pending Remote Wipe request.  Remote Wipe can't be canceled once the device confirms the wipe.
+
+<CancelPendingRemoteWipeRequest xmlns="urn:zimbraAdmin">
+  <device id="{device_id}" />
+</CancelPendingRemoteWipeRequest>
+
+<CancelPendingRemoteWipeResponse />
+
+------------------------
+<GetDeviceStatusRequest>
+------------------------
+
+get the requested device's status
+
+<GetDeviceStatusRequest xmlns="urn:zimbraAdmin"/>
+  <device id="{device_id}" />
+</GetDeviceStatusRequest>  
+ 
+<GetDeviceStatusResponse xmlns="urn:zimbraAdmin">
+  <device id="{device_id}" type="{device_type}" protocol="{protocol_version}" [ua="{user_agent}"] [model="{model}"] [imei="{imei}"] [friendly_name="{friendly_name}"] [os="{os}"] [os_language="{os_language}"] [phone_number="{phone_number}"]>
+    <provisionable>{provisionable}</provisionable>
+    <status>{status}</status>
+    <firstReqReceived>{first_req_recv}</firstReqReceived>
+    [<lastPolicyUpdate>{last_policy_update}</lastPolicyUpdate>]
+    [<remoteWipeReqTime>{remote_wipe_req}</remoteWipeReqTime>
+    [<removeWipeAckTime>{remote_wipe_ack}</remoteWipeAckTime>]]
+    [<recoveryPassword>{recover_password}</recoveryPassword>]
+    [<lastUsedDate>{last_used_date}</lastUsedDate>]
+  </device>
+</GetDeviceStatusResponse>
+
+device_id - DeviceID
+device_type - DeviceType
+protocol_version - Protocol Version
+user_agent - User Agent
+model - Device model
+imei - International Mobile Equipment Identity
+friendly_name - Friendly name of the device
+os - Device running OS (Operating System; e.g. android, ios etc.)
+os_language - OS language
+phone_number - Phone Number
+provisionable - 0: no; 1: yes
+status - 0: need provision (same as 1 if provisionable=0) 1: ok; 2: suspended; 3: remote wipe requested; 4: remote wipe complete
+first_req_recv - when this device first registered with the server
+last_policy_update - when policy was last updated on this device
+remote_wipe_req - time (seconds since epoch) when remote wipe was initiated
+remote_wipe_ack - time (seconds since epoch) when device confirmed the remote wipe
+last_used_date - date when the device was last used (the date is stored in server's time zone)
