@@ -1167,7 +1167,10 @@ public final class LC {
     // used for resumable document uploads (full files)
     public static final KnownKey document_incoming_max_age = KnownKey.newKey(360); // 120 mins = 2 hours
 
+    @Supported
     public static final KnownKey http_store_local_cache_max_bytes = KnownKey.newKey(1024 * 1024 * 1024); // 1GB
+
+    @Supported
     public static final KnownKey http_store_local_cache_max_files = KnownKey.newKey(10000);
 
     static {
