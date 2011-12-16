@@ -169,6 +169,11 @@ FAQ
          the creation of the top level Element for the structure from Element.addElement(String) to
          Element.addElement(QName).  Where possible, this is the preferred option as it avoids propagating almost
          duplicate JAXB objects for different namespaces.
+         Check the .xsd files produced to make sure they make sense.  There is a gotcha with schemagen where
+         it sometimes uses references (ref=)to the other .xsd file but has a poor algorithm for choosing the reference
+         name (it just uses the xml element name).  If more than one reference ends up using the same name, you can
+         end up with the target type being something like :
+             <xs:element name="device" nillable="true" type="xs:anyType"/>
      2.  If the current code is used in multiple namespaces, then the approach I'm taking these days is to create
          almost duplicate JAXB objects in each namespace where the data structure is used and have the objects
          implement an interface which encapsulates the important aspects of their behavior in package
