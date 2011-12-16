@@ -32,6 +32,9 @@ public class VoiceConstants {
     public static final QName MODIFY_VOICE_MAIL_PIN_REQUEST  = QName.get("ModifyVoiceMailPinRequest", NAMESPACE);
     public static final QName MODIFY_VOICE_MAIL_PIN_RESPONSE = QName.get("ModifyVoiceMailPinResponse", NAMESPACE);
 
+    public static final QName MODIFY_FROM_NUM_REQUEST  = QName.get("ModifyFromNumRequest", NAMESPACE);
+    public static final QName MODIFY_FROM_NUM_RESPONSE = QName.get("ModifyFromNumResponse", NAMESPACE);
+
     public static final QName GET_VOICE_INFO_REQUEST  = QName.get("GetVoiceInfoRequest", NAMESPACE);
     public static final QName GET_VOICE_INFO_RESPONSE = QName.get("GetVoiceInfoResponse", NAMESPACE);
 
@@ -83,7 +86,11 @@ public class VoiceConstants {
     public static final String A_CONTENT_TYPE  = "ct";
     public static final String A_VMAIL_OLD_PIN  = "oldPin";
     public static final String A_VMAIL_PIN  = "pin";
-    
+    public static final String A_TYPE          = "type";
+    public static final String A_CALLABLE = "callable";
+    public static final String A_EDITABLE = "editable";
+    public static final String A_NUM_PUBLISHABLE = "numpublishable";
+
     public static final String FLAG_UNFORWARDABLE = "p";  // 'p'rivate
     
     // folder inventory
