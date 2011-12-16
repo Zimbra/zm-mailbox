@@ -15,4 +15,16 @@ public enum RightClass {
         }
     }
     
+    public static String allValuesInString(String delimiter) {
+        StringBuffer sb = new StringBuffer();
+        
+        for (RightClass value : RightClass.values()) {
+            if (sb.length() > 0) {
+                sb.append(delimiter);
+            }
+            sb.append(value);
+        }
+        return sb.toString();
+    }
+    
 }
