@@ -14,8 +14,7 @@ SECTION amavis
 	LOCAL av_notify_domain
 	LOCAL av_notify_user
 	LOCAL ldap_url
-	LOCAL zimbra_ldap_userdn
-	LOCAL zimbra_ldap_password
+	LOCAL ldap_amavis_password
 	VAR zimbraMtaBlockedExtension
 	VAR zimbraVirusWarnRecipient
 	VAR zimbraSpamKillPercent
