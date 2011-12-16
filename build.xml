@@ -20,6 +20,14 @@
 
   <property name="TESTNAME" value="com.zimbra.soap.admin.GetServerTest" />
   <property name="WSDLTEST" value="com.zimbra.soap.account.WSDLAuthRequestTest" />
+  <!-- START ZimbraSoapDocs Properties -->
+  <property name="zimbra.service.wsdl.file" location="${build.classes.dir}/com/zimbra/soap/ZimbraService.wsdl" />
+  <property name="soapdocs.templates.dir" location="soapdocs/templates" />
+  <property name="soapdocs.output.dir" location="${build.dir}/docs/soap" />
+  <property name="soapdocs.src.dir" location="soapdocs/src"/>
+  <!-- TODO: use this? -->
+  <property name="soapdocs.classes.dir" location="${build.dir}/wsdl-doc-classes"/>
+  <!-- END   ZimbraSoapDocs Properties -->
 
   <path id="all.java.path">
     <pathelement location="${src.java.dir}" />
@@ -54,6 +62,17 @@
     </fileset>
   </path>
 
+  <path id="soapdocs.class.path">
+    <path refid="class.path"/>
+    <pathelement location="${soapdocs.classes.dir}" />
+    <fileset dir="${server.dir}/soapdocs/jars">
+        <include name="**/freemarker*.jar"/>
+    </fileset>
+    <fileset dir="${common.jars.dir}">
+        <include name="**/commons-lang-*.jar"/>
+    </fileset>
+  </path>
+
   <taskdef name="schemagen" classname="com.sun.tools.jxc.SchemaGenTask">
     <classpath refid="jaxws.classpath"/>
   </taskdef>
@@ -74,7 +93,7 @@
     </javac>
   </target>
 
-    <target name="jar" depends="compile,generate-schema,wsdl-files" description="Creates the jar file">
+    <target name="jar" depends="compile,generate-schema,wsdl-file" description="Creates the jar file">
         <antcall target="zimbra-jar">
             <param name="implementation.title" value="Zimbra Soap"/>
         </antcall>
@@ -84,7 +103,7 @@
     <delete dir="${build.dir}" />
   </target>
 
-  <target name="wsdl-files" depends="compile">
+  <target name="wsdl-file" depends="compile,generate-schema">
     <mkdir dir="${xml.schema.dir}"/>
     <java classname="com.zimbra.soap.util.WsdlGenerator" classpathref="class.path" fork="true" failonerror="true">
             <arg line="-output.dir ${xml.schema.dir}"/>
@@ -116,7 +135,7 @@
     </schemagen>
     <!-- fixup usage of zmBoolean - the valid values for zmBoolean and xs:boolean are the same,
          zmBoolean is only used to force the use of "1" and "0" instead of true and false -->
-    <replaceregexp match="(tns|ns[0-9]):zmBoolean" replace="xs:boolean" flags="g" byline="true">
+    <replaceregexp match="(tns|zimbra*|ns[0-9]):zmBoolean" replace="xs:boolean" flags="g" byline="true">
       <fileset dir="${xml.schema.dir}" includes="*.xsd"/>
     </replaceregexp>
   </target>
@@ -220,4 +239,21 @@
     <fail if="junit.failure" message="Unit test failed"/>
   </target>
 
+  <target name="soap-api-doc-compile" depends="compile">
+    <mkdir dir="${soapdocs.classes.dir}"/>
+    <javac srcdir="${soapdocs.src.dir}" destdir="${soapdocs.classes.dir}"
+      debug="true" classpathref="soapdocs.class.path" target="${javac.target}"/>
+  </target>
+
+  <target name="generate-soap-api-doc" depends="soap-api-doc-compile">
+    <delete dir="${soapdocs.output.dir}" quiet="true"/>
+    <mkdir dir="${soapdocs.output.dir}" />
+    <java classname="com.zimbra.doc.soap.WsdlDocGenerator" classpathref="soapdocs.class.path" fork="true" failonerror="true">
+      <arg line="-jaxb.src.dir ${src.java.dir}"/>
+      <arg line="-templates.dir ${soapdocs.templates.dir}"/>
+      <arg line="-output.dir ${soapdocs.output.dir}"/>
+      <arg line="-build.version ${zimbra.buildinfo.version}"/>
+      <arg line="-build.date ${zimbra.buildinfo.date}"/>
+    </java>
+  </target>
 </project>

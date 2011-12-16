@@ -13,16 +13,25 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.doc.soap.doclet;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import com.sun.javadoc.RootDoc;
 
-import com.zimbra.common.soap.HsmConstants;
+public class ZmApiDoclet {
 
-/**
- * @zm-api-command-description Aborts a running HSM process
- * @zm-api-request-description Aborts a running HSM process
- */
-@XmlRootElement(name=HsmConstants.E_ABORT_HSM_REQUEST)
-public class AbortHsmRequest {
+    private static DocletApiListener apiListener;
+
+    public static void setListener(DocletApiListener listener) {
+        apiListener = listener;
+    }
+
+    /**
+     * Starts processing the classes at the root document
+     *
+     * @param root the root document
+     */
+    public static boolean start(RootDoc root) {
+        apiListener.processJavadocResults(root);
+        return true;
+    }
 }

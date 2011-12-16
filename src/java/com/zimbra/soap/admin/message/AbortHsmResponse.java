@@ -24,10 +24,21 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.HsmConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-response-description The aborted attribute is set to true (1) if an HSM session was running at the time the
+ * request was made, false (0) otherwise.<p>Note: If the abort request is sent after all the blobs for the last mailbox
+ * have been moved, but before its database table has been updated, &lt;AbortHsmRequest> will return true even though
+ * the process was not really aborted.  This state is very unlikely.  The official aborted state can be verified
+ * with &lt;GetHsmStatusRequest>.</p>
+ * @zm-api-command-network-edition true
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=HsmConstants.E_ABORT_HSM_RESPONSE)
 public class AbortHsmResponse {
 
+    /**
+     * @zm-api-field-description Set to true (1) if an HSM session was running at the time the request was made.
+     */
     @XmlAttribute(name=HsmConstants.A_ABORTED /* aborted */, required=true)
     private final ZmBoolean aborted;
 

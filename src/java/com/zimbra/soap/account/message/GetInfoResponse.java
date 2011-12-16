@@ -131,6 +131,8 @@ import com.zimbra.soap.json.jackson.WrappedAttrListSerializer;
    </childAccounts>
    [<license status="inGracePeriod|bad"/>]
 </GetInfoResponse>
+ *
+ * @zm-api-response-description The response to a request for account information
  */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_INFO_RESPONSE)
@@ -142,21 +144,38 @@ import com.zimbra.soap.json.jackson.WrappedAttrListSerializer;
         "soapURLs", "publicURL", "changePasswordURL", "license"})
 public final class GetInfoResponse {
 
+    /**
+     * @zm-api-field-tag att-size-limit
+     * @zm-api-field-description The size limit for attachments
+     */
     @XmlAttribute(name=AccountConstants.A_ATTACHMENT_SIZE_LIMIT /* attSizeLimit */, required=false)
     private Long attachmentSizeLimit;
 
+    /**
+     * @zm-api-field-tag doc-size-limit
+     * @zm-api-field-description The size limit for documents
+     */
     @XmlAttribute(name=AccountConstants.A_DOCUMENT_SIZE_LIMIT /* docSizeLimit */, required=false)
     private Long documentSizeLimit;
 
     // For JSON treat as Attribute
+    /**
+     * @zm-api-field-description server version: &lt;major>[.&lt;minor>[.&lt;maintenance>]][build] &lt;release> &lt;date>[&lt;type>]
+     */
     @XmlElement(name=AccountConstants.E_VERSION /* version */, required=true)
     private String version;
 
     // For JSON treat as Attribute
+    /**
+     * @zm-api-field-description Account ID
+     */
     @XmlElement(name=AccountConstants.E_ID /* id */, required=true)
     private String accountId;
 
     // For JSON treat as Attribute
+    /**
+     * @zm-api-field-description email address (user@domain)
+     */
     @XmlElement(name=AccountConstants.E_NAME /* name */, required=true)
     private String accountName;
 
@@ -165,18 +184,32 @@ public final class GetInfoResponse {
     private String crumb;
 
     // For JSON treat as Attribute
+    /**
+     * @zm-api-field-description number of milliseconds until auth token expires
+     */
     @XmlElement(name=AccountConstants.E_LIFETIME /* lifetime */, required=true)
     private long lifetime;
 
     // For JSON treat as Attribute
+    /**
+     * @zm-api-field-tag admin-delegated
+     * @zm-api-field-description "1" if the auth token is a delegated auth token issued to an admin account
+     */
     @XmlElement(name=AccountConstants.E_ADMIN_DELEGATED /* adminDelegated */, required=false)
     private ZmBoolean adminDelegated;
 
     // For JSON treat as Attribute
+    /**
+     * @zm-api-field-description base REST URL for the requested account
+     */
     @XmlElement(name=AccountConstants.E_REST /* rest */, required=false)
     private String restUrl;
 
     // For JSON treat as Attribute
+    /**
+     * @zm-api-field-description mailbox quota used in bytes.  Returned only if the command successfully executes on
+     * the target user's home mail server:
+     */
     @XmlElement(name=AccountConstants.E_QUOTA_USED /* used */, required=false)
     private Long quotaUsed;
 

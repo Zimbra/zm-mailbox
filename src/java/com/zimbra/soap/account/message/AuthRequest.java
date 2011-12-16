@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2010 Zimbra, Inc.
+ * Copyright (C) 2010, 2011 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -44,26 +44,69 @@ import com.zimbra.common.soap.AccountConstants;
    [<attrs>[<attr name="..."/>...]</attrs>]
    [<requestedSkin>{skin}</requestedSkin>]
  </AuthRequest>
+ * @zm-api-command-description Authenticate for an account
+ * @zm-api-request-description when specifying an account, one of &lt;password> or &lt;preauth> must be specified.
+ * see preauth.txt for a discussion of preauth.<br />
+ * An authToken can be passed instead of account/password/preauth to validate an existing auth token.
+ * If verifyAccount="1", &lt;account> is required and the account in the auth token is compared to the named
+ * account.<br />
+ * Mismatch results in auth failure.  An external app that relies on ZCS for user identification can use this to test
+ * if the auth token provided by the user belongs to that user. If verifyAccount="0" (default), only the auth token
+ * is verified and any &lt;account> element specified is ignored.
  */
 @XmlRootElement(name=AccountConstants.E_AUTH_REQUEST)
 @XmlType(propOrder = {})
 public class AuthRequest {
 
+    /**
+     * @zm-api-field-description Specifies the account to authenticate against
+     */
     @XmlElement(name=AccountConstants.E_ACCOUNT) private Account account;
+    /**
+     * @zm-api-field-description Password to use in conjunction with an account
+     */
     @XmlElement(name=AccountConstants.E_PASSWORD) private String password;
-    @XmlElement(name=AccountConstants.E_PREAUTH) private PreAuth preauth;
-    @XmlElement(name=AccountConstants.E_AUTH_TOKEN) private AuthToken authToken;
-    @XmlElement(name=AccountConstants.E_VIRTUAL_HOST) private String virtualHost;
-    
-    @XmlElementWrapper(name=AccountConstants.E_PREFS)
-    @XmlElement(name=AccountConstants.E_PREF)
+    /**
+     * @zm-api-field-description &lt;preauth> is an alternative to &lt;account>.  See preauth.txt
+     */
+    @XmlElement(name=AccountConstants.E_PREAUTH /* preauth */)
+    private PreAuth preauth;
+    /**
+     * @zm-api-field-description &lt;preauth> is an alternative to &lt;account>.  See preauth.txt
+     */
+    @XmlElement(name=AccountConstants.E_AUTH_TOKEN /* authToken */)
+    private AuthToken authToken;
+    /**
+     * @zm-api-field-tag virtual-host
+     * @zm-api-field-description if specified (in conjunction with by="name"), virtual-host is used to determine
+     * the domain of the account name, if it does not include a domain component. For example, if the domain
+     * foo.com has a zimbraVirtualHostname of "mail.foo.com", and an auth request comes in for "joe" with a
+     * virtualHost of "mail.foo.com", then the request will be equivalent to logging in with "joe@foo.com".
+     */
+    @XmlElement(name=AccountConstants.E_VIRTUAL_HOST /* virtualHost */)
+    private String virtualHost;
+
+    /**
+     * @zm-api-field-description Requested preference settings.
+     */
+    @XmlElementWrapper(name=AccountConstants.E_PREFS /* prefs */)
+    @XmlElement(name=AccountConstants.E_PREF /* pref */)
     private List<Pref> prefs = new ArrayList<Pref>();
-    
-    @XmlElementWrapper(name=AccountConstants.E_ATTRS)
-    @XmlElement(name=AccountConstants.E_ATTR)
+
+    /**
+     * @zm-api-field-description Requested attribute settings.  Only attributes that are allowed to be returned by
+     * GetInfo will be returned by this call
+     */
+    @XmlElementWrapper(name=AccountConstants.E_ATTRS /* attrs */)
+    @XmlElement(name=AccountConstants.E_ATTR /* attr */)
     private List<Attr> attrs = new ArrayList<Attr>();
-    
-    @XmlElement(name=AccountConstants.E_REQUESTED_SKIN) private String requestedSkin;
+
+    /**
+     * @zm-api-field-tag requested-skin
+     * @zm-api-field-description if specified the name of the skin requested by the client
+     */
+    @XmlElement(name=AccountConstants.E_REQUESTED_SKIN /* requestedSkin */)
+    private String requestedSkin;
     
     public AuthRequest() {
     }

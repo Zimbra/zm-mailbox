@@ -13,16 +13,15 @@
  * ***** END LICENSE BLOCK *****
  */
 
-package com.zimbra.soap.admin.message;
+package com.zimbra.doc.soap;
 
-import javax.xml.bind.annotation.XmlRootElement;
+import java.util.List;
 
-import com.zimbra.common.soap.HsmConstants;
-
-/**
- * @zm-api-command-description Aborts a running HSM process
- * @zm-api-request-description Aborts a running HSM process
- */
-@XmlRootElement(name=HsmConstants.E_ABORT_HSM_REQUEST)
-public class AbortHsmRequest {
+public interface DescriptionNode {
+    public DescriptionNode getParent();
+    public List<DescriptionNode> getChildren();
+    public void writeDescription(StringBuilder desc, int depth);
+    public String getDescription();
+    public String getSummary();
+    public String getXPath();
 }

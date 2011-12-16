@@ -24,7 +24,15 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(propOrder = {})
 public class Session {
 
+    /**
+     * @zm-api-field-tag returned-from-server-in-last-response
+     * @zm-api-field-description The ID returned from the server in the last response
+     */
     @XmlElement private String id;
+    /**
+     * @zm-api-field-tag highest_notification_received
+     * @zm-api-field-description The highest notification received
+     */
     @XmlElement private Long seq;
     
     public Session() {

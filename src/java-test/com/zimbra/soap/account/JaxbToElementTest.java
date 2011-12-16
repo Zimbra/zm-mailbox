@@ -66,8 +66,6 @@ import com.zimbra.soap.mail.type.ContactActionSelector;
 import com.zimbra.soap.mail.type.FolderActionSelector;
 import com.zimbra.soap.mail.type.NoteActionSelector;
 import com.zimbra.soap.mail.type.RetentionPolicy;
-import com.zimbra.soap.type.AttributeName;
-import com.zimbra.soap.type.Id;
 import com.zimbra.soap.type.KeyValuePair;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
