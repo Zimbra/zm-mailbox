@@ -6063,18 +6063,19 @@ TODO: delete them permanently from here
   </desc>
 </attr>
 
-<attr id="1239" name="zimbraCalendarKeepExceptionsOnSeriesTimeChange" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.1.2">
+<attr id="1239" name="zimbraMailPurgeSystemPolicy" type="string" cardinality="single" optionalIn="globalConfig" since="8.0.0">
+  <desc>System purge policy, encoded as metadata.  Users can apply these policy elements to their folders and tags.  If the system policy changes, user settings are automatically updated with the change.</desc>
+</attr>
+
+<attr id="1240" name="zimbraCalendarKeepExceptionsOnSeriesTimeChange" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,domainAdminModifiable" since="7.1.2">
   <defaultCOSValue>FALSE</defaultCOSValue>
   <desc>whether to retain exception instances when the recurrence series is changed to new time; set to FALSE for Exchange compatibility</desc>
 </attr>
 
-<attr id="1240" name="zimbraMailAddressValidationRegex" type="string" max="512" cardinality="multi" optionalIn="domain,globalConfig" flags="domainInherited,accountInfo" since="7.1.2">
+<attr id="1241" name="zimbraMailAddressValidationRegex" type="string" max="512" cardinality="multi" optionalIn="domain,globalConfig" flags="domainInherited,accountInfo" since="7.1.2">
   <desc>optional regex used by web client to validate email address</desc>
 </attr>
 
-<attr id="1241" name="zimbraMailPurgeSystemPolicy" type="string" cardinality="single" optionalIn="globalConfig" since="8.0.0">
-  <desc>System purge policy, encoded as metadata.  Users can apply these policy elements to their folders and tags.  If the system policy changes, user settings are automatically updated with the change.</desc>
-</attr>
 
 <attr id="1242" name="zimbraIsACLGroup" type="boolean" cardinality="single" requiredIn="group" callback="IsACLGroup" since="8.0.0">
   <desc>if the dynamic group can be a legitimate grantee for folder grantees; and a legitimate grantee or target for delegated admin grants</desc>
