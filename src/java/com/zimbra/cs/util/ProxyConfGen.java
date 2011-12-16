@@ -1412,10 +1412,7 @@ public class ProxyConfGen
             }
 
             if (!tFile.exists()) {
-                //ignored this template
-                mLog.warn("Template file " + tf + " does not exist. " +
-                		  "Are you using the old version template set?");
-                return;
+                throw new ProxyConfException("Template file " + tf + " does not exist");
             }
             r = new BufferedReader(new FileReader(tf));
             w = new BufferedWriter(new FileWriter(wf));
