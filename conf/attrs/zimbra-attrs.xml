@@ -5643,7 +5643,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1199" name="zimbraMailSSLClientCertPort" type="port" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" callback="CheckPortConflict" requiresRestart="mailbox" since="7.1.0">
-  <globalConfigValue>9443</globalConfigValue>
+  <globalConfigValue>0</globalConfigValue>
   <desc>SSL port requesting client certificate for end-user UI</desc>
 </attr>
 
