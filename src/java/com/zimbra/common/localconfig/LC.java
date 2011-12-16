@@ -727,6 +727,7 @@ public final class LC {
     public static final KnownKey imap_max_request_size = KnownKey.newKey(10 * 1024);
     @Supported
     public static final KnownKey imap_inactive_session_cache_size = KnownKey.newKey(10000);
+    public static final KnownKey imap_use_ehcache = KnownKey.newKey(true);
     public static final KnownKey imap_max_idle_time = KnownKey.newKey(60);
     public static final KnownKey imap_authenticated_max_idle_time = KnownKey.newKey(1800);
     public static final KnownKey pop3_max_idle_time = KnownKey.newKey(60);
