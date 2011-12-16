@@ -26,6 +26,7 @@ import java.util.TimerTask;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.util.Constants;
@@ -70,10 +71,14 @@ final class ImapSessionManager {
             Zimbra.sTimer.schedule(new SessionSerializerTask(), SERIALIZER_INTERVAL_MSEC, SERIALIZER_INTERVAL_MSEC);
             ZimbraLog.imap.debug("initializing IMAP session serializer task");
         }
-        activeSessionCache = new EhcacheImapCache(EhcacheManager.IMAP_ACTIVE_SESSION_CACHE);
-        Preconditions.checkState(activeSessionCache != null);
-        inactiveSessionCache = new EhcacheImapCache(EhcacheManager.IMAP_INACTIVE_SESSION_CACHE);
-        Preconditions.checkState(inactiveSessionCache != null);
+        if (LC.imap_use_ehcache.booleanValue()) {
+            activeSessionCache = new EhcacheImapCache(EhcacheManager.IMAP_ACTIVE_SESSION_CACHE);
+            Preconditions.checkState(activeSessionCache != null);
+            inactiveSessionCache = new EhcacheImapCache(EhcacheManager.IMAP_INACTIVE_SESSION_CACHE);
+            Preconditions.checkState(inactiveSessionCache != null);
+        } else {
+            activeSessionCache = inactiveSessionCache = new DiskImapCache();
+        }
     }
 
     static ImapSessionManager getInstance() {
@@ -556,7 +561,7 @@ final class ImapSessionManager {
     }
 
     void serialize(String key, ImapFolder folder) {
-        if (key.contains(":")) {
+        if (!isActiveKey(key)) {
             inactiveSessionCache.put(key, folder);
         } else {
             activeSessionCache.put(key, folder);
@@ -564,13 +569,17 @@ final class ImapSessionManager {
     }
     
     ImapFolder deserialize(String key) {
-        if (key.contains(":")) {
+        if (!isActiveKey(key)) {
             return inactiveSessionCache.get(key);
         } else {
             ImapFolder folder = activeSessionCache.get(key);
             assert(folder != null);
             return folder;
         }
+    }
+
+    public static boolean isActiveKey(String key) {
+        return key.contains("_");
     }
 
     static interface Cache {
