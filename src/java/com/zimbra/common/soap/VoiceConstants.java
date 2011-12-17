@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2007, 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -28,7 +28,13 @@ public class VoiceConstants {
 
     public static final QName MODIFY_VOICE_MAIL_PREFS_REQUEST  = QName.get("ModifyVoiceMailPrefsRequest", NAMESPACE);
     public static final QName MODIFY_VOICE_MAIL_PREFS_RESPONSE = QName.get("ModifyVoiceMailPrefsResponse", NAMESPACE);
-    
+
+    public static final QName MODIFY_VOICE_MAIL_PIN_REQUEST  = QName.get("ModifyVoiceMailPinRequest", NAMESPACE);
+    public static final QName MODIFY_VOICE_MAIL_PIN_RESPONSE = QName.get("ModifyVoiceMailPinResponse", NAMESPACE);
+
+    public static final QName MODIFY_FROM_NUM_REQUEST  = QName.get("ModifyFromNumRequest", NAMESPACE);
+    public static final QName MODIFY_FROM_NUM_RESPONSE = QName.get("ModifyFromNumResponse", NAMESPACE);
+
     public static final QName GET_VOICE_INFO_REQUEST  = QName.get("GetVoiceInfoRequest", NAMESPACE);
     public static final QName GET_VOICE_INFO_RESPONSE = QName.get("GetVoiceInfoResponse", NAMESPACE);
 
@@ -63,9 +69,12 @@ public class VoiceConstants {
     public static final String E_STOREPRINCIPAL= "storeprincipal";
     public static final String E_VOICEMSG      = "vm";
     public static final String E_UPLOAD        = "upload";
+    public static final String E_AUDIO_TYPE    = "audioType";
  
     public static final String A_ACCOUNT_NUMBER = "accountNumber";
     public static final String A_NAME          = "name";
+    public static final String A_LABEL         = "label";
+    public static final String A_C2C_DEVICE_ID = "c2cDeviceId";
     public static final String A_ID            = "id";
     public static final String A_VMSG_DURATION = "du";
     public static final String A_PHONE         = "phone";
@@ -74,7 +83,14 @@ public class VoiceConstants {
     public static final String A_STATE         = "st";
     public static final String A_COUNTRY       = "co";
     public static final String A_VM            = "vm";
-    
+    public static final String A_CONTENT_TYPE  = "ct";
+    public static final String A_VMAIL_OLD_PIN  = "oldPin";
+    public static final String A_VMAIL_PIN  = "pin";
+    public static final String A_TYPE          = "type";
+    public static final String A_CALLABLE = "callable";
+    public static final String A_EDITABLE = "editable";
+    public static final String A_NUM_PUBLISHABLE = "numpublishable";
+
     public static final String FLAG_UNFORWARDABLE = "p";  // 'p'rivate
     
     // folder inventory
@@ -127,7 +143,10 @@ public class VoiceConstants {
     public static final String A_vmPrefGreetingType            = "vmPrefGreetingType";
     public static final String A_vmPrefEmailNotifStatus        = "vmPrefEmailNotifStatus";
     public static final String A_vmPrefPlayTutorial            = "vmPrefPlayTutorial";
-    public static final String A_zimbraPrefVoiceItemsPerPage   = "zimbraPrefVoiceItemsPerPage";
+    public static final String A_zimbraPrefVoiceItemsPerPage   = "zimbraPrefVoiceItemsPerPage";	
+
+    public static final String A_vmPrefEmailNotifTrans         = "vmPrefEmailNotifTrans";
+    public static final String A_vmPrefEmailNotifAttach        = "vmPrefEmailNotifAttach";
 
     public static final int FID_VOICEMAILINBOX = 1024;
     public static final int FID_MISSEDCALLS = 1025;

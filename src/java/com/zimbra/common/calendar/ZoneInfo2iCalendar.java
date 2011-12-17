@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2008, 2009, 2010, 2011 VMware, Inc.
+ * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
  * 
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -273,7 +273,7 @@ public class ZoneInfo2iCalendar {
             if (tzname != null)
                 sb.append("TZNAME:").append(iCalEscape(tzname)).append(CRLF);
         }
-        sb.append("DTSTART:").append("19710101T");  // YYYYMMDD fixed to 19710101
+        sb.append("DTSTART:").append("16010101T");  // YYYYMMDD fixed to 16010101 (MS Outlook style)
         Time at = rline.getAt();
         Time onset;
         switch (at.getType()) {
@@ -341,7 +341,7 @@ public class ZoneInfo2iCalendar {
         sb.append(CRLF);
         if (tznameFormat != null && tznameFormat.length() > 0 && !tznameFormat.contains("%"))
             sb.append("TZNAME:").append(iCalEscape(tznameFormat)).append(CRLF);
-        sb.append("DTSTART:19710101T000000").append(CRLF);  // YYYYMMDDThhmmss fixed to 19710171T000000
+        sb.append("DTSTART:16010101T000000").append(CRLF);  // YYYYMMDDThhmmss fixed to 16010101T000000 (MS Outlook style)
         String offset = getUtcOffset(gmtOffset);
         sb.append("TZOFFSETTO:").append(offset).append(CRLF);
         sb.append("TZOFFSETFROM:").append(offset).append(CRLF);

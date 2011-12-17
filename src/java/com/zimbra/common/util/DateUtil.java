@@ -1,8 +1,8 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
@@ -25,6 +25,7 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.zimbra.common.service.ServiceException;
 
@@ -519,41 +520,10 @@ public final class DateUtil {
      * @param defaultValue returned if the time interval is null or cannot be parsed
      */
     public static long getTimeInterval(String value, long defaultValue) {
-        if (value == null || value.length() == 0)
+        try {
+            return getTimeInterval(value);
+        } catch (ServiceException e) {
             return defaultValue;
-        else {
-            try {
-                char units = value.charAt(value.length()-1);
-                if (units >= '0' && units <= '9') {
-                    return Long.parseLong(value)*1000;
-                } else {
-                    if (value.endsWith("ms")) {
-                        return Long.parseLong(value.substring(0, value.length()-2));
-                    }
-                    
-                    long n = Long.parseLong(value.substring(0, value.length()-1));
-                    
-                    switch (units) {
-                    case 'd':
-                        n = n * Constants.MILLIS_PER_DAY;
-                        break;
-                    case 'h':
-                        n = n * Constants.MILLIS_PER_HOUR;
-                        break;
-                    case 'm':
-                        n = n * Constants.MILLIS_PER_MINUTE;
-                        break;
-                    case 's':
-                        n = n * Constants.MILLIS_PER_SECOND;
-                        break;
-                    default:
-                        return defaultValue;
-                    }
-                    return n;
-                }
-            } catch (NumberFormatException e) {
-                return defaultValue;
-            }
         }
     }
 
@@ -561,37 +531,22 @@ public final class DateUtil {
         if (value == null || value.length() == 0)
             throw ServiceException.FAILURE("no value", null);
         else {
-            try {
-                char units = value.charAt(value.length()-1);
-                if (units >= '0' && units <= '9') {
-                    return Long.parseLong(value)*1000;
-                } else {
-                    if (value.endsWith("ms")) {
-                        return Long.parseLong(value.substring(0, value.length()-2));
-                    }
-                    
-                    long n = Long.parseLong(value.substring(0, value.length()-1));
-                    switch (units) {
-                    case 'd':
-                        n = n * Constants.MILLIS_PER_DAY;
-                        break;
-                    case 'h':
-                        n = n * Constants.MILLIS_PER_HOUR;
-                        break;
-                    case 'm':
-                        n = n * Constants.MILLIS_PER_MINUTE;
-                        break;
-                    case 's':
-                        n = n * Constants.MILLIS_PER_SECOND;
-                        break;
-                    default:
-                        throw ServiceException.FAILURE("unknown unit", null);
-                    }
-                    return n;
-                }
-            } catch (NumberFormatException e) {
-                throw ServiceException.FAILURE("invalid format", e);
+            Matcher m = StringUtil.newMatcher("(\\d+)([hmsd]|ms)?", value);
+            if (!m.matches()) {
+                throw ServiceException.INVALID_REQUEST("Invalid duration: " + value, null);
             }
+            long n = Long.parseLong(m.group(1));
+            String units = Strings.nullToEmpty(m.group(2));
+            if (units.equals("d")) {
+                return n * Constants.MILLIS_PER_DAY;
+            } else if (units.equals("h")) {
+                return n * Constants.MILLIS_PER_HOUR;
+            } else if (units.equals("m")) {
+                return n * Constants.MILLIS_PER_MINUTE;
+            } else if (units.equals("ms")) {
+                return n;
+            }
+            return n * Constants.MILLIS_PER_SECOND;
         }
     }
 
@@ -614,48 +569,11 @@ public final class DateUtil {
      * @param defaultValue returned if the time interval is null or cannot be parsed
      */
     public static long getTimeIntervalSecs(String value, long defaultValue) {
-        /*
-         * like getTimeInterval, but return interval in seconds, saving the overhead 
-         * for code that needs seconds but gets milliseconds from getTimeInterval and 
-         * has to convert it back seconds.
-         * 
-         * If the value is in ms, round to the nearest second.
-         */
-        if (value == null || value.length() == 0)
+        try {
+            long millis = getTimeInterval(value);
+            return Math.round((float) millis / Constants.MILLIS_PER_SECOND);
+        } catch (ServiceException e) {
             return defaultValue;
-        else {
-            try {
-                char units = value.charAt(value.length()-1);
-                if (units >= '0' && units <= '9') {
-                    return Long.parseLong(value);
-                } else {
-                    if (value.endsWith("ms")) {
-                        // round up to the next second
-                        long ms = Long.parseLong(value.substring(0, value.length()-2));
-                        return Math.round((float)ms/Constants.MILLIS_PER_SECOND);
-                    }
-                    
-                    long n = Long.parseLong(value.substring(0, value.length()-1));
-                    switch (units) {
-                    case 'd':
-                        n = n * Constants.SECONDS_PER_DAY;
-                        break;
-                    case 'h':
-                        n = n * Constants.SECONDS_PER_HOUR;
-                        break;
-                    case 'm':
-                        n = n * Constants.SECONDS_PER_MINUTE;
-                        break;
-                    case 's':
-                        break;
-                    default:
-                        return defaultValue;
-                    }
-                    return n;
-                }
-            } catch (NumberFormatException e) {
-                return defaultValue;
-            }
         }
     }
 
