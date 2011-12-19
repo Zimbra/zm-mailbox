@@ -1,72 +1,52 @@
-package com.zimbra.qa.unittest;
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2011 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
+package com.zimbra.qa.unittest.prov.ldap;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.junit.*;
+
 import static org.junit.Assert.*;
 
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.DistributionList;
 import com.zimbra.cs.account.Domain;
-import com.zimbra.cs.account.DynamicGroup;
 import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.GuestAccount;
 import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.GlobalGrant;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
-import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
-import com.zimbra.cs.account.accesscontrol.Rights.User;
+import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.soap.type.TargetBy;
 
-public class TestACPermissionCache extends TestAC {
+public class TestACLPermissionCache extends LdapTest {
 
-    protected static final AccessManager accessMgr = AccessManager.getInstance();
+    private static AccessManager accessMgr;
     
-    private static final Right A_USER_RIGHT = TestAC.USER_RIGHT;
-    private static final Right A_USER_RIGHT_DISTRIBUTION_LIST = TestAC.USER_RIGHT_DISTRIBUTION_LIST;
-    private static final Right A_CACHEABLE_ADMIN_RIGHT = Admin.R_adminLoginAs;  // the only cached admin right
+    private static Right A_USER_RIGHT;
+    private static Right A_USER_RIGHT_DISTRIBUTION_LIST;
+    private static Right A_CACHEABLE_ADMIN_RIGHT;
     
-    public void tearDown() throws Exception {
-        deleteAllEntries();
-    }
-    
-    static Right getRight(String right) throws ServiceException {
-        return RightManager.getInstance().getRight(right);
-    }
-    
-    private void grantRight(TargetType targetType, Entry target, 
-            GranteeType granteeType, NamedEntry grantee, Right right) 
-    throws ServiceException {
-        grantRight(targetType, target, granteeType, grantee, null, right);
-    }
-    
-    private void revokeRight(TargetType targetType, Entry target, 
-            GranteeType granteeType, NamedEntry grantee, Right right) 
-    throws ServiceException {
-        RightCommand.revokeRight(
-                mProv, getGlobalAdminAcct(),
-                targetType.getCode(), TargetBy.name, target.getLabel(),
-                granteeType.getCode(), Key.GranteeBy.name, grantee.getName(), 
-                right.getName(), null);
-    }
-    
-    // takes a secret
-    private void grantRight(TargetType targetType, Entry target, 
-            GranteeType granteeType, NamedEntry grantee, String secret, Right right) 
-    throws ServiceException {
-        RightCommand.grantRight(
-                mProv, getGlobalAdminAcct(),
-                targetType.getCode(), TargetBy.name, target.getLabel(),
-                granteeType.getCode(), Key.GranteeBy.name, grantee.getName(), secret,
-                right.getName(), null);
-    }
     
     // grant target
     private static final String GRANTTARGET_USER_ACCT = "granttarget-user-acct";
@@ -86,6 +66,112 @@ public class TestACPermissionCache extends TestAC {
     private static final String GRANTEE_ADMIN_GROUP = "grantee-admin-group";
     private static final String GRANTEE_GUEST_ACCT = "grantee-guest-acct";
     private static final String GRANTEE_GUEST_ACCT_PASSWORD = "grantee-guest-acct-password";
+    
+    private static int sequence = 1;
+    
+    private static LdapProvTestUtil provUtil;
+    private static LdapProv mProv;
+    private static Domain baseDomain;
+    private static String BASE_DOMAIN_NAME;
+    private static Account globalAdmin;
+    
+    @BeforeClass
+    public static void init() throws Exception {
+        
+        provUtil = new LdapProvTestUtil();
+        mProv = provUtil.getProv();
+        baseDomain = provUtil.createDomain(baseDomainName());
+        BASE_DOMAIN_NAME = baseDomain.getName();
+        globalAdmin = provUtil.createGlobalAdmin("globaladmin", baseDomain);
+        
+        accessMgr = AccessManager.getInstance();
+        
+        ACLTestUtil.initTestRights();
+        A_USER_RIGHT = ACLTestUtil.USER_RIGHT;
+        A_USER_RIGHT_DISTRIBUTION_LIST = ACLTestUtil.USER_RIGHT_DISTRIBUTION_LIST;
+        A_CACHEABLE_ADMIN_RIGHT = Admin.R_adminLoginAs;  // the only cached admin right
+    }
+    
+    @AfterClass
+    public static void cleanup() throws Exception {
+        Cleanup.deleteAll(baseDomainName());
+    }
+    
+    private void grantRight(TargetType targetType, Entry target, 
+            GranteeType granteeType, NamedEntry grantee, Right right) 
+    throws ServiceException {
+        grantRight(targetType, target, granteeType, grantee, null, right);
+    }
+    
+    private void revokeRight(TargetType targetType, Entry target, 
+            GranteeType granteeType, NamedEntry grantee, Right right) 
+    throws ServiceException {
+        RightCommand.revokeRight(
+                mProv, globalAdmin,
+                targetType.getCode(), TargetBy.name, target.getLabel(),
+                granteeType.getCode(), Key.GranteeBy.name, grantee.getName(), 
+                right.getName(), null);
+    }
+    
+    // takes a secret
+    private void grantRight(TargetType targetType, Entry target, 
+            GranteeType granteeType, NamedEntry grantee, String secret, Right right) 
+    throws ServiceException {
+        RightCommand.grantRight(
+                mProv, globalAdmin,
+                targetType.getCode(), TargetBy.name, target.getLabel(),
+                granteeType.getCode(), Key.GranteeBy.name, grantee.getName(), secret,
+                right.getName(), null);
+    }
+
+    private static synchronized String nextSeq() {
+        return "" + sequence++;
+    }
+    
+    private String domainName() {
+        return nextSeq() + "." + BASE_DOMAIN_NAME;
+    }
+    
+    private Domain createDomain() throws Exception {
+        return provUtil.createDomain(domainName());
+    } 
+    
+    private Account createUserAccount(String localpart, Domain domain) throws Exception {
+        if (domain == null) {
+            domain = createDomain();
+        }
+        return provUtil.createAccount(localpart, domain);
+    }
+    
+    private Account createGuestAccount(String email, String password) {
+        return new GuestAccount(email, password);
+    }
+    
+    private Account createDelegatedAdminAccount(String localpart, Domain domain) 
+    throws Exception {
+        if (domain == null) {
+            domain = createDomain();
+        }
+        return provUtil.createDelegatedAdmin(localpart, domain);
+    }
+    
+    private DistributionList createDistributionList(String localpart, Domain domain, 
+            Map<String, Object> attrs) throws Exception {
+        if (domain == null) {
+            domain = createDomain();
+        }
+        return provUtil.createDistributionList(localpart, domain, attrs);
+    }
+        
+    private DistributionList createUserDistributionList(String localpart, Domain domain) 
+    throws Exception {
+        return createDistributionList(localpart, domain, new HashMap<String, Object>());
+    }
+    
+    private String getEmailLocalpart(String email) {
+        String[] parts = email.split("@");
+        return parts[0];
+    }
     
     /*
      * =================
@@ -452,12 +538,6 @@ public class TestACPermissionCache extends TestAC {
         // doTestPerf(false, expectedResult, grantee, target, right);
     }
     */
-    
-    public static void main(String[] args) throws Exception {
-        CliUtil.toolSetup("INFO");
-        // TestACL.logToConsole("DEBUG");
-        
-        TestUtil.runTest(TestACPermissionCache.class);
-    }
+
     
 }

@@ -94,6 +94,7 @@ import com.zimbra.qa.unittest.prov.ldap.TestProvCallbackAvailableZimlets;
 import com.zimbra.qa.unittest.prov.ldap.TestProvIDN;
 import com.zimbra.qa.unittest.prov.ldap.TestProvValidator;
 import com.zimbra.qa.unittest.prov.ldap.TestProvZimbraId;
+import com.zimbra.qa.unittest.prov.soap.TestACLUserRights;
 import com.zimbra.qa.unittest.prov.soap.TestDelegatedDL;
 import com.zimbra.qa.unittest.prov.soap.TestSearchGal;
 
@@ -479,7 +480,7 @@ public class TestLdap {
         // old tests, TODO: convert them 
         classes.add(TestAccountLockout.class);
         // classes.add(TestACPermissionCache.class);
-        classes.add(TestACUserRights.class);
+        classes.add(TestACLUserRights.class);
         classes.add(TestBuildInfo.class);
         classes.add(TestLdapBinary.class);
         classes.add(TestLdapUtil.class);

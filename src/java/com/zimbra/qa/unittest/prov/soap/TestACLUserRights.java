@@ -1,55 +1,71 @@
-package com.zimbra.qa.unittest;
+/*
+ * ***** BEGIN LICENSE BLOCK *****
+ * Zimbra Collaboration Suite Server
+ * Copyright (C) 2011 Zimbra, Inc.
+ * 
+ * The contents of this file are subject to the Zimbra Public License
+ * Version 1.3 ("License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ * http://www.zimbra.com/license.
+ * 
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
+ * ***** END LICENSE BLOCK *****
+ */
+package com.zimbra.qa.unittest.prov.soap;
 
 import java.util.List;
 import java.util.ArrayList;
 
 import org.junit.*;
+
 import static org.junit.Assert.*;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.client.ZAce;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZGrant;
 import com.zimbra.client.ZMailbox;
+import com.zimbra.qa.QA.Bug;
+import com.zimbra.qa.unittest.TestUtil;
 
-/*
- * TODO: move all user right specific testing from TestACLGrantee 
- *       to this class, and deprecate TestACLGrantee.
- *
- */
+public class TestACLUserRights extends SoapTest {
 
-
-public class TestACUserRights extends TestProv {
+    private static SoapProvTestUtil provUtil;
+    private static Provisioning prov;
+    private static Domain domain;
     
-    private int grantFolderRight(Account owner, Account grantee, String folderPath, String rights) 
-    throws ServiceException {
-        ZMailbox ownerMbox = TestUtil.getZMailbox(owner.getName());
-        ZFolder folder = TestUtil.createFolder(ownerMbox, folderPath);
-        ownerMbox.modifyFolderGrant(folder.getId(), ZGrant.GranteeType.usr, grantee.getName(), rights, null);
-        
-        return Integer.valueOf(folder.getId());
+    @BeforeClass
+    public static void init() throws Exception {
+        provUtil = new SoapProvTestUtil();
+        prov = provUtil.getProv();
+        domain = provUtil.createDomain(baseDomainName());
     }
     
-    // bug 42146
+    @AfterClass
+    public static void cleanup() throws Exception {
+        Cleanup.deleteAll(baseDomainName());
+    }
+    
+    private Account createUserAccount(String localPart) throws Exception {
+        return provUtil.createAccount(localPart, domain);
+    }
+    
     @Test
+    @Bug(bug=42146)
     public void testFallbackToFolderRight() throws Exception {
         
-        useSoapProv();
-        
-        Domain domain = createDomain();
-        
         // grantees
-        Account allowed = createUserAccount("allowed", domain);
-        Account denied = createUserAccount("denied", domain);
-        Account noAclButHasFolderGrant = createUserAccount("noAclButHasFolderGrant", domain);
-        Account noAclAndNoFolderGrant = createUserAccount("noAclAndNoFolderGrant", domain);
+        Account allowed = createUserAccount("allowed");
+        Account denied = createUserAccount("denied");
+        Account noAclButHasFolderGrant = createUserAccount("noAclButHasFolderGrant");
+        Account noAclAndNoFolderGrant = createUserAccount("noAclAndNoFolderGrant");
         
         // owner
-        Account owner = createUserAccount("owner", domain);
+        Account owner = createUserAccount("owner");
         
         ZMailbox ownerMbox = TestUtil.getZMailbox(owner.getName());
         
@@ -85,13 +101,4 @@ public class TestACUserRights extends TestProv {
         assertFalse(result);
     }
 
-    /**
-     * @param args
-     */
-    public static void main(String[] args) throws Exception {
-        CliUtil.toolSetup("INFO");
-        // TestACL.logToConsole("DEBUG");
-        
-        TestUtil.runTest(TestACUserRights.class);
-    }
 }

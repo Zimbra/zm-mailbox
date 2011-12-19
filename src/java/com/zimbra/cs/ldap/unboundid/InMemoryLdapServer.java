@@ -16,7 +16,6 @@ package com.zimbra.cs.ldap.unboundid;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 

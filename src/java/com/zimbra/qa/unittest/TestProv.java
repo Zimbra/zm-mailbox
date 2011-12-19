@@ -25,6 +25,7 @@ import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.qa.unittest.prov.ldap.ACLTestUtil;
 
 public abstract class TestProv extends TestLdap {
 
@@ -167,7 +168,7 @@ public abstract class TestProv extends TestLdap {
     }
     
     protected Account createKeyAccount(String name, String accesKey) {
-        AuthToken authToken = new TestACAccessKey.KeyAuthToken(name, accesKey);
+        AuthToken authToken = new ACLTestUtil.KeyAuthToken(name, accesKey);
         return new GuestAccount(authToken);
     }
     

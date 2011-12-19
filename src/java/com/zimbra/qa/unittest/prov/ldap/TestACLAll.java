@@ -73,7 +73,6 @@ import com.zimbra.cs.account.accesscontrol.UserRight;
 import com.zimbra.cs.account.auth.AuthMechanism.AuthMech;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.entry.LdapDomain;
-import com.zimbra.qa.unittest.TestACAccessKey;
 import com.zimbra.soap.type.TargetBy;
 
 public class TestACLAll extends LdapTest {
@@ -322,7 +321,7 @@ public class TestACLAll extends LdapTest {
     }
     
     private Account createKeyAccount(String name, String accesKey) {
-        AuthToken authToken = new TestACAccessKey.KeyAuthToken(name, accesKey);
+        AuthToken authToken = new ACLTestUtil.KeyAuthToken(name, accesKey);
         return new GuestAccount(authToken);
     }
     

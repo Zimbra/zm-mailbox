@@ -57,6 +57,7 @@ import com.zimbra.cs.account.accesscontrol.ACLAccessManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.service.AuthProvider;
+import com.zimbra.qa.unittest.prov.ldap.ACLTestUtil;
 import com.zimbra.soap.type.TargetBy;
 
 
@@ -163,7 +164,7 @@ public abstract class TestACL extends TestCase {
     }
     
     protected Account keyAccount(String name, String accesKey) {
-        AuthToken authToken = new TestACAccessKey.KeyAuthToken(name, accesKey);
+        AuthToken authToken = new ACLTestUtil.KeyAuthToken(name, accesKey);
         return new GuestAccount(authToken);
     }
     
@@ -738,7 +739,6 @@ public abstract class TestACL extends TestCase {
         // ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
         
         // run all ACL tests
-        TestUtil.runTest(TestACLGrantee.class);    // all user rights for now
         TestUtil.runTest(TestACLPrecedence.class); // all user rights for now
         
         if (mAM instanceof ACLAccessManager) {
