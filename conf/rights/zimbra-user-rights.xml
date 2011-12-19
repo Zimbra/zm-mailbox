@@ -54,7 +54,7 @@
   <desc>create distribution lists in a domain</desc>
 </right>
 
-<right name="ownDistList" userRight="1" targetType="dl" cache="1">
+<right name="ownDistList" userRight="1" targetType="dl" cache="1" grantTargetType="dl">
   <desc>own distribution list</desc>
 </right>
 
