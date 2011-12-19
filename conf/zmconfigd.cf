@@ -223,6 +223,7 @@ SECTION proxy
 	VAR zimbraMailSSLProxyPort
 	VAR zimbraPop3ProxyBindPort
 	VAR zimbraPop3SSLProxyBindPort
+	VAR zimbraReverseProxyAdminEnabled 
 	VAR zimbraReverseProxyAuthWaitInterval
 	VAR zimbraReverseProxyCacheEntryTTL
 	VAR zimbraReverseProxyCacheFetchTimeout
