@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111212-1421 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111219-1031 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -2512,7 +2512,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1239)
+    @ZAttr(id=1240)
     public static final String A_zimbraCalendarKeepExceptionsOnSeriesTimeChange = "zimbraCalendarKeepExceptionsOnSeriesTimeChange";
 
     /**
@@ -3665,7 +3665,7 @@ public class ZAttrProvisioning {
 
     /**
      * whether checking against zimbraExternalShareWhitelistDomain for
-     * external sharing is enabled
+     * external user sharing is enabled
      *
      * @since ZCS 8.0.0
      */
@@ -3686,10 +3686,11 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExternalShareInvitationUrlExpiration = "zimbraExternalShareInvitationUrlExpiration";
 
     /**
-     * lifetime of external shares. Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * maximum lifetime of shares to external users. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @since ZCS 8.0.0
      */
@@ -3697,7 +3698,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExternalShareLifetime = "zimbraExternalShareLifetime";
 
     /**
-     * flag indicates whether to limit lifetime of external shares
+     * flag indicates whether to limit lifetime of shares to external users
      *
      * @since ZCS 8.0.0
      */
@@ -3713,7 +3714,7 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExternalShareWhitelistDomain = "zimbraExternalShareWhitelistDomain";
 
     /**
-     * switch for turning external sharing on/off
+     * switch for turning external user sharing on/off
      *
      * @since ZCS 8.0.0
      */
@@ -5486,7 +5487,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1240)
+    @ZAttr(id=1241)
     public static final String A_zimbraMailAddressValidationRegex = "zimbraMailAddressValidationRegex";
 
     /**
@@ -5832,7 +5833,7 @@ public class ZAttrProvisioning {
      *
      * @since ZCS 8.0.0
      */
-    @ZAttr(id=1241)
+    @ZAttr(id=1239)
     public static final String A_zimbraMailPurgeSystemPolicy = "zimbraMailPurgeSystemPolicy";
 
     /**
@@ -8048,9 +8049,8 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPrefForwardReplyFormat = "zimbraPrefForwardReplyFormat";
 
     /**
-     * Deprecated since: 4.5. Deprecated in favor of
-     * zimbraPrefForwardReplyFormat. Orig desc: whether or not to use same
-     * format (text or html) of message we are replying to
+     * whether or not to use same format (text or html) of message we are
+     * replying to
      */
     @ZAttr(id=218)
     public static final String A_zimbraPrefForwardReplyInOriginalFormat = "zimbraPrefForwardReplyInOriginalFormat";
@@ -9063,6 +9063,25 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPublicServiceProtocol = "zimbraPublicServiceProtocol";
 
     /**
+     * maximum lifetime of public shares. Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1355)
+    public static final String A_zimbraPublicShareLifetime = "zimbraPublicShareLifetime";
+
+    /**
+     * flag indicates whether to limit lifetime of public shares
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1354)
+    public static final String A_zimbraPublicShareLimitLifetime = "zimbraPublicShareLimitLifetime";
+
+    /**
      * switch for turning public sharing on/off
      *
      * @since ZCS 8.0.0
@@ -9898,10 +9917,11 @@ public class ZAttrProvisioning {
     public static final String A_zimbraShareInfo = "zimbraShareInfo";
 
     /**
-     * lifetime of shares to users on the system. Must be in valid duration
-     * format: {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h -
-     * hours, m - minutes, s - seconds, d - days, ms - milliseconds. If time
-     * unit is not specified, the default is s(seconds).
+     * maximum lifetime of shares to users on the system. Must be in valid
+     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @since ZCS 8.0.0
      */
@@ -10603,22 +10623,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
