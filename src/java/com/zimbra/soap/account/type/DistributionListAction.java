@@ -74,6 +74,9 @@ public class DistributionListAction extends AccountKeyValuePairs {
     @XmlElement(name=AccountConstants.E_OWNER, required=false)
     protected List<DistributionListGranteeSelector> owners;
     
+    @XmlElement(name=AccountConstants.E_RIGHT, required=false)
+    protected List<DistributionListRight> rights;
+    
     @XmlElement(name=AccountConstants.E_DL_SUBS_REQ, required=false)
     protected DistributionListSubscribeReq subsReq;
     
@@ -143,6 +146,26 @@ public class DistributionListAction extends AccountKeyValuePairs {
     
     public List<DistributionListGranteeSelector> getOwners() {
         return owners;
+    }
+    
+    
+    public void addRight(DistributionListRight right) {
+        if (rights == null) {
+            rights = Lists.newArrayList();
+        }
+        rights.add(right);
+    }
+    
+    public void setRights(List<DistributionListRight> rights) {
+        this.rights = null;
+        if (rights != null) {
+            this.rights = Lists.newArrayList();
+            Iterables.addAll(this.rights, rights);
+        }
+    }
+    
+    public List<DistributionListRight> getRights() {
+        return rights;
     }
     
     public void setSubsReq(DistributionListSubscribeReq subsReq) {
