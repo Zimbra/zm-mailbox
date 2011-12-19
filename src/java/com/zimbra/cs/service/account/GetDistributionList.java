@@ -25,6 +25,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Group.GroupOwner;
 
 import com.zimbra.soap.ZimbraSoapContext;
 
@@ -83,7 +84,7 @@ public class GetDistributionList extends DistributionListDocumentHandler {
 
         @Override
         protected void handleRequest() throws ServiceException {
-            boolean isOwner = isOwner(acct, group);
+            boolean isOwner = GroupOwner.isOwner(acct, group);
             
             // isMember
             boolean isMember = isMember(prov, acct, group);

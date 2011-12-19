@@ -145,10 +145,10 @@ public class GlobalAccessManager extends AccessManager implements AdminConsoleCa
     }
     
     @Override
-    public boolean canAccessGroup(Account credentials, Group group) throws ServiceException {
+    public boolean canAccessGroup(Account credentials, Group group, boolean asAdmin) 
+    throws ServiceException {
         checkDomainStatus(group);
         
-        boolean asAdmin = true;
         Right rightNeeded = Group.GroupOwner.GROUP_OWNER_RIGHT;
         Account authedAcct = credentials;
         

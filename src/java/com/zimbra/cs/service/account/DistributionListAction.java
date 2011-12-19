@@ -2,7 +2,9 @@ package com.zimbra.cs.service.account;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -32,39 +34,22 @@ import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Group.GroupOwner;
+import com.zimbra.cs.account.accesscontrol.ACLUtil;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
+import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
+import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.TargetType;
-import com.zimbra.cs.account.accesscontrol.UserRight;
+import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.type.DistributionListSubscribeOp;
+import com.zimbra.soap.account.type.DistributionListAction.Operation;
 import com.zimbra.soap.type.TargetBy;
 
 public class DistributionListAction extends DistributionListDocumentHandler {
-    
-    private static enum Operation {
-        delete,
-        modify,
-        rename,
-        addAlias,
-        removeAlias,
-        addOwner,
-        removeOwner,
-        addMembers,
-        removeMembers,
-        acceptSubsReq,
-        rejectSubsReq;
-        
-        private static Operation fromString(String str) throws ServiceException {
-            try {
-                return Operation.valueOf(str);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("invalid op: " + str, e);
-            }
-        }
-    };
     
     public Element handle(Element request, Map<String, Object> context) 
     throws ServiceException {
@@ -97,7 +82,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
         @Override
         protected void handleRequest() throws ServiceException {
-            if (!isOwner(acct, group)) {
+            if (!GroupOwner.hasOwnerPrivilege(acct, group)) {
                 throw ServiceException.PERM_DENIED(
                         "you do not have sufficient rights to access this distribution list");
             }
@@ -122,11 +107,23 @@ public class DistributionListAction extends DistributionListDocumentHandler {
                 case removeAlias:
                     handler = new RemoveAliasHandler(eAction, group, prov, acct);
                     break;
-                case addOwner:
-                    handler = new AddOwnerHandler(eAction, group, prov, acct);
+                case addOwners:
+                    handler = new AddOwnersHandler(eAction, group, prov, acct);
                     break;
-                case removeOwner:
-                    handler = new RemoveOwnerHandler(eAction, group, prov, acct);
+                case removeOwners:
+                    handler = new RemoveOwnersHandler(eAction, group, prov, acct);
+                    break;
+                case setOwners:
+                    handler = new SetOwnersHandler(eAction, group, prov, acct);
+                    break;
+                case grantRights:
+                    handler = new GrantRightsHandler(eAction, group, prov, acct);
+                    break;
+                case revokeRights:
+                    handler = new RevokeRightsHandler(eAction, group, prov, acct);
+                    break;
+                case setRights:
+                    handler = new SetRightsHandler(eAction, group, prov, acct);
                     break;
                 case addMembers:
                     handler = new AddMembersHandler(eAction, group, prov, acct);
@@ -286,78 +283,261 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         }
     }
     
-    static class AddOwnerHandler extends DLActionHandler {
+    private static abstract class ModifyRightHandler extends DLActionHandler {
 
-        protected AddOwnerHandler(Element eAction, Group group, 
+        protected ModifyRightHandler(Element eAction, Group group, 
                 Provisioning prov, Account requestedAcct) {
             super(eAction, group, prov, requestedAcct);
         }
         
-        @Override
-        Operation getAction() {
-            return Operation.addOwner;
-        }
-
-        @Override
-        void handle() throws ServiceException {
-            Element eOwner = eAction.getElement(AccountConstants.E_OWNER);
-            GranteeType ownerType = GranteeType.fromCode(eOwner.getAttribute(AccountConstants.A_TYPE));
-            GranteeBy ownerBy = GranteeBy.fromString(eOwner.getAttribute(AccountConstants.A_BY));
-            String owner = eOwner.getText();
+        protected class Grantee {
+            GranteeType type;
+            GranteeBy by;
+            String grantee;
             
-            addOwner(prov, group, ownerType, ownerBy, owner);
+            private Grantee(GranteeType type, GranteeBy by, String grantee) {
+                this.type = type;
+                this.by = by;
+                this.grantee = grantee;
+            }
+        };
+        
+        protected List<Grantee> parseGrantees(String parentElem) throws ServiceException {
+            List<Grantee> grantees = Lists.newArrayList();
             
-            ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(), 
-                            "name", group.getName(), "type", ownerType.getCode(),
-                            "owner", owner})); 
+            for (Element eGrantee : eAction.listElements(parentElem)) {
+                GranteeType type = GranteeType.fromCode(eGrantee.getAttribute(AccountConstants.A_TYPE));
+                GranteeBy by = GranteeBy.fromString(eGrantee.getAttribute(AccountConstants.A_BY));
+                String grantee = eGrantee.getText();
+                
+                grantees.add(new Grantee(type, by, grantee));
+            }
+            
+            return grantees;
         }
         
-        
-        public static void addOwner(Provisioning prov, Group group, GranteeType granteeType, 
-                Key.GranteeBy granteeBy, String grantee) throws ServiceException {
+        protected void grantRight(Right right, GranteeType granteeType, 
+                Key.GranteeBy granteeBy, String grantee) 
+        throws ServiceException {
             RightCommand.grantRight(prov,
                     null,  // grant the right as a a system admin
                     TargetType.dl.getCode(), TargetBy.id, group.getId(),
                     granteeType.getCode(), granteeBy, grantee, null,
-                    UserRight.RT_ownDistList, null);
+                    right.getName(), null);
+            
+            ZimbraLog.security.info(ZimbraLog.encodeAttrs(
+                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(), 
+                            "name", group.getName(), "type", granteeType.getCode(),
+                            "grantee", grantee})); 
+        }
+        
+        protected void revokeRight(Right right, GranteeType granteeType, 
+                Key.GranteeBy granteeBy, String grantee) 
+        throws ServiceException {
+            RightCommand.revokeRight(prov,
+                    null,  // grant the right as a a system admin
+                    TargetType.dl.getCode(), TargetBy.id, group.getId(),
+                    granteeType.getCode(), granteeBy, grantee, 
+                    right.getName(), null);
+            
+            ZimbraLog.security.info(ZimbraLog.encodeAttrs(
+                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(), 
+                            "name", group.getName(), "type", granteeType.getCode(),
+                            "grantee", grantee})); 
         }
     }
     
-    static class RemoveOwnerHandler extends DLActionHandler {
+    static class AddOwnersHandler extends ModifyRightHandler {
 
-        protected RemoveOwnerHandler(Element eAction, Group group, 
+        protected AddOwnersHandler(Element eAction, Group group, 
                 Provisioning prov, Account requestedAcct) {
             super(eAction, group, prov, requestedAcct);
         }
         
         @Override
         Operation getAction() {
-            return Operation.removeOwner;
+            return Operation.addOwners;
         }
 
         @Override
         void handle() throws ServiceException {
-            Element eOwner = eAction.getElement(AccountConstants.E_OWNER);
-            GranteeType ownerType = GranteeType.fromCode(eOwner.getAttribute(AccountConstants.A_TYPE));
-            GranteeBy ownerBy = GranteeBy.fromString(eOwner.getAttribute(AccountConstants.A_BY));
-            String owner = eOwner.getText();
-            
-            removeOwner(prov, group, ownerType, ownerBy, owner);
-            
-            ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(), 
-                            "name", group.getName(), "type", ownerType.getCode(),
-                            "owner", owner})); 
+            List<Grantee> owners = parseGrantees(AccountConstants.E_OWNER);
+            for (Grantee owner : owners) {
+                addOwner(this, owner.type, owner.by, owner.grantee);
+            }
         }
         
-        public static void removeOwner(Provisioning prov, Group group, GranteeType granteeType, 
-                Key.GranteeBy granteeBy, String grantee) throws ServiceException {
-            RightCommand.revokeRight(prov,
-                    null,  // grant the right as a a system admin
-                    TargetType.dl.getCode(), TargetBy.id, group.getId(),
-                    granteeType.getCode(), granteeBy, grantee, 
-                    UserRight.RT_ownDistList, null);
+        private static void addOwner(ModifyRightHandler handler, 
+                GranteeType granteeType, Key.GranteeBy granteeBy, String grantee) 
+        throws ServiceException {
+            handler.grantRight(Group.GroupOwner.GROUP_OWNER_RIGHT,
+                    granteeType, granteeBy, grantee);
+        }
+    }
+    
+    static class RemoveOwnersHandler extends ModifyRightHandler {
+
+        protected RemoveOwnersHandler(Element eAction, Group group, 
+                Provisioning prov, Account requestedAcct) {
+            super(eAction, group, prov, requestedAcct);
+        }
+        
+        @Override
+        Operation getAction() {
+            return Operation.removeOwners;
+        }
+
+        @Override
+        void handle() throws ServiceException {
+            List<Grantee> owners = parseGrantees(AccountConstants.E_OWNER);
+            for (Grantee owner : owners) {
+                removeOwner(this, owner.type, owner.by, owner.grantee);
+            }
+        }
+        
+        private static void removeOwner(ModifyRightHandler handler, 
+                GranteeType granteeType, Key.GranteeBy granteeBy, String grantee) 
+        throws ServiceException {
+            handler.revokeRight(Group.GroupOwner.GROUP_OWNER_RIGHT,
+                    granteeType, granteeBy, grantee);
+        }
+    }
+    
+    static class SetOwnersHandler extends ModifyRightHandler {
+
+        protected SetOwnersHandler(Element eAction, Group group, 
+                Provisioning prov, Account requestedAcct) {
+            super(eAction, group, prov, requestedAcct);
+        }
+        
+        @Override
+        Operation getAction() {
+            return Operation.setOwners;
+        }
+
+        @Override
+        void handle() throws ServiceException {
+            List<Grantee> owners = parseGrantees(AccountConstants.E_OWNER);
+            
+            // remove all current owners
+            List<GroupOwner> curOwners = GroupOwner.getOwners(group, false);
+            for (GroupOwner owner : curOwners) {
+                RemoveOwnersHandler.removeOwner(this, owner.getType(), 
+                        Key.GranteeBy.id, owner.getId());
+            }
+            
+            // add owners
+            for (Grantee owner : owners) {
+                AddOwnersHandler.addOwner(this, owner.type, owner.by, owner.grantee);
+            }
+        }
+    }
+    
+    private static abstract class ModifyMultipleRightsHandler extends ModifyRightHandler {
+        protected ModifyMultipleRightsHandler(Element eAction, Group group, 
+                Provisioning prov, Account requestedAcct) {
+            super(eAction, group, prov, requestedAcct);
+        }
+        
+        protected Map<Right, List<Grantee>> parseRights() throws ServiceException {
+            RightManager rightMgr = RightManager.getInstance();
+            
+            // keep the soap order, use LinkedHashMap
+            Map<Right, List<Grantee>> rights = new LinkedHashMap<Right, List<Grantee>>();
+            for (Element eRight : eAction.listElements(AccountConstants.E_RIGHT)) {
+                Right right = rightMgr.getUserRight(eRight.getAttribute(AccountConstants.A_RIGHT));
+                List<Grantee> grantees = parseGrantees(AccountConstants.E_GRANTEE);
+                rights.put(right, grantees);
+            }
+            
+            return rights;
+        }
+    }
+    
+    static class GrantRightsHandler extends ModifyMultipleRightsHandler {
+        protected GrantRightsHandler(Element eAction, Group group, 
+                Provisioning prov, Account requestedAcct) {
+            super(eAction, group, prov, requestedAcct);
+        }
+
+        @Override
+        Operation getAction() {
+            return Operation.grantRights;
+        }
+
+        @Override
+        void handle() throws ServiceException {
+            Map<Right, List<Grantee>> rights = parseRights();
+            
+            for (Map.Entry<Right, List<Grantee>> entry : rights.entrySet()) {
+                Right right = entry.getKey();
+                List<Grantee> grantees = entry.getValue();
+                for (Grantee grantee : grantees) {
+                    grantRight(right, grantee.type, grantee.by, grantee.grantee);
+                }
+            }
+        }
+    }
+    
+    static class RevokeRightsHandler extends ModifyMultipleRightsHandler {
+        protected RevokeRightsHandler(Element eAction, Group group, 
+                Provisioning prov, Account requestedAcct) {
+            super(eAction, group, prov, requestedAcct);
+        }
+
+        @Override
+        Operation getAction() {
+            return Operation.revokeRights;
+        }
+
+        @Override
+        void handle() throws ServiceException {
+            Map<Right, List<Grantee>> rights = parseRights();
+            
+            for (Map.Entry<Right, List<Grantee>> entry : rights.entrySet()) {
+                Right right = entry.getKey();
+                List<Grantee> grantees = entry.getValue();
+                for (Grantee grantee : grantees) {
+                    revokeRight(right, grantee.type, grantee.by, grantee.grantee);
+                }
+            }
+        }
+    }
+
+    static class SetRightsHandler extends ModifyMultipleRightsHandler {
+
+        protected SetRightsHandler(Element eAction, Group group, 
+                Provisioning prov, Account requestedAcct) {
+            super(eAction, group, prov, requestedAcct);
+        }
+        
+        @Override
+        Operation getAction() {
+            return Operation.setRights;
+        }
+
+        @Override
+        void handle() throws ServiceException {
+            Map<Right, List<Grantee>> rights = parseRights();
+            
+            for (Map.Entry<Right, List<Grantee>> entry : rights.entrySet()) {
+                Right right = entry.getKey();
+                List<Grantee> grantees = entry.getValue();
+                
+                // remove all current grants for the right
+                List<ZimbraACE> acl = ACLUtil.getACEs(group, Collections.singleton(right));
+                if (acl != null) {
+                    for (ZimbraACE ace : acl) {
+                        revokeRight(right, ace.getGranteeType(),
+                                Key.GranteeBy.id, ace.getGrantee());
+                    }
+                }
+                
+                // grant the right to the new grantees
+                for (Grantee grantee : grantees) {
+                    grantRight(right, grantee.type, grantee.by, grantee.grantee);
+                }
+            }
         }
     }
     

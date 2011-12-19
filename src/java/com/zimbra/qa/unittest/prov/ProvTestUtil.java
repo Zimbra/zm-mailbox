@@ -207,6 +207,10 @@ public abstract class ProvTestUtil {
         return createGlobalAdmin(acctName, (String) null);
     }
     
+    public Account createGlobalAdmin(String acctName) throws Exception {
+        return createGlobalAdmin(acctName, (String) null);
+    }
+    
     public Account createDelegatedAdmin(String acctName, String password) throws Exception {
         Map<String, Object> attrs = Maps.newHashMap();
         attrs.put(Provisioning.A_zimbraIsDelegatedAdminAccount, ProvisioningConstants.TRUE);

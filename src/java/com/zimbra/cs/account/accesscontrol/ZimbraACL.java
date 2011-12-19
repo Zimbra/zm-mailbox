@@ -267,12 +267,13 @@ public class ZimbraACL {
      * @param rights specified rights.
      * @return ACEs with right specified in rights
      */
-    List<ZimbraACE> getACEs(Set<Right> rights) {
+    List<ZimbraACE> getACEs(Set<? extends Right> rights) {
         List<ZimbraACE> result = new ArrayList<ZimbraACE>();
         
         for (ZimbraACE ace : mAces) {
-            if (rights.contains(ace.getRight()))
+            if (rights.contains(ace.getRight())) {
                 result.add(ace);
+            }
         }
 
         return result;
@@ -281,9 +282,9 @@ public class ZimbraACL {
     List<String> serialize() {
         List<String> aces = new ArrayList<String>();
         
-        for (ZimbraACE ace : mAces)
+        for (ZimbraACE ace : mAces) {
             aces.add(ace.serialize());
-        
+        }
         return aces;
     }
     

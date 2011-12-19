@@ -76,7 +76,7 @@ public final class ACLUtil {
      * @param rights rights of interest
      * @return a Set of ACEs with the specified rights granted on the entry.
      */
-    public static List<ZimbraACE> getACEs(Entry entry, Set<Right> rights) 
+    public static List<ZimbraACE> getACEs(Entry entry, Set<? extends Right> rights) 
     throws ServiceException {
         ZimbraACL acl = getACL(entry);
         return acl != null ? acl.getACEs(rights) : null;

@@ -94,10 +94,6 @@ public abstract class DistributionListDocumentHandler extends AccountDocumentHan
         
         return group;
     }
-
-    protected static boolean isOwner(Account acct, Group group) throws ServiceException {
-        return AccessManager.getInstance().canAccessGroup(acct, group);
-    }
     
     protected static boolean isMember(Provisioning prov, Account acct, Group group) 
     throws ServiceException {

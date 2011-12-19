@@ -103,6 +103,14 @@ public abstract class Group extends MailTarget implements AliasedEntry {
     
     
     public static class GroupOwner {
+        /*
+         * The ownDistList right can only be granted on group target 
+         * (defined in the right definition xml), not domain, not globalgrant.  
+         * 
+         * It is implemented a as right (instead of an attribute on group) 
+         * because we need to support various types (user, group, external group) of 
+         * owners and it makes sense to use the delegated admin framework. 
+         */
         public static Right GROUP_OWNER_RIGHT = User.R_ownDistList;
         
         private GranteeType type;
@@ -121,10 +129,33 @@ public abstract class Group extends MailTarget implements AliasedEntry {
             return name;
         }
         
+        /*
+         * returns whether acct is an appointed owner via the grants.
+         * will return false for global admin accounts
+         */
+        public static boolean isOwner(Account acct, Group group) throws ServiceException {
+            // do not take into account admin privilege
+            return AccessManager.getInstance().canAccessGroup(acct, group, false);
+        }
+        
+        /*
+         * returns whether acct has effective permission for the ownDistList rights.
+         * will return true for global admin accounts
+         */
+        public static boolean hasOwnerPrivilege(Account acct, Group group) 
+        throws ServiceException {
+            // take into account admin privilege
+            return AccessManager.getInstance().canAccessGroup(acct, group, true);
+        }
+        
         public static List<GroupOwner> getOwners(Group group, boolean needName) 
         throws ServiceException {
             List<GroupOwner> owners = new ArrayList<GroupOwner>();
             
+            /*
+             * No need to check rights granted on the doamin or globalgrant,
+             * The ownDistList can only be granted on group target.
+             */
             List<ZimbraACE> acl = ACLUtil.getAllACEs(group);
             if (acl != null) {
                 for (ZimbraACE ace : acl) {
@@ -140,13 +171,15 @@ public abstract class Group extends MailTarget implements AliasedEntry {
         
         public static void getOwnerEmails(Group group, Collection<String> result) 
         throws ServiceException {
-            List<ZimbraACE> acl = ACLUtil.getAllACEs(group);
+            /*
+             * No need to check rights granted on the doamin or globalgrant,
+             * The ownDistList can only be granted on group target.
+             */
+            List<ZimbraACE> acl = ACLUtil.getACEs(group, Collections.singleton(GROUP_OWNER_RIGHT));
             if (acl != null) {
                 for (ZimbraACE ace : acl) {
                     Right right = ace.getRight();
-                    if (GROUP_OWNER_RIGHT == right) {
-                        result.add(ace.getGranteeDisplayName());
-                    }
+                    result.add(ace.getGranteeDisplayName());
                 }
             }
         }

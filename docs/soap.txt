@@ -4006,11 +4006,14 @@ Notes:
 
 <DistributionListActionRequest>
   <dl by="id|name">...</dl>
-  <action op="delete|modify|rename|addAlias|removeAlias|addOwner|removeOwner|addMembers|removeMembers|acceptSubsReq|rejectSubsReq">
+  <action op="{op}">
       [<a n="...">...</a>+]
       [<newName>{new-DL-name}</newName>]
       [<alias>...</alias>]
-      [<owner type={owner-type} by="name|id}">{owner-name-or-id}</owner>]
+      [<owner type={type} by="name|id}">{name-or-id}</owner>+]
+      [<right right="{right}"> 
+           <grantee type={type} by="name|id}">{name-or-id}</grantee>+
+       </right>+]  
       [<dlm>{member}</dlm>+]
       [<subsReq op="subscribe/unsubscribe" [bccOwners="1|0"]>{member-email}</subsReq>]
   </action>
@@ -4022,8 +4025,12 @@ Notes:
   op = delete         delete the list
        rename         rename the list
        modify         modify the list
-       addOwner       add list owner
-       removeOwner    remove list owner
+       addOwners      add list owner
+       removeOwners   remove list owners
+       setOwners      set list owners
+       grantRights    grant rights
+       revokeRights   revoke rights
+       setRights      set rights
        addAlias       add list alias
        removeAlias    remove list alias
        addMembers     add list members
@@ -4034,10 +4041,25 @@ Notes:
   <a>       required if op=modify
   <newName> required if op=rename
   <alias>   required if op=addAlias or or=removeAlias
-  <owner>   required if op=addOwner or op=removeOwner
+  <owner>   required if op=addOwners or op=removeOwners, 
+            optional if op=setOwners.  If not present when op=setOwners all current 
+            owners will be removed.
+  <right>   required if op=grantRight, op=revokeRight, op=setRight.
+  <grantee> (sub-element of <right>)
+            required if op=grantRight, op=revokeRight
+            optional if op=setRight.  If not present when op=setSenders all current 
+            grants for the right will be removed.            
   <dlm>     required if op=addMembers or op=removeMembers
   <subsReq> required if op=acceptSubsReq or op=rejectSubsReq    
   
+  Note: 
+        For owners/rights, only grants on the group itself will be 
+        modified, grants on domain and globalgrant (from which the right can be inherited) 
+        will not be touched.  Only admins can modify grants on domains and globalgrant, 
+        owners of groups can only modify grants on the group entry.
+        
+        
+        
   bccOwners = whether to bcc all other owners on the accept/reject notification emails.
               1(default): bcc all other owners
               0: do not bcc any other owners

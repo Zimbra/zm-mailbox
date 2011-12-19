@@ -160,7 +160,7 @@ public class DomainAccessManager extends AccessManager {
     }
     
     @Override
-    public boolean canAccessGroup(Account credentials, Group group)
+    public boolean canAccessGroup(Account credentials, Group group, boolean asAdmin)
             throws ServiceException {
         return false;
     }

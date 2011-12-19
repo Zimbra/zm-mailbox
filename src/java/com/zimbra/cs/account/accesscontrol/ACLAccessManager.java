@@ -152,10 +152,10 @@ public class ACLAccessManager extends AccessManager implements AdminConsoleCapab
     }
     
     @Override
-    public boolean canAccessGroup(Account credentials, Group group)
+    public boolean canAccessGroup(Account credentials, Group group, boolean asAdmin)
             throws ServiceException {
         checkDomainStatus(group);
-        return canDo(credentials, group, Group.GroupOwner.GROUP_OWNER_RIGHT, true);
+        return canDo(credentials, group, Group.GroupOwner.GROUP_OWNER_RIGHT, asAdmin);
     }
 
     @Override
