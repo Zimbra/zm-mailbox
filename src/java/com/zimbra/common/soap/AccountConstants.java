@@ -309,6 +309,7 @@ public class AccountConstants {
     public static final String E_BLACK_LIST = "blackList";
     public static final String E_GRANTEE = "grantee";
     public static final String E_OWNER = "owner";
+    public static final String E_SENDER = "sender";
     public static final String E_SHARE = "share";
     public static final String E_CONTACT_ID = "cid";
     public static final String E_STORE = "store";
