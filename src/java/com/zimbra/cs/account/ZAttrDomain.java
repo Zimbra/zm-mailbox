@@ -42,7 +42,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20111212-1421 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111219-1031 */
 
     /**
      * RFC2256: descriptive information
@@ -6947,7 +6947,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * whether checking against zimbraExternalShareWhitelistDomain for
-     * external sharing is enabled
+     * external user sharing is enabled
      *
      * @return zimbraExternalShareDomainWhitelistEnabled, or false if unset
      *
@@ -6960,7 +6960,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * whether checking against zimbraExternalShareWhitelistDomain for
-     * external sharing is enabled
+     * external user sharing is enabled
      *
      * @param zimbraExternalShareDomainWhitelistEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -6976,7 +6976,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * whether checking against zimbraExternalShareWhitelistDomain for
-     * external sharing is enabled
+     * external user sharing is enabled
      *
      * @param zimbraExternalShareDomainWhitelistEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -6993,7 +6993,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * whether checking against zimbraExternalShareWhitelistDomain for
-     * external sharing is enabled
+     * external user sharing is enabled
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -7008,7 +7008,7 @@ public abstract class ZAttrDomain extends NamedEntry {
 
     /**
      * whether checking against zimbraExternalShareWhitelistDomain for
-     * external sharing is enabled
+     * external user sharing is enabled
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -7275,7 +7275,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * switch for turning external sharing on/off
+     * switch for turning external user sharing on/off
      *
      * @return zimbraExternalSharingEnabled, or false if unset
      *
@@ -7287,7 +7287,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * switch for turning external sharing on/off
+     * switch for turning external user sharing on/off
      *
      * @param zimbraExternalSharingEnabled new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -7302,7 +7302,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * switch for turning external sharing on/off
+     * switch for turning external user sharing on/off
      *
      * @param zimbraExternalSharingEnabled new value
      * @param attrs existing map to populate, or null to create a new map
@@ -7318,7 +7318,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * switch for turning external sharing on/off
+     * switch for turning external user sharing on/off
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -7332,7 +7332,7 @@ public abstract class ZAttrDomain extends NamedEntry {
     }
 
     /**
-     * switch for turning external sharing on/off
+     * switch for turning external user sharing on/off
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -12346,7 +12346,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1240)
+    @ZAttr(id=1241)
     public String[] getMailAddressValidationRegex() {
         return getMultiAttr(Provisioning.A_zimbraMailAddressValidationRegex);
     }
@@ -12359,7 +12359,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1240)
+    @ZAttr(id=1241)
     public void setMailAddressValidationRegex(String[] zimbraMailAddressValidationRegex) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -12375,7 +12375,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1240)
+    @ZAttr(id=1241)
     public Map<String,Object> setMailAddressValidationRegex(String[] zimbraMailAddressValidationRegex, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -12390,7 +12390,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1240)
+    @ZAttr(id=1241)
     public void addMailAddressValidationRegex(String zimbraMailAddressValidationRegex) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -12406,7 +12406,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1240)
+    @ZAttr(id=1241)
     public Map<String,Object> addMailAddressValidationRegex(String zimbraMailAddressValidationRegex, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "+" + Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -12421,7 +12421,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1240)
+    @ZAttr(id=1241)
     public void removeMailAddressValidationRegex(String zimbraMailAddressValidationRegex) throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -12437,7 +12437,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1240)
+    @ZAttr(id=1241)
     public Map<String,Object> removeMailAddressValidationRegex(String zimbraMailAddressValidationRegex, Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         StringUtil.addToMultiMap(attrs, "-" + Provisioning.A_zimbraMailAddressValidationRegex, zimbraMailAddressValidationRegex);
@@ -12451,7 +12451,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1240)
+    @ZAttr(id=1241)
     public void unsetMailAddressValidationRegex() throws com.zimbra.common.service.ServiceException {
         HashMap<String,Object> attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, "");
@@ -12466,7 +12466,7 @@ public abstract class ZAttrDomain extends NamedEntry {
      *
      * @since ZCS 7.1.2
      */
-    @ZAttr(id=1240)
+    @ZAttr(id=1241)
     public Map<String,Object> unsetMailAddressValidationRegex(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraMailAddressValidationRegex, "");

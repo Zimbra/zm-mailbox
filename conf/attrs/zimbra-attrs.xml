@@ -6146,20 +6146,20 @@ TODO: delete them permanently from here
   <desc>regular expression for matching the value of zimbraSpamWhitelistHeader for flagging a message as not spam</desc>
 </attr>
 
-<attr id="1259" name="zimbraExternalShareLimitLifetime" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0.0" >
-  <desc>flag indicates whether to limit lifetime of external shares</desc>
+<attr id="1259" name="zimbraExternalShareLimitLifetime" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus" since="8.0.0" >
+  <desc>flag indicates whether to limit lifetime of shares to external users</desc>
   <defaultCOSValue>TRUE</defaultCOSValue>
 </attr>
 
-<attr id="1260" name="zimbraExternalShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,domainAdminModifiable" since="8.0.0">
-  <desc>lifetime of external shares</desc>
-  <defaultCOSValue>90d</defaultCOSValue>
+<attr id="1260" name="zimbraExternalShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus" since="8.0.0">
+  <desc>maximum lifetime of shares to external users</desc>
+  <defaultCOSValue>30d</defaultCOSValue>
 </attr>
 
 <attr id="1261" name="zimbraExternalSharingEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountInfo,accountCosDomainInherited,domainAdminModifiable" since="8.0.0">
   <defaultCOSValue>TRUE</defaultCOSValue>
   <defaultExternalCOSValue>FALSE</defaultExternalCOSValue>
-  <desc>switch for turning external sharing on/off</desc>
+  <desc>switch for turning external user sharing on/off</desc>
 </attr>
 
 <attr id="1263" name="zimbraExternalShareWhitelistDomain" type="string" cardinality="multi" optionalIn="account,cos,domain" flags="accountCosDomainInherited,domainAdminModifiable" since="8.0.0">
@@ -6168,7 +6168,7 @@ TODO: delete them permanently from here
 
 <attr id="1264" name="zimbraExternalShareDomainWhitelistEnabled" type="boolean" cardinality="single" optionalIn="account,cos,domain" flags="accountCosDomainInherited,domainAdminModifiable" since="8.0.0">
   <defaultCOSValue>FALSE</defaultCOSValue>
-  <desc>whether checking against zimbraExternalShareWhitelistDomain for external sharing is enabled</desc>
+  <desc>whether checking against zimbraExternalShareWhitelistDomain for external user sharing is enabled</desc>
 </attr>
 
 <attr id="1265" name="zimbraCustomMimeHeaderNameAllowed" type="string" cardinality="multi" optionalIn="globalConfig" since="7.1.3">
@@ -6682,7 +6682,7 @@ TODO: delete them permanently from here
 </attr>
 
 <attr id="1348" name="zimbraShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus" since="8.0.0">
-  <desc>lifetime of shares to users on the system</desc>
+  <desc>maximum lifetime of shares to users on the system</desc>
   <defaultCOSValue>90d</defaultCOSValue>
 </attr>
 
@@ -6720,6 +6720,16 @@ TODO: delete them permanently from here
     If not set, all IP addresses are allowed.
     If multiple values are set, an IP address is allowed as long as it matches any one of the values.
   </desc>
+</attr>
+
+<attr id="1354" name="zimbraPublicShareLimitLifetime" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus" since="8.0.0" >
+  <desc>flag indicates whether to limit lifetime of public shares</desc>
+  <defaultCOSValue>TRUE</defaultCOSValue>
+</attr>
+
+<attr id="1355" name="zimbraPublicShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus" since="8.0.0">
+  <desc>maximum lifetime of public shares</desc>
+  <defaultCOSValue>15d</defaultCOSValue>
 </attr>
 
 </attrs>
