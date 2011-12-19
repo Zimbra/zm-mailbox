@@ -18,11 +18,11 @@ package com.zimbra.soap.base;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 
-import com.zimbra.soap.type.DistributionListOwnerType;
+import com.zimbra.soap.type.DistributionListGranteeType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public interface DistributionListOwnerInfoInterface {
-    public DistributionListOwnerType getType();
+public interface DistributionListGranteeInfoInterface {
+    public DistributionListGranteeType getType();
     public String getId();
     public String getName();
 }

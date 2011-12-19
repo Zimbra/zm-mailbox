@@ -15,24 +15,20 @@
 
 package com.zimbra.soap.type;
 
-import java.util.Arrays;
 import javax.xml.bind.annotation.XmlEnum;
 
 import com.zimbra.common.service.ServiceException;
 
 @XmlEnum
-public enum DistributionListOwnerBy {
+public enum DistributionListGranteeType {
     // case must match protocol
-    id, name;
-
-    public static DistributionListOwnerBy fromString(String s)
-    throws ServiceException {
+    usr, grp, all, dom, gst, key, pub;
+    
+    public static DistributionListGranteeType fromString(String s) throws ServiceException {
         try {
-            return DistributionListOwnerBy.valueOf(s);
+            return DistributionListGranteeType.valueOf(s);
         } catch (IllegalArgumentException e) {
-           throw ServiceException.INVALID_REQUEST("unknown 'By' key: " +
-                   s + ", valid values: " +
-                   Arrays.asList(DistributionListOwnerBy.values()), null);
+            throw ServiceException.INVALID_REQUEST("unknown type: "+s, e);
         }
     }
 }

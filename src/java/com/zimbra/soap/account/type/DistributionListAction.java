@@ -32,15 +32,19 @@ import com.zimbra.common.soap.AccountConstants;
 public class DistributionListAction extends AccountKeyValuePairs {
 
     @XmlEnum
-    public enum Operation {
+    public static enum Operation {
         // case must match protocol
         delete, 
         modify, 
         rename, 
         addAlias, 
         removeAlias, 
-        addOwner, 
-        removeOwner, 
+        addOwners, 
+        removeOwners, 
+        setOwners,
+        grantRights,
+        revokeRights,
+        setRights,
         addMembers, 
         removeMembers,
         acceptSubsReq,
@@ -68,7 +72,7 @@ public class DistributionListAction extends AccountKeyValuePairs {
     protected String newName;
     
     @XmlElement(name=AccountConstants.E_OWNER, required=false)
-    protected DistributionListOwnerSelector owner;
+    protected List<DistributionListGranteeSelector> owners;
     
     @XmlElement(name=AccountConstants.E_DL_SUBS_REQ, required=false)
     protected DistributionListSubscribeReq subsReq;
@@ -87,7 +91,10 @@ public class DistributionListAction extends AccountKeyValuePairs {
     
     public Operation getOp() { return op; }
 
-    public void setMember(String member) {
+    public void addMember(String member) {
+        if (members == null) {
+            members = Lists.newArrayList();
+        }
         members.add(member);
     }
     
@@ -119,12 +126,23 @@ public class DistributionListAction extends AccountKeyValuePairs {
         return newName;
     }
     
-    public void setOwner(DistributionListOwnerSelector owner) {
-        this.owner = owner;
+    public void addOwner(DistributionListGranteeSelector owner) {
+        if (owners == null) {
+            owners = Lists.newArrayList();
+        }
+        owners.add(owner);
     }
     
-    public DistributionListOwnerSelector getOwner() {
-        return owner;
+    public void setOwners(List<DistributionListGranteeSelector> owners) {
+        this.owners = null;
+        if (owners != null) {
+            this.owners = Lists.newArrayList();
+            Iterables.addAll(this.owners, owners);
+        }
+    }
+    
+    public List<DistributionListGranteeSelector> getOwners() {
+        return owners;
     }
     
     public void setSubsReq(DistributionListSubscribeReq subsReq) {

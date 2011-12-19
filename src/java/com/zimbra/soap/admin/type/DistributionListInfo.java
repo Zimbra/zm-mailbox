@@ -31,8 +31,8 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.account.type.DistributionListOwnerInfo;
-import com.zimbra.soap.base.DistributionListOwnerInfoInterface;
+import com.zimbra.soap.account.type.DistributionListGranteeInfo;
+import com.zimbra.soap.base.DistributionListGranteeInfoInterface;
 import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -46,7 +46,7 @@ public class DistributionListInfo extends AdminObjectInfo {
 
     @XmlElementWrapper(name=AdminConstants.E_DL_OWNERS, required=false)
     @XmlElement(name=AdminConstants.E_DL_OWNER, required=false)
-    private List<DistributionListOwnerInfo> owners = Lists.newArrayList();
+    private List<DistributionListGranteeInfo> owners = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB
@@ -87,15 +87,15 @@ public class DistributionListInfo extends AdminObjectInfo {
         return ZmBoolean.toBool(dynamic, false);
     }
 
-    public void setOwners(List<DistributionListOwnerInfo> owners) {
+    public void setOwners(List<DistributionListGranteeInfo> owners) {
         this.owners = owners;
     }
 
-    public void addOwner(DistributionListOwnerInfo owner) {
+    public void addOwner(DistributionListGranteeInfo owner) {
         owners.add(owner);
     }
 
-    public List<? extends DistributionListOwnerInfoInterface> getOwners() {
+    public List<? extends DistributionListGranteeInfoInterface> getOwners() {
         return Collections.unmodifiableList(owners);
     }
 

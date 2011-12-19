@@ -21,16 +21,16 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.soap.type.DistributionListOwnerBy;
-import com.zimbra.soap.type.DistributionListOwnerType;
+import com.zimbra.soap.type.DistributionListGranteeBy;
+import com.zimbra.soap.type.DistributionListGranteeType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class DistributionListOwnerSelector {
+public class DistributionListGranteeSelector {
 
     @XmlAttribute(name=AccountConstants.A_TYPE, required=true)
-    private final DistributionListOwnerType type;
+    private final DistributionListGranteeType type;
     @XmlAttribute(name=AccountConstants.A_BY, required=true)
-    private final DistributionListOwnerBy by;
+    private final DistributionListGranteeBy by;
     @XmlValue
     private final String key;
     
@@ -38,20 +38,20 @@ public class DistributionListOwnerSelector {
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private DistributionListOwnerSelector() {
-        this((DistributionListOwnerType) null, 
-                (DistributionListOwnerBy) null, (String) null);
+    private DistributionListGranteeSelector() {
+        this((DistributionListGranteeType) null, 
+                (DistributionListGranteeBy) null, (String) null);
     }
 
-    public DistributionListOwnerSelector(DistributionListOwnerType type,
-            DistributionListOwnerBy by, String key) {
+    public DistributionListGranteeSelector(DistributionListGranteeType type,
+            DistributionListGranteeBy by, String key) {
         this.type = type;
         this.by = by;
         this.key = key;
     }
 
-    public DistributionListOwnerType getType() { return type; }
-    public DistributionListOwnerBy getBy() { return by; }
+    public DistributionListGranteeType getType() { return type; }
+    public DistributionListGranteeBy getBy() { return by; }
     public String getKey() { return key; }
 
 }

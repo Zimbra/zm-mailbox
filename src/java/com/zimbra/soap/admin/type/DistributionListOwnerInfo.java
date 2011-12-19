@@ -19,14 +19,14 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.base.DistributionListOwnerInfoInterface;
-import com.zimbra.soap.type.DistributionListOwnerType;
+import com.zimbra.soap.base.DistributionListGranteeInfoInterface;
+import com.zimbra.soap.type.DistributionListGranteeType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class DistributionListOwnerInfo implements DistributionListOwnerInfoInterface {
+public class DistributionListOwnerInfo implements DistributionListGranteeInfoInterface {
 
     @XmlAttribute(name=AdminConstants.A_TYPE, required=true)
-    private final DistributionListOwnerType type;
+    private final DistributionListGranteeType type;
     @XmlAttribute(name=AdminConstants.A_ID, required=true)
     private final String id;
     @XmlAttribute(name=AdminConstants.A_NAME, required=true)
@@ -40,13 +40,13 @@ public class DistributionListOwnerInfo implements DistributionListOwnerInfoInter
         this(null, null, null);
     }
 
-    public DistributionListOwnerInfo(DistributionListOwnerType type, String id, String name) {
+    public DistributionListOwnerInfo(DistributionListGranteeType type, String id, String name) {
         this.type = type;
         this.id = id;
         this.name = name;
     }
 
-    public DistributionListOwnerType getType() { return type; }
+    public DistributionListGranteeType getType() { return type; }
     public String getId() { return id; }
     public String getName() { return name; }
 }

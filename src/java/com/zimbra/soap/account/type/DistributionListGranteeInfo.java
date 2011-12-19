@@ -19,14 +19,14 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.soap.base.DistributionListOwnerInfoInterface;
-import com.zimbra.soap.type.DistributionListOwnerType;
+import com.zimbra.soap.base.DistributionListGranteeInfoInterface;
+import com.zimbra.soap.type.DistributionListGranteeType;
 
 @XmlAccessorType(XmlAccessType.NONE)
-public class DistributionListOwnerInfo implements DistributionListOwnerInfoInterface {
+public class DistributionListGranteeInfo implements DistributionListGranteeInfoInterface {
 
     @XmlAttribute(name=AccountConstants.A_TYPE, required=true)
-    private final DistributionListOwnerType type;
+    private final DistributionListGranteeType type;
     @XmlAttribute(name=AccountConstants.A_ID, required=true)
     private final String id;
     @XmlAttribute(name=AccountConstants.A_NAME, required=true)
@@ -36,18 +36,18 @@ public class DistributionListOwnerInfo implements DistributionListOwnerInfoInter
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private DistributionListOwnerInfo() {
+    private DistributionListGranteeInfo() {
         this(null, null, null);
     }
 
-    public DistributionListOwnerInfo(DistributionListOwnerType type, String id, String name) {
+    public DistributionListGranteeInfo(DistributionListGranteeType type, String id, String name) {
         this.type = type;
         this.id = id;
         this.name = name;
     }
 
     @Override
-    public DistributionListOwnerType getType() { return type; }
+    public DistributionListGranteeType getType() { return type; }
     @Override
     public String getId() { return id; }
     @Override
