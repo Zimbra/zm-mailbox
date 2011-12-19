@@ -804,6 +804,94 @@ public class TestDelegatedDL extends SoapTest {
         assertEquals(0, right2GranteeNames.size());
     }
     
+    /*
+     * verify owner right cann never be altered directly, all modification on 
+     * owners must go through addOwners/remvoeOwners/setOwners operations
+     */
+    @Test
+    public void distributionListActionManipulateOwnerRight() throws Exception {
+        String GROUP_NAME = getAddress(genGroupNameLocalPart("group"));
+        Group group = createGroupAndAddOwner(GROUP_NAME);
+        
+        String right = Group.GroupOwner.GROUP_OWNER_RIGHT.getName();
+        Account grantee = provUtil.createAccount(genAcctNameLocalPart("1"), domain);
+        
+        SoapTransport transport = authUser(USER_OWNER);
+        
+        //
+        // grantRights
+        //
+        DistributionListAction action = new DistributionListAction(Operation.grantRights);
+        DistributionListActionRequest req = new DistributionListActionRequest(
+                DistributionListSelector.fromName(GROUP_NAME), action);
+        
+        DistributionListRight dlRight = new DistributionListRight(right);
+        dlRight.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+                DistributionListGranteeBy.name, grantee.getName()));
+        
+        action.addRight(dlRight);
+        DistributionListActionResponse resp;
+        
+        boolean caughtException = false;
+        try {
+            resp = invokeJaxb(transport, req);
+        } catch (ServiceException e) {
+            if (ServiceException.INVALID_REQUEST.equals(e.getCode())) {
+                caughtException = true;
+            }
+        }
+        assertTrue(caughtException);
+        
+        
+        //
+        // revokeRights
+        //
+        action = new DistributionListAction(Operation.revokeRights);
+        req = new DistributionListActionRequest(
+                DistributionListSelector.fromName(GROUP_NAME), action);
+        
+        dlRight = new DistributionListRight(right);
+        dlRight.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+                DistributionListGranteeBy.name, grantee.getName()));
+        
+        action.addRight(dlRight);
+        
+        caughtException = false;
+        try {
+            resp = invokeJaxb(transport, req);
+        } catch (ServiceException e) {
+            if (ServiceException.INVALID_REQUEST.equals(e.getCode())) {
+                caughtException = true;
+            }
+        }
+        assertTrue(caughtException);
+        
+        
+        //
+        // setRights
+        //
+        action = new DistributionListAction(Operation.setRights);
+        req = new DistributionListActionRequest(
+                DistributionListSelector.fromName(GROUP_NAME), action);
+        
+        dlRight = new DistributionListRight(right);
+        dlRight.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+                DistributionListGranteeBy.name, grantee.getName()));
+        
+        action.addRight(dlRight);
+        
+        caughtException = false;
+        try {
+            resp = invokeJaxb(transport, req);
+        } catch (ServiceException e) {
+            if (ServiceException.INVALID_REQUEST.equals(e.getCode())) {
+                caughtException = true;
+            }
+        }
+        assertTrue(caughtException);
+        
+    }
+    
     @Test
     public void distributionListActionModify() throws Exception {
         String ATTR = Provisioning.A_description;

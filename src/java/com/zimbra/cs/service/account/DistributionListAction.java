@@ -446,6 +446,13 @@ public class DistributionListAction extends DistributionListDocumentHandler {
             Map<Right, List<Grantee>> rights = new LinkedHashMap<Right, List<Grantee>>();
             for (Element eRight : eAction.listElements(AccountConstants.E_RIGHT)) {
                 Right right = rightMgr.getUserRight(eRight.getAttribute(AccountConstants.A_RIGHT));
+                
+                if (Group.GroupOwner.GROUP_OWNER_RIGHT == right) {
+                    throw ServiceException.INVALID_REQUEST(right.getName() + 
+                            " cannot be granted directly, use addOwners/removeOwners/setOwners" +
+                            " operation instead", null);
+                    
+                }
                 List<Grantee> grantees = parseGrantees(eRight, AccountConstants.E_GRANTEE);
                 rights.put(right, grantees);
             }
