@@ -42,7 +42,9 @@ import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
+import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
+import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.qa.QA.Bug;
@@ -61,6 +63,7 @@ import com.zimbra.soap.account.message.SubscribeDistributionListResponse;
 import com.zimbra.soap.account.type.DistributionListAction;
 import com.zimbra.soap.account.type.DistributionListInfo;
 import com.zimbra.soap.account.type.DistributionListGranteeSelector;
+import com.zimbra.soap.account.type.DistributionListRight;
 import com.zimbra.soap.account.type.DistributionListSubscribeOp;
 import com.zimbra.soap.account.type.DistributionListSubscribeStatus;
 import com.zimbra.soap.account.type.DistributionListAction.Operation;
@@ -664,6 +667,142 @@ public class TestDelegatedDL extends SoapTest {
         assertEquals(0, owners.size());
     }
     
+    @Test
+    public void distributionListActionGrantRevokeSetRights() throws Exception {
+        String GROUP_NAME = getAddress(genGroupNameLocalPart("group"));
+        Group group = createGroupAndAddOwner(GROUP_NAME);
+        
+        String right1 = Right.RT_sendToDistList;
+        String right2 = Right.RT_viewDistList;
+        Account grantee1 = provUtil.createAccount(genAcctNameLocalPart("1"), domain);
+        Account grantee2 = provUtil.createAccount(genAcctNameLocalPart("2"), domain);
+        
+        SoapTransport transport = authUser(USER_OWNER);
+        
+        //
+        // grantRights
+        //
+        DistributionListAction action = new DistributionListAction(Operation.grantRights);
+        DistributionListActionRequest req = new DistributionListActionRequest(
+                DistributionListSelector.fromName(GROUP_NAME), action);
+        
+        DistributionListRight dlRight1 = new DistributionListRight(right1);
+        dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+                DistributionListGranteeBy.name, grantee1.getName()));
+        dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+                DistributionListGranteeBy.name, grantee2.getName()));
+        
+        DistributionListRight dlRight2 = new DistributionListRight(right2);
+        dlRight2.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+                DistributionListGranteeBy.name, grantee1.getName()));
+        dlRight2.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+                DistributionListGranteeBy.name, grantee2.getName()));
+        
+        action.addRight(dlRight1);
+        action.addRight(dlRight2);
+        DistributionListActionResponse resp = invokeJaxb(transport, req);
+        
+        //
+        // verify rights are granted
+        //
+        RightCommand.Grants grants = prov.getGrants(
+                TargetType.dl.name(), TargetBy.id, group.getId(),
+                null, null, null,
+                true);
+
+        Set<String> right1GranteeNames = Sets.newHashSet();
+        Set<String> right2GranteeNames = Sets.newHashSet();
+        for (RightCommand.ACE ace : grants.getACEs()) {
+            String right = ace.right();
+            if (right1.equals(right)) {
+                right1GranteeNames.add(ace.granteeName());
+            } else if (right2.equals(right)) {
+                right2GranteeNames.add(ace.granteeName());
+            }
+        }
+        Verify.verifyEquals(
+                Sets.newHashSet(grantee1.getName(), grantee2.getName()), 
+                right1GranteeNames);
+        Verify.verifyEquals(
+                Sets.newHashSet(grantee1.getName(), grantee2.getName()), 
+                right2GranteeNames);
+        
+        
+        //
+        // setRights
+        //
+        action = new DistributionListAction(Operation.setRights);
+        req = new DistributionListActionRequest(
+                DistributionListSelector.fromName(GROUP_NAME), action);
+        dlRight1 = new DistributionListRight(right1);
+        // set grantee to only grantee1
+        dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+                DistributionListGranteeBy.name, grantee1.getName()));
+        
+        dlRight2 = new DistributionListRight(right2);
+        // don't add any grantee, this should revoke all grants for right2
+        
+        action.addRight(dlRight1);
+        action.addRight(dlRight2);
+        resp = invokeJaxb(transport, req);
+        
+        //
+        // verify rights are set
+        //
+        grants = prov.getGrants(
+                TargetType.dl.name(), TargetBy.id, group.getId(),
+                null, null, null,
+                true);
+
+        right1GranteeNames = Sets.newHashSet();
+        right2GranteeNames = Sets.newHashSet();
+        for (RightCommand.ACE ace : grants.getACEs()) {
+            String right = ace.right();
+            if (right1.equals(right)) {
+                right1GranteeNames.add(ace.granteeName());
+            } else if (right2.equals(right)) {
+                right2GranteeNames.add(ace.granteeName());
+            }
+        }
+        Verify.verifyEquals(
+                Sets.newHashSet(grantee1.getName()), 
+                right1GranteeNames);
+        assertEquals(0, right2GranteeNames.size());
+        
+        
+        // 
+        // revokeRights
+        //
+        action = new DistributionListAction(Operation.revokeRights);
+        req = new DistributionListActionRequest(
+                DistributionListSelector.fromName(GROUP_NAME), action);
+        dlRight1 = new DistributionListRight(right1);
+        dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+                DistributionListGranteeBy.name, grantee1.getName()));
+        
+        action.addRight(dlRight1);
+        resp = invokeJaxb(transport, req);
+        
+        //
+        // verify all rights are revoked
+        //
+        grants = prov.getGrants(
+                TargetType.dl.name(), TargetBy.id, group.getId(),
+                null, null, null,
+                true);
+        right1GranteeNames = Sets.newHashSet();
+        right2GranteeNames = Sets.newHashSet();
+        for (RightCommand.ACE ace : grants.getACEs()) {
+            String right = ace.right();
+            if (right1.equals(right)) {
+                right1GranteeNames.add(ace.granteeName());
+            } else if (right2.equals(right)) {
+                right2GranteeNames.add(ace.granteeName());
+            }
+        }
+        assertEquals(0, right1GranteeNames.size());
+        assertEquals(0, right2GranteeNames.size());
+    }
     
     @Test
     public void distributionListActionModify() throws Exception {

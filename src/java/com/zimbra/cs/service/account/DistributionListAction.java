@@ -302,10 +302,10 @@ public class DistributionListAction extends DistributionListDocumentHandler {
             }
         };
         
-        protected List<Grantee> parseGrantees(String parentElem) throws ServiceException {
+        protected List<Grantee> parseGrantees(Element parent, String granteeElem) throws ServiceException {
             List<Grantee> grantees = Lists.newArrayList();
             
-            for (Element eGrantee : eAction.listElements(parentElem)) {
+            for (Element eGrantee : parent.listElements(granteeElem)) {
                 GranteeType type = GranteeType.fromCode(eGrantee.getAttribute(AccountConstants.A_TYPE));
                 GranteeBy by = GranteeBy.fromString(eGrantee.getAttribute(AccountConstants.A_BY));
                 String grantee = eGrantee.getText();
@@ -361,7 +361,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
         @Override
         void handle() throws ServiceException {
-            List<Grantee> owners = parseGrantees(AccountConstants.E_OWNER);
+            List<Grantee> owners = parseGrantees(eAction, AccountConstants.E_OWNER);
             for (Grantee owner : owners) {
                 addOwner(this, owner.type, owner.by, owner.grantee);
             }
@@ -389,7 +389,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
         @Override
         void handle() throws ServiceException {
-            List<Grantee> owners = parseGrantees(AccountConstants.E_OWNER);
+            List<Grantee> owners = parseGrantees(eAction, AccountConstants.E_OWNER);
             for (Grantee owner : owners) {
                 removeOwner(this, owner.type, owner.by, owner.grantee);
             }
@@ -417,7 +417,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
         @Override
         void handle() throws ServiceException {
-            List<Grantee> owners = parseGrantees(AccountConstants.E_OWNER);
+            List<Grantee> owners = parseGrantees(eAction, AccountConstants.E_OWNER);
             
             // remove all current owners
             List<GroupOwner> curOwners = GroupOwner.getOwners(group, false);
@@ -446,7 +446,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
             Map<Right, List<Grantee>> rights = new LinkedHashMap<Right, List<Grantee>>();
             for (Element eRight : eAction.listElements(AccountConstants.E_RIGHT)) {
                 Right right = rightMgr.getUserRight(eRight.getAttribute(AccountConstants.A_RIGHT));
-                List<Grantee> grantees = parseGrantees(AccountConstants.E_GRANTEE);
+                List<Grantee> grantees = parseGrantees(eRight, AccountConstants.E_GRANTEE);
                 rights.put(right, grantees);
             }
             
