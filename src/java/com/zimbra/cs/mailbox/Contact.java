@@ -263,6 +263,13 @@ public class Contact extends MailItem {
             return "";
         }
     }
+    
+    @Override
+    public String getSortSender() {
+        String sender = getSender();
+        // remove surrogate characters and trim to DbMailItem.MAX_SENDER_LENGTH
+        return DbMailItem.normalize(sender, DbMailItem.MAX_SENDER_LENGTH);
+    }
 
     /** Returns a single field from the contact's field/value pairs. */
     public String get(String fieldName) {

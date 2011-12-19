@@ -25,6 +25,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -78,6 +79,30 @@ public final class ContactTest {
         mbox.modifyContact(null, contact.getId(), new ParsedContact(fields));
 
         Assert.assertEquals("Last2, First2", DbUtil.executeQuery(conn,
+                "SELECT sender FROM mboxgroup1.mail_item WHERE mailbox_id = ? AND id = ?",
+                mbox.getId(), contact.getId()).getString(1));
+
+        conn.closeQuietly();
+    }
+    
+    @Test
+    public void tooLongSender() throws Exception {
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        Map<String, Object> fields = new HashMap<String, Object>();
+        fields.put(ContactConstants.A_firstName, Strings.repeat("F", 129));
+        Contact contact = mbox.createContact(null, new ParsedContact(fields), Mailbox.ID_FOLDER_CONTACTS, null);
+
+        DbConnection conn = DbPool.getConnection(mbox);
+
+        Assert.assertEquals(Strings.repeat("F", 128), DbUtil.executeQuery(conn,
+                "SELECT sender FROM mboxgroup1.mail_item WHERE mailbox_id = ? AND id = ?",
+                mbox.getId(), contact.getId()).getString(1));
+
+        fields.put(ContactConstants.A_firstName, null);
+        fields.put(ContactConstants.A_lastName, Strings.repeat("L", 129));
+        mbox.modifyContact(null, contact.getId(), new ParsedContact(fields));
+
+        Assert.assertEquals(Strings.repeat("L", 128), DbUtil.executeQuery(conn,
                 "SELECT sender FROM mboxgroup1.mail_item WHERE mailbox_id = ? AND id = ?",
                 mbox.getId(), contact.getId()).getString(1));
 
