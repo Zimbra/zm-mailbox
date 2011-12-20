@@ -307,8 +307,14 @@ public class DistributionListAction extends DistributionListDocumentHandler {
             
             for (Element eGrantee : parent.listElements(granteeElem)) {
                 GranteeType type = GranteeType.fromCode(eGrantee.getAttribute(AccountConstants.A_TYPE));
-                GranteeBy by = GranteeBy.fromString(eGrantee.getAttribute(AccountConstants.A_BY));
-                String grantee = eGrantee.getText();
+                
+                GranteeBy by = null;
+                String grantee = null;
+                
+                if (type.needsGranteeIdentity()) {
+                    by = GranteeBy.fromString(eGrantee.getAttribute(AccountConstants.A_BY));
+                    grantee = eGrantee.getText();
+                }
                 
                 grantees.add(new Grantee(type, by, grantee));
             }

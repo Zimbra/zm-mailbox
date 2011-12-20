@@ -4010,9 +4010,9 @@ Notes:
       [<a n="...">...</a>+]
       [<newName>{new-DL-name}</newName>]
       [<alias>...</alias>]
-      [<owner type={type} by="name|id}">{name-or-id}</owner>+]
+      [<owner type={grantee-type} by="name|id}">{name-or-id}</owner>+]
       [<right right="{right}"> 
-           <grantee type={type} by="name|id}">{name-or-id}</grantee>+
+           <grantee type={grantee-type} by="name|id}">{name-or-id}</grantee>+
        </right>+]  
       [<dlm>{member}</dlm>+]
       [<subsReq op="subscribe/unsubscribe" [bccOwners="1|0"]>{member-email}</subsReq>]
@@ -4037,6 +4037,13 @@ Notes:
        removeMembers  remove list members
        acceptSubsReq  accept subscription/un-subscription request
        rejectSubsReq  reject subscription/un-subscription request
+
+  grantee-type:      
+     usr - a Zimbra internal user
+     grp - a Zimbra internal group
+     all - all Zimbra users (by and {name-or-id} are ignored)
+     pub - public (by and {name-or-id} are ignored)
+     
 
   <a>       required if op=modify
   <newName> required if op=rename
