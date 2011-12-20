@@ -523,7 +523,7 @@ zmprov ms catfood.zimbra.com zimbraSpnegoAuthPrincipal HTTP/catfood.zimbra.com@V
 
 zmprov md zimbra.com zimbraAuthKerberos5Realm VMWARE.COM
 zmprov md zimbra.com +zimbraVirtualHostname dogfood.zimbra.com +zimbraVirtualHostname catfood.zimbra.com
-zmprov md zimbra.com zimbraWebClientLoginURL '../../service/spnego'
+zmprov md zimbra.com zimbraWebClientLoginURL '/service/spnego'
 zmprov md zimbra.com +zimbraWebClientLoginURLAllowedUA '.*Windows.*Firefox/3.*'
 zmprov md zimbra.com +zimbraWebClientLoginURLAllowedUA '.*MSIE.*Windows.*'
 zmprov md zimbra.com +zimbraWebClientLoginURLAllowedUA '.*Windows.*Chrome.*'
