@@ -25,6 +25,7 @@ import java.util.Properties;
 import org.hsqldb.cmdline.SqlFile;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.zimbra.cs.db.DbPool.DbConnection;
 import com.zimbra.cs.db.DbPool.PoolConfig;
 
@@ -39,6 +40,16 @@ public final class HSQLDB extends Db {
      * Populates ZIMBRA and MBOXGROUP1 schema.
      */
     public static void createDatabase() throws Exception {
+        createDatabase("");
+    }
+
+    /**
+     * Populates ZIMBRA and MBOXGROUP1 schema.
+     * @param zimbraServerDir the directory that contains the ZimbraServer project
+     * @throws Exception
+     */
+    public static void createDatabase(String zimbraServerDir) throws Exception {
+        zimbraServerDir = Strings.nullToEmpty(zimbraServerDir);
         PreparedStatement stmt = null;
         ResultSet rs = null;
         DbConnection conn = DbPool.getConnection();
@@ -49,8 +60,8 @@ public final class HSQLDB extends Db {
             if (rs.next() && rs.getInt(1) > 0) {
                 return;  // already exists
             }
-            execute(conn, "src/db/hsqldb/db.sql");
-            execute(conn, "src/db/hsqldb/create_database.sql");
+            execute(conn, zimbraServerDir + "src/db/hsqldb/db.sql");
+            execute(conn, zimbraServerDir + "src/db/hsqldb/create_database.sql");
         } finally {
             DbPool.closeResults(rs);
             DbPool.quietCloseStatement(stmt);
@@ -62,9 +73,19 @@ public final class HSQLDB extends Db {
      * Deletes all records from all tables.
      */
     public static void clearDatabase() throws Exception {
+        clearDatabase("");
+    }
+
+    /**
+     * Deletes all records from all tables.
+     * @param zimbraServerDir the directory that contains the ZimbraServer project
+     * @throws Exception
+     */
+    public static void clearDatabase(String zimbraServerDir) throws Exception {
+        zimbraServerDir = Strings.nullToEmpty(zimbraServerDir);
         DbConnection conn = DbPool.getConnection();
         try {
-            execute(conn, "src/db/hsqldb/clear.sql");
+            execute(conn, zimbraServerDir + "src/db/hsqldb/clear.sql");
         } finally {
             DbPool.quietClose(conn);
         }
