@@ -273,6 +273,9 @@ public final class LC {
 
     @Supported
     public static final KnownKey zimbra_session_limit_imap = KnownKey.newKey(15);
+    
+    @Supported
+    public static final KnownKey zimbra_session_limit_sync = KnownKey.newKey(5);
 
     @Supported
     public static final KnownKey zimbra_session_timeout_soap = KnownKey.newKey(600);
