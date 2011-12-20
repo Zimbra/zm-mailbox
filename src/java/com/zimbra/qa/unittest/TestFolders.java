@@ -17,6 +17,8 @@ package com.zimbra.qa.unittest;
 
 import junit.framework.TestCase;
 
+import com.google.common.base.Strings;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.client.ZFolder;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.cs.account.Provisioning;
@@ -76,6 +78,39 @@ public class TestFolders extends TestCase
         mbox.noOp();
         assertEquals(0, parent.getMessageCount());
         assertNull(mbox.getFolderByPath(childPath));
+    }
+    
+    public void testCreateManyFolders() throws Exception {
+        //normally skip this test since it takes a long time to complete. just keep it around for quick perf checks
+        boolean skip = true;
+        if (skip) {
+            return;
+        }
+
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        String parentPath = "/" + NAME_PREFIX + "-parent";
+
+        ZFolder parent = TestUtil.createFolder(mbox, parentPath);
+        int max = 10000;
+        int pad = ((int) Math.log10(max))+1;
+        long totalTime = 0;
+        double avgTime;
+        long maxTime = 0;
+        for (int i = 0; i < max; i++) {
+            long start = System.currentTimeMillis();
+            TestUtil.createFolder(mbox, parent.getId(), "child"+Strings.padStart(i+"", pad, '0'));
+            long end = System.currentTimeMillis();
+            long elapsed = (end-start);
+            totalTime+=elapsed;
+            if (elapsed > maxTime) {
+                maxTime = elapsed;
+                ZimbraLog.mailbox.info("FOLDER TIME new max time %dms at index %d",maxTime, i);
+            }
+            if (i > 0 && (i % 100 == 0 || i == max-1)) {
+                avgTime = (totalTime*1.0)/(i*1.0);
+                ZimbraLog.mailbox.info("FOLDER TIME average after %d = %dms", i, Math.round(avgTime));
+            }
+        }
     }
 
     private void cleanUp()

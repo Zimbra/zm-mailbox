@@ -22,7 +22,9 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Objects;
@@ -35,7 +37,6 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.db.DbPendingAclPush;
 import com.zimbra.cs.db.DbTag;
 import com.zimbra.cs.imap.ImapSession;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
@@ -80,7 +81,7 @@ public class Folder extends MailItem {
 
     protected byte    attributes;
     protected Type    defaultView;
-    private List<Folder> subfolders;
+    private Map<String, Folder> subfolders;
     private long      totalSize;
     private Folder    parent;
     private SyncData  syncData;
@@ -388,12 +389,7 @@ public class Folder extends MailItem {
             return null;
         }
         name = StringUtil.trimTrailingSpaces(name);
-        for (Folder subfolder : subfolders) {
-            if (subfolder != null && name.equalsIgnoreCase(subfolder.getName())) {
-                return subfolder;
-            }
-        }
-        return null;
+        return subfolders.get(name.toLowerCase());
     }
 
     private static final class SortByName implements Comparator<Folder> {
@@ -412,16 +408,17 @@ public class Folder extends MailItem {
         if (subfolders == null) {
             return Collections.emptyList();
         }
-        Collections.sort(subfolders, new SortByName());
+        ArrayList<Folder> visible = new ArrayList<Folder>();
         if (octxt == null || octxt.getAuthenticatedUser() == null) {
-            return Collections.unmodifiableList(subfolders);
-        }
-        List<Folder> visible = new ArrayList<Folder>();
-        for (Folder subfolder : subfolders) {
-            if (subfolder.canAccess(ACL.RIGHT_READ, octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges())) {
-                visible.add(subfolder);
+            visible.addAll(subfolders.values());
+        } else {
+            for (Folder subfolder : subfolders.values()) {
+                if (subfolder.canAccess(ACL.RIGHT_READ, octxt.getAuthenticatedUser(), octxt.isUsingAdminPrivileges())) {
+                    visible.add(subfolder);
+                }
             }
         }
+        Collections.sort(visible, new SortByName());
         return visible;
     }
 
@@ -450,7 +447,7 @@ public class Folder extends MailItem {
     private List<Folder> accumulateHierarchy(List<Folder> list) {
         list.add(this);
         if (subfolders != null) {
-            for (Folder subfolder : subfolders) {
+            for (Folder subfolder : subfolders.values()) {
                 subfolder.accumulateHierarchy(list);
             }
         }
@@ -977,9 +974,12 @@ public class Folder extends MailItem {
         boolean renamed = !name.equals(mData.name);
         if (!renamed && target == parent)
             return;
-
+        String oldName = mData.name;
+        Folder oldParent = (target == parent ? parent : null); 
         super.rename(name, target);
-
+        if (oldParent != null) { //null if moved; super.rename() already removed it from old
+            oldParent.subfolderRenamed(oldName, name);
+        }
         if (rights != null) {
             queueForAclPush();
         }
@@ -987,6 +987,11 @@ public class Folder extends MailItem {
         // for Folder objects rename also means the change in the contents.
         mData.date = mMailbox.getOperationTimestamp();
         mData.contentChanged(mMailbox);
+    }
+    
+    private void subfolderRenamed(String oldName, String name) {
+        Folder child = subfolders.remove(oldName.toLowerCase());
+        subfolders.put(name.toLowerCase(), child);
     }
 
     /** Moves this folder so that it is a subfolder of <tt>target</tt>.
@@ -1036,7 +1041,7 @@ public class Folder extends MailItem {
     private void onSoftDelete() throws ServiceException {
         alterUnread(false);
         if (subfolders != null) { // call on all sub folders recursively
-            for (Folder subfolder : subfolders) {
+            for (Folder subfolder : subfolders.values()) {
                 subfolder.onSoftDelete();
             }
         }
@@ -1062,7 +1067,7 @@ public class Folder extends MailItem {
             }
             Folder subfolder = (Folder) child;
             if (subfolders == null) {
-                subfolders = new ArrayList<Folder>();
+                subfolders = new LinkedHashMap<String, Folder>();
             } else {
                 Folder existing = findSubfolder(subfolder.getName());
                 if (existing == child) {
@@ -1072,12 +1077,12 @@ public class Folder extends MailItem {
                     throw MailServiceException.ALREADY_EXISTS(subfolder.getName());
                 }
             }
-            subfolders.add(subfolder);
+            subfolders.put(subfolder.getName().toLowerCase(), subfolder);
             subfolder.parent = this;
         }
     }
 
-    @Override
+    @Override 
     void removeChild(MailItem child) throws ServiceException {
         if (child == null) {
             throw MailServiceException.CANNOT_CONTAIN();
@@ -1089,11 +1094,21 @@ public class Folder extends MailItem {
             if (subfolders == null) {
                 throw MailServiceException.IS_NOT_CHILD();
             }
-            int index = subfolders.indexOf(subfolder);
-            if (index == -1) {
-                throw MailServiceException.IS_NOT_CHILD();
+            if (subfolders.remove(subfolder.getName().toLowerCase()) == null) {
+                if (subfolders.containsValue(subfolder)) {
+                    //edge case when folder has been moved and renamed in same txn
+                    //the rename happens before removal from 'old' folder, so lookup by name won't work
+                    Iterator<Folder> it = subfolders.values().iterator();
+                    while (it.hasNext()) {
+                        if (subfolder.equals(it.next())) {
+                            it.remove();
+                            break;
+                        }
+                    }
+                } else {
+                    throw MailServiceException.IS_NOT_CHILD();
+                }
             }
-            subfolders.remove(index);
             subfolder.parent = null;
         }
     }
