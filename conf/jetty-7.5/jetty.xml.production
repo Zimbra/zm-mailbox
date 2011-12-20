@@ -488,6 +488,9 @@
           <New class="org.eclipse.jetty.security.SpnegoLoginService">
             <Set name="name">Spnego Authentication Realm</Set>
             <Set name="config"><SystemProperty name="jetty.home" default="."/>/etc/spnego.properties</Set>
+            <Set name="IdentityService">
+                <New class="org.eclipse.jetty.security.DefaultIdentityService"/>
+            </Set>
           </New>
         </Arg>
     </Call>    

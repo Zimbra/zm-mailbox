@@ -244,7 +244,7 @@ zimbraSpnegoAuthPrincipal   : {zimbraSpnegoAuthTargetName}@{zimbraSpnegoAuthReal
 (C) Setup web client login URL and UAs/IP addresses allowed for the login URL on the domain
     - Set login URL.  Login URL is the URL to redirect to for logging in and when
       Zimbra auth token is expired.  Set it to the spnego authentication servlet.
-      zmprov md {domain} zimbraWebClientLoginURL '../../service/spnego'
+      zmprov md {domain} zimbraWebClientLoginURL '/service/spnego'
     
     - Honor only supported platforms and browsers.  
       zimbraWebClientLoginURLAllowedUA is a multi-valued attribute, values are regex.

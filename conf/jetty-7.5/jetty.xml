@@ -492,20 +492,23 @@
     <!-- example).                                                   -->
     <!-- =========================================================== -->
 
-        <!-- uncomment if global config attr zimbraSpnegoAuthEnabled is TRUE -->
-        <!-- zimbraSpnegoAuthEnabled
+    <!-- uncomment if global config attr zimbraSpnegoAuthEnabled is TRUE -->
+    <!-- zimbraSpnegoAuthEnabled
         
     <Call name="addBean">
        <Arg> 
           <New class="org.eclipse.jetty.security.SpnegoLoginService">
             <Set name="name">Spnego Authentication Realm</Set>
             <Set name="config"><SystemProperty name="jetty.home" default="."/>/etc/spnego.properties</Set>
+            <Set name="IdentityService">
+                <New class="org.eclipse.jetty.security.DefaultIdentityService"/>
+            </Set>
           </New>
         </Arg>
     </Call>
     
-    	zimbraSpnegoAuthEnabled -->     
-        <!-- end uncomment if global config attr zimbraSpnegoAuthEnabled is TRUE -->
+    zimbraSpnegoAuthEnabled -->     
+    <!-- end uncomment if global config attr zimbraSpnegoAuthEnabled is TRUE -->
 
 
     <!-- =========================================================== -->

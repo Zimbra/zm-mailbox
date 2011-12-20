@@ -593,7 +593,7 @@
                                             zimbraMailHost ${spnego.server.name}
                                             cn 'Spnego Demo User'
                                             displayName 'Spnego Demo User'
-                                            zimbraForeignPrincipal kerberos5:spnego@${zimbra.kerberos.realm}"/>
+                                            zimbraForeignPrincipal kerberos5:spnego@${SPNEGO_AUTH_REALM}"/>
       </antcall>
 
       <!--
