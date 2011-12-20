@@ -3824,30 +3824,23 @@ abstract class ImapHandler {
         i4set.remove(null);
 
         try {
-            // get set of relevant tags
+            // list of tag names (not including Flags)
+            List<String> tags = Lists.newArrayList();
+            
+             //just Flag objects, no need to convert Tag objects to ImapFlag here
             Set<ImapFlag> i4flags = new HashSet<ImapFlag>(flagNames.size());
-            mbox.lock.lock();
-            try {
-                for (String name : flagNames) {
-                    ImapFlag i4flag = i4folder.getFlagByName(name);
-                    if ((i4flag == null || !i4flag.mListed) && operation != StoreAction.REMOVE) {
-                        i4flag = i4folder.getTagset().createTag(mbox, getContext(), name, newTags);
-                    }
-                    if (i4flag != null) {
-                        i4flags.add(i4flag);
-                    }
+            
+            for (String name : flagNames) {
+                ImapFlag i4flag = i4folder.getFlagByName(name);
+                if (i4flag == null) {
+                    tags.add(name);
+                    continue; //new tag for this folder
+                } else if (i4flag.mId > 0) {
+                    tags.add(i4flag.mName);
+                } else {
+                    i4flags.add(i4flag);
                 }
-
-                if (i4folder.areTagsDirty()) {
-                    sendUntagged("FLAGS (" + StringUtil.join(" ", i4folder.getFlagList(false)) + ')');
-                    i4folder.setTagsDirty(false);
-                }
-            } finally {
-                mbox.lock.release();
-            }
-
-            if (operation != StoreAction.REMOVE) {
-                for (ImapFlag i4flag : i4flags) {
+                if (operation != StoreAction.REMOVE) {
                     if (i4flag.mId == Flag.ID_DELETED) {
                         if (!i4folder.getPath().isWritable(ACL.RIGHT_DELETE)) {
                             throw ServiceException.PERM_DENIED("you do not have permission to set the \\Deleted flag");
@@ -3861,12 +3854,10 @@ abstract class ImapHandler {
             }
 
             // if we're doing a STORE FLAGS (i.e. replace), precompute the new set of flags for all the affected messages
-            List<String> tags = Lists.newArrayList();  int flags = Flag.BITMASK_UNREAD;  short sflags = 0;
+            int flags = Flag.BITMASK_UNREAD;  short sflags = 0;
             if (operation == StoreAction.REPLACE) {
                 for (ImapFlag i4flag : i4flags) {
-                    if (i4flag.mId > 0) {
-                        tags.add(i4flag.mName);
-                    } else if (!i4flag.mPermanent) {
+                    if (!i4flag.mPermanent) {
                         sflags = (byte) (i4flag.mPositive ? sflags | i4flag.mBitmask : sflags & ~i4flag.mBitmask);
                     } else {
                         flags = (int) (i4flag.mPositive ? flags | i4flag.mBitmask : flags & ~i4flag.mBitmask);
@@ -3915,7 +3906,7 @@ abstract class ImapHandler {
                             for (ImapFlag i4flag : i4flags) {
                                 boolean add = operation == StoreAction.ADD ^ !i4flag.mPositive;
                                 if (i4flag.mPermanent) {
-                                    // real tag; do a batch update to the DB
+                                    // real Flag (not a Tag); do a batch update to the DB
                                     mbox.alterTag(getContext(), ArrayUtil.toIntArray(idlist), MailItem.Type.UNKNOWN, i4flag.mName, add, null);
                                 } else {
                                     // session tag; update one-by-one in memory only
@@ -3923,6 +3914,11 @@ abstract class ImapHandler {
                                         i4msg.setSessionFlags((short) (add ? i4msg.sflags | i4flag.mBitmask : i4msg.sflags & ~i4flag.mBitmask), i4folder);
                                     }
                                 }
+                            }
+                            boolean add = operation == StoreAction.ADD;
+                            //add (or remove) Tags
+                            for (String tagName : tags) {
+                                mbox.alterTag(getContext(), ArrayUtil.toIntArray(idlist), MailItem.Type.UNKNOWN, tagName, add, null);
                             }
                         }
                     } finally {

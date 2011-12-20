@@ -24,8 +24,6 @@ import com.google.common.collect.Maps;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.MailItem;
-import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.mailbox.Tag;
@@ -174,36 +172,6 @@ public class ImapFlagCache implements Iterable<ImapFlagCache.ImapFlag>, java.io.
         }
         return names;
     }
-
-    ImapFlag createTag(Mailbox mbox, OperationContext octxt, String name, List<Tag> newTags) throws ServiceException {
-        if (mbox == null) {
-            return null;
-        }
-
-        ImapFlag i4flag = getByImapName(name);
-        if (i4flag != null) {
-            return i4flag;
-        }
-
-        if (name.startsWith("\\")) {
-            throw MailServiceException.INVALID_NAME(name);
-        }
-
-        try {
-            Tag ltag = mbox.createTag(octxt, name, MailItem.DEFAULT_COLOR);
-            newTags.add(ltag);
-            i4flag = getByImapName(name);
-            if (i4flag == null) {
-                return cache(i4flag = new ImapFlag(ltag));
-            }
-        } catch (ServiceException e) {
-            if (!e.getCode().equals(ServiceException.PERM_DENIED)) {
-                throw e;
-            }
-        }
-        return i4flag;
-    }
-
 
     public ImapFlag cache(ImapFlag i4flag) {
         mImapNames.put(i4flag.mImapName.toUpperCase(), i4flag);

@@ -127,7 +127,8 @@ final class AppendMessage {
             }
 
             if (i4flag == null) {
-                i4flag = tagSet.createTag(mbox, handler.getContext(), name, newTags);
+                //add to tags, this is passed to DeliveryOptions later
+                tags.add(name);
             }
 
             if (i4flag != null) {
