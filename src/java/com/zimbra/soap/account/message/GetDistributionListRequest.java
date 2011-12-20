@@ -15,12 +15,15 @@
 
 package com.zimbra.soap.account.message;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.AttrsImpl;
 import com.zimbra.soap.type.DistributionListSelector;
@@ -32,21 +35,39 @@ public class GetDistributionListRequest extends AttrsImpl {
 
     @XmlAttribute(name=AccountConstants.A_NEED_OWNERS, required=false)
     private ZmBoolean needOwners;
+    
+    @XmlAttribute(name=AccountConstants.A_NEED_RIGHTS, required=false)
+    private String needRights;
+    
     @XmlElement(name=AccountConstants.E_DL, required=true)
     private DistributionListSelector dl;
 
     public GetDistributionListRequest() {
-        this((DistributionListSelector) null, (Boolean) null);
+        this((DistributionListSelector) null, (Boolean) null, (String) null);
+    }
+    
+    public GetDistributionListRequest(DistributionListSelector dl, Boolean needOwners) {
+        this(dl, needOwners, null);
     }
 
-    public GetDistributionListRequest(DistributionListSelector dl, Boolean needOwners) {
+    public GetDistributionListRequest(DistributionListSelector dl, Boolean needOwners, 
+            String needRights) {
         this.setDl(dl);
         this.setNeedOwners(needOwners);
+        this.setNeedRights(needRights);
     }
 
-    public void setNeedOwners(Boolean needOwners) { this.needOwners = ZmBoolean.fromBool(needOwners); }
+    public void setNeedOwners(Boolean needOwners) { 
+        this.needOwners = ZmBoolean.fromBool(needOwners); 
+    }
+    
+    public void setNeedRights(String needRights) { 
+        this.needRights = needRights;
+    }
 
     public Boolean getNeedOwners() { return ZmBoolean.toBool(needOwners); }
+    
+    public String getNeedRights() { return needRights; }
 
     public void setDl(DistributionListSelector dl) { this.dl = dl; }
     public DistributionListSelector getDl() { return dl; }

@@ -45,6 +45,10 @@ public class DistributionListInfo extends ObjectInfo {
     @XmlElementWrapper(name=AccountConstants.E_DL_OWNERS, required=false)
     @XmlElement(name=AccountConstants.E_DL_OWNER, required=false)
     private List<DistributionListGranteeInfo> owners = Lists.newArrayList();
+    
+    @XmlElementWrapper(name=AccountConstants.E_RIGHTS, required=false)
+    @XmlElement(name=AccountConstants.E_RIGHT, required=false)
+    private List<DistributionListRightInfo> rights = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB
@@ -95,5 +99,17 @@ public class DistributionListInfo extends ObjectInfo {
 
     public List<? extends DistributionListGranteeInfoInterface> getOwners() {
         return Collections.unmodifiableList(owners);
+    }
+    
+    public void setRights(List<DistributionListRightInfo> rights) {
+        this.rights = rights;
+    }
+
+    public void addRight(DistributionListRightInfo right) {
+        rights.add(right);
+    }
+
+    public List<? extends DistributionListRightInfo> getRights() {
+        return Collections.unmodifiableList(rights);
     }
 }

@@ -23,7 +23,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.zimbra.common.soap.AccountConstants;
 
-public class DistributionListRight {
+public class DistributionListRightSpec {
     
     @XmlAttribute(name=AccountConstants.A_RIGHT, required=true)
     private final String right;
@@ -31,11 +31,11 @@ public class DistributionListRight {
     @XmlElement(name=AccountConstants.E_GRANTEE, required=false)
     protected List<DistributionListGranteeSelector> grantees;
     
-    public DistributionListRight() {
+    public DistributionListRightSpec() {
         this(null);
     }
     
-    public DistributionListRight(String right) {
+    public DistributionListRightSpec(String right) {
         this.right = right;
     }
     
