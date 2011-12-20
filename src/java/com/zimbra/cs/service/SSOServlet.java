@@ -38,7 +38,7 @@ import com.zimbra.cs.service.authenticator.SSOAuthenticator.ZimbraPrincipal;
 import com.zimbra.cs.servlet.ZimbraServlet;
 
 public abstract class SSOServlet extends ZimbraServlet {
-    private final static String IGNORE_LOGIN_URL = "/?ignoreLoginURL=1";
+    private final static String IGNORE_LOGIN_URL = "?ignoreLoginURL=1";
     
     protected abstract boolean redirectToRelativeURL();
     
@@ -134,6 +134,13 @@ public abstract class SSOServlet extends ZimbraServlet {
         return redirectUrl;
     }
     
+    private String appendIgnoreLoginURL(String redirectUrl) {
+        if (!redirectUrl.endsWith("/")) {
+            redirectUrl = redirectUrl + "/";
+        }
+        return redirectUrl + IGNORE_LOGIN_URL;
+    }
+    
     protected void setAuthTokenCookieAndRedirect(HttpServletRequest req, HttpServletResponse resp, 
             Account acct, AuthToken authToken) 
     throws IOException, ServiceException {
@@ -148,7 +155,7 @@ public abstract class SSOServlet extends ZimbraServlet {
         String redirectUrl = getRedirectURL(req, server, isAdmin);
         
         // always append the ignore loginURL query so we do not get into a redirect loop.
-        redirectUrl = redirectUrl + IGNORE_LOGIN_URL;  // not yet supported for admin console
+        redirectUrl = appendIgnoreLoginURL(redirectUrl);
         
         boolean relative = redirectToRelativeURL();
         if (!relative) {
@@ -178,7 +185,7 @@ public abstract class SSOServlet extends ZimbraServlet {
             redirectUrl = getRedirectURL(req, server, isAdminRequest);
             
             // always append the ignore loginURL query so we do not get into a redirect loop.
-            redirectUrl = redirectUrl + IGNORE_LOGIN_URL;  // not yet supported for admin console
+            redirectUrl = appendIgnoreLoginURL(redirectUrl);
             
         } else {
             redirectUrl = errorUrl;
