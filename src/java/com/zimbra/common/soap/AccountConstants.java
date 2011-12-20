@@ -335,6 +335,7 @@ public class AccountConstants {
     public static final String A_LOCAL_NAME = "localName";
     public static final String A_MORE = "more";
     public static final String A_NEED_OWNERS = "needOwners";
+    public static final String A_NEED_RIGHTS = "needRights";
     public static final String A_TOTAL = "total";
     public static final String A_ZIMLET = "zimlet";
     public static final String A_ZIMLET_BASE_URL = "baseUrl";
@@ -374,6 +375,7 @@ public class AccountConstants {
     public static final String E_ACL = "acl";
     public static final String E_GRANT = "grant";
     public static final String E_RIGHT = "right";
+    public static final String E_RIGHTS = "rights";
     public static final String E_TARGET = "target";
     public static final String E_TARGETS = "targets";
     
