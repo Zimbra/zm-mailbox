@@ -60,7 +60,7 @@ public abstract class Session {
         IMAP(2, Math.max(0, LC.zimbra_session_limit_imap.intValue())),
         ADMIN(3, 5),
         WIKI(4, 0),
-        SYNCLISTENER(5, 2),
+        SYNCLISTENER(5, LC.zimbra_session_limit_sync.intValue()),
         WAITSET(6, 0)
         ;
 
