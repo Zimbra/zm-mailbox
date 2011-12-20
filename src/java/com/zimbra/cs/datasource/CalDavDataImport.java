@@ -226,7 +226,6 @@ public class CalDavDataImport extends MailItemImport {
             if (f == null)
                 f = new DataSourceItem(0, 0, url, null);
             CalendarFolder cf = new CalendarFolder(f.itemId);
-            ret.add(cf);
             Folder folder = null;
             if (f.itemId != 0) {
                 // check if the folder was deleted
@@ -299,6 +298,7 @@ public class CalDavDataImport extends MailItemImport {
                 }
             }
             allFolders.remove(url);
+            ret.add(cf);
         }
         if (!allFolders.isEmpty()) {
             // handle deleted folders
@@ -324,6 +324,7 @@ public class CalDavDataImport extends MailItemImport {
                 }
             }
         }
+        mbox.setSyncDate(octxt, rootFolder.getId(), mbox.getLastChangeID());        
         return ret;
     }
     private void deleteRemoteFolder(String url) throws ServiceException, IOException, DavException {

@@ -27,6 +27,7 @@ import junit.framework.TestSuite;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.extension.ExtensionUtil;
+import com.zimbra.qa.unittest.server.TestCalDavImportServer;
 import com.zimbra.qa.unittest.server.TestDataSourceServer;
 import com.zimbra.qa.unittest.server.TestDocumentServer;
 import com.zimbra.qa.unittest.server.TestNotificationServer;
@@ -106,6 +107,7 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestServerStats.class);
         sClasses.add(TestJaxbProvisioning.class);
         sClasses.add(TestAclPush.class);
+        sClasses.add(TestCalDavImportServer.class);
     }
 
     /**
