@@ -457,7 +457,6 @@ public class DistributionListAction extends DistributionListDocumentHandler {
                     throw ServiceException.INVALID_REQUEST(right.getName() + 
                             " cannot be granted directly, use addOwners/removeOwners/setOwners" +
                             " operation instead", null);
-                    
                 }
                 List<Grantee> grantees = parseGrantees(eRight, AccountConstants.E_GRANTEE);
                 rights.put(right, grantees);

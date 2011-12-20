@@ -3978,16 +3978,29 @@ Notes:
 
 -----------------------------
 
-<GetDistributionListRequest needOwners="1|0">
+<GetDistributionListRequest needOwners="1|0" needRights="{comma-seperated-rights}">
   <dl by="id|name">...</dl>
 </GetDistributionListRequest>
+
+  needOwners = whether to return owners, default is 0 
+               1: return owners
+               0: don't return owners
+               
+  needRights = return grants for the specified (comma-seperated) rights.
+               e.g. needRights="sendToDistList,viewDistList"
+               
 
 <GetDistributionListResponse isOwner="1" isMember="1">
   <dl name="{name}" id="{id}" dynamic="1|0">
     <owners>
-      <owner type="{owner-type}" id="{owner-id}" name="{owner-name}"/>+
+      <owner type="{grantee-type}" id="{owner-id}" name="{owner-name}"/>+
     </owners>
     <a n="...">...</a>+
+    <rights>
+      [<right right="{right}"> 
+           <grantee type={grantee-type} [id="{grantee-id}"] [name="grantee-name"]/>
+       </right>+]  
+    </rights>
   </dl>
 </GetDistributionListResponse>
 
@@ -3995,13 +4008,19 @@ Notes:
    If the authed account is one of the list owners, all (requested) attributes of the DL
    are returned in the response.  Otherwise only attributes visible and useful to
    non-owners are returned.
+   
+   Specified <rights> are returned only if the authed account is one of the list owners.
+   Only grants on this group entry is returned, inherited grants on domain or globalgrant 
+   are not returned.
 
    dynamic = whether this is a dynamic distribution list
-   owner-type = usr | grp | egp
-                usr: a Zimbra internal user
-                grp: a Zimbra internal group
-                egp: an external AD group
-
+   grantee-type = 
+                usr - a Zimbra internal user
+                grp - a Zimbra internal group
+                egp - an external AD group
+                all - all Zimbra users (id and name will not be present)
+                pub - public (id and name will not be present)
+     
 -----------------------------
 
 <DistributionListActionRequest>
@@ -4041,6 +4060,7 @@ Notes:
   grantee-type:      
      usr - a Zimbra internal user
      grp - a Zimbra internal group
+     egr - an external AD group
      all - all Zimbra users (by and {name-or-id} are ignored)
      pub - public (by and {name-or-id} are ignored)
      

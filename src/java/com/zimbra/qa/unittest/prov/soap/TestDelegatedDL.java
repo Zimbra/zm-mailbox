@@ -61,9 +61,11 @@ import com.zimbra.soap.account.message.GetDistributionListResponse;
 import com.zimbra.soap.account.message.SubscribeDistributionListRequest;
 import com.zimbra.soap.account.message.SubscribeDistributionListResponse;
 import com.zimbra.soap.account.type.DistributionListAction;
+import com.zimbra.soap.account.type.DistributionListGranteeInfo;
 import com.zimbra.soap.account.type.DistributionListInfo;
 import com.zimbra.soap.account.type.DistributionListGranteeSelector;
-import com.zimbra.soap.account.type.DistributionListRight;
+import com.zimbra.soap.account.type.DistributionListRightInfo;
+import com.zimbra.soap.account.type.DistributionListRightSpec;
 import com.zimbra.soap.account.type.DistributionListSubscribeOp;
 import com.zimbra.soap.account.type.DistributionListSubscribeStatus;
 import com.zimbra.soap.account.type.DistributionListAction.Operation;
@@ -427,11 +429,9 @@ public class TestDelegatedDL extends SoapTest {
             }
         }
         
-        /*
         assertTrue(seenMail);
         assertTrue(seenSubsPolicy);
         assertTrue(seenUnsubsPolicy);
-        */
         
         List<? extends DistributionListGranteeInfoInterface> dlOwners = dlInfo.getOwners();
         assertEquals(1, dlOwners.size());
@@ -465,6 +465,80 @@ public class TestDelegatedDL extends SoapTest {
         Group group = prov.getGroup(Key.DistributionListBy.name, DL_NAME);
         assertNotNull(group);
         assertEquals(group.getId(), dlId);
+    }
+    
+    /*
+     * verify rights are returned
+     */
+    @Test
+    public void getDistributionListRights() throws Exception {
+        String GROUP_NAME = getAddress(genGroupNameLocalPart("group"));
+        Group group = createGroupAndAddOwner(GROUP_NAME);
+        
+        String right1 = Right.RT_sendToDistList;
+        String right2 = Right.RT_viewDistList;
+        Account grantee1 = provUtil.createAccount(genAcctNameLocalPart("1"), domain);
+        Account grantee2 = provUtil.createAccount(genAcctNameLocalPart("2"), domain);
+        
+        SoapTransport transport = authUser(USER_OWNER);
+        
+        //
+        // grantRights
+        //
+        DistributionListAction action = new DistributionListAction(Operation.grantRights);
+        DistributionListActionRequest req = new DistributionListActionRequest(
+                DistributionListSelector.fromName(GROUP_NAME), action);
+        
+        DistributionListRightSpec dlRight1 = new DistributionListRightSpec(right1);
+        dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+                DistributionListGranteeBy.name, grantee1.getName()));
+        dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+                DistributionListGranteeBy.name, grantee2.getName()));
+        
+        DistributionListRightSpec dlRight2 = new DistributionListRightSpec(right2);
+        dlRight2.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+                DistributionListGranteeBy.name, grantee1.getName()));
+        dlRight2.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+                DistributionListGranteeBy.name, grantee2.getName()));
+        
+        action.addRight(dlRight1);
+        action.addRight(dlRight2);
+        DistributionListActionResponse resp = invokeJaxb(transport, req);
+        
+        /*
+         * verify rights are returned 
+         */
+        GetDistributionListRequest getDLReq = new GetDistributionListRequest(
+                DistributionListSelector.fromName(GROUP_NAME), Boolean.FALSE,
+                right1 + "," + right2);
+        GetDistributionListResponse getDLResp = invokeJaxb(transport, getDLReq);
+        
+        DistributionListInfo dlInfo = getDLResp.getDl();
+        List<? extends DistributionListRightInfo> rights = dlInfo.getRights();
+        
+        Set<String> right1GranteeNames = Sets.newHashSet();
+        Set<String> right2GranteeNames = Sets.newHashSet();
+        for (DistributionListRightInfo rightInfo : rights) {
+            String right = rightInfo.getRight();
+            List<DistributionListGranteeInfo> grantees = rightInfo.getGrantees();
+            
+            if (right1.equals(right)) {
+                for (DistributionListGranteeInfo grantee : grantees) {
+                    right1GranteeNames.add(grantee.getName());
+                }
+            } else if (right2.equals(right)) {
+                for (DistributionListGranteeInfo grantee : grantees) {
+                    right2GranteeNames.add(grantee.getName());
+                }
+            }
+        }
+
+        Verify.verifyEquals(
+                Sets.newHashSet(grantee1.getName(), grantee2.getName()), 
+                right1GranteeNames);
+        Verify.verifyEquals(
+                Sets.newHashSet(grantee1.getName(), grantee2.getName()), 
+                right2GranteeNames);
     }
 
     @Test
@@ -686,13 +760,13 @@ public class TestDelegatedDL extends SoapTest {
         DistributionListActionRequest req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
         
-        DistributionListRight dlRight1 = new DistributionListRight(right1);
+        DistributionListRightSpec dlRight1 = new DistributionListRightSpec(right1);
         dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
                 DistributionListGranteeBy.name, grantee1.getName()));
         dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
                 DistributionListGranteeBy.name, grantee2.getName()));
         
-        DistributionListRight dlRight2 = new DistributionListRight(right2);
+        DistributionListRightSpec dlRight2 = new DistributionListRightSpec(right2);
         dlRight2.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
                 DistributionListGranteeBy.name, grantee1.getName()));
         dlRight2.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
@@ -734,12 +808,12 @@ public class TestDelegatedDL extends SoapTest {
         action = new DistributionListAction(Operation.setRights);
         req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
-        dlRight1 = new DistributionListRight(right1);
+        dlRight1 = new DistributionListRightSpec(right1);
         // set grantee to only grantee1
         dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
                 DistributionListGranteeBy.name, grantee1.getName()));
         
-        dlRight2 = new DistributionListRight(right2);
+        dlRight2 = new DistributionListRightSpec(right2);
         // don't add any grantee, this should revoke all grants for right2
         
         action.addRight(dlRight1);
@@ -776,7 +850,7 @@ public class TestDelegatedDL extends SoapTest {
         action = new DistributionListAction(Operation.revokeRights);
         req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
-        dlRight1 = new DistributionListRight(right1);
+        dlRight1 = new DistributionListRightSpec(right1);
         dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
                 DistributionListGranteeBy.name, grantee1.getName()));
         
@@ -825,7 +899,7 @@ public class TestDelegatedDL extends SoapTest {
         DistributionListActionRequest req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
         
-        DistributionListRight dlRight = new DistributionListRight(right);
+        DistributionListRightSpec dlRight = new DistributionListRightSpec(right);
         dlRight.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
                 DistributionListGranteeBy.name, grantee.getName()));
         
@@ -850,7 +924,7 @@ public class TestDelegatedDL extends SoapTest {
         req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
         
-        dlRight = new DistributionListRight(right);
+        dlRight = new DistributionListRightSpec(right);
         dlRight.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
                 DistributionListGranteeBy.name, grantee.getName()));
         
@@ -874,7 +948,7 @@ public class TestDelegatedDL extends SoapTest {
         req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
         
-        dlRight = new DistributionListRight(right);
+        dlRight = new DistributionListRightSpec(right);
         dlRight.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
                 DistributionListGranteeBy.name, grantee.getName()));
         
