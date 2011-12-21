@@ -21,17 +21,16 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.soap.type.GranteeType;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.NONE)
+@XmlAccessorType(XmlAccessType.FIELD)
 public class AccountACEinfo {
 
     @XmlAttribute(name=AccountConstants.A_ZIMBRA_ID /* zid */, required=false)
     private String zimbraId;
 
     @XmlAttribute(name=AccountConstants.A_GRANT_TYPE /* gt */, required=true)
-    private final GranteeType granteeType;
+    private final Grant.GranteeType grantType;
 
     @XmlAttribute(name=AccountConstants.A_RIGHT /* right */, required=true)
     private final String right;
@@ -53,11 +52,11 @@ public class AccountACEinfo {
      */
     @SuppressWarnings("unused")
     private AccountACEinfo() {
-        this((GranteeType) null, (String) null);
+        this((Grant.GranteeType) null, (String) null);
     }
 
-    public AccountACEinfo(GranteeType granteeType, String right) {
-        this.granteeType = granteeType;
+    public AccountACEinfo(Grant.GranteeType grantType, String right) {
+        this.grantType = grantType;
         this.right = right;
     }
 
@@ -69,7 +68,7 @@ public class AccountACEinfo {
     public void setPassword(String password) { this.password = password; }
     public void setDeny(Boolean deny) { this.deny = ZmBoolean.fromBool(deny); }
     public String getZimbraId() { return zimbraId; }
-    public GranteeType getGranteeType() { return granteeType; }
+    public Grant.GranteeType getGrantType() { return grantType; }
     public String getRight() { return right; }
     public String getDisplayName() { return displayName; }
     public String getAccessKey() { return accessKey; }
@@ -80,7 +79,7 @@ public class AccountACEinfo {
                 Objects.ToStringHelper helper) {
         return helper
             .add("zimbraId", zimbraId)
-            .add("granteeType", granteeType)
+            .add("grantType", grantType)
             .add("right", right)
             .add("displayName", displayName)
             .add("accessKey", accessKey)
