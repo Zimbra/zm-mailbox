@@ -91,6 +91,8 @@ public class AttributeInfo {
 
     private List<String> mDefaultExternalCOSValues;
 
+    private List<String> mOctopusDefaultCOSValues;
+
     private List<String> mDefaultCOSValuesUpgrade;
 
     private long mMin = Long.MIN_VALUE, mMax = Long.MAX_VALUE;
@@ -148,7 +150,7 @@ public class AttributeInfo {
             AttributeCardinality cardinality, Set<AttributeClass> requiredIn,
             Set<AttributeClass> optionalIn, Set<AttributeFlag> flags,
             List<String> globalConfigValues, List<String> defaultCOSValues,
-            List<String> defaultExternalCOSValues, List<String> globalConfigValuesUpgrade,
+            List<String> defaultExternalCOSValues, List<String> octopusDefaultCOSValues, List<String> globalConfigValuesUpgrade,
             List<String> defaultCOSValuesUpgrade, String description, List<AttributeServerType> requiresRestart,
             Version since, Version deprecatedSince) {
         mName = attrName;
@@ -168,6 +170,7 @@ public class AttributeInfo {
         mGlobalConfigValuesUpgrade = globalConfigValuesUpgrade;
         mDefaultCOSValues = defaultCOSValues;
         mDefaultExternalCOSValues = defaultExternalCOSValues;
+        mOctopusDefaultCOSValues = octopusDefaultCOSValues;
         mDefaultCOSValuesUpgrade = defaultCOSValuesUpgrade;
         mDescription = description;
         mRequiresRestart = requiresRestart;
@@ -517,6 +520,10 @@ public class AttributeInfo {
 
     public List<String> getDefaultExternalCosValues() {
         return mDefaultExternalCOSValues;
+    }
+
+    public List<String> getOctopusDefaultCosValues() {
+        return mOctopusDefaultCOSValues;
     }
 
     public List<String> getDefaultCosValuesUpgrade() {

@@ -97,6 +97,7 @@ public class AttributeManagerUtil {
         dump,
         generateDefaultCOSLdif,
         generateDefaultExternalCOSLdif,
+        generateOctopusDefaultCOSLdif,
         generateGetters,
         generateGlobalConfigLdif,
         generateLdapSchema,
@@ -208,6 +209,45 @@ public class AttributeManagerUtil {
         List<String> out = new LinkedList<String>();
         for (AttributeInfo attr : getAttrs().values()) {
             List<String> defaultValues = attr.getDefaultExternalCosValues();
+            if (defaultValues != null && !defaultValues.isEmpty()) {
+                for (String v : defaultValues) {
+                    out.add(attr.getName() + ": " + v);
+                }
+            } else {
+                defaultValues = attr.getDefaultCosValues();
+                if (defaultValues != null) {
+                    for (String v : defaultValues) {
+                        out.add(attr.getName() + ": " + v);
+                    }
+                }
+            }
+        }
+        String[] outs = out.toArray(new String[out.size()]);
+        Arrays.sort(outs);
+        for (String o : outs) {
+            pw.println(o);
+        }
+    }
+
+    private void generateOctopusDefaultCOSLdif(PrintWriter pw) {
+        pw.println(doNotModifyDisclaimer("#"));
+        pw.println("#");
+        pw.println("# LDAP entry for default Octopus COS.");
+        pw.println("#");
+
+        String baseDn = CLOptions.getBaseDn("cos");
+        String cosName = CLOptions.getEntryName("cos", Provisioning.DEFAULT_COS_NAME);
+        String cosId = CLOptions.getEntryId("cos", "e00428a1-0c00-11d9-836a-000d93afea2a");
+
+        pw.println("dn: cn=" + cosName +",cn=cos," + baseDn);
+        pw.println("cn: " + cosName);
+        pw.println("objectclass: zimbraCOS");
+        pw.println("zimbraId: " + cosId);
+        pw.println("description: The " + cosName + " COS");
+
+        List<String> out = new LinkedList<String>();
+        for (AttributeInfo attr : getAttrs().values()) {
+            List<String> defaultValues = attr.getOctopusDefaultCosValues();
             if (defaultValues != null && !defaultValues.isEmpty()) {
                 for (String v : defaultValues) {
                     out.add(attr.getName() + ": " + v);
@@ -1379,6 +1419,9 @@ public class AttributeManagerUtil {
             break;        
         case generateDefaultExternalCOSLdif:
             amu.generateDefaultExternalCOSLdif(pw);
+            break;
+        case generateOctopusDefaultCOSLdif:
+            amu.generateOctopusDefaultCOSLdif(pw);
             break;
         case generateGetters:
             amu.generateGetters(cl.getOptionValue('c'), cl.getOptionValue('r'));

@@ -36,7 +36,7 @@ public abstract class ZAttrDistributionList extends Group {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111219-1031 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111222-2018 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by

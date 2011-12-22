@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111219-1031 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111222-2018 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -4608,47 +4608,50 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * maximum lifetime of shares to external users. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * Maximum allowed lifetime of shares to external users. A value of 0
+     * indicates that there&#039;s no limit on an external share&#039;s
+     * lifetime. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * <p>Use getExternalShareLifetimeAsString to access value as a string.
      *
      * @see #getExternalShareLifetimeAsString()
      *
-     * @return zimbraExternalShareLifetime in millseconds, or 2592000000 (30d)  if unset
+     * @return zimbraExternalShareLifetime in millseconds, or 0 (0)  if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1260)
     public long getExternalShareLifetime() {
-        return getTimeInterval(Provisioning.A_zimbraExternalShareLifetime, 2592000000L);
+        return getTimeInterval(Provisioning.A_zimbraExternalShareLifetime, 0L);
     }
 
     /**
-     * maximum lifetime of shares to external users. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * Maximum allowed lifetime of shares to external users. A value of 0
+     * indicates that there&#039;s no limit on an external share&#039;s
+     * lifetime. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
-     * @return zimbraExternalShareLifetime, or "30d" if unset
+     * @return zimbraExternalShareLifetime, or "0" if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1260)
     public String getExternalShareLifetimeAsString() {
-        return getAttr(Provisioning.A_zimbraExternalShareLifetime, "30d");
+        return getAttr(Provisioning.A_zimbraExternalShareLifetime, "0");
     }
 
     /**
-     * maximum lifetime of shares to external users. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * Maximum allowed lifetime of shares to external users. A value of 0
+     * indicates that there&#039;s no limit on an external share&#039;s
+     * lifetime. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param zimbraExternalShareLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -4663,11 +4666,12 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * maximum lifetime of shares to external users. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * Maximum allowed lifetime of shares to external users. A value of 0
+     * indicates that there&#039;s no limit on an external share&#039;s
+     * lifetime. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param zimbraExternalShareLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -4683,11 +4687,12 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * maximum lifetime of shares to external users. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * Maximum allowed lifetime of shares to external users. A value of 0
+     * indicates that there&#039;s no limit on an external share&#039;s
+     * lifetime. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -4701,11 +4706,12 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * maximum lifetime of shares to external users. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * Maximum allowed lifetime of shares to external users. A value of 0
+     * indicates that there&#039;s no limit on an external share&#039;s
+     * lifetime. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -34085,44 +34091,50 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * maximum lifetime of public shares. Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Maximum allowed lifetime of public shares. A value of 0 indicates that
+     * there&#039;s no limit on a public share&#039;s lifetime. . Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * <p>Use getPublicShareLifetimeAsString to access value as a string.
      *
      * @see #getPublicShareLifetimeAsString()
      *
-     * @return zimbraPublicShareLifetime in millseconds, or 1296000000 (15d)  if unset
+     * @return zimbraPublicShareLifetime in millseconds, or 0 (0)  if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1355)
     public long getPublicShareLifetime() {
-        return getTimeInterval(Provisioning.A_zimbraPublicShareLifetime, 1296000000L);
+        return getTimeInterval(Provisioning.A_zimbraPublicShareLifetime, 0L);
     }
 
     /**
-     * maximum lifetime of public shares. Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Maximum allowed lifetime of public shares. A value of 0 indicates that
+     * there&#039;s no limit on a public share&#039;s lifetime. . Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
-     * @return zimbraPublicShareLifetime, or "15d" if unset
+     * @return zimbraPublicShareLifetime, or "0" if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1355)
     public String getPublicShareLifetimeAsString() {
-        return getAttr(Provisioning.A_zimbraPublicShareLifetime, "15d");
+        return getAttr(Provisioning.A_zimbraPublicShareLifetime, "0");
     }
 
     /**
-     * maximum lifetime of public shares. Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Maximum allowed lifetime of public shares. A value of 0 indicates that
+     * there&#039;s no limit on a public share&#039;s lifetime. . Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraPublicShareLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -34137,10 +34149,12 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * maximum lifetime of public shares. Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Maximum allowed lifetime of public shares. A value of 0 indicates that
+     * there&#039;s no limit on a public share&#039;s lifetime. . Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param zimbraPublicShareLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -34156,10 +34170,12 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * maximum lifetime of public shares. Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Maximum allowed lifetime of public shares. A value of 0 indicates that
+     * there&#039;s no limit on a public share&#039;s lifetime. . Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -34173,10 +34189,12 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * maximum lifetime of public shares. Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Maximum allowed lifetime of public shares. A value of 0 indicates that
+     * there&#039;s no limit on a public share&#039;s lifetime. . Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
@@ -34559,47 +34577,50 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * maximum lifetime of shares to users on the system. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * Maximum allowed lifetime of shares to internal users or groups. A
+     * value of 0 indicates that there&#039;s no limit on an internal
+     * share&#039;s lifetime. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * <p>Use getShareLifetimeAsString to access value as a string.
      *
      * @see #getShareLifetimeAsString()
      *
-     * @return zimbraShareLifetime in millseconds, or 7776000000 (90d)  if unset
+     * @return zimbraShareLifetime in millseconds, or 0 (0)  if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1348)
     public long getShareLifetime() {
-        return getTimeInterval(Provisioning.A_zimbraShareLifetime, 7776000000L);
+        return getTimeInterval(Provisioning.A_zimbraShareLifetime, 0L);
     }
 
     /**
-     * maximum lifetime of shares to users on the system. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * Maximum allowed lifetime of shares to internal users or groups. A
+     * value of 0 indicates that there&#039;s no limit on an internal
+     * share&#039;s lifetime. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
-     * @return zimbraShareLifetime, or "90d" if unset
+     * @return zimbraShareLifetime, or "0" if unset
      *
      * @since ZCS 8.0.0
      */
     @ZAttr(id=1348)
     public String getShareLifetimeAsString() {
-        return getAttr(Provisioning.A_zimbraShareLifetime, "90d");
+        return getAttr(Provisioning.A_zimbraShareLifetime, "0");
     }
 
     /**
-     * maximum lifetime of shares to users on the system. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * Maximum allowed lifetime of shares to internal users or groups. A
+     * value of 0 indicates that there&#039;s no limit on an internal
+     * share&#039;s lifetime. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraShareLifetime new value
      * @throws com.zimbra.common.service.ServiceException if error during update
@@ -34614,11 +34635,12 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * maximum lifetime of shares to users on the system. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * Maximum allowed lifetime of shares to internal users or groups. A
+     * value of 0 indicates that there&#039;s no limit on an internal
+     * share&#039;s lifetime. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param zimbraShareLifetime new value
      * @param attrs existing map to populate, or null to create a new map
@@ -34634,11 +34656,12 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * maximum lifetime of shares to users on the system. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * Maximum allowed lifetime of shares to internal users or groups. A
+     * value of 0 indicates that there&#039;s no limit on an internal
+     * share&#039;s lifetime. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @throws com.zimbra.common.service.ServiceException if error during update
      *
@@ -34652,11 +34675,12 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * maximum lifetime of shares to users on the system. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * Maximum allowed lifetime of shares to internal users or groups. A
+     * value of 0 indicates that there&#039;s no limit on an internal
+     * share&#039;s lifetime. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @param attrs existing map to populate, or null to create a new map
      * @return populated map to pass into Provisioning.modifyAttrs
