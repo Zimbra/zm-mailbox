@@ -78,11 +78,26 @@ An optional company name []:
 
 
 (C) Create and sign(self-sign) a certificate from the certificate request
-$ /opt/zimbra/openssl/bin/openssl x509 -req -days 365 -in ca.csr -out ca.crt -signkey ca.key
+$ /opt/zimbra/openssl/bin/openssl x509 -extfile /opt/zimbra/openssl/ssl/openssl.cnf -trustout -extensions v3_ca -req -days 365 -in ca.csr -out ca.crt -signkey ca.key
 Signature ok
 subject=/C=US/ST=California/L=Palo Alto/O=VMWare/OU=Zimbra/CN=MyCA
 Getting Private key
 
+
+(D) Verify that X509v3 extensions are present in the CA cert.
+/opt/zimbra/openssl/bin/openssl x509 -in ca.crt -noout -text
+
+Version: 3 (0x2)
+...
+        X509v3 extensions:
+            X509v3 Subject Key Identifier: 
+                16:C1:9A:E4:31:5B:BA:16:49:CC:99:31:2A:88:D7:6C:B1:B5:45:54
+            X509v3 Authority Key Identifier: 
+                keyid:16:C1:9A:E4:31:5B:BA:16:49:CC:99:31:2A:88:D7:6C:B1:B5:45:54
+
+            X509v3 Basic Constraints: 
+                CA:TRUE
+                
 
 ----------------
 2. Create a Client Certificate
@@ -235,9 +250,9 @@ On mac, example of the equivalent keytool comamnd that would be issued by
 $ sudo keytool -import -keystore /System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Home/lib/security/cacerts -alias myca -file ca.crt
 
 To verify that the CA is added:
-$ keytool -list -keystore /System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Home/lib/security/cacerts -alias myca
+$ keytool -list -keystore /System/Library/Frameworks/JavaVM.framework/Versions/CurrentJDK/Home/lib/security/cacerts -v -alias myca
 or 
-$ keytool -list -keystore `zmlocalconfig -x -m nokey mailboxd_truststore` -alias myca
+$ keytool -list -keystore `zmlocalconfig -x -m nokey mailboxd_truststore` -v -alias myca
 
 
 For dev env on mac, to test providing CA certs from the trust manager, uncomment:
