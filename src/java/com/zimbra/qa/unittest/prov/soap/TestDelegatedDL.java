@@ -30,13 +30,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.zimbra.common.account.Key;
-import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapTransport;
-import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Group;
@@ -496,10 +494,8 @@ public class TestDelegatedDL extends SoapTest {
                 DistributionListGranteeBy.name, grantee2.getName()));
         
         DistributionListRightSpec dlRight2 = new DistributionListRightSpec(right2);
-        dlRight2.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
-                DistributionListGranteeBy.name, grantee1.getName()));
-        dlRight2.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
-                DistributionListGranteeBy.name, grantee2.getName()));
+        dlRight2.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.all, 
+                null, null));
         
         action.addRight(dlRight1);
         action.addRight(dlRight2);
@@ -524,20 +520,23 @@ public class TestDelegatedDL extends SoapTest {
             
             if (right1.equals(right)) {
                 for (DistributionListGranteeInfo grantee : grantees) {
-                    right1GranteeNames.add(grantee.getName());
+                    right1GranteeNames.add(grantee.getType().name() + ":" + grantee.getName());
                 }
             } else if (right2.equals(right)) {
                 for (DistributionListGranteeInfo grantee : grantees) {
-                    right2GranteeNames.add(grantee.getName());
+                    right2GranteeNames.add(grantee.getType().name() + ":" + grantee.getName());
                 }
             }
         }
 
         Verify.verifyEquals(
-                Sets.newHashSet(grantee1.getName(), grantee2.getName()), 
+                Sets.newHashSet(
+                        GranteeType.GT_USER.getCode() + ":" + grantee1.getName(), 
+                        GranteeType.GT_USER.getCode() + ":" + grantee2.getName()), 
                 right1GranteeNames);
         Verify.verifyEquals(
-                Sets.newHashSet(grantee1.getName(), grantee2.getName()), 
+                Sets.newHashSet(
+                        GranteeType.GT_AUTHUSER.getCode() + ":null"), 
                 right2GranteeNames);
     }
 
@@ -750,6 +749,7 @@ public class TestDelegatedDL extends SoapTest {
         String right2 = Right.RT_viewDistList;
         Account grantee1 = provUtil.createAccount(genAcctNameLocalPart("1"), domain);
         Account grantee2 = provUtil.createAccount(genAcctNameLocalPart("2"), domain);
+        Group groupGrantee = provUtil.createGroup(genGroupNameLocalPart("3"), domain, false);
         
         SoapTransport transport = authUser(USER_OWNER);
         
@@ -765,6 +765,12 @@ public class TestDelegatedDL extends SoapTest {
                 DistributionListGranteeBy.name, grantee1.getName()));
         dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
                 DistributionListGranteeBy.name, grantee2.getName()));
+        dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.grp, 
+                DistributionListGranteeBy.name, groupGrantee.getName()));
+        dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.all, 
+                null, null));
+        dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.pub, 
+                null, null));
         
         DistributionListRightSpec dlRight2 = new DistributionListRightSpec(right2);
         dlRight2.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
@@ -789,16 +795,23 @@ public class TestDelegatedDL extends SoapTest {
         for (RightCommand.ACE ace : grants.getACEs()) {
             String right = ace.right();
             if (right1.equals(right)) {
-                right1GranteeNames.add(ace.granteeName());
+                right1GranteeNames.add(ace.granteeType() + ":" + ace.granteeName());
             } else if (right2.equals(right)) {
-                right2GranteeNames.add(ace.granteeName());
+                right2GranteeNames.add(ace.granteeType() + ":" + ace.granteeName());
             }
         }
         Verify.verifyEquals(
-                Sets.newHashSet(grantee1.getName(), grantee2.getName()), 
+                Sets.newHashSet(
+                        GranteeType.GT_USER.getCode() + ":" + grantee1.getName(), 
+                        GranteeType.GT_USER.getCode() + ":" + grantee2.getName(), 
+                        GranteeType.GT_GROUP.getCode() + ":" + groupGrantee.getName(),
+                        GranteeType.GT_AUTHUSER.getCode() + ":" , 
+                        GranteeType.GT_PUBLIC.getCode() + ":" ), 
                 right1GranteeNames);
         Verify.verifyEquals(
-                Sets.newHashSet(grantee1.getName(), grantee2.getName()), 
+                Sets.newHashSet(
+                        GranteeType.GT_USER.getCode() + ":" + grantee1.getName(), 
+                        GranteeType.GT_USER.getCode() + ":" + grantee2.getName()), 
                 right2GranteeNames);
         
         
@@ -809,9 +822,8 @@ public class TestDelegatedDL extends SoapTest {
         req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
         dlRight1 = new DistributionListRightSpec(right1);
-        // set grantee to only grantee1
-        dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
-                DistributionListGranteeBy.name, grantee1.getName()));
+        dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.all, 
+                null, null));
         
         dlRight2 = new DistributionListRightSpec(right2);
         // don't add any grantee, this should revoke all grants for right2
@@ -833,13 +845,13 @@ public class TestDelegatedDL extends SoapTest {
         for (RightCommand.ACE ace : grants.getACEs()) {
             String right = ace.right();
             if (right1.equals(right)) {
-                right1GranteeNames.add(ace.granteeName());
+                right1GranteeNames.add(ace.granteeType() + ":" + ace.granteeName());
             } else if (right2.equals(right)) {
-                right2GranteeNames.add(ace.granteeName());
+                right2GranteeNames.add(ace.granteeType() + ":" + ace.granteeName());
             }
         }
         Verify.verifyEquals(
-                Sets.newHashSet(grantee1.getName()), 
+                Sets.newHashSet(GranteeType.GT_AUTHUSER.getCode() + ":"), 
                 right1GranteeNames);
         assertEquals(0, right2GranteeNames.size());
         
@@ -851,8 +863,8 @@ public class TestDelegatedDL extends SoapTest {
         req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
         dlRight1 = new DistributionListRightSpec(right1);
-        dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
-                DistributionListGranteeBy.name, grantee1.getName()));
+        dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.all, 
+                null, null));
         
         action.addRight(dlRight1);
         resp = invokeJaxb(transport, req);

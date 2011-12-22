@@ -14,7 +14,13 @@
  */
 package com.zimbra.qa.unittest.prov.ldap;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.servlet.http.HttpServletResponse;
+
+import junit.framework.AssertionFailedError;
+import static org.junit.Assert.*;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -25,9 +31,13 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.AuthTokenException;
+import com.zimbra.cs.account.Entry;
+import com.zimbra.cs.account.AccessManager.ViaGrant;
+import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.accesscontrol.RightModifier;
+import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 
@@ -189,6 +199,10 @@ public class ACLTestUtil {
         // ADMIN_COMBO_ALL               = getRight("test-combo-all");
     }
     
+    static Right getRight(String right) throws ServiceException {
+        return RightManager.getInstance().getRight(right);
+    }
+    
     static enum AllowOrDeny {
         ALLOW(true, false),
         DELEGABLE(true, true),
@@ -236,6 +250,21 @@ public class ACLTestUtil {
         
         boolean isGet() {
             return mGet;
+        }
+    }
+    
+    protected static enum AsAdmin {
+        AS_ADMIN(true),
+        AS_USER(false);
+        
+        boolean mAsAdmin;
+        
+        AsAdmin(boolean asAdmin) {
+            mAsAdmin = asAdmin;
+        }
+        
+        boolean yes()  {
+            return mAsAdmin;
         }
     }
     
@@ -368,10 +397,104 @@ public class ACLTestUtil {
             return mAccessKey;
         }
     }
-
-    static Right getRight(String right) throws ServiceException {
-        return RightManager.getInstance().getRight(right);
+    
+    static class TestViaGrant extends ViaGrant {
+        static final boolean POSITIVE = false;
+        static final boolean NEGATIVE = true;
+        
+        String mTargetType;
+        String mTargetName;
+        String mGranteeType;
+        String mGranteeName;
+        String mRight;
+        boolean mIsNegativeGrant;
+        
+        Set<TestViaGrant> mCanAlsoVia;
+        
+        TestViaGrant(TargetType targetType,
+                     Entry target,
+                     GranteeType granteeType,
+                     String granteeName,
+                     Right right,
+                     boolean isNegativeGrant) {
+            mTargetType = targetType.getCode();
+            mTargetName = target.getLabel();
+            mGranteeType = granteeType.getCode();
+            mGranteeName = granteeName;
+            mRight = right.getName();
+            mIsNegativeGrant = isNegativeGrant;
+        }
+        
+        public String getTargetType() { 
+            return mTargetType;
+        } 
+        
+        public String getTargetName() {
+            return mTargetName;
+        }
+        
+        public String getGranteeType() {
+            return mGranteeType;
+        }
+        
+        public String getGranteeName() {
+            return mGranteeName;
+        }
+        
+        public String getRight() {
+            return mRight;
+        }
+        
+        public boolean isNegativeGrant() {
+            return mIsNegativeGrant;
+        }
+        
+        public void addCanAlsoVia(TestViaGrant canAlsoVia) {
+            if (mCanAlsoVia == null)
+                mCanAlsoVia = new HashSet<TestViaGrant>();
+            mCanAlsoVia.add(canAlsoVia);
+        }
+        
+        public static void verifyEquals(TestViaGrant expected, ViaGrant actual) {
+            if (expected == null) {
+                assertNull(actual);
+                return;
+            } else {
+                assertNotNull(actual);
+            }
+            expected.verify(actual);
+        }
+        
+        public void verify(ViaGrant actual) {
+            try {
+                assertEquals(getTargetType(),   actual.getTargetType());
+                assertEquals(getTargetName(),   actual.getTargetName());
+                assertEquals(getGranteeType(),  actual.getGranteeType());
+                assertEquals(getGranteeName(),  actual.getGranteeName());
+                assertEquals(getRight(),        actual.getRight());
+                assertEquals(isNegativeGrant(), actual.isNegativeGrant());
+            } catch (AssertionError e) {
+                if (mCanAlsoVia == null) {
+                    throw e;
+                }
+                
+                // see if any canAlsoVia matches
+                for (TestViaGrant canAlsoVia : mCanAlsoVia) {
+                    try {
+                        canAlsoVia.verify(actual);
+                        // good, at least one of the canAlsoVia matches
+                        return;
+                    } catch (AssertionFailedError     eAlso) {
+                        // ignore, see if next one matches
+                    }
+                }
+                // if we get here, none of the canAlsoVia matches
+                // throw the assertion exception on the main via
+                throw e;
+            }
+        }
     }
+
     
     /*
     static void installUnitTestRights() throws Exception {

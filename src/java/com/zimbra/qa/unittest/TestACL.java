@@ -738,12 +738,7 @@ public abstract class TestACL extends TestCase {
         CliUtil.toolSetup("INFO");
         // ZimbraLog.toolSetupLog4j("DEBUG", "/Users/pshao/sandbox/conf/log4j.properties.phoebe");
         
-        // run all ACL tests
-        TestUtil.runTest(TestACLPrecedence.class); // all user rights for now
-        
         if (mAM instanceof ACLAccessManager) {
-            TestUtil.runTest(TestACLTarget.class);
-            TestUtil.runTest(TestACLRight.class);
             TestUtil.runTest(TestACLGrant.class);
         }
     }

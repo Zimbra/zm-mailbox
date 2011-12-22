@@ -144,15 +144,31 @@ public class Verify {
     
     public static void verifyEquals(Set<String> expected, Set<String> actual) 
     throws Exception {
-       
-        assertEquals(expected.size(), actual.size());
-        
-        for (String e : expected) {
-            assertTrue(actual.contains(e));
-        }
-        
-        for (String a : actual) {
-            assertTrue(expected.contains(a));
+        try {
+            assertEquals(expected.size(), actual.size());
+            
+            for (String entry : expected) {
+                assertTrue(actual.contains(entry));
+            }
+        } catch (AssertionError e) {
+            System.out.println();
+            System.out.println("===== verifyEquals failed =====");
+            System.out.println("Message: " + e.getMessage());
+            
+            System.out.println();
+            System.out.println(String.format("expected (size=%d)", expected.size()));
+            for (String str : expected) {
+                System.out.println("    " + str);
+            }
+            
+            System.out.println();
+            System.out.println(String.format("actual (size=%d)", actual.size()));
+            for (String str : actual) {
+                System.out.println("    " + str);
+            }
+            
+            System.out.println();
+            throw e;
         }
     }
     
