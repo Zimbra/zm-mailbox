@@ -87,23 +87,7 @@ public class CheckRights extends AccountDocumentHandler {
             TargetBy targetBy = TargetBy.fromString(eTarget.getAttribute(AccountConstants.A_BY));
             String key = eTarget.getAttribute(AccountConstants.A_KEY);
             
-            Entry entry = null;
-            switch (targetType) {
-                case account:
-                case calresource:
-                case dl:
-                case group:
-                case domain:
-                    entry = TargetType.lookupTarget(prov, targetType, targetBy, key, false);
-                    break;
-                default:
-                    throw ServiceException.INVALID_REQUEST(
-                            "unsupported target type: " + targetType.getCode(), null);
-            }
-            
-            // to defend against account harvest attack, include a <target> element in 
-            // the response even when the entry cannot be found.  Result for non-existing 
-            // target entry is always "not allow".
+            Entry entry = findEntry(prov, targetType, targetBy, key);
             
             RequestedTarget target = new RequestedTarget(entry, targetType, targetBy, key);
             requestedTargets.add(target);
@@ -132,8 +116,7 @@ public class CheckRights extends AccountDocumentHandler {
             boolean combinedResult = true;
             
             for (UserRight right : target.getRights()) {
-                boolean allow = targetEntry == null ? false : 
-                        accessMgr.canDo(zsc.getAuthToken(), targetEntry, right, false);
+                boolean allow = accessMgr.canDo(zsc.getAuthToken(), targetEntry, right, false);
                 
                 if (allow &&
                     DiscoverRights.isDelegatedSendRight(right) &&
@@ -148,6 +131,33 @@ public class CheckRights extends AccountDocumentHandler {
             eTarget.addAttribute(AccountConstants.A_ALLOW, combinedResult);
         }
         return response;
+    }
+    
+    private Entry findEntry(Provisioning prov, TargetType targetType, TargetBy targetBy, String key) 
+    throws ServiceException {
+        Entry entry = null;
+        switch (targetType) {
+            case account:
+            case calresource:
+            case dl:
+            case group:
+            case domain:
+                entry = TargetType.lookupTarget(prov, targetType, targetBy, key, false);
+                break;
+            default:
+                throw ServiceException.INVALID_REQUEST(
+                        "unsupported target type: " + targetType.getCode(), null);
+        }
+        
+        if (entry == null && TargetBy.id == targetBy) {
+            throw ServiceException.INVALID_REQUEST("no such entry: " + key, null);
+        }
+        
+        /*
+         * if entry is null, the target could be an external user, let it fall through
+         * to return the default permission.
+         */
+        return entry;
     }
 
 }
