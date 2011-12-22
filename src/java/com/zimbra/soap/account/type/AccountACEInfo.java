@@ -24,7 +24,7 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-public class AccountACEinfo {
+public class AccountACEInfo {
 
     @XmlAttribute(name=AccountConstants.A_ZIMBRA_ID /* zid */, required=false)
     private String zimbraId;
@@ -51,11 +51,11 @@ public class AccountACEinfo {
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
-    private AccountACEinfo() {
+    private AccountACEInfo() {
         this((Grant.GranteeType) null, (String) null);
     }
 
-    public AccountACEinfo(Grant.GranteeType grantType, String right) {
+    public AccountACEInfo(Grant.GranteeType grantType, String right) {
         this.grantType = grantType;
         this.right = right;
     }

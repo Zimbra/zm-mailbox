@@ -36,19 +36,19 @@ public class CheckRightsRightInfo {
         setAllow(allow);
     }
     
-    private void setRight(String right) {
+    public void setRight(String right) {
         this.right = right;
     }
     
-    private void setAllow(boolean allow) {
+    public void setAllow(boolean allow) {
         this.allow = ZmBoolean.fromBool(allow);
     }
     
-    private String getRight() {
+    public String getRight() {
         return right;
     }
     
-    private boolean getAllow() {
+    public boolean getAllow() {
         return ZmBoolean.toBool(allow); 
     }
 }

@@ -28,31 +28,31 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AccountConstants;
-import com.zimbra.soap.account.type.AccountACEinfo;
+import com.zimbra.soap.account.type.AccountACEInfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=AccountConstants.E_REVOKE_RIGHTS_REQUEST)
 public class RevokeRightsRequest {
 
     @XmlElement(name=AccountConstants.E_ACE /* ace */, required=false)
-    private List<AccountACEinfo> aces = Lists.newArrayList();
+    private List<AccountACEInfo> aces = Lists.newArrayList();
 
     public RevokeRightsRequest() {
     }
 
-    public void setAces(Iterable <AccountACEinfo> aces) {
+    public void setAces(Iterable <AccountACEInfo> aces) {
         this.aces.clear();
         if (aces != null) {
             Iterables.addAll(this.aces,aces);
         }
     }
 
-    public RevokeRightsRequest addAce(AccountACEinfo ace) {
+    public RevokeRightsRequest addAce(AccountACEInfo ace) {
         this.aces.add(ace);
         return this;
     }
 
-    public List<AccountACEinfo> getAces() {
+    public List<AccountACEInfo> getAces() {
         return Collections.unmodifiableList(aces);
     }
 
