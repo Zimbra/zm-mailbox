@@ -35,10 +35,30 @@ public class LocalBlobCache {
 
     private long mMaxBytes = LC.http_store_local_cache_max_bytes.longValue();
     private int mMaxFiles = LC.http_store_local_cache_max_files.intValue();
+    private long mMinLifetime = LC.http_store_local_cache_min_lifetime.intValue();
+
     private File mCacheDir;
 
+    private class CacheItem {
+        final Blob blob;
+        long accessTime;
+
+        CacheItem(Blob blob) {
+            this.blob = blob;
+            updateAccessTime();
+        }
+
+        synchronized void updateAccessTime() {
+            accessTime = System.currentTimeMillis();
+        }
+
+        synchronized long getAccessTime() {
+            return accessTime;
+        }
+    }
+
     /** Maps the key to the cache to the corresponding file. */
-    private LinkedHashMap<String, Blob> mKeyToBlob;
+    private LinkedHashMap<String, CacheItem> mCache;
     private long mNumBytes = 0;
 
     public LocalBlobCache(String path) {
@@ -65,8 +85,16 @@ public class LocalBlobCache {
         return this;
     }
 
+    /** Sets the minimum amount of time that a blob stays in the cache,
+     * based on access time. */
+    public synchronized LocalBlobCache setMinLifetime(long millis) {
+        log.info("Setting minimum lifetime to " + millis);
+        mMinLifetime = millis;
+        return this;
+    }
+
     public synchronized int getNumFiles() {
-        return mKeyToBlob.size();
+        return mCache.size();
     }
 
     public synchronized long getNumBytes() {
@@ -84,7 +112,7 @@ public class LocalBlobCache {
             throw new IOException("local blob cache folder is not a directory: " + mCacheDir);
 
         // create the file cache with default LinkedHashMap values, but sorted by last access time
-        mKeyToBlob = new LinkedHashMap<String, Blob>(16, 0.75f, true);
+        mCache = new LinkedHashMap<String, CacheItem>(16, 0.75f, true);
 
         // clear out the stale cache entries on disk
         for (File file : mCacheDir.listFiles()) {
@@ -95,17 +123,16 @@ public class LocalBlobCache {
     }
 
     public synchronized Blob get(String key) {
-        return mKeyToBlob.get(key);
+        CacheItem item = mCache.get(key);
+        if (item != null) {
+            item.updateAccessTime();
+            return item.blob;
+        }
+        return null;
     }
 
     public synchronized Blob cache(String key, Blob blob) throws IOException {
-        // Prune first, so that we don't delete the blob we're adding.
-        // Large blobs won't be removed until the MimeMessage has been
-        // aged out of the MessageCache, even if the size of this cache
-        // has been exceeded.
-        pruneIfNecessary();
-
-        Blob found = mKeyToBlob.get(key);
+        Blob found = get(key);
         if (found != null)
             return found;
 
@@ -114,9 +141,12 @@ public class LocalBlobCache {
         // filesystem-safe.
         String filename = ByteUtil.getSHA1Digest(key.getBytes(), true);
         blob.renameTo(mCacheDir + File.separator + filename);
-        mKeyToBlob.put(key, blob);
+        mCache.put(key, new CacheItem(blob));
         mNumBytes += size;
-        log.debug("Cached %s: key=%s, %d blobs, %d bytes.", blob, key, mKeyToBlob.size(), mNumBytes);
+        log.debug("Cached %s: key=%s, %d blobs, %d bytes.", blob, key, mCache.size(), mNumBytes);
+
+        pruneIfNecessary();
+
         return blob;
     }
 
@@ -124,20 +154,27 @@ public class LocalBlobCache {
      *  them from disk so that the cache size doesn't exceed {@link #mMaxFiles}
      *  and {@link #mMaxBytes}. */
     private synchronized void pruneIfNecessary() {
-        if (mKeyToBlob == null || (mNumBytes <= mMaxBytes && mKeyToBlob.size() <= mMaxFiles))
+        if (mCache == null || (mNumBytes <= mMaxBytes && mCache.size() <= mMaxFiles))
             return;
 
         StoreManager sm = StoreManager.getInstance();
 
-        Iterator<Map.Entry<String, Blob>> iEntries = mKeyToBlob.entrySet().iterator();
-        while (iEntries.hasNext() && !(mNumBytes <= mMaxBytes && mKeyToBlob.size() <= mMaxFiles)) {
-            Map.Entry<String, Blob> entry = iEntries.next();
+        Iterator<Map.Entry<String, CacheItem>> iEntries = mCache.entrySet().iterator();
+        while (iEntries.hasNext() && !(mNumBytes <= mMaxBytes && mCache.size() <= mMaxFiles)) {
+            Map.Entry<String, CacheItem> entry = iEntries.next();
+            CacheItem item = entry.getValue();
+            Blob blob = item.blob;
+            if (System.currentTimeMillis() - item.getAccessTime() <= mMinLifetime) {
+                log.debug("Not deleting %s because it has not exceeded the minimum lifetime of %dms.", blob, mMinLifetime);
+                continue;
+            }
             String key = entry.getKey();
-            Blob blob = entry.getValue();
+
+            long size;
 
             String digest;
             try {
-                mNumBytes -= blob.getRawSize();
+                size = blob.getRawSize();
                 digest = blob.getDigest();
             } catch (IOException ioe) {
                 log.warn("Unable to remove %s.", blob, ioe);
@@ -145,12 +182,13 @@ public class LocalBlobCache {
             }
 
             if (!MessageCache.contains(digest)) {
-                log.debug("Deleting %s: key=%s, %d blobs, %d bytes.", blob, key, mKeyToBlob.size(), mNumBytes);
+                log.debug("Deleting %s: key=%s, %d blobs, %d bytes.", blob, key, mCache.size(), mNumBytes);
                 if (!sm.quietDelete(blob)) {
                     log.warn("Unable to delete %s.", blob);
                 }
                 // remove key
                 iEntries.remove();
+                mNumBytes -= size;
             } else {
                 log.debug("Not deleting %s because it's being referenced by the message cache.", blob);
             }

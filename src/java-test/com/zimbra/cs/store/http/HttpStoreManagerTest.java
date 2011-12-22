@@ -149,7 +149,8 @@ public class HttpStoreManagerTest {
         ParsedMessage pm = ThreaderTest.getRootMessage();
         HttpStoreManager sm = (HttpStoreManager) StoreManager.getInstance();
         LocalBlobCache cache = sm.getBlobCache();
-        cache.setMaxFiles(1);
+        cache.setMaxFiles(2);
+        cache.setMinLifetime(0);
         Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
 
         // Store blob 1.
@@ -159,8 +160,7 @@ public class HttpStoreManagerTest {
         Assert.assertEquals(size, cache.getNumBytes());
         Assert.assertNotNull(cache.get(mblob1.getLocator()));
 
-        // Store blob 2.  We prune first, then cache.  Blob 1 won't
-        // be ejected even though max files = 1.
+        // Store blob 2.
         MailboxBlob mblob2 = storeAndGet(sm, mbox, pm.getRawInputStream());
         Assert.assertEquals(2, cache.getNumFiles());
         Assert.assertEquals(2 * size, cache.getNumBytes());
@@ -177,7 +177,7 @@ public class HttpStoreManagerTest {
         Assert.assertNotNull(cache.get(mblob3.getLocator()));
 
         cache.setMaxFiles(100);
-        cache.setMaxBytes(size * 3 - 1);
+        cache.setMaxBytes(size * 4 - 1);
 
         // Store blob 4.
         MailboxBlob mblob4 = storeAndGet(sm, mbox, pm.getRawInputStream());
@@ -199,6 +199,23 @@ public class HttpStoreManagerTest {
         Assert.assertNull(cache.get(mblob3.getLocator()));
         Assert.assertNotNull(cache.get(mblob4.getLocator()));
         Assert.assertNotNull(cache.get(mblob5.getLocator()));
+
+        cache.setMaxFiles(1);
+        cache.setMaxBytes(1L);
+        cache.setMinLifetime(100000);
+
+        // Store blob 6.  Make sure that the other blobs are not ejected
+        // because the minimum lifetime was not exceeded.
+        storeAndGet(sm, mbox, pm.getRawInputStream());
+        Assert.assertEquals(4, cache.getNumFiles());
+
+        cache.setMinLifetime(100);
+        Thread.sleep(150);
+
+        // Store blob 7.  Make sure that all other blobs were ejected.
+        MailboxBlob mblob7 = storeAndGet(sm, mbox, pm.getRawInputStream());
+        Assert.assertEquals(1, cache.getNumFiles());
+        Assert.assertNotNull(cache.get(mblob7.getLocator()));
     }
 
     /**
