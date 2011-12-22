@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111219-1031 */
+    /* build: 8.0.0_BETA1_1111 administrator 20111222-2018 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3686,11 +3686,12 @@ public class ZAttrProvisioning {
     public static final String A_zimbraExternalShareInvitationUrlExpiration = "zimbraExternalShareInvitationUrlExpiration";
 
     /**
-     * maximum lifetime of shares to external users. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * Maximum allowed lifetime of shares to external users. A value of 0
+     * indicates that there&#039;s no limit on an external share&#039;s
+     * lifetime. . Must be in valid duration format: {digits}{time-unit}.
+     * digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - minutes, s -
+     * seconds, d - days, ms - milliseconds. If time unit is not specified,
+     * the default is s(seconds).
      *
      * @since ZCS 8.0.0
      */
@@ -9063,10 +9064,12 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPublicServiceProtocol = "zimbraPublicServiceProtocol";
 
     /**
-     * maximum lifetime of public shares. Must be in valid duration format:
-     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
-     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
-     * specified, the default is s(seconds).
+     * Maximum allowed lifetime of public shares. A value of 0 indicates that
+     * there&#039;s no limit on a public share&#039;s lifetime. . Must be in
+     * valid duration format: {digits}{time-unit}. digits: 0-9, time-unit:
+     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
+     * milliseconds. If time unit is not specified, the default is
+     * s(seconds).
      *
      * @since ZCS 8.0.0
      */
@@ -9917,11 +9920,12 @@ public class ZAttrProvisioning {
     public static final String A_zimbraShareInfo = "zimbraShareInfo";
 
     /**
-     * maximum lifetime of shares to users on the system. Must be in valid
-     * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
-     * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
-     * milliseconds. If time unit is not specified, the default is
-     * s(seconds).
+     * Maximum allowed lifetime of shares to internal users or groups. A
+     * value of 0 indicates that there&#039;s no limit on an internal
+     * share&#039;s lifetime. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
      *
      * @since ZCS 8.0.0
      */
