@@ -35,12 +35,17 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CharsetUtil;
 
 class ZMimeParser {
+    private static final Charset DEFAULT_CHARSET = CharsetUtil.normalizeCharset(CharsetUtil.ISO_8859_1);
+
     ZMimeParser(ZMimePart part, Session s, SharedInputStream shared) {
+        Charset sessionCharset = s == null ? null : CharsetUtil.toCharset(s.getProperty("mail.mime.charset"));
+
         parts.add(new PartInfo(part));
         this.sis = shared;
         this.toplevel = part;
         this.session = s;
-        this.header = new ZMimeUtility.ByteBuilder(80, defaultCharset());
+        this.charset = CharsetUtil.normalizeCharset(sessionCharset == null ? DEFAULT_CHARSET : sessionCharset);
+        this.header = new ZMimeUtility.ByteBuilder(80, charset);
     }
 
     ZMimeParser(ZMimePart part, Session s, InputStream is) throws MessagingException {
@@ -61,6 +66,7 @@ class ZMimeParser {
             }
         }
     }
+
 
     private enum ParserState {
         HEADER_LINESTART, HEADER, HEADER_CR,
@@ -237,9 +243,10 @@ class ZMimeParser {
         }
     }
 
-    protected ZMimePart toplevel;
-    protected Session session;
-    protected SharedInputStream sis;
+    private final ZMimePart toplevel;
+    private final Session session;
+    private final SharedInputStream sis;
+    private final Charset charset;
 
     /** The current state of the parser.  Generally, a combination of which
      *  type of parsing is going on (HEADER vs. BODY) and where in the line
@@ -368,6 +375,11 @@ class ZMimeParser {
                 if (processBoundary()) {
                     // found a part boundary, which may transition us to body parsing
                     return handleByte(b);
+                } else if (misencodedCRLF()) {
+                    // broken MUA sent the CRLF as "=0D\n" -- treat as header/body separator
+                    clearHeader();
+                    state = ParserState.BODY_LINESTART;
+                    return handleByte(b);
                 }
                 newline();
                 if (b == ' ' || b == '\t') {
@@ -378,18 +390,16 @@ class ZMimeParser {
                 }
                 // not a folded header line, so record the header and continue
                 saveHeader();
+                // check for a blank line, which terminates the header
                 if (b == '\n') {
-                    // a blank line terminates the header
                     lastEnding = LineEnding.LF;
                     state = ParserState.BODY_LINESTART;
                     break;
                 } else if (b == '\r') {
-                    // a blank line terminates the header
                     state = ParserState.BODY_CR;
                     break;
-                } else {
-                    state = ParserState.HEADER;
                 }
+                state = ParserState.HEADER;
                 //$FALL-THROUGH$
 
             // in a header line, after reading at least one byte
@@ -590,15 +600,17 @@ class ZMimeParser {
         SharedInputStream bodyStream = (SharedInputStream) sis.newStream(pinfo.bodyStart, bodyEnd);
 
         if (pinfo.location == PartLocation.PREAMBLE) {
-            try {
-                if (length > MAXIMUM_HEADER_LENGTH) {
-                    // constrain preamble length to some reasonable value (64K)
-                    bodyStream = (SharedInputStream) bodyStream.newStream(0, length = MAXIMUM_HEADER_LENGTH);
+            if (length > 0) {
+                try {
+                    if (length > MAXIMUM_HEADER_LENGTH) {
+                        // constrain preamble length to some reasonable value (64K)
+                        bodyStream = (SharedInputStream) bodyStream.newStream(0, length = MAXIMUM_HEADER_LENGTH);
+                    }
+                    // save preamble to *parent* multipart
+                    String preamble = new String(ByteUtil.readInput((InputStream) bodyStream, (int) length, (int) length), charset);
+                    currentPart().multi.setPreamble(preamble);
+                } catch (IOException ioe) {
                 }
-                // save preamble to *parent* multipart
-                String preamble = new String(ByteUtil.readInput((InputStream) bodyStream, (int) length, (int) length), defaultCharset());
-                currentPart().multi.setPreamble(preamble);
-            } catch (IOException ioe) {
             }
         } else {
             mp.endPart(bodyStream, length, lineNumber - pinfo.firstLine);
@@ -607,16 +619,19 @@ class ZMimeParser {
         return currentPart();
     }
 
-    private void addHeaderByte(byte b) {
+    private boolean addHeaderByte(byte b) {
         if (header.size() <= MAXIMUM_HEADER_LENGTH) {
             header.append(b);
+            return true;
         } else if (header.endsWith((byte) '\n')) {
             // it's too long and it's already terminated -- we're done
-            String foo = "1";
+            return false;
         } else if (header.endsWith((byte) '\r')) {
             header.append('\n');
+            return false;
         } else {
             header.append('\r').append('\n');
+            return false;
         }
     }
 
@@ -625,20 +640,23 @@ class ZMimeParser {
         header.reset();
     }
 
+    boolean misencodedCRLF() {
+        return header.size() == 5 && header.byteAt(0) == '=' && header.byteAt(1) == '0' && header.byteAt(2) == 'D' && currentPart().part.getEncoding().equals("quoted-printable");
+    }
+
     /** Adds the current header to the active part's header block.  If the
      *  header is "<tt>Content-Type</tt>" and it's a <tt>multipart/*</tt>,
      *  updates the set of active MIME boundaries. */
     protected void saveHeader() {
-        if (!header.isEmpty()) {
-            PartInfo pcurrent = currentPart();
-            String hline = header.pop().pop().toString();
+        if (header.isEmpty())
+            return;
 
-            pcurrent.part.addHeaderLine(hline);
+        PartInfo pcurrent = currentPart();
+        ZInternetHeader zhdr = new ZInternetHeader(header.toByteArray());
+        pcurrent.part.appendHeader(zhdr);
 
-            int colon = hline.indexOf(':');
-            if (colon > 0 && hline.substring(0, colon).trim().equalsIgnoreCase("Content-Type")) {
-                pcurrent.setContentType(new ZContentType(hline.substring(colon + 1).trim(), defaultContentType()));
-            }
+        if (zhdr.getName().equalsIgnoreCase("Content-Type")) {
+            pcurrent.setContentType(new ZContentType(zhdr, defaultContentType()));
         }
 
         clearHeader();
@@ -649,13 +667,6 @@ class ZMimeParser {
         boolean inDigest = parent != null && parent.ctype.getBaseType().equals("multipart/digest");
         boolean isPreamble = currentPart().location == PartLocation.PREAMBLE;
         return inDigest && !isPreamble ? ZContentType.MESSAGE_RFC822 : ZContentType.TEXT_PLAIN;
-    }
-
-    private static final Charset DEFAULT_CHARSET = CharsetUtil.normalizeCharset(CharsetUtil.ISO_8859_1);
-
-    private Charset defaultCharset() {
-        Charset charset = session == null ? null : CharsetUtil.toCharset(session.getProperty("mail.mime.charset"));
-        return CharsetUtil.normalizeCharset(charset == null ? DEFAULT_CHARSET : charset);
     }
 
     /** Marks the transition from parsing MIME/message headers to skimming the

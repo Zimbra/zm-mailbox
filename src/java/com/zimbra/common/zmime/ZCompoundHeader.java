@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -23,7 +23,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
-
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.net.URLCodec;
 
@@ -33,7 +32,7 @@ import com.zimbra.common.zmime.ZMimeUtility.ByteBuilder;
 public class ZCompoundHeader extends ZInternetHeader {
     private boolean use2231Encoding;
     private String primaryValue;
-    private Map<String, String> params = new LinkedHashMap<String, String>();
+    private final Map<String, String> params = new LinkedHashMap<String, String>();
     private String charset;
 
     protected ZCompoundHeader(String name, String value) {
@@ -220,8 +219,7 @@ public class ZCompoundHeader extends ZInternetHeader {
     }
 
     public ZCompoundHeader setPrimaryValue(String value) {
-        if (value != null && !value.equals(primaryValue)) {
-            markDirty();
+        if (value != null) {
             this.primaryValue = value;
         }
         return this;
@@ -248,8 +246,6 @@ public class ZCompoundHeader extends ZInternetHeader {
     }
 
     public ZCompoundHeader setParameter(String name, String value) {
-        markDirty();
-
         // massage the parameter name until it's valid
         String key = name;
         if (name != null) {
@@ -293,7 +289,7 @@ public class ZCompoundHeader extends ZInternetHeader {
     }
 
     public ZCompoundHeader cleanup() {
-        markDirty();
+        reserialize();
         return this;
     }
 
@@ -311,12 +307,7 @@ public class ZCompoundHeader extends ZInternetHeader {
 
     private static final int LINE_WRAP_LENGTH = 76;
 
-    @Override
     protected void reserialize() {
-        if (content != null) {
-            return;
-        }
-
         ByteBuilder line = new ByteBuilder();
         line.append(name.getBytes()).append(':').append(' ');
         this.valueStart = line.length();
@@ -396,7 +387,8 @@ public class ZCompoundHeader extends ZInternetHeader {
             WWW_URL.clear(' ');
         }
 
-        @Override public byte[] encode(byte[] bytes) {
+        @Override
+        public byte[] encode(byte[] bytes) {
             return encodeUrl(WWW_URL, bytes);
         }
     }

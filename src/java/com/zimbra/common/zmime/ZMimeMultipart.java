@@ -16,6 +16,7 @@ package com.zimbra.common.zmime;
 
 import javax.activation.DataSource;
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
 
 public class ZMimeMultipart extends MimeMultipart {
@@ -39,9 +40,28 @@ public class ZMimeMultipart extends MimeMultipart {
         complete = super.isComplete();
     }
 
+    @SuppressWarnings("unchecked")
+    ZMimeMultipart(MimeMultipart source, ZContentType ctype, ZMimePart container) throws MessagingException {
+        super();
+        assert ZPARSER : "should not clone multipart when our parser is not active";
+
+        this.contentType = ctype.toString();
+        this.complete = false;
+        this.parent = container;
+
+        String defaultType = ctype.getSubType().equals("digest") ? ZContentType.MESSAGE_RFC822 : ZContentType.TEXT_PLAIN;
+
+        setPreamble(source.getPreamble());
+        for (int i = 0, count = source.getCount(); i < count; i++) {
+            MimeBodyPart part = (MimeBodyPart) source.getBodyPart(i);
+            parts.add(new ZMimeBodyPart(part, new ZContentType(part.getContentType(), defaultType), this));
+        }
+        this.complete = source.isComplete();
+    }
+
     static ZMimeMultipart newMultipart(ZContentType ctype, ZMimePart container) {
         ZMimeMultipart multi = new ZMimeMultipart();
-        multi.contentType = ctype.toString();
+        multi.contentType = ZInternetHeader.unfold(ctype.toString());
         multi.complete = false;
 
         multi.setParent(container);
@@ -75,5 +95,9 @@ public class ZMimeMultipart extends MimeMultipart {
         } catch (MessagingException e) {
             // superclass method does not actually throw this exception
         }
+    }
+
+    String getBoundary() {
+        return implicitBoundary != null ? implicitBoundary : new ZContentType(contentType).getParameter("boundary");
     }
 }
