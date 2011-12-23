@@ -29,18 +29,6 @@ import java.util.regex.Pattern;
 
 import junit.framework.TestCase;
 
-import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.soap.SoapFaultException;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.SystemUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.ldap.LdapConstants;
-import com.zimbra.cs.mailbox.MailSender;
-import com.zimbra.cs.mailbox.MailServiceException;
-import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.client.ZEmailAddress;
 import com.zimbra.client.ZGetMessageParams;
 import com.zimbra.client.ZMailbox;
@@ -49,6 +37,16 @@ import com.zimbra.client.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
 import com.zimbra.client.ZMailbox.ZOutgoingMessage.MessagePart;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZMessage.ZMimePart;
+import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.soap.SoapFaultException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.ldap.LdapConstants;
+import com.zimbra.cs.mailbox.MailSender;
+import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.Mailbox;
 
 public class TestSendAndReceive extends TestCase {
 
@@ -350,15 +348,6 @@ public class TestSendAndReceive extends TestCase {
         for (SenderThread sender : threads) {
             if (sender.error != null) {
                 numFailures++;
-                // If the upload was deleted before the outgoing message was assembled,
-                // we get NO_SUCH_UPLOAD.  If the outgoing message already references
-                // an UploadDataSource, we'll get an IOException that the file was deleted.
-                ServiceException ex = (ServiceException) sender.error;
-                if (!ex.getCode().equals(MailServiceException.NO_SUCH_UPLOAD)) {
-                    String stackTrace = SystemUtil.getStackTrace(sender.error);
-                    assertTrue(stackTrace,
-                        stackTrace.contains("upload " + attachId + " because it was deleted"));
-                }
             }
         }
         assertEquals(threads.length - 1, numFailures);
