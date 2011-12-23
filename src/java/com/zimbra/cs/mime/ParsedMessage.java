@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -47,9 +47,7 @@ import com.google.common.base.Strings;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.MimePart;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.EmailUtil;
@@ -60,6 +58,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.Fragment;
@@ -99,7 +98,7 @@ public class ParsedMessage {
     private boolean mAnalyzedBodyParts = false;
     private boolean mAnalyzedNonBodyParts = false;
     private String mBodyContent = "";
-    private List<String> mFilenames = new ArrayList<String>();
+    private final List<String> mFilenames = new ArrayList<String>();
     private boolean mIndexAttachments;
     private int mNumParseErrors = 0;
     private String defaultCharset;
@@ -298,11 +297,11 @@ public class ParsedMessage {
 
     public ParsedMessage setDefaultCharset(String charset) {
         defaultCharset = charset;
-        if (mMimeMessage instanceof JavaMailMimeMessage) {
-            ((JavaMailMimeMessage) mMimeMessage).setProperty(MimePart.PROP_CHARSET_DEFAULT, charset);
+        if (mMimeMessage instanceof ZMimeMessage) {
+            ((ZMimeMessage) mMimeMessage).setProperty("mail.mime.charset", charset);
         }
-        if (mExpandedMessage instanceof JavaMailMimeMessage) {
-            ((JavaMailMimeMessage) mExpandedMessage).setProperty(MimePart.PROP_CHARSET_DEFAULT, charset);
+        if (mExpandedMessage != mMimeMessage && mExpandedMessage instanceof ZMimeMessage) {
+            ((ZMimeMessage) mExpandedMessage).setProperty("mail.mime.charset", charset);
         }
         mSubject = mNormalizedSubject = null;
         return this;
@@ -316,8 +315,9 @@ public class ParsedMessage {
      * @throws ServiceException
      * @see #runMimeConverters() */
     private ParsedMessage parse() {
-        if (mParsed)
+        if (mParsed) {
             return this;
+        }
         mParsed = true;
 
         try {
