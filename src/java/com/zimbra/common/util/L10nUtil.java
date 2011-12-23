@@ -43,9 +43,6 @@ public class L10nUtil {
      * List all message keys here
      */
     public static enum MsgKey {
-        // account auto provisioning messages
-        accountAutoProvisionedBody,
-        accountAutoProvisionedSubject,
 
         replySubjectPrefix,
 

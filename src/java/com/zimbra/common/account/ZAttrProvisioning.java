@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111222-2018 */
+    /* build: unknown unknown unknown unknown */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -2237,6 +2237,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAutoProvMode = "zimbraAutoProvMode";
 
     /**
+     * Template used to construct the subject of the notification message
+     * sent to the user when the user&#039;s account is auto provisioned.
+     * Supported variables: ${ACCOUNT_ADDRESS}, ${ACCOUNT_DISPLAY_NAME}
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1357)
+    public static final String A_zimbraAutoProvNotificationBody = "zimbraAutoProvNotificationBody";
+
+    /**
      * EAGER mode: optional LAZY mode: optional MANUAL mode: optional Email
      * address to put in the From header for the notification email to the
      * newly created account. If not set, no notification email will sent to
@@ -2246,6 +2256,16 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1232)
     public static final String A_zimbraAutoProvNotificationFromAddress = "zimbraAutoProvNotificationFromAddress";
+
+    /**
+     * Template used to construct the subject of the notification message
+     * sent to the user when the user&#039;s account is auto provisioned.
+     * Supported variables: ${ACCOUNT_ADDRESS}, ${ACCOUNT_DISPLAY_NAME}
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1356)
+    public static final String A_zimbraAutoProvNotificationSubject = "zimbraAutoProvNotificationSubject";
 
     /**
      * EAGER mode: required LAZY mode: N/A MANUAL mode: N/A Interval between
@@ -10627,6 +10647,22 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10000)
+    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
+
+    /**
+     * binary data
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=10001)
+    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
