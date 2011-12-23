@@ -42,7 +42,7 @@ public abstract class ZAttrConfig extends Entry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20111222-2018 */
+    /* build: unknown unknown unknown unknown */
 
     /**
      * RFC2256: descriptive information
@@ -2562,6 +2562,170 @@ public abstract class ZAttrConfig extends Entry {
     public Map<String,Object> unsetAutoProvBatchSize(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraAutoProvBatchSize, "");
+        return attrs;
+    }
+
+    /**
+     * Template used to construct the subject of the notification message
+     * sent to the user when the user&#039;s account is auto provisioned.
+     * Supported variables: ${ACCOUNT_ADDRESS}, ${ACCOUNT_DISPLAY_NAME}
+     *
+     * @return zimbraAutoProvNotificationBody, or "Your account has been auto provisioned.  Your email address is ${ACCOUNT_ADDRESS}." if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1357)
+    public String getAutoProvNotificationBody() {
+        return getAttr(Provisioning.A_zimbraAutoProvNotificationBody, "Your account has been auto provisioned.  Your email address is ${ACCOUNT_ADDRESS}.");
+    }
+
+    /**
+     * Template used to construct the subject of the notification message
+     * sent to the user when the user&#039;s account is auto provisioned.
+     * Supported variables: ${ACCOUNT_ADDRESS}, ${ACCOUNT_DISPLAY_NAME}
+     *
+     * @param zimbraAutoProvNotificationBody new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1357)
+    public void setAutoProvNotificationBody(String zimbraAutoProvNotificationBody) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvNotificationBody, zimbraAutoProvNotificationBody);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Template used to construct the subject of the notification message
+     * sent to the user when the user&#039;s account is auto provisioned.
+     * Supported variables: ${ACCOUNT_ADDRESS}, ${ACCOUNT_DISPLAY_NAME}
+     *
+     * @param zimbraAutoProvNotificationBody new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1357)
+    public Map<String,Object> setAutoProvNotificationBody(String zimbraAutoProvNotificationBody, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvNotificationBody, zimbraAutoProvNotificationBody);
+        return attrs;
+    }
+
+    /**
+     * Template used to construct the subject of the notification message
+     * sent to the user when the user&#039;s account is auto provisioned.
+     * Supported variables: ${ACCOUNT_ADDRESS}, ${ACCOUNT_DISPLAY_NAME}
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1357)
+    public void unsetAutoProvNotificationBody() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvNotificationBody, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Template used to construct the subject of the notification message
+     * sent to the user when the user&#039;s account is auto provisioned.
+     * Supported variables: ${ACCOUNT_ADDRESS}, ${ACCOUNT_DISPLAY_NAME}
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1357)
+    public Map<String,Object> unsetAutoProvNotificationBody(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvNotificationBody, "");
+        return attrs;
+    }
+
+    /**
+     * Template used to construct the subject of the notification message
+     * sent to the user when the user&#039;s account is auto provisioned.
+     * Supported variables: ${ACCOUNT_ADDRESS}, ${ACCOUNT_DISPLAY_NAME}
+     *
+     * @return zimbraAutoProvNotificationSubject, or "New account auto provisioned" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1356)
+    public String getAutoProvNotificationSubject() {
+        return getAttr(Provisioning.A_zimbraAutoProvNotificationSubject, "New account auto provisioned");
+    }
+
+    /**
+     * Template used to construct the subject of the notification message
+     * sent to the user when the user&#039;s account is auto provisioned.
+     * Supported variables: ${ACCOUNT_ADDRESS}, ${ACCOUNT_DISPLAY_NAME}
+     *
+     * @param zimbraAutoProvNotificationSubject new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1356)
+    public void setAutoProvNotificationSubject(String zimbraAutoProvNotificationSubject) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvNotificationSubject, zimbraAutoProvNotificationSubject);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Template used to construct the subject of the notification message
+     * sent to the user when the user&#039;s account is auto provisioned.
+     * Supported variables: ${ACCOUNT_ADDRESS}, ${ACCOUNT_DISPLAY_NAME}
+     *
+     * @param zimbraAutoProvNotificationSubject new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1356)
+    public Map<String,Object> setAutoProvNotificationSubject(String zimbraAutoProvNotificationSubject, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvNotificationSubject, zimbraAutoProvNotificationSubject);
+        return attrs;
+    }
+
+    /**
+     * Template used to construct the subject of the notification message
+     * sent to the user when the user&#039;s account is auto provisioned.
+     * Supported variables: ${ACCOUNT_ADDRESS}, ${ACCOUNT_DISPLAY_NAME}
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1356)
+    public void unsetAutoProvNotificationSubject() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvNotificationSubject, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Template used to construct the subject of the notification message
+     * sent to the user when the user&#039;s account is auto provisioned.
+     * Supported variables: ${ACCOUNT_ADDRESS}, ${ACCOUNT_DISPLAY_NAME}
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1356)
+    public Map<String,Object> unsetAutoProvNotificationSubject(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraAutoProvNotificationSubject, "");
         return attrs;
     }
 

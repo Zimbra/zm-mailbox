@@ -6744,4 +6744,20 @@ TODO: delete them permanently from here
   <defaultOctopusCOSValue>15d</defaultOctopusCOSValue>
 </attr>
 
+<attr id="1356" name="zimbraAutoProvNotificationSubject" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="8.0.0">
+  <globalConfigValue>New account auto provisioned</globalConfigValue>
+  <desc>
+    Template used to construct the subject of the notification message sent to the user when the user's account is auto provisioned.
+    Supported variables: ${ACCOUNT_ADDRESS}, ${ACCOUNT_DISPLAY_NAME}
+  </desc>
+</attr>
+
+<attr id="1357" name="zimbraAutoProvNotificationBody" type="string" cardinality="single" optionalIn="globalConfig,domain" flags="domainInherited" since="8.0.0">
+  <globalConfigValue>Your account has been auto provisioned.  Your email address is ${ACCOUNT_ADDRESS}.</globalConfigValue>
+  <desc>
+    Template used to construct the subject of the notification message sent to the user when the user's account is auto provisioned.
+    Supported variables: ${ACCOUNT_ADDRESS}, ${ACCOUNT_DISPLAY_NAME}
+  </desc>
+</attr>
+
 </attrs>

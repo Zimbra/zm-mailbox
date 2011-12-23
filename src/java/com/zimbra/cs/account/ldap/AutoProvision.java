@@ -43,10 +43,8 @@ import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
 import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.AttributeClass;
@@ -388,8 +386,22 @@ public abstract class AutoProvision {
                 " or " + Provisioning.A_zimbraAutoProvLdapSearchFilter + " must be set", null);
     }
     
+    private String fillTemplate(Account acct, String template) {
+        String text = template.replaceAll("\\$\\{ACCOUNT_ADDRESS\\}", acct.getName());
+        
+        String displayName = acct.getDisplayName();
+        if (displayName == null) {
+            displayName = "";
+        }
+        text = text.replaceAll("\\$\\{ACCOUNT_DISPLAY_NAME\\}", displayName);
+        return text;
+    }
+    
     protected void sendNotifMessage(Account acct, String password) 
     throws ServiceException {
+        String subject = fillTemplate(acct, domain.getAutoProvNotificationSubject());
+        String body = fillTemplate(acct, domain.getAutoProvNotificationBody());
+        
         String from = domain.getAutoProvNotificationFromAddress();
         if (from == null) {
             // if From address is configured, notification is not sent.
@@ -429,14 +441,13 @@ public abstract class AutoProvision {
 
             // Subject
             Locale locale = acct.getLocale();
-            String subject = L10nUtil.getMessage(MsgKey.accountAutoProvisionedSubject, locale);
             out.setSubject(subject);
 
             // body
             MimeMultipart mmp = new JavaMailMimeMultipart("alternative");
 
             // TEXT part (add me first!)
-            String text = L10nUtil.getMessage(MsgKey.accountAutoProvisionedBody, locale, acct.getDisplayName());
+            String text = body;
             MimeBodyPart textPart = new JavaMailMimeBodyPart();
             textPart.setText(text, MimeConstants.P_CHARSET_UTF8);
             mmp.addBodyPart(textPart);
@@ -444,7 +455,7 @@ public abstract class AutoProvision {
             // HTML part
             StringBuilder html = new StringBuilder();
             html.append("<h4>\n");
-            html.append("<p>" + L10nUtil.getMessage(MsgKey.accountAutoProvisionedBody, locale, acct.getDisplayName()) + "</p>\n");
+            html.append("<p>" + body + "</p>\n");
             html.append("</h4>\n");
             html.append("\n");
 
