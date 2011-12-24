@@ -17,6 +17,7 @@ package com.zimbra.common.zmime;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.Properties;
 
 import javax.activation.DataHandler;
@@ -26,11 +27,15 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimeUtility;
 import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import com.zimbra.common.localconfig.LC;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.CharsetUtil;
+import com.zimbra.common.util.ZimbraLog;
 
 public class ZMimeMessage extends MimeMessage implements ZMimePart {
     static final boolean ZPARSER = LC.javamail_zparser.booleanValue();
@@ -39,61 +44,100 @@ public class ZMimeMessage extends MimeMessage implements ZMimePart {
         return ZPARSER;
     }
 
-    protected long size = -1;
-    protected int lines = -1;
+    protected long size;
+    protected int lines;
 
     public ZMimeMessage(Session session) {
         super(session);
+        if (ZPARSER) {
+            this.headers = new ZInternetHeaders().setParent(this);
+            this.size = -1;
+            this.lines = -1;
+        }
     }
 
     public ZMimeMessage(Session session, InputStream is) throws MessagingException {
-        super(session);
-        if (ZPARSER) {
-            try {
-                new ZMimeParser(this, session, is).parse();
-            } catch (IOException ioex) {
-                throw new MessagingException("IOException", ioex);
-            }
-        } else {
-            super.parse(is);
-        }
-        modified = false;
-        saved = true;
+        super(session, is);
     }
 
     public ZMimeMessage(MimeMessage source) throws MessagingException {
-        // get the other message's session if we can, since it's not formally exposed
         super(source instanceof ZMimeMessage ? ((ZMimeMessage) source).getSession() : Session.getInstance(new Properties()));
 
-        InputStream is = new SharedByteArrayInputStream(asByteArray(source));
+        this.size = -1;
+        this.lines = -1;
+
+        boolean copied = false;
         if (ZPARSER) {
             try {
-                // FIXME: alternative clone() method to avoid serializing to byte[]
-                new ZMimeParser(this, session, (SharedInputStream) is).parse();
-            } catch (IOException ioex) {
-                throw new MessagingException("IOException", ioex);
-            }
-        } else {
-            modified = false;
-            super.parse(is);
-        }
-    }
+                ZContentType ctype = new ZContentType(source.getContentType());
 
-    private static byte[] asByteArray(MimeMessage mm) throws MessagingException {
-        try {
-            int size = mm.getSize();
-            ByteArrayOutputStream baos = new ByteArrayOutputStream(size > 0 ? size : 1024);
-            mm.writeTo(baos);
-            return baos.toByteArray();
-        } catch (IOException ioe) {
-            // should never happen, but just in case...
-            throw new MessagingException("IOException while copying message", ioe);
+                this.flags = source.getFlags();
+                if (source instanceof ZMimeMessage) {
+                    ZMimeMessage zsrc = (ZMimeMessage) source;
+                    this.session = zsrc.session;
+                    if (zsrc.headers instanceof ZInternetHeaders) {
+                        this.headers = new ZInternetHeaders((ZInternetHeaders) zsrc.headers).setParent(this);
+                    } else {
+                        this.headers = ZInternetHeaders.copyHeaders(this);
+                    }
+                    this.content = zsrc.content;
+                    this.contentStream = zsrc.contentStream;
+                    this.saved = zsrc.saved;
+                    this.size = zsrc.size;
+                    this.lines = zsrc.lines;
+                } else {
+                    this.headers = ZInternetHeaders.copyHeaders(source);
+                    try {
+                        InputStream is = source.getRawInputStream();
+                        if (is instanceof SharedInputStream) {
+                            this.contentStream = is;
+                        } else {
+                            ByteUtil.closeStream(is);
+                        }
+                    } catch (MessagingException me) {
+                        // "no content"
+                    }
+                }
+
+                if (ctype.getBaseType().equals("message/rfc822")) {
+                    Object obj = source.getContent();
+                    if (obj instanceof MimeMessage) {
+                        cacheContent(new ZMimeMessage((MimeMessage) obj));
+                    }
+                } else if (ctype.getPrimaryType().equals("multipart")) {
+                    Object obj = source.getContent();
+                    if (obj instanceof MimeMultipart) {
+                        cacheContent(new ZMimeMultipart((MimeMultipart) obj, ctype, this));
+                    }
+                } else {
+                    if (content == null && contentStream == null) {
+                        this.dh = source.getDataHandler();
+                    }
+                }
+                copied = true;
+            } catch (Exception e) {
+                ZimbraLog.misc.warn("failed cloning " + source.getClass().getSimpleName(), e);
+            }
         }
+
+        if (!copied) {
+            // fall back to making an in-memory copy and re-parsing it
+            flags = source.getFlags();
+            ByteArrayOutputStream bos = new ByteArrayOutputStream(Math.max(source.getSize(), 1024));
+            try {
+                source.writeTo(bos);
+                parse(new SharedByteArrayInputStream(bos.toByteArray()));
+            } catch (IOException ex) {
+                // should never happen, but just in case...
+                throw new MessagingException("IOException while copying message", ex);
+            }
+        }
+
+        saved = true;
     }
 
     static ZMimeMessage newMessage(Session session, ZMimePart container) {
         ZMimeMessage mm = new ZMimeMessage(session);
-        mm.headers = new ZMimeBodyPart.ZInternetHeaders();
         mm.modified = false;
 
         if (container instanceof ZMimeMessage) {
@@ -103,6 +147,26 @@ public class ZMimeMessage extends MimeMessage implements ZMimePart {
         }
 
         return mm;
+    }
+
+    @Override
+    protected void parse(InputStream is) throws MessagingException {
+        if (ZPARSER) {
+            this.headers = new ZInternetHeaders().setParent(this);
+            try {
+                new ZMimeParser(this, session, is).parse();
+            } catch (IOException ioex) {
+                throw new MessagingException("IOException", ioex);
+            }
+            this.modified = false;
+        } else {
+            super.parse(is);
+        }
+    }
+
+    @Override
+    public Charset defaultCharset() {
+        return session == null ? null : CharsetUtil.toCharset(session.getProperty("mail.mime.charset"));
     }
 
     public void cacheContent(Object o) {
@@ -132,6 +196,21 @@ public class ZMimeMessage extends MimeMessage implements ZMimePart {
         return this;
     }
 
+    public ZMimeMessage setProperty(String key, String value) {
+        if (session == null && value != null) {
+            this.session = Session.getInstance(new Properties());
+        }
+        Properties props = session == null ? null : session.getProperties();
+        if (props != null) {
+            if (value != null) {
+                props.setProperty(key, value);
+            } else {
+                props.remove(key);
+            }
+        }
+        return this;
+    }
+
     @Override
     public void endPart(SharedInputStream sis, long partSize, int lineCount) {
         this.contentStream = (InputStream) sis;
@@ -141,17 +220,27 @@ public class ZMimeMessage extends MimeMessage implements ZMimePart {
 
     @Override
     public int getSize() throws MessagingException {
-        return !ZPARSER || size < 0 ? super.getSize() : (int) size;
+        return !ZPARSER || modified || size < 0 ? super.getSize() : (int) size;
     }
 
     @Override
     public int getLineCount() throws MessagingException {
-        return !ZPARSER || lines < 0 ? super.getLineCount() : lines;
+        return !ZPARSER || modified || lines < 0 ? super.getLineCount() : lines;
     }
 
     @Override
-    public void addHeaderLine(String line) {
-        headers.addHeaderLine(line);
+    public synchronized void setDataHandler(DataHandler dh) throws MessagingException {
+        size = lines = -1;
+        super.setDataHandler(dh);
+    }
+
+    @Override
+    public void appendHeader(ZInternetHeader header) {
+        if (ZPARSER) {
+            ((ZInternetHeaders) headers).appendHeader(header);
+        } else {
+            headers.addHeaderLine(header.toString().trim());
+        }
     }
 
     @Override
@@ -233,8 +322,12 @@ public class ZMimeMessage extends MimeMessage implements ZMimePart {
     }
 
     @Override
-    public String getEncoding() throws MessagingException {
-        return ZMimeBodyPart.sanitizeEncoding(super.getEncoding());
+    public String getEncoding() {
+        try {
+            return ZMimeBodyPart.sanitizeEncoding(super.getEncoding());
+        } catch (MessagingException e) {
+            return "binary";
+        }
     }
 
     @Override

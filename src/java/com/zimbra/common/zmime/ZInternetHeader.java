@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010, 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -21,7 +21,6 @@ import java.nio.charset.Charset;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
-
 
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CharsetUtil;
@@ -41,7 +40,7 @@ public class ZInternetHeader {
      *                encoding intact.
      * @param start   The position within <code>content</code> where the header
      *                field value begins (after the ":"/": "). */
-    ZInternetHeader(final String name, final byte[] content, final int start) {
+    protected ZInternetHeader(final String name, final byte[] content, final int start) {
         this.hinfo = HeaderInfo.of(name);
         this.name = name;
         this.content = content;
@@ -49,11 +48,35 @@ public class ZInternetHeader {
     }
 
     /** Creates a {@code ZInternetHeader} from another {@code ZInternetHeader}. */
-    ZInternetHeader(final ZInternetHeader header) {
+    protected ZInternetHeader(final ZInternetHeader header) {
         this.hinfo = header.hinfo;
         this.name = header.name;
         this.content = header.getRawHeader();
         this.valueStart = header.valueStart;
+    }
+
+    protected ZInternetHeader(final byte[] line) {
+        int colon = -1;
+        for (int i = 0, len = line.length; i < len; i++) {
+            if (line[i] == ':') {
+                colon = i;
+                break;
+            }
+        }
+        int vstart = colon == -1 ? line.length : colon + 1;
+        if (colon != -1) {
+            // the actual content of the header starts after an optional space and/or CRLF
+            for (int headerLength = line.length; vstart < headerLength; vstart++) {
+                byte b = line[vstart];
+                if (b != '\n' && b != '\r' && b != ' ' && b != '\t')
+                    break;
+            }
+        }
+
+        this.name = new String(line, 0, colon == -1 ? line.length : colon, DEFAULT_CHARSET).trim();
+        this.hinfo = HeaderInfo.of(name);
+        this.content = line;
+        this.valueStart = vstart;
     }
 
     /** Creates a new {@code ZInternetHeader} with {@code value} as the field value.
@@ -62,7 +85,7 @@ public class ZInternetHeader {
      *  has been performed.  When generating encoded-words, <tt>utf-8</tt> will
      *  be used as the encoding charset.  <i>Note: No line folding is done at
      *  present.</i> */
-    public ZInternetHeader(final String name, final String value) {
+    protected ZInternetHeader(final String name, final String value) {
         this(name, value, null);
     }
 
@@ -72,16 +95,17 @@ public class ZInternetHeader {
      *  has been performed.  When generating encoded-words, {@code charset}
      *  will be used as the encoding charset if possible, defaulting back to
      *  <tt>utf-8</tt>.  <i>Note: No line folding is done at present.</i> */
-    ZInternetHeader(final String name, final String value, final String charset) {
+    protected ZInternetHeader(final String name, final String value, final String charset) {
         this.hinfo = HeaderInfo.of(name);
         this.name = hinfo.name == null ? name : hinfo.name;
-        updateContent(escape(value, CharsetUtil.toCharset(charset), false).getBytes());
+//        updateContent(escape(value, CharsetUtil.toCharset(charset), false).getBytes());
+        updateContent(value == null ? null : value.getBytes());
     }
 
     /** Creates a new {@code ZInternetHeader} serialized as "<tt>{name}:
      *  {bvalue}CRLF</tt>".  {@code bvalue} is copied verbatim; no charset
      *  transforms, encoded-word handling, or folding is performed. */
-    public ZInternetHeader(final String name, final byte[] bvalue) {
+    protected ZInternetHeader(final String name, final byte[] bvalue) {
         this.hinfo = HeaderInfo.of(name);
         this.name = hinfo.name == null ? name : hinfo.name;
         updateContent(bvalue);
@@ -110,13 +134,17 @@ public class ZInternetHeader {
         TO("To", 8),
         CC("Cc", 9),
         BCC("Bcc", 10),
-        SUBJECT("Subject", 11, true),
-        MESSAGE_ID("Message-ID", 12, true),
-        IN_REPLY_TO("In-Reply-To", 13, true),
-        REFERENCES("References", 14, true),
-        CONTENT_TYPE("Content-Type", 15, true),
-        CONTENT_DISPOSITION("Content-Disposition", 16, true),
-        CONTENT_TRANSFER_ENCODING("Content-Transfer-Encoding", 17, true),
+        MESSAGE_ID("Message-ID", 11, true),
+        IN_REPLY_TO("In-Reply-To", 12, true),
+        REFERENCES("References", 13, true),
+        SUBJECT("Subject", 14, true),
+        COMMENTS("Comments", 15, true),
+        KEYWORDS("Keywords", 16, true),
+        ERRORS_TO("Errors-To", 17, true),
+        MIME_VERSION("MIME-Version", 18, true),
+        CONTENT_TYPE("Content-Type", 19, true),
+        CONTENT_DISPOSITION("Content-Disposition", 20, true),
+        CONTENT_TRANSFER_ENCODING("Content-Transfer-Encoding", 21, true),
         DEFAULT(null, 30),
         CONTENT_LENGTH("Content-Length", 49, true),
         STATUS("Status", 50, true);
@@ -166,7 +194,7 @@ public class ZInternetHeader {
     /** Reserializes the {@code ZInternetHeader}, using {@code bvalue} as the
      *  field value (the bit after the '<tt>:</tt>').  {@code bvalue} is
      *  copied verbatim; no charset transforms, encoded-word handling, or
-     *  folding is performed.*/ 
+     *  folding is performed.*/
     ZInternetHeader updateContent(final byte[] bvalue) {
         byte[] bname = name.getBytes();
         int nlen = bname.length, vlen = bvalue == null ? 0 : bvalue.length;
@@ -193,14 +221,12 @@ public class ZInternetHeader {
     /** Returns the entire header line (including the field name and the
      *  '<tt>:</tt>') as a raw byte array. */
     public byte[] getRawHeader() {
-        reserialize();
         return content;
     }
 
     /** Returns the header's value (the bit after the '<tt>:</tt>') after all
      *  unfolding and decoding of RFC 2047 encoded-words has been performed. */
     public String getValue(final String charset) {
-        reserialize();
         int end = content.length, c;
         while (end > valueStart && ((c = content[end-1]) == '\n' || c == '\r')) {
             end--;
@@ -213,52 +239,34 @@ public class ZInternetHeader {
      *  trailing CRLF. */
     @Override
     public String toString() {
-        return getEncodedValue(null);
+        return content == null ? "" : new String(content, valueStart, content.length - valueStart);
     }
 
     /** Returns the header's value (the bit after the '<tt>:</tt>') as a
      *  {@code String}.  No decoding is performed other than removing the
      *  trailing CRLF. */
     public String getEncodedValue() {
-        return getEncodedValue(null);
+        return getEncodedValue((Charset) null);
     }
 
     /** Returns the header's value (the bit after the '<tt>:</tt>') as a
      *  {@code String}.  If non-{@code null}, the {@code charset} is used when
      *  converting the header bytes to a {@code String}.  No decoding is
      *  performed other than removing the trailing CRLF. */
-    public String getEncodedValue(String charset) {
-        reserialize();
+    public String getEncodedValue(final String charset) {
+        return getEncodedValue(CharsetUtil.toCharset(charset));
+    }
+
+    public String getEncodedValue(final Charset charset) {
         int end = content.length, c;
         while (end > valueStart && ((c = content[end-1]) == '\n' || c == '\r')) {
             end--;
         }
-        return createString(content, valueStart, end - valueStart, CharsetUtil.toCharset(charset));
+        return createString(content, valueStart, end - valueStart, charset);
     }
 
-    private static String createString(byte[] bytes, int offset, int length, Charset charset) {
+    private static String createString(final byte[] bytes, final int offset, final int length, final Charset charset) {
         return new String(bytes, offset, length, decodingCharset(charset));
-    }
-
-    /** Marks the header as "dirty" and requiring reserialization.  To enforce
-     *  this reserialization requirement, unsets {@link #content}. */
-    protected void markDirty() {
-        this.content = null;
-        this.valueStart = -1;
-        // XXX: if header is in a header block, should mark that block as dirty?
-    }
-
-    /** Returns whether the header has been marked as needing reserialization.
-     * @see #markDirty() */
-    protected boolean isDirty() {
-        return content == null;
-    }
-
-    /** Permits a subclass to regenerate the {@code byte[]} content of the
-     *  header as a result of changes.  Implementations of this method should
-     *  first call {@link #isDirty()} and perform a no-op if it returns
-     *  {@code false}. */
-    protected void reserialize() {
     }
 
     static final Charset DEFAULT_CHARSET = CharsetUtil.normalizeCharset(CharsetUtil.ISO_8859_1);

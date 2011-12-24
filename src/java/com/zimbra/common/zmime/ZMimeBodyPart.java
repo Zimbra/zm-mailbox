@@ -14,24 +14,26 @@
  */
 package com.zimbra.common.zmime;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Enumeration;
-import java.util.List;
+import java.nio.charset.Charset;
 import java.util.Set;
 
 import javax.activation.DataHandler;
 import javax.mail.MessagingException;
-import javax.mail.internet.InternetHeaders;
 import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimePart;
 import javax.mail.internet.SharedInputStream;
 
 import com.google.common.collect.ImmutableSet;
 import com.sun.mail.util.PropUtil;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
 
 public class ZMimeBodyPart extends MimeBodyPart implements ZMimePart {
     private static final boolean ZPARSER = ZMimeMessage.ZPARSER;
@@ -39,38 +41,100 @@ public class ZMimeBodyPart extends MimeBodyPart implements ZMimePart {
     protected long size = -1;
     protected int lines = -1;
 
-    static class ZInternetHeaders extends InternetHeaders {
-        ZInternetHeaders() {
-            headers.clear();
+    public ZMimeBodyPart() {
+        super();
+        if (ZPARSER) {
+            this.headers = new ZInternetHeaders().setParent(this);
         }
+    }
 
-        @SuppressWarnings("unchecked")
-        ZInternetHeaders(InternetHeaders hdrs) {
-            this();
-            if (hdrs instanceof ZInternetHeaders) {
-                for (InternetHeader header : ((ZInternetHeaders) hdrs).getHeaders()) {
-                    headers.add(header);
+    ZMimeBodyPart(MimeBodyPart source, ZContentType ctype, ZMimeMultipart container) throws MessagingException {
+        boolean copied = false;
+        if (ZPARSER) {
+            try {
+                if (source instanceof ZMimeBodyPart) {
+                    ZMimeBodyPart zsrc = (ZMimeBodyPart) source;
+                    if (zsrc.headers instanceof ZInternetHeaders) {
+                        this.headers = new ZInternetHeaders((ZInternetHeaders) zsrc.headers).setParent(this);
+                    } else {
+                        this.headers = ZInternetHeaders.copyHeaders(this);
+                    }
+                    this.content = zsrc.content;
+                    this.contentStream = zsrc.contentStream;
+                    this.lines = zsrc.lines;
+                    this.size = zsrc.size;
+                } else {
+                    this.headers = ZInternetHeaders.copyHeaders(source);
+                    try {
+                        InputStream is = source.getRawInputStream();
+                        if (is instanceof SharedInputStream) {
+                            this.contentStream = is;
+                        } else {
+                            ByteUtil.closeStream(is);
+                        }
+                    } catch (MessagingException me) {
+                        // "no content"
+                    }
                 }
-            } else {
-                for (Enumeration<InternetHeader> e = hdrs.getAllHeaders(); e.hasMoreElements(); ) {
-                    headers.add(e.nextElement());
+
+                if (ctype.getBaseType().equals("message/rfc822")) {
+                    Object obj = source.getContent();
+                    if (obj instanceof MimeMessage) {
+                        cacheContent(new ZMimeMessage((MimeMessage) obj));
+                    }
+                } else if (ctype.getPrimaryType().equals("multipart")) {
+                    Object obj = source.getContent();
+                    if (obj instanceof MimeMultipart) {
+                        cacheContent(new ZMimeMultipart((MimeMultipart) obj, ctype, this));
+                    }
+                } else {
+                    if (content == null && contentStream == null) {
+                        this.dh = source.getDataHandler();
+                    }
                 }
+                copied = true;
+            } catch (Exception e) {
+                ZimbraLog.misc.warn("failed cloning " + source.getClass().getSimpleName(), e);
             }
         }
 
-        @SuppressWarnings("unchecked")
-        private List<InternetHeader> getHeaders() {
-            return headers;
+        if (!copied && content == null && contentStream == null) {
+            // fall back to making an in-memory copy and re-parsing it
+            ByteArrayOutputStream bos = new ByteArrayOutputStream(Math.max(source.getSize(), 1024));
+            try {
+                source.writeTo(bos);
+                this.content = bos.toByteArray();
+            } catch (IOException ex) {
+                // should never happen, but just in case...
+                throw new MessagingException("IOException while copying message", ex);
+            }
         }
+
+        this.parent = container;
     }
 
     static ZMimeBodyPart newBodyPart(ZMimeMultipart multi) {
         ZMimeBodyPart mbp = new ZMimeBodyPart();
-        mbp.headers = new ZMimeBodyPart.ZInternetHeaders();
         if (multi != null) {
             mbp.parent = multi.addBodyPart(mbp);
         }
         return mbp;
+    }
+
+    @Override
+    public Charset defaultCharset() {
+        // walk structure up to MimeMessage or die tryin'
+        MimeBodyPart part = this;
+        while (part != null) {
+            MimeMultipart multi = (MimeMultipart) part.getParent();
+            MimePart container = multi == null ? null : (MimePart) multi.getParent();
+            if (container instanceof MimeMessage) {
+                return container instanceof ZMimeMessage ? ((ZMimeMessage) container).defaultCharset() : null;
+            } else {
+                part = (MimeBodyPart) container;
+            }
+        }
+        return null;
     }
 
     static final byte[] CONTENT_PLACEHOLDER = new byte[0];
@@ -111,8 +175,18 @@ public class ZMimeBodyPart extends MimeBodyPart implements ZMimePart {
     }
 
     @Override
-    public void addHeaderLine(String line) {
-        headers.addHeaderLine(line);
+    public void setDataHandler(DataHandler dh) throws MessagingException {
+        size = lines = -1;
+        super.setDataHandler(dh);
+    }
+
+    @Override
+    public void appendHeader(ZInternetHeader header) {
+        if (ZPARSER) {
+            ((ZInternetHeaders) headers).appendHeader(header);
+        } else {
+            headers.addHeaderLine(header.toString().trim());
+        }
     }
 
     @Override
@@ -141,8 +215,12 @@ public class ZMimeBodyPart extends MimeBodyPart implements ZMimePart {
     private static final Set<String> SUPPORTED_ENCODINGS = ImmutableSet.of("7bit", "8bit", "binary", "base64", "quoted-printable", "uuencode", "x-uuencode", "x-uue");
 
     @Override
-    public String getEncoding() throws MessagingException {
-        return sanitizeEncoding(super.getEncoding());
+    public String getEncoding() {
+        try {
+            return sanitizeEncoding(super.getEncoding());
+        } catch (MessagingException e) {
+            return "binary";
+        }
     }
 
     static String sanitizeEncoding(String enc) {
