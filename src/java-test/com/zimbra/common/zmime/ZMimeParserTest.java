@@ -114,55 +114,55 @@ public class ZMimeParserTest {
         }
     }
 
-    private static void checkFile(java.io.File file) throws Exception {
-        String name = file.getName();
-        Properties props = new Properties();
-
-        props.put("mail.mime.address.strict", "false");
-
-        String charset = null;
-        if (name.startsWith("gbk") || name.startsWith("gb2312")) {
-            charset = "gb2312";
-        } else if (name.startsWith("iso-8859-1")) {
-            charset = "iso-8859-1";
-        } else if (name.startsWith("iso-8859-2")) {
-            charset = "iso-8859-2";
-        } else if (name.startsWith("iso-2022-jp")) {
-            charset = "iso-2022-jp";
-        } else if (name.startsWith("shift_jis")) {
-            charset = "shift_jis";
-        } else if (name.startsWith("big5")) {
-            charset = "big5";
-        }
-        if (charset != null) {
-            props.put("mail.mime.charset", charset);
-            props.put(com.zimbra.common.mime.MimePart.PROP_CHARSET_DEFAULT, charset);
-        }
-
-        Session s = Session.getInstance(props);
-        MimeMessage zmm = new ZMimeMessage(s, new java.io.FileInputStream(file));
-        MimeMessage jmmm = new com.zimbra.common.mime.shim.JavaMailMimeMessage(s, new javax.mail.util.SharedFileInputStream(file));
-        MimeMessage mm = new MimeMessage(s, new java.io.FileInputStream(file));
-
-        System.out.println("checking file: " + file.getName() + " [zmm/mm]");
-        com.zimbra.common.mime.shim.JavaMailMimeTester.compareStructure(zmm, mm);
-        System.out.println("checking file: " + file.getName() + " [jmmm/zmm]");
-        com.zimbra.common.mime.shim.JavaMailMimeTester.compareStructure(jmmm, zmm);
-    }
-
-    @Test
-    public void simple() throws Exception {
-        System.setProperty("mail.mime.decodetext.strict",   "false");
-        System.setProperty("mail.mime.encodefilename",      "true");
-        System.setProperty("mail.mime.charset",             "utf-8");
-        System.setProperty("mail.mime.base64.ignoreerrors", "true");
-
-        checkFile(new java.io.File("/Users/dkarp/Documents/messages/undisplayed-generated"));
-
-        for (java.io.File file : new java.io.File("/Users/dkarp/Documents/messages").listFiles()) {
-            if (file.isFile()) {
-                checkFile(file);
-            }
-        }
-    }
+//    private static void checkFile(java.io.File file) throws Exception {
+//        String name = file.getName();
+//        Properties props = new Properties();
+//
+//        props.put("mail.mime.address.strict", "false");
+//
+//        String charset = null;
+//        if (name.startsWith("gbk") || name.startsWith("gb2312")) {
+//            charset = "gb2312";
+//        } else if (name.startsWith("iso-8859-1")) {
+//            charset = "iso-8859-1";
+//        } else if (name.startsWith("iso-8859-2")) {
+//            charset = "iso-8859-2";
+//        } else if (name.startsWith("iso-2022-jp")) {
+//            charset = "iso-2022-jp";
+//        } else if (name.startsWith("shift_jis")) {
+//            charset = "shift_jis";
+//        } else if (name.startsWith("big5")) {
+//            charset = "big5";
+//        }
+//        if (charset != null) {
+//            props.put("mail.mime.charset", charset);
+//            props.put(com.zimbra.common.mime.MimePart.PROP_CHARSET_DEFAULT, charset);
+//        }
+//
+//        Session s = Session.getInstance(props);
+//        MimeMessage zmm = new ZMimeMessage(s, new java.io.FileInputStream(file));
+//        MimeMessage jmmm = new com.zimbra.common.mime.shim.JavaMailMimeMessage(s, new javax.mail.util.SharedFileInputStream(file));
+//        MimeMessage mm = new MimeMessage(s, new java.io.FileInputStream(file));
+//
+//        System.out.println("checking file: " + file.getName() + " [zmm/mm]");
+//        com.zimbra.common.mime.shim.JavaMailMimeTester.compareStructure(zmm, mm);
+//        System.out.println("checking file: " + file.getName() + " [jmmm/zmm]");
+//        com.zimbra.common.mime.shim.JavaMailMimeTester.compareStructure(jmmm, zmm);
+//    }
+//
+//    @Test
+//    public void simple() throws Exception {
+//        System.setProperty("mail.mime.decodetext.strict",   "false");
+//        System.setProperty("mail.mime.encodefilename",      "true");
+//        System.setProperty("mail.mime.charset",             "utf-8");
+//        System.setProperty("mail.mime.base64.ignoreerrors", "true");
+//
+//        checkFile(new java.io.File("/Users/dkarp/Documents/messages/undisplayed-generated"));
+//
+//        for (java.io.File file : new java.io.File("/Users/dkarp/Documents/messages").listFiles()) {
+//            if (file.isFile()) {
+//                checkFile(file);
+//            }
+//        }
+//    }
 }
