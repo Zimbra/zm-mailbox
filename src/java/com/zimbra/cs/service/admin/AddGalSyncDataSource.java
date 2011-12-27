@@ -84,7 +84,7 @@ public class AddGalSyncDataSource extends AdminDocumentHandler {
 
         CreateGalSyncAccount.addDataSource(request, zsc, account, domain, folder, name, type);
         
-        Element response = zsc.createElement(AdminConstants.E_ADD_GAL_SYNC_DATASOURCE_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.ADD_GAL_SYNC_DATASOURCE_RESPONSE);
         ToXML.encodeAccount(response, account, false, emptySet, null);
         return response;
     }
