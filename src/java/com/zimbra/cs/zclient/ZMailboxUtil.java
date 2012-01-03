@@ -394,7 +394,7 @@ public class ZMailboxUtil implements DebugListener {
         MODIFY_FOLDER_COLOR("modifyFolderColor", "mfc", "{folder-path} {new-color}", "modify a folder's color", Category.FOLDER, 2, 2),
         MODIFY_FOLDER_EXCLUDE_FREE_BUSY("modifyFolderExcludeFreeBusy", "mfefb", "{folder-path} [0|1*]", "change whether folder is excluded from free-busy", Category.FOLDER, 1, 2),
         MODIFY_FOLDER_FLAGS("modifyFolderFlags", "mff", "{folder-path} {folder-flags}", "replaces the flags on the folder (subscribed, checked, etc.)", Category.FOLDER, 2, 2),
-        MODIFY_FOLDER_GRANT("modifyFolderGrant", "mfg", "{folder-path} {account {name}|group {name}|domain {name}|all|public|guest {email} [{password}]|key {email} [{accesskey}] {permissions|none}}", "add/remove a grant to a folder", Category.FOLDER, 3, 5),
+        MODIFY_FOLDER_GRANT("modifyFolderGrant", "mfg", "{folder-path} {account {name}|group {name}|cos {name}|domain {name}|all|public|guest {email} [{password}]|key {email} [{accesskey}] {permissions|none}}", "add/remove a grant to a folder", Category.FOLDER, 3, 5),
         MODIFY_FOLDER_URL("modifyFolderURL", "mfu", "{folder-path} {url}", "modify a folder's URL", Category.FOLDER, 2, 2),
         MODIFY_IDENTITY("modifyIdentity", "mid", "{identity-name} [attr1 value1 [attr2 value2...]]", "modify an identity", Category.ACCOUNT, 1, Integer.MAX_VALUE),
         MODIFY_ITEM_FLAGS("modifyItemFlags", "mif", "{item-ids} {item-flags}", "replaces the flags on the items (answered, unread, flagged, etc.)", Category.ITEM, 2, 2),
@@ -1410,6 +1410,7 @@ public class ZMailboxUtil implements DebugListener {
         switch (type) {
         case usr: return "account";
         case grp: return "group";
+        case cos: return "cos";
         case pub: return "public";
         case all: return "all";
         case dom: return "domain";
@@ -1460,6 +1461,7 @@ public class ZMailboxUtil implements DebugListener {
     private GranteeType getGranteeType(String name) throws ServiceException {
         if (name.equalsIgnoreCase("account")) return GranteeType.usr;
         else if (name.equalsIgnoreCase("group")) return GranteeType.grp;
+        else if (name.equalsIgnoreCase("cos")) return GranteeType.cos;
         else if (name.equalsIgnoreCase("public")) return GranteeType.pub;
         else if (name.equalsIgnoreCase("all")) return GranteeType.all;
         else if (name.equalsIgnoreCase("domain")) return GranteeType.dom;
@@ -1478,6 +1480,7 @@ public class ZMailboxUtil implements DebugListener {
         switch (type) {
         case usr:
         case grp:
+        case cos:    
         case dom:
             if (args.length != 4) throw ZClientException.CLIENT_ERROR("not enough args", null);
             grantee = args[2];
@@ -1492,7 +1495,9 @@ public class ZMailboxUtil implements DebugListener {
             perms = args[2];
             break;
         case guest:
-            if (args.length != 4 && args.length != 5) throw ZClientException.CLIENT_ERROR("not enough args", null);
+            if (args.length != 4 && args.length != 5) {
+                throw ZClientException.CLIENT_ERROR("not enough args", null);
+            }
             grantee = args[2];
             if (args.length == 5) {
                 password = args[3];

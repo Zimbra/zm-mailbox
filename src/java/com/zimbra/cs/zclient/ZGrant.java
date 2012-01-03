@@ -85,6 +85,10 @@ public class ZGrant implements ToZJSONObject {
          */
         grp,
         /**
+         * access is granted to users on a cos
+         */
+        cos,
+        /**
          * accesss is granted to public. no authentication needed.
          */
         pub,
