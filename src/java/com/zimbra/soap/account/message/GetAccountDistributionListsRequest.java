@@ -42,10 +42,10 @@ public class GetAccountDistributionListsRequest {
         }
     };
 
-    @XmlAttribute(name=AccountConstants.A_OWNER, required=false)
-    private ZmBoolean owner;
-    @XmlAttribute(name=AccountConstants.A_MEMBER, required=false)
-    private MemberOfSelector member;
+    @XmlAttribute(name=AccountConstants.A_OWNER_OF, required=false)
+    private ZmBoolean ownerOf;
+    @XmlAttribute(name=AccountConstants.A_MEMBER_OF, required=false)
+    private MemberOfSelector memberOf;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -56,13 +56,13 @@ public class GetAccountDistributionListsRequest {
     }
 
     public GetAccountDistributionListsRequest(Boolean owner, MemberOfSelector member) {
-        this.setOwner(owner);
-        this.setMember(member);
+        this.setOwnerOf(owner);
+        this.setMemberOf(member);
     }
 
-    public void setOwner(Boolean owner) { this.owner = ZmBoolean.fromBool(owner); }
-    public Boolean getOwner() { return ZmBoolean.toBool(owner); }
+    public void setOwnerOf(Boolean owner) { this.ownerOf = ZmBoolean.fromBool(owner); }
+    public Boolean getOwnerOf() { return ZmBoolean.toBool(ownerOf); }
     
-    public void setMember(MemberOfSelector member) { this.member = member; }
-    public MemberOfSelector getMember() { return member; }
+    public void setMemberOf(MemberOfSelector member) { this.memberOf = member; }
+    public MemberOfSelector getMemberOf() { return memberOf; }
 }
