@@ -45,7 +45,7 @@ public class AutoProvAccount extends AdminDocumentHandler {
             throw ServiceException.FAILURE("unable to auto provision account: " + principal, null);
         }
         
-        Element response = zsc.createElement(AdminConstants.SEARCH_AUTO_PROV_DIRECTORY_RESPONSE);
+        Element response = zsc.createElement(AdminConstants.AUTO_PROV_ACCOUNT_RESPONSE);
         ToXML.encodeAccount(response, acct);
         return response;
     }
