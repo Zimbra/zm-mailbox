@@ -650,10 +650,14 @@ class WebUpstreamServersVar extends ProxyConfVar {
                             Provisioning.A_zimbraMailPort, 0);
                     int timeout = u.getIntAttr(
                             Provisioning.A_zimbraMailProxyReconnectTimeout, 60);
-                    Formatter f = new Formatter();
-                    f.format("%s:%d fail_timeout=%ds", serverName, serverPort,
-                            timeout);
-                    servers.add(f.toString());
+                    int maxFails = u.getIntAttr("zimbraMailProxyMaxFails", 1);
+                    if (maxFails != 1) {
+                        servers.add(String.format("%s:%d fail_timeout=%ds max_fails=%d", serverName, serverPort,
+                                timeout, maxFails));
+                    } else  {
+                        servers.add(String.format("%s:%d fail_timeout=%ds", serverName, serverPort,
+                                timeout));
+                    }
                     mLog.info("Added server to HTTP upstream: " + serverName);
                 } else {
                     mLog.warn("Upstream: Ignoring server: " + serverName
@@ -707,10 +711,14 @@ class WebAdminUpstreamServersVar extends ProxyConfVar {
                         Provisioning.A_zimbraAdminPort, 0);
                 int timeout = u.getIntAttr(
                         Provisioning.A_zimbraMailProxyReconnectTimeout, 60);
-                Formatter f = new Formatter();
-                f.format("%s:%d fail_timeout=%ds", serverName, serverPort,
-                        timeout);
-                servers.add(f.toString());
+                int maxFails = u.getIntAttr("zimbraMailProxyMaxFails", 1);
+                if (maxFails != 1) {
+                    servers.add(String.format("%s:%d fail_timeout=%ds max_fails=%d", serverName, serverPort,
+                            timeout, maxFails));
+                } else  {
+                    servers.add(String.format("%s:%d fail_timeout=%ds", serverName, serverPort,
+                            timeout));
+                }
                 mLog.info("Added server to HTTP upstream: " + serverName);
             }
         }
