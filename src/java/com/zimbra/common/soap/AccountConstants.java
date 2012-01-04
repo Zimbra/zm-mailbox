@@ -95,8 +95,8 @@ public class AccountConstants {
     public static final String E_CREATE_DISTRIBUTION_LIST_RESPONSE = "CreateDistributionListResponse";
     public static final String E_DISTRIBUTION_LIST_ACTION_REQUEST = "DistributionListActionRequest";
     public static final String E_DISTRIBUTION_LIST_ACTION_RESPONSE = "DistributionListActionResponse";
-    public static final String E_GET_ACCOUNT_MEMBERSHIP_REQUEST = "GetAccountMembershipRequest";
-    public static final String E_GET_ACCOUNT_MEMBERSHIP_RESPONSE = "GetAccountMembershipResponse";
+    public static final String E_GET_ACCOUNT_DISTRIBUTION_LISTS_REQUEST = "GetAccountDistributionListsRequest";
+    public static final String E_GET_ACCOUNT_DISTRIBUTION_LISTS_RESPONSE = "GetAccountDistributionListsResponse";
     public static final String E_GET_DISTRIBUTION_LIST_REQUEST = "GetDistributionListRequest";
     public static final String E_GET_DISTRIBUTION_LIST_RESPONSE = "GetDistributionListResponse";
     public static final String E_GET_DISTRIBUTION_LIST_MEMBERS_REQUEST = "GetDistributionListMembersRequest";
@@ -203,8 +203,8 @@ public class AccountConstants {
     public static final QName CREATE_DISTRIBUTION_LIST_RESPONSE = QName.get(E_CREATE_DISTRIBUTION_LIST_RESPONSE, NAMESPACE);
     public static final QName DISTRIBUTION_LIST_ACTION_REQUEST = QName.get(E_DISTRIBUTION_LIST_ACTION_REQUEST, NAMESPACE);
     public static final QName DISTRIBUTION_LIST_ACTION_RESPONSE = QName.get(E_DISTRIBUTION_LIST_ACTION_RESPONSE, NAMESPACE);
-    public static final QName GET_ACCOUNT_MEMBERSHIP_REQUEST = QName.get(E_GET_ACCOUNT_MEMBERSHIP_REQUEST, NAMESPACE);
-    public static final QName GET_ACCOUNT_MEMBERSHIP_RESPONSE = QName.get(E_GET_ACCOUNT_MEMBERSHIP_RESPONSE, NAMESPACE);
+    public static final QName GET_ACCOUNT_DISTRIBUTION_LISTS_REQUEST = QName.get(E_GET_ACCOUNT_DISTRIBUTION_LISTS_REQUEST, NAMESPACE);
+    public static final QName GET_ACCOUNT_DISTRIBUTION_LISTS_RESPONSE = QName.get(E_GET_ACCOUNT_DISTRIBUTION_LISTS_RESPONSE, NAMESPACE);
     public static final QName GET_DISTRIBUTION_LIST_REQUEST = QName.get(E_GET_DISTRIBUTION_LIST_REQUEST, NAMESPACE);
     public static final QName GET_DISTRIBUTION_LIST_RESPONSE = QName.get(E_GET_DISTRIBUTION_LIST_RESPONSE, NAMESPACE);
     public static final QName GET_DISTRIBUTION_LIST_MEMBERS_REQUEST = QName.get(E_GET_DISTRIBUTION_LIST_MEMBERS_REQUEST, NAMESPACE);
@@ -333,9 +333,11 @@ public class AccountConstants {
     public static final String A_TYPE = "type";
     public static final String A_LIMIT = "limit";
     public static final String A_LOCAL_NAME = "localName";
+    public static final String A_MEMBER = "member";
     public static final String A_MORE = "more";
     public static final String A_NEED_OWNERS = "needOwners";
     public static final String A_NEED_RIGHTS = "needRights";
+    public static final String A_OWNER = "owner";
     public static final String A_TOTAL = "total";
     public static final String A_ZIMLET = "zimlet";
     public static final String A_ZIMLET_BASE_URL = "baseUrl";
