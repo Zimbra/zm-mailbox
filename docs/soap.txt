@@ -4114,7 +4114,7 @@ Notes:
 
 -----------------------------
 
-<GetAccountDistributionListsRequest owner="{need-owner-of}" member="{need-member-of}">
+<GetAccountDistributionListsRequest ownerOf="{owner-of}" memberOf="{member-of}">
 </GetAccountDistributionListsRequest>
 
 <GetAccountDistributionListsResponse>
@@ -4124,12 +4124,12 @@ Notes:
 
 Returns groups the user is either a member or an owner of.
 
-{owner} = 1: needs groups the user is an owner of.
-          0 (default): do not need groups the user is an owner of.
+{owner-of} = 1: needs groups the user is an owner of.
+             0 (default): do not need groups the user is an owner of.
              
-{member} = all: needs all groups the user is a direct or indirect member of.
-           none: do not need groups the user is a member of.
-           directOnly (default): needs groups the account is a direct member of.    
+{member-of} = all: needs all groups the user is a direct or indirect member of.
+              none: do not need groups the user is a member of.
+              directOnly (default): needs groups the account is a direct member of.    
 
 {via-dl-name} = is present if the account is a member of the returned list because 
                 they are either a direct or indirect member of another list that is 

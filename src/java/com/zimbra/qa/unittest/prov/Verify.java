@@ -280,7 +280,11 @@ public class Verify {
             if (sb.length() > 0) {
                 sb.append(":");
             }
-            sb.append(obj.toString());
+            if (obj != null) {
+                sb.append(obj.toString());
+            } else {
+                sb.append("null");
+            }
         }
         return sb.toString();
     }

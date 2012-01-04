@@ -42,9 +42,9 @@ public class GetAccountDistributionLists extends AccountDocumentHandler {
         Account acct = getRequestedAccount(zsc);
         Provisioning prov = Provisioning.getInstance();
         
-        boolean needOwnerOf = request.getAttributeBool(AccountConstants.A_OWNER, false);
+        boolean needOwnerOf = request.getAttributeBool(AccountConstants.A_OWNER_OF, false);
         MemberOfSelector needMemberOf = MemberOfSelector.fromString(
-                request.getAttribute(AccountConstants.A_MEMBER, MemberOfSelector.directOnly.name()));
+                request.getAttribute(AccountConstants.A_MEMBER_OF, MemberOfSelector.directOnly.name()));
         
         Set<Entry> ownerOf = null;
         List<Group> memberOf = null;
