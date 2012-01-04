@@ -51,12 +51,13 @@ import com.zimbra.soap.account.message.CreateDistributionListRequest;
 import com.zimbra.soap.account.message.CreateDistributionListResponse;
 import com.zimbra.soap.account.message.DistributionListActionRequest;
 import com.zimbra.soap.account.message.DistributionListActionResponse;
-import com.zimbra.soap.account.message.GetAccountMembershipRequest;
-import com.zimbra.soap.account.message.GetAccountMembershipResponse;
+import com.zimbra.soap.account.message.GetAccountDistributionListsRequest;
+import com.zimbra.soap.account.message.GetAccountDistributionListsResponse;
 import com.zimbra.soap.account.message.GetDistributionListRequest;
 import com.zimbra.soap.account.message.GetDistributionListResponse;
 import com.zimbra.soap.account.message.SubscribeDistributionListRequest;
 import com.zimbra.soap.account.message.SubscribeDistributionListResponse;
+import com.zimbra.soap.account.message.GetAccountDistributionListsRequest.MemberOfSelector;
 import com.zimbra.soap.account.type.DistributionListAction;
 import com.zimbra.soap.account.type.DistributionListGranteeInfo;
 import com.zimbra.soap.account.type.DistributionListInfo;
@@ -1071,13 +1072,15 @@ public class TestDelegatedDL extends SoapTest {
     }
     
     @Test
-    public void getAccountMembership() throws Exception {
+    public void getAccountDistributionLists() throws Exception {
         String GROUP_1_NAME = getAddress(genGroupNameLocalPart("1"));
-        String GROUP_1_DISPLAY_NAME = "third";
+        String GROUP_1_DISPLAY_NAME = "last";
         String GROUP_2_NAME = getAddress(genGroupNameLocalPart("2"));
         String GROUP_2_DISPLAY_NAME = "first";
         String GROUP_3_NAME = getAddress(genGroupNameLocalPart("3"));
         String GROUP_3_DISPLAY_NAME = "first";
+        String GROUP_4_NAME = getAddress(genGroupNameLocalPart("4"));
+        String GROUP_4_DISPLAY_NAME = "first";
         
         Group group1 = provUtil.createGroup(GROUP_1_NAME, 
                 Collections.singletonMap(
@@ -1088,6 +1091,9 @@ public class TestDelegatedDL extends SoapTest {
         Group group3 = provUtil.createGroup(GROUP_3_NAME, 
                 Collections.singletonMap(
                 Provisioning.A_displayName, (Object)GROUP_3_DISPLAY_NAME), false);
+        Group group4 = provUtil.createGroup(GROUP_4_NAME, 
+                Collections.singletonMap(
+                Provisioning.A_displayName, (Object)GROUP_4_DISPLAY_NAME), false);
         
         // create an account
         String ACCT_NAME = getAddress(genAcctNameLocalPart());
@@ -1098,9 +1104,18 @@ public class TestDelegatedDL extends SoapTest {
         prov.addGroupMembers(group2, new String[]{ACCT_NAME});
         prov.addGroupMembers(group3, new String[]{ACCT_NAME});
         
+        // make the account owner of groups
+        prov.grantRight(TargetType.dl.getCode(), TargetBy.name, group1.getName(), 
+                GranteeType.GT_USER.getCode(), GranteeBy.name, acct.getName(), null, 
+                Group.GroupOwner.GROUP_OWNER_RIGHT.getName(), null);
+        prov.grantRight(TargetType.dl.getCode(), TargetBy.name, group4.getName(), 
+                GranteeType.GT_USER.getCode(), GranteeBy.name, acct.getName(), null, 
+                Group.GroupOwner.GROUP_OWNER_RIGHT.getName(), null);
+        
         SoapTransport transport = authUser(ACCT_NAME);
-        GetAccountMembershipRequest req = new GetAccountMembershipRequest(Boolean.TRUE);
-        GetAccountMembershipResponse resp = invokeJaxb(transport, req);
+        GetAccountDistributionListsRequest req = new GetAccountDistributionListsRequest(
+                Boolean.TRUE, MemberOfSelector.all);
+        GetAccountDistributionListsResponse resp = invokeJaxb(transport, req);
         
         List<String> result = Lists.newArrayList();
         
@@ -1109,17 +1124,20 @@ public class TestDelegatedDL extends SoapTest {
             String id = dlInfo.getId();
             String name = dlInfo.getName();
             String displayName = dlInfo.getDisplayName();
+            Boolean isOwner = dlInfo.isOwner();
+            Boolean isMember = dlInfo.isMember();
             
-            result.add(Verify.makeResultStr(id, name, displayName));
+            result.add(Verify.makeResultStr(id, name, displayName, isOwner, isMember));
         }
         
         // result should be sorted by displayName.  
         // If displayName are the same, sorted by entry.getLabel()
         Verify.verifyEquals(
                 Lists.newArrayList(
-                        Verify.makeResultStr(group2.getId(), group2.getName(), group2.getDisplayName()),
-                        Verify.makeResultStr(group3.getId(), group3.getName(), group3.getDisplayName()),
-                        Verify.makeResultStr(group1.getId(), group1.getName(), group1.getDisplayName())), 
+                        Verify.makeResultStr(group2.getId(), group2.getName(), group2.getDisplayName(), Boolean.FALSE, Boolean.TRUE),
+                        Verify.makeResultStr(group3.getId(), group3.getName(), group3.getDisplayName(), Boolean.FALSE, Boolean.TRUE),
+                        Verify.makeResultStr(group4.getId(), group4.getName(), group4.getDisplayName(), Boolean.TRUE, Boolean.FALSE),
+                        Verify.makeResultStr(group1.getId(), group1.getName(), group1.getDisplayName(), Boolean.TRUE, Boolean.TRUE)), 
                 result);
         
         
@@ -1134,16 +1152,19 @@ public class TestDelegatedDL extends SoapTest {
             String id = dlInfo.getId();
             String name = dlInfo.getName();
             String displayName = dlInfo.getDisplayName();
+            Boolean isOwner = dlInfo.isOwner();
+            Boolean isMember = dlInfo.isMember();
             
-            result.add(Verify.makeResultStr(id, name, displayName));
+            result.add(Verify.makeResultStr(id, name, displayName, isOwner, isMember));
         }
      
         // result should be sorted by displayName
         Verify.verifyEquals(
                 Lists.newArrayList(
-                        Verify.makeResultStr(group2.getId(), group2.getName(), group2.getDisplayName()),
-                        Verify.makeResultStr(group3.getId(), group3.getName(), group3.getDisplayName()),
-                        Verify.makeResultStr(group1.getId(), group1.getName(), group1.getDisplayName())), 
+                        Verify.makeResultStr(group2.getId(), group2.getName(), group2.getDisplayName(), Boolean.FALSE, Boolean.TRUE),
+                        Verify.makeResultStr(group3.getId(), group3.getName(), group3.getDisplayName(), Boolean.FALSE, Boolean.TRUE),
+                        Verify.makeResultStr(group4.getId(), group4.getName(), group4.getDisplayName(), Boolean.TRUE, Boolean.FALSE),
+                        Verify.makeResultStr(group1.getId(), group1.getName(), group1.getDisplayName(), Boolean.TRUE, Boolean.TRUE)), 
                 result);
     }
 

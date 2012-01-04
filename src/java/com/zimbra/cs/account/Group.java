@@ -153,7 +153,7 @@ public abstract class Group extends MailTarget implements AliasedEntry {
             List<GroupOwner> owners = new ArrayList<GroupOwner>();
             
             /*
-             * No need to check rights granted on the doamin or globalgrant,
+             * No need to check rights granted on the domain or globalgrant,
              * The ownDistList can only be granted on group target.
              */
             List<ZimbraACE> acl = ACLUtil.getAllACEs(group);

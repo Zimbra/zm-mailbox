@@ -4110,23 +4110,35 @@ Notes:
 
 {status} = subscribed | unsubscribed | awaiting_approval;
 
------------------------------
-
-<GetAccountMembershipRequest directOnly="1|0">
-</GetAccountMembershipRequest>
-
-<GetAccountMembershipResponse>
-  <dl name="{name}" id="{id}" [d="{display-name}"] via="{via-dl-name}"/>+
-</GetAccountMembershipResponse>
-
-{directOnly}  = 1 (default): return only lists the account is a direct member of
-                0: return all lists the account is a direct or indirect member of
-
-{via-dl-name} = is present if the account is a member of the returned list because they are either a direct
-                or indirect member of another list that is a member of the returned list. For example,
-                if a user is a member of engineering@domain.com, and engineering@domain.com is a member of all@domain.com,
-                then <dl name="all@domain.com" ... via="engineering@domain.com"/> would be returned.
 
 
 -----------------------------
 
+<GetAccountDistributionListsRequest owner="{need-owner-of}" member="{need-member-of}">
+</GetAccountDistributionListsRequest>
+
+<GetAccountDistributionListsResponse>
+  <dl name="{name}" id="{id}" [d="{display-name}"] [via="{via-dl-name}] [isOwner="1|0"] [isMember="1|0"]"/>+
+</GetAccountDistributionListsResponse>
+
+
+Returns groups the user is either a member or an owner of.
+
+{owner} = 1: needs groups the user is an owner of.
+          0 (default): do not need groups the user is an owner of.
+             
+{member} = all: needs all groups the user is a direct or indirect member of.
+           none: do not need groups the user is a member of.
+           directOnly (default): needs groups the account is a direct member of.    
+
+{via-dl-name} = is present if the account is a member of the returned list because 
+                they are either a direct or indirect member of another list that is 
+                a member of the returned list. 
+                For example,
+                if a user is a member of engineering@domain.com, and engineering@domain.com 
+                is a member of all@domain.com, then 
+                <dl name="all@domain.com" ... via="engineering@domain.com"/> 
+                would be returned.
+
+
+-----------------------------

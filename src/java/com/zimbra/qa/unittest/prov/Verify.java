@@ -274,13 +274,13 @@ public class Verify {
         }
     }
     
-    public static String makeResultStr(String... strings) {
+    public static String makeResultStr(Object... objs) {
         StringBuffer sb = new StringBuffer();
-        for (String str : strings) {
+        for (Object obj : objs) {
             if (sb.length() > 0) {
                 sb.append(":");
             }
-            sb.append(str);
+            sb.append(obj.toString());
         }
         return sb.toString();
     }
