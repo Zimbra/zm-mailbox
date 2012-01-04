@@ -29,16 +29,16 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.DLInfo;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name=AccountConstants.E_GET_ACCOUNT_MEMBERSHIP_RESPONSE)
-public class GetAccountMembershipResponse {
+@XmlRootElement(name=AccountConstants.E_GET_ACCOUNT_DISTRIBUTION_LISTS_RESPONSE)
+public class GetAccountDistributionListsResponse {
 
     @XmlElement(name=AccountConstants.E_DL)
     private List<DLInfo> dlList = new ArrayList<DLInfo>();
 
-    public GetAccountMembershipResponse() {
+    public GetAccountDistributionListsResponse() {
     }
 
-    public GetAccountMembershipResponse setDlList(Collection<DLInfo> dls) {
+    public GetAccountDistributionListsResponse setDlList(Collection<DLInfo> dls) {
         this.dlList.clear();
         if (dls != null) {
             this.dlList.addAll(dls);
@@ -46,7 +46,7 @@ public class GetAccountMembershipResponse {
         return this;
     }
 
-    public GetAccountMembershipResponse addDl(DLInfo dl) {
+    public GetAccountDistributionListsResponse addDl(DLInfo dl) {
         dlList.add(dl);
         return this;
     }

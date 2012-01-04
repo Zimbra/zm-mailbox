@@ -35,20 +35,27 @@ public class DLInfo extends ObjectInfo {
     ZmBoolean dynamic;
     @XmlAttribute(name=AccountConstants.A_VIA, required=false)
     private final String via;
+    @XmlAttribute(name=AccountConstants.A_IS_OWNER, required=false)
+    ZmBoolean isOwner;
+    @XmlAttribute(name=AccountConstants.A_IS_MEMBER, required=false)
+    ZmBoolean isMember;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private DLInfo() {
-        this(null, null, null, null, null);
+        this(null, null, null, null, null, null, null);
     }
 
-    public DLInfo(String id, String name, String displayName, Boolean dynamic, String via) {
+    public DLInfo(String id, String name, String displayName, Boolean dynamic, String via,
+            Boolean isOwner, Boolean isMember) {
         super(id, name, null);
         this.displayName = displayName;
         this.dynamic = ZmBoolean.fromBool(dynamic);
         this.via = via;
+        this.isOwner = ZmBoolean.fromBool(isOwner);
+        this.isMember = ZmBoolean.fromBool(isMember);
     }
 
     public String getDisplayName() {
@@ -61,5 +68,13 @@ public class DLInfo extends ObjectInfo {
 
     public Boolean isDynamic() {
         return ZmBoolean.toBool(dynamic, false);
+    }
+    
+    public Boolean isOwner() {
+        return ZmBoolean.toBool(isOwner, false);
+    }
+    
+    public Boolean isMember() {
+        return ZmBoolean.toBool(isMember, false);
     }
 }
