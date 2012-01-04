@@ -4124,6 +4124,12 @@ Notes:
 
 Returns groups the user is either a member or an owner of.
 
+Note: isOwner is returned only if ownerOf on the request is 1.
+      isMember is returned only if memberOf on the request is not "none".
+      For example, if isOwner="1" and isMember="none" on the request, and 
+      user is an owner and a member of a group, the returned entry for the group 
+      will have isOwner="1", but isMember will not be present.
+
 {owner-of} = 1: needs groups the user is an owner of.
              0 (default): do not need groups the user is an owner of.
              
