@@ -883,7 +883,7 @@ public final class AdminConstants {
     
     // Auto provision
     public static final QName AUTO_PROV_ACCOUNT_REQUEST = QName.get(E_AUTO_PROV_ACCOUNT_REQUEST, NAMESPACE);
-    public static final QName AUTO_PROV_ACCOUNT__RESPONSE = QName.get(E_AUTO_PROV_ACCOUNT_RESPONSE, NAMESPACE);
+    public static final QName AUTO_PROV_ACCOUNT_RESPONSE = QName.get(E_AUTO_PROV_ACCOUNT_RESPONSE, NAMESPACE);
     public static final QName SEARCH_AUTO_PROV_DIRECTORY_REQUEST = QName.get(E_SEARCH_AUTO_PROV_DIRECTORY_REQUEST, NAMESPACE);
     public static final QName SEARCH_AUTO_PROV_DIRECTORY_RESPONSE = QName.get(E_SEARCH_AUTO_PROV_DIRECTORY_RESPONSE, NAMESPACE);
 
