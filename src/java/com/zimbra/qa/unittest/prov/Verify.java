@@ -151,25 +151,43 @@ public class Verify {
                 assertTrue(actual.contains(entry));
             }
         } catch (AssertionError e) {
-            System.out.println();
-            System.out.println("===== verifyEquals failed =====");
-            System.out.println("Message: " + e.getMessage());
-            
-            System.out.println();
-            System.out.println(String.format("expected (size=%d)", expected.size()));
-            for (String str : expected) {
-                System.out.println("    " + str);
-            }
-            
-            System.out.println();
-            System.out.println(String.format("actual (size=%d)", actual.size()));
-            for (String str : actual) {
-                System.out.println("    " + str);
-            }
-            
-            System.out.println();
+            dump(e, expected, actual);
             throw e;
         }
+    }
+    
+    public static void verifyEquals(List<String> expected, List<String> actual) 
+    throws Exception {
+        try {
+            assertEquals(expected.size(), actual.size());
+            
+            for (int i = 0; i < expected.size(); i++) {
+                assertEquals(expected.get(i), actual.get(i));
+            }
+        } catch (AssertionError e) {
+            dump(e, expected, actual);
+            throw e;
+        }
+    }
+    
+    private static void dump(AssertionError e, Collection<String> expected, Collection<String> actual) {
+        System.out.println();
+        System.out.println("===== verifyEquals failed =====");
+        System.out.println("Message: " + e.getMessage());
+        
+        System.out.println();
+        System.out.println(String.format("expected (size=%d)", expected.size()));
+        for (String str : expected) {
+            System.out.println("    " + str);
+        }
+        
+        System.out.println();
+        System.out.println(String.format("actual (size=%d)", actual.size()));
+        for (String str : actual) {
+            System.out.println("    " + str);
+        }
+        
+        System.out.println();
     }
     
     public static void verifyEquals(Set<String> expected, List<NamedEntry> actual) {
@@ -254,6 +272,17 @@ public class Verify {
             System.out.println();
             throw e;
         }
+    }
+    
+    public static String makeResultStr(String... strings) {
+        StringBuffer sb = new StringBuffer();
+        for (String str : strings) {
+            if (sb.length() > 0) {
+                sb.append(":");
+            }
+            sb.append(str);
+        }
+        return sb.toString();
     }
 
 }

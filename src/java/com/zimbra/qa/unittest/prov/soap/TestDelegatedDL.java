@@ -42,7 +42,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightCommand;
-import com.zimbra.cs.account.accesscontrol.RightModifier;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.qa.QA.Bug;
@@ -520,23 +519,23 @@ public class TestDelegatedDL extends SoapTest {
             
             if (right1.equals(right)) {
                 for (DistributionListGranteeInfo grantee : grantees) {
-                    right1GranteeNames.add(grantee.getType().name() + ":" + grantee.getName());
+                    right1GranteeNames.add(Verify.makeResultStr(grantee.getType().name(), grantee.getName()));
                 }
             } else if (right2.equals(right)) {
                 for (DistributionListGranteeInfo grantee : grantees) {
-                    right2GranteeNames.add(grantee.getType().name() + ":" + grantee.getName());
+                    right2GranteeNames.add(Verify.makeResultStr(grantee.getType().name(), grantee.getName()));
                 }
             }
         }
 
         Verify.verifyEquals(
                 Sets.newHashSet(
-                        GranteeType.GT_USER.getCode() + ":" + grantee1.getName(), 
-                        GranteeType.GT_USER.getCode() + ":" + grantee2.getName()), 
+                        Verify.makeResultStr(GranteeType.GT_USER.getCode(), grantee1.getName()),
+                        Verify.makeResultStr(GranteeType.GT_USER.getCode(), grantee2.getName())), 
                 right1GranteeNames);
         Verify.verifyEquals(
                 Sets.newHashSet(
-                        GranteeType.GT_AUTHUSER.getCode() + ":null"), 
+                        Verify.makeResultStr(GranteeType.GT_AUTHUSER.getCode(), "null")), 
                 right2GranteeNames);
     }
 
@@ -795,23 +794,23 @@ public class TestDelegatedDL extends SoapTest {
         for (RightCommand.ACE ace : grants.getACEs()) {
             String right = ace.right();
             if (right1.equals(right)) {
-                right1GranteeNames.add(ace.granteeType() + ":" + ace.granteeName());
+                right1GranteeNames.add(Verify.makeResultStr(ace.granteeType(), ace.granteeName()));
             } else if (right2.equals(right)) {
-                right2GranteeNames.add(ace.granteeType() + ":" + ace.granteeName());
+                right2GranteeNames.add(Verify.makeResultStr(ace.granteeType(), ace.granteeName()));
             }
         }
         Verify.verifyEquals(
                 Sets.newHashSet(
-                        GranteeType.GT_USER.getCode() + ":" + grantee1.getName(), 
-                        GranteeType.GT_USER.getCode() + ":" + grantee2.getName(), 
-                        GranteeType.GT_GROUP.getCode() + ":" + groupGrantee.getName(),
-                        GranteeType.GT_AUTHUSER.getCode() + ":" , 
-                        GranteeType.GT_PUBLIC.getCode() + ":" ), 
+                        Verify.makeResultStr(GranteeType.GT_USER.getCode(), grantee1.getName()),
+                        Verify.makeResultStr(GranteeType.GT_USER.getCode(), grantee2.getName()),
+                        Verify.makeResultStr(GranteeType.GT_GROUP.getCode(), groupGrantee.getName()),
+                        Verify.makeResultStr(GranteeType.GT_AUTHUSER.getCode(), ""),
+                        Verify.makeResultStr(GranteeType.GT_PUBLIC.getCode(), "")), 
                 right1GranteeNames);
         Verify.verifyEquals(
                 Sets.newHashSet(
-                        GranteeType.GT_USER.getCode() + ":" + grantee1.getName(), 
-                        GranteeType.GT_USER.getCode() + ":" + grantee2.getName()), 
+                        Verify.makeResultStr(GranteeType.GT_USER.getCode(), grantee1.getName()),
+                        Verify.makeResultStr(GranteeType.GT_USER.getCode(), grantee2.getName())), 
                 right2GranteeNames);
         
         
@@ -845,13 +844,13 @@ public class TestDelegatedDL extends SoapTest {
         for (RightCommand.ACE ace : grants.getACEs()) {
             String right = ace.right();
             if (right1.equals(right)) {
-                right1GranteeNames.add(ace.granteeType() + ":" + ace.granteeName());
+                right1GranteeNames.add(Verify.makeResultStr(ace.granteeType(), ace.granteeName()));
             } else if (right2.equals(right)) {
-                right2GranteeNames.add(ace.granteeType() + ":" + ace.granteeName());
+                right2GranteeNames.add(Verify.makeResultStr(ace.granteeType(), ace.granteeName()));
             }
         }
         Verify.verifyEquals(
-                Sets.newHashSet(GranteeType.GT_AUTHUSER.getCode() + ":"), 
+                Sets.newHashSet(Verify.makeResultStr(GranteeType.GT_AUTHUSER.getCode(), "")), 
                 right1GranteeNames);
         assertEquals(0, right2GranteeNames.size());
         
@@ -1073,55 +1072,79 @@ public class TestDelegatedDL extends SoapTest {
     
     @Test
     public void getAccountMembership() throws Exception {
-        String GROUP_NAME = getAddress(genGroupNameLocalPart());
-        String GROUP_DISPLAY_NAME = "DISPLAY";
+        String GROUP_1_NAME = getAddress(genGroupNameLocalPart("1"));
+        String GROUP_1_DISPLAY_NAME = "third";
+        String GROUP_2_NAME = getAddress(genGroupNameLocalPart("2"));
+        String GROUP_2_DISPLAY_NAME = "first";
+        String GROUP_3_NAME = getAddress(genGroupNameLocalPart("3"));
+        String GROUP_3_DISPLAY_NAME = "first";
         
-        List<KeyValuePair> attrs = Lists.newArrayList(new KeyValuePair(
-                Provisioning.A_displayName, GROUP_DISPLAY_NAME));
-        Group group = createGroupAndAddOwner(GROUP_NAME, attrs);
+        Group group1 = provUtil.createGroup(GROUP_1_NAME, 
+                Collections.singletonMap(
+                Provisioning.A_displayName, (Object)GROUP_1_DISPLAY_NAME), false);
+        Group group2 = provUtil.createGroup(GROUP_2_NAME, 
+                Collections.singletonMap(
+                Provisioning.A_displayName, (Object)GROUP_2_DISPLAY_NAME), false);
+        Group group3 = provUtil.createGroup(GROUP_3_NAME, 
+                Collections.singletonMap(
+                Provisioning.A_displayName, (Object)GROUP_3_DISPLAY_NAME), false);
         
-        // add a member
-        prov.addGroupMembers(group, new String[]{USER_NOT_OWNER});
+        // create an account
+        String ACCT_NAME = getAddress(genAcctNameLocalPart());
+        Account acct = provUtil.createAccount(ACCT_NAME);
         
-        SoapTransport transport = authUser(USER_NOT_OWNER);
+        // add the account in groups
+        prov.addGroupMembers(group1, new String[]{ACCT_NAME});
+        prov.addGroupMembers(group2, new String[]{ACCT_NAME});
+        prov.addGroupMembers(group3, new String[]{ACCT_NAME});
+        
+        SoapTransport transport = authUser(ACCT_NAME);
         GetAccountMembershipRequest req = new GetAccountMembershipRequest(Boolean.TRUE);
         GetAccountMembershipResponse resp = invokeJaxb(transport, req);
         
-        boolean seenGroup = false;
+        List<String> result = Lists.newArrayList();
+        
         List<DLInfo> groups = resp.getDlList();
         for (DLInfo dlInfo : groups) {
             String id = dlInfo.getId();
             String name = dlInfo.getName();
             String displayName = dlInfo.getDisplayName();
             
-            if (group.getId().equals(id) && 
-                name.equals(GROUP_NAME) && 
-                displayName.equals(GROUP_DISPLAY_NAME)) {
-                seenGroup = true;
-            }
+            result.add(Verify.makeResultStr(id, name, displayName));
         }
-        assertTrue(seenGroup);
+        
+        // result should be sorted by displayName.  
+        // If displayName are the same, sorted by entry.getLabel()
+        Verify.verifyEquals(
+                Lists.newArrayList(
+                        Verify.makeResultStr(group2.getId(), group2.getName(), group2.getDisplayName()),
+                        Verify.makeResultStr(group3.getId(), group3.getName(), group3.getDisplayName()),
+                        Verify.makeResultStr(group1.getId(), group1.getName(), group1.getDisplayName())), 
+                result);
+        
         
         // rename group
         String GROUP_NEW_NAME = getAddress(genGroupNameLocalPart("new"));
-        prov.renameGroup(group.getId(), GROUP_NEW_NAME);
+        prov.renameGroup(group1.getId(), GROUP_NEW_NAME);
         
         // get membership again, should show the new name
-        resp = invokeJaxb(transport, req);
-        seenGroup = false;
+        result.clear();
         groups = resp.getDlList();
         for (DLInfo dlInfo : groups) {
             String id = dlInfo.getId();
             String name = dlInfo.getName();
             String displayName = dlInfo.getDisplayName();
             
-            if (group.getId().equals(id) && 
-                name.equals(GROUP_NEW_NAME) &&
-                displayName.equals(GROUP_DISPLAY_NAME)) {
-                seenGroup = true;
-            }
+            result.add(Verify.makeResultStr(id, name, displayName));
         }
-        assertTrue(seenGroup);
+     
+        // result should be sorted by displayName
+        Verify.verifyEquals(
+                Lists.newArrayList(
+                        Verify.makeResultStr(group2.getId(), group2.getName(), group2.getDisplayName()),
+                        Verify.makeResultStr(group3.getId(), group3.getName(), group3.getDisplayName()),
+                        Verify.makeResultStr(group1.getId(), group1.getName(), group1.getDisplayName())), 
+                result);
     }
 
     /*

@@ -13,7 +13,6 @@
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.service.account;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +21,7 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.ZimbraSoapContext;
@@ -42,7 +42,11 @@ public class GetAccountMembership extends AccountDocumentHandler {
         List<Group> groups = prov.getGroups(acct, directOnly, via);
         
         Element response = zsc.createElement(AccountConstants.GET_ACCOUNT_MEMBERSHIP_RESPONSE);
-        for (Group group: groups) {
+        
+        List<Entry> sortedGroups = Entry.sortByDisplayName(groups, acct.getLocale());
+        
+        for (Entry entry: sortedGroups) {
+            Group group = (Group) entry;
             Element eDL = response.addElement(AccountConstants.E_DL);
             eDL.addAttribute(AccountConstants.A_NAME, group.getName());
             eDL.addAttribute(AccountConstants.A_ID, group.getId());
@@ -55,5 +59,4 @@ public class GetAccountMembership extends AccountDocumentHandler {
         }
         return response;
     }
-
 }

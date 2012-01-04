@@ -15,6 +15,8 @@
 
 package com.zimbra.cs.service.account;
 
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -78,17 +80,21 @@ public class DiscoverRights extends AccountDocumentHandler {
         AccessManager accessMgr = AccessManager.getInstance();
         Map<Right, Set<Entry>> discoveredRights = accessMgr.discoverRights(account, rights);
         
+        Locale locale = account.getLocale();
+        
         Element response = zsc.createElement(AccountConstants.DISCOVER_RIGHTS_RESPONSE);
         for (Map.Entry<Right, Set<Entry>> targetsForRight : discoveredRights.entrySet()) {
             Right right = targetsForRight.getKey();
             Set<Entry> targets = targetsForRight.getValue();
+            
+            List<Entry> sortedTargets = Entry.sortByDisplayName(targets, locale);
             
             boolean isDelegatedSendRight = isDelegatedSendRight(right);
             
             Element eTargets = response.addElement(AccountConstants.E_TARGETS);
             eTargets.addAttribute(AccountConstants.A_RIGHT, right.getName());
             
-            for (Entry target : targets) {
+            for (Entry target : sortedTargets) {
                 TargetType targetType = TargetType.getTargetType(target);
                 Element eTarget = eTargets.addElement(AccountConstants.E_TARGET);
                 eTarget.addAttribute(AccountConstants.A_TYPE, targetType.getCode());

@@ -15,6 +15,9 @@
 
 package com.zimbra.cs.account;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.TreeMultimap;
 import com.zimbra.common.account.ProvisioningConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
@@ -24,8 +27,12 @@ import com.zimbra.client.ToZJSONObject;
 import com.zimbra.client.ZJSONObject;
 import org.json.JSONException;
 
+import java.text.CollationKey;
+import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -617,6 +624,44 @@ public abstract class Entry implements ToZJSONObject {
     public String dump(String filter, boolean applyDefaults) throws JSONException {
         return toZJSONObject(filter, applyDefaults).toString();
     }
+    
+    
+    private static final class SortByLabelAsc implements Comparator<Entry> {
+        @Override public int compare(Entry m1, Entry m2) {
+            return m1.getLabel().compareTo(m2.getLabel());
+        }
+    }
 
+    /**
+     * Sort a collection of Entries by locale-sensitive String comparison on
+     * each entry's displayName.  If there is no display name, use entry.getLabel() 
+     * as the key.
+     */
+    public static List<Entry> sortByDisplayName(Collection<? extends Entry> entries, Locale locale) {
+        List<Entry> sorted = Lists.newArrayList();
+        
+        // short-circuit if there is only one entry or no entry
+        if (entries.size() <= 1) {
+            sorted.addAll(entries);
+        } else {
+            Collator collator = Collator.getInstance(locale);
+            
+            TreeMultimap<CollationKey, Entry> map = 
+                TreeMultimap.create(Ordering.natural(), new SortByLabelAsc());
+            
+            for (Entry entry : entries) {
+                String key = entry.getAttr(Provisioning.A_displayName);
+                if (key == null) {
+                    key = entry.getLabel();
+                }
+                CollationKey collationKey = collator.getCollationKey(key);
+                
+                map.put(collationKey, entry);
+            }
+            
+            sorted.addAll(map.values());
+        }
+        return sorted;
+    }
 
 }

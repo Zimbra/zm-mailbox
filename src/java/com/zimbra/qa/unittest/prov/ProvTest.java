@@ -70,7 +70,7 @@ public class ProvTest {
     }
     
     protected String genAcctNameLocalPart(String suffix) {
-        return genName(suffix);
+        return "acct-" + genName(suffix);
     }
     
     protected String genAcctNameLocalPart() {
@@ -94,7 +94,7 @@ public class ProvTest {
     }
 
     protected String genGroupNameLocalPart(String suffix) {
-        return genName(suffix);
+        return "group-" + genName(suffix);
     }
     
     protected String genGroupNameLocalPart() {

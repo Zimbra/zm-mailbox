@@ -23,6 +23,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.common.collect.Lists;
 import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.cs.account.Account;
@@ -33,6 +34,8 @@ import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.TargetType;
 import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.qa.QA.Bug;
+import com.zimbra.qa.unittest.TestUtil;
+import com.zimbra.qa.unittest.prov.Verify;
 import com.zimbra.soap.account.message.DiscoverRightsRequest;
 import com.zimbra.soap.account.message.DiscoverRightsResponse;
 import com.zimbra.soap.account.type.DiscoverRightsInfo;
@@ -44,12 +47,14 @@ public class TestDiscoverRights extends SoapTest {
     private static SoapProvTestUtil provUtil;
     private static Provisioning prov;
     private static Domain domain;
+    private static String DOMAIN_NAME;
     
     @BeforeClass
     public static void init() throws Exception {
         provUtil = new SoapProvTestUtil();
         prov = provUtil.getProv();
         domain = provUtil.createDomain(baseDomainName());
+        DOMAIN_NAME = domain.getName();
     }
     
     @AfterClass
@@ -57,21 +62,46 @@ public class TestDiscoverRights extends SoapTest {
         Cleanup.deleteAll(baseDomainName());
     }
     
+    
+    private String getAddress(String localpart) {
+        return TestUtil.getAddress(localpart, DOMAIN_NAME);
+    }
+    
     /*
-     * verify display name is returned in DiscoverRights
+     * verify display name is returned in DiscoverRights and discovered targets 
+     * are sorted by displayName 
      */
     @Test 
     @Bug(bug=68225)
     public void displayName() throws Exception {
-        Account acct = provUtil.createAccount(genAcctNameLocalPart("acct"), domain);
+        Account acct = provUtil.createAccount(genAcctNameLocalPart(), domain);
         
-        String GROUP_DISPLAY_NAME = "DISPLAY";
-        Group group = provUtil.createGroup(genGroupNameLocalPart("dl"), domain,
-                Collections.singletonMap(Provisioning.A_displayName, (Object)GROUP_DISPLAY_NAME),
-                false);
+        String GROUP_1_NAME = getAddress(genGroupNameLocalPart("1"));
+        String GROUP_1_DISPLAY_NAME = "third";
+        String GROUP_2_NAME = getAddress(genGroupNameLocalPart("2"));
+        String GROUP_2_DISPLAY_NAME = "first";
+        String GROUP_3_NAME = getAddress(genGroupNameLocalPart("3"));
+        String GROUP_3_DISPLAY_NAME = "first";
+        
+        Group group1 = provUtil.createGroup(GROUP_1_NAME, 
+                Collections.singletonMap(
+                Provisioning.A_displayName, (Object)GROUP_1_DISPLAY_NAME), false);
+        Group group2 = provUtil.createGroup(GROUP_2_NAME, 
+                Collections.singletonMap(
+                Provisioning.A_displayName, (Object)GROUP_2_DISPLAY_NAME), false);
+        Group group3 = provUtil.createGroup(GROUP_3_NAME, 
+                Collections.singletonMap(
+                Provisioning.A_displayName, (Object)GROUP_3_DISPLAY_NAME), false);
         
         String RIGHT_NAME = User.R_ownDistList.getName();
-        prov.grantRight(TargetType.dl.getCode(), TargetBy.name, group.getName(), 
+        
+        prov.grantRight(TargetType.dl.getCode(), TargetBy.name, group1.getName(), 
+                GranteeType.GT_USER.getCode(), GranteeBy.name, acct.getName(), null, 
+                RIGHT_NAME, null);
+        prov.grantRight(TargetType.dl.getCode(), TargetBy.name, group2.getName(), 
+                GranteeType.GT_USER.getCode(), GranteeBy.name, acct.getName(), null, 
+                RIGHT_NAME, null);
+        prov.grantRight(TargetType.dl.getCode(), TargetBy.name, group3.getName(), 
                 GranteeType.GT_USER.getCode(), GranteeBy.name, acct.getName(), null, 
                 RIGHT_NAME, null);
         
@@ -84,23 +114,28 @@ public class TestDiscoverRights extends SoapTest {
         List<DiscoverRightsInfo> rightsInfo = resp.getDiscoveredRights();
         assertEquals(1, rightsInfo.size());
         
-        boolean seenGrant = false;
+        List<String> result = Lists.newArrayList();
+        
         for (DiscoverRightsInfo rightInfo : rightsInfo) {
             List<DiscoverRightsTarget> targets = rightInfo.getTargets();
-            assertEquals(1, targets.size());
+            
             for (DiscoverRightsTarget target : targets) {
                 String id = target.getId();
                 String name = target.getName();
                 String displayName = target.getDisplayName();
                 
-                if (group.getId().equals(id) &&
-                    group.getName().equals(name) &&
-                    GROUP_DISPLAY_NAME.equals(displayName)) {
-                    seenGrant = true;
-                }
+                result.add(Verify.makeResultStr(id, name, displayName));
             }
         }
-        assertTrue(seenGrant);
+        
+        // result should be sorted by displayName.  
+        // If displayName are the same, sorted by entry.getLabel()
+        Verify.verifyEquals(
+                Lists.newArrayList(
+                        Verify.makeResultStr(group2.getId(), group2.getName(), group2.getDisplayName()),
+                        Verify.makeResultStr(group3.getId(), group3.getName(), group3.getDisplayName()),
+                        Verify.makeResultStr(group1.getId(), group1.getName(), group1.getDisplayName())), 
+                result);
     }
     
 }
