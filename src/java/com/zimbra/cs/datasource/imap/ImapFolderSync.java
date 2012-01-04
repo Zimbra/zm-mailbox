@@ -827,7 +827,7 @@ class ImapFolderSync {
                     handleFetch(md, flagsByUid);
                     clearError(uid);
                 } catch (OutOfMemoryError e) {
-                    Zimbra.halt("Out of memory");
+                    Zimbra.halt("Out of memory", e);
                 } catch (Exception e) {
                     if (!IOExceptionHandler.getInstance().isRecoverable(mailbox, uid, "Exception syncing UID "+uid+" in folder "+remoteFolder.getPath(), e)) {
                         syncFailed("Fetch failed for uid " + uid, e);

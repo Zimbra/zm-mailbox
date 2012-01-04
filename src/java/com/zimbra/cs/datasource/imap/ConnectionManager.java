@@ -198,7 +198,7 @@ final class ConnectionManager {
             try {
                 return MessageContent.read(data.getInputStream(), data.getSize());
             } catch (OutOfMemoryError e) {
-                Zimbra.halt("Out of memory");
+                Zimbra.halt("Out of memory", e);
                 return null;
             }
         }
