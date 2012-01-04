@@ -1554,13 +1554,17 @@
             zimbraMailHost ${zimbra.server.hostname} \
             zimbraAttachmentsIndexingEnabled FALSE \
             zimbraMailQuota 0 \
-            zimbraHideInGal TRUE
+            zimbraHideInGal TRUE \
+            zimbraIsSystemResource TRUE \
+            zimbraIsSystemAccount TRUE
             mcf zimbraSpamIsSpamAccount spam-sink@${defaultdomain.name}
             ca ham-sink@${defaultdomain.name} test123 \
             zimbraMailHost ${zimbra.server.hostname} \
             zimbraAttachmentsIndexingEnabled FALSE \
             zimbraMailQuota 0 \
-            zimbraHideInGal TRUE
+            zimbraHideInGal TRUE \
+            zimbraIsSystemResource TRUE \
+            zimbraIsSystemAccount TRUE
             mcf zimbraSpamIsNotSpamAccount ham-sink@${defaultdomain.name}
             ccr room-mississippi@${defaultdomain.name} test123 \
             displayName 'Mississippi Conference Room' \
