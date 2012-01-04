@@ -23,6 +23,7 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Entry.EntryType;
 import com.zimbra.cs.account.ldap.LdapDIT;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.LdapClient;
@@ -37,6 +38,9 @@ import com.zimbra.cs.ldap.SearchLdapOptions.StopIteratingException;
 
 public class BUG_57866 extends UpgradeOp {
 
+    private static final String ATTR_NAME = Provisioning.A_zimbraIsSystemAccount;
+    private static final String VALUE = LdapConstants.LDAP_TRUE;
+    
     @Override
     void doUpgrade() throws ServiceException {
         ZLdapContext zlc = null;
@@ -83,6 +87,18 @@ public class BUG_57866 extends UpgradeOp {
             LdapClient.closeContext(zlc);
         }
     }
+    
+    @Override
+    Description getDescription() {
+        return new Description(
+                this, 
+                new String[] {ATTR_NAME}, 
+                new EntryType[] {EntryType.ACCOUNT},
+                null, 
+                VALUE, 
+                String.format("set %s to %s on all spam/ham/global and domain wiki/GAL sync" +
+                        "/quarantine accounts.", ATTR_NAME, VALUE));
+    }
 
     private void setIsSystemAccount(ZLdapContext zlc, Account acct) throws ServiceException {
         if (acct == null) {
@@ -91,7 +107,7 @@ public class BUG_57866 extends UpgradeOp {
         
         if (!acct.isIsSystemAccount()) {
             Map<String, Object> attrs = new HashMap<String, Object>();
-            attrs.put(Provisioning.A_zimbraIsSystemAccount, LdapConstants.LDAP_TRUE); 
+            attrs.put(ATTR_NAME, VALUE); 
             modifyAttrs(zlc, acct, attrs);
         }
     }
