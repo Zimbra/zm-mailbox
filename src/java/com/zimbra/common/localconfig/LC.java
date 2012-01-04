@@ -273,7 +273,7 @@ public final class LC {
 
     @Supported
     public static final KnownKey zimbra_session_limit_imap = KnownKey.newKey(15);
-    
+
     @Supported
     public static final KnownKey zimbra_session_limit_sync = KnownKey.newKey(5);
 
@@ -1178,6 +1178,7 @@ public final class LC {
     public static final KnownKey http_store_local_cache_max_files = KnownKey.newKey(10000);
 
     public static final KnownKey http_store_local_cache_min_lifetime = KnownKey.newKey(Constants.MILLIS_PER_MINUTE);
+    public static final KnownKey uncompressed_cache_min_lifetime = KnownKey.newKey(Constants.MILLIS_PER_MINUTE);
 
     static {
         // Automatically set the key name with the variable name.
