@@ -19,10 +19,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.junit.runner.JUnitCore;
-
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import org.junit.runner.JUnitCore;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -99,7 +99,6 @@ public class ZimbraSuite extends TestSuite
         sClasses.add(TestSpam.class);
         sClasses.add(TestMailSender.class);
         sClasses.add(TestGetMsg.class);
-        sClasses.add(TestFileDescriptorCache.class);
         sClasses.add(TestMountpoint.class);
         sClasses.add(TestZClient.class);
         sClasses.add(TestLog.class);

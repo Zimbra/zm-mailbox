@@ -15,7 +15,6 @@
 package com.zimbra.cs.store.http;
 
 import java.io.File;
-import java.io.InputStream;
 import java.util.HashMap;
 
 import org.apache.commons.httpclient.methods.PostMethod;
@@ -37,7 +36,6 @@ import com.zimbra.cs.mailbox.MailboxTestUtil;
 import com.zimbra.cs.mailbox.ThreaderTest;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.store.Blob;
-import com.zimbra.cs.store.LocalBlobCache;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
@@ -138,94 +136,5 @@ public class HttpStoreManagerTest {
 
         mblob1.getLocalBlob();
         mblob2.getLocalBlob();
-    }
-
-    /**
-     * Test pruning the local cache when the maximum number of files or number of bytes
-     * is exceeded (bug 67931).
-     */
-    @Test
-    public void localCachePruning() throws Exception {
-        ParsedMessage pm = ThreaderTest.getRootMessage();
-        HttpStoreManager sm = (HttpStoreManager) StoreManager.getInstance();
-        LocalBlobCache cache = sm.getBlobCache();
-        cache.setMaxFiles(2);
-        cache.setMinLifetime(0);
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
-
-        // Store blob 1.
-        MailboxBlob mblob1 = storeAndGet(sm, mbox, pm.getRawInputStream());
-        long size = mblob1.getSize();
-        Assert.assertEquals(1, cache.getNumFiles());
-        Assert.assertEquals(size, cache.getNumBytes());
-        Assert.assertNotNull(cache.get(mblob1.getLocator()));
-
-        // Store blob 2.
-        MailboxBlob mblob2 = storeAndGet(sm, mbox, pm.getRawInputStream());
-        Assert.assertEquals(2, cache.getNumFiles());
-        Assert.assertEquals(2 * size, cache.getNumBytes());
-        Assert.assertNotNull(cache.get(mblob1.getLocator()));
-        Assert.assertNotNull(cache.get(mblob2.getLocator()));
-
-        // Store blob 3.  Make sure that blob 1 was ejected because the
-        // number of files was exceeded.
-        MailboxBlob mblob3 = storeAndGet(sm, mbox, pm.getRawInputStream());
-        Assert.assertEquals(2, cache.getNumFiles());
-        Assert.assertEquals(2 * size, cache.getNumBytes());
-        Assert.assertNull(cache.get(mblob1.getLocator()));
-        Assert.assertNotNull(cache.get(mblob2.getLocator()));
-        Assert.assertNotNull(cache.get(mblob3.getLocator()));
-
-        cache.setMaxFiles(100);
-        cache.setMaxBytes(size * 4 - 1);
-
-        // Store blob 4.
-        MailboxBlob mblob4 = storeAndGet(sm, mbox, pm.getRawInputStream());
-        Assert.assertEquals(3, cache.getNumFiles());
-        Assert.assertEquals(3 * size, cache.getNumBytes());
-        Assert.assertNotNull(cache.get(mblob2.getLocator()));
-        Assert.assertNotNull(cache.get(mblob3.getLocator()));
-        Assert.assertNotNull(cache.get(mblob4.getLocator()));
-
-        // Access blob 2 to move it to the back of the LRU list.
-        cache.get(mblob2.getLocator());
-
-        // Store blob 5.  Make sure that blob 3 was ejected because the
-        // number of bytes was exceeded.
-        MailboxBlob mblob5 = storeAndGet(sm, mbox, pm.getRawInputStream());
-        Assert.assertEquals(3, cache.getNumFiles());
-        Assert.assertEquals(3 * size, cache.getNumBytes());
-        Assert.assertNotNull(cache.get(mblob2.getLocator()));
-        Assert.assertNull(cache.get(mblob3.getLocator()));
-        Assert.assertNotNull(cache.get(mblob4.getLocator()));
-        Assert.assertNotNull(cache.get(mblob5.getLocator()));
-
-        cache.setMaxFiles(1);
-        cache.setMaxBytes(1L);
-        cache.setMinLifetime(100000);
-
-        // Store blob 6.  Make sure that the other blobs are not ejected
-        // because the minimum lifetime was not exceeded.
-        storeAndGet(sm, mbox, pm.getRawInputStream());
-        Assert.assertEquals(4, cache.getNumFiles());
-
-        cache.setMinLifetime(100);
-        Thread.sleep(150);
-
-        // Store blob 7.  Make sure that all other blobs were ejected.
-        MailboxBlob mblob7 = storeAndGet(sm, mbox, pm.getRawInputStream());
-        Assert.assertEquals(1, cache.getNumFiles());
-        Assert.assertNotNull(cache.get(mblob7.getLocator()));
-    }
-
-    /**
-     * Stores a new blob from the given stream and loads it into the file cache.
-     */
-    private MailboxBlob storeAndGet(StoreManager store, Mailbox mbox, InputStream in) throws Exception {
-        Blob blob = store.storeIncoming(in, null);
-        StagedBlob staged = store.stage(blob, mbox);
-        MailboxBlob mblob = store.link(staged, mbox, 0, 0);
-        mblob.getLocalBlob();
-        return mblob;
     }
 }

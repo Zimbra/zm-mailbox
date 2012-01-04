@@ -28,13 +28,13 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobBuilder;
 import com.zimbra.cs.store.BlobInputStream;
+import com.zimbra.cs.store.FileCache;
 import com.zimbra.cs.store.FileDescriptorCache;
 import com.zimbra.cs.store.IncomingDirectory;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StorageCallback;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.store.UncompressedFileCache;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 import com.zimbra.znative.IO;
@@ -50,10 +50,12 @@ public final class FileBlobStore extends StoreManager {
         IncomingDirectory.startSweeper();
 
         // initialize file uncompressed file cache and file descriptor cache
-        String uncompressedPath = LC.zimbra_tmp_directory.value() + File.separator + "uncompressed";
-        FileUtil.ensureDirExists(uncompressedPath);
-        UncompressedFileCache<String> ufcache = new UncompressedFileCache<String>(uncompressedPath).startup();
-        BlobInputStream.setFileDescriptorCache(new FileDescriptorCache(ufcache).loadSettings());
+        File tmpDir = new File(LC.zimbra_tmp_directory.value());
+        File ufCacheDir = new File(tmpDir, "uncompressed");
+        FileUtil.ensureDirExists(ufCacheDir);
+        FileCache<String> ufCache = new FileCache.Builder<String>(ufCacheDir)
+            .minLifetime(LC.uncompressed_cache_min_lifetime.longValue()).build();
+        BlobInputStream.setFileDescriptorCache(new FileDescriptorCache(ufCache).loadSettings());
     }
 
     @Override
