@@ -333,11 +333,11 @@ public class AccountConstants {
     public static final String A_TYPE = "type";
     public static final String A_LIMIT = "limit";
     public static final String A_LOCAL_NAME = "localName";
-    public static final String A_MEMBER = "member";
+    public static final String A_MEMBER_OF = "memberOf";
     public static final String A_MORE = "more";
     public static final String A_NEED_OWNERS = "needOwners";
     public static final String A_NEED_RIGHTS = "needRights";
-    public static final String A_OWNER = "owner";
+    public static final String A_OWNER_OF = "ownerOf";
     public static final String A_TOTAL = "total";
     public static final String A_ZIMLET = "zimlet";
     public static final String A_ZIMLET_BASE_URL = "baseUrl";
