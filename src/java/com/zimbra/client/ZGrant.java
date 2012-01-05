@@ -76,38 +76,45 @@ public class ZGrant implements ToZJSONObject {
     }
 
     public enum GranteeType {
+        // Need to keep JAXB class com.zimbra.soap.type.GrantGranteeType in sync with this class
         /**
          * access is granted to an authenticated user
          */
-        usr, 
+        usr(com.zimbra.soap.type.GrantGranteeType.usr),
         /**
          * access is granted to a group of users
          */
-        grp,
+        grp(com.zimbra.soap.type.GrantGranteeType.grp),
         /**
          * access is granted to users on a cos
          */
-        cos,
+        cos(com.zimbra.soap.type.GrantGranteeType.cos),
         /**
-         * accesss is granted to public. no authentication needed.
+         * access is granted to public. no authentication needed.
          */
-        pub,
+        pub(com.zimbra.soap.type.GrantGranteeType.pub),
         /**
          * access is granted to all authenticated users
          */
-        all, 
+        all(com.zimbra.soap.type.GrantGranteeType.all),
         /**
          * access is granted to all users in a domain
          */
-        dom, 
+        dom(com.zimbra.soap.type.GrantGranteeType.dom),
         /**
          * access is granted to a non-Zimbra email address and a password 
          */
-        guest,
+        guest(com.zimbra.soap.type.GrantGranteeType.guest),
         /**
          * access is granted to a non-Zimbra email address and an accesskey
          */
-        key;
+        key(com.zimbra.soap.type.GrantGranteeType.key);
+
+        private com.zimbra.soap.type.GrantGranteeType jaxbGranteeType;
+
+        GranteeType(com.zimbra.soap.type.GrantGranteeType jaxbGT) {
+            jaxbGranteeType = jaxbGT;
+        }
 
         public static GranteeType fromString(String s) throws ServiceException {
             try {
@@ -115,6 +122,20 @@ public class ZGrant implements ToZJSONObject {
             } catch (IllegalArgumentException e) {
                 throw ZClientException.CLIENT_ERROR("invalid grantee: "+s+", valid values: "+Arrays.asList(GranteeType.values()), e);
             }
+        }
+
+        /* return equivalent JAXB enum */
+        public com.zimbra.soap.type.GrantGranteeType toJaxb() {
+            return jaxbGranteeType;
+        }
+
+        public static GranteeType fromJaxb(com.zimbra.soap.type.GrantGranteeType jaxbGT) {
+            for (GranteeType gt :GranteeType.values()) {
+                if (gt.toJaxb() == jaxbGT) {
+                    return gt;
+                }
+            }
+            throw new IllegalArgumentException("Unrecognised GranteeType:" + jaxbGT);
         }
     }
 
