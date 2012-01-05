@@ -27,7 +27,7 @@ import org.junit.Test;
 import com.zimbra.soap.mail.message.GetFolderResponse;
 import com.zimbra.soap.mail.type.Folder;
 import com.zimbra.soap.mail.type.Grant;
-import com.zimbra.soap.mail.type.Grant.GranteeType;
+import com.zimbra.soap.type.GrantGranteeType;
 import com.zimbra.soap.mail.type.ItemType;
 import com.zimbra.soap.mail.type.SearchFolder;
 
@@ -59,9 +59,9 @@ public final class GetFolderTest {
             if (myGrants.size() > 0) {
                 foundGrant = true;
                 Grant first = myGrants.get(0);
-                GranteeType mGranteeType = GranteeType.fromString(
+                GrantGranteeType mGranteeType = GrantGranteeType.fromString(
                         first.getGranteeType().toString());
-                Assert.assertEquals(GranteeType.USER, mGranteeType);
+                Assert.assertEquals(GrantGranteeType.usr, mGranteeType);
             }
         }
         Assert.assertTrue("Should have processed a valid <grant>", foundGrant);
@@ -74,7 +74,7 @@ public final class GetFolderTest {
             if (myGrants.size() > 0) {
                 foundGrant = true;
                 Grant first = myGrants.get(0);
-                GranteeType mGranteeType = first.getGranteeType();
+                GrantGranteeType mGranteeType = first.getGranteeType();
                 Assert.assertNull("There was no 'gt' attribute", mGranteeType);
             }
         }

@@ -23,9 +23,10 @@ import javax.xml.bind.annotation.XmlValue;
 
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AdminConstants;
+import com.zimbra.soap.type.GranteeType;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class GranteeSelector {
 
     @XmlEnum
@@ -43,7 +44,7 @@ public class GranteeSelector {
     }
 
     @XmlAttribute(name=AdminConstants.A_TYPE, required=false)
-    private final GranteeInfo.GranteeType type;
+    private final GranteeType type;
     @XmlAttribute(name=AdminConstants.A_BY, required=false)
     private final GranteeBy by;
     @XmlAttribute(name=AdminConstants.A_SECRET, required=false)
@@ -58,31 +59,31 @@ public class GranteeSelector {
      */
     @SuppressWarnings("unused")
     private GranteeSelector() {
-        this((GranteeInfo.GranteeType) null, (GranteeBy) null, (String) null,
+        this((GranteeType) null, (GranteeBy) null, (String) null,
                 (Boolean) null, (String) null);
     }
 
     public GranteeSelector(GranteeBy by, String key) {
-        this((GranteeInfo.GranteeType) null, by, key,
+        this((GranteeType) null, by, key,
                 (Boolean) null, (String) null);
     }
 
-    public GranteeSelector(GranteeInfo.GranteeType type,
+    public GranteeSelector(GranteeType type,
             GranteeBy by, String key) {
         this(type, by, key, (Boolean) null, (String) null);
     }
 
-    public GranteeSelector(GranteeInfo.GranteeType type,
+    public GranteeSelector(GranteeType type,
             GranteeBy by, String key, String secret) {
         this(type, by, key, (Boolean) null, secret);
     }
 
-    public GranteeSelector(GranteeInfo.GranteeType type,
+    public GranteeSelector(GranteeType type,
             GranteeBy by, String key, Boolean all) {
         this(type, by, key, all, (String) null);
     }
 
-    public GranteeSelector(GranteeInfo.GranteeType type,
+    public GranteeSelector(GranteeType type,
             GranteeBy by, String key, Boolean all, String secret) {
         this.type = type;
         this.by = by;
@@ -91,7 +92,7 @@ public class GranteeSelector {
         this.secret = secret;
     }
 
-    public GranteeInfo.GranteeType getType() { return type; }
+    public GranteeType getType() { return type; }
     public GranteeBy getBy() { return by; }
     public String getKey() { return key; }
     public String getSecret() { return secret; }

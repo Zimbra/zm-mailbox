@@ -15,22 +15,20 @@
 
 package com.zimbra.soap.account.type;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.google.common.base.Objects;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlEnum;
-import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlType;
 
 import com.zimbra.common.soap.AccountConstants;
 
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.StringUtil;
+import com.zimbra.soap.type.GrantGranteeType;
+
+/*
+ * Delete this class in bug 66989
+ */
 
 /*
 <grant perm="{rights}" gt="{grantee-type}" zid="{zimbra-id}" d="{grantee-name}" [pw="{password-for-guest}"] [key=="{access-key}"]/>*
@@ -39,51 +37,12 @@ import com.zimbra.common.util.StringUtil;
 @XmlType(propOrder = {})
 public class Grant {
 
-    @XmlEnum
-    public enum GranteeType {
-        @XmlEnumValue("usr") USER ("usr"),
-        @XmlEnumValue("grp") GROUP ("grp"),
-        @XmlEnumValue("all") AUTH_USER ("all"),
-        @XmlEnumValue("dom") DOMAIN ("dom"),
-        @XmlEnumValue("guest") GUEST ("guest"),
-        @XmlEnumValue("key") KEY ("key"),
-        @XmlEnumValue("pub") PUBLIC ("pub");
-
-        private static Map<String, GranteeType> nameToGranteeType = new HashMap<String, GranteeType>();
-
-        static {
-            for (GranteeType gt : values()) {
-                nameToGranteeType.put(gt.toString(), gt);
-            }
-        }
-
-        private String name;
-
-        private GranteeType(String name) {
-            this.name = name;
-        }
-
-        public static GranteeType fromString(String s)
-        throws ServiceException {
-            GranteeType gt = nameToGranteeType.get(s);
-            if (gt == null) {
-                throw ServiceException.INVALID_REQUEST("Invalid grantee type '" + s + "'.  Valid values are " +
-                    StringUtil.join(",", values()), null);
-            }
-            return gt;
-        }
-
-        @Override
-        public String toString() {
-            return name;
-        }
-    };
 
     @XmlAttribute(name=AccountConstants.A_RIGHTS /* perm */, required=true)
     private String perm;
 
     @XmlAttribute(name=AccountConstants.A_GRANT_TYPE /* gt */, required=true)
-    private GranteeType granteeType;
+    private GrantGranteeType granteeType;
 
     @XmlAttribute(name=AccountConstants.A_ZIMBRA_ID /* zid */, required=true)
     private String granteeId;
@@ -101,13 +60,13 @@ public class Grant {
     }
 
     public void setPerm(String perm) { this.perm = perm; }
-    public void setGranteeType(GranteeType granteeType) { this.granteeType = granteeType; }
+    public void setGranteeType(GrantGranteeType granteeType) { this.granteeType = granteeType; }
     public void setGranteeId(String granteeId) { this.granteeId = granteeId; }
     public void setGranteeName(String granteeName) { this.granteeName = granteeName; }
     public void setGuestPassword(String guestPassword) { this.guestPassword = guestPassword; }
     public void setAccessKey(String accessKey) { this.accessKey = accessKey; }
     public String getPerm() { return perm; }
-    public GranteeType getGranteeType() { return granteeType; }
+    public GrantGranteeType getGranteeType() { return granteeType; }
     public String getGranteeId() { return granteeId; }
     public String getGranteeName() { return granteeName; }
     public String getGuestPassword() { return guestPassword; }

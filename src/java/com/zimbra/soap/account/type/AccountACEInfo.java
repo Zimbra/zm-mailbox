@@ -21,16 +21,17 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.type.GranteeType;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class AccountACEInfo {
 
     @XmlAttribute(name=AccountConstants.A_ZIMBRA_ID /* zid */, required=false)
     private String zimbraId;
 
     @XmlAttribute(name=AccountConstants.A_GRANT_TYPE /* gt */, required=true)
-    private final Grant.GranteeType grantType;
+    private final GranteeType granteeType;
 
     @XmlAttribute(name=AccountConstants.A_RIGHT /* right */, required=true)
     private final String right;
@@ -52,11 +53,11 @@ public class AccountACEInfo {
      */
     @SuppressWarnings("unused")
     private AccountACEInfo() {
-        this((Grant.GranteeType) null, (String) null);
+        this((GranteeType) null, (String) null);
     }
 
-    public AccountACEInfo(Grant.GranteeType grantType, String right) {
-        this.grantType = grantType;
+    public AccountACEInfo(GranteeType granteeType, String right) {
+        this.granteeType = granteeType;
         this.right = right;
     }
 
@@ -68,7 +69,7 @@ public class AccountACEInfo {
     public void setPassword(String password) { this.password = password; }
     public void setDeny(Boolean deny) { this.deny = ZmBoolean.fromBool(deny); }
     public String getZimbraId() { return zimbraId; }
-    public Grant.GranteeType getGrantType() { return grantType; }
+    public GranteeType getGranteeType() { return granteeType; }
     public String getRight() { return right; }
     public String getDisplayName() { return displayName; }
     public String getAccessKey() { return accessKey; }
@@ -79,7 +80,7 @@ public class AccountACEInfo {
                 Objects.ToStringHelper helper) {
         return helper
             .add("zimbraId", zimbraId)
-            .add("grantType", grantType)
+            .add("granteeType", granteeType)
             .add("right", right)
             .add("displayName", displayName)
             .add("accessKey", accessKey)
