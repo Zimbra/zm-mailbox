@@ -6763,7 +6763,7 @@ TODO: delete them permanently from here
 <attr id="1358" name="zimbraMailProxyMaxFails" type="integer" min="0" cardinality="single" optionalIn="globalConfig,server" flags="serverInherited" since="8.0.0">
   <globalConfigValue>1</globalConfigValue>
   <desc>
-    The max number of unsuccessful attempts to connect the current server (as an upstream). If this number is reach, proxy will wait zimbraMailProxyReconnectTimeout and then try to reconnect. Default value is 1. Setting this to 0 means turning off this check.
+    The max number of unsuccessful attempts to connect to the current server (as an upstream). If this number is reached, proxy will refuse to connect to the current server, wait for zimbraMailProxyReconnectTimeout and then try to reconnect. Default value is 1. Setting this to 0 means turning this check off.
   </desc>
 </attr>
 </attrs>
