@@ -44,7 +44,7 @@ import com.zimbra.soap.account.type.AccountACEInfo;
 import com.zimbra.soap.account.type.CheckRightsRightInfo;
 import com.zimbra.soap.account.type.CheckRightsTargetInfo;
 import com.zimbra.soap.account.type.CheckRightsTargetSpec;
-import com.zimbra.soap.account.type.Grant.GranteeType;
+import com.zimbra.soap.type.GranteeType;
 import com.zimbra.soap.type.TargetBy;
 import com.zimbra.soap.type.TargetType;
 
@@ -87,7 +87,7 @@ public class TestCheckRights extends SoapTest {
         Account target2 = provUtil.createAccount(genAcctNameLocalPart("target2"), domain);
         
         // target1 grant right to acct, target2 does not
-        grantRight(target1, GranteeType.USER, acct, right);
+        grantRight(target1, GranteeType.usr, acct, right);
         
         SoapTransport transport = authUser(acct.getName());
         
@@ -191,7 +191,7 @@ public class TestCheckRights extends SoapTest {
         prov.modifyAttrs(targetAcct, 
                 Collections.singletonMap(Provisioning.A_zimbraPrefAllowAddressForDelegatedSender, alias1));
         
-        grantRight(targetAcct, GranteeType.USER, acct, right);
+        grantRight(targetAcct, GranteeType.usr, acct, right);
         
         SoapTransport transport = authUser(acct.getName());
         

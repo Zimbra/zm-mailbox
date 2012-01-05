@@ -23,18 +23,18 @@ import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.soap.admin.type.GranteeInfo;
 
 public enum GranteeType {
 
-    GT_USER("usr",     (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_INDIVIDUAL | GranteeFlag.F_IS_ZIMBRA_ENTRY)),
-    GT_GROUP("grp",    (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_GROUP      | GranteeFlag.F_IS_ZIMBRA_ENTRY)),
-    GT_EXT_GROUP("egp",(short)(GranteeFlag.F_ADMIN | GranteeFlag.F_GROUP)),
-    GT_AUTHUSER("all", (short)(                      GranteeFlag.F_AUTHUSER)),
-    GT_DOMAIN("dom",   (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_DOMAIN     | GranteeFlag.F_IS_ZIMBRA_ENTRY)),  // only for the admin crossDomainAdmin right and user rights
-    GT_GUEST("gst",    (short)(                      GranteeFlag.F_INDIVIDUAL                                  | GranteeFlag.F_HAS_SECRET)),
-    GT_KEY("key",      (short)(                      GranteeFlag.F_INDIVIDUAL                                  | GranteeFlag.F_HAS_SECRET)),
-    GT_PUBLIC("pub",   (short)(                      GranteeFlag.F_PUBLIC));
+    // Need to keep JAXB class com.zimbra.soap.type.GranteeType in sync with this class
+    GT_USER("usr",      com.zimbra.soap.type.GranteeType.usr, (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_INDIVIDUAL | GranteeFlag.F_IS_ZIMBRA_ENTRY)),
+    GT_GROUP("grp",     com.zimbra.soap.type.GranteeType.grp, (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_GROUP      | GranteeFlag.F_IS_ZIMBRA_ENTRY)),
+    GT_EXT_GROUP("egp", com.zimbra.soap.type.GranteeType.egp, (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_GROUP)),
+    GT_AUTHUSER("all",  com.zimbra.soap.type.GranteeType.all, (short)(                      GranteeFlag.F_AUTHUSER)),
+    GT_DOMAIN("dom",    com.zimbra.soap.type.GranteeType.dom, (short)(GranteeFlag.F_ADMIN | GranteeFlag.F_DOMAIN     | GranteeFlag.F_IS_ZIMBRA_ENTRY)),  // only for the admin crossDomainAdmin right and user rights
+    GT_GUEST("gst",     com.zimbra.soap.type.GranteeType.gst, (short)(                      GranteeFlag.F_INDIVIDUAL                                  | GranteeFlag.F_HAS_SECRET)),
+    GT_KEY("key",       com.zimbra.soap.type.GranteeType.key, (short)(                      GranteeFlag.F_INDIVIDUAL                                  | GranteeFlag.F_HAS_SECRET)),
+    GT_PUBLIC("pub",    com.zimbra.soap.type.GranteeType.pub, (short)(                      GranteeFlag.F_PUBLIC));
 
     private static class GT {
         static Map<String, GranteeType> sCodeMap = new HashMap<String, GranteeType>();
@@ -42,11 +42,13 @@ public enum GranteeType {
     
     private String mCode;
     private short mFlags;
+    private com.zimbra.soap.type.GranteeType jaxbGranteeType;
         
-    GranteeType(String code, short flags) {
+    GranteeType(String code, com.zimbra.soap.type.GranteeType jaxbGT, short flags) {
         mCode = code;
         GT.sCodeMap.put(code, this);
         mFlags = flags;
+        jaxbGranteeType = jaxbGT;
     }
     
     public static GranteeType fromCode(String granteeType) throws ServiceException {
@@ -57,10 +59,20 @@ public enum GranteeType {
         return gt;
     }
 
-    /* Convert to equivalent JAXB object */
-    public GranteeInfo.GranteeType toJaxb() throws ServiceException {
-        return GranteeInfo.GranteeType.fromString(this.getCode());
+    /* return equivalent JAXB enum */
+    public com.zimbra.soap.type.GranteeType toJaxb() {
+        return jaxbGranteeType;
     }
+
+    public static GranteeType fromJaxb(com.zimbra.soap.type.GranteeType jaxbGT) {
+        for (GranteeType gt :GranteeType.values()) {
+            if (gt.toJaxb() == jaxbGT) {
+                return gt;
+            }
+        }
+        throw new IllegalArgumentException("Unrecognised GranteeType:" + jaxbGT);
+    }
+
 
     /**
      * - code stored in the ACE.

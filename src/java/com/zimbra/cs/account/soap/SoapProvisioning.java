@@ -86,6 +86,7 @@ import com.zimbra.soap.admin.message.*;
 import com.zimbra.soap.admin.type.*;
 import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.GalSearchType;
+import com.zimbra.soap.type.GranteeType;
 import com.zimbra.soap.type.TargetBy;
 
 public class SoapProvisioning extends Provisioning {
@@ -2215,13 +2216,10 @@ public class SoapProvisioning extends Provisioning {
     throws ServiceException {
         GranteeSelector granteeSel = null;
         if (granteeType != null && granteeBy != null && grantee != null) {
-            granteeSel = new GranteeSelector(
-                    GranteeInfo.GranteeType.fromString(granteeType),
-                    toJaxb(granteeBy), grantee);
+            granteeSel = new GranteeSelector(GranteeType.fromString(granteeType), toJaxb(granteeBy), grantee);
         }
         GetAllEffectiveRightsResponse resp =
-            invokeJaxb(new GetAllEffectiveRightsRequest(granteeSel,
-                    expandSetAttrs, expandGetAttrs));
+            invokeJaxb(new GetAllEffectiveRightsRequest(granteeSel, expandSetAttrs, expandGetAttrs));
         return RightCommand.AllEffectiveRights.fromJaxb(resp);
     }
     

@@ -63,7 +63,7 @@ public class RightCommand {
     /*
      * Grants and ACE are aux classes for ProvUtil.  
      *        
-     * Use String instead of TargetTyep/GranteeType/Right data members in those classes 
+     * Use String instead of TargetType/GranteeType/Right data members in those classes 
      * so they can be readily displayed/serialize without further dependency of any server 
      * side logic, e.g. RightManager, which would access LDAP for custom rights that are 
      * defined in LDAP.
@@ -771,8 +771,7 @@ public class RightCommand {
         public static AllEffectiveRights fromJaxb(GetAllEffectiveRightsResponse resp)
         throws ServiceException {
             GranteeInfo grantee = resp.getGrantee();
-            com.zimbra.soap.admin.type.GranteeInfo.GranteeType gt =
-                    grantee.getType();
+            com.zimbra.soap.type.GranteeType gt = grantee.getType();
             String granteeType = (gt == null) ? null : gt.toString();
             
             AllEffectiveRights aer = new AllEffectiveRights(granteeType, 
