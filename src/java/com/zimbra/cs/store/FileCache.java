@@ -55,12 +55,15 @@ public class FileCache<K> {
 
     public static class Item {
         public final File file;
+        public final long length;
         public final String digest;
         private long accessTime;
 
         Item(File file, String digest) {
+            assert(file.exists());
             this.file = file;
             this.digest = digest;
+            this.length = file.length();
             updateAccessTime();
         }
 
@@ -76,6 +79,7 @@ public class FileCache<K> {
         public String toString() {
             return Objects.toStringHelper(this)
                 .add("file", file)
+                .add("length", length)
                 .add("digest", digest)
                 .add("accessTime", new Date(getAccessTime())).toString();
         }
@@ -132,9 +136,6 @@ public class FileCache<K> {
     throws IOException {
         ZimbraLog.store.info("Starting up FileCache at %s.  maxFiles=%d, maxBytes=%d.", cacheDir, maxFiles, maxBytes);
 
-        if (!cacheDir.isDirectory()) {
-            throw new IOException(cacheDir.getAbsolutePath() + " is not a directory");
-        }
         dataDir = new File(cacheDir, "data");
         FileUtil.deleteDir(dataDir);
         FileUtil.ensureDirExists(dataDir);
@@ -167,6 +168,11 @@ public class FileCache<K> {
 
     public synchronized Item get(K key) {
         String digest = keyToDigest.get(key);
+        if (digest == null) {
+            log.debug("No cache entry for key %s.", key);
+            return null;
+        }
+
         Item entry = digestToItem.get(digest);
         log.debug("Looked up key %s: digest=%s, entry=%s", key, digest, entry);
         if (entry != null) {
@@ -176,6 +182,10 @@ public class FileCache<K> {
         return null;
     }
 
+    /**
+     * Puts content for the given key into the cache.  The caller is responsible for closing
+     * the stream.
+     */
     public Item put(K key, InputStream content) throws IOException {
         if (dataDir == null) {
             throw new IOException("Please call startup() before using the cache.");
@@ -235,7 +245,7 @@ public class FileCache<K> {
 
             if (keys.isEmpty()) {
                 Item entry = digestToItem.remove(digest);
-                numBytes -= entry.file.length();
+                numBytes -= entry.length;
                 log.debug("Deleting unreferenced file %s.", entry.file);
                 if (entry.file.delete()) {
                     return true;
@@ -268,7 +278,7 @@ public class FileCache<K> {
                 continue;
             }
 
-            long size = item.file.length();
+            long size = item.length;
             if (item.file.delete()) {
                 i.remove();
                 numBytes -= size;
