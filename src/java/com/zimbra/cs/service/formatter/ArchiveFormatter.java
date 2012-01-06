@@ -573,7 +573,13 @@ public abstract class ArchiveFormatter extends Formatter {
                             }
                         }
                         bs = new BufferStream(sz, 1024 * 1024);
-                        bs.readFrom(mp.getInputStream());
+                        InputStream stream = mp.getInputStream();
+                        try {
+                            bs.readFrom(stream);
+                        } finally {
+                            // close the stream, it could be an instance of PipedInputStream.
+                            ByteUtil.closeStream(stream);
+                        }
                         aoe = aos.newOutputEntry(
                                 getEntryName(mi, "", name, ext, charsetEncoder, attachmentNames),
                                 MailItem.getNameForType(mi), mi.getType(), mi.getDate());
