@@ -131,6 +131,9 @@ public class SpnegoAuthenticator extends SSOAuthenticator {
             String token = header.substring(10);
             
             UserIdentity identity = realm.login(null, token);
+            if (identity == null) {
+                throw AuthFailedServiceException.AUTH_FAILED("SpengoAuthenticator: unable to login", (Throwable)null);
+            }
             user = identity.getUserPrincipal();
             
             if (user != null) {
