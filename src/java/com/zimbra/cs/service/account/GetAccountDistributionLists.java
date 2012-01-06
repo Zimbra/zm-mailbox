@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.Sets;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
@@ -45,6 +46,9 @@ public class GetAccountDistributionLists extends AccountDocumentHandler {
         boolean needOwnerOf = request.getAttributeBool(AccountConstants.A_OWNER_OF, false);
         MemberOfSelector needMemberOf = MemberOfSelector.fromString(
                 request.getAttribute(AccountConstants.A_MEMBER_OF, MemberOfSelector.directOnly.name()));
+        
+        Iterable<String> needAttrs = Splitter.on(',').trimResults().split(
+                request.getAttribute(AccountConstants.A_ATTRS, ""));
         
         Set<Entry> ownerOf = null;
         List<Group> memberOf = null;
@@ -100,13 +104,16 @@ public class GetAccountDistributionLists extends AccountDocumentHandler {
         
         for (Entry entry: sortedGroups) {
             Group group = (Group) entry;
+            
             Element eDL = response.addElement(AccountConstants.E_DL);
             eDL.addAttribute(AccountConstants.A_NAME, group.getName());
             eDL.addAttribute(AccountConstants.A_ID, group.getId());
             eDL.addAttribute(AccountConstants.A_DISPLAY, group.getDisplayName());
             eDL.addAttribute(AccountConstants.A_DYNAMIC, group.isDynamic());
             
-            if (needOwnerOf && ownerOfGroupIds.contains(group.getId())) {
+            boolean isOwner = ownerOfGroupIds.contains(group.getId());
+            
+            if (needOwnerOf && isOwner) {
                 eDL.addAttribute(AccountConstants.A_IS_OWNER, true);
             }
             
@@ -116,6 +123,11 @@ public class GetAccountDistributionLists extends AccountDocumentHandler {
                 if (viaDl != null) {
                     eDL.addAttribute(AccountConstants.A_VIA, viaDl);
                 }
+            }
+            
+            Set<String> returnAttrs = GetDistributionList.visibleAttrs(needAttrs, isOwner);
+            if (!returnAttrs.isEmpty()) {
+                GetDistributionList.encodeAttrs(group, eDL, returnAttrs);
             }
         }
         return response;

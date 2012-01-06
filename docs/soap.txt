@@ -4114,11 +4114,13 @@ Notes:
 
 -----------------------------
 
-<GetAccountDistributionListsRequest ownerOf="{owner-of}" memberOf="{member-of}">
+<GetAccountDistributionListsRequest [ownerOf="{owner-of}"] [memberOf="{member-of}] [attrs="{attrs}"]">
 </GetAccountDistributionListsRequest>
 
 <GetAccountDistributionListsResponse>
-  <dl name="{name}" id="{id}" [d="{display-name}"] [via="{via-dl-name}] [isOwner="1|0"] [isMember="1|0"]"/>+
+  <dl name="{name}" id="{id}" [d="{display-name}"] [via="{via-dl-name}] [isOwner="1|0"] [isMember="1|0"]">
+    [<a n="...">...</a>+]
+  </dl>+
 </GetAccountDistributionListsResponse>
 
 
@@ -4136,6 +4138,10 @@ Note: isOwner is returned only if ownerOf on the request is 1.
 {member-of} = all: needs all groups the user is a direct or indirect member of.
               none: do not need groups the user is a member of.
               directOnly (default): needs groups the account is a direct member of.    
+              
+{attrs} = comma-seperated attributes to return.  Note: non-owner user can see only certain 
+          attributes of a group.  If a specified attribute is not visible to the user,
+          it will not be returned.
 
 {via-dl-name} = is present if the account is a member of the returned list because 
                 they are either a direct or indirect member of another list that is 

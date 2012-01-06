@@ -281,7 +281,15 @@ public class Verify {
                 sb.append(":");
             }
             if (obj != null) {
-                sb.append(obj.toString());
+                if (obj instanceof Collection) {
+                    for (Object o : (Collection) obj) {
+                        sb.append("(");
+                        sb.append(o.toString());
+                        sb.append(")");
+                    }
+                } else {
+                    sb.append(obj.toString());
+                }
             } else {
                 sb.append("null");
             }

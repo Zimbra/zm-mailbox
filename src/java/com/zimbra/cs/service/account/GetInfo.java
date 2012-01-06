@@ -65,7 +65,7 @@ import com.zimbra.soap.account.type.Prop;
 public class GetInfo extends AccountDocumentHandler  {
 
     private enum Section {
-        MBOX, PREFS, ATTRS, ZIMLETS, PROPS, IDENTS, SIGS, DSRCS, CHILDREN;
+        MBOX, PREFS, ATTRS, ZIMLETS, PROPS, IDENTS, SIGS, DSRCS, CHILDREN, RIGHTS;
 
         static Section lookup(String value) throws ServiceException {
             try {
@@ -200,6 +200,10 @@ public class GetInfo extends AccountDocumentHandler  {
         if (sections.contains(Section.CHILDREN)) {
             Element ca = response.addUniqueElement(AccountConstants.E_CHILD_ACCOUNTS);
             doChildAccounts(ca, account, zsc.getAuthToken());
+        }
+        if (sections.contains(Section.RIGHTS)) {
+            Element eRights = response.addUniqueElement(AccountConstants.E_RIGHTS);
+            doRights(eRights, account, zsc.getAuthToken());
         }
 
         GetAccountInfo.addUrls(response, account);
@@ -393,5 +397,10 @@ public class GetInfo extends AccountDocumentHandler  {
                     AccountConstants.E_ATTR, AccountConstants.A_NAME);
         }
         return elem;
+    }
+    
+    protected void doRights(Element response, Account acct, AuthToken authToken) 
+    throws ServiceException {
+        
     }
 }

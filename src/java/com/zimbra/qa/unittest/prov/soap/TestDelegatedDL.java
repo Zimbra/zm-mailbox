@@ -421,6 +421,9 @@ public class TestDelegatedDL extends SoapTest {
                 assertEquals(ZAttrProvisioning.DistributionListSubscriptionPolicy.ACCEPT.name(), value);
                 seenSubsPolicy = true;
             }
+            
+            // zimbraDistributionListUnsubscriptionPolicy ia not set.  
+            // zimbraAccount:GetDistributionListResponse should return the default value, instead of empty.
             if (Provisioning.A_zimbraDistributionListUnsubscriptionPolicy.equals(name)) {
                 assertEquals(ZAttrProvisioning.DistributionListUnsubscriptionPolicy.REJECT.name(), value);
                 seenUnsubsPolicy = true;
@@ -1114,7 +1117,10 @@ public class TestDelegatedDL extends SoapTest {
         
         SoapTransport transport = authUser(ACCT_NAME);
         GetAccountDistributionListsRequest req = new GetAccountDistributionListsRequest(
-                Boolean.TRUE, MemberOfSelector.all);
+                Boolean.TRUE, MemberOfSelector.all, 
+                Sets.newHashSet(Provisioning.A_zimbraMailStatus,
+                        Provisioning.A_zimbraDistributionListSubscriptionPolicy,
+                        Provisioning.A_zimbraDistributionListUnsubscriptionPolicy));
         GetAccountDistributionListsResponse resp = invokeJaxb(transport, req);
         
         List<String> result = Lists.newArrayList();
@@ -1127,17 +1133,50 @@ public class TestDelegatedDL extends SoapTest {
             Boolean isOwner = dlInfo.isOwner();
             Boolean isMember = dlInfo.isMember();
             
-            result.add(Verify.makeResultStr(id, name, displayName, isOwner, isMember));
+            List<? extends KeyValuePair> attrs = dlInfo.getAttrList();
+            List<String> attrValues = Lists.newArrayList();
+            for (KeyValuePair attr : attrs) {
+                String key = attr.getKey();
+                String value = attr.getValue();
+                attrValues.add(Verify.makeResultStr(key, value));
+            }
+            Collections.sort(attrValues);
+            
+            result.add(Verify.makeResultStr(id, name, displayName, isOwner, isMember, attrValues));
         }
+        
+        List<String> expectedAttrValuesOwner = Lists.newArrayList();
+        expectedAttrValuesOwner.add(Verify.makeResultStr(
+                Provisioning.A_zimbraDistributionListSubscriptionPolicy, 
+                ZAttrProvisioning.DistributionListSubscriptionPolicy.REJECT.name()));
+        expectedAttrValuesOwner.add(Verify.makeResultStr(
+                Provisioning.A_zimbraDistributionListUnsubscriptionPolicy, 
+                ZAttrProvisioning.DistributionListUnsubscriptionPolicy.REJECT.name()));
+        expectedAttrValuesOwner.add(Verify.makeResultStr(
+                Provisioning.A_zimbraMailStatus, 
+                ZAttrProvisioning.MailStatus.enabled.name()));
+        
+        List<String> expectedAttrValuesNonOwner = Lists.newArrayList();
+        expectedAttrValuesNonOwner.add(Verify.makeResultStr(
+                Provisioning.A_zimbraDistributionListSubscriptionPolicy, 
+                ZAttrProvisioning.DistributionListSubscriptionPolicy.REJECT.name()));
+        expectedAttrValuesNonOwner.add(Verify.makeResultStr(
+                Provisioning.A_zimbraDistributionListUnsubscriptionPolicy, 
+                ZAttrProvisioning.DistributionListUnsubscriptionPolicy.REJECT.name()));
+
         
         // result should be sorted by displayName.  
         // If displayName are the same, sorted by entry.getLabel()
         Verify.verifyEquals(
                 Lists.newArrayList(
-                        Verify.makeResultStr(group2.getId(), group2.getName(), group2.getDisplayName(), Boolean.FALSE, Boolean.TRUE),
-                        Verify.makeResultStr(group3.getId(), group3.getName(), group3.getDisplayName(), Boolean.FALSE, Boolean.TRUE),
-                        Verify.makeResultStr(group4.getId(), group4.getName(), group4.getDisplayName(), Boolean.TRUE, Boolean.FALSE),
-                        Verify.makeResultStr(group1.getId(), group1.getName(), group1.getDisplayName(), Boolean.TRUE, Boolean.TRUE)), 
+                        Verify.makeResultStr(group2.getId(), group2.getName(), group2.getDisplayName(), 
+                                Boolean.FALSE, Boolean.TRUE, expectedAttrValuesNonOwner),
+                        Verify.makeResultStr(group3.getId(), group3.getName(), group3.getDisplayName(), 
+                                Boolean.FALSE, Boolean.TRUE, expectedAttrValuesNonOwner),
+                        Verify.makeResultStr(group4.getId(), group4.getName(), group4.getDisplayName(), 
+                                Boolean.TRUE, Boolean.FALSE, expectedAttrValuesOwner),
+                        Verify.makeResultStr(group1.getId(), group1.getName(), group1.getDisplayName(), 
+                                Boolean.TRUE, Boolean.TRUE, expectedAttrValuesOwner)), 
                 result);
         
         
@@ -1155,16 +1194,29 @@ public class TestDelegatedDL extends SoapTest {
             Boolean isOwner = dlInfo.isOwner();
             Boolean isMember = dlInfo.isMember();
             
-            result.add(Verify.makeResultStr(id, name, displayName, isOwner, isMember));
+            List<? extends KeyValuePair> attrs = dlInfo.getAttrList();
+            List<String> attrValues = Lists.newArrayList();
+            for (KeyValuePair attr : attrs) {
+                String key = attr.getKey();
+                String value = attr.getValue();
+                attrValues.add(Verify.makeResultStr(key, value));
+            }
+            Collections.sort(attrValues);
+            
+            result.add(Verify.makeResultStr(id, name, displayName, isOwner, isMember, attrValues));
         }
      
         // result should be sorted by displayName
         Verify.verifyEquals(
                 Lists.newArrayList(
-                        Verify.makeResultStr(group2.getId(), group2.getName(), group2.getDisplayName(), Boolean.FALSE, Boolean.TRUE),
-                        Verify.makeResultStr(group3.getId(), group3.getName(), group3.getDisplayName(), Boolean.FALSE, Boolean.TRUE),
-                        Verify.makeResultStr(group4.getId(), group4.getName(), group4.getDisplayName(), Boolean.TRUE, Boolean.FALSE),
-                        Verify.makeResultStr(group1.getId(), group1.getName(), group1.getDisplayName(), Boolean.TRUE, Boolean.TRUE)), 
+                        Verify.makeResultStr(group2.getId(), group2.getName(), group2.getDisplayName(), 
+                                Boolean.FALSE, Boolean.TRUE, expectedAttrValuesNonOwner),
+                        Verify.makeResultStr(group3.getId(), group3.getName(), group3.getDisplayName(), 
+                                Boolean.FALSE, Boolean.TRUE, expectedAttrValuesNonOwner),
+                        Verify.makeResultStr(group4.getId(), group4.getName(), group4.getDisplayName(), 
+                                Boolean.TRUE, Boolean.FALSE, expectedAttrValuesOwner),
+                        Verify.makeResultStr(group1.getId(), group1.getName(), group1.getDisplayName(), 
+                                Boolean.TRUE, Boolean.TRUE, expectedAttrValuesOwner)), 
                 result);
     }
 
