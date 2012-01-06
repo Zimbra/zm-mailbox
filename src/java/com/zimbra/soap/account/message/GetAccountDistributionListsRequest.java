@@ -15,11 +15,15 @@
 
 package com.zimbra.soap.account.message;
 
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.ZmBoolean;
@@ -27,6 +31,7 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_ACCOUNT_DISTRIBUTION_LISTS_REQUEST)
 public class GetAccountDistributionListsRequest {
+    private static Joiner COMMA_JOINER = Joiner.on(",");
     
     public static enum MemberOfSelector {
         all,
@@ -46,18 +51,25 @@ public class GetAccountDistributionListsRequest {
     private ZmBoolean ownerOf;
     @XmlAttribute(name=AccountConstants.A_MEMBER_OF, required=false)
     private MemberOfSelector memberOf;
-
+    
+    private List<String> attrs = Lists.newArrayList();
+    @XmlAttribute(name=AccountConstants.A_ATTRS) public String getAttrs() {
+        return COMMA_JOINER.join(attrs);
+    }
+    
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private GetAccountDistributionListsRequest() {
-        this((Boolean) null, (MemberOfSelector) null);
+        this((Boolean) null, (MemberOfSelector) null, (Iterable<String>) null);
     }
 
-    public GetAccountDistributionListsRequest(Boolean owner, MemberOfSelector member) {
-        this.setOwnerOf(owner);
-        this.setMemberOf(member);
+    public GetAccountDistributionListsRequest(Boolean owner, MemberOfSelector member,
+            Iterable<String> attrs) {
+        setOwnerOf(owner);
+        setMemberOf(member);
+        setAttrs(attrs);
     }
 
     public void setOwnerOf(Boolean owner) { this.ownerOf = ZmBoolean.fromBool(owner); }
@@ -65,4 +77,14 @@ public class GetAccountDistributionListsRequest {
     
     public void setMemberOf(MemberOfSelector member) { this.memberOf = member; }
     public MemberOfSelector getMemberOf() { return memberOf; }
+    
+    public void setAttrs(Iterable<String> attrs) {
+        if (attrs != null) {
+            this.attrs = Lists.newArrayList();
+            for (String attr : attrs) {
+                this.attrs.add(attr);
+            }
+        }
+    }
+
 }
