@@ -278,6 +278,10 @@ public class TnefConverter extends MimeVisitor {
                 }
             } catch (ServiceException e) {
                 throw new MessagingException("TNEF to iCalendar conversion failure: " + e.getMessage(), e);
+            } catch (Throwable t) {
+                //don't allow TNEF errors to crash server
+                ZimbraLog.extensions.warn("Failed to convert TNEF to iCal",t);
+                throw new MessagingException("TNEF to iCalendar conversion failure");
             }
         }
 
