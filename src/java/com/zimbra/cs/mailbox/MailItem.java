@@ -3420,8 +3420,11 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         markItemModified(Change.ACL);
         if (this.rights == null) {
+            long intShareLifetime = account.getShareLifetime();
+            long extShareLifetime = account.getExternalShareLifetime();
             long now = System.currentTimeMillis();
-            this.rights = new ACL(now + account.getShareLifetime(), now + account.getExternalShareLifetime());
+            this.rights = new ACL(intShareLifetime == 0 ? 0 : now + intShareLifetime,
+                    extShareLifetime == 0 ? 0 : now + extShareLifetime);
         }
         ACL.Grant grant = this.rights.grantAccess(zimbraId, type, rights, args, expiry);
         saveMetadata();
