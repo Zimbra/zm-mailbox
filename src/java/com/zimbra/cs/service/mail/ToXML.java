@@ -245,11 +245,15 @@ public final class ToXML {
         boolean remote = octxt != null && octxt.isDelegatedRequest(mbox);
 
         boolean canAdminister = !remote;
+        boolean canDelete = canAdminister;
         if (remote) {
             // return effective permissions only for remote folders
             String perms = encodeEffectivePermissions(folder, octxt);
             elem.addAttribute(MailConstants.A_RIGHTS, perms);
             canAdminister = perms != null && perms.indexOf(ACL.ABBR_ADMIN) != -1;
+            // Need to know retention policy if grantees can delete from a folder so clients can warn
+            // them when they try to delete something within the retention period
+            canDelete = canAdminister || (perms != null && perms.indexOf(ACL.ABBR_DELETE) != -1);
         }
 
         if (canAdminister) {
@@ -259,6 +263,8 @@ public final class ToXML {
                     encodeACL(octxt, elem, folder.getEffectiveACL(), exposeAclAccessKey);
                 }
             }
+        }
+        if (canDelete) {
             if (needToOutput(fields, Change.RETENTION_POLICY)) {
                 RetentionPolicy rp = folder.getRetentionPolicy();
                 if (fields != NOTIFY_FIELDS || rp.isSet()) {
