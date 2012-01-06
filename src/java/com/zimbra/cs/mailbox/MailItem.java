@@ -3178,15 +3178,25 @@ public abstract class MailItem implements Comparable<MailItem> {
                 mExtendedData.addSection(key.substring(CUSTOM_META_PREFIX.length()), entry.getValue().toString());
             }
         }
-        MetadataList mlistACL = meta.getList(Metadata.FN_RIGHTS, true);
-        if (mlistACL != null) {
-            ACL acl = new ACL(mlistACL);
+
+        ACL acl = null;
+        if (meta.getVersion() <= 10) {
+            MetadataList mlistACL = meta.getList(Metadata.FN_RIGHTS, true);
+            if (mlistACL != null) {
+                acl = new ACL(mlistACL);
+            }
+        } else {
+            Metadata mACL = meta.getMap(Metadata.FN_RIGHTS, true);
+            if (mACL != null) {
+                acl = new ACL(mACL);
+            }
+        }
+        if (acl != null) {
             rights = acl.isEmpty() ? null : acl;
             if (!isTagged(Flag.FlagInfo.NO_INHERIT)) {
                 alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
             }
         }
-
     }
 
 
@@ -3380,20 +3390,23 @@ public abstract class MailItem implements Comparable<MailItem> {
     /** Grants the specified set of rights to the target and persists them
      *  to the database.
      *
+     *
      * @param zimbraId  The zimbraId of the entry being granted rights.
      * @param type      The type of principal the grantee's ID refers to.
      * @param rights    A bitmask of the rights being granted.
+     * @param expiry    Time when grant expires. Value of 0 means grant never expires.
      * @perms {@link ACL#RIGHT_ADMIN} on the item
      * @throws ServiceException The following error codes are possible:<ul>
      *    <li><tt>service.FAILURE</tt> - if there's a database failure
      *    <li><tt>service.PERM_DENIED</tt> - if you don't have sufficient
      *        permissions</ul> */
-    ACL.Grant grantAccess(String zimbraId, byte type, short rights, String args) throws ServiceException {
-        if (type == ACL.GRANTEE_PUBLIC && !getAccount().isPublicSharingEnabled()) {
+    ACL.Grant grantAccess(String zimbraId, byte type, short rights, String args, long expiry) throws ServiceException {
+        Account account = getAccount();
+        if (type == ACL.GRANTEE_PUBLIC && !account.isPublicSharingEnabled()) {
             throw ServiceException.PERM_DENIED("public sharing not allowed");
         }
         if (type == ACL.GRANTEE_GUEST &&
-                (!getAccount().isExternalSharingEnabled() || !isAllowedExternalDomain(zimbraId))) {
+                (!account.isExternalSharingEnabled() || !isAllowedExternalDomain(zimbraId))) {
             throw ServiceException.PERM_DENIED("external sharing not allowed");
         }
         if (!canAccess(ACL.RIGHT_ADMIN)) {
@@ -3407,9 +3420,10 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         markItemModified(Change.ACL);
         if (this.rights == null) {
-            this.rights = new ACL();
+            long now = System.currentTimeMillis();
+            this.rights = new ACL(now + account.getShareLifetime(), now + account.getExternalShareLifetime());
         }
-        ACL.Grant grant = this.rights.grantAccess(zimbraId, type, rights, args);
+        ACL.Grant grant = this.rights.grantAccess(zimbraId, type, rights, args, expiry);
         saveMetadata();
 
         queueForAclPush();
