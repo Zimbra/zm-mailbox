@@ -1213,9 +1213,10 @@ Folders:
   <folder id="{folder-id}" name="{folder-name}" l="{parent-id}" [f="{flags}"] [color="{color}"]
        u="{unread}" [i4u="{imap-unread}"] n="{msg-count}" [i4n="{imap-count}"] s="{total-size}" [view="{default-type}"]
        [url="{remote-url}"] [perm="{effective-perms}"] [rest="{rest-url}"]>
-    [<acl> <grant perm="{rights}" gt="{grantee-type}" zid="{zimbra-id}" d="{grantee-name}" [pw="{password-for-guest}"] [key=="{access-key}"]/>* </acl>]
-    [<retentionPolicy> ... </retentionPolicy>]
-
+    <acl [internalGrantExpiry="{millis-since-epoch}"] [guestGrantExpiry="{millis-since-epoch}"]>
+      <grant perm="{rights}" gt="{grantee-type}" zid="{zimbra-id}" [expiry="{millis-since-epoch}"] [d="{grantee-name}"] [pw="{password-for-guest}"] [key=="{access-key}"]/>*
+    </acl>?
+    <retentionPolicy> ... </retentionPolicy>?
   </folder>
 
   {folder-name}  = name of folder; max length 128; whitespace is trimmed by server;
@@ -1237,9 +1238,22 @@ Folders:
                           both (i)nsert and (r)ead access on the folder
   {zimbra-id}    = the Zimbra account id, or if the {grantee-type} is "guest", the user's email address
 
-  folders can have an optional ACL set on them for sharing.  if they do (and the authenticated
+    folders can have an optional ACL set on them for sharing.  if they do (and the authenticated
     user has (a)dminister rights on the folder), an <acl> element will be returned containing
-    1 or more <grant> elements, with the following attributes:
+    1 or more <grant> elements.
+
+    an <acl> element has the following attributes:
+
+    {internalGrantExpiry} = time when grants to internal grantees expire.
+                            If not specified in the request, defaults to the maximum allowed expiry for internal grants.
+                            If not specified in the response, defaults to 0.
+                            Value of 0 indicates that these grants never expire.
+    {guestGrantExpiry}    = time when grants to guest grantees expire.
+                            If not specified in the request, defaults to the maximum allowed expiry for guest/external
+                            user grants.  If not specified in the response, defaults to 0.
+                            Value of 0 indicates that these grants never expire.
+
+    a <grant> element has the following attributes:
 
     {rights}       = some combination of (r)ead, (w)rite, (i)nsert, (d)elete, (a)dminister, workflow action (x), view (p)rivate, view (f)reebusy
     {grantee-type} = the type of grantee: 
@@ -1250,11 +1264,21 @@ Folders:
                      "all" (all authenticated users), "pub" (public authenticated and unauthenticated access),
                      "guest" (non-Zimbra email address and password),
                      "key" (non-Zimbra email address and access key)
+    {zid}          = grantee id
     {grantee-name} = name or email address of the principal being granted rights.
-                     optional if {grantee-type} is "all" or "guest".  When specified in a request,
+                     optional if {grantee-type} is "all"/"guest"/"pub".  When specified in a request,
                      this can be just the username portion of the address in the default domain.
     {pw}           = optional argument.  password when {grantee-type} is "guest"
     {key}          = optional argument.  access key when {grantee-type} is "key"
+    {expiry}       = time when this grant expires.
+                     For internal/guest grant:  If this attribute is not specified, the expiry of the grant is derived
+                     from internalGrantExpiry/guestGrantExpiry of the ACL it is part of.  If this attribute is
+                     specified (overridden), the expiry value can not be greater than the corresponding expiry value in
+                     the ACL.
+                     For public grant:  If this attribute is not specified, defaults to the maximum allowed expiry for
+                     a public grant.  If not specified in the response, defaults to 0.  Value of 0 indicates that this
+                     grant never expires.
+
 
 Retention policy:
 
@@ -1888,7 +1912,9 @@ If needExp is "1" in the request, two additional flags will be included in <e> e
 
 <CreateFolderRequest>
   <folder name="..." [l="{parent-folder}"] [fie="1"] [view="{default-type}"] [color="{color}"] [rgb="{rgb-color}"] [f="{flags}"] [url="{url}"] [sync="1"]>
-    [<acl> <grant perm="{rights}" gt="{grantee-type}" zid="{zimbra-id}" d="{grantee-name}" [key="{access-key}"]/>* </acl>]
+    <acl [internalGrantExpiry="{millis-since-epoch}"] [guestGrantExpiry="{millis-since-epoch}"]>
+      <grant perm="{rights}" gt="{grantee-type}" zid="{zimbra-id}" [expiry="{millis-since-epoch}"] [d="{grantee-name}"] [key="{access-key}"]/>*
+    </acl>?
   </folder>
 </CreateFolderRequest>
 
@@ -2006,7 +2032,7 @@ If needExp is "1" in the request, two additional flags will be included in <e> e
   <action id="{list}" op="read|delete|rename|move|trash|empty|color|[!]grant|revokeorphangrants|url|import|sync|fb|[!]check|update|[!]syncon|retentionpolicy" [l="{target-folder}"]
                       [name="{new-name}"] [color="{new-color}"] [rgb="{rgb-color}"] [zid="{grantee-zimbra-id}"] [url="{target-url}"]
                       [excludeFreeBusy="{exclude-free-busy-boolean}">
-    [<grant perm="..." gt="..." d="..." [key="..."]/>]
+    [<grant perm="..." gt="..." zid="..." [expiry="{millis-since-epoch}"] [d="..."] [key="..."]/>]
     [<retentionPolicy> ... </retentionPolicy>]
   </action>
 </FolderActionRequest>
@@ -2040,7 +2066,7 @@ Actions:
     - see ItemActionRequest
 
   <action op="grant" id="{list}">
-    <grant perm="..." gt="..." d="..." [key="..."]/>
+    <grant perm="..." gt="..." zid="..." [expiry="{millis-since-epoch}"] [d="..."] [key="..."]/>
   </action>
     - add the <grant> object to the folder
 

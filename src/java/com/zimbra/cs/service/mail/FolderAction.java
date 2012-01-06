@@ -161,12 +161,15 @@ public class FolderAction extends ItemAction {
             short rights = ACL.stringToRights(grant.getAttribute(MailConstants.A_RIGHTS));
             byte gtype   = ACL.stringToType(grant.getAttribute(MailConstants.A_GRANT_TYPE));
             String zid   = grant.getAttribute(MailConstants.A_ZIMBRA_ID, null);
+            long expiry  = grant.getAttributeLong(MailConstants.A_EXPIRY, 0);
             String secret = null;
             NamedEntry nentry = null;
             if (gtype == ACL.GRANTEE_AUTHUSER) {
                 zid = GuestAccount.GUID_AUTHUSER;
             } else if (gtype == ACL.GRANTEE_PUBLIC) {
                 zid = GuestAccount.GUID_PUBLIC;
+                expiry = validateGrantExpiry(grant.getAttribute(MailConstants.A_EXPIRY, null),
+                        mbox.getAccount().getPublicShareLifetime());
             } else if (gtype == ACL.GRANTEE_GUEST) {
                 zid = grant.getAttribute(MailConstants.A_DISPLAY);
                 if (zid == null || zid.indexOf('@') < 0)
@@ -211,7 +214,7 @@ public class FolderAction extends ItemAction {
                     gtype = ACL.GRANTEE_GROUP;
             }
 
-            ACL.Grant g =  mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, secret);
+            ACL.Grant g =  mbox.grantAccess(octxt, iid.getId(), zid, gtype, rights, secret, expiry);
 
             // kinda hacky -- return the zimbra id and name of the grantee in the response
             result.addAttribute(MailConstants.A_ZIMBRA_ID, zid);
@@ -237,7 +240,7 @@ public class FolderAction extends ItemAction {
             }
             String flags = action.getAttribute(MailConstants.A_FLAGS, null);
             byte color = (byte) action.getAttributeLong(MailConstants.A_COLOR, -1);
-            ACL acl = parseACL(action.getOptionalElement(MailConstants.E_ACL));
+            ACL acl = parseACL(action.getOptionalElement(MailConstants.E_ACL), mbox.getAccount());
             String view = action.getAttribute(MailConstants.A_DEFAULT_VIEW, null);
             if (color >= 0) {
                 mbox.setColor(octxt, iid.getId(), MailItem.Type.FOLDER, color);
@@ -268,15 +271,24 @@ public class FolderAction extends ItemAction {
         return ifmt.formatItemId(iid);
     }
 
-    static ACL parseACL(Element eAcl) throws ServiceException {
+    static ACL parseACL(Element eAcl, Account account) throws ServiceException {
         if (eAcl == null)
             return null;
 
-        ACL acl = new ACL();
+        long internalGrantExpiry = validateGrantExpiry(eAcl.getAttribute(MailConstants.A_INTERNAL_GRANT_EXPIRY, null),
+                account.getShareLifetime());
+        long guestGrantExpiry = validateGrantExpiry(eAcl.getAttribute(MailConstants.A_GUEST_GRANT_EXPIRY, null),
+                account.getExternalShareLifetime());
+        ACL acl = new ACL(internalGrantExpiry, guestGrantExpiry);
+
         for (Element grant : eAcl.listElements(MailConstants.E_GRANT)) {
             String zid   = grant.getAttribute(MailConstants.A_ZIMBRA_ID);
             byte gtype   = ACL.stringToType(grant.getAttribute(MailConstants.A_GRANT_TYPE));
             short rights = ACL.stringToRights(grant.getAttribute(MailConstants.A_RIGHTS));
+            long expiry = gtype == ACL.GRANTEE_PUBLIC ?
+                    validateGrantExpiry(eAcl.getAttribute(MailConstants.A_EXPIRY, null),
+                            account.getPublicShareLifetime()) :
+                    eAcl.getAttributeLong(MailConstants.A_EXPIRY, 0);
 
             String secret = null;
             if (gtype == ACL.GRANTEE_KEY) {
@@ -288,7 +300,7 @@ public class FolderAction extends ItemAction {
                     secret = grant.getAttribute(MailConstants.A_PASSWORD);
                 }
             }
-            acl.grantAccess(zid, gtype, rights, secret);
+            acl.grantAccess(zid, gtype, rights, secret, expiry);
         }
         return acl;
     }

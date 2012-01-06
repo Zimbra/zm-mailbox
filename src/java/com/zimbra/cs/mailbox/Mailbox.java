@@ -39,7 +39,6 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.mail.Address;
-import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import com.google.common.base.CharMatcher;
@@ -154,7 +153,6 @@ import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
-import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMailbox.Options;
@@ -6690,7 +6688,12 @@ public class Mailbox {
 
     public ACL.Grant grantAccess(OperationContext octxt, int itemId, String grantee, byte granteeType, short rights,
             String args) throws ServiceException {
-        GrantAccess redoPlayer = new GrantAccess(mId, itemId, grantee, granteeType, rights, args);
+         return grantAccess(octxt, itemId, grantee, granteeType, rights, args, 0);
+    }
+
+    public ACL.Grant grantAccess(OperationContext octxt, int itemId, String grantee, byte granteeType, short rights,
+            String args, long expiry) throws ServiceException {
+        GrantAccess redoPlayer = new GrantAccess(mId, itemId, grantee, granteeType, rights, args, expiry);
 
         boolean success = false;
         ACL.Grant grant = null;
@@ -6699,7 +6702,7 @@ public class Mailbox {
 
             MailItem item = getItemById(itemId, Type.UNKNOWN);
             checkItemChangeID(item);
-            grant = item.grantAccess(grantee, granteeType, rights, args);
+            grant = item.grantAccess(grantee, granteeType, rights, args, expiry);
             success = true;
         } finally {
             endTransaction(success);

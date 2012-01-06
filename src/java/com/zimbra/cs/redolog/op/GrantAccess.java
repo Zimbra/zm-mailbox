@@ -34,6 +34,7 @@ public class GrantAccess extends RedoableOp {
     private byte mGranteeType;
     private short mRights;
     private String mPassword;
+    private long mExpiry;
 
     public GrantAccess() {
         super(MailboxOperation.GrantAccess);
@@ -41,7 +42,8 @@ public class GrantAccess extends RedoableOp {
         mGrantee = "";
     }
 
-    public GrantAccess(int mailboxId, int folderId, String grantee, byte granteeType, short rights, String password) {
+    public GrantAccess(int mailboxId, int folderId, String grantee, byte granteeType, short rights, String password,
+            long expiry) {
         this();
         setMailboxId(mailboxId);
         mFolderId = folderId;
@@ -49,6 +51,7 @@ public class GrantAccess extends RedoableOp {
         mGranteeType = granteeType;
         mRights = rights;
         mPassword = password == null ? "" : password;
+        mExpiry = expiry;
     }
 
     @Override protected String getPrintableData() {
@@ -57,6 +60,7 @@ public class GrantAccess extends RedoableOp {
         sb.append(", type=").append(mGranteeType);
         sb.append(", rights=").append(ACL.rightsToString(mRights));
         sb.append(", args=").append(mPassword);
+        sb.append(", expiry=").append(mExpiry);
         return sb.toString();
     }
 
@@ -66,8 +70,8 @@ public class GrantAccess extends RedoableOp {
         out.writeByte(mGranteeType);
         out.writeShort(mRights);
         out.writeBoolean(true);
-        if (getVersion().atLeast(1, 2))
-        	out.writeUTF(mPassword);
+        out.writeUTF(mPassword);
+        out.writeLong(mExpiry);
     }
 
     @Override protected void deserializeData(RedoLogInput in) throws IOException {
@@ -76,12 +80,16 @@ public class GrantAccess extends RedoableOp {
         mGranteeType = in.readByte();
         mRights = in.readShort();
         in.readBoolean();  // "INHERIT", deprecated as of 02-Apr-2006
-        if (getVersion().atLeast(1, 2))
+        if (getVersion().atLeast(1, 2)) {
         	mPassword = in.readUTF();
+        }
+        if (getVersion().atLeast(1, 36)) {
+            mExpiry = in.readLong();
+        }
     }
 
     @Override public void redo() throws ServiceException {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(getMailboxId());
-        mbox.grantAccess(getOperationContext(), mFolderId, mGrantee, mGranteeType, mRights, mPassword);
+        mbox.grantAccess(getOperationContext(), mFolderId, mGrantee, mGranteeType, mRights, mPassword, mExpiry);
     }
 }

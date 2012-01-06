@@ -31,6 +31,7 @@ import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.MetadataList;
 import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.session.PendingModifications;
@@ -62,8 +63,14 @@ public final class EffectiveACLCache {
 
         @Override
         public ACL deserialize(Object obj) throws ServiceException {
-            MetadataList meta = new MetadataList((String) obj);
-            return new ACL(meta);
+            try {
+                // first try with old serialization
+                MetadataList meta = new MetadataList((String) obj);
+                return new ACL(meta);
+            } catch (ServiceException e) {
+                Metadata meta = new Metadata((String) obj);
+                return new ACL(meta);
+            }
         }
     }
 

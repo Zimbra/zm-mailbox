@@ -316,8 +316,15 @@ public final class ToXML {
         if (acl == null) {
             return eACL;
         }
-        boolean needDispName = OperationContextData.getNeedGranteeName(octxt);
 
+        if (acl.getInternalGrantExpiry() != 0) {
+            eACL.addAttribute(MailConstants.A_INTERNAL_GRANT_EXPIRY, acl.getInternalGrantExpiry());
+        }
+        if (acl.getGuestGrantExpiry() != 0) {
+            eACL.addAttribute(MailConstants.A_GUEST_GRANT_EXPIRY, acl.getGuestGrantExpiry());
+        }
+
+        boolean needDispName = OperationContextData.getNeedGranteeName(octxt);
         for (ACL.Grant grant : acl.getGrants()) {
             String name = null;
             byte granteeType = grant.getGranteeType();
@@ -351,6 +358,9 @@ public final class ToXML {
             eGrant.addAttribute(MailConstants.A_ZIMBRA_ID, grant.getGranteeId())
                 .addAttribute(MailConstants.A_GRANT_TYPE, ACL.typeToString(granteeType))
                 .addAttribute(MailConstants.A_RIGHTS, ACL.rightsToString(grant.getGrantedRights()));
+            if (grant.getExpiry() != 0) {
+                eGrant.addAttribute(MailConstants.A_EXPIRY, grant.getExpiry());
+            }
 
             if (needDispName) {
                 // Note: use == instead of equals, the if returns true if and only if INVALID_GRANT and name

@@ -61,7 +61,7 @@ public class CreateFolder extends MailDocumentHandler {
         ItemId iidParent = folderId != null ? new ItemId(folderId, zsc) : null;
         boolean fetchIfExists = t.getAttributeBool(MailConstants.A_FETCH_IF_EXISTS, false);
         boolean syncToUrl = t.getAttributeBool(MailConstants.A_SYNC, true);
-        ACL acl          = FolderAction.parseACL(t.getOptionalElement(MailConstants.E_ACL));
+        ACL acl          = FolderAction.parseACL(t.getOptionalElement(MailConstants.E_ACL), mbox.getAccount());
 
         Folder folder;
         boolean alreadyExisted = false;

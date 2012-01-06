@@ -152,7 +152,7 @@ public class Acl extends ResourceProperty {
         }
         for (Grant g : mAcl.getGrants()) {
             try {
-                if (ownerAccount != null && authAccount.compareTo(ownerAccount) != 0 && g.getGrantedRights(authAccount) == 0)
+                if (ownerAccount != null && authAccount.compareTo(ownerAccount) != 0 && g.getGrantedRights(authAccount, mAcl) == 0)
                     continue;
                 Element ace = acl.addElement(DavElements.E_ACE);
                 Element principal = ace.addElement(DavElements.E_PRINCIPAL);
@@ -341,7 +341,7 @@ public class Acl extends ResourceProperty {
 
             for (Grant g : mAcl.getGrants()) {
                 try {
-                    short rights = g.getGrantedRights(ctxt.getAuthAccount());
+                    short rights = g.getGrantedRights(ctxt.getAuthAccount(), mAcl);
                     if (rights > 0) {
                         addPrivileges(cups, rights);
                         break;

@@ -6151,7 +6151,7 @@ TODO: delete them permanently from here
   <defaultCOSValue>TRUE</defaultCOSValue>
 </attr>
 
-<attr id="1260" name="zimbraExternalShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus" since="8.0.0">
+<attr id="1260" name="zimbraExternalShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,octopus" since="8.0.0">
   <desc>
     Maximum allowed lifetime of shares to external users.
     A value of 0 indicates that there's no limit on an external share's lifetime.
@@ -6685,7 +6685,7 @@ TODO: delete them permanently from here
   <defaultCOSValue>TRUE</defaultCOSValue>
 </attr>
 
-<attr id="1348" name="zimbraShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus" since="8.0.0">
+<attr id="1348" name="zimbraShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,octopus" since="8.0.0">
   <desc>
     Maximum allowed lifetime of shares to internal users or groups.
     A value of 0 indicates that there's no limit on an internal share's lifetime.
@@ -6735,7 +6735,7 @@ TODO: delete them permanently from here
   <defaultCOSValue>TRUE</defaultCOSValue>
 </attr>
 
-<attr id="1355" name="zimbraPublicShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus" since="8.0.0">
+<attr id="1355" name="zimbraPublicShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,octopus" since="8.0.0">
   <desc>
     Maximum allowed lifetime of public shares.
     A value of 0 indicates that there's no limit on a public share's lifetime.

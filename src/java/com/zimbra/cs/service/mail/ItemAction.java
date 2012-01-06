@@ -344,4 +344,12 @@ public class ItemAction extends MailDocumentHandler {
 
         return successes;
     }
+
+    protected static long validateGrantExpiry(String grantExpiry, long maxLifetime) throws ServiceException {
+        long ret = grantExpiry == null ? maxLifetime : Long.valueOf(grantExpiry);
+        if (grantExpiry != null && maxLifetime != 0 && (ret == 0 || ret > System.currentTimeMillis() + maxLifetime)) {
+            throw ServiceException.PERM_DENIED("share expiration policy conflict");
+        }
+        return ret;
+    }
 }

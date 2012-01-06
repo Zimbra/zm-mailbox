@@ -96,6 +96,10 @@ public final class ACL {
         private short mRights;
         /** The password for guest accounts, or hex ascii string version of the accesskey for "key" grantees. */
         private String mSecret;
+        /** Time when this grant expires.
+         *  Value of 0 indicates that expiry is derived from ACL, except when {@link #mType} is
+         *  {@link ACL.GRANTEE_PUBLIC}. */
+        private long mExpiry = 0;
 
         /** Creates a new Grant object granting access to a user or class
          *  of users.  <tt>zimbraId</tt> may be <tt>null</tt>
@@ -110,10 +114,11 @@ public final class ACL {
             mType    = type;
             mRights  = (short) (rights & GRANTABLE_RIGHTS);
         }
-        Grant(String zimbraId, byte type, short rights, String secret) {
+        Grant(String zimbraId, byte type, short rights, String secret, long expiry) {
             this(zimbraId, type, rights);
             if (mType == GRANTEE_GUEST || mType == GRANTEE_KEY)
                 mSecret = secret;
+            mExpiry = expiry;
         }
 
         /** Creates a new Grant object from a decoded {@link Metadata} hash.
@@ -130,6 +135,7 @@ public final class ACL {
                 mSecret = meta.get(FN_PASSWORD, null);
             else if (mType == ACL.GRANTEE_KEY)
                 mSecret = meta.get(FN_ACCESSKEY);
+            mExpiry = meta.getLong(FN_EXPIRY, 0);
         }
 
         /** Returns true if there is an explicit grantee. */
@@ -144,8 +150,20 @@ public final class ACL {
         /** Returns the rights granted to the given {@link Account} by this
          *  <tt>Grant</tt>.  If the grant does not apply to the Account,
          *  returns <tt>0</tt>. */
-        public short getGrantedRights(Account acct) throws ServiceException {
-            return matches(acct) ? mRights : 0;
+        public short getGrantedRights(Account acct, ACL acl) throws ServiceException {
+            return !isExpired(acl) && matches(acct) ? mRights : 0;
+        }
+
+        private boolean isExpired(ACL acl) {
+            long expiry = mExpiry;
+            if (expiry == 0) {
+                if (mType == ACL.GRANTEE_GUEST || mType == ACL.GRANTEE_KEY) {
+                    expiry = acl.getGuestGrantExpiry();
+                } else if (mType != ACL.GRANTEE_PUBLIC) {
+                    expiry = acl.getInternalGrantExpiry();
+                }
+            }
+            return expiry != 0 && System.currentTimeMillis() > expiry;
         }
 
         /** Returns the display name of grantee. */
@@ -241,6 +259,18 @@ public final class ACL {
             return mSecret;
         }
 
+        /** Updates the expiry time for the grant.
+         *
+         * @param expiry
+         */
+        public void setExpiry(long expiry) {
+            mExpiry = expiry;
+        }
+
+        public long getExpiry() {
+            return mExpiry;
+        }
+
 
         private static final String FN_GRANTEE   = "g";
         private static final String FN_NAME      = "n";
@@ -248,6 +278,7 @@ public final class ACL {
         private static final String FN_RIGHTS    = "r";
         private static final String FN_PASSWORD  = "a";
         private static final String FN_ACCESSKEY = "k";
+        private static final String FN_EXPIRY    = "e";
 
         /** Encapsulates this <tt>Grant</tt> as a {@link Metadata} object
          *  for serialization. */
@@ -263,6 +294,7 @@ public final class ACL {
                 meta.put(FN_ACCESSKEY, mSecret);
             else
                 meta.put(FN_PASSWORD, mSecret);
+            meta.put(FN_EXPIRY, mExpiry);
 
             return meta;
         }
@@ -270,10 +302,37 @@ public final class ACL {
 
     /** The <tt>List</tt> of all {@link ACL.Grant}s set on an item. */
     private List<Grant> mGrants = new ArrayList<Grant>(3);
-
+    /** Time when all grants to internal users or groups expire. Value of 0 indicates that they never expire. */
+    private long mInternalGrantExpiry = 0;
+    /** Time when all grants to guest/external users expire. Value of 0 indicates that they never expire. */
+    private long mGuestGrantExpiry = 0;
 
     public ACL()  { }
+
+    public ACL(long internalGrantExpiry, long guestGrantExpiry) {
+        mInternalGrantExpiry = internalGrantExpiry;
+        mGuestGrantExpiry = guestGrantExpiry;
+    }
+
     public ACL(MetadataList mlist) {
+        decodeGrants(mlist);
+    }
+
+    public ACL(Metadata meta) {
+        MetadataList mlist = null;
+        try {
+            mlist = meta.getList(FN_GRANTS, true);
+            mInternalGrantExpiry = meta.getLong(FN_INT_GRANT_EXPIRY, 0);
+            mGuestGrantExpiry = meta.getLong(FN_GST_GRANT_EXPIRY, 0);
+        } catch (ServiceException e) {
+            ZimbraLog.mailbox.warn("malformed ACL: " + meta, e);
+        }
+        if (mlist != null) {
+            decodeGrants(mlist);
+        }
+    }
+
+    private void decodeGrants(MetadataList mlist) {
         for (int i = 0; i < mlist.size(); i++) {
             try {
                 mGrants.add(new Grant(mlist.getMap(i)));
@@ -281,6 +340,14 @@ public final class ACL {
                 ZimbraLog.mailbox.warn("malformed permission grant: " + mlist, e);
             }
         }
+    }
+
+    public long getInternalGrantExpiry() {
+        return mInternalGrantExpiry;
+    }
+
+    public long getGuestGrantExpiry() {
+        return mGuestGrantExpiry;
     }
 
     /** Returns the bitmask of rights granted to the user by the ACL, or
@@ -297,7 +364,7 @@ public final class ACL {
 
         short rightsGranted = 0;
         for (Grant grant : mGrants)
-            rightsGranted |= grant.getGrantedRights(authuser);
+            rightsGranted |= grant.getGrantedRights(authuser, this);
         if ((rightsGranted & SUBFOLDER_RIGHTS) == SUBFOLDER_RIGHTS)
             rightsGranted |= RIGHT_SUBFOLDER;
 
@@ -309,6 +376,11 @@ public final class ACL {
         return mGrants.isEmpty();
     }
 
+    public ACL.Grant grantAccess(String zimbraId, byte type, short rights, String secret)
+    throws ServiceException {
+        return grantAccess(zimbraId, type, rights, secret, 0);
+    }
+
     /** Grants the specified set of rights to the target.  If another set
      *  of rights has already been granted to the exact given (id, type)
      *  pair, the previous set is revoked and the new set is granted.
@@ -317,10 +389,25 @@ public final class ACL {
      * @param type      The type of object the grantee's ID refers to.
      * @param rights    A bitmask of the rights being granted.
      * @param secret    password or accesskey
+     * @param expiry    time when grant expires
      * @return          the grant object
      */
-    public ACL.Grant grantAccess(String zimbraId, byte type, short rights, String secret)
+    public ACL.Grant grantAccess(String zimbraId, byte type, short rights, String secret, long expiry)
     throws ServiceException {
+
+        if (expiry != 0) {
+            if (type == ACL.GRANTEE_GUEST || type == ACL.GRANTEE_KEY) {
+                if (mGuestGrantExpiry != 0 && expiry > mGuestGrantExpiry) {
+                    throw ServiceException.PERM_DENIED("share expiration policy conflict");
+                }
+            } else if (type != ACL.GRANTEE_PUBLIC) {
+                // internal grantee
+                if (mInternalGrantExpiry != 0 && expiry > mInternalGrantExpiry) {
+                    throw ServiceException.PERM_DENIED("share expiration policy conflict");
+                }
+            }
+        }
+
         if (type == GRANTEE_AUTHUSER)
             zimbraId = GuestAccount.GUID_AUTHUSER;
         else if (type == GRANTEE_PUBLIC)
@@ -338,11 +425,12 @@ public final class ACL {
                     grant.setRights(rights);
                     if (type == GRANTEE_GUEST || type == GRANTEE_KEY)
                         grant.setPassword(secret);
+                    grant.setExpiry(expiry);
                     return grant;
                 }
         }
 
-        Grant grant = new Grant(zimbraId, type, rights, secret);
+        Grant grant = new Grant(zimbraId, type, rights, secret, expiry);
         mGrants.add(grant);
         return grant;
     }
@@ -365,13 +453,19 @@ public final class ACL {
         return (mGrants.size() != count);
     }
 
-    /** Encapsulates this set of {@link ACL.Grant}s as a {@link MetadataList}
-     *  for serialization. */
-    public MetadataList encode() {
+    private static final String FN_GRANTS           = "g";
+    private static final String FN_INT_GRANT_EXPIRY = "ie";
+    private static final String FN_GST_GRANT_EXPIRY = "ge";
+
+    public Metadata encode() {
+        Metadata meta = new Metadata();
         MetadataList mlist = new MetadataList();
         for (Grant grant : mGrants)
             mlist.add(grant.encode());
-        return mlist;
+        meta.put(FN_GRANTS, mlist);
+        meta.put(FN_INT_GRANT_EXPIRY, mInternalGrantExpiry);
+        meta.put(FN_INT_GRANT_EXPIRY, mGuestGrantExpiry);
+        return meta;
     }
 
     @Override public String toString() {
