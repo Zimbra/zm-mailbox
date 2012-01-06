@@ -648,6 +648,8 @@ public final class MailConstants {
 
     // grants and shares
     public static final String E_ACL = "acl";
+    public static final String A_INTERNAL_GRANT_EXPIRY = "internalGrantExpiry";
+    public static final String A_GUEST_GRANT_EXPIRY = "guestGrantExpiry";
     public static final String E_GRANT = "grant";
     public static final String E_NOTES = "notes";
     public static final String E_SHARE = "share";
@@ -656,6 +658,7 @@ public final class MailConstants {
     public static final String A_GRANT_TYPE = "gt";
     public static final String A_PASSWORD = "pw";
     public static final String A_ACCESSKEY = "key";
+    public static final String A_EXPIRY = "expiry";
 
     // account ACLs
     public static final String E_ACE = "ace";
