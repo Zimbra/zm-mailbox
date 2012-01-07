@@ -42,7 +42,8 @@ public abstract class Db {
         TOO_MANY_SQL_PARAMS,
         BUSY,
         LOCKED,
-        CANTOPEN;
+        CANTOPEN,
+        TABLE_FULL;
     }
 
     public static enum Capability {

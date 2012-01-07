@@ -33,6 +33,8 @@ import java.util.Calendar;
 import java.util.List;
 
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.cs.util.Zimbra;
+
 import org.apache.commons.dbcp.DelegatingPreparedStatement;
 import org.apache.commons.dbcp.DelegatingConnection;
 
@@ -169,6 +171,8 @@ class DebugPreparedStatement extends DelegatingPreparedStatement {
             numRows = mStmt.executeUpdate();
         } catch (SQLException e) {
             logException(e);
+            if (Db.errorMatches(e, Db.Error.TABLE_FULL))
+                Zimbra.halt("DB out of space", e);
             throw e;
         }
         log();

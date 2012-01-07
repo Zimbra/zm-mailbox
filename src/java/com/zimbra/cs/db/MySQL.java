@@ -31,6 +31,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
 import com.google.common.base.Joiner;
+import com.mysql.jdbc.MysqlErrorNumbers;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
@@ -42,12 +43,13 @@ public class MySQL extends Db {
 
     MySQL() {
         mErrorCodes = new HashMap<Db.Error, Integer>(6);
-        mErrorCodes.put(Db.Error.DEADLOCK_DETECTED,        1213);
-        mErrorCodes.put(Db.Error.DUPLICATE_ROW,            1062);
-        mErrorCodes.put(Db.Error.FOREIGN_KEY_NO_PARENT,    1216);
+        mErrorCodes.put(Db.Error.DEADLOCK_DETECTED,        MysqlErrorNumbers.ER_LOCK_DEADLOCK);
+        mErrorCodes.put(Db.Error.DUPLICATE_ROW,            MysqlErrorNumbers.ER_DUP_ENTRY);
+        mErrorCodes.put(Db.Error.FOREIGN_KEY_NO_PARENT,    MysqlErrorNumbers.ER_NO_REFERENCED_ROW);
         mErrorCodes.put(Db.Error.FOREIGN_KEY_CHILD_EXISTS, 1451);
-        mErrorCodes.put(Db.Error.NO_SUCH_DATABASE,         1146);
-        mErrorCodes.put(Db.Error.NO_SUCH_TABLE,            1146);
+        mErrorCodes.put(Db.Error.NO_SUCH_DATABASE,         MysqlErrorNumbers.ER_NO_SUCH_TABLE);
+        mErrorCodes.put(Db.Error.NO_SUCH_TABLE,            MysqlErrorNumbers.ER_NO_SUCH_TABLE);
+        mErrorCodes.put(Db.Error.TABLE_FULL,               MysqlErrorNumbers.ER_RECORD_FILE_FULL);
     }
 
     @Override
