@@ -435,8 +435,13 @@ public class SoapEngine {
             }
         } catch (AuthFailedServiceException e) {
             response = soapProto.soapFault(e);
-            // Don't log stack trace for auth failures, since they commonly happen
-            LOG.info("handler exception: %s%s", e.getMessage(), e.getReason(", %s"));
+            
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("handler exception: %s%s", e.getMessage(), e.getReason(", %s"), e);
+            } else {
+                // Don't log stack trace for auth failures, since they commonly happen
+                LOG.info("handler exception: %s%s", e.getMessage(), e.getReason(", %s"));
+            }
         } catch (ServiceException e) {
             response = soapProto.soapFault(e);
             LOG.info("handler exception", e);
