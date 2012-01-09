@@ -617,19 +617,26 @@ class AuthHttpHandlersVar extends LookupHandlersVar {
     }
 }
 
-class WebUpstreamServersVar extends ProxyConfVar {
+/**
+ * The variable for nginx "upstream" servers block
+ * @author jiankuan
+ *
+ */
+abstract class ServersVar extends ProxyConfVar {
+    /**
+     * The port attribute name
+     */
+    private String mPortAttrName;
     
-    public WebUpstreamServersVar() {
-        super("web.upstream.:servers", null, null, ProxyConfValueType.CUSTOM,
-                ProxyConfOverride.CUSTOM, 
-                "List of upstream HTTP servers used by Web Proxy (i.e. servers " +
-                "for which zimbraReverseProxyLookupTarget is true, and whose " +
-                "mail mode is http|mixed|both)");
+    public ServersVar(String key, String portAttrName, String description) {
+        super(key, null, null, ProxyConfValueType.CUSTOM, ProxyConfOverride.CUSTOM, description);
+        this.mPortAttrName = portAttrName;
     }
     
     @Override
     public void update() throws ServiceException {
         ArrayList<String> servers = new ArrayList<String>();
+        String portName = configSource.getAttr(mPortAttrName, "");
         /* $(zmprov garpb) */
         List<Server> us = mProv.getAllServers();
 
@@ -646,8 +653,7 @@ class WebUpstreamServersVar extends ProxyConfVar {
                                 .toString())
                         || mode.equalsIgnoreCase(Provisioning.MailMode.both
                                 .toString())) {
-                    int serverPort = u.getIntAttr(
-                            Provisioning.A_zimbraMailPort, 0);
+                    int serverPort = u.getIntAttr(portName, 0);
                     int timeout = u.getIntAttr(
                             Provisioning.A_zimbraMailProxyReconnectTimeout, 60);
                     int maxFails = u.getIntAttr("zimbraMailProxyMaxFails", 1);
@@ -663,63 +669,6 @@ class WebUpstreamServersVar extends ProxyConfVar {
                     mLog.warn("Upstream: Ignoring server: " + serverName
                             + " ,because its mail mode is: " + (mode.equals("")?"EMPTY":mode));
                 }
-            }
-        }
-
-        mValue = servers;      
-    }
-    
-    @Override
-    public String format(Object o) {
-        @SuppressWarnings("unchecked")
-        ArrayList<String> servers = (ArrayList<String>) o;
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < servers.size(); i++) {
-            String s = servers.get(i);
-            if (i == 0) {
-                sb.append(String.format("server    %s;\n", s));
-            } else {
-                sb.append(String.format("        server    %s;\n", s));
-            }
-        }
-        return sb.toString();
-    }
-}
-
-class WebAdminUpstreamServersVar extends ProxyConfVar {
-    
-    public WebAdminUpstreamServersVar() {
-        super("web.admin.upstream.:servers", null, null, ProxyConfValueType.CUSTOM,
-                ProxyConfOverride.CUSTOM, 
-                "List of upstream admin console servers used by Web Proxy (i.e. servers " +
-                "for which zimbraReverseProxyLookupTarget is true");
-    }
-    
-    @Override
-    public void update() throws ServiceException {
-        ArrayList<String> servers = new ArrayList<String>();
-        /* $(zmprov garpb) */
-        List<Server> us = mProv.getAllServers();
-
-        for (Server u : us) {
-            boolean isTarget = u.getBooleanAttr(
-                    Provisioning.A_zimbraReverseProxyLookupTarget, false);
-            if (isTarget) {
-                String serverName = u.getAttr(
-                        Provisioning.A_zimbraServiceHostname, "");
-                int serverPort = u.getIntAttr(
-                        Provisioning.A_zimbraAdminPort, 0);
-                int timeout = u.getIntAttr(
-                        Provisioning.A_zimbraMailProxyReconnectTimeout, 60);
-                int maxFails = u.getIntAttr("zimbraMailProxyMaxFails", 1);
-                if (maxFails != 1) {
-                    servers.add(String.format("%s:%d fail_timeout=%ds max_fails=%d", serverName, serverPort,
-                            timeout, maxFails));
-                } else  {
-                    servers.add(String.format("%s:%d fail_timeout=%ds", serverName, serverPort,
-                            timeout));
-                }
-                mLog.info("Added server to HTTP upstream: " + serverName);
             }
         }
 
@@ -740,6 +689,35 @@ class WebAdminUpstreamServersVar extends ProxyConfVar {
             }
         }
         return sb.toString();
+    }
+}
+
+class WebUpstreamServersVar extends ServersVar {
+    
+    public WebUpstreamServersVar() {
+        super("web.upstream.:servers", Provisioning.A_zimbraReverseProxyHttpPortAttribute,
+                "List of upstream HTTP servers used by Web Proxy (i.e. servers " +
+                "for which zimbraReverseProxyLookupTarget is true, and whose " +
+                "mail mode is http|mixed|both)");
+    }
+}
+
+class WebSSLUpstreamServersVar extends ServersVar {
+    
+    public WebSSLUpstreamServersVar() {
+        super("web.ssl.upstream.:servers", Provisioning.A_zimbraReverseProxyHttpSSLPortAttribute,
+                "List of upstream HTTPS servers used by Web Proxy (i.e. servers " +
+                "for which zimbraReverseProxyLookupTarget is true, and whose " +
+                "mail mode is https|mixed|both)");
+    }
+}
+
+class WebAdminUpstreamServersVar extends ServersVar {
+    
+    public WebAdminUpstreamServersVar() {
+        super("web.admin.upstream.:servers", Provisioning.A_zimbraReverseProxyAdminPortAttribute,
+                "List of upstream admin console servers used by Web Proxy (i.e. servers " +
+                "for which zimbraReverseProxyLookupTarget is true");
     }
 }
 
@@ -1082,6 +1060,28 @@ class TimeInSecVarWrapper extends ProxyConfVar {
 }
 
 /**
+ * Provide the value of "proxy_pass" for web proxy.
+ * @author jiankuan
+ *
+ */
+class WebProxyUpstreamTargetVar extends ProxyConfVar {
+    public WebProxyUpstreamTargetVar() {
+        super("web.upstream.schema", "zimbraReverseProxySSLToUpstreamEnabled", false, ProxyConfValueType.BOOLEAN,
+                ProxyConfOverride.SERVER, "The target of proxy_pass for web proxy");
+    }
+    
+    @Override
+    public String format(Object o) throws ProxyConfException {
+        Boolean value = (Boolean)o;
+        if(value == false) {
+            return "http://" + ProxyConfGen.ZIMBRA_UPSTREAM_NAME;
+        } else {
+            return "https://" + ProxyConfGen.ZIMBRA_SSL_UPSTREAM_NAME;
+        }
+    }
+}
+
+/**
  * A simple class of Triple<VirtualHostName, VirtualIPAddress, DomainName>. Uses
  * this only for convenient and HashMap can't guarantee order
  * @author jiankuan
@@ -1149,6 +1149,10 @@ public class ProxyConfGen
     private static Map<String, ProxyConfVar> mConfVars = new HashMap<String, ProxyConfVar>();
     private static Map<String, String> mVars = new HashMap<String, String>();
     static List<DomainAttrItem> mDomainReverseProxyAttrs;
+    
+    static final String ZIMBRA_UPSTREAM_NAME = "zimbra";
+    static final String ZIMBRA_SSL_UPSTREAM_NAME = "zimbra_ssl";
+    static final String ZIMBRA_ADMIN_CONSOLE_UPSTREAM_NAME = "zimbra_admin";
      
 
     /** the pattern for custom header cmd, such as "!{explode domain} */
@@ -1724,8 +1728,8 @@ public class ProxyConfGen
         mConfVars.put("ssl.clientcertmode.default", new ProxyConfVar("ssl.clientcertmode.default", "zimbraReverseProxyClientCertMode", "off", ProxyConfValueType.STRING, ProxyConfOverride.SERVER,"enable authentication via X.509 Client Certificate in nginx proxy (https only)"));
         mConfVars.put("ssl.clientcertca.default", new ClientCertAuthDefaultCAVar());
         mConfVars.put("ssl.clientcertdepth.default", new ProxyConfVar("ssl.clientcertdepth.default", "zimbraReverseProxyClientCertDepth", new Integer(10), ProxyConfValueType.INTEGER, ProxyConfOverride.NONE,"indicate how depth the verification will load the ca chain. This is useful when client crt is signed by multiple intermediate ca"));
-        mConfVars.put("main.user", new ProxyConfVar("main.user", null, "zimbra", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "The user as which the worker processes will run"));
-        mConfVars.put("main.group", new ProxyConfVar("main.group", null, "zimbra", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "The group as which the worker processes will run"));
+        mConfVars.put("main.user", new ProxyConfVar("main.user", null, ZIMBRA_UPSTREAM_NAME, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "The user as which the worker processes will run"));
+        mConfVars.put("main.group", new ProxyConfVar("main.group", null, ZIMBRA_UPSTREAM_NAME, ProxyConfValueType.STRING, ProxyConfOverride.NONE, "The group as which the worker processes will run"));
         mConfVars.put("main.workers", new ProxyConfVar("main.workers", "zimbraReverseProxyWorkerProcesses", new Integer(4), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Number of worker processes"));
         mConfVars.put("main.pidfile", new ProxyConfVar("main.pidfile", null, mWorkingDir + "/log/nginx.pid", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "PID file path (relative to ${core.workdir})"));
         mConfVars.put("main.logfile", new ProxyConfVar("main.logfile", null, mWorkingDir + "/log/nginx.log", ProxyConfValueType.STRING, ProxyConfOverride.NONE, "Log file path (relative to ${core.workdir})"));
@@ -1782,8 +1786,10 @@ public class ProxyConfGen
         mConfVars.put("mail.pop3.greeting", new Pop3GreetingVar());
         mConfVars.put("mail.enabled", new ProxyConfVar("mail.enabled", "zimbraReverseProxyMailEnabled", true, ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER,"Indicates whether Mail Proxy is enabled"));
         mConfVars.put("web.mailmode", new ProxyConfVar("web.mailmode", Provisioning.A_zimbraReverseProxyMailMode, "both", ProxyConfValueType.STRING, ProxyConfOverride.SERVER,"Reverse Proxy Mail Mode - can be http|https|both|redirect|mixed"));
-        mConfVars.put("web.upstream.name", new ProxyConfVar("web.upstream.name", null, "zimbra", ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,"Symbolic name for HTTP upstream cluster"));
+        mConfVars.put("web.upstream.name", new ProxyConfVar("web.upstream.name", null, ZIMBRA_UPSTREAM_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,"Symbolic name for HTTP upstream cluster"));
+        mConfVars.put("web.ssl.upstream.name", new ProxyConfVar("web.ssl.upstream.name", null, ZIMBRA_SSL_UPSTREAM_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG,"Symbolic name for HTTPS upstream cluster"));
         mConfVars.put("web.upstream.:servers", new WebUpstreamServersVar());
+        mConfVars.put("web.ssl.upstream.:servers", new WebSSLUpstreamServersVar());
         /* deprecated */ mConfVars.put("web.:routehandlers", new RouteHandlersVar());
         /* deprecated */ mConfVars.put("web.routetimeout", new ProxyConfVar("web.routetimeout", "zimbraReverseProxyRouteLookupTimeout", new Long(15000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER,"Time interval (ms) given to web route lookup handler to respond to route lookup request (after this time elapses, Proxy fails over to next handler, or fails the request if there are no more lookup handlers)"));
         mConfVars.put("web.uploadmax", new ProxyConfVar("web.uploadmax", "zimbraFileUploadMaxSize", new Long(10485760), ProxyConfValueType.LONG, ProxyConfOverride.SERVER,"Maximum accepted client request body size (indicated by Content-Length) - if content length exceeds this limit, then request fails with HTTP 413"));
@@ -1803,6 +1809,7 @@ public class ProxyConfGen
         mConfVars.put("web.enabled", new ProxyConfVar("web.enabled", "zimbraReverseProxyHttpEnabled", false, ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER, "Indicates whether HTTP proxying is enabled"));
         mConfVars.put("web.http.enabled", new HttpEnablerVar());
         mConfVars.put("web.https.enabled", new HttpsEnablerVar());
+        mConfVars.put("web.upstream.target", new WebProxyUpstreamTargetVar());
         mConfVars.put("zmlookup.:handlers", new ZMLookupHandlerVar());
         mConfVars.put("zmlookup.timeout", new ProxyConfVar("zmlookup.timeout", "zimbraReverseProxyRouteLookupTimeout", new Long(15000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER, "Time interval (ms) given to lookup handler to respond to route lookup request (after this time elapses, Proxy fails over to next handler, or fails the request if there are no more lookup handlers)"));
         mConfVars.put("zmlookup.retryinterval", new ProxyConfVar("zmlookup.retryinterval", "zimbraReverseProxyRouteLookupTimeoutCache", new Long(60000), ProxyConfValueType.TIME, ProxyConfOverride.SERVER,"Time interval (ms) given to lookup handler to cache a failed response to route a previous lookup request (after this time elapses, Proxy retries this host)"));
@@ -1816,7 +1823,7 @@ public class ProxyConfGen
         mConfVars.put("web.admin.default.enabled", new ProxyConfVar("web.amdin.default.enabled", "zimbraReverseProxyAdminEnabled", new Boolean(false), ProxyConfValueType.ENABLER, ProxyConfOverride.SERVER, "Inidicate whether admin console proxy is enabled"));
         mConfVars.put("web.admin.port", new ProxyConfVar("web.admin.port", "zimbraAdminProxyPort", new Integer(9071), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Admin console proxy port"));
         mConfVars.put("web.admin.uport", new ProxyConfVar("web.admin.uport", "zimbraAdminPort", new Integer(7071), ProxyConfValueType.INTEGER, ProxyConfOverride.SERVER, "Admin console upstream port"));
-        mConfVars.put("web.admin.upstream.name", new ProxyConfVar("web.admin.upstream.name", null, "zimbra_admin", ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for admin console upstream cluster"));
+        mConfVars.put("web.admin.upstream.name", new ProxyConfVar("web.admin.upstream.name", null, ZIMBRA_ADMIN_CONSOLE_UPSTREAM_NAME, ProxyConfValueType.STRING, ProxyConfOverride.CONFIG, "Symbolic name for admin console upstream cluster"));
         mConfVars.put("web.admin.upstream.:servers", new WebAdminUpstreamServersVar());
     }
 
