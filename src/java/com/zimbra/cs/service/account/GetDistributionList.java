@@ -101,9 +101,6 @@ public class GetDistributionList extends DistributionListDocumentHandler {
             
             // isMember
             boolean isMember = isMember(prov, acct, group);
-
-            response.addAttribute(AccountConstants.A_IS_MEMBER, isMember);  
-            response.addAttribute(AccountConstants.A_IS_OWNER, isOwner);
             
             boolean needOwners = request.getAttributeBool(AccountConstants.A_NEED_OWNERS, false);
             
@@ -111,6 +108,14 @@ public class GetDistributionList extends DistributionListDocumentHandler {
             // which is more json friendly
             Element eDL = com.zimbra.cs.service.admin.GetDistributionList.encodeDistributionList(
                     response, group, true, !needOwners, false, null, null);
+            
+            if (isMember) {
+                eDL.addAttribute(AccountConstants.A_IS_MEMBER, true);  
+            }
+            
+            if (isOwner) {
+                eDL.addAttribute(AccountConstants.A_IS_OWNER, true);
+            }
             
             encodeAttrs(group, eDL, isOwner ? OWNER_ATTRS : NON_OWNER_ATTRS);
             

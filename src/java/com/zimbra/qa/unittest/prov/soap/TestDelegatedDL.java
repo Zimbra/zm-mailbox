@@ -395,10 +395,11 @@ public class TestDelegatedDL extends SoapTest {
                 DistributionListSelector.fromName(DL_NAME), Boolean.TRUE);
         
         GetDistributionListResponse resp = invokeJaxb(transport, req);
-        assertTrue(resp.isOwner());
-        assertFalse(resp.isMember());
         
         DistributionListInfo dlInfo = resp.getDl();
+        
+        assertTrue(dlInfo.isOwner());
+        assertFalse(dlInfo.isMember());
         
         String dlId = dlInfo.getId();
         
@@ -457,9 +458,9 @@ public class TestDelegatedDL extends SoapTest {
                 DistributionListSelector.fromName(DL_NAME), Boolean.TRUE);
         
         GetDistributionListResponse resp = invokeJaxb(transport, req);
-        assertFalse(resp.isOwner());
         
         DistributionListInfo dlInfo = resp.getDl();
+        assertFalse(dlInfo.isOwner());
         
         String dlId = dlInfo.getId();
         

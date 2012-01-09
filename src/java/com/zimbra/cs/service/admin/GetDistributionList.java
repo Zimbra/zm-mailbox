@@ -164,10 +164,6 @@ public class GetDistributionList extends DistributionListDocumentHandler {
         eDL.addAttribute(AdminConstants.A_NAME, group.getUnicodeName());
         eDL.addAttribute(AdminConstants.A_ID,group.getId());
         eDL.addAttribute(AdminConstants.A_DYNAMIC, group.isDynamic());
-                
-        if (!hideOwners) {
-            encodeOwners(eDL, group);
-        }
         
         if (encodeAttrs) {
             Set<String> hideAttrs = null;
@@ -182,6 +178,10 @@ public class GetDistributionList extends DistributionListDocumentHandler {
     
             ToXML.encodeAttrs(eDL, group.getUnicodeAttrs(), 
                     AdminConstants.A_N, reqAttrs, hideAttrs, attrRightChecker);
+        }
+        
+        if (!hideOwners) {
+            encodeOwners(eDL, group);
         }
         
         return eDL;

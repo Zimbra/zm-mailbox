@@ -4020,17 +4020,17 @@ Notes:
                e.g. needRights="sendToDistList,viewDistList"
                
 
-<GetDistributionListResponse isOwner="1" isMember="1">
-  <dl name="{name}" id="{id}" dynamic="1|0">
-    <owners>
-      <owner type="{grantee-type}" id="{owner-id}" name="{owner-name}"/>+
-    </owners>
+<GetDistributionListResponse >
+  <dl name="{name}" id="{id}" dynamic="1|0" [isOwner="1"] [isMember="1"]>
     <a n="...">...</a>+
-    <rights>
+    [<owners>
+      <owner type="{grantee-type}" id="{owner-id}" name="{owner-name}"/>+
+    </owners>]
+    [<rights>
       [<right right="{right}"> 
            <grantee type={grantee-type} [id="{grantee-id}"] [name="grantee-name"]/>
        </right>+]  
-    </rights>
+    </rights>]
   </dl>
 </GetDistributionListResponse>
 
@@ -4144,7 +4144,7 @@ Notes:
 </GetAccountDistributionListsRequest>
 
 <GetAccountDistributionListsResponse>
-  <dl name="{name}" id="{id}" [d="{display-name}"] [via="{via-dl-name}] [isOwner="1|0"] [isMember="1|0"]">
+  <dl name="{name}" id="{id}" [d="{display-name}"] [via="{via-dl-name}] [isOwner="1"] [isMember="1"]>
     [<a n="...">...</a>+]
   </dl>+
 </GetAccountDistributionListsResponse>
