@@ -37,6 +37,11 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlRootElement(name=AccountConstants.E_DL)
 public class DistributionListInfo extends ObjectInfo {
 
+    @XmlAttribute(name=AccountConstants.A_IS_OWNER, required=false)
+    ZmBoolean isOwner;
+    @XmlAttribute(name=AccountConstants.A_IS_MEMBER, required=false)
+    ZmBoolean isMember;
+    
     @XmlAttribute(name=AccountConstants.A_DYNAMIC, required=false)
     ZmBoolean dynamic;
     @XmlElement(name=AccountConstants.E_DLM, required=false)
@@ -70,6 +75,22 @@ public class DistributionListInfo extends ObjectInfo {
         setMembers(members);
     }
 
+    public void setIsOwner(Boolean isOwner) {
+        this.isOwner = ZmBoolean.fromBool(isOwner);
+    }
+    
+    public Boolean isOwner() {
+        return ZmBoolean.toBool(isOwner, false);
+    }
+    
+    public void setIsMember(Boolean isMember) {
+        this.isMember = ZmBoolean.fromBool(isMember);
+    }
+    
+    public Boolean isMember() {
+        return ZmBoolean.toBool(isMember, false);
+    }
+    
     public void setMembers(Collection <String> members) {
         this.members = Lists.newArrayList();
         if (members != null) {

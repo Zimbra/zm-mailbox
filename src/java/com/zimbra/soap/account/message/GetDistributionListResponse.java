@@ -29,10 +29,6 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlRootElement(name=AccountConstants.E_GET_DISTRIBUTION_LIST_RESPONSE)
 public class GetDistributionListResponse {
 
-    @XmlAttribute(name=AccountConstants.A_IS_MEMBER, required=true)
-    private ZmBoolean isMember;
-    @XmlAttribute(name=AccountConstants.A_IS_OWNER, required=true)
-    private ZmBoolean isOwner;
     @XmlElement(name=AccountConstants.E_DL, required=false)
     DistributionListInfo dl;
 
@@ -47,13 +43,4 @@ public class GetDistributionListResponse {
     public void setDl(DistributionListInfo dl) { this.dl = dl; }
 
     public DistributionListInfo getDl() { return dl; }
-
-
-    public Boolean isMember() {
-        return ZmBoolean.toBool(isMember);
-    }
-
-    public Boolean isOwner() {
-        return ZmBoolean.toBool(isOwner);
-    }
 }
