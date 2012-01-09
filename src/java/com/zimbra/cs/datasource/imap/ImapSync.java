@@ -86,7 +86,7 @@ public class ImapSync extends MailItemImport {
     }
 
     public static boolean isSyncNeeded(DataSource ds) throws ServiceException {
-        if (ds.isOffline()) {
+        if (ds.isOffline() && ds.getSyncFrequency() > 0) {
             SyncState ss = SyncStateManager.getInstance().getSyncState(ds);
             if (ss == null) {
                 return ds.getSyncFrequency() >= 0;
