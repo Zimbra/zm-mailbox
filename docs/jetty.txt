@@ -55,9 +55,8 @@ I. Conventional Debugging
 
 2. In Eclipse select Run/Debug... and right click on Java Application
    to "New" a configuration.  Call it anything you want, such as
-   "jetty".  You can choose any project as the debug project.  That is
-   unimportant.  What's important is the Main class.  Set it to
-   org.eclipse.jetty.start.Main.
+   "jetty".  Choose the ZimbraServer as the debug project. Set the main
+   class to org.eclipse.jetty.start.Main.
 
 3. Switch to the Arguments tab and set
 
