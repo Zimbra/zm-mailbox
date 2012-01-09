@@ -9457,6 +9457,14 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=632)
     public static final String A_zimbraReverseProxyHttpPortAttribute = "zimbraReverseProxyHttpPortAttribute";
+    
+    /**
+     * attribute that contains http ssl bind port
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1359)
+    public static final String A_zimbraReverseProxyHttpSSLPortAttribute = "zimbraReverseProxyHttpSSLPortAttribute";
 
     /**
      * NGINX reverse proxy imap capabilities
