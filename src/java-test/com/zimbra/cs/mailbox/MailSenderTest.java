@@ -23,6 +23,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.account.ZAttrProvisioning.ShareNotificationMtaConnectionType;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
@@ -114,12 +115,12 @@ public final class MailSenderTest {
         server.setSmtpPort(25);
         server.setSmtpTimeout(60);
         server.setSmtpSendPartial(true);
-        server.setRelaySmtpHostname("mta02.zimbra.com");
-        server.setRelaySmtpPort(25);
-        server.setRelaySmtpAuthRequired(true);
-        server.setRelaySmtpUseTls(true);
-        server.setRelaySmtpAuthAccount("test-jylee");
-        server.setRelaySmtpAuthPassword("test123");
+        server.setShareNotificationMtaHostname("mta02.zimbra.com");
+        server.setShareNotificationMtaPort(25);
+        server.setShareNotificationMtaAuthRequired(true);
+        server.setShareNotificationMtaConnectionType(ShareNotificationMtaConnectionType.STARTTLS);
+        server.setShareNotificationMtaAuthAccount("test-jylee");
+        server.setShareNotificationMtaAuthPassword("test123");
         
         MimeMessage mm = new MimeMessage(JMSession.getSmtpSession());
         InternetAddress address = new JavaMailInternetAddress("test-jylee@zimbra.com");

@@ -508,7 +508,7 @@ public class SendShareNotification extends MailDocumentHandler {
 
         mbox.getMailSender().sendMimeMessage(octxt, mbox, true, mm, null, null, null, null, false);
         // also send a copy of the message out to relay MTA
-        if (true) {  // if (Provisioning.getInstance().getServer().isExternalMtaConfigured()) {
+        if (Provisioning.getInstance().getLocalServer().isShareNotificationMtaEnabled()) {
             MailSender.relayMessage(mm);
         }
     }
