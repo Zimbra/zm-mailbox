@@ -780,6 +780,20 @@ class DomainAttrItem {
     }
 }
 
+/** The visit of LdapProvisioning can't throw the exception out.
+ *  Therefore uses this special item to indicate exception.
+ * @author jiankuan
+ *
+ */
+class DomainAttrExceptionItem extends DomainAttrItem {
+    public DomainAttrExceptionItem(ProxyConfException e) {
+        super(null, null, null, null, null, null, null);
+        this.exception = e;
+    }
+
+    public ProxyConfException exception;
+}
+
 public class ProxyConfGen
 {
     private static Log mLog = LogFactory.getLog (ProxyConfGen.class);
@@ -949,8 +963,10 @@ public class ProxyConfGen
 
                     }
                 } catch (UnknownHostException e) {
-                    throw ServiceException.
-                        FAILURE("Cannot find the IP of " + virtualHostnames[i], e);
+                    result.add(new DomainAttrExceptionItem(
+                                    new ProxyConfException("virtual host name \"" + virtualHostnames[i] + "\" is not resolvable", e)));
+
+                    return;          
                 }
             }
         };
@@ -1140,8 +1156,17 @@ public class ProxyConfGen
         List<String> cache = null;
         if (size > 0) {
             Iterator<DomainAttrItem> it = mDomainReverseProxyAttrs.iterator();
-            DomainAttrItem item = it.next();
-            fillVarsWithDomainAttrs(item);
+            DomainAttrItem item;
+            while(cache == null && it.hasNext()) {
+                item = it.next();
+                if (item instanceof DomainAttrExceptionItem) {
+                    throw ((DomainAttrExceptionItem)item).exception;
+                }
+
+                fillVarsWithDomainAttrs(item);
+                cache = expandTemplateAndCache(temp, conf);
+                conf.newLine();
+            }
 
             cache = expandTemplateAndCache(temp, conf);
             conf.newLine();
@@ -1156,7 +1181,7 @@ public class ProxyConfGen
     }
     private static void fillVarsWithDomainAttrs(DomainAttrItem item)
             throws UnknownHostException, ProxyConfException {
-        String defaultVal = null;;
+        String defaultVal = null;
         mVars.put("vhn", item.virtualHostname);
         if (getZimbraIPMode() != IPMode.BOTH) {
             if (getZimbraIPMode() == IPMode.IPV4_ONLY &&
@@ -1620,18 +1645,43 @@ public class ProxyConfGen
             expandTemplate(new File(mTemplateDir, getWebHttpSModeConfTemplate("mixed")), new File(mConfIncludesDir, getWebHttpSModeConf("mixed")));
         } catch (ProxyConfException pe) {
             mLog.error("Error while expanding templates: " + pe.getMessage());
+            appendConfGenResultToConf("__CONF_GEN_ERROR__:" + pe.getMessage());
             exitCode = 1;
         } catch (SecurityException se) {
             mLog.error("Error while expanding templates: " + se.getMessage());
+            appendConfGenResultToConf("__CONF_GEN_ERROR__:" + se.getMessage());
             exitCode = 1;
         }
         if (exitCode != 1) {
             mLog.info("Proxy configuration files are generated successfully");
+            appendConfGenResultToConf("__SUCCESS__");
         } else {
             mLog.info("Proxy configuration files generation is interrupted by errors");
         }
         
         return (exitCode);
+    }
+
+    /**
+     * bug 66072#c3, always append the conf generation result
+     * to <zimbr home>/conf/nginx.conf. In this way, zmnginxctl
+     * restart can detect the problem.
+     * @param text
+     */
+    private static void appendConfGenResultToConf(String text) {
+        File conf = new File(mConfDir, getCoreConf());
+        if (!conf.exists()) {
+            return;
+        }
+
+        FileWriter writer;
+        try {
+            writer = new FileWriter(conf, true);
+            writer.write("\n#" + text + "\n");
+            writer.close();
+        } catch (IOException e) {
+            //do nothing
+        }
     }
 
     private static void writeClientCAtoFile(String clientCA)
