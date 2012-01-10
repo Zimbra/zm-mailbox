@@ -78,7 +78,7 @@ An optional company name []:
 
 
 (C) Create and sign(self-sign) a certificate from the certificate request
-$ /opt/zimbra/openssl/bin/openssl x509 -extfile /opt/zimbra/openssl/ssl/openssl.cnf -trustout -extensions v3_ca -req -days 365 -in ca.csr -out ca.crt -signkey ca.key
+$ /opt/zimbra/openssl/bin/openssl x509 -extfile /opt/zimbra/openssl/ssl/openssl.cnf -extensions v3_ca -req -days 365 -in ca.csr -out ca.crt -signkey ca.key
 Signature ok
 subject=/C=US/ST=California/L=Palo Alto/O=VMWare/OU=Zimbra/CN=MyCA
 Getting Private key
