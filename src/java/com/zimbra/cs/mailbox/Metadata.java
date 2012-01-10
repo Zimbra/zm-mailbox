@@ -31,10 +31,8 @@ import com.zimbra.common.soap.Element;
 
 public final class Metadata {
 
-    /** Current Metadata version number.  Note that all MailItems have NOT
-     *  been updated to check the version number, so make sure to look at
-     *  the code if you depend on this. */
-    public static final int CURRENT_METADATA_VERSION = 11;
+    /** never change this - implement structural changes in new attrs instead */
+    public static final int LEGACY_METADATA_VERSION = 10;
 
     // MetaData attributes used in toplevel metadata for MailItems.
 
@@ -44,7 +42,9 @@ public final class Metadata {
     // FIXME: SENDER and SORT conflict
     // FIXME: RECIPIENTS and TYPES conflict
     public static final String FN_ATTRS            = "a";
+    @Deprecated
     public static final String FN_RIGHTS           = "acl";
+    public static final String FN_RIGHTS_MAP       = "aclm";
     public static final String FN_ALARM_DATA       = "ad";
     public static final String FN_ACCOUNT_ID       = "aid";
     public static final String FN_CALITEM_IDS      = "ais";
@@ -105,14 +105,14 @@ public final class Metadata {
     public static final String FN_USER_AGENT       = "ua";
     public static final String FN_UIDNEXT          = "unxt";
     public static final String FN_URL              = "url";
-    public static final String FN_MD_VERSION       = "v"; // metadata version
+    @Deprecated
+    public static final String FN_MD_VERSION       = "v"; // metadata version; frozen but needs to be encoded for legacy clients
     public static final String FN_VERSION          = "ver";
     public static final String FN_VIEW             = "vt";
     public static final String FN_WIKI_WORD        = "ww";
     public static final String FN_ELIDED           = "X";
     public static final String FN_EXTRA_DATA       = "xd";
 
-    private int version = CURRENT_METADATA_VERSION;
     Map<Object, Object> map;
 
     public Metadata() {
@@ -120,12 +120,7 @@ public final class Metadata {
     }
 
     public Metadata(Map<?, ?> map) {
-        this(map, CURRENT_METADATA_VERSION);
-    }
-
-    Metadata(Map<?, ?> map, int version) {
         this.map = new TreeMap<Object, Object>(map);
-        this.version = version;
     }
 
     public Metadata(String encoded) throws MailServiceException {
@@ -146,12 +141,9 @@ public final class Metadata {
         } finally {
             if (map != null && map.containsKey(FN_MD_VERSION)) {
                 try {
-                    version = (int) getLong(FN_MD_VERSION, CURRENT_METADATA_VERSION);
                     map.remove(FN_MD_VERSION);
                 } catch (Exception e) {
                 }
-            } else {
-                version = 1; // if no version is encoded, assume oldest version, or "1"
             }
         }
     }
@@ -169,7 +161,7 @@ public final class Metadata {
     }
 
     public int getVersion() {
-        return version;
+        return LEGACY_METADATA_VERSION;
     }
 
     public Metadata copy(Metadata source) {
@@ -187,9 +179,9 @@ public final class Metadata {
             if (key == null || value == null) {
                 continue;
             } else if (value instanceof Map) {
-                result.put(key.toString(), new Metadata((Map<?, ?>) value, version));
+                result.put(key.toString(), new Metadata((Map<?, ?>) value));
             } else if (value instanceof List) {
-                result.put(key.toString(), new MetadataList((List<?>) value, version));
+                result.put(key.toString(), new MetadataList((List<?>) value));
             } else {
                 result.put(key.toString(), value);
             }
@@ -297,7 +289,7 @@ public final class Metadata {
         if (value instanceof List) {
             @SuppressWarnings("unchecked")
             List<Object> cast = (List<Object>) value;
-            return new MetadataList(cast, version);
+            return new MetadataList(cast);
         }
         throw ServiceException.INVALID_REQUEST("invalid/missing value for attribute: " + key, null);
     }
@@ -314,14 +306,14 @@ public final class Metadata {
         if (value instanceof Map) {
             @SuppressWarnings("unchecked")
             Map<String, Object> cast = (Map<String, Object>) value;
-            return new Metadata(cast, version);
+            return new Metadata(cast);
         }
         throw ServiceException.INVALID_REQUEST("invalid/missing value for attribute: " + key, null);
     }
 
     @Override
     public String toString() {
-        put(FN_MD_VERSION, version);
+        put(FN_MD_VERSION, LEGACY_METADATA_VERSION);
         String result = BEncoding.encode(map);
         map.remove(FN_MD_VERSION);
         return result;
@@ -329,7 +321,6 @@ public final class Metadata {
 
     public String prettyPrint() {
         StringBuilder sb = new StringBuilder(2048);
-        sb.append("MetaData version = ").append(version).append("\n");
         prettyEncode(sb, map, 0);
         sb.setLength(sb.length() - 1);  // Remove the last newline.
         return sb.toString();

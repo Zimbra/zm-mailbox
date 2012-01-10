@@ -63,7 +63,7 @@ public class ItemData {
             JSONObject json = new JSONObject(encoded);
             int version = (byte)json.getInt(Keys.Ver.toString());
 
-            if (version > Metadata.CURRENT_METADATA_VERSION) {
+            if (version > Metadata.LEGACY_METADATA_VERSION) {
                 throw new IOException("unsupported data version");
             }
             ud = new MailItem.UnderlyingData();
@@ -131,7 +131,7 @@ public class ItemData {
                 put(Keys.Path.toString(), path).
                 putOpt(Keys.TagStr.toString(), tagsOldFmt).
                 putOpt(Keys.TagNames.toString(), tags).
-                put(Keys.Ver.toString(), Metadata.CURRENT_METADATA_VERSION);
+                put(Keys.Ver.toString(), Metadata.LEGACY_METADATA_VERSION);
         } catch (Exception e) {
             throw new IOException("encode error: " + e);
         }

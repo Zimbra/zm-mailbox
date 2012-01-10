@@ -27,7 +27,6 @@ import com.zimbra.common.util.BEncoding.BEncodingException;
  * @author dkarp
  */
 public class MetadataList {
-    private int version;
     List<Object> list;
 
     public MetadataList() {
@@ -35,12 +34,7 @@ public class MetadataList {
     }
 
     public MetadataList(List<?> list) {
-        this(list, Metadata.CURRENT_METADATA_VERSION);
-    }
-
-    MetadataList(List<?> list, int version) {
         this.list = new ArrayList<Object>(list);
-        this.version = version;
     }
 
     public MetadataList(String encoded) throws ServiceException {
@@ -60,7 +54,7 @@ public class MetadataList {
     }
 
     public int getVersion() {
-        return version;
+        return Metadata.LEGACY_METADATA_VERSION;
     }
 
     public MetadataList copy(MetadataList source) {
@@ -75,9 +69,9 @@ public class MetadataList {
             if (obj == null) {
                 continue;
             } else if (obj instanceof Map) {
-                result.add((T) new Metadata((Map<String, ?>) obj, version));
+                result.add((T) new Metadata((Map<String, ?>) obj));
             } else if (obj instanceof List) {
-                result.add((T) new MetadataList((List<?>) obj, version));
+                result.add((T) new MetadataList((List<?>) obj));
             } else {
                 result.add((T) obj);
             }
@@ -150,7 +144,7 @@ public class MetadataList {
     public MetadataList getList(int index) throws ServiceException {
         Object value = list.get(index);
         if (value instanceof List)  {
-            return new MetadataList((List<?>) value, version);
+            return new MetadataList((List<?>) value);
         }
         throw ServiceException.INVALID_REQUEST("invalid/null value for index: " + index, null);
     }
@@ -160,7 +154,7 @@ public class MetadataList {
         if (value instanceof Map) {
             @SuppressWarnings("unchecked")
             Map<String, ?> cast = (Map<String, ?>) value;
-            return new Metadata(cast, version);
+            return new Metadata(cast);
         }
         throw ServiceException.INVALID_REQUEST("invalid/null value for attribute: " + index, null);
     }

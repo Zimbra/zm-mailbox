@@ -3147,7 +3147,7 @@ public abstract class MailItem implements Comparable<MailItem> {
             }
         }
         if (rights != null) {
-            meta.put(Metadata.FN_RIGHTS, rights.encode());
+            meta.put(Metadata.FN_RIGHTS_MAP, rights.encode());
         }
         return meta;
     }
@@ -3180,15 +3180,20 @@ public abstract class MailItem implements Comparable<MailItem> {
         }
 
         ACL acl = null;
-        if (meta.getVersion() <= 10) {
-            MetadataList mlistACL = meta.getList(Metadata.FN_RIGHTS, true);
-            if (mlistACL != null) {
-                acl = new ACL(mlistACL);
-            }
-        } else {
-            Metadata mACL = meta.getMap(Metadata.FN_RIGHTS, true);
-            if (mACL != null) {
-                acl = new ACL(mACL);
+        if (meta.containsKey(Metadata.FN_RIGHTS_MAP)) {
+            //new format
+            acl = makeACLFromMap(Metadata.FN_RIGHTS_MAP, meta);
+        } else if (meta.containsKey(Metadata.FN_RIGHTS)) {
+            try {
+                //try the HELIX list format
+                MetadataList mlistACL = meta.getList(Metadata.FN_RIGHTS, true);
+                if (mlistACL != null) {
+                    acl = new ACL(mlistACL);
+                }
+            } catch (ServiceException se) {
+                //map may exist in old attr for a short time between bug 60048 and bug 68928
+                ZimbraLog.mailbox.warn("Metadata.FN_RIGHTS exists, but is not list. Should never see this outside CF/DF!");
+                acl = makeACLFromMap(Metadata.FN_RIGHTS, meta);
             }
         }
         if (acl != null) {
@@ -3196,6 +3201,15 @@ public abstract class MailItem implements Comparable<MailItem> {
             if (!isTagged(Flag.FlagInfo.NO_INHERIT)) {
                 alterTag(mMailbox.getFlagById(Flag.ID_NO_INHERIT), true);
             }
+        }
+    }
+    
+    private ACL makeACLFromMap(String key, Metadata meta) throws ServiceException {
+        Metadata aclMetaData = meta.getMap(key, true);
+        if (aclMetaData != null) {
+            return new ACL(aclMetaData);
+        } else {
+            return null;
         }
     }
 
