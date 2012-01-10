@@ -27,6 +27,7 @@ import javax.mail.NoSuchProviderException;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 
+import com.zimbra.common.account.ZAttrProvisioning.ShareNotificationMtaConnectionType;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Constants;
@@ -154,10 +155,10 @@ public final class JMSession {
 
         try {
             server = prov.getLocalServer();
-            relayHost = server.getRelaySmtpHostname();
-            relayPort = server.getRelaySmtpPort();
-            useSmtpAuth = server.isRelaySmtpAuthRequired();
-            useTls = server.isRelaySmtpUseTls();
+            relayHost = server.getShareNotificationMtaHostname();
+            relayPort = server.getShareNotificationMtaPort();
+            useSmtpAuth = server.isShareNotificationMtaAuthRequired();
+            useTls = server.getShareNotificationMtaConnectionType() == ShareNotificationMtaConnectionType.STARTTLS;
         } catch (ServiceException e) {
             throw new MessagingException("Unable to identify local server", e);
         }
@@ -171,10 +172,10 @@ public final class JMSession {
         Authenticator auth = null;
 
         if (useSmtpAuth) {
-            String account = server.getRelaySmtpAuthAccount();
-            String password = server.getRelaySmtpAuthPassword();
+            String account = server.getShareNotificationMtaAuthAccount();
+            String password = server.getShareNotificationMtaAuthPassword();
             if (account == null || password == null) {
-                ZimbraLog.smtp.warn(Provisioning.A_zimbraRelaySmtpAuthRequired + " is enabled but account or password is unset");
+                ZimbraLog.smtp.warn(Provisioning.A_zimbraShareNotificationMtaAuthRequired + " is enabled but account or password is unset");
             } else {
                 props.setProperty("mail.smtp.auth", "" + useSmtpAuth);
                 props.setProperty("mail.smtp.sasl.enable", "" + useSmtpAuth);
