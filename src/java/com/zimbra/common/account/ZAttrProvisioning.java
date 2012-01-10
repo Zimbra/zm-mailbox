@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: unknown unknown unknown unknown */
+    /* build: 8.0.0_BETA1_1111 pshao 20120109-1442 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1234,6 +1234,24 @@ public class ZAttrProvisioning {
         public boolean isOff() { return this == off;}
         public boolean isOn() { return this == on;}
         public boolean isOnly() { return this == only;}
+    }
+
+    public static enum ShareNotificationMtaConnectionType {
+        CLEARTEXT("CLEARTEXT"),
+        SSL("SSL"),
+        STARTTLS("STARTTLS");
+        private String mValue;
+        private ShareNotificationMtaConnectionType(String value) { mValue = value; }
+        public String toString() { return mValue; }
+        public static ShareNotificationMtaConnectionType fromString(String s) throws ServiceException {
+            for (ShareNotificationMtaConnectionType value : values()) {
+                if (value.mValue.equals(s)) return value;
+             }
+             throw ServiceException.INVALID_REQUEST("invalid value: "+s+", valid values: "+ Arrays.asList(values()), null);
+        }
+        public boolean isCLEARTEXT() { return this == CLEARTEXT;}
+        public boolean isSSL() { return this == SSL;}
+        public boolean isSTARTTLS() { return this == STARTTLS;}
     }
 
     public static enum TableMaintenanceOperation {
@@ -5808,6 +5826,18 @@ public class ZAttrProvisioning {
     public static final String A_zimbraMailPort = "zimbraMailPort";
 
     /**
+     * The max number of unsuccessful attempts to connect to the current
+     * server (as an upstream). If this number is reached, proxy will refuse
+     * to connect to the current server, wait for
+     * zimbraMailProxyReconnectTimeout and then try to reconnect. Default
+     * value is 1. Setting this to 0 means turning this check off.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1358)
+    public static final String A_zimbraMailProxyMaxFails = "zimbraMailProxyMaxFails";
+
+    /**
      * HTTP proxy port
      *
      * @since ZCS 5.0.3
@@ -9212,54 +9242,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraRedoLogRolloverMinFileAge = "zimbraRedoLogRolloverMinFileAge";
 
     /**
-     * Account name for authenticating to relay MTA.
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1343)
-    public static final String A_zimbraRelaySmtpAuthAccount = "zimbraRelaySmtpAuthAccount";
-
-    /**
-     * Password for authenticating to relay MTA.
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1344)
-    public static final String A_zimbraRelaySmtpAuthPassword = "zimbraRelaySmtpAuthPassword";
-
-    /**
-     * Whether to use credential to authenticate to relay MTA.
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1346)
-    public static final String A_zimbraRelaySmtpAuthRequired = "zimbraRelaySmtpAuthRequired";
-
-    /**
-     * SMTP hostname for relay MTA used for sending email notifications.
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1341)
-    public static final String A_zimbraRelaySmtpHostname = "zimbraRelaySmtpHostname";
-
-    /**
-     * SMTP port for relay MTA used for sending email notifications.
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1342)
-    public static final String A_zimbraRelaySmtpPort = "zimbraRelaySmtpPort";
-
-    /**
-     * Whether to use TLS when connecting to relay MTA.
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1345)
-    public static final String A_zimbraRelaySmtpUseTls = "zimbraRelaySmtpUseTls";
-
-    /**
      * Path to remote management command to execute on this server
      */
     @ZAttr(id=336)
@@ -9457,7 +9439,7 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=632)
     public static final String A_zimbraReverseProxyHttpPortAttribute = "zimbraReverseProxyHttpPortAttribute";
-    
+
     /**
      * attribute that contains http ssl bind port
      *
@@ -9758,6 +9740,16 @@ public class ZAttrProvisioning {
     public static final String A_zimbraReverseProxySSLCiphers = "zimbraReverseProxySSLCiphers";
 
     /**
+     * If set as TRUE, proxy will use SSL to connect to the upstream mail
+     * servers for web and mail proxy. Note admin console proxy always use
+     * https no matter how this attr is set.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1360)
+    public static final String A_zimbraReverseProxySSLToUpstreamEnabled = "zimbraReverseProxySSLToUpstreamEnabled";
+
+    /**
      * The read timeout for long polling support by proxy, e.g. ActiveSync
      * for mobile devices. . Must be in valid duration format:
      * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
@@ -9968,6 +9960,64 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1347)
     public static final String A_zimbraShareLimitLifetime = "zimbraShareLimitLifetime";
+
+    /**
+     * Account name for authenticating to share notification MTA.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1343)
+    public static final String A_zimbraShareNotificationMtaAuthAccount = "zimbraShareNotificationMtaAuthAccount";
+
+    /**
+     * Password for authenticating to share notification MTA.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1344)
+    public static final String A_zimbraShareNotificationMtaAuthPassword = "zimbraShareNotificationMtaAuthPassword";
+
+    /**
+     * Whether to use credential to authenticate to share notification MTA.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1346)
+    public static final String A_zimbraShareNotificationMtaAuthRequired = "zimbraShareNotificationMtaAuthRequired";
+
+    /**
+     * Connection mode when connecting to share notification MTA.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1345)
+    public static final String A_zimbraShareNotificationMtaConnectionType = "zimbraShareNotificationMtaConnectionType";
+
+    /**
+     * Whether share notification MTA is enabled.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1361)
+    public static final String A_zimbraShareNotificationMtaEnabled = "zimbraShareNotificationMtaEnabled";
+
+    /**
+     * SMTP hostname for share notification MTA used for sending email
+     * notifications.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1341)
+    public static final String A_zimbraShareNotificationMtaHostname = "zimbraShareNotificationMtaHostname";
+
+    /**
+     * SMTP port for share notification MTA used for sending email
+     * notifications.
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1342)
+    public static final String A_zimbraShareNotificationMtaPort = "zimbraShareNotificationMtaPort";
 
     /**
      * Interval between successive executions of the task that publishes
