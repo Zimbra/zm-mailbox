@@ -73,8 +73,11 @@ public final class MailboxInfo implements ResponseHandler {
             //read until we get to space. if there happens to be spaces in the name it should already be quoted..
             name += is.readText(" ");
         }
-        is.skipChar(' ');
-        is.skipSpaces();
+        // bug 67924 Read until ( in case buggy IMAP server doesn't quote mailbox name
+        String remaining = is.readText("(");
+        if (remaining.trim().length() > 0) {
+            name += remaining.substring(0, remaining.length() - 1);
+        }
         is.skipChar('(');
         while (!is.match(')')) {
             Atom attr = is.readAtom();
