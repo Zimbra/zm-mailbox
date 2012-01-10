@@ -320,9 +320,9 @@ public final class ZimbraLog {
     public static final Log zimlet = LogFactory.getLog("zimbra.zimlet");
 
     /**
-     * the "zimbra.wiki" logger. For wiki and document sharing.
+     * the "zimbra.doc" logger. For document sharing.
      */
-    public static final Log wiki = LogFactory.getLog("zimbra.wiki");
+    public static final Log doc = LogFactory.getLog("zimbra.doc");
 
     /**
      * the "zimbra.op" logger. Logs server operations
@@ -482,7 +482,7 @@ public final class ZimbraLog {
         descriptions.put(sync.getCategory(), "Sync client operations");
         descriptions.put(extensions.getCategory(), "Server extension loading");
         descriptions.put(zimlet.getCategory(), "Zimlet operations");
-        descriptions.put(wiki.getCategory(), "Wiki operations");
+        descriptions.put(doc.getCategory(), "Docs operations");
         descriptions.put(mailop.getCategory(), "Changes to mailbox state");
         descriptions.put(dav.getCategory(), "DAV operations");
         descriptions.put(io.getCategory(), "Filesystem operations");
