@@ -62,7 +62,7 @@ public class Base64Filter implements Filter {
     }
 
     boolean isEncodeable(HttpServletRequest request) {
-        String ae = request.getHeader("accept-encoding");
+        String ae = request.getHeader("x-zimbra-encoding");
         return ae != null && (ae.trim().equals("base64") || ae.trim().equals("x-base64"));
     }
 
@@ -75,7 +75,7 @@ public class Base64Filter implements Filter {
         public Base64ResponseWrapper(HttpServletResponse resp) {
             super(resp);
             response = resp;
-            response.setHeader("Content-Encoding", "x-base64");
+            response.setHeader("X-Zimbra-Encoding", "x-base64");
         }
 
         void finishResponse() throws IOException {
@@ -124,12 +124,10 @@ public class Base64Filter implements Filter {
 
     public static class Base64ResponseStream extends ServletOutputStream {
         protected Base64OutputStream output;
-        protected HttpServletResponse response;
 
         public Base64ResponseStream(HttpServletResponse resp) throws IOException {
             super();
-            response = resp;
-            output = new Base64OutputStream(response.getOutputStream());
+            output = new Base64OutputStream(resp.getOutputStream());
         }
 
         @Override
@@ -139,7 +137,7 @@ public class Base64Filter implements Filter {
 
         @Override
         public void write(int b) throws IOException {
-            write(new byte[] { (byte) (b & 0xff) }, 0, 1);
+            output.write(b);
         }
 
         @Override
