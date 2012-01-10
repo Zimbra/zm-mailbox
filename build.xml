@@ -229,6 +229,7 @@
         <mkdir dir="${build.classes.dir}"/>
         <mkdir dir="${generated.java.dir}"/>
         <mkdir dir="${build.dir}/data"/>
+    	<mkdir dir="${aux.jars.dir}"/>
         <antcall target="make-dirs">
             <param name="base.dir" value="${dist.dir}"/>
         </antcall>
@@ -521,6 +522,7 @@
           <include name="ehcache-*.jar"/>
         </lib>
         <lib dir="${im.jars.dir}" includes="*.jar"/>
+      	<lib dir="${aux.jars.dir}" includes="*.jar"/>
         <classes dir="${config.dir}" includes="sieveConfig.xml"/>
       </war>
     </target>
@@ -753,7 +755,7 @@
 
     <target name="copy-war">
         <delete dir="${jetty.home.dir}/webapps/service"/>
-        <delete file="${jetty.home.dir}/webapps/service.war"/>
+        <delete file="${jetty.home.dir}/webapps/${warfilename}"/>
         <copy file="${warfile}" todir="${jetty.home.dir}/webapps"/>
         <mkdir dir='${jetty.home.dir}/webapps/service'/>
         <unzip dest="${jetty.home.dir}/webapps/service" src="${jetty.home.dir}/webapps/${warfilename}"/>
@@ -1289,7 +1291,7 @@
             <fileset dir="${jetty.home.dir}/logs" includes="*"/>
         </delete>
         <delete dir="${jetty.home.dir}/webapps/service"/>
-        <delete file="${jetty.home.dir}/webapps/service.war"/>
+        <delete file="${jetty.home.dir}/webapps/${warfilename}"/>
   </target>
 
     <target name="choose-db-schema">
