@@ -359,6 +359,7 @@ public class SoapServlet extends ZimbraServlet {
             byte[] soapBytes = envelope.toUTF8();
             resp.setContentLength(soapBytes.length);
             resp.getOutputStream().write(soapBytes);
+            resp.getOutputStream().flush();
         }
         envelope.destroy();
     }
