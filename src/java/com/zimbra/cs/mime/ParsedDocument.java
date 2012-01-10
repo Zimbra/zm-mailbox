@@ -112,7 +112,7 @@ public final class ParsedDocument {
                 textContent = handler.getContent();
             } catch (MimeHandlerException e) {
                 if (ConversionException.isTemporaryCauseOf(e)) {
-                    ZimbraLog.wiki.warn("Temporary failure extracting from the document.  (is convertd down?)", e);
+                    ZimbraLog.doc.warn("Temporary failure extracting from the document.  (is convertd down?)", e);
                     temporaryAnalysisFailure = true;
                 } else {
                     ZimbraLog.index.warn("Failure indexing wiki document "+ filename + ".  Item will be partially indexed", e);
@@ -138,10 +138,10 @@ public final class ParsedDocument {
             document.addFilename(filename);
         } catch (MimeHandlerException mhe) {
             if (ConversionException.isTemporaryCauseOf(mhe)) {
-                ZimbraLog.wiki.warn("Temporary failure extracting from the document.  (is convertd down?)", mhe);
+                ZimbraLog.doc.warn("Temporary failure extracting from the document.  (is convertd down?)", mhe);
                 temporaryAnalysisFailure = true;
             } else {
-                ZimbraLog.wiki.error("cannot create ParsedDocument", mhe);
+                ZimbraLog.doc.error("cannot create ParsedDocument", mhe);
             }
         } catch (Exception e) {
             ZimbraLog.index.warn("Failure indexing wiki document " + filename + ".  Item will be partially indexed", e);
@@ -164,7 +164,7 @@ public final class ParsedDocument {
         this.version = version;
         // should be indexed so we can add search constraints on the index version
         if (document == null) {
-            ZimbraLog.wiki.warn("Can't index document version.  (is convertd down?)");
+            ZimbraLog.doc.warn("Can't index document version.  (is convertd down?)");
         } else {
             document.addVersion(version);
         }

@@ -385,7 +385,7 @@ public class WikiTemplate implements Comparable<WikiTemplate> {
         public abstract WikiTemplate findInclusion(Context ctxt) throws ServiceException,IOException;
         public String reportError(String errorMsg) {
             String msg = "Error handling wiklet " + getName() + ": " + errorMsg;
-            ZimbraLog.wiki.error(msg);
+            ZimbraLog.doc.error(msg);
             return msg;
         }
         protected String handleTemplates(Context ctxt,

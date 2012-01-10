@@ -162,7 +162,7 @@ public abstract class WikiUtil {
                 Folder f = mbox.getFolderByPath(octxt, where);
                 deleteItems(octxt, mbox, f);
             } catch (ServiceException se) {
-                ZimbraLog.wiki.error("error emptying Notebook folders", se);
+                ZimbraLog.doc.error("error emptying Notebook folders", se);
             }
         }
 
