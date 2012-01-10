@@ -33,6 +33,7 @@ import com.zimbra.cs.mime.Mime;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 
 class ImapPartSpecifier {
@@ -323,5 +324,9 @@ class ImapPartSpecifier {
             ByteUtil.closeStream(is);
             return null;
         }
+    }
+
+    public boolean isIgnoredExchangeHeader() {
+        return (mHeaders != null && mHeaders.size() == 1 && StringUtil.equalIgnoreCase(mHeaders.get(0), "CONTENT-CLASS") && StringUtil.equalIgnoreCase("BODY", mCommand) && StringUtil.equalIgnoreCase("HEADER.FIELDS", mModifier));
     }
 }

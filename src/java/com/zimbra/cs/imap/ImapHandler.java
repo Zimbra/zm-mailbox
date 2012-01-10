@@ -3318,7 +3318,12 @@ abstract class ImapHandler extends ProtocolHandler {
                 i4folder.cleanTags();
             }
         }
-
+        if ((attributes & FETCH_FROM_MIME) == 0 && parts != null && parts.size() == 1) {
+            if (parts.get(0).isIgnoredExchangeHeader()) {
+                ZimbraLog.imap.warn("possible misconfigured client; requested ignored header in part %s",parts.get(0));
+                parts = null;
+            }
+        }
         for (ImapMessage i4msg : i4set) {
             OutputStream os = mOutputStream;
             ByteArrayOutputStream baosDebug = ZimbraLog.imap.isDebugEnabled() ? new ByteArrayOutputStream() : null;
