@@ -48,6 +48,7 @@ import com.zimbra.cs.account.ShareInfoData;
 import com.zimbra.cs.mailbox.ACL;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
@@ -87,8 +88,13 @@ public class SendShareNotification extends MailDocumentHandler {
         String notes = (eNotes==null)?null:eNotes.getText();
 
         // send the messages
-        for (ShareInfoData sid : shareInfos) {
-            sendShareNotif(octxt, account, mbox, sid, notes);
+        try {
+            for (ShareInfoData sid : shareInfos) {
+                sendShareNotif(octxt, account, mbox, sid, notes);
+            }
+        } catch (MessagingException e) {
+            throw ServiceException.FAILURE(
+                    "Messaging Exception while sending share notification message", e);
         }
 
         Element response = zsc.createElement(MailConstants.SEND_SHARE_NOTIFICATION_RESPONSE);
@@ -460,36 +466,30 @@ public class SendShareNotification extends MailDocumentHandler {
     //
     // send using MailSender
     //
-    void sendShareNotif(OperationContext octxt, Account authAccount, Mailbox mbox, ShareInfoData sid, String notes)
-    throws ServiceException {
+    private void sendShareNotif(OperationContext octxt, Account authAccount, Mailbox mbox, ShareInfoData sid, String notes)
+            throws ServiceException, MessagingException {
 
         Locale locale = authAccount.getLocale();
         String charset = authAccount.getAttr(Provisioning.A_zimbraPrefMailDefaultCharset, MimeConstants.P_CHARSET_UTF8);
 
-        MimeMessage mm;
-        try {
-            mm = new Mime.FixedMimeMessage(JMSession.getSession());
+        MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
 
-            String subject = L10nUtil.getMessage(MsgKey.shareNotifSubject, locale);
-            subject += L10nUtil.getMessage(MsgKey.sharedBySubject, locale, sid.getName(), sid.getOwnerNotifName());
-            mm.setSubject(subject, CharsetUtil.checkCharset(subject, charset));
-            mm.setSentDate(new Date());
+        String subject = L10nUtil.getMessage(MsgKey.shareNotifSubject, locale);
+        subject += L10nUtil.getMessage(MsgKey.sharedBySubject, locale, sid.getName(), sid.getOwnerNotifName());
+        mm.setSubject(subject, CharsetUtil.checkCharset(subject, charset));
+        mm.setSentDate(new Date());
 
-            // from the auth account
-            mm.setFrom(AccountUtil.getFriendlyEmailAddress(authAccount));
+        // from the auth account
+        mm.setFrom(AccountUtil.getFriendlyEmailAddress(authAccount));
 
-            // to the grantee
-            String recipient = sid.getGranteeName();
-            mm.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(recipient));
+        // to the grantee
+        String recipient = sid.getGranteeName();
+        mm.setRecipient(javax.mail.Message.RecipientType.TO, new JavaMailInternetAddress(recipient));
 
-            MimeMultipart mmp = ShareInfo.NotificationSender.genNotifBody(
-                    sid, notes, locale);
-            mm.setContent(mmp);
-            mm.saveChanges();
-        } catch (MessagingException e) {
-            throw ServiceException.FAILURE(
-                    "Messaging Exception while building share notification message", e);
-        }
+        MimeMultipart mmp = ShareInfo.NotificationSender.genNotifBody(
+                sid, notes, locale);
+        mm.setContent(mmp);
+        mm.saveChanges();
 
         if (sLog.isDebugEnabled()) {
             // log4j.logger.com.zimbra.cs.service.mail=DEBUG
@@ -507,6 +507,10 @@ public class SendShareNotification extends MailDocumentHandler {
         }
 
         mbox.getMailSender().sendMimeMessage(octxt, mbox, true, mm, null, null, null, null, false);
+        // also send a copy of the message out to relay MTA
+        if (true) {  // if (Provisioning.getInstance().getServer().isExternalMtaConfigured()) {
+            MailSender.relayMessage(mm);
+        }
     }
 }
 

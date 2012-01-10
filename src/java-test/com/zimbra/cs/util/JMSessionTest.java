@@ -14,12 +14,20 @@
  */
 package com.zimbra.cs.util;
 
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.sun.mail.smtp.SMTPMessage;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.util.Log.Level;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
 import com.zimbra.cs.mailclient.smtp.SmtpTransport;
 import com.zimbra.cs.mailclient.smtp.SmtpsTransport;
 
@@ -50,4 +58,29 @@ public class JMSessionTest {
                 JMSession.getSmtpSession().getTransport("smtps").getClass());
     }
 
+    //@Test
+    public void testRelayMta() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        Server server = prov.getLocalServer();
+        server.setRelaySmtpHostname("mta02.zimbra.com");
+        server.setRelaySmtpPort(25);
+        server.setRelaySmtpAuthRequired(true);
+        server.setRelaySmtpUseTls(true);
+        server.setRelaySmtpAuthAccount("test-jylee");
+        server.setRelaySmtpAuthPassword("test123");
+        
+        SMTPMessage out = new SMTPMessage(JMSession.getRelaySession());
+        InternetAddress address = new JavaMailInternetAddress("test-jylee@zimbra.com");
+        out.setFrom(address);
+
+        address = new JavaMailInternetAddress("test-jylee@zimbra.com");
+        out.setRecipient(javax.mail.Message.RecipientType.TO, address);
+
+        out.setSubject("test mail");
+        out.setText("hello world");
+
+        out.saveChanges();
+        ZimbraLog.smtp.setLevel(Level.trace);
+        Transport.send(out);
+    }
 }

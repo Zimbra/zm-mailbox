@@ -17,15 +17,21 @@ package com.zimbra.cs.mailbox;
 import java.util.HashMap;
 
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.util.Log.Level;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.Server;
+import com.zimbra.cs.util.JMSession;
 
 /**
  * Unit test for {@link MailSender}.
@@ -100,4 +106,33 @@ public final class MailSenderTest {
         Assert.assertEquals("test@zimbra.com", pair.getSecond().toString());
     }
 
+    //@Test
+    public void sendExternalMessage() throws Exception {
+        Provisioning prov = Provisioning.getInstance();
+        Server server = prov.getLocalServer();
+        server.setSmtpHostname(new String[] {"bogusname.test"});
+        server.setSmtpPort(25);
+        server.setSmtpTimeout(60);
+        server.setSmtpSendPartial(true);
+        server.setRelaySmtpHostname("mta02.zimbra.com");
+        server.setRelaySmtpPort(25);
+        server.setRelaySmtpAuthRequired(true);
+        server.setRelaySmtpUseTls(true);
+        server.setRelaySmtpAuthAccount("test-jylee");
+        server.setRelaySmtpAuthPassword("test123");
+        
+        MimeMessage mm = new MimeMessage(JMSession.getSmtpSession());
+        InternetAddress address = new JavaMailInternetAddress("test-jylee@zimbra.com");
+        mm.setFrom(address);
+
+        address = new JavaMailInternetAddress("test-jylee@zimbra.com");
+        mm.setRecipient(javax.mail.Message.RecipientType.TO, address);
+
+        mm.setSubject("test mail");
+        mm.setText("hello world");
+
+        mm.saveChanges();
+        ZimbraLog.smtp.setLevel(Level.trace);
+        MailSender.relayMessage(mm);
+    }
 }

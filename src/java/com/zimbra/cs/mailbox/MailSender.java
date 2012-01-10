@@ -1100,6 +1100,24 @@ public class MailSender {
     }
 
     /**
+     * Send the MimeMessage via external relay MTA configured on the server.
+     * @param mm
+     * @throws ServiceException
+     */
+    public static void relayMessage(MimeMessage mm) throws MessagingException, ServiceException {
+        Session session = JMSession.getRelaySession();
+        ZimbraLog.smtp.debug("Sending message %s with properties: %s",
+                mm.getMessageID(), session.getProperties());
+        Transport transport = session.getTransport("smtp");
+        try {
+            transport.connect();
+            transport.sendMessage(mm, mm.getAllRecipients());
+        } finally {
+            transport.close();
+        }
+    }
+
+    /**
      * Class that avoids JavaMail bug that throws OutOfMemoryError when sending
      * a message with many recipients and SMTP server rejects many of them.
      * The bug is in MessagingException.toString().

@@ -154,7 +154,8 @@ public class SmtpTransport extends Transport {
         config.setHost(host);
         config.setPort(port);
         config.setDomain(session.getProperty("mail." + protocol + ".localhost"));
-        config.setSecurity(ssl ? SmtpConfig.Security.SSL : SmtpConfig.Security.NONE);
+        config.setSecurity(ssl ? SmtpConfig.Security.SSL : 
+            PropUtil.getBooleanSessionProperty(session, "mail.smtp.starttls.enable", false) ? SmtpConfig.Security.TLS_IF_AVAILABLE : SmtpConfig.Security.NONE);
         config.setAllowPartialSend(PropUtil.getBooleanSessionProperty(session,
                 "mail." + protocol + ".sendpartial", false));
         config.setConnectTimeout(PropUtil.getIntSessionProperty(session,

@@ -42,6 +42,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.cs.mailclient.CommandFailedException;
+import com.zimbra.cs.mailclient.MailConfig;
 import com.zimbra.cs.mailclient.MailConnection;
 import com.zimbra.cs.mailclient.MailException;
 import com.zimbra.cs.mailclient.MailInputStream;
@@ -218,30 +219,11 @@ public final class SmtpConnection extends MailConnection {
         if (ehlo() != 250) {
             helo();
         }
-
-        SmtpConfig config = getSmtpConfig();
-        if (config.getAuthenticationId() != null) {
-            if (!serverExtensions.contains(AUTH)) {
-                throw new MailException("The server doesn't support SMTP-AUTH.");
-            }
-            String mech = config.getMechanism();
-            if (mech != null) {
-                if (!serverAuthMechanisms.contains(mech.toUpperCase())) {
-                    throw new MailException("Auth mechanism mismatch client=" + mech + ",server="+ serverAuthMechanisms);
-                }
-            } else {
-                if (serverAuthMechanisms.contains(LOGIN)) {
-                    config.setMechanism(LOGIN);
-                } else if (serverAuthMechanisms.contains(SaslAuthenticator.PLAIN)) {
-                    config.setMechanism(SaslAuthenticator.PLAIN);
-                } else if (serverAuthMechanisms.contains(SaslAuthenticator.CRAM_MD5)) {
-                    config.setMechanism(SaslAuthenticator.CRAM_MD5);
-                } else if (serverAuthMechanisms.contains(SaslAuthenticator.DIGEST_MD5)) {
-                    config.setMechanism(SaslAuthenticator.DIGEST_MD5);
-                } else {
-                    throw new MailException("No auth mechanism supported: " + serverAuthMechanisms);
-                }
-            }
+        
+        // check auth extensions now if starttls is not being used
+        if (config.getSecurity() != MailConfig.Security.TLS_IF_AVAILABLE ||
+                !serverExtensions.contains(STARTTLS)) {
+            checkAuthExtensions();
         }
 
         setState(State.NOT_AUTHENTICATED);
@@ -321,6 +303,33 @@ public final class SmtpConnection extends MailConnection {
         }
     }
 
+    private void checkAuthExtensions() throws MailException {
+        if (config.getAuthenticationId() == null) {
+            return;
+        }
+        if (!serverExtensions.contains(AUTH)) {
+            throw new MailException("The server doesn't support SMTP-AUTH.");
+        }
+        String mech = config.getMechanism();
+        if (mech != null) {
+            if (!serverAuthMechanisms.contains(mech.toUpperCase())) {
+                throw new MailException("Auth mechanism mismatch client=" + mech + ",server="+ serverAuthMechanisms);
+            }
+        } else {
+            if (serverAuthMechanisms.contains(LOGIN)) {
+                config.setMechanism(LOGIN);
+            } else if (serverAuthMechanisms.contains(SaslAuthenticator.PLAIN)) {
+                config.setMechanism(SaslAuthenticator.PLAIN);
+            } else if (serverAuthMechanisms.contains(SaslAuthenticator.CRAM_MD5)) {
+                config.setMechanism(SaslAuthenticator.CRAM_MD5);
+            } else if (serverAuthMechanisms.contains(SaslAuthenticator.DIGEST_MD5)) {
+                config.setMechanism(SaslAuthenticator.DIGEST_MD5);
+            } else {
+                throw new MailException("No auth mechanism supported: " + serverAuthMechanisms);
+            }
+        }
+    }
+
     @Override
     protected void sendLogin(String user, String pass) throws IOException {
         // Send AUTH LOGIN command.
@@ -393,6 +402,7 @@ public final class SmtpConnection extends MailConnection {
         if (ehlo() != 250) {
             helo();
         }
+        checkAuthExtensions();
     }
 
     @Override
