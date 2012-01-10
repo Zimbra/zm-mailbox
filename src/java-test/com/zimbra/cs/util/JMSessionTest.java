@@ -22,6 +22,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.sun.mail.smtp.SMTPMessage;
+import com.zimbra.common.account.ZAttrProvisioning.ShareNotificationMtaConnectionType;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.util.Log.Level;
 import com.zimbra.common.util.ZimbraLog;
@@ -62,12 +63,12 @@ public class JMSessionTest {
     public void testRelayMta() throws Exception {
         Provisioning prov = Provisioning.getInstance();
         Server server = prov.getLocalServer();
-        server.setRelaySmtpHostname("mta02.zimbra.com");
-        server.setRelaySmtpPort(25);
-        server.setRelaySmtpAuthRequired(true);
-        server.setRelaySmtpUseTls(true);
-        server.setRelaySmtpAuthAccount("test-jylee");
-        server.setRelaySmtpAuthPassword("test123");
+        server.setShareNotificationMtaHostname("mta02.zimbra.com");
+        server.setShareNotificationMtaPort(25);
+        server.setShareNotificationMtaAuthRequired(true);
+        server.setShareNotificationMtaConnectionType(ShareNotificationMtaConnectionType.STARTTLS);
+        server.setShareNotificationMtaAuthAccount("test-jylee");
+        server.setShareNotificationMtaAuthPassword("test123");
         
         SMTPMessage out = new SMTPMessage(JMSession.getRelaySession());
         InternetAddress address = new JavaMailInternetAddress("test-jylee@zimbra.com");
