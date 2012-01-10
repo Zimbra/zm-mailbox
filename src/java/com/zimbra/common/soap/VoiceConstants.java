@@ -78,6 +78,7 @@ public class VoiceConstants {
     public static final String A_ID            = "id";
     public static final String A_VMSG_DURATION = "du";
     public static final String A_PHONE         = "phone";
+    public static final String A_OLD_PHONE  = "oldPhone";
     public static final String A_PHONENUM      = "n";
     public static final String A_CITY          = "ci";
     public static final String A_STATE         = "st";
