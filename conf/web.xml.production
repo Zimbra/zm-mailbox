@@ -100,7 +100,11 @@
   </filter>
   <filter-mapping>
     <filter-name>Base64Filter</filter-name>
-    <url-pattern>/*</url-pattern>
+    <url-pattern>/user/*</url-pattern>
+  </filter-mapping>
+  <filter-mapping>
+    <filter-name>Base64Filter</filter-name>
+    <url-pattern>/home/*</url-pattern>
   </filter-mapping>
 
   <servlet>
