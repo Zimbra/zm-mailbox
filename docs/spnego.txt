@@ -176,7 +176,7 @@ On the Windows Server AD domain controller:
     
     
 (D) Place the Keytab File on Zimbraserver   
-    copy jetty.keytab created in step (C) to the zimbra server (e.g. dogfood.zimbra.com) under /opt/zimbra/jetty/etc.
+    copy jetty.keytab created in step (C) to the zimbra server (e.g. dogfood.zimbra.com) as /opt/zimbra/data/mailboxd/spnego/jetty.keytab
     
     Note: Do not rename the keytab file, the name(jetty.keytab) is referenced from various configuration files.
 
