@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -32,6 +32,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -55,7 +56,7 @@ public class FileUtil {
     public static void copy(File from, File to) throws IOException {
         copy(from, to, false);
     }
-    
+
     /**
      * GZIP compress file src into file dest.
      */
@@ -63,7 +64,7 @@ public class FileUtil {
         FileInputStream fin = null;
         GZIPOutputStream fout = null;
         boolean isComplete = false;
-        
+
         try {
             fin = new FileInputStream(src);
             FileOutputStream fos = new FileOutputStream(dest);
@@ -110,7 +111,7 @@ public class FileUtil {
 
     /**
      * GZip uncompresses the data returned by <tt>in</tt> and writes the uncompressed
-     * data to <tt>dest</tt>.  Closes the <tt>in</tt> automatically. 
+     * data to <tt>dest</tt>.  Closes the <tt>in</tt> automatically.
      * @param in gzip-compressed data stream
      * @param dest output file
      * @sync <tt>true</tt> to fsync writes
@@ -298,11 +299,11 @@ public class FileUtil {
         }
         return filesCopied;
     }
-    
+
     /**
      * Returns a <tt>List</tt> of files in the given directory and all of
      * its subdirectories.  Files are returned in depth-first order.
-     * 
+     *
      * @return the list of files, or an empty <tt>List</tt> if <tt>dir</tt>
      * is empty, does not exist, or is not a directory.
      */
@@ -311,7 +312,7 @@ public class FileUtil {
         addFilesRecursively(dir, files);
         return files;
     }
-    
+
     private static void addFilesRecursively(File dir, List<File> files) {
         File[] myFiles = dir.listFiles();
         if (myFiles == null || myFiles.length == 0) {
@@ -330,7 +331,7 @@ public class FileUtil {
      * Returns a <tt>List</tt> that contains the given directory
      * and all of its subdirectories.  Directories are returned in depth-first
      * order.
-     * 
+     *
      * @return the list of files, or an empty <tt>List</tt> if <tt>dir</tt>
      * is empty, does not exist, or is not a directory.
      */
@@ -341,7 +342,7 @@ public class FileUtil {
         }
         return dirs;
     }
-    
+
     private static void addDirsRecursively(File dir, List<File> dirs) {
         File[] myFiles = dir.listFiles();
         if (myFiles != null) {
@@ -353,50 +354,57 @@ public class FileUtil {
         }
         dirs.add(dir);
     }
-    
+
     public static void ensureDirExists(File dir) throws IOException {
         if (!mkdirs(dir))
             throw new IOException("Unable to create directory " + dir.getPath());
     }
-    
-	public static void ensureDirExists(String directory) throws IOException {
-		File d = new File(directory);
-		ensureDirExists(d);
+
+    public static void ensureDirExists(String directory) throws IOException {
+        File d = new File(directory);
+        ensureDirExists(d);
     }
 
-	public static String getTodayDir() {
-		DateFormat fmt = new SimpleDateFormat("yyyy.MM.dd");
-		return fmt.format(new Date());
-	}
+    public static String getTodayDir() {
+        DateFormat fmt = new SimpleDateFormat("yyyy.MM.dd");
+        return fmt.format(new Date());
+    }
 
-	private static class MTimeComparator implements Comparator<File> {
+    private static class MTimeComparator implements Comparator<File> {
         private boolean mReverse;
-        
+
         private MTimeComparator(boolean reverse) {
             mReverse = reverse;
         }
-		public int compare(File f1, File f2) {
-			long diff = mReverse ? 
-                    f2.lastModified() - f1.lastModified() : f1.lastModified() - f2.lastModified();
-			if (diff < 0)
-				return -1;
-			else if (diff == 0)
-				return 0;
-			else
-				return 1;
-		}
-	}
+        public int compare(File f1, File f2) {
+            long diff = mReverse ? f2.lastModified() - f1.lastModified() : f1.lastModified() - f2.lastModified();
+            if (diff < 0)
+                return -1;
+            else if (diff == 0)
+                return 0;
+            else
+                return 1;
+        }
+    }
 
-	public static void sortFilesByModifiedTime(File[] files) {
+    public static void sortFilesByModifiedTime(File[] files) {
         sortFilesByModifiedTime(files, false);
-	}
-	
+    }
+
     public static void sortFilesByModifiedTime(File[] files, boolean reverse) {
         MTimeComparator comp = new MTimeComparator(reverse);
         Arrays.sort(files, comp);
     }
 
-    
+    public static void sortFilesByModifiedTime(List<File> files) {
+        sortFilesByModifiedTime(files, false);
+    }
+
+    public static void sortFilesByModifiedTime(List<File> files, boolean reverse) {
+        MTimeComparator comp = new MTimeComparator(reverse);
+        Collections.sort(files, comp);
+    }
+
     public static void delete(File file) throws IOException {
         if (file.delete() || !file.exists())
             return;
@@ -416,7 +424,7 @@ public class FileUtil {
 
     /**
 	 * Deletes a directory hierarchy and all files under it.
-	 * 
+	 *
 	 * @param directory the directory
 	 * @throws IOException if deletion fails for any file or directory in the hierarchy.
 	 */
@@ -480,7 +488,7 @@ public class FileUtil {
      */
     public static String trimFilename(String filename) {
         final char[] delimiter = { '/', '\\', ':' };
-    
+
         if (filename == null || filename.equals(""))
             return null;
         for (int i = 0; i < delimiter.length; i++) {
@@ -503,7 +511,7 @@ public class FileUtil {
      *     <code>null</code>.</li>
      *   <li>If <code>filename</code> ends with a dot, returns an
      *     empty <code>String</code>.</li>
-     * </ul> 
+     * </ul>
      */
     public static String getExtension(String filename) {
         if (filename == null) {
@@ -518,7 +526,7 @@ public class FileUtil {
         }
         return filename.substring(lastDot + 1, filename.length());
     }
-    
+
     public static void rename(File src, File dst) throws IOException {
         if (src.renameTo(dst))
             return;
