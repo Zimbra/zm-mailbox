@@ -21,6 +21,7 @@ import java.io.InputStream;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.FileCache;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.SystemUtil;
 import com.zimbra.common.util.ZimbraLog;
@@ -28,7 +29,6 @@ import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobBuilder;
 import com.zimbra.cs.store.BlobInputStream;
-import com.zimbra.cs.store.FileCache;
 import com.zimbra.cs.store.FileDescriptorCache;
 import com.zimbra.cs.store.IncomingDirectory;
 import com.zimbra.cs.store.MailboxBlob;
@@ -53,7 +53,7 @@ public final class FileBlobStore extends StoreManager {
         File tmpDir = new File(LC.zimbra_tmp_directory.value());
         File ufCacheDir = new File(tmpDir, "uncompressed");
         FileUtil.ensureDirExists(ufCacheDir);
-        FileCache<String> ufCache = new FileCache.Builder<String>(ufCacheDir)
+        FileCache<String> ufCache = FileCache.Builder.createWithStringKey(ufCacheDir)
             .minLifetime(LC.uncompressed_cache_min_lifetime.longValue()).build();
         BlobInputStream.setFileDescriptorCache(new FileDescriptorCache(ufCache).loadSettings());
     }

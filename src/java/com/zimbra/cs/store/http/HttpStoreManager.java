@@ -31,6 +31,7 @@ import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.FileCache;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
@@ -40,7 +41,6 @@ import com.zimbra.cs.service.UserServlet;
 import com.zimbra.cs.store.Blob;
 import com.zimbra.cs.store.BlobBuilder;
 import com.zimbra.cs.store.BlobInputStream;
-import com.zimbra.cs.store.FileCache;
 import com.zimbra.cs.store.FileDescriptorCache;
 import com.zimbra.cs.store.IncomingDirectory;
 import com.zimbra.cs.store.MailboxBlob;
@@ -50,21 +50,15 @@ import com.zimbra.cs.store.StoreManager;
 
 public abstract class HttpStoreManager extends StoreManager {
     private final IncomingDirectory incoming = new IncomingDirectory(LC.zimbra_tmp_directory.value() + File.separator + "incoming");
-    private LocalBlobCache localCache;
+    private FileCache<String> localCache;
 
-    private class LocalBlobCache extends FileCache<String> {
-        LocalBlobCache(File dir) {
-            super(dir, LC.http_store_local_cache_max_files.intValue(),
-                LC.http_store_local_cache_max_bytes.longValue(),
-                LC.http_store_local_cache_min_lifetime.longValue());
-        }
-
+    private class MessageCacheChecker implements FileCache.RemoveCallback {
         @Override
-        protected boolean okToRemove(Item item) {
+        public boolean okToRemove(FileCache.Item item) {
             // Don't remove blobs that are being referenced by a cached message.
             return !MessageCache.contains(item.digest);
         }
-    }
+    };
 
     protected abstract String getPostUrl(Mailbox mbox);
     protected abstract String getGetUrl(Mailbox mbox, String locator);
@@ -79,21 +73,26 @@ public abstract class HttpStoreManager extends StoreManager {
         IncomingDirectory.setSweptDirectories(incoming);
         IncomingDirectory.startSweeper();
 
+        // create a local cache for downloading remote blobs
         File tmpDir = new File(LC.zimbra_tmp_directory.value());
         File localCacheDir = new File(tmpDir, "blobs");
         FileUtil.deleteDir(localCacheDir);
         FileUtil.ensureDirExists(localCacheDir);
-        localCache = new LocalBlobCache(localCacheDir);
-        localCache.startup();
+        localCache = FileCache.Builder.createWithStringKey(localCacheDir)
+            .maxFiles(LC.http_store_local_cache_max_files.intValue())
+            .maxBytes(LC.http_store_local_cache_max_bytes.longValue())
+            .minLifetime(LC.http_store_local_cache_min_lifetime.longValue())
+            .removeCallback(new MessageCacheChecker()).build();
 
         // initialize file uncompressed file cache and file descriptor cache
         File ufCacheDir = new File(tmpDir, "uncompressed");
         FileUtil.ensureDirExists(ufCacheDir);
-        FileCache<String> ufCache = new LocalBlobCache(ufCacheDir);
+        FileCache<String> ufCache = FileCache.Builder.createWithStringKey(ufCacheDir)
+            .maxFiles(LC.http_store_local_cache_max_files.intValue())
+            .maxBytes(LC.http_store_local_cache_max_bytes.longValue())
+            .minLifetime(LC.http_store_local_cache_min_lifetime.longValue())
+            .removeCallback(new MessageCacheChecker()).build();
         BlobInputStream.setFileDescriptorCache(new FileDescriptorCache(ufCache).loadSettings());
-
-        // create a local cache for downloading remote blobs
-        localCache.startup();
     }
 
     @Override

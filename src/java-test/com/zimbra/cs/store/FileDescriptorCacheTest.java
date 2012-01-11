@@ -31,6 +31,7 @@ import org.junit.Test;
 
 import com.google.common.io.Files;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.FileCache;
 import com.zimbra.common.util.FileUtil;
 
 public class FileDescriptorCacheTest {
@@ -59,7 +60,7 @@ public class FileDescriptorCacheTest {
     @Test
     public void testUncompressedCache()
     throws Exception {
-        FileCache<String> uc = new FileCache.Builder<String>(uncompressedDir).build();
+        FileCache<String> uc = FileCache.Builder.createWithStringKey(uncompressedDir).build();
         FileDescriptorCache fdc = new FileDescriptorCache(uc);
         fdc.setMaxSize(2);
 

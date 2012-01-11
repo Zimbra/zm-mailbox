@@ -27,6 +27,7 @@ import java.util.zip.GZIPInputStream;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.stats.Counter;
 import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.FileCache;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
