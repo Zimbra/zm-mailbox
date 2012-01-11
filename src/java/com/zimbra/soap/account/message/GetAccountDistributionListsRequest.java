@@ -24,8 +24,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.account.type.MemberOfSelector;
 import com.zimbra.soap.type.ZmBoolean;
 
 @XmlAccessorType(XmlAccessType.NONE)
@@ -33,20 +33,6 @@ import com.zimbra.soap.type.ZmBoolean;
 public class GetAccountDistributionListsRequest {
     private static Joiner COMMA_JOINER = Joiner.on(",");
     
-    public static enum MemberOfSelector {
-        all,
-        none,
-        directOnly;
-        
-        public static MemberOfSelector fromString(String s) throws ServiceException {
-            try {
-                return MemberOfSelector.valueOf(s);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown NeedMemberOf: "+s, e);
-            }
-        }
-    };
-
     @XmlAttribute(name=AccountConstants.A_OWNER_OF, required=false)
     private ZmBoolean ownerOf;
     @XmlAttribute(name=AccountConstants.A_MEMBER_OF, required=false)

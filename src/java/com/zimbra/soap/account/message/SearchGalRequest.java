@@ -32,6 +32,7 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.account.type.CalTZInfo;
 import com.zimbra.soap.account.type.EntrySearchFilterInfo;
+import com.zimbra.soap.account.type.MemberOfSelector;
 import com.zimbra.soap.base.CalTZInfoInterface;
 import com.zimbra.soap.base.SearchParameters;
 import com.zimbra.soap.type.AttributeName;
@@ -59,7 +60,7 @@ public class SearchGalRequest implements SearchParameters {
     private ZmBoolean needIsOwner;
     
     @XmlAttribute(name=AccountConstants.A_NEED_IS_MEMBER /* needIsMember */, required=false)
-    private ZmBoolean needIsMember;
+    private MemberOfSelector needIsMember;
     
     @XmlAttribute(name=AccountConstants.A_NEED_SMIME_CERTS /* needSMIMECerts */, required=false)
     private ZmBoolean needSMIMECerts;
@@ -156,7 +157,7 @@ public class SearchGalRequest implements SearchParameters {
     public void setType(GalSearchType type) { this.type = type; }
     public void setNeedCanExpand(Boolean needCanExpand) { this.needCanExpand = ZmBoolean.fromBool(needCanExpand); }
     public void setNeedIsOwner(Boolean needIsOwner) { this.needIsOwner = ZmBoolean.fromBool(needIsOwner); }
-    public void setNeedIsMember(Boolean needIsMember) { this.needIsMember = ZmBoolean.fromBool(needIsMember); }
+    public void setNeedIsMember(MemberOfSelector needIsMemberSelector) { this.needIsMember = needIsMemberSelector; }
     public void setNeedSMIMECerts(Boolean needSMIMECerts) { this.needSMIMECerts = ZmBoolean.fromBool(needSMIMECerts); }
     public void setGalAccountId(String galAccountId) { this.galAccountId = galAccountId; }
     @Override
@@ -229,7 +230,7 @@ public class SearchGalRequest implements SearchParameters {
     public GalSearchType getType() { return type; }
     public Boolean getNeedCanExpand() { return ZmBoolean.toBool(needCanExpand); }
     public Boolean getNeedIsOwner() { return ZmBoolean.toBool(needIsOwner); }
-    public Boolean getNeedIsMember() { return ZmBoolean.toBool(needIsMember); }
+    public MemberOfSelector getNeedIsMember() { return needIsMember; }
     public Boolean getNeedSMIMECerts() { return ZmBoolean.toBool(needSMIMECerts); }
     public String getGalAccountId() { return galAccountId; }
     @Override
