@@ -13,7 +13,6 @@
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.service.account;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,12 +23,10 @@ import com.google.common.collect.Sets;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
-import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.account.message.GetAccountDistributionListsRequest.MemberOfSelector;
 
@@ -50,12 +47,12 @@ public class GetAccountDistributionLists extends AccountDocumentHandler {
         Iterable<String> needAttrs = Splitter.on(',').trimResults().split(
                 request.getAttribute(AccountConstants.A_ATTRS, ""));
         
-        Set<Entry> ownerOf = null;
+        Set<Group> ownerOf = null;
         List<Group> memberOf = null;
-        HashMap<String,String> via = new HashMap<String, String>();
+        HashMap<String, String> via = new HashMap<String, String>();
         
         if (needOwnerOf) {
-            ownerOf = getOwnedGroups(acct);
+            ownerOf = Group.GroupOwner.getOwnedGroups(acct);
         }
         
         if (MemberOfSelector.none != needMemberOf) {
@@ -71,28 +68,25 @@ public class GetAccountDistributionLists extends AccountDocumentHandler {
         Set<String> memberOfGroupIds = Sets.newHashSet();
         
         if (ownerOf != null) {
-            for (Entry entry : ownerOf) {
-                if (!(entry instanceof Group)) {
-                    // skip non group targets. AccessManager.discoverRights currently 
-                    // only returns group targets, but it can change later.
-                    continue;
-                }
-                Group group = (Group) entry;
-                ownerOfGroupIds.add(group.getId());
+            for (Group group : ownerOf) {
+                String groupId = group.getId();
+                ownerOfGroupIds.add(groupId);
                 
-                if (!combinedIds.contains(group.getId())) {
+                if (!combinedIds.contains(groupId)) {
                     combined.add(group);
-                    combinedIds.add(group.getId());
+                    combinedIds.add(groupId);
                 }
             }
         }
+        
         if (memberOf != null) {
             for (Group group : memberOf) {
-                memberOfGroupIds.add(group.getId());
+                String groupId = group.getId();
+                memberOfGroupIds.add(groupId);
                 
-                if (!combinedIds.contains(group.getId())) {
+                if (!combinedIds.contains(groupId)) {
                     combined.add(group);
-                    combinedIds.add(group.getId());
+                    combinedIds.add(groupId);
                 }
             }
         }
@@ -131,16 +125,6 @@ public class GetAccountDistributionLists extends AccountDocumentHandler {
             }
         }
         return response;
-    }
-    
-    private Set<Entry> getOwnedGroups(Account acct) throws ServiceException {
-        AccessManager accessMgr = AccessManager.getInstance();
-        
-        Right right = Group.GroupOwner.GROUP_OWNER_RIGHT;
-        Map<Right, Set<Entry>> discoveredRights = accessMgr.discoverRights(acct, 
-                Collections.singleton(right));
-        
-        return discoveredRights.get(right);
     }
 
 }

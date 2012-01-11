@@ -60,6 +60,8 @@ public class GalSearchParams {
     private DataSource mDataSource;
     private boolean mIdOnly;
     private boolean mNeedCanExpand;
+    private boolean mNeedIsOwner;
+    private boolean mNeedIsMember;
     private boolean mNeedSMIMECerts;
     private boolean mFetchGroupMembers;
     private GalOp mOp;
@@ -205,7 +207,15 @@ public class GalSearchParams {
     public boolean getNeedCanExpand() {
         return mNeedCanExpand;
     }
-
+    
+    public boolean getNeedIsOwner() {
+        return mNeedIsOwner;
+    }
+    
+    public boolean getNeedIsMember() {
+        return mNeedIsMember;
+    }
+    
     public boolean getNeedSMIMECerts() {
         return mNeedSMIMECerts;
     }
@@ -314,10 +324,19 @@ public class GalSearchParams {
         mNeedCanExpand = needCanExpand;
     }
 
+    public void setNeedIsOwner(boolean needOwnerOf) {
+        mNeedIsOwner = needOwnerOf;
+    }
+
+    public void setNeedIsMember(boolean needMemberOf) {
+        mNeedIsMember = needMemberOf;
+    }
+
     public void setNeedSMIMECerts(boolean needSMIMECerts) {
         mNeedSMIMECerts = needSMIMECerts;
     }
 
+    
     public void setFetchGroupMembers(boolean fetchGroupMembers) {
         mFetchGroupMembers = fetchGroupMembers;
     }

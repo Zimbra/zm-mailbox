@@ -78,6 +78,8 @@ public class SearchGal extends GalDocumentHandler {
         String typeStr = request.getAttribute(AccountConstants.A_TYPE, "all");
         GalSearchType type = GalSearchType.fromString(typeStr);
         boolean needCanExpand = request.getAttributeBool(AccountConstants.A_NEED_EXP, false);
+        boolean needIsOwner = request.getAttributeBool(AccountConstants.A_NEED_IS_OWNER, false);
+        boolean needIsMember = request.getAttributeBool(AccountConstants.A_NEED_IS_MEMBER, false);
         
         // internal attr, for proxied GSA search from GetSMIMEPublicCerts only
         boolean needSMIMECerts = request.getAttributeBool(AccountConstants.A_NEED_SMIME_CERTS, false);
@@ -95,6 +97,8 @@ public class SearchGal extends GalDocumentHandler {
         params.setType(type);
         params.setRequest(request);
         params.setNeedCanExpand(needCanExpand);
+        params.setNeedIsOwner(needIsOwner);
+        params.setNeedIsMember(needIsMember);
         params.setNeedSMIMECerts(needSMIMECerts);
         params.setResponseName(AccountConstants.SEARCH_GAL_RESPONSE);
         

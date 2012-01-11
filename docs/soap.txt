@@ -655,7 +655,8 @@ import and export of addressbook.
 ----------------------------
 
 
- <SearchGalRequest [type="{type}"] [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"]  [needExp="1|0"]>
+ <SearchGalRequest [type="{type}"] [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"]  
+     [needExp="1|0"] [needIsOwner="[1|0]"] [needIsMember="[1|0]"]>
   [<cursor id="{prevId}" sortVal="{prevSortValue}" endSortVal="{endSortValue}"/> ]
    <name>...</name>
 
@@ -672,7 +673,7 @@ import and export of addressbook.
  </SearchGalRequest>
 
  <SearchGalResponse more="{more}" sortBy="sort-by" offset="..." [tokenizeKey="{tokenize-key-op}"]>
-   <cn [exp="1|0"] ref="{gal-entry-ref}">
+   <cn [exp="1|0"] [isOwner="1|0"] [isMember="1|0"] ref="{gal-entry-ref}">
      <a n="...">...</a>+
    </cn>*
  </SearchGalResponse>
@@ -695,12 +696,24 @@ import and export of addressbook.
 
   needExp: if the "exp" flag is needed in the response for group entries.
            default is 0
+           
+  needIsOwner: if the "isOwner" flag is needed in the response for group entries.
+               default is 0   
+           
+  needIsMember: if the "isMember" flag is needed in the response for group entries.
+                default is 0               
 
   {gal-entry-ref}: a unigue reference id for the GAL entry.  This is the ref id to be used for the value
                    of type="G" contact group members.  See CreateContactRequest and ModifyContactRequest.
 
   exp: if the user can (has right to) expand group members
        returned only if needExp is 1 in the request and only on group entries (type=group in attrs on a <cn>).
+
+  isOwner: whether the user is an owner of the group
+           returned only if needIsOwner is 1 in the request and only on group entries (type=group in attrs on a <cn>).
+           
+  isMember: whether the user is a member of the group
+            returned only if needIsMember is 1 in the request and only on group entries (type=group in attrs on a <cn>).
 
   see SearchRequest for use of cursor.
 

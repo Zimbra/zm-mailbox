@@ -117,6 +117,14 @@ public abstract class Group extends MailTarget implements AliasedEntry {
         private String id;
         private String name;
         
+        private GroupOwner(ZimbraACE ace, boolean needName) {
+            type = ace.getGranteeType();
+            id = ace.getGrantee();
+            if (needName) {
+                name = ace.getGranteeDisplayName();
+            }
+        }
+        
         public GranteeType getType() {
             return type;
         }
@@ -127,6 +135,44 @@ public abstract class Group extends MailTarget implements AliasedEntry {
         
         public String getName() {
             return name;
+        }
+        
+        
+        public static Set<Group> getOwnedGroups(Account acct) throws ServiceException {
+            AccessManager accessMgr = AccessManager.getInstance();
+            
+            Right right = GROUP_OWNER_RIGHT;
+            Map<Right, Set<Entry>> discoveredRights = accessMgr.discoverRights(acct, 
+                    Collections.singleton(right));
+            
+            Set<Entry> ownerOf = discoveredRights.get(right);
+            Set<Group> ownerOfGroups = Sets.newHashSet();
+            
+            if (ownerOf != null) {
+                for (Entry entry : ownerOf) {
+                    if (!(entry instanceof Group)) {
+                        // skip non group targets. AccessManager.discoverRights currently 
+                        // only returns group targets, but it can change later.
+                        continue;
+                    }
+                    ownerOfGroups.add((Group) entry);
+                }
+            }
+            
+            return ownerOfGroups;
+        }
+        
+        public static Set<String> getOwnedGroupsIds(Account acct) throws ServiceException {
+            Set<Group> groups = getOwnedGroups(acct);
+            
+            Set<String> ids = Sets.newHashSet();
+            if (groups != null) {
+                for (Group group : groups) {
+                    ids.add(group.getId());
+                }
+            }
+            
+            return ids;
         }
         
         /*
@@ -183,13 +229,6 @@ public abstract class Group extends MailTarget implements AliasedEntry {
                 }
             }
         }
-        
-        private GroupOwner(ZimbraACE ace, boolean needName) {
-            type = ace.getGranteeType();
-            id = ace.getGrantee();
-            if (needName) {
-                name = ace.getGranteeDisplayName();
-            }
-        }
+
     }
 }
