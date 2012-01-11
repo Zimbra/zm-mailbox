@@ -19,14 +19,19 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.base.Objects;
+import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.SyncAdminConstants;
 import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.admin.type.DeviceId;
 
 @XmlRootElement(name = SyncAdminConstants.E_GET_DEVICE_STATUS_REQUEST)
 public class GetDeviceStatusRequest {
-    @XmlElement(name = SyncConstants.E_DEVICE /* device */, required = true)
-    private final DeviceId device;
+
+    @XmlElement(name = SyncConstants.E_DEVICE /* device */, required = false)
+    private DeviceId device;
+
+    @XmlElement(name = MailConstants.E_MAILBOX /* mailboxId */, required = false)
+    private int mailboxId;
 
     /**
      * no-argument constructor wanted by JAXB
@@ -40,16 +45,21 @@ public class GetDeviceStatusRequest {
         this.device = device;
     }
 
-    public DeviceId getDevice() {
-        return device;
+    public GetDeviceStatusRequest(int mboxId) {
+        this.mailboxId = mboxId;
     }
 
-    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
-        return helper.add("device", device);
+    public DeviceId getDevice() {
+        return this.device;
+    }
+
+    public int getMailboxId() {
+        return this.mailboxId;
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this)).toString();
+        return Objects.toStringHelper(this).add("device", this.device).add("mboxId", this.mailboxId)
+                .toString();
     }
 }
