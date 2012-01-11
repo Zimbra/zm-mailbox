@@ -80,8 +80,18 @@ Suspend a device from further sync actions.
   <device id="{device_id}" />
 </SuspendDeviceRequest>
          
-<SuspendDeviceResponse />
-
+<SuspendDeviceResponse>
+  [<device id="{device_id}" type="{device_type}" protocol="{protocol_version}" [ua="{user_agent}"] [model="{model}"] [imei="{imei}"] [friendly_name="{friendly_name}"] [os="{os}"] [os_language="{os_language}"] [phone_number="{phone_number}"]>
+    <provisionable>{provisionable}</provisionable>
+    <status>{status}</status>
+    <firstReqReceived>{first_req_recv}</firstReqReceived>
+    [<lastPolicyUpdate>{last_policy_update}</lastPolicyUpdate>]
+    [<remoteWipeReqTime>{remote_wipe_req}</remoteWipeReqTime>
+    [<removeWipeAckTime>{remote_wipe_ack}</remoteWipeAckTime>]]
+    [<recoveryPassword>{recover_password}</recoveryPassword>]
+    [<lastUsedDate>{last_used_date}</lastUsedDate>]
+  </device>]*
+</SuspendDeviceResponse>
 
 ---------------------
 <ResumeDeviceRequest>
@@ -93,7 +103,18 @@ Resume sync with a device if currently suspended.  This will cause a policy rese
   <device id="{device_id}" />
 </ResumeDeviceRequest>
          
-<ResumeDeviceResponse />
+<ResumeDeviceResponse>
+  [<device id="{device_id}" type="{device_type}" protocol="{protocol_version}" [ua="{user_agent}"] [model="{model}"] [imei="{imei}"] [friendly_name="{friendly_name}"] [os="{os}"] [os_language="{os_language}"] [phone_number="{phone_number}"]>
+    <provisionable>{provisionable}</provisionable>
+    <status>{status}</status>
+    <firstReqReceived>{first_req_recv}</firstReqReceived>
+    [<lastPolicyUpdate>{last_policy_update}</lastPolicyUpdate>]
+    [<remoteWipeReqTime>{remote_wipe_req}</remoteWipeReqTime>
+    [<removeWipeAckTime>{remote_wipe_ack}</remoteWipeAckTime>]]
+    [<recoveryPassword>{recover_password}</recoveryPassword>]
+    [<lastUsedDate>{last_used_date}</lastUsedDate>]
+  </device>]*
+</ResumeDeviceResponse>
 
 
 -------------------
@@ -137,7 +158,12 @@ zimbra sync specific admin SOAP messages:
 <CancelPendingRemoteWipeResponse>
 <GetDeviceStatusRequest>
 <GetDeviceStatusResponse>
-
+<RemoveDeviceRequest>
+<RemoveDeviceResponse>
+<SuspendDeviceRequest>
+<SuspendDeviceResponse>
+<ResumeDeviceRequest>
+<ResumeDeviceResponse>
 ------------------------
 <GetDevicesCountRequest>
 ------------------------
@@ -255,3 +281,64 @@ last_policy_update - when policy was last updated on this device
 remote_wipe_req - time (seconds since epoch) when remote wipe was initiated
 remote_wipe_ack - time (seconds since epoch) when device confirmed the remote wipe
 last_used_date - date when the device was last used (the date is stored in server's time zone)
+
+---------------------
+<RemoveDeviceRequest>
+---------------------
+
+Remove a device or remove all devices attached to a mailbox. This will not cause a reset of sync data, but will cause a reset of policies on the next sync.
+
+<RemoveDeviceRequest xmlns="urn:zimbraAdmin">
+  [<mbox id="{mailbox_id}" />]
+  [<device id="{device_id}" />]
+</RemoveDeviceRequest>
+
+<RemoveDeviceResponse />
+
+----------------------
+<SuspendDeviceRequest>
+----------------------
+
+Suspend a device or all devices attached to a mailbox from further sync actions.
+
+<SuspendDeviceRequest xmlns="urn:zimbraAdmin">
+  [<mbox id="{mailbox_id}" />]
+  [<device id="{device_id}" />]
+</SuspendDeviceRequest>
+
+<SuspendDeviceResponse>
+  [<device id="{device_id}" type="{device_type}" protocol="{protocol_version}" [ua="{user_agent}"] [model="{model}"] [imei="{imei}"] [friendly_name="{friendly_name}"] [os="{os}"] [os_language="{os_language}"] [phone_number="{phone_number}"]>
+    <provisionable>{provisionable}</provisionable>
+    <status>{status}</status>
+    <firstReqReceived>{first_req_recv}</firstReqReceived>
+    [<lastPolicyUpdate>{last_policy_update}</lastPolicyUpdate>]
+    [<remoteWipeReqTime>{remote_wipe_req}</remoteWipeReqTime>
+    [<removeWipeAckTime>{remote_wipe_ack}</remoteWipeAckTime>]]
+    [<recoveryPassword>{recover_password}</recoveryPassword>]
+    [<lastUsedDate>{last_used_date}</lastUsedDate>]
+  </device>]*
+</SuspendDeviceResponse>
+
+---------------------
+<ResumeDeviceRequest>
+---------------------
+
+Resume sync with a device or all devices attached to a mailbox if currently suspended.  This will cause a policy reset, but will not reset sync data.
+
+<ResumeDeviceRequest xmlns="urn:zimbraAdmin">
+  [<mbox id="{mailbox_id}" />]
+  [<device id="{device_id}" />]
+</ResumeDeviceRequest>
+
+<ResumeDeviceResponse>
+  [<device id="{device_id}" type="{device_type}" protocol="{protocol_version}" [ua="{user_agent}"] [model="{model}"] [imei="{imei}"] [friendly_name="{friendly_name}"] [os="{os}"] [os_language="{os_language}"] [phone_number="{phone_number}"]>
+    <provisionable>{provisionable}</provisionable>
+    <status>{status}</status>
+    <firstReqReceived>{first_req_recv}</firstReqReceived>
+    [<lastPolicyUpdate>{last_policy_update}</lastPolicyUpdate>]
+    [<remoteWipeReqTime>{remote_wipe_req}</remoteWipeReqTime>
+    [<removeWipeAckTime>{remote_wipe_ack}</remoteWipeAckTime>]]
+    [<recoveryPassword>{recover_password}</recoveryPassword>]
+    [<lastUsedDate>{last_used_date}</lastUsedDate>]
+  </device>]*
+</ResumeDeviceResponse>
