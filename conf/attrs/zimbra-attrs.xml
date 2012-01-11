@@ -6146,11 +6146,6 @@ TODO: delete them permanently from here
   <desc>regular expression for matching the value of zimbraSpamWhitelistHeader for flagging a message as not spam</desc>
 </attr>
 
-<attr id="1259" name="zimbraExternalShareLimitLifetime" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus" since="8.0.0" >
-  <desc>flag indicates whether to limit lifetime of shares to external users</desc>
-  <defaultCOSValue>TRUE</defaultCOSValue>
-</attr>
-
 <attr id="1260" name="zimbraExternalShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,octopus" since="8.0.0">
   <desc>
     Maximum allowed lifetime of shares to external users.
@@ -6680,11 +6675,6 @@ TODO: delete them permanently from here
   <desc>Whether to use credential to authenticate to share notification MTA.</desc>
 </attr>
 
-<attr id="1347" name="zimbraShareLimitLifetime" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus" since="8.0.0" >
-  <desc>flag indicates whether to limit lifetime of shares to users on the system</desc>
-  <defaultCOSValue>TRUE</defaultCOSValue>
-</attr>
-
 <attr id="1348" name="zimbraShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,octopus" since="8.0.0">
   <desc>
     Maximum allowed lifetime of shares to internal users or groups.
@@ -6728,11 +6718,6 @@ TODO: delete them permanently from here
     If not set, all IP addresses are allowed.
     If multiple values are set, an IP address is allowed as long as it matches any one of the values.
   </desc>
-</attr>
-
-<attr id="1354" name="zimbraPublicShareLimitLifetime" type="boolean" cardinality="single" optionalIn="account,cos" flags="accountInherited,octopus" since="8.0.0" >
-  <desc>flag indicates whether to limit lifetime of public shares</desc>
-  <defaultCOSValue>TRUE</defaultCOSValue>
 </attr>
 
 <attr id="1355" name="zimbraPublicShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,octopus" since="8.0.0">

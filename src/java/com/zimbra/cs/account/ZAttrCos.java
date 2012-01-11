@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120109-1442 */
+    /* build: 8.0.0_BETA1_1111 administrator 20120111-1206 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -4722,78 +4722,6 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetExternalShareLifetime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraExternalShareLifetime, "");
-        return attrs;
-    }
-
-    /**
-     * flag indicates whether to limit lifetime of shares to external users
-     *
-     * @return zimbraExternalShareLimitLifetime, or true if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1259)
-    public boolean isExternalShareLimitLifetime() {
-        return getBooleanAttr(Provisioning.A_zimbraExternalShareLimitLifetime, true);
-    }
-
-    /**
-     * flag indicates whether to limit lifetime of shares to external users
-     *
-     * @param zimbraExternalShareLimitLifetime new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1259)
-    public void setExternalShareLimitLifetime(boolean zimbraExternalShareLimitLifetime) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraExternalShareLimitLifetime, zimbraExternalShareLimitLifetime ? Provisioning.TRUE : Provisioning.FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * flag indicates whether to limit lifetime of shares to external users
-     *
-     * @param zimbraExternalShareLimitLifetime new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1259)
-    public Map<String,Object> setExternalShareLimitLifetime(boolean zimbraExternalShareLimitLifetime, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraExternalShareLimitLifetime, zimbraExternalShareLimitLifetime ? Provisioning.TRUE : Provisioning.FALSE);
-        return attrs;
-    }
-
-    /**
-     * flag indicates whether to limit lifetime of shares to external users
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1259)
-    public void unsetExternalShareLimitLifetime() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraExternalShareLimitLifetime, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * flag indicates whether to limit lifetime of shares to external users
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1259)
-    public Map<String,Object> unsetExternalShareLimitLifetime(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraExternalShareLimitLifetime, "");
         return attrs;
     }
 
@@ -34209,78 +34137,6 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
-     * flag indicates whether to limit lifetime of public shares
-     *
-     * @return zimbraPublicShareLimitLifetime, or true if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1354)
-    public boolean isPublicShareLimitLifetime() {
-        return getBooleanAttr(Provisioning.A_zimbraPublicShareLimitLifetime, true);
-    }
-
-    /**
-     * flag indicates whether to limit lifetime of public shares
-     *
-     * @param zimbraPublicShareLimitLifetime new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1354)
-    public void setPublicShareLimitLifetime(boolean zimbraPublicShareLimitLifetime) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPublicShareLimitLifetime, zimbraPublicShareLimitLifetime ? Provisioning.TRUE : Provisioning.FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * flag indicates whether to limit lifetime of public shares
-     *
-     * @param zimbraPublicShareLimitLifetime new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1354)
-    public Map<String,Object> setPublicShareLimitLifetime(boolean zimbraPublicShareLimitLifetime, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPublicShareLimitLifetime, zimbraPublicShareLimitLifetime ? Provisioning.TRUE : Provisioning.FALSE);
-        return attrs;
-    }
-
-    /**
-     * flag indicates whether to limit lifetime of public shares
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1354)
-    public void unsetPublicShareLimitLifetime() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPublicShareLimitLifetime, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * flag indicates whether to limit lifetime of public shares
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1354)
-    public Map<String,Object> unsetPublicShareLimitLifetime(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraPublicShareLimitLifetime, "");
-        return attrs;
-    }
-
-    /**
      * switch for turning public sharing on/off
      *
      * @return zimbraPublicSharingEnabled, or true if unset
@@ -34691,83 +34547,6 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetShareLifetime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraShareLifetime, "");
-        return attrs;
-    }
-
-    /**
-     * flag indicates whether to limit lifetime of shares to users on the
-     * system
-     *
-     * @return zimbraShareLimitLifetime, or true if unset
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1347)
-    public boolean isShareLimitLifetime() {
-        return getBooleanAttr(Provisioning.A_zimbraShareLimitLifetime, true);
-    }
-
-    /**
-     * flag indicates whether to limit lifetime of shares to users on the
-     * system
-     *
-     * @param zimbraShareLimitLifetime new value
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1347)
-    public void setShareLimitLifetime(boolean zimbraShareLimitLifetime) throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraShareLimitLifetime, zimbraShareLimitLifetime ? Provisioning.TRUE : Provisioning.FALSE);
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * flag indicates whether to limit lifetime of shares to users on the
-     * system
-     *
-     * @param zimbraShareLimitLifetime new value
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1347)
-    public Map<String,Object> setShareLimitLifetime(boolean zimbraShareLimitLifetime, Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraShareLimitLifetime, zimbraShareLimitLifetime ? Provisioning.TRUE : Provisioning.FALSE);
-        return attrs;
-    }
-
-    /**
-     * flag indicates whether to limit lifetime of shares to users on the
-     * system
-     *
-     * @throws com.zimbra.common.service.ServiceException if error during update
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1347)
-    public void unsetShareLimitLifetime() throws com.zimbra.common.service.ServiceException {
-        HashMap<String,Object> attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraShareLimitLifetime, "");
-        getProvisioning().modifyAttrs(this, attrs);
-    }
-
-    /**
-     * flag indicates whether to limit lifetime of shares to users on the
-     * system
-     *
-     * @param attrs existing map to populate, or null to create a new map
-     * @return populated map to pass into Provisioning.modifyAttrs
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1347)
-    public Map<String,Object> unsetShareLimitLifetime(Map<String,Object> attrs) {
-        if (attrs == null) attrs = new HashMap<String,Object>();
-        attrs.put(Provisioning.A_zimbraShareLimitLifetime, "");
         return attrs;
     }
 
