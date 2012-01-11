@@ -21,12 +21,11 @@ package com.zimbra.cs.service.admin;
 import java.util.Map;
 import java.util.List;
 
-import com.zimbra.cs.account.NamedEntry;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Provisioning.AccountBy;
-import com.zimbra.cs.account.Provisioning.SearchOptions;
+import com.zimbra.cs.account.ZAttrProvisioning.AccountStatus;
 import com.zimbra.cs.account.accesscontrol.AdminRight;
 import com.zimbra.cs.account.accesscontrol.Rights.Admin;
 import com.zimbra.cs.im.IMPersona;
@@ -70,6 +69,19 @@ public class DeleteAccount extends AdminDocumentHandler {
 
         checkAccountRight(zsc, account, Admin.R_deleteAccount);        
 
+        /*
+         * bug 69009
+         * 
+         * We delete the mailbox before deleting the LDAP entry.
+         * It's possible that a message delivery or other user action could 
+         * cause the mailbox to be recreated between the mailbox delete step 
+         * and the LDAP delete step.
+         * 
+         * To prevent this race condition, put the account in "maintenance" mode 
+         * so mail delivery and any user action is blocked.  
+         */ 
+        prov.modifyAccountStatus(account, AccountStatus.maintenance.name());
+        
         Mailbox mbox = Provisioning.onLocalServer(account) ? 
                 MailboxManager.getInstance().getMailboxByAccount(account, false) : null;
                 
