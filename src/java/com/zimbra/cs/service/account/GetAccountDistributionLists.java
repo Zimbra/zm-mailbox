@@ -107,15 +107,19 @@ public class GetAccountDistributionLists extends AccountDocumentHandler {
             
             boolean isOwner = ownerOfGroupIds.contains(group.getId());
             
-            if (needOwnerOf && isOwner) {
-                eDL.addAttribute(AccountConstants.A_IS_OWNER, true);
+            if (needOwnerOf) {
+                eDL.addAttribute(AccountConstants.A_IS_OWNER, isOwner);
             }
             
-            if (MemberOfSelector.none != needMemberOf && memberOfGroupIds.contains(group.getId())) {
-                eDL.addAttribute(AccountConstants.A_IS_MEMBER, true);
-                String viaDl = via.get(group.getName());
-                if (viaDl != null) {
-                    eDL.addAttribute(AccountConstants.A_VIA, viaDl);
+            if (MemberOfSelector.none != needMemberOf) {
+                boolean isMember = memberOfGroupIds.contains(group.getId());
+                eDL.addAttribute(AccountConstants.A_IS_MEMBER, isMember);
+                
+                if (isMember) {
+                    String viaDl = via.get(group.getName());
+                    if (viaDl != null) {
+                        eDL.addAttribute(AccountConstants.A_VIA, viaDl);
+                    }
                 }
             }
             

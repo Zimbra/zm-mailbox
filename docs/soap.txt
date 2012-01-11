@@ -4161,7 +4161,7 @@ Notes:
 </GetAccountDistributionListsRequest>
 
 <GetAccountDistributionListsResponse>
-  <dl name="{name}" id="{id}" [d="{display-name}"] [via="{via-dl-name}] [isOwner="1"] [isMember="1"]>
+  <dl name="{name}" id="{id}" [d="{display-name}"] [via="{via-dl-name}] [isOwner="1|0"] [isMember="1|0"]>
     [<a n="...">...</a>+]
   </dl>+
 </GetAccountDistributionListsResponse>
@@ -4171,7 +4171,7 @@ Returns groups the user is either a member or an owner of.
 
 Note: isOwner is returned only if ownerOf on the request is 1.
       isMember is returned only if memberOf on the request is not "none".
-      For example, if isOwner="1" and isMember="none" on the request, and 
+      For example, if ownerOf="1" and memberOf="none" on the request, and 
       user is an owner and a member of a group, the returned entry for the group 
       will have isOwner="1", but isMember will not be present.
 

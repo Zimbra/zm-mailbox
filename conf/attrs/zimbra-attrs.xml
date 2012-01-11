@@ -933,6 +933,8 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <globalConfigValue>zimbraCalResFloor=zimbraCalResFloor</globalConfigValue>
   <globalConfigValue>zimbraCalResSite=zimbraCalResSite</globalConfigValue>
   <globalConfigValue>zimbraCalResContactEmail=zimbraCalResContactEmail</globalConfigValue>
+  <globalConfigValue>zimbraDistributionListSubscriptionPolicy=zimbraDistributionListSubscriptionPolicy</globalConfigValue>
+  <globalConfigValue>zimbraDistributionListUnsubscriptionPolicy=zimbraDistributionListUnsubscriptionPolicy</globalConfigValue>
   <globalConfigValue>msExchResourceSearchProperties=zimbraAccountCalendarUserType</globalConfigValue>
   <globalConfigValue>(certificate) userCertificate=userCertificate</globalConfigValue>
   <globalConfigValue>(binary) userSMIMECertificate=userSMIMECertificate</globalConfigValue>

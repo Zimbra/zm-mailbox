@@ -15,12 +15,15 @@
 package com.zimbra.qa.unittest.prov.soap;
 
 import java.util.List;
+import java.util.Map;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.zimbra.common.account.ZAttrProvisioning;
 import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.soap.SoapTransport;
@@ -78,7 +81,8 @@ public class TestSearchGalGroups extends SoapTest {
                         group.getName(), 
                         ContactConstants.TYPE_GROUP,
                         needIsOwner == null ? null : actualIsOwner,
-                        needIsMember == null ? null : actualIsMember));
+                        needIsMember == null ? null : actualIsMember,
+                        ZAttrProvisioning.DistributionListSubscriptionPolicy.ACCEPT.name()));
         
         List<ContactInfo> entries = resp.getContacts();
         for (ContactInfo entry : entries) {
@@ -86,26 +90,33 @@ public class TestSearchGalGroups extends SoapTest {
             
             String email = null;
             String type = null;
+            String subsPolicy = null;
+            
             for (ContactAttr attr : attrs) {
                 String key = attr.getKey();
                 if (ContactConstants.A_email.equals(key)) {
                     email = attr.getValue();
                 } else if (ContactConstants.A_type.equals(key)) {
                     type = attr.getValue();
+                } else if (Provisioning.A_zimbraDistributionListSubscriptionPolicy.equals(key)) {
+                    subsPolicy = attr.getValue();
                 }
             }
             
             Boolean isOwner = entry.isOwner();
             Boolean isMember = entry.isMember();
             
-            result.add(Verify.makeResultStr(email, type, isOwner, isMember));
+            result.add(Verify.makeResultStr(email, type, isOwner, isMember, subsPolicy));
         }
         Verify.verifyEquals(expected, result);
     }
     
     @Test
     public void searchGroup() throws Exception {
-        Group group = provUtil.createGroup(genGroupNameLocalPart(), domain, false);
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraDistributionListSubscriptionPolicy, 
+                ZAttrProvisioning.DistributionListSubscriptionPolicy.ACCEPT.name());
+        Group group = provUtil.createGroup(genGroupNameLocalPart(), domain, attrs, false);
         Account acct = provUtil.createAccount(genAcctNameLocalPart(), domain);
         
         // make acct owner of the the group
