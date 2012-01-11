@@ -335,6 +335,8 @@ public class AccountConstants {
     public static final String A_LOCAL_NAME = "localName";
     public static final String A_MEMBER_OF = "memberOf";
     public static final String A_MORE = "more";
+    public static final String A_NEED_IS_OWNER = "needIsOwner";
+    public static final String A_NEED_IS_MEMBER = "needIsMember";
     public static final String A_NEED_OWNERS = "needOwners";
     public static final String A_NEED_RIGHTS = "needRights";
     public static final String A_OWNER_OF = "ownerOf";
