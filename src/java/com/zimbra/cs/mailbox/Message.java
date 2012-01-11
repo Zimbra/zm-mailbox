@@ -37,7 +37,6 @@ import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.Color;
 import com.zimbra.common.mime.InternetAddress;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
@@ -111,7 +110,8 @@ public class Message extends MailItem {
             autoSendTime = meta.getLong(Metadata.FN_AUTO_SEND_TIME, 0);
         }
 
-        @Override public boolean equals(Object obj) {
+        @Override
+        public boolean equals(Object obj) {
             if (obj != null && obj instanceof DraftInfo) {
                 DraftInfo dInfo = (DraftInfo) obj;
                 return StringUtil.equal(accountId, dInfo.accountId) &&
@@ -443,7 +443,7 @@ public class Message extends MailItem {
      * @see UUEncodeConverter */
     public MimeMessage getMimeMessage(boolean runConverters) throws ServiceException {
         MimeMessage mm = MessageCache.getMimeMessage(this, runConverters);
-        if (mm instanceof JavaMailMimeMessage && ZMimeMessage.usingZimbraParser()) {
+        if (mm instanceof ZMimeMessage && ZMimeMessage.usingZimbraParser()) {
             try {
                 mm = new Mime.FixedMimeMessage(mm, mMailbox.getAccount());
             } catch (MessagingException e) {

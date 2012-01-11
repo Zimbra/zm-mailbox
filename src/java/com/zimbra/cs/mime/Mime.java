@@ -67,7 +67,6 @@ import com.ibm.icu.text.CharsetMatch;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.MimeHeader;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CharsetUtil;
@@ -75,6 +74,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZInternetHeader;
 import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.common.zmime.ZMimePart;
@@ -125,8 +125,8 @@ public class Mime {
 
         public FixedMimeMessage(MimeMessage source, Account acct) throws MessagingException {
             super(source);
-            if (acct != null && session != null && session.getProperties() != null) {
-                session.getProperties().setProperty("mail.mime.charset", acct.getPrefMailDefaultCharset());
+            if (acct != null) {
+                setProperty("mail.mime.charset", acct.getPrefMailDefaultCharset());
             }
         }
 
@@ -1164,7 +1164,7 @@ public class Mime {
      */
     public static String getSubject(MimeMessage mm) throws MessagingException {
         String subject = mm.getHeader("Subject", null);
-        return subject == null ? null : MimeHeader.decode(subject);
+        return subject == null ? null : ZInternetHeader.decode(subject);
     }
 
     /** Returns the value of the <tt>From</tt> header.  If not available,

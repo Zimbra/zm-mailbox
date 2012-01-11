@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -55,9 +55,7 @@ import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.MimePart;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.EmailUtil;
@@ -68,6 +66,7 @@ import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.convert.ConversionException;
 import com.zimbra.cs.db.DbMailItem;
 import com.zimbra.cs.index.Fragment;
@@ -294,11 +293,11 @@ public final class ParsedMessage {
 
     public ParsedMessage setDefaultCharset(String charset) {
         defaultCharset = charset;
-        if (mimeMessage instanceof JavaMailMimeMessage) {
-            ((JavaMailMimeMessage) mimeMessage).setProperty(MimePart.PROP_CHARSET_DEFAULT, charset);
+        if (mimeMessage instanceof ZMimeMessage) {
+            ((ZMimeMessage) mimeMessage).setProperty("mail.mime.charset", charset);
         }
-        if (expandedMessage instanceof JavaMailMimeMessage) {
-            ((JavaMailMimeMessage) expandedMessage).setProperty(MimePart.PROP_CHARSET_DEFAULT, charset);
+        if (expandedMessage != mimeMessage && expandedMessage instanceof ZMimeMessage) {
+            ((ZMimeMessage) expandedMessage).setProperty("mail.mime.charset", charset);
         }
         subject = normalizedSubject = null;
         return this;
