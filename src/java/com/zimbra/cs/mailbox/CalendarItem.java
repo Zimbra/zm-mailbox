@@ -37,15 +37,35 @@ import javax.mail.internet.ContentType;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.util.SharedByteArrayInputStream;
 
 import com.google.common.base.Strings;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.calendar.ICalTimeZone;
+import com.zimbra.common.calendar.ParsedDateTime;
+import com.zimbra.common.calendar.ParsedDuration;
+import com.zimbra.common.calendar.TimeZoneMap;
+import com.zimbra.common.calendar.ZCalendar.ICalTok;
+import com.zimbra.common.calendar.ZCalendar.ZProperty;
+import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.common.localconfig.DebugConfig;
+import com.zimbra.common.mailbox.Color;
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMessage;
+import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.db.DbMailItem;
-import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.analysis.FieldTokenStream;
 import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
@@ -58,18 +78,18 @@ import com.zimbra.cs.mailbox.calendar.InviteChanges;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
+import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
+import com.zimbra.cs.mailbox.calendar.Recurrence.RecurrenceRule;
 import com.zimbra.cs.mailbox.calendar.Recurrence.SimpleRepeatingRule;
 import com.zimbra.cs.mailbox.calendar.Util;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
-import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
-import com.zimbra.cs.mailbox.calendar.Recurrence.RecurrenceRule;
 import com.zimbra.cs.mailbox.calendar.ZRecur.Frequency;
 import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.MailboxBlob;
@@ -77,27 +97,6 @@ import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.Pair;
-import com.zimbra.common.util.ZimbraLog;
-
-import com.zimbra.common.util.Log;
-import com.zimbra.common.util.LogFactory;
-import com.zimbra.common.calendar.ICalTimeZone;
-import com.zimbra.common.calendar.ParsedDateTime;
-import com.zimbra.common.calendar.ParsedDuration;
-import com.zimbra.common.calendar.TimeZoneMap;
-import com.zimbra.common.calendar.ZCalendar.ICalTok;
-import com.zimbra.common.calendar.ZCalendar.ZProperty;
-import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
-import com.zimbra.common.localconfig.DebugConfig;
-import com.zimbra.common.mailbox.Color;
-import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
-import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
-
 
 /**
  * An APPOINTMENT consists of one or more INVITES in the same series -- ie that
@@ -879,20 +878,20 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     }
 
     public static class Instance implements Comparable<Instance> {
-        private boolean mHasStart;
-        private boolean mHasEnd;
+        private final boolean mHasStart;
+        private final boolean mHasEnd;
         private long mStart;        // calculated start time of this instance
         private long mEnd;          // calculated end time of this instance
 
         private boolean mIsException; // TRUE if this instance is an exception
                                       // to a recurrence
-        private boolean mFromRdate;  // true if this instance was generated from RDATE
+        private final boolean mFromRdate;  // true if this instance was generated from RDATE
                                      // rather than RRULE or a stand-alone exception VEVENT/VTODO
 
-        private InviteInfo mInvId;
+        private final InviteInfo mInvId;
 
-        private int mCalItemId;
-        private boolean mAllDay;
+        private final int mCalItemId;
+        private final boolean mAllDay;
         private int mStartTzOffset;    // used when mAllDay == true; timezone offset in millis of mStart
         private int mEndTzOffset;      // used when mAllDay == true; timezone offset in millis of mEnd
 
@@ -2189,7 +2188,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
      * into our combined multipart/alternative Appointment store
      */
     private static class PMDataSource implements DataSource {
-        private ParsedMessage mPm;
+        private final ParsedMessage mPm;
 
         public PMDataSource(ParsedMessage pm) {
             mPm = pm;
@@ -2283,11 +2282,11 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         try {
             // create the toplevel multipart/digest...
             MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
-            MimeMultipart mmp = new JavaMailMimeMultipart("digest");
+            MimeMultipart mmp = new ZMimeMultipart("digest");
             mm.setContent(mmp);
 
             // add the invite
-            MimeBodyPart mbp = new JavaMailMimeBodyPart();
+            MimeBodyPart mbp = new ZMimeBodyPart();
             mbp.setDataHandler(new DataHandler(new PMDataSource(invPm)));
             mbp.addHeader("invId", Integer.toString(firstInvite.getMailItemId()));
             mmp.addBodyPart(mbp);
@@ -2426,7 +2425,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                 if (replaceExceptionBodyWithSeriesBody) {
                     // Throw away the existing part.  Replace it with body from new invite.
                     mmp.removeBodyPart(mbpInv);
-                    mbpInv = new JavaMailMimeBodyPart();
+                    mbpInv = new ZMimeBodyPart();
                     mbpInv.setDataHandler(new DataHandler(new PMDataSource(invPm)));
                     mbpInv.addHeader("invId", Integer.toString(inv.getMailItemId()));
                     mmp.addBodyPart(mbpInv);
@@ -2467,7 +2466,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             }
 
             if (newInv != null) {
-                MimeBodyPart mbp = new JavaMailMimeBodyPart();
+                MimeBodyPart mbp = new ZMimeBodyPart();
                 mbp.setDataHandler(new DataHandler(new PMDataSource(invPm)));
                 mmp.addBodyPart(mbp);
                 mbp.addHeader("invId", Integer.toString(newInv.getMailItemId()));
@@ -2502,7 +2501,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         private ZAttendee mAttendee; // attendee record w/ PartStat
         private int mSeqNo;
         private long mDtStamp;
-        private RecurId mRecurId;
+        private final RecurId mRecurId;
 
         private static final String FN_RECURID = "r";
         private static final String FN_SEQNO = "s";
@@ -3133,7 +3132,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             is = getRawMessage();
             if (is == null)
                 return null;
-            mm = new JavaMailMimeMessage(JMSession.getSession(), is);
+            mm = new ZMimeMessage(JMSession.getSession(), is);
             ByteUtil.closeStream(is);
 
             try {
@@ -3144,7 +3143,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                 ZimbraLog.mailbox.warn(
                     "MIME converter failed for message " + getId(), e);
                 is = getRawMessage();
-                mm = new JavaMailMimeMessage(JMSession.getSession(), is);
+                mm = new ZMimeMessage(JMSession.getSession(), is);
                 ByteUtil.closeStream(is);
             }
 
@@ -3212,7 +3211,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
                     // If the conversion bombs for any reason, revert to the original
                     ZimbraLog.mailbox.warn("MIME converter failed for message " + getId(), e);
                     is = getRawMessage();
-                    mm = new JavaMailMimeMessage(JMSession.getSession(), is);
+                    mm = new ZMimeMessage(JMSession.getSession(), is);
                     ByteUtil.closeStream(is);
                 }
             }
@@ -3262,10 +3261,10 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
         private long mSnoozeUntil = NO_SNOOZE;  // time when the snoozed alarm goes off
                                                 // When an alarm is snoozed, mNextAt remains the same and
                                                 // mSnoozeUntil is set to the new time.
-        private long mNextInstStart;  // start time of the instance that mNextAt alarm is for
-        private int mInvId;
-        private int mCompNum;
-        private Alarm mAlarm;
+        private final long mNextInstStart;  // start time of the instance that mNextAt alarm is for
+        private final int mInvId;
+        private final int mCompNum;
+        private final Alarm mAlarm;
 
         public AlarmData(long next, long snoozeUntil, long nextInstStart, int invId, int compNum, Alarm alarm) {
             mNextAt = next;
@@ -3276,6 +3275,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
             mAlarm = alarm;
         }
 
+        @Override
         public Object clone() {
             return new AlarmData(mNextAt, mSnoozeUntil, mNextInstStart, mInvId, mCompNum, mAlarm.newCopy());
         }
@@ -3681,8 +3681,8 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     }
 
     public static class NextAlarms {
-        private Map<Integer, Long> mTriggerMap;
-        private Map<Integer, Long> mInstStartMap;
+        private final Map<Integer, Long> mTriggerMap;
+        private final Map<Integer, Long> mInstStartMap;
         public NextAlarms() {
             mTriggerMap = new HashMap<Integer, Long>();
             mInstStartMap = new HashMap<Integer, Long>();
@@ -3927,7 +3927,7 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     throws ServiceException {
         Map<Integer, MimeMessage> map = new HashMap<Integer, MimeMessage>();
         try {
-            ByteArrayInputStream bais = new ByteArrayInputStream(digestBlob);
+            InputStream bais = new SharedByteArrayInputStream(digestBlob);
             FixedMimeMessage digestMm = new FixedMimeMessage(JMSession.getSession(), bais);
 
             // It should be multipart/digest.

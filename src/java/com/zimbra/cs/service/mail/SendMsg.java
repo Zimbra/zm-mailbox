@@ -31,6 +31,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.zimbra.client.ZMailbox;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
@@ -41,7 +42,6 @@ import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -51,6 +51,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AuthToken;
 import com.zimbra.cs.account.Domain;
@@ -76,7 +77,6 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.client.ZMailbox;
 import com.zimbra.soap.ZimbraSoapContext;
 
 /**
@@ -245,7 +245,7 @@ public final class SendMsg extends MailDocumentHandler {
         try {
             // if we may need to mutate the message, we can't use the "updateHeaders" hack...
             if (anySystemMutators || needCalendarSentByFixup) {
-                MimeMessage mm = new JavaMailMimeMessage(JMSession.getSession(), up.getInputStream());
+                MimeMessage mm = new ZMimeMessage(JMSession.getSession(), up.getInputStream());
                 if (anySystemMutators)
                     return mm;
 
@@ -259,7 +259,7 @@ public final class SendMsg extends MailDocumentHandler {
             }
 
             // ... but in general, for most installs this is safe
-            return new JavaMailMimeMessage(JMSession.getSession(), up.getInputStream()) {
+            return new ZMimeMessage(JMSession.getSession(), up.getInputStream()) {
                 @Override protected void updateHeaders() throws MessagingException {
                     setHeader("MIME-Version", "1.0");
                     if (getMessageID() == null)
@@ -352,12 +352,12 @@ public final class SendMsg extends MailDocumentHandler {
     private static class OutlookICalendarFixupMimeVisitor extends MimeVisitor {
         private boolean needFixup;
         private boolean isCalendarMessage;
-        private Account mAccount;
-        private Mailbox mMailbox;
+        private final Account mAccount;
+        private final Mailbox mMailbox;
         private int mMsgDepth;
         private String[] mFromEmails;
         private String mSentBy;
-        private String mDefaultCharset;
+        private final String mDefaultCharset;
 
         static class ICalendarModificationCallback implements MimeVisitor.ModificationCallback {
             private boolean mWouldModify;

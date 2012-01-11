@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -29,31 +29,31 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import com.zimbra.cs.util.JMSession;
-import com.zimbra.cs.util.tnef.DefaultTnefToICalendar;
-import com.zimbra.cs.util.tnef.TnefToICalendar;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.util.ZimbraLog;
+import net.freeutils.tnef.TNEFInputStream;
+import net.freeutils.tnef.TNEFUtils;
+import net.freeutils.tnef.mime.TNEFMime;
+
 import com.zimbra.common.calendar.ZCalendar;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
-import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
-
-import net.freeutils.tnef.TNEFInputStream;
-import net.freeutils.tnef.TNEFUtils;
-import net.freeutils.tnef.mime.TNEFMime;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMultipart;
+import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.tnef.DefaultTnefToICalendar;
+import com.zimbra.cs.util.tnef.TnefToICalendar;
 
 /**
  * Converts each TNEF MimeBodyPart to a multipart/alternative that contains
  * the original TNEF file and its MIME counterpart.<p>
- * 
+ *
  * For example, the following structure:
- * 
+ *
  * <ul>
  *   <li>MimeMessage + MimeMultipart (multipart/mixed)</li>
  *   <ul>
@@ -61,9 +61,9 @@ import net.freeutils.tnef.mime.TNEFMime;
  *     <li><b>MimeBodyPart (application/ms-tnef)</b></li>
  *   </ul>
  * </ul>
- * 
+ *
  * would be converted to:
- *   
+ *
  * <ul>
  *   <li>MimeMessage + MimeMultipart (multipart/mixed)</li>
  *   <ul>
@@ -199,7 +199,7 @@ public class TnefConverter extends MimeVisitor {
             change.converted.addBodyPart(change.tnefPart, 0);
 
             // create a BodyPart to contain the new Multipart (JavaMail bookkeeping)
-            MimeBodyPart replacementPart = new JavaMailMimeBodyPart();
+            MimeBodyPart replacementPart = new ZMimeBodyPart();
             replacementPart.setContent(change.converted);
 
             // and put the new multipart/alternatives where the TNEF used to be
@@ -210,8 +210,8 @@ public class TnefConverter extends MimeVisitor {
 
     /**
      * Performs the TNEF->MIME conversion on any TNEF body parts that
-     * make up the given message. 
-     * @throws ServiceException 
+     * make up the given message.
+     * @throws ServiceException
      */
 
     private MimeMultipart expandTNEF(MimeBodyPart bp) throws MessagingException, IOException {
@@ -219,7 +219,7 @@ public class TnefConverter extends MimeVisitor {
             return null;
 
         MimeMessage converted = null;
-        
+
         // convert TNEF to a MimeMessage and remove it from the parent
         InputStream is = null;
         try {
@@ -247,7 +247,7 @@ public class TnefConverter extends MimeVisitor {
         // Create a MimeBodyPart for the converted data.  Currently we're throwing
         // away the top-level message because its content shows up as blank after
         // the conversion.
-        MimeBodyPart convertedPart = new JavaMailMimeBodyPart();
+        MimeBodyPart convertedPart = new ZMimeBodyPart();
         convertedPart.setContent(convertedMulti);
 
         // If the TNEF object contains calendar data, create an iCalendar version.
@@ -267,7 +267,7 @@ public class TnefConverter extends MimeVisitor {
                                 method = cal.getMethod();
                         }
                         writer.close();
-                        icalPart = new JavaMailMimeBodyPart();
+                        icalPart = new ZMimeBodyPart();
                         icalPart.setText(writer.toString());
                         ContentType ct = new ContentType(MimeConstants.CT_TEXT_CALENDAR);
                         ct.setCharset(MimeConstants.P_CHARSET_UTF8);
@@ -286,7 +286,7 @@ public class TnefConverter extends MimeVisitor {
         }
 
         // create a multipart/alternative for the TNEF and its MIME version
-        MimeMultipart altMulti = new JavaMailMimeMultipart("alternative");
+        MimeMultipart altMulti = new ZMimeMultipart("alternative");
 //        altMulti.addBodyPart(bp);
         altMulti.addBodyPart(convertedPart);
         if (icalPart != null)

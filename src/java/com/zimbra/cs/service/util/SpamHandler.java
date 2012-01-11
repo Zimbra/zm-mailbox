@@ -36,12 +36,12 @@ import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
-import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
-import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.MailItem;
@@ -89,9 +89,9 @@ public class SpamHandler {
         Mailbox mbox = MailboxManager.getInstance().getMailboxById(sr.mailboxId);
         Message msg = mbox.getMessageById(null, sr.messageId);
 
-        MimeMultipart mmp = new JavaMailMimeMultipart("mixed");
+        MimeMultipart mmp = new ZMimeMultipart("mixed");
 
-        MimeBodyPart infoPart = new JavaMailMimeBodyPart();
+        MimeBodyPart infoPart = new ZMimeBodyPart();
         infoPart.setHeader("Content-Description", "Zimbra spam classification report");
         String body = String.format(
             "Classified-By: %s\r\n" +
@@ -107,7 +107,7 @@ public class SpamHandler {
         mmp.addBodyPart(infoPart);
 
         MailboxBlob blob = msg.getBlob();
-        MimeBodyPart mbp = new JavaMailMimeBodyPart();
+        MimeBodyPart mbp = new ZMimeBodyPart();
         mbp.setDataHandler(new DataHandler(new MailboxBlobDataSource(blob)));
         mbp.setHeader("Content-Type", MimeConstants.CT_MESSAGE_RFC822);
         mbp.setHeader("Content-Disposition", Part.ATTACHMENT);

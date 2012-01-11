@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -43,6 +43,7 @@ import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
@@ -127,10 +128,10 @@ public class Message extends MailItem {
         // special calItem id value meaning no calendar item was created
         public static final int CALITEM_ID_NONE = 0;
 
-        private int mCalendarItemId;
-        private int mComponentNo;
-        private Invite mInvite;  // set only when mCalendarItemId == CALITEM_ID_NONE
-        private InviteChanges mInviteChanges;
+        private final int mCalendarItemId;
+        private final int mComponentNo;
+        private final Invite mInvite;  // set only when mCalendarItemId == CALITEM_ID_NONE
+        private final InviteChanges mInviteChanges;
 
         CalendarItemInfo(int calItemId, int componentNo, Invite inv, InviteChanges changes) {
             mCalendarItemId = calItemId;
@@ -442,7 +443,7 @@ public class Message extends MailItem {
      * @see UUEncodeConverter */
     public MimeMessage getMimeMessage(boolean runConverters) throws ServiceException {
         MimeMessage mm = MessageCache.getMimeMessage(this, runConverters);
-        if (mm instanceof JavaMailMimeMessage && JavaMailMimeMessage.usingZimbraParser()) {
+        if (mm instanceof JavaMailMimeMessage && ZMimeMessage.usingZimbraParser()) {
             try {
                 mm = new Mime.FixedMimeMessage(mm, mMailbox.getAccount());
             } catch (MessagingException e) {

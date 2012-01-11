@@ -14,7 +14,6 @@
  */
 package com.zimbra.cs.imap;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,6 +39,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimePart;
 import javax.mail.internet.ParseException;
+import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.BCodec;
@@ -207,7 +207,7 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
         GMT_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
 
-    static final Pair<Long, InputStream> EMPTY_CONTENT = new Pair<Long, InputStream>(0L, new ByteArrayInputStream(new byte[0]));
+    static final Pair<Long, InputStream> EMPTY_CONTENT = new Pair<Long, InputStream>(0L, new SharedByteArrayInputStream(new byte[0]));
 
     static Pair<Long, InputStream> getContent(MailItem item) throws ServiceException {
         if (item instanceof Message) {
@@ -228,7 +228,7 @@ public class ImapMessage implements Comparable<ImapMessage>, java.io.Serializabl
                 baos.write(header.toString().getBytes(MimeConstants.P_CHARSET_ASCII));
                 baos.write(ImapHandler.LINE_SEPARATOR_BYTES);
                 baos.write(vcard.formatted.getBytes(MimeConstants.P_CHARSET_UTF8));
-                return new Pair<Long, InputStream>((long) baos.size(), new ByteArrayInputStream(baos.toByteArray()));
+                return new Pair<Long, InputStream>((long) baos.size(), new SharedByteArrayInputStream(baos.toByteArray()));
             } catch (Exception e) {
                 throw ServiceException.FAILURE("problems serializing contact " + item.getId(), e);
             }

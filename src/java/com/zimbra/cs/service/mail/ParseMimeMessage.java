@@ -14,8 +14,8 @@
  */
 package com.zimbra.cs.service.mail;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,6 +33,7 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
+import javax.mail.util.SharedByteArrayInputStream;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
@@ -45,9 +46,6 @@ import com.zimbra.common.mime.DataSourceWrapper;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.MimeHeader;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
-import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
-import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -55,6 +53,9 @@ import com.zimbra.common.util.CharsetUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMessage;
+import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.IDNUtil;
@@ -64,22 +65,22 @@ import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
+import com.zimbra.cs.mailbox.MailSender.SafeSendFailedException;
 import com.zimbra.cs.mailbox.MailServiceException;
+import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailbox.Mountpoint;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.MailSender.SafeSendFailedException;
-import com.zimbra.cs.mailbox.MailServiceException.NoSuchItemException;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.MailboxBlobDataSource;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.FileUploadServlet;
+import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.UploadDataSource;
 import com.zimbra.cs.service.UserServlet;
-import com.zimbra.cs.service.FileUploadServlet.Upload;
 import com.zimbra.cs.service.formatter.VCard;
 import com.zimbra.cs.service.mail.ToXML.EmailType;
 import com.zimbra.cs.service.util.ItemId;
@@ -98,7 +99,7 @@ public final class ParseMimeMessage {
      * of all non-message attachments to base64, so that we preserve line endings
      * of text attachments (bugs 45858 and 53405).
      */
-    private static class ForceBase64MimeBodyPart extends JavaMailMimeBodyPart {
+    private static class ForceBase64MimeBodyPart extends ZMimeBodyPart {
         public ForceBase64MimeBodyPart()  { }
 
         @Override
@@ -131,7 +132,7 @@ public final class ParseMimeMessage {
         if (content.length > maxSize)
             throw ServiceException.INVALID_REQUEST("inline message too large", null);
 
-        ByteArrayInputStream messageStream = new ByteArrayInputStream(content);
+        InputStream messageStream = new SharedByteArrayInputStream(content);
         try {
             return new Mime.FixedMimeMessage(JMSession.getSession(), messageStream);
         } catch (MessagingException me) {
@@ -301,7 +302,7 @@ public final class ParseMimeMessage {
             boolean hasContent  = (partElem != null || inviteElem != null || additionalParts != null);
             boolean isMultipart = (attachElem != null); // || inviteElem != null || additionalParts!=null);
             if (isMultipart) {
-                mmp = new JavaMailMimeMultipart("mixed");  // may need to change to "digest" later
+                mmp = new ZMimeMultipart("mixed");  // may need to change to "digest" later
                 mm.setContent(mmp);
             }
 
@@ -518,11 +519,11 @@ public final class ParseMimeMessage {
 
         if (alternatives != null) {
             // create a multipart/alternative to hold all the alternatives
-            MimeMultipart mmpNew = new JavaMailMimeMultipart("alternative");
+            MimeMultipart mmpNew = new ZMimeMultipart("alternative");
             if (mmp == null) {
                 mm.setContent(mmpNew);
             } else {
-                MimeBodyPart mbpWrapper = new JavaMailMimeBodyPart();
+                MimeBodyPart mbpWrapper = new ZMimeBodyPart();
                 mbpWrapper.setContent(mmpNew);
                 mmp.addBodyPart(mbpWrapper);
             }
@@ -541,9 +542,9 @@ public final class ParseMimeMessage {
         ctype.setCharset(charset).setParameter(MimeConstants.P_CHARSET, charset);
 
         Object content = ctype.getContentType().equals(ContentType.MESSAGE_RFC822) ?
-                new JavaMailMimeMessage(JMSession.getSession(), new ByteArrayInputStream(raw)) : text;
+                new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(raw)) : text;
         if (mmp != null) {
-            MimeBodyPart mbp = new JavaMailMimeBodyPart();
+            MimeBodyPart mbp = new ZMimeBodyPart();
             mbp.setContent(content, ctype.toString());
             mmp.addBodyPart(mbp);
         } else {
@@ -565,13 +566,13 @@ public final class ParseMimeMessage {
             // no need to add an extra multipart/alternative!
 
             // create the MimeMultipart and attach it to the existing structure:
-            MimeMultipart mmpNew = new JavaMailMimeMultipart(subType);
+            MimeMultipart mmpNew = new ZMimeMultipart(subType);
             if (mmp == null) {
                 // there were no multiparts at all, we need to create one
                 mm.setContent(mmpNew);
             } else {
                 // there was already a multipart/mixed at the top of the mm
-                MimeBodyPart mbpWrapper = new JavaMailMimeBodyPart();
+                MimeBodyPart mbpWrapper = new ZMimeBodyPart();
                 mbpWrapper.setContent(mmpNew);
                 mmp.addBodyPart(mbpWrapper);
             }
@@ -589,11 +590,11 @@ public final class ParseMimeMessage {
             }
         } else {
             // create a multipart/alternative to hold all the client's struct + the alternatives
-            MimeMultipart mmpNew = new JavaMailMimeMultipart("alternative");
+            MimeMultipart mmpNew = new ZMimeMultipart("alternative");
             if (mmp == null) {
                 mm.setContent(mmpNew);
             } else {
-                MimeBodyPart mbpWrapper = new JavaMailMimeBodyPart();
+                MimeBodyPart mbpWrapper = new ZMimeBodyPart();
                 mbpWrapper.setContent(mmpNew);
                 mmp.addBodyPart(mbpWrapper);
             }
@@ -674,7 +675,7 @@ public final class ParseMimeMessage {
         Message msg = mbox.getMessageById(ctxt.octxt, iid.getId());
         ctxt.incrementSize("attached message", msg.getSize());
 
-        MimeBodyPart mbp = new JavaMailMimeBodyPart();
+        MimeBodyPart mbp = new ZMimeBodyPart();
         mbp.setDataHandler(new DataHandler(new MailboxBlobDataSource(msg.getBlob())));
         mbp.setHeader("Content-Type", MimeConstants.CT_MESSAGE_RFC822);
         mbp.setHeader("Content-Disposition", Part.ATTACHMENT);
@@ -701,7 +702,7 @@ public final class ParseMimeMessage {
         String filename = vcf.fn + ".vcf";
         String charset = CharsetUtil.checkCharset(vcf.formatted, ctxt.defaultCharset);
 
-        MimeBodyPart mbp = new JavaMailMimeBodyPart();
+        MimeBodyPart mbp = new ZMimeBodyPart();
         mbp.setText(vcf.formatted, charset);
         mbp.setHeader("Content-Type", new ContentType("text/x-vcard", ctxt.use2231).setCharset(ctxt.defaultCharset).setParameter("name", filename).setParameter("charset", charset).toString());
         mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT, ctxt.use2231).setCharset(ctxt.defaultCharset).setParameter("filename", filename).toString());
@@ -766,7 +767,7 @@ public final class ParseMimeMessage {
             ct = new ContentType(MimeConstants.CT_TEXT_HTML);
         }
 
-        MimeBodyPart mbp = new JavaMailMimeBodyPart();
+        MimeBodyPart mbp = new ZMimeBodyPart();
         mbp.setDataHandler(new DataHandler(new MailboxBlobDataSource(doc.getBlob(), ct.getContentType())));
         mbp.setHeader("Content-Type", ct.cleanup().setParameter("name", doc.getName()).setCharset(ctxt.defaultCharset).toString());
         mbp.setHeader("Content-Disposition", new ContentDisposition(Part.ATTACHMENT).setParameter("filename", doc.getName()).toString());

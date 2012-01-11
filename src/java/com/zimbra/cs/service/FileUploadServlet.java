@@ -2,19 +2,18 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.service;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
@@ -32,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
 
+import javax.mail.util.SharedByteArrayInputStream;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -86,7 +86,7 @@ import com.zimbra.cs.util.Zimbra;
 
 public class FileUploadServlet extends ZimbraServlet {
     private static final long serialVersionUID = -3156986245375108467L;
-    
+
     // bug 27610
     // We now limit file upload size for messages by zimbraMtaMaxMessageSize
     // If this query param is present in the URI, upload size is limited by zimbraFileUploadMaxSize,
@@ -97,8 +97,8 @@ public class FileUploadServlet extends ZimbraServlet {
     public static final String UPLOAD_DELIMITER = ",";
     /** The character separating server ID from upload ID */
     private static final String UPLOAD_PART_DELIMITER = ":";
-    
-    private static String sUploadDir; 
+
+    private static String sUploadDir;
 
     public static final class Upload {
         final String   accountId;
@@ -108,14 +108,14 @@ public class FileUploadServlet extends ZimbraServlet {
         final FileItem file;
         long time;
         boolean deleted = false;
-        
+
         Upload(String acctId, FileItem attachment) throws ServiceException {
             this(acctId, attachment, attachment.getName());
         }
 
         Upload(String acctId, FileItem attachment, String filename) throws ServiceException {
             assert(attachment != null); // TODO: Remove null checks in mainline.
-            
+
             String localServer = Provisioning.getInstance().getLocalServer().getId();
             accountId = acctId;
             time      = System.currentTimeMillis();
@@ -130,16 +130,16 @@ public class FileUploadServlet extends ZimbraServlet {
                 // when it sees xml magic <?xml.  that's incompatible
                 // with WebDAV handlers as the content type needs to be
                 // text/xml instead.
-                
+
                 // 1. detect by file extension
                 contentType = MimeDetect.getMimeDetect().detect(name);
-                
+
                 // 2. special-case text/xml to avoid detection
                 if (contentType == null && file.getContentType() != null) {
                     if (file.getContentType().equals("text/xml"))
                         contentType = file.getContentType();
                 }
-                
+
                 // 3. detect by magic
                 if (contentType == null) {
                     try {
@@ -148,12 +148,12 @@ public class FileUploadServlet extends ZimbraServlet {
                         contentType = null;
                     }
                 }
-                
-                // 4. try the browser-specified content type 
+
+                // 4. try the browser-specified content type
                 if (contentType == null || contentType.equals(MimeConstants.CT_APPLICATION_OCTET_STREAM)) {
                     contentType = file.getContentType();
                 }
-                
+
                 // 5. when all else fails, use application/octet-stream
                 if (contentType == null)
                     contentType = file.getContentType();
@@ -166,14 +166,15 @@ public class FileUploadServlet extends ZimbraServlet {
         public String getId()           { return uuid; }
         public String getContentType()  { return contentType; }
         public long getSize()           { return file == null ? 0 : file.getSize(); }
-        
+
         public InputStream getInputStream() throws IOException {
             if (wasDeleted()) {
                 throw new IOException("Cannot get content for upload " + uuid + " because it was deleted.");
             }
-            if (file == null)
-                return new ByteArrayInputStream(new byte[0]);
-            if (!file.isInMemory() && (file instanceof DiskFileItem)) {
+            if (file == null) {
+                return new SharedByteArrayInputStream(new byte[0]);
+            }
+            if (!file.isInMemory() && file instanceof DiskFileItem) {
                 // If it's backed by a File, return a BlobInputStream so that any use by JavaMail
                 // will avoid loading the whole thing in memory.
                 File f = ((DiskFileItem) file).getStoreLocation();
@@ -191,11 +192,11 @@ public class FileUploadServlet extends ZimbraServlet {
                 file.delete();
             }
         }
-        
+
         synchronized void markDeleted() {
             deleted = true;
         }
-        
+
         public synchronized boolean wasDeleted() {
             return deleted;
         }
@@ -213,7 +214,7 @@ public class FileUploadServlet extends ZimbraServlet {
     static final long DEFAULT_MAX_SIZE = 10 * 1024 * 1024;
 
     /** Returns the zimbra id of the server the specified upload resides on.
-     * 
+     *
      * @param uploadId  The id of the upload.
      * @throws ServiceException if the upload id is malformed. */
     static String getUploadServerId(String uploadId) throws ServiceException {
@@ -225,7 +226,7 @@ public class FileUploadServlet extends ZimbraServlet {
     }
 
     /** Returns whether the specified upload resides on this server.
-     * 
+     *
      * @param uploadId  The id of the upload.
      * @throws ServiceException if the upload id is malformed or if there is
      *         an error accessing LDAP. */
@@ -340,11 +341,11 @@ public class FileUploadServlet extends ZimbraServlet {
             }
         }
     }
-    
+
     public static Upload saveUpload(InputStream is, String filename, String contentType, String accountId) throws ServiceException, IOException {
         return saveUpload(is, filename, contentType, accountId, false);
     }
-    
+
     static File getStoreLocation(FileItem fi) {
         if (fi.isInMemory() || !(fi instanceof DiskFileItem)) {
             return null;
@@ -383,10 +384,10 @@ public class FileUploadServlet extends ZimbraServlet {
     }
 
     private static class TempFileFilter implements FileFilter {
-        private long mNow = System.currentTimeMillis();
+        private final long mNow = System.currentTimeMillis();
 
         TempFileFilter()  { }
-        
+
         /** Returns <code>true</code> if the specified <code>File</code>
          *  follows the {@link DefaultFileItem} naming convention
          *  (<code>upload_*.tmp</code>) and is older than
@@ -444,7 +445,6 @@ public class FileUploadServlet extends ZimbraServlet {
         }
 
         try {
-            
             Provisioning prov = Provisioning.getInstance();
             Account acct = AuthProvider.validateAuthToken(prov, at, true);
             if (!isAdminRequest) {    
@@ -659,7 +659,7 @@ public class FileUploadServlet extends ZimbraServlet {
 
         if (raw) {
             out.println(results);
-        } else {          
+        } else {
             out.println("<html><head>" +
                     "<script language='javascript'>\nfunction doit() { window.parent._uploadManager.loaded("+ results + "); }\n</script>" +
                     "</head><body onload='doit()'></body></html>\n");
@@ -674,10 +674,10 @@ public class FileUploadServlet extends ZimbraServlet {
             }
         }
     }
-    
+
     /**
      * Reads the end of the client request when an error occurs, to avoid cases where
-     * the client blocks when writing the HTTP request.  
+     * the client blocks when writing the HTTP request.
      */
     private static void drainRequestStream(HttpServletRequest req) {
         try {
@@ -689,7 +689,7 @@ public class FileUploadServlet extends ZimbraServlet {
             while ((numRead = in.read(buf)) >= 0) {
                 totalRead += numRead;
             }
-            mLog.debug("Drained %d bytes", totalRead);            
+            mLog.debug("Drained %d bytes", totalRead);
         } catch (IOException e) {
             mLog.info("Ignoring error that occurred while reading the end of the client request: " + e);
         }
@@ -712,8 +712,8 @@ public class FileUploadServlet extends ZimbraServlet {
                 maxSize = Provisioning.getInstance().getConfig().getLongAttr(Provisioning.A_zimbraMtaMaxMessageSize, DEFAULT_MAX_SIZE);
             }
         } catch (ServiceException e) {
-            mLog.error("Unable to read " + 
-                      ((limitByFileUploadMaxSize) ? Provisioning.A_zimbraFileUploadMaxSize : Provisioning.A_zimbraMtaMaxMessageSize) + 
+            mLog.error("Unable to read " +
+                      ((limitByFileUploadMaxSize) ? Provisioning.A_zimbraFileUploadMaxSize : Provisioning.A_zimbraMtaMaxMessageSize) +
                       " attribute", e);
         }
         dfif.setSizeThreshold(32 * 1024);

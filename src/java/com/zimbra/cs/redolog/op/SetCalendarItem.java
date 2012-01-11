@@ -14,7 +14,6 @@
  */
 package com.zimbra.cs.redolog.op;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -22,16 +21,17 @@ import java.util.List;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import javax.mail.util.SharedByteArrayInputStream;
 
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.TimeZoneMap;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.MailboxOperation;
 import com.zimbra.cs.mailbox.Metadata;
 import com.zimbra.cs.mailbox.OperationContext;
-import com.zimbra.cs.mailbox.CalendarItem.ReplyInfo;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mailbox.calendar.Util;
@@ -110,7 +110,7 @@ public class SetCalendarItem extends RedoableOp implements CreateCalendarItemRec
                 byte[] rawPmData = new byte[dataLen];
                 in.readFully(rawPmData, 0, dataLen);
 
-                InputStream is = new ByteArrayInputStream(rawPmData);
+                InputStream is = new SharedByteArrayInputStream(rawPmData);
                 MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), is);
 
                 toRet.message = new ParsedMessage(mm, receivedDate, attachmentIndexingEnabled);

@@ -14,7 +14,6 @@
  */
 package com.zimbra.cs.mailclient.smtp;
 
-import java.io.ByteArrayInputStream;
 import java.io.OutputStream;
 import java.util.Properties;
 
@@ -25,6 +24,7 @@ import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.codec.binary.Base64;
 import org.junit.After;
@@ -33,9 +33,9 @@ import org.junit.Test;
 
 import com.google.common.base.Charsets;
 import com.sun.mail.smtp.SMTPMessage;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
-import com.zimbra.cs.util.MockTcpServer;
+import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.MockTcpServer;
 
 /**
  * Unit test for {@link SmtpTransport}.
@@ -79,7 +79,7 @@ public final class SmtpTransportTest {
         Transport transport = session.getTransport("smtp");
         transport.connect("localhost", PORT, null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
-        MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, msg.getAllRecipients());
         transport.close();
 
@@ -120,7 +120,7 @@ public final class SmtpTransportTest {
         transport.connect("localhost", PORT, null, null);
         String raw = "From: sender@zimbra.com\n" +
             "To: rcpt1@zimbra.com, rcpt2@zimbra.com, rcpt3@zimbra.com\nSubject: test\n\ntest";
-        MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         try {
             transport.sendMessage(msg, msg.getAllRecipients());
         } catch (SendFailedException e) {
@@ -158,7 +158,7 @@ public final class SmtpTransportTest {
         transport.connect("localhost", PORT, null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\n" +
             "Subject: test\n\ntest";
-        MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         try {
             transport.sendMessage(msg, msg.getAllRecipients());
             Assert.fail();
@@ -200,7 +200,7 @@ public final class SmtpTransportTest {
         Transport transport = session.getTransport("smtp");
         transport.connect("localhost", PORT, null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
-        MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, msg.getAllRecipients());
         transport.close();
 
@@ -236,7 +236,7 @@ public final class SmtpTransportTest {
         Transport transport = session.getTransport("smtp");
         transport.connect("localhost", PORT, null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
-        SMTPMessage msg = new SMTPMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        SMTPMessage msg = new SMTPMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         msg.setEnvelopeFrom("<>"); // this should override the previously set mail.smtp.from
         transport.sendMessage(msg, msg.getAllRecipients());
         transport.close();
@@ -273,7 +273,7 @@ public final class SmtpTransportTest {
         Transport transport = session.getTransport("smtp");
         transport.connect("localhost", PORT, null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
-        MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, new Address[] { new InternetAddress("<rcpt@zimbra.com>") });
         transport.close();
 
@@ -315,7 +315,7 @@ public final class SmtpTransportTest {
         Transport transport = session.getTransport("smtp");
         transport.connect("localhost", PORT, "zimbra", "secret");
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
-        MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, msg.getAllRecipients());
         transport.close();
 
@@ -356,7 +356,7 @@ public final class SmtpTransportTest {
         Transport transport = session.getTransport("smtp");
         transport.connect("localhost", PORT, "zimbra", "secret");
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
-        MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, msg.getAllRecipients());
         transport.close();
 
@@ -431,7 +431,7 @@ public final class SmtpTransportTest {
         Transport transport = session.getTransport("smtp");
         transport.connect("localhost", PORT, null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
-        MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         try {
             transport.sendMessage(msg, msg.getAllRecipients());
             Assert.fail();
@@ -476,7 +476,7 @@ public final class SmtpTransportTest {
             ".\n" +
             "..\n" +
             ".\n";
-        MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, msg.getAllRecipients());
         transport.close();
 
@@ -514,7 +514,7 @@ public final class SmtpTransportTest {
         Transport transport = session.getTransport("smtp");
         transport.connect("localhost", PORT, null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
-        MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         try {
             transport.sendMessage(msg, msg.getAllRecipients());
             Assert.fail();
@@ -554,8 +554,8 @@ public final class SmtpTransportTest {
         Transport transport = session.getTransport("smtp");
         transport.connect("localhost", PORT, null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
-        MimeMessage msg = new JavaMailMimeMessage(session,
-                new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1))) {
+        MimeMessage msg = new ZMimeMessage(session,
+                new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1))) {
             @Override
             public void writeTo(OutputStream os, String[] ignoreList) throws MessagingException {
                 throw new MessagingException(); // exception while encoding
@@ -627,7 +627,7 @@ public final class SmtpTransportTest {
         Transport transport = session.getTransport("smtp");
         transport.connect("localhost", PORT, null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
-        MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, msg.getAllRecipients());
         transport.close();
 
@@ -663,7 +663,7 @@ public final class SmtpTransportTest {
         Transport transport = session.getTransport("smtp");
         transport.connect("localhost", PORT, null, null);
         String raw = "From: sender@zimbra.com\nTo: rcpt@zimbra.com\nSubject: test\n\ntest";
-        MimeMessage msg = new JavaMailMimeMessage(session, new ByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
+        MimeMessage msg = new ZMimeMessage(session, new SharedByteArrayInputStream(raw.getBytes(Charsets.ISO_8859_1)));
         transport.sendMessage(msg, msg.getAllRecipients());
         transport.close();
 

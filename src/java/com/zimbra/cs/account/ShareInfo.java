@@ -14,14 +14,40 @@
  */
 package com.zimbra.cs.account;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.mail.Address;
+import javax.mail.MessagingException;
+import javax.mail.Transport;
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMultipart;
+
+import org.apache.commons.codec.binary.Hex;
+
 import com.google.common.base.Strings;
 import com.sun.mail.smtp.SMTPMessage;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
-import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
-import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants.ShareConstants;
@@ -31,6 +57,8 @@ import com.zimbra.common.util.L10nUtil;
 import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Provisioning.GroupMembership;
 import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
@@ -48,32 +76,6 @@ import com.zimbra.cs.mailbox.acl.AclPushTask;
 import com.zimbra.cs.servlet.ZimbraServlet;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
-import org.apache.commons.codec.binary.Hex;
-
-import javax.activation.DataHandler;
-import javax.activation.DataSource;
-import javax.mail.Address;
-import javax.mail.MessagingException;
-import javax.mail.Transport;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMultipart;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 
 
 public class ShareInfo {
@@ -264,7 +266,7 @@ public class ShareInfo {
          *     key: {owner-acct-id}:{remote-folder-id}
          *     value: {local-folder-id}
          */
-        private Map<String, Integer> mMountedFolders;
+        private final Map<String, Integer> mMountedFolders;
 
         public MountedFolders(OperationContext octxt, Account acct) throws ServiceException {
             mMountedFolders = getLocalMountpoints(octxt, acct);
@@ -484,7 +486,7 @@ public class ShareInfo {
             if (granteeIds.isEmpty() && !includePublicShares && !includeAllAuthedShares) {
                 return;
             }
-            
+
             SearchAccountsOptions searchOpts = new SearchAccountsOptions(
                     new String[] {
                            Provisioning.A_zimbraId,
@@ -493,7 +495,7 @@ public class ShareInfo {
            searchOpts.setFilter(ZLdapFilterFactory.getInstance().accountsByGrants(
                    granteeIds, includePublicShares, includeAllAuthedShares));
            List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
-            
+
             //TODO - check for dups
             for (NamedEntry ne : accounts) {
                 Account account = (Account) ne;
@@ -544,7 +546,7 @@ public class ShareInfo {
                 throws MessagingException, ServiceException {
 
             // Body
-            MimeMultipart mmp = new JavaMailMimeMultipart("alternative");
+            MimeMultipart mmp = new ZMimeMultipart("alternative");
 
             String shareAcceptUrl = null;
             String extUserLoginUrl = null;
@@ -559,21 +561,21 @@ public class ShareInfo {
             }
 
             // TEXT part (add me first!)
-            MimeBodyPart textPart = new JavaMailMimeBodyPart();
+            MimeBodyPart textPart = new ZMimeBodyPart();
             textPart.setText(
                     genPart(sid, notes, shareAcceptUrl, extUserLoginUrl, locale, null, false),
                     MimeConstants.P_CHARSET_UTF8);
             mmp.addBodyPart(textPart);
 
             // HTML part
-            MimeBodyPart htmlPart = new JavaMailMimeBodyPart();
+            MimeBodyPart htmlPart = new ZMimeBodyPart();
             htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(genPart(
                     sid, notes, shareAcceptUrl, extUserLoginUrl, locale, null, true))));
             mmp.addBodyPart(htmlPart);
 
             // XML part
             if (sid.getGranteeTypeCode() != ACL.GRANTEE_GUEST) {
-                MimeBodyPart xmlPart = new JavaMailMimeBodyPart();
+                MimeBodyPart xmlPart = new ZMimeBodyPart();
                 xmlPart.setDataHandler(
                         new DataHandler(new XmlPartDataSource(genXmlPart(sid, notes, null))));
                 mmp.addBodyPart(xmlPart);
@@ -888,21 +890,21 @@ public class ShareInfo {
                 shareInfoXml = visitor.genXml(idx);
             }
             // Body
-            MimeMultipart mmp = new JavaMailMimeMultipart("alternative");
+            MimeMultipart mmp = new ZMimeMultipart("alternative");
 
             // TEXT part (add me first!)
-            MimeBodyPart textPart = new JavaMailMimeBodyPart();
+            MimeBodyPart textPart = new ZMimeBodyPart();
             textPart.setText(shareInfoText, MimeConstants.P_CHARSET_UTF8);
             mmp.addBodyPart(textPart);
 
             // HTML part
-            MimeBodyPart htmlPart = new JavaMailMimeBodyPart();
+            MimeBodyPart htmlPart = new ZMimeBodyPart();
             htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(shareInfoHtml)));
             mmp.addBodyPart(htmlPart);
 
             // XML part
             if (shareInfoXml != null) {
-                MimeBodyPart xmlPart = new JavaMailMimeBodyPart();
+                MimeBodyPart xmlPart = new ZMimeBodyPart();
                 xmlPart.setDataHandler(new DataHandler(new XmlPartDataSource(shareInfoXml)));
                 mmp.addBodyPart(xmlPart);
             }
@@ -967,7 +969,7 @@ public class ShareInfo {
 
         private static abstract class MimePartDataSource implements DataSource {
 
-            private String mText;
+            private final String mText;
             private byte[] mBuf = null;
 
             public MimePartDataSource(String text) {

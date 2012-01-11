@@ -37,9 +37,9 @@ import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.Address;
 import javax.mail.Header;
+import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.mail.Part;
-import javax.mail.Message.RecipientType;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.InternetAddress;
@@ -48,14 +48,30 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
 import com.google.common.io.Closeables;
+import com.zimbra.common.account.Key;
+import com.zimbra.common.account.Key.AccountBy;
+import com.zimbra.common.account.SignatureUtil;
+import com.zimbra.common.calendar.ICalTimeZone;
+import com.zimbra.common.calendar.ParsedDateTime;
+import com.zimbra.common.calendar.TimeZoneMap;
+import com.zimbra.common.calendar.ZCalendar;
+import com.zimbra.common.calendar.ZCalendar.ICalTok;
+import com.zimbra.common.calendar.ZCalendar.ZComponent;
+import com.zimbra.common.calendar.ZCalendar.ZProperty;
+import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.L10nUtil.MsgKey;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMessage;
+import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.CalendarResource;
 import com.zimbra.cs.account.Identity;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.common.account.Key;
-import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.common.account.SignatureUtil;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailSender;
@@ -70,22 +86,6 @@ import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.util.L10nUtil.MsgKey;
-import com.zimbra.common.calendar.ICalTimeZone;
-import com.zimbra.common.calendar.ParsedDateTime;
-import com.zimbra.common.calendar.TimeZoneMap;
-import com.zimbra.common.calendar.ZCalendar;
-import com.zimbra.common.calendar.ZCalendar.ICalTok;
-import com.zimbra.common.calendar.ZCalendar.ZComponent;
-import com.zimbra.common.calendar.ZCalendar.ZProperty;
-import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
-import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.shim.JavaMailInternetAddress;
-import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
-import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 
 public class CalendarMailSender {
 
@@ -473,7 +473,7 @@ public class CalendarMailSender {
         try {
             MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
 
-            MimeMultipart mmp = new JavaMailMimeMultipart("alternative");
+            MimeMultipart mmp = new ZMimeMultipart("alternative");
             mm.setContent(mmp);
 
             // Add the text as DESCRIPTION property in the iCalendar part.
@@ -483,13 +483,13 @@ public class CalendarMailSender {
 
             // ///////
             // TEXT part (add me first!)
-            MimeBodyPart textPart = new JavaMailMimeBodyPart();
+            MimeBodyPart textPart = new ZMimeBodyPart();
             textPart.setText(desc, MimeConstants.P_CHARSET_UTF8);
             mmp.addBodyPart(textPart);
 
             // HTML part is needed to keep Outlook happy as it doesn't know
             // how to deal with a message with only text/plain but no HTML.
-            MimeBodyPart htmlPart = new JavaMailMimeBodyPart();
+            MimeBodyPart htmlPart = new ZMimeBodyPart();
             if (descHtml != null) {
                 ContentType ct = new ContentType(MimeConstants.CT_TEXT_HTML);
                 ct.setParameter(MimeConstants.P_CHARSET, MimeConstants.P_CHARSET_UTF8);
@@ -534,8 +534,8 @@ public class CalendarMailSender {
 
     private static class CalendarPartReplacingVisitor extends MimeVisitor {
 
-        private String mUid;
-        private ZVCalendar mCal;
+        private final String mUid;
+        private final ZVCalendar mCal;
         private boolean mReplaced;
         private MimeBodyPart mCalendarPart;
 
@@ -582,7 +582,7 @@ public class CalendarMailSender {
                     // We have a calendar part and we haven't replaced yet.  The calendar part must be
                     // a child of this multipart.
                     if (mp.removeBodyPart(mCalendarPart)) {
-                        MimeBodyPart newCalendarPart = new JavaMailMimeBodyPart();
+                        MimeBodyPart newCalendarPart = new ZMimeBodyPart();
                         setCalendarContent(newCalendarPart, mCal);
                         mp.addBodyPart(newCalendarPart);
                         mReplaced = true;
@@ -604,7 +604,7 @@ public class CalendarMailSender {
         try {
             String uid = inv.getUid();
             if (srcMm != null) {
-                MimeMessage mm = new JavaMailMimeMessage(srcMm);  // Get a copy so we can modify it.
+                MimeMessage mm = new ZMimeMessage(srcMm);  // Get a copy so we can modify it.
                 // Discard all old headers except Subject and Content-*.
                 Enumeration eh = srcMm.getAllHeaders();
                 while (eh.hasMoreElements()) {
@@ -667,7 +667,7 @@ public class CalendarMailSender {
             return null;
         MimeMessage mm = null;
         try {
-            mm = new JavaMailMimeMessage(mmOrig);
+            mm = new ZMimeMessage(mmOrig);
             mm.removeHeader("To");
             mm.removeHeader("Cc");
             mm.removeHeader("Bcc");
@@ -1036,7 +1036,7 @@ public class CalendarMailSender {
 
     public static MimeBodyPart makeICalIntoMimePart(ZVCalendar cal) throws ServiceException {
         try {
-            MimeBodyPart mbp = new JavaMailMimeBodyPart();
+            MimeBodyPart mbp = new ZMimeBodyPart();
             setCalendarContent(mbp, cal);
             return mbp;
         } catch (MessagingException e) {

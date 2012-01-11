@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -19,7 +19,6 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -48,9 +47,9 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.protocol.Protocol;
 
+import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -64,34 +63,34 @@ import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.Log;
 import com.zimbra.common.util.LogFactory;
 import com.zimbra.common.util.ZimbraCookie;
+import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
-import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.cs.service.mail.ItemAction;
 
 public class SpamExtract {
 
     private static Log mLog = LogFactory.getLog(SpamExtract.class);
-    
+
     private static Options mOptions = new Options();
 
     static {
         mOptions.addOption("s", "spam", false, "extract messages from configured spam mailbox");
         mOptions.addOption("n", "notspam", false, "extract messages from configured notspam mailbox");
         mOptions.addOption("m", "mailbox", true, "extract messages from specified mailbox");
-       
+
         mOptions.addOption("d", "delete", false, "delete extracted messages (default is to keep)");
         mOptions.addOption("o", "outdir", true, "directory to store extracted messages");
 
         mOptions.addOption("a", "admin", true, "admin user name for auth (default is zimbra_ldap_userdn)");
         mOptions.addOption("p", "password", true, "admin password for auth (default is zimbra_ldap_password)");
         mOptions.addOption("u", "url", true, "admin SOAP service url (default is target mailbox's server's admin service port)");
-        
+
         mOptions.addOption("q", "query", true, "search query whose results should be extracted (default is in:inbox)");
         mOptions.addOption("r", "raw", false, "extract raw message (default: gets message/rfc822 attachments)");
-        
+
         mOptions.addOption("h", "help", false, "show this usage text");
         mOptions.addOption("D", "debug", false, "enable debug level logging");
         mOptions.addOption("v", "verbose", false, "be verbose while running");
@@ -124,7 +123,7 @@ public class SpamExtract {
     }
 
     private static boolean mVerbose = false;
-    
+
     public static void main(String[] args) throws ServiceException, HttpException, SoapFaultException, IOException {
         CommandLine cl = parseArgs(args);
 
@@ -136,7 +135,7 @@ public class SpamExtract {
         if (cl.hasOption('v')) {
             mVerbose = true;
         }
-        
+
         boolean optDelete = cl.hasOption('d');
 
         if (!cl.hasOption('o')) {
@@ -155,7 +154,7 @@ public class SpamExtract {
 
         String optAdminUser;
         if (cl.hasOption('a')) {
-            optAdminUser = cl.getOptionValue('a'); 
+            optAdminUser = cl.getOptionValue('a');
         } else {
             optAdminUser = LC.zimbra_ldap_user.value();
         }
@@ -166,7 +165,7 @@ public class SpamExtract {
         } else {
             optAdminPassword = LC.zimbra_ldap_password.value();
         }
-        
+
         String optQuery = "in:inbox";
         if (cl.hasOption('q')) {
             optQuery = cl.getOptionValue('q');
@@ -178,9 +177,9 @@ public class SpamExtract {
         }
 
         boolean optRaw = cl.hasOption('r');
-        
+
         if (mVerbose) mLog.info("Extracting from account " + account.getName());
-        
+
         Server server = Provisioning.getInstance().getServer(account);
 
         String optAdminURL;
@@ -230,7 +229,7 @@ public class SpamExtract {
                 if (mLog.isDebugEnabled()) mLog.debug(searchReq.prettyPrint());
                 Element searchResp = transport.invoke(searchReq, false, true, account.getId());
                 if (mLog.isDebugEnabled()) mLog.debug(searchResp.prettyPrint());
-                
+
                 StringBuilder deleteList = new StringBuilder();
 
                 for (Iterator<Element> iter = searchResp.elementIterator(MailConstants.E_MSG); iter.hasNext();) {
@@ -247,7 +246,7 @@ public class SpamExtract {
                     }
                     totalProcessed++;
                 }
-                
+
                 haveMore = false;
                 String more = searchResp.getAttribute(MailConstants.A_QUERY_MORE);
                 if (more != null && more.length() > 0) {
@@ -260,14 +259,14 @@ public class SpamExtract {
                         mLog.warn("more flag from server not a number: " + more, nfe);
                     }
                 }
-                
+
                 if (delete && deleteList.length() > 0) {
                     deleteList.deleteCharAt(deleteList.length()-1); // -1 removes trailing comma
                     Element msgActionReq = new Element.XMLElement(MailConstants.MSG_ACTION_REQUEST);
                     Element action = msgActionReq.addElement(MailConstants.E_ACTION);
                     action.addAttribute(MailConstants.A_ID, deleteList.toString());
                     action.addAttribute(MailConstants.A_OPERATION, ItemAction.OP_HARD_DELETE);
-                    
+
                     if (mLog.isDebugEnabled()) mLog.debug(msgActionReq.prettyPrint());
                     Element msgActionResp = transport.invoke(msgActionReq, false, true, account.getId());
                     if (mLog.isDebugEnabled()) mLog.debug(msgActionResp.prettyPrint());
@@ -281,16 +280,16 @@ public class SpamExtract {
     }
 
     private static Session mJMSession;
-    
+
     private static String mOutputPrefix;
-    
+
     static {
         Properties props = new Properties();
         props.setProperty("mail.mime.address.strict", "false");
         mJMSession = Session.getInstance(props);
         mOutputPrefix = Long.toHexString(System.currentTimeMillis());
     }
-    
+
     private static boolean extractMessage(HttpClient hc, GetMethod gm, String path, File outdir, boolean raw) {
         try {
             extractMessage0(hc, gm, path, outdir, raw);
@@ -301,11 +300,11 @@ public class SpamExtract {
             mLog.warn("exception occurred fetching message", ioe);
         }
         return false;
-    }        
-    
+    }
+
     private static int mExtractIndex;
     private static final int MAX_BUFFER_SIZE = 10 * 1024 * 1024;
-    
+
     private static void extractMessage0(HttpClient hc, GetMethod gm, String path, File outdir, boolean raw) throws IOException, MessagingException {
         gm.setPath(path);
         if (mLog.isDebugEnabled()) mLog.debug("Fetching " + path);
@@ -319,7 +318,7 @@ public class SpamExtract {
             File file = new File(outdir, mOutputPrefix + "-" + mExtractIndex++);
             OutputStream os = null;
             try {
-                os = new BufferedOutputStream(new FileOutputStream(file)); 
+                os = new BufferedOutputStream(new FileOutputStream(file));
                 ByteUtil.copy(gm.getResponseBodyAsStream(), true, os, false);
                 if (mVerbose) mLog.info("Wrote: " + file);
             } catch (java.io.IOException e) {
@@ -329,7 +328,7 @@ public class SpamExtract {
                 if (os != null)
                     os.close();
             }
-            
+
             return;
         }
 
@@ -342,17 +341,17 @@ public class SpamExtract {
             ByteUtil.copy(gm.getResponseBodyAsStream(), true, buffer, false);
             if (buffer.isSpooled()) {
                 sfis = new SharedFileInputStream(buffer.getFile());
-                mm = new JavaMailMimeMessage(mJMSession, sfis);
+                mm = new ZMimeMessage(mJMSession, sfis);
             } else {
-                mm = new JavaMailMimeMessage(mJMSession, buffer.getInputStream());
+                mm = new ZMimeMessage(mJMSession, buffer.getInputStream());
             }
             writeAttachedMessages(mm, outdir, gm.getPath());
         } finally {
             ByteUtil.closeStream(sfis);
         }
-        
+
     }
-    
+
     private static void writeAttachedMessages(MimeMessage mm, File outdir, String msgUri)
     throws IOException, MessagingException {
         // Not raw - ignore the spam report and extract messages that are in attachments...
@@ -360,7 +359,7 @@ public class SpamExtract {
             mLog.warn("Spam/notspam messages must have attachments (skipping " + msgUri + ")");
             return;
         }
-        
+
         MimeMultipart mmp = (MimeMultipart)mm.getContent();
         int nAttachments  = mmp.getCount();
         boolean foundAtleastOneAttachedMessage = false;
@@ -375,20 +374,20 @@ public class SpamExtract {
             File file = new File(outdir, mOutputPrefix + "-" + mExtractIndex++);
             OutputStream os = null;
             try {
-                os = new BufferedOutputStream(new FileOutputStream(file)); 
+                os = new BufferedOutputStream(new FileOutputStream(file));
                 msg.writeTo(os);
             } finally {
                 os.close();
             }
             if (mVerbose) mLog.info("Wrote: " + file);
         }
-        
+
         if (!foundAtleastOneAttachedMessage) {
             String msgid = mm.getHeader("Message-ID", " ");
             mLog.warn("message uri=" + msgUri + " message-id=" + msgid + " had no attachments");
         }
     }
-        
+
     public static URL getServerURL(Server server, boolean admin) throws ServiceException {
         String host = server.getAttr(Provisioning.A_zimbraServiceHostname);
         if (host == null) {
@@ -486,7 +485,7 @@ public class SpamExtract {
         }
 
         String name = null;
-        
+
         if (cl.hasOption('s')) {
             if (cl.hasOption('n') || cl.hasOption('m')) {
                 mLog.error("only one of s, n or m options can be specified");
@@ -517,7 +516,7 @@ public class SpamExtract {
             mLog.error("one of s, n or m options must be specified");
             return null;
         }
-        
+
         Account account = prov.get(AccountBy.name, name);
         if (account == null) {
             mLog.error("can not find account " + name);

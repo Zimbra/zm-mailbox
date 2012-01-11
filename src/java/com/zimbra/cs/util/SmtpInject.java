@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -16,7 +16,6 @@
 package com.zimbra.cs.util;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Properties;
@@ -26,10 +25,8 @@ import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.mail.util.SharedFileInputStream;
 
-import com.zimbra.common.mime.shim.JavaMailInternetAddress;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
-import com.zimbra.common.net.SocketFactories;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
@@ -38,7 +35,13 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import com.zimbra.common.util.*;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.net.SocketFactories;
+import com.zimbra.common.util.ByteUtil;
+import com.zimbra.common.util.CliUtil;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.util.LogFactory;
+import com.zimbra.common.zmime.ZMimeMessage;
 
 /**
  * Simple command line SMTP client for testing purposes.
@@ -199,7 +202,7 @@ public class SmtpInject {
 
         try {
             // create a message
-            MimeMessage msg = new JavaMailMimeMessage(session, new FileInputStream(file));
+            MimeMessage msg = new ZMimeMessage(session, new SharedFileInputStream(file));
             InternetAddress[] address = { new JavaMailInternetAddress(recipient) };
             msg.setFrom(new JavaMailInternetAddress(sender));
 

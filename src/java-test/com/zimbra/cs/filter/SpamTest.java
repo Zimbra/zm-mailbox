@@ -14,6 +14,14 @@
  */
 package com.zimbra.cs.filter;
 
+import javax.mail.internet.MimeMessage;
+import javax.mail.util.SharedByteArrayInputStream;
+
+import junit.framework.Assert;
+
+import org.junit.BeforeClass;
+import org.junit.Test;
+
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.MockProvisioning;
@@ -21,12 +29,6 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.service.util.SpamHandler;
 import com.zimbra.cs.util.JMSession;
-import junit.framework.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import javax.mail.internet.MimeMessage;
-import java.io.ByteArrayInputStream;
 
 /**
  * Unit tests for spam/whitelist filtering
@@ -53,7 +55,7 @@ public class SpamTest {
                 "Subject: test\n" +
                 "\n" +
                 "Hello World.";
-        MimeMessage msg = new Mime.FixedMimeMessage(JMSession.getSession(), new ByteArrayInputStream(raw.getBytes()));
+        MimeMessage msg = new Mime.FixedMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(raw.getBytes()));
         Assert.assertTrue(SpamHandler.isSpam(msg));
 
         // add a whitelist header to the previous message
@@ -64,7 +66,7 @@ public class SpamTest {
                 "Subject: test\n" +
                 "\n" +
                 "Hello World.";
-        msg = new Mime.FixedMimeMessage(JMSession.getSession(), new ByteArrayInputStream(raw.getBytes()));
+        msg = new Mime.FixedMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(raw.getBytes()));
         Assert.assertFalse(SpamHandler.isSpam(msg));
     }
 }

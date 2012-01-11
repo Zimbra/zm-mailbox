@@ -49,6 +49,7 @@ import java.util.zip.GZIPInputStream;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
+import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -57,16 +58,43 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import com.zimbra.client.*;
+import com.zimbra.client.ZAce;
+import com.zimbra.client.ZAppointmentHit;
+import com.zimbra.client.ZAutoCompleteMatch;
+import com.zimbra.client.ZContact;
+import com.zimbra.client.ZContactHit;
+import com.zimbra.client.ZConversation;
 import com.zimbra.client.ZConversation.ZMessageSummary;
+import com.zimbra.client.ZConversationHit;
+import com.zimbra.client.ZDocument;
+import com.zimbra.client.ZDocumentHit;
+import com.zimbra.client.ZEmailAddress;
+import com.zimbra.client.ZFilterRule;
+import com.zimbra.client.ZFilterRules;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZGetMessageParams;
+import com.zimbra.client.ZGrant;
 import com.zimbra.client.ZGrant.GranteeType;
+import com.zimbra.client.ZIdentity;
+import com.zimbra.client.ZJSONObject;
+import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMailbox.Fetch;
 import com.zimbra.client.ZMailbox.GalEntryType;
 import com.zimbra.client.ZMailbox.OwnerBy;
 import com.zimbra.client.ZMailbox.SharedItemBy;
 import com.zimbra.client.ZMailbox.ZApptSummaryResult;
 import com.zimbra.client.ZMailbox.ZSearchGalResult;
+import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZMessage.ZMimePart;
+import com.zimbra.client.ZMessageHit;
+import com.zimbra.client.ZMountpoint;
+import com.zimbra.client.ZSearchFolder;
+import com.zimbra.client.ZSearchHit;
+import com.zimbra.client.ZSearchPagerResult;
+import com.zimbra.client.ZSearchParams;
+import com.zimbra.client.ZSearchResult;
+import com.zimbra.client.ZSignature;
+import com.zimbra.client.ZTag;
 import com.zimbra.client.ZTag.Color;
 import com.zimbra.client.event.ZCreateEvent;
 import com.zimbra.client.event.ZDeleteEvent;
@@ -77,7 +105,6 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.ContactConstants;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapFaultException;
@@ -91,8 +118,8 @@ import com.zimbra.common.util.EmailUtil;
 import com.zimbra.common.util.HttpUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.zclient.ZClientException;
+import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.GuestAccount;
-//import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.Right;
 import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.cs.account.soap.SoapAccountInfo;
@@ -131,7 +158,7 @@ public class ZMailboxUtil implements DebugListener {
     SoapProvisioning mProv;
     private int mTimeout = LC.httpclient_internal_connmgr_so_timeout.intValue();
 
-    private Map<Integer, String> mIndexToId = new HashMap<Integer, String>();
+    private final Map<Integer, String> mIndexToId = new HashMap<Integer, String>();
 
     /** current command */
     private Command mCommand;
@@ -140,7 +167,7 @@ public class ZMailboxUtil implements DebugListener {
     private CommandLine mCommandLine;
 
     /** parser for internal commands */
-    private CommandLineParser mParser = new GnuParser();
+    private final CommandLineParser mParser = new GnuParser();
 
     public void setDebug(boolean debug) { mDebug = debug; }
 
@@ -1325,7 +1352,7 @@ public class ZMailboxUtil implements DebugListener {
         return ExecuteStatus.OK;
     }
 
-    private ZEventHandler mTraceHandler = new TraceHandler();
+    private final ZEventHandler mTraceHandler = new TraceHandler();
 
     private static class TraceHandler extends ZEventHandler {
 
@@ -1913,7 +1940,7 @@ public class ZMailboxUtil implements DebugListener {
 
         try {
             if (date == -1) {
-                MimeMessage mm = new JavaMailMimeMessage(mSession, new ByteArrayInputStream(data));
+                MimeMessage mm = new ZMimeMessage(mSession, new SharedByteArrayInputStream(data));
                 Date d = mm.getSentDate();
                 if (d != null) date = d.getTime();
                 else date = 0;

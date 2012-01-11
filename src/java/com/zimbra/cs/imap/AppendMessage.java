@@ -14,41 +14,41 @@
  */
 package com.zimbra.cs.imap;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.InternetHeaders;
+import javax.mail.internet.MailDateFormat;
+
 import com.google.common.collect.Sets;
-import com.zimbra.cs.store.Blob;
-import com.zimbra.cs.store.BlobBuilder;
-import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.mailbox.DeliveryOptions;
-import com.zimbra.cs.mailbox.Flag;
-import com.zimbra.cs.mailbox.Tag;
-import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.Message;
-import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZFolder;
-import com.zimbra.cs.mime.ParsedMessage;
-import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.client.ZMailbox;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
 import com.zimbra.common.mime.shim.JavaMailInternetHeaders;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraLog;
-
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.InternetHeaders;
-import javax.mail.internet.MailDateFormat;
-import javax.mail.MessagingException;
-
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Set;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.BufferedInputStream;
-import java.text.ParseException;
+import com.zimbra.cs.mailbox.DeliveryOptions;
+import com.zimbra.cs.mailbox.Flag;
+import com.zimbra.cs.mailbox.Folder;
+import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.Message;
+import com.zimbra.cs.mailbox.Tag;
+import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.service.util.ItemId;
+import com.zimbra.cs.store.Blob;
+import com.zimbra.cs.store.BlobBuilder;
+import com.zimbra.cs.store.StoreManager;
+import com.zimbra.cs.util.AccountUtil;
 
 /**
  * Encapsulates append message data for an APPEND request.
@@ -63,7 +63,7 @@ final class AppendMessage {
     private Blob content;
     private List<String> flagNames;
     private int flags = Flag.BITMASK_UNREAD;
-    private Set<String> tags = Sets.newHashSetWithExpectedSize(3);
+    private final Set<String> tags = Sets.newHashSetWithExpectedSize(3);
     private short sflags;
 
     static AppendMessage parse(ImapHandler handler, String tag, ImapRequest req)

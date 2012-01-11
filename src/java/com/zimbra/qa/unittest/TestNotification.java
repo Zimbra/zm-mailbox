@@ -14,7 +14,6 @@
  */
 package com.zimbra.qa.unittest;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -26,6 +25,7 @@ import java.util.Set;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
+import javax.mail.util.SharedByteArrayInputStream;
 
 import junit.framework.TestCase;
 
@@ -36,9 +36,9 @@ import com.zimbra.client.ZMailbox.ZOutgoingMessage.MessagePart;
 import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZMessage.ZMimePart;
 import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.db.DbOutOfOffice;
@@ -71,8 +71,9 @@ extends TestCase {
     private String[] mOriginalInterceptAddresses;
     private String mOriginalInterceptSendHeadersOnly;
     private String mOriginalSaveToSent;
-    private boolean mIsServerTest = false;
+    private final boolean mIsServerTest = false;
 
+    @Override
     protected void setUp() throws Exception
     {
         super.setUp();
@@ -230,8 +231,8 @@ extends TestCase {
         Account account = TestUtil.getAccount(TAPPED_NAME);
 
         // Compare headers
-        MimeMessage tappedMimeMsg = new JavaMailMimeMessage(JMSession.getSession(), new ByteArrayInputStream(tappedMsgContent.getBytes()));
-        MimeMessage interceptedMimeMsg = new JavaMailMimeMessage(JMSession.getSession(), new ByteArrayInputStream(interceptedMsgContent.getBytes()));
+        MimeMessage tappedMimeMsg = new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(tappedMsgContent.getBytes()));
+        MimeMessage interceptedMimeMsg = new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(interceptedMsgContent.getBytes()));
 
         boolean headersOnly = account.getBooleanAttr(Provisioning.A_zimbraInterceptSendHeadersOnly, false);
         Set<String> tappedHeaderLines = getHeaderLines(tappedMimeMsg);
@@ -265,6 +266,7 @@ extends TestCase {
         return headerLines;
     }
 
+    @Override
     public void tearDown()
     throws Exception {
         cleanUp();

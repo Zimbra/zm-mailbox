@@ -2,26 +2,27 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.mailclient.imap;
 
-import com.zimbra.cs.mailclient.util.Ascii;
-
-import java.io.InputStream;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
+
+import javax.mail.util.SharedByteArrayInputStream;
+
+import com.zimbra.cs.mailclient.util.Ascii;
 
 /**
  * Base class for basic IMAP data types.
@@ -34,12 +35,12 @@ public abstract class ImapData {
             return new Literal(Ascii.getBytes(s));
         }
         switch (getType(s)) {
-        case ATOM:
-            return new Atom(s);
-        case QUOTED:
-            return new Quoted(s);
-        case LITERAL:
-            return new Literal(encodeUtf8(s));
+            case ATOM:
+                return new Atom(s);
+            case QUOTED:
+                return new Quoted(s);
+            case LITERAL:
+                return new Literal(encodeUtf8(s));
         }
         return null;
     }
@@ -47,7 +48,7 @@ public abstract class ImapData {
     public static ImapData asNString(String s) {
         return s != null ? asString(s) : Atom.NIL;
     }
-    
+
     public static ImapData asString(String s) {
         return s.length() <= 64 && Chars.isText(s) ?
             new Quoted(s) : new Literal(encodeUtf8(s));
@@ -78,7 +79,7 @@ public abstract class ImapData {
         }
 
     }
-    
+
     public static String asSequenceSet(List<? extends Number> ids) {
         StringBuilder sb = new StringBuilder();
         if (ids.isEmpty()) {
@@ -91,7 +92,7 @@ public abstract class ImapData {
         }
         return sb.toString();
     }
-        
+
     public abstract Type getType();
 
     public boolean isAtom() {
@@ -127,7 +128,7 @@ public abstract class ImapData {
     public abstract byte[] getBytes() throws IOException;
 
     public InputStream getInputStream() throws IOException {
-        return new ByteArrayInputStream(getBytes());
+        return new SharedByteArrayInputStream(getBytes());
     }
 
     public void dispose() {}

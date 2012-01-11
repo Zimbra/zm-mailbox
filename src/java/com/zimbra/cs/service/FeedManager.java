@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -54,15 +54,15 @@ import com.zimbra.common.httpclient.HttpClientUtil;
 import com.zimbra.common.mime.ContentType;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
-import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
-import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.FileUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.common.soap.Element;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.httpclient.HttpProxyUtil;
 import com.zimbra.cs.ldap.LdapUtil;
@@ -107,7 +107,7 @@ public class FeedManager {
         }
 
         public List<T> getItems() { return items; }
-        
+
         // returns the guid of the most recently modified item
         public String getMostRecentGuid() { return lastGuid; }
 
@@ -135,7 +135,7 @@ public class FeedManager {
 
         // cannot set connection timeout because it'll affect all HttpClients associated with the conn mgr.
         // see comments in ZimbraHttpConnectionManager
-        // client.setConnectionTimeout(10000); 
+        // client.setConnectionTimeout(10000);
 
         HttpMethodParams params = new HttpMethodParams();
         params.setParameter(HttpMethodParams.HTTP_CONTENT_CHARSET, MimeConstants.P_CHARSET_UTF8);
@@ -295,7 +295,7 @@ public class FeedManager {
 //    private static org.dom4j.QName QN_CONTENT_ENCODED = org.dom4j.QName.get("encoded", "content", "http://purl.org/rss/1.0/modules/content/");
 
     private static final class Enclosure {
-        private String mUrl, mTitle, mCtype;
+        private final String mUrl, mTitle, mCtype;
         Enclosure(String url, String title, String ctype) {
             mUrl = url;  mTitle = title;  mCtype = ctype;
         }
@@ -461,16 +461,16 @@ public class FeedManager {
         // create the MIME message and wrap it
         try {
             MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
-            MimePart body = (hasAttachments ? new JavaMailMimeBodyPart() : (MimePart) mm);
+            MimePart body = hasAttachments ? new ZMimeBodyPart() : (MimePart) mm;
             body.setText(content, "utf-8");
             body.setHeader("Content-Type", ctype);
 
             if (hasAttachments) {
                 // encode each enclosure as an attachment with Content-Location set
-                MimeMultipart mmp = new JavaMailMimeMultipart("mixed");
+                MimeMultipart mmp = new ZMimeMultipart("mixed");
                 mmp.addBodyPart((BodyPart) body);
                 for (Enclosure enc : attach) {
-                    MimeBodyPart part = new JavaMailMimeBodyPart();
+                    MimeBodyPart part = new ZMimeBodyPart();
                     part.setText("");
                     part.addHeader("Content-Location", enc.getLocation());
                     part.addHeader("Content-Type", enc.getContentType());
@@ -536,7 +536,7 @@ public class FeedManager {
     }
 
     private static class UnescapedContent extends org.xml.sax.helpers.DefaultHandler {
-        private StringBuffer str = new StringBuffer();
+        private final StringBuffer str = new StringBuffer();
         private boolean continued;
 
         UnescapedContent()  { }

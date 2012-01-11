@@ -27,9 +27,9 @@ import java.util.Map;
 import javax.activation.DataHandler;
 import javax.mail.Address;
 import javax.mail.Header;
+import javax.mail.Message.RecipientType;
 import javax.mail.MessagingException;
 import javax.mail.Part;
-import javax.mail.Message.RecipientType;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
@@ -46,11 +46,11 @@ import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
-import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.CalendarItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -401,7 +401,7 @@ public class ForwardCalendarItem extends CalendarRequest {
         try {
             String uid = inv.getUid();
             if (mmInv != null) {
-                MimeMessage mm = new JavaMailMimeMessage(mmInv);  // Get a copy so we can modify it.
+                MimeMessage mm = new ZMimeMessage(mmInv);  // Get a copy so we can modify it.
                 // Discard all old headers except Subject and Content-*.
                 @SuppressWarnings("rawtypes")
                 Enumeration eh = mmInv.getAllHeaders();
@@ -497,10 +497,10 @@ public class ForwardCalendarItem extends CalendarRequest {
     // First part of each type encountered is replaced.
     private static class ReplacingVisitor extends MimeVisitor {
 
-        private String mUid;
-        private ZVCalendar mCalNew;          // data from which to generate new text/calendar part
-        private MimeBodyPart mPlainNew;      // new text/plain part to replace with
-        private MimeBodyPart mHtmlNew;       // new text/html part to replace with
+        private final String mUid;
+        private final ZVCalendar mCalNew;          // data from which to generate new text/calendar part
+        private final MimeBodyPart mPlainNew;      // new text/plain part to replace with
+        private final MimeBodyPart mHtmlNew;       // new text/html part to replace with
         private MimeBodyPart mCalendarPart;  // existing text/calendar part
         private MimeBodyPart mPlainPart;     // existing text/plain part
         private MimeBodyPart mHtmlPart;      // existing text/html part
@@ -584,7 +584,7 @@ public class ForwardCalendarItem extends CalendarRequest {
                     // We have a calendar part and we haven't replaced yet.  The calendar part must be
                     // a child of this multipart.
                     if (mp.removeBodyPart(mCalendarPart)) {
-                        MimeBodyPart newCalendarPart = new JavaMailMimeBodyPart();
+                        MimeBodyPart newCalendarPart = new ZMimeBodyPart();
                         setCalendarContent(newCalendarPart, mCalNew);
                         mp.addBodyPart(newCalendarPart);
                         mCalendarPartReplaced = true;

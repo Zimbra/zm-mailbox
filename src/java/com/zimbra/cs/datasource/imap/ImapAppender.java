@@ -2,19 +2,18 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
  */
 package com.zimbra.cs.datasource.imap;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -28,12 +27,13 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.mail.internet.MailDateFormat;
 import javax.mail.internet.MimeMessage;
+import javax.mail.util.SharedByteArrayInputStream;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.datasource.SyncUtil;
 import com.zimbra.cs.mailbox.Message;
 import com.zimbra.cs.mailclient.imap.AppendResult;
@@ -154,7 +154,7 @@ public class ImapAppender {
                 // bug 45385: Temporarily increase timeout to 10 minutes in case of slow search.
                 // Not pretty, but hopefully we never get here since most servers now support
                 // UIDPLUS or don't de-dup messages.
-                
+
                 // bug 64062 : let's try 2 minutes. hopefully search shouldn't take too long now that we use msg id rather than subject
                 connection.setReadTimeout(2 * 60);
                 uids = connection.uidSearch(getSearchParams(mi));
@@ -176,13 +176,13 @@ public class ImapAppender {
                 }
             }
         } catch(Exception e) {
-            //if this is a real exception (e.g. network went down) next command will fail regardless. 
+            //if this is a real exception (e.g. network went down) next command will fail regardless.
             //otherwise, don't allow appendSlow to create loop
             ZimbraLog.imap_client.warn("Dedupe search in appendSlow failed.",e);
         }
         //this usually is OK, and actually the way Exchange has been working due to size check in matches()
         //we delete the local tracker and allow next sync to get the current version of message
-        ZimbraLog.imap_client.warn("append slow failed to find appended message id"); 
+        ZimbraLog.imap_client.warn("append slow failed to find appended message id");
         // If still not found, then give up :(
         return -1;
     }
@@ -239,7 +239,7 @@ public class ImapAppender {
         return new Data() {
             @Override
             public InputStream getInputStream() throws IOException {
-                return new ByteArrayInputStream(b);
+                return new SharedByteArrayInputStream(b);
             }
 
             @Override
@@ -277,7 +277,7 @@ public class ImapAppender {
             this.data = data;
             InputStream is = data.getInputStream();
             try {
-                mm = new JavaMailMimeMessage(null, is);
+                mm = new ZMimeMessage(null, is);
                 this.flags = flags;
                 date = mm.getReceivedDate();
                 if (date == null) {

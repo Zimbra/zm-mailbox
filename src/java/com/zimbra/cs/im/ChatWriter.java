@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2007, 2008, 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -39,16 +39,15 @@ import javax.mail.internet.MimeMultipart;
 
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
-import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
-import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMessage;
+import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.html.BrowserDefang;
 import com.zimbra.cs.html.DefangFactory;
-import com.zimbra.cs.html.HtmlDefang;
 import com.zimbra.cs.html.HtmlEntityMapper;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.service.im.IMGetChat;
@@ -66,13 +65,15 @@ class ChatWriter {
             mElt = elt;
         }
 
+        @Override
         public String getContentType() {
             return "application/zimbra-im-xml";
         }
 
-        private Element mElt;
+        private final Element mElt;
         private byte[] mBuf = null;
 
+        @Override
         public InputStream getInputStream() throws IOException {
             synchronized(this) {
                 if (mBuf == null) {
@@ -80,11 +81,11 @@ class ChatWriter {
                     OutputStreamWriter wout =
                         new OutputStreamWriter(buf, MimeConstants.P_CHARSET_UTF8);
                     String text = mElt.toXML().asXML();
-                    
+
                     // convert unicode chars to HTML entities.  This is purely to make the "show original"
                     // easier to deal with by keeping the saved chat entrely in the 7-bit ascii space
                     text = HtmlEntityMapper.unicodeToHtmlEntity(text);
-                    
+
                     wout.write(text);
                     wout.flush();
                     mBuf = buf.toByteArray();
@@ -94,10 +95,12 @@ class ChatWriter {
             return in;
         }
 
+        @Override
         public String getName() {
             return "ImXmlPartDataSource";
         }
 
+        @Override
         public OutputStream getOutputStream() {
             throw new UnsupportedOperationException();
         }
@@ -110,13 +113,15 @@ class ChatWriter {
             mText = text;
         }
 
+        @Override
         public String getContentType() {
             return "text/html; charset=utf-8";
         }
 
-        private String mText;
+        private final String mText;
         private byte[] mBuf = null;
 
+        @Override
         public InputStream getInputStream() throws IOException {
             synchronized(this) {
                 if (mBuf == null) {
@@ -133,10 +138,12 @@ class ChatWriter {
             return in;
         }
 
+        @Override
         public String getName() {
             return "HtmlPartDataSource";
         }
 
+        @Override
         public OutputStream getOutputStream() {
             throw new UnsupportedOperationException();
         }
@@ -149,12 +156,12 @@ class ChatWriter {
         "#00FF00",
         "#FF00FF",
     };
-    
+
     private static final String TAB_STR = "&nbsp;&nbsp;&nbsp;&nbsp;";
 
     static ParsedMessage writeChat(IMChat chat) throws MessagingException, ServiceException {
-        MimeMessage mm = new JavaMailMimeMessage(JMSession.getSession());
-        MimeMultipart mmp = new JavaMailMimeMultipart("alternative");
+        MimeMessage mm = new ZMimeMessage(JMSession.getSession());
+        MimeMultipart mmp = new ZMimeMultipart("alternative");
 
         StringBuilder subject = new StringBuilder();
         StringBuilder plainText = new StringBuilder();
@@ -187,7 +194,7 @@ class ChatWriter {
             // date tracking: find the date of the latest message in the conv
             if (msg.getDate().after(highestDate))
                 highestDate = msg.getDate();
-            
+
             String msgBodyHtml = "";
             IMMessage.TextPart body = msg.getBody();
             if (body != null) {
@@ -197,8 +204,8 @@ class ChatWriter {
                     msgBodyHtml = StringUtil.escapeHtml(body.getPlainText());
                 }
             }
-            
-            // conert embedded unicode entities to their HTML equivalent 
+
+            // conert embedded unicode entities to their HTML equivalent
             msgBodyHtml = HtmlEntityMapper.unicodeToHtmlEntity(msgBodyHtml);
 
             // defang it
@@ -209,7 +216,7 @@ class ChatWriter {
                 ZimbraLog.im.warn("Unable to htmldefang text: "+msgBodyHtml);
                 msgBodyHtml = "defang_error";
             }
-            
+
             // find the color for this user
             if (!colorMap.containsKey(from)) {
                 if (colorOff == -1)
@@ -222,7 +229,7 @@ class ChatWriter {
             }
             String colorId = colorMap.get(from);
 
-            html.append(new Formatter().format("<font color=\"%s\"><b>%s</b><i>[%s]</i>: %s</font><br>\n", 
+            html.append(new Formatter().format("<font color=\"%s\"><b>%s</b><i>[%s]</i>: %s</font><br>\n",
                         colorId, msg.getFrom().toString(), df.format(msg.getDate()), msgBodyHtml));
         }
         html.append("</html>");
@@ -240,19 +247,19 @@ class ChatWriter {
         mm.setSentDate(highestDate);
 
         // plain text part
-        MimeBodyPart textPart = new JavaMailMimeBodyPart();
+        MimeBodyPart textPart = new ZMimeBodyPart();
         mmp.addBodyPart(textPart);
         textPart.setText(plainText.toString(), MimeConstants.P_CHARSET_UTF8);
 
         // html
-        MimeBodyPart htmlPart = new JavaMailMimeBodyPart();
+        MimeBodyPart htmlPart = new ZMimeBodyPart();
         htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(html.toString())));
         mmp.addBodyPart(htmlPart);
-        
+
         // xml part
         Element root = new Element.XMLElement("im");
         IMGetChat.chatToXml(chat, root);
-        MimeBodyPart xmlPart = new JavaMailMimeBodyPart();
+        MimeBodyPart xmlPart = new ZMimeBodyPart();
         xmlPart.setDataHandler(new DataHandler(new ImXmlPartDataSource(root)));
         mmp.addBodyPart(xmlPart);
 
@@ -261,6 +268,6 @@ class ChatWriter {
 
         ParsedMessage pm  = new ParsedMessage(mm, true);
 
-        return pm; 
+        return pm;
     }
 }

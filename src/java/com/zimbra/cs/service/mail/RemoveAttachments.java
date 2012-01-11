@@ -28,12 +28,13 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
+import javax.mail.util.SharedFileInputStream;
 
+import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ByteUtil;
-import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.cs.mailbox.DeliveryOptions;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailServiceException;
@@ -192,7 +193,7 @@ public class RemoveAttachments extends MailDocumentHandler {
         InputStream is = null;
         try {
             java.io.File file = new java.io.File(args[0]);
-            MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), is = new java.io.FileInputStream(file));
+            MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession(), is = new SharedFileInputStream(file));
             stripPart(mm, "1.2");
             mm.saveChanges();
             mm.writeTo(System.out);

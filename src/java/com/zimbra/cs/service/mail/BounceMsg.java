@@ -30,13 +30,13 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.util.ArrayUtil;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.mailbox.MailSender;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -78,7 +78,7 @@ public final class BounceMsg extends MailDocumentHandler {
                 is = upload.getInputStream();
             }
 
-            JavaMailMimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSmtpSession(acct), is);
+            ZMimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSmtpSession(acct), is);
             addResentHeaders(msgElem, mm, zsc, octxt, acct, msender);
             msender.sendMimeMessage(octxt, mbox, mm);
         } catch (MessagingException me) {
@@ -104,7 +104,7 @@ public final class BounceMsg extends MailDocumentHandler {
      *  {@code From} and {@code Sender} are treated in normal mail send.
      *  Updates the {@link MailSender}'s envelope with the sender and recipient
      *  {@code Resent-*} addresses. */
-    MailSender addResentHeaders(Element msgElem, JavaMailMimeMessage mm, ZimbraSoapContext zsc, OperationContext octxt,
+    MailSender addResentHeaders(Element msgElem, ZMimeMessage mm, ZimbraSoapContext zsc, OperationContext octxt,
             Account acct, MailSender msender) throws MessagingException, ServiceException {
         MessageAddresses maddrs = getResentAddressees(msgElem, acct, msender);
 
@@ -115,7 +115,7 @@ public final class BounceMsg extends MailDocumentHandler {
         //    identical to "Resent-From:".
 
         // UniqueValue.getUniqueMessageIDValue() isn't visible, so get a message-id another way
-        String msgid = new JavaMailMimeMessage(mm.getSession()).getMessageID();
+        String msgid = new ZMimeMessage(mm.getSession()).getMessageID();
         mm.addHeader("Resent-Message-ID", msgid);
 
         List<String> recipients = new ArrayList<String>(5);

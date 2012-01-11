@@ -15,59 +15,65 @@
 
 package com.zimbra.qa.unittest;
 
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
-import com.zimbra.common.util.Log;
-import com.zimbra.cs.datasource.imap.ImapAppender;
-import com.zimbra.cs.mailclient.imap.MailboxInfo;
-import org.junit.*;
-import org.junit.runner.JUnitCore;
-import org.junit.runner.Request;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import com.zimbra.cs.mailclient.imap.ImapConnection;
-import com.zimbra.cs.mailclient.imap.ImapConfig;
-import com.zimbra.cs.mailclient.imap.ResponseHandler;
-import com.zimbra.cs.mailclient.imap.ImapResponse;
-import com.zimbra.cs.mailclient.imap.MessageData;
-import com.zimbra.cs.mailclient.imap.CAtom;
-import com.zimbra.cs.mailclient.imap.ListData;
-import com.zimbra.cs.mailclient.imap.IDInfo;
-import com.zimbra.cs.mailclient.imap.Flags;
-import com.zimbra.cs.mailclient.imap.Literal;
-import com.zimbra.cs.mailclient.imap.Body;
-import com.zimbra.cs.mailclient.imap.AppendResult;
-import com.zimbra.cs.mailclient.imap.ImapCapabilities;
-import com.zimbra.cs.mailclient.imap.Envelope;
-import com.zimbra.cs.mailclient.imap.BodyStructure;
-import com.zimbra.cs.mailclient.imap.ImapUtil;
-import com.zimbra.cs.mailclient.util.SSLUtil;
-import com.zimbra.cs.mailclient.util.Ascii;
-import com.zimbra.cs.mailclient.CommandFailedException;
-import com.zimbra.cs.mailclient.MailException;
-import com.zimbra.cs.mailclient.MailConfig;
-import com.zimbra.cs.util.JMSession;
-
-import java.io.IOException;
-import java.io.File;
-import java.io.OutputStream;
-import java.io.FileOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStreamWriter;
 import java.io.BufferedReader;
-import java.io.Writer;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.List;
-import java.util.Date;
-import java.util.Random;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.Socket;
+import java.util.Date;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 
 import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Logger;
 import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
+import org.junit.After;
+import org.junit.Test;
+import org.junit.runner.JUnitCore;
+import org.junit.runner.Request;
 
-import javax.mail.internet.MimeMessage;
-import javax.mail.MessagingException;
+import com.zimbra.common.util.Log;
+import com.zimbra.common.zmime.ZMimeMessage;
+import com.zimbra.cs.datasource.imap.ImapAppender;
+import com.zimbra.cs.mailclient.CommandFailedException;
+import com.zimbra.cs.mailclient.MailConfig;
+import com.zimbra.cs.mailclient.MailException;
+import com.zimbra.cs.mailclient.imap.AppendResult;
+import com.zimbra.cs.mailclient.imap.Body;
+import com.zimbra.cs.mailclient.imap.BodyStructure;
+import com.zimbra.cs.mailclient.imap.CAtom;
+import com.zimbra.cs.mailclient.imap.Envelope;
+import com.zimbra.cs.mailclient.imap.Flags;
+import com.zimbra.cs.mailclient.imap.IDInfo;
+import com.zimbra.cs.mailclient.imap.ImapCapabilities;
+import com.zimbra.cs.mailclient.imap.ImapConfig;
+import com.zimbra.cs.mailclient.imap.ImapConnection;
+import com.zimbra.cs.mailclient.imap.ImapResponse;
+import com.zimbra.cs.mailclient.imap.ImapUtil;
+import com.zimbra.cs.mailclient.imap.ListData;
+import com.zimbra.cs.mailclient.imap.Literal;
+import com.zimbra.cs.mailclient.imap.MailboxInfo;
+import com.zimbra.cs.mailclient.imap.MessageData;
+import com.zimbra.cs.mailclient.imap.ResponseHandler;
+import com.zimbra.cs.mailclient.util.Ascii;
+import com.zimbra.cs.mailclient.util.SSLUtil;
+import com.zimbra.cs.util.JMSession;
 
 public class TestImapClient {
     private ImapConfig config;
@@ -403,7 +409,7 @@ public class TestImapClient {
     }
 
     private static MimeMessage newTestMessage(int num) throws MessagingException {
-        MimeMessage mm = new JavaMailMimeMessage(JMSession.getSession());
+        MimeMessage mm = new ZMimeMessage(JMSession.getSession());
         mm.setHeader("Message-Id", "<test-" + num + "@foo.com>");
         mm.setHeader("To", "nobody@foo.com");
         mm.setHeader("From", "nobody@bar.com");

@@ -23,18 +23,18 @@ import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.Key.GranteeBy;
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
-import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
-import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.util.L10nUtil.MsgKey;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Group;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Group.GroupOwner;
+import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.accesscontrol.ACLUtil;
 import com.zimbra.cs.account.accesscontrol.GranteeType;
 import com.zimbra.cs.account.accesscontrol.Right;
@@ -45,33 +45,34 @@ import com.zimbra.cs.account.accesscontrol.ZimbraACE;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.account.type.DistributionListSubscribeOp;
 import com.zimbra.soap.account.type.DistributionListAction.Operation;
+import com.zimbra.soap.account.type.DistributionListSubscribeOp;
 import com.zimbra.soap.type.TargetBy;
 
 public class DistributionListAction extends DistributionListDocumentHandler {
-    
-    public Element handle(Element request, Map<String, Object> context) 
+
+    @Override
+    public Element handle(Element request, Map<String, Object> context)
     throws ServiceException {
-        
+
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         Account acct = getRequestedAccount(zsc);
-        
+
         Group group = getGroupBasic(request, prov);
         DistributionListActionHandler handler = new DistributionListActionHandler(
                 group, request, prov, acct);
         handler.handle();
-        
+
         Element response = zsc.createElement(AccountConstants.DISTRIBUTION_LIST_ACTION_RESPONSE);
         return response;
     }
-    
+
     private static class DistributionListActionHandler extends SynchronizedGroupHandler {
-        private Element request;
-        private Provisioning prov;
-        private Account acct;
-        
+        private final Element request;
+        private final Provisioning prov;
+        private final Account acct;
+
         protected DistributionListActionHandler(Group group,
                 Element request, Provisioning prov, Account acct) {
             super(group);
@@ -86,10 +87,10 @@ public class DistributionListAction extends DistributionListDocumentHandler {
                 throw ServiceException.PERM_DENIED(
                         "you do not have sufficient rights to access this distribution list");
             }
-            
+
             Element eAction = request.getElement(AccountConstants.E_ACTION);
             Operation op = Operation.fromString(eAction.getAttribute(AccountConstants.A_OP));
-            
+
             DLActionHandler handler = null;
             switch (op) {
                 case delete:
@@ -136,37 +137,37 @@ public class DistributionListAction extends DistributionListDocumentHandler {
                     break;
                 case rejectSubsReq:
                     handler = new RejectSubsReqHandler(eAction, group, prov, acct);
-                    break;     
+                    break;
                 default:
                     throw ServiceException.FAILURE("unsupported op:" + op.name(), null);
             }
-            
+
             handler.handle();
         }
-        
+
     }
-    
+
     private static abstract class DLActionHandler {
         protected Element eAction;
         protected Group group;
         protected Provisioning prov;
         protected Account requestedAcct;
-        
-        protected DLActionHandler(Element request, Group group, 
+
+        protected DLActionHandler(Element request, Group group,
                 Provisioning prov, Account requestedAcct) {
             this.eAction = request;
             this.group = group;
             this.prov = prov;
             this.requestedAcct = requestedAcct;
         }
-        
+
         abstract void handle() throws ServiceException;
         abstract Operation getAction();
     }
-    
+
     private static class DeleteHandler extends DLActionHandler {
 
-        protected DeleteHandler(Element eAction, Group group, 
+        protected DeleteHandler(Element eAction, Group group,
                 Provisioning prov, Account requestedAcct) {
             super(eAction, group, prov, requestedAcct);
         }
@@ -175,25 +176,25 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         Operation getAction() {
             return Operation.delete;
         }
-        
+
         @Override
         void handle() throws ServiceException {
             prov.deleteGroup(group.getId());
-            
+
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(), 
+                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(),
                             "name", group.getName(), "id", group.getId()}));
         }
 
     }
-    
+
     private static class ModifyHandler extends DLActionHandler {
 
-        protected ModifyHandler(Element eAction, Group group, 
+        protected ModifyHandler(Element eAction, Group group,
                 Provisioning prov, Account requestedAcct) {
             super(eAction, group, prov, requestedAcct);
         }
-        
+
         @Override
         Operation getAction() {
             return Operation.modify;
@@ -203,21 +204,21 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         void handle() throws ServiceException {
             Map<String, Object> attrs = AccountService.getKeyValuePairs(
                     eAction, AccountConstants.E_A, AccountConstants.A_N);
-            prov.modifyAttrs(group, attrs, true);    
-            
+            prov.modifyAttrs(group, attrs, true);
+
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(), 
-                            "name", group.getName()}, attrs)); 
+                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(),
+                            "name", group.getName()}, attrs));
         }
     }
-    
+
     private static class RenameHandler extends DLActionHandler {
 
-        protected RenameHandler(Element eAction, Group group, 
+        protected RenameHandler(Element eAction, Group group,
                 Provisioning prov, Account requestedAcct) {
             super(eAction, group, prov, requestedAcct);
         }
-        
+
         @Override
         Operation getAction() {
             return Operation.rename;
@@ -227,23 +228,23 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         void handle() throws ServiceException {
             Element eNewName = eAction.getElement(AccountConstants.E_NEW_NAME);
             String newName = eNewName.getText();
-            
+
             String oldName = group.getName();
             prov.renameGroup(group.getId(), newName);
 
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(), 
-                            "name", oldName, "newName", newName})); 
+                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(),
+                            "name", oldName, "newName", newName}));
         }
     }
-    
+
     private static class AddAliasHandler extends DLActionHandler {
 
-        protected AddAliasHandler(Element eAction, Group group, 
+        protected AddAliasHandler(Element eAction, Group group,
                 Provisioning prov, Account requestedAcct) {
             super(eAction, group, prov, requestedAcct);
         }
-        
+
         @Override
         Operation getAction() {
             return Operation.addAlias;
@@ -253,20 +254,20 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         void handle() throws ServiceException {
             String alias = eAction.getAttribute(AccountConstants.E_ALIAS);
             prov.addGroupAlias(group, alias);
-            
+
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(), 
-                            "name", group.getName(), "alias", alias})); 
+                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(),
+                            "name", group.getName(), "alias", alias}));
         }
     }
-    
+
     private static class RemoveAliasHandler extends DLActionHandler {
 
-        protected RemoveAliasHandler(Element eAction, Group group, 
+        protected RemoveAliasHandler(Element eAction, Group group,
                 Provisioning prov, Account requestedAcct) {
             super(eAction, group, prov, requestedAcct);
         }
-        
+
         @Override
         Operation getAction() {
             return Operation.removeAlias;
@@ -276,90 +277,90 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         void handle() throws ServiceException {
             String alias = eAction.getAttribute(AccountConstants.E_ALIAS);
             prov.removeGroupAlias(group, alias);
-            
+
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(), 
-                            "name", group.getName(), "alias", alias})); 
+                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(),
+                            "name", group.getName(), "alias", alias}));
         }
     }
-    
+
     private static abstract class ModifyRightHandler extends DLActionHandler {
 
-        protected ModifyRightHandler(Element eAction, Group group, 
+        protected ModifyRightHandler(Element eAction, Group group,
                 Provisioning prov, Account requestedAcct) {
             super(eAction, group, prov, requestedAcct);
         }
-        
+
         protected class Grantee {
             GranteeType type;
             GranteeBy by;
             String grantee;
-            
+
             private Grantee(GranteeType type, GranteeBy by, String grantee) {
                 this.type = type;
                 this.by = by;
                 this.grantee = grantee;
             }
         };
-        
+
         protected List<Grantee> parseGrantees(Element parent, String granteeElem) throws ServiceException {
             List<Grantee> grantees = Lists.newArrayList();
-            
+
             for (Element eGrantee : parent.listElements(granteeElem)) {
                 GranteeType type = GranteeType.fromCode(eGrantee.getAttribute(AccountConstants.A_TYPE));
-                
+
                 GranteeBy by = null;
                 String grantee = null;
-                
+
                 if (type.needsGranteeIdentity()) {
                     by = GranteeBy.fromString(eGrantee.getAttribute(AccountConstants.A_BY));
                     grantee = eGrantee.getText();
                 }
-                
+
                 grantees.add(new Grantee(type, by, grantee));
             }
-            
+
             return grantees;
         }
-        
-        protected void grantRight(Right right, GranteeType granteeType, 
-                Key.GranteeBy granteeBy, String grantee) 
+
+        protected void grantRight(Right right, GranteeType granteeType,
+                Key.GranteeBy granteeBy, String grantee)
         throws ServiceException {
             RightCommand.grantRight(prov,
                     null,  // grant the right as a a system admin
                     TargetType.dl.getCode(), TargetBy.id, group.getId(),
                     granteeType.getCode(), granteeBy, grantee, null,
                     right.getName(), null);
-            
+
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(), 
+                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(),
                             "name", group.getName(), "type", granteeType.getCode(),
-                            "grantee", grantee})); 
+                            "grantee", grantee}));
         }
-        
-        protected void revokeRight(Right right, GranteeType granteeType, 
-                Key.GranteeBy granteeBy, String grantee) 
+
+        protected void revokeRight(Right right, GranteeType granteeType,
+                Key.GranteeBy granteeBy, String grantee)
         throws ServiceException {
             RightCommand.revokeRight(prov,
                     null,  // grant the right as a a system admin
                     TargetType.dl.getCode(), TargetBy.id, group.getId(),
-                    granteeType.getCode(), granteeBy, grantee, 
+                    granteeType.getCode(), granteeBy, grantee,
                     right.getName(), null);
-            
+
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(), 
+                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(),
                             "name", group.getName(), "type", granteeType.getCode(),
-                            "grantee", grantee})); 
+                            "grantee", grantee}));
         }
     }
-    
+
     static class AddOwnersHandler extends ModifyRightHandler {
 
-        protected AddOwnersHandler(Element eAction, Group group, 
+        protected AddOwnersHandler(Element eAction, Group group,
                 Provisioning prov, Account requestedAcct) {
             super(eAction, group, prov, requestedAcct);
         }
-        
+
         @Override
         Operation getAction() {
             return Operation.addOwners;
@@ -372,22 +373,22 @@ public class DistributionListAction extends DistributionListDocumentHandler {
                 addOwner(this, owner.type, owner.by, owner.grantee);
             }
         }
-        
-        private static void addOwner(ModifyRightHandler handler, 
-                GranteeType granteeType, Key.GranteeBy granteeBy, String grantee) 
+
+        private static void addOwner(ModifyRightHandler handler,
+                GranteeType granteeType, Key.GranteeBy granteeBy, String grantee)
         throws ServiceException {
             handler.grantRight(Group.GroupOwner.GROUP_OWNER_RIGHT,
                     granteeType, granteeBy, grantee);
         }
     }
-    
+
     static class RemoveOwnersHandler extends ModifyRightHandler {
 
-        protected RemoveOwnersHandler(Element eAction, Group group, 
+        protected RemoveOwnersHandler(Element eAction, Group group,
                 Provisioning prov, Account requestedAcct) {
             super(eAction, group, prov, requestedAcct);
         }
-        
+
         @Override
         Operation getAction() {
             return Operation.removeOwners;
@@ -400,22 +401,21 @@ public class DistributionListAction extends DistributionListDocumentHandler {
                 removeOwner(this, owner.type, owner.by, owner.grantee);
             }
         }
-        
-        private static void removeOwner(ModifyRightHandler handler, 
-                GranteeType granteeType, Key.GranteeBy granteeBy, String grantee) 
+        private static void removeOwner(ModifyRightHandler handler,
+                GranteeType granteeType, Key.GranteeBy granteeBy, String grantee)
         throws ServiceException {
             handler.revokeRight(Group.GroupOwner.GROUP_OWNER_RIGHT,
                     granteeType, granteeBy, grantee);
         }
     }
-    
+
     static class SetOwnersHandler extends ModifyRightHandler {
 
-        protected SetOwnersHandler(Element eAction, Group group, 
+        protected SetOwnersHandler(Element eAction, Group group,
                 Provisioning prov, Account requestedAcct) {
             super(eAction, group, prov, requestedAcct);
         }
-        
+
         @Override
         Operation getAction() {
             return Operation.setOwners;
@@ -424,50 +424,50 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         @Override
         void handle() throws ServiceException {
             List<Grantee> owners = parseGrantees(eAction, AccountConstants.E_OWNER);
-            
+
             // remove all current owners
             List<GroupOwner> curOwners = GroupOwner.getOwners(group, false);
             for (GroupOwner owner : curOwners) {
-                RemoveOwnersHandler.removeOwner(this, owner.getType(), 
+                RemoveOwnersHandler.removeOwner(this, owner.getType(),
                         Key.GranteeBy.id, owner.getId());
             }
-            
+
             // add owners
             for (Grantee owner : owners) {
                 AddOwnersHandler.addOwner(this, owner.type, owner.by, owner.grantee);
             }
         }
     }
-    
+
     private static abstract class ModifyMultipleRightsHandler extends ModifyRightHandler {
-        protected ModifyMultipleRightsHandler(Element eAction, Group group, 
+        protected ModifyMultipleRightsHandler(Element eAction, Group group,
                 Provisioning prov, Account requestedAcct) {
             super(eAction, group, prov, requestedAcct);
         }
-        
+
         protected Map<Right, List<Grantee>> parseRights() throws ServiceException {
             RightManager rightMgr = RightManager.getInstance();
-            
+
             // keep the soap order, use LinkedHashMap
             Map<Right, List<Grantee>> rights = new LinkedHashMap<Right, List<Grantee>>();
             for (Element eRight : eAction.listElements(AccountConstants.E_RIGHT)) {
                 Right right = rightMgr.getUserRight(eRight.getAttribute(AccountConstants.A_RIGHT));
-                
+
                 if (Group.GroupOwner.GROUP_OWNER_RIGHT == right) {
-                    throw ServiceException.INVALID_REQUEST(right.getName() + 
+                    throw ServiceException.INVALID_REQUEST(right.getName() +
                             " cannot be granted directly, use addOwners/removeOwners/setOwners" +
                             " operation instead", null);
                 }
                 List<Grantee> grantees = parseGrantees(eRight, AccountConstants.E_GRANTEE);
                 rights.put(right, grantees);
             }
-            
+
             return rights;
         }
     }
-    
+
     static class GrantRightsHandler extends ModifyMultipleRightsHandler {
-        protected GrantRightsHandler(Element eAction, Group group, 
+        protected GrantRightsHandler(Element eAction, Group group,
                 Provisioning prov, Account requestedAcct) {
             super(eAction, group, prov, requestedAcct);
         }
@@ -480,7 +480,6 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         @Override
         void handle() throws ServiceException {
             Map<Right, List<Grantee>> rights = parseRights();
-            
             for (Map.Entry<Right, List<Grantee>> entry : rights.entrySet()) {
                 Right right = entry.getKey();
                 List<Grantee> grantees = entry.getValue();
@@ -490,9 +489,9 @@ public class DistributionListAction extends DistributionListDocumentHandler {
             }
         }
     }
-    
+
     static class RevokeRightsHandler extends ModifyMultipleRightsHandler {
-        protected RevokeRightsHandler(Element eAction, Group group, 
+        protected RevokeRightsHandler(Element eAction, Group group,
                 Provisioning prov, Account requestedAcct) {
             super(eAction, group, prov, requestedAcct);
         }
@@ -505,7 +504,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         @Override
         void handle() throws ServiceException {
             Map<Right, List<Grantee>> rights = parseRights();
-            
+
             for (Map.Entry<Right, List<Grantee>> entry : rights.entrySet()) {
                 Right right = entry.getKey();
                 List<Grantee> grantees = entry.getValue();
@@ -518,11 +517,11 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
     static class SetRightsHandler extends ModifyMultipleRightsHandler {
 
-        protected SetRightsHandler(Element eAction, Group group, 
+        protected SetRightsHandler(Element eAction, Group group,
                 Provisioning prov, Account requestedAcct) {
             super(eAction, group, prov, requestedAcct);
         }
-        
+
         @Override
         Operation getAction() {
             return Operation.setRights;
@@ -531,11 +530,11 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         @Override
         void handle() throws ServiceException {
             Map<Right, List<Grantee>> rights = parseRights();
-            
+
             for (Map.Entry<Right, List<Grantee>> entry : rights.entrySet()) {
                 Right right = entry.getKey();
                 List<Grantee> grantees = entry.getValue();
-                
+
                 // remove all current grants for the right
                 List<ZimbraACE> acl = ACLUtil.getACEs(group, Collections.singleton(right));
                 if (acl != null) {
@@ -544,7 +543,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
                                 Key.GranteeBy.id, ace.getGrantee());
                     }
                 }
-                
+
                 // grant the right to the new grantees
                 for (Grantee grantee : grantees) {
                     grantRight(right, grantee.type, grantee.by, grantee.grantee);
@@ -552,14 +551,14 @@ public class DistributionListAction extends DistributionListDocumentHandler {
             }
         }
     }
-    
+
     private static class AddMembersHandler extends DLActionHandler {
 
-        protected AddMembersHandler(Element eAction, Group group, 
+        protected AddMembersHandler(Element eAction, Group group,
                 Provisioning prov, Account requestedAcct) {
             super(eAction, group, prov, requestedAcct);
         }
-        
+
         @Override
         Operation getAction() {
             return Operation.addMembers;
@@ -571,23 +570,23 @@ public class DistributionListAction extends DistributionListDocumentHandler {
             for (Element elem : eAction.listElements(AccountConstants.E_DLM)) {
                 memberList.add(elem.getTextTrim());
             }
-            
-            String[] members = (String[]) memberList.toArray(new String[memberList.size()]); 
+
+            String[] members = memberList.toArray(new String[memberList.size()]);
             addGroupMembers(prov, group, members);
-            
+
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(), 
-                   "name", group.getName(), "members", Arrays.deepToString(members)})); 
+                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(),
+                   "name", group.getName(), "members", Arrays.deepToString(members)}));
         }
     }
-    
+
     private static class RemoveMembersHandler extends DLActionHandler {
 
-        protected RemoveMembersHandler(Element eAction, Group group, 
+        protected RemoveMembersHandler(Element eAction, Group group,
                 Provisioning prov, Account requestedAcct) {
             super(eAction, group, prov, requestedAcct);
         }
-        
+
         @Override
         Operation getAction() {
             return Operation.removeMembers;
@@ -599,57 +598,57 @@ public class DistributionListAction extends DistributionListDocumentHandler {
             for (Element elem : eAction.listElements(AccountConstants.E_DLM)) {
                 memberList.add(elem.getTextTrim());
             }
-            
-            String[] members = (String[]) memberList.toArray(new String[memberList.size()]); 
+
+            String[] members = memberList.toArray(new String[memberList.size()]);
             removeGroupMembers(prov, group, members);
-            
+
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(), 
-                   "name", group.getName(), "members", Arrays.deepToString(members)})); 
+                    new String[] {"cmd", "DistributionListAction", "op", getAction().name(),
+                   "name", group.getName(), "members", Arrays.deepToString(members)}));
         }
     }
-    
+
     private static class SubscriptionResponseSender extends NotificationSender {
-        private Account ownerAcct;  // owner who is handling the request
-        private boolean bccOwners;
-        private boolean accepted;
-        
-        private SubscriptionResponseSender(Provisioning prov, Group group, 
-                Account ownerAcct, Account requestingAcct, 
+        private final Account ownerAcct;  // owner who is handling the request
+        private final boolean bccOwners;
+        private final boolean accepted;
+
+        private SubscriptionResponseSender(Provisioning prov, Group group,
+                Account ownerAcct, Account requestingAcct,
                 DistributionListSubscribeOp op, boolean bccOwners, boolean accepted) {
             super(prov, group, requestingAcct, op);
             this.ownerAcct = ownerAcct;
             this.bccOwners = bccOwners;
             this.accepted = accepted;
         }
-        
+
         private void sendMessage() throws ServiceException {
             try {
                 SMTPMessage out = new SMTPMessage(JMSession.getSmtpSession());
-                
+
                 Address fromAddr = AccountUtil.getFriendlyEmailAddress(ownerAcct);
-                
+
                 Address replyToAddr = fromAddr;
                 String replyTo = ownerAcct.getAttr(Provisioning.A_zimbraPrefReplyToAddress);
                 if (replyTo != null) {
                     replyToAddr = new JavaMailInternetAddress(replyTo);
                 }
-                
+
                 // From
                 out.setFrom(fromAddr);
-                
+
                 // Reply-To
                 out.setReplyTo(new Address[]{replyToAddr});
-                
+
                 // To
-                out.setRecipient(javax.mail.Message.RecipientType.TO, 
+                out.setRecipient(javax.mail.Message.RecipientType.TO,
                         new JavaMailInternetAddress(requestingAcct.getName()));
-                
+
                 // Bcc all other owners of the list
                 if (bccOwners) {
                     List<String> owners = new ArrayList<String>();
                     Group.GroupOwner.getOwnerEmails(group, owners);
-                    
+
                     List<Address> addrs = Lists.newArrayList();
                     for (String ownerEmail : owners) {
                         if (!ownerEmail.equals(ownerAcct.getName())) {
@@ -657,25 +656,25 @@ public class DistributionListAction extends DistributionListDocumentHandler {
                         }
                     }
                     if (!addrs.isEmpty()) {
-                        out.addRecipients(javax.mail.Message.RecipientType.BCC, 
+                        out.addRecipients(javax.mail.Message.RecipientType.BCC,
                                 addrs.toArray(new Address[addrs.size()]));
                     }
                 }
-                
+
                 // Date
                 out.setSentDate(new Date());
-                
+
                 // send in the receiver's(i.e. the requesting account) locale
                 Locale locale = getLocale(requestingAcct);
-                
+
                 // Subject
                 String subject = L10nUtil.getMessage(MsgKey.dlSubscriptionResponseSubject, locale);
                 out.setSubject(subject);
-                
+
                 buildContentAndSend(out, locale, "group subscription response");
-            
+
             } catch (MessagingException e) {
-                ZimbraLog.account.warn("send share info notification failed, rcpt='" + 
+                ZimbraLog.account.warn("send share info notification failed, rcpt='" +
                         requestingAcct.getName() +"'", e);
             }
 
@@ -686,27 +685,27 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         throws MessagingException {
             String text = textPart(locale);
             String html = htmlPart(locale);
-            
+
             // Body
-            MimeMultipart mmp = new JavaMailMimeMultipart("alternative");
-        
+            MimeMultipart mmp = new ZMimeMultipart("alternative");
+
             // TEXT part (add me first!)
-            MimeBodyPart textPart = new JavaMailMimeBodyPart();
+            MimeBodyPart textPart = new ZMimeBodyPart();
             textPart.setText(text, MimeConstants.P_CHARSET_UTF8);
             mmp.addBodyPart(textPart);
 
             // HTML part
-            MimeBodyPart htmlPart = new JavaMailMimeBodyPart();
+            MimeBodyPart htmlPart = new ZMimeBodyPart();
             htmlPart.setDataHandler(new DataHandler(new HtmlPartDataSource(html)));
             mmp.addBodyPart(htmlPart);
-            
+
             return mmp;
         }
-        
+
         private String textPart(Locale locale) {
             StringBuilder sb = new StringBuilder();
 
-            
+
             MsgKey msgKey;
             if (accepted) {
                 msgKey = DistributionListSubscribeOp.subscribe == op ? MsgKey.dlSubscribeResponseAcceptedText :
@@ -714,11 +713,11 @@ public class DistributionListAction extends DistributionListDocumentHandler {
             } else {
                 msgKey = DistributionListSubscribeOp.subscribe == op ? MsgKey.dlSubscribeResponseRejectedText :
                     MsgKey.dlUnsubscribeResponseRejectedText;
-                
+
             }
-            
+
             sb.append("\n");
-            sb.append(L10nUtil.getMessage(msgKey, locale, 
+            sb.append(L10nUtil.getMessage(msgKey, locale,
                     requestingAcct.getName(), group.getName()));
             sb.append("\n\n");
             return sb.toString();
@@ -738,11 +737,11 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
     private static class AcceptSubsReqHandler extends DLActionHandler {
 
-        protected AcceptSubsReqHandler(Element eAction, Group group, 
+        protected AcceptSubsReqHandler(Element eAction, Group group,
                 Provisioning prov, Account requestedAcct) {
             super(eAction, group, prov, requestedAcct);
         }
-        
+
         @Override
         Operation getAction() {
             return Operation.acceptSubsReq;
@@ -750,25 +749,25 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
         @Override
         void handle() throws ServiceException {
-            
+
             Element eSubsReq = eAction.getElement(AccountConstants.E_DL_SUBS_REQ);
             DistributionListSubscribeOp subsOp = DistributionListSubscribeOp.fromString(
                     eSubsReq.getAttribute(AccountConstants.A_OP));
             boolean bccOwners = eSubsReq.getAttributeBool(AccountConstants.A_BCC_OWNERS, true);
             String memberEmail = eSubsReq.getText();
-            
+
             Account memberAcct = prov.get(AccountBy.name, memberEmail);
             if (memberAcct == null) {
                 throw ServiceException.DEFEND_ACCOUNT_HARVEST(memberEmail);
             }
             boolean isMember = DistributionListDocumentHandler.isMember(prov, memberAcct, group);
-            
+
             boolean processed = false;
             if (isMember) {
                 if (subsOp == DistributionListSubscribeOp.subscribe) {
                     // do nothing
-                    ZimbraLog.account.debug("AcceptSubsReqHandler: " + memberEmail + 
-                            " is currently a member in list " + group.getName() + 
+                    ZimbraLog.account.debug("AcceptSubsReqHandler: " + memberEmail +
+                            " is currently a member in list " + group.getName() +
                             ", no action taken for the subscribe request");
                 } else {
                     removeGroupMembers(prov, group, new String[]{memberEmail});
@@ -781,34 +780,34 @@ public class DistributionListAction extends DistributionListDocumentHandler {
                     processed = true;
                 } else {
                     // do nothing
-                    ZimbraLog.account.debug("AcceptSubsReqHandler: " + memberEmail + 
-                            " is currently not a member in list " + group.getName() + 
+                    ZimbraLog.account.debug("AcceptSubsReqHandler: " + memberEmail +
+                            " is currently not a member in list " + group.getName() +
                             ", no action taken for the un-subscribe request");
                 }
             }
-            
+
             if (processed) {
                 ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                        new String[] {"cmd", "DistributionListAction", "op", getAction().name(), 
-                       "name", group.getName(), "subsOp", subsOp.name(), "member", memberEmail})); 
-                
+                        new String[] {"cmd", "DistributionListAction", "op", getAction().name(),
+                       "name", group.getName(), "subsOp", subsOp.name(), "member", memberEmail}));
+
                 // send notification email to the user and bcc other owners
                 SubscriptionResponseSender notifSender = new SubscriptionResponseSender(
-                        prov, group, requestedAcct, memberAcct, 
+                        prov, group, requestedAcct, memberAcct,
                         subsOp, bccOwners, true);
                 notifSender.sendMessage();
             }
         }
-        
+
     }
-    
+
     private static class RejectSubsReqHandler extends DLActionHandler {
 
-        protected RejectSubsReqHandler(Element eAction, Group group, 
+        protected RejectSubsReqHandler(Element eAction, Group group,
                 Provisioning prov, Account requestedAcct) {
             super(eAction, group, prov, requestedAcct);
         }
-        
+
         @Override
         Operation getAction() {
             return Operation.rejectSubsReq;
@@ -816,25 +815,25 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
         @Override
         void handle() throws ServiceException {
-            
+
             Element eSubsReq = eAction.getElement(AccountConstants.E_DL_SUBS_REQ);
             DistributionListSubscribeOp subsOp = DistributionListSubscribeOp.fromString(
                     eSubsReq.getAttribute(AccountConstants.A_OP));
             boolean bccOwners = eSubsReq.getAttributeBool(AccountConstants.A_BCC_OWNERS, true);
             String memberEmail = eSubsReq.getText();
-            
+
             Account memberAcct = prov.get(AccountBy.name, memberEmail);
             if (memberAcct == null) {
                 throw ServiceException.DEFEND_ACCOUNT_HARVEST(memberEmail);
             }
             boolean isMember = DistributionListDocumentHandler.isMember(prov, memberAcct, group);
-            
+
             boolean processed = false;
             if (isMember) {
                 if (subsOp == DistributionListSubscribeOp.subscribe) {
                     // do nothing
-                    ZimbraLog.account.debug("RejectSubsReqHandler: " + memberEmail + 
-                            " is currently a member in list " + group.getName() + 
+                    ZimbraLog.account.debug("RejectSubsReqHandler: " + memberEmail +
+                            " is currently a member in list " + group.getName() +
                             ", no action taken for the subscribe request");
                 } else {
                     processed = true;
@@ -845,20 +844,20 @@ public class DistributionListAction extends DistributionListDocumentHandler {
                     processed = true;
                 } else {
                     // do nothing
-                    ZimbraLog.account.debug("RejectSubsReqHandler: " + memberEmail + 
-                            " is currently not a member in list " + group.getName() + 
+                    ZimbraLog.account.debug("RejectSubsReqHandler: " + memberEmail +
+                            " is currently not a member in list " + group.getName() +
                             ", no action taken for the un-subscribe request");
                 }
             }
-            
+
             if (processed) {
                 ZimbraLog.security.info(ZimbraLog.encodeAttrs(
-                        new String[] {"cmd", "DistributionListAction", "op", getAction().name(), 
-                       "name", group.getName(), "subsOp", subsOp.name(), "member", memberEmail})); 
-                
+                        new String[] {"cmd", "DistributionListAction", "op", getAction().name(),
+                       "name", group.getName(), "subsOp", subsOp.name(), "member", memberEmail}));
+
                 // send notification email to the user and bcc other owners
                 SubscriptionResponseSender notifSender = new SubscriptionResponseSender(
-                        prov, group, requestedAcct, memberAcct, 
+                        prov, group, requestedAcct, memberAcct,
                         subsOp, bccOwners, false);
                 notifSender.sendMessage();
             }

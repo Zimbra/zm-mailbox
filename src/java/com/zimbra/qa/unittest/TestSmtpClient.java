@@ -21,15 +21,15 @@ import javax.mail.internet.MimeMessage;
 
 import junit.framework.TestCase;
 
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMessage;
+import com.zimbra.client.ZMessage.ZMimePart;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
+import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailclient.smtp.SmtpConfig;
 import com.zimbra.cs.mailclient.smtp.SmtpConnection;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZMessage;
-import com.zimbra.client.ZMessage.ZMimePart;
 
 public class TestSmtpClient extends TestCase {
 
@@ -37,8 +37,8 @@ public class TestSmtpClient extends TestCase {
     private static final String USER2_NAME = "user2";
     private static final String NAME_PREFIX = TestSmtpClient.class.getSimpleName();
 
-    private String mHost;
-    private int mPort;
+    private final String mHost;
+    private final int mPort;
 
     public TestSmtpClient() throws Exception {
         mHost = TestUtil.getServerAttr(Provisioning.A_zimbraSmtpHostname);
@@ -74,7 +74,7 @@ public class TestSmtpClient extends TestCase {
 
     public void testMimeMessage() throws Exception {
         // Assemble the message.
-        MimeMessage mm = new JavaMailMimeMessage(JMSession.getSession());
+        MimeMessage mm = new ZMimeMessage(JMSession.getSession());
         InternetAddress addr = new JavaMailInternetAddress(TestUtil.getAddress(USER_NAME));
         mm.setFrom(addr);
         mm.setRecipient(RecipientType.TO, addr);

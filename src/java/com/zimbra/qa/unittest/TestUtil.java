@@ -33,14 +33,23 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import junit.framework.Assert;
+
 import org.junit.runner.JUnitCore;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
-
 import com.google.common.io.Closeables;
-import com.zimbra.client.*;
+import com.zimbra.client.ZContact;
+import com.zimbra.client.ZDataSource;
+import com.zimbra.client.ZDateTime;
+import com.zimbra.client.ZDocument;
+import com.zimbra.client.ZEmailAddress;
+import com.zimbra.client.ZFilterRule;
+import com.zimbra.client.ZFolder;
+import com.zimbra.client.ZGetInfoResult;
+import com.zimbra.client.ZGetMessageParams;
 import com.zimbra.client.ZGrant.GranteeType;
+import com.zimbra.client.ZIdentity;
+import com.zimbra.client.ZInvite;
 import com.zimbra.client.ZInvite.ZAttendee;
 import com.zimbra.client.ZInvite.ZClass;
 import com.zimbra.client.ZInvite.ZComponent;
@@ -49,6 +58,7 @@ import com.zimbra.client.ZInvite.ZParticipantStatus;
 import com.zimbra.client.ZInvite.ZRole;
 import com.zimbra.client.ZInvite.ZStatus;
 import com.zimbra.client.ZInvite.ZTransparency;
+import com.zimbra.client.ZMailbox;
 import com.zimbra.client.ZMailbox.ContactSortBy;
 import com.zimbra.client.ZMailbox.OwnerBy;
 import com.zimbra.client.ZMailbox.SharedItemBy;
@@ -57,13 +67,17 @@ import com.zimbra.client.ZMailbox.ZImportStatus;
 import com.zimbra.client.ZMailbox.ZOutgoingMessage;
 import com.zimbra.client.ZMailbox.ZOutgoingMessage.AttachedMessagePart;
 import com.zimbra.client.ZMailbox.ZOutgoingMessage.MessagePart;
+import com.zimbra.client.ZMessage;
 import com.zimbra.client.ZMessage.ZMimePart;
+import com.zimbra.client.ZMountpoint;
+import com.zimbra.client.ZSearchHit;
+import com.zimbra.client.ZSearchParams;
+import com.zimbra.client.ZTag;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.lmtp.LmtpClient;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
@@ -77,6 +91,7 @@ import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeMessage;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Config;
 import com.zimbra.cs.account.DataSource;
@@ -979,7 +994,7 @@ extends Assert {
             content = getContent(mbox, msg.getId());
         }
         assertNotNull("Content was not fetched from the server", content);
-        MimeMessage mimeMsg = new JavaMailMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content.getBytes()));
+        MimeMessage mimeMsg = new ZMimeMessage(JMSession.getSession(), new SharedByteArrayInputStream(content.getBytes()));
         return mimeMsg.getHeader(headerName, null);
     }
 
@@ -1046,7 +1061,7 @@ extends Assert {
         String docId = mbox.createDocument(folderId, name, attachId, isNote);
         return mbox.getDocument(docId);
     }
-    
+
     public static ZIdentity getDefaultIdentity(ZMailbox mbox)
     throws ServiceException {
         for (ZIdentity ident : mbox.getIdentities()) {

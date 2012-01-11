@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2009, 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -28,11 +28,11 @@ import javax.mail.util.ByteArrayDataSource;
 
 import com.zimbra.common.mime.MimeConstants;
 import com.zimbra.common.mime.shim.JavaMailInternetAddress;
-import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
-import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMessage;
+import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.util.JMSession;
 
 public class MessageBuilder {
@@ -54,14 +54,15 @@ public class MessageBuilder {
 
     /**
      * Used to generate a message with no <tt>Message-ID</tt> header.  This
-     * allows us to inject the same message multiple times without being deduped. 
+     * allows us to inject the same message multiple times without being deduped.
      */
-    private class MimeMessageWithNoId extends JavaMailMimeMessage {
+    private class MimeMessageWithNoId extends ZMimeMessage {
         MimeMessageWithNoId() {
             super(JMSession.getSession());
         }
 
-        @Override protected void updateMessageID() throws MessagingException {
+        @Override
+        protected void updateMessageID() throws MessagingException {
             removeHeader("Message-ID");
         }
     }
@@ -148,7 +149,7 @@ public class MessageBuilder {
         sender = TestUtil.addDomainIfNecessary(sender);
 
         MimeMessage msg =
-                addMessageIdHeader ? new JavaMailMimeMessage(JMSession.getSession()) : new MimeMessageWithNoId();
+                addMessageIdHeader ? new ZMimeMessage(JMSession.getSession()) : new MimeMessageWithNoId();
         msg.setRecipient(RecipientType.TO, new JavaMailInternetAddress(toRecipient));
         if (ccRecipient != null) {
             ccRecipient = TestUtil.addDomainIfNecessary(ccRecipient);
@@ -166,12 +167,12 @@ public class MessageBuilder {
             // doesn't know what to do with text/enriched.
             msg.setDataHandler(new DataHandler(new ByteArrayDataSource(body.getBytes(), contentType)));
         } else {
-            MimeMultipart multi = new JavaMailMimeMultipart("mixed");
-            MimeBodyPart body = new JavaMailMimeBodyPart();
+            MimeMultipart multi = new ZMimeMultipart("mixed");
+            MimeBodyPart body = new ZMimeBodyPart();
             body.setDataHandler(new DataHandler(new ByteArrayDataSource(this.body.getBytes(), contentType)));
             multi.addBodyPart(body);
 
-            MimeBodyPart attachment = new JavaMailMimeBodyPart();
+            MimeBodyPart attachment = new ZMimeBodyPart();
             attachment.setContent(this.attachment, attachmentContentType);
             attachment.setHeader("Content-Disposition", "attachment; filename=" + attachmentFilename);
             multi.addBodyPart(attachment);

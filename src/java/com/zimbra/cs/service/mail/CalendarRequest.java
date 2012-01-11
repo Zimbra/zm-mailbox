@@ -16,7 +16,6 @@
 package com.zimbra.cs.service.mail;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +32,7 @@ import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.mail.util.SharedFileInputStream;
 
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
@@ -367,7 +367,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                     ByteUtil.closeStream(os);
                     os = null;
         
-                    is = new FileInputStream(tempMmFile);
+                    is = new SharedFileInputStream(tempMmFile);
                     csd.mMm = new FixedMimeMessage(JMSession.getSession(), is);
                 } catch (IOException e) {
                     if (tempMmFile != null)
@@ -418,7 +418,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
 
         return response;
     }
-    
+
     protected static Element echoAddedInvite(Element parent, ItemIdFormatter ifmt, OperationContext octxt, Mailbox mbox,
                                              AddInviteData aid, int maxSize, boolean wantHtml, boolean neuter)
     throws ServiceException {

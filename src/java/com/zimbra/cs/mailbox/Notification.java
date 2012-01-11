@@ -15,28 +15,12 @@
 
 package com.zimbra.cs.mailbox;
 
-import com.sun.mail.smtp.SMTPMessage;
-import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.shim.JavaMailInternetAddress;
-import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
-import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
-import com.zimbra.common.service.ServiceException;
-import com.zimbra.common.util.CharsetUtil;
-import com.zimbra.common.util.Constants;
-import com.zimbra.common.util.EmailUtil;
-import com.zimbra.common.util.L10nUtil;
-import com.zimbra.common.util.StringUtil;
-import com.zimbra.common.util.ZimbraLog;
-import com.zimbra.cs.account.Account;
-import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.db.DbOutOfOffice;
-import com.zimbra.cs.db.DbPool;
-import com.zimbra.cs.db.DbPool.DbConnection;
-import com.zimbra.cs.lmtpserver.LmtpCallback;
-import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.util.AccountUtil;
-import com.zimbra.cs.util.JMSession;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
@@ -48,12 +32,28 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
+import com.sun.mail.smtp.SMTPMessage;
+import com.zimbra.common.mime.MimeConstants;
+import com.zimbra.common.mime.shim.JavaMailInternetAddress;
+import com.zimbra.common.service.ServiceException;
+import com.zimbra.common.util.CharsetUtil;
+import com.zimbra.common.util.Constants;
+import com.zimbra.common.util.EmailUtil;
+import com.zimbra.common.util.L10nUtil;
+import com.zimbra.common.util.StringUtil;
+import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMessage;
+import com.zimbra.common.zmime.ZMimeMultipart;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.db.DbOutOfOffice;
+import com.zimbra.cs.db.DbPool;
+import com.zimbra.cs.db.DbPool.DbConnection;
+import com.zimbra.cs.lmtpserver.LmtpCallback;
+import com.zimbra.cs.mime.Mime;
+import com.zimbra.cs.util.AccountUtil;
+import com.zimbra.cs.util.JMSession;
 
 public class Notification implements LmtpCallback {
 
@@ -80,9 +80,9 @@ public class Notification implements LmtpCallback {
      * Subclass of <tt>MimeMessage</tt> that allows the caller to set an explicit <tt>Message-ID</tt>
      * header (see JavaMail FAQ for details).
      */
-    private class MimeMessageWithId extends JavaMailMimeMessage {
+    private class MimeMessageWithId extends ZMimeMessage {
 
-        private String mMessageId;
+        private final String mMessageId;
 
         private MimeMessageWithId(String messageId) {
             super(JMSession.getSession());
@@ -459,7 +459,7 @@ public class Notification implements LmtpCallback {
         // Send the message
         try {
             Session smtpSession = JMSession.getSmtpSession();
-            MimeMessage out = new JavaMailMimeMessage(smtpSession);
+            MimeMessage out = new ZMimeMessage(smtpSession);
             out.setHeader("Auto-Submitted", "auto-replied (notification; " + rcpt + ")");
             InternetAddress address = new JavaMailInternetAddress(from);
             out.setFrom(address);
@@ -561,15 +561,15 @@ public class Notification implements LmtpCallback {
                     out.setSubject(subject, charset);
                     charset = getCharset(account, bodyText);
 
-                    MimeMultipart multi = new JavaMailMimeMultipart();
+                    MimeMultipart multi = new ZMimeMultipart();
 
                     // Add message body
-                    MimeBodyPart part = new JavaMailMimeBodyPart();
+                    MimeBodyPart part = new ZMimeBodyPart();
                     part.setText(bodyText, charset);
                     multi.addBodyPart(part);
 
                     // Add original message
-                    MimeBodyPart part2 = new JavaMailMimeBodyPart();
+                    MimeBodyPart part2 = new ZMimeBodyPart();
                     part2.setContent(attached, MimeConstants.CT_MESSAGE_RFC822);
                     multi.addBodyPart(part2);
 

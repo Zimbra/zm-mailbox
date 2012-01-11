@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Zimbra, Inc.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 VMware, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -15,6 +15,21 @@
 
 package com.zimbra.cs.lmtpserver;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -24,9 +39,7 @@ import com.zimbra.common.lmtp.LmtpClient;
 import com.zimbra.common.lmtp.LmtpProtocolException;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
-import com.zimbra.common.mime.MimeParserInputStream;
 import com.zimbra.common.mime.Rfc822ValidationInputStream;
-import com.zimbra.common.mime.shim.JavaMailMimeMessage;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.BufferStream;
 import com.zimbra.common.util.ByteUtil;
@@ -62,28 +75,13 @@ import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.Zimbra;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
-
-import javax.mail.MessagingException;
-import javax.mail.internet.MimeMessage;
-
 public class ZimbraLmtpBackend implements LmtpBackend {
 
     private static List<LmtpCallback> callbacks = new CopyOnWriteArrayList<LmtpCallback>();
     private static Map<String, Set<Integer>> receivedMessageIDs;
     private static final Map<Integer, Object> mailboxDeliveryLocks = createMailboxDeliveryLocks();
 
-    private LmtpConfig config;
+    private final LmtpConfig config;
 
     public ZimbraLmtpBackend(LmtpConfig lmtpConfig) {
         config = lmtpConfig;
@@ -323,11 +321,11 @@ public class ZimbraLmtpBackend implements LmtpBackend {
             cis = new CopyInputStream(in, sizeHint, bufLen, bufLen);
             in = cis;
 
-            MimeParserInputStream mpis = null;
-            if (JavaMailMimeMessage.usingZimbraParser()) {
-                mpis = new MimeParserInputStream(in);
-                in = mpis;
-            }
+//            MimeParserInputStream mpis = null;
+//            if (ZMimeMessage.usingZimbraParser()) {
+//                mpis = new MimeParserInputStream(in);
+//                in = mpis;
+//            }
 
             Rfc822ValidationInputStream validator = null;
             if (LC.zimbra_lmtp_validate_messages.booleanValue()) {
@@ -356,20 +354,20 @@ public class ZimbraLmtpBackend implements LmtpBackend {
 
             BlobInputStream bis = null;
             MimeMessage mm = null;
-            if (mpis != null) {
-                try {
-                    if (data == null) {
-                        bis = new BlobInputStream(blob);
-                        mpis.setSource(bis);
-                    } else {
-                        mpis.setSource(data);
-                    }
-                } catch (IOException ioe) {
-                    throw new UnrecoverableLmtpException("Error in accessing incoming message", ioe);
-                }
-
-                mm = new JavaMailMimeMessage(mpis.getMessage(null));
-            }
+//            if (mpis != null) {
+//                try {
+//                    if (data == null) {
+//                        bis = new BlobInputStream(blob);
+//                        mpis.setSource(bis);
+//                    } else {
+//                        mpis.setSource(data);
+//                    }
+//                } catch (IOException ioe) {
+//                    throw new UnrecoverableLmtpException("Error in accessing incoming message", ioe);
+//                }
+//
+//                mm = new ZMimeMessage(mpis.getMessage(null));
+//            }
 
             try {
                 deliverMessageToLocalMailboxes(blob, bis, data, mm, env);

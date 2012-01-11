@@ -38,26 +38,26 @@ import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.mime.ContentDisposition;
 import com.zimbra.common.mime.MimeConstants;
-import com.zimbra.common.mime.shim.JavaMailMimeBodyPart;
-import com.zimbra.common.mime.shim.JavaMailMimeMultipart;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.CalculatorStream;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
+import com.zimbra.common.zmime.ZMimeBodyPart;
+import com.zimbra.common.zmime.ZMimeMultipart;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.convert.ConversionException;
-import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.IndexDocument;
+import com.zimbra.cs.index.LuceneFields;
 import com.zimbra.cs.index.analysis.FieldTokenStream;
 import com.zimbra.cs.index.analysis.NormalizeTokenFilter;
 import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.mailbox.Contact;
+import com.zimbra.cs.mailbox.Contact.Attachment;
+import com.zimbra.cs.mailbox.Contact.DerefGroupMembersOption;
 import com.zimbra.cs.mailbox.ContactGroup;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
-import com.zimbra.cs.mailbox.Contact.Attachment;
-import com.zimbra.cs.mailbox.Contact.DerefGroupMembersOption;
 import com.zimbra.cs.object.ObjectHandlerException;
 import com.zimbra.cs.util.JMSession;
 
@@ -208,13 +208,13 @@ public final class ParsedContact {
     private static MimeMessage generateMimeMessage(List<Attachment> attachments)
     throws MessagingException {
         MimeMessage mm = new Mime.FixedMimeMessage(JMSession.getSession());
-        MimeMultipart multi = new JavaMailMimeMultipart("mixed");
+        MimeMultipart multi = new ZMimeMultipart("mixed");
         int part = 1;
         for (Attachment attach : attachments) {
             ContentDisposition cdisp = new ContentDisposition(Part.ATTACHMENT);
             cdisp.setParameter("filename", attach.getFilename()).setParameter("field", attach.getName());
 
-            MimeBodyPart bp = new JavaMailMimeBodyPart();
+            MimeBodyPart bp = new ZMimeBodyPart();
             bp.addHeader("Content-Disposition", cdisp.toString());
             bp.addHeader("Content-Type", attach.getContentType());
             bp.addHeader("Content-Transfer-Encoding", MimeConstants.ET_8BIT);
@@ -284,7 +284,7 @@ public final class ParsedContact {
     }
 
     public static abstract class FieldDelta {
-        private Op op;
+        private final Op op;
 
         public static enum Op {
             ADD,
@@ -314,8 +314,8 @@ public final class ParsedContact {
     }
 
     private static class AttrDelta extends FieldDelta {
-        private String name;
-        private String value;
+        private final String name;
+        private final String value;
 
         private AttrDelta(String name, String value, Op op) {
             super(op);
@@ -333,8 +333,8 @@ public final class ParsedContact {
     }
 
     private static class GroupMemberDelta extends FieldDelta {
-        private ContactGroup.Member.Type memberType;
-        private String value;
+        private final ContactGroup.Member.Type memberType;
+        private final String value;
 
         private GroupMemberDelta(ContactGroup.Member.Type memberType, String value, Op op) {
             super(op);
