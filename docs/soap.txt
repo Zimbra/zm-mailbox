@@ -656,7 +656,7 @@ import and export of addressbook.
 
 
  <SearchGalRequest [type="{type}"] [limit="..."] [offset="..."] [sortBy="{sort-by}"] [groupBy="{group-by}"]  
-     [needExp="1|0"] [needIsOwner="[1|0]"] [needIsMember="[1|0]"]>
+     [needExp="1|0"] [needIsOwner="[1|0]"] [needIsMember="[all|directOnly|none]"]>
   [<cursor id="{prevId}" sortVal="{prevSortValue}" endSortVal="{endSortValue}"/> ]
    <name>...</name>
 
@@ -700,8 +700,12 @@ import and export of addressbook.
   needIsOwner: if the "isOwner" flag is needed in the response for group entries.
                default is 0   
            
-  needIsMember: if the "isMember" flag is needed in the response for group entries.
-                default is 0               
+  needIsMember = if the "isMember" flag is needed in the response for group entries.
+                 all: the isMember flag returned is 1 if the user is a direct or indirect 
+                      member of the group, 0 otherwise.
+                 directOnly: the isMember flag returned is 1 if the user is a direct 
+                             member of the group, 0 otherwise.
+                 none(default): the isMember flag is not returned
 
   {gal-entry-ref}: a unigue reference id for the GAL entry.  This is the ref id to be used for the value
                    of type="G" contact group members.  See CreateContactRequest and ModifyContactRequest.

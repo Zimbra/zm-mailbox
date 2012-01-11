@@ -28,7 +28,7 @@ import com.zimbra.cs.account.Entry;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.soap.ZimbraSoapContext;
-import com.zimbra.soap.account.message.GetAccountDistributionListsRequest.MemberOfSelector;
+import com.zimbra.soap.account.type.MemberOfSelector;
 
 public class GetAccountDistributionLists extends AccountDocumentHandler {
     

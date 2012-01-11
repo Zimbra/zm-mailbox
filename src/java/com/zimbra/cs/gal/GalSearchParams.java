@@ -34,6 +34,7 @@ import com.zimbra.cs.index.SearchParams;
 import com.zimbra.cs.index.SortBy;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.account.type.MemberOfSelector;
 import com.zimbra.soap.type.GalSearchType;
 
 public class GalSearchParams {
@@ -61,7 +62,7 @@ public class GalSearchParams {
     private boolean mIdOnly;
     private boolean mNeedCanExpand;
     private boolean mNeedIsOwner;
-    private boolean mNeedIsMember;
+    private MemberOfSelector mNeedIsMember;
     private boolean mNeedSMIMECerts;
     private boolean mFetchGroupMembers;
     private GalOp mOp;
@@ -212,7 +213,7 @@ public class GalSearchParams {
         return mNeedIsOwner;
     }
     
-    public boolean getNeedIsMember() {
+    public MemberOfSelector getNeedIsMember() {
         return mNeedIsMember;
     }
     
@@ -328,7 +329,7 @@ public class GalSearchParams {
         mNeedIsOwner = needOwnerOf;
     }
 
-    public void setNeedIsMember(boolean needMemberOf) {
+    public void setNeedIsMember(MemberOfSelector needMemberOf) {
         mNeedIsMember = needMemberOf;
     }
 

@@ -38,6 +38,7 @@ import com.zimbra.cs.gal.GalSearchParams;
 import com.zimbra.cs.gal.GalSearchQueryCallback;
 import com.zimbra.cs.gal.GalExtraSearchFilter.GalExtraQueryCallback;
 import com.zimbra.soap.ZimbraSoapContext;
+import com.zimbra.soap.account.type.MemberOfSelector;
 import com.zimbra.soap.type.GalSearchType;
 
 /**
@@ -79,7 +80,8 @@ public class SearchGal extends GalDocumentHandler {
         GalSearchType type = GalSearchType.fromString(typeStr);
         boolean needCanExpand = request.getAttributeBool(AccountConstants.A_NEED_EXP, false);
         boolean needIsOwner = request.getAttributeBool(AccountConstants.A_NEED_IS_OWNER, false);
-        boolean needIsMember = request.getAttributeBool(AccountConstants.A_NEED_IS_MEMBER, false);
+        MemberOfSelector needIsMember = MemberOfSelector.fromString(
+                request.getAttribute(AccountConstants.A_NEED_IS_MEMBER, MemberOfSelector.none.name()));
         
         // internal attr, for proxied GSA search from GetSMIMEPublicCerts only
         boolean needSMIMECerts = request.getAttributeBool(AccountConstants.A_NEED_SMIME_CERTS, false);

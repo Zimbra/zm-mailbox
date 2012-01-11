@@ -34,6 +34,7 @@ import com.zimbra.qa.unittest.prov.Verify;
 import com.zimbra.soap.account.message.SearchGalRequest;
 import com.zimbra.soap.account.message.SearchGalResponse;
 import com.zimbra.soap.account.type.ContactInfo;
+import com.zimbra.soap.account.type.MemberOfSelector;
 import com.zimbra.soap.type.ContactAttr;
 import com.zimbra.soap.type.TargetBy;
 
@@ -57,12 +58,11 @@ public class TestSearchGalGroups extends SoapTest {
     }
     
     /*
-     * acct is an owner and a member of the group.
-     * 
      * Verify isOwner and isMember flags are returned correctly.
      */
     private void testSearchGroup(Account acct, Group group, 
-            Boolean needIsOwner, Boolean needIsMember) throws Exception {
+            Boolean needIsOwner, MemberOfSelector needIsMember,
+            boolean actualIsOwner, boolean actualIsMember) throws Exception {
         SoapTransport transport = authUser(acct.getName());
         
         SearchGalRequest req = new SearchGalRequest();
@@ -77,8 +77,8 @@ public class TestSearchGalGroups extends SoapTest {
                 Verify.makeResultStr(
                         group.getName(), 
                         ContactConstants.TYPE_GROUP,
-                        needIsOwner,
-                        needIsMember));
+                        needIsOwner == null ? null : actualIsOwner,
+                        needIsMember == null ? null : actualIsMember));
         
         List<ContactInfo> entries = resp.getContacts();
         for (ContactInfo entry : entries) {
@@ -119,17 +119,17 @@ public class TestSearchGalGroups extends SoapTest {
         
         // test with GSA on
         GalTestUtil.enableGalSyncAccount(prov, domain.getName());
-        testSearchGroup(acct, group, Boolean.TRUE, Boolean.TRUE);
-        testSearchGroup(acct, group, Boolean.TRUE, null);
-        testSearchGroup(acct, group, null, Boolean.TRUE);
-        testSearchGroup(acct, group, null, null);
+        testSearchGroup(acct, group, Boolean.TRUE, MemberOfSelector.all, true, true);
+        testSearchGroup(acct, group, Boolean.TRUE, null, true, true);
+        testSearchGroup(acct, group, null, MemberOfSelector.all, true, true);
+        testSearchGroup(acct, group, null, null, true, true);
         
         // test with GSA off
         GalTestUtil.disableGalSyncAccount(prov, domain.getName());
-        testSearchGroup(acct, group, Boolean.TRUE, Boolean.TRUE);
-        testSearchGroup(acct, group, Boolean.TRUE, null);
-        testSearchGroup(acct, group, null, Boolean.TRUE);
-        testSearchGroup(acct, group, null, null);
+        testSearchGroup(acct, group, Boolean.TRUE, MemberOfSelector.all, true, true);
+        testSearchGroup(acct, group, Boolean.TRUE, null, true, true);
+        testSearchGroup(acct, group, null, MemberOfSelector.all, true, true);
+        testSearchGroup(acct, group, null, null, true, true);
         
         provUtil.deleteGroup(group);
         provUtil.deleteAccount(acct);

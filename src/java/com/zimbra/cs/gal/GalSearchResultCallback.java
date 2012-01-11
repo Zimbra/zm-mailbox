@@ -39,7 +39,7 @@ import com.zimbra.cs.mailbox.Contact;
 import com.zimbra.cs.service.mail.ToXML;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
-import com.zimbra.soap.account.message.GetAccountDistributionListsRequest.MemberOfSelector;
+import com.zimbra.soap.account.type.MemberOfSelector;
 
 public class GalSearchResultCallback implements GalContact.Visitor {
     private Element mResponse;
@@ -49,7 +49,7 @@ public class GalSearchResultCallback implements GalContact.Visitor {
 	private Account mAuthAcct;
 	private boolean mNeedCanExpand;
 	private boolean mNeedIsOwner;
-    private boolean mNeedIsMember;
+    private MemberOfSelector mNeedIsMember;
 	private boolean mNeedSMIMECerts;
 	
 	private Set<String> mOwnerOfGroupsIds = null;
@@ -132,7 +132,7 @@ public class GalSearchResultCallback implements GalContact.Visitor {
         	    eContact.addAttribute(AccountConstants.A_IS_OWNER, isOwner);
         	}
         	
-        	if (mNeedIsMember) {
+        	if (MemberOfSelector.none != mNeedIsMember) {
         	    boolean isMember = isMember(zimbraId);
                 eContact.addAttribute(AccountConstants.A_IS_MEMBER, isMember);
         	}
@@ -159,7 +159,7 @@ public class GalSearchResultCallback implements GalContact.Visitor {
                 eGalContact.addAttribute(AccountConstants.A_IS_OWNER, isOwner);
             }
             
-            if (mNeedIsMember) {
+            if (MemberOfSelector.none != mNeedIsMember) {
                 boolean isMember = isMember(zimbraId);
                 eGalContact.addAttribute(AccountConstants.A_IS_MEMBER, isMember);
             }
