@@ -55,6 +55,12 @@ public class SearchGalRequest implements SearchParameters {
     @XmlAttribute(name=AccountConstants.A_NEED_EXP /* needExp */, required=false)
     private ZmBoolean needCanExpand;
 
+    @XmlAttribute(name=AccountConstants.A_NEED_IS_OWNER /* needIsOwner */, required=false)
+    private ZmBoolean needIsOwner;
+    
+    @XmlAttribute(name=AccountConstants.A_NEED_IS_MEMBER /* needIsMember */, required=false)
+    private ZmBoolean needIsMember;
+    
     @XmlAttribute(name=AccountConstants.A_NEED_SMIME_CERTS /* needSMIMECerts */, required=false)
     private ZmBoolean needSMIMECerts;
 
@@ -149,6 +155,8 @@ public class SearchGalRequest implements SearchParameters {
     public void setName(String name) { this.name = name; }
     public void setType(GalSearchType type) { this.type = type; }
     public void setNeedCanExpand(Boolean needCanExpand) { this.needCanExpand = ZmBoolean.fromBool(needCanExpand); }
+    public void setNeedIsOwner(Boolean needIsOwner) { this.needIsOwner = ZmBoolean.fromBool(needIsOwner); }
+    public void setNeedIsMember(Boolean needIsMember) { this.needIsMember = ZmBoolean.fromBool(needIsMember); }
     public void setNeedSMIMECerts(Boolean needSMIMECerts) { this.needSMIMECerts = ZmBoolean.fromBool(needSMIMECerts); }
     public void setGalAccountId(String galAccountId) { this.galAccountId = galAccountId; }
     @Override
@@ -220,6 +228,8 @@ public class SearchGalRequest implements SearchParameters {
     public String getName() { return name; }
     public GalSearchType getType() { return type; }
     public Boolean getNeedCanExpand() { return ZmBoolean.toBool(needCanExpand); }
+    public Boolean getNeedIsOwner() { return ZmBoolean.toBool(needIsOwner); }
+    public Boolean getNeedIsMember() { return ZmBoolean.toBool(needIsMember); }
     public Boolean getNeedSMIMECerts() { return ZmBoolean.toBool(needSMIMECerts); }
     public String getGalAccountId() { return galAccountId; }
     @Override
@@ -283,6 +293,8 @@ public class SearchGalRequest implements SearchParameters {
             .add("name", name)
             .add("type", type)
             .add("needCanExpand", needCanExpand)
+            .add("needIsOwner", needIsOwner)
+            .add("needIsMember", needIsMember)
             .add("needSMIMECerts", needSMIMECerts)
             .add("galAccountId", galAccountId)
             .add("includeTagDeleted", includeTagDeleted)

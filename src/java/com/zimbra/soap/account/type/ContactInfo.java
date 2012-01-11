@@ -110,6 +110,13 @@ implements ContactInterface {
 
     @XmlElement(name=MailConstants.E_CONTACT_GROUP_MEMBER /* m */, required=false)
     private List<ContactGroupMember> contactGroupMembers = Lists.newArrayList();
+    
+    @XmlAttribute(name=AccountConstants.A_IS_OWNER, required=false)
+    ZmBoolean isOwner;
+    
+    @XmlAttribute(name=AccountConstants.A_IS_MEMBER, required=false)
+    ZmBoolean isMember;
+    
 
     public ContactInfo() {
     }
@@ -210,6 +217,14 @@ implements ContactInterface {
         this.contactGroupMembers.add(contactGroupMember);
     }
 
+    public void setIsOwner(Boolean isOwner) {
+        this.isOwner = ZmBoolean.fromBool(isOwner);
+    }
+    
+    public void setIsMember(Boolean isMember) {
+        this.isMember = ZmBoolean.fromBool(isMember);
+    }
+    
     @Override
     public String getSortField() { return sortField; }
     @Override
@@ -261,6 +276,15 @@ implements ContactInterface {
         return Collections.unmodifiableList(contactGroupMembers);
     }
 
+    
+    public Boolean isOwner() {
+        return ZmBoolean.toBool(isOwner);
+    }
+    
+    public Boolean isMember() {
+        return ZmBoolean.toBool(isMember);
+    }
+    
     // non-JAXB method
     @Override
     public void setMetadataInterfaces(
