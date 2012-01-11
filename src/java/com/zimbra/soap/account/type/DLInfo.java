@@ -71,10 +71,10 @@ public class DLInfo extends ObjectInfo {
     }
     
     public Boolean isOwner() {
-        return ZmBoolean.toBool(isOwner, false);
+        return ZmBoolean.toBool(isOwner);
     }
     
     public Boolean isMember() {
-        return ZmBoolean.toBool(isMember, false);
+        return ZmBoolean.toBool(isMember);
     }
 }
