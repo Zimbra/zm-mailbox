@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 pshao 20120109-1442 */
+    /* build: 8.0.0_BETA1_1111 administrator 20120111-1206 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -3735,14 +3735,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1260)
     public static final String A_zimbraExternalShareLifetime = "zimbraExternalShareLifetime";
-
-    /**
-     * flag indicates whether to limit lifetime of shares to external users
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1259)
-    public static final String A_zimbraExternalShareLimitLifetime = "zimbraExternalShareLimitLifetime";
 
     /**
      * list of external domains that users can share files and folders with
@@ -9127,14 +9119,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraPublicShareLifetime = "zimbraPublicShareLifetime";
 
     /**
-     * flag indicates whether to limit lifetime of public shares
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1354)
-    public static final String A_zimbraPublicShareLimitLifetime = "zimbraPublicShareLimitLifetime";
-
-    /**
      * switch for turning public sharing on/off
      *
      * @since ZCS 8.0.0
@@ -9953,15 +9937,6 @@ public class ZAttrProvisioning {
     public static final String A_zimbraShareLifetime = "zimbraShareLifetime";
 
     /**
-     * flag indicates whether to limit lifetime of shares to users on the
-     * system
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=1347)
-    public static final String A_zimbraShareLimitLifetime = "zimbraShareLimitLifetime";
-
-    /**
      * Account name for authenticating to share notification MTA.
      *
      * @since ZCS 8.0.0
@@ -10705,22 +10680,6 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=231)
     public static final String A_zimbraTimeZoneStandardRRule = "zimbraTimeZoneStandardRRule";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10000)
-    public static final String A_zimbraUnittestBinary = "zimbraUnittestBinary";
-
-    /**
-     * binary data
-     *
-     * @since ZCS 8.0.0
-     */
-    @ZAttr(id=10001)
-    public static final String A_zimbraUnittestCertificate = "zimbraUnittestCertificate";
 
     /**
      * whether end-user services on SOAP and LMTP interfaces are enabled
