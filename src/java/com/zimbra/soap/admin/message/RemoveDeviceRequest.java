@@ -13,43 +13,47 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.base.Objects;
-import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SyncAdminConstants;
 import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.admin.type.DeviceId;
+import com.zimbra.soap.type.AccountSelector;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=SyncAdminConstants.E_REMOVE_DEVICE_REQUEST)
 public class RemoveDeviceRequest {
 
-    @XmlElement(name=SyncConstants.E_DEVICE /* device */, required = false)
-    private DeviceId deviceId;
+    @XmlElement(name=AdminConstants.E_ACCOUNT, required=true)
+    private AccountSelector account;
 
-    @XmlElement(name = MailConstants.E_MAILBOX /* mailboxId */, required = false)
-    private int mailboxId;
+    @XmlElement(name=SyncConstants.E_DEVICE, required=false)
+    private DeviceId deviceId;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private RemoveDeviceRequest() {
-        this(null);
     }
 
-    public RemoveDeviceRequest(DeviceId device) {
-        this.deviceId = device;
-    }
-
-    public RemoveDeviceRequest(int mboxId) {
-        this.mailboxId = mboxId;
+    public RemoveDeviceRequest(AccountSelector account) {
+        this.account = account;
     }
 
     public DeviceId getDeviceId() {
         return this.deviceId;
     }
 
+    public void setDeviceId(DeviceId deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    public AccountSelector getAccount() {
+        return this.account;
+    }
+
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("device", this.deviceId).add("mboxId", this.mailboxId).toString();
+        return Objects.toStringHelper(this).add("account", this.account).add("device", this.deviceId).toString();
     }
 }
