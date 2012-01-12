@@ -19,47 +19,47 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.google.common.base.Objects;
-import com.zimbra.common.soap.MailConstants;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SyncAdminConstants;
 import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.admin.type.DeviceId;
+import com.zimbra.soap.type.AccountSelector;
 
 @XmlRootElement(name = SyncAdminConstants.E_GET_DEVICE_STATUS_REQUEST)
 public class GetDeviceStatusRequest {
 
-    @XmlElement(name = SyncConstants.E_DEVICE /* device */, required = false)
-    private DeviceId device;
+    @XmlElement(name=AdminConstants.E_ACCOUNT, required=true)
+    private final AccountSelector account;
 
-    @XmlElement(name = MailConstants.E_MAILBOX /* mailboxId */, required = false)
-    private int mailboxId;
+    @XmlElement(name = SyncConstants.E_DEVICE, required = false)
+    private DeviceId deviceId;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private GetDeviceStatusRequest() {
-        this((DeviceId) null);
+        this(null);
     }
 
-    public GetDeviceStatusRequest(DeviceId device) {
-        this.device = device;
+    public GetDeviceStatusRequest(AccountSelector account) {
+        this.account = account;
     }
 
-    public GetDeviceStatusRequest(int mboxId) {
-        this.mailboxId = mboxId;
+    public DeviceId getDeviceId() {
+        return this.deviceId;
     }
 
-    public DeviceId getDevice() {
-        return this.device;
+    public void setDeviceId(DeviceId deviceId) {
+        this.deviceId = deviceId;
     }
 
-    public int getMailboxId() {
-        return this.mailboxId;
+    public AccountSelector getAccount() {
+        return this.account;
     }
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this).add("device", this.device).add("mboxId", this.mailboxId)
-                .toString();
+        return Objects.toStringHelper(this).add("account", this.account).add("device", this.deviceId).toString();
     }
 }

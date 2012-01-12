@@ -15,46 +15,54 @@
 
 package com.zimbra.soap.admin.message;
 
-import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.google.common.base.Objects;
+import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.SyncAdminConstants;
 import com.zimbra.common.soap.SyncConstants;
 import com.zimbra.soap.admin.type.DeviceId;
+import com.zimbra.soap.type.AccountSelector;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name=SyncAdminConstants.E_REMOTE_WIPE_REQUEST)
 public class RemoteWipeRequest {
 
-    @XmlElement(name=SyncConstants.E_DEVICE /* device */, required=true)
-    private final DeviceId device;
+    @XmlElement(name=AdminConstants.E_ACCOUNT, required=true)
+    private final AccountSelector account;
+
+    @XmlElement(name=SyncConstants.E_DEVICE, required=false)
+    private DeviceId deviceId;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private RemoteWipeRequest() {
-        this((DeviceId) null);
+        this(null);
     }
 
-    public RemoteWipeRequest(DeviceId device) {
-        this.device = device;
+    public RemoteWipeRequest(AccountSelector account) {
+        this.account = account;
     }
 
-    public DeviceId getDevice() { return device; }
+    public DeviceId getDeviceId() {
+        return this.deviceId;
+    }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
-        return helper
-            .add("device", device);
+    public void setDeviceId(DeviceId deviceId) {
+        this.deviceId = deviceId;
+    }
+
+    public AccountSelector getAccount() {
+        return this.account;
     }
 
     @Override
     public String toString() {
-        return addToStringInfo(Objects.toStringHelper(this))
-                .toString();
+        return Objects.toStringHelper(this).add("account", this.account).add("device", this.deviceId).toString();
     }
 }
