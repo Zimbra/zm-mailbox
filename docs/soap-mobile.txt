@@ -286,10 +286,10 @@ last_used_date - date when the device was last used (the date is stored in serve
 <RemoveDeviceRequest>
 ---------------------
 
-Remove a device or remove all devices attached to a mailbox. This will not cause a reset of sync data, but will cause a reset of policies on the next sync.
+Remove a device or remove all devices attached to an account. This will not cause a reset of sync data, but will cause a reset of policies on the next sync.
 
 <RemoveDeviceRequest xmlns="urn:zimbraAdmin">
-  [<mbox id="{mailbox_id}" />]
+  <account by="id|name">...</account>
   [<device id="{device_id}" />]
 </RemoveDeviceRequest>
 
@@ -299,10 +299,10 @@ Remove a device or remove all devices attached to a mailbox. This will not cause
 <SuspendDeviceRequest>
 ----------------------
 
-Suspend a device or all devices attached to a mailbox from further sync actions.
+Suspend a device or all devices attached to an account from further sync actions.
 
 <SuspendDeviceRequest xmlns="urn:zimbraAdmin">
-  [<mbox id="{mailbox_id}" />]
+  <account by="id|name">...</account>
   [<device id="{device_id}" />]
 </SuspendDeviceRequest>
 
@@ -323,10 +323,10 @@ Suspend a device or all devices attached to a mailbox from further sync actions.
 <ResumeDeviceRequest>
 ---------------------
 
-Resume sync with a device or all devices attached to a mailbox if currently suspended.  This will cause a policy reset, but will not reset sync data.
+Resume sync with a device or all devices attached to an account if currently suspended.  This will cause a policy reset, but will not reset sync data.
 
 <ResumeDeviceRequest xmlns="urn:zimbraAdmin">
-  [<mbox id="{mailbox_id}" />]
+  <account by="id|name">...</account>
   [<device id="{device_id}" />]
 </ResumeDeviceRequest>
 
