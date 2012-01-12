@@ -41,9 +41,8 @@ public class Get extends DavMethod {
 		DavResource resource = ctxt.getRequestedResource();
 		HttpServletResponse resp = ctxt.getResponse();
 		String contentType = resource.getContentType(ctxt);
-		ContentType ct = null;
         if (contentType != null) {
-            ct = new ContentType(contentType);
+            ContentType ct = new ContentType(contentType);
             if (ct.getParameter(MimeConstants.P_CHARSET) == null)
                 ct.setParameter(MimeConstants.P_CHARSET, MimeConstants.P_CHARSET_UTF8);
             resp.setContentType(ct.toString());
@@ -61,8 +60,7 @@ public class Get extends DavMethod {
 		//resp.setContentLength(resource.getContentLength());
 		if (!returnContent() || !resource.hasContent(ctxt))
 			return;
-		if ((ct == null) || (ct.getContentType().equalsIgnoreCase("text/html")))
-		    resp.setHeader("Content-Disposition", "attachment");
+		resp.setHeader("Content-Disposition", "attachment");
 		if (ZimbraLog.dav.isDebugEnabled()) {
 			ZimbraLog.dav.debug("GET "+ctxt.getUri());
 			if (contentType != null && contentType.startsWith("text"))
