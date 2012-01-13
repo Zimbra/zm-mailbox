@@ -33,21 +33,11 @@ final class EhcacheImapCache implements ImapSessionManager.Cache {
     @Override
     public void put(String key, ImapFolder folder) {
         if (ehcache.isKeyInCache(key)) {
-            if (ImapSessionManager.isActiveKey(key)) {
-                //isKeyInCache() can return expired elements, and does not update lastAccessTime
-                //for example session paged out, then paged back in, then invokes a few commands, then paged out again
-                //lastAccessTime is only set when paged back in, but actual session timeout based on execution of commands
-                //for active cache need to do a get() so lastAccessTime is updated on page out, even if already exists in cache
-                if (ehcache.get(key) != null) {
-                    return;
-                }
-            } else {
-                //no concerns with lastAccessTime for inactive; it is LRU'd instead of expired based on timeToIdle
-                return;
-            }
+            return;
+        } else {
+            Element el = new Element(key, folder);
+            ehcache.put(el);
         }
-        Element el = new Element(key, folder);
-        ehcache.put(el);
     }
 
     @Override
