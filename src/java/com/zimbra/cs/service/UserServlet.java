@@ -347,7 +347,7 @@ public class UserServlet extends ZimbraServlet {
     }
 
     private static AuthToken getProxyAuthToken(UserServletContext context) throws ServiceException {
-        String encoded = Provisioning.getInstance().getProxyAuthToken(context.targetAccount.getId());
+        String encoded = Provisioning.getInstance().getProxyAuthToken(context.targetAccount.getId(), null);
         if (encoded != null) {
             return new ZimbraAuthTokenEncoded(encoded);
         } else if (context.basicAuthHappened) {

@@ -225,7 +225,7 @@ public class SoapEngine {
             try {
                 AuthToken at = zsc.getAuthToken();
                 if (at != null) {
-                    proxyAuthToken = prov.getProxyAuthToken(rid);
+                    proxyAuthToken = prov.getProxyAuthToken(rid, context);
                     at.setProxyAuthToken(proxyAuthToken);
                 }
             } catch (ServiceException e) {

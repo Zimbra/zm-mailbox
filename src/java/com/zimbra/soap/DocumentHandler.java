@@ -447,6 +447,10 @@ public abstract class DocumentHandler {
         return proxyRequest(request, context, server, pxyCtxt);
     }
 
+    protected String getProxyAuthToken(String requestedAccountId, Map<String, Object> context) throws ServiceException {
+        return Provisioning.getInstance().getProxyAuthToken(requestedAccountId, context);
+    }
+
     protected Element proxyRequest(Element request, Map<String, Object> context, Server server, ZimbraSoapContext zsc)
     throws ServiceException {
         // figure out whether we can just re-dispatch or if we need to proxy via HTTP
@@ -462,7 +466,7 @@ public abstract class DocumentHandler {
         if (zsc.getRequestedAccountId() != null) {
             try {
                 AuthToken at = zsc.getAuthToken();
-                String proxyToken = Provisioning.getInstance().getProxyAuthToken(zsc.getRequestedAccountId());
+                String proxyToken = getProxyAuthToken(zsc.getRequestedAccountId(), context);
                 if (at != null && (at.getProxyAuthToken() == null || !at.getProxyAuthToken().equals(proxyToken))) {
                     at.setProxyAuthToken(proxyToken);
                 }

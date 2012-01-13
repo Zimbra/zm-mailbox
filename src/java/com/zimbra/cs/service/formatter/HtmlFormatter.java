@@ -94,7 +94,7 @@ public class HtmlFormatter extends Formatter {
             auth = AuthToken.getAuthToken(GuestAccount.GUID_PUBLIC, null, null, null, expiration);
         }
         if (auth != null && context.targetAccount != null && context.targetAccount != context.getAuthAccount()) {
-            auth.setProxyAuthToken(Provisioning.getInstance().getProxyAuthToken(context.targetAccount.getId()));
+            auth.setProxyAuthToken(Provisioning.getInstance().getProxyAuthToken(context.targetAccount.getId(), null));
         }
         String authString = null;
         try {
