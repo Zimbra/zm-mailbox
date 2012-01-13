@@ -644,7 +644,7 @@
 
       <!-- domain -->
       <property name="zimbraVirtualHostname"       value="${spnego.server.name}"/>
-      <property name="zimbraWebClientLoginURL"     value="../../service/spnego"/>
+      <property name="zimbraWebClientLoginURL"     value="/service/spnego"/>
       <property name="zimbraWebClientLogoutURL"    value="../?sso=1"/>
       <property name="zimbraAuthKerberos5Realm"    value="${zimbraSpnegoAuthRealm}"/>
 
