@@ -37,6 +37,7 @@ public class GetInfoRequest {
     private static Joiner COMMA_JOINER = Joiner.on(",");
     
     private List<InfoSection> sections = new ArrayList<InfoSection>();
+    private List<String> rights = new ArrayList<String>();
     
     public GetInfoRequest() {
     }
@@ -45,8 +46,14 @@ public class GetInfoRequest {
         addSections(sections);
     }
     
-    @XmlAttribute(name=AccountConstants.A_SECTIONS) public String getSections() {
+    @XmlAttribute(name=AccountConstants.A_SECTIONS) 
+    public String getSections() {
         return COMMA_JOINER.join(sections);
+    }
+    
+    @XmlAttribute(name=AccountConstants.A_RIGHTS) 
+    public String getRights() {
+        return COMMA_JOINER.join(rights);
     }
     
     public GetInfoRequest setSections(String sections)
@@ -83,6 +90,23 @@ public class GetInfoRequest {
                 addSection(section);
             }
         }
+        return this;
+    }
+    
+    public GetInfoRequest setRights(String... rights)
+    throws ServiceException {
+        this.rights.clear();
+        if (rights != null) {
+            for (String right : rights) {
+                addRight(right);
+            }
+        }
+        return this;
+    }
+    
+    public GetInfoRequest addRight(String right)
+    throws ServiceException {
+        rights.add(right);
         return this;
     }
 }

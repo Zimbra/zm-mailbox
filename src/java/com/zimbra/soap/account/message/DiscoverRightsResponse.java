@@ -43,7 +43,7 @@ public class DiscoverRightsResponse {
     }
     
     public void addDiscoveredRight(DiscoverRightsInfo discoveredRight) {
-        discoveredRights.add(discoveredRight);
+        this.discoveredRights.add(discoveredRight);
     }
     
     public List<DiscoverRightsInfo> getDiscoveredRights() {

@@ -50,6 +50,7 @@ import com.zimbra.soap.account.type.AccountZimletInfo;
 import com.zimbra.soap.account.type.Attr;
 import com.zimbra.soap.account.type.ChildAccount;
 import com.zimbra.soap.account.type.Cos;
+import com.zimbra.soap.account.type.DiscoverRightsInfo;
 import com.zimbra.soap.account.type.Identity;
 import com.zimbra.soap.account.type.LicenseInfo;
 import com.zimbra.soap.account.type.Pref;
@@ -129,6 +130,9 @@ import com.zimbra.soap.json.jackson.WrappedAttrListSerializer;
          </attrs>
      </childAccount>*
    </childAccounts>
+   <rights>
+     {discovered-rights}
+   </right>*  
    [<license status="inGracePeriod|bad"/>]
 </GetInfoResponse>
  *
@@ -140,7 +144,7 @@ import com.zimbra.soap.json.jackson.WrappedAttrListSerializer;
         "lifetime", "adminDelegated", "restUrl", "quotaUsed",
         "previousSessionTime", "lastWriteAccessTime", "recentMessageCount",
         "cos", "prefs", "attrs", "zimlets", "props", "identities",
-        "signatures", "dataSources", "childAccounts",
+        "signatures", "dataSources", "childAccounts", "discoveredRights",
         "soapURLs", "publicURL", "changePasswordURL", "license"})
 public final class GetInfoResponse {
 
@@ -270,6 +274,10 @@ public final class GetInfoResponse {
     @XmlElementWrapper(name=AccountConstants.E_CHILD_ACCOUNTS /* childAccounts */, required=false)
     @XmlElement(name=AccountConstants.E_CHILD_ACCOUNT /* childAccount */, required=false)
     private List<ChildAccount> childAccounts = Lists.newArrayList();
+    
+    @XmlElementWrapper(name=AccountConstants.E_RIGHTS /* rights */, required=false)
+    @XmlElement(name=AccountConstants.E_TARGETS, required=false)
+    private List<DiscoverRightsInfo> discoveredRights = Lists.newArrayList();
 
     // For JSON treat as Attribute
     @XmlElement(name=AccountConstants.E_SOAP_URL /* soapURL */, required=false)
@@ -391,6 +399,14 @@ public final class GetInfoResponse {
     public void addChildAccount(ChildAccount childAccount) {
         this.childAccounts.add(childAccount);
     }
+    
+    public void setDiscoveredRights(Iterable<DiscoverRightsInfo> discoveredRights) {
+        this.discoveredRights = Lists.newArrayList(discoveredRights);
+    }
+    
+    public void addDiscoveredRight(DiscoverRightsInfo discoveredRight) {
+        this.discoveredRights.add(discoveredRight);
+    }
 
     public void setSoapURLs(Iterable <String> soapURLs) {
         this.soapURLs.clear();
@@ -444,6 +460,9 @@ public final class GetInfoResponse {
     }
     public List<ChildAccount> getChildAccounts() {
         return Collections.unmodifiableList(childAccounts);
+    }
+    public List<DiscoverRightsInfo> getDiscoveredRights() {
+        return Collections.unmodifiableList(discoveredRights);
     }
     public List<String> getSoapURLs() {
         return Collections.unmodifiableList(soapURLs);
