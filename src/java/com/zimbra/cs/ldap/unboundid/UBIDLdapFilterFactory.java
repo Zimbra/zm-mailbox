@@ -305,6 +305,16 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     }
     
     
+    @Override
+    public ZLdapFilter negate(ZLdapFilter filter) {
+        return new UBIDLdapFilter(
+                filter.getFilterId(),
+                Filter.createNOTFilter(
+                        ((UBIDLdapFilter) filter).getNative()));
+    }
+    
+    
+    
     /*
      * Mail target (accounts and groups)
      */

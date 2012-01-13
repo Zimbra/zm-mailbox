@@ -208,6 +208,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter endsWithFilter(FilterId filterId, String attr, String value);
     public abstract ZLdapFilter substringFilter(FilterId filterId, String attr, String value);
     public abstract ZLdapFilter andWith(ZLdapFilter filter, ZLdapFilter otherFilter);
+    public abstract ZLdapFilter negate(ZLdapFilter filter);
     
     /*
      * Mail target (accounts and groups)

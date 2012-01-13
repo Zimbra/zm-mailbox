@@ -35,6 +35,7 @@ public class LdapUpgrade {
     private static String O_HELP = "h";
     private static String O_BUG = "b";
     private static String O_DESCRIBE ="d";
+    private static String O_DESCRIBE_ALL ="da";
     private static String O_VERBOSE = "v";
     
     private static Options getAllOptions() {
@@ -43,6 +44,7 @@ public class LdapUpgrade {
         options.addOption(O_VERBOSE, "verbose", false, "be verbose");
         options.addOption(O_BUG, "bug", true, "bug number this upgrade is for");
         options.addOption(O_DESCRIBE, "desc", true, "describe this upgrade task");
+        options.addOption(O_DESCRIBE_ALL, "descAll", false, "describe all upgrade tasks");
         return options;
     }
     
@@ -132,6 +134,15 @@ public class LdapUpgrade {
             String bug = cl.getOptionValue(O_DESCRIBE);
             UpgradeOp upgradeOp = getUpgradeOp(bug, printer);
             upgradeOp.describe();
+            System.exit(0);
+        }
+        
+        if (cl.hasOption(O_DESCRIBE_ALL)) {
+            for (UpgradeTask task : UpgradeTask.values()) {
+                String bug = task.getBug();
+                UpgradeOp upgradeOp = getUpgradeOp(bug, printer);
+                upgradeOp.describe();
+            }
             System.exit(0);
         }
         

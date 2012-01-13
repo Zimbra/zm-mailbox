@@ -82,6 +82,9 @@ public class LegacyLdapFilter {
         return "(&" + filter + otherFilter + ")";
     }
     
+    public static String negate(String filter) {
+        return "(!" + filter + ")";
+    }
     
     /*
      * Mail target (accounts and groups)

@@ -173,6 +173,16 @@ public class TestLdapZLdapFilter extends LdapTest {
                 filterDactory.fromFilterString(FilterId.UNITTEST, FILTER2));
         verify(FilterId.ADMIN_SEARCH, filter, zLdapFilter);
     }
+    
+    @Test
+    public void negate() throws Exception {
+        String FILTER = "(foo=bar)";
+        
+        String filter = LegacyLdapFilter.negate(FILTER);
+        ZLdapFilter zLdapFilter = filterDactory.negate(
+                filterDactory.fromFilterString(FilterId.UNITTEST, FILTER));
+        verify(FilterId.UNITTEST, filter, zLdapFilter);
+    }
   
     @Test
     public void addrsExist() throws Exception {

@@ -104,6 +104,12 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
                 otherFilter.toFilterString()));
     }
     
+    @Override
+    public ZLdapFilter negate(ZLdapFilter filter) {
+        return new JNDILdapFilter(LegacyLdapFilter.negate(
+                filter.toFilterString()));
+    }
+    
     
     /*
      * Mail target (accounts and groups)
