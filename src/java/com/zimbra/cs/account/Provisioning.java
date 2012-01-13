@@ -2025,7 +2025,12 @@ public abstract class Provisioning extends ZAttrProvisioning {
         return false;
     }
 
-    public String getProxyAuthToken(String acctId) throws ServiceException {
+    /**
+     * Get auth token for proxying. Only implemented in OfflineProvisioning
+     * @param targetAcctId - the account we are proxying to
+     * @param originalContext - the original request context. Used internally to ensure proxy token is obtained for correct mountpoint account
+     */
+    public String getProxyAuthToken(String targetAcctId, Map<String,Object> originalContext) throws ServiceException {
         return null;
     }
 
