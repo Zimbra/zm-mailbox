@@ -76,13 +76,23 @@ public class DiscoverRights extends AccountDocumentHandler {
         if (rights.size() == 0) {
             throw ServiceException.INVALID_REQUEST("no right is specified", null);
         }
-        
+
+        Element response = zsc.createElement(AccountConstants.DISCOVER_RIGHTS_RESPONSE);
+        discoverRights(account, rights, response);
+
+        return response;
+    }
+    
+    public static boolean isDelegatedSendRight(Right right) {
+        return DELEGATED_SEND_RIGHTS.contains(right.getName());
+    }
+    
+    public static void discoverRights(Account account, Set<Right> rights, Element eParent) 
+    throws ServiceException {
         AccessManager accessMgr = AccessManager.getInstance();
         Map<Right, Set<Entry>> discoveredRights = accessMgr.discoverRights(account, rights);
         
         Locale locale = account.getLocale();
-        
-        Element response = zsc.createElement(AccountConstants.DISCOVER_RIGHTS_RESPONSE);
         for (Map.Entry<Right, Set<Entry>> targetsForRight : discoveredRights.entrySet()) {
             Right right = targetsForRight.getKey();
             Set<Entry> targets = targetsForRight.getValue();
@@ -91,7 +101,7 @@ public class DiscoverRights extends AccountDocumentHandler {
             
             boolean isDelegatedSendRight = isDelegatedSendRight(right);
             
-            Element eTargets = response.addElement(AccountConstants.E_TARGETS);
+            Element eTargets = eParent.addElement(AccountConstants.E_TARGETS);
             eTargets.addAttribute(AccountConstants.A_RIGHT, right.getName());
             
             for (Entry target : sortedTargets) {
@@ -126,11 +136,6 @@ public class DiscoverRights extends AccountDocumentHandler {
                 }
             }
         }
-        return response;
-    }
-    
-    public static boolean isDelegatedSendRight(Right right) {
-        return DELEGATED_SEND_RIGHTS.contains(right.getName());
     }
 
 }

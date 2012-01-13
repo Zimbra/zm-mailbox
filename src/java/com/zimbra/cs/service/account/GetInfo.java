@@ -23,6 +23,7 @@ import java.util.Set;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.Sets;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.Element;
@@ -42,6 +43,8 @@ import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.Signature;
 import com.zimbra.cs.account.Zimlet;
+import com.zimbra.cs.account.accesscontrol.Right;
+import com.zimbra.cs.account.accesscontrol.RightManager;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ProvisioningConstants;
@@ -90,13 +93,23 @@ public class GetInfo extends AccountDocumentHandler  {
         Set<Section> sections;
         if (secstr != null) {
             sections = EnumSet.noneOf(Section.class);
-            for (String sec : Splitter.on(',').split(secstr)) {
+            for (String sec : Splitter.on(',').omitEmptyStrings().trimResults().split(secstr)) {
                 sections.add(Section.lookup(sec));
             }
         } else {
             sections = EnumSet.allOf(Section.class);
         }
 
+        String rightsStr = request.getAttribute(AccountConstants.A_RIGHTS, null);
+        Set<Right> rights = null;
+        if (rightsStr != null) {
+            RightManager rightMgr = RightManager.getInstance();
+            rights = Sets.newHashSet();
+            for (String right : Splitter.on(',').omitEmptyStrings().trimResults().split(rightsStr)) {
+                rights.add(rightMgr.getUserRight(right));
+            }
+        }
+        
 
         Element response = zsc.createElement(AccountConstants.GET_INFO_RESPONSE);
         response.addAttribute(AccountConstants.E_VERSION, BuildInfo.FULL_VERSION, Element.Disposition.CONTENT);
@@ -200,6 +213,11 @@ public class GetInfo extends AccountDocumentHandler  {
         if (sections.contains(Section.CHILDREN)) {
             Element ca = response.addUniqueElement(AccountConstants.E_CHILD_ACCOUNTS);
             doChildAccounts(ca, account, zsc.getAuthToken());
+        }
+        
+        if (rights != null && !rights.isEmpty()) {
+            Element eRights = response.addUniqueElement(AccountConstants.E_RIGHTS);
+            doDiscoverRights(eRights, account, rights);
         }
 
         GetAccountInfo.addUrls(response, account);
@@ -393,5 +411,9 @@ public class GetInfo extends AccountDocumentHandler  {
                     AccountConstants.E_ATTR, AccountConstants.A_NAME);
         }
         return elem;
+    }
+    
+    private void doDiscoverRights(Element eRights, Account account, Set<Right> rights) throws ServiceException {
+        DiscoverRights.discoverRights(account, rights, eRights);
     }
 }

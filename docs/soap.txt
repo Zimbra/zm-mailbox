@@ -492,7 +492,7 @@ effect if called in a <nosession> context.
 
 ----------------------------
 
-<GetInfoRequest [sections="mbox,prefs,attrs,zimlets,props,idents,sigs,dsrcs,children"]>
+<GetInfoRequest [sections="mbox,prefs,attrs,zimlets,props,idents,sigs,dsrcs,children"] [rights="{comma-separated-rights}"]>
 </GetInfoRequest>
 
    <-- by default, GetInfo returns all data; to limit the returned data, specify only the sections you want in the "sections" attr -->
@@ -562,6 +562,9 @@ effect if called in a <nosession> context.
          </attrs>
      </childAccount>*
    </childAccounts>
+   [<rights>
+      {same as DiscoverRightsResponse}
+    </rights>]
 </GetInfoResponse>
 
   {version} = server version: <major>[.<minor>[.<maintenance>]][build] <release> <date>[ <type>]
@@ -825,7 +828,7 @@ import and export of addressbook.
 
  Notes:
    SearchCalendarResourcesRequest:
-   attrs - comma-seperated list of attrs to return ("displayName", "zimbraId", "zimbraCalResType")
+   attrs - comma-separated list of attrs to return ("displayName", "zimbraId", "zimbraCalResType")
    sortBy - name of attribute to sort on. default is the calendar resource name.
    sortAscending - whether to sort in ascending order (0/1), 1 is default
 
@@ -4025,7 +4028,7 @@ Notes:
 
 -----------------------------
 
-<GetDistributionListRequest needOwners="1|0" needRights="{comma-seperated-rights}">
+<GetDistributionListRequest needOwners="1|0" needRights="{comma-separated-rights}">
   <dl by="id|name">...</dl>
 </GetDistributionListRequest>
 
@@ -4033,7 +4036,7 @@ Notes:
                1: return owners
                0: don't return owners
                
-  needRights = return grants for the specified (comma-seperated) rights.
+  needRights = return grants for the specified (comma-separated) rights.
                e.g. needRights="sendToDistList,viewDistList"
                
 
@@ -4182,7 +4185,7 @@ Note: isOwner is returned only if ownerOf on the request is 1.
               none: do not need groups the user is a member of.
               directOnly (default): needs groups the account is a direct member of.    
               
-{attrs} = comma-seperated attributes to return.  Note: non-owner user can see only certain 
+{attrs} = comma-separated attributes to return.  Note: non-owner user can see only certain 
           attributes of a group.  If a specified attribute is not visible to the user,
           it will not be returned.
 

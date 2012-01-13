@@ -42,8 +42,6 @@ import com.zimbra.soap.type.ContactAttr;
 import com.zimbra.soap.type.TargetBy;
 
 public class TestSearchGalGroups extends SoapTest {
-    private static final String PASSWORD = "test123";
-    
     private static SoapProvTestUtil provUtil;
     private static Provisioning prov;
     private static Domain domain;
