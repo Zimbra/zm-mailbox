@@ -390,4 +390,14 @@ public class Document extends MailItem {
         }
         return info;
     }
+
+    @Override
+    protected long getExternalShareLifetime(Account account) {
+        return account.getFileExternalShareLifetime();
+    }
+
+    @Override
+    protected long getInternalShareLifetime(Account account) {
+        return account.getFileShareLifetime();
+    }
 }

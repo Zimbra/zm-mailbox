@@ -6768,5 +6768,28 @@ TODO: delete them permanently from here
   <desc>Whether share notification MTA is enabled.</desc>
 </attr>
 
+<attr id="1362" name="zimbraFileShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,octopus" since="8.0.0">
+  <desc>
+    Maximum allowed lifetime of file shares to internal users or groups.
+    A value of 0 indicates that there's no limit on an internal file share's lifetime.
+  </desc>
+  <defaultCOSValue>90d</defaultCOSValue>
+</attr>
+
+<attr id="1363" name="zimbraFileExternalShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,octopus" since="8.0.0">
+  <desc>
+    Maximum allowed lifetime of file shares to external users.
+    A value of 0 indicates that there's no limit on an external file share's lifetime.
+  </desc>
+  <defaultCOSValue>30d</defaultCOSValue>
+</attr>
+
+<attr id="1364" name="zimbraFilePublicShareLifetime" type="duration" cardinality="single" optionalIn="account,cos" flags="accountInfo,accountInherited,octopus" since="8.0.0">
+  <desc>
+    Maximum allowed lifetime of public file shares.
+    A value of 0 indicates that there's no limit on a public file share's lifetime.
+  </desc>
+  <defaultCOSValue>15d</defaultCOSValue>
+</attr>
 
 </attrs>

@@ -44,6 +44,7 @@ import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.DomainBy;
 import com.zimbra.cs.account.Server;
 import com.zimbra.cs.account.AuthToken;
+import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.soap.admin.type.DataSourceType;
 
 public class AccountUtil {
@@ -259,6 +260,53 @@ public class AccountUtil {
             addrs.add(addr.toLowerCase());
 
         return addrs;
+    }
+
+    public static long getMaxInternalShareLifetime(Account account, MailItem.Type folderType) {
+        switch (folderType) {
+            case DOCUMENT:
+                return account.getFileShareLifetime();
+            case UNKNOWN:
+                return AccountUtil.minShareLifetime(
+                        account.getFileShareLifetime(), account.getShareLifetime());
+            default:
+                return account.getShareLifetime();
+        }
+    }
+
+    public static long getMaxExternalShareLifetime(Account account, MailItem.Type folderType) {
+        switch (folderType) {
+            case DOCUMENT:
+                return account.getFileExternalShareLifetime();
+            case UNKNOWN:
+                return AccountUtil.minShareLifetime(
+                        account.getFileExternalShareLifetime(), account.getExternalShareLifetime());
+            default:
+                return account.getExternalShareLifetime();
+        }
+    }
+
+    public static long getMaxPublicShareLifetime(Account account, MailItem.Type folderType) {
+        switch (folderType) {
+            case DOCUMENT:
+                return account.getFilePublicShareLifetime();
+            case UNKNOWN:
+                return AccountUtil.minShareLifetime(
+                        account.getFilePublicShareLifetime(), account.getPublicShareLifetime());
+            default:
+                return account.getPublicShareLifetime();
+        }
+    }
+
+    private static long minShareLifetime(long shareLifetime1, long shareLifetime2) {
+        // 0 means there's no limit on lifetime
+        if (shareLifetime1 == 0) {
+            return shareLifetime2;
+        } else if (shareLifetime2 == 0) {
+            return shareLifetime1;
+        } else {
+            return Math.min(shareLifetime1, shareLifetime2);
+        }
     }
 
     public static class AccountAddressMatcher {

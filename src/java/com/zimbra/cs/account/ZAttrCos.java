@@ -41,7 +41,7 @@ public abstract class ZAttrCos extends NamedEntry {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20120111-1206 */
+    /* build: 8.0.0_BETA1_1111 administrator 20120111-1420 */
 
     /**
      * RFC2256: common name(s) for which the entity is known by
@@ -10701,6 +10701,124 @@ public abstract class ZAttrCos extends NamedEntry {
     }
 
     /**
+     * Maximum allowed lifetime of file shares to external users. A value of
+     * 0 indicates that there&#039;s no limit on an external file
+     * share&#039;s lifetime. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getFileExternalShareLifetimeAsString to access value as a string.
+     *
+     * @see #getFileExternalShareLifetimeAsString()
+     *
+     * @return zimbraFileExternalShareLifetime in millseconds, or 2592000000 (30d)  if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1363)
+    public long getFileExternalShareLifetime() {
+        return getTimeInterval(Provisioning.A_zimbraFileExternalShareLifetime, 2592000000L);
+    }
+
+    /**
+     * Maximum allowed lifetime of file shares to external users. A value of
+     * 0 indicates that there&#039;s no limit on an external file
+     * share&#039;s lifetime. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraFileExternalShareLifetime, or "30d" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1363)
+    public String getFileExternalShareLifetimeAsString() {
+        return getAttr(Provisioning.A_zimbraFileExternalShareLifetime, "30d");
+    }
+
+    /**
+     * Maximum allowed lifetime of file shares to external users. A value of
+     * 0 indicates that there&#039;s no limit on an external file
+     * share&#039;s lifetime. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraFileExternalShareLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1363)
+    public void setFileExternalShareLifetime(String zimbraFileExternalShareLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileExternalShareLifetime, zimbraFileExternalShareLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum allowed lifetime of file shares to external users. A value of
+     * 0 indicates that there&#039;s no limit on an external file
+     * share&#039;s lifetime. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraFileExternalShareLifetime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1363)
+    public Map<String,Object> setFileExternalShareLifetime(String zimbraFileExternalShareLifetime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileExternalShareLifetime, zimbraFileExternalShareLifetime);
+        return attrs;
+    }
+
+    /**
+     * Maximum allowed lifetime of file shares to external users. A value of
+     * 0 indicates that there&#039;s no limit on an external file
+     * share&#039;s lifetime. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1363)
+    public void unsetFileExternalShareLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileExternalShareLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum allowed lifetime of file shares to external users. A value of
+     * 0 indicates that there&#039;s no limit on an external file
+     * share&#039;s lifetime. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1363)
+    public Map<String,Object> unsetFileExternalShareLifetime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileExternalShareLifetime, "");
+        return attrs;
+    }
+
+    /**
      * Period of inactivity after which a file gets deleted. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
@@ -10809,6 +10927,242 @@ public abstract class ZAttrCos extends NamedEntry {
     public Map<String,Object> unsetFileLifetime(Map<String,Object> attrs) {
         if (attrs == null) attrs = new HashMap<String,Object>();
         attrs.put(Provisioning.A_zimbraFileLifetime, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum allowed lifetime of public file shares. A value of 0 indicates
+     * that there&#039;s no limit on a public file share&#039;s lifetime. .
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * <p>Use getFilePublicShareLifetimeAsString to access value as a string.
+     *
+     * @see #getFilePublicShareLifetimeAsString()
+     *
+     * @return zimbraFilePublicShareLifetime in millseconds, or 1296000000 (15d)  if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1364)
+    public long getFilePublicShareLifetime() {
+        return getTimeInterval(Provisioning.A_zimbraFilePublicShareLifetime, 1296000000L);
+    }
+
+    /**
+     * Maximum allowed lifetime of public file shares. A value of 0 indicates
+     * that there&#039;s no limit on a public file share&#039;s lifetime. .
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @return zimbraFilePublicShareLifetime, or "15d" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1364)
+    public String getFilePublicShareLifetimeAsString() {
+        return getAttr(Provisioning.A_zimbraFilePublicShareLifetime, "15d");
+    }
+
+    /**
+     * Maximum allowed lifetime of public file shares. A value of 0 indicates
+     * that there&#039;s no limit on a public file share&#039;s lifetime. .
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraFilePublicShareLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1364)
+    public void setFilePublicShareLifetime(String zimbraFilePublicShareLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFilePublicShareLifetime, zimbraFilePublicShareLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum allowed lifetime of public file shares. A value of 0 indicates
+     * that there&#039;s no limit on a public file share&#039;s lifetime. .
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param zimbraFilePublicShareLifetime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1364)
+    public Map<String,Object> setFilePublicShareLifetime(String zimbraFilePublicShareLifetime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFilePublicShareLifetime, zimbraFilePublicShareLifetime);
+        return attrs;
+    }
+
+    /**
+     * Maximum allowed lifetime of public file shares. A value of 0 indicates
+     * that there&#039;s no limit on a public file share&#039;s lifetime. .
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1364)
+    public void unsetFilePublicShareLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFilePublicShareLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum allowed lifetime of public file shares. A value of 0 indicates
+     * that there&#039;s no limit on a public file share&#039;s lifetime. .
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1364)
+    public Map<String,Object> unsetFilePublicShareLifetime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFilePublicShareLifetime, "");
+        return attrs;
+    }
+
+    /**
+     * Maximum allowed lifetime of file shares to internal users or groups. A
+     * value of 0 indicates that there&#039;s no limit on an internal file
+     * share&#039;s lifetime. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * <p>Use getFileShareLifetimeAsString to access value as a string.
+     *
+     * @see #getFileShareLifetimeAsString()
+     *
+     * @return zimbraFileShareLifetime in millseconds, or 7776000000 (90d)  if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1362)
+    public long getFileShareLifetime() {
+        return getTimeInterval(Provisioning.A_zimbraFileShareLifetime, 7776000000L);
+    }
+
+    /**
+     * Maximum allowed lifetime of file shares to internal users or groups. A
+     * value of 0 indicates that there&#039;s no limit on an internal file
+     * share&#039;s lifetime. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @return zimbraFileShareLifetime, or "90d" if unset
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1362)
+    public String getFileShareLifetimeAsString() {
+        return getAttr(Provisioning.A_zimbraFileShareLifetime, "90d");
+    }
+
+    /**
+     * Maximum allowed lifetime of file shares to internal users or groups. A
+     * value of 0 indicates that there&#039;s no limit on an internal file
+     * share&#039;s lifetime. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraFileShareLifetime new value
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1362)
+    public void setFileShareLifetime(String zimbraFileShareLifetime) throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileShareLifetime, zimbraFileShareLifetime);
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum allowed lifetime of file shares to internal users or groups. A
+     * value of 0 indicates that there&#039;s no limit on an internal file
+     * share&#039;s lifetime. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param zimbraFileShareLifetime new value
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1362)
+    public Map<String,Object> setFileShareLifetime(String zimbraFileShareLifetime, Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileShareLifetime, zimbraFileShareLifetime);
+        return attrs;
+    }
+
+    /**
+     * Maximum allowed lifetime of file shares to internal users or groups. A
+     * value of 0 indicates that there&#039;s no limit on an internal file
+     * share&#039;s lifetime. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @throws com.zimbra.common.service.ServiceException if error during update
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1362)
+    public void unsetFileShareLifetime() throws com.zimbra.common.service.ServiceException {
+        HashMap<String,Object> attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileShareLifetime, "");
+        getProvisioning().modifyAttrs(this, attrs);
+    }
+
+    /**
+     * Maximum allowed lifetime of file shares to internal users or groups. A
+     * value of 0 indicates that there&#039;s no limit on an internal file
+     * share&#039;s lifetime. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @param attrs existing map to populate, or null to create a new map
+     * @return populated map to pass into Provisioning.modifyAttrs
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1362)
+    public Map<String,Object> unsetFileShareLifetime(Map<String,Object> attrs) {
+        if (attrs == null) attrs = new HashMap<String,Object>();
+        attrs.put(Provisioning.A_zimbraFileShareLifetime, "");
         return attrs;
     }
 

@@ -45,6 +45,7 @@ import com.zimbra.cs.mailbox.Mailbox.FolderNode;
 import com.zimbra.cs.mailbox.OperationContext;
 import com.zimbra.cs.service.util.ItemId;
 import com.zimbra.cs.service.util.ItemIdFormatter;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.ZimbraSoapContext;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 
@@ -169,7 +170,7 @@ public class FolderAction extends ItemAction {
             } else if (gtype == ACL.GRANTEE_PUBLIC) {
                 zid = GuestAccount.GUID_PUBLIC;
                 expiry = validateGrantExpiry(grant.getAttribute(MailConstants.A_EXPIRY, null),
-                        mbox.getAccount().getPublicShareLifetime());
+                        AccountUtil.getMaxPublicShareLifetime(mbox.getAccount(), mbox.getFolderById(octxt, iid.getId()).getType()));
             } else if (gtype == ACL.GRANTEE_GUEST) {
                 zid = grant.getAttribute(MailConstants.A_DISPLAY);
                 if (zid == null || zid.indexOf('@') < 0)
@@ -240,8 +241,14 @@ public class FolderAction extends ItemAction {
             }
             String flags = action.getAttribute(MailConstants.A_FLAGS, null);
             byte color = (byte) action.getAttributeLong(MailConstants.A_COLOR, -1);
-            ACL acl = parseACL(action.getOptionalElement(MailConstants.E_ACL), mbox.getAccount());
             String view = action.getAttribute(MailConstants.A_DEFAULT_VIEW, null);
+            Element eAcl = action.getOptionalElement(MailConstants.E_ACL);
+            ACL acl = null;
+            if (eAcl != null) {
+                acl = parseACL(eAcl,
+                        view == null ? mbox.getFolderById(octxt, iid.getId()).getType() : MailItem.Type.of(view),
+                        mbox.getAccount());
+            }
             if (color >= 0) {
                 mbox.setColor(octxt, iid.getId(), MailItem.Type.FOLDER, color);
             }
@@ -271,14 +278,14 @@ public class FolderAction extends ItemAction {
         return ifmt.formatItemId(iid);
     }
 
-    static ACL parseACL(Element eAcl, Account account) throws ServiceException {
+    static ACL parseACL(Element eAcl, MailItem.Type folderType, Account account) throws ServiceException {
         if (eAcl == null)
             return null;
 
         long internalGrantExpiry = validateGrantExpiry(eAcl.getAttribute(MailConstants.A_INTERNAL_GRANT_EXPIRY, null),
-                account.getShareLifetime());
+                AccountUtil.getMaxInternalShareLifetime(account, folderType));
         long guestGrantExpiry = validateGrantExpiry(eAcl.getAttribute(MailConstants.A_GUEST_GRANT_EXPIRY, null),
-                account.getExternalShareLifetime());
+                AccountUtil.getMaxExternalShareLifetime(account, folderType));
         ACL acl = new ACL(internalGrantExpiry, guestGrantExpiry);
 
         for (Element grant : eAcl.listElements(MailConstants.E_GRANT)) {
@@ -287,7 +294,7 @@ public class FolderAction extends ItemAction {
             short rights = ACL.stringToRights(grant.getAttribute(MailConstants.A_RIGHTS));
             long expiry = gtype == ACL.GRANTEE_PUBLIC ?
                     validateGrantExpiry(eAcl.getAttribute(MailConstants.A_EXPIRY, null),
-                            account.getPublicShareLifetime()) :
+                            AccountUtil.getMaxPublicShareLifetime(account, folderType)) :
                     eAcl.getAttributeLong(MailConstants.A_EXPIRY, 0);
 
             String secret = null;

@@ -3434,8 +3434,8 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         markItemModified(Change.ACL);
         if (this.rights == null) {
-            long intShareLifetime = account.getShareLifetime();
-            long extShareLifetime = account.getExternalShareLifetime();
+            long intShareLifetime = getInternalShareLifetime(account);
+            long extShareLifetime = getExternalShareLifetime(account);
             long now = System.currentTimeMillis();
             this.rights = new ACL(intShareLifetime == 0 ? 0 : now + intShareLifetime,
                     extShareLifetime == 0 ? 0 : now + extShareLifetime);
@@ -3446,6 +3446,14 @@ public abstract class MailItem implements Comparable<MailItem> {
         queueForAclPush();
 
         return grant;
+    }
+
+    protected long getExternalShareLifetime(Account account) {
+        return account.getExternalShareLifetime();
+    }
+
+    protected long getInternalShareLifetime(Account account) {
+        return account.getShareLifetime();
     }
 
     protected void queueForAclPush() throws ServiceException {

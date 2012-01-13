@@ -42,6 +42,7 @@ import com.zimbra.cs.imap.ImapSession;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.session.Session;
+import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 
 /**
@@ -1378,5 +1379,15 @@ public class Folder extends MailItem {
         if (isMutable()) {
             super.checkItemCreationAllowed();
         }
+    }
+
+    @Override
+    protected long getExternalShareLifetime(Account account) {
+        return AccountUtil.getMaxExternalShareLifetime(account, getType());
+    }
+
+    @Override
+    protected long getInternalShareLifetime(Account account) {
+        return AccountUtil.getMaxInternalShareLifetime(account, getType());
     }
 }
