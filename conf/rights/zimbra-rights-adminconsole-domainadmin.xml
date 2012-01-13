@@ -728,6 +728,7 @@
     <r n="listAccount"/>
     <r n="viewAccountAdminUI"/>
     <r n="get.account.zimbraIsSystemResource"/>
+    <r n="get.account.zimbraIsSystemAccount"/>
   </rights>
 </right>
 
