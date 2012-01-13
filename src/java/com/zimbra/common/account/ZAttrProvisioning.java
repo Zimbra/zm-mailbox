@@ -28,7 +28,7 @@ public class ZAttrProvisioning {
 
     ///// BEGIN-AUTO-GEN-REPLACE
 
-    /* build: 8.0.0_BETA1_1111 administrator 20120111-1206 */
+    /* build: 8.0.0_BETA1_1111 administrator 20120111-1420 */
 
     public static enum AccountCalendarUserType {
         RESOURCE("RESOURCE"),
@@ -1676,7 +1676,18 @@ public class ZAttrProvisioning {
     public static final String A_zimbraAccountExtraObjectClass = "zimbraAccountExtraObjectClass";
 
     /**
-     * account status
+     * account status. active - active lockout - no login until lockout
+     * duration is over, mail delivery OK. locked - no login, mail delivery
+     * OK. maintenance - no login, no delivery(lmtp server returns 4.x.x
+     * Persistent Transient Failure). pending - no login, no delivery(lmtp
+     * server returns 5.x.x Permanent Failure), Account behavior is like
+     * closed, except that when the status is being set to pending, account
+     * addresses are not removed from distribution lists. The use case is for
+     * hosted. New account creation based on invites that are not completed
+     * until user accepts TOS on account creation confirmation page. closed -
+     * no login, no delivery(lmtp server returns 5.x.x Permanent Failure),
+     * all addresses (account main email and all aliases) of the account are
+     * removed from all distribution lists.
      */
     @ZAttr(id=2)
     public static final String A_zimbraAccountStatus = "zimbraAccountStatus";
@@ -3531,33 +3542,25 @@ public class ZAttrProvisioning {
 
     /**
      * domain status. enum values are akin to those of zimbraAccountStatus
-     * zimbraAccountStatus values: active - active lockout - no login until
-     * lockout duration is over locked - no login maintenance - no login, no
-     * delivery(try again, no bouncing) pending - no login, no
-     * delivery(bouncing mails), Account behavior is like closed, except that
-     * when the status is being set to pending, account addresses are not
-     * removed from distribution lists. The use case is for hosted. New
-     * account creation based on invites that are not completed until user
-     * accepts TOS on account creation confirmation page. closed - no login,
-     * no delivery(bouncing mails) all addresses (account main email and all
-     * aliases) of the account are removed from all distribution lists.
-     * zimbraDomainStatus values: all values for zimbraAccountStatus (except
-     * for lockout, see mapping below) suspended - maintenance + no
-     * creating/deleting/modifying accounts/DLs under the domain. shutdown -
-     * suspended + cannot modify domain attrs + cannot delete the domain
-     * Indicating server is doing major and lengthy maintenance work on the
-     * domain, e.g. renaming the domain and moving LDAP entries. Modification
-     * and deletion of the domain can only be done internally by the server
-     * when it is safe to release the domain, they cannot be done in admin
-     * console or zmprov. How zimbraDomainStatus affects account behavior :
-     * ------------------------------------- zimbraDomainStatus account
-     * behavior ------------------------------------- active
-     * zimbraAccountStatus locked zimbraAccountStatus if it is maintenance or
-     * pending or closed, else locked maintenance zimbraAccountStatus if it
-     * is pending or closed, else maintenance suspended zimbraAccountStatus
-     * if it is pending or closed, else maintenance shutdown
-     * zimbraAccountStatus if it is pending or closed, else maintenance
-     * closed closed
+     * but the status affects all accounts on the domain. See table below for
+     * how zimbraDomainStatus affects account status. active - see
+     * zimbraAccountStatus maintenance - see zimbraAccountStatus locked - see
+     * zimbraAccountStatus closed - see zimbraAccountStatus suspended -
+     * maintenance + no creating/deleting/modifying accounts/DLs under the
+     * domain. shutdown - suspended + cannot modify domain attrs + cannot
+     * delete the domain Indicating server is doing major and lengthy
+     * maintenance work on the domain, e.g. renaming the domain and moving
+     * LDAP entries. Modification and deletion of the domain can only be done
+     * internally by the server when it is safe to release the domain, they
+     * cannot be done in admin console or zmprov. How zimbraDomainStatus
+     * affects account behavior : -------------------------------------
+     * zimbraDomainStatus account behavior
+     * ------------------------------------- active zimbraAccountStatus
+     * locked zimbraAccountStatus if it is maintenance or pending or closed,
+     * else locked maintenance zimbraAccountStatus if it is pending or
+     * closed, else maintenance suspended zimbraAccountStatus if it is
+     * pending or closed, else maintenance shutdown zimbraAccountStatus if it
+     * is pending or closed, else maintenance closed closed
      *
      * @since ZCS 5.0.0
      */
@@ -4378,6 +4381,19 @@ public class ZAttrProvisioning {
     public static final String A_zimbraFileExpirationWarningThreshold = "zimbraFileExpirationWarningThreshold";
 
     /**
+     * Maximum allowed lifetime of file shares to external users. A value of
+     * 0 indicates that there&#039;s no limit on an external file
+     * share&#039;s lifetime. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1363)
+    public static final String A_zimbraFileExternalShareLifetime = "zimbraFileExternalShareLifetime";
+
+    /**
      * Period of inactivity after which a file gets deleted. Must be in valid
      * duration format: {digits}{time-unit}. digits: 0-9, time-unit:
      * [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days, ms -
@@ -4388,6 +4404,32 @@ public class ZAttrProvisioning {
      */
     @ZAttr(id=1309)
     public static final String A_zimbraFileLifetime = "zimbraFileLifetime";
+
+    /**
+     * Maximum allowed lifetime of public file shares. A value of 0 indicates
+     * that there&#039;s no limit on a public file share&#039;s lifetime. .
+     * Must be in valid duration format: {digits}{time-unit}. digits: 0-9,
+     * time-unit: [hmsd]|ms. h - hours, m - minutes, s - seconds, d - days,
+     * ms - milliseconds. If time unit is not specified, the default is
+     * s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1364)
+    public static final String A_zimbraFilePublicShareLifetime = "zimbraFilePublicShareLifetime";
+
+    /**
+     * Maximum allowed lifetime of file shares to internal users or groups. A
+     * value of 0 indicates that there&#039;s no limit on an internal file
+     * share&#039;s lifetime. . Must be in valid duration format:
+     * {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m -
+     * minutes, s - seconds, d - days, ms - milliseconds. If time unit is not
+     * specified, the default is s(seconds).
+     *
+     * @since ZCS 8.0.0
+     */
+    @ZAttr(id=1362)
+    public static final String A_zimbraFileShareLifetime = "zimbraFileShareLifetime";
 
     /**
      * Maximum size in bytes for attachments
