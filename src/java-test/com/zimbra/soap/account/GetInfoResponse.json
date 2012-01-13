@@ -1688,6 +1688,7 @@
   "signatures": [{}],
   "dataSources": [{}],
   "childAccounts": [{}],
+  "rights": [{}],
   "soapURL": [{
       "_content": "http://ysasaki.local:7070/service/soap/"
     }],
