@@ -327,11 +327,6 @@
                     <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
                     <arg line="-a generateDefaultExternalCOSLdif -i ${build.dir}/attrs -o ${build.dir}/ldap-config/zimbra_defaultexternalcos.ldif"/>
                 </java>
-                <java classname="com.zimbra.cs.account.AttributeManagerUtil" fork="true" classpathref="class.path"
-                      failonerror="true">
-                    <sysproperty key="zimbra.version" value="${zimbra.buildinfo.all}"/>
-                    <arg line="-a generateOctopusDefaultCOSLdif -i ${build.dir}/attrs -o ${build.dir}/ldap-config/octopus_defaultcos.ldif"/>
-                </java>
                 <copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/zimbra.ldif"/>
                 <copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/zimbra_mimehandlers.ldif"/>
                 <copy todir="${build.dir}/ldap-config" file="${config.dir}/ldap/amavisd.schema"/>
@@ -1418,19 +1413,9 @@
     <antcall target="ldap-add">
       <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_globalconfig.ldif"/>
     </antcall>
-    <if>
-      <equals arg1="${application}" arg2="Octopus"/>
-      <then>
-        <antcall target="ldap-add">
-          <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/octopus_defaultcos.ldif"/>
-        </antcall>
-      </then>
-      <else>
-        <antcall target="ldap-add">
-          <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_defaultcos.ldif"/>
-        </antcall>
-      </else>
-    </if>
+    <antcall target="ldap-add">
+      <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_defaultcos.ldif"/>
+    </antcall>
     <antcall target="ldap-add">
       <param name="ldif.file" value="${dist.dir}/${slapd.etc.dir}/zimbra_defaultexternalcos.ldif"/>
     </antcall>
