@@ -585,7 +585,6 @@ final class ImapSessionManager {
             return inactiveSessionCache.get(key);
         } else {
             ImapFolder folder = activeSessionCache.get(key);
-//            assert(folder != null);
             return folder;
         }
     }
