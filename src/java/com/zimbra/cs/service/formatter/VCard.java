@@ -491,16 +491,26 @@ public class VCard {
 
         StringBuilder sb = new StringBuilder();
         sb.append("BEGIN:VCARD\r\n");
+
+        // This is from RFC 2426 (vCard version 3.0) Section 1:
+        // Profile special notes: The vCard object MUST contain the FN, N and VERSION types.
+
         if (vcattrs == null || vcattrs.contains("VERSION"))
             sb.append("VERSION:3.0\r\n");
 
-        // FN is the only mandatory component of the vCard -- try our best to find or generate one
+        // FN is a mandatory component of the vCard -- try our best to find or generate one
         String fn = fields.get(ContactConstants.A_fullName);
         if (vcattrs == null || vcattrs.contains("FN")) {
             if (fn == null || fn.trim().equals(""))
                 try { fn = con.getFileAsString(); } catch (ServiceException e) { fn = ""; }
             if (fn.trim().equals("") && !emails.isEmpty())
                 fn = emails.get(0);
+            if (fn.trim().equals("")) {
+                String org = fields.get(ContactConstants.A_company);
+                if (org != null && !org.trim().equals("")) {
+                    fn = org;
+                }
+            }
             sb.append("FN:").append(vcfEncode(fn)).append("\r\n");
         }
 
@@ -510,8 +520,8 @@ public class VCard {
             vcfEncode(fields.get(ContactConstants.A_middleName)) + ';' +
             vcfEncode(fields.get(ContactConstants.A_namePrefix)) + ';' +
             vcfEncode(fields.get(ContactConstants.A_nameSuffix));
-            if (!n.equals(";;;;"))
-                sb.append("N:").append(n).append("\r\n");
+            // N is mandatory according to  RFC 2426 Section 1, so include it even if all components are empty
+            sb.append("N:").append(n).append("\r\n");
         }
 
         if (vcattrs == null || vcattrs.contains("NICKNAME"))
