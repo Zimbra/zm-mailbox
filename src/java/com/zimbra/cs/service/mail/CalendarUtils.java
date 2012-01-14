@@ -1,7 +1,7 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010 Zimbra, Inc.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Zimbra, Inc.
  *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
@@ -33,6 +33,7 @@ import com.zimbra.common.calendar.ICalTimeZone.SimpleOnset;
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.ParsedDuration;
 import com.zimbra.common.calendar.TZIDMapper;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.calendar.TimeZoneMap;
 import com.zimbra.common.calendar.WellKnownTimeZones;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
@@ -475,6 +476,8 @@ public class CalendarUtils {
         if (list.isEmpty())
             return list;
 
+        //bug 68728, skip checking in ZD
+        checkListMembership = checkListMembership && LC.check_dl_membership_enabled.booleanValue();
         // Find out which of the new attendees are local distribution lists or GAL groups.
         if (checkListMembership) {
             List<DistributionList> newAtsDL = new ArrayList<DistributionList>();
