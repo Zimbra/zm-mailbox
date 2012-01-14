@@ -1180,6 +1180,8 @@ public final class LC {
     public static final KnownKey http_store_local_cache_min_lifetime = KnownKey.newKey(Constants.MILLIS_PER_MINUTE);
     public static final KnownKey uncompressed_cache_min_lifetime = KnownKey.newKey(Constants.MILLIS_PER_MINUTE);
 
+    public static final KnownKey check_dl_membership_enabled = KnownKey.newKey(true);
+
     static {
         // Automatically set the key name with the variable name.
         for (Field field : LC.class.getFields()) {
