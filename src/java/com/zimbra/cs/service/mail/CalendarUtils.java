@@ -16,6 +16,7 @@
 package com.zimbra.cs.service.mail;
 
 import com.zimbra.common.calendar.TZIDMapper;
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.MailConstants;
@@ -483,6 +484,8 @@ public class CalendarUtils {
         if (list.isEmpty())
             return list;
 
+        //bug 68728, skip checking in ZD
+        checkListMembership = checkListMembership && LC.check_dl_membership_enabled.booleanValue();
         // Find out which of the new attendees are local distribution lists or GAL groups.
         if (checkListMembership) {
             List<DistributionList> newAtsDL = new ArrayList<DistributionList>();
