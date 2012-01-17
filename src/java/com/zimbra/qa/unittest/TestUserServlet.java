@@ -15,7 +15,9 @@
 package com.zimbra.qa.unittest;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -25,12 +27,21 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import junit.framework.TestCase;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.GetMethod;
+
+import com.zimbra.client.ZDocument;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.common.httpclient.HttpClientUtil;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.tar.TarEntry;
 import com.zimbra.common.util.tar.TarInputStream;
 import com.zimbra.common.zmime.ZMimeMessage;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.mailbox.Mailbox;
 import com.zimbra.cs.util.JMSession;
-import com.zimbra.client.ZMailbox;
 
 
 public class TestUserServlet
@@ -38,6 +49,8 @@ extends TestCase {
 
     private static final String NAME_PREFIX = TestUserServlet.class.getSimpleName();
     private static final String USER_NAME = "user1";
+
+    private String originalSanitizeHtml;
 
     @Override
     public void setUp()
@@ -47,6 +60,7 @@ extends TestCase {
         // Add a test message, in case the account is empty.
         ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
         TestUtil.addMessage(mbox, NAME_PREFIX);
+        originalSanitizeHtml = TestUtil.getAccountAttr(USER_NAME, Provisioning.A_zimbraNotebookSanitizeHtml);
     }
 
     public void testTarFormatter()
@@ -126,9 +140,37 @@ extends TestCase {
         assertTrue(foundMessage);
     }
 
+    /**
+     * Verifies that the value of {@code zimbraNotebookSanitizeHtml} does not
+     * affect the {@code Content-Type} header (bug 67752).
+     */
+    public void testSanitizeHtmlContentType() throws ServiceException, IOException {
+        ZMailbox mbox = TestUtil.getZMailbox(USER_NAME);
+        ZDocument doc = TestUtil.createDocument(mbox,
+            Integer.toString(Mailbox.ID_FOLDER_BRIEFCASE), NAME_PREFIX + " testSanitizeHtmlContentType.txt",
+            "text/plain", "testSanitizeHtmlContentType".getBytes());
+
+        Account account = TestUtil.getAccount(USER_NAME);
+        account.setNotebookSanitizeHtml(false);
+        checkContentType(mbox, doc);
+        account.setNotebookSanitizeHtml(true);
+        checkContentType(mbox, doc);
+    }
+
+    private void checkContentType(ZMailbox mbox, ZDocument doc) throws ServiceException, IOException {
+        URI uri = mbox.getRestURI("?id=" + doc.getId());
+        HttpClient client = mbox.getHttpClient(uri);
+        GetMethod get = new GetMethod(uri.toString());
+        int statusCode = HttpClientUtil.executeMethod(client, get);
+        get.releaseConnection();
+        assertEquals(200, statusCode);
+        assertEquals("text/plain", get.getResponseHeader("Content-Type").getValue());
+    }
+
     @Override
     public void tearDown()
     throws Exception {
+        TestUtil.setAccountAttr(USER_NAME, Provisioning.A_zimbraNotebookSanitizeHtml, originalSanitizeHtml);
         cleanUp();
     }
 

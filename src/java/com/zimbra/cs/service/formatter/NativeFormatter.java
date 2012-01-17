@@ -563,7 +563,7 @@ public final class NativeFormatter extends Formatter {
         // everything from the request has been written ok, now see if it's a complete upload
 
         if (ib.isComplete()) {
-            Blob b = ((StoreManagerBasedTempBlobStore)blobStore).extractIncoming(ib);
+            Blob b = blobStore.extractIncoming(ib);
             saveDocument(b, context, contentType, folder, filename);
         } else {
             context.resp.addHeader(RESUME_ID_HEADER, resumeId);
@@ -649,7 +649,7 @@ public final class NativeFormatter extends Formatter {
         ByteUtil.copy(is, true, out, true, contentLength);
 
         if (ib.isComplete()) {
-            Blob b = ((StoreManagerBasedTempBlobStore)blobStore).extractIncoming(ib);
+            Blob b = blobStore.extractIncoming(ib);
             saveDocument(b, context, contentType, folder, filename);
         } else {
             context.resp.addHeader(RESUME_ID_HEADER, resumeId);
@@ -712,6 +712,7 @@ public final class NativeFormatter extends Formatter {
                                           String disposition,
                                           String filename,
                                           long size) throws IOException {
+        resp.setContentType(contentType);
         if (disposition == null) {
             String disp = req.getParameter(UserServlet.QP_DISP);
             disposition = (disp == null || disp.toLowerCase().startsWith("i") ) ? Part.INLINE : Part.ATTACHMENT;
