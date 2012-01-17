@@ -14,6 +14,7 @@
  */
 package com.zimbra.common.util;
 
+import java.text.DateFormat;
 import java.text.DateFormatSymbols;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -577,4 +578,28 @@ public final class DateUtil {
         }
     }
 
+    public static String convertDateToLong(String input) {
+        DateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
+        Date date;
+        try {
+            date = (Date)formatter.parse(input);
+            return Long.toString(date.getTime() / 1000L);
+        } catch (ParseException e) {
+            return "-1";
+        }
+    }
+
+    public static String convertRelativeDatetoLong(String input, String syncFieldName) {
+        Calendar now = GregorianCalendar.getInstance();
+        if(syncFieldName.equals("Year")) {
+            now.add(Calendar.YEAR, Integer.parseInt(input) * -1);
+        }
+        else if(syncFieldName.equals("Month")) {
+            now.add(Calendar.MONTH, Integer.parseInt(input) * -1);
+        }
+        else if(syncFieldName.equals("Week")) {
+            now.add(Calendar.WEEK_OF_YEAR, Integer.parseInt(input) * -1);
+        }
+        return Long.toString(now.getTime().getTime() / 1000L);
+    }
 }
