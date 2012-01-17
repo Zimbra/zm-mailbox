@@ -103,7 +103,15 @@ public class ToXML {
         } catch (ServiceException se) {
             ZimbraLog.account.warn("failed to get AttributeManager instance", se);
         }
-        
+
+        Set<String> reqAttrsLowerCase = null;
+        if (reqAttrs != null) {
+            reqAttrsLowerCase = new HashSet<String>();
+            for (String reqAttr : reqAttrs) {
+                reqAttrsLowerCase.add(reqAttr.toLowerCase());
+            }
+        }
+
         for (Iterator iter = attrs.entrySet().iterator(); iter.hasNext(); ) {
             Map.Entry entry = (Entry) iter.next();
             String name = (String) entry.getKey();
@@ -115,7 +123,7 @@ public class ToXML {
             }
             
             // only returns requested attrs
-            if (reqAttrs != null && !reqAttrs.contains(name)) {
+            if (reqAttrsLowerCase != null && !reqAttrsLowerCase.contains(name.toLowerCase())) {
                 continue;
             }
             
