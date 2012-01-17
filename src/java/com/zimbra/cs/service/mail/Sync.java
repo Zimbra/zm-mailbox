@@ -177,7 +177,7 @@ public class Sync extends MailDocumentHandler {
 
     private static void initialMsgSync(Element f, TypedIdList idlist, OperationContext octxt, Mailbox mbox, Folder folder, long messageSyncStart) throws ServiceException {
         if (messageSyncStart > 0 && (idlist.getTypesMask() & MailItem.typeToBitmask(MailItem.TYPE_MESSAGE)) != 0) {
-            idlist = mbox.listMessageItems(octxt, folder.getId(), messageSyncStart);
+            idlist = mbox.listMessageItems(octxt, folder.getId(), MailItem.TYPE_MESSAGE, messageSyncStart);
         }
 
         initialItemSync(f, MailConstants.E_MSG, idlist.getIds(MailItem.TYPE_MESSAGE));

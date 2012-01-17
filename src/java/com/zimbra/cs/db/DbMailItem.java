@@ -4082,7 +4082,7 @@ public class DbMailItem {
         return idList.toString();
     }
 
-    public static TypedIdList listMsgItems(Folder folder, long messageSyncStart, boolean descending, boolean older) throws ServiceException {
+    public static TypedIdList listMsgItems(Folder folder, long messageSyncStart, byte type, boolean descending, boolean older) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
@@ -4093,15 +4093,16 @@ public class DbMailItem {
         try {
             if (older) {
                 stmt = conn.prepareStatement("SELECT id, type FROM " + getMailItemTableName(folder) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND date < ?" +
+                        " WHERE " + IN_THIS_MAILBOX_AND + " type = ? AND folder_id = ? AND date < ?" +
                         " ORDER BY date" + (descending ? " DESC" : ""));
             } else {
                 stmt = conn.prepareStatement("SELECT id, type FROM " + getMailItemTableName(folder) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND date >= ?" +
+                        " WHERE " + IN_THIS_MAILBOX_AND + " type = ? AND folder_id = ? AND date >= ?" +
                         " ORDER BY date" + (descending ? " DESC" : ""));
             }
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
+            stmt.setByte(pos++, type);
             stmt.setInt(pos++, folder.getId());
             stmt.setLong(pos++, messageSyncStart);
             rs = stmt.executeQuery();
