@@ -18,6 +18,7 @@ package com.zimbra.cs.util.tnef;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -295,16 +296,16 @@ public class TestMain {
         sLog.debug("Processing MIME file %s", mimeFile.getPath());
 
         // Prepare the input and output.
-        SharedFileInputStream sfisMime = null;
+        FileInputStream fisMime = null;
         ByteArrayOutputStream baos = new ByteArrayOutputStream(10240);
         Writer baosOut = null;
         boolean doneConversion = false;
         try {
-            sfisMime = new SharedFileInputStream(mimeFile);
+            fisMime = new FileInputStream(mimeFile);
             baosOut = new OutputStreamWriter(baos, UTF8);
 
             // Do the conversion.
-            MimeMessage mm = new ZMimeMessage(JMSession.getSession(), sfisMime);
+            MimeMessage mm = new ZMimeMessage(JMSession.getSession(), fisMime);
             TnefToICalendar converter = getConverter();
             doneConversion = doConversion(mm, baosOut, converter, tnefFile, verbose);
             if (recurInfoFile != null) {
@@ -345,8 +346,8 @@ public class TestMain {
             return false;
         } finally {
             try {
-                if (sfisMime != null)
-                    sfisMime.close();
+                if (fisMime != null)
+                    fisMime.close();
             } catch (IOException e) {sLog.error("Problem closing mime stream", e);}
         }
         if (!doneConversion) {

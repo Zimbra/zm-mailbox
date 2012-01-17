@@ -17,6 +17,7 @@ package com.zimbra.cs.util;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -31,7 +32,6 @@ import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
-import javax.mail.util.SharedFileInputStream;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -336,18 +336,18 @@ public class SpamExtract {
         BufferStream buffer = new BufferStream(gm.getResponseContentLength(), MAX_BUFFER_SIZE);
         buffer.setSequenced(false);
         MimeMessage mm = null;
-        SharedFileInputStream sfis = null;
+        FileInputStream fis = null;
         try {
             ByteUtil.copy(gm.getResponseBodyAsStream(), true, buffer, false);
             if (buffer.isSpooled()) {
-                sfis = new SharedFileInputStream(buffer.getFile());
-                mm = new ZMimeMessage(mJMSession, sfis);
+                fis = new FileInputStream(buffer.getFile());
+                mm = new ZMimeMessage(mJMSession, fis);
             } else {
                 mm = new ZMimeMessage(mJMSession, buffer.getInputStream());
             }
             writeAttachedMessages(mm, outdir, gm.getPath());
         } finally {
-            ByteUtil.closeStream(sfis);
+            ByteUtil.closeStream(fis);
         }
 
     }
