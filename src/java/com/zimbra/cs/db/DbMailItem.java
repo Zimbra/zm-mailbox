@@ -64,6 +64,7 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
+import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -4037,7 +4038,7 @@ public class DbMailItem {
         return idList.toString();
     }
 
-    public static TypedIdList listMsgItems(Folder folder, long messageSyncStart, boolean descending, boolean older) throws ServiceException {
+    public static TypedIdList listMsgItems(Folder folder, long messageSyncStart, MailItem.Type type, boolean descending, boolean older) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 
@@ -4048,31 +4049,23 @@ public class DbMailItem {
         try {
             if (older) {
                 stmt = conn.prepareStatement("SELECT id, type FROM " + getMailItemTableName(folder) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND date < ?" +
+                        " WHERE " + IN_THIS_MAILBOX_AND + " type = ? AND folder_id = ? AND date < ?" +
                         " ORDER BY date" + (descending ? " DESC" : ""));
             } else {
                 stmt = conn.prepareStatement("SELECT id, type FROM " + getMailItemTableName(folder) +
-                        " WHERE " + IN_THIS_MAILBOX_AND + "folder_id = ? AND date >= ?" +
+                        " WHERE " + IN_THIS_MAILBOX_AND + " type = ? AND folder_id = ? AND date >= ?" +
                         " ORDER BY date" + (descending ? " DESC" : ""));
             }
             int pos = 1;
             pos = setMailboxId(stmt, mbox, pos);
+            stmt.setByte(pos++, type.toByte());
             stmt.setInt(pos++, folder.getId());
             stmt.setLong(pos++, messageSyncStart);
             rs = stmt.executeQuery();
 
             while (rs.next()) {
-                MailItem.Type type = MailItem.Type.of(rs.getByte(2));
-                String row = rs.getString(1);
-                if (row == null || row.equals(""))
-                    continue;
-                for (String entry : row.split(",")) {
-                    try {
-                        result.add(type, Integer.parseInt(entry));
-                    } catch (NumberFormatException nfe) {
-                        ZimbraLog.sync.warn("unparseable result entry: " + entry);
-                    }
-                }
+                MailItem.Type dataType = MailItem.Type.of(rs.getByte(2));
+                result.add(dataType, rs.getInt(1));
             }
             return result;
         } catch (SQLException e) {
