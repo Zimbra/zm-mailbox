@@ -43,12 +43,12 @@ public class WhiteBlackList extends AttributeCallback {
         String max;
         
         if (isCreate || entry == null) {
-            if (Provisioning.A_amavisWhitelistSender.equals(attrName))
+            if (Provisioning.A_amavisWhitelistSender.equalsIgnoreCase(attrName))
                 max = (String)context.get(CALLBACK_KEY_zimbraMailWhitelistMaxNumEntries);
             else
                 max = (String)context.get(CALLBACK_KEY_zimbraMailBlacklistMaxNumEntries);
         } else {
-            if (Provisioning.A_amavisWhitelistSender.equals(attrName))
+            if (Provisioning.A_amavisWhitelistSender.equalsIgnoreCase(attrName))
                 max = acct.getAttr(Provisioning.A_zimbraMailWhitelistMaxNumEntries);
             else
                 max = acct.getAttr(Provisioning.A_zimbraMailBlacklistMaxNumEntries);
