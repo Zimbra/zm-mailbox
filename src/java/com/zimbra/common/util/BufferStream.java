@@ -27,7 +27,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 import javax.mail.util.SharedByteArrayInputStream;
-import javax.mail.util.SharedFileInputStream;
 
 import com.zimbra.common.localconfig.LC;
 
@@ -135,12 +134,12 @@ public class BufferStream extends OutputStream {
             throw new EOFException("data exceeds copy capacity");
         }
         if (buf == null) {
-            return file == null ? new SharedByteArrayInputStream(new byte[0]) : new SharedFileInputStream(file);
+            return file == null ? new SharedByteArrayInputStream(new byte[0]) : new FileInputStream(file);
         }
 
         InputStream in = new SharedByteArrayInputStream(buf, 0, (int) Math.min(buf.length, size));
 
-        return file == null ? in : new SequenceInputStream(in, new SharedFileInputStream(file));
+        return file == null ? in : new SequenceInputStream(in, new FileInputStream(file));
     }
 
     public int getMaxMem() { return maxMem; }
