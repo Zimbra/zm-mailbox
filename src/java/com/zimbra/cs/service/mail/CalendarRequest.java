@@ -16,6 +16,7 @@
 package com.zimbra.cs.service.mail;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +33,6 @@ import javax.mail.MessagingException;
 import javax.mail.SendFailedException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import javax.mail.util.SharedFileInputStream;
 
 import com.zimbra.common.calendar.ParsedDateTime;
 import com.zimbra.common.calendar.ZCalendar.ICalTok;
@@ -361,13 +361,13 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 InputStream is = null;
                 try {
                     tempMmFile = File.createTempFile("zcal", "tmp");
-        
+
                     os = new FileOutputStream(tempMmFile);
                     csd.mMm.writeTo(os);
                     ByteUtil.closeStream(os);
                     os = null;
-        
-                    is = new SharedFileInputStream(tempMmFile);
+
+                    is = new FileInputStream(tempMmFile);
                     csd.mMm = new FixedMimeMessage(JMSession.getSession(), is);
                 } catch (IOException e) {
                     if (tempMmFile != null)
@@ -394,7 +394,7 @@ public abstract class CalendarRequest extends MailDocumentHandler {
                 MailSendQueueEntry entry = new MailSendQueueEntry(octxt, mbox, csd, tempMmFile);
                 sendQueue.add(entry);
                 queued = true;
-            }   
+            }
         } finally {
             // Delete the temp file if it wasn't queued.
             if (tempMmFile != null && !queued) {
