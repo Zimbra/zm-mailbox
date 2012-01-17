@@ -507,9 +507,10 @@ public class ShareInfo {
                 String[] sharedItems = account.getSharedItem();
                 for (String sharedItem : sharedItems) {
                     ShareInfoData shareData = AclPushSerializer.deserialize(sharedItem);
-                    if (granteeIds.contains(shareData.getGranteeId()) ||
+                    if (!shareData.isExpired() &&
+                            (granteeIds.contains(shareData.getGranteeId()) ||
                             (includePublicShares && shareData.getGranteeTypeCode() == ACL.GRANTEE_PUBLIC) ||
-                            (includeAllAuthedShares && shareData.getGranteeTypeCode() == ACL.GRANTEE_AUTHUSER)) {
+                            (includeAllAuthedShares && shareData.getGranteeTypeCode() == ACL.GRANTEE_AUTHUSER))) {
                         shareData.setOwnerAcctId(account.getId());
                         shareData.setOwnerAcctEmail(account.getName());
                         shareData.setOwnerAcctDisplayName(account.getDisplayName());

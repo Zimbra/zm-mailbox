@@ -155,6 +155,11 @@ public final class ACL {
         }
 
         private boolean isExpired(ACL acl) {
+            long expiry = getEffectiveExpiry(acl);
+            return expiry != 0 && System.currentTimeMillis() > expiry;
+        }
+
+        public long getEffectiveExpiry(ACL acl) {
             long expiry = mExpiry;
             if (expiry == 0) {
                 if (mType == ACL.GRANTEE_GUEST || mType == ACL.GRANTEE_KEY) {
@@ -163,7 +168,7 @@ public final class ACL {
                     expiry = acl.getInternalGrantExpiry();
                 }
             }
-            return expiry != 0 && System.currentTimeMillis() > expiry;
+            return expiry;
         }
 
         /** Returns the display name of grantee. */

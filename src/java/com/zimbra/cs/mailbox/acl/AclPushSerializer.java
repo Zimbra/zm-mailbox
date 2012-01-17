@@ -43,7 +43,8 @@ public class AclPushSerializer {
                 shareInfoData.getGranteeId(),
                 shareInfoData.getGranteeName(),
                 shareInfoData.getGranteeTypeCode(),
-                shareInfoData.getRightsCode());
+                shareInfoData.getRightsCode(),
+                shareInfoData.getExpiry());
     }
 
     public static String serialize(MailItem item, ACL.Grant grant) {
@@ -55,11 +56,12 @@ public class AclPushSerializer {
                 grant.getGranteeId(),
                 grant.getGranteeName(),
                 grant.getGranteeType(),
-                grant.getGrantedRights());
+                grant.getGrantedRights(),
+                grant.getEffectiveExpiry(item.getACL()));
     }
 
     public static String serialize(int itemId, String path, MailItem.Type folderDefaultView, MailItem.Type type,
-            String granteeId, String granteeName, byte granteeType, short rights) {
+            String granteeId, String granteeName, byte granteeType, short rights, long expiry) {
         // Mailbox ACLs typically persist grantee id but not grantee name
         if (granteeName == null && granteeId != null) {
             try {
@@ -94,7 +96,7 @@ public class AclPushSerializer {
                 ZimbraLog.misc.info("Error in getting grantee name for grantee id %s", granteeId, e);
             }
         }
-        return new StringBuilder().
+        StringBuilder sb = new StringBuilder().
                 append("granteeId:").append(granteeId).
                 append(";granteeName:").append(granteeName).
                 append(";granteeType:").append(ACL.typeToString(granteeType)).
@@ -102,8 +104,11 @@ public class AclPushSerializer {
                 append(";folderPath:").append(path).
                 append(";folderDefaultView:").append(folderDefaultView).
                 append(";rights:").append(ACL.rightsToString(rights)).
-                append(";type:").append(type).
-                toString();
+                append(";type:").append(type);
+        if (expiry != 0) {
+            sb.append(";expiry:").append(expiry);
+        }
+        return sb.toString();
     }
 
     public static ShareInfoData deserialize(String sharedItemInfo) throws ServiceException {
@@ -120,10 +125,13 @@ public class AclPushSerializer {
         obj.setPath(parts[pos++].substring("folderPath:".length()));
         obj.setFolderDefaultView(MailItem.Type.of(parts[pos++].substring("folderDefaultView:".length())));
         obj.setRights(ACL.stringToRights(parts[pos++].substring("rights:".length())));
-        if (parts.length < pos) {
+        if (pos < parts.length) {
             obj.setType(MailItem.Type.of(parts[pos++].substring("type:".length())));
         } else {
             obj.setType(MailItem.Type.FOLDER);
+        }
+        if (pos < parts.length) {
+            obj.setExpiry(Long.valueOf(parts[pos++].substring("expiry:".length())));
         }
         return obj;
     }

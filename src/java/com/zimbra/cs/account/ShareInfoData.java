@@ -50,6 +50,9 @@ public class ShareInfoData {
     // only used for sending
     private String mGuestPassword;
 
+    // time when share expires
+    private long mExpiry = 0;
+
     // mountpointid
     // Note:
     //    only used by zmprov/SoapProvisioning  to construct a
@@ -203,6 +206,18 @@ public class ShareInfoData {
 
     public String getGuestPassword() {
         return mGuestPassword;
+    }
+
+    public void setExpiry(Long expiry) {
+        mExpiry = expiry;
+    }
+
+    public long getExpiry() {
+        return mExpiry;
+    }
+
+    public boolean isExpired() {
+        return mExpiry != 0 && System.currentTimeMillis() > mExpiry;
     }
 
     /*
