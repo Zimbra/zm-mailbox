@@ -19,8 +19,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
@@ -127,12 +129,12 @@ public class FileDescriptorCache
 
         synchronized (this) {
             sharedFile = mCache.get(path);
-            if (sharedFile != null) {
-                sLog.debug("Found existing file descriptor for %s, rawSize=%d.", path, rawSize);
-                sharedFile.aboutToRead();
-                mHitRate.increment(100);
-                return sharedFile;
-            }
+        }
+        if (sharedFile != null) {
+            sLog.debug("Found existing file descriptor for %s, rawSize=%d.", path, rawSize);
+            sharedFile.aboutToRead();
+            mHitRate.increment(100);
+            return sharedFile;
         }
 
         // Open a new file descriptor.
@@ -172,8 +174,8 @@ public class FileDescriptorCache
                 sLog.debug("Caching file descriptor: path=%s, sharedFile=%s", path, sharedFile);
                 mCache.put(path, sharedFile);
             }
-            sharedFile.aboutToRead();
         }
+        sharedFile.aboutToRead();
         pruneIfNecessary();
 
         return sharedFile;
@@ -244,24 +246,27 @@ public class FileDescriptorCache
         return mHitRate.getAverage();
     }
 
-    private synchronized void pruneIfNecessary() {
-        if (mCache.size() <= mMaxSize)
+    private void pruneIfNecessary() {
+        if (getSize() <= mMaxSize)
             return;
 
-        Iterator<Map.Entry<String, SharedFile>> iEntries = mCache.entrySet().iterator();
-        while (iEntries.hasNext() && mCache.size() > mMaxSize) {
-            Map.Entry<String, SharedFile> mapEntry = iEntries.next();
+        List<Map.Entry<String, SharedFile>> removeList = new ArrayList<Map.Entry<String, SharedFile>>();
+        
+        synchronized (this) {
+            Iterator<Map.Entry<String, SharedFile>> iEntries = mCache.entrySet().iterator();
+            while (iEntries.hasNext() && mCache.size() > mMaxSize) {
+                Map.Entry<String, SharedFile> mapEntry = iEntries.next();
+                iEntries.remove();
+                removeList.add(mapEntry);
+            }
+        }
+        for (Map.Entry<String, SharedFile> mapEntry : removeList) {
             String path = mapEntry.getKey();
             SharedFile file = mapEntry.getValue();
-            if (file.getNumReaders() == 0) {
-                iEntries.remove();
-                try {
-                    close(file, path);
-                } catch (IOException e) {
-                    ZimbraLog.store.warn("Unable to close file descriptor for " + path, e);
-                }
-            } else {
-                sLog.debug("Not pruning %s because another thread is reading from it.", path);
+            try {
+                close(file, path);
+            } catch (IOException e) {
+                ZimbraLog.store.warn("Unable to close file descriptor for " + path, e);
             }
         }
     }
