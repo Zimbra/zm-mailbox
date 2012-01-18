@@ -320,6 +320,9 @@ public final class AdminConstants {
 
     public static final String E_COUNT_ACCOUNT_REQUEST = "CountAccountRequest";
     public static final String E_COUNT_ACCOUNT_RESPONSE = "CountAccountResponse";
+    
+    public static final String E_COUNT_OBJECTS_REQUEST = "CountObjectsRequest";
+    public static final String E_COUNT_OBJECTS_RESPONSE = "CountObjectsResponse";
 
     public static final String E_GET_SHARE_INFO_REQUEST = "GetShareInfoRequest";
     public static final String E_GET_SHARE_INFO_RESPONSE = "GetShareInfoResponse";
@@ -759,6 +762,9 @@ public final class AdminConstants {
     public static final QName COUNT_ACCOUNT_REQUEST = QName.get(E_COUNT_ACCOUNT_REQUEST, NAMESPACE);
     public static final QName COUNT_ACCOUNT_RESPONSE = QName.get(E_COUNT_ACCOUNT_RESPONSE, NAMESPACE);
 
+    public static final QName COUNT_OBJECTS_REQUEST = QName.get(E_COUNT_OBJECTS_REQUEST, NAMESPACE);
+    public static final QName COUNT_OBJECTS_RESPONSE = QName.get(E_COUNT_OBJECTS_RESPONSE, NAMESPACE);
+    
     public static final QName GET_SHARE_INFO_REQUEST = QName.get(E_GET_SHARE_INFO_REQUEST, NAMESPACE);
     public static final QName GET_SHARE_INFO_RESPONSE = QName.get(E_GET_SHARE_INFO_RESPONSE, NAMESPACE);
 
@@ -999,6 +1005,7 @@ public final class AdminConstants {
     public static final String A_C = "c";
     public static final String A_T = "t";
     public static final String A_NAME = "name";
+    public static final String A_NUM = "num";
     public static final String A_MORE = "more";
     public static final String A_BY = "by";
     public static final String A_N = "n";
