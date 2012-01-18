@@ -2754,16 +2754,16 @@ TODO - add support for multi-line values in globalConfigValue and defaultCOSValu
   <desc>domain status.  enum values are akin to those of zimbraAccountStatus but the status affects all accounts on the domain.  
         See table below for how zimbraDomainStatus affects account status.
   
-        active      - see zimbraAccountStatus
-        maintenance - see zimbraAccountStatus
-        locked      - see zimbraAccountStatus 
-        closed      - see zimbraAccountStatus 
-       suspended    - maintenance + no creating/deleting/modifying accounts/DLs under the domain.  
-       shutdown     - suspended + cannot modify domain attrs + cannot delete the domain
-                      Indicating server is doing major and lengthy maintenance work on the domain, 
-                      e.g. renaming the domain and moving LDAP entries.  Modification and deletion 
-                      of the domain can only be done internally by the server when it is safe to release 
-                      the domain, they cannot be done in admin console or zmprov.
+        active       - see zimbraAccountStatus
+        maintenance  - see zimbraAccountStatus
+        locked       - see zimbraAccountStatus 
+        closed       - see zimbraAccountStatus 
+        suspended    - maintenance + no creating/deleting/modifying accounts/DLs under the domain.  
+        shutdown     - suspended + cannot modify domain attrs + cannot delete the domain
+                       Indicating server is doing major and lengthy maintenance work on the domain, 
+                       e.g. renaming the domain and moving LDAP entries.  Modification and deletion 
+                       of the domain can only be done internally by the server when it is safe to release 
+                       the domain, they cannot be done in admin console or zmprov.
         
         How zimbraDomainStatus affects account behavior :
         -------------------------------------
