@@ -404,6 +404,73 @@ What happens behind the scene in ZCS server:
       If this is the case, it should be shown in zmmailboxd.out.  Fix the clock skew and try again.
 
 
+===========================================
+5. Configure kerberos auth with SPNEGO auth
+===========================================
+Kerberos auth and SPNEGO can co-exists on a domain.   Use case is using kerberos as the 
+mechanism for verifying user principal/password against a KDC, instead of the native 
+Zimbra LDAP, when user cannot get in by SPNEGO.
+
+When SPNEGO auth fails, user is redirected to the Zimbra login screen if browser is 
+configured properly.   Users can enter their Zimbra username/password on the login screen to 
+login manually.  Domain attribute zimbraAuthMech controls the mechanism for verifying  
+password.   If zimbraAuthMech is set to "kerberos5", user entered username is used to first 
+identify a valid Zimbra user (must be provisionined in Zimbra LDAP), then from Zimbra user 
+is mapped to a kerberos principal, the kerberos principal + password is then validated 
+against a KDC.   This KDC could be different from, or the same as the KDC that Active Directory 
+domain controller(for SPNEGO auth) is running as.    
+
+Note, Every Microsoft Active Directory domain controller acts as Kerberos KDC.  
+For SPNEGO auth, KDC is not contacted from mailbox server.  The kerberos token sent from the 
+Authorization http header along with jetty's keytab file can identify/authenticate the 
+user.
+
+For kerberos auth (zimbraAuthMech="kerberos5"), mailbox server needs to contact KDC to 
+validate principal+password.   For java kerberos client (i.e. Zimbra mailbox server), 
+the default realm and KDC for the realm is specify in a kerberos config file.  Location of 
+this config file can be specified in JVM argument java.security.krb5.conf. If not specified,
+default is /etc/krb5.conf.   When SPNEGO is enabled in Zimbra, java.security.krb5.conf 
+for mailbox server is set to "/opt/zimbra/jetty/etc/krb5.ini".   Therefore, that is the 
+effective file for configuring kerberos auth.
+
+/opt/zimbra/jetty/etc/krb5.ini is rewritten from /opt/zimbra/jetty/etc/krb5.ini.in 
+each time when mailbox server restarts.  To configure, you need to modify the 
+/opt/zimbra/jetty/etc/krb5.ini.in file, not /opt/zimbra/jetty/etc/krb5.ini.
+
+Under [realms] section, kdc and admin_server are not set for SPNEGO auth, but they are 
+required for kerberos auth.   
+
+To configure:
+
+(1) Edit /opt/zimbra/jetty/etc/krb5.ini.in
+
+change:
+
+[realms]
+%%zimbraSpnegoAuthRealm%% = {
+                default_domain = %%zimbraSpnegoAuthRealm%%
+}
+
+to:
+
+%%zimbraSpnegoAuthRealm%% = {
+                kdc = YOUR-KDC
+                admin_server = YOUR-ADMIN-SERVER
+                default_domain = %%zimbraSpnegoAuthRealm%%
+}
+
+
+replace YOUR-KDC and YOUR-ADMIN-SERVER to the hostname on which the 
+kdc/admin_server for kerberos auth is running.
+
+(2) save the file and restart mailbox server.
+
+
+The restriction is, the realm for SPNEGO and kerberos auth must be the same.  
+For SPNEGO auth, the kerberos principal in the Authorization header is mapped to a 
+unique Zimbra account.  For kerberos auth, the Zimbra account is mapped to a unique kerberos 
+principal.  The mapping (by domain attribute zimbraAuthKerberos5Realm) is the same for both.
+
 
 =======================
 Appendix A: HTTP Flow
