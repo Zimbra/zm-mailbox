@@ -20,6 +20,7 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
+import com.zimbra.common.localconfig.LC;
 import com.zimbra.cs.mailbox.Document;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -106,8 +107,12 @@ public final class TestDocumentServer extends TestCase {
     /**
      * Confirms that saving a document to a compressed volume works correctly (bug 48363).
      */
-    // TODO: Reenable after bug 66463 is fixed.
-    public void disabledTestCompressedVolume() throws Exception {
+
+    public void testCompressedVolume() throws Exception {
+        // Perform this test only if instant parsing is enabled.
+        // Normally the instant parsing is enabled for ZCS and disabled for Octopus.
+        if (LC.documents_disable_instant_parsing.booleanValue() == true)
+            return;
         VolumeManager mgr = VolumeManager.getInstance();
         Volume current = mgr.getCurrentMessageVolume();
         mgr.update(Volume.builder(current).setCompressBlobs(true).setCompressionThreshold(1).build());
