@@ -223,7 +223,7 @@ public class LdapUtil {
             if (i-offset > 0) {
                 sb.append(",");
             }
-            sb.append(LdapConstants.ATTR_DC).append("=").append(escapeRDNValue(parts[i]));
+            sb.append(LdapConstants.ATTR_dc).append("=").append(escapeRDNValue(parts[i]));
         }
         return sb.toString();
     }

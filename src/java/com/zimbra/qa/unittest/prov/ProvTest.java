@@ -117,6 +117,10 @@ public class ProvTest {
         return genDomainSegmentName(null);
     }
     
+    protected String genDomainName(String baseDomainName) {
+        return genDomainSegmentName() + "." + baseDomainName;
+    }
+    
     protected String genServerName(String suffix) {
         return "server-" + genName(suffix);
     }

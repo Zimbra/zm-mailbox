@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.zimbra.common.service.ServiceException;
-import com.zimbra.cs.account.accesscontrol.Right.RightType;
 
 public enum AttributeClass {
     mailRecipient("zimbraMailRecipient",        false), 
@@ -55,17 +54,20 @@ public enum AttributeClass {
     public static final String OC_zimbraAlias = alias.getOCName();
     public static final String OC_zimbraCalendarResource = calendarResource.getOCName();
     public static final String OC_zimbraCOS = cos.getOCName();
+    public static final String OC_zimbraDataSource = dataSource.getOCName();
     public static final String OC_zimbraDistributionList = distributionList.getOCName();
     public static final String OC_zimbraDomain = domain.getOCName();
     public static final String OC_zimbraGalDataSource = galDataSource.getOCName();
     public static final String OC_zimbraGlobalConfig = globalConfig.getOCName();
     public static final String OC_zimbraGroup = group.getOCName();
+    public static final String OC_zimbraIdentity = identity.getOCName();
     public static final String OC_zimbraImapDataSource = imapDataSource.getOCName();
     public static final String OC_zimbraMailRecipient = mailRecipient.getOCName();
     public static final String OC_zimbraMimeEntry = mimeEntry.getOCName();
     public static final String OC_zimbraPop3DataSource = pop3DataSource.getOCName();
     public static final String OC_zimbraRssDataSource = rssDataSource.getOCName();
     public static final String OC_zimbraServer = server.getOCName();
+    public static final String OC_zimbraSignature = signature.getOCName();
     public static final String OC_zimbraXMPPComponent = xmppComponent.getOCName();
     public static final String OC_zimbraZimletEntry = zimletEntry.getOCName();
     

@@ -230,6 +230,28 @@ public abstract class ProvTestUtil {
         return createDelegatedAdmin(localPart, domain, (String) null);
     }
     
+    public Account createSystemAccount(String acctName) throws Exception {
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraIsSystemAccount, ProvisioningConstants.TRUE);
+        return createAccount(acctName, attrs);
+    }
+    
+    public Account createSystemAccount(String localPart, Domain domain) throws Exception {
+        String acctName = TestUtil.getAddress(localPart, domain.getName());
+        return createSystemAccount(acctName);
+    }
+    
+    public Account createSystemResource(String acctName) throws Exception {
+        Map<String, Object> attrs = Maps.newHashMap();
+        attrs.put(Provisioning.A_zimbraIsSystemResource, ProvisioningConstants.TRUE);
+        return createAccount(acctName, attrs);
+    }
+    
+    public Account createSystemResource(String localPart, Domain domain) throws Exception {
+        String acctName = TestUtil.getAddress(localPart, domain.getName());
+        return createSystemResource(acctName);
+    }
+    
     public CalendarResource createCalendarResource(String localPart, Domain domain, 
             Map<String, Object> attrs)
     throws Exception {

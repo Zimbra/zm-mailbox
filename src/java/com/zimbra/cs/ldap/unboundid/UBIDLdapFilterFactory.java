@@ -19,13 +19,12 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.unboundid.ldap.sdk.Filter;
 import com.unboundid.ldap.sdk.LDAPException;
+import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapConstants;
 import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
-import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
-import com.zimbra.cs.ldap.jndi.JNDILdapFilter;
 
 public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     
@@ -42,6 +41,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     private static Filter FILTER_ALL_ACCOUNTS;       // including calendar resources
     private static Filter FILTER_ALL_ACCOUNTS_ONLY;  // excluding calendar resources
     private static Filter FILTER_ALL_ADMIN_ACCOUNTS;
+    private static Filter FILTER_ALL_ALIASES;
     private static Filter FILTER_ALL_CALENDAR_RESOURCES;
     private static Filter FILTER_ALL_COSES;
     private static Filter FILTER_ALL_DATASOURCES;
@@ -90,72 +90,93 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
         /*
          * self-defined filters
          */
-        FILTER_ALL_ACCOUNTS = Filter.createEqualityFilter(LdapConstants.ATTR_OBJECTCLASS, "zimbraAccount");
+        FILTER_ALL_ACCOUNTS = Filter.createEqualityFilter(
+                LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraAccount);
 
+        FILTER_ALL_ALIASES = Filter.createEqualityFilter(
+                LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraAlias);
+        
         FILTER_ALL_CALENDAR_RESOURCES = 
-                Filter.createEqualityFilter(LdapConstants.ATTR_OBJECTCLASS, "zimbraCalendarResource");
+                Filter.createEqualityFilter(
+                LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraCalendarResource);
         
         FILTER_ALL_COSES = 
-                Filter.createEqualityFilter(LdapConstants.ATTR_OBJECTCLASS, "zimbraCOS");
+                Filter.createEqualityFilter(
+                LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraCOS);
         
         FILTER_ALL_DATASOURCES = 
-                Filter.createEqualityFilter(LdapConstants.ATTR_OBJECTCLASS, "zimbraDataSource");
+                Filter.createEqualityFilter(
+                LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraDataSource);
         
         FILTER_ALL_DISTRIBUTION_LISTS = 
-                Filter.createEqualityFilter(LdapConstants.ATTR_OBJECTCLASS, "zimbraDistributionList");
+                Filter.createEqualityFilter(
+                LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraDistributionList);
         
         FILTER_ALL_DOMAINS = 
-                Filter.createEqualityFilter(LdapConstants.ATTR_OBJECTCLASS, "zimbraDomain");
+                Filter.createEqualityFilter(
+                LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraDomain);
         
         FILTER_ALL_DYNAMIC_GROUPS = 
-                Filter.createEqualityFilter(LdapConstants.ATTR_OBJECTCLASS, "zimbraGroup");
+                Filter.createEqualityFilter(
+                LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraGroup);
         
         FILTER_ALL_IDENTITIES = 
-                Filter.createEqualityFilter(LdapConstants.ATTR_OBJECTCLASS, "zimbraIdentity");
+                Filter.createEqualityFilter(
+                LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraIdentity);
         
         FILTER_ALL_MIME_ENTRIES = 
-                Filter.createEqualityFilter(LdapConstants.ATTR_OBJECTCLASS, "zimbraMimeEntry");
+                Filter.createEqualityFilter(
+                LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraMimeEntry);
         
         FILTER_ALL_SERVERS = 
-                Filter.createEqualityFilter(LdapConstants.ATTR_OBJECTCLASS, "zimbraServer");
+                Filter.createEqualityFilter(
+                LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraServer);
         
         FILTER_ALL_SIGNATURES = 
-                Filter.createEqualityFilter(LdapConstants.ATTR_OBJECTCLASS, "zimbraSignature");
+                Filter.createEqualityFilter(
+                LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraSignature);
         
         FILTER_ALL_XMPP_COMPONENTS = 
-                Filter.createEqualityFilter(LdapConstants.ATTR_OBJECTCLASS, "zimbraXMPPComponent");
+                Filter.createEqualityFilter(
+                LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraXMPPComponent);
         
         FILTER_ALL_ZIMLETS = 
-                Filter.createEqualityFilter(LdapConstants.ATTR_OBJECTCLASS, "zimbraZimletEntry");
+                Filter.createEqualityFilter(
+                LdapConstants.ATTR_objectClass, AttributeClass.OC_zimbraZimletEntry);
         
         FILTER_ANY_ENTRY = 
-                Filter.createPresenceFilter(LdapConstants.ATTR_OBJECTCLASS);
+                Filter.createPresenceFilter(LdapConstants.ATTR_objectClass);
         
         FILTER_DOMAIN_LABEL = 
-                Filter.createEqualityFilter(LdapConstants.ATTR_OBJECTCLASS, "dcObject");
+                Filter.createEqualityFilter(
+                LdapConstants.ATTR_objectClass, LdapConstants.OC_dcObject);
         
         FILTER_HAS_SUBORDINATES = 
-                Filter.createEqualityFilter("hasSubordinates", "TRUE");
+                Filter.createEqualityFilter(
+                LdapConstants.ATTR_hasSubordinates, LdapConstants.LDAP_TRUE);
         
         FILTER_IS_SYSTEM_RESOURCE = 
-                Filter.createEqualityFilter("zimbraIsSystemResource", "TRUE");
+                Filter.createEqualityFilter(
+                Provisioning.A_zimbraIsSystemResource, LdapConstants.LDAP_TRUE);
         
         FILTER_NOT_SYSTEM_RESOURCE = 
-            Filter.createNOTFilter(FILTER_IS_SYSTEM_RESOURCE);
+                Filter.createNOTFilter(FILTER_IS_SYSTEM_RESOURCE);
         
         FILTER_PUBLIC_SHARE = 
-            Filter.createSubstringFilter(Provisioning.A_zimbraSharedItem, null, new String[]{"granteeType:pub"}, null);
+                Filter.createSubstringFilter(
+                Provisioning.A_zimbraSharedItem, null, new String[]{"granteeType:pub"}, null);
         
         FILTER_ALLAUTHED_SHARE = 
-            Filter.createSubstringFilter(Provisioning.A_zimbraSharedItem, null, new String[]{"granteeType:all"}, null);
+                Filter.createSubstringFilter(
+                Provisioning.A_zimbraSharedItem, null, new String[]{"granteeType:all"}, null);
         
         FILTER_NOT_EXCLUDED_FROM_CMB_SEARCH = 
-            Filter.createORFilter(
-                    Filter.createNOTFilter(Filter.createPresenceFilter(Provisioning.A_zimbraExcludeFromCMBSearch)),
-                    Filter.createEqualityFilter(Provisioning.A_zimbraExcludeFromCMBSearch, "FALSE"));
+                Filter.createORFilter(
+                Filter.createNOTFilter(Filter.createPresenceFilter(Provisioning.A_zimbraExcludeFromCMBSearch)),
+                Filter.createEqualityFilter(Provisioning.A_zimbraExcludeFromCMBSearch, "FALSE"));
         
         FILTER_WITH_ARCHIVE =
-            Filter.createPresenceFilter(Provisioning.A_zimbraArchiveAccount); 
+                Filter.createPresenceFilter(Provisioning.A_zimbraArchiveAccount); 
 
         
         /*
@@ -170,9 +191,9 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                Filter.createANDFilter(
                        FILTER_ALL_ACCOUNTS,
                        Filter.createORFilter(
-                            Filter.createEqualityFilter("zimbraIsAdminAccount", LdapConstants.LDAP_TRUE),
-                            Filter.createEqualityFilter("zimbraIsDelegatedAdminAccount", LdapConstants.LDAP_TRUE),
-                            Filter.createEqualityFilter("zimbraIsDomainAdminAccount", LdapConstants.LDAP_TRUE)));
+                            Filter.createEqualityFilter(Provisioning.A_zimbraIsAdminAccount, LdapConstants.LDAP_TRUE),
+                            Filter.createEqualityFilter(Provisioning.A_zimbraIsDelegatedAdminAccount, LdapConstants.LDAP_TRUE),
+                            Filter.createEqualityFilter(Provisioning.A_zimbraIsDomainAdminAccount, LdapConstants.LDAP_TRUE)));
         
         FILTER_ALL_NON_SYSTEM_ACCOUNTS = 
                 Filter.createANDFilter(
@@ -208,7 +229,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter createdLaterOrEqual(String generalizedTime) {
         return new UBIDLdapFilter(
                 FilterId.CREATED_LATEROREQUAL,
-                Filter.createGreaterOrEqualFilter(LdapConstants.ATTR_CREATE_TIMESTAMP, generalizedTime));
+                Filter.createGreaterOrEqualFilter(LdapConstants.ATTR_createTimestamp, generalizedTime));
     }
     
     /*
@@ -511,6 +532,15 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         FILTER_NOT_EXCLUDED_FROM_CMB_SEARCH));
     }
     
+    
+    /*
+     * alias
+     */
+    public ZLdapFilter allAliases() {
+        return new UBIDLdapFilter(
+                FilterId.ALL_ALIASES,
+                FILTER_ALL_ALIASES);
+    }
     
     /*
      * calendar resource
@@ -928,7 +958,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     public ZLdapFilter memberOf(String dnOfGroup) {
         return new UBIDLdapFilter(
                 FilterId.MEMBER_OF,
-                Filter.createEqualityFilter(LdapConstants.ATTR_MEMBER_OF, dnOfGroup));
+                Filter.createEqualityFilter(LdapConstants.ATTR_memberOf, dnOfGroup));
     }
     
     /*

@@ -48,6 +48,7 @@ import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.soap.admin.type.CmdRightsInfo;
+import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DistributionListSelector;
 import com.zimbra.soap.admin.type.DomainSelector;
 import com.zimbra.soap.admin.type.ServerSelector;
@@ -1909,21 +1910,6 @@ public abstract class Provisioning extends ZAttrProvisioning {
 
     public CountAccountResult countAccount(Domain domain) throws ServiceException {
         throw ServiceException.UNSUPPORTED();
-    }
-
-    // supported types for countObjects
-    // for now just used by the installer
-    // add more canned types if needed, we certainly don't want to open up a free form query interface
-    public enum CountObjectsType {
-        userAccounts;
-
-        public static CountObjectsType fromString(String type) throws ServiceException {
-            try {
-                return CountObjectsType.valueOf(type);
-            } catch (IllegalArgumentException e) {
-                throw ServiceException.INVALID_REQUEST("unknown count cobjects type: " + type, e);
-            }
-        }
     }
 
     public long countObjects(CountObjectsType type, Domain domain) throws ServiceException {

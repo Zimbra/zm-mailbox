@@ -263,7 +263,7 @@ public class UBIDLdapContext extends ZLdapContext {
         UBIDMutableEntry entry = new UBIDMutableEntry();
         entry.setDN(dn);
         
-        entry.setAttr(LdapConstants.ATTR_OBJECTCLASS, objectClass);
+        entry.setAttr(LdapConstants.ATTR_objectClass, objectClass);
         
         for (int i=0; i < attrs.length; i += 2) {
             entry.setAttr(attrs[i], attrs[i+1]);
@@ -279,7 +279,7 @@ public class UBIDLdapContext extends ZLdapContext {
         entry.setDN(dn);
         
         Set<String> ocs = new HashSet<String>(Arrays.asList(objectClasses));
-        entry.addAttr(LdapConstants.ATTR_OBJECTCLASS, ocs);
+        entry.addAttr(LdapConstants.ATTR_objectClass, ocs);
         
         for (int i=0; i < attrs.length; i += 2) {
             entry.setAttr(attrs[i], attrs[i+1]);

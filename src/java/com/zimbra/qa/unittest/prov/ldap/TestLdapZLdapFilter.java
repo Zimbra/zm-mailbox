@@ -427,6 +427,13 @@ public class TestLdapZLdapFilter extends LdapTest {
     }
     
     @Test
+    public void allAliases() throws Exception {
+        String filter = LegacyLdapFilter.allAliases();
+        ZLdapFilter zLdapFilter = filterDactory.allAliases();
+        verify(FilterId.ALL_ALIASES, filter, zLdapFilter);
+    }
+    
+    @Test
     public void allCalendarResources() throws Exception {
         String filter = LegacyLdapFilter.allCalendarResources();
         ZLdapFilter zLdapFilter = filterDactory.allCalendarResources();

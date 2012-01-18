@@ -23,6 +23,7 @@ public class LegacyLdapFilter {
 
     private static final String FILTER_ACCOUNT_OBJECTCLASS = "(objectClass=zimbraAccount)";
     private static final String FILTER_ACCOUNT_ONLY_OBJECTCLASS = "(&(objectClass=zimbraAccount)(!(objectClass=zimbraCalendarResource)))";
+    private static final String FILTER_ALIAS_OBJECTCLASS = "(objectClass=zimbraAlias)";
     private static final String FILTER_CALENDAR_RESOURCE_OBJECTCLASS = "(objectClass=zimbraCalendarResource)";
     private static final String FILTER_DISTRIBUTION_LIST_OBJECTCLASS = "(objectClass=zimbraDistributionList)";
     private static final String FILTER_DYNAMIC_GROUP_OBJECTCLASS = "(objectClass=zimbraGroup)";
@@ -213,6 +214,13 @@ public class LegacyLdapFilter {
         LegacyLdapFilter.homedOnServer(serverServiceHostname) +
         LegacyLdapFilter.hasSubordinates() +
         "(|(!(" + Provisioning.A_zimbraCOSId + "=*))" + "(" + Provisioning.A_zimbraCOSId + "=" + cosId + ")))";
+    }
+    
+    /*
+     * alias
+     */
+    public static String allAliases() {
+        return FILTER_ALIAS_OBJECTCLASS;
     }
     
     /*

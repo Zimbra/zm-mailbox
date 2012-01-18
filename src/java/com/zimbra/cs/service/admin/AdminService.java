@@ -199,7 +199,8 @@ public class AdminService implements DocumentService {
         dispatcher.registerHandler(AdminConstants.FLUSH_CACHE_REQUEST, new FlushCache());
 
         dispatcher.registerHandler(AdminConstants.COUNT_ACCOUNT_REQUEST, new CountAccount());
-
+        dispatcher.registerHandler(AdminConstants.COUNT_OBJECTS_REQUEST, new CountObjects());
+        
         dispatcher.registerHandler(AdminConstants.GET_SHARE_INFO_REQUEST, new GetShareInfo());
 
         dispatcher.registerHandler(AdminConstants.GET_SERVER_NIFS_REQUEST, new GetServerNIFs());

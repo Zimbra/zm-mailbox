@@ -75,10 +75,8 @@ import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zclient.ZClientException;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
-import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.cs.account.Provisioning.CacheEntry;
 import com.zimbra.cs.account.Provisioning.CacheEntryType;
-import com.zimbra.cs.account.Provisioning.CountObjectsType;
 import com.zimbra.cs.account.Provisioning.CountAccountResult;
 import com.zimbra.cs.account.Provisioning.MailMode;
 import com.zimbra.cs.account.Provisioning.PublishedShareInfoVisitor;
@@ -119,6 +117,8 @@ import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.SoapCLI;
 import com.zimbra.cs.wiki.WikiUtil;
 import com.zimbra.cs.zclient.ZMailboxUtil;
+import com.zimbra.soap.admin.type.CountObjectsType;
+import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.TargetBy;
 
@@ -450,17 +450,6 @@ public class ProvUtil implements HttpDebugListener {
         }
     }
 
-    static class CountObjectsHelp implements CommandHelp {
-        @Override
-        public void printHelp() {
-            console.println();
-            console.println("Valid types:");
-            for (CountObjectsType type : CountObjectsType.values()) {
-                console.println("    " + type.toString());
-            }
-        }
-    }
-
     public enum Command {
         ADD_ACCOUNT_ALIAS("addAccountAlias", "aaa", "{name@domain|id} {alias@domain}", Category.ACCOUNT, 2, 2),
         ADD_ACCOUNT_LOGGER("addAccountLogger", "aal", "[-s/--server hostname] {name@domain|id} {logging-category} {trace|debug|info|warn|error}", Category.LOG, 3, 5),
@@ -471,7 +460,7 @@ public class ProvUtil implements HttpDebugListener {
         CHECK_RIGHT("checkRight", "ckr", "{target-type} [{target-id|target-name}] {grantee-id|grantee-name (note:can only check internal user)} {right}", Category.RIGHT, 3, 4, null, new RightCommandHelp()),
         COPY_COS("copyCos", "cpc", "{src-cos-name|id} {dest-cos-name}", Category.COS, 2, 2),
         COUNT_ACCOUNT("countAccount", "cta", "{domain|id}", Category.DOMAIN, 1, 1),
-        COUNT_OBJECTS("countObjects", "cto", "{type} [-d {domain|id}]", Category.MISC, 1, 3, Via.ldap, new CountObjectsHelp()), // add more counting types later if needed.
+        COUNT_OBJECTS("countObjects", "cto", "{" + CountObjectsType.names("|") + "} [-d {domain|id}]", Category.MISC, 1, 3, Via.ldap),
         CREATE_ACCOUNT("createAccount", "ca", "{name@domain} {password} [attr1 value1 [attr2 value2...]]", Category.ACCOUNT, 2, Integer.MAX_VALUE),
         CREATE_ALIAS_DOMAIN("createAliasDomain", "cad", "{alias-domain-name} {local-domain-name|id} [attr1 value1 [attr2 value2...]]", Category.DOMAIN, 2, Integer.MAX_VALUE),
         CREATE_BULK_ACCOUNTS("createBulkAccounts", "cabulk", "{domain} {namemask} {number of accounts to create}", Category.MISC, 3, 3),
@@ -2006,7 +1995,7 @@ public class ProvUtil implements HttpDebugListener {
 
     private void doCountObjects(String[] args) throws ServiceException {
 
-        CountObjectsType type = Provisioning.CountObjectsType.fromString(args[1]);
+        CountObjectsType type = CountObjectsType.fromString(args[1]);
 
         Domain domain = null;
         int idx = 2;

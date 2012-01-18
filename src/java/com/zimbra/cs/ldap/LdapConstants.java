@@ -21,13 +21,14 @@ public class LdapConstants {
     public static final String EARLIEST_SYNC_TOKEN = "19700101000000Z";
 
     public static final String DN_ROOT_DSE = "";
-    public static final String ATTR_DN = "dn";
-    public static final String ATTR_DC = "dc";
-    public static final String ATTR_OBJECTCLASS = "objectClass";
-    public static final String ATTR_CREATE_TIMESTAMP = "createTimestamp";
+    public static final String ATTR_dn = "dn";
+    public static final String ATTR_dc = "dc";
+    public static final String ATTR_objectClass = "objectClass";
+    public static final String ATTR_createTimestamp = "createTimestamp";
+    public static final String ATTR_hasSubordinates = "hasSubordinates";
     
     // AD attrs
-    public static final String ATTR_MEMBER_OF = "memberOf";
+    public static final String ATTR_memberOf = "memberOf";
     
     // milli seconds to wait for checking LDAP server health
     public static final int CHECK_LDAP_SLEEP_MILLIS = 5000;
@@ -37,4 +38,6 @@ public class LdapConstants {
     public static final String DN_SUBTREE_MATCH_FILTER_TEMPLATE = 
             "(" + DN_SUBTREE_MATCH_ATTR + ":" + DN_SUBTREE_MATCH_MATCHING_RULE + ":=%s)";
     
+    
+    public static final String OC_dcObject = "dcObject";
 }

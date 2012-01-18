@@ -196,7 +196,7 @@ public abstract class AutoProvision {
 
             Set<String> attrs = new HashSet<String>();
             attrs.addAll(attrMap.keySet());
-            attrs.add(LdapConstants.ATTR_CREATE_TIMESTAMP);
+            attrs.add(LdapConstants.ATTR_createTimestamp);
             String nameMapAttr = domain.getAutoProvAccountNameMap();
             if (nameMapAttr != null) {
                 attrs.add(nameMapAttr);

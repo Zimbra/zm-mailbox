@@ -49,6 +49,7 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         ALL_ACCOUNTS(SINGLETON.allAccounts()),
         ALL_ACCOUNTS_ONLY(SINGLETON.allAccountsOnly()),
         ALL_ADMIN_ACCOUNTS(SINGLETON.allAdminAccounts()),
+        ALL_ALIASES(SINGLETON.allAliases()),
         ALL_CALENDAR_RESOURCES(SINGLETON.allCalendarResources()),
         ALL_COSES(SINGLETON.allCoses()),
         ALL_DATA_SOURCES(SINGLETON.allDataSources()),
@@ -240,6 +241,10 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter CMBSearchAccountsOnlyWithArchive();
     public abstract ZLdapFilter CMBSearchNonSystemResourceAccountsOnly();
     
+    /*
+     * alias
+     */
+    public abstract ZLdapFilter allAliases();
     
     /*
      * calendar resource

@@ -216,6 +216,14 @@ public class JNDILdapFilterFactory extends ZLdapFilterFactory {
     }
     
     /*
+     * alias
+     */
+    @Override
+    public ZLdapFilter allAliases() {
+        return new JNDILdapFilter(LegacyLdapFilter.allAliases());
+    }
+    
+    /*
      * calendar resource
      */
     @Override

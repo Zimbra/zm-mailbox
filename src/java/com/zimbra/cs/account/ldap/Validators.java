@@ -32,11 +32,11 @@ import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Cos;
 import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
-import com.zimbra.cs.account.Provisioning.CountObjectsType;
 import com.zimbra.cs.ldap.IAttributes;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
+import com.zimbra.soap.admin.type.CountObjectsType;
 
 final public class Validators {
 
@@ -103,7 +103,7 @@ final public class Validators {
             long now = System.currentTimeMillis();
             if (now > getNextCheck()) {
                 try {
-                    mLastUserCount = prov.countObjects(CountObjectsType.userAccounts, d);
+                    mLastUserCount = prov.countObjects(CountObjectsType.userAccount, d);
                 } catch (ServiceException e) {
                     Throwable cause = e.getCause();
                     String causeMsg = cause.getMessage();

@@ -39,7 +39,7 @@ public abstract class LdapClient {
                 try {
                     InMemoryLdapServer.start(InMemoryLdapServer.ZIMBRA_LDAP_SERVER, 
                             new InMemoryLdapServer.ServerConfig(
-                            Lists.newArrayList(LdapConstants.ATTR_DC + "=" + InMemoryLdapServer.UNITTEST_BASE_DOMAIN_SEGMENT)));
+                            Lists.newArrayList(LdapConstants.ATTR_dc + "=" + InMemoryLdapServer.UNITTEST_BASE_DOMAIN_SEGMENT)));
                 } catch (Exception e) {
                     ZimbraLog.system.error("could not start InMemoryLdapServer", e);
                 }

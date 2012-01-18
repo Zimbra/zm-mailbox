@@ -126,6 +126,7 @@ import com.zimbra.cs.mime.MimeTypeInfo;
 import com.zimbra.cs.util.Zimbra;
 import com.zimbra.cs.zimlet.ZimletException;
 import com.zimbra.cs.zimlet.ZimletUtil;
+import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.type.AutoProvPrincipalBy;
 import com.zimbra.soap.type.GalSearchType;
@@ -7514,21 +7515,42 @@ public class LdapProvisioning extends LdapProv {
 
         String[] bases = null;
         ZLdapFilter filter = null;
-        String[] attrs = null;
+        String[] attrs = new String[] {"zimbraId"};
 
         // figure out bases, query, and attrs for each supported counting type
         switch (type) {
-        case userAccounts:
-
+        case userAccount:
+        case account:
             if (domain instanceof LdapDomain) {
-                String b = mDIT.domainDNToAccountSearchDN(((LdapDomain)domain).getDN());
-                bases = new String[]{b};
-            } else
+                String base = mDIT.domainDNToAccountSearchDN(((LdapDomain)domain).getDN());
+                bases = new String[]{base};
+            } else {
                 bases = mDIT.getSearchBases(Provisioning.SD_ACCOUNT_FLAG);
+            }
 
-            filter = filterFactory.allNonSystemAccounts();
-            attrs = new String[] {"zimbraId"};
+            if (type == CountObjectsType.userAccount) {
+                filter = filterFactory.allNonSystemAccounts();
+            } else {
+                filter = filterFactory.allAccounts();
+            }
             break;
+        case alias:
+            if (domain instanceof LdapDomain) {
+                String base = mDIT.domainDNToAccountSearchDN(((LdapDomain)domain).getDN());
+                bases = new String[]{base};
+            } else {
+                bases = mDIT.getSearchBases(Provisioning.SD_ALIAS_FLAG);
+            }
+            filter = filterFactory.allAliases();
+            break;
+        case dl:
+        case domain:
+        case cos:
+        case server:  
+            if (domain != null) {
+                throw ServiceException.INVALID_REQUEST(
+                        "domain cannot be specified for counting type: " + type.toString(), null); 
+            }
         default:
             throw ServiceException.INVALID_REQUEST("unsupported counting type:" + type.toString(), null);
         }

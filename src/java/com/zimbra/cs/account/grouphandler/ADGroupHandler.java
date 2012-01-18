@@ -45,7 +45,7 @@ import com.zimbra.cs.ldap.SearchLdapOptions.SearchLdapVisitor;
 public class ADGroupHandler extends GroupHandler {
 
     private static final String MAIL_ATTR = "mail";
-    private static final String MEMBER_OF_ATTR = LdapConstants.ATTR_MEMBER_OF;
+    private static final String MEMBER_OF_ATTR = LdapConstants.ATTR_memberOf;
     
     @Override
     public boolean isGroup(IAttributes ldapAttrs) {

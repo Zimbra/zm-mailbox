@@ -64,6 +64,7 @@ import javax.net.ssl.SSLHandshakeException;
 import com.zimbra.common.account.Key;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.account.ProvisioningConstants;
+import com.zimbra.soap.admin.type.CountObjectsType;
 import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
@@ -7005,7 +7006,7 @@ public class LegacyLdapProvisioning extends LdapProv {
 
         // figure out bases, query, and attrs for each supported counting type
         switch (type) {
-        case userAccounts:
+        case userAccount:
 
             if (domain instanceof LdapDomain) {
                 String b = mDIT.domainDNToAccountSearchDN(((LdapDomain)domain).getDN());
