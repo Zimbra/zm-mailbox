@@ -4038,7 +4038,7 @@ public class DbMailItem {
         return idList.toString();
     }
 
-    public static TypedIdList listMsgItems(Folder folder, long messageSyncStart, MailItem.Type type, boolean descending, boolean older) throws ServiceException {
+    public static TypedIdList listItems(Folder folder, long messageSyncStart, MailItem.Type type, boolean descending, boolean older) throws ServiceException {
         Mailbox mbox = folder.getMailbox();
         assert(Db.supports(Db.Capability.ROW_LEVEL_LOCKING) || Thread.holdsLock(mbox));
 

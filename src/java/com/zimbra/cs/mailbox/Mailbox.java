@@ -8486,7 +8486,7 @@ public class Mailbox {
         return id < 2<<29;
     }
 
-    public TypedIdList listMessageItems(OperationContext octxt, int folderId, MailItem.Type type, long messageSyncStart) throws ServiceException {
+    public TypedIdList listItemsForSync(OperationContext octxt, int folderId, MailItem.Type type, long messageSyncStart) throws ServiceException {
         if (folderId == ID_AUTO_INCREMENT)
             return new TypedIdList();
 
@@ -8496,7 +8496,7 @@ public class Mailbox {
 
             // if they specified a folder, make sure it actually exists
             Folder folder = getFolderById(folderId);
-            TypedIdList ids = DbMailItem.listMsgItems(folder, messageSyncStart, type, true, false);
+            TypedIdList ids = DbMailItem.listItems(folder, messageSyncStart, type, true, false);
             success = true;
             return ids;
         } finally {
