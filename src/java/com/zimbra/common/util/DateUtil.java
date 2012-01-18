@@ -578,28 +578,43 @@ public final class DateUtil {
         }
     }
 
-    public static String convertDateToLong(String input) {
+    /**
+     * Returns the seconds specified by the Fixed date value otherwise -1
+     * The format of the date is MM/dd/yyyy
+     *
+     * @param date of the fixed date in Mail Sync
+     */
+
+    public static long getFixedDateSecs(String date) {
         DateFormat formatter = new SimpleDateFormat("MM/dd/yyyy");
-        Date date;
+        Date formatDate;
         try {
-            date = (Date)formatter.parse(input);
-            return Long.toString(date.getTime() / 1000L);
+            formatDate = (Date)formatter.parse(date);
+            return formatDate.getTime()/Constants.MILLIS_PER_SECOND;
         } catch (ParseException e) {
-            return "-1";
+            return -1;
         }
     }
 
-    public static String convertRelativeDatetoLong(String input, String syncFieldName) {
+    /**
+     * Returns the relative time in seconds specified by the time value
+     * The relative time format is specified by the user, it can be
+     * Year, Month, Week
+     *
+     * @param value of the relative time interval specified by the user in Mail Sync
+     * @param syncFieldName signifies the relative time in Years, months, weeks
+     */
+    public static long getRelativeDateSecs(String value, String syncFieldName) {
         Calendar now = GregorianCalendar.getInstance();
         if(syncFieldName.equals("Year")) {
-            now.add(Calendar.YEAR, Integer.parseInt(input) * -1);
+            now.add(Calendar.YEAR, Integer.parseInt(value) * -1);
         }
         else if(syncFieldName.equals("Month")) {
-            now.add(Calendar.MONTH, Integer.parseInt(input) * -1);
+            now.add(Calendar.MONTH, Integer.parseInt(value) * -1);
         }
         else if(syncFieldName.equals("Week")) {
-            now.add(Calendar.WEEK_OF_YEAR, Integer.parseInt(input) * -1);
+            now.add(Calendar.WEEK_OF_YEAR, Integer.parseInt(value) * -1);
         }
-        return Long.toString(now.getTime().getTime() / 1000L);
+        return now.getTime().getTime()/Constants.MILLIS_PER_SECOND;
     }
 }
