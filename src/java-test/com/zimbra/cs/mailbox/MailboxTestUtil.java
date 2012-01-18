@@ -54,7 +54,7 @@ public final class MailboxTestUtil {
 
     /**
      * Initializes the provisioning.
-     * 
+     *
      * @param zimbraServerDir the directory that contains the ZimbraServer project
      * @throws Exception
      */
@@ -148,6 +148,9 @@ public final class MailboxTestUtil {
         File index = new File("build/test/index");
         if (index.isDirectory()) {
             Files.deleteDirectoryContents(index);
+        }
+        if (StoreManager.getInstance() instanceof MockStoreManager) {
+            MockStoreManager.purge();
         }
     }
 

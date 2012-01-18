@@ -53,6 +53,8 @@ public abstract class HttpStoreManager extends StoreManager {
     private FileCache<String> localCache;
 
     private class MessageCacheChecker implements FileCache.RemoveCallback {
+        MessageCacheChecker()  { }
+
         @Override
         public boolean okToRemove(FileCache.Item item) {
             // Don't remove blobs that are being referenced by a cached message.
@@ -98,6 +100,14 @@ public abstract class HttpStoreManager extends StoreManager {
     @Override
     public void shutdown() {
         IncomingDirectory.stopSweeper();
+    }
+
+    @Override
+    public boolean supports(StoreFeature feature) {
+        switch (feature) {
+            case BULK_DELETE:  return false;
+            default:           return false;
+        }
     }
 
     FileCache<String> getBlobCache() {
@@ -178,8 +188,8 @@ public abstract class HttpStoreManager extends StoreManager {
     }
 
     @Override
-    public MailboxBlob getMailboxBlob(Mailbox mbox, int msgId, int revision, String locator) {
-        return new HttpMailboxBlob(mbox, msgId, revision, locator);
+    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator) {
+        return new HttpMailboxBlob(mbox, itemId, revision, locator);
     }
 
     @Override
@@ -247,46 +257,43 @@ public abstract class HttpStoreManager extends StoreManager {
     }
 
     @Override
-    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
+    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destItemId, int destRevision)
     throws IOException, ServiceException {
-        return link(src, destMbox, destMsgId, destRevision);
+        return link(src, destMbox, destItemId, destRevision);
     }
 
     @Override
-    public MailboxBlob link(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision)
+    public MailboxBlob link(MailboxBlob src, Mailbox destMbox, int destItemId, int destRevision)
     throws IOException, ServiceException {
         // default implementation is a GET fed directly into a POST
         InputStream is = getContent(src);
         try {
             StagedBlob staged = stage(is, src.getSize(), destMbox);
-            return link(staged, destMbox, destMsgId, destRevision);
+            return link(staged, destMbox, destItemId, destRevision);
         } finally {
             ByteUtil.closeStream(is);
         }
     }
 
     @Override
-    public MailboxBlob link(StagedBlob staged, Mailbox destMbox, int destMsgId, int destRevision) {
+    public MailboxBlob link(StagedBlob staged, Mailbox destMbox, int destItemId, int destRevision) {
         // link is a noop
-        return renameTo(staged, destMbox, destMsgId, destRevision);
+        return renameTo(staged, destMbox, destItemId, destRevision);
     }
 
     @Override
-    public MailboxBlob renameTo(StagedBlob staged, Mailbox destMbox, int destMsgId, int destRevision) {
+    public MailboxBlob renameTo(StagedBlob staged, Mailbox destMbox, int destItemId, int destRevision) {
         // rename is a noop
         HttpStagedBlob hsb = (HttpStagedBlob) staged;
         hsb.markInserted();
 
-        MailboxBlob mblob = new HttpMailboxBlob(destMbox, destMsgId, destRevision, hsb.getLocator());
+        MailboxBlob mblob = new HttpMailboxBlob(destMbox, destItemId, destRevision, hsb.getLocator());
         return mblob.setSize(hsb.getSize()).setDigest(hsb.getDigest());
     }
 
     @Override
-    public boolean delete(MailboxBlob mblob) throws IOException {
-        if (mblob == null) {
-            return true;
-        }
-        return delete(mblob.getMailbox(), mblob.getLocator());
+    public boolean delete(Blob blob) {
+        return blob.getFile().delete();
     }
 
     @Override
@@ -297,6 +304,14 @@ public abstract class HttpStoreManager extends StoreManager {
             return true;
         }
         return delete(hsb.getMailbox(), hsb.getLocator());
+    }
+
+    @Override
+    public boolean delete(MailboxBlob mblob) throws IOException {
+        if (mblob == null) {
+            return true;
+        }
+        return delete(mblob.getMailbox(), mblob.getLocator());
     }
 
     private boolean delete(Mailbox mbox, String locator) throws IOException {
@@ -316,14 +331,11 @@ public abstract class HttpStoreManager extends StoreManager {
     }
 
     @Override
-    public boolean delete(Blob blob) {
-        return blob.getFile().delete();
+    public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob> blobs) throws IOException {
+        // the default implementation iterates through the mailbox's blobs and deletes them one by one
+        for (MailboxBlob mblob : blobs) {
+            delete(mblob);
+        }
+        return true;
     }
-
-    @Override
-    public boolean deleteStore(Mailbox mbox) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
 }

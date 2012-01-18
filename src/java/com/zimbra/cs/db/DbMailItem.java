@@ -15,6 +15,7 @@
 
 package com.zimbra.cs.db;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -53,6 +54,7 @@ import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ListUtil;
 import com.zimbra.common.util.Pair;
+import com.zimbra.common.util.SpoolingCache;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.db.DbPool.DbConnection;
@@ -64,7 +66,6 @@ import com.zimbra.cs.mailbox.Flag;
 import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.MailItem.PendingDelete;
-import com.zimbra.cs.mailbox.MailItem.Type;
 import com.zimbra.cs.mailbox.MailItem.UnderlyingData;
 import com.zimbra.cs.mailbox.MailServiceException;
 import com.zimbra.cs.mailbox.Mailbox;
@@ -511,6 +512,7 @@ public class DbMailItem {
     public static void purgeRevisions(MailItem item, int revision, boolean includeOlderRevisions) throws ServiceException {
         if (revision <= 0)
             return;
+
         Mailbox mbox = item.getMailbox();
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -552,8 +554,9 @@ public class DbMailItem {
 
     public static void setFolder(MailItem item, Folder folder) throws ServiceException {
         Mailbox mbox = item.getMailbox();
-        if (mbox != folder.getMailbox())
+        if (mbox != folder.getMailbox()) {
             throw MailServiceException.WRONG_MAILBOX();
+        }
         checkNamingConstraint(mbox, folder.getId(), item.getName(), item.getId());
 
         DbConnection conn = mbox.getOperationConnection();
@@ -660,7 +663,7 @@ public class DbMailItem {
     }
 
     public static SetMultimap<MailItem.Type, Integer> getIndexDeferredIds(DbConnection conn, Mailbox mbox)
-            throws ServiceException {
+    throws ServiceException {
         SetMultimap<MailItem.Type, Integer> result = Multimaps.newSetMultimap(
                 new EnumMap<MailItem.Type, Collection<Integer>>(MailItem.Type.class),
                 new Supplier<Set<Integer>>() {
@@ -669,6 +672,7 @@ public class DbMailItem {
                         return new HashSet<Integer>();
                     }
                 });
+
         PreparedStatement stmt = null;
         ResultSet rs = null;
         try { // from MAIL_ITEM table
@@ -685,6 +689,7 @@ public class DbMailItem {
             conn.closeQuietly(rs);
             conn.closeQuietly(stmt);
         }
+
         if (mbox.dumpsterEnabled()) {
             try { // also from MAIL_ITEM_DUMPSTER table
                 stmt = conn.prepareStatement("SELECT type, id FROM " + getMailItemTableName(mbox, true) +
@@ -705,7 +710,7 @@ public class DbMailItem {
     }
 
     public static List<Integer> getReIndexIds(DbConnection conn, Mailbox mbox, Set<MailItem.Type> types)
-            throws ServiceException {
+    throws ServiceException {
         List<Integer> ids = new ArrayList<Integer>();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -826,8 +831,9 @@ public class DbMailItem {
         if (children == null || children.length == 0)
             return;
         Mailbox mbox = children[0].getMailbox();
-        if (parent != null && mbox != parent.getMailbox())
+        if (parent != null && mbox != parent.getMailbox()) {
             throw MailServiceException.WRONG_MAILBOX();
+        }
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -861,8 +867,9 @@ public class DbMailItem {
         if (oldParent == newParent)
             return;
         Mailbox mbox = oldParent.getMailbox();
-        if (mbox != newParent.getMailbox())
+        if (mbox != newParent.getMailbox()) {
             throw MailServiceException.WRONG_MAILBOX();
+        }
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         try {
@@ -1394,8 +1401,9 @@ public class DbMailItem {
      * @return the ids of any conversation that were purged as a result of this operation
      */
     public static List<Integer> markDeletionTargets(Mailbox mbox, List<Integer> ids, Set<Integer> candidates) throws ServiceException {
-        if (ids == null)
+        if (ids == null) {
             return null;
+        }
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -1412,8 +1420,9 @@ public class DbMailItem {
                             " WHERE " + IN_THIS_MAILBOX_AND + "id = pid AND type = " + MailItem.Type.CONVERSATION.toByte());
                     int pos = 1;
                     pos = setMailboxId(stmt, mbox, pos);
-                    for (int index = i; index < i + count; index++)
+                    for (int index = i; index < i + count; index++) {
                         stmt.setInt(pos++, ids.get(index));
+                    }
                     stmt.setInt(pos++, mbox.getOperationChangeID());
                     stmt.setInt(pos++, mbox.getOperationTimestamp());
                     pos = setMailboxId(stmt, mbox, pos);
@@ -1426,15 +1435,17 @@ public class DbMailItem {
                         " GROUP BY parent_id");
                 int pos = 1;
                 pos = setMailboxId(stmt, mbox, pos);
-                for (int id : ids)
+                for (int id : ids) {
                     stmt.setInt(pos++, id);
+                }
                 rs = stmt.executeQuery();
                 Map<Integer, List<Integer>> counts = new HashMap<Integer, List<Integer>>();
                 while (rs.next()) {
                     int convId = rs.getInt(1), count = rs.getInt(2);
                     List<Integer> targets = counts.get(count);
-                    if (targets == null)
+                    if (targets == null) {
                         counts.put(count, targets = new ArrayList<Integer>());
+                    }
                     targets.add(convId);
                 }
                 rs.close();
@@ -1450,8 +1461,9 @@ public class DbMailItem {
                     stmt.setInt(pos++, mbox.getOperationChangeID());
                     stmt.setInt(pos++, mbox.getOperationTimestamp());
                     pos = setMailboxId(stmt, mbox, pos);
-                    for (int convId : update.getValue())
+                    for (int convId : update.getValue()) {
                         stmt.setInt(pos++, convId);
+                    }
                     stmt.executeUpdate();
                     stmt.close();
                 }
@@ -1468,8 +1480,9 @@ public class DbMailItem {
     }
 
     private static List<Integer> getPurgedConversations(Mailbox mbox, Set<Integer> candidates) throws ServiceException {
-        if (candidates == null || candidates.isEmpty())
+        if (candidates == null || candidates.isEmpty()) {
             return null;
+        }
         List<Integer> purgedConvs = new ArrayList<Integer>();
         DbConnection conn = mbox.getOperationConnection();
         PreparedStatement stmt = null;
@@ -2141,7 +2154,7 @@ public class DbMailItem {
     }
 
     public static List<UnderlyingData> getByFolder(Folder folder, MailItem.Type type, SortBy sort)
-            throws ServiceException {
+    throws ServiceException {
         if (Mailbox.isCachedType(type)) {
             throw ServiceException.INVALID_REQUEST("folders and tags must be retrieved from cache", null);
         }
@@ -2433,15 +2446,15 @@ public class DbMailItem {
     }
 
     public static void completeConversation(Mailbox mbox, DbConnection conn, UnderlyingData data)
-            throws ServiceException {
+    throws ServiceException {
         completeConversations(mbox, conn, Collections.singletonList(data));
     }
 
     private static void completeConversations(Mailbox mbox, DbConnection conn, List<UnderlyingData> convData)
-            throws ServiceException {
-        if (convData == null || convData.isEmpty()) {
+    throws ServiceException {
+        if (convData == null || convData.isEmpty())
             return;
-        }
+
         for (UnderlyingData data : convData) {
             if (data.type != MailItem.Type.CONVERSATION.toByte()) {
                 throw ServiceException.FAILURE("attempting to complete a non-conversation", null);
@@ -2490,8 +2503,7 @@ public class DbMailItem {
                 for (Map.Entry<Integer, Collection<String>> entry : convTags.asMap().entrySet()) {
                     UnderlyingData data = conversations.get(entry.getKey());
                     if (data != null) {
-                        Collection<String> tags = entry.getValue();
-                        data.setTags(new Tag.NormalizedTags(tags));
+                        data.setTags(new Tag.NormalizedTags(entry.getValue()));
                     }
                 }
             } catch (SQLException e) {
@@ -2871,7 +2883,7 @@ public class DbMailItem {
             DbPool.closeStatement(stmt);
         }
     }
-    
+
     /**
      * Returns the blob digest for the item with the given id, or <tt>null</tt>
      * if either the id doesn't exist in the table or there is no associated blob.
@@ -3131,6 +3143,61 @@ public class DbMailItem {
         } finally {
             DbPool.closeResults(rs);
             DbPool.closeStatement(stmt);
+        }
+    }
+
+    public static SpoolingCache<MailboxBlob> getAllBlobs(Mailbox mbox) throws ServiceException {
+        SpoolingCache<MailboxBlob> blobs = new SpoolingCache<MailboxBlob>(5000);
+
+        DbConnection conn = mbox.getOperationConnection();
+        PreparedStatement stmt = null;
+        try {
+            stmt = conn.prepareStatement("SELECT id, mod_content, volume_id FROM " + getMailItemTableName(mbox) +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "blob_digest IS NOT NULL");
+            getAllBlobs(stmt, mbox, blobs);
+            stmt.close();
+            stmt = null;
+
+            stmt = conn.prepareStatement("SELECT id, mod_content, volume_id FROM " + getMailItemTableName(mbox, true) +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "blob_digest IS NOT NULL");
+            getAllBlobs(stmt, mbox, blobs);
+            stmt.close();
+            stmt = null;
+
+            stmt = conn.prepareStatement("SELECT item_id, mod_content, volume_id FROM " + getRevisionTableName(mbox) +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "blob_digest IS NOT NULL");
+            getAllBlobs(stmt, mbox, blobs);
+            stmt.close();
+            stmt = null;
+
+            stmt = conn.prepareStatement("SELECT item_id, mod_content, volume_id FROM " + getRevisionTableName(mbox, true) +
+                    " WHERE " + IN_THIS_MAILBOX_AND + "blob_digest IS NOT NULL");
+            getAllBlobs(stmt, mbox, blobs);
+
+            return blobs;
+        } catch (SQLException e) {
+            throw ServiceException.FAILURE("fetching blob list for mailbox " + mbox.getId(), e);
+        } catch (IOException e) {
+            throw ServiceException.FAILURE("fetching blob list for mailbox " + mbox.getId(), e);
+        } finally {
+            DbPool.closeStatement(stmt);
+        }
+    }
+
+    private static void getAllBlobs(PreparedStatement stmt, Mailbox mbox, SpoolingCache<MailboxBlob> blobs)
+    throws SQLException, IOException, ServiceException {
+        StoreManager sm = StoreManager.getInstance();
+        ResultSet rs = null;
+        try {
+            int pos = 1;
+            pos = setMailboxId(stmt, mbox, pos);
+            rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                blobs.add(sm.getMailboxBlob(mbox, rs.getInt(1), rs.getInt(2), rs.getString(3)));
+            }
+        } finally {
+            DbPool.closeResults(rs);
         }
     }
 
@@ -3436,14 +3503,14 @@ public class DbMailItem {
     }
 
     public static class QueryParams {
-        private SortedSet<Integer> folderIds = new TreeSet<Integer>();
+        private final SortedSet<Integer> folderIds = new TreeSet<Integer>();
         private Integer changeDateBefore;
         private Integer changeDateAfter;
         private Integer modifiedSequenceBefore;
         private Integer rowLimit;
         private Integer offset;
-        private Set<MailItem.Type> includedTypes = EnumSet.noneOf(MailItem.Type.class);
-        private Set<MailItem.Type> excludedTypes = EnumSet.noneOf(MailItem.Type.class);
+        private final Set<MailItem.Type> includedTypes = EnumSet.noneOf(MailItem.Type.class);
+        private final Set<MailItem.Type> excludedTypes = EnumSet.noneOf(MailItem.Type.class);
 
         public SortedSet<Integer> getFolderIds() {
             return Collections.unmodifiableSortedSet(folderIds);
@@ -3496,7 +3563,7 @@ public class DbMailItem {
         /**
          * Return items modified later than the given timestamp.
          * @param timestamp the timestamp, in seconds
-         */        
+         */
         public QueryParams setChangeDateAfter(Integer timestamp) { changeDateAfter = timestamp; return this; }
         public Integer getModifiedSequenceBefore() { return modifiedSequenceBefore; }
         public QueryParams setModifiedSequenceBefore(Integer changeId) { modifiedSequenceBefore = changeId; return this; }
@@ -3882,8 +3949,9 @@ public class DbMailItem {
                     throw ServiceException.FAILURE("metadata too long", null);
             } else {
                 try {
-                    if (result.getBytes("utf-8").length > MAX_MEDIUMTEXT_LENGTH)
+                    if (result.getBytes("utf-8").length > MAX_MEDIUMTEXT_LENGTH) {
                         throw ServiceException.FAILURE("metadata too long", null);
+                    }
                 } catch (UnsupportedEncodingException uee) { }
             }
         }

@@ -56,7 +56,15 @@ public class MockHttpStore {
         ssock.close();
         ssock = null;
 
+        purge();
+    }
+
+    static void purge() {
         blobs.clear();
+    }
+
+    static int size() {
+        return blobs.size();
     }
 
     static void handle(Socket socket) throws IOException {

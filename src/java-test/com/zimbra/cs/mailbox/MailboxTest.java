@@ -17,7 +17,6 @@ package com.zimbra.cs.mailbox;
 import java.util.HashMap;
 import java.util.List;
 
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -32,6 +31,7 @@ import com.zimbra.cs.index.BrowseTerm;
 import com.zimbra.cs.mime.ParsedMessage;
 import com.zimbra.cs.session.PendingModifications;
 import com.zimbra.cs.session.PendingModifications.ModificationKey;
+import com.zimbra.cs.store.MockStoreManager;
 
 /**
  * Unit test for {@link Mailbox}.
@@ -264,5 +264,20 @@ public final class MailboxTest {
 
         mbox.delete(null, msgId, MailItem.Type.MESSAGE);
         mbox.recover(null, new int[] { msgId }, MailItem.Type.MESSAGE, Mailbox.ID_FOLDER_INBOX);
+    }
+
+    @Test
+    public void deleteMailbox() throws Exception {
+        Assert.assertEquals("start with no blobs in the store", 0, MockStoreManager.size());
+
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
+        DeliveryOptions dopt = new DeliveryOptions().setFolderId(Mailbox.ID_FOLDER_INBOX);
+        mbox.addMessage(null, MailboxTestUtil.generateMessage("test"), dopt, null).getId();
+
+        Assert.assertEquals("1 blob in the store", 1, MockStoreManager.size());
+
+        mbox.deleteMailbox();
+
+        Assert.assertEquals("end with no blobs in the store", 0, MockStoreManager.size());
     }
 }

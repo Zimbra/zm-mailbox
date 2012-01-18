@@ -46,6 +46,8 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
+import com.zimbra.client.ZMailbox;
+import com.zimbra.client.ZMailbox.Options;
 import com.zimbra.common.account.Key.AccountBy;
 import com.zimbra.common.calendar.ICalTimeZone;
 import com.zimbra.common.calendar.ParsedDateTime;
@@ -55,7 +57,6 @@ import com.zimbra.common.calendar.ZCalendar.ICalTok;
 import com.zimbra.common.calendar.ZCalendar.ZComponent;
 import com.zimbra.common.calendar.ZCalendar.ZProperty;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
-import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.common.localconfig.LC;
 import com.zimbra.common.mailbox.Color;
@@ -72,6 +73,7 @@ import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.MapUtil;
 import com.zimbra.common.util.Pair;
 import com.zimbra.common.util.SetUtil;
+import com.zimbra.common.util.SpoolingCache;
 import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AccessManager;
@@ -133,7 +135,70 @@ import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.mime.ParsedMessageDataSource;
 import com.zimbra.cs.mime.ParsedMessageOptions;
 import com.zimbra.cs.pop3.Pop3Message;
-import com.zimbra.cs.redolog.op.*;
+import com.zimbra.cs.redolog.op.AddDocumentRevision;
+import com.zimbra.cs.redolog.op.AlterItemTag;
+import com.zimbra.cs.redolog.op.ColorItem;
+import com.zimbra.cs.redolog.op.CopyItem;
+import com.zimbra.cs.redolog.op.CreateCalendarItemPlayer;
+import com.zimbra.cs.redolog.op.CreateCalendarItemRecorder;
+import com.zimbra.cs.redolog.op.CreateChat;
+import com.zimbra.cs.redolog.op.CreateComment;
+import com.zimbra.cs.redolog.op.CreateContact;
+import com.zimbra.cs.redolog.op.CreateFolder;
+import com.zimbra.cs.redolog.op.CreateFolderPath;
+import com.zimbra.cs.redolog.op.CreateInvite;
+import com.zimbra.cs.redolog.op.CreateLink;
+import com.zimbra.cs.redolog.op.CreateMessage;
+import com.zimbra.cs.redolog.op.CreateMountpoint;
+import com.zimbra.cs.redolog.op.CreateNote;
+import com.zimbra.cs.redolog.op.CreateSavedSearch;
+import com.zimbra.cs.redolog.op.CreateTag;
+import com.zimbra.cs.redolog.op.DateItem;
+import com.zimbra.cs.redolog.op.DeleteItem;
+import com.zimbra.cs.redolog.op.DeleteItemFromDumpster;
+import com.zimbra.cs.redolog.op.DeleteMailbox;
+import com.zimbra.cs.redolog.op.DismissCalendarItemAlarm;
+import com.zimbra.cs.redolog.op.EditNote;
+import com.zimbra.cs.redolog.op.EnableSharedReminder;
+import com.zimbra.cs.redolog.op.FixCalendarItemEndTime;
+import com.zimbra.cs.redolog.op.FixCalendarItemPriority;
+import com.zimbra.cs.redolog.op.FixCalendarItemTZ;
+import com.zimbra.cs.redolog.op.GrantAccess;
+import com.zimbra.cs.redolog.op.ICalReply;
+import com.zimbra.cs.redolog.op.ImapCopyItem;
+import com.zimbra.cs.redolog.op.LockItem;
+import com.zimbra.cs.redolog.op.ModifyContact;
+import com.zimbra.cs.redolog.op.ModifyInvitePartStat;
+import com.zimbra.cs.redolog.op.ModifySavedSearch;
+import com.zimbra.cs.redolog.op.MoveItem;
+import com.zimbra.cs.redolog.op.PurgeImapDeleted;
+import com.zimbra.cs.redolog.op.PurgeOldMessages;
+import com.zimbra.cs.redolog.op.PurgeRevision;
+import com.zimbra.cs.redolog.op.RecoverItem;
+import com.zimbra.cs.redolog.op.RedoableOp;
+import com.zimbra.cs.redolog.op.RenameItem;
+import com.zimbra.cs.redolog.op.RenameItemPath;
+import com.zimbra.cs.redolog.op.RenameMailbox;
+import com.zimbra.cs.redolog.op.RepositionNote;
+import com.zimbra.cs.redolog.op.RevokeAccess;
+import com.zimbra.cs.redolog.op.SaveChat;
+import com.zimbra.cs.redolog.op.SaveDocument;
+import com.zimbra.cs.redolog.op.SaveDraft;
+import com.zimbra.cs.redolog.op.SetCalendarItem;
+import com.zimbra.cs.redolog.op.SetConfig;
+import com.zimbra.cs.redolog.op.SetCustomData;
+import com.zimbra.cs.redolog.op.SetFolderDefaultView;
+import com.zimbra.cs.redolog.op.SetFolderUrl;
+import com.zimbra.cs.redolog.op.SetImapUid;
+import com.zimbra.cs.redolog.op.SetItemTags;
+import com.zimbra.cs.redolog.op.SetPermissions;
+import com.zimbra.cs.redolog.op.SetRetentionPolicy;
+import com.zimbra.cs.redolog.op.SetSubscriptionData;
+import com.zimbra.cs.redolog.op.SnoozeCalendarItemAlarm;
+import com.zimbra.cs.redolog.op.StoreIncomingBlob;
+import com.zimbra.cs.redolog.op.TrackImap;
+import com.zimbra.cs.redolog.op.TrackSync;
+import com.zimbra.cs.redolog.op.UnlockItem;
 import com.zimbra.cs.service.AuthProvider;
 import com.zimbra.cs.service.FeedManager;
 import com.zimbra.cs.service.util.ItemId;
@@ -154,8 +219,7 @@ import com.zimbra.cs.store.StoreManager;
 import com.zimbra.cs.util.AccountUtil;
 import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.cs.util.Zimbra;
-import com.zimbra.client.ZMailbox;
-import com.zimbra.client.ZMailbox.Options;
+import com.zimbra.soap.admin.type.DataSourceType;
 import com.zimbra.soap.mail.type.Policy;
 import com.zimbra.soap.mail.type.RetentionPolicy;
 
@@ -393,16 +457,16 @@ public class Mailbox {
     private static final int MAX_ITEM_CACHE_FOR_GALSYNC_MAILBOX = LC.zimbra_mailbox_galsync_cache.intValue();
     private static final int MAX_MSGID_CACHE = 10;
 
-    private int           mId;
-    private MailboxData   mData;
+    private final int           mId;
+    private final MailboxData   mData;
     private final MailboxChange currentChange = new MailboxChange();
-    private List<Session> mListeners = new CopyOnWriteArrayList<Session>();
+    private final List<Session> mListeners = new CopyOnWriteArrayList<Session>();
 
     private Map<Integer, Folder> mFolderCache;
     private Map<Object, Tag>     mTagCache;
     private SoftReference<Map<Integer, MailItem>> mItemCache = new SoftReference<Map<Integer, MailItem>>(null);
-    private Map <String, Integer> mConvHashes     = MapUtil.newLruMap(MAX_MSGID_CACHE);
-    private Map <String, Integer> mSentMessageIDs = MapUtil.newLruMap(MAX_MSGID_CACHE);
+    private final Map <String, Integer> mConvHashes     = MapUtil.newLruMap(MAX_MSGID_CACHE);
+    private final Map <String, Integer> mSentMessageIDs = MapUtil.newLruMap(MAX_MSGID_CACHE);
 
     private MailboxMaintenance maintenance;
     private IMPersona persona;
@@ -417,7 +481,7 @@ public class Mailbox {
         // version init done in finishInitialization()
         // index init done in finishInitialization()
     }
-    
+
     public void setGalSyncMailbox(boolean isGalSync) {
     	isGalSyncMailbox = isGalSync;
     }
@@ -541,7 +605,7 @@ public class Mailbox {
                     MailboxUpgrade.upgradeTo2_3(this);
                     updateVersion(new MailboxVersion((short) 2, (short) 3));
                 }
-                
+
                 // POST flag
                 if (!mData.version.atLeast(2, 4)) {
                     ZimbraLog.mailbox.info("Upgrade mailbox from %s to 2.4", getVersion());
@@ -1789,6 +1853,8 @@ public class Mailbox {
     }
 
     public void deleteMailbox(OperationContext octxt) throws ServiceException {
+        SpoolingCache<MailboxBlob> blobs = null;
+
         lock.lock();
         try {
             // first, throw the mailbox into maintenance mode
@@ -1813,6 +1879,12 @@ public class Mailbox {
                 if (needRedo) {
                     redoRecorder.log();
                 }
+
+                StoreManager sm = StoreManager.getInstance();
+                if (!sm.supports(StoreManager.StoreFeature.BULK_DELETE)) {
+                    blobs = DbMailItem.getAllBlobs(this);
+                }
+
                 try {
                     // remove all the relevant entries from the database
                     DbConnection conn = getOperationConnection();
@@ -1842,7 +1914,7 @@ public class Mailbox {
                         ZimbraLog.store.warn("Unable to delete index data.", iox);
                     }
                     try {
-                        StoreManager.getInstance().deleteStore(this);
+                        sm.deleteStore(this, blobs);
                     } catch (IOException iox) {
                         ZimbraLog.store.warn("Unable to delete message data.", iox);
                     }
@@ -1865,6 +1937,10 @@ public class Mailbox {
                         // end the maintenance if the delete is not successful.
                         MailboxManager.getInstance().endMaintenance(maintenance, success, true);
                     }
+                }
+
+                if (blobs != null) {
+                    blobs.cleanup();
                 }
             }
         } finally {
@@ -3494,10 +3570,12 @@ public class Mailbox {
         Conversation conv = null;
 
         Integer convId = mConvHashes.get(hash);
-        if (convId != null)
+        if (convId != null) {
             conv = getCachedConversation(convId);
-        if (conv != null)
+        }
+        if (conv != null) {
             return conv;
+        }
 
         // XXX: why not just do a "getConversationById()" if convId != null?
         MailItem.UnderlyingData data = DbMailItem.getByHash(this, hash);
@@ -3518,10 +3596,6 @@ public class Mailbox {
         } finally {
             endTransaction(success);
         }
-    }
-
-    public WikiItem getWikiById(OperationContext octxt, int id) throws ServiceException {
-        return (WikiItem) getItemById(octxt, id, MailItem.Type.WIKI);
     }
 
     public Document getDocumentById(OperationContext octxt, int id) throws ServiceException {
@@ -6538,10 +6612,10 @@ public class Mailbox {
         }
         return result;
     }
-    
+
     /**
      * Returns a list of contacts don't exist in any contacts folders.
-     * 
+     *
      * @param addrs email addresses
      * @return addresses doesn't exist
      */
@@ -6562,10 +6636,10 @@ public class Mailbox {
                                 iaddr.getPersonal(), iaddr.getAddress())))) {
                     newAddrs.add(addr);
                 }
-                
+
             }
         }
-        return newAddrs;  
+        return newAddrs;
     }
 
     public Folder createFolder(OperationContext octxt, String name, int parentId, MailItem.Type defaultView, int flags,
@@ -7536,7 +7610,7 @@ public class Mailbox {
     throws ServiceException {
         Document doc = getDocumentById(octxt, docId);
         try {
-            ParsedDocument pd = new ParsedDocument(data, name, doc.getContentType(), System.currentTimeMillis(), author, description, 
+            ParsedDocument pd = new ParsedDocument(data, name, doc.getContentType(), System.currentTimeMillis(), author, description,
                     descEnabled, !LC.documents_disable_instant_parsing.booleanValue());
             return addDocumentRevision(octxt, docId, pd);
         } catch (IOException ioe) {
@@ -7737,7 +7811,7 @@ public class Mailbox {
         }
     }
 
-    private SharedDeliveryCoordinator mSharedDelivCoord = new SharedDeliveryCoordinator();
+    private final SharedDeliveryCoordinator mSharedDelivCoord = new SharedDeliveryCoordinator();
 
     /**
      * Puts mailbox in shared delivery mode.  A shared delivery is delivery of
@@ -8272,7 +8346,7 @@ public class Mailbox {
     private void trimItemCache() {
         try {
             int sizeTarget = mListeners.isEmpty() ? MAX_ITEM_CACHE_WITHOUT_LISTENERS : MAX_ITEM_CACHE_WITH_LISTENERS;
-            if (isGalSyncMailbox) 
+            if (isGalSyncMailbox)
                 sizeTarget = MAX_ITEM_CACHE_FOR_GALSYNC_MAILBOX;
             Map<Integer, MailItem> cache = currentChange.itemCache;
             if (cache == null) {

@@ -41,8 +41,7 @@ public final class MockStoreManager extends StoreManager {
 
     private static final Map<Integer, MockMailboxBlob> BLOBS = new HashMap<Integer, MockMailboxBlob>();
 
-    public MockStoreManager()
-    {
+    public MockStoreManager() {
 //        DebugConfig.disableMessageStoreFsync = true;
     }
 
@@ -52,17 +51,32 @@ public final class MockStoreManager extends StoreManager {
 
     @Override
     public void startup() {
-        BLOBS.clear();
+        purge();
     }
 
     @Override
     public void shutdown() {
+        purge();
+    }
+
+    @Override
+    public boolean supports(StoreFeature feature) {
+        switch (feature) {
+            case BULK_DELETE:  return false;
+            default:           return false;
+        }
+    }
+
+    public static void purge() {
         BLOBS.clear();
+    }
+
+    public static int size() {
+        return BLOBS.size();
     }
 
     @Override
     public BlobBuilder getBlobBuilder() {
-
         return new MockBlobBuilder();
     }
 
@@ -73,7 +87,7 @@ public final class MockStoreManager extends StoreManager {
 
     @Override
     public StagedBlob stage(InputStream data, long actualSize, StorageCallback callback, Mailbox mbox)
-            throws IOException {
+    throws IOException {
         return new MockStagedBlob(mbox, ByteStreams.toByteArray(data));
     }
 
@@ -83,34 +97,34 @@ public final class MockStoreManager extends StoreManager {
     }
 
     @Override
-    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision) {
-        MockMailboxBlob blob = new MockMailboxBlob(destMbox, destMsgId, destRevision,
+    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destItemId, int destRevision) {
+        MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision,
                 src.getLocator(), ((MockMailboxBlob) src).content);
-        BLOBS.put(destMsgId, blob);
+        BLOBS.put(destItemId, blob);
         return blob;
     }
 
     @Override
-    public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision) {
-        MockMailboxBlob blob = new MockMailboxBlob(destMbox, destMsgId, destRevision,
+    public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destItemId, int destRevision) {
+        MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision,
                 src.getLocator(), ((MockStagedBlob) src).content);
-        BLOBS.put(destMsgId, blob);
+        BLOBS.put(destItemId, blob);
         return blob;
     }
 
     @Override
-    public MailboxBlob link(MailboxBlob src, Mailbox destMbox, int destMsgId, int destRevision) {
-        MockMailboxBlob blob = new MockMailboxBlob(destMbox, destMsgId, destRevision,
+    public MailboxBlob link(MailboxBlob src, Mailbox destMbox, int destItemId, int destRevision) {
+        MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision,
                 src.getLocator(), ((MockMailboxBlob) src).content);
-        BLOBS.put(destMsgId, blob);
+        BLOBS.put(destItemId, blob);
         return blob;
     }
 
     @Override
-    public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destMsgId, int destRevision) {
-        MockMailboxBlob blob = new MockMailboxBlob(destMbox, destMsgId, destRevision,
+    public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destItemId, int destRevision) {
+        MockMailboxBlob blob = new MockMailboxBlob(destMbox, destItemId, destRevision,
                 src.getLocator(), ((MockStagedBlob) src).content);
-        BLOBS.put(destMsgId, blob);
+        BLOBS.put(destItemId, blob);
         return blob;
     }
 
@@ -131,8 +145,8 @@ public final class MockStoreManager extends StoreManager {
     }
 
     @Override
-    public MailboxBlob getMailboxBlob(Mailbox mbox, int msgId, int revision, String locator) {
-        return BLOBS.get(Integer.valueOf(msgId));
+    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator) {
+        return BLOBS.get(Integer.valueOf(itemId));
     }
 
     @Override
@@ -146,13 +160,16 @@ public final class MockStoreManager extends StoreManager {
     }
 
     @Override
-    public boolean deleteStore(Mailbox mbox) {
-        BLOBS.clear();
+    public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob> blobs) {
+        assert blobs != null : "we require a blob iterator for testing purposes";
+        for (MailboxBlob mblob : blobs) {
+            delete(mblob);
+        }
         return true;
     }
 
     private static final class MockBlob extends Blob {
-        private byte[] content;
+        byte[] content;
 
         MockBlob() {
             super(new File("build/test/store"));
@@ -180,7 +197,7 @@ public final class MockStoreManager extends StoreManager {
     }
 
     private static final class MockStagedBlob extends StagedBlob {
-        private final byte[] content;
+        final byte[] content;
 
         MockStagedBlob(Mailbox mbox, byte[] data) {
             super(mbox, String.valueOf(data.length), data.length);
@@ -193,8 +210,9 @@ public final class MockStoreManager extends StoreManager {
         }
     }
 
+    @SuppressWarnings("serial")
     private static final class MockMailboxBlob extends MailboxBlob {
-        private byte[] content;
+        final byte[] content;
 
         MockMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, byte[] data) {
             super(mbox, itemId, revision, locator);
@@ -207,42 +225,35 @@ public final class MockStoreManager extends StoreManager {
         }
     }
 
-    private static final class MockBlobBuilder extends BlobBuilder
-    {
+    private static final class MockBlobBuilder extends BlobBuilder {
         private ByteArrayOutputStream out;
 
-        protected MockBlobBuilder()
-        {
+        protected MockBlobBuilder() {
             super(new MockBlob());
         }
 
         @Override
-        protected OutputStream createOutputStream(File file) throws FileNotFoundException
-        {
+        protected OutputStream createOutputStream(File file) throws FileNotFoundException {
             assert out == null : "Output stream already created";
             out = new ByteArrayOutputStream();
             return out;
         }
 
         @Override
-        protected FileChannel getFileChannel()
-        {
+        protected FileChannel getFileChannel() {
             return null;
         }
 
         @Override
-        public Blob finish() throws IOException, ServiceException
-        {
-            MockBlob blob = (MockBlob)super.finish();
+        public Blob finish() throws IOException, ServiceException {
+            MockBlob mockblob = (MockBlob) super.finish();
 
             if (out != null) {
-                blob.setContent(out.toByteArray());
+                mockblob.setContent(out.toByteArray());
                 out = null;
             }
 
-            return blob;
+            return mockblob;
         }
     }
-
-
 }

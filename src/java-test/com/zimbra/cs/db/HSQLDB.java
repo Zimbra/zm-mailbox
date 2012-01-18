@@ -109,9 +109,9 @@ public final class HSQLDB extends Db {
     boolean supportsCapability(Capability capability) {
         switch (capability) {
             case MULTITABLE_UPDATE:
-                return false;
-            case REPLACE_INTO:
             case BITWISE_OPERATIONS:
+            case REPLACE_INTO:
+            case DISABLE_CONSTRAINT_CHECK:
                 return false;
             default:
                 return true;
