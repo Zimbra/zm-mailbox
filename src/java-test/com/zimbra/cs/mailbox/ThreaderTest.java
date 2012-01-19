@@ -18,9 +18,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
-import java.util.UUID;
 
 import javax.mail.internet.MimeMessage;
 
@@ -30,7 +28,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.zimbra.common.account.ZAttrProvisioning.MailThreadingAlgorithm;
+import com.zimbra.common.service.ServiceException;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.MockProvisioning;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.mailbox.Threader.ThreadIndex;
 import com.zimbra.cs.mime.Mime;
@@ -41,12 +41,7 @@ public final class ThreaderTest {
     @BeforeClass
     public static void init() throws Exception {
         MailboxTestUtil.initServer();
-
-        Provisioning prov = Provisioning.getInstance();
-        Map<String, Object> attrs = new HashMap<String, Object>();
-        attrs.put(Provisioning.A_zimbraId, UUID.randomUUID().toString());
-        attrs.put(Provisioning.A_zimbraMailHost, "localhost");
-        prov.createAccount("test@zimbra.com", "secret", attrs);
+        Provisioning.getInstance().createAccount("test@zimbra.com", "secret", new HashMap<String, Object>());
     }
 
     @Before
@@ -63,6 +58,8 @@ public final class ThreaderTest {
     private static final String OTHER_MESSAGE_ID = "<lsdfkjghkds.afas.sdf@sdkf.example.com>";
 
     private static final String THIRD_MESSAGE_ID = "<dkjhgf.w98yerg.ksj72@sdkf.example.com>";
+    private static final String FOURTH_MESSAGE_ID = "<783246tygirufhmnasdb@sdkf.example.com>";
+    private static final String FIFTH_MESSAGE_ID = "<kjsdfg.45wy.setrhye.g@sdkf.example.com>";
 
     private Account getAccount() throws Exception {
         return Provisioning.getInstance().getAccount("test@zimbra.com");
@@ -104,7 +101,7 @@ public final class ThreaderTest {
 
     @Test
     public void unrelated() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(getAccount());
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         mbox.addMessage(null, getRootMessage(), MailboxTest.STANDARD_DELIVERY_OPTIONS, null);
 
         // unrelated, not a reply
@@ -134,7 +131,7 @@ public final class ThreaderTest {
 
     @Test
     public void followup() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(getAccount());
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Message msg = mbox.addMessage(null, getRootMessage(), MailboxTest.STANDARD_DELIVERY_OPTIONS, null);
         List<Integer> match = Arrays.asList(msg.getConversationId());
 
@@ -178,7 +175,7 @@ public final class ThreaderTest {
 
     @Test
     public void missingHeaders() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(getAccount());
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Message msg = mbox.addMessage(null, getRootMessage(), MailboxTest.STANDARD_DELIVERY_OPTIONS, null);
         List<Integer> match = Arrays.asList(msg.getConversationId());
 
@@ -196,7 +193,7 @@ public final class ThreaderTest {
 
     @Test
     public void nonreply() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(getAccount());
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Message msg = mbox.addMessage(null, getRootMessage(), MailboxTest.STANDARD_DELIVERY_OPTIONS, null);
         List<Integer> match = Arrays.asList(msg.getConversationId());
 
@@ -214,7 +211,7 @@ public final class ThreaderTest {
 
     @Test
     public void changedSubject() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(getAccount());
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Message msg = mbox.addMessage(null, getRootMessage(), MailboxTest.STANDARD_DELIVERY_OPTIONS, null);
         List<Integer> match = Arrays.asList(msg.getConversationId());
 
@@ -234,7 +231,7 @@ public final class ThreaderTest {
 
     @Test
     public void crossedThread() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(getAccount());
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Message msg = mbox.addMessage(null, getRootMessage(), MailboxTest.STANDARD_DELIVERY_OPTIONS, null);
         List<Integer> match = Arrays.asList(msg.getConversationId());
 
@@ -254,7 +251,7 @@ public final class ThreaderTest {
 
     @Test
     public void outlook() throws Exception {
-        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(getAccount());
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccountId(MockProvisioning.DEFAULT_ACCOUNT_ID);
         Message msg = mbox.addMessage(null, getRootMessage(), MailboxTest.STANDARD_DELIVERY_OPTIONS, null);
         List<Integer> match = Arrays.asList(msg.getConversationId());
 
@@ -285,4 +282,59 @@ public final class ThreaderTest {
         Assert.assertArrayEquals("preserving old index", oldIndex, head);
     }
 
+    private void checkConversations(Mailbox mbox, int msgidA, int msgidB, boolean match) throws ServiceException {
+        Message msgA = mbox.getMessageById(null, msgidA);
+        Message msgB = mbox.getMessageById(null, msgidB);
+        if (match) {
+            Assert.assertTrue("in same conversation", msgA.getConversationId() == msgB.getConversationId());
+        } else {
+            Assert.assertFalse("in different conversations", msgA.getConversationId() == msgB.getConversationId());
+        }
+    }
+
+    @Test
+    public void redelivery() throws Exception {
+        Account acct = getAccount();
+        acct.setMailThreadingAlgorithm(MailThreadingAlgorithm.references);
+
+        Mailbox mbox = MailboxManager.getInstance().getMailboxByAccount(acct);
+
+        // add thread starter
+        int msgid1 = mbox.addMessage(null, getRootMessage(), MailboxTest.STANDARD_DELIVERY_OPTIONS, null).getId();
+
+        // add second message, which should get slotted with the first message
+        MimeMessage mm = getSecondMessage();
+        mm.setHeader("Subject", "Re: " + ROOT_SUBJECT);
+        mm.setHeader("In-Reply-To", ROOT_MESSAGE_ID);
+        int msgid2 = mbox.addMessage(null, new ParsedMessage(mm, false), MailboxTest.STANDARD_DELIVERY_OPTIONS, null).getId();
+
+        checkConversations(mbox, msgid1, msgid2, true);
+
+        // add fourth message
+        mm.setHeader("Message-ID", FOURTH_MESSAGE_ID);
+        mm.setHeader("In-Reply-To", THIRD_MESSAGE_ID);
+        int msgid4 = mbox.addMessage(null, new ParsedMessage(mm, false), MailboxTest.STANDARD_DELIVERY_OPTIONS, null).getId();
+
+        // add fifth message, which should get slotted with the fourth message
+        mm.setHeader("Message-ID", FIFTH_MESSAGE_ID);
+        mm.setHeader("In-Reply-To", FOURTH_MESSAGE_ID);
+        int msgid5 = mbox.addMessage(null, new ParsedMessage(mm, false), MailboxTest.STANDARD_DELIVERY_OPTIONS, null).getId();
+
+        checkConversations(mbox, msgid4, msgid5, true);
+        checkConversations(mbox, msgid1, msgid5, false);
+
+        // add third message, joining the two conversations
+        mm.setHeader("Message-ID", THIRD_MESSAGE_ID);
+        mm.setHeader("In-Reply-To", OTHER_MESSAGE_ID);
+        ParsedMessage pm = new ParsedMessage(mm, false);
+        int msgid3 = mbox.addMessage(null, pm, MailboxTest.STANDARD_DELIVERY_OPTIONS, null).getId();
+
+        checkConversations(mbox, msgid3, msgid5, true);
+        checkConversations(mbox, msgid3, msgid1, true);
+
+        // redeliver the same message to the mailbox (e.g. two different FILEINTO filters)
+        int msgid3A = mbox.addMessage(null, pm, MailboxTest.STANDARD_DELIVERY_OPTIONS, null).getId();
+
+        checkConversations(mbox, msgid3A, msgid3, true);
+    }
 }

@@ -254,24 +254,30 @@ public final class Threader {
      *  in the multi-{@code Conversation} case, the caller is responsible for
      *  choosing one or merging them all. */
     List<Conversation> lookupConversation() throws ServiceException {
-        if (matchedConversations != null) {
-            return matchedConversations;
-        }
-        if (mode.isNone()) {
-            return Collections.emptyList();
-        }
-        ZimbraLog.mailbox.debug("  threading message \"%s\" (%s)", pm.getSubject(), pm.getMessageID());
+        if (matchedConversations == null) {
+            if (mode.isNone()) {
+                return Collections.emptyList();
+            }
+            ZimbraLog.mailbox.debug("  threading message \"%s\" (%s)", pm.getSubject(), pm.getMessageID());
 
-        List<Conversation> matches = Collections.emptyList();
-        if (!mode.isSubject()) {
-            // check to see if there's a conversation matching this message's references
-            matches = lookupByReference();
+            List<Conversation> matches = Collections.emptyList();
+            if (!mode.isSubject()) {
+                // check to see if there's a conversation matching this message's references
+                matches = lookupByReference();
+            }
+            if (matches.isEmpty() && (mode.isSubject() || (!mode.isStrict() && isReplyWithoutReferences()))) {
+                // check for an existing open conversation with the same normalized subject
+                matches = lookupBySubject();
+            }
+            matchedConversations = matches;
         }
-        if (matches.isEmpty() && (mode.isSubject() || (!mode.isStrict() && isReplyWithoutReferences()))) {
-            // check for an existing open conversation with the same normalized subject
-            matches = lookupBySubject();
-        }
-        return matchedConversations = matches;
+        return new ArrayList<Conversation>(matchedConversations);
+    }
+
+    /** Clears cached threader results.  Matching conversations will be
+     *  recalculated the next time {@link #lookupConversation()} is called. */
+    void reset() {
+        matchedConversations = null;
     }
 
     /** Returns whether the message being threaded has a subject that looks
@@ -333,7 +339,7 @@ public final class Threader {
                 ZimbraLog.mailbox.debug("  no valid reference matches found");
             }
         }
-        assert(matches != null);
+        assert matches != null;
         return matches;
     }
 

@@ -483,7 +483,7 @@ public class Mailbox {
     }
 
     public void setGalSyncMailbox(boolean isGalSync) {
-    	isGalSyncMailbox = isGalSync;
+        isGalSyncMailbox = isGalSync;
     }
 
     boolean isOpen() {
@@ -5059,7 +5059,7 @@ public class Mailbox {
             }
         }
 
-        Threader threading = pm.getThreader(this);
+        Threader threader = pm.getThreader(this);
         String subject = pm.getNormalizedSubject();
 
         try {
@@ -5098,7 +5098,7 @@ public class Mailbox {
 
             // step 2: figure out where the message belongs
             Conversation conv = null;
-            if (threading.isEnabled()) {
+            if (threader.isEnabled()) {
                 boolean isReply = pm.isReply();
                 if (conversationId != ID_AUTO_INCREMENT) {
                     try {
@@ -5108,13 +5108,12 @@ public class Mailbox {
                         ZimbraLog.mailbox.debug("fetched explicitly-specified conversation %d", conv.getId());
                     } catch (NoSuchItemException nsie) {
                         if (!isRedo) {
-                            ZimbraLog.mailbox.debug("could not find explicitly-specified conversation %d",
-                                    conversationId);
+                            ZimbraLog.mailbox.debug("could not find explicitly-specified conversation %d", conversationId);
                             conversationId = ID_AUTO_INCREMENT;
                         }
                     }
                 } else if (!isRedo && !isSpam && (isReply || (!isSent && !subject.isEmpty()))) {
-                    List<Conversation> matches = threading.lookupConversation();
+                    List<Conversation> matches = threader.lookupConversation();
                     if (matches != null && !matches.isEmpty()) {
                         // file the message into the largest conversation, then later merge any other matching convs
                         Collections.sort(matches, new MailItem.SortSizeDescending());
@@ -5141,7 +5140,7 @@ public class Mailbox {
             redoRecorder.setMessageId(msg.getId());
 
             // step 4: create a conversation for the message, if necessary
-            if (threading.isEnabled() && convTarget == null) {
+            if (threader.isEnabled() && convTarget == null) {
                 if (conv == null && conversationId == ID_AUTO_INCREMENT) {
                     conv = VirtualConversation.create(this, msg);
                     ZimbraLog.mailbox.debug("placed message %d in vconv %d", msg.getId(), conv.getId());
@@ -5191,7 +5190,7 @@ public class Mailbox {
                     // if we're threading by references and promoting a virtual conversation to a real one,
                     //   associate the first message's reference hashes with the new conversation
                     if (contents.length == 2) {
-                        threading.changeThreadingTargets(contents[0], conv);
+                        threader.changeThreadingTargets(contents[0], conv);
                     }
                 }
             } else {
@@ -5201,7 +5200,7 @@ public class Mailbox {
             redoRecorder.setConvId(conv != null && !(conv instanceof VirtualConversation) ? conv.getId() : -1);
             // if we're threading by references, associate the new message's reference hashes with its conversation
             if (!isSpam && !isDraft) {
-                threading.recordAddedMessage(conv);
+                threader.recordAddedMessage(conv);
             }
 
             if (conv != null && mergeConvs != null) {
@@ -5211,6 +5210,9 @@ public class Mailbox {
                     conv.merge(smaller);
                 }
             }
+
+            // conversations may have shifted, so the threader's cached state is now questionable
+            threader.reset();
 
             // step 5: write the redolog entries
             if (dctxt.getShared()) {
@@ -8346,30 +8348,31 @@ public class Mailbox {
     private void trimItemCache() {
         try {
             int sizeTarget = mListeners.isEmpty() ? MAX_ITEM_CACHE_WITHOUT_LISTENERS : MAX_ITEM_CACHE_WITH_LISTENERS;
-            if (isGalSyncMailbox)
+            if (isGalSyncMailbox) {
                 sizeTarget = MAX_ITEM_CACHE_FOR_GALSYNC_MAILBOX;
+            }
+
             Map<Integer, MailItem> cache = currentChange.itemCache;
-            if (cache == null) {
+            if (cache == null)
                 return;
-            }
+
             int excess = cache.size() - sizeTarget;
-            if (excess <= 0) {
+            if (excess <= 0)
                 return;
-            }
+
             // cache the overflow to avoid the Iterator's ConcurrentModificationException
             MailItem[] overflow = new MailItem[excess];
             int i = 0;
             for (MailItem item : cache.values()) {
                 overflow[i++] = item;
-                if (i >= excess) {
+                if (i >= excess)
                     break;
-                }
             }
             // trim the excess; note that "uncache" can cascade and take out child items
             while (--i >= 0) {
-                if (cache.size() <= sizeTarget) {
+                if (cache.size() <= sizeTarget)
                     return;
-                }
+
                 try {
                     uncache(overflow[i]);
                 } catch (ServiceException e) {
@@ -8387,8 +8390,9 @@ public class Mailbox {
 
     private void logCacheActivity(Integer key, MailItem.Type type, MailItem item) {
         // The global item cache counter always gets updated
-        if (!isCachedType(type))
+        if (!isCachedType(type)) {
             ZimbraPerf.COUNTER_MBOX_ITEM_CACHE.increment(item == null ? 0 : 100);
+        }
 
         // the per-access log only gets updated when cache or perf debug logging is on
         if (!ZimbraLog.cache.isDebugEnabled())
@@ -8401,14 +8405,13 @@ public class Mailbox {
 
         // Don't log cache hits for folders, search folders and tags.  We always
         // keep these in memory, so cache hits are not interesting.
-        if (isCachedType(type)) {
+        if (isCachedType(type))
             return;
-        }
         ZimbraLog.cache.debug("Cache hit for %s %d in mailbox %d", type, key, getId());
     }
 
     public MailItem lock(OperationContext octxt, int itemId, MailItem.Type type, String accountId)
-            throws ServiceException {
+    throws ServiceException {
         LockItem redoRecorder = new LockItem(mId, itemId, type, accountId);
 
         boolean success = false;
@@ -8424,7 +8427,7 @@ public class Mailbox {
     }
 
     public void unlock(OperationContext octxt, int itemId, MailItem.Type type, String accountId)
-            throws ServiceException {
+    throws ServiceException {
         UnlockItem redoRecorder = new UnlockItem(mId, itemId, type, accountId);
 
         boolean success = false;
@@ -8439,7 +8442,7 @@ public class Mailbox {
     }
 
     public Comment createComment(OperationContext octxt, int parentId, String text, String creatorId)
-            throws ServiceException {
+    throws ServiceException {
         CreateComment redoRecorder = new CreateComment(mId, parentId, text, creatorId);
 
         boolean success = false;
@@ -8480,12 +8483,12 @@ public class Mailbox {
     }
 
     public Collection<Comment> getComments(OperationContext octxt, int parentId, int offset, int length)
-            throws ServiceException {
+    throws ServiceException {
         return getComments(octxt, parentId, offset, length, false);
     }
 
     Collection<Comment> getComments(OperationContext octxt, int parentId, int offset, int length, boolean fromDumpster)
-            throws ServiceException {
+    throws ServiceException {
         boolean success = false;
         try {
             beginTransaction("getComments", octxt, null);
