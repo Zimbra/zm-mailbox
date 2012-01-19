@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 VMware, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -27,35 +27,40 @@ import com.zimbra.cs.mailbox.Mailbox;
 public class MockStoreManager extends StoreManager {
 
     private static class MockBlob extends Blob {
-        private String content;
+        private final String content;
+
         protected MockBlob(String content) {
             super(new File("/var/tmp/mockblob"));
             this.content = content;
         }
+
         @Override
         public InputStream getInputStream() throws IOException {
             return new ByteArrayInputStream(content.getBytes());
-        }        
+        }
     }
+
+    @SuppressWarnings("serial")
     private static class MockMailboxBlob extends MailboxBlob {
-        private String content;
-        protected MockMailboxBlob(Mailbox mbox, int itemId, int revision,
-                String locator, String content) {
+        private final String content;
+
+        protected MockMailboxBlob(Mailbox mbox, int itemId, int revision, String locator, String content) {
             super(mbox, itemId, revision, locator);
             this.content = content;
         }
+
         @Override
         public Blob getLocalBlob() throws IOException {
             return new MockBlob(content);
         }
     }
-    
-    private static HashMap<Integer,MockMailboxBlob> blobs = new HashMap<Integer,MockMailboxBlob>();
-    
+
+    private static HashMap<Integer, MockMailboxBlob> blobs = new HashMap<Integer, MockMailboxBlob>();
+
     public static void setBlob(MailItem item, String content) {
         blobs.put(item.getId(), new MockMailboxBlob(item.getMailbox(), item.getId(), item.getVersion(), null, content));
     }
-    
+
     @Override
     public void startup() throws IOException, ServiceException {
     }
@@ -65,51 +70,53 @@ public class MockStoreManager extends StoreManager {
     }
 
     @Override
+    public boolean supports(StoreFeature feature) {
+        return false;
+    }
+
+    @Override
     public BlobBuilder getBlobBuilder() throws IOException, ServiceException {
         return null;
     }
 
     @Override
-    public Blob storeIncoming(InputStream data, StorageCallback callback,
-            boolean storeAsIs) throws IOException, ServiceException {
+    public Blob storeIncoming(InputStream data, StorageCallback callback, boolean storeAsIs)
+    throws IOException, ServiceException {
         return null;
     }
 
     @Override
-    public StagedBlob stage(InputStream data, long actualSize,
-            StorageCallback callback, Mailbox mbox) throws IOException,
-            ServiceException {
+    public StagedBlob stage(InputStream data, long actualSize, StorageCallback callback, Mailbox mbox)
+    throws IOException, ServiceException {
         return null;
     }
 
     @Override
-    public StagedBlob stage(Blob blob, Mailbox mbox) throws IOException,
-            ServiceException {
+    public StagedBlob stage(Blob blob, Mailbox mbox) throws IOException, ServiceException {
         return null;
     }
 
     @Override
-    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destMsgId,
-            int destRevision) throws IOException, ServiceException {
+    public MailboxBlob copy(MailboxBlob src, Mailbox destMbox, int destItemId, int destRevision)
+    throws IOException, ServiceException {
         return null;
     }
 
     @Override
-    public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destMsgId,
-            int destRevision) throws IOException, ServiceException {
+    public MailboxBlob link(StagedBlob src, Mailbox destMbox, int destItemId, int destRevision)
+    throws IOException, ServiceException {
         return null;
     }
 
     @Override
-    public MailboxBlob link(MailboxBlob src, Mailbox destMbox, int destMsgId,
-            int destRevision) throws IOException, ServiceException {
+    public MailboxBlob link(MailboxBlob src, Mailbox destMbox, int destItemId, int destRevision)
+    throws IOException, ServiceException {
         return null;
     }
 
     @Override
-    public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox,
-            int destMsgId, int destRevision) throws IOException,
-            ServiceException {
+    public MailboxBlob renameTo(StagedBlob src, Mailbox destMbox, int destItemId, int destRevision)
+    throws IOException, ServiceException {
         return null;
     }
 
@@ -129,9 +136,9 @@ public class MockStoreManager extends StoreManager {
     }
 
     @Override
-    public MailboxBlob getMailboxBlob(Mailbox mbox, int msgId, int revision,
-            String locator) throws ServiceException {
-        return blobs.get(Integer.valueOf(msgId));
+    public MailboxBlob getMailboxBlob(Mailbox mbox, int itemId, int revision, String locator)
+    throws ServiceException {
+        return blobs.get(Integer.valueOf(itemId));
     }
 
     @Override
@@ -145,8 +152,9 @@ public class MockStoreManager extends StoreManager {
     }
 
     @Override
-    public boolean deleteStore(Mailbox mbox) throws IOException,
-            ServiceException {
-        return false;
+    public boolean deleteStore(Mailbox mbox, Iterable<MailboxBlob> ignored)
+    throws IOException, ServiceException {
+        blobs.clear();
+        return true;
     }
 }
