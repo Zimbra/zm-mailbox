@@ -14,12 +14,28 @@
  */
 package com.zimbra.common.util;
 
+import java.io.File;
 import java.io.IOException;
 
+import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.localconfig.LC;
+
 public class SpoolingCacheTest {
+
+    @BeforeClass
+    public static void init() throws Exception {
+        new File("build/test").mkdirs();
+        LC.zimbra_tmp_directory.setDefault("build/test");
+    }
+
+    @AfterClass
+    public static void destroy() throws Exception {
+        new File("build/test").delete();
+    }
 
     private static final String[] STRINGS = new String[] { "foo", "bar", "baz" };
 
