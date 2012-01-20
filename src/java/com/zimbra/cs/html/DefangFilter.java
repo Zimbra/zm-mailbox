@@ -551,11 +551,14 @@ public class DefangFilter extends DefaultFilter {
             if (mNeuterImages) {
                 String srcValue = Strings.nullToEmpty(attributes.getValue("src"));
                 if ((eName.equals("img") || eName.equals("input")) &&
-                   (VALID_EXT_URL.matcher(srcValue).find() || 
-                   !VALID_INT_IMG.matcher(srcValue).find())) {                                                                             
-                        neuterTag(attributes, "src");    
+                   (VALID_EXT_URL.matcher(srcValue).find() ||
+                   !VALID_INT_IMG.matcher(srcValue).find())) {
+                        neuterTag(attributes, "src", "df");
+                } else if (!VALID_EXT_URL.matcher(srcValue).find() &&
+                        !VALID_INT_IMG.matcher(srcValue).find()) {
+                    neuterTag(attributes, "src", "pn");
                 }
-                neuterTag(attributes, "background");
+                neuterTag(attributes, "background", "df");
             }
 
             return true;
@@ -587,8 +590,8 @@ public class DefangFilter extends DefaultFilter {
     /**
      * @param attributes
      */
-    private void neuterTag(XMLAttributes attributes, String aName) {
-        String df_aName = "df"+aName;
+    private void neuterTag(XMLAttributes attributes, String aName, String prefix) {
+        String df_aName = prefix + aName;
         int dfIndex = attributes.getIndex(df_aName);
         int index = attributes.getIndex(aName);
         if (index != -1) {
