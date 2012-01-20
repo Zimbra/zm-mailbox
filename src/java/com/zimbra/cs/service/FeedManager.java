@@ -48,6 +48,8 @@ import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.httpclient.util.DateParseException;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Strings;
 import com.zimbra.common.calendar.ZCalendar.ZCalendarBuilder;
 import com.zimbra.common.calendar.ZCalendar.ZVCalendar;
 import com.zimbra.common.httpclient.HttpClientUtil;
@@ -58,7 +60,6 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.Element;
 import com.zimbra.common.util.DateUtil;
 import com.zimbra.common.util.FileUtil;
-import com.zimbra.common.util.StringUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeBodyPart;
@@ -70,6 +71,7 @@ import com.zimbra.cs.mailbox.Folder;
 import com.zimbra.cs.mailbox.calendar.Invite;
 import com.zimbra.cs.mime.Mime;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.util.BuildInfo;
 import com.zimbra.cs.util.JMSession;
 import com.zimbra.cs.util.Zimbra;
 
@@ -81,52 +83,73 @@ public class FeedManager {
         private long   lastDate;
         private boolean notModified;
 
-        private static SubscriptionData<Object> NOT_MODIFIED() {
+        static SubscriptionData<Object> NOT_MODIFIED() {
             return new SubscriptionData<Object>(new ArrayList<Object>(0), 0, true);
         }
 
-        private SubscriptionData() {
+        SubscriptionData() {
             this(new ArrayList<T>(), 0);
         }
-        private SubscriptionData(List<T> items, long ldate)  {
+
+        SubscriptionData(List<T> items, long ldate)  {
             this(items, ldate, false);
         }
-        private SubscriptionData(List<T> items, long lastModifiedDate, boolean notModified)  {
+
+        SubscriptionData(List<T> items, long lastModifiedDate, boolean notModified)  {
             this.items = items;
             this.lastDate = lastModifiedDate;
             this.notModified = notModified;
         }
 
-        private void recordItem(T item, String guid, long date) {
+        void recordItem(T item, String guid, long date) {
             items.add(item);
-            if (date > lastDate)  { lastGuid = guid;  lastDate = date; }
-        }
-        private void recordFeedModifiedDate(long feedModified) {
-            if (feedModified > lastDate)
-                lastDate = feedModified;
+            if (date > lastDate) {
+                lastGuid = guid;  lastDate = date;
+            }
         }
 
-        public List<T> getItems() { return items; }
+        void recordFeedModifiedDate(long feedModified) {
+            if (feedModified > lastDate) {
+                lastDate = feedModified;
+            }
+        }
+
+        public List<T> getItems() {
+            return items;
+        }
 
         // returns the guid of the most recently modified item
-        public String getMostRecentGuid() { return lastGuid; }
+        public String getMostRecentGuid() {
+            return lastGuid;
+        }
 
         // returns the timestamp of the most recently modified item, or the last modified time of the feed itself,
         // whichever is more recent
-        public long getLastModifiedDate() { return lastDate; }
+        public long getLastModifiedDate() {
+            return lastDate;
+        }
 
         // returns true if the feed has no change since the last sync (HTTP 304 Not Modified response)
-        public boolean isNotModified() { return notModified; }
+        public boolean isNotModified() {
+            return notModified;
+        }
+    }
+
+    private static String getBrowserTag() {
+        String tag = " Zimbra/" + BuildInfo.MAJORVERSION + "." + BuildInfo.MINORVERSION + "." + BuildInfo.MICROVERSION;
+        return tag.indexOf("unknown") == -1 ? tag : " Zimbra/8.0";
     }
 
     public static final int MAX_REDIRECTS = 3;
-    public static final String HTTP_USER_AGENT = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.1.4322) Zimbra/2.0";
+
+    public static final String BROWSER_TAG = getBrowserTag();
+    public static final String HTTP_USER_AGENT = "Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-US; rv:1.9.1.7)" + BROWSER_TAG;
     public static final String HTTP_ACCEPT = "image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, application/x-shockwave-flash, " +
-    		                             "application/vnd.ms-powerpoint, application/vnd.ms-excel, application/msword, */*";
+                                             "application/vnd.ms-powerpoint, application/vnd.ms-excel, application/msword, */*";
 
     public static SubscriptionData<?> retrieveRemoteDatasource(Account acct, String url, Folder.SyncData fsd)
     throws ServiceException {
-        assert(!StringUtil.isNullOrEmpty(url));
+        assert !Strings.isNullOrEmpty(url);
 
         HttpClient client = ZimbraHttpConnectionManager.getExternalHttpConnMgr().newHttpClient();
         HttpProxyUtil.configureProxy(client);
@@ -149,12 +172,13 @@ public class FeedManager {
             int redirects = 0;
             do {
                 String lcurl = url.toLowerCase();
-                if (lcurl.startsWith("webcal:"))
+                if (lcurl.startsWith("webcal:")) {
                     url = "http:" + url.substring(7);
-                else if (lcurl.startsWith("feed:"))
+                } else if (lcurl.startsWith("feed:")) {
                     url = "http:" + url.substring(5);
-                else if (!lcurl.startsWith("http:") && !lcurl.startsWith("https:"))
+                } else if (!lcurl.startsWith("http:") && !lcurl.startsWith("https:")) {
                     throw ServiceException.INVALID_REQUEST("url must begin with http: or https:", null);
+                }
 
                 // username and password are encoded in the URL as http://user:pass@host/...
                 if (url.indexOf('@') != -1) {
@@ -188,8 +212,7 @@ public class FeedManager {
                 get.addRequestHeader("User-Agent", HTTP_USER_AGENT);
                 get.addRequestHeader("Accept", HTTP_ACCEPT);
                 if (fsd != null && fsd.getLastSyncDate() > 0) {
-                    String lastSyncAt = org.apache.commons.httpclient.util.DateUtil.formatDate(
-                            new Date(fsd.getLastSyncDate()));
+                    String lastSyncAt = org.apache.commons.httpclient.util.DateUtil.formatDate(new Date(fsd.getLastSyncDate()));
                     get.addRequestHeader("If-Modified-Since", lastSyncAt);
                 }
                 HttpClientUtil.executeMethod(client, get);
@@ -206,8 +229,9 @@ public class FeedManager {
                         expectedCharset = get.getResponseCharSet();
 
                         Header lastModHdr = get.getResponseHeader("Last-Modified");
-                        if (lastModHdr == null)
+                        if (lastModHdr == null) {
                             lastModHdr = get.getResponseHeader("Date");
+                        }
                         if (lastModHdr != null) {
                             try {
                                 Date d = org.apache.commons.httpclient.util.DateUtil.parseDate(lastModHdr.getValue());
@@ -229,8 +253,9 @@ public class FeedManager {
                 }
             } while (++redirects <= MAX_REDIRECTS);
 
-            if (redirects > MAX_REDIRECTS)
+            if (redirects > MAX_REDIRECTS) {
                 throw ServiceException.TOO_MANY_PROXIES(originalURL);
+            }
 
             StringBuilder charset = new StringBuilder(expectedCharset);
             switch (getLeadingChar(content, charset)) {
@@ -243,8 +268,9 @@ public class FeedManager {
                     List<Invite> invites = Invite.createFromCalendar(acct, null, icals, true, true, null);
                     // handle missing UIDs on remote calendars by generating them as needed
                     for (Invite inv : invites) {
-                    	if (inv.getUid() == null)
-                    	    inv.setUid(LdapUtil.generateUUID());
+                        if (inv.getUid() == null) {
+                            inv.setUid(LdapUtil.generateUUID());
+                        }
                     }
                     return new SubscriptionData<Invite>(invites, lastModified);
                 default:
@@ -257,8 +283,9 @@ public class FeedManager {
         } catch (IOException e) {
             throw ServiceException.RESOURCE_UNREACHABLE("IOException: " + e, e);
         } finally {
-            if (get != null)
+            if (get != null) {
                 get.releaseConnection();
+            }
         }
     }
 
@@ -295,18 +322,28 @@ public class FeedManager {
 //    private static org.dom4j.QName QN_CONTENT_ENCODED = org.dom4j.QName.get("encoded", "content", "http://purl.org/rss/1.0/modules/content/");
 
     private static final class Enclosure {
-        private final String mUrl, mTitle, mCtype;
+        private final String url, title, cthdr;
+
         Enclosure(String url, String title, String ctype) {
-            mUrl = url;  mTitle = title;  mCtype = ctype;
+            this.url = url;
+            this.title = title;
+            this.cthdr = ctype;
         }
-        String getLocation()     { return mUrl; }
-        String getDescription()  { return mTitle; }
+
+        String getLocation() {
+            return url;
+        }
+
+        String getDescription() {
+            return title;
+        }
+
         String getContentType() {
-            ContentType ctype = new ContentType(mCtype == null ? "text/plain" : mCtype).cleanup();
+            ContentType ctype = new ContentType(cthdr == null ? "text/plain" : cthdr).cleanup();
             try {
-                ctype.setParameter("name", FileUtil.trimFilename(URLDecoder.decode(mUrl, "utf-8")));
+                ctype.setParameter("name", FileUtil.trimFilename(URLDecoder.decode(url, "utf-8")));
             } catch (UnsupportedEncodingException e) {
-                ctype.setParameter("name", FileUtil.trimFilename(mUrl));
+                ctype.setParameter("name", FileUtil.trimFilename(url));
             }
             return ctype.toString();
         }
@@ -316,8 +353,9 @@ public class FeedManager {
     throws ServiceException {
         try {
             String rname = root.getName();
-            if (rname.equals("feed"))
+            if (rname.equals("feed")) {
                 return parseAtomFeed(root, fsd, lastModified);
+            }
 
             Element channel = root.getElement("channel");
             String hrefChannel = channel.getAttribute("link");
@@ -328,16 +366,19 @@ public class FeedManager {
             List<Enclosure> enclosures = new ArrayList<Enclosure>(3);
             SubscriptionData<ParsedMessage> sdata = new SubscriptionData<ParsedMessage>();
 
-            if (rname.equals("rss"))
+            if (rname.equals("rss")) {
                 root = channel;
-            else if (!rname.equals("RDF"))
+            } else if (!rname.equals("RDF")) {
                 throw ServiceException.PARSE_ERROR("unknown top-level rss element name: " + root.getQualifiedName(), null);
+            }
 
             for (Element item : root.listElements("item")) {
                 // get the item's date
                 Date date = DateUtil.parseRFC2822Date(item.getAttribute("pubDate", null), null);
-                if (date == null)
+                if (date == null) {
                     date = DateUtil.parseISO8601Date(item.getAttribute("date", null), dateChannel);
+                }
+
                 // construct an address for the author
                 InternetAddress addr = addrChannel;
                 try {
@@ -345,27 +386,35 @@ public class FeedManager {
                 } catch (Exception e) {
                     addr = parseDublinCreator(item.getAttribute("creator", null), addr);
                 }
+
                 // get the item's title and link, defaulting to the channel attributes
                 String title = parseTitle(item.getAttribute("title", subjChannel));
                 String href = item.getAttribute("link", hrefChannel);
                 String guid = item.getAttribute("guid", href);
+
                 // make sure we haven't already seen this item
                 if (fsd != null && fsd.alreadySeen(guid == hrefChannel ? null : guid, date == dateChannel ? null : date))
                     continue;
+
                 // handle the enclosure (associated media link), if any
                 enclosures.clear();
                 Element enc = item.getOptionalElement("enclosure");
-                if (enc != null)
+                if (enc != null) {
                     enclosures.add(new Enclosure(enc.getAttribute("url", null), null, enc.getAttribute("type", null)));
+                }
+
                 // get the feed item's content and guess at its type
                 String text = item.getAttribute("encoded", null);
                 boolean html = text != null;
-                if (text == null)
+                if (text == null) {
                     text = item.getAttribute("description", null);
-                if (text == null)
+                }
+                if (text == null) {
                     text = item.getAttribute("abstract", null);
-                if (text == null && title != subjChannel)
+                }
+                if (text == null && title != subjChannel) {
                     text = "";
+                }
                 if (text == null)
                     continue;
                 html |= text.indexOf("</") != -1 || text.indexOf("/>") != -1 || text.indexOf("<p>") != -1;
@@ -385,8 +434,9 @@ public class FeedManager {
         try {
             // get defaults from the <feed> element
             InternetAddress addrFeed = parseAtomAuthor(feed.getOptionalElement("author"), null);
-            if (addrFeed == null)
+            if (addrFeed == null) {
                 addrFeed = new JavaMailInternetAddress("", feed.getAttribute("title"), "utf-8");
+            }
             Date dateFeed = DateUtil.parseISO8601Date(feed.getAttribute("updated", null), new Date());
             List<Enclosure> enclosures = new ArrayList<Enclosure>();
             SubscriptionData<ParsedMessage> sdata = new SubscriptionData<ParsedMessage>();
@@ -394,42 +444,53 @@ public class FeedManager {
             for (Element item : feed.listElements("entry")) {
                 // get the item's date
                 Date date = DateUtil.parseISO8601Date(item.getAttribute("updated", null), null);
-                if (date == null)
+                if (date == null) {
                     date = DateUtil.parseISO8601Date(item.getAttribute("modified", null), dateFeed);
+                }
+
                 // construct an address for the author
                 InternetAddress addr = parseAtomAuthor(item.getOptionalElement("author"), addrFeed);
+
                 // get the item's title (may be html or xhtml)
                 Element tblock = item.getElement("title");
                 String type = tblock.getAttribute("type", "text").trim().toLowerCase();
                 String title = tblock.getText();
-                if (type.equals("html") || type.equals("xhtml") || type.equals("text/html") || type.equals("application/xhtml+xml"))
+                if (type.equals("html") || type.equals("xhtml") || type.equals("text/html") || type.equals("application/xhtml+xml")) {
                     title = parseTitle(title);
+                }
+
                 // find the item's link and any enclosures (associated media links)
                 enclosures.clear();
                 String href = "";
                 for (Element link : item.listElements("link")) {
                     String relation = link.getAttribute("rel", "alternate");
-                    if (relation.equals("alternate"))
+                    if (relation.equals("alternate")) {
                         href = link.getAttribute("href");
-                    else if (relation.equals("enclosure"))
+                    } else if (relation.equals("enclosure")) {
                         enclosures.add(new Enclosure(link.getAttribute("href", null), link.getAttribute("title", null), link.getAttribute("type", null)));
+                    }
                 }
                 String guid = item.getAttribute("id", href);
+
                 // make sure we haven't already seen this item
                 if (fsd != null && fsd.alreadySeen(guid == null || guid.equals("") ? null : guid, date == dateFeed ? null : date))
                     continue;
+
                 // get the content/summary and markup
                 Element content = item.getOptionalElement("content");
-                if (content == null)
+                if (content == null) {
                     content = item.getOptionalElement("summary");
+                }
                 if (content == null)
                     continue;
+
                 type = content.getAttribute("type", "text").trim().toLowerCase();
                 boolean html = false;
-                if (type.equals("html") || type.equals("xhtml") || type.equals("text/html") || type.equals("application/xhtml+xml"))
+                if (type.equals("html") || type.equals("xhtml") || type.equals("text/html") || type.equals("application/xhtml+xml")) {
                     html = true;
-                else if (!type.equals("text") && !type.equals("text/plain"))
+                } else if (!type.equals("text") && !type.equals("text/plain")) {
                     throw ServiceException.PARSE_ERROR("unsupported atom entry content type: " + type, null);
+                }
 
                 ParsedMessage pm = generateMessage(title, content.getText(), href, html, addr, date, enclosures);
                 sdata.recordItem(pm, guid, date.getTime());
@@ -446,17 +507,25 @@ public class FeedManager {
     private static final String HTML_FOOTER = "</BODY></HTML>";
 
     private static ParsedMessage generateMessage(String title, String text, String href, boolean html,
-                                                 InternetAddress addr, Date date, List<Enclosure> attach)
+            InternetAddress addr, Date date, List<Enclosure> attach)
     throws ServiceException {
         String ctype = html ? "text/html; charset=\"utf-8\"" : "text/plain; charset=\"utf-8\"";
         String content = html ? HTML_HEADER + text + "<p>" + href + HTML_FOOTER : text + "\r\n\r\n" + href;
+
         // cull out invalid enclosures
         if (attach != null) {
-            for (Iterator<Enclosure> it = attach.iterator(); it.hasNext(); )
-                if (it.next().getLocation() == null)
+            for (Iterator<Enclosure> it = attach.iterator(); it.hasNext(); ) {
+                if (it.next().getLocation() == null) {
                     it.remove();
+                }
+            }
         }
         boolean hasAttachments = attach != null && !attach.isEmpty();
+
+        // clean up whitespace in the title
+        if (title != null) {
+            title = title.replaceAll("\\s+", " ");
+        }
 
         // create the MIME message and wrap it
         try {
@@ -474,8 +543,9 @@ public class FeedManager {
                     part.setText("");
                     part.addHeader("Content-Location", enc.getLocation());
                     part.addHeader("Content-Type", enc.getContentType());
-                    if (enc.getDescription() != null)
+                    if (enc.getDescription() != null) {
                         part.addHeader("Content-Description", enc.getDescription());
+                    }
                     part.addHeader("Content-Disposition", "attachment");
                     mmp.addBodyPart(part);
                 }
@@ -503,12 +573,16 @@ public class FeedManager {
         if (mailto == 0 && lc.length() <= 7) {
             return addrChannel;
         } else if (mailto == 0) {
-            personal = null;  address = creator = creator.substring(7);
+            personal = null;
+            address = creator = creator.substring(7);
         } else if (mailto != -1) {
             // checking for "...[mailto:...]..." or "...(mailto:...)..."
             char delimit = creator.charAt(mailto - 1), complement = 0;
-            if (delimit == '[')       complement = ']';
-            else if (delimit == '(')  complement = ')';
+            if (delimit == '[') {
+                complement = ']';
+            } else if (delimit == '(') {
+                complement = ')';
+            }
             int closing = creator.indexOf(complement, mailto + 7);
             if (closing != -1 && closing != mailto + 7) {
                 address = creator.substring(mailto + 7, closing);
@@ -516,56 +590,76 @@ public class FeedManager {
             }
         }
 
-        try { return new JavaMailInternetAddress(address, personal, "utf-8"); } catch (UnsupportedEncodingException e) { }
-        try { return new JavaMailInternetAddress("", creator, "utf-8"); }       catch (UnsupportedEncodingException e) { }
+        try {
+            return new JavaMailInternetAddress(address, personal, "utf-8");
+        } catch (UnsupportedEncodingException e) { }
+        try {
+            return new JavaMailInternetAddress("", creator, "utf-8");
+        } catch (UnsupportedEncodingException e) { }
         return addrChannel;
     }
 
     private static InternetAddress parseAtomAuthor(Element author, InternetAddress addrChannel) {
-        if (author == null)
+        if (author == null) {
             return addrChannel;
+        }
 
         String address  = author.getAttribute("email", "");
         String personal = author.getAttribute("name", "");
-        if (personal.equals("") && address.equals(""))
+        if (personal.equals("") && address.equals("")) {
             return addrChannel;
+        }
 
-        try { return new JavaMailInternetAddress(address, personal, "utf-8"); }      catch (UnsupportedEncodingException e) { }
-        try { return new JavaMailInternetAddress("", address + personal, "utf-8"); } catch (UnsupportedEncodingException e) { }
+        try {
+            return new JavaMailInternetAddress(address, personal, "utf-8");
+        } catch (UnsupportedEncodingException e) { }
+        try {
+            return new JavaMailInternetAddress("", address + personal, "utf-8");
+        } catch (UnsupportedEncodingException e) { }
         return addrChannel;
     }
 
     private static class UnescapedContent extends org.xml.sax.helpers.DefaultHandler {
-        private final StringBuffer str = new StringBuffer();
-        private boolean continued;
+        private final StringBuilder str = new StringBuilder();
 
         UnescapedContent()  { }
 
-        @Override public void startDocument() {
-            str.setLength(0);  continued = false;
+        @Override
+        public void startDocument() {
+            str.setLength(0);
         }
-        @Override public void characters(char[] ch, int offset, int length) {
-            if (!continued && str.length() > 0)
-                str.append(' ');
+
+        @Override
+        public void characters(char[] ch, int offset, int length) {
             str.append(ch, offset, length);
-            continued = true;
         }
-        @Override public void startElement(String uri, String localName, String qName, org.xml.sax.Attributes attributes) {
-            continued = localName.toUpperCase().equals("A");
+
+        @Override
+        public void startElement(String uri, String localName, String qName, org.xml.sax.Attributes attributes) {
+            if (str.length() > 0) {
+                String name = localName.toUpperCase();
+                if (name.equals("P") || name.equals("BR") || name.equals("HR")) {
+                    if (!Character.isWhitespace(str.charAt(str.length() - 1))) {
+                        str.append(" ");
+                    }
+                }
+            }
         }
-        @Override public void endElement(String uri, String localName, String qName) {
-            continued = localName.toUpperCase().equals("A");
-        }
-        @Override public String toString() {
+
+        @Override
+        public String toString() {
             return str.toString();
         }
     }
 
-    private static final String parseTitle(String title) {
-        if (title == null)
+    @VisibleForTesting
+    static final String parseTitle(String title) {
+        if (title == null) {
             return "";
-        else if (title.indexOf('<') == -1 && title.indexOf('&') == -1)
+        } else if (title.indexOf('<') == -1 && title.indexOf('&') == -1) {
             return title;
+        }
+
         org.xml.sax.XMLReader parser = new org.cyberneko.html.parsers.SAXParser();
         org.xml.sax.ContentHandler handler = new UnescapedContent();
         parser.setContentHandler(handler);
