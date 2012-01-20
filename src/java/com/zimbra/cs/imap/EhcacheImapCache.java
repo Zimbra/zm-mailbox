@@ -14,6 +14,9 @@
  */
 package com.zimbra.cs.imap;
 
+import com.zimbra.common.util.ZimbraLog;
+
+import net.sf.ehcache.CacheException;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
@@ -42,12 +45,28 @@ final class EhcacheImapCache implements ImapSessionManager.Cache {
 
     @Override
     public ImapFolder get(String key) {
-        Element el = ehcache.get(key);
-        return el != null ? (ImapFolder) el.getValue() : null;
+        try {
+            Element el = ehcache.get(key);
+            return el != null ? (ImapFolder) el.getValue() : null;
+        } catch (CacheException ce) {
+            ZimbraLog.imap.error("IMAP cache exception - removing offending key", ce);
+            remove(key, true);
+            return null;
+        }
+    }
+
+    private void remove(String key, boolean quiet) {
+        try {
+            ehcache.remove(key);
+        } catch (CacheException ce) {
+            if (!quiet) {
+                ZimbraLog.imap.error("IMAP cache exception", ce);
+            }
+        }
     }
 
     @Override
     public void remove(String key) {
-        ehcache.remove(key);
+        remove(key, false);
     }
 }
