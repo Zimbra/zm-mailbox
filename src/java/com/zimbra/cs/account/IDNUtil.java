@@ -20,6 +20,7 @@ import java.lang.IllegalAccessException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -80,6 +81,8 @@ public class IDNUtil {
     }
     
     private static class JavaIDN extends ZimbraIDN {
+        private static final String SEGMENT_DELIM = ".";
+        
         private int mFlags;
         private Method mMethodToASCII;
         private Method mMethodToUnicode;
@@ -143,7 +146,28 @@ public class IDNUtil {
              */
             
             try {
-                return (String)mMethodToASCII.invoke(null, input, mFlags);
+                /*
+                 * bug 68964
+                 * 
+                 * if there is no segment after the last dot, the last dot is not 
+                 * included in the output by java.net.IDN.toASCII.  
+                 * e.g. "." would return "", expected: "."
+                 *      ".." would return ".", expected: ".."
+                 *      ".a." would return ".a", expected: ".a."
+                 *      
+                 * To work around, split input to segments, convert each segment
+                 * separately, then join them.
+                 */
+                StringBuffer sb = new StringBuffer();
+                StringTokenizer tokenizer = new StringTokenizer(input, SEGMENT_DELIM, true);
+                while (tokenizer.hasMoreTokens()) {
+                    String token = tokenizer.nextToken();
+                    if (!SEGMENT_DELIM.equals(token)) {
+                        token = (String)mMethodToASCII.invoke(null, token, mFlags);
+                    }
+                    sb.append(token);
+                }
+                return sb.toString();
             } catch (IllegalAccessException e) {
                 throw ServiceException.FAILURE("cannot convert to ASCII", e);
             } catch (IllegalArgumentException e) {
@@ -161,7 +185,16 @@ public class IDNUtil {
              */
             
             try {
-                return (String)mMethodToUnicode.invoke(null, input, mFlags);
+                StringBuffer sb = new StringBuffer();
+                StringTokenizer tokenizer = new StringTokenizer(input, SEGMENT_DELIM, true);
+                while (tokenizer.hasMoreTokens()) {
+                    String token = tokenizer.nextToken();
+                    if (!SEGMENT_DELIM.equals(token)) {
+                        token = (String)mMethodToUnicode.invoke(null, token, mFlags);
+                    }
+                    sb.append(token);
+                }
+                return sb.toString();
             } catch (IllegalAccessException e) {
                 throw ServiceException.FAILURE("cannot convert to Unicode", e);
             } catch (IllegalArgumentException e) {

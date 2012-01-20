@@ -146,6 +146,11 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         provUtil.deleteServer(server);
     }
     
+    private void deleteDomain(Domain domain) throws Exception {
+        provUtil.deleteDomain(domain);
+    }
+    
+    
     @Test
     public void searchAccountsOnServer() throws Exception {
         // create a search domain
@@ -857,8 +862,10 @@ public class TestLdapProvSearchDirectory extends LdapTest {
     public void idnFilter() throws Exception {
         String idnDomainUnicodeName = "\u4e2d\u6587" + "." + baseDomainName();
         Domain idnDomain = provUtil.createDomain(idnDomainUnicodeName);
-        Account acct = provUtil.createAccount(genAcctNameLocalPart(), idnDomain);
-        String acctUnicodeName = "idnFilter" + "@" + idnDomainUnicodeName;
+        
+        String acctNameLocalPart = genAcctNameLocalPart();
+        Account acct = provUtil.createAccount(acctNameLocalPart, idnDomain);
+        String acctUnicodeName = acctNameLocalPart + "@" + idnDomainUnicodeName;
         
         SearchDirectoryOptions options = new SearchDirectoryOptions(idnDomain);
         options.setTypes(ObjectType.accounts);
@@ -1008,6 +1015,28 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         deleteAccount(acctSub);
         deleteGroup(dlSub);
         deleteGroup(dgSub);
+        deleteDomain(subSubDomain);
+        deleteDomain(subDomain);
     }
     
+
+    @Test
+    @Bug(bug=68964)
+    public void filterWithTrailingDot() throws Exception {
+        Domain subDomain = provUtil.createDomain(genDomainName(baseDomainName()));
+        Account acct = provUtil.createAccount(genAcctNameLocalPart(), subDomain);
+        
+        SearchDirectoryOptions options = new SearchDirectoryOptions();
+        options.setDomain(subDomain);
+        options.setTypes(SearchDirectoryOptions.ObjectType.accounts);
+        options.setFilterString(FilterId.UNITTEST, "(zimbraMailDeliveryAddress=*.*)");
+        options.setReturnAttrs(new String[] {Provisioning.A_zimbraMailDeliveryAddress});
+        options.setConvertIDNToAscii(true);
+        
+        List<NamedEntry> entries = prov.searchDirectory(options);
+        Verify.verifyEquals(Lists.newArrayList(acct), entries, true);
+        
+        deleteAccount(acct);
+        deleteDomain(subDomain);
+    }
 }

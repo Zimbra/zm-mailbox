@@ -959,5 +959,24 @@ zmprov mcf +zimbraGalLdapFilterDef 'ad:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(
                 LdapEntrySearchFilter.toLdapIDNFilter("(|(zimbraMailDeliveryAddress=*@test.\u4e2d\u6587.com)(zimbraMailAlias=*@test.\u4e2d\u6587.com))"));
         */
     }
+    
+    @Test
+    @Bug(bug=68964)
+    public void toIDNFilterTrailingDot() throws Exception {
+        assertEquals("(zimbraMailDeliveryAddress=.)", 
+                LdapEntrySearchFilter.toLdapIDNFilter("(zimbraMailDeliveryAddress=.)"));
+
+        assertEquals("(zimbraMailDeliveryAddress=...)", 
+                LdapEntrySearchFilter.toLdapIDNFilter("(zimbraMailDeliveryAddress=...)"));
+        
+        assertEquals("(zimbraMailDeliveryAddress=.a.)", 
+                LdapEntrySearchFilter.toLdapIDNFilter("(zimbraMailDeliveryAddress=.a.)"));
+        
+        assertEquals("(zimbraMailDeliveryAddress=a.b.)", 
+                LdapEntrySearchFilter.toLdapIDNFilter("(zimbraMailDeliveryAddress=a.b.)"));
+        
+        assertEquals("(zimbraMailDeliveryAddress=*.*)", 
+                LdapEntrySearchFilter.toLdapIDNFilter("(zimbraMailDeliveryAddress=*.*)"));
+    }
 
 }
