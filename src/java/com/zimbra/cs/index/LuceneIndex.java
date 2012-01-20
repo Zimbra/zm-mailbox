@@ -18,7 +18,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +35,7 @@ import org.apache.lucene.index.SerialMergeScheduler;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Searcher;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
@@ -43,8 +43,11 @@ import org.apache.lucene.store.NoSuchDirectoryException;
 import org.apache.lucene.util.Version;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.MapEvictionListener;
-import com.google.common.collect.MapMaker;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
 import com.google.common.io.Closeables;
 import com.google.common.io.NullOutputStream;
 import com.zimbra.common.localconfig.LC;
@@ -52,9 +55,9 @@ import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.index.global.GlobalIndex;
 import com.zimbra.cs.mailbox.Folder;
-import com.zimbra.cs.mailbox.MailboxIndex;
 import com.zimbra.cs.mailbox.MailItem;
 import com.zimbra.cs.mailbox.Mailbox;
+import com.zimbra.cs.mailbox.MailboxIndex;
 import com.zimbra.cs.volume.Volume;
 import com.zimbra.cs.volume.VolumeManager;
 
@@ -76,16 +79,24 @@ public final class LuceneIndex implements IndexStore {
 
     private static final Semaphore READER_THROTTLE = new Semaphore(LC.zimbra_index_max_readers.intValue());
     private static final Semaphore WRITER_THROTTLE = new Semaphore(LC.zimbra_index_max_writers.intValue());
-    private static final ConcurrentMap<Integer, IndexSearcherImpl> SEARCHER_CACHE = new MapMaker()
-        .maximumSize(LC.zimbra_index_reader_cache_size.intValue())
+    
+    private static final Cache<Integer, IndexSearcherImpl> SEARCHER_CACHE = 
+        CacheBuilder.newBuilder()                                                                                          
+        .maximumSize(LC.zimbra_index_reader_cache_size.intValue())                                                        
         .expireAfterAccess(LC.zimbra_index_reader_cache_ttl.intValue(), TimeUnit.SECONDS)
-        .evictionListener(new MapEvictionListener<Integer, IndexSearcherImpl>() {
+        .removalListener(new RemovalListener<Integer, IndexSearcherImpl>() {                                               
             @Override
-            public void onEviction(Integer mboxId, IndexSearcherImpl searcher) {
-                Closeables.closeQuietly(searcher);
-            }
+            public void onRemoval(RemovalNotification<Integer, IndexSearcherImpl> notification) {
+                Closeables.closeQuietly(notification.getValue());  
+            }  
         })
-        .makeMap();
+        .build(new CacheLoader<Integer, IndexSearcherImpl>() {
+            @Override
+            public IndexSearcherImpl load(Integer key) throws Exception {
+                return null; //To Do. Returning null during load in turns throws NullPointerException
+                             // should ideally be avoided by using google "Optional" collection.
+            }
+        });
 
     private final Mailbox mailbox;
     private final LuceneDirectory luceneDirectory;
@@ -148,7 +159,7 @@ public final class LuceneIndex implements IndexStore {
     public synchronized void deleteIndex() throws IOException {
         assert(writerRef == null);
         ZimbraLog.index.debug("Deleting index %s", luceneDirectory);
-        Closeables.closeQuietly(SEARCHER_CACHE.remove(mailbox.getId()));
+        Closeables.closeQuietly(SEARCHER_CACHE.asMap().remove(mailbox.getId()));
 
         String[] files;
         try {
@@ -171,7 +182,7 @@ public final class LuceneIndex implements IndexStore {
      */
     @Override
     public synchronized void warmup() {
-        if (SEARCHER_CACHE.containsKey(mailbox.getId())) {
+        if (SEARCHER_CACHE.asMap().containsKey(mailbox.getId())) {
             return; // already warmed up
         }
         long start = System.currentTimeMillis();
@@ -193,7 +204,7 @@ public final class LuceneIndex implements IndexStore {
      */
     @Override
     public void evict() {
-        Closeables.closeQuietly(SEARCHER_CACHE.remove(mailbox.getId()));
+        Closeables.closeQuietly(SEARCHER_CACHE.asMap().remove(mailbox.getId()));
     }
 
     private IndexReader openIndexReader(boolean tryRepair) throws IOException {
@@ -279,7 +290,13 @@ public final class LuceneIndex implements IndexStore {
      */
     @Override
     public synchronized IndexSearcher openSearcher() throws IOException {
-        IndexSearcherImpl searcher = SEARCHER_CACHE.get(mailbox.getId());
+        IndexSearcherImpl searcher = null;
+        try {
+            searcher = SEARCHER_CACHE.get(mailbox.getId());
+        } catch (Exception e) {
+            if (!(e instanceof NullPointerException))
+                ZimbraLog.search.warn(e);
+        }
         if (searcher != null) {
             ZimbraLog.search.debug("CacheHitLuceneSearcher %s", searcher);
             searcher.inc();
@@ -310,7 +327,7 @@ public final class LuceneIndex implements IndexStore {
 
         ZimbraLog.search.debug("OpenLuceneSearcher %s,elapsed=%d", searcher, System.currentTimeMillis() - start);
         searcher.inc();
-        Closeables.closeQuietly(SEARCHER_CACHE.put(mailbox.getId(), searcher));
+        Closeables.closeQuietly(SEARCHER_CACHE.asMap().put(mailbox.getId(), searcher));
         return searcher;
     }
 
@@ -674,10 +691,10 @@ public final class LuceneIndex implements IndexStore {
 
         @Override
         public void destroy() {
-            for (IndexSearcherImpl searcher : SEARCHER_CACHE.values()) {
+            for (IndexSearcherImpl searcher : SEARCHER_CACHE.asMap().values()) {
                 Closeables.closeQuietly(searcher);
             }
-            SEARCHER_CACHE.clear();
+            SEARCHER_CACHE.asMap().clear();
         }
     }
 
@@ -691,11 +708,17 @@ public final class LuceneIndex implements IndexStore {
         @Override
         public void close() throws IOException {
             writer.index.commitWriter();
-            IndexSearcher searcher = SEARCHER_CACHE.get(writer.getIndex().mailbox.getId());
+            IndexSearcher searcher = null;
+            try {
+                searcher = SEARCHER_CACHE.get(writer.getIndex().mailbox.getId());
+            } catch (Exception e) {
+                if (!(e instanceof NullPointerException))
+                    ZimbraLog.search.warn(e);
+            }
             if (searcher != null) {
                 IndexReader newReader = searcher.getIndexReader().reopen(true);
                 if (newReader != searcher.getIndexReader()) {
-                    Closeables.closeQuietly(SEARCHER_CACHE.put(writer.getIndex().mailbox.getId(),
+                    Closeables.closeQuietly(SEARCHER_CACHE.asMap().put(writer.getIndex().mailbox.getId(),
                             new IndexSearcherImpl(newReader)));
                 }
             }
