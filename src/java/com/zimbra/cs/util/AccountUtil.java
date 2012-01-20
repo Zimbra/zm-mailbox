@@ -267,8 +267,7 @@ public class AccountUtil {
             case DOCUMENT:
                 return account.getFileShareLifetime();
             case UNKNOWN:
-                return AccountUtil.minShareLifetime(
-                        account.getFileShareLifetime(), account.getShareLifetime());
+                return minShareLifetime(account.getFileShareLifetime(), account.getShareLifetime());
             default:
                 return account.getShareLifetime();
         }
@@ -279,8 +278,7 @@ public class AccountUtil {
             case DOCUMENT:
                 return account.getFileExternalShareLifetime();
             case UNKNOWN:
-                return AccountUtil.minShareLifetime(
-                        account.getFileExternalShareLifetime(), account.getExternalShareLifetime());
+                return minShareLifetime(account.getFileExternalShareLifetime(), account.getExternalShareLifetime());
             default:
                 return account.getExternalShareLifetime();
         }
@@ -291,8 +289,7 @@ public class AccountUtil {
             case DOCUMENT:
                 return account.getFilePublicShareLifetime();
             case UNKNOWN:
-                return AccountUtil.minShareLifetime(
-                        account.getFilePublicShareLifetime(), account.getPublicShareLifetime());
+                return minShareLifetime(account.getFilePublicShareLifetime(), account.getPublicShareLifetime());
             default:
                 return account.getPublicShareLifetime();
         }

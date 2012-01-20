@@ -392,12 +392,12 @@ public class Document extends MailItem {
     }
 
     @Override
-    protected long getExternalShareLifetime(Account account) {
+    protected long getMaxAllowedExternalShareLifetime(Account account) {
         return account.getFileExternalShareLifetime();
     }
 
     @Override
-    protected long getInternalShareLifetime(Account account) {
+    protected long getMaxAllowedInternalShareLifetime(Account account) {
         return account.getFileShareLifetime();
     }
 }

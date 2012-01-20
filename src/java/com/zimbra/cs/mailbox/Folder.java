@@ -1382,12 +1382,12 @@ public class Folder extends MailItem {
     }
 
     @Override
-    protected long getExternalShareLifetime(Account account) {
+    protected long getMaxAllowedExternalShareLifetime(Account account) {
         return AccountUtil.getMaxExternalShareLifetime(account, getType());
     }
 
     @Override
-    protected long getInternalShareLifetime(Account account) {
+    protected long getMaxAllowedInternalShareLifetime(Account account) {
         return AccountUtil.getMaxInternalShareLifetime(account, getType());
     }
 }

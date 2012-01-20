@@ -3434,8 +3434,8 @@ public abstract class MailItem implements Comparable<MailItem> {
 
         markItemModified(Change.ACL);
         if (this.rights == null) {
-            long intShareLifetime = getInternalShareLifetime(account);
-            long extShareLifetime = getExternalShareLifetime(account);
+            long intShareLifetime = getMaxAllowedInternalShareLifetime(account);
+            long extShareLifetime = getMaxAllowedExternalShareLifetime(account);
             long now = System.currentTimeMillis();
             this.rights = new ACL(intShareLifetime == 0 ? 0 : now + intShareLifetime,
                     extShareLifetime == 0 ? 0 : now + extShareLifetime);
@@ -3448,11 +3448,13 @@ public abstract class MailItem implements Comparable<MailItem> {
         return grant;
     }
 
-    protected long getExternalShareLifetime(Account account) {
+    /** Returns the maximum allowed validity of a grant to external/guest users for this type of item. */
+    protected long getMaxAllowedExternalShareLifetime(Account account) {
         return account.getExternalShareLifetime();
     }
 
-    protected long getInternalShareLifetime(Account account) {
+    /** Returns the maximum allowed validity of a grant to internal users for this type of item. */
+    protected long getMaxAllowedInternalShareLifetime(Account account) {
         return account.getShareLifetime();
     }
 
