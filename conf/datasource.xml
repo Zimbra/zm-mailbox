@@ -24,6 +24,15 @@
         <folder remotePath="[Gmail]/Spam" localPath="/Junk" sync="false"/>
         <folder remotePath="[Gmail]/Starred" ignore="true"/>
         <folder remotePath="[Gmail]/Important" ignore="true"/>
+        <!-- below is for google app users -->
+        <folder remotePath="[Google Mail]" ignore="true"/>
+        <folder remotePath="[Google Mail]/Trash" localPath="/Trash" sync="false"/>
+        <folder remotePath="[Google Mail]/All Mail" ignore="true"/>
+        <folder remotePath="[Google Mail]/Drafts" ignore="true"/>
+        <folder remotePath="[Google Mail]/Sent Mail" localPath="/Sent" sync="true"/>
+        <folder remotePath="[Google Mail]/Spam" localPath="/Junk" sync="false"/>
+        <folder remotePath="[Google Mail]/Starred" ignore="true"/>
+        <folder remotePath="[Google Mail]/Important" ignore="true"/>
     </service>
 
     <service name="aol.com" saveToSent="true">
