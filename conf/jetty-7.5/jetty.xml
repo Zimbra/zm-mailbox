@@ -459,6 +459,7 @@
               <Item>org.eclipse.jetty.plus.jaas.</Item>
               <Item>org.eclipse.jetty.websocket.</Item>
               <Item>org.eclipse.jetty.servlet.</Item>
+              <Item>org.eclipse.jetty.servlets.</Item>
               <Item>org.eclipse.jetty.server.</Item>
               <Item>org.eclipse.jetty.io.</Item>
               <Item>org.eclipse.jetty.http.</Item>
@@ -477,6 +478,7 @@
               <Item>-org.eclipse.jetty.plus.jass.</Item>
               <Item>-org.eclipse.jetty.websocket.</Item>
               <Item>-org.eclipse.jetty.servlet.</Item>
+              <Item>-org.eclipse.jetty.servlets.</Item>
               <Item>-org.eclipse.jetty.server.</Item>
               <Item>-org.eclipse.jetty.io.</Item>
               <Item>-org.eclipse.jetty.http.</Item>
