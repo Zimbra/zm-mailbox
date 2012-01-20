@@ -18,6 +18,7 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Collections;
 import java.util.Map;
 
 import org.apache.commons.httpclient.Cookie;
@@ -27,30 +28,48 @@ import org.apache.commons.httpclient.cookie.CookiePolicy;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.httpclient.params.HttpMethodParams;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.zimbra.common.account.ZAttrProvisioning.AccountStatus;
 import com.zimbra.common.auth.ZAuthToken;
 import com.zimbra.common.service.ServiceException;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.common.soap.Element;
+import com.zimbra.common.soap.SoapFaultException;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.ZimbraHttpConnectionManager;
+import com.zimbra.cs.account.Account;
+import com.zimbra.cs.account.AccountServiceException;
+import com.zimbra.cs.account.Domain;
 import com.zimbra.cs.account.Provisioning;
+import com.zimbra.cs.account.accesscontrol.Rights.User;
 import com.zimbra.qa.unittest.TestUtil;
+import com.zimbra.soap.account.message.GetInfoRequest;
+import com.zimbra.soap.account.message.GetInfoResponse;
 
 public class TestAuth extends SoapTest {
     
+    private static SoapProvTestUtil provUtil;
+    private static Provisioning prov;
+    private static Domain domain;
     
     @BeforeClass
     public static void init() throws Exception {
-        
+        provUtil = new SoapProvTestUtil();
+        prov = provUtil.getProv();
+        domain = provUtil.createDomain(baseDomainName());
     }
     
+    @AfterClass
+    public static void cleanup() throws Exception {
+        Cleanup.deleteAll(baseDomainName());
+    }
     
     private String getAutoToken(String acctName, boolean isAdmin) throws Exception {
         SoapTransport transport;
@@ -162,5 +181,45 @@ public class TestAuth extends SoapTest {
         String value = eA.getText();
         assertEquals("config", value);
     }
+    
+    @Test
+    public void accountStatusMaintenance() throws Exception {
+        Account acct = provUtil.createAccount(genAcctNameLocalPart(), domain,
+                Collections.singletonMap(
+                Provisioning.A_zimbraAccountStatus, (Object)AccountStatus.maintenance.name()));
+        
+        String errorCode = null;
+        try {
+            SoapTransport transport = authUser(acct.getName());
+        } catch (SoapFaultException e) {
+            errorCode = e.getCode();
+        }
+        assertEquals(AccountServiceException.MAINTENANCE_MODE, errorCode);
+        
+        provUtil.deleteAccount(acct);
+    }
 
+    @Test
+    public void accountStatusMaintenanceAfterAuth() throws Exception {
+        Account acct = provUtil.createAccount(genAcctNameLocalPart(), domain);
+        
+        SoapTransport transport = authUser(acct.getName());
+        
+        /*
+         * change account status to maintenance
+         */
+        prov.modifyAccountStatus(acct, AccountStatus.maintenance.name());
+        
+        GetInfoRequest req = new GetInfoRequest();
+        
+        String errorCode = null;
+        try {
+            GetInfoResponse resp = invokeJaxb(transport, req);
+        } catch (SoapFaultException e) {
+            errorCode = e.getCode();
+        }
+        assertEquals(AccountServiceException.AUTH_EXPIRED, errorCode);
+        
+        provUtil.deleteAccount(acct);
+    }
 }
