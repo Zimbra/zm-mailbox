@@ -38,12 +38,23 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlRootElement(name=AccountConstants.E_GET_DISTRIBUTION_LIST_MEMBERS_RESPONSE)
 public class GetDistributionListMembersResponse {
 
+    /**
+     * @zm-api-field-tag more-flag
+     * @zm-api-field-description 1 (true) if more members left to return
+     */
     @XmlAttribute(name=AccountConstants.A_MORE, required=false)
     private ZmBoolean more;
 
+    /**
+     * @zm-api-field-tag total
+     * @zm-api-field-description total number of distribution lists (not affected by limit/offset)
+     */
     @XmlAttribute(name=AccountConstants.A_TOTAL, required=false)
     private Integer total;
 
+    /**
+     * @zm-api-field-description Distribution list members
+     */
     @XmlElement(name=AccountConstants.E_DLM, required=false)
     @JsonSerialize(using=ContentListSerializer.class)
     private List<String> dlMembers = Lists.newArrayList();

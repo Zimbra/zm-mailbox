@@ -35,31 +35,52 @@ import com.zimbra.soap.type.TzOnsetInfo;
 @XmlType(propOrder = {})
 public class CalTZInfo implements CalTZInfoInterface {
 
+    /**
+     * @zm-api-field-tag timezone-id
+     * @zm-api-field-description Timezone ID.
+     * If this is the only detail present then this should be an existing server-known timezone's ID
+     * Otherwise, it must be present, although it will be ignored by the server
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private final String id;
 
-    @XmlAttribute(name=MailConstants.A_CAL_TZ_STDOFFSET /* stdoff */,
-                    required=true)
+    /**
+     * @zm-api-field-tag timezone-std-offset
+     * @zm-api-field-description Standard Time's offset in minutes from UTC; local = UTC + offset
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_TZ_STDOFFSET /* stdoff */, required=false)
     private final Integer tzStdOffset;
 
-    @XmlAttribute(name=MailConstants.A_CAL_TZ_DAYOFFSET /* dayoff */,
-                    required=true)
+    /**
+     * @zm-api-field-tag timezone-daylight-offset
+     * @zm-api-field-description Daylight Saving Time's offset in minutes from UTC; present only if DST is used
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_TZ_DAYOFFSET /* dayoff */, required=false)
     private final Integer tzDayOffset;
 
-    @XmlElement(name=MailConstants.E_CAL_TZ_STANDARD /* standard */,
-                    required=false)
+    /**
+     * @zm-api-field-description Time/rule for transitioning from daylight time to standard time.
+     * Either specify week/wkday combo, or mday.
+     */
+    @XmlElement(name=MailConstants.E_CAL_TZ_STANDARD /* standard */, required=false)
     private TzOnsetInfo standardTzOnset;
 
-    @XmlElement(name=MailConstants.E_CAL_TZ_DAYLIGHT /* daylight */,
-                    required=false)
+    /**
+     * @zm-api-field-description Time/rule for transitioning from standard time to daylight time
+     */
+    @XmlElement(name=MailConstants.E_CAL_TZ_DAYLIGHT /* daylight */, required=false)
     private TzOnsetInfo daylightTzOnset;
 
-    @XmlAttribute(name=MailConstants.A_CAL_TZ_STDNAME /* stdname */,
-                    required=false)
+    /**
+     * @zm-api-field-description Standard Time component's timezone name
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_TZ_STDNAME /* stdname */, required=false)
     private String standardTZName;
 
-    @XmlAttribute(name=MailConstants.A_CAL_TZ_DAYNAME /* dayname */,
-                    required=false)
+    /**
+     * @zm-api-field-description Daylight Saving Time component's timezone name
+     */
+    @XmlAttribute(name=MailConstants.A_CAL_TZ_DAYNAME /* dayname */, required=false)
     private String daylightTZName;
 
     /**

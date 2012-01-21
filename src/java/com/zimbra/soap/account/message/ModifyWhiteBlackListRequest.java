@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -31,14 +31,81 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.type.OpValue;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Modify the anti-spam WhiteList and BlackList addresses
+ * <br />
+ * Note: If no <b>&lt;addr></b> is present in a list, it means to remove all addresses in the list.
+ * <br />
+ * e.g. remove all addresses in the white list
+ * <pre>
+ *        &lt;ModifyWhiteBlackListRequest>
+ *            &lt;whiteList/>
+ *        &lt;/ModifyWhiteBlackListRequest>
+ * </pre>
+ * <p>
+ * <b>{op}</b> = + | -
+ * <ul>
+ * <li> <b>+</b> : add, ignored if the value already exists
+ * <li> <b>-</b> : remove, ignored if the value does not exist
+ * </ul>
+ * if not present, replace the entire list with provided values.
+ * <br />
+ * Note, can't mix +/- with non-present op)
+ * <br />
+ * <br />
+ * e.g.
+ * <ol>
+ * <li> replace the entire white list with "foo", "bar".
+ * <pre>
+ *             &lt;whiteList>
+ *                 &lt;addr>foo&lt;/addr>
+ *                 &lt;addr>bar&lt;/addr>
+ *             &lt;/whiteList>
+ * </pre>
+ * <li> add values "foo" and "bar" to white list
+ * <pre>
+ *             &lt;whiteList>
+ *                 &lt;addr op="+">foo&lt;/addr>
+ *                 &lt;addr op="+">bar&lt;/addr>
+ *             &lt;/whiteList>
+ * </pre>
+ * <li> remove values "foo" and "bar" from white list
+ * <pre>
+ *             &lt;whiteList>
+ *                 &lt;addr op="-">foo&lt;/addr>
+ *                 &lt;addr op="-">bar&lt;/addr>
+ *             &lt;/whiteList>
+ * </pre>
+ * <li> add "foo" and remove 'bar"
+ * <pre>
+ *             &lt;whiteList>
+ *                 &lt;addr op="+">foo&lt;/addr>
+ *                 &lt;addr op="-">bar&lt;/addr>
+ *             &lt;/whiteList>
+ * </pre>
+ * <li> mix +/- and non-present op - not allowed, INVALID_REQUEST will be thrown
+ * <pre>
+ *             &lt;whiteList>
+ *                 &lt;addr op="+">foo&lt;/addr>
+ *                 &lt;addr>bar&lt;/addr>
+ *             &lt;/whiteList>
+ * </pre>
+ * </ol>
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_MODIFY_WHITE_BLACK_LIST_REQUEST)
 public class ModifyWhiteBlackListRequest {
 
+    /**
+     * @zm-api-field-description Modifications for WhiteList
+     */
     @XmlElementWrapper(name=AccountConstants.E_WHITE_LIST, required=false)
     @XmlElement(name=AccountConstants.E_ADDR, required=false)
     private List<OpValue> whiteListEntries = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Modifications for BlackList
+     */
     @XmlElementWrapper(name=AccountConstants.E_BLACK_LIST, required=false)
     @XmlElement(name=AccountConstants.E_ADDR, required=false)
     private List<OpValue> blackListEntries = Lists.newArrayList();

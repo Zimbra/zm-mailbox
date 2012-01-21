@@ -33,6 +33,9 @@ import com.zimbra.soap.account.type.LocaleInfo;
 @XmlRootElement(name=AccountConstants.E_GET_AVAILABLE_LOCALES_RESPONSE)
 public class GetAvailableLocalesResponse {
 
+    /**
+     * @zm-api-field-description Information about locales
+     */
     @XmlElement(name=AccountConstants.E_LOCALE, required=false)
     private List<LocaleInfo> locales = Lists.newArrayList();
 

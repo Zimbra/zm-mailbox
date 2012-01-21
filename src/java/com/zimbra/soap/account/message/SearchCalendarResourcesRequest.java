@@ -39,12 +39,18 @@ import com.zimbra.soap.type.AttributeSelectorImpl;
 import com.zimbra.soap.type.CursorInfo;
 import com.zimbra.soap.type.ZmBoolean;
 
+/**
+ * @zm-api-command-description Search calendar resources
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_SEARCH_CALENDAR_RESOURCES_REQUEST)
 public class SearchCalendarResourcesRequest
 extends AttributeSelectorImpl
 implements SearchParameters {
 
+    /**
+     * @zm-api-field-description
+     */
     @XmlAttribute(name=MailConstants.A_INCLUDE_TAG_DELETED /* includeTagDeleted */, required=false)
     private ZmBoolean includeTagDeleted;
 
@@ -73,6 +79,10 @@ implements SearchParameters {
     private ZmBoolean quick;
 
     // Based on SortBy which is NOT an enum and appears to support runtime construction
+    /**
+     * @zm-api-field-tag sort-by
+     * @zm-api-field-description Name of attribute to sort on. default is the calendar resource name.
+     */
     @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
     private String sortBy;
 
@@ -105,9 +115,17 @@ implements SearchParameters {
     @XmlAttribute(name=MailConstants.A_FIELD /* field */, required=false)
     private String field;
 
+    /**
+     * @zm-api-field-description An integer specifying the 0-based offset into the results list to return as the
+     * first result for this search operation
+     */
     @XmlAttribute(name=MailConstants.A_QUERY_LIMIT /* limit */, required=false)
     private Integer limit;
 
+    /**
+     * @zm-api-field-description The 0-based offset into the results list to return as the first result for this
+     * search operation.
+     */
     @XmlAttribute(name=MailConstants.A_QUERY_OFFSET /* offset */, required=false)
     private Integer offset;
 

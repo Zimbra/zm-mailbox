@@ -17,6 +17,8 @@ package com.zimbra.doc.soap;
 
 import java.util.*;
 
+import com.google.common.base.Strings;
+
 public class Command implements java.io.Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -32,8 +34,6 @@ public class Command implements java.io.Serializable {
     private String name = null;
     private String namespace = null;
 
-    private String requestName = null;
-    private String responseName = null;
     private String description = null;
 
     Command(Service service, String name, String namespace) {
@@ -62,7 +62,7 @@ public class Command implements java.io.Serializable {
     }
 
     public String getDescription() {
-        return (this.description == null) ? "" : this.description;
+        return Strings.nullToEmpty(this.description);
     }
 
     /**

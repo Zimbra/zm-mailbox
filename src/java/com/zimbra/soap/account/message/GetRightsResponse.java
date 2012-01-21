@@ -31,11 +31,14 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.AccountACEInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_RIGHTS_RESPONSE)
 @XmlType(propOrder = {})
 public class GetRightsResponse {
 
+    /**
+     * @zm-api-field-description  Access Control Entries
+     */
     @XmlElement(name=AccountConstants.E_ACE /* ace */, required=false)
     private List<AccountACEInfo> aces = Lists.newArrayList();
 

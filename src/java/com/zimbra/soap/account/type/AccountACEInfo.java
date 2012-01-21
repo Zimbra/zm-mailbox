@@ -27,24 +27,83 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlAccessorType(XmlAccessType.NONE)
 public class AccountACEInfo {
 
+    /**
+     * @zm-api-field-tag zimbra-id
+     * @zm-api-field-description Zimbra ID of the grantee
+     */
     @XmlAttribute(name=AccountConstants.A_ZIMBRA_ID /* zid */, required=false)
     private String zimbraId;
 
+    /**
+     * @zm-api-field-tag grantee-type
+     * @zm-api-field-description The type of grantee:
+     * <ul>
+     * <li> <b>usr</b> - Zimbra user
+     * <li> <b>grp</b> - Zimbra group(distribution list)
+     * <li> <b>all</b> - all authenticated users
+     * <li> <b>gst</b> - non-Zimbra email address and password (not yet supported)
+     * <li> <b>key</b> - external user with an accesskey
+     * <li> <b>pub</b> - public authenticated and unauthenticated access
+     * </ul>
+     *
+     * If the value is:
+     * <ul>
+     * <li> <b>usr</b> - either <b>{zimbra-id}</b> or <b>{grantee-name}</b> is required
+     * <li> <b>grp</b> - either <b>{zimbra-id}</b> or <b>{grantee-name}</b> is required
+     * <li> <b>all</b> - <b>{zimbra-id}</b>, <b>{grantee-name}</b> and <b>{password}</b> are ignored
+     * <li> <b>gst</b> - <b>{zimbra-id}</b> is ignored, <b>{grantee-name}</b> is required, <b>{password}</b> is optional
+     * <li> <b>key</b> - <b>{zimbra-id}</b> is ignored, <b>{grantee-name}</b> is required
+     * <li> <b>pub</b> - <b>{zimbra-id}</b>, <b>{grantee-name}</b> and <b>{password}</b> are ignored
+     * </ul>
+     * For <b>usr</b> and <b>grp</b>:
+     * <ul>
+     * <li> if <b>{zimbra-id}</b> is provided, server will lookup the entry by <b>{zimbra-id}</b> and
+     * <li> if <b>{zimbra-id}</b> is not provided, server will lookup the grantee by <b>{grantee-type}</b> and
+     *      <b>{grantee-name}</b>
+     * <li>if the lookup fails, NO_SUCH_ACCOUNT/NO_SUCH_DISTRIBUTION_LIST will be thrown.
+     * </ul>
+     * If <b>{grantee-type}</b> == <b>key</b>:
+     * <ul>
+     * <li> if key is given, server will use that as the access key for this grant
+     * <li> if key is not given, server will generate an access key
+     * </ul>
+     */
     @XmlAttribute(name=AccountConstants.A_GRANT_TYPE /* gt */, required=true)
     private final GranteeType granteeType;
 
+    /**
+     * @zm-api-field-description Right.
+     * <br />
+     * Valid values: <b>viewFreeBusy</b> | <b>invite</b>
+     */
     @XmlAttribute(name=AccountConstants.A_RIGHT /* right */, required=true)
     private final String right;
 
+    /**
+     * @zm-api-field-tag grantee-name
+     * @zm-api-field-description Name or email address of the grantee.
+     * <br />
+     * Not present if <b>{grantee-type}</b> is "all" or "pub"
+     */
     @XmlAttribute(name=AccountConstants.A_DISPLAY /* d */, required=false)
     private String displayName;
 
+    /**
+     * @zm-api-field-description Optional access key when <b>{grantee-type}</b> is "key"
+     */
     @XmlAttribute(name=AccountConstants.A_ACCESSKEY /* key */, required=false)
     private String accessKey;
 
+    /**
+     * @zm-api-field-tag password
+     * @zm-api-field-description Password when <b>{grantee-type}</b> is <b>"gst"</b> <b><i>(not yet supported)</i></b>
+     */
     @XmlAttribute(name=AccountConstants.A_PASSWORD /* pw */, required=false)
     private String password;
 
+    /**
+     * @zm-api-field-description "1" if a right is specifically denied or "0" (default)
+     */
     @XmlAttribute(name=AccountConstants.A_DENY /* deny */, required=false)
     private ZmBoolean deny;
 

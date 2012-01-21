@@ -37,22 +37,53 @@ import com.zimbra.soap.type.CursorInfo;
 import com.zimbra.soap.type.GalSearchType;
 import com.zimbra.soap.type.ZmBoolean;
 
+/**
+ * @zm-api-command-description Perform an autocomplete for a name against the Global Address List
+ * <p>
+ * The number of entries in the response is limited by Account/COS attribute zimbraContactAutoCompleteMaxResults with
+ * default value of 20.
+ * </p>
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_AUTO_COMPLETE_GAL_REQUEST)
 public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
 
+    /**
+     * @zm-api-field-tag need-can-expand
+     * @zm-api-field-description flag whether the <b>{exp}</b> flag is needed in the response for group entries.<br />
+     *     default is 0 (false)
+     */
     @XmlAttribute(name=AccountConstants.A_NEED_EXP /* needExp */, required=false)
     private ZmBoolean needCanExpand;
 
+    /**
+     * @zm-api-field-description The name to test for autocompletion
+     */
     @XmlAttribute(name=AccountConstants.E_NAME /* name */, required=true)
     private String name;
 
+    /**
+     * @zm-api-field-description type of addresses to auto-complete on
+     * <ul>
+     * <li>     "account" for regular user accounts, aliases and distribution lists
+     * <li>     "resource" for calendar resources
+     * <li>     "group" for groups
+     * <li>     "all" for combination of both types
+     * </ul>
+     * if omitted, defaults to "accounts"
+     */
     @XmlAttribute(name=AccountConstants.A_TYPE /* type */, required=false)
     private GalSearchType type;
 
+    /**
+     * @zm-api-field-description GAL Account ID
+     */
     @XmlAttribute(name=AccountConstants.A_GAL_ACCOUNT_ID /* galAcctId */, required=false)
     private String galAccountId;
 
+    /**
+     * @zm-api-field-description GAL Account ID
+     */
     @XmlAttribute(name=MailConstants.A_INCLUDE_TAG_DELETED /* includeTagDeleted */, required=false)
     private ZmBoolean includeTagDeleted;
 

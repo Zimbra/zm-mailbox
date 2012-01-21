@@ -42,6 +42,11 @@ ${command.name} SOAP Command</h2>
 ${command.description}
 </p>
 <h2><a name="request">${command.requestName}</a></h2>
+<#if command.request.description != "">
+<p>
+${command.request.description}
+</p>
+</#if>
 <p>
 ${command.request.htmlDescription}
 </p>
@@ -84,6 +89,11 @@ The following table describes elements and attributes you can define within a
 </#if>
 
 <h2><a name="response">${command.responseName}</a></h2>
+<#if command.response.description != "">
+<p>
+${command.response.description}
+</p>
+</#if>
 <p>
 ${command.response.htmlDescription}
 </p>

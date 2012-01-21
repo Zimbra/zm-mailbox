@@ -24,12 +24,27 @@ import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.DistributionListSubscribeOp;
 import com.zimbra.soap.type.DistributionListSelector;
 
+/**
+ * @zm-api-command-description Subscribe to or unsubscribe from a distribution list
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_SUBSCRIBE_DISTRIBUTION_LIST_REQUEST)
 public class SubscribeDistributionListRequest {
 
+    /**
+     * @zm-api-field-description The operation to perform.
+     * <br />
+     * <ul>
+     * <li> <b>subscribe</b>  : Subscribe the requested account to the distribution list
+     * <li> <b>unsubscribe</b>: Unsubscribe the requested account from the distribution list
+     * </ul>
+     */
     @XmlAttribute(name=AccountConstants.A_OP, required=true)
     private DistributionListSubscribeOp op;
+
+    /**
+     * @zm-api-field-description Selector for the distribution list
+     */
     @XmlElement(name=AccountConstants.E_DL, required=true)
     private DistributionListSelector dl;
 

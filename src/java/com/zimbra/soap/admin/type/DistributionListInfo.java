@@ -15,12 +15,10 @@
 
 package com.zimbra.soap.admin.type;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Collection;
 import java.util.Collections;
 
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -31,22 +29,21 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AdminConstants;
-import com.zimbra.soap.account.type.DistributionListGranteeInfo;
 import com.zimbra.soap.base.DistributionListGranteeInfoInterface;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_DL)
 public class DistributionListInfo extends AdminObjectInfo {
 
-    @XmlAttribute(name=AdminConstants.A_DYNAMIC, required=false)
+    @XmlAttribute(name=AdminConstants.A_DYNAMIC /* dynamic */, required=false)
     ZmBoolean dynamic;
-    @XmlElement(name=AdminConstants.E_DLM, required=false)
+    @XmlElement(name=AdminConstants.E_DLM /* dlm */, required=false)
     private List<String> members;
 
-    @XmlElementWrapper(name=AdminConstants.E_DL_OWNERS, required=false)
-    @XmlElement(name=AdminConstants.E_DL_OWNER, required=false)
-    private List<DistributionListGranteeInfo> owners = Lists.newArrayList();
+    @XmlElementWrapper(name=AdminConstants.E_DL_OWNERS /* owners */, required=false)
+    @XmlElement(name=AdminConstants.E_DL_OWNER /* owner */, required=false)
+    private List<GranteeInfo> owners = Lists.newArrayList();
 
     /**
      * no-argument constructor wanted by JAXB
@@ -87,15 +84,15 @@ public class DistributionListInfo extends AdminObjectInfo {
         return ZmBoolean.toBool(dynamic, false);
     }
 
-    public void setOwners(List<DistributionListGranteeInfo> owners) {
+    public void setOwners(List<GranteeInfo> owners) {
         this.owners = owners;
     }
 
-    public void addOwner(DistributionListGranteeInfo owner) {
+    public void addOwner(GranteeInfo owner) {
         owners.add(owner);
     }
 
-    public List<? extends DistributionListGranteeInfoInterface> getOwners() {
+    public List<GranteeInfo> getOwners() {
         return Collections.unmodifiableList(owners);
     }
 

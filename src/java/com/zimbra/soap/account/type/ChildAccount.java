@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010, 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
@@ -36,17 +38,40 @@ import com.zimbra.soap.type.ZmBoolean;
      </childAccount>*
 
  */
+@XmlAccessorType(XmlAccessType.NONE)
 public class ChildAccount {
 
+    /**
+     * @zm-api-field-tag child-account-id
+     * @zm-api-field-description Child account ID
+     */
     @XmlAttribute(name=AccountConstants.A_ID, required=true)
     private final String id;
+
+    /**
+     * @zm-api-field-tag child-account-name
+     * @zm-api-field-description Child account name
+     */
     @XmlAttribute(name=AccountConstants.A_NAME, required=true)
     private final String name;
+
+    /**
+     * @zm-api-field-tag child-account-is-visible
+     * @zm-api-field-description Flag whether child account is visible or not
+     */
     @XmlAttribute(name=AccountConstants.A_VISIBLE, required=true)
     private final ZmBoolean isVisible;
+
+    /**
+     * @zm-api-field-tag child-account-is-active
+     * @zm-api-field-description Flag whether child account is active or not
+     */
     @XmlAttribute(name=AccountConstants.A_ACTIVE, required=true)
     private final ZmBoolean isActive;
 
+    /**
+     * @zm-api-field-description Attributes of the child account, including <b>displayName</b>
+     */
     @XmlElementWrapper(name=AccountConstants.E_ATTRS, required=false)
     @XmlElement(name=AccountConstants.E_ATTR, required=false)
     private List<Attr> attrs = new ArrayList<Attr>();
@@ -76,7 +101,7 @@ public class ChildAccount {
     public List<Attr> getAttrs() {
         return Collections.unmodifiableList(attrs);
     }
-    
+
     public void setAttrs(Iterable<Attr> attrs) {
         this.attrs.clear();
         if (attrs != null) {

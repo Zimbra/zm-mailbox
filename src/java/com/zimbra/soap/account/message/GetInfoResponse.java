@@ -132,7 +132,7 @@ import com.zimbra.soap.json.jackson.WrappedAttrListSerializer;
    </childAccounts>
    <rights>
      {discovered-rights}
-   </right>*  
+   </right>*
    [<license status="inGracePeriod|bad"/>]
 </GetInfoResponse>
  *
@@ -164,13 +164,15 @@ public final class GetInfoResponse {
 
     // For JSON treat as Attribute
     /**
-     * @zm-api-field-description server version: &lt;major>[.&lt;minor>[.&lt;maintenance>]][build] &lt;release> &lt;date>[&lt;type>]
+     * @zm-api-field-description Server version:
+     *     &lt;major>[.&lt;minor>[.&lt;maintenance>]][build] &lt;release> &lt;date>[&lt;type>]
      */
     @XmlElement(name=AccountConstants.E_VERSION /* version */, required=true)
     private String version;
 
     // For JSON treat as Attribute
     /**
+     * @zm-api-field-tag account-id
      * @zm-api-field-description Account ID
      */
     @XmlElement(name=AccountConstants.E_ID /* id */, required=true)
@@ -178,18 +180,23 @@ public final class GetInfoResponse {
 
     // For JSON treat as Attribute
     /**
-     * @zm-api-field-description email address (user@domain)
+     * @zm-api-field-tag account-email-address
+     * @zm-api-field-description Email address (user@domain)
      */
     @XmlElement(name=AccountConstants.E_NAME /* name */, required=true)
     private String accountName;
 
     // For JSON treat as Attribute
+    /**
+     * @zm-api-field-description Crumb
+     */
     @XmlElement(name=AccountConstants.E_CRUMB /* crumb */, required=false)
     private String crumb;
 
     // For JSON treat as Attribute
     /**
-     * @zm-api-field-description number of milliseconds until auth token expires
+     * @zm-api-field-tag lifetime
+     * @zm-api-field-description Number of milliseconds until auth token expires
      */
     @XmlElement(name=AccountConstants.E_LIFETIME /* lifetime */, required=true)
     private long lifetime;
@@ -197,67 +204,112 @@ public final class GetInfoResponse {
     // For JSON treat as Attribute
     /**
      * @zm-api-field-tag admin-delegated
-     * @zm-api-field-description "1" if the auth token is a delegated auth token issued to an admin account
+     * @zm-api-field-description 1 (true) if the auth token is a delegated auth token issued to an admin account
      */
     @XmlElement(name=AccountConstants.E_ADMIN_DELEGATED /* adminDelegated */, required=false)
     private ZmBoolean adminDelegated;
 
     // For JSON treat as Attribute
     /**
-     * @zm-api-field-description base REST URL for the requested account
+     * @zm-api-field-tag account-base-REST-url
+     * @zm-api-field-description Base REST URL for the requested account
      */
     @XmlElement(name=AccountConstants.E_REST /* rest */, required=false)
     private String restUrl;
 
     // For JSON treat as Attribute
     /**
-     * @zm-api-field-description mailbox quota used in bytes.  Returned only if the command successfully executes on
-     * the target user's home mail server:
+     * @zm-api-field-tag quota-used
+     * @zm-api-field-description Mailbox quota used in bytes.
+     * <br />Returned only if the command successfully executes on the target user's home mail server
      */
     @XmlElement(name=AccountConstants.E_QUOTA_USED /* used */, required=false)
     private Long quotaUsed;
 
     // For JSON treat as Attribute
+    /**
+     * @zm-api-field-tag previous-SOAP-session-time
+     * @zm-api-field-description Time (in millis) of last write op from this session, or from *any* SOAP session if we
+     * don't have one
+     * <br />Returned only if the command successfully executes on the target user's home mail server
+     */
     @XmlElement(name=AccountConstants.E_PREVIOUS_SESSION /* prevSession */, required=false)
     private Long previousSessionTime;
 
     // For JSON treat as Attribute
+    /**
+     * @zm-api-field-tag last-SOAP-write-access-time
+     * @zm-api-field-description Time (in millis) of last write op from any SOAP session before this session was
+     * initiated, or same as {previous-SOAP-session-time} if we don't have one.
+     * <br />Returned only if the command successfully executes on the target user's home mail server
+     */
     @XmlElement(name=AccountConstants.E_LAST_ACCESS /* accessed */, required=false)
     private Long lastWriteAccessTime;
 
     // For JSON treat as Attribute
+    /**
+     * @zm-api-field-tag recent-message-count
+     * @zm-api-field-description Number of messages received since the previous soap session, or since the last SOAP
+     * write op if we don't have a session.
+     * <br />Returned only if the command successfully executes on the target user's home mail server
+     */
     @XmlElement(name=AccountConstants.E_RECENT_MSGS /* recent */, required=false)
     private Integer recentMessageCount;
 
+    /**
+     * @zm-api-field-description Class of service
+     */
     @XmlElement(name=AccountConstants.E_COS /* cos */, required=false)
     private Cos cos;
 
+    /**
+     * @zm-api-field-description User-settable preferences
+     */
     @XmlElementWrapper(name=AccountConstants.E_PREFS /* prefs */, required=false)
     @XmlElement(name=AccountConstants.E_PREF /* pref */, required=false)
     @JsonSerialize(using=WrappedAttrListSerializer.class)
     private List<Pref> prefs = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Account attributes that aren't user-settable, but the front-end needs.
+     * Only attributes listed in <b>zimbraAccountClientAttrs</b> will be returned.
+     */
     @XmlElementWrapper(name=AccountConstants.E_ATTRS /* attrs */, required=false)
     @XmlElement(name=AccountConstants.E_ATTR /* attr */, required=false)
     @JsonSerialize(using=WrappedAttrListSerializer.class)
     private List<Attr> attrs = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Zimlets
+     */
     @XmlElementWrapper(name=AccountConstants.E_ZIMLETS /* zimlets */, required=false)
     @XmlElement(name=AccountConstants.E_ZIMLET /* zimlet */, required=false)
     private List<AccountZimletInfo> zimlets = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Properties
+     */
     @XmlElementWrapper(name=AccountConstants.E_PROPERTIES /* props */, required=false)
     @XmlElement(name=AccountConstants.E_PROPERTY /* prop */, required=false)
     private List<Prop> props = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Identities
+     */
     @XmlElementWrapper(name=AccountConstants.E_IDENTITIES /* identities */, required=false)
     @XmlElement(name=AccountConstants.E_IDENTITY /* identity */, required=false)
     private List<Identity> identities = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Signatures
+     */
     @XmlElementWrapper(name=AccountConstants.E_SIGNATURES /* signatures */, required=false)
     @XmlElement(name=AccountConstants.E_SIGNATURE /* signature */, required=false)
     private List<Signature> signatures = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Data sources
+     */
     @XmlElementWrapper(name=AccountConstants.E_DATA_SOURCES /* dataSources */, required=false)
     @XmlElements({
         @XmlElement(name=MailConstants.E_DS_IMAP /* imap */, type=AccountImapDataSource.class),
@@ -271,27 +323,54 @@ public final class GetInfoResponse {
     })
     private List<AccountDataSource> dataSources = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Child accounts
+     */
     @XmlElementWrapper(name=AccountConstants.E_CHILD_ACCOUNTS /* childAccounts */, required=false)
     @XmlElement(name=AccountConstants.E_CHILD_ACCOUNT /* childAccount */, required=false)
     private List<ChildAccount> childAccounts = Lists.newArrayList();
-    
+
+    /**
+     * @zm-api-field-description Discovered Rights - same as for <b>DiscoverRightsResponse</b>
+     */
     @XmlElementWrapper(name=AccountConstants.E_RIGHTS /* rights */, required=false)
     @XmlElement(name=AccountConstants.E_TARGETS, required=false)
     private List<DiscoverRightsInfo> discoveredRights = Lists.newArrayList();
 
     // For JSON treat as Attribute
+    /**
+     * @zm-api-field-description URL to talk to for soap service for this account. i.e:
+     * <br />
+     * http://server:7070/service/soap/
+     * <br />
+     * <br />
+     * Multiple URLs can be returned if both http and https (SSL) are enabled. If only one of the two is enabled,
+     * then only one URL will be returned.
+     */
     @XmlElement(name=AccountConstants.E_SOAP_URL /* soapURL */, required=false)
     @JsonSerialize(using=StringListSerializer.class)
     private List<String> soapURLs = Lists.newArrayList();
 
     // For JSON treat as Attribute
+    /**
+     * @zm-api-field-tag account-base-public-url
+     * @zm-api-field-description Base public URL for the requested account
+     */
     @XmlElement(name=AccountConstants.E_PUBLIC_URL /* publicURL */, required=false)
     private String publicURL;
 
     // For JSON treat as Attribute
+    /**
+     * @zm-api-field-tag change-password-url
+     * @zm-api-field-description URL to talk to in order to change a password.  Not returned if not configured
+     * via domain attribute <b>zimbraChangePasswordURL</b>
+     */
     @XmlElement(name=AccountConstants.E_CHANGE_PASSWORD_URL /* changePasswordURL */, required=false)
     private String changePasswordURL;
 
+    /**
+     * @zm-api-field-description License information.  Only present for Network Edition
+     */
     @XmlElement(name=AccountConstants.E_LICENSE /* license */, required=false)
     private LicenseInfo license;
 
@@ -399,11 +478,11 @@ public final class GetInfoResponse {
     public void addChildAccount(ChildAccount childAccount) {
         this.childAccounts.add(childAccount);
     }
-    
+
     public void setDiscoveredRights(Iterable<DiscoverRightsInfo> discoveredRights) {
         this.discoveredRights = Lists.newArrayList(discoveredRights);
     }
-    
+
     public void addDiscoveredRight(DiscoverRightsInfo discoveredRight) {
         this.discoveredRights.add(discoveredRight);
     }
@@ -480,7 +559,7 @@ public final class GetInfoResponse {
     }
 
     public Multimap<String, String> getPropsMultimap(String userPropKey) {
-        return Prop.toMultimap(props, userPropKey); 
+        return Prop.toMultimap(props, userPropKey);
     }
 
     public Objects.ToStringHelper addToStringInfo(

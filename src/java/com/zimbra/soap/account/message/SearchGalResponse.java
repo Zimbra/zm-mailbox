@@ -39,25 +39,55 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlType(propOrder = {})
 public class SearchGalResponse {
 
+    /**
+     * @zm-api-field-tag sort-by
+     * @zm-api-field-description Name of attribute sorted on. If not present then sorted by the calendar resource name.
+     */
     @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
     private String sortBy;
 
+    /**
+     * @zm-api-field-description The 0-based offset into the results list to return as the first result for this
+     * search operation.
+     */
     @XmlAttribute(name=MailConstants.A_QUERY_OFFSET /* offset */, required=false)
     private Integer offset;
 
+    /**
+     * @zm-api-field-description Flags whether there are more results
+     */
     @XmlAttribute(name=MailConstants.A_QUERY_MORE /* more */, required=false)
     private ZmBoolean more;
 
-    @XmlAttribute(name=MailConstants.A_TOKEN /* token */, required=false)
-    private String token;
-
+    /**
+     * @zm-api-field-tag pagination-supported
+     * @zm-api-field-description Flag whether the underlying search supported pagination.
+     * <ul>
+     * <li> <b>1 (true)</b> - limit and offset in the request was honored
+     * <li> <b>0 (false)</b> - the underlying search does not support pagination. <b>limit</b> and <b>offset</b> in
+     *      the request was not honored
+     * </ul>
+     */
     @XmlAttribute(name=AccountConstants.A_PAGINATION_SUPPORTED /* paginationSupported */, required=false)
     private ZmBoolean pagingSupported;
 
     // TODO:Documented in soap.txt - not sure if this is still used
+    /**
+     * @zm-api-field-tag tokenize-key-op
+     * @zm-api-field-description Valid values: and|or
+     * <ul>
+     * <li> Not present if the search key was not tokenized.
+     * <li> Some clients backtrack on GAL results assuming the results of a more specific key is the subset of a more
+     *      generic key, and it checks cached results instead of issuing another SOAP request to the server.  
+     *      If search key was tokenized and expanded with AND or OR, this cannot be assumed.
+     * </ul>
+     */
     @XmlAttribute(name=AccountConstants.A_TOKENIZE_KEY /* tokenizeKey */, required=false)
     private ZmBoolean tokenizeKey;
 
+    /**
+     * @zm-api-field-description Matching contacts
+     */
     @XmlElement(name=MailConstants.E_CONTACT /* cn */, required=false)
     private List<ContactInfo> contacts = Lists.newArrayList();
 
@@ -67,7 +97,6 @@ public class SearchGalResponse {
     public void setSortBy(String sortBy) { this.sortBy = sortBy; }
     public void setOffset(Integer offset) { this.offset = offset; }
     public void setMore(Boolean more) { this.more = ZmBoolean.fromBool(more); }
-    public void setToken(String token) { this.token = token; }
     public void setPagingSupported(Boolean pagingSupported) {
         this.pagingSupported = ZmBoolean.fromBool(pagingSupported);
     }
@@ -86,7 +115,6 @@ public class SearchGalResponse {
     public String getSortBy() { return sortBy; }
     public Integer getOffset() { return offset; }
     public Boolean getMore() { return ZmBoolean.toBool(more); }
-    public String getToken() { return token; }
     public Boolean getPagingSupported() { return ZmBoolean.toBool(pagingSupported); }
     public Boolean getTokenizeKey() { return ZmBoolean.toBool(tokenizeKey); }
     public List<ContactInfo> getContacts() {
@@ -99,7 +127,6 @@ public class SearchGalResponse {
             .add("sortBy", sortBy)
             .add("offset", offset)
             .add("more", more)
-            .add("token", token)
             .add("pagingSupported", pagingSupported)
             .add("tokenizeKey", tokenizeKey)
             .add("contacts", contacts);

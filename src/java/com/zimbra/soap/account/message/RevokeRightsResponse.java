@@ -31,11 +31,17 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.AccountACEInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-response-description Returns rights that are successfully revoked
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_REVOKE_RIGHTS_RESPONSE)
 @XmlType(propOrder = {})
 public class RevokeRightsResponse {
 
+    /**
+     * @zm-api-field-description Access Control Entries
+     */
     @XmlElement(name=AccountConstants.E_ACE /* ace */, required=false)
     private List<AccountACEInfo> aces = Lists.newArrayList();
 

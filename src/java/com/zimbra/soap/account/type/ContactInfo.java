@@ -27,6 +27,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 
+import com.zimbra.common.mailbox.ContactConstants;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.base.ContactGroupMemberInterface;
@@ -40,83 +41,181 @@ public class ContactInfo
 implements ContactInterface {
 
     // Added by e.g. GalSearchControl.doLocalGalAccountSearch
+    /**
+     * @zm-api-field-tag contact-sort-field-value
+     * @zm-api-field-description Sort field value
+     */
     @XmlAttribute(name=MailConstants.A_SORT_FIELD /* sf */, required=false)
     private String sortField;
 
+    /**
+     * @zm-api-field-description
+     */
     @XmlAttribute(name=AccountConstants.A_EXP /* exp */, required=false)
     private ZmBoolean canExpand;
 
     // id is the only attribute or element that can be required:
     //    GalSearchResultCallback.handleContact(Contact c) and CreateContact.handle
     //    sometimes just create E_CONTACT elements with only an A_ID attribute
+    /**
+     * @zm-api-field-tag contact-id 
+     * @zm-api-field-description Contact ID
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=true)
     private String id;
 
+    /**
+     * @zm-api-field-tag contact-folder
+     * @zm-api-field-description Folder
+     */
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folder;
 
+    /**
+     * @zm-api-field-tag contact-flags
+     * @zm-api-field-description Flags
+     */
     @XmlAttribute(name=MailConstants.A_FLAGS /* f */, required=false)
     private String flags;
 
+    /**
+     * @zm-api-field-description Tags (deprecated)
+     */
     @Deprecated
     @XmlAttribute(name=MailConstants.A_TAGS /* t */, required=false)
     private String tags;
 
+    /**
+     * @zm-api-field-tag contact-tag-names
+     * @zm-api-field-description Tag names
+     */
     @XmlAttribute(name=MailConstants.A_TAG_NAMES /* tn */, required=false)
     private String tagNames;
 
+    /**
+     * @zm-api-field-tag contact-change-date
+     * @zm-api-field-description Change date
+     */
     @XmlAttribute(name=MailConstants.A_CHANGE_DATE /* md */, required=false)
     private Long changeDate;
 
+    /**
+     * @zm-api-field-tag modified-seq-id
+     * @zm-api-field-description Modified sequence ID
+     */
     @XmlAttribute(name=MailConstants.A_MODIFIED_SEQUENCE /* ms */, required=false)
     private Integer modifiedSequenceId;
 
+    /**
+     * @zm-api-field-tag contact-date
+     * @zm-api-field-description Contact date
+     */
     @XmlAttribute(name=MailConstants.A_DATE /* d */, required=false)
     private Long date;
 
+    /**
+     * @zm-api-field-tag contact-revision-id
+     * @zm-api-field-description Revision ID
+     */
     @XmlAttribute(name=MailConstants.A_REVISION /* rev */, required=false)
     private Integer revisionId;
 
+    /**
+     * @zm-api-field-tag contact-fileAs
+     * @zm-api-field-description FileAs string for contact
+     */
     @XmlAttribute(name=MailConstants.A_FILE_AS_STR /* fileAsStr */, required=false)
     private String fileAs;
 
-    @XmlAttribute(name="email", required=false)
+    /**
+     * @zm-api-field-tag contact-email-1
+     * @zm-api-field-description Email address 1
+     */
+    @XmlAttribute(name="email" /* ContactConstants.A_email */, required=false)
     private String email;
 
-    @XmlAttribute(name="email2", required=false)
+    /**
+     * @zm-api-field-tag contact-email-2
+     * @zm-api-field-description Email address 2
+     */
+    @XmlAttribute(name="email2" /* ContactConstants.A_email2 */, required=false)
     private String email2;
 
-    @XmlAttribute(name="email3", required=false)
+    /**
+     * @zm-api-field-tag contact-email-3
+     * @zm-api-field-description Email address 3
+     */
+    @XmlAttribute(name="email3" /* ContactConstants.A_email3 */, required=false)
     private String email3;
 
+    /**
+     * @zm-api-field-tag contact-type
+     * @zm-api-field-description Contact type
+     * <br />
+     * Default value is <b>"contact"</b>. If is present and set to <b>"group"</b>, then the contact is a
+     * personal distribution list.
+     */
     @XmlAttribute(name="type", required=false)
     private String type;
 
+    /**
+     * @zm-api-field-description dlist - retained for backwards compatibility
+     */
     @XmlAttribute(name="dlist", required=false)
     private String dlist;
 
     // See GalSearchResultCallback.handleContact(Contact c)
+    /**
+     * @zm-api-field-tag contact-ref
+     * @zm-api-field-description Reference
+     */
     @XmlAttribute(name=AccountConstants.A_REF /* ref */, required=false)
     private String reference;
-    
+
+    /**
+     * @zm-api-field-tag contact-group-too-many-members
+     * @zm-api-field-description Flag whether there were too many members.
+     * <br />
+     * If the number of members on a GAL group is greater than the specified max, no members are returned and
+     * this flag is set to <b>1 (true)</b> instead.
+     */
     @XmlAttribute(name=MailConstants.A_TOO_MANY_MEMBERS /* tooManyMembers */, required=false)
     private ZmBoolean tooManyMembers;
 
+    /**
+     * @zm-api-field-description Custom metadata
+     */
     @XmlElement(name=MailConstants.E_METADATA /* meta */, required=false)
     private List<AccountCustomMetadata> metadatas = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Contact attributes
+     */
     @XmlElement(name=MailConstants.E_A /* a */, required=false)
     private List<ContactAttr> attrs = Lists.newArrayList();
 
+    /**
+     * @zm-api-field-description Contact group members
+     */
     @XmlElement(name=MailConstants.E_CONTACT_GROUP_MEMBER /* m */, required=false)
     private List<ContactGroupMember> contactGroupMembers = Lists.newArrayList();
-    
-    @XmlAttribute(name=AccountConstants.A_IS_OWNER, required=false)
+
+    /**
+     * @zm-api-field-tag isOwner
+     * @zm-api-field-description For group entries, flags whether user is the owner of a group
+     * (type=group in attrs on a <b>&lt;cn></b>).
+     */
+    @XmlAttribute(name=AccountConstants.A_IS_OWNER /* isOwner */, required=false)
     ZmBoolean isOwner;
-    
-    @XmlAttribute(name=AccountConstants.A_IS_MEMBER, required=false)
+
+    /**
+     * @zm-api-field-tag isMember
+     * @zm-api-field-description For group entries, flags whether user is a member of a group
+     * (type=group in attrs on a <b>&lt;cn></b>).
+     */
+    @XmlAttribute(name=AccountConstants.A_IS_MEMBER /* isMember */, required=false)
     ZmBoolean isMember;
-    
+
 
     public ContactInfo() {
     }
@@ -220,11 +319,11 @@ implements ContactInterface {
     public void setIsOwner(Boolean isOwner) {
         this.isOwner = ZmBoolean.fromBool(isOwner);
     }
-    
+
     public void setIsMember(Boolean isMember) {
         this.isMember = ZmBoolean.fromBool(isMember);
     }
-    
+
     @Override
     public String getSortField() { return sortField; }
     @Override
@@ -263,7 +362,7 @@ implements ContactInterface {
     public String getReference() { return reference; }
     @Override
     public Boolean getTooManyMembers() { return ZmBoolean.toBool(tooManyMembers); }
-    
+
     public List<AccountCustomMetadata> getMetadatas() {
         return metadatas;
     }
@@ -276,15 +375,15 @@ implements ContactInterface {
         return Collections.unmodifiableList(contactGroupMembers);
     }
 
-    
+
     public Boolean isOwner() {
         return ZmBoolean.toBool(isOwner);
     }
-    
+
     public Boolean isMember() {
         return ZmBoolean.toBool(isMember);
     }
-    
+
     // non-JAXB method
     @Override
     public void setMetadataInterfaces(

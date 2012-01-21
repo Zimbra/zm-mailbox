@@ -39,21 +39,41 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlType(propOrder = {})
 public class SearchCalendarResourcesResponse {
 
+    /**
+     * @zm-api-field-tag sort-by
+     * @zm-api-field-description Name of attribute sorted on. If not present then sorted by the calendar resource name.
+     */
     @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
     private String sortBy;
 
+    /**
+     * @zm-api-field-description The 0-based offset into the results list to return as the first result for this
+     * search operation.
+     */
     @XmlAttribute(name=MailConstants.A_QUERY_OFFSET /* offset */, required=false)
     private Integer offset;
 
+    /**
+     * @zm-api-field-description Flags whether there are more results
+     */
     @XmlAttribute(name=MailConstants.A_QUERY_MORE /* more */, required=false)
     private ZmBoolean more;
 
-    @XmlAttribute(name=MailConstants.A_TOKEN /* token */, required=false)
-    private String token;
-
+    /**
+     * @zm-api-field-tag pagination-supported
+     * @zm-api-field-description Flag whether the underlying search supported pagination.
+     * <ul>
+     * <li> <b>1 (true)</b> - limit and offset in the request was honored
+     * <li> <b>0 (false)</b> - the underlying search does not support pagination. <b>limit</b> and <b>offset</b> in
+     *      the request was not honored
+     * </ul>
+     */
     @XmlAttribute(name=AccountConstants.A_PAGINATION_SUPPORTED /* paginationSupported */, required=false)
     private ZmBoolean pagingSupported;
 
+    /**
+     * @zm-api-field-description Matching calendar resources
+     */
     @XmlElement(name=AccountConstants.E_CALENDAR_RESOURCE /* calresource */, required=false)
     private List<CalendarResourceInfo> calendarResources = Lists.newArrayList();
 
@@ -63,7 +83,6 @@ public class SearchCalendarResourcesResponse {
     public void setSortBy(String sortBy) { this.sortBy = sortBy; }
     public void setOffset(Integer offset) { this.offset = offset; }
     public void setMore(Boolean more) { this.more = ZmBoolean.fromBool(more); }
-    public void setToken(String token) { this.token = token; }
     public void setPagingSupported(Boolean pagingSupported) {
         this.pagingSupported = ZmBoolean.fromBool(pagingSupported);
     }
@@ -81,7 +100,6 @@ public class SearchCalendarResourcesResponse {
     public String getSortBy() { return sortBy; }
     public Integer getOffset() { return offset; }
     public Boolean getMore() { return ZmBoolean.toBool(more); }
-    public String getToken() { return token; }
     public Boolean getPagingSupported() { return ZmBoolean.toBool(pagingSupported); }
     public List<CalendarResourceInfo> getCalendarResources() {
         return Collections.unmodifiableList(calendarResources);
@@ -93,7 +111,6 @@ public class SearchCalendarResourcesResponse {
             .add("sortBy", sortBy)
             .add("offset", offset)
             .add("more", more)
-            .add("token", token)
             .add("pagingSupported", pagingSupported)
             .add("calendarResources", calendarResources);
     }

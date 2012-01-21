@@ -35,6 +35,9 @@ import com.zimbra.common.soap.AccountConstants;
 @XmlType(propOrder = {})
 public class ModifyZimletPrefsResponse {
 
+    /**
+     * @zm-api-field-description Zimlets
+     */
     @XmlElement(name=AccountConstants.E_ZIMLET /* zimlet */, required=false)
     private List<String> zimlets = Lists.newArrayList();
 

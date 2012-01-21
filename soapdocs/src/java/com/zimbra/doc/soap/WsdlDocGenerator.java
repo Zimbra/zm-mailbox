@@ -165,49 +165,65 @@ public class WsdlDocGenerator {
         return namespace;
     }
 
+    private static void updateElementDescriptionWithApiClassDocumentation(
+                        XmlElementDescription elem, ApiClassDocumentation doc) {
+        if (doc == null) {
+            return;
+        }
+        String classDesc = doc.getClassDescription();
+        if (!Strings.isNullOrEmpty(classDesc)) {
+            elem.setDescription(classDesc);
+        }
+        // Field Tags
+        for (Entry<String, String> entry : doc.getFieldTag().entrySet()) {
+            for (XmlAttributeDescription attr : elem.getAttribs()) {
+                if (entry.getKey().equals(attr.getFieldName())) {
+                    attr.setFieldTag(entry.getValue());
+                }
+            }
+            for (DescriptionNode childNode : elem.getChildren()) {
+                if (childNode instanceof XmlElementDescription) {
+                    XmlElementDescription childElem = (XmlElementDescription) childNode;
+                    if (entry.getKey().equals(childElem.getFieldName())) {
+                        childElem.setFieldTag(entry.getValue());
+                    }
+                }
+            }
+        }
+        // Field Descriptions
+        for (Entry<String, String> entry : doc.getFieldDescription().entrySet()) {
+            if (elem.getValueFieldName() != null) {
+                if (elem.getValueFieldName().equals(entry.getKey())) {
+                    elem.setValueFieldDescription(entry.getValue());
+                }
+            }
+            // public JaxbValueInfo getElementValue() { return elementValue; }
+            for (XmlAttributeDescription attr : elem.getAttribs()) {
+                if (entry.getKey().equals(attr.getFieldName())) {
+                    attr.setDescription(entry.getValue());
+                }
+            }
+            for (DescriptionNode childNode : elem.getChildren()) {
+                if (childNode instanceof XmlElementDescription) {
+                    XmlElementDescription childElem = (XmlElementDescription) childNode;
+                    if (entry.getKey().equals(childElem.getFieldName())) {
+                        childElem.setDescription(entry.getValue());
+                    }
+                }
+            }
+        }
+    }
+
     private static void populateWithJavadocInfo(DescriptionNode node,
             Map<String,ApiClassDocumentation> javadocInfo) {
         if (node instanceof XmlElementDescription) {
             XmlElementDescription elem = (XmlElementDescription) node;
             Class<?> jaxbClass = elem.getJaxbClass();
-            ApiClassDocumentation doc = (jaxbClass != null) ? javadocInfo.get(jaxbClass.getName()) : null;
-            if (doc != null) {
-                String classDesc = doc.getClassDescription();
-                if (!Strings.isNullOrEmpty(classDesc)) {
-                    elem.setDescription(classDesc);
-                }
-                // Field Tags
-                for (Entry<String, String> entry : doc.getFieldTag().entrySet()) {
-                    for (XmlAttributeDescription attr : elem.getAttribs()) {
-                        if (entry.getKey().equals(attr.getFieldName())) {
-                            attr.setFieldTag(entry.getValue());
-                        }
-                    }
-                    for (DescriptionNode childNode : elem.getChildren()) {
-                        if (childNode instanceof XmlElementDescription) {
-                            XmlElementDescription childElem = (XmlElementDescription) childNode;
-                            if (entry.getKey().equals(childElem.getFieldName())) {
-                                childElem.setFieldTag(entry.getValue());
-                            }
-                        }
-                    }
-                }
-                // Field Descriptions
-                for (Entry<String, String> entry : doc.getFieldDescription().entrySet()) {
-                    for (XmlAttributeDescription attr : elem.getAttribs()) {
-                        if (entry.getKey().equals(attr.getFieldName())) {
-                            attr.setDescription(entry.getValue());
-                        }
-                    }
-                    for (DescriptionNode childNode : elem.getChildren()) {
-                        if (childNode instanceof XmlElementDescription) {
-                            XmlElementDescription childElem = (XmlElementDescription) childNode;
-                            if (entry.getKey().equals(childElem.getFieldName())) {
-                                childElem.setDescription(entry.getValue());
-                            }
-                        }
-                    }
-                }
+            // Loop over class and superclasses to ensure we get all documentation
+            while ((jaxbClass != null) && (jaxbClass.getName().startsWith("com.zimbra"))) {
+                ApiClassDocumentation doc = (jaxbClass != null) ? javadocInfo.get(jaxbClass.getName()) : null;
+                updateElementDescriptionWithApiClassDocumentation(elem, doc);
+                jaxbClass = jaxbClass.getSuperclass();
             }
         }
         for (DescriptionNode childNode : node.getChildren()) {
@@ -265,8 +281,8 @@ public class WsdlDocGenerator {
                 if (cmd == null) {
                     cmd = svc.addCommand(new Command(svc, cmdName, namespace));
                 }
-                cmd.setDescription(cmdName + " Description");
                 desc = XmlElementDescription.createTopLevel(jaxbInfo, namespace, jaxbInfo.getRootElementName());
+                cmd.setDescription(desc.getDescription());
                 cmd.setRootRequestElement(desc);
                 // getJavaDocInfoForCommand(cmd, jaxbClass);
             } else if (className.endsWith("Response")) {

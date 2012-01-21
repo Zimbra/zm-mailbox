@@ -32,86 +32,184 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.soap.type.DataSource;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlType(propOrder = {"lastError", "attributes"})
-abstract public class MailDataSource implements DataSource {
+abstract public class MailDataSource
+implements DataSource {
 
+
+    /**
+     * @zm-api-field-tag data-source-id
+     * @zm-api-field-description Unique ID for data source
+     */
     @XmlAttribute(name=MailConstants.A_ID /* id */, required=false)
     private String id;
 
+    /**
+     * @zm-api-field-tag data-source-name
+     * @zm-api-field-description Name for data source
+     * <br />
+     * e.g. "My IMAP Account"
+     */
     @XmlAttribute(name=MailConstants.A_NAME /* name */, required=false)
     private String name;
 
+    /**
+     * @zm-api-field-tag data-source-folder-id
+     * @zm-api-field-description Folder ID for data source
+     */
     @XmlAttribute(name=MailConstants.A_FOLDER /* l */, required=false)
     private String folderId;
 
+    /**
+     * @zm-api-field-tag data-source-is-enabled
+     * @zm-api-field-description Flag whether or not the data source is enabled
+     */
     @XmlAttribute(name=MailConstants.A_DS_IS_ENABLED /* isEnabled */, required=false)
     private ZmBoolean enabled;
 
+    /**
+     * @zm-api-field-tag import-only
+     * @zm-api-field-description indicates that this datasource is used for one way (incoming) import versus
+     * two-way sync
+     */
     @XmlAttribute(name=MailConstants.A_DS_IS_IMPORTONLY /* importOnly */, required=false)
     private ZmBoolean importOnly;
 
+    /**
+     * @zm-api-field-tag data-source-server
+     * @zm-api-field-description Name of server
+     * <br />
+     * e.g. "imap.myisp.com"
+     */
     @XmlAttribute(name=MailConstants.A_DS_HOST /* host */, required=false)
     private String host;
 
+    /**
+     * @zm-api-field-tag data-source-port
+     * @zm-api-field-description Port number of server
+     * <br />
+     * e.g. "143"
+     */
     @XmlAttribute(name=MailConstants.A_DS_PORT /* port */, required=false)
     private Integer port;
 
+    /**
+     * @zm-api-field-description Which security layer to use for connection (cleartext, ssl, tls, or tls if available).
+     * If not set on data source, fallback to the value on global config.
+     */
     @XmlAttribute(name=MailConstants.A_DS_CONNECTION_TYPE /* connectionType */, required=false)
     private MdsConnectionType mdsConnectionType;
 
+    /**
+     * @zm-api-field-description Login string on <b>{data-source-server}</b>, for example a user name
+     */
     @XmlAttribute(name=MailConstants.A_DS_USERNAME /* username */, required=false)
     private String username;
 
+    /**
+     * @zm-api-field-tag data-source-password
+     * @zm-api-field-description Login password for data source
+     */
     @XmlAttribute(name=MailConstants.A_DS_PASSWORD /* password */, required=false)
     private String password;
 
+    /**
+     * @zm-api-field-description Polling interval.  For instance <b>"10m"</b>
+     * <br />
+     * The time interval between automated data imports for a data source. If unset or 0, the data source will not be
+     * scheduled for automated polling. Must be in valid duration format:
+     * <br />
+     *     {digits}{time-unit}. digits: 0-9, time-unit: [hmsd]|ms. h - hours, m - * minutes, s - seconds, d - days,
+     *     ms - milliseconds.
+     * <br />
+     * If time unit is not specified, the default is s(seconds).
+     */
     @XmlAttribute(name=MailConstants.A_DS_POLLING_INTERVAL /* pollingInterval */, required=false)
     private String pollingInterval;
 
+    /**
+     * @zm-api-field-tag data-source-email-address
+     * @zm-api-field-description Email address for the data-source
+     */
     @XmlAttribute(name=MailConstants.A_DS_EMAIL_ADDRESS /* emailAddress */, required=false)
     private String emailAddress;
 
-    @XmlAttribute(name=MailConstants.A_DS_USE_ADDRESS_FOR_FORWARD_REPLY
-                    /* useAddressForForwardReply */, required=false)
+    /**
+     * @zm-api-field-description When forwarding or replying to messages sent to this data source, this flags whether
+     * or not to use the email address of the data source for the from address and the designated signature/replyTo
+     * of the data source for the outgoing message.
+     */
+    @XmlAttribute(name=MailConstants.A_DS_USE_ADDRESS_FOR_FORWARD_REPLY /* useAddressForForwardReply */, required=false)
     private ZmBoolean useAddressForForwardReply;
 
-    @XmlAttribute(name=MailConstants.A_DS_DEFAULT_SIGNATURE
-                    /* defaultSignature */, required=false)
+    /**
+     * @zm-api-field-tag default-signature-id
+     * @zm-api-field-description ID for default signature
+     */
+    @XmlAttribute(name=MailConstants.A_DS_DEFAULT_SIGNATURE /* defaultSignature */, required=false)
     private String defaultSignature;
 
-    @XmlAttribute(name=MailConstants.A_DS_FORWARD_REPLY_SIGNATURE
-                    /* forwardReplySignature */, required=false)
+    /**
+     * @zm-api-field-tag forward-reply-signature-id
+     * @zm-api-field-description Forward / Reply Signature ID for data source
+     */
+    @XmlAttribute(name=MailConstants.A_DS_FORWARD_REPLY_SIGNATURE /* forwardReplySignature */, required=false)
     private String forwardReplySignature;
 
-    @XmlAttribute(name=MailConstants.A_DS_FROM_DISPLAY /* fromDisplay */,
-                    required=false)
+    /**
+     * @zm-api-field-tag data-source-from-display
+     * @zm-api-field-description Personal part of email address to put in the from header
+     */
+    @XmlAttribute(name=MailConstants.A_DS_FROM_DISPLAY /* fromDisplay */, required=false)
     private String fromDisplay;
 
-    @XmlAttribute(name=MailConstants.A_DS_FROM_ADDRESS /* fromAddress */,
-                    required=false)
+    /**
+     * @zm-api-field-tag data-source-from-address
+     * @zm-api-field-description Email address to put in the from header
+     */
+    @XmlAttribute(name=MailConstants.A_DS_FROM_ADDRESS /* fromAddress */, required=false)
     private String fromAddress;
 
-    @XmlAttribute(name=MailConstants.A_DS_REPLYTO_ADDRESS /* replyToAddress */,
-                    required=false)
+    /**
+     * @zm-api-field-tag data-source-replyto-address
+     * @zm-api-field-description Email address to put in the reply-to header
+     */
+    @XmlAttribute(name=MailConstants.A_DS_REPLYTO_ADDRESS /* replyToAddress */, required=false)
     private String replyToAddress;
 
-    @XmlAttribute(name=MailConstants.A_DS_REPLYTO_DISPLAY /* replyToDisplay */,
-                    required=false)
+    /**
+     * @zm-api-field-tag data-source-replyto-display
+     * @zm-api-field-description Personal part of Email address to put in the reply-to header
+     */
+    @XmlAttribute(name=MailConstants.A_DS_REPLYTO_DISPLAY /* replyToDisplay */, required=false)
     private String replyToDisplay;
 
-    @XmlAttribute(name=MailConstants.A_DS_IMPORT_CLASS /* importClass */,
-                    required=false)
+    /**
+     * @zm-api-field-tag data-import-class
+     * @zm-api-field-description Data import class used bt this data source
+     */
+    @XmlAttribute(name=MailConstants.A_DS_IMPORT_CLASS /* importClass */, required=false)
     private String importClass;
 
-    @XmlAttribute(name=MailConstants.A_DS_FAILING_SINCE /* failingSince */,
-                    required=false)
+    /**
+     * @zm-api-field-tag data-source-failing-since
+     * @zm-api-field-description Failing Since
+     */
+    @XmlAttribute(name=MailConstants.A_DS_FAILING_SINCE /* failingSince */, required=false)
     private Long failingSince;
 
-    @XmlElement(name=MailConstants.E_DS_LAST_ERROR /* lastError */,
-                    required=false)
+    /**
+     * @zm-api-field-tag data-source-last-error
+     * @zm-api-field-description Last Error
+     */
+    @XmlElement(name=MailConstants.E_DS_LAST_ERROR /* lastError */, required=false)
     private String lastError;
 
+    /**
+     * @zm-api-field-tag data-source-attrs
+     * @zm-api-field-description Properties for the data source
+     */
     @XmlElement(name=MailConstants.E_ATTRIBUTE /* a */, required=false)
     private List<String> attributes = Lists.newArrayList();
 

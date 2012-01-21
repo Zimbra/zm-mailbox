@@ -51,6 +51,7 @@ implements DescriptionNode, XmlUnit {
     private String typeIdString;
     private String fieldName;
     private String valueFieldName;    // Field that has @XmlValue annotation
+    private String valueFieldDescription;
     private String elementText;
     private String description;
     private String fieldTag;
@@ -89,15 +90,13 @@ implements DescriptionNode, XmlUnit {
         desc.targetNamespace = nodeInfo.getNamespace();
         desc.name = nodeInfo.getName();
         desc.jaxbClass = nodeInfo.getAtomClass();
-        processTypeInfo(desc, nodeInfo.getAtomClass());
-        desc.isInnerRecursionElement = isInnerRecursion(parent, desc.typeName);
         desc.elementText = "";
         desc.fieldName = nodeInfo.getFieldName();
+        processTypeInfo(desc, nodeInfo.getAtomClass());
+        desc.isInnerRecursionElement = isInnerRecursion(parent, desc.typeName);
         if (!desc.isInnerRecursionElement) {
             JaxbInfo jaxbInfo = getJaxbInfoForClass(nodeInfo.getAtomClass());
-            if (jaxbInfo == null) {
-                desc.elementText = desc.typeName;
-            } else {
+            if (jaxbInfo != null) {
                 addXmlInfo(desc, jaxbInfo);
             }
         }
@@ -157,7 +156,12 @@ implements DescriptionNode, XmlUnit {
         desc.typeName = ValueDescription.getRepresentation(klass);
         if (klass.isPrimitive() || klass.getName().startsWith("java.lang.")) {
             desc.typeIdString = "";
-            desc.elementText = desc.typeName;
+            String ftag = desc.getFieldTag();
+            if (Strings.isNullOrEmpty(ftag)) {
+                desc.elementText = desc.typeName;
+            } else {
+                desc.elementText = String.format("{%s} (%s)", ftag, desc.typeName);
+            }
         } else {
             desc.typeIdString = String.format(" ## %s", desc.typeName);
         }
@@ -395,18 +399,34 @@ implements DescriptionNode, XmlUnit {
         this.description = description;
     }
 
+    public void setValueFieldDescription(String description) {
+        this.valueFieldDescription = description;
+    }
+
     @Override
     public String getDescription() {
-    	StringBuilder desc = new StringBuilder();
+        StringBuilder desc = new StringBuilder();
         if (!Strings.isNullOrEmpty(elementText)) {
-        	desc.append("<b>Type:").append(elementText).append("</b>");
-	    	if (!Strings.isNullOrEmpty(description)) {
-	        	desc.append("<br />\n").append(description);
-	    	}
+            desc.append("<b>Type:").append(elementText).append("</b>");
+            if (!Strings.isNullOrEmpty(description)) {
+                desc.append("<br />\n").append(description);
+            }
+            if (!Strings.isNullOrEmpty(this.valueFieldDescription)) {
+                desc.append("<br />\n").append(this.valueFieldDescription);
+            }
         } else if (!Strings.isNullOrEmpty(description)) {
-        	desc.append(description);
-    	}
+            desc.append(description);
+            if (!Strings.isNullOrEmpty(this.valueFieldDescription)) {
+                desc.append("<br />\n").append(this.valueFieldDescription);
+            }
+        } else if (!Strings.isNullOrEmpty(this.valueFieldDescription)) {
+            desc.append(this.valueFieldDescription);
+        }
         return desc.toString();
+    }
+
+    public String getValueFieldDescription() {
+        return Strings.nullToEmpty(this.valueFieldDescription);
     }
 
     public void setFieldTag(String fieldTag) {
@@ -414,7 +434,14 @@ implements DescriptionNode, XmlUnit {
     }
 
     public String getFieldTag() {
-        return Strings.nullToEmpty(fieldTag);
+        if (Strings.isNullOrEmpty(fieldTag)) {
+            if (Strings.isNullOrEmpty(fieldName)) {
+                return "";
+            }
+            return fieldName;
+        } else {
+            return fieldTag;
+        }
     }
 
     public String getFieldName() {

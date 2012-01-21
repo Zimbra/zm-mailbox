@@ -25,9 +25,17 @@ import com.zimbra.common.soap.AccountConstants;
 @XmlAccessorType(XmlAccessType.NONE)
 public class ModifyZimletPrefsSpec {
 
+    /**
+     * @zm-api-field-description Zimlet name
+     */
     @XmlAttribute(name=AccountConstants.A_NAME /* name */, required=true)
     private String name;
 
+    /**
+     * @zm-api-field-description Zimlet presence setting
+     * <br />
+     * Valid values : "enabled" | "disabled"
+     */
     @XmlAttribute(name=AccountConstants.A_ZIMLET_PRESENCE /* presence */, required=true)
     private String presence;
 

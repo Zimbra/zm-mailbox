@@ -28,29 +28,36 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AccountConstants;
+import com.zimbra.soap.account.type.ModifyZimletPrefsSpec;
 
+/**
+ * @zm-api-command-description Modify Zimlet Preferences
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_MODIFY_ZIMLET_PREFS_REQUEST)
 public class ModifyZimletPrefsRequest {
 
+    /**
+     * @zm-api-field-description Zimlet Preference Specifications
+     */
     @XmlElement(name=AccountConstants.E_ZIMLET /* zimlet */, required=false)
-    private List<String> zimlets = Lists.newArrayList();
+    private List<ModifyZimletPrefsSpec> zimlets = Lists.newArrayList();
 
     public ModifyZimletPrefsRequest() {
     }
 
-    public void setZimlets(Iterable <String> zimlets) {
+    public void setZimlets(Iterable <ModifyZimletPrefsSpec> zimlets) {
         this.zimlets.clear();
         if (zimlets != null) {
             Iterables.addAll(this.zimlets,zimlets);
         }
     }
 
-    public void addZimlet(String zimlet) {
+    public void addZimlet(ModifyZimletPrefsSpec zimlet) {
         this.zimlets.add(zimlet);
     }
 
-    public List<String> getZimlets() {
+    public List<ModifyZimletPrefsSpec> getZimlets() {
         return zimlets;
     }
 

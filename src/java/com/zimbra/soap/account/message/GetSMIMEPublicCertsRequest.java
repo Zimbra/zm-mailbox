@@ -30,13 +30,32 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.SMIMEPublicCertsStoreSpec;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-network-edition
+ * @zm-api-command-description Get SMIME Public Certificates
+ * Stores specified in <b>&lt;store></b> will be attempted in the order they appear in the comma separated list.
+ * <br />
+ * e.g.
+ * <ul>
+ * <li>   <b>&lt;store>CONTACT&lt;/store></b>     - lookup certs in user's address books
+ * <li>   <b>&lt;store>CONTACT,GAL&lt;/store></b> - lookup in user's address books, then lookup in GAL
+ * <li>   <b>&lt;store>LDAP&lt;/store></b>        - lookup certs in external LDAP
+ * </ul>
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_SMIME_PUBLIC_CERTS_REQUEST)
 public class GetSMIMEPublicCertsRequest {
 
+    /**
+     * @zm-api-field-description Information on public certificate stores
+     */
     @XmlElement(name=AccountConstants.E_STORE /* store */, required=true)
     private final SMIMEPublicCertsStoreSpec store;
 
+    /**
+     * @zm-api-field-tag email-address
+     * @zm-api-field-description List of email addresses
+     */
     @XmlElement(name=AccountConstants.E_EMAIL /* email */, required=false)
     private List<String> emails = Lists.newArrayList();
 

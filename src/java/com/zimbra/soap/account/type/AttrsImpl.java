@@ -42,6 +42,9 @@ import com.zimbra.soap.json.jackson.KeyAndValueListSerializer;
 @XmlAccessorType(XmlAccessType.NONE)
 abstract public class AttrsImpl implements Attrs {
 
+    /**
+     * @zm-api-field-description Attributes
+     */
     @XmlElement(name=AdminConstants.E_A)
     @JsonSerialize(using=KeyAndValueListSerializer.class)
     @JsonProperty("_attrs")

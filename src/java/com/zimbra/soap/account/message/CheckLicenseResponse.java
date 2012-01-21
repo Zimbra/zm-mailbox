@@ -19,33 +19,54 @@ import com.google.common.base.Objects;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlEnum;
+import javax.xml.bind.annotation.XmlEnumValue;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import com.zimbra.common.soap.AccountConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_CHECK_LICENSE_RESPONSE)
 public class CheckLicenseResponse {
 
+    @XmlEnum
+    public enum CheckLicenseStatus {
+        @XmlEnumValue("ok") OK("ok"),
+        @XmlEnumValue("no") NO("no"),
+        @XmlEnumValue("inGracePeriod") IN_GRACE_PERIOD("inGracePeriod");
+        private final String name;
+
+        private CheckLicenseStatus(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
+    }
+
+    /**
+     * @zm-api-field-description Status of access to requested licensed feature.
+     */
     @XmlAttribute(name=AccountConstants.A_STATUS /* status */, required=true)
-    private final String status;
+    private final CheckLicenseStatus status;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     @SuppressWarnings("unused")
     private CheckLicenseResponse() {
-        this((String) null);
+        this((CheckLicenseStatus) null);
     }
 
-    public CheckLicenseResponse(String status) {
+    public CheckLicenseResponse(CheckLicenseStatus status) {
         this.status = status;
     }
 
-    public String getStatus() { return status; }
+    public CheckLicenseStatus getStatus() { return status; }
 
-    public Objects.ToStringHelper addToStringInfo(
-                Objects.ToStringHelper helper) {
+    public Objects.ToStringHelper addToStringInfo(Objects.ToStringHelper helper) {
         return helper
             .add("status", status);
     }

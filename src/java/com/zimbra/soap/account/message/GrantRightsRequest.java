@@ -30,10 +30,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.AccountACEInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
+/**
+ * @zm-api-command-description Grant account level rights
+ */
 @XmlRootElement(name=AccountConstants.E_GRANT_RIGHTS_REQUEST)
 public class GrantRightsRequest {
 
+    /**
+     * @zm-api-field-description Specify Access Control Entries
+     */
     @XmlElement(name=AccountConstants.E_ACE /* ace */, required=false)
     private List<AccountACEInfo> aces = Lists.newArrayList();
 

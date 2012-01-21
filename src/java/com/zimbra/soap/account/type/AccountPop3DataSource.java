@@ -27,6 +27,9 @@ public class AccountPop3DataSource
 extends AccountDataSource
 implements Pop3DataSource {
 
+    /**
+     * @zm-api-field-description Specifies whether imported POP3 messages should be left on the server or deleted.
+     */
     @XmlAttribute(name=MailConstants.A_DS_LEAVE_ON_SERVER)
     private ZmBoolean leaveOnServer;
 

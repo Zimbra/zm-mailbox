@@ -35,27 +35,37 @@ import com.zimbra.soap.account.type.InfoSection;
 @XmlRootElement(name=AccountConstants.E_GET_INFO_REQUEST)
 public class GetInfoRequest {
     private static Joiner COMMA_JOINER = Joiner.on(",");
-    
+
     private List<InfoSection> sections = new ArrayList<InfoSection>();
+
     private List<String> rights = new ArrayList<String>();
-    
+
     public GetInfoRequest() {
     }
-    
+
     public GetInfoRequest(Iterable<InfoSection> sections) {
         addSections(sections);
     }
-    
-    @XmlAttribute(name=AccountConstants.A_SECTIONS) 
+
+    /**
+     * @zm-api-field-description Comma separated list of sections to return information about.
+     * <br />
+     * Sections are: mbox,prefs,attrs,zimlets,props,idents,sigs,dsrcs,children
+     */
+    @XmlAttribute(name=AccountConstants.A_SECTIONS /* sections */, required=false)
     public String getSections() {
         return COMMA_JOINER.join(sections);
     }
-    
+
+    /**
+     * @zm-api-field-description comma-separated-rights
+     * @zm-api-field-description Comma separated list of rights to return information about.
+     */
     @XmlAttribute(name=AccountConstants.A_RIGHTS) 
     public String getRights() {
         return COMMA_JOINER.join(rights);
     }
-    
+
     public GetInfoRequest setSections(String sections)
     throws ServiceException {
         this.sections.clear();
@@ -64,18 +74,18 @@ public class GetInfoRequest {
         }
         return this;
     }
-    
+
     public GetInfoRequest addSection(String sectionName)
     throws ServiceException {
         addSection(InfoSection.fromString(sectionName));
         return this;
     }
-    
+
     public GetInfoRequest addSection(InfoSection section) {
         sections.add(section);
         return this;
     }
-    
+
     public GetInfoRequest addSections(String ... sectionNames)
     throws ServiceException {
         for (String sectionName : sectionNames) {
@@ -92,7 +102,7 @@ public class GetInfoRequest {
         }
         return this;
     }
-    
+
     public GetInfoRequest setRights(String... rights)
     throws ServiceException {
         this.rights.clear();
@@ -103,7 +113,7 @@ public class GetInfoRequest {
         }
         return this;
     }
-    
+
     public GetInfoRequest addRight(String right)
     throws ServiceException {
         rights.add(right);

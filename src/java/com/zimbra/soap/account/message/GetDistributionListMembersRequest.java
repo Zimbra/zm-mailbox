@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -25,16 +25,29 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Get the list of members of a distribution list.
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_DISTRIBUTION_LIST_MEMBERS_REQUEST)
 public class GetDistributionListMembersRequest {
 
+    /**
+     * @zm-api-field-description The number of members to return (0 is default and means all)
+     */
     @XmlAttribute(name=AdminConstants.A_LIMIT, required=false)
     private final Integer limit;
 
+    /**
+     * @zm-api-field-description The starting offset (0, 25, etc)
+     */
     @XmlAttribute(name=AdminConstants.A_OFFSET, required=false)
     private final Integer offset;
 
+    /**
+     * @zm-api-field-tag dl-name
+     * @zm-api-field-description The name of the distribution list
+     */
     @XmlElement(name=AdminConstants.E_DL, required=true)
     private final String dl;
 

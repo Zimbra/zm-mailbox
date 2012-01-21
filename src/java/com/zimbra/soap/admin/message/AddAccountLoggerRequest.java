@@ -25,18 +25,35 @@ import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.LoggerInfo;
 import com.zimbra.soap.type.AccountSelector;
 
+/**
+ * @zm-api-command-description Changes logging settings on a per-account basis<br />
+ * Adds a custom logger for the given account and log category.  The logger stays in effect only during the
+ * lifetime of the current server instance.  If the request is sent to a server other than the one that the account
+ * resides on, it is proxied to the correct server.
+ * <p>
+ * If the category is "all", adds a custom logger for every category or the given user.
+ * </p>
+ */
 @XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AdminConstants.E_ADD_ACCOUNT_LOGGER_REQUEST)
 public class AddAccountLoggerRequest {
 
-    // Deprecated - use account instead
+    /**
+     * @zm-api-field-description Deprecated - use account instead
+     */
     @XmlElement(name=AdminConstants.E_ID /* id */, required=false)
     @Deprecated
     private String id;
 
+    /**
+     * @zm-api-field-description Use to select account
+     */
     @XmlElement(name=AdminConstants.E_ACCOUNT /* account */, required=false)
     private AccountSelector account;
 
+    /**
+     * @zm-api-field-description Logger category
+     */
     @XmlElement(name=AdminConstants.E_LOGGER /* logger */, required=true)
     private LoggerInfo logger;
 

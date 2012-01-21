@@ -18,6 +18,11 @@ package com.zimbra.soap.account.message;
 import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AccountConstants;
 
+/**
+ * @zm-api-command-description End the current session, removing it from all caches.  Called when the browser app
+ * (or other session-using app) shuts down.  Has no effect if called in a &lt;nosession> context.
+ */
+
 @XmlRootElement(name=AccountConstants.E_END_SESSION_REQUEST)
 public class EndSessionRequest {
 }

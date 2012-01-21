@@ -25,11 +25,14 @@ import javax.xml.bind.annotation.XmlType;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.SMIMEPublicCertsInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_SMIME_PUBLIC_CERTS_RESPONSE)
 @XmlType(propOrder = {})
 public class GetSMIMEPublicCertsResponse {
 
+    /**
+     * @zm-api-field-description SMIME public certificates
+     */
     @XmlElement(name=AccountConstants.E_CERTS /* certs */, required=false)
     private SMIMEPublicCertsInfo certs;
 

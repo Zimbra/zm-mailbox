@@ -35,6 +35,9 @@ import com.zimbra.soap.base.ZimletInclude;
 public class AccountZimletInclude
 implements ZimletInclude {
 
+    /**
+     * @zm-api-field-description Included script
+     */
     @XmlValue
     private String value;
 

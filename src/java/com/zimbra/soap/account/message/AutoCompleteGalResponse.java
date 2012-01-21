@@ -41,12 +41,19 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlType(propOrder = {})
 public class AutoCompleteGalResponse implements AutoCompleteGalInterface {
 
+    /**
+     * @zm-api-field-description Sort by
+     */
     @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
     private String sortBy;
 
     @XmlAttribute(name=MailConstants.A_QUERY_OFFSET /* offset */, required=false)
     private Integer offset;
 
+    /**
+     * @zm-api-field-tag more-flag
+     * @zm-api-field-description Set to 1 if the results were truncated
+     */
     @XmlAttribute(name=MailConstants.A_QUERY_MORE /* more */, required=false)
     private ZmBoolean more;
 
@@ -55,12 +62,29 @@ public class AutoCompleteGalResponse implements AutoCompleteGalInterface {
     private String token;
 
     // TODO:Is this actually set anywhere in the server?
+    /**
+     * @zm-api-field-tag tokenize-key-op
+     * @zm-api-field-description Either "and" or "or" (if present)
+     * <br />
+     * <ul>
+     * <li> Not present if the search key was not tokenized.
+     * <li> Some clients backtrack on GAL results assuming the results of a more specific key is the subset of a
+     *      more generic key, and it checks cached results instead of issuing another SOAP request to the server.  If
+     *      search key was tokenized and expanded with AND or OR, this cannot be assumed.
+     * </ul>
+     */
     @XmlAttribute(name=AccountConstants.A_TOKENIZE_KEY /* tokenizeKey */, required=false)
     private ZmBoolean tokenizeKey;
 
+    /**
+     * @zm-api-field-description Flag if pagination is supported
+     */
     @XmlAttribute(name=AccountConstants.A_PAGINATION_SUPPORTED /* paginationSupported */, required=false)
     private ZmBoolean pagingSupported;
 
+    /**
+     * @zm-api-field-description Contacts matching the autocomplete request
+     */
     @XmlElement(name=MailConstants.E_CONTACT /* cn */, required=false)
     private List<ContactInfo> contacts = Lists.newArrayList();
 

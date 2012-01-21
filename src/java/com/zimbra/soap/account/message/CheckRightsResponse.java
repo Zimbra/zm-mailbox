@@ -26,27 +26,31 @@ import com.zimbra.soap.account.type.CheckRightsTargetInfo;
 
 @XmlRootElement(name=AccountConstants.E_CHECK_RIGHTS_RESPONSE)
 public class CheckRightsResponse {
+
+    /**
+     * @zm-api-field-description Rights information for targets
+     */
     @XmlElement(name=MailConstants.E_TARGET /* target */, required=true)
     private List<CheckRightsTargetInfo> targets = Lists.newArrayList();
-    
+
     public CheckRightsResponse() {
         this(null);
     }
-    
+
     public CheckRightsResponse(List<CheckRightsTargetInfo> targets) {
         if (targets != null) {
             setTargets(targets);
         }
     }
-    
+
     public void setTargets(List<CheckRightsTargetInfo> targets) {
         this.targets = Lists.newArrayList(targets);
     }
-    
+
     public void addTarget(CheckRightsTargetInfo target) {
         targets.add(target);
     }
-    
+
     public List<CheckRightsTargetInfo> getTargets() {
         return targets;
     }

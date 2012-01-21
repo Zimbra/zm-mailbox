@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2010 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -29,18 +29,35 @@ import javax.xml.bind.annotation.XmlType;
 import com.google.common.collect.Iterables;
 import com.zimbra.common.soap.AccountConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_SIGNATURE)
 @XmlType(propOrder = {"contentList", AccountConstants.E_CONTACT_ID})
 public class Signature {
 
-    @XmlAttribute(name=AccountConstants.A_ID)
+    /**
+     * @zm-api-field-tag signature-id
+     * @zm-api-field-description ID for the signature
+     */
+    @XmlAttribute(name=AccountConstants.A_ID, required=false)
     private String id;
-    @XmlAttribute(name=AccountConstants.A_NAME)
+
+    /**
+     * @zm-api-field-tag signature-name
+     * @zm-api-field-description Name for the signature
+     */
+    @XmlAttribute(name=AccountConstants.A_NAME, required=false)
     private String name;
+
+    /**
+     * @zm-api-field-description Content of the signature
+     */
     @XmlElement(name=AccountConstants.E_CONTENT)
     private List<SignatureContent> contentList = new ArrayList<SignatureContent>();
 
+    /**
+     * @zm-api-field-tag contact-id
+     * @zm-api-field-description Contact ID
+     */
     @XmlElement(name=AccountConstants.E_CONTACT_ID)
     private String cid;
 

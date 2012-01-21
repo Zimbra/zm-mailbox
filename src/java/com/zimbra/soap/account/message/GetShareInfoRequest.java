@@ -2,12 +2,12 @@
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
  * Copyright (C) 2011 Zimbra, Inc.
- * 
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -27,19 +27,99 @@ import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.GranteeChooser;
 import com.zimbra.soap.type.ZmBoolean;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Get information about published shares
+ * @zm-api-request-description
+ * Notes:
+ * <ul>
+ * <li> if <b>&lt;owner></b> is *not* specified the server will search the LDAP directory for published shares
+ *      (<b>zimbraSharedItem</b> account attribute) accessible to the authed user.
+ * <li> if <b>&lt;owner></b> *is* specified, the server will iterate through the owner's mailbox to discover all
+ *      shares applicable to the authed user, instead of looking at any of the published share info.
+ * <li> All applicable shares will be returned, including any shares that are:
+ *     <table>
+ *     <tr> <td>shared with the account directly</td>                              <td></td></tr>
+ *     <tr> <td>shared with any group(and parent groups) the account belongs.</td> <td>(*is* supported)</td></tr>
+ *     <tr> <td>shared with the cos assigned to the account. </td>                 <td>(*is* supported)</td></tr>
+ *     <tr> <td>shared with the domain this account is in. </td>                   <td>(*is* supported)</td></tr>
+ *     <tr> <td>shared with all authed users (i.e. all Zimbra users) </td>         <td>(*is* supported)</td></tr>
+ *     <tr> <td>shared with the public </td>                                       <td>(*is* supported)</td></tr>
+ *     </table>
+ * </ul>
+ * e.g.
+ * <ol>
+ * <li> What folders are shared with any of the groups I belong to?
+ *      <ol type="a">
+ *      <li> folders of any user
+ *           <pre>
+ *              &lt;GetShareInfoRequest>
+ *                  &lt;grantee type="grp">
+ *              &lt;/GetShareInfoRequest>
+ *           </pre>
+ *      <li> folders of a particular user
+ *           <pre>
+ *              &lt;GetShareInfoRequest>
+ *                  &lt;grantee type="grp">
+ *                  &lt;owner by="name">user1@example.com&lt;/owner>
+ *              &lt;/GetShareInfoRequest>
+ *           </pre>
+ *      </ol>
+
+ * <li> What folders does a particular user share with me?
+ *      <ol type="a">
+ *      <li> include all folders directly shared with me and shared with an entry I can inherit shares from:
+ *           <pre>
+ *              &lt;GetShareInfoRequest>
+ *                  &lt;owner by="name">user1@example.com&lt;/owner>
+ *              &lt;/GetShareInfoRequest>
+ *           </pre>
+ *      <li> include only folders directly shared with me.
+ *           <pre>
+ *              &lt;GetShareInfoRequest>
+ *                  &lt;grantee type="usr">
+ *                  &lt;owner by="name">user1@example.com&lt;/owner>
+ *              &lt;/GetShareInfoRequest>
+ *           </pre>
+ *      </ol>
+ * <li> Show me all folders shared directly with me and with any entry I can inherit shares from:
+ *           <pre>
+ *              &lt;GetShareInfoRequest>
+ *              &lt;/GetShareInfoRequest>
+ *           </pre>
+ * </ol>
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_SHARE_INFO_REQUEST)
 public class GetShareInfoRequest {
 
+    /**
+     * @zm-api-field-description Flags that have been proxied to this server because the specified "owner account" is
+     * homed here.  Do not proxy in this case. (Used internally by ZCS)
+     */
     @XmlAttribute(name=AccountConstants.A_INTERNAL, required=false)
     private ZmBoolean internal;
 
+    /**
+     * @zm-api-field-description Flag whether own shares should be included:
+     * <ul>
+     * <li> <b>0</b> if shares owned by the requested account should not be included in the response
+     * <li> <b>1</b> (default) include shares owned by the requested account
+     * </ul>
+     * (It might be useful to see the shares I've shared to a DL that I belong to so that I know I'm sharing it
+     * correctly.)
+     */
     @XmlAttribute(name=AccountConstants.A_INCLUDE_SELF, required=false)
     private ZmBoolean includeSelf;
 
+    /**
+     * @zm-api-field-description Filter by the specified grantee type
+     */
     @XmlElement(name=AccountConstants.E_GRANTEE, required=false)
     private GranteeChooser grantee;
 
+    /**
+     * @zm-api-field-description Specifies the owner of the share
+     */
     @XmlElement(name=AccountConstants.E_OWNER, required=false)
     private AccountSelector owner;
 

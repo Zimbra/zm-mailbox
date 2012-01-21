@@ -50,13 +50,29 @@ public class Attr implements KeyAndValue {
         }
     };
 
+    /**
+     * @zm-api-field-tag attr-name
+     * @zm-api-field-description Name of attribute
+     */
     @XmlAttribute(name=AccountConstants.A_NAME /* name */, required=true)
     private String name;
 
     // If true, flags that the real value of this attribute has not been provided - i.e. value is set to ""
+    /**
+     * @zm-api-field-tag attr-perm-denied
+     * @zm-api-field-description Flags whether permission has been denied (optional).
+     * <br />
+     * If <b>1 (true)</b>, flags that the real value of this attribute has not been provided.
+     * <br />
+     * The value is set to ""
+     */
     @XmlAttribute(name=AccountConstants.A_PERM_DENIED /* pd */, required=false)
     private ZmBoolean permDenied;
 
+    /**
+     * @zm-api-field-tag attr-value
+     * @zm-api-field-description Value of attribute
+     */
     @XmlValue
     private String value;
 

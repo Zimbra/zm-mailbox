@@ -34,6 +34,10 @@ import com.zimbra.soap.base.ZimletProperty;
 public class AccountZimletGlobalConfigInfo
 implements ZimletGlobalConfigInfo {
 
+    /**
+     * @zm-api-field-tag global-zimlet-config-prop
+     * @zm-api-field-description Global zimlet configuration property
+     */
     @XmlElement(name=ZimletConstants.ZIMLET_TAG_PROPERTY /* property */, required=false)
     private List<AccountZimletProperty> properties = Lists.newArrayList();
 

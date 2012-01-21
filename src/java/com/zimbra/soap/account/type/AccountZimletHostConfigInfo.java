@@ -37,9 +37,18 @@ import com.zimbra.soap.base.ZimletProperty;
 public class AccountZimletHostConfigInfo
 implements ZimletHostConfigInfo {
 
+    /**
+     * @zm-api-field-tag zimlet-host-name
+     * @zm-api-field-description Designates the zimbra host name for the properties.
+     * <br />
+     * Must be a valid Zimbra host name
+     */
     @XmlAttribute(name=ZimletConstants.ZIMLET_ATTR_NAME /* name */, required=false)
     private String name;
 
+    /**
+     * @zm-api-field-description Host specifice zimlet configuration properties
+     */
     @XmlElement(name=ZimletConstants.ZIMLET_TAG_PROPERTY /* property */, required=false)
     private List<AccountZimletProperty> properties = Lists.newArrayList();
 

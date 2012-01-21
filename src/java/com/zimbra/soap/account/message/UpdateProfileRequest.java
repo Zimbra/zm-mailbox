@@ -24,10 +24,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.ProfileInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Update profile
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_UPDATE_PROFILE_REQUEST)
 public class UpdateProfileRequest {
 
+    /**
+     * @zm-api-field-description New profile information
+     */
     @XmlElement(name=AccountConstants.E_PROFILE /* profile */, required=true)
     private final ProfileInfo profile;
 

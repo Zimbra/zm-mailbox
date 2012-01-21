@@ -30,10 +30,16 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.AccountACEInfo;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Revoke account level rights
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_REVOKE_RIGHTS_REQUEST)
 public class RevokeRightsRequest {
 
+    /**
+     * @zm-api-field-description Specify Access Control Entries
+     */
     @XmlElement(name=AccountConstants.E_ACE /* ace */, required=false)
     private List<AccountACEInfo> aces = Lists.newArrayList();
 

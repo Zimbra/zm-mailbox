@@ -25,9 +25,17 @@ import com.zimbra.common.soap.AccountConstants;
 @XmlAccessorType(XmlAccessType.NONE)
 public class CalendarResourceInfo extends AccountKeyValuePairs {
 
+    /**
+     * @zm-api-field-tag calendar-resource-name
+     * @zm-api-field-description Name of calendar resource
+     */
     @XmlAttribute(name=AccountConstants.A_NAME /* name */, required=true)
     private String name;
 
+    /**
+     * @zm-api-field-tag calendar-resource-id
+     * @zm-api-field-description Name of calendar resource
+     */
     @XmlAttribute(name=AccountConstants.A_ID /* id */, required=true)
     private String id;
 

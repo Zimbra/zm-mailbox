@@ -35,6 +35,9 @@ import com.zimbra.soap.base.ZimletIncludeCSS;
 public class AccountZimletIncludeCSS
 implements ZimletIncludeCSS {
 
+    /**
+     * @zm-api-field-description Included Cascading Style Sheet (CSS)
+     */
     @XmlValue
     private String value;
 

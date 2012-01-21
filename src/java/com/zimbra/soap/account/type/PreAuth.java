@@ -24,8 +24,21 @@ import javax.xml.bind.annotation.XmlValue;
  */
 public class PreAuth {
 
+    /**
+     * @zm-api-field-description Time stamp
+     */
     @XmlAttribute(required=true) private long timestamp;
+    /**
+     * @zm-api-field-tag expires
+     * @zm-api-field-description expiration time of the authtoken, in milliseconds. set to 0 to use the default
+     * expiration time for the account. Can be used to sync the auth token expiration time with the external system's
+     * notion of expiration (like a Kerberos TGT lifetime, for example).
+     */
     @XmlAttribute private Long expiresTimestamp;
+    /**
+     * @zm-api-field-tag computed-preauth-value
+     * @zm-api-field-description Computed preauth value
+     */
     @XmlValue private String value;
     
     public long getTimestamp() { return timestamp; }

@@ -41,31 +41,32 @@ import com.zimbra.soap.type.ZmBoolean;
 @XmlType(propOrder = {})
 public class SyncGalResponse {
 
-    @XmlAttribute(name=MailConstants.A_SORTBY /* sortBy */, required=false)
-    private String sortBy;
-
-    @XmlAttribute(name=MailConstants.A_QUERY_OFFSET /* offset */, required=false)
-    private Integer offset;
-
+    /**
+     * @zm-api-field-description Flags whether there are more results
+     */
     @XmlAttribute(name=MailConstants.A_QUERY_MORE /* more */, required=false)
     private ZmBoolean more;
 
+    /**
+     * @zm-api-field-description new-token
+     * @zm-api-field-description New synchronization token
+     */
     @XmlAttribute(name=MailConstants.A_TOKEN /* token */, required=false)
     private String token;
 
+    /**
+     * @zm-api-field-description Details of contact.  For element names <b>&lt;deleted</b> - gives details of deleted
+     * entries.
+     */
     @XmlElements({
-        @XmlElement(name=MailConstants.E_CONTACT /* cn */,
-            type=ContactInfo.class),
-        @XmlElement(name=MailConstants.E_DELETED /* deleted */,
-            type=Id.class)
+        @XmlElement(name=MailConstants.E_CONTACT /* cn */, type=ContactInfo.class),
+        @XmlElement(name=MailConstants.E_DELETED /* deleted */, type=Id.class)
     })
     private List<Object> hits = Lists.newArrayList();
 
     public SyncGalResponse() {
     }
 
-    public void setSortBy(String sortBy) { this.sortBy = sortBy; }
-    public void setOffset(Integer offset) { this.offset = offset; }
     public void setMore(Boolean more) { this.more = ZmBoolean.fromBool(more); }
     public void setToken(String token) { this.token = token; }
     public void setHits(Iterable <Object> hits) {
@@ -79,8 +80,6 @@ public class SyncGalResponse {
         this.hits.add(hit);
     }
 
-    public String getSortBy() { return sortBy; }
-    public Integer getOffset() { return offset; }
     public Boolean getMore() { return ZmBoolean.toBool(more); }
     public String getToken() { return token; }
     public List<Object> getHits() {
@@ -90,8 +89,6 @@ public class SyncGalResponse {
     public Objects.ToStringHelper addToStringInfo(
                 Objects.ToStringHelper helper) {
         return helper
-            .add("sortBy", sortBy)
-            .add("offset", offset)
             .add("more", more)
             .add("token", token)
             .add("hits", hits);

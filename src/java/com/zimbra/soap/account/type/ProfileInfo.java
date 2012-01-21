@@ -22,9 +22,13 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AccountConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+@XmlAccessorType(XmlAccessType.NONE)
 public class ProfileInfo {
 
+    /**
+     * @zm-api-field-tag upload-id
+     * @zm-api-field-description The ID of an uploaded image
+     */
     @XmlAttribute(name=AccountConstants.A_IMAGE /* image */, required=false)
     private String imageId;
 

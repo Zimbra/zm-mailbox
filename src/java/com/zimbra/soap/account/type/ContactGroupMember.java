@@ -34,12 +34,24 @@ import com.zimbra.soap.base.ContactInterface;
 public class ContactGroupMember
 implements ContactGroupMemberInterface {
 
+    /**
+     * @zm-api-field-tag contact-group-member-type
+     * @zm-api-field-description Contact group member type
+     */
     @XmlAttribute(name=MailConstants.A_CONTACT_GROUP_MEMBER_TYPE /* type */, required=true)
     private String type;
 
+    /**
+     * @zm-api-field-tag contact-group-member-value
+     * @zm-api-field-description Contact group member value
+     */
     @XmlAttribute(name=MailConstants.A_CONTACT_GROUP_MEMBER_VALUE /* value */, required=true)
     private String value;
 
+    /**
+     * @zm-api-field-tag contact-group-member
+     * @zm-api-field-description Contact
+     */
     @XmlElement(name=MailConstants.E_CONTACT /* cn */, required=false)
     private ContactInfo contact;
 

@@ -38,6 +38,10 @@ implements CustomMetadataInterface {
 
     // Normally present but sometimes an empty element is created to show that
     // CustomMetadata info is present but there are no sections to report on.
+    /**
+     * @zm-api-field-tag metadata-section-key
+     * @zm-api-field-description Metadata section key
+     */
     @XmlAttribute(name=MailConstants.A_SECTION /* section */, required=false)
     private String section;
 

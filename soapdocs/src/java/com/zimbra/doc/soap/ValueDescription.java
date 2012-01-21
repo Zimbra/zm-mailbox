@@ -16,6 +16,7 @@
 package com.zimbra.doc.soap;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.zimbra.soap.type.ZmBoolean;
 
 public class ValueDescription {
@@ -59,7 +60,19 @@ public class ValueDescription {
             if (valueName == null) {
                 value = className;
             } else {
-                value = String.format("${%s} %s", valueName, className);
+                if ("String".equals(className)) {
+                    if (Strings.isNullOrEmpty(valueName)) {
+                        value = "\"...\"";
+                    } else {
+                        value = String.format("{%s}", valueName);
+                    } 
+                } else {
+                    if (Strings.isNullOrEmpty(valueName)) {
+                            value = String.format("(%s)", className);
+                    } else {
+                        value = String.format("{%s} (%s)", valueName, className);
+                    }
+                }
             }
         }
         return value;

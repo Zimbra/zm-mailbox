@@ -1,13 +1,13 @@
 /*
  * ***** BEGIN LICENSE BLOCK *****
  * Zimbra Collaboration Suite Server
- * Copyright (C) 2011 Zimbra, Inc.
- * 
+ * Copyright (C) 2012 Zimbra, Inc.
+ *
  * The contents of this file are subject to the Zimbra Public License
  * Version 1.3 ("License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
  * http://www.zimbra.com/license.
- * 
+ *
  * Software distributed under the License is distributed on an "AS IS"
  * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.
  * ***** END LICENSE BLOCK *****
@@ -15,20 +15,27 @@
 
 package com.zimbra.soap.type;
 
+import java.util.Arrays;
 import javax.xml.bind.annotation.XmlEnum;
 
 import com.zimbra.common.service.ServiceException;
 
+/**
+ * relates to Logging levels.
+ */
 @XmlEnum
-public enum DistributionListGranteeType {
-    // case must match protocol
-    usr, grp, all, dom, gst, key, pub;
-    
-    public static DistributionListGranteeType fromString(String s) throws ServiceException {
+public enum LoggingLevel {
+    // keep in sync with com.zimbra.common.util.Log.Level
+    error, warn, info, debug, trace;
+
+    public static LoggingLevel fromString(String s)
+    throws ServiceException {
         try {
-            return DistributionListGranteeType.valueOf(s);
+            return LoggingLevel.valueOf(s);
         } catch (IllegalArgumentException e) {
-            throw ServiceException.INVALID_REQUEST("unknown type: "+s, e);
+           throw ServiceException.INVALID_REQUEST("unknown Logging Level: " + s + ", valid values: " +
+                   Arrays.asList(LoggingLevel.values()), null);
         }
     }
+
 }

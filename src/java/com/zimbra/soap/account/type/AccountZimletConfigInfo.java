@@ -35,27 +35,58 @@ implements ZimletConfigInfo {
     // ZimletMeta validate() checks:
     //     ZIMLET_ATTR_NAME, ZIMLET_ATTR_VERSION, ZIMLET_ATTR_DESCRIPTION, ZIMLET_ATTR_EXTENSION
     // ZimletConfig validateElement() checks: ZIMLET_TAG_GLOBAL, ZIMLET_TAG_HOST
+
+    /**
+     * @zm-api-field-tag zimlet-name
+     * @zm-api-field-description Zimlet Name
+     */
     @XmlAttribute(name=ZimletConstants.ZIMLET_ATTR_NAME /* name */, required=false)
     private String name;
 
+    /**
+     * @zm-api-field-tag zimlet-version
+     * @zm-api-field-description Zimlet Version
+     */
     @XmlAttribute(name=ZimletConstants.ZIMLET_ATTR_VERSION /* version */, required=false)
     private String version;
 
+    /**
+     * @zm-api-field-tag zimlet-description
+     * @zm-api-field-description Zimlet description
+     */
     @XmlAttribute(name=ZimletConstants.ZIMLET_ATTR_DESCRIPTION /* description */, required=false)
     private String description;
 
+    /**
+     * @zm-api-field-tag zimlet-extension
+     * @zm-api-field-description Zimlet extension
+     */
     @XmlAttribute(name=ZimletConstants.ZIMLET_ATTR_EXTENSION /* extension */, required=false)
     private String extension;
 
+    /**
+     * @zm-api-field-tag zimlet-target
+     * @zm-api-field-description Zimlet target
+     */
     @XmlAttribute(name=ZimletConstants.ZIMLET_TAG_TARGET /* target */, required=false)
     private String target;
 
+    /**
+     * @zm-api-field-tag zimlet-label
+     * @zm-api-field-description Zimlet label
+     */
     @XmlAttribute(name=ZimletConstants.ZIMLET_TAG_LABEL /* label */, required=false)
     private String label;
 
+    /**
+     * @zm-api-field-description Zimlet Global configuration information
+     */
     @XmlElement(name=ZimletConstants.ZIMLET_TAG_GLOBAL /* global */, required=false)
     private AccountZimletGlobalConfigInfo global;
 
+    /**
+     * @zm-api-field-description Zimlet host specific configuration information
+     */
     @XmlElement(name=ZimletConstants.ZIMLET_TAG_HOST /* host */, required=false)
     private AccountZimletHostConfigInfo host;
 

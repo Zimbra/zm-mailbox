@@ -1,0 +1,199 @@
+<html>
+<body>
+<h2>Implementation Notes for JAXB classes</h2>
+
+<h3>Steps to Create JAXB classes for a new request/response pair</h3>
+<ol>
+<li>See [[#Steps to add a new namespace]] if necessary - although it is recommended that new namespaces are
+    <b>NOT</b> created unless absolutely necessary.
+<li>Determine the package name {PKG} appropriate for the namespace of your request/response pair.  For instance:
+<pre>grep namespaceURI ZimbraSoap/src/java/com/zimbra/soap/*/message/package-info.java</pre>
+currently yields output like:
+<pre>
+ZimbraSoap/src/java/com/zimbra/soap/account/message/package-info.java:        @XmlNs(prefix="account", namespaceURI = "urn:zimbraAccount")
+ZimbraSoap/src/java/com/zimbra/soap/admin/message/package-info.java:        @XmlNs(prefix="admin", namespaceURI = "urn:zimbraAdmin")
+ZimbraSoap/src/java/com/zimbra/soap/adminext/message/package-info.java:        @XmlNs(prefix="adminExt", namespaceURI = "urn:zimbraAdminExt")
+ZimbraSoap/src/java/com/zimbra/soap/appblast/message/package-info.java:        @XmlNs(prefix="appblast", namespaceURI = "urn:zimbraAppblast")
+ZimbraSoap/src/java/com/zimbra/soap/mail/message/package-info.java:        @XmlNs(prefix="mail", namespaceURI = "urn:zimbraMail")
+ZimbraSoap/src/java/com/zimbra/soap/replication/message/package-info.java:        @XmlNs(prefix="repl", namespaceURI = "urn:zimbraRepl")
+ZimbraSoap/src/java/com/zimbra/soap/sync/message/package-info.java:        @XmlNs(prefix="sync", namespaceURI = "urn:zimbraSync")
+</pre>
+{PKG} is the name of the directory component before message/package-info.java
+<li>Create <b>ZimbraSoap/src/java/com/zimbra/soap/{PKG}/message/{Request}.java</b> where {Request} is the top level element
+name for your new request.  Base this on other similar files.  See below for generic advice on JAXB annotations.
+<li>Create <b>ZimbraSoap/src/java/com/zimbra/soap/{PKG}/message/{Response}.java</b> where {Response} is the top level element
+name for your new response.
+<li>Create other JAXB classes for data types needed by your request/response pair if they don't exist already.
+<li>Update the <b>MESSAGE_CLASSES</b> array in <b>ZimbraSoap/src/java/com/zimbra/soap/JaxbUtil.java</b>
+</ol>
+
+<h3> Steps to add a new namespace </h3>
+<ol>
+<li>  Choose a new sub-package name {PKG} and a service name {SVC}<br />
+    e.g. for AppBlast, chose {PKG}="appblast" and {SVC}=AppblastService
+<li>  Create new directories :<br />
+        <pre>
+        ZimbraSoap/src/java/com/zimbra/soap/{PKG}/message
+        ZimbraSoap/src/java/com/zimbra/soap/{PKG}/type
+        </pre>
+<li>  Create new files:<br />
+        <pre>
+        ZimbraSoap/src/java/com/zimbra/soap/{PKG}/message/package-info.java
+        ZimbraSoap/src/java/com/zimbra/soap/{PKG}/type/package-info.java
+        </pre>
+    These can be based on similar files for another namespace.
+    Need to update namespace/package etc info in these files.
+<li>  Update <b>ZimbraSoap/src/java/com/zimbra/soap/util/WsdlGenerator.java</b>
+    the <b>main</b> method needs something like :
+    <pre>
+    nsInfoList.add(WsdlInfoForNamespace.create(AppBlastConstants.NAMESPACE_STR, WsdlServiceInfo.zcsService,
+                packageToRequestListMap.get("com.zimbra.soap.appblast.message")));
+    </pre>
+<li>  Update binding file <b>ZimbraSoap/src/wsdl-test/xsdBindings-zcs.xml</b> for use with wsdl-test API.
+        This will need a &lt;jaxb:bindings> for the new targetNamespace.
+</ol>
+
+<h3> Manual steps </h3>
+<h4>  Marshalling / Unmarshalling support. </h4>
+The code that is responsible for marshalling and unmarshalling JAXB classes
+needs to know about the top level requests and response classes - see the
+MESSAGE_CLASSES array in :
+src/java/com/zimbra/soap/JaxbUtil.java 
+
+Ordering of elements.
+---------------------
+For pre-existing requests, best not to force an ordering of elements in case this breaks clients.
+For responses, because the server controls the order, it is reasonable to enforce an order.
+
+Enforcing an order is achieved via the @XmlType annotation.  For example :
+@XmlType(propOrder = {"hostNames", "stats", "note"})
+
+The strings in the list are the names of fields which map to elements (NOT the @XmlElement names).
+Attributes cannot be ordered, so their field names are excluded.
+
+@XmlRootElement
+---------------
+SOAP Request and Response classes must have this.
+In a lot of JAXB, the root element associated with a field is chosen by the @XmlElement annotation associated with
+the field - so there is no
+need for an @XmlRootElement.  This has the added advantage that classes can
+represent types independant of the element name used with them.
+Problems were encountered in some of the COS related classes when an
+un-necessary @XmlRootElement was used.  On the other hand, see the gotchas.
+Sometimes an @XmlRootElement is required...
+
+@XmlAccessorType
+----------------
+Tend to prefer XmlAccessType.NONE and explicitly label everything that needs
+to be annotated rather than letting JAXB do some defaults.
+
+enums
+-----
+For the values of some fields in JAXB objects, Enums are needed under ZimbraSoap.
+For preference, non-ZimbraSoap code should use the ZimbraSoap enums to avoid having
+to keep 2 sets of enums in lock step.
+
+If that isn't possible, either because an enum is already widely used or because
+it references objects not visible in ZimbraSoap, then using the ZimbraSoap enum
+in the constructor of the other enum should help avoid the enums getting out of step.
+For example, see JAXB enum com.zimbra.soap.type.TargetType and ZimbraServer enum
+com.zimbra.cs.account.accesscontrol.TargetType.  The latter enum includes the
+"toJaxb()" method and the static method "fromJaxb(com.zimbra.soap.type.TargetType)".
+
+Gotchas
+-------
+.   Do NOT reference non-simple classes outside the ZimbraSoap hierarchy in fields relevant to JAXB.
+    Failing to do this will result in errors in the resulting WSDL as it will not have
+    the information it needs to specify the structure of these classes.
+.   Unmarshalling from Xml may not correctly identify superclasses.
+    Test before using! e.g. See :
+        JaxbToElementTest.ConvActionRequestJaxbSubclassHandlingTestDisabled()
+.   Target objects for @XmlElementRef etc must have an @XmlRootElement
+    annotation
+.   For structured fields, e.g. comma separated strings, there is a temptation
+    to use non-JAXB fields for the real data.
+.   Elements which have both sub-elements AND a value.  End up having to used
+    @XmlMixed which is horrible.
+.   You cannot use basic types like "int" for optional attributes/variables.
+    This is because need something which can have a null value to represent
+    absence.
+
+
+Special handling
+================
+
+Boolean / boolean support using ZmBoolean
+-----------------------------------------
+XML schema regards the literals {true, false, 1, 0} as legal
+However, the canonical representation for boolean is the set of literals {true, false} and this is reflected in
+JAXB behavior when marshaling.  Historically, Zimbra Booleans have been rendered in SOAP response XML as {1, 0}
+To further complicate things, SOAP response JSON uses {true, false}.
+
+When adding Boolean or boolean attributes/elements to SOAP requests or responses :
+1.  Specify the corresponding fields in JAXB with type "ZmBoolean"
+2.  Add methods which get and set these fields via Boolean (or boolean).
+    The static methods ZmBoolean.fromBool(Boolean), ZmBoolean.toBool(ZmBoolean) and
+    ZmBoolean.toBool(ZmBoolean, boolean) should be used from these methods.
+3.  Do NOT create ZmBoolean getters and setters!
+4.  If you are creating an element that should be treated as an element in JSON, use an @JsonSerialize annotation,
+    for example :
+        @XmlElement(name=AdminConstants.E_STATUS, required=true)
+        @JsonSerialize(using=ZmBooleanContentSerializer.class)
+        private final ZmBoolean status;
+
+FAQ
+===
+1. How do you define an XmlAttribute or XmlElement whose value is an enum
+    You need to create an enum in ZimbraSoap.  Ideally, used this new enum in all code rather than duplicating
+    from somewhere else.  For a fairly simple example - see
+        //depot/zimbra/main/ZimbraSoap/src/java/com/zimbra/soap/type/AccountBy.java
+    which uses the @XmlEnum annotation.  See
+        //depot/zimbra/main/ZimbraSoap/src/java/com/zimbra/soap/admin/type/AccountSelector.java
+    for how this enum is used for an @XmlAttribute.
+    If you want the enum values to differ from what is in the xml, see another example - Folder.View 
+        //depot/zimbra/main/ZimbraSoap/src/java/com/zimbra/soap/mail/type/Folder.java
+    This also uses @XmlEnumValue annotations.
+
+2. For some JAXB classes, @XmlElement or @XmlAttribute might have property "required" set as "false" even when it
+   is not optional.  Is this intentional? 
+
+   If the @XmlElement or @XmlAttribute is required in all contexts then this is an error.  When the original
+   implementor was constructing JAXB classes, situations were encountered where looking at the first use of a
+   JAXB type some of these were clearly required but later uses had them as optional.   As this situation can
+   be a bit difficult to spot a lot of newer JAXB classes were written with a more relaxed view of whether
+   things were required or not.
+
+3. I'm creating new JAXB classes for a request/response in the urn:zimbraAdmin namespace which calls code which
+   is already used for request/responses in the urn:zimbraAccount namespace.  Can I re-use the JAXB objects in
+   package com.zimbra.soap.account.type?
+
+   You need to ensure that you won't have namespace related problems.  If the SOAP handler code uses Element
+   code to build the structure, most elements are added using Element.addElement(String).  This causes the namespace
+   associated with the parent to be associated with the new element, which will often mean that it will differ
+   depending on the main namespace associated with the request/response being handled and the same JAXB class cannot
+   be used.
+
+   There are 2 suggested solutions:
+     1.  If the current code is only used in one namespace, then namespace lock the data structure by changing
+         the creation of the top level Element for the structure from Element.addElement(String) to
+         Element.addElement(QName).  Where possible, this is the preferred option as it avoids propagating almost
+         duplicate JAXB objects for different namespaces.
+         Check the .xsd files produced to make sure they make sense.  There is a gotcha with schemagen where
+         it sometimes uses references (ref=)to the other .xsd file but has a poor algorithm for choosing the reference
+         name (it just uses the xml element name).  If more than one reference ends up using the same name, you can
+         end up with the target type being something like :
+             <xs:element name="device" nillable="true" type="xs:anyType"/>
+     2.  If the current code is used in multiple namespaces, then the approach I'm taking these days is to create
+         almost duplicate JAXB objects in each namespace where the data structure is used and have the objects
+         implement an interface which encapsulates the important aspects of their behavior in package
+         com.zimbra.soap.base.  The plan is that when we move to using JAXB code instead of Element code we will be
+         able to use the interface combined with appropriate JAXB factories.  This is rather fiddly but I don't
+         thing there is a good alternative.
+    Aside:
+        In some cases in the past, if a JAXB class has only had @XmlAttribute (i.e. no @XmlElement)
+        I have moved the JAXB class to com.zimbra.soap.type and re-used it.  This works because we have things
+        setup not to tie @XmlAttribute to a namespace when processing the JAXB.  However, the issue was raised
+        that this is confusing as it isn't clear why this works but objects containing elements don't.
+        So, although this results in simpler code it is a deprecated practise.
+</body>
+</html>

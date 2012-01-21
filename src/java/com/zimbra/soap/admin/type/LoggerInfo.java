@@ -21,31 +21,43 @@ import javax.xml.bind.annotation.XmlAttribute;
 
 import com.zimbra.common.soap.AdminConstants;
 import com.zimbra.soap.admin.type.LoggerInfo;
+import com.zimbra.soap.type.LoggingLevel;
 
 @XmlAccessorType(XmlAccessType.NONE)
 public final class LoggerInfo {
 
+    /**
+     * @zm-api-field-tag category-name
+     * @zm-api-field-description name of the logger category
+     */
     @XmlAttribute(name=AdminConstants.A_CATEGORY, required=true)
     private String category;
+    /**
+     * @zm-api-field-description level of the logging.
+     */
     @XmlAttribute(name=AdminConstants.A_LEVEL, required=false)
-    private String level;
+    private LoggingLevel level;
 
     /**
      * no-argument constructor wanted by JAXB
      */
     private LoggerInfo() {
-        this((String) null, (String) null);
+        this((String) null, (LoggingLevel) null);
     }
 
-    private LoggerInfo(String category, String level) {
+    private LoggerInfo(String category, LoggingLevel level) {
         this.category = category;
         this.level = level;
     }
 
-    public static LoggerInfo createForCategoryAndLevel(String category, String level) {
+    public static LoggerInfo createForCategoryAndLevel(String category, LoggingLevel level) {
         return new LoggerInfo(category, level);
     }
 
+    public static LoggerInfo createForCategoryAndLevelString(String category, String level) {
+        return new LoggerInfo(category, LoggingLevel.valueOf(level));
+    }
+
     public String getCategory() { return category; }
-    public String getLevel() { return level; }
+    public LoggingLevel getLevel() { return level; }
 }

@@ -30,10 +30,20 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.soap.account.type.Right;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-description Get account level rights.
+ * <br />
+ * If no <b>&lt;ace></b> elements are provided, all ACEs are returned in the response.
+ * <br />
+ * If <b>&lt;ace></b> elements are provided, only those ACEs with specified rights are returned in the response.
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_GET_RIGHTS_REQUEST)
 public class GetRightsRequest {
 
+    /**
+     * @zm-api-field-description Specify Access Control Entries to return
+     */
     @XmlElement(name=AccountConstants.E_ACE /* ace */, required=false)
     private List<Right> aces = Lists.newArrayList();
 

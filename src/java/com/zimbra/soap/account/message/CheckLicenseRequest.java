@@ -24,11 +24,26 @@ import javax.xml.bind.annotation.XmlRootElement;
 import com.zimbra.common.soap.AccountConstants;
 import com.zimbra.common.soap.AdminConstants;
 
-@XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * @zm-api-command-network-edition
+ * @zm-api-command-description Checks whether this account (auth token account or requested account id) is allowed
+ * access to the specified feature.
+ */
+@XmlAccessorType(XmlAccessType.NONE)
 @XmlRootElement(name=AccountConstants.E_CHECK_LICENSE_REQUEST)
 public class CheckLicenseRequest {
 
-    @XmlAttribute(name=AdminConstants.A_FEATURE /* feature */, required=false)
+    /**
+     * @zm-api-field-description The licensable feature.  These are the valid values (which are case-insensitive):
+     * <ul>
+     * <li> <b>MAPI</b> - Zimbra Connector For Outlook
+     * <li> <b>MobileSync</b> - ActiveSync
+     * <li> <b>iSync</b> - Apple iSync
+     * <li> <b>SMIME</b> - Zimbra SMIME
+     * <li> <b>BES</b> - Zimbra Connector for BlackBerry Enterprise Server
+     * </ul>
+     */
+    @XmlAttribute(name=AdminConstants.A_FEATURE /* feature */, required=true)
     private String feature;
 
     public CheckLicenseRequest() {

@@ -39,7 +39,7 @@ implements XmlUnit {
         desc.required = info.isRequired();
         desc.jaxbClass = info.getAtomClass();
         desc.fieldName = info.getFieldName();
-        desc.valueRepresentation = String.format("\"%s\"", ValueDescription.getRepresentation(desc.jaxbClass));
+        desc.valueRepresentation = ValueDescription.getRepresentation(desc.jaxbClass);
         return desc;
     }
 
@@ -75,7 +75,22 @@ implements XmlUnit {
             desc.append("[");
         }
         desc.append("<span id=\"attrName\">").append(name).append("</span>");
-        desc.append("=<span id=\"value\">").append(getValueRepresentation()).append("</span>");
+        String valRep = getValueRepresentation();
+        String ftag = getFieldTag();
+        if ("String".equals(valRep)) {
+            if (Strings.isNullOrEmpty(ftag)) {
+                valRep = "\"...\"";
+            } else {
+                valRep = String.format("\"{%s}\"", ftag);
+            }
+        } else {
+            if (Strings.isNullOrEmpty(ftag)) {
+                valRep = String.format("\"(%s)\"", valRep);
+            } else {
+                valRep = String.format("\"{%s} (%s)\"", ftag, valRep);
+            }
+        }
+        desc.append("=<span id=\"value\">").append(valRep).append("</span>");
         if (!required) {
             desc.append("]");
         }
