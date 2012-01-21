@@ -101,7 +101,6 @@ import com.zimbra.soap.account.message.GetInfoRequest;
 import com.zimbra.soap.account.message.GetInfoResponse;
 import com.zimbra.soap.account.message.GetSignaturesRequest;
 import com.zimbra.soap.account.message.GetSignaturesResponse;
-import com.zimbra.soap.account.type.Account;
 import com.zimbra.soap.account.type.AuthToken;
 import com.zimbra.soap.account.type.InfoSection;
 import com.zimbra.soap.mail.message.CheckSpellingRequest;
@@ -121,6 +120,7 @@ import com.zimbra.soap.mail.message.ModifyOutgoingFilterRulesRequest;
 import com.zimbra.soap.mail.type.Content;
 import com.zimbra.soap.mail.type.Folder;
 import com.zimbra.soap.mail.type.ImportContact;
+import com.zimbra.soap.type.AccountSelector;
 import com.zimbra.soap.type.CalDataSource;
 import com.zimbra.soap.type.DataSource;
 import com.zimbra.soap.type.ImapDataSource;
@@ -445,7 +445,7 @@ public class ZMailbox implements ToZJSONObject {
     private ZChangePasswordResult changePassword(String key, AccountBy by, String oldPassword, String newPassword, String virtualHost) throws ServiceException {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling changePassword", null);
 
-        Account account = new Account(SoapConverter.TO_SOAP_ACCOUNT_BY.apply(by), key);
+        AccountSelector account = new AccountSelector(SoapConverter.TO_SOAP_ACCOUNT_BY.apply(by), key);
         ChangePasswordRequest req = new ChangePasswordRequest(account, oldPassword, newPassword);
         req.setVirtualHost(virtualHost);
 
@@ -470,7 +470,7 @@ public class ZMailbox implements ToZJSONObject {
     private ZAuthResult authByPassword(Options options, String password) throws ServiceException {
         if (mTransport == null) throw ZClientException.CLIENT_ERROR("must call setURI before calling authenticate", null);
 
-        Account account = new Account(Account.By.NAME, options.getAccount());
+        AccountSelector account = new AccountSelector(com.zimbra.soap.type.AccountBy.name, options.getAccount());
         AuthRequest auth = new AuthRequest(account, password);
         auth.setPassword(password);
         auth.setVirtualHost(options.getVirtualHost());
