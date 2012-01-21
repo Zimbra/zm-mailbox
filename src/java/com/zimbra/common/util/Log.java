@@ -54,6 +54,7 @@ public class Log {
         .build();
 
     public enum Level {
+        // Keep in sync with com.zimbra.soap.type.LoggingLevel
         error, warn, info, debug, trace;
     };
 
