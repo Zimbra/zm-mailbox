@@ -3602,71 +3602,75 @@ abstract class ImapHandler {
                 boolean empty = true;
                 MailItem item = null;
                 MimeMessage mm;
-
-                if (!fullMessage.isEmpty() || (parts != null && !parts.isEmpty()) || (attributes & ~FETCH_FROM_CACHE) != 0) {
-                    try {
-                        item = mbox.getItemById(getContext(), i4msg.msgId, i4msg.getType());
-                    } catch (NoSuchItemException nsie) {
-                        // just in case we're out of sync, force this message back into sync
-                        i4folder.markMessageExpunged(i4msg);
-                        fetchStub(i4msg, i4folder, attributes, parts, fullMessage, result);
-                        continue;
+                try {
+                    if (!fullMessage.isEmpty() || (parts != null && !parts.isEmpty()) || (attributes & ~FETCH_FROM_CACHE) != 0) {
+                        mbox.lock.lock();
+                        try {
+                            item = mbox.getItemById(getContext(), i4msg.msgId, i4msg.getType());
+                        } catch (NoSuchItemException nsie) {
+                            // just in case we're out of sync, force this message back into sync
+                            i4folder.markMessageExpunged(i4msg);
+                            fetchStub(i4msg, i4folder, attributes, parts, fullMessage, result);
+                            continue;
+                        }
                     }
-                }
 
-                if ((attributes & FETCH_UID) != 0) {
-                    result.print((empty ? "" : " ") + "UID " + i4msg.imapUid);
-                    empty = false;
-                }
-                if ((attributes & FETCH_INTERNALDATE) != 0) {
-                    result.print((empty ? "" : " ") + "INTERNALDATE \"" +
-                            DateUtil.toImapDateTime(new Date(item.getDate())) + '"');
-                    empty = false;
-                }
-                if ((attributes & FETCH_RFC822_SIZE) != 0) {
-                    result.print((empty ? "" : " ") + "RFC822.SIZE " + i4msg.getSize(item));
-                    empty = false;
-                }
-                if ((attributes & FETCH_BINARY_SIZE) != 0) {
-                    result.print((empty ? "" : " ") + "BINARY.SIZE[] " + i4msg.getSize(item));
-                    empty = false;
-                }
-
-                if (!fullMessage.isEmpty()) {
-                    for (ImapPartSpecifier pspec : fullMessage) {
-                        result.print(empty ? "" : " ");
-                        pspec.write(result, output, item);
+                    if ((attributes & FETCH_UID) != 0) {
+                        result.print((empty ? "" : " ") + "UID " + i4msg.imapUid);
                         empty = false;
                     }
-                }
+                    if ((attributes & FETCH_INTERNALDATE) != 0) {
+                        result.print((empty ? "" : " ") + "INTERNALDATE \"" +
+                                DateUtil.toImapDateTime(new Date(item.getDate())) + '"');
+                        empty = false;
+                    }
+                    if ((attributes & FETCH_RFC822_SIZE) != 0) {
+                        result.print((empty ? "" : " ") + "RFC822.SIZE " + i4msg.getSize(item));
+                        empty = false;
+                    }
+                    if ((attributes & FETCH_BINARY_SIZE) != 0) {
+                        result.print((empty ? "" : " ") + "BINARY.SIZE[] " + i4msg.getSize(item));
+                        empty = false;
+                    }
 
-                if ((parts != null && !parts.isEmpty()) || (attributes & FETCH_FROM_MIME) != 0) {
-                    mm = ImapMessage.getMimeMessage(item);
-                    if ((attributes & FETCH_BODY) != 0) {
-                        result.print(empty ? "" : " ");
-                        result.print("BODY ");
-                        ImapMessage.serializeStructure(result, mm, false);
-                        empty = false;
-                    }
-                    if ((attributes & FETCH_BODYSTRUCTURE) != 0) {
-                        result.print(empty ? "" : " ");
-                        result.print("BODYSTRUCTURE ");
-                        ImapMessage.serializeStructure(result, mm, true);
-                        empty = false;
-                    }
-                    if ((attributes & FETCH_ENVELOPE) != 0) {
-                        result.print(empty ? "" : " ");
-                        result.print("ENVELOPE ");
-                        ImapMessage.serializeEnvelope(result, mm);
-                        empty = false;
-                    }
-                    if (parts != null) {
-                        for (ImapPartSpecifier pspec : parts) {
+                    if (!fullMessage.isEmpty()) {
+                        for (ImapPartSpecifier pspec : fullMessage) {
                             result.print(empty ? "" : " ");
-                            pspec.write(result, output, mm);
+                            pspec.write(result, output, item);
                             empty = false;
                         }
                     }
+
+                    if ((parts != null && !parts.isEmpty()) || (attributes & FETCH_FROM_MIME) != 0) {
+                        mm = ImapMessage.getMimeMessage(item);
+                        if ((attributes & FETCH_BODY) != 0) {
+                            result.print(empty ? "" : " ");
+                            result.print("BODY ");
+                            ImapMessage.serializeStructure(result, mm, false);
+                            empty = false;
+                        }
+                        if ((attributes & FETCH_BODYSTRUCTURE) != 0) {
+                            result.print(empty ? "" : " ");
+                            result.print("BODYSTRUCTURE ");
+                            ImapMessage.serializeStructure(result, mm, true);
+                            empty = false;
+                        }
+                        if ((attributes & FETCH_ENVELOPE) != 0) {
+                            result.print(empty ? "" : " ");
+                            result.print("ENVELOPE ");
+                            ImapMessage.serializeEnvelope(result, mm);
+                            empty = false;
+                        }
+                        if (parts != null) {
+                            for (ImapPartSpecifier pspec : parts) {
+                                result.print(empty ? "" : " ");
+                                pspec.write(result, output, mm);
+                                empty = false;
+                            }
+                        }
+                    }
+                } finally {
+                    mbox.lock.release();
                 }
 
                 // 6.4.5: "The \Seen flag is implicitly set; if this causes the flags to
