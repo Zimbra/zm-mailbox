@@ -80,9 +80,9 @@ import com.zimbra.soap.admin.message.RemoveDistributionListAliasRequest;
 import com.zimbra.soap.admin.message.RemoveDistributionListAliasResponse;
 import com.zimbra.soap.admin.message.RemoveDistributionListMemberRequest;
 import com.zimbra.soap.admin.message.RemoveDistributionListMemberResponse;
+import com.zimbra.soap.admin.type.GranteeInfo;
 import com.zimbra.soap.base.DistributionListGranteeInfoInterface;
 import com.zimbra.soap.type.DistributionListGranteeBy;
-import com.zimbra.soap.type.DistributionListGranteeType;
 import com.zimbra.soap.type.DistributionListSelector;
 import com.zimbra.soap.type.KeyValuePair;
 import com.zimbra.soap.type.TargetBy;
@@ -189,7 +189,7 @@ public class TestDelegatedDL extends SoapTest {
         DistributionListActionRequest actionReq = new DistributionListActionRequest(
                 DistributionListSelector.fromName(groupName), action);
         
-        action.addOwner(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
                 DistributionListGranteeBy.name, USER_OWNER));
         DistributionListActionResponse actionResp = invokeJaxb(transport, actionReq);
         
@@ -198,7 +198,7 @@ public class TestDelegatedDL extends SoapTest {
         actionReq = new DistributionListActionRequest(
                 DistributionListSelector.fromName(groupName), action);
         
-        action.addOwner(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
                 DistributionListGranteeBy.name, USER_CREATOR));
         actionResp = invokeJaxb(transport, actionReq);
         
@@ -250,14 +250,14 @@ public class TestDelegatedDL extends SoapTest {
         }
         */
         
-        List<? extends DistributionListGranteeInfoInterface> dlOwners = dlInfo.getOwners();
+        List<GranteeInfo> dlOwners = dlInfo.getOwners();
         assertEquals(1, dlOwners.size());
-        for (DistributionListGranteeInfoInterface owner : dlOwners) {
-            DistributionListGranteeType type = owner.getType();
+        for (GranteeInfo owner : dlOwners) {
+            com.zimbra.soap.type.GranteeType type = owner.getType();
             String id = owner.getId();
             String name = owner.getName();
             
-            assertEquals(DistributionListGranteeType.usr, type);
+            assertEquals(com.zimbra.soap.type.GranteeType.usr, type);
             assertEquals(USER_OWNER, name);
         }
     }
@@ -359,11 +359,11 @@ public class TestDelegatedDL extends SoapTest {
         List<? extends DistributionListGranteeInfoInterface> dlOwners = dlInfo.getOwners();
         assertEquals(1, dlOwners.size());
         for (DistributionListGranteeInfoInterface owner : dlOwners) {
-            DistributionListGranteeType type = owner.getType();
+            com.zimbra.soap.type.GranteeType type = owner.getType();
             String id = owner.getId();
             String name = owner.getName();
             
-            assertEquals(DistributionListGranteeType.usr, type);
+            assertEquals(com.zimbra.soap.type.GranteeType.usr, type);
             assertEquals(USER_CREATOR, name);
         }
         
@@ -438,11 +438,11 @@ public class TestDelegatedDL extends SoapTest {
         List<? extends DistributionListGranteeInfoInterface> dlOwners = dlInfo.getOwners();
         assertEquals(1, dlOwners.size());
         for (DistributionListGranteeInfoInterface owner : dlOwners) {
-            DistributionListGranteeType type = owner.getType();
+            com.zimbra.soap.type.GranteeType type = owner.getType();
             String id = owner.getId();
             String name = owner.getName();
             
-            assertEquals(DistributionListGranteeType.usr, type);
+            assertEquals(com.zimbra.soap.type.GranteeType.usr, type);
             assertEquals(USER_OWNER, name);
         }
     }
@@ -492,13 +492,13 @@ public class TestDelegatedDL extends SoapTest {
                 DistributionListSelector.fromName(GROUP_NAME), action);
         
         DistributionListRightSpec dlRight1 = new DistributionListRightSpec(right1);
-        dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
                 DistributionListGranteeBy.name, grantee1.getName()));
-        dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
                 DistributionListGranteeBy.name, grantee2.getName()));
         
         DistributionListRightSpec dlRight2 = new DistributionListRightSpec(right2);
-        dlRight2.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.all, 
+        dlRight2.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.all, 
                 null, null));
         
         action.addRight(dlRight1);
@@ -624,11 +624,11 @@ public class TestDelegatedDL extends SoapTest {
         DistributionListActionRequest req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
         
-        action.addOwner(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
                 DistributionListGranteeBy.name, USER_OWNER));
-        action.addOwner(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
                 DistributionListGranteeBy.name, owner1.getName()));
-        action.addOwner(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
                 DistributionListGranteeBy.name, owner2.getName()));
         DistributionListActionResponse resp = invokeJaxb(transport, req);
         
@@ -642,7 +642,7 @@ public class TestDelegatedDL extends SoapTest {
         List<? extends DistributionListGranteeInfoInterface> owners = dlInfo.getOwners();
         Set<String> ownerNames = Sets.newHashSet();
         for (DistributionListGranteeInfoInterface owner : owners) {
-            if (owner.getType() == DistributionListGranteeType.usr) {
+            if (owner.getType() == com.zimbra.soap.type.GranteeType.usr) {
                 ownerNames.add(owner.getName());
             }
         }
@@ -658,9 +658,9 @@ public class TestDelegatedDL extends SoapTest {
         action = new DistributionListAction(Operation.removeOwners);
         req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
-        action.addOwner(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
                 DistributionListGranteeBy.name, owner1.getName()));
-        action.addOwner(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
                 DistributionListGranteeBy.name, owner2.getName()));
         resp = invokeJaxb(transport, req);
         
@@ -674,7 +674,7 @@ public class TestDelegatedDL extends SoapTest {
         owners = dlInfo.getOwners();
         ownerNames = Sets.newHashSet();
         for (DistributionListGranteeInfoInterface owner : owners) {
-            if (owner.getType() == DistributionListGranteeType.usr) {
+            if (owner.getType() == com.zimbra.soap.type.GranteeType.usr) {
                 ownerNames.add(owner.getName());
             }
         }
@@ -700,13 +700,13 @@ public class TestDelegatedDL extends SoapTest {
         DistributionListActionRequest req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
         
-        action.addOwner(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
                 DistributionListGranteeBy.name, USER_OWNER));
-        action.addOwner(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
                 DistributionListGranteeBy.name, owner1.getName()));
-        action.addOwner(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
                 DistributionListGranteeBy.name, owner2.getName()));
-        action.addOwner(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+        action.addOwner(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
                 DistributionListGranteeBy.name, owner3.getName()));
         DistributionListActionResponse resp = invokeJaxb(transport, req);
         
@@ -720,7 +720,7 @@ public class TestDelegatedDL extends SoapTest {
         List<? extends DistributionListGranteeInfoInterface> owners = dlInfo.getOwners();
         Set<String> ownerNames = Sets.newHashSet();
         for (DistributionListGranteeInfoInterface owner : owners) {
-            if (owner.getType() == DistributionListGranteeType.usr) {
+            if (owner.getType() == com.zimbra.soap.type.GranteeType.usr) {
                 ownerNames.add(owner.getName());
             }
         }
@@ -765,21 +765,21 @@ public class TestDelegatedDL extends SoapTest {
                 DistributionListSelector.fromName(GROUP_NAME), action);
         
         DistributionListRightSpec dlRight1 = new DistributionListRightSpec(right1);
-        dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
                 DistributionListGranteeBy.name, grantee1.getName()));
-        dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
                 DistributionListGranteeBy.name, grantee2.getName()));
-        dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.grp, 
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.grp, 
                 DistributionListGranteeBy.name, groupGrantee.getName()));
-        dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.all, 
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.all, 
                 null, null));
-        dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.pub, 
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.pub, 
                 null, null));
         
         DistributionListRightSpec dlRight2 = new DistributionListRightSpec(right2);
-        dlRight2.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+        dlRight2.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
                 DistributionListGranteeBy.name, grantee1.getName()));
-        dlRight2.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+        dlRight2.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
                 DistributionListGranteeBy.name, grantee2.getName()));
         
         action.addRight(dlRight1);
@@ -826,7 +826,7 @@ public class TestDelegatedDL extends SoapTest {
         req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
         dlRight1 = new DistributionListRightSpec(right1);
-        dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.all, 
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.all, 
                 null, null));
         
         dlRight2 = new DistributionListRightSpec(right2);
@@ -867,7 +867,7 @@ public class TestDelegatedDL extends SoapTest {
         req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(GROUP_NAME), action);
         dlRight1 = new DistributionListRightSpec(right1);
-        dlRight1.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.all, 
+        dlRight1.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.all, 
                 null, null));
         
         action.addRight(dlRight1);
@@ -916,7 +916,7 @@ public class TestDelegatedDL extends SoapTest {
                 DistributionListSelector.fromName(GROUP_NAME), action);
         
         DistributionListRightSpec dlRight = new DistributionListRightSpec(right);
-        dlRight.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+        dlRight.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
                 DistributionListGranteeBy.name, grantee.getName()));
         
         action.addRight(dlRight);
@@ -941,7 +941,7 @@ public class TestDelegatedDL extends SoapTest {
                 DistributionListSelector.fromName(GROUP_NAME), action);
         
         dlRight = new DistributionListRightSpec(right);
-        dlRight.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+        dlRight.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
                 DistributionListGranteeBy.name, grantee.getName()));
         
         action.addRight(dlRight);
@@ -965,7 +965,7 @@ public class TestDelegatedDL extends SoapTest {
                 DistributionListSelector.fromName(GROUP_NAME), action);
         
         dlRight = new DistributionListRightSpec(right);
-        dlRight.addGrantee(new DistributionListGranteeSelector(DistributionListGranteeType.usr, 
+        dlRight.addGrantee(new DistributionListGranteeSelector(com.zimbra.soap.type.GranteeType.usr, 
                 DistributionListGranteeBy.name, grantee.getName()));
         
         action.addRight(dlRight);

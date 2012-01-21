@@ -545,9 +545,8 @@ public class SoapProvisioning extends Provisioning {
     @Override
     public void changePassword(Account acct, String currentPassword,
             String newPassword) throws ServiceException {
-        com.zimbra.soap.account.type.Account jaxbAcct =
-            new com.zimbra.soap.account.type.Account(
-                    com.zimbra.soap.account.type.Account.By.NAME, acct.getName());
+        com.zimbra.soap.type.AccountSelector jaxbAcct =
+            new com.zimbra.soap.type.AccountSelector(com.zimbra.soap.type.AccountBy.name, acct.getName());
         invokeJaxb(new ChangePasswordRequest(jaxbAcct, currentPassword, newPassword));
     }
 
@@ -860,13 +859,11 @@ public class SoapProvisioning extends Provisioning {
         if (serverName == null) {
             serverName = account.getServerName();
         }
-        LoggerInfo logger = LoggerInfo.createForCategoryAndLevel(category, level);
-        AddAccountLoggerRequest req = AddAccountLoggerRequest.createForAccountAndLogger(
-                        getSelector(account), logger);
+        LoggerInfo logger = LoggerInfo.createForCategoryAndLevelString(category, level);
+        AddAccountLoggerRequest req = AddAccountLoggerRequest.createForAccountAndLogger(getSelector(account), logger);
         
         AddAccountLoggerResponse resp = serverName == null ?
-                (AddAccountLoggerResponse) invokeJaxb(req) :
-                (AddAccountLoggerResponse) invokeJaxb(req, serverName);    
+                (AddAccountLoggerResponse) invokeJaxb(req) : (AddAccountLoggerResponse) invokeJaxb(req, serverName);
         
         return accountLoggersFromLoggerInfos(resp.getLoggers(),
                 account.getName());
@@ -875,7 +872,7 @@ public class SoapProvisioning extends Provisioning {
     private AccountLogger accountLoggerFromLoggerInfo(
             LoggerInfo loggerInfo, String accountName) {
         return new AccountLogger(loggerInfo.getCategory(),
-                    accountName, Level.valueOf(loggerInfo.getLevel()));
+                    accountName, Level.valueOf(loggerInfo.getLevel().toString()));
     }
     
     private List<AccountLogger> accountLoggersFromLoggerInfos(

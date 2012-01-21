@@ -57,9 +57,8 @@ public class SoapTest extends ProvTest {
     }
     
     static SoapTransport authUser(String acctName) throws Exception {
-        com.zimbra.soap.account.type.Account acct = 
-            new com.zimbra.soap.account.type.Account(
-                    com.zimbra.soap.account.type.Account.By.NAME, acctName);
+        com.zimbra.soap.type.AccountSelector acct = 
+            new com.zimbra.soap.type.AccountSelector(com.zimbra.soap.type.AccountBy.name, acctName);
         
         SoapHttpTransport transport = new SoapHttpTransport(TestUtil.getSoapUrl());
         transport.setHttpDebugListener(soapDebugListener);

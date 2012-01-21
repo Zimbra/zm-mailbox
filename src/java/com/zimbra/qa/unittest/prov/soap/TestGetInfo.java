@@ -86,7 +86,7 @@ public class TestGetInfo  extends SoapTest {
             for (DiscoverRightsTarget target : targets) {
                 String id = target.getId();
                 String name = target.getName();
-                String type = target.getType();
+                String type = target.getType().toString();
                 
                 result.add(Verify.makeResultStr(right, id, name, type));
             }
