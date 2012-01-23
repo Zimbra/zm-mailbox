@@ -212,6 +212,8 @@ public class ZMimeBodyPart extends MimeBodyPart implements ZMimePart {
         }
     }
 
+    static final Set<String> RAW_ENCODINGS = ImmutableSet.of("7bit", "8bit", "binary");
+
     private static final Set<String> SUPPORTED_ENCODINGS = ImmutableSet.of("7bit", "8bit", "binary", "base64", "quoted-printable", "uuencode", "x-uuencode", "x-uue");
 
     @Override
