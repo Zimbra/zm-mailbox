@@ -173,7 +173,7 @@ public class AutoCompleteGalRequest implements AutoCompleteGalSpecInterface {
         this.name = name;
     }
 
-    public AutoCompleteGalRequest createForName(String name) {
+    public static AutoCompleteGalRequest createForName(String name) {
         return new AutoCompleteGalRequest(name);
     }
 
