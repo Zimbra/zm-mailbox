@@ -51,6 +51,14 @@ public class ProvTest {
             throw new SkippedForRealLdapServerException(reason);
         }
     }
+    
+    public static class Sequencer {
+        private int next = 1;
+        
+        public int next() {
+            return next++;
+        }
+    }
 
     @Rule
     public TestName TEST_NAME = new TestName();
@@ -59,10 +67,18 @@ public class ProvTest {
         return TEST_NAME.getMethodName();
     }
     
-    private String genName(String suffix) {
+    private String genName(String suffix, Sequencer seq) {
         String name = suffix == null ? getTestName() : 
             getTestName() + "-" + suffix;
+        
+        if (seq != null) {
+            name = name + "-" + seq.next();
+        }
         return name.toLowerCase();
+    }
+    
+    private String genName(String suffix) {
+        return genName(suffix, null);
     }
     
     private String genName() {
@@ -77,20 +93,36 @@ public class ProvTest {
         return genAcctNameLocalPart(null);
     }
     
+    protected String genDataSourceName(String suffix, Sequencer seq) {
+        return "ds-" + genName(suffix, seq);
+    }
+    
     protected String genDataSourceName(String suffix) {
-        return "ds-" + genName(suffix);
+        return genDataSourceName(suffix, null);
+    }
+    
+    protected String genDataSourceName(Sequencer seq) {
+        return genDataSourceName(null, seq);
     }
     
     protected String genDataSourceName() {
-        return genDataSourceName(null);
+        return genDataSourceName(null, null);
+    }
+    
+    protected String genIdentityName(String suffix, Sequencer seq) {
+        return "iden-" + genName(suffix, seq);
     }
     
     protected String genIdentityName(String suffix) {
-        return "iden-" + genName(suffix);
+        return genIdentityName(suffix, null);
+    }
+    
+    protected String genIdentityName(Sequencer seq) {
+        return genIdentityName(null, seq);
     }
     
     protected String genIdentityName() {
-        return genIdentityName(null);
+        return genIdentityName(null, null);
     }
 
     protected String genGroupNameLocalPart(String suffix) {
@@ -129,12 +161,20 @@ public class ProvTest {
         return genServerName(null);
     }
     
+    protected String genSignatureName(String suffix, Sequencer seq) {
+        return "sig-" + genName(suffix, seq);
+    }
+    
     protected String genSignatureName(String suffix) {
-        return "sig-" + genName(suffix);
+        return genSignatureName(suffix, null);
+    }
+    
+    protected String genSignatureName(Sequencer seq) {
+        return genSignatureName(null, seq);
     }
     
     protected String genSignatureName() {
-        return genSignatureName(null);
+        return genSignatureName(null, null);
     }
     
     protected String genXMPPName(String suffix) {

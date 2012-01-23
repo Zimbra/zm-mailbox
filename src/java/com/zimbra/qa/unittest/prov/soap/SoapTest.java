@@ -23,6 +23,7 @@ import com.zimbra.common.soap.Element;
 import com.zimbra.common.soap.SoapHttpTransport;
 import com.zimbra.common.soap.SoapProtocol;
 import com.zimbra.common.soap.SoapTransport;
+import com.zimbra.common.soap.Element.XMLElement;
 import com.zimbra.common.soap.SoapHttpTransport.HttpDebugListener;
 import com.zimbra.common.util.CliUtil;
 import com.zimbra.cs.account.accesscontrol.RightManager;
@@ -87,5 +88,17 @@ public class SoapTest extends ProvTest {
         
         Element res = transport.invoke(req);
         return (T) JaxbUtil.elementToJaxb(res);
+    }
+    
+    static <T> T invokeJaxbOnTargetAccount(SoapTransport transport, Object jaxbObject,
+            String targetAcctId) 
+    throws Exception {
+        String oldTarget = transport.getTargetAcctId();
+        try {
+            transport.setTargetAcctId(targetAcctId);
+            return invokeJaxb(transport, jaxbObject);
+        } finally {
+            transport.setTargetAcctId(oldTarget);
+        }
     }
 }
