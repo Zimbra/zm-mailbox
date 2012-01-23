@@ -691,15 +691,20 @@ class ZMimeParser {
         pcurrent.firstLine = lineNumber;
 
         if (ctype.getPrimaryType().equals("multipart")) {
-            pcurrent.multi = ZMimeMultipart.newMultipart(ctype, pcurrent.part);
-            // create the preamble, which encloses the lines up to the first boundary in its *body*
-            parts.add(pcurrent = new PartInfo(ZMimeBodyPart.newBodyPart(null), PartLocation.PREAMBLE));
-            bodyStart(pos);
+            // catch encoded multiparts (not legal, but they exist) and defer parsing
+            String enc = pcurrent.part.getEncoding();
+            if (enc == null || ZMimeBodyPart.RAW_ENCODINGS.contains(enc)) {
+                pcurrent.multi = ZMimeMultipart.newMultipart(ctype, pcurrent.part);
+                // create the preamble, which encloses the lines up to the first boundary in its *body*
+                parts.add(pcurrent = new PartInfo(ZMimeBodyPart.newBodyPart(null), PartLocation.PREAMBLE));
+                bodyStart(pos);
+            } else {
+                pcurrent.boundary = null;
+            }
         } else if (ctype.getBaseType().equals(ZContentType.MESSAGE_RFC822)) {
             parts.add(pcurrent = new PartInfo(ZMimeMessage.newMessage(session, pcurrent.part)));
             state = ParserState.HEADER_LINESTART;
             return true;
-        } else {
         }
 
         return false;
