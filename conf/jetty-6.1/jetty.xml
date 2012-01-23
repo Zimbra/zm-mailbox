@@ -24,6 +24,11 @@
       </New>
     </Set>
 
+     <Call name="setAttribute">
+       <Arg> org.mortbay.jetty.Request.maxFormContentSize</Arg>
+       <Arg> 4000 </Arg>
+    </Call>
+
     <Call class="com.zimbra.common.jetty.JettyMonitor" name="setThreadPool">
       <Arg><Ref id="pool"/></Arg>
     </Call>
