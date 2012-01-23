@@ -17,6 +17,7 @@ package com.zimbra.cs.mailbox;
 import com.google.common.annotations.VisibleForTesting;
 import com.zimbra.common.localconfig.DebugConfig;
 import com.zimbra.cs.account.Account;
+import com.zimbra.cs.datasource.DataSourceListener;
 import com.zimbra.cs.fb.FreeBusyProvider;
 import com.zimbra.cs.filter.FilterListener;
 import com.zimbra.cs.mailbox.MailItem.Type;
@@ -85,6 +86,7 @@ public abstract class MailboxListener {
         register(new FilterListener());
         register(new MemcachedCacheManager());
         register(new FreeBusyProvider.Listener());
+        register(new DataSourceListener());
     }
 
     public static void register(MailboxListener listener) {
