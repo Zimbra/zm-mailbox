@@ -96,7 +96,7 @@ public class SoapTest extends ProvTest {
         String oldTarget = transport.getTargetAcctId();
         try {
             transport.setTargetAcctId(targetAcctId);
-            return invokeJaxb(transport, jaxbObject);
+            return (T) invokeJaxb(transport, jaxbObject);
         } finally {
             transport.setTargetAcctId(oldTarget);
         }
