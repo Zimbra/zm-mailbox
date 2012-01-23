@@ -23,12 +23,14 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.zimbra.common.util.ByteUtil;
 import com.zimbra.common.util.FileCache;
@@ -40,6 +42,7 @@ public class FileDescriptorCacheTest {
 
     private File tmpDir;
     private File uncompressedDir;
+    private List<File> tempFiles = Lists.newArrayList();
 
     @Before
     public void startUp() {
@@ -55,6 +58,9 @@ public class FileDescriptorCacheTest {
         if (uncompressedDir != null) {
             FileUtil.deleteDir(uncompressedDir);
         }
+        for (File file : tempFiles) {
+            file.delete();
+        }
     }
 
     @Test
@@ -65,9 +71,13 @@ public class FileDescriptorCacheTest {
         fdc.setMaxSize(2);
 
         File file1 = File.createTempFile(NAME_PREFIX, ".tmp.gz");
+        tempFiles.add(file1);
         File file2 = File.createTempFile(NAME_PREFIX, ".tmp.gz");
+        tempFiles.add(file2);
         File file3 = File.createTempFile(NAME_PREFIX, ".tmp.gz");
+        tempFiles.add(file3);
         File file4 = File.createTempFile(NAME_PREFIX, ".tmp.gz");
+        tempFiles.add(file4);
 
         String content1 = "Tempted";
         String content2 = "Tempted";
