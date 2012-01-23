@@ -423,61 +423,70 @@ public class FileUtil {
     }
 
     /**
-	 * Deletes a directory hierarchy and all files under it.
-	 *
-	 * @param directory the directory
-	 * @throws IOException if deletion fails for any file or directory in the hierarchy.
-	 */
-	public static void deleteDir(File directory) throws IOException {
+     * Deletes a directory hierarchy and all files under it.
+     *
+     * @param directory the directory
+     * @throws IOException if deletion fails for any file or directory in the hierarchy.
+     */
+    public static void deleteDir(File directory) throws IOException {
+        deleteDirContents(directory);
+        if (directory.exists() && !directory.delete()) {
+            throw new IOException("Cannot remove " + directory.getPath());
+        }
+    }
+
+    /**
+     * Deletes all files and directory hierarchies inside the given directory.
+     *
+     * @throws IOException if deletion fails for any file or directory in the hierarchy.
+     */
+    public static void deleteDirContents(File directory) throws IOException {
         if (!directory.exists())
             return;
-	    File[] files = directory.listFiles();
-	    if (files != null) {
+        File[] files = directory.listFiles();
+        if (files != null) {
             for (int i = 0; i < files.length; i++) {
                 if (files[i].isDirectory()) {
                     deleteDir(files[i]);
                 } else {
                     if (!files[i].delete()) {
                         throw new IOException("Cannot remove "
-                                + files[i].getPath());
+                            + files[i].getPath());
                     }
                 }
             }
         }
-	    if (directory.exists() && !directory.delete()) {
-	        throw new IOException("Cannot remove " + directory.getPath());
-	    }
-	}
+    }
 
-	/**
-	 * File.mkdirs() method doesn't work when multiple threads are
-	 * creating paths with a common parent directory simultaneously.
-	 * Use this method instead.
-	 * @return
-	 */
-	public static boolean mkdirs(File path) {
-		if (path.exists()) {
-			return true;
-		}
-		// mkdir() may return false if another thread creates the directory
-		// after the above exists() check but before the mkdir() call.
-		// As far as this thread is concerned it's a successful mkdirs().
-		if (path.mkdir() || path.exists()) {
-			return true;
-		}
-		File canonFile = null;
-		try {
-			canonFile = path.getCanonicalFile();
-		} catch (IOException e) {
-			return false;
-		}
-		String parent = canonFile.getParent();
-		if (parent != null) {
-			File pf = new File(parent);
-			return mkdirs(pf) && (canonFile.mkdir() || canonFile.exists());
-		} else
-			return false;
-	}
+    /**
+     * File.mkdirs() method doesn't work when multiple threads are
+     * creating paths with a common parent directory simultaneously.
+     * Use this method instead.
+     * @return
+     */
+    public static boolean mkdirs(File path) {
+        if (path.exists()) {
+            return true;
+        }
+        // mkdir() may return false if another thread creates the directory
+        // after the above exists() check but before the mkdir() call.
+        // As far as this thread is concerned it's a successful mkdirs().
+        if (path.mkdir() || path.exists()) {
+            return true;
+        }
+        File canonFile = null;
+        try {
+            canonFile = path.getCanonicalFile();
+        } catch (IOException e) {
+            return false;
+        }
+        String parent = canonFile.getParent();
+        if (parent != null) {
+            File pf = new File(parent);
+            return mkdirs(pf) && (canonFile.mkdir() || canonFile.exists());
+        } else
+            return false;
+    }
 
     /**
      * Returns the filename without path/scheme.  (substring trailing the

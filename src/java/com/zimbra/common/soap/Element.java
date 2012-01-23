@@ -554,10 +554,16 @@ public abstract class Element implements Cloneable {
         cur.addAttribute(xpath[depth], value);
     }
 
+    /**
+     * Parses a JSON element structure and closes the stream.
+     */
     public static Element parseJSON(InputStream is) throws SoapParseException {
         return parseJSON(is, JSONElement.mFactory);
     }
 
+    /**
+     * Parses a JSON element structure and closes the stream.
+     */
     public static Element parseJSON(InputStream is, ElementFactory factory) throws SoapParseException {
         try {
             return parseJSON(new String(com.zimbra.common.util.ByteUtil.getContent(is, -1), "utf-8"), factory);
