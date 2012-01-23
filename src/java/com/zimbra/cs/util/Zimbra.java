@@ -66,10 +66,11 @@ public class Zimbra {
      *  servlet faults in classes or references properties before they're set
      *  here. */
     private static void setSystemProperties() {
-        System.setProperty("mail.mime.decodetext.strict",   "false");
-        System.setProperty("mail.mime.encodefilename",      "true");
-        System.setProperty("mail.mime.charset",             "utf-8");
-        System.setProperty("mail.mime.base64.ignoreerrors", "true");
+        System.setProperty("mail.mime.decodetext.strict",       "false");
+        System.setProperty("mail.mime.encodefilename",          "true");
+        System.setProperty("mail.mime.charset",                 "utf-8");
+        System.setProperty("mail.mime.base64.ignoreerrors",     "true");
+        System.setProperty("mail.mime.ignoremultipartencoding", "false");
     }
 
     private static void checkForClass(String clzName, String jarName) {
