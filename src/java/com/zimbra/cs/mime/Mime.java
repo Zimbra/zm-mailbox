@@ -61,7 +61,7 @@ import org.apache.commons.codec.EncoderException;
 import org.apache.commons.codec.net.QCodec;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.Sets;
+import com.google.common.collect.ImmutableSet;
 import com.ibm.icu.text.CharsetDetector;
 import com.ibm.icu.text.CharsetMatch;
 import com.zimbra.common.mime.ContentDisposition;
@@ -92,17 +92,18 @@ public class Mime {
 
     private static final int MAX_DECODE_BUFFER = 2048;
 
-    private static final Set<String> TRANSFER_ENCODINGS = Sets.newHashSet(MimeConstants.ET_7BIT, MimeConstants.ET_8BIT, MimeConstants.ET_BINARY, MimeConstants.ET_QUOTED_PRINTABLE,
-            MimeConstants.ET_BASE64);
+    private static final Set<String> TRANSFER_ENCODINGS = ImmutableSet.of(MimeConstants.ET_7BIT, MimeConstants.ET_8BIT,
+            MimeConstants.ET_BINARY, MimeConstants.ET_QUOTED_PRINTABLE, MimeConstants.ET_BASE64);
 
-    private static final Set<String> INLINEABLE_TYPES = Sets.newHashSet("image/jpeg", "image/png", "image/gif");
+    private static final Set<String> INLINEABLE_TYPES = ImmutableSet.of("image/jpeg", "image/png", "image/gif");
 
-    private static Set<String> TEXT_ALTERNATES = Sets.newHashSet(MimeConstants.CT_TEXT_ENRICHED, MimeConstants.CT_TEXT_HTML);
+    private static Set<String> TEXT_ALTERNATES = ImmutableSet.of(MimeConstants.CT_TEXT_ENRICHED, MimeConstants.CT_TEXT_HTML);
 
-    private static Set<String> HTML_ALTERNATES = Sets.newHashSet(MimeConstants.CT_TEXT_ENRICHED, MimeConstants.CT_TEXT_PLAIN);
+    private static Set<String> HTML_ALTERNATES = ImmutableSet.of(MimeConstants.CT_TEXT_ENRICHED, MimeConstants.CT_TEXT_PLAIN);
 
-    private static Set<String> KNOWN_MULTIPART_TYPES = Sets.newHashSet(MimeConstants.CT_MULTIPART_ALTERNATIVE, MimeConstants.CT_MULTIPART_DIGEST, MimeConstants.CT_MULTIPART_MIXED,
-            MimeConstants.CT_MULTIPART_REPORT, MimeConstants.CT_MULTIPART_RELATED, MimeConstants.CT_MULTIPART_SIGNED, MimeConstants.CT_MULTIPART_ENCRYPTED);
+    private static Set<String> KNOWN_MULTIPART_TYPES = ImmutableSet.of(MimeConstants.CT_MULTIPART_ALTERNATIVE,
+            MimeConstants.CT_MULTIPART_DIGEST, MimeConstants.CT_MULTIPART_MIXED, MimeConstants.CT_MULTIPART_REPORT,
+            MimeConstants.CT_MULTIPART_RELATED, MimeConstants.CT_MULTIPART_SIGNED, MimeConstants.CT_MULTIPART_ENCRYPTED);
 
     /**
      * Max length (in bytes) that a MIME multipart preamble can be before we
@@ -177,14 +178,15 @@ public class Mime {
             if (isMultipart) {
                 // IMAP part numbering is screwy: top-level multipart doesn't get a number
                 String prefix = mpart.mPartName.length() > 0 ? (mpart.mPartName + '.') : "";
-                if (mp instanceof MimeMessage)
+                if (mp instanceof MimeMessage) {
                     mpart.mPartName = prefix + "TEXT";
-                Object content = getMultipartContent(mp, cts);
-                if (content instanceof MimeMultipart) {
-                    MimeMultipart multi = (MimeMultipart) content;
+                }
+                MimeMultipart multi = getMultipartContent(mp, cts);
+                if (multi != null) {
                     mpart.mChildren = new ArrayList<MPartInfo>(multi.getCount());
-                    for (int i = 1; i <= multi.getCount(); i++)
+                    for (int i = 1; i <= multi.getCount(); i++) {
                         mpart.mChildren.add(generateMPartInfo((MimePart) multi.getBodyPart(i - 1), mpart, prefix + i, i));
+                    }
                     queue.addAll(0, mpart.mChildren);
                 }
             } else if (isMessage) {
@@ -242,7 +244,7 @@ public class Mime {
 
     private static MimeMultipart validateMultipart(MimeMultipart multi, MimePart mp) throws MessagingException, IOException {
         // our MIME parser preparses the multipart, so if an object exists then it's valid
-        if (isZimbraJavaMailShim(multi)) {
+        if (multi == null || isZimbraJavaMailShim(multi)) {
             return multi;
         }
 
@@ -269,6 +271,7 @@ public class Mime {
         } catch (MessagingException me) {
             return true;
         }
+
         final int blength = boundary == null ? 0 : boundary.length();
         int bindex = 0, dashes = 0;
         boolean failed = false;
@@ -509,8 +512,8 @@ public class Mime {
      *  {@link Part#getContent()} to work around JavaMail's fascism about
      *  proper MIME format and failure to support RFC 2184. */
     public static MimeMultipart getMultipartContent(MimePart multipartPart, String contentType) throws IOException, MessagingException {
-        Object content = multipartPart.getContent();
         MimeMultipart mmp = null;
+        Object content = multipartPart.getContent();
         if (content instanceof MimeMultipart) {
             mmp = (MimeMultipart) content;
         } else if (content instanceof InputStream) {
@@ -522,8 +525,7 @@ public class Mime {
                 ByteUtil.closeStream((InputStream) content);
             }
         }
-        if (mmp == null)
-            return null;
+
         return validateMultipart(mmp, multipartPart);
     }
 

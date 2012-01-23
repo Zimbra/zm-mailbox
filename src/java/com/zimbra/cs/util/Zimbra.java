@@ -19,7 +19,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Timer;
 
-import com.zimbra.cs.mailbox.acl.AclPushTask;
 import org.apache.mina.core.buffer.IoBuffer;
 
 import com.zimbra.common.calendar.WellKnownTimeZones;
@@ -44,6 +43,7 @@ import com.zimbra.cs.mailbox.MailboxIndex;
 import com.zimbra.cs.mailbox.MailboxManager;
 import com.zimbra.cs.mailbox.PurgeThread;
 import com.zimbra.cs.mailbox.ScheduledTaskManager;
+import com.zimbra.cs.mailbox.acl.AclPushTask;
 import com.zimbra.cs.memcached.MemcachedConnector;
 import com.zimbra.cs.redolog.RedoLogProvider;
 import com.zimbra.cs.server.ServerManager;
@@ -68,9 +68,10 @@ public final class Zimbra {
      *  servlet faults in classes or references properties before they're set
      *  here. */
     private static void setSystemProperties() {
-        System.setProperty("mail.mime.decodetext.strict", "false");
-        System.setProperty("mail.mime.encodefilename",    "true");
-        System.setProperty("mail.mime.charset",           "utf-8");
+        System.setProperty("mail.mime.decodetext.strict",       "false");
+        System.setProperty("mail.mime.encodefilename",          "true");
+        System.setProperty("mail.mime.charset",                 "utf-8");
+        System.setProperty("mail.mime.ignoremultipartencoding", "false");
     }
 
     private static void checkForClass(String clzName, String jarName) {
