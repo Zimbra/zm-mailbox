@@ -71,6 +71,7 @@ public final class Zimbra {
         System.setProperty("mail.mime.decodetext.strict",       "false");
         System.setProperty("mail.mime.encodefilename",          "true");
         System.setProperty("mail.mime.charset",                 "utf-8");
+        System.setProperty("mail.mime.base64.ignoreerrors",     "true");
         System.setProperty("mail.mime.ignoremultipartencoding", "false");
     }
 
@@ -161,6 +162,7 @@ public final class Zimbra {
         DbPool.startup();
 
         app.initializeZimbraDb(forMailboxd);
+
 
         if (!Versions.checkVersions()) {
             Zimbra.halt("Data version mismatch.  Reinitialize or upgrade the backend data store.");
