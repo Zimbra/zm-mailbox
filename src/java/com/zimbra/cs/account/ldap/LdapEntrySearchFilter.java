@@ -28,21 +28,48 @@ import com.zimbra.cs.account.EntrySearchFilter.Operator;
 import com.zimbra.cs.account.EntrySearchFilter.Single;
 import com.zimbra.cs.account.EntrySearchFilter.Term;
 import com.zimbra.cs.account.EntrySearchFilter.Visitor;
-import com.zimbra.cs.ldap.LdapUtil;
-import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
-import com.zimbra.cs.ldap.ZLdapFilterFactory.FilterId;
 
 /*
  * Traverse a EntrySearchFilter.Term tree and convert it to LDAP query
  */
 public class LdapEntrySearchFilter {
 
+    
     public static class LdapQueryVisitor implements Visitor {
-        StringBuilder mLdapFilter;
+        private StringBuilder mLdapFilter;
+        
+        /*
+         * Whether values in the EntrySearchFilter.Term tree is raw and therefore
+         * should be escaped per RFC 2254.  
+         *     raw    escaped
+         *    ---------------
+         *      *     0x2a
+         *      (     0x28
+         *      )     0x29
+         *      \     0x5c
+         *
+         * Set to true if value in each node is already escaped.
+         * Set to false if value in each node is not yet escaped.
+         * 
+         * Callsites taking RFC 2254 LDAP search filter as input should 
+         * set this to false.  e.g. LdapQueryVisitorIDN used by SearchDirectory SOAP 
+         * handler and "zmprov sa", because values are already escaped.
+         * 
+         * Callsites takes raw search value should set this to true, so values in 
+         * the output will be properly escaped.  e.g. callsites that build ldap 
+         * filter from SOAP <searchFilter> elements.
+         * 
+         */
+        private boolean valueIsRaw = true;
 
         public LdapQueryVisitor() {
+            this(true);
+        }
+        
+        public LdapQueryVisitor(boolean valueIsRaw) {
             mLdapFilter = new StringBuilder();
+            this.valueIsRaw = valueIsRaw;
         }
 
         public String getFilter() {
@@ -67,34 +94,33 @@ public class LdapEntrySearchFilter {
             }
             
             ZLdapFilterFactory filterFactory = ZLdapFilterFactory.getInstance();
-            FilterId filterId = FilterId.GAL_SEARCH;
-            ZLdapFilter filter;
+            String filter = null;
             
             String attr = term.getLhs();
             String val = getVal(term);
             if (op.equals(Operator.has)) {
-                filter = filterFactory.substringFilter(filterId, attr, val);
+                filter = filterFactory.substringFilter(attr, val, valueIsRaw);
             } else if (op.equals(Operator.eq)) {
                 // there is no presence operator in Single
                 if (val.equals("*")) {
-                    filter = filterFactory.presenceFilter(filterId, attr);
+                    filter = filterFactory.presenceFilter(attr);
                 } else {
-                    filter = filterFactory.equalityFilter(filterId, attr, val);
+                    filter = filterFactory.equalityFilter(attr, val, valueIsRaw);
                 }
             } else if (op.equals(Operator.ge)) {
-                filter = filterFactory.greaterOrEqualFilter(filterId, attr, val);
+                filter = filterFactory.greaterOrEqualFilter(attr, val, valueIsRaw);
             } else if (op.equals(Operator.le)) {
-                filter = filterFactory.lessOrEqualFilter(filterId, attr, val);
+                filter = filterFactory.lessOrEqualFilter(attr, val, valueIsRaw);
             } else if (op.equals(Operator.startswith)) {
-                filter = filterFactory.startsWithFilter(filterId, attr, val);
+                filter = filterFactory.startsWithFilter(attr, val, valueIsRaw);
             } else if (op.equals(Operator.endswith)) {
-                filter = filterFactory.endsWithFilter(filterId, attr, val);
+                filter = filterFactory.endsWithFilter(attr, val, valueIsRaw);
             } else {
                 // fallback to EQUALS
-                filter = filterFactory.equalityFilter(filterId, attr, val);
+                filter = filterFactory.equalityFilter(attr, val, valueIsRaw);
             }
             
-            mLdapFilter.append(filter.toFilterString());
+            mLdapFilter.append(filter);
 
             if (negation) {
                 mLdapFilter.append(')');
@@ -123,6 +149,11 @@ public class LdapEntrySearchFilter {
     }
     
     private static class LdapQueryVisitorIDN extends LdapQueryVisitor implements Visitor {
+        
+        private LdapQueryVisitorIDN() {
+            super(false);
+        }
+        
         protected String getVal(Single term) {
             String rhs = term.getRhs();
             
@@ -140,16 +171,22 @@ public class LdapEntrySearchFilter {
         }
     }
 
-    public static EntrySearchFilter sCalendarResourcesFilter;
-    static {
-        Single calResType = new Single(
-                false,
-                Provisioning.A_objectClass,
-                Operator.eq,
-                AttributeClass.OC_zimbraCalendarResource);
-        sCalendarResourcesFilter = new EntrySearchFilter(calResType);
-    }
-
+    /**
+     * Takes a RFC 2254 filter and converts assertions value from unicode to ACE 
+     * for IDN attributes.  IDN attributes are those storing the ACE representation 
+     * of the unicode.   For non-IDN attributes, assertion values are just passed through. 
+     * 
+     * e.g.
+     * (zimbraMailDeliveryAddress=*@test.\u4e2d\u6587.com) will be converted to
+     * (zimbraMailDeliveryAddress=*@test.xn--fiq228c.com)
+     * because zimbraMailDeliveryAddress is an IDN attribute.
+     * 
+     * (zimbraDomainName=*\u4e2d\u6587*) will remain the same because zimbraDomainName 
+     * is not an IDN attribute.
+     *   
+     * @param filterStr a RFC 2254 filter (assertion values must be already RFC 2254 escaped)
+     * @return
+     */
     public static String toLdapIDNFilter(String filterStr) {
         String asciiQuery;
         
@@ -183,8 +220,7 @@ public class LdapEntrySearchFilter {
 
     public static String toLdapCalendarResourcesFilter(EntrySearchFilter filter)
     throws ServiceException {
-        /* objectClass=calendarResource will be prepended in SearchDirectory
-        filter.andWith(sCalendarResourcesFilter);
+        /* 
         if (!filter.usesIndex())
             throw ServiceException.INVALID_REQUEST(
                     "Search referring to no indexed attribute is not allowed: " + filter.toString(), null);

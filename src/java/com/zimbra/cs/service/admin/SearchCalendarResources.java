@@ -95,6 +95,8 @@ public class SearchCalendarResources extends AdminDocumentHandler {
         AdminAccessControl.SearchDirectoryRightChecker rightChecker = 
             new AdminAccessControl.SearchDirectoryRightChecker(aac, prov, null);
         
+        // filter is not RFC 2254 escaped 
+        // query is RFC 2254 escaped
         String query = LdapEntrySearchFilter.toLdapCalendarResourcesFilter(filter);
         
         SearchDirectoryOptions options = new SearchDirectoryOptions();

@@ -1870,7 +1870,7 @@ public class ProvUtil implements HttpDebugListener {
         // FilterId.ADMIN_SEARCH in SearchDirectory soap handler.
         FilterId filterId = (prov instanceof LdapProv) ? FilterId.ADMIN_SEARCH : null;
         searchOpts.setFilterString(filterId, query);
-        searchOpts.setConvertIDNToAscii(true);
+        searchOpts.setConvertIDNToAscii(true); // query must be already RFC 2254 escaped
         
         List<NamedEntry> accounts = prov.searchDirectory(searchOpts);
 

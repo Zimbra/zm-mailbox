@@ -59,6 +59,12 @@ public class TestLdapZLdapFilter extends LdapTest {
         verifyStatString(filterId, actual);
     }
     
+    private void verify(FilterId filterId, ZLdapFilter expected, ZLdapFilter actual) 
+    throws Exception {
+        assertEquals(expected.toFilterString(), actual.toFilterString());
+        verifyStatString(filterId, actual);
+    }
+    
     @Test
     public void hasSubordinates() throws Exception {
         String filter = LegacyLdapFilter.hasSubordinates();
@@ -91,75 +97,6 @@ public class TestLdapZLdapFilter extends LdapTest {
     }
     
     @Test
-    public void presenceFilter() throws Exception {
-        String ATTR = "foo";
-        
-        String filter = LegacyLdapFilter.presenceFilter(ATTR);
-        ZLdapFilter zLdapFilter = filterDactory.presenceFilter(FilterId.UNITTEST, ATTR);
-        verify(FilterId.UNITTEST, filter, zLdapFilter);
-    }
-    
-    @Test
-    public void equalityFilter() throws Exception {
-        String ATTR = "foo";
-        String VALUE = "bar";
-        
-        String filter = LegacyLdapFilter.equalityFilter(ATTR, VALUE);
-        ZLdapFilter zLdapFilter = filterDactory.equalityFilter(FilterId.UNITTEST, ATTR, VALUE);
-        verify(FilterId.UNITTEST, filter, zLdapFilter);
-    }
-    
-    @Test
-    public void greaterOrEqualFilter() throws Exception {
-        String ATTR = "foo";
-        String VALUE = "bar";
-        
-        String filter = LegacyLdapFilter.greaterOrEqualFilter(ATTR, VALUE);
-        ZLdapFilter zLdapFilter = filterDactory.greaterOrEqualFilter(FilterId.UNITTEST, ATTR, VALUE);
-        verify(FilterId.UNITTEST, filter, zLdapFilter);
-    }
-    
-    @Test
-    public void lessOrEqualFilter() throws Exception {
-        String ATTR = "foo";
-        String VALUE = "bar";
-        
-        String filter = LegacyLdapFilter.lessOrEqualFilter(ATTR, VALUE);
-        ZLdapFilter zLdapFilter = filterDactory.lessOrEqualFilter(FilterId.UNITTEST, ATTR, VALUE);
-        verify(FilterId.UNITTEST, filter, zLdapFilter);
-    }
-    
-    @Test
-    public void startsWithFilter() throws Exception {
-        String ATTR = "foo";
-        String VALUE = "bar";
-        
-        String filter = LegacyLdapFilter.startsWithFilter(ATTR, VALUE);
-        ZLdapFilter zLdapFilter = filterDactory.startsWithFilter(FilterId.UNITTEST, ATTR, VALUE);
-        verify(FilterId.UNITTEST, filter, zLdapFilter);
-    }
-    
-    @Test
-    public void endsWithFilter() throws Exception {
-        String ATTR = "foo";
-        String VALUE = "bar";
-        
-        String filter = LegacyLdapFilter.endsWithFilter(ATTR, VALUE);
-        ZLdapFilter zLdapFilter = filterDactory.endsWithFilter(FilterId.UNITTEST, ATTR, VALUE);
-        verify(FilterId.UNITTEST, filter, zLdapFilter);
-    }
-    
-    @Test
-    public void substringFilter() throws Exception {
-        String ATTR = "foo";
-        String VALUE = "bar";
-        
-        String filter = LegacyLdapFilter.substringFilter(ATTR, VALUE);
-        ZLdapFilter zLdapFilter = filterDactory.substringFilter(FilterId.UNITTEST, ATTR, VALUE);
-        verify(FilterId.UNITTEST, filter, zLdapFilter);
-    }
-    
-    @Test
     public void andWith() throws Exception {
         String FILTER1 = "(foo=1)";
         String FILTER2 = "(bar=2)";
@@ -182,6 +119,80 @@ public class TestLdapZLdapFilter extends LdapTest {
         ZLdapFilter zLdapFilter = filterDactory.negate(
                 filterDactory.fromFilterString(FilterId.UNITTEST, FILTER));
         verify(FilterId.UNITTEST, filter, zLdapFilter);
+    }
+    
+    @Test
+    public void presenceFilter() throws Exception {
+        String ATTR = "foo";
+        
+        String filter = filterDactory.presenceFilter(ATTR);
+        assertEquals("(foo=*)", filter);
+    }
+    
+    @Test
+    public void equalityFilter() throws Exception {
+        String ATTR = "foo";
+        String VALUE_RAW = "bar*()\\";
+        String VALUE_ESCAPED = "bar\\2a\\28\\29\\5c";
+        
+        String filterFromRaw = filterDactory.equalityFilter(ATTR, VALUE_RAW, true);
+        String filterFromEscaped = filterDactory.equalityFilter(ATTR, VALUE_ESCAPED, false);
+        assertEquals(filterFromRaw, filterFromEscaped);
+    }
+        
+    @Test
+    public void greaterOrEqualFilter() throws Exception {
+        String ATTR = "foo";
+        String VALUE_RAW = "bar*()\\";
+        String VALUE_ESCAPED = "bar\\2a\\28\\29\\5c";
+        
+        String filterFromRaw = filterDactory.greaterOrEqualFilter(ATTR, VALUE_RAW, true);
+        String filterFromEscaped = filterDactory.greaterOrEqualFilter(ATTR, VALUE_ESCAPED, false);
+        assertEquals(filterFromRaw, filterFromEscaped);
+    }
+    
+    @Test
+    public void lessOrEqualFilter() throws Exception {
+        String ATTR = "foo";
+        String VALUE_RAW = "bar*()\\";
+        String VALUE_ESCAPED = "bar\\2a\\28\\29\\5c";
+        
+        String filterFromRaw = filterDactory.lessOrEqualFilter(ATTR, VALUE_RAW, true);
+        String filterFromEscaped = filterDactory.lessOrEqualFilter(ATTR, VALUE_ESCAPED, false);
+        assertEquals(filterFromRaw, filterFromEscaped);
+    }
+    
+    @Test
+    public void startsWithFilter() throws Exception {
+        String ATTR = "foo";
+        String VALUE_RAW = "bar*()\\";
+        String VALUE_ESCAPED = "bar\\2a\\28\\29\\5c";
+        
+        String filterFromRaw = filterDactory.startsWithFilter(ATTR, VALUE_RAW, true);
+        String filterFromEscaped = filterDactory.startsWithFilter(ATTR, VALUE_ESCAPED, false);
+        assertEquals(filterFromRaw, filterFromEscaped);
+    }
+    
+    @Test
+    public void endsWithFilter() throws Exception {
+        String ATTR = "foo";
+        String VALUE_RAW = "bar*()\\";
+        String VALUE_ESCAPED = "bar\\2a\\28\\29\\5c";
+        
+        String filterFromRaw = filterDactory.endsWithFilter(ATTR, VALUE_RAW, true);
+        String filterFromEscaped = filterDactory.endsWithFilter(ATTR, VALUE_ESCAPED, false);
+        assertEquals(filterFromRaw, filterFromEscaped);
+    }
+    
+    @Test
+    public void substringFilter() throws Exception {
+        String ATTR = "foo";
+        String VALUE_RAW = "bar*()\\";
+        String VALUE_ESCAPED = "bar\\2a\\28\\29\\5c";
+        
+        String filterFromRaw = filterDactory.substringFilter(ATTR, VALUE_RAW, true);
+        String filterFromEscaped = filterDactory.substringFilter(ATTR, VALUE_ESCAPED, false);
+        assertEquals(filterFromRaw, filterFromEscaped);
     }
   
     @Test
@@ -911,13 +922,14 @@ zmprov mcf +zimbraGalLdapFilterDef 'ad:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(
     
     @Test
     public void toIDNFilter() throws Exception {
-        assertEquals("(!(zimbraDomainName=*\\e4\\b8\\ad\\e6\\96\\87*))", 
+        assertEquals("(!(zimbraDomainName=*\u4e2d\u6587*))", 
                 LdapEntrySearchFilter.toLdapIDNFilter("(!(zimbraDomainName=*\u4e2d\u6587*))"));
         
         assertEquals("(objectClass=*)", 
                 LdapEntrySearchFilter.toLdapIDNFilter("(objectClass=*)"));
         
-        assertEquals("(!(objectClass=\\2a\\2a))", 
+        // this is actually an invalid filter, will throw during search
+        assertEquals("(!(objectClass=**))", 
                 LdapEntrySearchFilter.toLdapIDNFilter("(!(objectClass=**))"));
         
         assertEquals("(!(objectClass=*abc))", 
@@ -979,4 +991,20 @@ zmprov mcf +zimbraGalLdapFilterDef 'ad:(&(|(displayName=*%s*)(cn=*%s*)(sn=*%s*)(
                 LdapEntrySearchFilter.toLdapIDNFilter("(zimbraMailDeliveryAddress=*.*)"));
     }
 
+    @Test
+    @Bug(bug=68965)
+    public void toIDNFilterWithCharsNeedEscaping() throws Exception {
+        assertEquals("(objectClass=*\\2a*)", 
+                LdapEntrySearchFilter.toLdapIDNFilter("(objectClass=*\\2a*)"));
+        
+        assertEquals("(objectClass=*\\28*)", 
+                LdapEntrySearchFilter.toLdapIDNFilter("(objectClass=*\\28*)"));
+        
+        assertEquals("(objectClass=*\\29*)", 
+                LdapEntrySearchFilter.toLdapIDNFilter("(objectClass=*\\29*)"));
+        
+        assertEquals("(objectClass=*\\5c*)", 
+                LdapEntrySearchFilter.toLdapIDNFilter("(objectClass=*\\5c*)"));
+    }
+    
 }

@@ -39,5 +39,11 @@ public class LdapConstants {
             "(" + DN_SUBTREE_MATCH_ATTR + ":" + DN_SUBTREE_MATCH_MATCHING_RULE + ":=%s)";
     
     
+    public static final String FILTER_TYPE_EQUAL = "=";
+    public static final String FILTER_TYPE_GREATER_OR_EQUAL = ">=";
+    public static final String FILTER_TYPE_LESS_OR_EQUAL = "<=";
+    public static final String FILTER_VALUE_ANY = "*";
+    
+    
     public static final String OC_dcObject = "dcObject";
 }

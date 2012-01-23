@@ -19,6 +19,7 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import com.unboundid.ldap.sdk.Filter;
 import com.unboundid.ldap.sdk.LDAPException;
+import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.cs.account.AttributeClass;
 import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.ldap.LdapConstants;
@@ -243,7 +244,8 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
     }
     
     @Override
-    public ZLdapFilter fromFilterString(FilterId filterId, String filterString) throws LdapException {
+    public ZLdapFilter fromFilterString(FilterId filterId, String filterString) 
+    throws LdapException {
         try {
             return new UBIDLdapFilter(
                     filterId,
@@ -252,57 +254,7 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
             throw UBIDLdapException.mapToLdapException(filterString, e);
         }
     }
-    
 
-    @Override
-    public ZLdapFilter presenceFilter(FilterId filterId, String attr) {
-        return new UBIDLdapFilter(
-                filterId,
-                Filter.createPresenceFilter(attr));
-    }
-
-    @Override
-    public ZLdapFilter equalityFilter(FilterId filterId, String attr, String value) {
-        return new UBIDLdapFilter(
-                filterId,
-                Filter.createEqualityFilter(attr, value));
-    }
-    
-    @Override
-    public ZLdapFilter greaterOrEqualFilter(FilterId filterId, String attr, String value) {
-        return new UBIDLdapFilter(
-                filterId,
-                Filter.createGreaterOrEqualFilter(attr, value));
-    }
-
-    @Override
-    public ZLdapFilter lessOrEqualFilter(FilterId filterId, String attr, String value) {
-        return new UBIDLdapFilter(
-                filterId,
-                Filter.createLessOrEqualFilter(attr, value));
-    }
-
-    @Override
-    public ZLdapFilter startsWithFilter(FilterId filterId, String attr, String value) {
-        return new UBIDLdapFilter(
-                filterId,
-                Filter.createSubstringFilter(attr, value, null, null));
-    }
-
-    @Override
-    public ZLdapFilter endsWithFilter(FilterId filterId, String attr, String value) {
-        return new UBIDLdapFilter(
-                filterId,
-                Filter.createSubstringFilter(attr, null, null, value));
-    }
-
-    @Override
-    public ZLdapFilter substringFilter(FilterId filterId, String attr, String value) {
-        return new UBIDLdapFilter(
-                filterId,
-                Filter.createSubstringFilter(attr, null, new String[]{value}, null));
-    }
-    
     @Override
     public ZLdapFilter andWith(ZLdapFilter filter, ZLdapFilter otherFilter) {
         /*
@@ -312,19 +264,19 @@ public class UBIDLdapFilterFactory extends ZLdapFilterFactory {
                         ((UBIDLdapFilter) filter).getNative(),
                         ((UBIDLdapFilter) otherFilter).getNative()));
                         */
+        ZLdapFilter andedFilter = null;
         try {
-            return new UBIDLdapFilter(
+            andedFilter = new UBIDLdapFilter(
                     filter.getFilterId(),  // use filter id of the filter to which the other filter is appended.
                     Filter.createANDFilter(
                             ((UBIDLdapFilter) filter).getNative(),
                             ((UBIDLdapFilter) fromFilterString(FilterId.DN_SUBTREE_MATCH, otherFilter.toFilterString())).getNative()));
         } catch (LdapException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return null;
+            ZimbraLog.ldap.warn("filter error", e);
+            assert(false);  // should not happen
         } 
+        return andedFilter;
     }
-    
     
     @Override
     public ZLdapFilter negate(ZLdapFilter filter) {

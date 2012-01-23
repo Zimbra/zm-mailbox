@@ -17,6 +17,7 @@ package com.zimbra.qa.unittest.prov.ldap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +50,7 @@ import com.zimbra.cs.account.SearchDirectoryOptions.ObjectType;
 import com.zimbra.cs.account.SearchDirectoryOptions.SortOpt;
 import com.zimbra.cs.account.ldap.LdapProv;
 import com.zimbra.cs.account.ldap.entry.LdapDomain;
+import com.zimbra.cs.ldap.LdapException;
 import com.zimbra.cs.ldap.LdapUtil;
 import com.zimbra.cs.ldap.ZLdapFilter;
 import com.zimbra.cs.ldap.ZLdapFilterFactory;
@@ -1038,5 +1040,98 @@ public class TestLdapProvSearchDirectory extends LdapTest {
         
         deleteAccount(acct);
         deleteDomain(subDomain);
+    }
+    
+    
+    /*
+     * RFC 2254
+     *    
+       If a value should contain any of the following characters
+    
+               Character       ASCII value
+               ---------------------------
+               *               0x2a
+               (               0x28
+               )               0x29
+               \               0x5c
+               NUL             0x00
+    
+       For example, the filter checking whether the "cn" attribute contained
+       a value with the character "*" anywhere in it would be represented as
+       "(cn=*\2a*)".
+     */
+    @Test
+    @Bug(bug=68965)
+    public void filterWithCharsNeedEscaping() throws Exception {
+        Domain subDomain = provUtil.createDomain(genDomainName(baseDomainName()));
+        
+        String ATTR = Provisioning.A_displayName;
+        
+        Account acctStar = provUtil.createAccount(genAcctNameLocalPart("star"), subDomain,
+                Collections.singletonMap(ATTR, (Object)"*"));
+        Account acctLeftParen = provUtil.createAccount(genAcctNameLocalPart("left-paren"), subDomain,
+                Collections.singletonMap(ATTR, (Object)"("));
+        Account acctRightParen = provUtil.createAccount(genAcctNameLocalPart("right-paren"), subDomain,
+                Collections.singletonMap(ATTR, (Object)")"));
+        Account acctBackSlash = provUtil.createAccount(genAcctNameLocalPart("back-slash"), subDomain,
+                Collections.singletonMap(ATTR, (Object)"\\"));
+        
+        testFilterWithCharsNeedEscaping(acctStar, ATTR, "*\\2a*");
+        testFilterWithCharsNeedEscaping(acctLeftParen, ATTR, "*\\28*");
+        testFilterWithCharsNeedEscaping(acctRightParen, ATTR, "*\\29*");
+        testFilterWithCharsNeedEscaping(acctBackSlash, ATTR, "*\\5c*");
+        
+        /*
+         * TODO
+         *         
+        testFilterWithCharsNeedEscaping(acctStar, ATTR, "***");
+        testFilterWithCharsNeedEscaping(acctStar, ATTR, "*(*");
+        testFilterWithCharsNeedEscaping(acctStar, ATTR, "*)*");
+        testFilterWithCharsNeedEscaping(acctStar, ATTR, "*\\*");
+         */
+        
+        deleteAccount(acctStar);
+        deleteAccount(acctLeftParen);
+        deleteAccount(acctRightParen);
+        deleteAccount(acctBackSlash);
+        deleteDomain(subDomain);
+    }
+    
+    private void testFilterWithCharsNeedEscaping(Account expected,
+            String filterAttr, String filterValue) throws Exception {
+        SearchDirectoryOptions options = new SearchDirectoryOptions();
+        options.setDomain(prov.getDomain(expected));
+        options.setTypes(SearchDirectoryOptions.ObjectType.accounts);
+        options.setFilterString(FilterId.UNITTEST, String.format("(%s=%s)", filterAttr, filterValue));
+        options.setReturnAttrs(new String[] {Provisioning.A_zimbraMailDeliveryAddress});
+        options.setConvertIDNToAscii(true);
+        
+        List<NamedEntry> entries = prov.searchDirectory(options);
+        Verify.verifyEquals(Lists.newArrayList(expected), entries, true);
+    }
+    
+    @Test
+    public void badFilter() throws Exception {
+        testBadFilter("(objectClass=**)");
+        testBadFilter("(objectClass=***)");
+        testBadFilter("(objectClass=()");
+        testBadFilter("(objectClass=))");
+        testBadFilter("(objectClass=\\)");
+    }
+    
+    private void testBadFilter(String filter) throws Exception {
+        SearchDirectoryOptions options = new SearchDirectoryOptions();
+        options.setTypes(SearchDirectoryOptions.ObjectType.accounts);
+        options.setFilterString(FilterId.UNITTEST, filter);
+        options.setReturnAttrs(new String[] {Provisioning.A_zimbraId});
+        options.setConvertIDNToAscii(true);
+        
+        String errorCode = null;
+        try {
+            prov.searchDirectory(options);
+        } catch (ServiceException e) {
+            errorCode = e.getCode();
+        }
+        assertEquals(LdapException.INVALID_SEARCH_FILTER, errorCode);
     }
 }

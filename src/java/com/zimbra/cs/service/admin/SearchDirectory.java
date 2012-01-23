@@ -166,7 +166,7 @@ public class SearchDirectory extends AdminDocumentHandler {
         options.setReturnAttrs(attrs);
         options.setSortOpt(sortAscending ? SortOpt.SORT_ASCENDING : SortOpt.SORT_DESCENDING);
         options.setSortAttr(sortBy);
-        options.setConvertIDNToAscii(true);
+        options.setConvertIDNToAscii(true); // query must be already RFC 2254 escaped
             
         // bug 36017. 
         // defaults, if requested, are set when accounts are paged back to the SOAP client.

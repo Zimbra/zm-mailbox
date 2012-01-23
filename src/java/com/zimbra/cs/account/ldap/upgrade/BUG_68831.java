@@ -63,8 +63,11 @@ public class BUG_68831 extends UpgradeOp {
         String bases[] = prov.getDIT().getSearchBases(Provisioning.SD_DISTRIBUTION_LIST_FLAG);
         
         ZLdapFilterFactory filterFactory = ZLdapFilterFactory.getInstance();
+        
+        ZLdapFilter homeServerPresent = filterFactory.fromFilterString(
+                FilterId.LDAP_UPGRADE, filterFactory.presenceFilter(ATTR_NAME));
         ZLdapFilter homeServerNotPresent = 
-            filterFactory.negate(filterFactory.presenceFilter(FilterId.LDAP_UPGRADE, ATTR_NAME));
+            filterFactory.negate(homeServerPresent);
         
         String query = filterFactory.andWith(
                 filterFactory.allDistributionLists(), homeServerNotPresent).toFilterString();

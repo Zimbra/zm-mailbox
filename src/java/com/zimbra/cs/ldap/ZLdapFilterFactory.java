@@ -141,7 +141,6 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
         SEARCH_GRANTEE("Search grantee for revoking orphan grants"),
         SMIME_LOOKUP("Filter in " + Provisioning.A_zimbraSMIMELdapFilter),
         
-        
         UNITTEST("UNITTEST"),
         LDAP_UPGRADE("LDAP_UPGRADE"),
         
@@ -200,16 +199,51 @@ public abstract class ZLdapFilterFactory extends ZLdapElement {
     public abstract ZLdapFilter anyEntry();
     public abstract ZLdapFilter fromFilterString(FilterId filterId, String filterString) 
     throws LdapException;
-    
-    public abstract ZLdapFilter presenceFilter(FilterId filterId, String attr);
-    public abstract ZLdapFilter equalityFilter(FilterId filterId, String attr, String value);
-    public abstract ZLdapFilter greaterOrEqualFilter(FilterId filterId, String attr, String value);
-    public abstract ZLdapFilter lessOrEqualFilter(FilterId filterId, String attr, String value);
-    public abstract ZLdapFilter startsWithFilter(FilterId filterId, String attr, String value);
-    public abstract ZLdapFilter endsWithFilter(FilterId filterId, String attr, String value);
-    public abstract ZLdapFilter substringFilter(FilterId filterId, String attr, String value);
     public abstract ZLdapFilter andWith(ZLdapFilter filter, ZLdapFilter otherFilter);
     public abstract ZLdapFilter negate(ZLdapFilter filter);
+    
+    public String presenceFilter(String attr) {
+        return String.format("(%s%s%s)", attr, LdapConstants.FILTER_TYPE_EQUAL, LdapConstants.FILTER_VALUE_ANY);
+    }
+    
+    public String equalityFilter(String attr, String value, boolean valueIsRaw) {
+        return String.format("(%s%s%s)", attr, LdapConstants.FILTER_TYPE_EQUAL, 
+                valueIsRaw ? encodeValue(value) : value);
+    }
+    
+    public String greaterOrEqualFilter(String attr, String value, boolean valueIsRaw) {
+        return String.format("(%s%s%s)", 
+                attr, LdapConstants.FILTER_TYPE_GREATER_OR_EQUAL, 
+                valueIsRaw ? encodeValue(value) : value);
+    }
+    
+    public String lessOrEqualFilter(String attr, String value, boolean valueIsRaw) {
+        return String.format("(%s%s%s)", 
+                attr, LdapConstants.FILTER_TYPE_LESS_OR_EQUAL, 
+                valueIsRaw ? encodeValue(value) : value);
+    }
+    
+    public String startsWithFilter(String attr, String value, boolean valueIsRaw) {
+        return String.format("(%s%s%s%s)", 
+                attr, LdapConstants.FILTER_TYPE_EQUAL, 
+                valueIsRaw ? encodeValue(value) : value, 
+                LdapConstants.FILTER_VALUE_ANY);
+    }
+    
+    public String endsWithFilter(String attr, String value, boolean valueIsRaw) {
+        return String.format("(%s%s%s%s)", 
+                attr, LdapConstants.FILTER_TYPE_EQUAL, 
+                LdapConstants.FILTER_VALUE_ANY, 
+                valueIsRaw ? encodeValue(value) : value);
+    }
+    
+    public String substringFilter(String attr, String value, boolean valueIsRaw) {
+        return String.format("(%s%s%s%s%s)", 
+                attr, LdapConstants.FILTER_TYPE_EQUAL, 
+                LdapConstants.FILTER_VALUE_ANY, 
+                valueIsRaw ? encodeValue(value) : value, 
+                LdapConstants.FILTER_VALUE_ANY);
+    }
     
     /*
      * Mail target (accounts and groups)

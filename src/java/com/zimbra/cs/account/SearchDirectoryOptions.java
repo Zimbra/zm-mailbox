@@ -419,6 +419,13 @@ public class SearchDirectoryOptions {
         return sortAttr;
     }
     
+    /*
+     * Applicable only when filterStr is used.  
+     * Ignored if filter is used.
+     * 
+     * filterStr must be already RFC 2254 escaped.
+     * RFC 2254 escaping will bot be done during the unicode -> conversion.
+     */
     public void setConvertIDNToAscii(boolean convertIDNToAscii) {
         this.convertIDNToAscii = convertIDNToAscii;
     }
