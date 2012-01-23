@@ -37,7 +37,7 @@ CREATE TABLE *{DATABASE_NAME}.mail_item (
    recipients    VARCHAR(128),
    subject       VARCHAR(255),
    name          VARCHAR(128),
-   metadata      VARCHAR(255),
+   metadata      VARCHAR(1000000),
    mod_metadata  INTEGER NOT NULL,
    change_date   INTEGER,
    mod_content   INTEGER NOT NULL,

@@ -772,10 +772,7 @@ public class Contact extends MailItem {
     @Override
     void decodeMetadata(Metadata meta) throws ServiceException {
         Metadata metaAttrs;
-        if (meta.getVersion() <= 8) {
-            // old version: metadata is just the fields
-            metaAttrs = meta;
-        } else {
+        if (meta.containsKey(Metadata.FN_FIELDS)) {
             // new version: fields are in their own subhash
             super.decodeMetadata(meta);
             metaAttrs = meta.getMap(Metadata.FN_FIELDS);
@@ -795,6 +792,9 @@ public class Contact extends MailItem {
                 }
 
             }
+        } else {
+            // version 8 or earlier; metadata is just the fields
+            metaAttrs = meta;
         }
 
         fields = new HashMap<String, String>();

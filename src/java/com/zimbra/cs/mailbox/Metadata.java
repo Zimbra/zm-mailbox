@@ -160,10 +160,6 @@ public final class Metadata {
         return map.isEmpty();
     }
 
-    public int getVersion() {
-        return LEGACY_METADATA_VERSION;
-    }
-
     public Metadata copy(Metadata source) {
         if (source != null) {
             map.putAll(source.map);

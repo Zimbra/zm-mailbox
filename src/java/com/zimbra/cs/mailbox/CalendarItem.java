@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -70,7 +71,6 @@ import com.zimbra.cs.index.analysis.FieldTokenStream;
 import com.zimbra.cs.index.analysis.RFC822AddressTokenStream;
 import com.zimbra.cs.mailbox.MailItem.CustomMetadata.CustomMetadataList;
 import com.zimbra.cs.mailbox.calendar.Alarm;
-import com.zimbra.cs.mailbox.calendar.Alarm.Action;
 import com.zimbra.cs.mailbox.calendar.CalendarMailSender;
 import com.zimbra.cs.mailbox.calendar.IcalXmlStrMap;
 import com.zimbra.cs.mailbox.calendar.Invite;
@@ -78,25 +78,26 @@ import com.zimbra.cs.mailbox.calendar.InviteChanges;
 import com.zimbra.cs.mailbox.calendar.InviteInfo;
 import com.zimbra.cs.mailbox.calendar.RecurId;
 import com.zimbra.cs.mailbox.calendar.Recurrence;
-import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
-import com.zimbra.cs.mailbox.calendar.Recurrence.RecurrenceRule;
-import com.zimbra.cs.mailbox.calendar.Recurrence.SimpleRepeatingRule;
 import com.zimbra.cs.mailbox.calendar.Util;
 import com.zimbra.cs.mailbox.calendar.ZAttendee;
 import com.zimbra.cs.mailbox.calendar.ZOrganizer;
 import com.zimbra.cs.mailbox.calendar.ZRecur;
+import com.zimbra.cs.mailbox.calendar.Alarm.Action;
+import com.zimbra.cs.mailbox.calendar.Recurrence.IRecurrence;
+import com.zimbra.cs.mailbox.calendar.Recurrence.RecurrenceRule;
+import com.zimbra.cs.mailbox.calendar.Recurrence.SimpleRepeatingRule;
 import com.zimbra.cs.mailbox.calendar.ZRecur.Frequency;
 import com.zimbra.cs.mime.Mime;
-import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.mime.MimeVisitor;
 import com.zimbra.cs.mime.ParsedMessage;
+import com.zimbra.cs.mime.Mime.FixedMimeMessage;
 import com.zimbra.cs.mime.ParsedMessage.CalendarPartInfo;
 import com.zimbra.cs.session.PendingModifications.Change;
 import com.zimbra.cs.store.MailboxBlob;
 import com.zimbra.cs.store.StagedBlob;
 import com.zimbra.cs.store.StoreManager;
-import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 import com.zimbra.cs.util.JMSession;
+import com.zimbra.cs.util.AccountUtil.AccountAddressMatcher;
 
 /**
  * An APPOINTMENT consists of one or more INVITES in the same series -- ie that
@@ -697,65 +698,77 @@ public abstract class CalendarItem extends MailItem implements ScheduledTaskResu
     void decodeMetadata(Metadata meta) throws ServiceException {
         super.decodeMetadata(meta);
 
-        int mdVersion = meta.getVersion();
-
         mUid = Invite.fixupIfOutlookUid(meta.get(Metadata.FN_UID, null));
         mInvites = new ArrayList<Invite>();
 
         ICalTimeZone accountTZ = Util.getAccountTimeZone(getMailbox().getAccount());
-        if (mdVersion < 6) {
-            mStartTime = 0;
-            mEndTime = 0;
-        } else {
-            Set<String> tzids = new HashSet<String>();
-            mTzMap = Util.decodeFromMetadata(meta.getMap(Metadata.FN_TZMAP), accountTZ);
-
-            // appointment/task start and end
-            mStartTime = meta.getLong(Metadata.FN_CALITEM_START, 0);
-            mEndTime = meta.getLong(Metadata.FN_CALITEM_END, 0);
-
-            // invite ID's
-            long numComp = meta.getLong(Metadata.FN_NUM_COMPONENTS);
-            for (int i = 0; i < numComp; i++) {
-                Metadata md = meta.getMap(Metadata.FN_INV + i);
-                Invite inv = Invite.decodeMetadata(getMailboxId(), md, this, accountTZ);
-                mInvites.add(inv);
-                tzids.addAll(inv.getReferencedTZIDs());
-                mTzMap.add(inv.getTimeZoneMap());
-            }
-
-            Metadata metaRecur = meta.getMap(FN_CALITEM_RECURRENCE, true);
-            if (metaRecur != null) {
-                mRecurrence = Recurrence.decodeMetadata(metaRecur, mTzMap);
-                if (mRecurrence != null) {
-                    tzids.addAll(Recurrence.getReferencedTZIDs(mRecurrence));
+        if (meta.containsKey(Metadata.FN_TZMAP)) {
+            try {
+                Set<String> tzids = new HashSet<String>();
+                mTzMap = Util.decodeFromMetadata(meta.getMap(Metadata.FN_TZMAP), accountTZ);
+    
+                // appointment/task start and end
+                mStartTime = meta.getLong(Metadata.FN_CALITEM_START, 0);
+                mEndTime = meta.getLong(Metadata.FN_CALITEM_END, 0);
+    
+                // invite ID's
+                long numComp = meta.getLong(Metadata.FN_NUM_COMPONENTS);
+                for (int i = 0; i < numComp; i++) {
+                    Metadata md = meta.getMap(Metadata.FN_INV + i);
+                    Invite inv = Invite.decodeMetadata(getMailboxId(), md, this, accountTZ);
+                    mInvites.add(inv);
+                    tzids.addAll(inv.getReferencedTZIDs());
+                    mTzMap.add(inv.getTimeZoneMap());
                 }
-            }
-
-            if (meta.containsKey(Metadata.FN_REPLY_LIST)) {
-                mReplyList = ReplyList.decodeFromMetadata(meta.getMap(Metadata.FN_REPLY_LIST), mTzMap);
-                // Get all TZIDs referenced by replies.
-                for (ReplyInfo ri : mReplyList.mReplies) {
-                    if (ri.mRecurId != null) {
-                        ParsedDateTime dt = ri.mRecurId.getDt();
-                        if (dt != null && dt.hasTime()) {
-                            ICalTimeZone tz = dt.getTimeZone();
-                            if (tz != null)
-                                tzids.add(tz.getID());
-                        }
+    
+                Metadata metaRecur = meta.getMap(FN_CALITEM_RECURRENCE, true);
+                if (metaRecur != null) {
+                    mRecurrence = Recurrence.decodeMetadata(metaRecur, mTzMap);
+                    if (mRecurrence != null) {
+                        tzids.addAll(Recurrence.getReferencedTZIDs(mRecurrence));
                     }
                 }
-            } else {
-                mReplyList = new ReplyList();
+    
+                if (meta.containsKey(Metadata.FN_REPLY_LIST)) {
+                    mReplyList = ReplyList.decodeFromMetadata(meta.getMap(Metadata.FN_REPLY_LIST), mTzMap);
+                    // Get all TZIDs referenced by replies.
+                    for (ReplyInfo ri : mReplyList.mReplies) {
+                        if (ri.mRecurId != null) {
+                            ParsedDateTime dt = ri.mRecurId.getDt();
+                            if (dt != null && dt.hasTime()) {
+                                ICalTimeZone tz = dt.getTimeZone();
+                                if (tz != null)
+                                    tzids.add(tz.getID());
+                            }
+                        }
+                    }
+                } else {
+                    mReplyList = new ReplyList();
+                }
+    
+                Metadata metaAlarmData = meta.getMap(Metadata.FN_ALARM_DATA, true);
+                if (metaAlarmData != null)
+                    mAlarmData = AlarmData.decodeMetadata(metaAlarmData);
+    
+                // Reduce tzmap to minimal set of TZIDs referenced by invites, recurrence, and replies.
+                mTzMap.reduceTo(tzids);
+            } catch (ServiceException se) {
+                if (ServiceException.INVALID_REQUEST.equals(se.getCode()) && 
+                        this.getChangeDate() < new GregorianCalendar(2006, 0, 1).getTimeInMillis()) {
+                    //could have been metadata version 3, 4 or 5. 
+                    //All of those versions have FN_TZMAP, but different format for other fields
+                    //these are edge cases that should only appear in dev/df/cf
+                    mStartTime = 0;
+                    mEndTime = 0;
+                } else {
+                    throw se;
+                }
             }
-
-            Metadata metaAlarmData = meta.getMap(Metadata.FN_ALARM_DATA, true);
-            if (metaAlarmData != null)
-                mAlarmData = AlarmData.decodeMetadata(metaAlarmData);
-
-            // Reduce tzmap to minimal set of TZIDs referenced by invites, recurrence, and replies.
-            mTzMap.reduceTo(tzids);
-        }
+        } else {
+            //version 2 or earlier
+            mStartTime = 0;
+            mEndTime = 0;
+        } 
     }
 
     @Override Metadata encodeMetadata(Metadata meta) {
