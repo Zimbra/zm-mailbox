@@ -3342,10 +3342,10 @@ abstract class ImapHandler extends ProtocolHandler {
                 boolean markMessage = markRead && (i4msg.flags & Flag.BITMASK_UNREAD) != 0;
                 if (!fullMessage.isEmpty() || (parts != null && !parts.isEmpty()) || (attributes & ~FETCH_FROM_CACHE) != 0) {
                     synchronized (mbox) {
-                        writeMessage(fullMessage, parts, attributes, i4msg, i4folder, mbox, result, baosDebug, markMessage, modseqEnabled);
+                        writeMessage(fullMessage, parts, attributes, i4msg, i4folder, mbox, result, os, markMessage, modseqEnabled);
                     }
                 } else {
-                    writeMessage(fullMessage, parts, attributes, i4msg, i4folder, mbox, result, baosDebug, markMessage, modseqEnabled);
+                    writeMessage(fullMessage, parts, attributes, i4msg, i4folder, mbox, result, os, markMessage, modseqEnabled);
                 }                    
             } catch (ImapPartSpecifier.BinaryDecodingException e) {
                 // don't write this response line if we're returning NO
