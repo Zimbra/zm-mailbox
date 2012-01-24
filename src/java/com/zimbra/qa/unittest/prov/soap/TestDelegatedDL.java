@@ -984,7 +984,22 @@ public class TestDelegatedDL extends SoapTest {
         DistributionListActionRequest req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(DL_NAME), action);
         
-        DistributionListActionResponse resp = invokeJaxb(transport, req);
+        DistributionListActionResponse resp;
+        
+        String errorCode = null;
+        try {
+            // only people with create right can rename
+            resp = invokeJaxb(transport, req);
+        } catch (ServiceException e) {
+            errorCode = e.getCode();
+        }
+        assertEquals(ServiceException.PERM_DENIED, errorCode);
+        
+        /*
+         * auth as creator and try again
+         */
+        transport = authUser(USER_CREATOR);
+        resp = invokeJaxb(transport, req);
         
         Group group = prov.getGroup(Key.DistributionListBy.name, DL_NEW_NAME);
         assertEquals(DL_NEW_NAME, group.getName());
@@ -1011,7 +1026,22 @@ public class TestDelegatedDL extends SoapTest {
         DistributionListActionRequest req = new DistributionListActionRequest(
                 DistributionListSelector.fromName(NAME), action);
         
-        DistributionListActionResponse resp = invokeJaxb(transport, req);
+        DistributionListActionResponse resp;
+        
+        String errorCode = null;
+        try {
+            // only people with create right can rename
+            resp = invokeJaxb(transport, req);
+        } catch (ServiceException e) {
+            errorCode = e.getCode();
+        }
+        assertEquals(ServiceException.PERM_DENIED, errorCode);
+        
+        /*
+         * auth as creator and try again
+         */
+        transport = authUser(USER_CREATOR);
+        resp = invokeJaxb(transport, req);
         
         group = prov.getGroup(Key.DistributionListBy.name, NAME);
         assertNull(null);

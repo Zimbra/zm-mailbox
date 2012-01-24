@@ -9,7 +9,6 @@ import com.zimbra.common.soap.MailConstants;
 import com.zimbra.common.soap.Element;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.AccountServiceException;
-import com.zimbra.cs.account.Provisioning;
 import com.zimbra.cs.gal.GalGroupMembers;
 import com.zimbra.cs.gal.GalGroupMembers.DLMembers;
 import com.zimbra.cs.gal.GalGroupMembers.DLMembersResult;
@@ -20,10 +19,11 @@ import com.zimbra.soap.ZimbraSoapContext;
 public class GetDistributionListMembers extends GalDocumentHandler {
     public Element handle(Element request, Map<String, Object> context) throws ServiceException {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
-        Account account = getRequestedAccount(getZimbraSoapContext(context));
+        Account account = getRequestedAccount(zsc);
         
-        if (!canAccessAccount(zsc, account))
+        if (!canAccessAccount(zsc, account)) {
             throw ServiceException.PERM_DENIED("can not access account");
+        }
         
         Element d = request.getElement(AdminConstants.E_DL);
         String dlName = d.getText();

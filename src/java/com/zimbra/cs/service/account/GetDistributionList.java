@@ -67,7 +67,7 @@ public class GetDistributionList extends DistributionListDocumentHandler {
         
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        Account acct = getRequestedAccount(zsc);
+        Account acct = getAuthenticatedAccount(zsc);
         
         Element response = zsc.createElement(AccountConstants.GET_DISTRIBUTION_LIST_RESPONSE);
         

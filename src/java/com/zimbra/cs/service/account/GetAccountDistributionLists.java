@@ -40,6 +40,10 @@ public class GetAccountDistributionLists extends AccountDocumentHandler {
         Account acct = getRequestedAccount(zsc);
         Provisioning prov = Provisioning.getInstance();
         
+        if (!canAccessAccount(zsc, acct)) {
+            throw ServiceException.PERM_DENIED("can not access account");
+        }
+        
         boolean needOwnerOf = request.getAttributeBool(AccountConstants.A_OWNER_OF, false);
         MemberOfSelector needMemberOf = MemberOfSelector.fromString(
                 request.getAttribute(AccountConstants.A_MEMBER_OF, MemberOfSelector.directOnly.name()));

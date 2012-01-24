@@ -35,7 +35,7 @@ public class CreateDistributionList extends AccountDocumentHandler {
         
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        Account acct = getRequestedAccount(zsc);
+        Account acct = getAuthenticatedAccount(zsc);
         
         String name = request.getAttribute(AccountConstants.E_NAME).toLowerCase();
         

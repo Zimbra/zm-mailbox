@@ -58,6 +58,10 @@ public class SubscribeDistributionList extends DistributionListDocumentHandler {
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
         Account acct = getRequestedAccount(zsc);
+        
+        if (!canAccessAccount(zsc, acct)) {
+            throw ServiceException.PERM_DENIED("can not access account");
+        }
 
         Element response = zsc.createElement(AccountConstants.SUBSCRIBE_DISTRIBUTION_LIST_RESPONSE);
 

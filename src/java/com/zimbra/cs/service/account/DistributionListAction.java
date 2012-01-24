@@ -31,6 +31,7 @@ import com.zimbra.common.util.L10nUtil.MsgKey;
 import com.zimbra.common.util.ZimbraLog;
 import com.zimbra.common.zmime.ZMimeBodyPart;
 import com.zimbra.common.zmime.ZMimeMultipart;
+import com.zimbra.cs.account.AccessManager;
 import com.zimbra.cs.account.Account;
 import com.zimbra.cs.account.Group;
 import com.zimbra.cs.account.Group.GroupOwner;
@@ -57,8 +58,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
         ZimbraSoapContext zsc = getZimbraSoapContext(context);
         Provisioning prov = Provisioning.getInstance();
-        Account acct = getRequestedAccount(zsc);
-
+        Account acct = getAuthenticatedAccount(zsc);
+        
         Group group = getGroupBasic(request, prov);
         DistributionListActionHandler handler = new DistributionListActionHandler(
                 group, request, prov, acct);
@@ -83,13 +84,18 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
         @Override
         protected void handleRequest() throws ServiceException {
-            if (!GroupOwner.hasOwnerPrivilege(acct, group)) {
-                throw ServiceException.PERM_DENIED(
-                        "you do not have sufficient rights to access this distribution list");
-            }
-
             Element eAction = request.getElement(AccountConstants.E_ACTION);
             Operation op = Operation.fromString(eAction.getAttribute(AccountConstants.A_OP));
+            
+            if (op == Operation.delete || op == Operation.rename) {
+                // need create right, will check in the handlers
+            } else {
+                // need owner right
+                if (!GroupOwner.hasOwnerPrivilege(acct, group)) {
+                    throw ServiceException.PERM_DENIED(
+                            "you do not have sufficient rights to access this distribution list");
+                }
+            }
 
             DLActionHandler handler = null;
             switch (op) {
@@ -145,14 +151,14 @@ public class DistributionListAction extends DistributionListDocumentHandler {
         protected Element eAction;
         protected Group group;
         protected Provisioning prov;
-        protected Account requestedAcct;
+        protected Account authedAcct;
 
         protected DLActionHandler(Element request, Group group,
-                Provisioning prov, Account requestedAcct) {
+                Provisioning prov, Account authedAcct) {
             this.eAction = request;
             this.group = group;
             this.prov = prov;
-            this.requestedAcct = requestedAcct;
+            this.authedAcct = authedAcct;
         }
 
         abstract void handle() throws ServiceException;
@@ -162,8 +168,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
     private static class DeleteHandler extends DLActionHandler {
 
         protected DeleteHandler(Element eAction, Group group,
-                Provisioning prov, Account requestedAcct) {
-            super(eAction, group, prov, requestedAcct);
+                Provisioning prov, Account authedAcct) {
+            super(eAction, group, prov, authedAcct);
         }
 
         @Override
@@ -173,6 +179,11 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
         @Override
         void handle() throws ServiceException {
+            if (!AccessManager.getInstance().canCreateGroup(authedAcct, group.getName())) {
+                throw ServiceException.PERM_DENIED(
+                        "you do not have sufficient rights to delete this distribution list");
+            }
+            
             prov.deleteGroup(group.getId());
 
             ZimbraLog.security.info(ZimbraLog.encodeAttrs(
@@ -185,8 +196,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
     private static class ModifyHandler extends DLActionHandler {
 
         protected ModifyHandler(Element eAction, Group group,
-                Provisioning prov, Account requestedAcct) {
-            super(eAction, group, prov, requestedAcct);
+                Provisioning prov, Account authedAcct) {
+            super(eAction, group, prov, authedAcct);
         }
 
         @Override
@@ -209,8 +220,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
     private static class RenameHandler extends DLActionHandler {
 
         protected RenameHandler(Element eAction, Group group,
-                Provisioning prov, Account requestedAcct) {
-            super(eAction, group, prov, requestedAcct);
+                Provisioning prov, Account authedAcct) {
+            super(eAction, group, prov, authedAcct);
         }
 
         @Override
@@ -220,8 +231,18 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
         @Override
         void handle() throws ServiceException {
+            
             Element eNewName = eAction.getElement(AccountConstants.E_NEW_NAME);
             String newName = eNewName.getText();
+            
+            /*
+             * must have create right on the target domain (whether the new doamin is
+             * the same or diff from the current domain)
+             */
+            if (!AccessManager.getInstance().canCreateGroup(authedAcct, newName)) {
+                throw ServiceException.PERM_DENIED(
+                        "you do not have sufficient rights to rename this distribution list");
+            }
 
             String oldName = group.getName();
             prov.renameGroup(group.getId(), newName);
@@ -235,8 +256,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
     private static abstract class ModifyRightHandler extends DLActionHandler {
 
         protected ModifyRightHandler(Element eAction, Group group,
-                Provisioning prov, Account requestedAcct) {
-            super(eAction, group, prov, requestedAcct);
+                Provisioning prov, Account authedAcct) {
+            super(eAction, group, prov, authedAcct);
         }
 
         protected class Grantee {
@@ -305,8 +326,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
     static class AddOwnersHandler extends ModifyRightHandler {
 
         protected AddOwnersHandler(Element eAction, Group group,
-                Provisioning prov, Account requestedAcct) {
-            super(eAction, group, prov, requestedAcct);
+                Provisioning prov, Account authedAcct) {
+            super(eAction, group, prov, authedAcct);
         }
 
         @Override
@@ -333,8 +354,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
     static class RemoveOwnersHandler extends ModifyRightHandler {
 
         protected RemoveOwnersHandler(Element eAction, Group group,
-                Provisioning prov, Account requestedAcct) {
-            super(eAction, group, prov, requestedAcct);
+                Provisioning prov, Account authedAcct) {
+            super(eAction, group, prov, authedAcct);
         }
 
         @Override
@@ -360,8 +381,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
     static class SetOwnersHandler extends ModifyRightHandler {
 
         protected SetOwnersHandler(Element eAction, Group group,
-                Provisioning prov, Account requestedAcct) {
-            super(eAction, group, prov, requestedAcct);
+                Provisioning prov, Account authedAcct) {
+            super(eAction, group, prov, authedAcct);
         }
 
         @Override
@@ -389,8 +410,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
     private static abstract class ModifyMultipleRightsHandler extends ModifyRightHandler {
         protected ModifyMultipleRightsHandler(Element eAction, Group group,
-                Provisioning prov, Account requestedAcct) {
-            super(eAction, group, prov, requestedAcct);
+                Provisioning prov, Account authedAcct) {
+            super(eAction, group, prov, authedAcct);
         }
 
         protected Map<Right, List<Grantee>> parseRights() throws ServiceException {
@@ -416,8 +437,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
     static class GrantRightsHandler extends ModifyMultipleRightsHandler {
         protected GrantRightsHandler(Element eAction, Group group,
-                Provisioning prov, Account requestedAcct) {
-            super(eAction, group, prov, requestedAcct);
+                Provisioning prov, Account authedAcct) {
+            super(eAction, group, prov, authedAcct);
         }
 
         @Override
@@ -440,8 +461,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
     static class RevokeRightsHandler extends ModifyMultipleRightsHandler {
         protected RevokeRightsHandler(Element eAction, Group group,
-                Provisioning prov, Account requestedAcct) {
-            super(eAction, group, prov, requestedAcct);
+                Provisioning prov, Account authedAcct) {
+            super(eAction, group, prov, authedAcct);
         }
 
         @Override
@@ -466,8 +487,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
     static class SetRightsHandler extends ModifyMultipleRightsHandler {
 
         protected SetRightsHandler(Element eAction, Group group,
-                Provisioning prov, Account requestedAcct) {
-            super(eAction, group, prov, requestedAcct);
+                Provisioning prov, Account authedAcct) {
+            super(eAction, group, prov, authedAcct);
         }
 
         @Override
@@ -503,8 +524,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
     private static class AddMembersHandler extends DLActionHandler {
 
         protected AddMembersHandler(Element eAction, Group group,
-                Provisioning prov, Account requestedAcct) {
-            super(eAction, group, prov, requestedAcct);
+                Provisioning prov, Account authedAcct) {
+            super(eAction, group, prov, authedAcct);
         }
 
         @Override
@@ -531,8 +552,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
     private static class RemoveMembersHandler extends DLActionHandler {
 
         protected RemoveMembersHandler(Element eAction, Group group,
-                Provisioning prov, Account requestedAcct) {
-            super(eAction, group, prov, requestedAcct);
+                Provisioning prov, Account authedAcct) {
+            super(eAction, group, prov, authedAcct);
         }
 
         @Override
@@ -686,8 +707,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
     private static class AcceptSubsReqHandler extends DLActionHandler {
 
         protected AcceptSubsReqHandler(Element eAction, Group group,
-                Provisioning prov, Account requestedAcct) {
-            super(eAction, group, prov, requestedAcct);
+                Provisioning prov, Account authedAcct) {
+            super(eAction, group, prov, authedAcct);
         }
 
         @Override
@@ -741,7 +762,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
                 // send notification email to the user and bcc other owners
                 SubscriptionResponseSender notifSender = new SubscriptionResponseSender(
-                        prov, group, requestedAcct, memberAcct,
+                        prov, group, authedAcct, memberAcct,
                         subsOp, bccOwners, true);
                 notifSender.sendMessage();
             }
@@ -752,8 +773,8 @@ public class DistributionListAction extends DistributionListDocumentHandler {
     private static class RejectSubsReqHandler extends DLActionHandler {
 
         protected RejectSubsReqHandler(Element eAction, Group group,
-                Provisioning prov, Account requestedAcct) {
-            super(eAction, group, prov, requestedAcct);
+                Provisioning prov, Account authedAcct) {
+            super(eAction, group, prov, authedAcct);
         }
 
         @Override
@@ -805,7 +826,7 @@ public class DistributionListAction extends DistributionListDocumentHandler {
 
                 // send notification email to the user and bcc other owners
                 SubscriptionResponseSender notifSender = new SubscriptionResponseSender(
-                        prov, group, requestedAcct, memberAcct,
+                        prov, group, authedAcct, memberAcct,
                         subsOp, bccOwners, false);
                 notifSender.sendMessage();
             }
