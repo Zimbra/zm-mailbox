@@ -77,7 +77,11 @@
 </right>        
  
 <right name="setAccountPassword" type="preset" targetType="account">
-  <desc>set account password</desc>
+  <desc>set account password, not restricted by password strength policies</desc>
+</right>
+
+<right name="changeAccountPassword" type="preset" targetType="account">
+  <desc>change account password, restricted by password strength policies</desc>
 </right>
 
 <right name="checkPasswordStrength" type="preset" targetType="account">
@@ -184,7 +188,11 @@
 </right>
        
 <right name="setCalendarResourcePassword" type="preset" targetType="calresource">
-  <desc>set calendar resource password</desc>
+  <desc>set calendar resource password, not restricted by password strength policies</desc>
+</right>
+
+<right name="changeCalendarResourcePassword" type="preset" targetType="calresource">
+  <desc>set calendar resource password, restricted by password strength policies</desc>
 </right> 
 
 <right name="checkCalendarResourcePasswordStrength" type="preset" targetType="calresource">
