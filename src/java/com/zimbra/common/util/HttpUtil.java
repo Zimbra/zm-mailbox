@@ -207,6 +207,8 @@ public final class HttpUtil {
         sUrlEscapeMap.put('#', "%23");
         sUrlEscapeMap.put('%', "%25");
         sUrlEscapeMap.put('&', "%26");
+        sUrlEscapeMap.put('<', "%3C");
+        sUrlEscapeMap.put('>', "%3E");
         sUrlEscapeMap.put('?', "%3F");
         sUrlEscapeMap.put('[', "%5B");
         sUrlEscapeMap.put('\\', "%5C");
@@ -223,7 +225,8 @@ public final class HttpUtil {
      * urlEscape method will encode '?' and '&', so make sure
      * the passed in String does not have query string in it.
      * Or call urlEscape on each segment and append query
-     * String afterwards.
+     * String afterwards. Deviates slightly from RFC 3986 to
+     * include "<" and ">"
      *
      * from RFC 3986:
      *
