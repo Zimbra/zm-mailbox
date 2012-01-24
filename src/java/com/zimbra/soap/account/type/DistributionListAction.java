@@ -37,8 +37,6 @@ public class DistributionListAction extends AccountKeyValuePairs {
         delete,
         modify,
         rename,
-        addAlias,
-        removeAlias,
         addOwners,
         removeOwners,
         setOwners,
@@ -72,8 +70,6 @@ public class DistributionListAction extends AccountKeyValuePairs {
      * <tr><td><b>grantRights</b>    </td><td>grant rights</td></tr>
      * <tr><td><b>revokeRights</b>   </td><td>revoke rights</td></tr>
      * <tr><td><b>setRights</b>      </td><td>set rights</td></tr>
-     * <tr><td><b>addAlias</b>       </td><td>add list alias</td></tr>
-     * <tr><td><b>removeAlias</b>    </td><td>remove list alias</td></tr>
      * <tr><td><b>addMembers</b>     </td><td>add list members</td></tr>
      * <tr><td><b>removeMembers</b>  </td><td>remove list members</td></tr>
      * <tr><td><b>acceptSubsReq</b>  </td><td>accept subscription/un-subscription request</td></tr>
@@ -90,14 +86,6 @@ public class DistributionListAction extends AccountKeyValuePairs {
      */
     @XmlElement(name=AccountConstants.E_DLM /* dlm */, required=false)
     protected List<String> members = Lists.newArrayList();
-
-    /**
-     * @zm-api-field-description Alias
-     * <br />
-     * Required if op="addAlias" or or="removeAlias"
-     */
-    @XmlElement(name=AccountConstants.E_ALIAS /* alias */, required=false)
-    protected String alias;
 
     /**
      * @zm-api-field-tag new-name
@@ -165,14 +153,6 @@ public class DistributionListAction extends AccountKeyValuePairs {
 
     public List<String> getMembers() {
         return members;
-    }
-
-    public void setAlias(String alias) {
-        this.alias = alias;
-    }
-
-    public String getAlias() {
-        return alias;
     }
 
     public void setNewName(String newName) {
